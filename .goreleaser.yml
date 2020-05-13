@@ -1,0 +1,57 @@
+release:
+  prerelease: auto
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - id: default
+    main: cmd/main.go
+    binary: okctl
+    flags:
+      - -tags
+      - netgo
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+
+archives:
+  - replacements:
+      darwin: Darwin
+      linux: Linux
+    id: default
+    builds:
+      - default
+    name_template: "okctl_{{ .Os }}_{{ .Arch }}"
+    format: tar.gz
+    files:
+      - none*
+
+checksum:
+  name_template: 'okctl_checksums.txt'
+
+brews:
+  -
+    github:
+      owner: oslokommune
+      name: homebrew-tap
+
+    commit_author:
+      name: veiviser
+      email: veiviser@oslo.kommune.no
+
+    folder: Formula
+
+    homepage: "https://github.com/oslokommune/okctl"
+
+    description: "Opinionated and effortless infrastructure and application management"
+
+    skip_upload: false
+
+    custom_block: |
+      head "https://github.com/oslokommune/okctl/releases/download/latest_release/okctl_Darwin_amd64.tar.gz"

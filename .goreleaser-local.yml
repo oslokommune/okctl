@@ -1,0 +1,36 @@
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - id: default
+    main: cmd/main.go
+    binary: okctl
+    flags:
+      - -tags
+      - netgo
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+
+archives:
+- replacements:
+    darwin: Darwin
+    linux: Linux
+
+checksum:
+  name_template: 'okctl_checksums.txt'
+
+snapshot:
+  name_template: "{{ .Tag }}"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'

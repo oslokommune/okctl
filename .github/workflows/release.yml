@@ -1,0 +1,40 @@
+name: goreleaser
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Unshallow
+        run: git fetch --prune --unshallow
+      -
+        name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.14
+      -
+        name: Get the tag name
+        uses: olegtarasov/get-tag@v2
+        id: tagName
+      -
+        name: Check if release notes exist
+        uses: andstor/file-existence-action@v1
+        with:
+          files: docs/release_notes/${{ steps.tagName.outputs.tag }}
+          allow_failure: false
+      -
+        name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: latest
+          args: release --rm-dist --release-notes=docs/release_notes/${{ steps.tagName.outputs.tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

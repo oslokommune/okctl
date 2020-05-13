@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// Decompressor provides an interface for decompressing into a single file
+// Decompressor provides an interface for decompressing into a single file.
 type Decompressor interface {
 	Decompress(io.Reader, io.Writer) error
 }

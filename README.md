@@ -2,6 +2,8 @@
 
 We will be building up the functionality of this CLI within the coming weeks, and the aim is to release frequently. At this stage we are mostly setting the CI/CD and release processes.
 
+![okctl](logo/okctl-fit.png)
+
 ## Installation
 
 To download the latest release, run the command matching your operating system:

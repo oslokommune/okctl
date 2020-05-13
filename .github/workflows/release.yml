@@ -24,6 +24,9 @@ jobs:
         name: Get the tag name
         uses: olegtarasov/get-tag@v2
         id: tagName
+        with:
+          tagRegex: v(.*)
+          tagRegexGroup: 1
       -
         name: Check if release notes exist
         uses: andstor/file-existence-action@v1
@@ -35,6 +38,6 @@ jobs:
         uses: goreleaser/goreleaser-action@v2
         with:
           version: latest
-          args: release --rm-dist --release-notes=docs/release_notes/${{ steps.tagName.outputs.tag }}
+          args: release --rm-dist --release-notes=docs/release_notes/${{ steps.tagName.outputs.tag }}.md
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}

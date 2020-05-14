@@ -1,1 +1,12 @@
+title: okctl
+email: okctl@oslo.kommune.no
+description: >-
+  Opinionated and effortless infrastructure and application management
+baseurl: ""
+url: "https://okctl.io"
+github_username: oslokommune
 theme: jekyll-theme-cayman
+show_downloads: false
+exclude:
+  - release_notes/
+timezone: Europe/Oslo

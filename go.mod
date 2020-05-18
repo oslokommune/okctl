@@ -11,6 +11,8 @@ require (
 	github.com/foolin/pagser v0.1.4
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
+	github.com/go-yaml/yaml v2.1.0+incompatible
+	github.com/google/uuid v1.1.1
 	github.com/jarcoal/httpmock v1.0.5
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
@@ -34,4 +36,5 @@ require (
 	golang.org/x/sys v0.0.0-20200501145240-bc7a7d42d5c3 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/ini.v1 v1.55.0 // indirect
+	gopkg.in/yaml.v2 v2.2.8
 )

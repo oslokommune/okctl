@@ -1,0 +1,8 @@
+name: okctl
+region: eu-west-1
+baseDir: deployment/
+clusters:
+  - name: pro
+    aws:
+      account: 790988435217
+      profile: aws-okctl-pro

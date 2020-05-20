@@ -71,7 +71,7 @@ func New(dest io.Writer, s Storage, f Fetcher, v Verifier, d Decompressor) Stage
 	}
 }
 
-func FromConfig(binaries []config.Binary, host config.Host, s storage.Storage) ([]Stager, error) {
+func FromConfig(binaries []config.Binary, host config.Host, s storage.Storer) ([]Stager, error) {
 	var stagers []Stager
 
 	for _, binary := range binaries {

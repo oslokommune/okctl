@@ -38,16 +38,16 @@ linters:
     - whitespace
     - gochecknoglobals
     - gocognit
-    - godot
+#    - godot
     - godox
     - gomnd
-    - gomodguard
+#    - gomodguard
     - goprintffuncname
     - maligned
-    - nestif
+#    - nestif
     - prealloc
     - rowserrcheck
-    - testpackage
+#    - testpackage
     - wsl
 
 linters-settings:

@@ -1,6 +1,7 @@
 package config_test
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -8,75 +9,111 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 )
 
-// nolint
-var confContent = `
-binaries:
-  - name: eksctl
-    version: 0.18.0
-    bufferSize: 100mb
-    urlPattern: https://pattern
-    archive:
-      type: .tar.gz
-      target: eksctl
-    checksums:
-      - os: darwin
-        arch: amd64
-        type: sha256
-        digest: something
-`
+func stableAppCfg(id string) *config.AppConfig {
+	c := config.NewDefaultAppCfg()
+	c.User.ID = id
 
-func TestLoadConfiguration(t *testing.T) {
+	return c
+}
+
+func contentFromStruct(t *testing.T, content interface{}) string {
+	c, err := yaml.Marshal(content)
+	assert.NoError(t, err)
+
+	return string(c)
+}
+
+func createAppTestConfig(t *testing.T, content, fileName string) string {
+	dir, err := ioutil.TempDir("", "config")
+	assert.NoError(t, err)
+
+	err = os.MkdirAll(path.Join(dir, config.DefaultAppDir), 0744)
+	assert.NoError(t, err)
+
+	err = ioutil.WriteFile(path.Join(dir, config.DefaultAppDir, fileName), []byte(content), 0600)
+	assert.NoError(t, err)
+
+	err = os.Chdir(dir)
+	assert.NoError(t, err)
+
+	return dir
+}
+
+// nolint
+func TestLoadApp(t *testing.T) {
 	testCases := []struct {
 		name        string
-		fn          func(c *config.UserConfig) interface{}
+		fileName    string
+		content     string
+		preFn       func()
+		appCfgFn    config.AppCfgFn
+		notFoundFn  config.AppNotFoundFn
 		expectError bool
 		expect      interface{}
 	}{
 		{
-			name: "binary checksums",
-			fn: func(c *config.UserConfig) interface{} {
-				return c.Binaries[0].Checksums
+			name:     "Full config",
+			fileName: config.DefaultAppConfig,
+			appCfgFn: config.NewDefaultAppCfgFn(),
+			content:  contentFromStruct(t, stableAppCfg("1")),
+			expect:   stableAppCfg("1"),
+		},
+		{
+			name:     "Empty config",
+			fileName: config.DefaultAppConfig,
+			appCfgFn: func() *config.AppConfig {
+				return stableAppCfg("1")
 			},
-			expect: []config.Checksum{
-				{
-					Os:     "darwin",
-					Arch:   "amd64",
-					Type:   "sha256",
-					Digest: "something",
-				},
+			expect: stableAppCfg("1"),
+		},
+		{
+			name:     "Envvar override",
+			fileName: config.DefaultAppConfig,
+			preFn: func() {
+				err := os.Setenv(fmt.Sprintf("%s_USER_ID", config.DefaultAppEnvPrefix), "2")
+				assert.NoError(t, err)
 			},
+			appCfgFn: func() *config.AppConfig {
+				return stableAppCfg("1")
+			},
+			expect: stableAppCfg("2"),
+		},
+		{
+			name:     "No configuration file",
+			fileName: "nope.yml",
+			appCfgFn: func() *config.AppConfig {
+				return stableAppCfg("1")
+			},
+			notFoundFn:  config.NewDefaultNotFoundFn(),
+			expectError: true,
 		},
 	}
-
-	dir, err := ioutil.TempDir("", "config")
-	assert.NoError(t, err)
-
-	err = os.Mkdir(path.Join(dir, ".okctl"), 0755)
-	assert.NoError(t, err)
-
-	defer func() {
-		_ = os.RemoveAll(dir)
-	}()
-
-	err = ioutil.WriteFile(path.Join(dir, ".okctl", "user.yml"), []byte(confContent), 0600)
-	assert.NoError(t, err)
-	err = os.Chdir(dir)
-	assert.NoError(t, err)
-
-	c, err := config.LoadUserConfiguration(dir)
-	assert.NoError(t, err)
 
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			os.Clearenv()
+
+			if tc.preFn != nil {
+				tc.preFn()
+			}
+
+			got, err := config.LoadApp(createAppTestConfig(t, tc.content, tc.fileName), tc.appCfgFn, tc.notFoundFn)
 			if tc.expectError {
-				assert.Nil(t, c)
-				assert.Equal(t, tc.expect, err.Error())
+				if tc.expect == nil {
+					assert.NotNil(t, err)
+				} else {
+					assert.Equal(t, tc.expect, err.Error())
+				}
 			} else {
-				assert.NoError(t, err, tc.name)
-				assert.Equal(t, tc.expect, tc.fn(c))
+				if got != nil {
+					got.BaseDir = "" // Dont like this
+				}
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expect, got)
 			}
 		})
 	}

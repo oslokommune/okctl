@@ -105,13 +105,13 @@ func (s *scrape) doTotp(resp *http.Response, mfatoken string) (*http.Response, e
 	return resp, nil
 }
 
-func (s *scrape) Scrape(username, password, mfatoken string) (string, error) {
+func (s *scrape) Scrape(username, password, mfaToken string) (string, error) {
 	resp, err := s.doLogin(DefaultURL, username, password)
 	if err != nil {
 		return "", err
 	}
 
-	resp, err = s.doTotp(resp, DefaultURL)
+	resp, err = s.doTotp(resp, mfaToken)
 	if err != nil {
 		return "", err
 	}

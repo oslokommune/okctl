@@ -5,7 +5,7 @@ import (
 	"net"
 	"strings"
 
-	cidrpkg "github.com/apparentlymart/go-cidr/cidr"
+	cidrPkg "github.com/apparentlymart/go-cidr/cidr"
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/ec2"
 	"github.com/awslabs/goformation/v4/cloudformation/tags"
@@ -48,7 +48,7 @@ func AvailabilityZonesForRegion(region string) ([]string, error) {
 	return azs, nil
 }
 
-type subnet struct {
+type Subnet struct {
 	name    string
 	cluster cfn.Namer
 	number  int
@@ -58,15 +58,15 @@ type subnet struct {
 	vpc     cfn.Referencer
 }
 
-func (s *subnet) Name() string {
+func (s *Subnet) Name() string {
 	return s.name
 }
 
-func (s *subnet) Ref() string {
+func (s *Subnet) Ref() string {
 	return cloudformation.Ref(s.Name())
 }
 
-func (s *subnet) Resource() cloudformation.Resource {
+func (s *Subnet) Resource() cloudformation.Resource {
 	mapPublicIPonLaunch := true
 
 	t := []tags.Tag{
@@ -124,7 +124,7 @@ func (d *distributor) DistinctAzs() int {
 
 func NewDistributor(subnetTypes, azs []string) (*distributor, error) {
 	if len(subnetTypes) == 0 {
-		return nil, fmt.Errorf("must provide at least one subnet type")
+		return nil, fmt.Errorf("must provide at least one Subnet type")
 	}
 
 	uniqueTypes := uniqueStringsInSlice(subnetTypes)
@@ -179,21 +179,21 @@ func (d *distributor) nextAz(subnetType string) string {
 	return next
 }
 
-type CreatorFn func(network *net.IPNet) *subnet
+type CreatorFn func(network *net.IPNet) *Subnet
 
 func NoopCreator() CreatorFn {
-	return func(network *net.IPNet) *subnet {
-		return &subnet{
+	return func(network *net.IPNet) *Subnet {
+		return &Subnet{
 			network: network,
 		}
 	}
 }
 
 func DefaultCreator(vpc cfn.Referencer, cluster cfn.Namer, dist Distributor) CreatorFn {
-	return func(network *net.IPNet) *subnet {
+	return func(network *net.IPNet) *Subnet {
 		subnetType, az, number := dist.Next()
 
-		return &subnet{
+		return &Subnet{
 			cluster: cluster,
 			name:    fmt.Sprintf("%sSubnet%02d", strings.Title(subnetType), number),
 			number:  number,
@@ -205,23 +205,53 @@ func DefaultCreator(vpc cfn.Referencer, cluster cfn.Namer, dist Distributor) Cre
 	}
 }
 
-// NewSubnets creates n new subnets from the provided cidr block with the given
-// network prefix size and distributes them evenly across the subnet types and
+type Subnets struct {
+	Public   []*Subnet
+	Private  []*Subnet
+	Database []*Subnet
+}
+
+// NewDefault creates a default Subnet distribution for the given network and region
+func NewDefault(network *net.IPNet, region string, vpc cfn.Referencer, cluster cfn.Namer) (*Subnets, error) {
+	azs, err := AvailabilityZonesForRegion(region)
+	if err != nil {
+		return nil, err
+	}
+
+	dist, err := NewDistributor(Types(), azs)
+	if err != nil {
+		return nil, err
+	}
+
+	return New(DefaultSubnets, DefaultPrefixLen, network, DefaultCreator(vpc, cluster, dist))
+}
+
+// New creates n new subnets from the provided cidr block with the given
+// network prefix size and distributes them evenly across the Subnet types and
 // availability zones as given by the Distributor.
-func NewSubnets(n int, prefixLen int, block *net.IPNet, createFn CreatorFn) (map[string][]cfn.ResourceNameReferencer, error) {
-	subnets := map[string][]cfn.ResourceNameReferencer{}
+func New(n int, prefixLen int, block *net.IPNet, createFn CreatorFn) (*Subnets, error) {
+	subnets := &Subnets{}
 
 	bits, _ := block.Mask.Size()
 
-	subnet, err := cidrpkg.Subnet(block, prefixLen-bits, 0)
+	subnet, err := cidrPkg.Subnet(block, prefixLen-bits, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	for i := 0; i < n; i++ {
 		s := createFn(subnet)
-		subnets[s.typ] = append(subnets[s.typ], s)
-		subnet, _ = cidrpkg.NextSubnet(subnet, prefixLen)
+
+		switch s.typ {
+		case TypePublic:
+			subnets.Public = append(subnets.Public, s)
+		case TypePrivate:
+			subnets.Private = append(subnets.Private, s)
+		case TypeDatabase:
+			subnets.Database = append(subnets.Database, s)
+		}
+
+		subnet, _ = cidrPkg.NextSubnet(subnet, prefixLen)
 	}
 
 	return subnets, nil

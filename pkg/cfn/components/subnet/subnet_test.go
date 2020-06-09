@@ -4,7 +4,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/cfn/subnet"
+	"github.com/oslokommune/okctl/pkg/cfn/components/subnet"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -45,7 +45,7 @@ func TestSubnets(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := subnet.NewSubnets(tc.num, tc.prefix, tc.cidr, tc.creator)
+			got, err := subnet.New(tc.num, tc.prefix, tc.cidr, tc.creator)
 			if tc.expectErr {
 				assert.Nil(t, got)
 				assert.Error(t, err)

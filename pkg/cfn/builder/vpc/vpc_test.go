@@ -1,4 +1,4 @@
-package defaults
+package vpc
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 )
 
 func TestVPC(t *testing.T) {
-	b, err := VPC("test", "test", "192.168.0.0/20", "eu-west-1")
+	got, err := New("test", "test", "192.168.0.0/20", "eu-west-1").Build()
+	assert.NotNil(t, got)
 	assert.NoError(t, err)
-	assert.NotNil(t, b)
 }

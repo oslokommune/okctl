@@ -1,4 +1,4 @@
-package stager
+package stage
 
 import (
 	"io"
@@ -71,8 +71,8 @@ func New(dest io.Writer, s Storage, f Fetcher, v Verifier, d Decompressor) Stage
 	}
 }
 
-func FromConfig(binaries []config.Binary, host config.Host, s storage.Storer) ([]Stager, error) {
-	var stagers []Stager
+func FromConfig(binaries []config.Binary, host config.Host, s storage.Storer) (map[string]Stager, error) {
+	stagers := map[string]Stager{}
 
 	for _, binary := range binaries {
 		binaryBaseDir := path.Join("binaries", binary.Name, binary.Version, host.Os, host.Arch)
@@ -119,13 +119,13 @@ func FromConfig(binaries []config.Binary, host config.Host, s storage.Storer) ([
 				d = NewNoopDecompressor()
 			}
 
-			stagers = append(stagers, New(
+			stagers[binary.Name] = New(
 				binaryWriter,
 				NewEphemeralStorage(),
 				NewHTTPFetcher(replaceVars(binary.URLPattern, replacements)),
 				NewVerifier(checksums),
 				d,
-			))
+			)
 		}
 	}
 

@@ -137,11 +137,21 @@ func NewDefaultAppCfgFn() AppCfgFn {
 	return NewDefaultAppCfg
 }
 
+type AppCfgNotFoundErr struct {
+	err error
+}
+
+func (e *AppCfgNotFoundErr) Error() string {
+	return e.err.Error()
+}
+
 type AppNotFoundFn func(baseDir, appDir, config string) error
 
 func NewDefaultNotFoundFn() AppNotFoundFn {
 	return func(baseDir, appDir, config string) error {
-		return fmt.Errorf("failed to load your configuration: %s, run: 'configure' command first", path.Join(baseDir, appDir, config))
+		return &AppCfgNotFoundErr{
+			err: fmt.Errorf("failed to load configuration file: %s", path.Join(baseDir, appDir, config)),
+		}
 	}
 }
 

@@ -43,14 +43,14 @@ type login struct {
 	mfaToken   string
 }
 
-func (l *login) Login() error {
+func (l *login) Login() (*sts.Credentials, error) {
 	samlAssertion, err := scrape.New().Scrape(l.username, l.password, l.mfaToken)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if len(samlAssertion) == 0 {
-		return fmt.Errorf("got invalid SAML assertion")
+		return nil, fmt.Errorf("got invalid SAML assertion")
 	}
 
 	region := DefaultRegion
@@ -59,7 +59,7 @@ func (l *login) Login() error {
 		Region: &region,
 	})
 	if err != nil {
-		return errors.Wrap(err, "failed to create session")
+		return nil, errors.Wrap(err, "failed to create session")
 	}
 
 	svc := sts.New(sess)
@@ -72,7 +72,7 @@ func (l *login) Login() error {
 
 	resp, err := svc.AssumeRoleWithSAML(params)
 	if err != nil {
-		return errors.Wrap(err, "error retrieving STS credentials using SAML")
+		return nil, errors.Wrap(err, "error retrieving STS credentials using SAML")
 	}
 
 	c := &AWSCredentials{
@@ -87,11 +87,11 @@ func (l *login) Login() error {
 
 	log.Println(spew.Sdump(c))
 
-	return nil
+	return resp.Credentials, nil
 }
 
 type Loginer interface {
-	Login() error
+	Login() (*sts.Credentials, error)
 }
 
 func New(account, username string) Loginer {

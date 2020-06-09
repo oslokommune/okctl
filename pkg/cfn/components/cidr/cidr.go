@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	cidrpkg "github.com/apparentlymart/go-cidr/cidr"
+	"github.com/oslokommune/okctl/pkg/cfn/components/subnet"
 )
 
 // RequiredHosts calculates the required number of hosts
@@ -29,6 +30,11 @@ func PrivateCidrRanges() []string {
 
 type Cidr struct {
 	Block *net.IPNet
+}
+
+// NewDefault parses the provided Cidr given the default restrictions
+func NewDefault(block string) (*Cidr, error) {
+	return New(block, RequiredHosts(subnet.DefaultSubnets, subnet.DefaultPrefixLen), PrivateCidrRanges())
 }
 
 // New parses a provided cidr and ensures that it

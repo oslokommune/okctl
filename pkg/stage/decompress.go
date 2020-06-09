@@ -1,4 +1,4 @@
-package stager
+package stage
 
 import (
 	"archive/tar"

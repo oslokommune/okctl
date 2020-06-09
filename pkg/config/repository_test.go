@@ -44,7 +44,6 @@ func TestLoadRepository(t *testing.T) {
 						Name: "dev",
 						AWS: config.AWS{
 							Account: 3456789,
-							Profile: "abc",
 						},
 					},
 				},
@@ -56,7 +55,6 @@ clusters:
   - name: dev
     aws:
       account: 3456789
-      profile: abc
 `,
 		},
 		{

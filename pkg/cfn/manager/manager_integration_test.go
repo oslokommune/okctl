@@ -1,6 +1,6 @@
 // +build integration
 
-package defaults
+package manager
 
 import (
 	"log"
@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/oslokommune/okctl/pkg/cfn/builder/vpc"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,10 +32,10 @@ func NewCloudformationSession(t *testing.T) *cloudformation.CloudFormation {
 }
 
 func NewVPC(t *testing.T) string {
-	b, err := VPC("test", "dev", "172.16.10.0/20", "eu-west-1")
+	builder, err := vpc.New("test", "dev", "172.16.10.0/20", "eu-west-1").Build()
 	assert.NoError(t, err)
 
-	return string(b)
+	return builder
 }
 
 func TestValidate(t *testing.T) {
@@ -54,23 +55,10 @@ func TestApply(t *testing.T) {
 	cf := NewCloudformationSession(t)
 
 	result, err := cf.CreateStack(&cloudformation.CreateStackInput{
-		Capabilities:                nil,
-		ClientRequestToken:          nil,
-		DisableRollback:             nil,
-		EnableTerminationProtection: nil,
-		NotificationARNs:            nil,
-		OnFailure:                   aws.String("DO_NOTHING"),
-		Parameters:                  nil,
-		ResourceTypes:               nil,
-		RoleARN:                     nil,
-		RollbackConfiguration:       nil,
-		StackName:                   aws.String("test-eks-vpc"),
-		StackPolicyBody:             nil,
-		StackPolicyURL:              nil,
-		Tags:                        nil,
-		TemplateBody:                &body,
-		TemplateURL:                 nil,
-		TimeoutInMinutes:            aws.Int64(5),
+		OnFailure:        aws.String("DO_NOTHING"),
+		StackName:        aws.String("test-eks-vpc"),
+		TemplateBody:     &body,
+		TimeoutInMinutes: aws.Int64(5),
 	})
 
 	assert.NoError(t, err)

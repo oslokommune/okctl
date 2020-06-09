@@ -1,33 +1,22 @@
-package login
+package main
 
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/stage"
 	"github.com/spf13/cobra"
 
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/login"
-	"github.com/oslokommune/okctl/pkg/stager"
 	"github.com/oslokommune/okctl/pkg/storage"
 )
 
-func BuildLoginCommand() *cobra.Command {
+func buildLoginCommand(appCfg *config.AppConfig, repoCfg *config.RepoConfig) *cobra.Command {
 	var selectedCluster string
-
-	repoCfg := &config.RepoConfig{}
-
-	appCfg := &config.AppConfig{}
 
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Login to AWS (deprecated)",
-		PreRunE: func(_ *cobra.Command, _ []string) error {
-			var err error
-
-			appCfg, repoCfg, err = config.Load()
-
-			return err
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return Login(appCfg, repoCfg, selectedCluster)
 		},
@@ -41,7 +30,7 @@ func BuildLoginCommand() *cobra.Command {
 func Login(appCfg *config.AppConfig, repoCfg *config.RepoConfig, clusterName string) error {
 	store := storage.NewFileSystemStorage(appCfg.BaseDir)
 
-	stagers, err := stager.FromConfig(appCfg.Binaries, appCfg.Host, store)
+	stagers, err := stage.FromConfig(appCfg.Binaries, appCfg.Host, store)
 	if err != nil {
 		return err
 	}
@@ -66,7 +55,7 @@ func Login(appCfg *config.AppConfig, repoCfg *config.RepoConfig, clusterName str
 		return fmt.Errorf("failed to get configuration for cluster: %s", clusterName)
 	}
 
-	err = login.New(cluster.Name, appCfg.User.Username).Login()
+	_, err = login.New(cluster.Name, appCfg.User.Username).Login()
 	if err != nil {
 		return err
 	}

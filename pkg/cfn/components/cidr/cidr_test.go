@@ -4,7 +4,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/cfn/cidr"
+	"github.com/oslokommune/okctl/pkg/cfn/components/cidr"
 	"github.com/stretchr/testify/assert"
 )
 

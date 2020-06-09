@@ -24,7 +24,6 @@ type Cluster struct {
 
 type AWS struct {
 	Account int
-	Profile string
 }
 
 // LoadRepo reads in the configuration of a repository

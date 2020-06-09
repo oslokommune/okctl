@@ -40,10 +40,10 @@ func (v *VPC) Ref() string {
 	return cloudformation.Ref(v.Name())
 }
 
-func NewVPC(cluster cfn.Namer, cidr *net.IPNet) (*VPC, error) {
+func New(cluster cfn.Namer, cidr *net.IPNet) *VPC {
 	return &VPC{
 		name:    "VPC",
 		cluster: cluster,
 		block:   cidr,
-	}, nil
+	}
 }

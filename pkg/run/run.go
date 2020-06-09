@@ -1,29 +1,30 @@
-package execute
+package run
 
 import (
 	"bytes"
 	"io"
-	"os"
 	"os/exec"
 )
 
-type Executor interface {
-	Execute(progress io.Writer, command string) (interface{}, error)
+type Runner interface {
+	Run(progress io.Writer, args string) ([]byte, error)
 }
 
-type executor struct {
+type Run struct {
+	WorkingDirectory string
+	BinaryPath       string
+	Env              []string
 }
 
-func (e *executor) Execute(progress io.Writer, command string) (interface{}, error) {
+func (e *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 	var errOut, errErr error
 
-	wd, err := os.Getwd()
-	if err != nil {
-		return nil, err
+	cmd := &exec.Cmd{
+		Path: e.BinaryPath,
+		Args: args,
+		Env:  e.Env,
+		Dir:  e.WorkingDirectory,
 	}
-
-	cmd := exec.Command("bash", "-c", command)
-	cmd.Dir = wd
 
 	stdoutIn, err := cmd.StdoutPipe()
 	if err != nil {
@@ -54,16 +55,19 @@ func (e *executor) Execute(progress io.Writer, command string) (interface{}, err
 
 	err = cmd.Wait()
 	if err != nil {
-		return nil, err
+		return errBuff.Bytes(), err
 	}
 
 	if errOut != nil || errErr != nil {
-		return nil, err
+		return errBuff.Bytes(), err
 	}
 
 	return outBuff.Bytes(), nil
 }
 
-func New() Executor {
-	return &executor{}
+func New(workingDirectory, binaryPath string) *Run {
+	return &Run{
+		WorkingDirectory: workingDirectory,
+		BinaryPath:       binaryPath,
+	}
 }

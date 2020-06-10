@@ -1,164 +1,123 @@
 package config
 
 import (
-	"bytes"
-	"fmt"
 	"os"
-	"path"
-	"runtime"
-	"strings"
+	"path/filepath"
 
-	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/go-yaml/yaml"
-	"github.com/google/uuid"
+	"github.com/go-git/go-git/v5"
 	"github.com/mitchellh/go-homedir"
-	"github.com/spf13/viper"
+	"github.com/oslokommune/okctl/pkg/config/application"
+	"github.com/oslokommune/okctl/pkg/config/repository"
+	"github.com/oslokommune/okctl/pkg/context"
+	"github.com/pkg/errors"
 )
 
 const (
-	DefaultAppDir        = ".okctl"
-	DefaultAppConfig     = "conf.yml"
-	DefaultAppConfigName = "conf"
-	DefaultAppConfigType = "yml"
-	DefaultAppEnvPrefix  = "OKCTL"
-	DefaultAppEnvHome    = "OKCTL_HOME"
+	DefaultDir        = ".okctl"
+	DefaultConfig     = "conf.yml"
+	DefaultConfigName = "conf"
+	DefaultConfigType = "yml"
+
+	DefaultRepositoryConfig     = ".okctl.yml"
+	DefaultRepositoryConfigName = ".okctl"
+	DefaultRepositoryConfigType = "yml"
+
+	EnvPrefix = "OKCTL"
+	EnvHome   = "OKCTL_HOME"
 )
 
-type AppConfig struct {
-	BaseDir  string
-	User     User
-	Host     Host
-	Binaries []Binary
+type DataLoaderFn func(*Config) error
+
+func NoopDataLoader(_ *Config) error {
+	return nil
 }
 
-type User struct {
-	ID       string
-	Username string
+type Config struct {
+	*context.Context
+
+	AppDataLoader DataLoaderFn
+	AppData       *application.Data
+
+	RepoDataLoader DataLoaderFn
+	RepoData       *repository.Data
+
+	homeDir string
+	repoDir string
 }
 
-type Host struct {
-	Os   string
-	Arch string
-}
-
-const (
-	OsDarwin = "darwin"
-	OsLinux  = "linux"
-
-	ArchAmd64 = "amd64"
-)
-
-// host ensures that the operating system and architecture of the host machine
-// are supported.
-func (h Host) Valid() error {
-	return validation.ValidateStruct(&h,
-		validation.Field(&h.Arch,
-			validation.Required,
-			validation.In(
-				ArchAmd64,
-			),
-		),
-		validation.Field(&h.Os,
-			validation.Required,
-			validation.In(
-				OsDarwin,
-				OsLinux,
-			),
-		),
-	)
-}
-
-type Binary struct {
-	Name       string
-	Version    string
-	BufferSize string
-	URLPattern string
-	Archive    Archive
-	Checksums  []Checksum
-}
-
-type Archive struct {
-	Type   string
-	Target string
-}
-
-type Checksum struct {
-	Os     string
-	Arch   string
-	Type   string
-	Digest string
-}
-
-type AppCfgFn func() *AppConfig
-
-// NewDefaultAppCfg is the default configuration
-// of the okctl CLI.
-func NewDefaultAppCfg() *AppConfig {
-	return &AppConfig{
-		User: User{
-			ID: uuid.New().String(),
-		},
-		Host: Host{
-			Os:   runtime.GOOS,
-			Arch: runtime.GOARCH,
-		},
-		Binaries: []Binary{
-			{
-				Name:       "eksctl",
-				Version:    "0.18.0",
-				BufferSize: "100mb",
-				URLPattern: "https://github.com/weaveworks/eksctl/releases/download/#{ver}/eksctl_#{os}_#{arch}.tar.gz",
-				Archive: Archive{
-					Type:   ".tar.gz",
-					Target: "eksctl",
-				},
-				Checksums: []Checksum{
-					{
-						Os:     "darwin",
-						Arch:   "amd64",
-						Type:   "sha256",
-						Digest: "fc320f3e52adef9f8d06a98f1996801ee3b59d1d74bac11e24123f593875a344",
-					},
-					{
-						Os:     "linux",
-						Arch:   "amd64",
-						Type:   "sha256",
-						Digest: "a8f83394a12051bd6bf539dca7db2005237d36c6b1a67073bcf2070d034356f0",
-					},
-				},
-			},
-		},
+// New Config initialises a default okctl configuration
+func New() *Config {
+	return &Config{
+		Context:        context.New(),
+		AppDataLoader:  NoopDataLoader,
+		RepoDataLoader: NoopDataLoader,
 	}
 }
 
-// NewDefaultAppCfgFn provides a function that can be
-// invoked to get a default configuration of okctl.
-func NewDefaultAppCfgFn() AppCfgFn {
-	return NewDefaultAppCfg
-}
+func (c *Config) LoadRepoData() error {
+	c.RepoData = nil
 
-type AppCfgNotFoundErr struct {
-	err error
-}
-
-func (e *AppCfgNotFoundErr) Error() string {
-	return e.err.Error()
-}
-
-type AppNotFoundFn func(baseDir, appDir, config string) error
-
-func NewDefaultNotFoundFn() AppNotFoundFn {
-	return func(baseDir, appDir, config string) error {
-		return &AppCfgNotFoundErr{
-			err: fmt.Errorf("failed to load configuration file: %s", path.Join(baseDir, appDir, config)),
-		}
+	if c.RepoDataLoader == nil {
+		c.RepoDataLoader = NoopDataLoader
 	}
+
+	return c.RepoDataLoader(c)
 }
 
-// GetHomeDir will attempt to determine what location
-// we should read the okctl CLI configuration from.
-func GetHomeDir() (string, error) {
-	homeDir := os.Getenv(DefaultAppEnvHome)
+func (c *Config) LoadAppData() error {
+	c.AppData = nil
+
+	if c.AppDataLoader == nil {
+		c.AppDataLoader = NoopDataLoader
+	}
+
+	return c.AppDataLoader(c)
+}
+
+func (c *Config) GetRepoDir() (string, error) {
+	if len(c.repoDir) != 0 {
+		return c.repoDir, nil
+	}
+
+	repoDir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	absoluteRepo, err := filepath.Abs(repoDir)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = git.PlainOpen(absoluteRepo)
+	if err != nil {
+		return "", errors.Wrap(err, "working directory must be a git repository")
+	}
+
+	c.repoDir = absoluteRepo
+
+	return c.repoDir, nil
+}
+
+func (c *Config) GetRepoDataDir() (string, error) {
+	return c.GetRepoDir()
+}
+
+func (c *Config) GetRepoDataPath() (string, error) {
+	base, err := c.GetRepoDataDir()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(base, DefaultRepositoryConfig), nil
+}
+
+func (c *Config) GetHomeDir() (string, error) {
+	if len(c.homeDir) != 0 {
+		return c.homeDir, nil
+	}
+
+	homeDir := os.Getenv(EnvHome)
 
 	if len(homeDir) == 0 {
 		dir, err := homedir.Dir()
@@ -169,53 +128,30 @@ func GetHomeDir() (string, error) {
 		homeDir = dir
 	}
 
-	return homeDir, nil
+	absoluteHome, err := filepath.Abs(homeDir)
+	if err != nil {
+		return "", err
+	}
+
+	c.homeDir = absoluteHome
+
+	return c.homeDir, nil
 }
 
-// LoadApp will load the okctl CLI configuration.
-func LoadApp(baseDir string, defaultAppCfgFn AppCfgFn, notFoundFn AppNotFoundFn) (*AppConfig, error) {
-	v := viper.New()
-
-	b, err := yaml.Marshal(defaultAppCfgFn())
+func (c *Config) GetAppDataDir() (string, error) {
+	home, err := c.GetHomeDir()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	defaultConfig := bytes.NewReader(b)
+	return filepath.Join(home, DefaultDir), nil
+}
 
-	v.SetConfigType(DefaultAppConfigType)
-
-	err = v.MergeConfig(defaultConfig)
+func (c *Config) GetAppDataPath() (string, error) {
+	base, err := c.GetAppDataDir()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	v.AddConfigPath(path.Join(baseDir, DefaultAppDir))
-	v.SetConfigName(DefaultAppConfigName)
-
-	err = v.MergeInConfig()
-	if err != nil {
-		switch err.(type) {
-		case viper.ConfigFileNotFoundError:
-			err := notFoundFn(baseDir, DefaultAppDir, DefaultAppConfig)
-			if err != nil {
-				return nil, err
-			}
-		default:
-			return nil, err
-		}
-	}
-
-	v.AutomaticEnv()
-	v.SetEnvPrefix(DefaultAppEnvPrefix)
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
-	cfg := &AppConfig{}
-
-	err = v.Unmarshal(cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	return cfg, nil
+	return filepath.Join(base, DefaultConfig), nil
 }

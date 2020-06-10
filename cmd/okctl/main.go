@@ -3,7 +3,8 @@ package main
 import (
 	"os"
 
-	"github.com/oslokommune/okctl/pkg/config"
+	"github.com/oslokommune/okctl/pkg/config/load"
+	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
 
@@ -15,9 +16,7 @@ func main() {
 }
 
 func buildRootCommand() *cobra.Command {
-	repoCfg := &config.RepoConfig{}
-
-	appCfg := &config.AppConfig{}
+	o := okctl.New()
 
 	var cmd = &cobra.Command{
 		Use:   "okctl",
@@ -30,37 +29,39 @@ Also comes pre-configured with ArgoCD for managing deployments, etc.
 We also use the prometheus-operator for ensuring metrics and logs are
 being captured. Together with slack and slick.`,
 		SilenceUsage: true,
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
-			appCfg, err = config.LoadAppCfg()
+			repoDataNotFound := load.CreateOnRepoDataNotFound()
+			appDataNotFound := load.CreateOnAppDataNotFound()
+
+			if o.NoInput {
+				repoDataNotFound = load.ErrOnRepoDataNotFound()
+				appDataNotFound = load.ErrOnAppDataNotFound()
+			}
+
+			o.RepoDataLoader = load.RepoDataFromConfigFile(cmd, repoDataNotFound)
+			o.AppDataLoader = load.AppDataFromFlagsThenEnvVarsThenConfigFile(cmd, appDataNotFound)
+
+			err = o.LoadAppData()
 			if err != nil {
 				return err
 			}
 
-			switch err.(type) {
-			case *config.AppCfgNotFoundErr:
-				// Here we need to perform a survey, asking the
-				// user all kinds of questions.
-				appCfg, err = config.NewAppCfg()
-				if err != nil {
-					return err
-				}
-			default:
-				return err
-			}
-
-			repoCfg, err = config.LoadRepoCfg()
+			err = o.LoadRepoData()
 			if err != nil {
 				return err
 			}
 
-			return err
+			o.Out = cmd.OutOrStdout()
+			o.Err = cmd.OutOrStderr()
+
+			return nil
 		},
 	}
 
-	cmd.AddCommand(buildCreateCommand(appCfg, repoCfg))
-	cmd.AddCommand(buildLoginCommand(appCfg, repoCfg))
+	cmd.AddCommand(buildCreateCommand(o))
+	cmd.AddCommand(buildLoginCommand(o))
 
 	return cmd
 }

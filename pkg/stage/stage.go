@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	humanize "github.com/dustin/go-humanize"
-	"github.com/oslokommune/okctl/pkg/config"
+	"github.com/oslokommune/okctl/pkg/config/application"
 	"github.com/oslokommune/okctl/pkg/digest"
 	"github.com/oslokommune/okctl/pkg/storage"
 )
@@ -71,7 +71,7 @@ func New(dest io.Writer, s Storage, f Fetcher, v Verifier, d Decompressor) Stage
 	}
 }
 
-func FromConfig(binaries []config.Binary, host config.Host, s storage.Storer) (map[string]Stager, error) {
+func FromConfig(binaries []application.Binary, host application.Host, s storage.Storer) (map[string]Stager, error) {
 	stagers := map[string]Stager{}
 
 	for _, binary := range binaries {

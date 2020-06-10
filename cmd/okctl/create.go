@@ -7,8 +7,8 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/cfn/builder/vpc"
 	"github.com/oslokommune/okctl/pkg/cfn/manager"
-	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/login"
+	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/stage"
 	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/spf13/cobra"
@@ -16,18 +16,18 @@ import (
 
 const AWSAccountDigits = 12
 
-func buildCreateCommand(appCfg *config.AppConfig, repoCfg *config.RepoConfig) *cobra.Command {
+func buildCreateCommand(o *okctl.Okctl) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create commands",
 	}
 
-	cmd.AddCommand(buildCreateClusterCommand(appCfg, repoCfg))
+	cmd.AddCommand(buildCreateClusterCommand(o))
 
 	return cmd
 }
 
-func buildCreateClusterCommand(appCfg *config.AppConfig, repoCfg *config.RepoConfig) *cobra.Command {
+func buildCreateClusterCommand(o *okctl.Okctl) *cobra.Command {
 	var opts CreateClusterOpts
 
 	cmd := &cobra.Command{
@@ -44,7 +44,7 @@ func buildCreateClusterCommand(appCfg *config.AppConfig, repoCfg *config.RepoCon
 			return opts.Validate()
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return CreateCluster(appCfg, repoCfg, opts)
+			return CreateCluster(o, opts)
 		},
 	}
 
@@ -85,10 +85,15 @@ func (o *CreateClusterOpts) Validate() error {
 	return nil
 }
 
-func CreateCluster(appCfg *config.AppConfig, repoCfg *config.RepoConfig, opts CreateClusterOpts) error {
-	store := storage.NewFileSystemStorage(appCfg.BaseDir)
+func CreateCluster(o *okctl.Okctl, opts CreateClusterOpts) error {
+	baseDir, err := o.GetAppDataDir()
+	if err != nil {
+		return err
+	}
 
-	stagers, err := stage.FromConfig(appCfg.Binaries, appCfg.Host, store)
+	store := storage.NewFileSystemStorage(baseDir)
+
+	stagers, err := stage.FromConfig(o.AppData.Binaries, o.AppData.Host, store)
 	if err != nil {
 		return err
 	}
@@ -100,20 +105,20 @@ func CreateCluster(appCfg *config.AppConfig, repoCfg *config.RepoConfig, opts Cr
 		}
 	}
 
-	for _, c := range repoCfg.Clusters {
+	for _, c := range o.RepoData.Clusters {
 		if c.Name == opts.Env && c.AWS.Account == opts.AWSAccount {
 			return fmt.Errorf("cluster: %s, already exists", opts.Env)
 		}
 	}
 
-	creds, err := login.New(fmt.Sprintf("%d", opts.AWSAccount), appCfg.User.Username).Login()
+	creds, err := login.New(fmt.Sprintf("%d", opts.AWSAccount), o.AppData.User.Username).Login()
 	if err != nil {
 		return err
 	}
 
-	m := manager.New(vpc.New(repoCfg.Name, opts.Env, opts.Cidr, opts.Region), creds)
+	m := manager.New(vpc.New(o.RepoData.Name, opts.Env, opts.Cidr, opts.Region), creds)
 
-	err = m.Create(fmt.Sprintf("%s-%s-cluster-vpc", repoCfg.Name, opts.Env), 5)
+	err = m.Create(fmt.Sprintf("%s-%s-cluster-vpc", o.RepoData.Name, opts.Env), 5)
 	if err != nil {
 		return err
 	}

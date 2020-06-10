@@ -44,8 +44,12 @@ func (m *manager) Create(stackName string, timeout int64) error {
 
 	sess, err := session.NewSession(
 		&aws.Config{
-			Credentials: credentials.NewStaticCredentials(*m.c.AccessKeyId, *m.c.SecretAccessKey, *m.c.SessionToken),
-			Region:      aws.String(endpoints.EuWest1RegionID),
+			Credentials: credentials.NewStaticCredentials(
+				*m.c.AccessKeyId,
+				*m.c.SecretAccessKey,
+				*m.c.SessionToken,
+			),
+			Region: aws.String(endpoints.EuWest1RegionID),
 		},
 	)
 	if err != nil {

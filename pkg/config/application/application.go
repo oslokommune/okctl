@@ -1,11 +1,14 @@
 package application
 
 import (
+	"regexp"
 	"runtime"
 
 	"github.com/AlecAivazis/survey/v2"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/google/uuid"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -24,6 +27,19 @@ type Data struct {
 type User struct {
 	ID       string
 	Username string
+}
+
+func (u User) Valid() error {
+	return validation.ValidateStruct(&u,
+		validation.Field(&u.ID,
+			validation.Required,
+			is.UUIDv4,
+		),
+		validation.Field(&u.Username,
+			validation.Required,
+			validation.Match(regexp.MustCompile("^byr[0-9]{6}$")).Error("username must be in the form: byrXXXXXX"),
+		),
+	)
 }
 
 type Binary struct {
@@ -114,8 +130,8 @@ func (d *Data) Survey() error {
 		{
 			Name: "username",
 			Prompt: &survey.Input{
-				Message: "Your Oslo kommune username:",
-				Help:    "This is your byr user, e.g., byrXXXXXX",
+				Message: "Your username:",
+				Help:    "This is your byr user, e.g., byrXXXXXX. We store it in the application configuration so you don't have to enter it each time.",
 			},
 		},
 	}
@@ -131,5 +147,9 @@ func (d *Data) Survey() error {
 
 	d.User.Username = answers.Username
 
-	return nil
+	return d.User.Valid()
+}
+
+func (d *Data) YAML() ([]byte, error) {
+	return yaml.Marshal(d)
 }

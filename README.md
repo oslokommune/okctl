@@ -32,3 +32,4 @@ We have begged, borrowed and stolen various ideas from the following CLIs:
 
 - https://github.com/deislabs/porter
 - https://github.com/weaveworks/eksctl
+- https://github.com/kubernetes/kops

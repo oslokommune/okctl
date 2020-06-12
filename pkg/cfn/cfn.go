@@ -34,4 +34,5 @@ type Referencer interface {
 
 type Builder interface {
 	Build() ([]ResourceNamer, error)
+	StackName() string
 }

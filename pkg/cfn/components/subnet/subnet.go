@@ -9,6 +9,7 @@ import (
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/ec2"
 	"github.com/awslabs/goformation/v4/cloudformation/tags"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
@@ -30,23 +31,6 @@ const (
 	DefaultSubnets   = 9
 	DefaultPrefixLen = 24
 )
-
-func AvailabilityZonesForRegion(region string) ([]string, error) {
-	var azs []string
-
-	switch region {
-	case "eu-west-1":
-		azs = []string{
-			"eu-west-1a",
-			"eu-west-1b",
-			"eu-west-1c",
-		}
-	default:
-		return nil, fmt.Errorf("no availability zone data available for region: %s", region)
-	}
-
-	return azs, nil
-}
 
 type Subnet struct {
 	name    string
@@ -213,7 +197,7 @@ type Subnets struct {
 
 // NewDefault creates a default Subnet distribution for the given network and region
 func NewDefault(network *net.IPNet, region string, vpc cfn.Referencer, cluster cfn.Namer) (*Subnets, error) {
-	azs, err := AvailabilityZonesForRegion(region)
+	azs, err := v1alpha1.SupportedAvailabilityZones(region)
 	if err != nil {
 		return nil, err
 	}

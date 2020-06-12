@@ -10,6 +10,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/config/application"
 	"github.com/oslokommune/okctl/pkg/storage"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -42,7 +43,7 @@ func CreateOnAppDataNotFound() DataNotFoundFn {
 		{
 			doContinue := false
 			prompt := &survey.Confirm{
-				Message: "Is this the first time you are using okctl? Do you want to start the guided configuration process?",
+				Message: "First time using okctl? Start guided configuration?",
 				Default: true,
 			}
 
@@ -56,14 +57,14 @@ func CreateOnAppDataNotFound() DataNotFoundFn {
 			}
 		}
 
+		appDataPath, err := c.GetAppDataPath()
+		if err != nil {
+			return err
+		}
 		{
-			appDataPath, err := c.GetAppDataPath()
-			if err != nil {
-				return err
-			}
 			doContinue := false
 			prompt := &survey.Confirm{
-				Message: fmt.Sprintf("The okctl configuration file will be written to: %s, continue?", appDataPath),
+				Message: fmt.Sprintf("Configuration will be written to: %s. Continue?", appDataPath),
 				Default: true,
 			}
 
@@ -79,7 +80,7 @@ func CreateOnAppDataNotFound() DataNotFoundFn {
 
 		store := storage.NewFileSystemStorage(home)
 
-		writer, err := store.Create(config.DefaultDir, config.DefaultConfig)
+		writer, err := store.Create(config.DefaultDir, config.DefaultConfig, 0644)
 		if err != nil {
 			return err
 		}
@@ -101,8 +102,17 @@ func CreateOnAppDataNotFound() DataNotFoundFn {
 		}
 
 		_, err = io.Copy(writer, bytes.NewReader(b))
+		if err != nil {
+			return err
+		}
 
-		return err
+		c.Logger.WithFields(logrus.Fields{
+			"configuration_file": appDataPath,
+		}).Info("cli configuration completed")
+
+		c.AppData = data
+
+		return nil
 	}
 }
 

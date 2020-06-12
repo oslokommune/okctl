@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
 
@@ -21,6 +22,8 @@ type Context struct {
 	In  io.Reader
 	Out io.Writer
 	Err io.Writer
+
+	Logger *logrus.Logger
 }
 
 func New() *Context {
@@ -34,5 +37,6 @@ func New() *Context {
 		In:         os.Stdin,
 		Out:        os.Stdout,
 		Err:        os.Stderr,
+		Logger:     logrus.StandardLogger(),
 	}
 }

@@ -8,7 +8,7 @@ import (
 )
 
 type Storer interface {
-	Create(dir, name string) (afero.File, error)
+	Create(dir, name string, perms os.FileMode) (afero.File, error)
 	Exists(name string) (bool, error)
 }
 
@@ -16,13 +16,13 @@ type Storage struct {
 	Fs afero.Fs
 }
 
-func (s *Storage) Create(baseDir, name string) (afero.File, error) {
+func (s *Storage) Create(baseDir, name string, perms os.FileMode) (afero.File, error) {
 	err := s.Fs.MkdirAll(baseDir, 0755)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.Fs.OpenFile(path.Join(baseDir, name), os.O_RDWR|os.O_CREATE, 0755)
+	return s.Fs.OpenFile(path.Join(baseDir, name), os.O_RDWR|os.O_CREATE, perms)
 }
 
 func (s *Storage) Exists(name string) (bool, error) {

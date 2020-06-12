@@ -1,8 +1,4 @@
 name: okctl
 region: eu-west-1
-baseDir: deployment/
-clusters:
-  - name: pro
-    cidr: 192.168.0.0/20
-    aws:
-      account: 790988435217
+outputdir: infrastructure
+clusters: []

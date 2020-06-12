@@ -32,15 +32,18 @@ being captured. Together with slack and slick.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
-			repoDataNotFound := load.CreateOnRepoDataNotFound()
-			appDataNotFound := load.CreateOnAppDataNotFound()
-
-			if o.NoInput {
-				repoDataNotFound = load.ErrOnRepoDataNotFound()
-				appDataNotFound = load.ErrOnAppDataNotFound()
+			{
+				repoDataNotFound := load.CreateOnRepoDataNotFound()
+				if o.NoInput {
+					repoDataNotFound = load.ErrOnRepoDataNotFound()
+				}
+				o.RepoDataLoader = load.RepoDataFromConfigFile(cmd, repoDataNotFound)
 			}
 
-			o.RepoDataLoader = load.RepoDataFromConfigFile(cmd, repoDataNotFound)
+			appDataNotFound := load.CreateOnAppDataNotFound()
+			if o.NoInput {
+				appDataNotFound = load.ErrOnAppDataNotFound()
+			}
 			o.AppDataLoader = load.AppDataFromFlagsThenEnvVarsThenConfigFile(cmd, appDataNotFound)
 
 			err = o.LoadAppData()
@@ -61,7 +64,6 @@ being captured. Together with slack and slick.`,
 	}
 
 	cmd.AddCommand(buildCreateCommand(o))
-	cmd.AddCommand(buildLoginCommand(o))
 
 	return cmd
 }

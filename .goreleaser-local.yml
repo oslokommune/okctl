@@ -4,7 +4,7 @@ before:
 
 builds:
   - id: default
-    main: cmd/okctl/main.go
+    main: ./cmd/okctl
     binary: okctl
     flags:
       - -tags

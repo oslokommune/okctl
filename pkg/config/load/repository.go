@@ -9,6 +9,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/config/repository"
 	"github.com/oslokommune/okctl/pkg/storage"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
@@ -38,7 +39,7 @@ func CreateOnRepoDataNotFound() DataNotFoundFn {
 		{
 			doContinue := false
 			prompt := &survey.Confirm{
-				Message: "Is this the first time you are using okctl with this repository? Do you want to start the guided configuration process?",
+				Message: "First time using okctl with this repository? Start guided configuration?",
 				Default: true,
 			}
 
@@ -52,14 +53,14 @@ func CreateOnRepoDataNotFound() DataNotFoundFn {
 			}
 		}
 
+		repoDataPath, err := c.GetRepoDataPath()
+		if err != nil {
+			return err
+		}
 		{
-			repoDataPath, err := c.GetRepoDataPath()
-			if err != nil {
-				return err
-			}
 			doContinue := false
 			prompt := &survey.Confirm{
-				Message: fmt.Sprintf("The okctl repository configuration file will be written to: %s, continue?", repoDataPath),
+				Message: fmt.Sprintf("Repository configuration will be written to: %s. Continue?", repoDataPath),
 				Default: true,
 			}
 
@@ -75,7 +76,7 @@ func CreateOnRepoDataNotFound() DataNotFoundFn {
 
 		store := storage.NewFileSystemStorage(repo)
 
-		writer, err := store.Create("", config.DefaultRepositoryConfigName)
+		writer, err := store.Create("", config.DefaultRepositoryConfig, 0644)
 		if err != nil {
 			return err
 		}
@@ -97,6 +98,15 @@ func CreateOnRepoDataNotFound() DataNotFoundFn {
 		}
 
 		_, err = io.Copy(writer, bytes.NewReader(b))
+		if err != nil {
+			return err
+		}
+
+		c.Logger.WithFields(logrus.Fields{
+			"configuration_file": repoDataPath,
+		}).Info("repository configuration completed")
+
+		c.RepoData = data
 
 		return nil
 	}
@@ -141,6 +151,8 @@ func buildRepoDataLoader(notFoundFn DataNotFoundFn, viperCfg func(v *viper.Viper
 		if err != nil {
 			return err
 		}
+
+		cfg.RepoData = repoData
 
 		return nil
 	}

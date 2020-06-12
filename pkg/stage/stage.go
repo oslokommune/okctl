@@ -97,7 +97,7 @@ func FromConfig(binaries []application.Binary, host application.Host, s storage.
 				return nil, err
 			}
 
-			binaryWriter, err := s.Create(binaryBaseDir, binary.Name)
+			binaryWriter, err := s.Create(binaryBaseDir, binary.Name, 0755)
 			if err != nil {
 				return nil, err
 			}

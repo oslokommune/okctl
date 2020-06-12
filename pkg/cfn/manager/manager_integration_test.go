@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn/builder/vpc"
 	"github.com/stretchr/testify/assert"
 )
@@ -23,7 +23,7 @@ func NewCloudformationSession(t *testing.T) *cloudformation.CloudFormation {
 
 	sess, err := session.NewSession(
 		&aws.Config{
-			Region: aws.String(endpoints.EuWest1RegionID),
+			Region: aws.String(v1alpha1.RegionEuWest1),
 		},
 	)
 	assert.NoError(t, err)

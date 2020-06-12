@@ -1,6 +1,8 @@
 package vpc
 
 import (
+	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/cfn"
 	cidrPkg "github.com/oslokommune/okctl/pkg/cfn/components/cidr"
 	clusterPkg "github.com/oslokommune/okctl/pkg/cfn/components/cluster"
@@ -31,6 +33,10 @@ func New(name, env, cidrBlock, region string) *Builder {
 		CidrBlock: cidrBlock,
 		Region:    region,
 	}
+}
+
+func (b *Builder) StackName() string {
+	return fmt.Sprintf("%s-%s-okctl-vpc", b.Name, b.Env)
 }
 
 func (b *Builder) Build() ([]cfn.ResourceNamer, error) {

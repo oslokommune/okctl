@@ -7,10 +7,11 @@ import (
 	"net/url"
 
 	"github.com/foolin/pagser"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 )
 
 const (
-	DefaultURL = "https://login.oslo.kommune.no/auth/realms/AD/protocol/saml/clients/amazon-aws"
+	DefaultURL = v1alpha1.OkSamlURL
 )
 
 type FormAction struct {

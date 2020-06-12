@@ -141,6 +141,9 @@ $(TEST_TARGETS): test
 check test tests: fmt lint $(RICHGO)
 	$(GO) test -timeout $(TIMEOUT)s $(ARGS) $(TESTPKGS) | tee >(RICHGO_FORCE_COLOR=1 $(RICHGO) testfilter)
 
+integration:
+	$(GO) test -tags=integration ./...
+
 COVERAGE_MODE    = atomic
 COVERAGE_PROFILE = $(COVERAGE_DIR)/profile.out
 COVERAGE_XML     = $(COVERAGE_DIR)/coverage.xml

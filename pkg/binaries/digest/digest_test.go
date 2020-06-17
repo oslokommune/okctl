@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/digest"
+	"github.com/oslokommune/okctl/pkg/binaries/digest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,12 +25,12 @@ func TestDigests(t *testing.T) {
 		},
 		{
 			name:     "Verify multiple digests",
-			digester: digest.NewDigester(digest.DigestTypeMD5, digest.DigestTypeSHA1, digest.DigestTypeSHA256, digest.DigestTypeSHA512),
+			digester: digest.NewDigester(digest.TypeMD5, digest.TypeSHA1, digest.TypeSHA256, digest.TypeSHA512),
 			expect: map[digest.DigestType]string{
-				digest.DigestTypeMD5:    "736db904ad222bf88ee6b8d103fceb8e",
-				digest.DigestTypeSHA1:   "5ec1a3cb71c75c52cf23934b137985bd2499bd85",
-				digest.DigestTypeSHA256: "373993310775a34f5ad48aae265dac65c7abf420dfbaef62819e2cf5aafc64ca",
-				digest.DigestTypeSHA512: "47bb28d146567b3be18d06d8468aaa8222183fe6b2a942b17b6a48bbc32bda7213f7dc1acf36677f7710cffa7add3f3656597630bf0d591f34145015f59724e1",
+				digest.TypeMD5:    "736db904ad222bf88ee6b8d103fceb8e",
+				digest.TypeSHA1:   "5ec1a3cb71c75c52cf23934b137985bd2499bd85",
+				digest.TypeSHA256: "373993310775a34f5ad48aae265dac65c7abf420dfbaef62819e2cf5aafc64ca",
+				digest.TypeSHA512: "47bb28d146567b3be18d06d8468aaa8222183fe6b2a942b17b6a48bbc32bda7213f7dc1acf36677f7710cffa7add3f3656597630bf0d591f34145015f59724e1",
 			},
 			content: strings.NewReader("this is some content"),
 		},

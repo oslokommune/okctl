@@ -11,6 +11,7 @@ import (
 	"github.com/awslabs/goformation/v4/cloudformation/tags"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn"
+	"github.com/oslokommune/okctl/pkg/cfn/builder/output"
 )
 
 const (
@@ -193,6 +194,23 @@ type Subnets struct {
 	Public   []*Subnet
 	Private  []*Subnet
 	Database []*Subnet
+}
+
+func (s *Subnets) NamedOutputs() map[string]map[string]interface{} {
+	private := output.Joined("PrivateSubnetIds")
+	for _, p := range s.Private {
+		private.Add(p.Ref())
+	}
+
+	public := output.Joined("PublicSubnetIds")
+	for _, p := range s.Public {
+		public.Add(p.Ref())
+	}
+
+	return map[string]map[string]interface{}{
+		private.Name(): private.Outputs(),
+		public.Name():  public.Outputs(),
+	}
 }
 
 // NewDefault creates a default Subnet distribution for the given network and region

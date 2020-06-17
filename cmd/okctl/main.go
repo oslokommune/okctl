@@ -3,8 +3,10 @@ package main
 import (
 	"os"
 
+	"github.com/oslokommune/okctl/pkg/binaries"
 	"github.com/oslokommune/okctl/pkg/config/load"
 	"github.com/oslokommune/okctl/pkg/okctl"
+	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/spf13/cobra"
 )
 
@@ -15,6 +17,7 @@ func main() {
 	}
 }
 
+// nolint
 func buildRootCommand() *cobra.Command {
 	o := okctl.New()
 
@@ -55,6 +58,20 @@ being captured. Together with slack and slick.`,
 			if err != nil {
 				return err
 			}
+
+			appDataDir, err := o.GetAppDataDir()
+			if err != nil {
+				return err
+			}
+
+			store := storage.NewFileSystemStorage(appDataDir)
+
+			stagers, err := binaries.New(o.AppData.Host, store).FromConfig(true, o.AppData.Binaries)
+			if err != nil {
+				return err
+			}
+
+			o.BinariesProvider = stagers
 
 			o.Out = cmd.OutOrStdout()
 			o.Err = cmd.OutOrStderr()

@@ -69,17 +69,27 @@ func (m *Manager) Create(stackName string, timeout int64) error {
 		return fmt.Errorf("stack: %s exists or is in a transitional state", stackName)
 	}
 
-	resources, err := m.Builder.Build()
+	err = m.Builder.Build()
 	if err != nil {
 		return err
 	}
 
-	for _, resource := range resources {
+	for _, resource := range m.Builder.Resources() {
 		if _, hasKey := m.Template.Resources[resource.Name()]; hasKey {
 			return fmt.Errorf("already have resource with name: %s", resource.Name())
 		}
 
 		m.Template.Resources[resource.Name()] = resource.Resource()
+	}
+
+	for _, output := range m.Builder.Outputs() {
+		for key, value := range output.NamedOutputs() {
+			if _, hasKey := m.Template.Outputs[key]; hasKey {
+				return fmt.Errorf("already have output with name: %s", key)
+			}
+
+			m.Template.Outputs[key] = value
+		}
 	}
 
 	body, err := m.Template.YAML()

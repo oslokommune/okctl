@@ -98,7 +98,7 @@ package load_test
 //
 //	for _, tc := range testCases {
 //		tc := tc
-//		t.Run(tc.name, func(t *testing.T) {
+//		t.Fetch(tc.name, func(t *testing.T) {
 //			os.Clearenv()
 //
 //			if tc.preFn != nil {

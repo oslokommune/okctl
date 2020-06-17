@@ -61,6 +61,7 @@ func (c Cluster) Validate() error {
 
 type AWS struct {
 	AccountID string
+	Cidr      string
 }
 
 func (a AWS) Validate() error {

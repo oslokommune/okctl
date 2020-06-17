@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/go-git/go-git/v5"
@@ -154,4 +155,13 @@ func (c *Config) GetAppDataPath() (string, error) {
 	}
 
 	return filepath.Join(base, DefaultConfig), nil
+}
+
+func (c *Config) GetRepoOutputDir(env string) (string, error) {
+	base, err := c.GetRepoDataDir()
+	if err != nil {
+		return "", err
+	}
+
+	return path.Join(base, env), nil
 }

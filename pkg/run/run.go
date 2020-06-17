@@ -7,7 +7,7 @@ import (
 )
 
 type Runner interface {
-	Run(progress io.Writer, args string) ([]byte, error)
+	Run(progress io.Writer, args []string) ([]byte, error)
 }
 
 type Run struct {
@@ -16,14 +16,14 @@ type Run struct {
 	Env              []string
 }
 
-func (e *Run) Run(progress io.Writer, args []string) ([]byte, error) {
+func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 	var errOut, errErr error
 
 	cmd := &exec.Cmd{
-		Path: e.BinaryPath,
+		Path: r.BinaryPath,
 		Args: args,
-		Env:  e.Env,
-		Dir:  e.WorkingDirectory,
+		Env:  r.Env,
+		Dir:  r.WorkingDirectory,
 	}
 
 	stdoutIn, err := cmd.StdoutPipe()
@@ -65,9 +65,10 @@ func (e *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 	return outBuff.Bytes(), nil
 }
 
-func New(workingDirectory, binaryPath string) *Run {
+func New(workingDirectory, binaryPath string, env []string) *Run {
 	return &Run{
 		WorkingDirectory: workingDirectory,
 		BinaryPath:       binaryPath,
+		Env:              env,
 	}
 }

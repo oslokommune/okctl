@@ -73,7 +73,7 @@ STATIK         := $(GOBIN)/statik
 GORELEASER     := $(GOBIN)/goreleaser
 
 $(GOLANGCILINT):
-	$(GO) get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.24.0
+	$(GO) get github.com/golangci/golangci-lint/cmd/golangci-lint
 
 $(GOIMPORTS):
 	$(GO) get -u golang.org/x/tools/cmd/goimports

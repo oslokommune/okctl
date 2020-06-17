@@ -59,6 +59,17 @@ func (m *Manager) Exists(stackName string) (bool, error) {
 	return m.StackStatusIsNotDeleted(stack.Stacks[0]), nil
 }
 
+func (m *Manager) Ready(stackName string) (bool, error) {
+	stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
+		StackName: aws.String(stackName),
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return m.StackStatusIsNotTransitional(stack.Stacks[0]), nil
+}
+
 func (m *Manager) Create(stackName string, timeout int64) error {
 	exists, err := m.Exists(stackName)
 	if err != nil {

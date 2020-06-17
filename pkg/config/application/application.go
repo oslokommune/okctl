@@ -99,7 +99,7 @@ func New() *Data {
 		Binaries: []Binary{
 			{
 				Name:       "eksctl",
-				Version:    "0.18.0",
+				Version:    "0.21.0",
 				BufferSize: "100mb",
 				URLPattern: "https://github.com/weaveworks/eksctl/releases/download/#{ver}/eksctl_#{os}_#{arch}.tar.gz",
 				Archive: Archive{
@@ -111,13 +111,13 @@ func New() *Data {
 						Os:     "darwin",
 						Arch:   "amd64",
 						Type:   "sha256",
-						Digest: "fc320f3e52adef9f8d06a98f1996801ee3b59d1d74bac11e24123f593875a344",
+						Digest: "3cdcbb1792bb131cc0ed944cbfc51dd6f1b2261a480436efc6f8124dea7c8c14",
 					},
 					{
 						Os:     "linux",
 						Arch:   "amd64",
 						Type:   "sha256",
-						Digest: "a8f83394a12051bd6bf539dca7db2005237d36c6b1a67073bcf2070d034356f0",
+						Digest: "4573bca35af67fa002fb722b4d41fae2224a27576619ed2f1e269dd7bd15c214",
 					},
 				},
 			},

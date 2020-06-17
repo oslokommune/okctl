@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"io"
 	"os/exec"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Runner interface {
@@ -14,10 +16,21 @@ type Run struct {
 	WorkingDirectory string
 	BinaryPath       string
 	Env              []string
+	Logger           *logrus.Logger
 }
 
 func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 	var errOut, errErr error
+
+	ctxLogger := logrus.WithFields(
+		logrus.Fields{
+			"component": "generic_runner",
+			"path":      r.BinaryPath,
+			"args":      args,
+			"env":       r.Env,
+			"dir":       r.WorkingDirectory,
+		},
+	)
 
 	cmd := &exec.Cmd{
 		Path: r.BinaryPath,
@@ -40,6 +53,7 @@ func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 	stdout := io.MultiWriter(progress, &outBuff)
 	stderr := io.MultiWriter(progress, &errBuff)
 
+	ctxLogger.Info("Starting execution of provided command")
 	err = cmd.Start()
 	if err != nil {
 		return nil, err
@@ -65,10 +79,11 @@ func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 	return outBuff.Bytes(), nil
 }
 
-func New(workingDirectory, binaryPath string, env []string) *Run {
+func New(logger *logrus.Logger, workingDirectory, binaryPath string, env []string) *Run {
 	return &Run{
 		WorkingDirectory: workingDirectory,
 		BinaryPath:       binaryPath,
 		Env:              env,
+		Logger:           logger,
 	}
 }

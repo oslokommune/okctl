@@ -72,9 +72,16 @@ func (o *Okctl) CreateCluster(opts CreateClusterOpts) error {
 
 	ctxLogger.Info("Creating EKS compatible VPC")
 
-	err = m.Create(builder.StackName(), 5)
+	ready, err := m.Ready(builder.StackName())
 	if err != nil {
 		return err
+	}
+
+	if !ready {
+		err = m.Create(builder.StackName(), 5)
+		if err != nil {
+			return err
+		}
 	}
 
 	// TODO: Move this stuff out of here..
@@ -102,7 +109,7 @@ func (o *Okctl) CreateCluster(opts CreateClusterOpts) error {
 
 	ctxLogger.Info("Done creating EKS VPC")
 
-	eksctl, err := eksctlPkg.New(o.CredentialsProvider, o.BinariesProvider)
+	eksctl, err := eksctlPkg.New(o.Logger, o.CredentialsProvider, o.BinariesProvider)
 	if err != nil {
 		return err
 	}

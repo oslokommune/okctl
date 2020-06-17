@@ -10,6 +10,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/binaries/digest"
 	"github.com/oslokommune/okctl/pkg/config/application"
 	"github.com/oslokommune/okctl/pkg/storage"
+	"github.com/pkg/errors"
 )
 
 type Provider interface {
@@ -173,7 +174,7 @@ func (s *DefaultProvider) FromConfig(preload bool, binaries []application.Binary
 		)
 
 		if preload {
-			err = stager.Fetch()
+			err = errors.Wrap(stager.Fetch(), "failed to preload binaries")
 			if err != nil {
 				return nil, err
 			}

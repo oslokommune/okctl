@@ -8,11 +8,12 @@ import (
 	"github.com/oslokommune/okctl/pkg/credentials"
 	"github.com/oslokommune/okctl/pkg/run"
 	"github.com/oslokommune/okctl/pkg/storage"
+	"github.com/sirupsen/logrus"
 )
 
 const (
 	Name    = "eksctl"
-	Version = "0.18.0"
+	Version = "0.21.0"
 )
 
 type Eksctl struct {
@@ -21,9 +22,10 @@ type Eksctl struct {
 	Credentials credentials.Provider
 	Runner      run.Runner
 	Store       storage.StoreCleaner
+	Logger      *logrus.Logger
 }
 
-func New(credentials credentials.Provider, binaries binaries.Provider) (*Eksctl, error) {
+func New(logger *logrus.Logger, credentials credentials.Provider, binaries binaries.Provider) (*Eksctl, error) {
 	binaryPath, err := binaries.Fetch(Name, Version)
 	if err != nil {
 		return nil, err
@@ -42,8 +44,9 @@ func New(credentials credentials.Provider, binaries binaries.Provider) (*Eksctl,
 	return &Eksctl{
 		BinaryPath:  binaryPath,
 		Credentials: credentials,
-		Runner:      run.New(store.Path, binaryPath, envs),
+		Runner:      run.New(logger, store.Path, binaryPath, envs),
 		Store:       store,
+		Logger:      logger,
 	}, nil
 }
 

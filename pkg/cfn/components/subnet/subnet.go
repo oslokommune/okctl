@@ -198,11 +198,13 @@ type Subnets struct {
 
 func (s *Subnets) NamedOutputs() map[string]map[string]interface{} {
 	private := output.Joined("PrivateSubnetIds")
+
 	for _, p := range s.Private {
 		private.Add(p.Ref())
 	}
 
 	public := output.Joined("PublicSubnetIds")
+
 	for _, p := range s.Public {
 		public.Add(p.Ref())
 	}

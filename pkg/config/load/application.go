@@ -131,7 +131,7 @@ func AppDataFromFlagsThenEnvVarsThenConfigFile(cmd *cobra.Command, notFoundFn Da
 func buildAppDataLoader(notFoundFn DataNotFoundFn, viperCfg func(v *viper.Viper)) config.DataLoaderFn {
 	return func(cfg *config.Config) error {
 		v := viper.New()
-		v.SetFs(cfg.FileSystem)
+		v.SetFs(cfg.FileSystem.Fs)
 
 		b, err := yaml.Marshal(application.New())
 		if err != nil {

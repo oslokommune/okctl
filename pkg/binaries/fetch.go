@@ -1,4 +1,4 @@
-package stage
+package binaries
 
 import (
 	"fmt"

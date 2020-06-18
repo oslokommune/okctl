@@ -7,7 +7,6 @@ import (
 )
 
 func TestVPC(t *testing.T) {
-	got, err := New("test", "test", "192.168.0.0/20", "eu-west-1").Build()
-	assert.NotNil(t, got)
+	err := New("test", "test", "192.168.0.0/20", "eu-west-1").Build()
 	assert.NoError(t, err)
 }

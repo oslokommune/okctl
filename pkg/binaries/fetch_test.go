@@ -1,4 +1,4 @@
-package stage_test
+package binaries_test
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/jarcoal/httpmock"
-	"github.com/oslokommune/okctl/pkg/stage"
+	"github.com/oslokommune/okctl/pkg/binaries"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -55,7 +55,7 @@ func TestHttpFetcher_Fetch(t *testing.T) {
 			httpmock.RegisterResponder(http.MethodGet, tc.url, tc.response)
 
 			buf := &bytes.Buffer{}
-			_, err := stage.NewHTTPFetcher(tc.url).Fetch(buf)
+			_, err := binaries.NewHTTPFetcher(tc.url).Fetch(buf)
 
 			if tc.expectErr {
 				assert.Equal(t, tc.expect, err.Error())

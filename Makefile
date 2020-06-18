@@ -73,7 +73,7 @@ STATIK         := $(GOBIN)/statik
 GORELEASER     := $(GOBIN)/goreleaser
 
 $(GOLANGCILINT):
-	$(GO) get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.24.0
+	$(GO) get github.com/golangci/golangci-lint/cmd/golangci-lint
 
 $(GOIMPORTS):
 	$(GO) get -u golang.org/x/tools/cmd/goimports
@@ -140,6 +140,9 @@ test-race:    ARGS=-race
 $(TEST_TARGETS): test
 check test tests: fmt lint $(RICHGO)
 	$(GO) test -timeout $(TIMEOUT)s $(ARGS) $(TESTPKGS) | tee >(RICHGO_FORCE_COLOR=1 $(RICHGO) testfilter)
+
+test-update:
+	$(GO) test ./... -update
 
 integration:
 	$(GO) test -tags=integration ./...

@@ -8,12 +8,17 @@ import (
 	"github.com/awslabs/goformation/v4/cloudformation/ec2"
 	"github.com/awslabs/goformation/v4/cloudformation/tags"
 	"github.com/oslokommune/okctl/pkg/cfn"
+	"github.com/oslokommune/okctl/pkg/cfn/builder/output"
 )
 
 type VPC struct {
 	name    string
 	cluster cfn.Namer
 	block   *net.IPNet
+}
+
+func (v *VPC) NamedOutputs() map[string]map[string]interface{} {
+	return output.Value(v.Name(), v.Ref()).NamedOutputs()
 }
 
 func (v *VPC) Resource() cloudformation.Resource {
@@ -42,7 +47,7 @@ func (v *VPC) Ref() string {
 
 func New(cluster cfn.Namer, cidr *net.IPNet) *VPC {
 	return &VPC{
-		name:    "VPC",
+		name:    "Vpc",
 		cluster: cluster,
 		block:   cidr,
 	}

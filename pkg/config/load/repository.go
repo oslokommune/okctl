@@ -12,7 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 )
 
 func ErrOnRepoDataNotFound() DataNotFoundFn {
@@ -124,6 +124,7 @@ func buildRepoDataLoader(notFoundFn DataNotFoundFn, viperCfg func(v *viper.Viper
 		}
 
 		v := viper.New()
+		v.SetFs(cfg.FileSystem.Fs)
 		v.SetConfigName(config.DefaultRepositoryConfigName)
 		v.SetConfigType(config.DefaultRepositoryConfigType)
 		v.AddConfigPath(baseDir)

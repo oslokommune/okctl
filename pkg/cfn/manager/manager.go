@@ -40,14 +40,14 @@ func New(logger *logrus.Logger, builder cfn.Builder, provider v1alpha1.CloudProv
 	}
 }
 
-func (m *Manager) Exists(stackName string) (bool, error) {
+func (m *Manager) Exists() (bool, error) {
 	stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
-		StackName: aws.String(stackName),
+		StackName: aws.String(m.Builder.StackName()),
 	})
 	if err != nil {
 		switch e := err.(type) {
 		case awserr.Error:
-			if e.Code() == awsErrValidationError && fmt.Sprintf(stackDoesNotExistPattern, stackName) == e.Message() {
+			if e.Code() == awsErrValidationError && fmt.Sprintf(stackDoesNotExistPattern, m.Builder.StackName()) == e.Message() {
 				return false, nil
 			}
 		default:
@@ -59,27 +59,72 @@ func (m *Manager) Exists(stackName string) (bool, error) {
 	return m.StackStatusIsNotDeleted(stack.Stacks[0]), nil
 }
 
-func (m *Manager) Create(stackName string, timeout int64) error {
-	exists, err := m.Exists(stackName)
+type ProcessOutputFn func(string) error
+
+func (m *Manager) Outputs(processors map[string]ProcessOutputFn) error {
+	stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
+		StackName: aws.String(m.Builder.StackName()),
+	})
+	if err != nil {
+		return err
+	}
+
+	for key, fn := range processors {
+		for _, o := range stack.Stacks[0].Outputs {
+			if *o.OutputKey == key {
+				err = fn(*o.OutputValue)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (m *Manager) Ready() (bool, error) {
+	stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
+		StackName: aws.String(m.Builder.StackName()),
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return m.StackStatusIsNotTransitional(stack.Stacks[0]), nil
+}
+
+func (m *Manager) Create(timeout int64) error {
+	exists, err := m.Exists()
 	if err != nil {
 		return err
 	}
 
 	if exists {
-		return fmt.Errorf("stack: %s exists or is in a transitional state", stackName)
+		return fmt.Errorf("stack: %s exists or is in a transitional state", m.Builder.StackName())
 	}
 
-	resources, err := m.Builder.Build()
+	err = m.Builder.Build()
 	if err != nil {
 		return err
 	}
 
-	for _, resource := range resources {
+	for _, resource := range m.Builder.Resources() {
 		if _, hasKey := m.Template.Resources[resource.Name()]; hasKey {
 			return fmt.Errorf("already have resource with name: %s", resource.Name())
 		}
 
 		m.Template.Resources[resource.Name()] = resource.Resource()
+	}
+
+	for _, output := range m.Builder.Outputs() {
+		for key, value := range output.NamedOutputs() {
+			if _, hasKey := m.Template.Outputs[key]; hasKey {
+				return fmt.Errorf("already have output with name: %s", key)
+			}
+
+			m.Template.Outputs[key] = value
+		}
 	}
 
 	body, err := m.Template.YAML()
@@ -89,7 +134,7 @@ func (m *Manager) Create(stackName string, timeout int64) error {
 
 	r, err := m.Provider.CloudFormation().CreateStack(&cfPkg.CreateStackInput{
 		OnFailure:        aws.String(cfPkg.OnFailureDelete),
-		StackName:        aws.String(stackName),
+		StackName:        aws.String(m.Builder.StackName()),
 		TemplateBody:     aws.String(string(body)),
 		TimeoutInMinutes: aws.Int64(timeout),
 	})

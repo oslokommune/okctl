@@ -1,0 +1,19 @@
+apiVersion: eksctl.io/v1alpha5
+iam:
+  fargatePodExecutionRolePermissionsBoundary: ""
+  serviceRolePermissionsBoundary: ""
+  withOIDC: true
+kind: ClusterConfig
+metadata:
+  name: ""
+  region: ""
+nodeGroups: null
+vpc:
+  cidr: ""
+  clusterEndpoints:
+    privateAccess: true
+    publicAccess: true
+  id: ""
+  subnets:
+    private: {}
+    public: {}

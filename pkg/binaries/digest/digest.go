@@ -26,10 +26,10 @@ type DigestType string
 
 // nolint
 const (
-	DigestTypeMD5    DigestType = "md5"
-	DigestTypeSHA1   DigestType = "sha1"
-	DigestTypeSHA256 DigestType = "sha256"
-	DigestTypeSHA512 DigestType = "sha512"
+	TypeMD5    DigestType = "md5"
+	TypeSHA1   DigestType = "sha1"
+	TypeSHA256 DigestType = "sha256"
+	TypeSHA512 DigestType = "sha512"
 )
 
 type digest struct {
@@ -77,15 +77,15 @@ func (d *digest) Digest(reader io.Reader) (map[DigestType]string, error) {
 		var h hash.Hash
 
 		switch d {
-		case DigestTypeMD5:
+		case TypeMD5:
 			// nolint
 			h = md5.New()
-		case DigestTypeSHA1:
+		case TypeSHA1:
 			// nolint
 			h = sha1.New()
-		case DigestTypeSHA256:
+		case TypeSHA256:
 			h = sha256.New()
-		case DigestTypeSHA512:
+		case TypeSHA512:
 			h = sha512.New()
 		default:
 			return nil, fmt.Errorf("unsupported digester: %s", d)

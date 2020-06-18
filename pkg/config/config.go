@@ -164,7 +164,7 @@ func (c *Config) GetRepoOutputDir(env string) (string, error) {
 		return "", err
 	}
 
-	return path.Join(base, env), nil
+	return path.Join(base, c.RepoData.OutputDir, env), nil
 }
 
 func (c *Config) ClusterName(env string) string {

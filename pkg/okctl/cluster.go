@@ -137,7 +137,7 @@ func (o *Okctl) CreateCluster(opts CreateClusterOpts) error {
 		return err
 	}
 
-	ctxLogger.Info(string(yaml))
+	ctxLogger.Debug(string(yaml))
 
 	err = eksctl.CreateCluster(o.Err, clusterConfig)
 	if err != nil {
@@ -145,6 +145,11 @@ func (o *Okctl) CreateCluster(opts CreateClusterOpts) error {
 	}
 
 	outDir, err := o.GetRepoOutputDir(opts.Environment)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(outDir, 0744)
 	if err != nil {
 		return err
 	}

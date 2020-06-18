@@ -80,6 +80,7 @@ func (e *Eksctl) CreateCluster(progress io.Writer, cfg *v1alpha1.ClusterConfig) 
 	args := []string{
 		"create",
 		"cluster",
+		"--write-kubeconfig=false",
 		"--config-file",
 		e.Store.Abs("cluster-config.yml"),
 	}

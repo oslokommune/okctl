@@ -2,8 +2,10 @@ package run
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os/exec"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -19,6 +21,28 @@ type Run struct {
 	Logger           *logrus.Logger
 }
 
+func AnonymizeEnv(entries []string) []string {
+	out := make([]string, len(entries))
+
+	hide := []string{
+		"AWS_SECRET_ACCESS_KEY",
+		"AWS_SESSION_TOKEN",
+	}
+
+	for _, e := range entries {
+		for _, h := range hide {
+			if strings.Contains(e, h) {
+				e = fmt.Sprintf("%s=XXXXXXX", h)
+				break
+			}
+		}
+
+		out = append(out, e)
+	}
+
+	return out
+}
+
 func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 	var errOut, errErr error
 
@@ -27,7 +51,7 @@ func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 			"component": "generic_runner",
 			"binary":    r.BinaryPath,
 			"args":      args,
-			"env":       r.Env,
+			"env":       AnonymizeEnv(r.Env),
 			"dir":       r.WorkingDirectory,
 		},
 	)

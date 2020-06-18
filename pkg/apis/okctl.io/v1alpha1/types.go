@@ -3,8 +3,8 @@ package v1alpha1
 import (
 	"fmt"
 
-	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/yaml"
 )
 
 const (
@@ -16,7 +16,7 @@ const (
 	OkSamlURL = "https://login.oslo.kommune.no/auth/realms/AD/protocol/saml/clients/amazon-aws"
 
 	ClusterConfigKind       = "ClusterConfig"
-	ClusterConfigAPIVersion = "ekstctl.io/v1alpha5"
+	ClusterConfigAPIVersion = "eksctl.io/v1alpha5"
 )
 
 func SupportedRegions() []string {
@@ -71,7 +71,7 @@ func PermissionsBoundaryARN(awsAccountID string) string {
 // https://github.com/weaveworks/eksctl/blob/master/pkg/apis/eksctl.io/v1alpha5/types.go#L451
 // where we have extract the parts that we are interested in for managing a eksctl cluster
 type ClusterConfig struct {
-	metav1.TypeMeta
+	metav1.TypeMeta `json:",inline"`
 
 	Metadata   ClusterMeta `json:"metadata"`
 	IAM        ClusterIAM  `json:"iam"`
@@ -85,12 +85,14 @@ type ClusterMeta struct {
 }
 
 type ClusterIAM struct {
-	ServiceRolePermissionsBoundary             string `json:"serviceRolePermissionsBoundary,omitempty"`
-	FargatePodExecutionRolePermissionsBoundary string `json:"fargatePodExecutionRolePermissionsBoundary,omitempty"`
+	ServiceRolePermissionsBoundary             string `json:"serviceRolePermissionsBoundary"`
+	FargatePodExecutionRolePermissionsBoundary string `json:"fargatePodExecutionRolePermissionsBoundary"`
 	WithOIDC                                   bool   `json:"withOIDC"`
 }
 
 type ClusterVPC struct {
+	ID               string           `json:"id"`
+	CIDR             string           `json:"cidr"`
 	ClusterEndpoints ClusterEndpoints `json:"clusterEndpoints"`
 	Subnets          ClusterSubnets   `json:"subnets"`
 }
@@ -123,10 +125,17 @@ func ClusterConfigTypeMeta() metav1.TypeMeta {
 func NewClusterConfig() *ClusterConfig {
 	return &ClusterConfig{
 		TypeMeta: ClusterConfigTypeMeta(),
+		IAM: ClusterIAM{
+			WithOIDC: true,
+		},
 		VPC: ClusterVPC{
 			ClusterEndpoints: ClusterEndpoints{
 				PrivateAccess: true,
 				PublicAccess:  true,
+			},
+			Subnets: ClusterSubnets{
+				Private: map[string]ClusterNetwork{},
+				Public:  map[string]ClusterNetwork{},
 			},
 		},
 	}

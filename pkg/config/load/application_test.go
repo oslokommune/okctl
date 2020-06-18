@@ -13,7 +13,7 @@ package load_test
 //	"github.com/oslokommune/okctl/pkg/config/load"
 //	"github.com/spf13/cobra"
 //	"github.com/stretchr/testify/assert"
-//	"gopkg.in/yaml.v2"
+//	"sigs.k8s.io/yaml"
 //)
 //
 //func stableAppCfg(id string) *application.Data {

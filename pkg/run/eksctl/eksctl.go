@@ -81,7 +81,7 @@ func (e *Eksctl) CreateCluster(progress io.Writer, cfg *v1alpha1.ClusterConfig) 
 		"create",
 		"cluster",
 		"--config-file",
-		file.Name(),
+		e.Store.Abs("cluster-config.yml"),
 	}
 
 	_, err = e.Runner.Run(progress, args)

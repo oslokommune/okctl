@@ -6,6 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudformation/cloudformationiface"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/credentials"
 )
@@ -13,12 +15,6 @@ import (
 type Provider struct {
 	Provider    v1alpha1.CloudProvider
 	Credentials credentials.Provider
-}
-
-type Services struct {
-	cfn cloudformationiface.CloudFormationAPI
-
-	region string
 }
 
 func New(region string, c credentials.Provider) (*Provider, error) {
@@ -36,16 +32,9 @@ func New(region string, c credentials.Provider) (*Provider, error) {
 	}
 
 	services.cfn = cloudformation.New(sess)
+	services.ec2 = ec2.New(sess)
 
 	return p, nil
-}
-
-func (p *Services) CloudFormation() cloudformationiface.CloudFormationAPI {
-	return p.cfn
-}
-
-func (p *Services) Region() string {
-	return p.region
 }
 
 func (p *Provider) newSession() (*session.Session, error) {
@@ -70,4 +59,23 @@ func (p *Provider) newSession() (*session.Session, error) {
 	}
 
 	return sess, err
+}
+
+type Services struct {
+	cfn cloudformationiface.CloudFormationAPI
+	ec2 ec2iface.EC2API
+
+	region string
+}
+
+func (s *Services) EC2() ec2iface.EC2API {
+	return s.ec2
+}
+
+func (s *Services) CloudFormation() cloudformationiface.CloudFormationAPI {
+	return s.cfn
+}
+
+func (s *Services) Region() string {
+	return s.region
 }

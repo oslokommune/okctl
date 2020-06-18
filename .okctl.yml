@@ -1,4 +1,4 @@
-name: okctl
-region: eu-west-1
-outputdir: infrastructure
-clusters: []
+Clusters: []
+Name: okctl
+OutputDir: infrastructure
+Region: eu-west-1

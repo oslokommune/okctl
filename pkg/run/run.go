@@ -25,7 +25,7 @@ func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 	ctxLogger := logrus.WithFields(
 		logrus.Fields{
 			"component": "generic_runner",
-			"path":      r.BinaryPath,
+			"binary":    r.BinaryPath,
 			"args":      args,
 			"env":       r.Env,
 			"dir":       r.WorkingDirectory,
@@ -34,7 +34,7 @@ func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 
 	cmd := &exec.Cmd{
 		Path: r.BinaryPath,
-		Args: args,
+		Args: append([]string{r.BinaryPath}, args...),
 		Env:  r.Env,
 		Dir:  r.WorkingDirectory,
 	}
@@ -54,6 +54,7 @@ func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 	stderr := io.MultiWriter(progress, &errBuff)
 
 	ctxLogger.Info("Starting execution of provided command")
+
 	err = cmd.Start()
 	if err != nil {
 		return nil, err

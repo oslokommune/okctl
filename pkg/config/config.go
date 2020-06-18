@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -164,4 +165,8 @@ func (c *Config) GetRepoOutputDir(env string) (string, error) {
 	}
 
 	return path.Join(base, env), nil
+}
+
+func (c *Config) ClusterName(env string) string {
+	return fmt.Sprintf("%s-%s", c.RepoData.Name, env)
 }

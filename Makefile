@@ -141,6 +141,9 @@ $(TEST_TARGETS): test
 check test tests: fmt lint $(RICHGO)
 	$(GO) test -timeout $(TIMEOUT)s $(ARGS) $(TESTPKGS) | tee >(RICHGO_FORCE_COLOR=1 $(RICHGO) testfilter)
 
+test-update:
+	$(GO) test ./... -update
+
 integration:
 	$(GO) test -tags=integration ./...
 

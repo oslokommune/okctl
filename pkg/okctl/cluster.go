@@ -10,6 +10,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn/builder/vpc"
 	"github.com/oslokommune/okctl/pkg/cfn/manager"
+	"github.com/oslokommune/okctl/pkg/cfn/process"
 	"github.com/oslokommune/okctl/pkg/cloud"
 	eksctlPkg "github.com/oslokommune/okctl/pkg/run/eksctl"
 	"github.com/sirupsen/logrus"
@@ -72,13 +73,13 @@ func (o *Okctl) CreateCluster(opts CreateClusterOpts) error {
 
 	ctxLogger.Info("Creating EKS compatible VPC")
 
-	ready, err := m.Ready(builder.StackName())
+	ready, err := m.Ready()
 	if err != nil {
 		return err
 	}
 
 	if !ready {
-		err = m.Create(builder.StackName(), 5)
+		err = m.Create(5)
 		if err != nil {
 			return err
 		}
@@ -116,6 +117,28 @@ func (o *Okctl) CreateCluster(opts CreateClusterOpts) error {
 
 	clusterConfig := v1alpha1.NewClusterConfig()
 
+	clusterConfig.Metadata.Name = o.ClusterName(opts.Environment)
+	clusterConfig.Metadata.Region = o.Region()
+	clusterConfig.VPC.CIDR = opts.Cidr
+	clusterConfig.IAM.FargatePodExecutionRolePermissionsBoundary = v1alpha1.PermissionsBoundaryARN(opts.AWSAccountID)
+	clusterConfig.IAM.ServiceRolePermissionsBoundary = v1alpha1.PermissionsBoundaryARN(opts.AWSAccountID)
+
+	err = m.Outputs(map[string]manager.ProcessOutputFn{
+		"PrivateSubnetIds": process.Subnets(provider.Provider, clusterConfig.VPC.Subnets.Private),
+		"PublicSubnetIds":  process.Subnets(provider.Provider, clusterConfig.VPC.Subnets.Public),
+		"Vpc":              process.String(&clusterConfig.VPC.ID),
+	})
+	if err != nil {
+		return err
+	}
+
+	yaml, err := clusterConfig.YAML()
+	if err != nil {
+		return err
+	}
+
+	ctxLogger.Info(string(yaml))
+
 	err = eksctl.CreateCluster(o.Err, clusterConfig)
 	if err != nil {
 		return err
@@ -131,6 +154,15 @@ func (o *Okctl) CreateCluster(opts CreateClusterOpts) error {
 		return err
 	}
 	err = file.Close()
+
+	defer func() {
+		err = file.Close()
+	}()
+
+	_, err = file.Write(yaml)
+	if err != nil {
+		return err
+	}
 
 	return err
 }

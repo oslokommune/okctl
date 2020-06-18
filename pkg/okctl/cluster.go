@@ -3,15 +3,16 @@ package okctl
 import (
 	"fmt"
 	"os"
+	"path"
 	"regexp"
 
 	val "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn/builder/vpc"
 	"github.com/oslokommune/okctl/pkg/cfn/manager"
+	"github.com/oslokommune/okctl/pkg/cfn/process"
 	"github.com/oslokommune/okctl/pkg/cloud"
-	"github.com/oslokommune/okctl/pkg/login"
-	"github.com/oslokommune/okctl/pkg/stage"
-	"github.com/oslokommune/okctl/pkg/storage"
+	eksctlPkg "github.com/oslokommune/okctl/pkg/run/eksctl"
 	"github.com/sirupsen/logrus"
 )
 
@@ -55,43 +56,15 @@ func (o *Okctl) CreateCluster(opts CreateClusterOpts) error {
 
 	ctxLogger.Info("Starting EKS cluster creation process")
 
-	appDataDir, err := o.GetAppDataDir()
-	if err != nil {
-		return err
-	}
-
-	store := storage.NewFileSystemStorage(appDataDir)
-
-	stagers, err := stage.FromConfig(o.AppData.Binaries, o.AppData.Host, store)
-	if err != nil {
-		return err
-	}
-
-	for _, s := range stagers {
-		err = s.Run()
-		if err != nil {
-			return err
-		}
-	}
-
 	for _, c := range o.RepoData.Clusters {
 		if c.Environment == opts.Environment && c.AWS.AccountID == opts.AWSAccountID {
 			return fmt.Errorf("cluster: %s, already exists", opts.Environment)
 		}
 	}
 
-	if o.NoInput {
-		return fmt.Errorf("create cluster requires user input for now")
-	}
-
-	interactiveLogin, err := login.Interactive(opts.AWSAccountID, o.Region(), o.Username())
-	if err != nil {
-		return err
-	}
-
 	builder := vpc.New(o.RepoData.Name, opts.Environment, opts.Cidr, o.Region())
 
-	provider, err := cloud.New(o.Region(), interactiveLogin)
+	provider, err := cloud.New(o.Region(), o.CredentialsProvider)
 	if err != nil {
 		return err
 	}
@@ -100,9 +73,16 @@ func (o *Okctl) CreateCluster(opts CreateClusterOpts) error {
 
 	ctxLogger.Info("Creating EKS compatible VPC")
 
-	err = m.Create(builder.StackName(), 5)
+	ready, err := m.Ready()
 	if err != nil {
 		return err
+	}
+
+	if !ready {
+		err = m.Create(5)
+		if err != nil {
+			return err
+		}
 	}
 
 	// TODO: Move this stuff out of here..
@@ -130,7 +110,64 @@ func (o *Okctl) CreateCluster(opts CreateClusterOpts) error {
 
 	ctxLogger.Info("Done creating EKS VPC")
 
-	ctxLogger.Warn("We do not support creating the EKS cluster itself yet, exiting")
+	eksctl, err := eksctlPkg.New(o.Logger, o.CredentialsProvider, o.BinariesProvider)
+	if err != nil {
+		return err
+	}
 
-	return nil
+	clusterConfig := v1alpha1.NewClusterConfig()
+
+	clusterConfig.Metadata.Name = o.ClusterName(opts.Environment)
+	clusterConfig.Metadata.Region = o.Region()
+	clusterConfig.VPC.CIDR = opts.Cidr
+	clusterConfig.IAM.FargatePodExecutionRolePermissionsBoundary = v1alpha1.PermissionsBoundaryARN(opts.AWSAccountID)
+	clusterConfig.IAM.ServiceRolePermissionsBoundary = v1alpha1.PermissionsBoundaryARN(opts.AWSAccountID)
+
+	err = m.Outputs(map[string]manager.ProcessOutputFn{
+		"PrivateSubnetIds": process.Subnets(provider.Provider, clusterConfig.VPC.Subnets.Private),
+		"PublicSubnetIds":  process.Subnets(provider.Provider, clusterConfig.VPC.Subnets.Public),
+		"Vpc":              process.String(&clusterConfig.VPC.ID),
+	})
+	if err != nil {
+		return err
+	}
+
+	yaml, err := clusterConfig.YAML()
+	if err != nil {
+		return err
+	}
+
+	ctxLogger.Debug(string(yaml))
+
+	err = eksctl.CreateCluster(o.Err, clusterConfig)
+	if err != nil {
+		return err
+	}
+
+	outDir, err := o.GetRepoOutputDir(opts.Environment)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(outDir, 0744)
+	if err != nil {
+		return err
+	}
+
+	file, err := o.FileSystem.OpenFile(path.Join(outDir, "cluster.yml"), os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	err = file.Close()
+
+	defer func() {
+		err = file.Close()
+	}()
+
+	_, err = file.Write(yaml)
+	if err != nil {
+		return err
+	}
+
+	return err
 }

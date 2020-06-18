@@ -1,38 +1,29 @@
 package cloud
 
 import (
-	"time"
-
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
+	awsCreds "github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudformation/cloudformationiface"
-	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
-	"github.com/oslokommune/okctl/pkg/login"
+	"github.com/oslokommune/okctl/pkg/credentials"
 )
 
 type Provider struct {
-	Provider v1alpha1.CloudProvider
-
-	login login.Loginer
-	creds *sts.Credentials
+	Provider    v1alpha1.CloudProvider
+	Credentials credentials.Provider
 }
 
-type Services struct {
-	cfn cloudformationiface.CloudFormationAPI
-
-	region string
-}
-
-func New(region string, l login.Loginer) (*Provider, error) {
+func New(region string, c credentials.Provider) (*Provider, error) {
 	services := &Services{
 		region: region,
 	}
 	p := &Provider{
-		Provider: services,
-		login:    l,
+		Provider:    services,
+		Credentials: c,
 	}
 
 	sess, err := p.newSession()
@@ -41,41 +32,24 @@ func New(region string, l login.Loginer) (*Provider, error) {
 	}
 
 	services.cfn = cloudformation.New(sess)
+	services.ec2 = ec2.New(sess)
 
 	return p, nil
 }
 
-func (p *Services) CloudFormation() cloudformationiface.CloudFormationAPI {
-	return p.cfn
-}
-
-func (p *Services) Region() string {
-	return p.region
-}
-
 func (p *Provider) newSession() (*session.Session, error) {
-	// Credentials have expired
-	if p.creds != nil && time.Since(*p.creds.Expiration) < 0 {
-		p.creds = nil
-	}
-
-	// No credentials available
-	if p.creds == nil {
-		creds, err := p.login.Login()
-		if err != nil {
-			return nil, err
-		}
-
-		p.creds = creds
+	creds, err := p.Credentials.Raw()
+	if err != nil {
+		return nil, err
 	}
 
 	config := aws.NewConfig().
 		WithRegion(p.Provider.Region()).
 		WithCredentials(
-			credentials.NewStaticCredentials(
-				*p.creds.AccessKeyId,
-				*p.creds.SecretAccessKey,
-				*p.creds.SessionToken,
+			awsCreds.NewStaticCredentials(
+				*creds.AccessKeyId,
+				*creds.SecretAccessKey,
+				*creds.SessionToken,
 			),
 		)
 
@@ -85,4 +59,23 @@ func (p *Provider) newSession() (*session.Session, error) {
 	}
 
 	return sess, err
+}
+
+type Services struct {
+	cfn cloudformationiface.CloudFormationAPI
+	ec2 ec2iface.EC2API
+
+	region string
+}
+
+func (s *Services) EC2() ec2iface.EC2API {
+	return s.ec2
+}
+
+func (s *Services) CloudFormation() cloudformationiface.CloudFormationAPI {
+	return s.cfn
+}
+
+func (s *Services) Region() string {
+	return s.region
 }

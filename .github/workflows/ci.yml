@@ -16,3 +16,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Run golang checks
         run: make check
+      - name: Check coverage
+        run: make test-coverage
+      - name: Check code coverage
+        uses: codecov/codecov-action@v1

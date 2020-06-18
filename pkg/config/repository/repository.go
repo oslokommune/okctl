@@ -7,7 +7,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 )
 
 type Data struct {
@@ -61,6 +61,7 @@ func (c Cluster) Validate() error {
 
 type AWS struct {
 	AccountID string
+	Cidr      string
 }
 
 func (a AWS) Validate() error {

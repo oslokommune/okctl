@@ -30,6 +30,12 @@ func New() *Context {
 	_, debug := os.LookupEnv(DefaultDebugEnv)
 	_, noInput := os.LookupEnv(DefaultNoInputEnv)
 
+	logger := logrus.StandardLogger()
+
+	if debug {
+		logger.SetLevel(logrus.DebugLevel)
+	}
+
 	return &Context{
 		FileSystem: &afero.Afero{Fs: afero.NewOsFs()},
 		Debug:      debug,
@@ -37,6 +43,6 @@ func New() *Context {
 		In:         os.Stdin,
 		Out:        os.Stdout,
 		Err:        os.Stderr,
-		Logger:     logrus.StandardLogger(),
+		Logger:     logger,
 	}
 }

@@ -1,6 +1,10 @@
 package main
 
 import (
+	"fmt"
+
+	"github.com/oslokommune/okctl/pkg/credentials"
+	"github.com/oslokommune/okctl/pkg/credentials/login"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
@@ -27,14 +31,31 @@ func buildCreateClusterCommand(o *okctl.Okctl) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cluster [env] [AWS account id]",
 		Short: "Create a cluster",
-		Long: `Run all tasks required to get an EKS cluster up and running on AWS.
+		Long: `Fetch all tasks required to get an EKS cluster up and running on AWS.
 This includes creating an EKS compatible VPC with private, public
 and database subnets.`,
 		Args: cobra.ExactArgs(createClusterArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			opts.Environment = args[0]
 			opts.AWSAccountID = args[1]
-			return opts.Valid()
+
+			err := opts.Valid()
+			if err != nil {
+				return err
+			}
+
+			if o.NoInput {
+				return fmt.Errorf("create cluster requires user input for now")
+			}
+
+			l, err := login.Interactive(opts.AWSAccountID, o.Region(), o.Username())
+			if err != nil {
+				return err
+			}
+
+			o.CredentialsProvider = credentials.New(l)
+
+			return nil
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return o.CreateCluster(opts)

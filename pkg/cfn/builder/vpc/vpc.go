@@ -24,6 +24,9 @@ type Builder struct {
 	Env       string
 	CidrBlock string
 	Region    string
+
+	outputs   []cfn.Outputer
+	resources []cfn.ResourceNamer
 }
 
 func New(name, env, cidrBlock, region string) *Builder {
@@ -35,18 +38,24 @@ func New(name, env, cidrBlock, region string) *Builder {
 	}
 }
 
+func (b *Builder) Resources() []cfn.ResourceNamer {
+	return b.resources
+}
+
+func (b *Builder) Outputs() []cfn.Outputer {
+	return b.outputs
+}
+
 func (b *Builder) StackName() string {
 	return fmt.Sprintf("%s-%s-okctl-vpc", b.Name, b.Env)
 }
 
-func (b *Builder) Build() ([]cfn.ResourceNamer, error) {
-	resources := []cfn.ResourceNamer{}
-
+func (b *Builder) Build() error {
 	cluster := clusterPkg.New(b.Name, b.Env)
 
 	cidr, err := cidrPkg.NewDefault(b.CidrBlock)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	vpc := vpcPkg.New(cluster, cidr.Block)
@@ -55,11 +64,12 @@ func (b *Builder) Build() ([]cfn.ResourceNamer, error) {
 	prt := routetable.NewPublic(vpc)
 	pr := route.NewPublic(gwa, prt, igw)
 
-	resources = append(resources, vpc, igw, gwa, prt, pr)
+	b.resources = append(b.resources, vpc, igw, gwa, prt, pr)
+	b.outputs = append(b.outputs, vpc)
 
 	subnets, err := subnet.NewDefault(cidr.Block, b.Region, vpc, cluster)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	for i, sub := range subnets.Private {
@@ -69,27 +79,31 @@ func (b *Builder) Build() ([]cfn.ResourceNamer, error) {
 		r := route.NewPrivate(i, gwa, rt, ngw)
 		assoc := routetableassociation.NewPrivate(i, sub, rt)
 
-		resources = append(resources, sub, rt, e, ngw, r, assoc)
+		b.resources = append(b.resources, sub, rt, e, ngw, r, assoc)
 	}
 
 	for i, sub := range subnets.Public {
 		assoc := routetableassociation.NewPublic(i, sub, prt)
 
-		resources = append(resources, sub, assoc)
+		b.resources = append(b.resources, sub, assoc)
 	}
+
+	b.outputs = append(b.outputs, subnets)
 
 	dbSubnets := make([]cfn.Referencer, len(subnets.Database))
 
 	for i, sub := range subnets.Database {
 		dbSubnets[i] = sub
 
-		resources = append(resources, sub)
+		b.resources = append(b.resources, sub)
 	}
 
 	dsg := dbsubnetgroup.New(dbSubnets)
 	cpsg := securitygroup.ControlPlane(vpc)
 
-	resources = append(resources, dsg, cpsg)
+	b.outputs = append(b.outputs, cpsg)
 
-	return resources, nil
+	b.resources = append(b.resources, dsg, cpsg)
+
+	return nil
 }

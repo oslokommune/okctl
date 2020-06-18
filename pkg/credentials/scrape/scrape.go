@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
+	"net/http/httputil"
 	"net/url"
 
 	"github.com/foolin/pagser"
@@ -20,6 +21,11 @@ type FormAction struct {
 
 type FormSAML struct {
 	Response string `pagser:"input[name='SAMLResponse']->attr(value)"`
+}
+
+func ErrorFromResponse(r *http.Response) error {
+	pretty, _ := httputil.DumpResponse(r, true)
+	return fmt.Errorf("http request failed, because: \n%s", pretty)
 }
 
 func New() *scrape {
@@ -47,7 +53,7 @@ func (s *scrape) doLogin(loginURL, username, password string) (*http.Response, e
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("login failed, got response code: %d", resp.StatusCode)
+		return nil, ErrorFromResponse(resp)
 	}
 
 	err = s.p.ParseReader(&formAction, resp.Body)
@@ -69,7 +75,7 @@ func (s *scrape) doLogin(loginURL, username, password string) (*http.Response, e
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("login failed, got response code: %d", resp.StatusCode)
+		return nil, ErrorFromResponse(resp)
 	}
 
 	return resp, nil
@@ -79,7 +85,7 @@ func (s *scrape) doTotp(resp *http.Response, mfatoken string) (*http.Response, e
 	var formAction FormAction
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("login failed, got response code: %d", resp.StatusCode)
+		return nil, ErrorFromResponse(resp)
 	}
 
 	err := s.p.ParseReader(&formAction, resp.Body)
@@ -100,7 +106,7 @@ func (s *scrape) doTotp(resp *http.Response, mfatoken string) (*http.Response, e
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("login failed, got response code: %d", resp.StatusCode)
+		return nil, ErrorFromResponse(resp)
 	}
 
 	return resp, nil

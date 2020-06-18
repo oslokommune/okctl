@@ -1,10 +1,10 @@
-package stage
+package binaries
 
 import (
 	"fmt"
 	"io"
 
-	"github.com/oslokommune/okctl/pkg/digest"
+	"github.com/oslokommune/okctl/pkg/binaries/digest"
 	"github.com/pkg/errors"
 )
 

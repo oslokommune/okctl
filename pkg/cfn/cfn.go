@@ -32,7 +32,13 @@ type Referencer interface {
 	Ref() string
 }
 
+type Outputer interface {
+	NamedOutputs() map[string]map[string]interface{}
+}
+
 type Builder interface {
-	Build() ([]ResourceNamer, error)
+	Build() error
 	StackName() string
+	Outputs() []Outputer
+	Resources() []ResourceNamer
 }

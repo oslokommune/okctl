@@ -105,7 +105,7 @@ package load_test
 //				tc.preFn()
 //			}
 //
-//			err := load.AppDataFromFlagsThenEnvVarsThenConfigFile(cobra.Command{}, createAppTestConfig(t, tc.content, tc.fileName), tc.appCfgFn, tc.notFoundFn)()
+//			err := load.AppDataFromFlagsEnvConfigDefaults(cobra.Command{}, createAppTestConfig(t, tc.content, tc.fileName), tc.appCfgFn, tc.notFoundFn)()
 //			if tc.expectError {
 //				if tc.expect == nil {
 //					assert.NotNil(t, err)

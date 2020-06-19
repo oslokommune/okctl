@@ -1,7 +1,9 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -11,6 +13,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/config/application"
 	"github.com/oslokommune/okctl/pkg/config/repository"
 	"github.com/oslokommune/okctl/pkg/context"
+	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/pkg/errors"
 )
 
@@ -74,6 +77,31 @@ func (c *Config) LoadAppData() error {
 	}
 
 	return c.AppDataLoader(c)
+}
+
+func (c *Config) WriteAppData(b []byte) error {
+	home, err := c.GetHomeDir()
+	if err != nil {
+		return err
+	}
+
+	store := storage.NewFileSystemStorage(home)
+
+	writer, err := store.Create(DefaultDir, DefaultConfig, 0644)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = writer.Close()
+	}()
+
+	_, err = io.Copy(writer, bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *Config) GetRepoDir() (string, error) {

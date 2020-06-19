@@ -109,7 +109,42 @@ func New(host application.Host, store storage.Storer) *DefaultProvider {
 	}
 }
 
-// nolint
+func (s *DefaultProvider) Stager(baseDir string, bufferSize int64, binary application.Binary) (*Stager, error) {
+	var d Decompressor
+
+	switch binary.Archive.Type {
+	case ".tar.gz":
+		d = NewGzipTarDecompressor(binary.Archive.Target, bufferSize)
+	case ".zip":
+		d = NewZipDecompressor(binary.Archive.Target, bufferSize)
+	default:
+		d = NewNoopDecompressor()
+	}
+
+	binaryWriter, err := s.Store.Create(baseDir, binary.Name, 0755)
+	if err != nil {
+		return nil, err
+	}
+
+	stager := NewStager(
+		binaryWriter,
+		NewEphemeralStorage(),
+		NewHTTPFetcher(
+			replaceVars(binary.URLPattern, map[string]string{
+				"#{os}":   s.Host.Os,
+				"#{arch}": s.Host.Arch,
+				"#{ver}":  binary.Version,
+			}),
+		),
+		NewVerifier(
+			checksumsFor(s.Host, binary.Checksums),
+		),
+		d,
+	)
+
+	return stager, nil
+}
+
 func (s *DefaultProvider) FromConfig(preload bool, binaries []application.Binary) (*DefaultProvider, error) {
 	for _, binary := range binaries {
 		binaryBaseDir := path.Join("binaries", binary.Name, binary.Version, s.Host.Os, s.Host.Arch)
@@ -121,21 +156,11 @@ func (s *DefaultProvider) FromConfig(preload bool, binaries []application.Binary
 		}
 
 		if exists {
-			abs := s.Store.Abs(binaryPath)
 			s.Binaries[binaryIndex(binary.Name, binary.Version)] = &Stager{
-				BinaryPath: abs,
+				BinaryPath: s.Store.Abs(binaryPath),
 			}
 
 			continue
-		}
-
-		// We haven't seen this binary before, so lets process it now
-		checksums := map[digest.DigestType]string{}
-
-		for _, c := range binary.Checksums {
-			if c.Arch == s.Host.Arch && c.Os == s.Host.Os {
-				checksums[digest.DigestType(c.Type)] = c.Digest
-			}
 		}
 
 		bufferSize, err := humanize.ParseBytes(binary.BufferSize)
@@ -143,35 +168,10 @@ func (s *DefaultProvider) FromConfig(preload bool, binaries []application.Binary
 			return nil, err
 		}
 
-		binaryWriter, err := s.Store.Create(binaryBaseDir, binary.Name, 0755)
+		stager, err := s.Stager(binaryBaseDir, int64(bufferSize), binary)
 		if err != nil {
 			return nil, err
 		}
-
-		replacements := map[string]string{
-			"#{os}":   s.Host.Os,
-			"#{arch}": s.Host.Arch,
-			"#{ver}":  binary.Version,
-		}
-
-		var d Decompressor
-
-		switch binary.Archive.Type {
-		case ".tar.gz":
-			d = NewGzipTarDecompressor(binary.Archive.Target, int64(bufferSize))
-		case ".zip":
-			d = NewZipDecompressor(binary.Archive.Target, int64(bufferSize))
-		default:
-			d = NewNoopDecompressor()
-		}
-
-		stager := NewStager(
-			binaryWriter,
-			NewEphemeralStorage(),
-			NewHTTPFetcher(replaceVars(binary.URLPattern, replacements)),
-			NewVerifier(checksums),
-			d,
-		)
 
 		if preload {
 			err = errors.Wrap(stager.Fetch(), "failed to preload binaries")
@@ -198,6 +198,18 @@ func (s *DefaultProvider) Fetch(name, version string) (string, error) {
 	}
 
 	return binary.BinaryPath, nil
+}
+
+func checksumsFor(h application.Host, cs []application.Checksum) map[digest.DigestType]string {
+	out := map[digest.DigestType]string{}
+
+	for _, c := range cs {
+		if c.Arch == h.Arch && c.Os == h.Os {
+			out[digest.DigestType(c.Type)] = c.Digest
+		}
+	}
+
+	return out
 }
 
 func replaceVars(content string, vars map[string]string) string {

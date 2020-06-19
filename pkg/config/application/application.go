@@ -125,7 +125,7 @@ func New() *Data {
 	}
 }
 
-func (d *Data) Survey() error {
+func (d *Data) Survey() (*Data, error) {
 	qs := []*survey.Question{
 		{
 			Name: "username",
@@ -142,12 +142,12 @@ func (d *Data) Survey() error {
 
 	err := survey.Ask(qs, &answers)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	d.User.Username = answers.Username
 
-	return d.User.Valid()
+	return d, d.User.Valid()
 }
 
 func (d *Data) YAML() ([]byte, error) {

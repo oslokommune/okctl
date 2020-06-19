@@ -46,7 +46,6 @@ package load_test
 //	return dir
 //}
 //
-//// nolint
 //func TestLoadApp(t *testing.T) {
 //	testCases := []struct {
 //		name        string

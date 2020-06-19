@@ -77,7 +77,7 @@ func New() *Data {
 	return &Data{}
 }
 
-func (d *Data) Survey() error {
+func (d *Data) Survey() (*Data, error) {
 	qs := []*survey.Question{
 		{
 			Name: "name",
@@ -112,14 +112,14 @@ func (d *Data) Survey() error {
 
 	err := survey.Ask(qs, &answers)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	d.Name = answers.Name
 	d.Region = answers.Region
 	d.OutputDir = answers.BaseDir
 
-	return errors.Wrap(d.Validate(), "failed to validate repository data")
+	return nil, errors.Wrap(d.Validate(), "failed to validate repository data")
 }
 
 func (d *Data) YAML() ([]byte, error) {

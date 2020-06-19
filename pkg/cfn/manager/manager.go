@@ -94,14 +94,23 @@ func (m *Manager) Ready() (bool, error) {
 	return m.StackStatusIsNotTransitional(stack.Stacks[0]), nil
 }
 
-func (m *Manager) Create(timeout int64) error {
+func (m *Manager) CreateIfNotExists(timeout int64) error {
 	exists, err := m.Exists()
 	if err != nil {
 		return err
 	}
 
 	if exists {
-		return fmt.Errorf("stack: %s exists or is in a transitional state", m.Builder.StackName())
+		ready, err := m.Ready()
+		if err != nil {
+			return err
+		}
+
+		if ready {
+			return nil
+		}
+
+		return fmt.Errorf("stack: %s is in a transitional state", m.Builder.StackName())
 	}
 
 	err = m.Builder.Build()
@@ -149,6 +158,8 @@ func (m *Manager) Create(timeout int64) error {
 func (m *Manager) watchCreate(r *cfPkg.CreateStackOutput) error {
 	m.Logger.Info("Stack creation request sent to AWS")
 
+	const defaultSleepTime = 30
+
 	for {
 		stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
 			StackName: r.StackId,
@@ -161,8 +172,7 @@ func (m *Manager) watchCreate(r *cfPkg.CreateStackOutput) error {
 			return fmt.Errorf("expected 1 cloudformation stack to be created")
 		}
 
-		// nolint
-		sleepTime := 30 * time.Second
+		sleepTime := defaultSleepTime * time.Second
 
 		switch *stack.Stacks[0].StackStatus {
 		case cfPkg.StackStatusCreateComplete:

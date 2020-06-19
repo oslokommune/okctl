@@ -17,7 +17,7 @@ const (
 func buildCreateCommand(o *okctl.Okctl) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create commands",
+		Short: "CreateIfNotExists commands",
 	}
 
 	cmd.AddCommand(buildCreateClusterCommand(o))
@@ -30,7 +30,7 @@ func buildCreateClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "cluster [env] [AWS account id]",
-		Short: "Create a cluster",
+		Short: "CreateIfNotExists a cluster",
 		Long: `Fetch all tasks required to get an EKS cluster up and running on AWS.
 This includes creating an EKS compatible VPC with private, public
 and database subnets.`,

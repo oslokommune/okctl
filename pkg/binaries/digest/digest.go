@@ -1,10 +1,6 @@
 package digest
 
 import (
-	// nolint
-	"crypto/md5"
-	// nolint
-	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
@@ -24,10 +20,7 @@ type Digester interface {
 // DigestType enumerates the supported digesters.
 type DigestType string
 
-// nolint
 const (
-	TypeMD5    DigestType = "md5"
-	TypeSHA1   DigestType = "sha1"
 	TypeSHA256 DigestType = "sha256"
 	TypeSHA512 DigestType = "sha512"
 )
@@ -77,12 +70,6 @@ func (d *digest) Digest(reader io.Reader) (map[DigestType]string, error) {
 		var h hash.Hash
 
 		switch d {
-		case TypeMD5:
-			// nolint
-			h = md5.New()
-		case TypeSHA1:
-			// nolint
-			h = sha1.New()
 		case TypeSHA256:
 			h = sha256.New()
 		case TypeSHA512:

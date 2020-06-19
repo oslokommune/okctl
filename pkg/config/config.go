@@ -87,7 +87,7 @@ func (c *Config) WriteAppData(b []byte) error {
 
 	store := storage.NewFileSystemStorage(home)
 
-	writer, err := store.Create(DefaultDir, DefaultConfig, 0644)
+	writer, err := store.Recreate(DefaultDir, DefaultConfig, 0644)
 	if err != nil {
 		return err
 	}
@@ -142,6 +142,40 @@ func (c *Config) GetRepoDataPath() (string, error) {
 	return filepath.Join(base, DefaultRepositoryConfig), nil
 }
 
+func (c *Config) WriteCurrentRepoData() error {
+	data, err := c.RepoData.YAML()
+	if err != nil {
+		return err
+	}
+
+	return c.WriteRepoData(data)
+}
+
+func (c *Config) WriteRepoData(b []byte) error {
+	repo, err := c.GetRepoDir()
+	if err != nil {
+		return err
+	}
+
+	store := storage.NewFileSystemStorage(repo)
+
+	writer, err := store.Recreate("", DefaultRepositoryConfig, 0644)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = writer.Close()
+	}()
+
+	_, err = io.Copy(writer, bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *Config) GetHomeDir() (string, error) {
 	if len(c.homeDir) != 0 {
 		return c.homeDir, nil
@@ -193,6 +227,33 @@ func (c *Config) GetRepoOutputDir(env string) (string, error) {
 	}
 
 	return path.Join(base, c.RepoData.OutputDir, env), nil
+}
+
+func (c *Config) WriteToOutputDir(env, filePath string, b []byte) error {
+	outDir, err := c.GetRepoOutputDir(env)
+	if err != nil {
+		return err
+	}
+
+	store := storage.NewFileSystemStorage(outDir)
+
+	base, file := path.Split(filePath)
+
+	writer, err := store.Recreate(base, file, 0644)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = writer.Close()
+	}()
+
+	_, err = io.Copy(writer, bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *Config) ClusterName(env string) string {

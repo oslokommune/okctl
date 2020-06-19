@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/config/application"
 	"github.com/sirupsen/logrus"
@@ -27,30 +26,9 @@ func ErrOnAppDataNotFound() DataNotFoundFn {
 	}
 }
 
-func PromptContinue(msg, errMsg string) error {
-	var doContinue bool
-
-	prompt := &survey.Confirm{
-		Message: msg,
-		Default: true,
-	}
-
-	err := survey.AskOne(prompt, &doContinue)
-	if err != nil {
-		return err
-	}
-
-	if !doContinue {
-		return fmt.Errorf(errMsg)
-	}
-
-	return nil
-}
-
 // CreateOnAppDataNotFound will start an interactive survey
 // that allows the end user to configure okctl for their
 // use
-// nolint
 func CreateOnAppDataNotFound() DataNotFoundFn {
 	return func(c *config.Config) error {
 		var err error
@@ -76,9 +54,7 @@ func CreateOnAppDataNotFound() DataNotFoundFn {
 			return err
 		}
 
-		data := application.New()
-
-		err = data.Survey()
+		data, err := application.New().Survey()
 		if err != nil {
 			return err
 		}

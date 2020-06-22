@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn/manager"
+	"github.com/pkg/errors"
 )
 
 // Subnets knows how to process the output from a subnet creation
@@ -17,7 +18,7 @@ func Subnets(p v1alpha1.CloudProvider, to map[string]v1alpha1.ClusterNetwork) ma
 			SubnetIds: aws.StringSlice(strings.Split(v, ",")),
 		})
 		if err != nil {
-			return err
+			return errors.Wrap(err, "failed to describe subnet outputs")
 		}
 
 		for _, s := range got.Subnets {

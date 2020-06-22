@@ -11,11 +11,13 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/mitchellh/go-homedir"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/config/application"
 	"github.com/oslokommune/okctl/pkg/config/repository"
 	"github.com/oslokommune/okctl/pkg/context"
 	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/pkg/errors"
+	"github.com/sanathkr/go-yaml"
 )
 
 const (
@@ -34,6 +36,11 @@ const (
 	DefaultRepositoryConfigName = ".okctl"
 	// DefaultRepositoryConfigType is the default type of the okctl repository config
 	DefaultRepositoryConfigType = "yml"
+
+	// DefaultClusterConfig is the default filename of the eksctl cluster config
+	DefaultClusterConfig = "cluster.yml"
+	// DefaultClusterBaseDir is the default directory name of the eksctl cluster config
+	DefaultClusterBaseDir = "cluster"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"
@@ -121,6 +128,17 @@ func (c *Config) WriteAppData(b []byte) error {
 	return nil
 }
 
+// WriteCurrentAppData writes the current app data state
+// to disk
+func (c *Config) WriteCurrentAppData() error {
+	b, err := c.AppData.YAML()
+	if err != nil {
+		return err
+	}
+
+	return c.WriteAppData(b)
+}
+
 // GetRepoDir will return the currently active repository directory
 func (c *Config) GetRepoDir() (string, error) {
 	if len(c.repoDir) != 0 {
@@ -168,6 +186,8 @@ func (c *Config) WriteCurrentRepoData() error {
 	if err != nil {
 		return err
 	}
+
+	c.Logger.Debugf("write current repo data: %s", string(data))
 
 	return c.WriteRepoData(data)
 }
@@ -287,7 +307,75 @@ func (c *Config) WriteToOutputDir(env, filePath string, b []byte) error {
 	return nil
 }
 
+// DeleteFromOutputDir removes everything for a given env from path
+func (c *Config) DeleteFromOutputDir(env, filepath string) error {
+	outDir, err := c.GetRepoOutputDir(env)
+	if err != nil {
+		return err
+	}
+
+	store := storage.NewFileSystemStorage(outDir)
+
+	return store.RemoveAll(filepath)
+}
+
+// WriteClusterConfig stores the cluster config
+func (c *Config) WriteClusterConfig(env string, cfg *v1alpha1.ClusterConfig) error {
+	b, err := cfg.YAML()
+	if err != nil {
+		return err
+	}
+
+	return c.WriteToOutputDir(env, path.Join(DefaultClusterBaseDir, DefaultClusterConfig), b)
+}
+
+// DeleteClusterConfig deletes the cluster config for a given environment
+func (c *Config) DeleteClusterConfig(env string) error {
+	return c.DeleteFromOutputDir(env, path.Join(DefaultClusterBaseDir, DefaultClusterConfig))
+}
+
+// ClusterConfig loads the cluster configuration for the given environment
+func (c *Config) ClusterConfig(env string) (*v1alpha1.ClusterConfig, error) {
+	outDir, err := c.GetRepoOutputDir(env)
+	if err != nil {
+		return nil, err
+	}
+
+	store := storage.NewFileSystemStorage(outDir)
+
+	b, err := store.ReadAll(path.Join(DefaultClusterBaseDir, DefaultClusterConfig))
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := v1alpha1.NewClusterConfig()
+
+	return cfg, yaml.Unmarshal(b, cfg)
+}
+
 // ClusterName returns a consistent cluster name
 func (c *Config) ClusterName(env string) string {
 	return fmt.Sprintf("%s-%s", c.RepoData.Name, env)
+}
+
+// AWSAccountID returns the aws account ID for the given env
+func (c *Config) AWSAccountID(env string) (string, error) {
+	for _, cluster := range c.RepoData.Clusters {
+		if cluster.Environment == env {
+			return cluster.AWS.AccountID, nil
+		}
+	}
+
+	return "", fmt.Errorf("could not find configuration for cluster: %s", env)
+}
+
+// HasCluster returns true if we can find the cluster in the repo data
+func (c *Config) HasCluster(env string) bool {
+	for _, c := range c.RepoData.Clusters {
+		if c.Environment == env {
+			return true
+		}
+	}
+
+	return false
 }

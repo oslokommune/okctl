@@ -1,6 +1,7 @@
 package okctl
 
 import (
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/binaries"
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/credentials"
@@ -10,6 +11,7 @@ import (
 type Okctl struct {
 	*config.Config
 
+	CloudProvider       v1alpha1.CloudProvider
 	BinariesProvider    binaries.Provider
 	CredentialsProvider credentials.Provider
 }

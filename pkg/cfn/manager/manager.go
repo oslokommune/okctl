@@ -94,30 +94,29 @@ func (m *Manager) Ready() (bool, error) {
 	return m.StackStatusIsNotTransitional(stack.Stacks[0]), nil
 }
 
-func (m *Manager) CreateIfNotExists(timeout int64) error {
+func (m *Manager) existsAndReady() error {
 	exists, err := m.Exists()
 	if err != nil {
 		return err
 	}
 
-	if exists {
-		ready, err := m.Ready()
-		if err != nil {
-			return err
-		}
-
-		if ready {
-			return nil
-		}
-
-		return fmt.Errorf("stack: %s is in a transitional state", m.Builder.StackName())
-	}
-
-	err = m.Builder.Build()
+	ready, err := m.Ready()
 	if err != nil {
 		return err
 	}
 
+	if exists {
+		if ready {
+			return nil
+		}
+
+		return fmt.Errorf("stack: %s exists and is in a transitional state", m.Builder.StackName())
+	}
+
+	return nil
+}
+
+func (m *Manager) collectResources() error {
 	for _, resource := range m.Builder.Resources() {
 		if _, hasKey := m.Template.Resources[resource.Name()]; hasKey {
 			return fmt.Errorf("already have resource with name: %s", resource.Name())
@@ -126,6 +125,10 @@ func (m *Manager) CreateIfNotExists(timeout int64) error {
 		m.Template.Resources[resource.Name()] = resource.Resource()
 	}
 
+	return nil
+}
+
+func (m *Manager) collectOutputs() error {
 	for _, output := range m.Builder.Outputs() {
 		for key, value := range output.NamedOutputs() {
 			if _, hasKey := m.Template.Outputs[key]; hasKey {
@@ -134,6 +137,30 @@ func (m *Manager) CreateIfNotExists(timeout int64) error {
 
 			m.Template.Outputs[key] = value
 		}
+	}
+
+	return nil
+}
+
+func (m *Manager) CreateIfNotExists(timeout int64) error {
+	err := m.existsAndReady()
+	if err != nil {
+		return err
+	}
+
+	err = m.Builder.Build()
+	if err != nil {
+		return err
+	}
+
+	err = m.collectResources()
+	if err != nil {
+		return err
+	}
+
+	err = m.collectOutputs()
+	if err != nil {
+		return err
 	}
 
 	body, err := m.Template.YAML()

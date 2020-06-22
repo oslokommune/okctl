@@ -15,14 +15,6 @@ func CidrFromString(t *testing.T, block string) *net.IPNet {
 	return network
 }
 
-// nolint
-func DistributorForTest(t *testing.T, subnetTypes, azs []string) subnet.Distributor {
-	d, err := subnet.NewDistributor(subnetTypes, azs)
-	assert.NoError(t, err)
-
-	return d
-}
-
 func TestSubnets(t *testing.T) {
 	testCases := []struct {
 		name      string

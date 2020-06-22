@@ -36,23 +36,16 @@ func IsSupportedRegion(region string) bool {
 }
 
 func SupportedAvailabilityZones(region string) ([]string, error) {
-	if !IsSupportedRegion(region) {
-		return nil, fmt.Errorf("region: %s is not supported", region)
-	}
-
-	var azs []string
-
-	// nolint
 	switch region {
 	case RegionEuWest1:
-		azs = []string{
+		return []string{
 			"eu-west-1a",
 			"eu-west-1b",
 			"eu-west-1c",
-		}
+		}, nil
+	default:
+		return nil, fmt.Errorf("region: %s is not supported", region)
 	}
-
-	return azs, nil
 }
 
 func PrincipalARN(awsAccountID string) string {

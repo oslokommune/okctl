@@ -23,7 +23,6 @@ package load_test
 //	return dir
 //}
 //
-//// nolint
 //func TestLoadRepository(t *testing.T) {
 //	testCases := []struct {
 //		name      string

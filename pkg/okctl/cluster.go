@@ -2,8 +2,6 @@ package okctl
 
 import (
 	"fmt"
-	"os"
-	"path"
 	"regexp"
 
 	val "github.com/go-ozzo/ozzo-validation/v4"
@@ -15,6 +13,8 @@ import (
 	eksctlPkg "github.com/oslokommune/okctl/pkg/run/eksctl"
 	"github.com/sirupsen/logrus"
 )
+
+const defaultTimeOut = 5
 
 type CreateClusterOpts struct {
 	AWSAccountID string
@@ -33,6 +33,10 @@ func (o *CreateClusterOpts) LoggerContext(logger *logrus.Logger) *logrus.Entry {
 }
 
 func (o *CreateClusterOpts) Valid() error {
+	const minLength = 3
+
+	const maxLength = 10
+
 	return val.ValidateStruct(o,
 		val.Field(&o.AWSAccountID,
 			val.Required,
@@ -41,8 +45,7 @@ func (o *CreateClusterOpts) Valid() error {
 		),
 		val.Field(&o.Environment,
 			val.Required,
-			// nolint
-			val.Length(3, 10),
+			val.Length(minLength, maxLength),
 		),
 		val.Field(&o.Cidr,
 			val.Required,
@@ -50,7 +53,22 @@ func (o *CreateClusterOpts) Valid() error {
 	)
 }
 
-// nolint
+func ClusterConfig(name, region, cidr, awsAccountID string, m *manager.Manager, provider v1alpha1.CloudProvider) (*v1alpha1.ClusterConfig, error) {
+	clusterConfig := v1alpha1.NewClusterConfig()
+
+	clusterConfig.Metadata.Name = name
+	clusterConfig.Metadata.Region = region
+	clusterConfig.VPC.CIDR = cidr
+	clusterConfig.IAM.FargatePodExecutionRolePermissionsBoundary = v1alpha1.PermissionsBoundaryARN(awsAccountID)
+	clusterConfig.IAM.ServiceRolePermissionsBoundary = v1alpha1.PermissionsBoundaryARN(awsAccountID)
+
+	return clusterConfig, m.Outputs(map[string]manager.ProcessOutputFn{
+		"PrivateSubnetIds": process.Subnets(provider, clusterConfig.VPC.Subnets.Private),
+		"PublicSubnetIds":  process.Subnets(provider, clusterConfig.VPC.Subnets.Public),
+		"Vpc":              process.String(&clusterConfig.VPC.ID),
+	})
+}
+
 func (o *Okctl) CreateCluster(opts CreateClusterOpts) error {
 	ctxLogger := opts.LoggerContext(o.Logger)
 
@@ -64,70 +82,34 @@ func (o *Okctl) CreateCluster(opts CreateClusterOpts) error {
 
 	builder := vpc.New(o.RepoData.Name, opts.Environment, opts.Cidr, o.Region())
 
-	provider, err := cloud.New(o.Region(), o.CredentialsProvider)
+	prov, err := cloud.New(o.Region(), o.CredentialsProvider)
 	if err != nil {
 		return err
 	}
 
-	m := manager.New(o.Logger, builder, provider.Provider)
+	m := manager.New(o.Logger, builder, prov.Provider)
 
-	ctxLogger.Info("Creating EKS compatible VPC")
-
-	ready, err := m.Ready()
+	err = m.CreateIfNotExists(defaultTimeOut)
 	if err != nil {
 		return err
 	}
 
-	if !ready {
-		err = m.Create(5)
-		if err != nil {
-			return err
-		}
-	}
-
-	// TODO: Move this stuff out of here..
-	repoDataPath, err := o.GetRepoDataPath()
+	err = o.WriteCurrentRepoData()
 	if err != nil {
 		return err
 	}
-
-	f, err := o.FileSystem.OpenFile(repoDataPath, os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		err = f.Close()
-	}()
-
-	d, err := o.RepoData.YAML()
-	if err != nil {
-		return err
-	}
-	_, err = f.Write(d)
-	if err != nil {
-		return err
-	}
-
-	ctxLogger.Info("Done creating EKS VPC")
 
 	eksctl, err := eksctlPkg.New(o.Logger, o.CredentialsProvider, o.BinariesProvider)
 	if err != nil {
 		return err
 	}
 
-	clusterConfig := v1alpha1.NewClusterConfig()
+	clusterConfig, err := ClusterConfig(o.ClusterName(opts.Environment), o.Region(), opts.Cidr, opts.AWSAccountID, m, prov.Provider)
+	if err != nil {
+		return err
+	}
 
-	clusterConfig.Metadata.Name = o.ClusterName(opts.Environment)
-	clusterConfig.Metadata.Region = o.Region()
-	clusterConfig.VPC.CIDR = opts.Cidr
-	clusterConfig.IAM.FargatePodExecutionRolePermissionsBoundary = v1alpha1.PermissionsBoundaryARN(opts.AWSAccountID)
-	clusterConfig.IAM.ServiceRolePermissionsBoundary = v1alpha1.PermissionsBoundaryARN(opts.AWSAccountID)
-
-	err = m.Outputs(map[string]manager.ProcessOutputFn{
-		"PrivateSubnetIds": process.Subnets(provider.Provider, clusterConfig.VPC.Subnets.Private),
-		"PublicSubnetIds":  process.Subnets(provider.Provider, clusterConfig.VPC.Subnets.Public),
-		"Vpc":              process.String(&clusterConfig.VPC.ID),
-	})
+	err = eksctl.CreateCluster(o.Err, clusterConfig)
 	if err != nil {
 		return err
 	}
@@ -137,34 +119,7 @@ func (o *Okctl) CreateCluster(opts CreateClusterOpts) error {
 		return err
 	}
 
-	ctxLogger.Debug(string(yaml))
-
-	err = eksctl.CreateCluster(o.Err, clusterConfig)
-	if err != nil {
-		return err
-	}
-
-	outDir, err := o.GetRepoOutputDir(opts.Environment)
-	if err != nil {
-		return err
-	}
-
-	err = os.MkdirAll(outDir, 0744)
-	if err != nil {
-		return err
-	}
-
-	file, err := o.FileSystem.OpenFile(path.Join(outDir, "cluster.yml"), os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		return err
-	}
-	err = file.Close()
-
-	defer func() {
-		err = file.Close()
-	}()
-
-	_, err = file.Write(yaml)
+	err = o.WriteToOutputDir(opts.Environment, "cluster.yml", yaml)
 	if err != nil {
 		return err
 	}

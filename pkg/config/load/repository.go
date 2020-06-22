@@ -1,14 +1,10 @@
 package load
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/config/repository"
-	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -28,66 +24,26 @@ func ErrOnRepoDataNotFound() DataNotFoundFn {
 // CreateOnRepoDataNotFound will start an interactive survey
 // that allows the end user to configure okctl when a repository
 // configuration was not found
-// nolint
 func CreateOnRepoDataNotFound() DataNotFoundFn {
 	return func(c *config.Config) error {
-		repo, err := c.GetRepoDir()
+		var err error
+
+		err = PromptContinue("First time using okctl with this repository? Start guided configuration?", "user aborted configuration")
 		if err != nil {
 			return err
-		}
-
-		{
-			doContinue := false
-			prompt := &survey.Confirm{
-				Message: "First time using okctl with this repository? Start guided configuration?",
-				Default: true,
-			}
-
-			err = survey.AskOne(prompt, &doContinue)
-			if err != nil {
-				return err
-			}
-
-			if !doContinue {
-				return fmt.Errorf("no configuration file found, and user did not want to start a configuration")
-			}
 		}
 
 		repoDataPath, err := c.GetRepoDataPath()
 		if err != nil {
 			return err
 		}
-		{
-			doContinue := false
-			prompt := &survey.Confirm{
-				Message: fmt.Sprintf("Repository configuration will be written to: %s. Continue?", repoDataPath),
-				Default: true,
-			}
 
-			err = survey.AskOne(prompt, &doContinue)
-			if err != nil {
-				return err
-			}
-
-			if !doContinue {
-				return fmt.Errorf("no configuration file found, and user did not accept configuration file location")
-			}
-		}
-
-		store := storage.NewFileSystemStorage(repo)
-
-		writer, err := store.Create("", config.DefaultRepositoryConfig, 0644)
+		err = PromptContinue(fmt.Sprintf("Repository configuration will be written to: %s. Continue?", repoDataPath), "user aborted configuration")
 		if err != nil {
 			return err
 		}
 
-		defer func() {
-			err = writer.Close()
-		}()
-
-		data := repository.New()
-
-		err = data.Survey()
+		data, err := repository.New().Survey()
 		if err != nil {
 			return err
 		}
@@ -97,16 +53,16 @@ func CreateOnRepoDataNotFound() DataNotFoundFn {
 			return err
 		}
 
-		_, err = io.Copy(writer, bytes.NewReader(b))
+		err = c.WriteRepoData(b)
 		if err != nil {
 			return err
 		}
 
+		c.RepoData = data
+
 		c.Logger.WithFields(logrus.Fields{
 			"configuration_file": repoDataPath,
 		}).Info("repository configuration completed")
-
-		c.RepoData = data
 
 		return nil
 	}

@@ -94,21 +94,29 @@ func (m *Manager) Ready() (bool, error) {
 	return m.StackStatusIsNotTransitional(stack.Stacks[0]), nil
 }
 
-func (m *Manager) Create(timeout int64) error {
+func (m *Manager) existsAndReady() error {
 	exists, err := m.Exists()
 	if err != nil {
 		return err
 	}
 
-	if exists {
-		return fmt.Errorf("stack: %s exists or is in a transitional state", m.Builder.StackName())
-	}
-
-	err = m.Builder.Build()
+	ready, err := m.Ready()
 	if err != nil {
 		return err
 	}
 
+	if exists {
+		if ready {
+			return nil
+		}
+
+		return fmt.Errorf("stack: %s exists and is in a transitional state", m.Builder.StackName())
+	}
+
+	return nil
+}
+
+func (m *Manager) collectResources() error {
 	for _, resource := range m.Builder.Resources() {
 		if _, hasKey := m.Template.Resources[resource.Name()]; hasKey {
 			return fmt.Errorf("already have resource with name: %s", resource.Name())
@@ -117,6 +125,10 @@ func (m *Manager) Create(timeout int64) error {
 		m.Template.Resources[resource.Name()] = resource.Resource()
 	}
 
+	return nil
+}
+
+func (m *Manager) collectOutputs() error {
 	for _, output := range m.Builder.Outputs() {
 		for key, value := range output.NamedOutputs() {
 			if _, hasKey := m.Template.Outputs[key]; hasKey {
@@ -125,6 +137,30 @@ func (m *Manager) Create(timeout int64) error {
 
 			m.Template.Outputs[key] = value
 		}
+	}
+
+	return nil
+}
+
+func (m *Manager) CreateIfNotExists(timeout int64) error {
+	err := m.existsAndReady()
+	if err != nil {
+		return err
+	}
+
+	err = m.Builder.Build()
+	if err != nil {
+		return err
+	}
+
+	err = m.collectResources()
+	if err != nil {
+		return err
+	}
+
+	err = m.collectOutputs()
+	if err != nil {
+		return err
 	}
 
 	body, err := m.Template.YAML()
@@ -149,6 +185,8 @@ func (m *Manager) Create(timeout int64) error {
 func (m *Manager) watchCreate(r *cfPkg.CreateStackOutput) error {
 	m.Logger.Info("Stack creation request sent to AWS")
 
+	const defaultSleepTime = 30
+
 	for {
 		stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
 			StackName: r.StackId,
@@ -161,8 +199,7 @@ func (m *Manager) watchCreate(r *cfPkg.CreateStackOutput) error {
 			return fmt.Errorf("expected 1 cloudformation stack to be created")
 		}
 
-		// nolint
-		sleepTime := 30 * time.Second
+		sleepTime := defaultSleepTime * time.Second
 
 		switch *stack.Stacks[0].StackStatus {
 		case cfPkg.StackStatusCreateComplete:

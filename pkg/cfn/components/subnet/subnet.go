@@ -86,28 +86,31 @@ func (s *Subnet) Resource() cloudformation.Resource {
 	}
 }
 
-type Distributor interface {
+type Distribution interface {
 	Next() (subnetType string, availabilityZone string, number int)
 	DistinctSubnetTypes() int
 	DistinctAzs() int
 }
 
-type distributor struct {
-	subnetTypes []string
-	subnetIndex int
-	azs         []string
-	azsIndex    map[string]int
+type Distributor struct {
+	SubnetTypes []string
+	SubnetIndex int
+	Azs         []string
+	AzsIndex    map[string]int
 }
 
-func (d *distributor) DistinctSubnetTypes() int {
-	return len(d.subnetTypes)
+func (d *Distributor) DistinctSubnetTypes() int {
+	return len(d.SubnetTypes)
 }
 
-func (d *distributor) DistinctAzs() int {
-	return len(d.azs)
+func (d *Distributor) DistinctAzs() int {
+	return len(d.Azs)
 }
 
-func NewDistributor(subnetTypes, azs []string) (*distributor, error) {
+// NewDistributor returns a Distributor that can be used
+// to delegate a set of subnets evenly across the provided
+// types and availability zones
+func NewDistributor(subnetTypes, azs []string) (*Distributor, error) {
 	if len(subnetTypes) == 0 {
 		return nil, fmt.Errorf("must provide at least one Subnet type")
 	}
@@ -125,40 +128,40 @@ func NewDistributor(subnetTypes, azs []string) (*distributor, error) {
 		azsIndex[t] = 0
 	}
 
-	return &distributor{
-		subnetTypes: uniqueTypes,
-		azs:         uniqueAzs,
-		azsIndex:    azsIndex,
+	return &Distributor{
+		SubnetTypes: uniqueTypes,
+		Azs:         uniqueAzs,
+		AzsIndex:    azsIndex,
 	}, nil
 }
 
-func (d *distributor) Next() (string, string, int) {
+func (d *Distributor) Next() (string, string, int) {
 	t := d.nextSubnetType()
-	n := d.azsIndex[t]
+	n := d.AzsIndex[t]
 	a := d.nextAz(t)
 
 	return t, a, n
 }
 
-func (d *distributor) nextSubnetType() string {
-	next := d.subnetTypes[d.subnetIndex]
+func (d *Distributor) nextSubnetType() string {
+	next := d.SubnetTypes[d.SubnetIndex]
 
-	d.subnetIndex++
-	if d.subnetIndex == len(d.subnetTypes) {
-		d.subnetIndex = 0
+	d.SubnetIndex++
+	if d.SubnetIndex == len(d.SubnetTypes) {
+		d.SubnetIndex = 0
 	}
 
 	return next
 }
 
 // nextAz should not be able to fail due to the checks
-// introduced when creating the distributor.
-func (d *distributor) nextAz(subnetType string) string {
-	next := d.azs[d.azsIndex[subnetType]]
+// introduced when creating the Distributor.
+func (d *Distributor) nextAz(subnetType string) string {
+	next := d.Azs[d.AzsIndex[subnetType]]
 
-	d.azsIndex[subnetType]++
-	if d.azsIndex[subnetType] == len(d.azsIndex) {
-		d.azsIndex[subnetType] = 0
+	d.AzsIndex[subnetType]++
+	if d.AzsIndex[subnetType] == len(d.AzsIndex) {
+		d.AzsIndex[subnetType] = 0
 	}
 
 	return next
@@ -174,7 +177,7 @@ func NoopCreator() CreatorFn {
 	}
 }
 
-func DefaultCreator(vpc cfn.Referencer, cluster cfn.Namer, dist Distributor) CreatorFn {
+func DefaultCreator(vpc cfn.Referencer, cluster cfn.Namer, dist Distribution) CreatorFn {
 	return func(network *net.IPNet) *Subnet {
 		subnetType, az, number := dist.Next()
 
@@ -197,13 +200,13 @@ type Subnets struct {
 }
 
 func (s *Subnets) NamedOutputs() map[string]map[string]interface{} {
-	private := output.Joined("PrivateSubnetIds")
+	private := output.NewJoined("PrivateSubnetIds")
 
 	for _, p := range s.Private {
 		private.Add(p.Ref())
 	}
 
-	public := output.Joined("PublicSubnetIds")
+	public := output.NewJoined("PublicSubnetIds")
 
 	for _, p := range s.Public {
 		public.Add(p.Ref())
@@ -232,7 +235,7 @@ func NewDefault(network *net.IPNet, region string, vpc cfn.Referencer, cluster c
 
 // New creates n new subnets from the provided cidr block with the given
 // network prefix size and distributes them evenly across the Subnet types and
-// availability zones as given by the Distributor.
+// availability zones as given by the Distribution.
 func New(n int, prefixLen int, block *net.IPNet, createFn CreatorFn) (*Subnets, error) {
 	subnets := &Subnets{}
 

@@ -14,29 +14,29 @@ import (
 // Digester defines the functions related to creating
 // digests of some given input.
 type Digester interface {
-	Digest(reader io.Reader) (map[DigestType]string, error)
+	Digest(reader io.Reader) (map[Type]string, error)
 }
 
-// DigestType enumerates the supported digesters.
-type DigestType string
+// Type enumerates the supported digesters.
+type Type string
 
 const (
-	TypeSHA256 DigestType = "sha256"
-	TypeSHA512 DigestType = "sha512"
+	TypeSHA256 Type = "sha256"
+	TypeSHA512 Type = "sha512"
 )
 
 type digest struct {
-	digesters []DigestType
+	digesters []Type
 }
 
 // NewDigester creates a new digester with the given digest types.
-func NewDigester(digesters ...DigestType) Digester {
-	uniqueDigesters := map[DigestType]struct{}{}
+func NewDigester(digesters ...Type) Digester {
+	uniqueDigesters := map[Type]struct{}{}
 	for _, dig := range digesters {
 		uniqueDigesters[dig] = struct{}{}
 	}
 
-	toDigest := make([]DigestType, len(uniqueDigesters))
+	toDigest := make([]Type, len(uniqueDigesters))
 	i := 0
 
 	for dig := range uniqueDigesters {
@@ -51,13 +51,13 @@ func NewDigester(digesters ...DigestType) Digester {
 
 // Digest returns the hashes of the loaded data given
 // the provided digesters.
-func (d *digest) Digest(reader io.Reader) (map[DigestType]string, error) {
+func (d *digest) Digest(reader io.Reader) (map[Type]string, error) {
 	if reader == nil {
 		return nil, fmt.Errorf("reader is nil")
 	}
 
 	type Digested struct {
-		Type DigestType
+		Type Type
 		Hash string
 
 		hasher hash.Hash
@@ -90,7 +90,7 @@ func (d *digest) Digest(reader io.Reader) (map[DigestType]string, error) {
 		return nil, errors.Wrap(err, "failed to write content to digesters")
 	}
 
-	digests := map[DigestType]string{}
+	digests := map[Type]string{}
 	for _, d := range digested {
 		digests[d.Type] = hex.EncodeToString(d.hasher.Sum(nil))
 	}

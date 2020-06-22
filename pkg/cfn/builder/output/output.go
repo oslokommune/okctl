@@ -11,63 +11,69 @@ type Outputer interface {
 	Name() string
 }
 
-type joined struct {
-	name   string
-	values []string
+type Joined struct {
+	StoredName string
+	Values     []string
 }
 
-func (j *joined) NamedOutputs() map[string]map[string]interface{} {
+func (j *Joined) NamedOutputs() map[string]map[string]interface{} {
 	return map[string]map[string]interface{}{
 		j.Name(): j.Outputs(),
 	}
 }
 
-func (j *joined) Outputs() map[string]interface{} {
+func (j *Joined) Outputs() map[string]interface{} {
 	return map[string]interface{}{
-		"Value": cloudformation.Join(",", j.values),
+		"NewValue": cloudformation.Join(",", j.Values),
 	}
 }
 
-func (j *joined) Name() string {
-	return j.name
+func (j *Joined) Name() string {
+	return j.StoredName
 }
 
-func (j *joined) Add(v ...string) *joined {
-	j.values = append(j.values, v...)
+func (j *Joined) Add(v ...string) *Joined {
+	j.Values = append(j.Values, v...)
 
 	return j
 }
 
-func Joined(name string) *joined {
-	return &joined{
-		name: name,
+// NewJoined is a helper for creating cloud formation Joined data
+// in the output of a cloud formation stack
+//
+// https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-join.html
+func NewJoined(name string) *Joined {
+	return &Joined{
+		StoredName: name,
 	}
 }
 
-type value struct {
-	name  string
-	value string
+type Value struct {
+	StoredName string
+	Value      string
 }
 
-func (v *value) NamedOutputs() map[string]map[string]interface{} {
+func (v *Value) NamedOutputs() map[string]map[string]interface{} {
 	return map[string]map[string]interface{}{
 		v.Name(): v.Outputs(),
 	}
 }
 
-func (v *value) Outputs() map[string]interface{} {
+func (v *Value) Outputs() map[string]interface{} {
 	return map[string]interface{}{
-		"Value": v.value,
+		"NewValue": v.Value,
 	}
 }
 
-func (v *value) Name() string {
-	return v.name
+func (v *Value) Name() string {
+	return v.StoredName
 }
 
-func Value(name, v string) *value {
-	return &value{
-		name:  name,
-		value: v,
+// NewValue is a helper for creating Value outputs in
+// a cloud formation stack
+func NewValue(name, v string) *Value {
+	return &Value{
+		StoredName: name,
+		Value:      v,
 	}
 }

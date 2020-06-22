@@ -8,56 +8,72 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
-type private struct {
-	name   string
-	number int
-	vpc    cfn.Referencer
+type Private struct {
+	StoredName string
+	Number     int
+	VPC        cfn.Referencer
 }
 
-func NewPrivate(number int, vpc cfn.Referencer) *private {
-	return &private{
-		name:   fmt.Sprintf("PrivateRouteTable%02d", number),
-		number: number,
-		vpc:    vpc,
+// NewPrivate returns a route table for the Private
+// subnets
+//
+// Specifies a route table for a specified VPC.
+// After you create a route table, you can add routes
+// and associate the table with a subnet.
+//
+// https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-route-table.html
+func NewPrivate(number int, vpc cfn.Referencer) *Private {
+	return &Private{
+		StoredName: fmt.Sprintf("PrivateRouteTable%02d", number),
+		Number:     number,
+		VPC:        vpc,
 	}
 }
 
-func (p *private) Resource() cloudformation.Resource {
+func (p *Private) Resource() cloudformation.Resource {
 	return &ec2.RouteTable{
-		VpcId: p.vpc.Ref(),
+		VpcId: p.VPC.Ref(),
 	}
 }
 
-func (p *private) Name() string {
-	return p.name
+func (p *Private) Name() string {
+	return p.StoredName
 }
 
-func (p *private) Ref() string {
+func (p *Private) Ref() string {
 	return cloudformation.Ref(p.Name())
 }
 
-type public struct {
-	name string
-	vpc  cfn.Referencer
+type Public struct {
+	StoredName string
+	VPC        cfn.Referencer
 }
 
-func (p *public) Resource() cloudformation.Resource {
+func (p *Public) Resource() cloudformation.Resource {
 	return &ec2.RouteTable{
-		VpcId: p.vpc.Ref(),
+		VpcId: p.VPC.Ref(),
 	}
 }
 
-func (p *public) Name() string {
-	return p.name
+func (p *Public) Name() string {
+	return p.StoredName
 }
 
-func (p *public) Ref() string {
+func (p *Public) Ref() string {
 	return cloudformation.Ref(p.Name())
 }
 
-func NewPublic(vpc cfn.Referencer) *public {
-	return &public{
-		name: "PublicRouteTable",
-		vpc:  vpc,
+// NewPublic returns a route table for the Public
+// subnets
+//
+// Specifies a route table for a specified VPC.
+// After you create a route table, you can add routes
+// and associate the table with a subnet.
+//
+// https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-route-table.html
+func NewPublic(vpc cfn.Referencer) *Public {
+	return &Public{
+		StoredName: "PublicRouteTable",
+		VPC:        vpc,
 	}
 }

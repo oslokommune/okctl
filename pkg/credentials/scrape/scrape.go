@@ -28,10 +28,12 @@ func ErrorFromResponse(r *http.Response) error {
 	return fmt.Errorf("http request failed, because: \n%s", pretty)
 }
 
-func New() *scrape {
+// New returns a scraper that knows how extract the SAML
+// response for logging onto AWS using KeyCloak
+func New() *Scrape {
 	jar, _ := cookiejar.New(nil)
 
-	return &scrape{
+	return &Scrape{
 		p: pagser.New(),
 		c: &http.Client{
 			Jar: jar,
@@ -39,12 +41,12 @@ func New() *scrape {
 	}
 }
 
-type scrape struct {
+type Scrape struct {
 	p *pagser.Pagser
 	c *http.Client
 }
 
-func (s *scrape) doLogin(loginURL, username, password string) (*http.Response, error) {
+func (s *Scrape) doLogin(loginURL, username, password string) (*http.Response, error) {
 	var formAction FormAction
 
 	resp, err := s.c.Get(loginURL)
@@ -81,7 +83,7 @@ func (s *scrape) doLogin(loginURL, username, password string) (*http.Response, e
 	return resp, nil
 }
 
-func (s *scrape) doTotp(resp *http.Response, mfatoken string) (*http.Response, error) {
+func (s *Scrape) doTotp(resp *http.Response, mfatoken string) (*http.Response, error) {
 	var formAction FormAction
 
 	if resp.StatusCode != http.StatusOK {
@@ -112,7 +114,7 @@ func (s *scrape) doTotp(resp *http.Response, mfatoken string) (*http.Response, e
 	return resp, nil
 }
 
-func (s *scrape) Scrape(username, password, mfaToken string) (string, error) {
+func (s *Scrape) Scrape(username, password, mfaToken string) (string, error) {
 	resp, err := s.doLogin(DefaultURL, username, password)
 	if err != nil {
 		return "", err

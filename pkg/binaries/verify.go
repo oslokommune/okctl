@@ -22,8 +22,8 @@ func NewNoopVerifier() Verifier {
 	return &noopVerifier{}
 }
 
-func NewVerifier(digests map[digest.DigestType]string) Verifier {
-	digestTypes := make([]digest.DigestType, len(digests))
+func NewVerifier(digests map[digest.Type]string) Verifier {
+	digestTypes := make([]digest.Type, len(digests))
 	i := 0
 
 	for digestType := range digests {
@@ -37,8 +37,8 @@ func NewVerifier(digests map[digest.DigestType]string) Verifier {
 }
 
 type verifier struct {
-	digests     map[digest.DigestType]string
-	digestTypes []digest.DigestType
+	digests     map[digest.Type]string
+	digestTypes []digest.Type
 }
 
 var (

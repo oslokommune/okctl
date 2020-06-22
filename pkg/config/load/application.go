@@ -8,6 +8,7 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/config/application"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -57,20 +58,15 @@ func CreateOnAppDataNotFound() DataNotFoundFn {
 
 		data, err := application.New().Survey()
 		if err != nil {
-			return err
-		}
-
-		b, err := yaml.Marshal(data)
-		if err != nil {
-			return err
-		}
-
-		err = c.WriteAppData(b)
-		if err != nil {
-			return err
+			return errors.Wrap(err, "failed to get interactive user data")
 		}
 
 		c.AppData = data
+
+		err = c.WriteCurrentAppData()
+		if err != nil {
+			return errors.Wrap(err, "failed to write current app data")
+		}
 
 		c.Logger.WithFields(logrus.Fields{
 			"configuration_file": appDataPath,

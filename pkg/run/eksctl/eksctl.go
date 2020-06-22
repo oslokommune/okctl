@@ -17,6 +17,8 @@ const (
 	Name = "eksctl"
 	// Version sets the currently used version of the binary/cli
 	Version = "0.21.0"
+
+	defaultClusterConfig = "cluster-config.yml"
 )
 
 // Eksctl stores state for working with the eksctl cli
@@ -55,20 +57,13 @@ func New(logger *logrus.Logger, credentials credentials.Provider, binaries binar
 	}, nil
 }
 
-// CreateCluster creates an EKS cluster using eksctl
-func (e *Eksctl) CreateCluster(progress io.Writer, cfg *v1alpha1.ClusterConfig) error {
-	var err error
-
-	defer func() {
-		err = e.Store.Clean()
-	}()
-
+func (e *Eksctl) writeTemporaryClusterConfig(cfg *v1alpha1.ClusterConfig) error {
 	data, err := cfg.YAML()
 	if err != nil {
 		return err
 	}
 
-	file, err := e.Store.Create("", "cluster-config.yml", 0644)
+	file, err := e.Store.Create("", defaultClusterConfig, 0644)
 	if err != nil {
 		return err
 	}
@@ -83,12 +78,56 @@ func (e *Eksctl) CreateCluster(progress io.Writer, cfg *v1alpha1.ClusterConfig) 
 		return err
 	}
 
+	return nil
+}
+
+// DeleteCluster deletes an EKS cluster using eksctl
+func (e *Eksctl) DeleteCluster(progress io.Writer, cfg *v1alpha1.ClusterConfig) error {
+	var err error
+
+	defer func() {
+		err = e.Store.Clean()
+	}()
+
+	err = e.writeTemporaryClusterConfig(cfg)
+	if err != nil {
+		return err
+	}
+
+	args := []string{
+		"delete",
+		"cluster",
+		"--config-file",
+		e.Store.Abs(defaultClusterConfig),
+	}
+
+	_, err = e.Runner.Run(progress, args)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// CreateCluster creates an EKS cluster using eksctl
+func (e *Eksctl) CreateCluster(progress io.Writer, cfg *v1alpha1.ClusterConfig) error {
+	var err error
+
+	defer func() {
+		err = e.Store.Clean()
+	}()
+
+	err = e.writeTemporaryClusterConfig(cfg)
+	if err != nil {
+		return err
+	}
+
 	args := []string{
 		"create",
 		"cluster",
 		"--write-kubeconfig=false",
 		"--config-file",
-		e.Store.Abs("cluster-config.yml"),
+		e.Store.Abs(defaultClusterConfig),
 	}
 
 	_, err = e.Runner.Run(progress, args)

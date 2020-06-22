@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/cloud"
 	"github.com/oslokommune/okctl/pkg/credentials"
 	"github.com/oslokommune/okctl/pkg/credentials/login"
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -17,7 +18,7 @@ const (
 func buildCreateCommand(o *okctl.Okctl) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "CreateIfNotExists commands",
+		Short: "Create commands",
 	}
 
 	cmd.AddCommand(buildCreateClusterCommand(o))
@@ -30,7 +31,7 @@ func buildCreateClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "cluster [env] [AWS account id]",
-		Short: "CreateIfNotExists a cluster",
+		Short: "Create a cluster",
 		Long: `Fetch all tasks required to get an EKS cluster up and running on AWS.
 This includes creating an EKS compatible VPC with private, public
 and database subnets.`,
@@ -54,6 +55,13 @@ and database subnets.`,
 			}
 
 			o.CredentialsProvider = credentials.New(l)
+
+			c, err := cloud.New(o.Region(), o.CredentialsProvider)
+			if err != nil {
+				return err
+			}
+
+			o.CloudProvider = c.Provider
 
 			return nil
 		},

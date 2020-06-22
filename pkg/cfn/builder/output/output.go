@@ -30,7 +30,7 @@ func (j *Joined) NamedOutputs() map[string]map[string]interface{} {
 // Outputs returns the outputs only
 func (j *Joined) Outputs() map[string]interface{} {
 	return map[string]interface{}{
-		"NewValue": cloudformation.Join(",", j.Values),
+		"Value": cloudformation.Join(",", j.Values),
 	}
 }
 
@@ -72,7 +72,7 @@ func (v *Value) NamedOutputs() map[string]map[string]interface{} {
 // Outputs returns only the cloud formation outputs
 func (v *Value) Outputs() map[string]interface{} {
 	return map[string]interface{}{
-		"NewValue": v.Value,
+		"Value": v.Value,
 	}
 }
 

@@ -1,3 +1,6 @@
+// Package cidr provides functionality for interacting with
+// classless inter-domain routing
+// https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing
 package cidr
 
 import (
@@ -22,6 +25,8 @@ func RequiredHosts(subnets, prefixLen int) uint64 {
 	return uint64(math.Pow(base, math.Ceil(math.Log(size)/math.Log(base))))
 }
 
+// PrivateCidrRanges returns a set of valid private CIDRs
+// https://en.wikipedia.org/wiki/Private_network#Private_IPv4_addresses
 func PrivateCidrRanges() []string {
 	return []string{
 		"10.0.0.0/8",
@@ -30,6 +35,7 @@ func PrivateCidrRanges() []string {
 	}
 }
 
+// Cidr stores the parsed range
 type Cidr struct {
 	Block *net.IPNet
 }

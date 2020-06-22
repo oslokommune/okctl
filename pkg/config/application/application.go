@@ -1,3 +1,4 @@
+// Package application provides functionality for interacting with okctl application data
 package application
 
 import (
@@ -12,23 +13,30 @@ import (
 )
 
 const (
+	// OsDarwin is a constant for macos
 	OsDarwin = "darwin"
-	OsLinux  = "linux"
+	// OsLinux is a constant for a linux based os
+	OsLinux = "linux"
 
+	// ArchAmd64 represents all 64-bit systems
 	ArchAmd64 = "amd64"
 )
 
+// Data stores the state for the configuration
+// of okctl itself
 type Data struct {
 	User     User
 	Host     Host
 	Binaries []Binary
 }
 
+// User stores state related to the user themselves
 type User struct {
 	ID       string
 	Username string
 }
 
+// Valid returns no error if it passes all tests
 func (u User) Valid() error {
 	return validation.ValidateStruct(&u,
 		validation.Field(&u.ID,
@@ -42,6 +50,8 @@ func (u User) Valid() error {
 	)
 }
 
+// Binary stores information on how a dependent CLI
+// can be staged
 type Binary struct {
 	Name       string
 	Version    string
@@ -51,11 +61,13 @@ type Binary struct {
 	Checksums  []Checksum
 }
 
+// Archive represents the compression type
 type Archive struct {
 	Type   string
 	Target string
 }
 
+// Checksum represents the hashing algorithm and result
 type Checksum struct {
 	Os     string
 	Arch   string
@@ -63,11 +75,14 @@ type Checksum struct {
 	Digest string
 }
 
+// Host represents the user system
 type Host struct {
 	Os   string
 	Arch string
 }
 
+// Valid determines if the host operating
+// system is valid
 func (h Host) Valid() error {
 	return validation.ValidateStruct(&h,
 		validation.Field(&h.Arch,
@@ -125,6 +140,8 @@ func New() *Data {
 	}
 }
 
+// Survey starts an interactive survey for fetching configuration
+// information from the end user
 func (d *Data) Survey() (*Data, error) {
 	qs := []*survey.Question{
 		{
@@ -150,6 +167,7 @@ func (d *Data) Survey() (*Data, error) {
 	return d, d.User.Valid()
 }
 
+// YAML returns the data serialised in a yaml reperesentation
 func (d *Data) YAML() ([]byte, error) {
 	return yaml.Marshal(d)
 }

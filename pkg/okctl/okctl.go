@@ -6,6 +6,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/credentials"
 )
 
+// Okctl stores all state required for invoking commands
 type Okctl struct {
 	*config.Config
 
@@ -13,6 +14,7 @@ type Okctl struct {
 	CredentialsProvider credentials.Provider
 }
 
+// New returns a new okctl instance
 func New() *Okctl {
 	return &Okctl{
 		Config:              config.New(),

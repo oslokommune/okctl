@@ -1,3 +1,4 @@
+// Package binaries knows how fetch, verify and stage binaries
 package binaries
 
 import (
@@ -13,10 +14,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Provider defines the interface for fetching a binary
+// and returning a path to its location
 type Provider interface {
 	Fetch(name, version string) (string, error)
 }
 
+// NewStager creates a new stager for fetching and verifying a binary
 func NewStager(dest io.WriteCloser, s Storage, f Fetcher, v Verifier, d Decompressor) *Stager {
 	return &Stager{
 		Destination:  dest,
@@ -27,6 +31,7 @@ func NewStager(dest io.WriteCloser, s Storage, f Fetcher, v Verifier, d Decompre
 	}
 }
 
+// Stager stores the state required for fetching and verifying a binary
 type Stager struct {
 	BinaryPath string
 
@@ -37,6 +42,7 @@ type Stager struct {
 	Decompressor Decompressor
 }
 
+// Fetch the binary and ensure that no errors occurred
 func (s *Stager) Fetch() error {
 	// We have already fetched this binary
 	if len(s.BinaryPath) > 0 {
@@ -85,22 +91,27 @@ func (s *Stager) Fetch() error {
 	return err
 }
 
+// ErrorProvider stores state for returning an error
 type ErrorProvider struct{}
 
+// Fetch provides a default implementation that simply errors
 func (s *ErrorProvider) Fetch(name, version string) (string, error) {
-	return "", fmt.Errorf("this is an error operator, couldn't retrieve binary for: %s, version: %s", name, version)
+	return "", fmt.Errorf("funcitionality not configured, so couldn't retrieve binary for: %s, version: %s", name, version)
 }
 
+// NewErrorProvider returns a provider that simply errors when trying to fetch a binary
 func NewErrorProvider() *ErrorProvider {
 	return &ErrorProvider{}
 }
 
+// DefaultProvider is a provider that knows how to fetch binaries via https
 type DefaultProvider struct {
 	Host     application.Host
 	Store    storage.Storer
 	Binaries map[string]*Stager
 }
 
+// New returns a provider that knows how to fetch binaries via https
 func New(host application.Host, store storage.Storer) *DefaultProvider {
 	return &DefaultProvider{
 		Host:     host,
@@ -109,6 +120,7 @@ func New(host application.Host, store storage.Storer) *DefaultProvider {
 	}
 }
 
+// Stager returns a configured stager
 func (s *DefaultProvider) Stager(baseDir string, bufferSize int64, binary application.Binary) (*Stager, error) {
 	var d Decompressor
 
@@ -145,6 +157,7 @@ func (s *DefaultProvider) Stager(baseDir string, bufferSize int64, binary applic
 	return stager, nil
 }
 
+// FromConfig loads a set of stagers from a config
 func (s *DefaultProvider) FromConfig(preload bool, binaries []application.Binary) (*DefaultProvider, error) {
 	for _, binary := range binaries {
 		binaryBaseDir := path.Join("binaries", binary.Name, binary.Version, s.Host.Os, s.Host.Arch)
@@ -186,6 +199,7 @@ func (s *DefaultProvider) FromConfig(preload bool, binaries []application.Binary
 	return s, nil
 }
 
+// Fetch attempts to download and verify the binary
 func (s *DefaultProvider) Fetch(name, version string) (string, error) {
 	binary, hasKey := s.Binaries[binaryIndex(name, version)]
 	if !hasKey {

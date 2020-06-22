@@ -1,3 +1,4 @@
+// Package repository knows how to interact with repository data
 package repository
 
 import (
@@ -10,6 +11,8 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// Data stores the configured state of a repository
+// as used by okctl
 type Data struct {
 	Name      string
 	Region    string
@@ -17,6 +20,7 @@ type Data struct {
 	Clusters  []Cluster
 }
 
+// Validate the provided data
 func (d *Data) Validate() error {
 	return validation.ValidateStruct(d,
 		validation.Field(&d.Name,
@@ -39,6 +43,8 @@ func (d *Data) Validate() error {
 	)
 }
 
+// Cluster represents an okctl created
+// cluster
 type Cluster struct {
 	Environment string
 	AWS         AWS
@@ -49,6 +55,7 @@ const (
 	envMaxLength = 10
 )
 
+// Validate the cluster data
 func (c Cluster) Validate() error {
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.Environment,
@@ -59,11 +66,13 @@ func (c Cluster) Validate() error {
 	)
 }
 
+// AWS represents the required information
 type AWS struct {
 	AccountID string
 	Cidr      string
 }
 
+// Validate the data
 func (a AWS) Validate() error {
 	return validation.ValidateStruct(&a,
 		validation.Field(&a.AccountID,
@@ -73,10 +82,16 @@ func (a AWS) Validate() error {
 	)
 }
 
+// New returns repository data with defaults set
 func New() *Data {
-	return &Data{}
+	return &Data{
+		Region:    v1alpha1.RegionEuWest1,
+		OutputDir: "infrastructure",
+	}
 }
 
+// Survey starts an interactive survey that queries
+// the user for input
 func (d *Data) Survey() (*Data, error) {
 	qs := []*survey.Question{
 		{
@@ -122,6 +137,7 @@ func (d *Data) Survey() (*Data, error) {
 	return nil, errors.Wrap(d.Validate(), "failed to validate repository data")
 }
 
+// YAML returns the state of the data object in YAML
 func (d *Data) YAML() ([]byte, error) {
 	return yaml.Marshal(d)
 }

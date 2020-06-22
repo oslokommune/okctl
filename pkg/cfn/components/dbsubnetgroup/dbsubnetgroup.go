@@ -1,3 +1,5 @@
+// Package dbsubnetgroup knows how to create cloud formation
+// for a db subnet group
 package dbsubnetgroup
 
 import (
@@ -6,11 +8,13 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
+// DBSubnetGroup stores the state for a cloud formation dbsubnetgroup
 type DBSubnetGroup struct {
 	StoredName string
 	Subnets    []cfn.Referencer
 }
 
+// Resource returns the cloud formation resource for a dbsubnetgroup
 func (g *DBSubnetGroup) Resource() cloudformation.Resource {
 	subnets := make([]string, len(g.Subnets))
 
@@ -24,10 +28,12 @@ func (g *DBSubnetGroup) Resource() cloudformation.Resource {
 	}
 }
 
+// Name returns the name of the resource
 func (g *DBSubnetGroup) Name() string {
 	return g.StoredName
 }
 
+// Ref returns a cloud formation intrinsic ref to the resource
 func (g *DBSubnetGroup) Ref() string {
 	return cloudformation.Ref(g.StoredName)
 }

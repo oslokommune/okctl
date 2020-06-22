@@ -1,3 +1,4 @@
+// Package vpc knows how to create a VPC cloud formation stack
 package vpc
 
 import (
@@ -19,6 +20,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn/components/vpcgatewayattachment"
 )
 
+// Builder stores state for creating a cloud formation VPC stack
 type Builder struct {
 	Name      string
 	Env       string
@@ -29,6 +31,7 @@ type Builder struct {
 	resources []cfn.ResourceNamer
 }
 
+// New returns a VPC builder
 func New(name, env, cidrBlock, region string) *Builder {
 	return &Builder{
 		Name:      name,
@@ -38,18 +41,22 @@ func New(name, env, cidrBlock, region string) *Builder {
 	}
 }
 
+// Resources returns all cloud formation resources
 func (b *Builder) Resources() []cfn.ResourceNamer {
 	return b.resources
 }
 
+// Outputs returns all cloud formation outputs
 func (b *Builder) Outputs() []cfn.Outputer {
 	return b.outputs
 }
 
+// StackName returns the name of the stack
 func (b *Builder) StackName() string {
 	return fmt.Sprintf("%s-%s-okctl-vpc", b.Name, b.Env)
 }
 
+// Build all resources needed for creating a cloud formation VPC
 func (b *Builder) Build() error {
 	cluster := clusterPkg.New(b.Name, b.Env)
 

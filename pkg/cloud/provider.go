@@ -1,3 +1,4 @@
+// Package cloud provides access to AWS APIs
 package cloud
 
 import (
@@ -12,11 +13,13 @@ import (
 	"github.com/oslokommune/okctl/pkg/credentials"
 )
 
+// Provider stores state required for interacting with the AWS API
 type Provider struct {
 	Provider    v1alpha1.CloudProvider
 	Credentials credentials.Provider
 }
 
+// New returns a new AWS API provider
 func New(region string, c credentials.Provider) (*Provider, error) {
 	services := &Services{
 		region: region,
@@ -61,6 +64,7 @@ func (p *Provider) newSession() (*session.Session, error) {
 	return sess, err
 }
 
+// Services stores access to the various AWS APIs
 type Services struct {
 	cfn cloudformationiface.CloudFormationAPI
 	ec2 ec2iface.EC2API
@@ -68,14 +72,17 @@ type Services struct {
 	region string
 }
 
+// EC2 returns an interface to the AWS EC2 API
 func (s *Services) EC2() ec2iface.EC2API {
 	return s.ec2
 }
 
+// CloudFormation returns an interface to the AWS CloudFormation API
 func (s *Services) CloudFormation() cloudformationiface.CloudFormationAPI {
 	return s.cfn
 }
 
+// Region returns the configured AWS region
 func (s *Services) Region() string {
 	return s.region
 }

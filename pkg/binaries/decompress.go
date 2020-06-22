@@ -17,11 +17,13 @@ type Decompressor interface {
 
 type noopDecompressor struct{}
 
+// Decompress nothing, simply pass the data on
 func (d *noopDecompressor) Decompress(reader io.Reader, writer io.Writer) error {
 	_, err := io.Copy(writer, reader)
 	return err
 }
 
+// NewNoopDecompressor simply passes on the input data
 func NewNoopDecompressor() Decompressor {
 	return &noopDecompressor{}
 }
@@ -31,6 +33,7 @@ type zipDecompressor struct {
 	bufferSize int64
 }
 
+// Decompress from a .zip file
 func (z *zipDecompressor) Decompress(r io.Reader, w io.Writer) error {
 	// Zip requires a ReaderAt interface, we provide this
 	// by reading into a buffer, getting a string to that buffer
@@ -68,6 +71,7 @@ func (z *zipDecompressor) Decompress(r io.Reader, w io.Writer) error {
 	return fmt.Errorf("couldn't find: %s, in archive", z.file)
 }
 
+// NewZipDecompressor returns a decompressor that knows how to handle .zip files
 func NewZipDecompressor(file string, bufferSize int64) Decompressor {
 	return &zipDecompressor{
 		file:       file,
@@ -80,6 +84,7 @@ type gzipTarDecompressor struct {
 	bufferSize int64
 }
 
+// Decompress from a .tar.gz file
 func (g *gzipTarDecompressor) Decompress(reader io.Reader, writer io.Writer) error {
 	zs, err := gzip.NewReader(reader)
 	if err != nil {
@@ -111,6 +116,7 @@ func (g *gzipTarDecompressor) Decompress(reader io.Reader, writer io.Writer) err
 	return fmt.Errorf("couldn't find: %s, in archive", g.file)
 }
 
+// NewGzipTarDecompressor returns a decompressor that knows how to handle .tar.gz files
 func NewGzipTarDecompressor(file string, bufferSize int64) Decompressor {
 	return &gzipTarDecompressor{
 		file:       file,

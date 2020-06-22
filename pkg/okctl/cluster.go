@@ -1,3 +1,4 @@
+// Package okctl provides a high level interface for all okctl commands
 package okctl
 
 import (
@@ -16,12 +17,15 @@ import (
 
 const defaultTimeOut = 5
 
+// CreateClusterOpts defines the inputs required for creating a
+// new cluster
 type CreateClusterOpts struct {
 	AWSAccountID string
 	Environment  string
 	Cidr         string
 }
 
+// LoggerContext creates a log context based on the provided inputs
 func (o *CreateClusterOpts) LoggerContext(logger *logrus.Logger) *logrus.Entry {
 	return logger.WithFields(logrus.Fields{
 		"action":         "create",
@@ -32,6 +36,7 @@ func (o *CreateClusterOpts) LoggerContext(logger *logrus.Logger) *logrus.Entry {
 	})
 }
 
+// Valid determines if the provided cluster inputs are valid
 func (o *CreateClusterOpts) Valid() error {
 	const minLength = 3
 
@@ -53,6 +58,7 @@ func (o *CreateClusterOpts) Valid() error {
 	)
 }
 
+// ClusterConfig knows how to populate an eksctl cluster config prior to creation
 func ClusterConfig(name, region, cidr, awsAccountID string, m *manager.Manager, provider v1alpha1.CloudProvider) (*v1alpha1.ClusterConfig, error) {
 	clusterConfig := v1alpha1.NewClusterConfig()
 
@@ -69,6 +75,8 @@ func ClusterConfig(name, region, cidr, awsAccountID string, m *manager.Manager, 
 	})
 }
 
+// CreateCluster starts the creation of all resources related to an EKS cluster
+// such as a VPC, etc.
 func (o *Okctl) CreateCluster(opts CreateClusterOpts) error {
 	ctxLogger := opts.LoggerContext(o.Logger)
 

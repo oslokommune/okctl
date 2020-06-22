@@ -1,3 +1,4 @@
+// Package natgateway knows how to create cloud formation for a NATGW
 package natgateway
 
 import (
@@ -8,6 +9,8 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
+// NatGateway stores required state for creating
+// a cloud formation NATGW
 type NatGateway struct {
 	StoredName        string
 	Number            int
@@ -16,6 +19,7 @@ type NatGateway struct {
 	GatewayAttachment cfn.Namer
 }
 
+// Resource returns a cloud formation resource for creating a NATGW
 func (n *NatGateway) Resource() cloudformation.Resource {
 	return &ec2.NatGateway{
 		AllocationId: cloudformation.GetAtt(n.EIP.Name(), "AllocationId"),
@@ -28,10 +32,12 @@ func (n *NatGateway) Resource() cloudformation.Resource {
 	}
 }
 
+// Name returns the name of the resource
 func (n *NatGateway) Name() string {
 	return n.StoredName
 }
 
+// Ref returns a cloud formation intrinsic ref to the resource
 func (n *NatGateway) Ref() string {
 	return cloudformation.Ref(n.Name())
 }

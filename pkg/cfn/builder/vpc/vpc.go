@@ -53,7 +53,7 @@ func (b *Builder) Outputs() []cfn.Outputer {
 
 // StackName returns the name of the stack
 func (b *Builder) StackName() string {
-	return fmt.Sprintf("%s-%s-okctl-vpc", b.Name, b.Env)
+	return StackName(b.Name, b.Env)
 }
 
 // Build all resources needed for creating a cloud formation VPC
@@ -113,4 +113,9 @@ func (b *Builder) Build() error {
 	b.resources = append(b.resources, dsg, cpsg)
 
 	return nil
+}
+
+// StackName returns a consistent stack name for a VPC
+func StackName(name, env string) string {
+	return fmt.Sprintf("%s-%s-okctl-vpc", name, env)
 }

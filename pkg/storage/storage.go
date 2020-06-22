@@ -28,6 +28,8 @@ type Cleaner interface {
 // and directories
 type Storer interface {
 	Create(dir, name string, perms os.FileMode) (afero.File, error)
+	RemoveAll(path string) error
+	ReadAll(path string) ([]byte, error)
 	MkdirAll(dir string) error
 	Exists(name string) (bool, error)
 	Abs(name string) string
@@ -37,6 +39,22 @@ type Storer interface {
 type Storage struct {
 	Path string
 	Fs   afero.Fs
+}
+
+// ReadAll returns all the content of a file
+func (s *Storage) ReadAll(path string) ([]byte, error) {
+	f, err := s.Fs.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return ioutil.ReadAll(f)
+}
+
+// RemoveAll returns no error if it successfully remove everything
+// under the given path
+func (s *Storage) RemoveAll(path string) error {
+	return s.Fs.RemoveAll(path)
 }
 
 // MkdirAll creates a directory and all preceding directories

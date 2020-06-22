@@ -99,6 +99,7 @@ being captured. Together with slack and slick.`,
 	}
 
 	cmd.AddCommand(buildCreateCommand(o))
+	cmd.AddCommand(buildDeleteCommand(o))
 
 	return cmd
 }

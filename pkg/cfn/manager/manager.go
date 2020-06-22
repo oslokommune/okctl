@@ -17,8 +17,8 @@ import (
 const (
 	//stackStatus              = "Stacks[].StackStatus"
 	stackDoesNotExistPattern = "Stack with id %s does not exist"
-
-	awsErrValidationError = "ValidationError"
+	defaultSleepTime         = 30
+	awsErrValidationError    = "ValidationError"
 )
 
 // Stack defines a single cloud formation stack
@@ -34,15 +34,23 @@ type Manager struct {
 }
 
 // New returns a new manager
-func New(logger *logrus.Logger, builder cfn.Builder, provider v1alpha1.CloudProvider) *Manager {
+func New(logger *logrus.Logger, provider v1alpha1.CloudProvider) *Manager {
 	return &Manager{
-		Logger: logger.WithFields(logrus.Fields{
-			"cloud_formation_stack_name": builder.StackName(),
-		}),
-		Builder:  builder,
+		Logger:   logger.WithFields(logrus.Fields{}),
 		Provider: provider,
 		Template: cloudformation.NewTemplate(),
 	}
+}
+
+// WithBuilder adds a builder to cloud formation stack manager
+func (m *Manager) WithBuilder(builder cfn.Builder) *Manager {
+	m.Builder = builder
+
+	m.Logger = m.Logger.WithFields(logrus.Fields{
+		"cloud_formation_stack_name": builder.StackName(),
+	})
+
+	return m
 }
 
 // Exists returns true if a cloud formation stack already exists
@@ -151,6 +159,18 @@ func (m *Manager) collectOutputs() error {
 	return nil
 }
 
+// Delete a cloud formation stack
+func (m *Manager) Delete(stackName string) error {
+	_, err := m.Provider.CloudFormation().DeleteStack(&cfPkg.DeleteStackInput{
+		StackName: aws.String(stackName),
+	})
+	if err != nil {
+		return err
+	}
+
+	return m.watchDelete(stackName)
+}
+
 // CreateIfNotExists creates a cloud formation stack if none exists from before
 func (m *Manager) CreateIfNotExists(timeout int64) error {
 	err := m.existsAndReady()
@@ -191,11 +211,40 @@ func (m *Manager) CreateIfNotExists(timeout int64) error {
 	return m.watchCreate(r)
 }
 
+func (m *Manager) watchDelete(stackName string) error {
+	m.Logger.Info("Stack deletion request sent to AWS")
+
+	for {
+		stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
+			StackName: aws.String(stackName),
+		})
+		if err != nil {
+			return err
+		}
+
+		if len(stack.Stacks) != 1 {
+			return fmt.Errorf("expected 1 cloudformation stack to be deleted")
+		}
+
+		sleepTime := defaultSleepTime * time.Second
+
+		switch *stack.Stacks[0].StackStatus {
+		case cfPkg.StackStatusDeleteComplete:
+			return nil
+		case cfPkg.StackStatusDeleteFailed:
+			return fmt.Errorf("failed to delete stack: %s", *stack.Stacks[0].StackStatusReason)
+		case cfPkg.StackStatusDeleteInProgress:
+			m.Logger.Info("Waiting for stack deletion to complete.. sleeping for 30 seconds")
+			time.Sleep(sleepTime)
+		default:
+			return fmt.Errorf("wtf")
+		}
+	}
+}
+
 // Reimplement this as wait
 func (m *Manager) watchCreate(r *cfPkg.CreateStackOutput) error {
 	m.Logger.Info("Stack creation request sent to AWS")
-
-	const defaultSleepTime = 30
 
 	for {
 		stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{

@@ -1,3 +1,4 @@
+// Package context provides an interface to ephemeral resources
 package context
 
 import (
@@ -9,10 +10,13 @@ import (
 )
 
 const (
-	DefaultDebugEnv   = "OKCTL_DEBUG"
+	// DefaultDebugEnv if set will ensure verbose debugging output
+	DefaultDebugEnv = "OKCTL_DEBUG"
+	// DefaultNoInputEnv if set will ensure that no interactive dialogs are started
 	DefaultNoInputEnv = "OKCTL_NO_INPUT"
 )
 
+// Context provides access to ephemeral state
 type Context struct {
 	FileSystem *afero.Afero
 
@@ -26,6 +30,7 @@ type Context struct {
 	Logger *logrus.Logger
 }
 
+// New returns a context with sensible defaults
 func New() *Context {
 	_, debug := os.LookupEnv(DefaultDebugEnv)
 	_, noInput := os.LookupEnv(DefaultNoInputEnv)

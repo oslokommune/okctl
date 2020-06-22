@@ -1,3 +1,4 @@
+// Package login knows how to orchestrate a login to AWS via KeyCloak
 package login
 
 import (
@@ -14,10 +15,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Loginer knows how to retrieve AWS credentials
 type Loginer interface {
 	Login() (*sts.Credentials, error)
 }
 
+// Login stores state for fetching credentials
 type Login struct {
 	AWSAccountID string
 	Username     string
@@ -26,6 +29,7 @@ type Login struct {
 	Region       string
 }
 
+// Validate the login data
 func (l *Login) Validate() error {
 	return validation.ValidateStruct(l,
 		validation.Field(&l.Username,
@@ -42,6 +46,7 @@ func (l *Login) Validate() error {
 	)
 }
 
+// Login starts a process for retrieving AWS credentials
 func (l *Login) Login() (*sts.Credentials, error) {
 	samlAssertion, err := scrape.New().Scrape(l.Username, l.Password, l.MFAToken)
 	if err != nil {
@@ -73,6 +78,7 @@ func (l *Login) Login() (*sts.Credentials, error) {
 	return resp.Credentials, nil
 }
 
+// Interactive returns an interactive login
 func Interactive(awsAccountID, region, userName string) (*Login, error) {
 	qs := []*survey.Question{
 		{

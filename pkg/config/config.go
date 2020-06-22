@@ -1,3 +1,4 @@
+// Package config interacts with all configuration state
 package config
 
 import (
@@ -18,25 +19,38 @@ import (
 )
 
 const (
-	DefaultDir        = ".okctl"
-	DefaultConfig     = "conf.yml"
+	// DefaultDir is the default location directory for the okctl application config
+	DefaultDir = ".okctl"
+	// DefaultConfig is the default filename of the okctl application config
+	DefaultConfig = "conf.yml"
+	// DefaultConfigName is the default name of the okctl application config
 	DefaultConfigName = "conf"
+	// DefaultConfigType is the default type of the okctl application config
 	DefaultConfigType = "yml"
 
-	DefaultRepositoryConfig     = ".okctl.yml"
+	// DefaultRepositoryConfig is the default filename of the okctl repository config
+	DefaultRepositoryConfig = ".okctl.yml"
+	// DefaultRepositoryConfigName is the default name of the okctl repository config
 	DefaultRepositoryConfigName = ".okctl"
+	// DefaultRepositoryConfigType is the default type of the okctl repository config
 	DefaultRepositoryConfigType = "yml"
 
+	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"
-	EnvHome   = "OKCTL_HOME"
+	// EnvHome is the default env var parsed for determining the application home
+	EnvHome = "OKCTL_HOME"
 )
 
+// DataLoaderFn is the type for loading configuration data
 type DataLoaderFn func(*Config) error
 
+// NoopDataLoader does nothing
 func NoopDataLoader(_ *Config) error {
 	return nil
 }
 
+// Config stores state for representing and interacting
+// with okctl state
 type Config struct {
 	*context.Context
 
@@ -59,6 +73,7 @@ func New() *Config {
 	}
 }
 
+// LoadRepoData will attempt to load repository data
 func (c *Config) LoadRepoData() error {
 	c.RepoData = nil
 
@@ -69,6 +84,7 @@ func (c *Config) LoadRepoData() error {
 	return c.RepoDataLoader(c)
 }
 
+// LoadAppData will attempt to load okctl application data
 func (c *Config) LoadAppData() error {
 	c.AppData = nil
 
@@ -79,6 +95,7 @@ func (c *Config) LoadAppData() error {
 	return c.AppDataLoader(c)
 }
 
+// WriteAppData will store the current app data state to disk
 func (c *Config) WriteAppData(b []byte) error {
 	home, err := c.GetHomeDir()
 	if err != nil {
@@ -104,6 +121,7 @@ func (c *Config) WriteAppData(b []byte) error {
 	return nil
 }
 
+// GetRepoDir will return the currently active repository directory
 func (c *Config) GetRepoDir() (string, error) {
 	if len(c.repoDir) != 0 {
 		return c.repoDir, nil
@@ -129,10 +147,12 @@ func (c *Config) GetRepoDir() (string, error) {
 	return c.repoDir, nil
 }
 
+// GetRepoDataDir will return the directory where repo data should be read/written
 func (c *Config) GetRepoDataDir() (string, error) {
 	return c.GetRepoDir()
 }
 
+// GetRepoDataPath will return the filename where repo data should be read/written
 func (c *Config) GetRepoDataPath() (string, error) {
 	base, err := c.GetRepoDataDir()
 	if err != nil {
@@ -142,6 +162,7 @@ func (c *Config) GetRepoDataPath() (string, error) {
 	return filepath.Join(base, DefaultRepositoryConfig), nil
 }
 
+// WriteCurrentRepoData will write current repo state to disk
 func (c *Config) WriteCurrentRepoData() error {
 	data, err := c.RepoData.YAML()
 	if err != nil {
@@ -151,6 +172,7 @@ func (c *Config) WriteCurrentRepoData() error {
 	return c.WriteRepoData(data)
 }
 
+// WriteRepoData will write the provided repo state to disk
 func (c *Config) WriteRepoData(b []byte) error {
 	repo, err := c.GetRepoDir()
 	if err != nil {
@@ -176,6 +198,7 @@ func (c *Config) WriteRepoData(b []byte) error {
 	return nil
 }
 
+// GetHomeDir will get the okctl application home dir
 func (c *Config) GetHomeDir() (string, error) {
 	if len(c.homeDir) != 0 {
 		return c.homeDir, nil
@@ -202,6 +225,8 @@ func (c *Config) GetHomeDir() (string, error) {
 	return c.homeDir, nil
 }
 
+// GetAppDataDir will get the directory to where okctl
+// application data should be written
 func (c *Config) GetAppDataDir() (string, error) {
 	home, err := c.GetHomeDir()
 	if err != nil {
@@ -211,6 +236,8 @@ func (c *Config) GetAppDataDir() (string, error) {
 	return filepath.Join(home, DefaultDir), nil
 }
 
+// GetAppDataPath returns the path to the okctl application
+// config path
 func (c *Config) GetAppDataPath() (string, error) {
 	base, err := c.GetAppDataDir()
 	if err != nil {
@@ -220,6 +247,8 @@ func (c *Config) GetAppDataPath() (string, error) {
 	return filepath.Join(base, DefaultConfig), nil
 }
 
+// GetRepoOutputDir return the repository output directory,
+// where cloud formation stacks, etc., should be written
 func (c *Config) GetRepoOutputDir(env string) (string, error) {
 	base, err := c.GetRepoDataDir()
 	if err != nil {
@@ -229,6 +258,8 @@ func (c *Config) GetRepoOutputDir(env string) (string, error) {
 	return path.Join(base, c.RepoData.OutputDir, env), nil
 }
 
+// WriteToOutputDir will write state to the given output dir, env and
+// filepath
 func (c *Config) WriteToOutputDir(env, filePath string, b []byte) error {
 	outDir, err := c.GetRepoOutputDir(env)
 	if err != nil {
@@ -256,6 +287,7 @@ func (c *Config) WriteToOutputDir(env, filePath string, b []byte) error {
 	return nil
 }
 
+// ClusterName returns a consistent cluster name
 func (c *Config) ClusterName(env string) string {
 	return fmt.Sprintf("%s-%s", c.RepoData.Name, env)
 }

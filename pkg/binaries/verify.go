@@ -8,20 +8,25 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Verifier provides an interface for verifying a file
 type Verifier interface {
 	Verify(io.Reader) error
 }
 
 type noopVerifier struct{}
 
+// Verify does nothing, simply return nil
 func (v *noopVerifier) Verify(io.Reader) error {
 	return nil
 }
 
+// NewNoopVerifier creates a verifier that does nothing
 func NewNoopVerifier() Verifier {
 	return &noopVerifier{}
 }
 
+// NewVerifier returns a verifier that understand common
+// hashing algorithms
 func NewVerifier(digests map[digest.Type]string) Verifier {
 	digestTypes := make([]digest.Type, len(digests))
 	i := 0

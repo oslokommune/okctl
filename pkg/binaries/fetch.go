@@ -7,6 +7,7 @@ import (
 	"net/url"
 )
 
+// Fetcher provides an interface for downloading a file from a URL
 type Fetcher interface {
 	Fetch(io.Writer) (int64, error)
 }

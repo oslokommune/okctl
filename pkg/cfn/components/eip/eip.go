@@ -1,3 +1,5 @@
+// Package eip provides a simplified interface for creating cloud
+// formation resources
 package eip
 
 import (
@@ -8,12 +10,14 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
+// EIP stores the state for creating a cloud formation EIP resource
 type EIP struct {
 	StoredName        string
 	Number            int
 	GatewayAttachment cfn.Namer
 }
 
+// Resource returns the cloud formation resource for an EIP
 func (i *EIP) Resource() cloudformation.Resource {
 	return &ec2.EIP{
 		Domain: "vpc",
@@ -23,10 +27,12 @@ func (i *EIP) Resource() cloudformation.Resource {
 	}
 }
 
+// Name returns the name of the resource
 func (i *EIP) Name() string {
 	return i.StoredName
 }
 
+// Ref returns a cloud formation intrinsic ref to the resource
 func (i *EIP) Ref() string {
 	return cloudformation.Ref(i.Name())
 }

@@ -1,3 +1,4 @@
+// Package routetable knows how to create cloud formation for a route table
 package routetable
 
 import (
@@ -8,13 +9,32 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
-type Private struct {
+// RouteTable stores required state for creating a
+// cloud formation route table resource
+type RouteTable struct {
 	StoredName string
 	Number     int
 	VPC        cfn.Referencer
 }
 
-// NewPrivate returns a route table for the Private
+// Resource returns the cloud formation route table
+func (p *RouteTable) Resource() cloudformation.Resource {
+	return &ec2.RouteTable{
+		VpcId: p.VPC.Ref(),
+	}
+}
+
+// Name returns the name of the resource
+func (p *RouteTable) Name() string {
+	return p.StoredName
+}
+
+// Ref return a cloud formation intrinsic ref to the resource
+func (p *RouteTable) Ref() string {
+	return cloudformation.Ref(p.Name())
+}
+
+// NewPrivate returns a route table for the RouteTable
 // subnets
 //
 // Specifies a route table for a specified VPC.
@@ -22,45 +42,12 @@ type Private struct {
 // and associate the table with a subnet.
 //
 // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-route-table.html
-func NewPrivate(number int, vpc cfn.Referencer) *Private {
-	return &Private{
+func NewPrivate(number int, vpc cfn.Referencer) *RouteTable {
+	return &RouteTable{
 		StoredName: fmt.Sprintf("PrivateRouteTable%02d", number),
 		Number:     number,
 		VPC:        vpc,
 	}
-}
-
-func (p *Private) Resource() cloudformation.Resource {
-	return &ec2.RouteTable{
-		VpcId: p.VPC.Ref(),
-	}
-}
-
-func (p *Private) Name() string {
-	return p.StoredName
-}
-
-func (p *Private) Ref() string {
-	return cloudformation.Ref(p.Name())
-}
-
-type Public struct {
-	StoredName string
-	VPC        cfn.Referencer
-}
-
-func (p *Public) Resource() cloudformation.Resource {
-	return &ec2.RouteTable{
-		VpcId: p.VPC.Ref(),
-	}
-}
-
-func (p *Public) Name() string {
-	return p.StoredName
-}
-
-func (p *Public) Ref() string {
-	return cloudformation.Ref(p.Name())
 }
 
 // NewPublic returns a route table for the Public
@@ -71,8 +58,8 @@ func (p *Public) Ref() string {
 // and associate the table with a subnet.
 //
 // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-route-table.html
-func NewPublic(vpc cfn.Referencer) *Public {
-	return &Public{
+func NewPublic(vpc cfn.Referencer) *RouteTable {
+	return &RouteTable{
 		StoredName: "PublicRouteTable",
 		VPC:        vpc,
 	}

@@ -11,6 +11,8 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// ErrOnRepoDataNotFound will simply error if no
+// application data is found
 func ErrOnRepoDataNotFound() DataNotFoundFn {
 	return func(c *config.Config) error {
 		f, _ := c.GetRepoDataPath()
@@ -68,6 +70,7 @@ func CreateOnRepoDataNotFound() DataNotFoundFn {
 	}
 }
 
+// RepoDataFromConfigFile defines the default behavior for loading configuration data
 func RepoDataFromConfigFile(_ *cobra.Command, notFoundFn DataNotFoundFn) config.DataLoaderFn {
 	return buildRepoDataLoader(notFoundFn, nil)
 }

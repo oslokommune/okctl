@@ -1,3 +1,4 @@
+// Package digest knows how to create a new hash digest from some input
 package digest
 
 import (
@@ -21,7 +22,9 @@ type Digester interface {
 type Type string
 
 const (
+	// TypeSHA256 defines the secure hash algorithm type 2 with 256 bits
 	TypeSHA256 Type = "sha256"
+	// TypeSHA512 defines the secure hash algorithm type 2 with 512 bits
 	TypeSHA512 Type = "sha512"
 )
 

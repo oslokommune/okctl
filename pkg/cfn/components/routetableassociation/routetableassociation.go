@@ -1,3 +1,4 @@
+// Package routetableassociation knows how to create cloud formation for a route table association
 package routetableassociation
 
 import (
@@ -8,12 +9,14 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
+// RouteTableAssociation stores the state of the cloud formation resource
 type RouteTableAssociation struct {
 	StoredName string
 	Subnet     cfn.Referencer
 	RouteTable cfn.Referencer
 }
 
+// Resource returns a cloud formation resource of the route table association
 func (a *RouteTableAssociation) Resource() cloudformation.Resource {
 	return &ec2.SubnetRouteTableAssociation{
 		RouteTableId: a.RouteTable.Ref(),
@@ -21,10 +24,12 @@ func (a *RouteTableAssociation) Resource() cloudformation.Resource {
 	}
 }
 
+// Name returns the name of the resource
 func (a *RouteTableAssociation) Name() string {
 	return a.StoredName
 }
 
+// Ref returns a cloud formation intrinsic ref to the resource
 func (a *RouteTableAssociation) Ref() string {
 	return cloudformation.Ref(a.Name())
 }

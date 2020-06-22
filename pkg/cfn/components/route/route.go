@@ -1,3 +1,4 @@
+// Package route knows how to create cloud formation for an EC2 VPC route
 package route
 
 import (
@@ -8,6 +9,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
+// Route stores required state for creating a cloud formation Route
 type Route struct {
 	Type              string
 	Number            int
@@ -18,6 +20,7 @@ type Route struct {
 	NatGateway        cfn.NameReferencer
 }
 
+// Resource returns the cloud formation route resource
 func (r *Route) Resource() cloudformation.Resource {
 	route := &ec2.Route{
 		DestinationCidrBlock: "0.0.0.0/0",
@@ -38,10 +41,12 @@ func (r *Route) Resource() cloudformation.Resource {
 	return route
 }
 
+// Name returns the name of the resource
 func (r *Route) Name() string {
 	return r.StoredName
 }
 
+// Ref returns a cloud formation intrinsic ref to the resource
 func (r *Route) Ref() string {
 	return cloudformation.Ref(r.Name())
 }

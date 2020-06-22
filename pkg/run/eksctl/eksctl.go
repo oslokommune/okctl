@@ -17,6 +17,8 @@ const (
 	Name = "eksctl"
 	// Version sets the currently used version of the binary/cli
 	Version = "0.21.0"
+
+	defaultClusterConfig = "cluster-config.yml"
 )
 
 // Eksctl stores state for working with the eksctl cli
@@ -61,7 +63,7 @@ func (e *Eksctl) writeTemporaryClusterConfig(cfg *v1alpha1.ClusterConfig) error 
 		return err
 	}
 
-	file, err := e.Store.Create("", "cluster-config.yml", 0644)
+	file, err := e.Store.Create("", defaultClusterConfig, 0644)
 	if err != nil {
 		return err
 	}
@@ -96,7 +98,7 @@ func (e *Eksctl) DeleteCluster(progress io.Writer, cfg *v1alpha1.ClusterConfig) 
 		"delete",
 		"cluster",
 		"--config-file",
-		e.Store.Abs("cluster-config.yml"),
+		e.Store.Abs(defaultClusterConfig),
 	}
 
 	_, err = e.Runner.Run(progress, args)
@@ -125,7 +127,7 @@ func (e *Eksctl) CreateCluster(progress io.Writer, cfg *v1alpha1.ClusterConfig) 
 		"cluster",
 		"--write-kubeconfig=false",
 		"--config-file",
-		e.Store.Abs("cluster-config.yml"),
+		e.Store.Abs(defaultClusterConfig),
 	}
 
 	_, err = e.Runner.Run(progress, args)

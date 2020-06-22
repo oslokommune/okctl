@@ -37,6 +37,11 @@ const (
 	// DefaultRepositoryConfigType is the default type of the okctl repository config
 	DefaultRepositoryConfigType = "yml"
 
+	// DefaultClusterConfig is the default filename of the eksctl cluster config
+	DefaultClusterConfig = "cluster.yml"
+	// DefaultClusterBaseDir is the default directory name of the eksctl cluster config
+	DefaultClusterBaseDir = "cluster"
+
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"
 	// EnvHome is the default env var parsed for determining the application home
@@ -321,12 +326,12 @@ func (c *Config) WriteClusterConfig(env string, cfg *v1alpha1.ClusterConfig) err
 		return err
 	}
 
-	return c.WriteToOutputDir(env, path.Join("cluster", "config.yml"), b)
+	return c.WriteToOutputDir(env, path.Join(DefaultClusterBaseDir, DefaultClusterConfig), b)
 }
 
 // DeleteClusterConfig deletes the cluster config for a given environment
 func (c *Config) DeleteClusterConfig(env string) error {
-	return c.DeleteFromOutputDir(env, path.Join("cluster", "config.yml"))
+	return c.DeleteFromOutputDir(env, path.Join(DefaultClusterBaseDir, DefaultClusterConfig))
 }
 
 // ClusterConfig loads the cluster configuration for the given environment
@@ -338,7 +343,7 @@ func (c *Config) ClusterConfig(env string) (*v1alpha1.ClusterConfig, error) {
 
 	store := storage.NewFileSystemStorage(outDir)
 
-	b, err := store.ReadAll(path.Join("cluster", "config.yml"))
+	b, err := store.ReadAll(path.Join(DefaultClusterBaseDir, DefaultClusterConfig))
 	if err != nil {
 		return nil, err
 	}

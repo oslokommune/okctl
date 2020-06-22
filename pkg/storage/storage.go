@@ -42,6 +42,15 @@ func (s *Storage) Create(dir, file string, perms os.FileMode) (afero.File, error
 	return s.Fs.OpenFile(path.Join(dir, file), os.O_RDWR|os.O_CREATE, perms)
 }
 
+func (s *Storage) Recreate(dir, file string, perms os.FileMode) (afero.File, error) {
+	err := s.Fs.RemoveAll(path.Join(dir, file))
+	if err != nil {
+		return nil, err
+	}
+
+	return s.Create(dir, file, perms)
+}
+
 func (s *Storage) Exists(name string) (bool, error) {
 	return afero.Exists(s.Fs, name)
 }

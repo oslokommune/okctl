@@ -17,7 +17,48 @@ func main() {
 	}
 }
 
-// nolint
+func binariesProvider(o *okctl.Okctl) error {
+	appDataDir, err := o.GetAppDataDir()
+	if err != nil {
+		return err
+	}
+
+	store := storage.NewFileSystemStorage(appDataDir)
+
+	stagers, err := binaries.New(o.AppData.Host, store).FromConfig(true, o.AppData.Binaries)
+	if err != nil {
+		return err
+	}
+
+	o.BinariesProvider = stagers
+
+	return nil
+}
+
+func repoDataLoader(o *okctl.Okctl, cmd *cobra.Command) error {
+	repoDataNotFound := load.CreateOnRepoDataNotFound()
+
+	if o.NoInput {
+		repoDataNotFound = load.ErrOnRepoDataNotFound()
+	}
+
+	o.RepoDataLoader = load.RepoDataFromConfigFile(cmd, repoDataNotFound)
+
+	return o.LoadRepoData()
+}
+
+func appDataLoader(o *okctl.Okctl, cmd *cobra.Command) error {
+	appDataNotFound := load.CreateOnAppDataNotFound()
+
+	if o.NoInput {
+		appDataNotFound = load.ErrOnAppDataNotFound()
+	}
+
+	o.AppDataLoader = load.AppDataFromFlagsEnvConfigDefaults(cmd, appDataNotFound)
+
+	return o.LoadAppData()
+}
+
 func buildRootCommand() *cobra.Command {
 	o := okctl.New()
 
@@ -35,43 +76,20 @@ being captured. Together with slack and slick.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
-			{
-				repoDataNotFound := load.CreateOnRepoDataNotFound()
-				if o.NoInput {
-					repoDataNotFound = load.ErrOnRepoDataNotFound()
-				}
-				o.RepoDataLoader = load.RepoDataFromConfigFile(cmd, repoDataNotFound)
-			}
-
-			appDataNotFound := load.CreateOnAppDataNotFound()
-			if o.NoInput {
-				appDataNotFound = load.ErrOnAppDataNotFound()
-			}
-			o.AppDataLoader = load.AppDataFromFlagsThenEnvVarsThenConfigFile(cmd, appDataNotFound)
-
-			err = o.LoadAppData()
+			err = appDataLoader(o, cmd)
 			if err != nil {
 				return err
 			}
 
-			err = o.LoadRepoData()
+			err = repoDataLoader(o, cmd)
 			if err != nil {
 				return err
 			}
 
-			appDataDir, err := o.GetAppDataDir()
+			err = binariesProvider(o)
 			if err != nil {
 				return err
 			}
-
-			store := storage.NewFileSystemStorage(appDataDir)
-
-			stagers, err := binaries.New(o.AppData.Host, store).FromConfig(true, o.AppData.Binaries)
-			if err != nil {
-				return err
-			}
-
-			o.BinariesProvider = stagers
 
 			o.Out = cmd.OutOrStdout()
 			o.Err = cmd.OutOrStderr()

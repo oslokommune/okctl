@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHttpFetcher_Fetch(t *testing.T) {
+func TestHttpFetcherFetch(t *testing.T) {
 	testCases := []struct {
 		name      string
 		url       string

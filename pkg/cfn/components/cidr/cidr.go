@@ -14,10 +14,12 @@ import (
 // and rounds up to the nearest power of two
 func RequiredHosts(subnets, prefixLen int) uint64 {
 	const ipv4bits = 32
+
+	const base = 2
+
 	size := float64(subnets * (1 << (uint64(ipv4bits) - uint64(prefixLen))))
 
-	// nolint
-	return uint64(math.Pow(2, math.Ceil(math.Log(size)/math.Log(2))))
+	return uint64(math.Pow(base, math.Ceil(math.Log(size)/math.Log(base))))
 }
 
 func PrivateCidrRanges() []string {

@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.0.7
+	github.com/VividCortex/gohistogram v1.0.0 // indirect
 	github.com/apparentlymart/go-cidr v1.0.1
 	github.com/aws/aws-sdk-go v1.23.15
 	github.com/awslabs/goformation/v4 v4.8.0
@@ -14,6 +15,7 @@ require (
 	github.com/go-git/go-git/v5 v5.1.0
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
 	github.com/google/uuid v1.1.1
+	github.com/influxdata/influxdb v1.8.0 // indirect
 	github.com/jarcoal/httpmock v1.0.5
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect

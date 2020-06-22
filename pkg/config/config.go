@@ -123,6 +123,15 @@ func (c *Config) WriteAppData(b []byte) error {
 	return nil
 }
 
+func (c *Config) WriteCurrentAppData() error {
+	b, err := c.AppData.YAML()
+	if err != nil {
+		return err
+	}
+
+	return c.WriteAppData(b)
+}
+
 // GetRepoDir will return the currently active repository directory
 func (c *Config) GetRepoDir() (string, error) {
 	if len(c.repoDir) != 0 {
@@ -170,6 +179,8 @@ func (c *Config) WriteCurrentRepoData() error {
 	if err != nil {
 		return err
 	}
+
+	c.Logger.Debugf("write current repo data: %s", string(data))
 
 	return c.WriteRepoData(data)
 }

@@ -134,7 +134,7 @@ func (d *Data) Survey() (*Data, error) {
 	d.Region = answers.Region
 	d.OutputDir = answers.BaseDir
 
-	return nil, errors.Wrap(d.Validate(), "failed to validate repository data")
+	return d, errors.Wrap(d.Validate(), "failed to validate repository data")
 }
 
 // YAML returns the state of the data object in YAML

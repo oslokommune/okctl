@@ -161,10 +161,7 @@ func (o *Okctl) CreateCluster(opts CreateClusterOpts) error {
 
 	ctxLogger.Info("Starting EKS cluster creation process")
 
-	exists := o.HasCluster(opts.Environment)
-	if exists {
-		return fmt.Errorf("cluster for env: %s, already exists", opts.Environment)
-	}
+	ctxLogger.Debugf("known repository data: %s", o.RepoData)
 
 	m := manager.New(o.Logger, o.CloudProvider).
 		WithBuilder(vpc.New(o.RepoData.Name, opts.Environment, opts.Cidr, o.Region()))
@@ -173,6 +170,8 @@ func (o *Okctl) CreateCluster(opts CreateClusterOpts) error {
 	if err != nil {
 		return err
 	}
+
+	o.RepoData.Clusters = remove(opts.Environment, o.RepoData.Clusters)
 
 	o.RepoData.Clusters = append(o.RepoData.Clusters, repository.Cluster{
 		Environment: opts.Environment,
@@ -196,6 +195,8 @@ func (o *Okctl) CreateCluster(opts CreateClusterOpts) error {
 	if err != nil {
 		return err
 	}
+
+	ctxLogger.Debugf("cluster config: %s", clusterConfig)
 
 	err = eksctl.CreateCluster(o.Err, clusterConfig)
 	if err != nil {

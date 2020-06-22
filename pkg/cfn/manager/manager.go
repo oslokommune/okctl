@@ -55,10 +55,19 @@ func (m *Manager) WithBuilder(builder cfn.Builder) *Manager {
 
 // Exists returns true if a cloud formation stack already exists
 func (m *Manager) Exists() (bool, error) {
-	stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
+	req := &cfPkg.DescribeStacksInput{
 		StackName: aws.String(m.Builder.StackName()),
-	})
+	}
+
+	m.Logger.WithFields(logrus.Fields{
+		"request": req,
+		"type":    "CloudFormation.DescribeStacks",
+	}).Debug("sending cloud formation describe request")
+
+	stack, err := m.Provider.CloudFormation().DescribeStacks(req)
 	if err != nil {
+		m.Logger.Debug(err)
+
 		switch e := err.(type) {
 		case awserr.Error:
 			if e.Code() == awsErrValidationError && fmt.Sprintf(stackDoesNotExistPattern, m.Builder.StackName()) == e.Message() {
@@ -68,6 +77,12 @@ func (m *Manager) Exists() (bool, error) {
 			return false, err
 		}
 	}
+
+	if stack == nil {
+		return false, fmt.Errorf("failed to describe stack")
+	}
+
+	m.Logger.Debug(stack)
 
 	// Is this check really necessary?
 	return m.StackStatusIsNotDeleted(stack.Stacks[0]), nil
@@ -111,26 +126,26 @@ func (m *Manager) Ready() (bool, error) {
 	return m.StackStatusIsNotTransitional(stack.Stacks[0]), nil
 }
 
-func (m *Manager) existsAndReady() error {
+func (m *Manager) existsAndReady() (bool, error) {
 	exists, err := m.Exists()
 	if err != nil {
-		return err
-	}
-
-	ready, err := m.Ready()
-	if err != nil {
-		return err
+		return false, err
 	}
 
 	if exists {
-		if ready {
-			return nil
+		ready, err := m.Ready()
+		if err != nil {
+			return false, err
 		}
 
-		return fmt.Errorf("stack: %s exists and is in a transitional state", m.Builder.StackName())
+		if ready {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("stack: %s exists and is in a transitional state", m.Builder.StackName())
 	}
 
-	return nil
+	return false, nil
 }
 
 func (m *Manager) collectResources() error {
@@ -173,9 +188,13 @@ func (m *Manager) Delete(stackName string) error {
 
 // CreateIfNotExists creates a cloud formation stack if none exists from before
 func (m *Manager) CreateIfNotExists(timeout int64) error {
-	err := m.existsAndReady()
+	yes, err := m.existsAndReady()
 	if err != nil {
 		return err
+	}
+
+	if yes {
+		return nil
 	}
 
 	err = m.Builder.Build()

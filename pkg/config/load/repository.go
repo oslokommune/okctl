@@ -5,10 +5,10 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/config/repository"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"sigs.k8s.io/yaml"
 )
 
 // ErrOnRepoDataNotFound will simply error if no
@@ -50,17 +50,12 @@ func CreateOnRepoDataNotFound() DataNotFoundFn {
 			return err
 		}
 
-		b, err := yaml.Marshal(data)
-		if err != nil {
-			return err
-		}
-
-		err = c.WriteRepoData(b)
-		if err != nil {
-			return err
-		}
-
 		c.RepoData = data
+
+		err = c.WriteCurrentRepoData()
+		if err != nil {
+			return errors.Wrap(err, "failed to write current repo data")
+		}
 
 		c.Logger.WithFields(logrus.Fields{
 			"configuration_file": repoDataPath,

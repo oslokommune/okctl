@@ -7,6 +7,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/config/load"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/storage"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -78,17 +79,17 @@ being captured. Together with slack and slick.`,
 
 			err = appDataLoader(o, cmd)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "failed to load application data")
 			}
 
 			err = repoDataLoader(o, cmd)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "failed to load repository data")
 			}
 
 			err = binariesProvider(o)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "failed to create binaries provider")
 			}
 
 			o.Out = cmd.OutOrStdout()

@@ -76,7 +76,7 @@ func (s *Storage) Create(dir, file string, perms os.FileMode) (afero.File, error
 
 // Recreate will delete a file and then recreate it
 func (s *Storage) Recreate(dir, file string, perms os.FileMode) (afero.File, error) {
-	err := s.Fs.Remove(path.Join(dir, file))
+	err := s.Fs.RemoveAll(path.Join(dir, file))
 	if err != nil {
 		return nil, err
 	}

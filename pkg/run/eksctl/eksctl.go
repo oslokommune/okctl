@@ -95,7 +95,6 @@ func (e *Eksctl) DeleteCluster(progress io.Writer, cfg *v1alpha1.ClusterConfig) 
 	args := []string{
 		"delete",
 		"cluster",
-		"--write-kubeconfig=false",
 		"--config-file",
 		e.Store.Abs("cluster-config.yml"),
 	}

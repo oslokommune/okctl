@@ -8,33 +8,38 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
-type eip struct {
-	name              string
-	number            int
-	gatewayAttachment cfn.Namer
+type EIP struct {
+	StoredName        string
+	Number            int
+	GatewayAttachment cfn.Namer
 }
 
-func (i *eip) Resource() cloudformation.Resource {
+func (i *EIP) Resource() cloudformation.Resource {
 	return &ec2.EIP{
 		Domain: "vpc",
 		AWSCloudFormationDependsOn: []string{
-			i.gatewayAttachment.Name(),
+			i.GatewayAttachment.Name(),
 		},
 	}
 }
 
-func (i *eip) Name() string {
-	return i.name
+func (i *EIP) Name() string {
+	return i.StoredName
 }
 
-func (i *eip) Ref() string {
+func (i *EIP) Ref() string {
 	return cloudformation.Ref(i.Name())
 }
 
-func New(number int, gatewayAttachment cfn.Namer) *eip {
-	return &eip{
-		name:              fmt.Sprintf("NatGatewayEIP%02d", number),
-		number:            number,
-		gatewayAttachment: gatewayAttachment,
+// New creates an EIP for use with the NAT GW
+//
+// Specifies an Elastic IP (EIP) address
+//
+// https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-eip.html
+func New(number int, gatewayAttachment cfn.Namer) *EIP {
+	return &EIP{
+		StoredName:        fmt.Sprintf("NatGatewayEIP%02d", number),
+		Number:            number,
+		GatewayAttachment: gatewayAttachment,
 	}
 }

@@ -18,7 +18,7 @@ type VPC struct {
 }
 
 func (v *VPC) NamedOutputs() map[string]map[string]interface{} {
-	return output.Value(v.Name(), v.Ref()).NamedOutputs()
+	return output.NewValue(v.Name(), v.Ref()).NamedOutputs()
 }
 
 func (v *VPC) Resource() cloudformation.Resource {

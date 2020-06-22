@@ -8,75 +8,71 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
-type private struct {
-	name              string
-	number            int
-	routeTable        cfn.Referencer
-	natGateway        cfn.NameReferencer
-	gatewayAttachment cfn.Namer
+type Route struct {
+	Type              string
+	Number            int
+	StoredName        string
+	RouteTable        cfn.Referencer
+	GatewayAttachment cfn.Namer
+	InternetGateway   cfn.Referencer
+	NatGateway        cfn.NameReferencer
 }
 
-func (p *private) Ref() string {
-	return cloudformation.Ref(p.Name())
-}
-
-func (p *private) Resource() cloudformation.Resource {
-	return &ec2.Route{
+func (r *Route) Resource() cloudformation.Resource {
+	route := &ec2.Route{
 		DestinationCidrBlock: "0.0.0.0/0",
-		NatGatewayId:         p.natGateway.Ref(),
-		RouteTableId:         p.routeTable.Ref(),
+		RouteTableId:         r.RouteTable.Ref(),
 		AWSCloudFormationDependsOn: []string{
-			p.natGateway.Name(),
-			p.gatewayAttachment.Name(),
+			r.GatewayAttachment.Name(),
 		},
 	}
+
+	switch r.Type {
+	case "public":
+		route.GatewayId = r.InternetGateway.Ref()
+	case "private":
+		route.NatGatewayId = r.NatGateway.Ref()
+		route.AWSCloudFormationDependsOn = append(route.AWSCloudFormationDependsOn, r.NatGateway.Name())
+	}
+
+	return route
 }
 
-func (p *private) Name() string {
-	return p.name
+func (r *Route) Name() string {
+	return r.StoredName
 }
 
-func NewPrivate(number int, gatewayAttachment cfn.Namer, routeTable cfn.Referencer, natGateway cfn.NameReferencer) *private {
-	return &private{
-		name:              fmt.Sprintf("PrivateRoute%02d", number),
-		number:            number,
-		routeTable:        routeTable,
-		natGateway:        natGateway,
-		gatewayAttachment: gatewayAttachment,
+func (r *Route) Ref() string {
+	return cloudformation.Ref(r.Name())
+}
+
+// NewPrivate creates a private EC2 route, routing traffic to the NATGW
+//
+// Specifies a route in a route table within a VPC.
+//
+// https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-route.html
+func NewPrivate(number int, gatewayAttachment cfn.Namer, routeTable cfn.Referencer, natGateway cfn.NameReferencer) *Route {
+	return &Route{
+		Type:              "private",
+		StoredName:        fmt.Sprintf("PrivateRoute%02d", number),
+		Number:            number,
+		RouteTable:        routeTable,
+		NatGateway:        natGateway,
+		GatewayAttachment: gatewayAttachment,
 	}
 }
 
-type public struct {
-	name              string
-	routeTable        cfn.Referencer
-	gatewayAttachment cfn.Namer
-	internetGateway   cfn.Referencer
-}
-
-func (p *public) Resource() cloudformation.Resource {
-	return &ec2.Route{
-		DestinationCidrBlock: "0.0.0.0/0",
-		GatewayId:            p.internetGateway.Ref(),
-		RouteTableId:         p.routeTable.Ref(),
-		AWSCloudFormationDependsOn: []string{
-			p.gatewayAttachment.Name(),
-		},
-	}
-}
-
-func (p *public) Name() string {
-	return p.name
-}
-
-func (p *public) Ref() string {
-	return cloudformation.Ref(p.Name())
-}
-
-func NewPublic(gatewayAttachment cfn.Namer, routeTable cfn.Referencer, internetGateway cfn.Referencer) *public {
-	return &public{
-		name:              "PublicRoute",
-		routeTable:        routeTable,
-		gatewayAttachment: gatewayAttachment,
-		internetGateway:   internetGateway,
+// NewPublic creates a Route EC2 route, routing traffic to the IGW
+//
+// Specifies a route in a route table within a VPC.
+//
+// https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-route.html
+func NewPublic(gatewayAttachment cfn.Namer, routeTable cfn.Referencer, internetGateway cfn.Referencer) *Route {
+	return &Route{
+		Type:              "public",
+		StoredName:        "PublicRoute",
+		RouteTable:        routeTable,
+		GatewayAttachment: gatewayAttachment,
+		InternetGateway:   internetGateway,
 	}
 }

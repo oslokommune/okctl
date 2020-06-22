@@ -6,35 +6,38 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
-type dbSubnetGroup struct {
-	name    string
-	subnets []cfn.Referencer
+type DBSubnetGroup struct {
+	StoredName string
+	Subnets    []cfn.Referencer
 }
 
-func (g *dbSubnetGroup) Resource() cloudformation.Resource {
-	subnets := make([]string, len(g.subnets))
+func (g *DBSubnetGroup) Resource() cloudformation.Resource {
+	subnets := make([]string, len(g.Subnets))
 
-	for i, s := range g.subnets {
+	for i, s := range g.Subnets {
 		subnets[i] = s.Ref()
 	}
 
 	return &rds.DBSubnetGroup{
-		DBSubnetGroupDescription: g.name,
+		DBSubnetGroupDescription: g.StoredName,
 		SubnetIds:                subnets,
 	}
 }
 
-func (g *dbSubnetGroup) Name() string {
-	return g.name
+func (g *DBSubnetGroup) Name() string {
+	return g.StoredName
 }
 
-func (g *dbSubnetGroup) Ref() string {
-	return cloudformation.Ref(g.name)
+func (g *DBSubnetGroup) Ref() string {
+	return cloudformation.Ref(g.StoredName)
 }
 
-func New(subnets []cfn.Referencer) *dbSubnetGroup {
-	return &dbSubnetGroup{
-		name:    "DatabaseSubnetGroup",
-		subnets: subnets,
+// New creates a database subnet group
+//
+//https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-rds-dbsubnet-group.html
+func New(subnets []cfn.Referencer) *DBSubnetGroup {
+	return &DBSubnetGroup{
+		StoredName: "DatabaseSubnetGroup",
+		Subnets:    subnets,
 	}
 }

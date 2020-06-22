@@ -1,3 +1,5 @@
+// Package subnet provides functionality for slicing and
+// dicing subnets for use with EKS
 package subnet
 
 import (
@@ -15,11 +17,15 @@ import (
 )
 
 const (
-	TypePublic   = "public"
-	TypePrivate  = "private"
+	// TypePublic represents a public subnet
+	TypePublic = "public"
+	// TypePrivate represents a private subnet
+	TypePrivate = "private"
+	// TypeDatabase represents a database subnet
 	TypeDatabase = "database"
 )
 
+// Types returns all available subnet types
 func Types() []string {
 	return []string{
 		TypePublic,
@@ -29,10 +35,14 @@ func Types() []string {
 }
 
 const (
-	DefaultSubnets   = 9
+	// DefaultSubnets defines how many subnets we will be needing by default in total
+	DefaultSubnets = 9
+	// DefaultPrefixLen defines the size of the subnets, e.g., how many IPs they contain
 	DefaultPrefixLen = 24
 )
 
+// Subnet stores state required for creating a
+// cloud formation subnet
 type Subnet struct {
 	name    string
 	cluster cfn.Namer
@@ -43,14 +53,17 @@ type Subnet struct {
 	vpc     cfn.Referencer
 }
 
+// Name returns the name of the resource
 func (s *Subnet) Name() string {
 	return s.name
 }
 
+// Ref returns a cloud formation intrinsic ref to the resource
 func (s *Subnet) Ref() string {
 	return cloudformation.Ref(s.Name())
 }
 
+// Resource returns a cloud formation resource for a subnet
 func (s *Subnet) Resource() cloudformation.Resource {
 	mapPublicIPonLaunch := true
 
@@ -86,12 +99,16 @@ func (s *Subnet) Resource() cloudformation.Resource {
 	}
 }
 
+// Distribution defines the interface required for something to be able
+// to distribute subnets across various parameters
 type Distribution interface {
 	Next() (subnetType string, availabilityZone string, number int)
 	DistinctSubnetTypes() int
 	DistinctAzs() int
 }
 
+// Distributor stores state required for creating an even
+// distribution of subnets
 type Distributor struct {
 	SubnetTypes []string
 	SubnetIndex int
@@ -99,10 +116,12 @@ type Distributor struct {
 	AzsIndex    map[string]int
 }
 
+// DistinctSubnetTypes returns the number of distinct subnet types
 func (d *Distributor) DistinctSubnetTypes() int {
 	return len(d.SubnetTypes)
 }
 
+// DistinctAzs returns the number of distinct azs
 func (d *Distributor) DistinctAzs() int {
 	return len(d.Azs)
 }
@@ -135,6 +154,7 @@ func NewDistributor(subnetTypes, azs []string) (*Distributor, error) {
 	}, nil
 }
 
+// Next returns the next entry in the distribution
 func (d *Distributor) Next() (string, string, int) {
 	t := d.nextSubnetType()
 	n := d.AzsIndex[t]
@@ -167,8 +187,12 @@ func (d *Distributor) nextAz(subnetType string) string {
 	return next
 }
 
+// CreatorFn defines a function that is invoked when
+// creating a subnet
 type CreatorFn func(network *net.IPNet) *Subnet
 
+// NoopCreator simply returns the subnet with the given
+// CIDR
 func NoopCreator() CreatorFn {
 	return func(network *net.IPNet) *Subnet {
 		return &Subnet{
@@ -177,6 +201,7 @@ func NoopCreator() CreatorFn {
 	}
 }
 
+// DefaultCreator provides a simplified way of creating a new subnet
 func DefaultCreator(vpc cfn.Referencer, cluster cfn.Namer, dist Distribution) CreatorFn {
 	return func(network *net.IPNet) *Subnet {
 		subnetType, az, number := dist.Next()
@@ -193,12 +218,15 @@ func DefaultCreator(vpc cfn.Referencer, cluster cfn.Namer, dist Distribution) Cr
 	}
 }
 
+// Subnets stores the state of the created subnets
 type Subnets struct {
 	Public   []*Subnet
 	Private  []*Subnet
 	Database []*Subnet
 }
 
+// NamedOutputs returns the cloud formation outputs commonly
+// required for the given subnets
 func (s *Subnets) NamedOutputs() map[string]map[string]interface{} {
 	private := output.NewJoined("PrivateSubnetIds")
 

@@ -1,3 +1,4 @@
+// Package load knows how to load application and repository data
 package load
 
 import (
@@ -79,8 +80,11 @@ func CreateOnAppDataNotFound() DataNotFoundFn {
 	}
 }
 
+// LoaderFn defines an interface for loading configuration
 type LoaderFn func(cfg *config.Config, v *viper.Viper) error
 
+// AppDataFromFlagsEnvConfigDefaults returns the default behavior for loading
+// application state
 func AppDataFromFlagsEnvConfigDefaults(cmd *cobra.Command, notFoundFn DataNotFoundFn) config.DataLoaderFn {
 	return buildAppDataLoader(
 		loadDefaultAppData,

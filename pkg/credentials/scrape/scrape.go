@@ -1,3 +1,4 @@
+// Package scrape knows how to parse html to retrieve a SAML response from KeyCloak
 package scrape
 
 import (
@@ -12,17 +13,25 @@ import (
 )
 
 const (
+	// DefaultURL provides a default starting location for
+	// retrieving the credentials
 	DefaultURL = v1alpha1.OkSamlURL
 )
 
+// FormAction knows how to find the URL for
+// the next stage of the parsing
 type FormAction struct {
 	URL string `pagser:"form->attr(action)"`
 }
 
+// FormSAML knows how to extract the SAML
+// response for getting AWS credentials
 type FormSAML struct {
 	Response string `pagser:"input[name='SAMLResponse']->attr(value)"`
 }
 
+// ErrorFromResponse creates an error from an invalid http status
+// code
 func ErrorFromResponse(r *http.Response) error {
 	pretty, _ := httputil.DumpResponse(r, true)
 	return fmt.Errorf("http request failed, because: \n%s", pretty)
@@ -41,6 +50,7 @@ func New() *Scrape {
 	}
 }
 
+// Scrape stores the state required for parsing the responses
 type Scrape struct {
 	p *pagser.Pagser
 	c *http.Client
@@ -114,6 +124,7 @@ func (s *Scrape) doTotp(resp *http.Response, mfatoken string) (*http.Response, e
 	return resp, nil
 }
 
+// Scrape starts a process for fetching valid AWS credentials
 func (s *Scrape) Scrape(username, password, mfaToken string) (string, error) {
 	resp, err := s.doLogin(DefaultURL, username, password)
 	if err != nil {

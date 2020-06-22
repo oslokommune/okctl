@@ -1,3 +1,4 @@
+// Package eksctl knows how to run the eksctl cli
 package eksctl
 
 import (
@@ -12,10 +13,13 @@ import (
 )
 
 const (
-	Name    = "eksctl"
+	// Name sets the name of the binary/cli
+	Name = "eksctl"
+	// Version sets the currently used version of the binary/cli
 	Version = "0.21.0"
 )
 
+// Eksctl stores state for working with the eksctl cli
 type Eksctl struct {
 	BinaryPath  string
 	WorkingDir  string
@@ -25,6 +29,7 @@ type Eksctl struct {
 	Logger      *logrus.Logger
 }
 
+// New returns a new wrapper around the eksctl cli
 func New(logger *logrus.Logger, credentials credentials.Provider, binaries binaries.Provider) (*Eksctl, error) {
 	binaryPath, err := binaries.Fetch(Name, Version)
 	if err != nil {
@@ -50,6 +55,7 @@ func New(logger *logrus.Logger, credentials credentials.Provider, binaries binar
 	}, nil
 }
 
+// CreateCluster creates an EKS cluster using eksctl
 func (e *Eksctl) CreateCluster(progress io.Writer, cfg *v1alpha1.ClusterConfig) error {
 	var err error
 

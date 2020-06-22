@@ -1,3 +1,4 @@
+// Package run knows how to execute binaries and collect their output and result
 package run
 
 import (
@@ -10,10 +11,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Runner defines the interface required by a concrete
+// runner implementation
 type Runner interface {
 	Run(progress io.Writer, args []string) ([]byte, error)
 }
 
+// Run stores state related to running a given command
 type Run struct {
 	WorkingDirectory string
 	BinaryPath       string
@@ -21,6 +25,9 @@ type Run struct {
 	Logger           *logrus.Logger
 }
 
+// AnonymizeEnv will conceal any secret portions of the
+// provided environment variables, given that it knows
+// of them
 func AnonymizeEnv(entries []string) []string {
 	out := make([]string, len(entries))
 
@@ -43,6 +50,7 @@ func AnonymizeEnv(entries []string) []string {
 	return out
 }
 
+// Run a command and record the progress to the provided writer
 func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 	var errOut, errErr error
 
@@ -104,6 +112,7 @@ func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 	return outBuff.Bytes(), nil
 }
 
+// New creates a new runner
 func New(logger *logrus.Logger, workingDirectory, binaryPath string, env []string) *Run {
 	return &Run{
 		WorkingDirectory: workingDirectory,

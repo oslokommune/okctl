@@ -6,6 +6,7 @@ import (
 
 // This is verbatim stolen from: https://github.com/weaveworks/eksctl/blob/master/pkg/cfn/manager/api.go
 
+// StackStatusIsNotTransitional returns true if stack is in a steady state
 func (*Manager) StackStatusIsNotTransitional(s *Stack) bool {
 	for _, state := range nonTransitionalReadyStackStatuses() {
 		if *s.StackStatus == state {
@@ -25,6 +26,7 @@ func nonTransitionalReadyStackStatuses() []string {
 	}
 }
 
+// StackStatusIsNotReady returns true if the stack is in a transitional state
 func (*Manager) StackStatusIsNotReady(s *Stack) bool {
 	for _, state := range nonReadyStackStatuses() {
 		if *s.StackStatus == state {
@@ -52,6 +54,7 @@ func nonReadyStackStatuses() []string {
 	}
 }
 
+// StackStatusIsNotDeleted returns true if the stack exists in some form
 func (*Manager) StackStatusIsNotDeleted(s *Stack) bool {
 	for _, state := range allNonDeletedStackStatuses() {
 		if *s.StackStatus == state {

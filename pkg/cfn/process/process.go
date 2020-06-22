@@ -1,3 +1,4 @@
+// Package process knows how to process cloud formation outputs
 package process
 
 import (
@@ -9,6 +10,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn/manager"
 )
 
+// Subnets knows how to process the output from a subnet creation
 func Subnets(p v1alpha1.CloudProvider, to map[string]v1alpha1.ClusterNetwork) manager.ProcessOutputFn {
 	return func(v string) error {
 		got, err := p.EC2().DescribeSubnets(&ec2.DescribeSubnetsInput{
@@ -29,6 +31,7 @@ func Subnets(p v1alpha1.CloudProvider, to map[string]v1alpha1.ClusterNetwork) ma
 	}
 }
 
+// String knows how to process the output from a value
 func String(to *string) manager.ProcessOutputFn {
 	return func(v string) error {
 		to = &v

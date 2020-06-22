@@ -50,6 +50,12 @@ linters:
 #    - testpackage
     - wsl
 
+issues:
+  exclude-use-default: false
+  exclude:
+    # should have a package comment, unless it's in another file for this package (golint)
+    - 'in another file for this package'
+
 linters-settings:
   dupl:
     threshold: 400
@@ -59,3 +65,6 @@ linters-settings:
     min-complexity: 15
   golint:
     min-confidence: 0
+
+output:
+  format: colored-line-number

@@ -1,3 +1,4 @@
+// Package manager knows how to interact with AWS cloud formation stacks
 package manager
 
 import (
@@ -20,8 +21,11 @@ const (
 	awsErrValidationError = "ValidationError"
 )
 
+// Stack defines a single cloud formation stack
 type Stack = cfPkg.Stack
 
+// Manager stores state required for interacting with the AWS
+// cloud formation API
 type Manager struct {
 	Logger   *logrus.Entry
 	Builder  cfn.Builder
@@ -29,6 +33,7 @@ type Manager struct {
 	Template *cloudformation.Template
 }
 
+// New returns a new manager
 func New(logger *logrus.Logger, builder cfn.Builder, provider v1alpha1.CloudProvider) *Manager {
 	return &Manager{
 		Logger: logger.WithFields(logrus.Fields{
@@ -40,6 +45,7 @@ func New(logger *logrus.Logger, builder cfn.Builder, provider v1alpha1.CloudProv
 	}
 }
 
+// Exists returns true if a cloud formation stack already exists
 func (m *Manager) Exists() (bool, error) {
 	stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
 		StackName: aws.String(m.Builder.StackName()),
@@ -59,8 +65,10 @@ func (m *Manager) Exists() (bool, error) {
 	return m.StackStatusIsNotDeleted(stack.Stacks[0]), nil
 }
 
+// ProcessOutputFn defines a callback for handling output data
 type ProcessOutputFn func(string) error
 
+// Outputs processes the cloud formation stacks given the provided processors
 func (m *Manager) Outputs(processors map[string]ProcessOutputFn) error {
 	stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
 		StackName: aws.String(m.Builder.StackName()),
@@ -83,6 +91,7 @@ func (m *Manager) Outputs(processors map[string]ProcessOutputFn) error {
 	return nil
 }
 
+// Ready returns true if the stack is in a valid steady state
 func (m *Manager) Ready() (bool, error) {
 	stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
 		StackName: aws.String(m.Builder.StackName()),
@@ -142,6 +151,7 @@ func (m *Manager) collectOutputs() error {
 	return nil
 }
 
+// CreateIfNotExists creates a cloud formation stack if none exists from before
 func (m *Manager) CreateIfNotExists(timeout int64) error {
 	err := m.existsAndReady()
 	if err != nil {
@@ -215,10 +225,12 @@ func (m *Manager) watchCreate(r *cfPkg.CreateStackOutput) error {
 	}
 }
 
+// YAML returns the cloud formation template in a yaml serialisation
 func (m *Manager) YAML() ([]byte, error) {
 	return m.Template.YAML()
 }
 
+// JSON returns the cloud formation template in a json serialisation
 func (m *Manager) JSON() ([]byte, error) {
 	return m.Template.JSON()
 }

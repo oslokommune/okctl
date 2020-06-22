@@ -123,6 +123,8 @@ func (c *Config) WriteAppData(b []byte) error {
 	return nil
 }
 
+// WriteCurrentAppData writes the current app data state
+// to disk
 func (c *Config) WriteCurrentAppData() error {
 	b, err := c.AppData.YAML()
 	if err != nil {

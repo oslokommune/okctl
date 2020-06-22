@@ -200,12 +200,12 @@ func (s *DefaultProvider) Fetch(name, version string) (string, error) {
 	return binary.BinaryPath, nil
 }
 
-func checksumsFor(h application.Host, cs []application.Checksum) map[digest.DigestType]string {
-	out := map[digest.DigestType]string{}
+func checksumsFor(h application.Host, cs []application.Checksum) map[digest.Type]string {
+	out := map[digest.Type]string{}
 
 	for _, c := range cs {
 		if c.Arch == h.Arch && c.Os == h.Os {
-			out[digest.DigestType(c.Type)] = c.Digest
+			out[digest.Type(c.Type)] = c.Digest
 		}
 	}
 

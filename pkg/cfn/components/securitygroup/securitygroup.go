@@ -7,33 +7,34 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn/builder/output"
 )
 
-type securityGroup struct {
-	name string
-	vpc  cfn.Referencer
+type SecurityGroup struct {
+	StoredName string
+	VPC        cfn.Referencer
 }
 
-func (s *securityGroup) NamedOutputs() map[string]map[string]interface{} {
-	return output.Value(s.Name(), s.Ref()).NamedOutputs()
+func (s *SecurityGroup) NamedOutputs() map[string]map[string]interface{} {
+	return output.NewValue(s.Name(), s.Ref()).NamedOutputs()
 }
 
-func (s *securityGroup) Resource() cloudformation.Resource {
+func (s *SecurityGroup) Resource() cloudformation.Resource {
 	return &ec2.SecurityGroup{
-		VpcId:            s.vpc.Ref(),
-		GroupDescription: s.name,
+		VpcId:            s.VPC.Ref(),
+		GroupDescription: s.StoredName,
 	}
 }
 
-func (s *securityGroup) Name() string {
-	return s.name
+func (s *SecurityGroup) Name() string {
+	return s.StoredName
 }
 
-func (s *securityGroup) Ref() string {
+func (s *SecurityGroup) Ref() string {
 	return cloudformation.Ref(s.Name())
 }
 
-func ControlPlane(vpc cfn.Referencer) *securityGroup {
-	return &securityGroup{
-		name: "ControlPlaneSecurityGroup",
-		vpc:  vpc,
+// ControlPlane creates an EKS control plane security group
+func ControlPlane(vpc cfn.Referencer) *SecurityGroup {
+	return &SecurityGroup{
+		StoredName: "ControlPlaneSecurityGroup",
+		VPC:        vpc,
 	}
 }

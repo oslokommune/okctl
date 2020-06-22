@@ -8,39 +8,53 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
-type association struct {
-	name       string
-	subnet     cfn.Referencer
-	routeTable cfn.Referencer
+type RouteTableAssociation struct {
+	StoredName string
+	Subnet     cfn.Referencer
+	RouteTable cfn.Referencer
 }
 
-func (a *association) Resource() cloudformation.Resource {
+func (a *RouteTableAssociation) Resource() cloudformation.Resource {
 	return &ec2.SubnetRouteTableAssociation{
-		RouteTableId: a.routeTable.Ref(),
-		SubnetId:     a.subnet.Ref(),
+		RouteTableId: a.RouteTable.Ref(),
+		SubnetId:     a.Subnet.Ref(),
 	}
 }
 
-func (a *association) Name() string {
-	return a.name
+func (a *RouteTableAssociation) Name() string {
+	return a.StoredName
 }
 
-func (a *association) Ref() string {
+func (a *RouteTableAssociation) Ref() string {
 	return cloudformation.Ref(a.Name())
 }
 
-func newAssociation(number int, t string, subnet cfn.Referencer, routeTable cfn.Referencer) *association {
-	return &association{
-		name:       fmt.Sprintf("%sSubnet%02dRouteTableAssociation", t, number),
-		subnet:     subnet,
-		routeTable: routeTable,
+func newAssociation(number int, t string, subnet cfn.Referencer, routeTable cfn.Referencer) *RouteTableAssociation {
+	return &RouteTableAssociation{
+		StoredName: fmt.Sprintf("%sSubnet%02dRouteTableAssociation", t, number),
+		Subnet:     subnet,
+		RouteTable: routeTable,
 	}
 }
 
-func NewPublic(number int, subnet cfn.Referencer, routeTable cfn.Referencer) *association {
+// NewPublic returns a public subnet route table association
+//
+// Associates a subnet with a route table. This association causes
+// traffic originating from the subnet to be routed according to
+// the routes in the route table
+//
+// https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-subnet-route-table-assoc.html
+func NewPublic(number int, subnet cfn.Referencer, routeTable cfn.Referencer) *RouteTableAssociation {
 	return newAssociation(number, "Public", subnet, routeTable)
 }
 
-func NewPrivate(number int, subnet cfn.Referencer, routeTable cfn.Referencer) *association {
+// NewPrivate returns a private subnet route table association
+//
+// Associates a subnet with a route table. This association causes
+// traffic originating from the subnet to be routed according to
+// the routes in the route table
+//
+// https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-subnet-route-table-assoc.html
+func NewPrivate(number int, subnet cfn.Referencer, routeTable cfn.Referencer) *RouteTableAssociation {
 	return newAssociation(number, "Private", subnet, routeTable)
 }

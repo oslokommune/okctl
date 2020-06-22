@@ -2,16 +2,19 @@ package cluster
 
 import "fmt"
 
-type cluster struct {
-	name string
+type Cluster struct {
+	StoredName string
 }
 
-func (c *cluster) Name() string {
-	return c.name
+func (c *Cluster) Name() string {
+	return c.StoredName
 }
 
-func New(name, env string) *cluster {
-	return &cluster{
-		name: fmt.Sprintf("%s-%s", name, env),
+// New returns a structure for printing
+// a consistent Cluster name for use in a
+// cloud formation template
+func New(name, env string) *Cluster {
+	return &Cluster{
+		StoredName: fmt.Sprintf("%s-%s", name, env),
 	}
 }

@@ -8,40 +8,46 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
-type natGateway struct {
-	name              string
-	number            int
-	eip               cfn.Namer
-	subnet            cfn.NameReferencer
-	gatewayAttachment cfn.Namer
+type NatGateway struct {
+	StoredName        string
+	Number            int
+	EIP               cfn.Namer
+	Subnet            cfn.NameReferencer
+	GatewayAttachment cfn.Namer
 }
 
-func (n *natGateway) Resource() cloudformation.Resource {
+func (n *NatGateway) Resource() cloudformation.Resource {
 	return &ec2.NatGateway{
-		AllocationId: cloudformation.GetAtt(n.eip.Name(), "AllocationId"),
-		SubnetId:     n.subnet.Ref(),
+		AllocationId: cloudformation.GetAtt(n.EIP.Name(), "AllocationId"),
+		SubnetId:     n.Subnet.Ref(),
 		AWSCloudFormationDependsOn: []string{
-			n.eip.Name(),
-			n.subnet.Name(),
-			n.gatewayAttachment.Name(),
+			n.EIP.Name(),
+			n.Subnet.Name(),
+			n.GatewayAttachment.Name(),
 		},
 	}
 }
 
-func (n *natGateway) Name() string {
-	return n.name
+func (n *NatGateway) Name() string {
+	return n.StoredName
 }
 
-func (n *natGateway) Ref() string {
+func (n *NatGateway) Ref() string {
 	return cloudformation.Ref(n.Name())
 }
 
-func New(number int, gatewayAttachment cfn.Namer, eip cfn.Namer, subnet cfn.NameReferencer) *natGateway {
-	return &natGateway{
-		name:              fmt.Sprintf("NatGateway%02d", number),
-		number:            0,
-		eip:               eip,
-		subnet:            subnet,
-		gatewayAttachment: gatewayAttachment,
+// New returns a cloud formation VPC NAT gateway attachment
+//
+// Attaches an internet gateway, or a virtual private gateway to a VPC,
+// enabling connectivity between the internet and the VPC.
+//
+// https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-vpc-gateway-attachment.html
+func New(number int, gatewayAttachment cfn.Namer, eip cfn.Namer, subnet cfn.NameReferencer) *NatGateway {
+	return &NatGateway{
+		StoredName:        fmt.Sprintf("NatGateway%02d", number),
+		Number:            0,
+		EIP:               eip,
+		Subnet:            subnet,
+		GatewayAttachment: gatewayAttachment,
 	}
 }

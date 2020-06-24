@@ -1,11 +1,7 @@
 package main
 
 import (
-	"fmt"
-
-	"github.com/oslokommune/okctl/pkg/cloud"
-	"github.com/oslokommune/okctl/pkg/credentials"
-	"github.com/oslokommune/okctl/pkg/credentials/login"
+	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
@@ -27,7 +23,7 @@ func buildCreateCommand(o *okctl.Okctl) *cobra.Command {
 }
 
 func buildCreateClusterCommand(o *okctl.Okctl) *cobra.Command {
-	var opts okctl.CreateClusterOpts
+	opts := &api.ClusterCreateOpts{}
 
 	cmd := &cobra.Command{
 		Use:   "cluster [env] [AWS account id]",
@@ -40,30 +36,12 @@ and database subnets.`,
 			opts.Environment = args[0]
 			opts.AWSAccountID = args[1]
 
-			err := opts.Valid()
+			err := opts.Validate()
 			if err != nil {
 				return err
 			}
 
-			if o.NoInput {
-				return fmt.Errorf("create cluster requires user input for now")
-			}
-
-			l, err := login.Interactive(opts.AWSAccountID, o.Region(), o.Username())
-			if err != nil {
-				return err
-			}
-
-			o.CredentialsProvider = credentials.New(l)
-
-			c, err := cloud.New(o.Region(), o.CredentialsProvider)
-			if err != nil {
-				return err
-			}
-
-			o.CloudProvider = c.Provider
-
-			return nil
+			return o.NewProviders(opts.Environment, opts.AWSAccountID)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return o.CreateCluster(opts)

@@ -17,28 +17,6 @@ type Provider interface {
 	Raw() (*sts.Credentials, error)
 }
 
-// ErrorProvider stores an error
-type ErrorProvider struct {
-	Err error
-}
-
-// AsEnv returns the stored error
-func (p *ErrorProvider) AsEnv() ([]string, error) {
-	return nil, p.Err
-}
-
-// Raw returns the stored error
-func (p *ErrorProvider) Raw() (*sts.Credentials, error) {
-	return nil, p.Err
-}
-
-// NewErrorProvider returns a provider that simply errors
-func NewErrorProvider() *ErrorProvider {
-	return &ErrorProvider{
-		fmt.Errorf("this is an error provider, cli is probably misconfigured"),
-	}
-}
-
 // AWSProvider stores state required for fetching
 // AWS credentials
 type AWSProvider struct {

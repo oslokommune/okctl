@@ -28,6 +28,7 @@ type Cleaner interface {
 // and directories
 type Storer interface {
 	Create(dir, name string, perms os.FileMode) (afero.File, error)
+	Recreate(dir, file string, perms os.FileMode) (afero.File, error)
 	RemoveAll(path string) error
 	ReadAll(path string) ([]byte, error)
 	MkdirAll(dir string) error

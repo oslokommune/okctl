@@ -1,11 +1,7 @@
 package main
 
 import (
-	"fmt"
-
-	"github.com/oslokommune/okctl/pkg/cloud"
-	"github.com/oslokommune/okctl/pkg/credentials"
-	"github.com/oslokommune/okctl/pkg/credentials/login"
+	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
@@ -26,7 +22,7 @@ func buildDeleteCommand(o *okctl.Okctl) *cobra.Command {
 }
 
 func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
-	var opts okctl.DeleteClusterOpts
+	opts := &api.ClusterDeleteOpts{}
 
 	cmd := &cobra.Command{
 		Use:   "cluster [env]",
@@ -37,13 +33,9 @@ including VPC, this is a highly destructive operation.`,
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			opts.Environment = args[0]
 
-			err := opts.Valid()
+			err := opts.Validate()
 			if err != nil {
 				return err
-			}
-
-			if o.NoInput {
-				return fmt.Errorf("delete cluster requires user input for now")
 			}
 
 			awsAccountID, err := o.AWSAccountID(opts.Environment)
@@ -51,27 +43,10 @@ including VPC, this is a highly destructive operation.`,
 				return err
 			}
 
-			l, err := login.Interactive(awsAccountID, o.Region(), o.Username())
-			if err != nil {
-				return err
-			}
-
-			o.CredentialsProvider = credentials.New(l)
-
-			c, err := cloud.New(o.Region(), o.CredentialsProvider)
-			if err != nil {
-				return err
-			}
-
-			o.CloudProvider = c.Provider
-
-			return nil
+			return o.NewProviders(opts.Environment, awsAccountID)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return o.DeleteCluster(opts)
-		},
-		PostRunE: func(_ *cobra.Command, args []string) error {
-			return o.WriteCurrentRepoData()
 		},
 	}
 

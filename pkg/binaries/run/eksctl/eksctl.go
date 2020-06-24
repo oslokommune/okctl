@@ -4,12 +4,9 @@ package eksctl
 import (
 	"io"
 
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
-	"github.com/oslokommune/okctl/pkg/binaries"
-	"github.com/oslokommune/okctl/pkg/credentials"
-	"github.com/oslokommune/okctl/pkg/run"
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/binaries/run"
 	"github.com/oslokommune/okctl/pkg/storage"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -23,37 +20,25 @@ const (
 
 // Eksctl stores state for working with the eksctl cli
 type Eksctl struct {
-	BinaryPath  string
-	WorkingDir  string
-	Credentials credentials.Provider
-	Runner      run.Runner
-	Store       storage.StoreCleaner
-	Logger      *logrus.Logger
+	Progress   io.Writer
+	BinaryPath string
+	WorkingDir string
+	Runner     run.Runner
+	Store      storage.StoreCleaner
 }
 
 // New returns a new wrapper around the eksctl cli
-func New(logger *logrus.Logger, credentials credentials.Provider, binaries binaries.Provider) (*Eksctl, error) {
-	binaryPath, err := binaries.Fetch(Name, Version)
-	if err != nil {
-		return nil, err
-	}
-
-	envs, err := credentials.AsEnv()
-	if err != nil {
-		return nil, err
-	}
-
+func New(progress io.Writer, binaryPath string, envs []string) (*Eksctl, error) {
 	store, err := storage.NewTemporaryStorage()
 	if err != nil {
 		return nil, err
 	}
 
 	return &Eksctl{
-		BinaryPath:  binaryPath,
-		Credentials: credentials,
-		Runner:      run.New(logger, store.Path, binaryPath, envs),
-		Store:       store,
-		Logger:      logger,
+		Progress:   progress,
+		BinaryPath: binaryPath,
+		Runner:     run.New(store.Path, binaryPath, envs),
+		Store:      store,
 	}, nil
 }
 
@@ -81,8 +66,9 @@ func (e *Eksctl) writeTemporaryClusterConfig(cfg *v1alpha1.ClusterConfig) error 
 	return nil
 }
 
-// DeleteCluster deletes an EKS cluster using eksctl
-func (e *Eksctl) DeleteCluster(progress io.Writer, cfg *v1alpha1.ClusterConfig) error {
+// DeleteCluster invokes eksctl delete cluster using the provided
+// cluster configuration as input
+func (e *Eksctl) DeleteCluster(cfg *v1alpha1.ClusterConfig) error {
 	var err error
 
 	defer func() {
@@ -101,7 +87,7 @@ func (e *Eksctl) DeleteCluster(progress io.Writer, cfg *v1alpha1.ClusterConfig) 
 		e.Store.Abs(defaultClusterConfig),
 	}
 
-	_, err = e.Runner.Run(progress, args)
+	_, err = e.Runner.Run(e.Progress, args)
 	if err != nil {
 		return err
 	}
@@ -109,8 +95,9 @@ func (e *Eksctl) DeleteCluster(progress io.Writer, cfg *v1alpha1.ClusterConfig) 
 	return nil
 }
 
-// CreateCluster creates an EKS cluster using eksctl
-func (e *Eksctl) CreateCluster(progress io.Writer, cfg *v1alpha1.ClusterConfig) error {
+// CreateCluster invokes eksctl create cluster using the provided
+// cluster configuration as input
+func (e *Eksctl) CreateCluster(cfg *v1alpha1.ClusterConfig) error {
 	var err error
 
 	defer func() {
@@ -130,7 +117,7 @@ func (e *Eksctl) CreateCluster(progress io.Writer, cfg *v1alpha1.ClusterConfig) 
 		e.Store.Abs(defaultClusterConfig),
 	}
 
-	_, err = e.Runner.Run(progress, args)
+	_, err = e.Runner.Run(e.Progress, args)
 	if err != nil {
 		return err
 	}

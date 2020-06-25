@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/mitchellh/go-homedir"
+	"github.com/oslokommune/okctl/pkg/api/core"
 	"github.com/oslokommune/okctl/pkg/config/application"
 	"github.com/oslokommune/okctl/pkg/config/repository"
 	"github.com/oslokommune/okctl/pkg/context"
@@ -65,6 +66,9 @@ type Config struct {
 	RepoDataLoader DataLoaderFn
 	RepoData       *repository.Data
 
+	Destination string
+
+	format  core.EncodeResponseType
 	homeDir string
 	repoDir string
 }
@@ -75,7 +79,16 @@ func New() *Config {
 		Context:        context.New(),
 		AppDataLoader:  NoopDataLoader,
 		RepoDataLoader: NoopDataLoader,
+		Destination:    "127.0.0.1:8085",
 	}
+}
+
+func (c *Config) SetFormat(responseType core.EncodeResponseType) {
+	c.format = responseType
+}
+
+func (c *Config) Format() core.EncodeResponseType {
+	return c.format
 }
 
 // LoadRepoData will attempt to load repository data

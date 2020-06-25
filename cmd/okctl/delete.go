@@ -1,6 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
@@ -32,6 +38,7 @@ including VPC, this is a highly destructive operation.`,
 		Args: cobra.ExactArgs(deleteClusterArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			opts.Environment = args[0]
+			opts.RepositoryName = o.RepoData.Name
 
 			err := opts.Validate()
 			if err != nil {
@@ -43,10 +50,42 @@ including VPC, this is a highly destructive operation.`,
 				return err
 			}
 
-			return o.NewProviders(opts.Environment, awsAccountID)
+			err = o.InitialiseProviders(opts.Environment, awsAccountID)
+			if err != nil {
+				return err
+			}
+
+			return o.InitialiseServer()
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return o.DeleteCluster(opts)
+			data, err := json.Marshal(opts)
+			if err != nil {
+				return err
+			}
+
+			req, err := http.NewRequest(
+				http.MethodDelete,
+				fmt.Sprintf("http://%s/v1/clusters/", o.Destination),
+				bytes.NewReader(data),
+			)
+			if err != nil {
+				return err
+			}
+			req.Header.Set("Content-Type", "application/json")
+
+			clnt := http.Client{}
+
+			resp, err := clnt.Do(req)
+			if err != nil {
+				return err
+			}
+
+			_, err = io.Copy(o.Out, resp.Body)
+			if err != nil {
+				return err
+			}
+
+			return nil
 		},
 	}
 

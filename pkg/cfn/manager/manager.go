@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	cfPkg "github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn"
 )
@@ -52,8 +53,11 @@ func (m *Manager) Exists() (bool, error) {
 		StackName: aws.String(m.Builder.StackName()),
 	}
 
+	fmt.Println(req)
+
 	stack, err := m.Provider.CloudFormation().DescribeStacks(req)
 	if err != nil {
+		fmt.Println(err)
 		switch e := err.(type) {
 		case awserr.Error:
 			if e.Code() == awsErrValidationError && fmt.Sprintf(stackDoesNotExistPattern, m.Builder.StackName()) == e.Message() {
@@ -66,6 +70,12 @@ func (m *Manager) Exists() (bool, error) {
 
 	if stack == nil {
 		return false, fmt.Errorf("failed to describe stack")
+	}
+
+	fmt.Println(spew.Sdump(stack))
+
+	if len(stack.Stacks) == 0 {
+		return false, nil
 	}
 
 	// Is this check really necessary?

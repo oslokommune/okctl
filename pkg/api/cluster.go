@@ -2,6 +2,7 @@
 package api
 
 import (
+	"context"
 	"regexp"
 
 	val "github.com/go-ozzo/ozzo-validation/v4"
@@ -65,8 +66,8 @@ func (o *ClusterDeleteOpts) Validate() error {
 
 // ClusterService provides an interface for the business logic when working with clusters
 type ClusterService interface {
-	CreateCluster(*ClusterCreateOpts) (*Cluster, error)
-	DeleteCluster(*ClusterDeleteOpts) error
+	CreateCluster(context.Context, ClusterCreateOpts) (*Cluster, error)
+	DeleteCluster(context.Context, ClusterDeleteOpts) error
 }
 
 // ClusterExe provides an interface for running CLIs

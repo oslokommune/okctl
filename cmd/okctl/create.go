@@ -1,6 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
@@ -35,16 +41,42 @@ and database subnets.`,
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			opts.Environment = args[0]
 			opts.AWSAccountID = args[1]
+			opts.RepositoryName = o.RepoData.Name
+			opts.ClusterName = o.ClusterName(opts.Environment)
 
 			err := opts.Validate()
 			if err != nil {
 				return err
 			}
 
-			return o.NewProviders(opts.Environment, opts.AWSAccountID)
+			err = o.InitialiseProviders(opts.Environment, opts.AWSAccountID)
+			if err != nil {
+				return err
+			}
+
+			return o.InitialiseServer()
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return o.CreateCluster(opts)
+			data, err := json.Marshal(opts)
+			if err != nil {
+				return err
+			}
+
+			resp, err := http.Post(
+				fmt.Sprintf("http://%s/v1/clusters/", o.Destination),
+				"application/json",
+				strings.NewReader(string(data)),
+			)
+			if err != nil {
+				return err
+			}
+
+			_, err = io.Copy(o.Out, resp.Body)
+			if err != nil {
+				return err
+			}
+
+			return nil
 		},
 	}
 

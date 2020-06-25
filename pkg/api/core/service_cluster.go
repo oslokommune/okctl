@@ -2,6 +2,8 @@
 package core
 
 import (
+	"context"
+
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
@@ -12,7 +14,7 @@ type cluster struct {
 }
 
 // CreateCluster creates an EKS cluster and VPC
-func (c *cluster) CreateCluster(opts *api.ClusterCreateOpts) (*api.Cluster, error) {
+func (c *cluster) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error) {
 	clusterConfig, err := c.cloud.CreateCluster(opts.AWSAccountID, opts.ClusterName, opts.Environment, opts.RepositoryName, opts.Cidr, opts.Region)
 	if err != nil {
 		return nil, err
@@ -39,7 +41,7 @@ func (c *cluster) CreateCluster(opts *api.ClusterCreateOpts) (*api.Cluster, erro
 }
 
 // DeleteCluster deletes an EKS cluster and VPC
-func (c *cluster) DeleteCluster(opts *api.ClusterDeleteOpts) error {
+func (c *cluster) DeleteCluster(_ context.Context, opts api.ClusterDeleteOpts) error {
 	clus, err := c.store.GetCluster(opts.Environment)
 	if err != nil {
 		return err

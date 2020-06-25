@@ -2,18 +2,32 @@ package okctl
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
 	"path"
+	"syscall"
 
+	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/api/core"
+	cld "github.com/oslokommune/okctl/pkg/api/core/cloud"
+	"github.com/oslokommune/okctl/pkg/api/core/exe"
+	"github.com/oslokommune/okctl/pkg/api/core/store"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/binaries"
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
 	"github.com/oslokommune/okctl/pkg/cloud"
 	"github.com/oslokommune/okctl/pkg/config"
+	"github.com/oslokommune/okctl/pkg/config/application"
 	"github.com/oslokommune/okctl/pkg/credentials"
 	"github.com/oslokommune/okctl/pkg/credentials/login"
 	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/oslokommune/okctl/pkg/storage/state"
 )
+
+type ServiceProvider interface {
+	ClusterService() api.ClusterService
+}
 
 // Okctl stores all state required for invoking commands
 type Okctl struct {
@@ -25,11 +39,70 @@ type Okctl struct {
 	PersisterProvider   state.PersisterProvider
 }
 
+func (o *Okctl) InitialiseServer() error {
+	required := []interface{}{
+		o.CloudProvider,
+		o.BinariesProvider,
+		o.CredentialsProvider,
+		o.PersisterProvider,
+	}
+
+	for _, r := range required {
+		if r == nil {
+			return fmt.Errorf("failed to initialise okctl cli, missing required provider")
+		}
+	}
+
+	clusterService := core.NewClusterService(
+		store.NewClusterStore(o.PersisterProvider),
+		cld.NewCluster(o.CloudProvider),
+		exe.NewClusterExe(o.BinariesProvider),
+	)
+
+	services := core.Services{
+		Cluster: clusterService,
+	}
+
+	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))
+
+	handlers := core.MakeHandlers(o.Format(), endpoints)
+
+	router := http.NewServeMux()
+	router.Handle("/", core.AttachRoutes(handlers))
+
+	server := &http.Server{
+		Handler: router,
+		Addr:    o.Destination,
+	}
+
+	errs := make(chan error, 2)
+	go func() {
+		fmt.Printf("started server, listening on address: %s", o.Destination)
+		errs <- server.ListenAndServe()
+	}()
+
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, syscall.SIGINT)
+		errs <- fmt.Errorf("%s", <-c)
+	}()
+
+	return nil
+}
+
 // New returns a new okctl instance
 func New() *Okctl {
 	return &Okctl{
 		Config: config.New(),
 	}
+}
+
+func (o *Okctl) Binaries() []application.Binary {
+	return o.AppData.Binaries
+}
+
+func (o *Okctl) Host() application.Host {
+	return o.AppData.Host
 }
 
 // Username returns the username of the active user
@@ -42,24 +115,24 @@ func (o *Okctl) Region() string {
 	return o.RepoData.Region
 }
 
-// NewProviders knows how to create all required providers
-func (o *Okctl) NewProviders(env, awsAccountID string) error {
-	err := o.NewCredentialsProvider(awsAccountID)
+// InitialiseProviders knows how to create all required providers
+func (o *Okctl) InitialiseProviders(env, awsAccountID string) error {
+	err := o.newCredentialsProvider(awsAccountID)
 	if err != nil {
 		return err
 	}
 
-	err = o.NewBinariesProvider()
+	err = o.newBinariesProvider()
 	if err != nil {
 		return err
 	}
 
-	err = o.NewCloudProvider()
+	err = o.newCloudProvider()
 	if err != nil {
 		return err
 	}
 
-	err = o.NewPersisterProvider(env)
+	err = o.newPersisterProvider(env)
 	if err != nil {
 		return err
 	}
@@ -67,8 +140,8 @@ func (o *Okctl) NewProviders(env, awsAccountID string) error {
 	return nil
 }
 
-// NewPersisterProvider creates a provider for persisting state
-func (o *Okctl) NewPersisterProvider(env string) error {
+// newPersisterProvider creates a provider for persisting state
+func (o *Okctl) newPersisterProvider(env string) error {
 	appDir, err := o.GetAppDataDir()
 	if err != nil {
 		return err
@@ -108,8 +181,8 @@ func (o *Okctl) NewPersisterProvider(env string) error {
 	return nil
 }
 
-// NewBinariesProvider creates a provider for loading binaries
-func (o *Okctl) NewBinariesProvider() error {
+// newBinariesProvider creates a provider for loading binaries
+func (o *Okctl) newBinariesProvider() error {
 	appDataDir, err := o.GetAppDataDir()
 	if err != nil {
 		return err
@@ -117,7 +190,7 @@ func (o *Okctl) NewBinariesProvider() error {
 
 	store := storage.NewFileSystemStorage(appDataDir)
 
-	stagers, err := fetch.New(o.AppData.Host, store).FromConfig(true, o.AppData.Binaries)
+	stagers, err := fetch.New(o.Host(), store).FromConfig(true, o.Binaries())
 	if err != nil {
 		return err
 	}
@@ -129,8 +202,8 @@ func (o *Okctl) NewBinariesProvider() error {
 	return nil
 }
 
-// NewCloudProvider creates a provider for running cloud operations
-func (o *Okctl) NewCloudProvider() error {
+// newCloudProvider creates a provider for running cloud operations
+func (o *Okctl) newCloudProvider() error {
 	c, err := cloud.New(o.Region(), o.CredentialsProvider)
 	if err != nil {
 		return err
@@ -141,8 +214,8 @@ func (o *Okctl) NewCloudProvider() error {
 	return nil
 }
 
-// NewCredentialsProvider knows how to load credentials
-func (o *Okctl) NewCredentialsProvider(awsAccountID string) error {
+// newCredentialsProvider knows how to load credentials
+func (o *Okctl) newCredentialsProvider(awsAccountID string) error {
 	if o.NoInput {
 		return fmt.Errorf("we only support retrieving credentials interactively for now")
 	}

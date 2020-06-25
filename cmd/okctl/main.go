@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"github.com/oslokommune/okctl/pkg/api/core"
 	"github.com/oslokommune/okctl/pkg/config/load"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/pkg/errors"
@@ -41,6 +42,8 @@ func appDataLoader(o *okctl.Okctl, cmd *cobra.Command) error {
 }
 
 func buildRootCommand() *cobra.Command {
+	var outputFormat string
+
 	o := okctl.New()
 
 	var cmd = &cobra.Command{
@@ -70,12 +73,18 @@ being captured. Together with slack and slick.`,
 			o.Out = cmd.OutOrStdout()
 			o.Err = cmd.OutOrStderr()
 
+			o.SetFormat(core.EncodeResponseType(outputFormat))
+
 			return nil
 		},
 	}
 
 	cmd.AddCommand(buildCreateCommand(o))
 	cmd.AddCommand(buildDeleteCommand(o))
+
+	f := cmd.Flags()
+	f.StringVarP(&outputFormat, "output", "o", "text",
+		"The format of the output returned to the user")
 
 	return cmd
 }

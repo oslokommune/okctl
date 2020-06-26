@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"strings"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/okctl"
+	"github.com/oslokommune/okctl/pkg/request"
 	"github.com/spf13/cobra"
 )
 
@@ -57,16 +57,14 @@ and database subnets.`,
 				return err
 			}
 
-			resp, err := http.Post(
-				fmt.Sprintf("http://%s/v1/clusters/", o.Destination),
-				"application/json",
-				strings.NewReader(string(data)),
-			)
+			r := request.New(fmt.Sprintf("http://%s/v1/", o.Destination))
+
+			resp, err := r.Delete("clusters/", data)
 			if err != nil {
 				return err
 			}
 
-			_, err = io.Copy(o.Out, resp.Body)
+			_, err = io.Copy(o.Out, strings.NewReader(resp))
 			if err != nil {
 				return err
 			}

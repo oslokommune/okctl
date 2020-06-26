@@ -30,7 +30,7 @@ type provider struct {
 }
 
 // New returns an AWS credentials provider
-func New(aws AwsAuthenticator) *provider {
+func New(aws AwsAuthenticator) Provider {
 	return &provider{
 		aws: aws,
 	}

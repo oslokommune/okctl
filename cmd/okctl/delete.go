@@ -1,14 +1,14 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
+	"strings"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/okctl"
+	"github.com/oslokommune/okctl/pkg/request"
 	"github.com/spf13/cobra"
 )
 
@@ -58,24 +58,14 @@ including VPC, this is a highly destructive operation.`,
 				return err
 			}
 
-			req, err := http.NewRequest(
-				http.MethodDelete,
-				fmt.Sprintf("http://%s/v1/clusters/", o.Destination),
-				bytes.NewReader(data),
-			)
-			if err != nil {
-				return err
-			}
-			req.Header.Set("Content-Type", "application/json")
+			r := request.New(fmt.Sprintf("http://%s/v1/", o.Destination))
 
-			client := http.Client{}
-
-			resp, err := client.Do(req)
+			resp, err := r.Post("clusters/", data)
 			if err != nil {
 				return err
 			}
 
-			_, err = io.Copy(o.Out, resp.Body)
+			_, err = io.Copy(o.Out, strings.NewReader(resp))
 			if err != nil {
 				return err
 			}

@@ -25,7 +25,7 @@ type Success struct {
 	Success bool `json:"success"`
 }
 
-// Returns a created ok
+// Ok returns a created ok
 func Ok() Created {
 	return Created{
 		Data: Success{

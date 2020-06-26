@@ -12,11 +12,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Endpoints defines all available endpoints
 type Endpoints struct {
 	CreateCluster endpoint.Endpoint
 	DeleteCluster endpoint.Endpoint
 }
 
+// MakeEndpoints returns the endpoints initialised with their
+// corresponding service
 func MakeEndpoints(s Services) Endpoints {
 	return Endpoints{
 		CreateCluster: makeCreateClusterEndpoint(s.Cluster),
@@ -24,19 +27,25 @@ func MakeEndpoints(s Services) Endpoints {
 	}
 }
 
+// Handlers defines http handlers for processing requests
 type Handlers struct {
 	CreateCluster http.Handler
 	DeleteCluster http.Handler
 }
 
+// EncodeResponseType defines a type for responses
 type EncodeResponseType string
 
 const (
+	// EncodeJSONResponse encodes as json when returning response
 	EncodeJSONResponse EncodeResponseType = "json"
+	// EncodeYAMLResponse encodes as yaml when returning response
 	EncodeYAMLResponse EncodeResponseType = "yaml"
+	// EncodeTextResponse encodes as text when returning response
 	EncodeTextResponse EncodeResponseType = "text"
 )
 
+// MakeHandlers returns all handlers initialised with encoders, decoders, etc
 func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handlers {
 	var encoderFn kit.EncodeResponseFunc
 
@@ -59,6 +68,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 	}
 }
 
+// AttachRoutes creates a router and adds handlers to the corresponding routes
 func AttachRoutes(handlers *Handlers) http.Handler {
 	r := chi.NewRouter()
 
@@ -72,12 +82,16 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 	return r
 }
 
+// Services defines all available services
 type Services struct {
 	Cluster api.ClusterService
 }
 
+// EndpointOption makes it easy to enable and disable the endpoint
+// middlewares
 type EndpointOption func(Endpoints) Endpoints
 
+// InstrumentEndpoints adds instrumentation to the endpoints
 func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 	return func(endpoints Endpoints) Endpoints {
 		return Endpoints{
@@ -87,6 +101,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 	}
 }
 
+// GenerateEndpoints is a convenience function for decorating endpoints
 func GenerateEndpoints(s Services, opts ...EndpointOption) Endpoints {
 	endpoints := MakeEndpoints(s)
 	for _, opt := range opts {

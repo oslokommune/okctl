@@ -1,3 +1,5 @@
+// Package okctl implements the core logic for creating providers
+// and loading configuration state
 package okctl
 
 import (
@@ -9,7 +11,6 @@ import (
 	"syscall"
 
 	"github.com/mishudark/errors"
-	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/api/core"
 	cld "github.com/oslokommune/okctl/pkg/api/core/cloud"
 	"github.com/oslokommune/okctl/pkg/api/core/exe"
@@ -26,10 +27,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/storage/state"
 )
 
-type ServiceProvider interface {
-	ClusterService() api.ClusterService
-}
-
 // Okctl stores all state required for invoking commands
 type Okctl struct {
 	*config.Config
@@ -40,6 +37,7 @@ type Okctl struct {
 	PersisterProvider   state.PersisterProvider
 }
 
+// Initialise okctl for receiving requests
 func (o *Okctl) Initialise(env, awsAccountID string) error {
 	err := o.initialiseProviders(env, awsAccountID)
 	if err != nil {
@@ -68,7 +66,9 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		Addr:    o.Destination,
 	}
 
+	// nolint: mnd
 	errs := make(chan error, 2)
+
 	go func() {
 		errs <- server.ListenAndServe()
 	}()
@@ -89,10 +89,12 @@ func New() *Okctl {
 	}
 }
 
+// Binaries returns the application binaries
 func (o *Okctl) Binaries() []application.Binary {
 	return o.AppData.Binaries
 }
 
+// Host returns the host information
 func (o *Okctl) Host() application.Host {
 	return o.AppData.Host
 }

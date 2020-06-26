@@ -61,9 +61,9 @@ func (m *Manager) Exists() (bool, error) {
 			if e.Code() == awsErrValidationError && fmt.Sprintf(stackDoesNotExistPattern, m.Builder.StackName()) == e.Message() {
 				return false, nil
 			}
+		default:
+			return false, err
 		}
-
-		return false, err
 	}
 
 	return m.StackStatusIsNotDeleted(stack.Stacks[0]), nil

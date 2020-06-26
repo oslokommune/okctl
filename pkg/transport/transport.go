@@ -1,3 +1,4 @@
+//Package transport implements some basic functionality for transport encoding
 package transport
 
 import (
@@ -11,12 +12,16 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// Texter defines the interface types must implement to
+// control the text output of their response
 type Texter interface {
 	Text() []byte
 }
 
+// EncodeYAMLResponse writes a YAML serialised response to the receiver
 func EncodeYAMLResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	if headerer, ok := response.(kit.Headerer); ok {
 		for k, values := range headerer.Headers() {
 			for _, v := range values {
@@ -24,11 +29,15 @@ func EncodeYAMLResponse(_ context.Context, w http.ResponseWriter, response inter
 			}
 		}
 	}
+
 	code := http.StatusOK
+
 	if sc, ok := response.(kit.StatusCoder); ok {
 		code = sc.StatusCode()
 	}
+
 	w.WriteHeader(code)
+
 	if code == http.StatusNoContent {
 		return nil
 	}
@@ -46,8 +55,10 @@ func EncodeYAMLResponse(_ context.Context, w http.ResponseWriter, response inter
 	return nil
 }
 
+// EncodeTextResponse writes a plaintext response to the receiver
 func EncodeTextResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	if headerer, ok := response.(kit.Headerer); ok {
 		for k, values := range headerer.Headers() {
 			for _, v := range values {
@@ -55,11 +66,15 @@ func EncodeTextResponse(_ context.Context, w http.ResponseWriter, response inter
 			}
 		}
 	}
+
 	code := http.StatusOK
+
 	if sc, ok := response.(kit.StatusCoder); ok {
 		code = sc.StatusCode()
 	}
+
 	w.WriteHeader(code)
+
 	if code == http.StatusNoContent {
 		return nil
 	}

@@ -1,4 +1,4 @@
-// Package login knows how to orchestrate a login to AWS via KeyCloak
+// Package aws knows how to orchestrate a login to AWS using various methods
 package aws
 
 import (
@@ -14,9 +14,11 @@ import (
 	"github.com/oslokommune/okctl/pkg/credentials/aws/scrape"
 )
 
+// AuthType defines a type for enumerating authentication types
 type AuthType string
 
 const (
+	// AuthTypeSAML defines SAML as an authentication method towards AWS
 	AuthTypeSAML AuthType = "SAML"
 )
 
@@ -58,7 +60,7 @@ func (a *Auth) Validate() error {
 	}
 }
 
-// Auth starts a process for retrieving AWS credentials
+// Get starts a process for retrieving AWS credentials
 func (a *Auth) Get() (*sts.Credentials, error) {
 	switch a.AuthType {
 	case AuthTypeSAML:
@@ -103,7 +105,6 @@ func (a *Auth) SAML() (*sts.Credentials, error) {
 	}
 
 	return resp.Credentials, nil
-
 }
 
 // New returns an AWS credentials provider

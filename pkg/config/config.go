@@ -83,10 +83,12 @@ func New() *Config {
 	}
 }
 
+// SetFormat sets the encode response type
 func (c *Config) SetFormat(responseType core.EncodeResponseType) {
 	c.format = responseType
 }
 
+// Format returns the encode response type
 func (c *Config) Format() core.EncodeResponseType {
 	return c.format
 }

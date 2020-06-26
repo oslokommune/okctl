@@ -10,8 +10,12 @@ import (
 )
 
 const (
-	envMinLength = 3
-	envMaxLength = 10
+	envMinLength     = 3
+	envMaxLength     = 10
+	repoMinLength    = 3
+	repoMaxLength    = 10
+	clusterMinLength = 3
+	clusterMaxLength = 10
 )
 
 // Cluster contains the core state for a cluster
@@ -37,6 +41,14 @@ func (o *ClusterCreateOpts) Validate() error {
 			val.Required,
 			val.Match(regexp.MustCompile("^[0-9]{12}$")).
 				Error("must consist of 12 digits"),
+		),
+		val.Field(&o.RepositoryName,
+			val.Required,
+			val.Length(repoMinLength, repoMaxLength),
+		),
+		val.Field(&o.ClusterName,
+			val.Required,
+			val.Length(clusterMinLength, clusterMaxLength),
 		),
 		val.Field(&o.Environment,
 			val.Required,

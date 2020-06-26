@@ -1,5 +1,5 @@
 // Package login knows how to orchestrate a login to AWS via KeyCloak
-package login
+package aws
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
-	"github.com/oslokommune/okctl/pkg/credentials/scrape"
+	"github.com/oslokommune/okctl/pkg/credentials/aws/scrape"
 	"github.com/pkg/errors"
 )
 
@@ -20,6 +20,10 @@ type Loginer interface {
 	Login() (*sts.Credentials, error)
 }
 
+// RetrieveFn is invoked when a login is required due
+// to missing or expired credentials
+type RetrieveFn func(l *Login) error
+
 // Login stores state for fetching credentials
 type Login struct {
 	AWSAccountID string
@@ -27,6 +31,8 @@ type Login struct {
 	Password     string
 	MFAToken     string
 	Region       string
+
+	retrieve RetrieveFn
 }
 
 // Validate the login data

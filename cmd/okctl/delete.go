@@ -50,12 +50,7 @@ including VPC, this is a highly destructive operation.`,
 				return err
 			}
 
-			err = o.InitialiseProviders(opts.Environment, awsAccountID)
-			if err != nil {
-				return err
-			}
-
-			return o.InitialiseServer()
+			return o.Initialise(opts.Environment, awsAccountID)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			data, err := json.Marshal(opts)
@@ -73,9 +68,9 @@ including VPC, this is a highly destructive operation.`,
 			}
 			req.Header.Set("Content-Type", "application/json")
 
-			clnt := http.Client{}
+			client := http.Client{}
 
-			resp, err := clnt.Do(req)
+			resp, err := client.Do(req)
 			if err != nil {
 				return err
 			}

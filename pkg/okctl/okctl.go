@@ -39,18 +39,10 @@ type Okctl struct {
 	PersisterProvider   state.PersisterProvider
 }
 
-func (o *Okctl) InitialiseServer() error {
-	required := []interface{}{
-		o.CloudProvider,
-		o.BinariesProvider,
-		o.CredentialsProvider,
-		o.PersisterProvider,
-	}
-
-	for _, r := range required {
-		if r == nil {
-			return fmt.Errorf("failed to initialise okctl cli, missing required provider")
-		}
+func (o *Okctl) Initialise(env, awsAccountID string) error {
+	err := o.initialiseProviders(env, awsAccountID)
+	if err != nil {
+		return err
 	}
 
 	clusterService := core.NewClusterService(
@@ -77,7 +69,6 @@ func (o *Okctl) InitialiseServer() error {
 
 	errs := make(chan error, 2)
 	go func() {
-		fmt.Printf("started server, listening on address: %s", o.Destination)
 		errs <- server.ListenAndServe()
 	}()
 
@@ -115,8 +106,8 @@ func (o *Okctl) Region() string {
 	return o.RepoData.Region
 }
 
-// InitialiseProviders knows how to create all required providers
-func (o *Okctl) InitialiseProviders(env, awsAccountID string) error {
+// initialiseProviders knows how to create all required providers
+func (o *Okctl) initialiseProviders(env, awsAccountID string) error {
 	err := o.newCredentialsProvider(awsAccountID)
 	if err != nil {
 		return err
@@ -188,9 +179,9 @@ func (o *Okctl) newBinariesProvider() error {
 		return err
 	}
 
-	store := storage.NewFileSystemStorage(appDataDir)
+	str := storage.NewFileSystemStorage(appDataDir)
 
-	stagers, err := fetch.New(o.Host(), store).FromConfig(true, o.Binaries())
+	stagers, err := fetch.New(o.Host(), str).FromConfig(true, o.Binaries())
 	if err != nil {
 		return err
 	}

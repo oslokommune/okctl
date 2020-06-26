@@ -49,12 +49,7 @@ and database subnets.`,
 				return err
 			}
 
-			err = o.InitialiseProviders(opts.Environment, opts.AWSAccountID)
-			if err != nil {
-				return err
-			}
-
-			return o.InitialiseServer()
+			return o.Initialise(opts.Environment, opts.AWSAccountID)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			data, err := json.Marshal(opts)

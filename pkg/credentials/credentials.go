@@ -7,34 +7,38 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/oslokommune/okctl/pkg/credentials/login"
 )
+
+// AwsAuthenticator authenticates with AWS
+type AwsAuthenticator interface {
+	Get() (*sts.Credentials, error)
+}
 
 // Provider defines how credentials should
 // be made available
 type Provider interface {
-	AsEnv() ([]string, error)
-	Raw() (*sts.Credentials, error)
+	AwsEnv() ([]string, error)
+	AwsRaw() (*sts.Credentials, error)
 }
 
-// AWSProvider stores state required for fetching
+// provider stores state required for fetching
 // AWS credentials
-type AWSProvider struct {
-	Login login.Loginer
+type provider struct {
+	aws AwsAuthenticator
 
 	creds *sts.Credentials
 }
 
 // New returns an AWS credentials provider
-func New(l login.Loginer) *AWSProvider {
-	return &AWSProvider{
-		Login: l,
+func New(aws AwsAuthenticator) *provider {
+	return &provider{
+		aws: aws,
 	}
 }
 
-// AsEnv returns the AWS credentials as env vars
-func (p *AWSProvider) AsEnv() ([]string, error) {
-	creds, err := p.Raw()
+// AwsEnv returns the AWS credentials as env vars
+func (p *provider) AwsEnv() ([]string, error) {
+	creds, err := p.AwsRaw()
 	if err != nil {
 		return nil, err
 	}
@@ -46,8 +50,8 @@ func (p *AWSProvider) AsEnv() ([]string, error) {
 	}, nil
 }
 
-// Raw returns the raw credentials
-func (p *AWSProvider) Raw() (*sts.Credentials, error) {
+// AwsRaw returns the raw credentials
+func (p *provider) AwsRaw() (*sts.Credentials, error) {
 	// Credentials have expired
 	if p.creds != nil && time.Since(*p.creds.Expiration) < 0 {
 		p.creds = nil
@@ -55,7 +59,7 @@ func (p *AWSProvider) Raw() (*sts.Credentials, error) {
 
 	// No credentials available
 	if p.creds == nil {
-		creds, err := p.Login.Login()
+		creds, err := p.aws.Get()
 		if err != nil {
 			return nil, err
 		}

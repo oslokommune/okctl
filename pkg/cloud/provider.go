@@ -41,7 +41,7 @@ func New(region string, c credentials.Provider) (*Provider, error) {
 }
 
 func (p *Provider) newSession() (*session.Session, error) {
-	creds, err := p.Credentials.Raw()
+	creds, err := p.Credentials.AwsRaw()
 	if err != nil {
 		return nil, err
 	}

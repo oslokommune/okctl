@@ -31,7 +31,7 @@ func (p *provider) Eksctl(version string) (*eksctl.Eksctl, error) {
 			return nil, err
 		}
 
-		envs, err := p.credentials.AsEnv()
+		envs, err := p.credentials.AwsEnv()
 		if err != nil {
 			return nil, err
 		}

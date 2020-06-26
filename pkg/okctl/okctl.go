@@ -8,6 +8,7 @@ import (
 	"path"
 	"syscall"
 
+	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/api/core"
 	cld "github.com/oslokommune/okctl/pkg/api/core/cloud"
@@ -20,7 +21,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/config/application"
 	"github.com/oslokommune/okctl/pkg/credentials"
-	"github.com/oslokommune/okctl/pkg/credentials/login"
+	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/oslokommune/okctl/pkg/storage/state"
 )
@@ -208,15 +209,12 @@ func (o *Okctl) newCloudProvider() error {
 // newCredentialsProvider knows how to load credentials
 func (o *Okctl) newCredentialsProvider(awsAccountID string) error {
 	if o.NoInput {
-		return fmt.Errorf("we only support retrieving credentials interactively for now")
+		return errors.E(errors.Errorf("we only support retrieving credentials interactively for now"), errors.Invalid)
 	}
 
-	l, err := login.Interactive(awsAccountID, o.Region(), o.Username())
-	if err != nil {
-		return err
-	}
-
-	o.CredentialsProvider = credentials.New(l)
+	o.CredentialsProvider = credentials.New(
+		aws.New(awsAccountID, o.Region(), aws.Interactive(o.Username()), aws.AuthTypeSAML),
+	)
 
 	return nil
 }

@@ -9,9 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	cfPkg "github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation"
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -27,16 +26,14 @@ type Stack = cfPkg.Stack
 // Manager stores state required for interacting with the AWS
 // cloud formation API
 type Manager struct {
-	Logger   *logrus.Entry
 	Builder  cfn.Builder
 	Provider v1alpha1.CloudProvider
 	Template *cloudformation.Template
 }
 
 // New returns a new manager
-func New(logger *logrus.Logger, provider v1alpha1.CloudProvider) *Manager {
+func New(provider v1alpha1.CloudProvider) *Manager {
 	return &Manager{
-		Logger:   logger.WithFields(logrus.Fields{}),
 		Provider: provider,
 		Template: cloudformation.NewTemplate(),
 	}
@@ -45,10 +42,6 @@ func New(logger *logrus.Logger, provider v1alpha1.CloudProvider) *Manager {
 // WithBuilder adds a builder to cloud formation stack manager
 func (m *Manager) WithBuilder(builder cfn.Builder) *Manager {
 	m.Builder = builder
-
-	m.Logger = m.Logger.WithFields(logrus.Fields{
-		"cloud_formation_stack_name": builder.StackName(),
-	})
 
 	return m
 }
@@ -59,15 +52,10 @@ func (m *Manager) Exists() (bool, error) {
 		StackName: aws.String(m.Builder.StackName()),
 	}
 
-	m.Logger.WithFields(logrus.Fields{
-		"request": req,
-		"type":    "CloudFormation.DescribeStacks",
-	}).Debug("sending cloud formation describe request")
+	fmt.Println(req)
 
 	stack, err := m.Provider.CloudFormation().DescribeStacks(req)
 	if err != nil {
-		m.Logger.Debug(err)
-
 		switch e := err.(type) {
 		case awserr.Error:
 			if e.Code() == awsErrValidationError && fmt.Sprintf(stackDoesNotExistPattern, m.Builder.StackName()) == e.Message() {
@@ -78,13 +66,6 @@ func (m *Manager) Exists() (bool, error) {
 		}
 	}
 
-	if stack == nil {
-		return false, fmt.Errorf("failed to describe stack")
-	}
-
-	m.Logger.Debug(stack)
-
-	// Is this check really necessary?
 	return m.StackStatusIsNotDeleted(stack.Stacks[0]), nil
 }
 
@@ -231,8 +212,6 @@ func (m *Manager) CreateIfNotExists(timeout int64) error {
 }
 
 func (m *Manager) watchDelete(stackName string) error {
-	m.Logger.Info("Stack deletion request sent to AWS")
-
 	for {
 		stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
 			StackName: aws.String(stackName),
@@ -253,7 +232,6 @@ func (m *Manager) watchDelete(stackName string) error {
 		case cfPkg.StackStatusDeleteFailed:
 			return fmt.Errorf("failed to delete stack: %s", *stack.Stacks[0].StackStatusReason)
 		case cfPkg.StackStatusDeleteInProgress:
-			m.Logger.Info("Waiting for stack deletion to complete.. sleeping for 30 seconds")
 			time.Sleep(sleepTime)
 		default:
 			return fmt.Errorf("wtf")
@@ -263,8 +241,6 @@ func (m *Manager) watchDelete(stackName string) error {
 
 // Reimplement this as wait
 func (m *Manager) watchCreate(r *cfPkg.CreateStackOutput) error {
-	m.Logger.Info("Stack creation request sent to AWS")
-
 	for {
 		stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
 			StackName: r.StackId,
@@ -285,7 +261,6 @@ func (m *Manager) watchCreate(r *cfPkg.CreateStackOutput) error {
 		case cfPkg.StackStatusCreateFailed:
 			return fmt.Errorf("failed to create stack: %s", *stack.Stacks[0].StackStatusReason)
 		case cfPkg.StackStatusCreateInProgress:
-			m.Logger.Info("Waiting for stack creation to complete.. sleeping for 30 seconds")
 			time.Sleep(sleepTime)
 		default:
 			return fmt.Errorf("wtf")

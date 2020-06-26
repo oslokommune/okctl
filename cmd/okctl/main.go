@@ -3,10 +3,9 @@ package main
 import (
 	"os"
 
-	"github.com/oslokommune/okctl/pkg/binaries"
+	"github.com/oslokommune/okctl/pkg/api/core"
 	"github.com/oslokommune/okctl/pkg/config/load"
 	"github.com/oslokommune/okctl/pkg/okctl"
-	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -16,24 +15,6 @@ func main() {
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
-}
-
-func binariesProvider(o *okctl.Okctl) error {
-	appDataDir, err := o.GetAppDataDir()
-	if err != nil {
-		return err
-	}
-
-	store := storage.NewFileSystemStorage(appDataDir)
-
-	stagers, err := binaries.New(o.AppData.Host, store).FromConfig(true, o.AppData.Binaries)
-	if err != nil {
-		return err
-	}
-
-	o.BinariesProvider = stagers
-
-	return nil
 }
 
 func repoDataLoader(o *okctl.Okctl, cmd *cobra.Command) error {
@@ -61,6 +42,8 @@ func appDataLoader(o *okctl.Okctl, cmd *cobra.Command) error {
 }
 
 func buildRootCommand() *cobra.Command {
+	var outputFormat string
+
 	o := okctl.New()
 
 	var cmd = &cobra.Command{
@@ -87,13 +70,10 @@ being captured. Together with slack and slick.`,
 				return errors.Wrap(err, "failed to load repository data")
 			}
 
-			err = binariesProvider(o)
-			if err != nil {
-				return errors.Wrap(err, "failed to create binaries provider")
-			}
-
 			o.Out = cmd.OutOrStdout()
 			o.Err = cmd.OutOrStderr()
+
+			o.SetFormat(core.EncodeResponseType(outputFormat))
 
 			return nil
 		},
@@ -101,6 +81,10 @@ being captured. Together with slack and slick.`,
 
 	cmd.AddCommand(buildCreateCommand(o))
 	cmd.AddCommand(buildDeleteCommand(o))
+
+	f := cmd.Flags()
+	f.StringVarP(&outputFormat, "output", "o", "text",
+		"The format of the output returned to the user")
 
 	return cmd
 }

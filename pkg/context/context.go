@@ -2,6 +2,7 @@
 package context
 
 import (
+	"context"
 	"io"
 	"os"
 
@@ -27,6 +28,8 @@ type Context struct {
 	Out io.Writer
 	Err io.Writer
 
+	Ctx context.Context
+
 	Logger *logrus.Logger
 }
 
@@ -48,6 +51,7 @@ func New() *Context {
 		In:         os.Stdin,
 		Out:        os.Stdout,
 		Err:        os.Stderr,
+		Ctx:        context.Background(),
 		Logger:     logger,
 	}
 }

@@ -6,7 +6,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 )

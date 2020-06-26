@@ -3,7 +3,7 @@ package v1alpha1_test
 import (
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 )

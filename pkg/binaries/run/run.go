@@ -7,8 +7,6 @@ import (
 	"io"
 	"os/exec"
 	"strings"
-
-	"github.com/sirupsen/logrus"
 )
 
 // Runner defines the interface required by a concrete
@@ -22,7 +20,6 @@ type Run struct {
 	WorkingDirectory string
 	BinaryPath       string
 	Env              []string
-	Logger           *logrus.Logger
 }
 
 // AnonymizeEnv will conceal any secret portions of the
@@ -54,16 +51,6 @@ func AnonymizeEnv(entries []string) []string {
 func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 	var errOut, errErr error
 
-	ctxLogger := logrus.WithFields(
-		logrus.Fields{
-			"component": "generic_runner",
-			"binary":    r.BinaryPath,
-			"args":      args,
-			"env":       AnonymizeEnv(r.Env),
-			"dir":       r.WorkingDirectory,
-		},
-	)
-
 	cmd := &exec.Cmd{
 		Path: r.BinaryPath,
 		Args: append([]string{r.BinaryPath}, args...),
@@ -84,8 +71,6 @@ func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 	var errBuff, outBuff bytes.Buffer
 	stdout := io.MultiWriter(progress, &outBuff)
 	stderr := io.MultiWriter(progress, &errBuff)
-
-	ctxLogger.Info("Starting execution of provided command")
 
 	err = cmd.Start()
 	if err != nil {
@@ -112,12 +97,12 @@ func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 	return outBuff.Bytes(), nil
 }
 
-// New creates a new runner
-func New(logger *logrus.Logger, workingDirectory, binaryPath string, env []string) *Run {
+// New returns a runner capable of executing
+// commands using the provided binary
+func New(workingDirectory, binaryPath string, env []string) *Run {
 	return &Run{
 		WorkingDirectory: workingDirectory,
 		BinaryPath:       binaryPath,
 		Env:              env,
-		Logger:           logger,
 	}
 }

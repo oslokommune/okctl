@@ -11,13 +11,12 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/mitchellh/go-homedir"
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/api/core"
 	"github.com/oslokommune/okctl/pkg/config/application"
 	"github.com/oslokommune/okctl/pkg/config/repository"
 	"github.com/oslokommune/okctl/pkg/context"
 	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/pkg/errors"
-	"github.com/sanathkr/go-yaml"
 )
 
 const (
@@ -67,6 +66,9 @@ type Config struct {
 	RepoDataLoader DataLoaderFn
 	RepoData       *repository.Data
 
+	Destination string
+
+	format  core.EncodeResponseType
 	homeDir string
 	repoDir string
 }
@@ -77,7 +79,18 @@ func New() *Config {
 		Context:        context.New(),
 		AppDataLoader:  NoopDataLoader,
 		RepoDataLoader: NoopDataLoader,
+		Destination:    "127.0.0.1:8085",
 	}
+}
+
+// SetFormat sets the encode response type
+func (c *Config) SetFormat(responseType core.EncodeResponseType) {
+	c.format = responseType
+}
+
+// Format returns the encode response type
+func (c *Config) Format() core.EncodeResponseType {
+	return c.format
 }
 
 // LoadRepoData will attempt to load repository data
@@ -278,81 +291,6 @@ func (c *Config) GetRepoOutputDir(env string) (string, error) {
 	return path.Join(base, c.RepoData.OutputDir, env), nil
 }
 
-// WriteToOutputDir will write state to the given output dir, env and
-// filepath
-func (c *Config) WriteToOutputDir(env, filePath string, b []byte) error {
-	outDir, err := c.GetRepoOutputDir(env)
-	if err != nil {
-		return err
-	}
-
-	store := storage.NewFileSystemStorage(outDir)
-
-	base, file := path.Split(filePath)
-
-	writer, err := store.Recreate(base, file, 0644)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		err = writer.Close()
-	}()
-
-	_, err = io.Copy(writer, bytes.NewReader(b))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// DeleteFromOutputDir removes everything for a given env from path
-func (c *Config) DeleteFromOutputDir(env, filepath string) error {
-	outDir, err := c.GetRepoOutputDir(env)
-	if err != nil {
-		return err
-	}
-
-	store := storage.NewFileSystemStorage(outDir)
-
-	return store.RemoveAll(filepath)
-}
-
-// WriteClusterConfig stores the cluster config
-func (c *Config) WriteClusterConfig(env string, cfg *v1alpha1.ClusterConfig) error {
-	b, err := cfg.YAML()
-	if err != nil {
-		return err
-	}
-
-	return c.WriteToOutputDir(env, path.Join(DefaultClusterBaseDir, DefaultClusterConfig), b)
-}
-
-// DeleteClusterConfig deletes the cluster config for a given environment
-func (c *Config) DeleteClusterConfig(env string) error {
-	return c.DeleteFromOutputDir(env, path.Join(DefaultClusterBaseDir, DefaultClusterConfig))
-}
-
-// ClusterConfig loads the cluster configuration for the given environment
-func (c *Config) ClusterConfig(env string) (*v1alpha1.ClusterConfig, error) {
-	outDir, err := c.GetRepoOutputDir(env)
-	if err != nil {
-		return nil, err
-	}
-
-	store := storage.NewFileSystemStorage(outDir)
-
-	b, err := store.ReadAll(path.Join(DefaultClusterBaseDir, DefaultClusterConfig))
-	if err != nil {
-		return nil, err
-	}
-
-	cfg := v1alpha1.NewClusterConfig()
-
-	return cfg, yaml.Unmarshal(b, cfg)
-}
-
 // ClusterName returns a consistent cluster name
 func (c *Config) ClusterName(env string) string {
 	return fmt.Sprintf("%s-%s", c.RepoData.Name, env)
@@ -367,15 +305,4 @@ func (c *Config) AWSAccountID(env string) (string, error) {
 	}
 
 	return "", fmt.Errorf("could not find configuration for cluster: %s", env)
-}
-
-// HasCluster returns true if we can find the cluster in the repo data
-func (c *Config) HasCluster(env string) bool {
-	for _, c := range c.RepoData.Clusters {
-		if c.Environment == env {
-			return true
-		}
-	}
-
-	return false
 }

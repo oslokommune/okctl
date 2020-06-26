@@ -48,3 +48,4 @@ We have begged, borrowed and stolen various ideas from the following CLIs:
 - https://github.com/weaveworks/eksctl
 - https://github.com/kubernetes/kops
 - https://kubernetes.io/docs/tasks/tools/install-kubectl/
+- https://github.com/go-kit/kit

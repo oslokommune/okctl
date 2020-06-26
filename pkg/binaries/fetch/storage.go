@@ -1,4 +1,4 @@
-package binaries
+package fetch
 
 import (
 	"io"

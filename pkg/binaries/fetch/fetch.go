@@ -1,6 +1,7 @@
 package fetch
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,6 +11,23 @@ import (
 // Fetcher provides an interface for downloading a file from a URL
 type Fetcher interface {
 	Fetch(io.Writer) (int64, error)
+}
+
+type staticFetcher struct {
+	data []byte
+}
+
+// Fetch returns the static data
+func (f *staticFetcher) Fetch(writer io.Writer) (int64, error) {
+	return io.Copy(writer, bytes.NewReader(f.data))
+}
+
+// NewStaticFetcher creates a fetcher that returns the
+// provided data, good for use with testing
+func NewStaticFetcher(data []byte) Fetcher {
+	return &staticFetcher{
+		data: data,
+	}
 }
 
 type httpFetcher struct {

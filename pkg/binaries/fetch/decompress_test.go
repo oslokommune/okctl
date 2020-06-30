@@ -11,11 +11,14 @@ import (
 )
 
 func readFile(t *testing.T, file string) io.Reader {
+	//nolint: gosec
 	b, err := ioutil.ReadFile(file)
 	assert.NoError(t, err)
+
 	return bytes.NewReader(b)
 }
 
+//nolint: funlen
 func TestDecompressor(t *testing.T) {
 	testCases := []struct {
 		name         string
@@ -66,6 +69,8 @@ func TestDecompressor(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		t.Run(tc.name, func(t *testing.T) {
 			got := new(bytes.Buffer)
 

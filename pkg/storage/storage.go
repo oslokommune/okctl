@@ -34,12 +34,18 @@ type Storer interface {
 	MkdirAll(dir string) error
 	Exists(name string) (bool, error)
 	Abs(name string) string
+	Path() string
 }
 
 // Storage stores state about the filesystem
 type Storage struct {
-	Path string
-	Fs   afero.Fs
+	BasePath string
+	Fs       afero.Fs
+}
+
+// Path returns the base path for the store
+func (s *Storage) Path() string {
+	return s.BasePath
 }
 
 // ReadAll returns all the content of a file
@@ -96,7 +102,7 @@ func (s *Storage) Abs(name string) string {
 	case *afero.BasePathFs:
 		return afero.FullBaseFsPath(fs, name)
 	default:
-		return path.Join(s.Path, name)
+		return path.Join(s.BasePath, name)
 	}
 }
 
@@ -104,15 +110,31 @@ func (s *Storage) Abs(name string) string {
 // base path filesystem
 func NewFileSystemStorage(path string) *Storage {
 	return &Storage{
-		Path: path,
-		Fs:   afero.NewBasePathFs(afero.NewOsFs(), path),
+		BasePath: path,
+		Fs:       afero.NewBasePathFs(afero.NewOsFs(), path),
 	}
 }
 
+// EphemeralStorage wraps storage and
+// implements the Cleaner interface
+type EphemeralStorage struct {
+	*Storage
+}
+
+// Clean simply instantiates a new in-memory store
+func (e *EphemeralStorage) Clean() error {
+	e.Fs = afero.NewMemMapFs()
+
+	return nil
+}
+
 // NewEphemeralStorage will return an in memory file system
-func NewEphemeralStorage() *Storage {
-	return &Storage{
-		Fs: afero.NewMemMapFs(),
+func NewEphemeralStorage() *EphemeralStorage {
+	return &EphemeralStorage{
+		&Storage{
+			BasePath: "/",
+			Fs:       afero.NewMemMapFs(),
+		},
 	}
 }
 
@@ -125,7 +147,7 @@ type TemporaryStorage struct {
 // Clean removes everything at the path the filesystem was
 // created from
 func (s *TemporaryStorage) Clean() error {
-	return os.RemoveAll(s.Path)
+	return os.RemoveAll(s.BasePath)
 }
 
 // NewTemporaryStorage creates a new temporary storage
@@ -137,8 +159,8 @@ func NewTemporaryStorage() (*TemporaryStorage, error) {
 
 	return &TemporaryStorage{
 		&Storage{
-			Path: dir,
-			Fs:   afero.NewBasePathFs(afero.NewOsFs(), dir),
+			BasePath: dir,
+			Fs:       afero.NewBasePathFs(afero.NewOsFs(), dir),
 		},
 	}, nil
 }

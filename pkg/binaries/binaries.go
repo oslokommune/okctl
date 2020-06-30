@@ -7,6 +7,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
 	"github.com/oslokommune/okctl/pkg/binaries/run/eksctl"
 	"github.com/oslokommune/okctl/pkg/credentials"
+	"github.com/oslokommune/okctl/pkg/storage"
 )
 
 // Provider defines the CLIs that are available
@@ -36,12 +37,12 @@ func (p *provider) Eksctl(version string) (*eksctl.Eksctl, error) {
 			return nil, err
 		}
 
-		e, err := eksctl.New(p.progress, binaryPath, envs)
+		store, err := storage.NewTemporaryStorage()
 		if err != nil {
 			return nil, err
 		}
 
-		p.eksctl[version] = e
+		p.eksctl[version] = eksctl.New(store, p.progress, binaryPath, envs)
 	}
 
 	return p.eksctl[version], nil

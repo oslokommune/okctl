@@ -120,7 +120,7 @@ func TestProcessor(t *testing.T) {
 			}(),
 			binary:  "myBinary",
 			version: "v0.1.0",
-			expect:  "binaries/myBinary/v0.1.0/darwin/amd64/myBinary",
+			expect:  "/binaries/myBinary/v0.1.0/darwin/amd64/myBinary",
 			preFn: func() {
 				responder := httpmock.NewBytesResponder(200, readBytesFromFile(t, "testdata/myFile.tar.gz"))
 				httpmock.RegisterResponder(http.MethodGet, "https://localhost/myFile.tar.gz", responder)

@@ -11,13 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	gfn "github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn/builder/vpc"
 	"github.com/stretchr/testify/assert"
 )
 
-func NewCloudformationSession(t *testing.T) *cloudformation.CloudFormation {
+func NewCloudFormationSession(t *testing.T) *cloudformation.CloudFormation {
 	assert.NotEmpty(t, os.Getenv("AWS_ACCESS_KEY_ID"))
 	assert.NotEmpty(t, os.Getenv("AWS_SECRET_ACCESS_KEY"))
 
@@ -32,15 +33,27 @@ func NewCloudformationSession(t *testing.T) *cloudformation.CloudFormation {
 }
 
 func NewVPC(t *testing.T) string {
-	builder, err := vpc.New("test", "dev", "172.16.10.0/20", "eu-west-1").Build()
+	builder := vpc.New("test", "dev", "172.16.10.0/20", "eu-west-1")
+
+	err := builder.Build()
 	assert.NoError(t, err)
 
-	return builder
+	resources := builder.Resources()
+
+	template := gfn.NewTemplate()
+	for _, resource := range resources {
+		template.Resources[resource.Name()] = resource.Resource()
+	}
+
+	got, err := template.YAML()
+	assert.NoError(t, err)
+
+	return string(got)
 }
 
 func TestValidate(t *testing.T) {
 	body := NewVPC(t)
-	cf := NewCloudformationSession(t)
+	cf := NewCloudFormationSession(t)
 
 	res, err := cf.ValidateTemplate(&cloudformation.ValidateTemplateInput{
 		TemplateBody: &body,
@@ -52,7 +65,7 @@ func TestValidate(t *testing.T) {
 
 func TestApply(t *testing.T) {
 	body := NewVPC(t)
-	cf := NewCloudformationSession(t)
+	cf := NewCloudFormationSession(t)
 
 	result, err := cf.CreateStack(&cloudformation.CreateStackInput{
 		OnFailure:        aws.String("DO_NOTHING"),

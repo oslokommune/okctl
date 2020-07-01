@@ -32,6 +32,12 @@ type CFAPI struct {
 	nextDescribeStacks int
 
 	CreateStackFn func(*cloudformation.CreateStackInput) (*cloudformation.CreateStackOutput, error)
+	DeleteStackFn func(*cloudformation.DeleteStackInput) (*cloudformation.DeleteStackOutput, error)
+}
+
+// DeleteStack invokes a mocked a response
+func (a *CFAPI) DeleteStack(in *cloudformation.DeleteStackInput) (*cloudformation.DeleteStackOutput, error) {
+	return a.DeleteStackFn(in)
 }
 
 // CreateStack invokes a mocked response
@@ -45,6 +51,15 @@ func (a *CFAPI) DescribeStacks(stack *cloudformation.DescribeStacksInput) (*clou
 	a.nextDescribeStacks++
 
 	return a.DescribeStacksFn[i](stack)
+}
+
+// DeleteStackSuccess sets a success response on the mocked DeleteStack function
+func (p *CloudProvider) DeleteStackSuccess() *CloudProvider {
+	p.CFAPI.DeleteStackFn = func(input *cloudformation.DeleteStackInput) (*cloudformation.DeleteStackOutput, error) {
+		return &cloudformation.DeleteStackOutput{}, nil
+	}
+
+	return p
 }
 
 // CreateStackSuccess sets a success response on the mocked CreateStack function
@@ -72,10 +87,10 @@ func (p *CloudProvider) DescribeStacksEmpty() *CloudProvider {
 }
 
 // DescribeStacksResponse pushes a success response onto the describe stacks list
-func (p *CloudProvider) DescribeStacksResponse() *CloudProvider {
+func (p *CloudProvider) DescribeStacksResponse(status string) *CloudProvider {
 	p.CFAPI.DescribeStacksFn = append(p.CFAPI.DescribeStacksFn, func(*cloudformation.DescribeStacksInput) (*cloudformation.DescribeStacksOutput, error) {
 		return &cloudformation.DescribeStacksOutput{
-			Stacks: Stacks(),
+			Stacks: Stacks(status),
 		}, nil
 	})
 
@@ -118,15 +133,6 @@ func NewGoodCloudProvider() *CloudProvider {
 				}, nil
 			},
 		},
-		CFAPI: &CFAPI{
-			DescribeStacksFn: []func(*cloudformation.DescribeStacksInput) (*cloudformation.DescribeStacksOutput, error){
-				func(*cloudformation.DescribeStacksInput) (*cloudformation.DescribeStacksOutput, error) {
-					return &cloudformation.DescribeStacksOutput{
-						Stacks: Stacks(),
-					}, nil
-				},
-			},
-		},
 	}
 }
 
@@ -153,12 +159,12 @@ func Subnets() []*ec2.Subnet {
 }
 
 // Stacks returns a valid stack describe response
-func Stacks() []*cloudformation.Stack {
+func Stacks(status string) []*cloudformation.Stack {
 	return []*cloudformation.Stack{
 		{
 			StackId:     aws.String(DefaultStackName),
 			StackName:   aws.String(DefaultStackName),
-			StackStatus: aws.String(cloudformation.StackStatusCreateComplete),
+			StackStatus: aws.String(status),
 		},
 	}
 }

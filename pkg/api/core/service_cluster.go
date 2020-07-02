@@ -33,7 +33,7 @@ func (c *cluster) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (
 
 	err = c.exe.CreateCluster(clusterConfig)
 	if err != nil {
-		return nil, errors.E(err,  msgFailedToCreateCluster)
+		return nil, errors.E(err, msgFailedToCreateCluster)
 	}
 
 	res := &api.Cluster{

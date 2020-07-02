@@ -63,9 +63,7 @@ func (e *Eksctl) writeClusterConfig(cfg *v1alpha1.ClusterConfig) error {
 	return nil
 }
 
-// DeleteCluster invokes eksctl delete cluster using the provided
-// cluster configuration as input
-func (e *Eksctl) DeleteCluster(cfg *v1alpha1.ClusterConfig) ([]byte, error) {
+func (e *Eksctl) run(args []string, cfg *v1alpha1.ClusterConfig) ([]byte, error) {
 	var err error
 
 	defer func() {
@@ -77,14 +75,18 @@ func (e *Eksctl) DeleteCluster(cfg *v1alpha1.ClusterConfig) ([]byte, error) {
 		return nil, err
 	}
 
+	return e.Runner.Run(e.Progress, append(args, "--config-file", e.Store.Abs(defaultClusterConfig)))
+}
+
+// DeleteCluster invokes eksctl delete cluster using the provided
+// cluster configuration as input
+func (e *Eksctl) DeleteCluster(cfg *v1alpha1.ClusterConfig) ([]byte, error) {
 	args := []string{
 		"delete",
 		"cluster",
-		"--config-file",
-		e.Store.Abs(defaultClusterConfig),
 	}
 
-	b, err := e.Runner.Run(e.Progress, args)
+	b, err := e.run(args, cfg)
 	if err != nil {
 		return nil, errors.E(err, fmt.Sprintf("failed to delete: %s", string(b)), errors.IO)
 	}
@@ -95,26 +97,13 @@ func (e *Eksctl) DeleteCluster(cfg *v1alpha1.ClusterConfig) ([]byte, error) {
 // CreateCluster invokes eksctl create cluster using the provided
 // cluster configuration as input
 func (e *Eksctl) CreateCluster(cfg *v1alpha1.ClusterConfig) ([]byte, error) {
-	var err error
-
-	defer func() {
-		err = e.Store.Clean()
-	}()
-
-	err = e.writeClusterConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-
 	args := []string{
 		"create",
 		"cluster",
 		"--write-kubeconfig=false",
-		"--config-file",
-		e.Store.Abs(defaultClusterConfig),
 	}
 
-	b, err := e.Runner.Run(e.Progress, args)
+	b, err := e.run(args, cfg)
 	if err != nil {
 		return nil, errors.E(err, fmt.Sprintf("failed to create: %s", string(b)), errors.IO)
 	}

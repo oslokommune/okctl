@@ -110,11 +110,11 @@ func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 
 // New returns a runner capable of executing
 // commands using the provided binary
-func New(workingDirectory, binaryPath string, env []string) *Run {
+func New(workingDirectory, binaryPath string, env []string, cmdFn CmdFn) *Run {
 	return &Run{
 		WorkingDirectory: workingDirectory,
 		BinaryPath:       binaryPath,
 		Env:              env,
-		CmdFn:            Cmd(),
+		CmdFn:            cmdFn,
 	}
 }

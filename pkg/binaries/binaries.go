@@ -5,8 +5,9 @@ import (
 	"io"
 
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
+	"github.com/oslokommune/okctl/pkg/binaries/run"
 	"github.com/oslokommune/okctl/pkg/binaries/run/eksctl"
-	"github.com/oslokommune/okctl/pkg/credentials"
+	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	"github.com/oslokommune/okctl/pkg/storage"
 )
 
@@ -16,10 +17,10 @@ type Provider interface {
 }
 
 type provider struct {
-	progress    io.Writer
-	credentials credentials.Provider
-	fetcher     fetch.Provider
-	eksctl      map[string]*eksctl.Eksctl
+	progress io.Writer
+	auth     aws.Authenticator
+	fetcher  fetch.Provider
+	eksctl   map[string]*eksctl.Eksctl
 }
 
 // Eksctl returns an eksctl cli wrapper for running commands
@@ -32,17 +33,12 @@ func (p *provider) Eksctl(version string) (*eksctl.Eksctl, error) {
 			return nil, err
 		}
 
-		envs, err := p.credentials.AwsEnv()
-		if err != nil {
-			return nil, err
-		}
-
 		store, err := storage.NewTemporaryStorage()
 		if err != nil {
 			return nil, err
 		}
 
-		p.eksctl[version] = eksctl.New(store, p.progress, binaryPath, envs)
+		p.eksctl[version] = eksctl.New(store, p.progress, binaryPath, p.auth, run.Cmd())
 	}
 
 	return p.eksctl[version], nil
@@ -50,11 +46,11 @@ func (p *provider) Eksctl(version string) (*eksctl.Eksctl, error) {
 
 // New returns a provider that knows how to fetch binaries and make
 // them available for other commands
-func New(progress io.Writer, credentials credentials.Provider, fetcher fetch.Provider) Provider {
+func New(progress io.Writer, auth aws.Authenticator, fetcher fetch.Provider) Provider {
 	return &provider{
-		progress:    progress,
-		credentials: credentials,
-		fetcher:     fetcher,
-		eksctl:      map[string]*eksctl.Eksctl{},
+		progress: progress,
+		auth:     auth,
+		fetcher:  fetcher,
+		eksctl:   map[string]*eksctl.Eksctl{},
 	}
 }

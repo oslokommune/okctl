@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/request"
@@ -42,7 +43,7 @@ including VPC, this is a highly destructive operation.`,
 
 			err := opts.Validate()
 			if err != nil {
-				return err
+				return errors.E(err, "failed to validate delete cluster options")
 			}
 
 			awsAccountID, err := o.AWSAccountID(opts.Environment)

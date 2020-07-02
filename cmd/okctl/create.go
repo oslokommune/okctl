@@ -44,11 +44,11 @@ and database subnets.`,
 			opts.AWSAccountID = args[1]
 			opts.RepositoryName = o.RepoData.Name
 			opts.ClusterName = o.ClusterName(opts.Environment)
+			opts.Region = o.Region()
 
-			fmt.Println(opts)
 			err := opts.Validate()
 			if err != nil {
-				return err
+				return errors.E(err, "failed to validate create cluster options", errors.Invalid)
 			}
 
 			return o.Initialise(opts.Environment, opts.AWSAccountID)

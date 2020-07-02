@@ -23,6 +23,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/config/application"
 	"github.com/oslokommune/okctl/pkg/credentials"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
+	"github.com/oslokommune/okctl/pkg/credentials/aws/scrape"
 	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/oslokommune/okctl/pkg/storage/state"
 )
@@ -66,7 +67,7 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		Addr:    o.Destination,
 	}
 
-	// nolint: mnd
+	// nolint: gomnd
 	errs := make(chan error, 2)
 
 	go func() {
@@ -147,7 +148,7 @@ func (o *Okctl) newPersisterProvider(env string) error {
 			ConfigFile: config.DefaultConfig,
 			Defaults:   map[string]string{},
 		},
-		State: nil,
+		State: o.AppData,
 	}
 
 	repoDir, err := o.GetRepoDir()
@@ -168,6 +169,7 @@ func (o *Okctl) newPersisterProvider(env string) error {
 				"cluster_config": path.Join(outputDir, config.DefaultClusterBaseDir, config.DefaultClusterConfig),
 			},
 		},
+		State: o.RepoData,
 	}
 
 	o.PersisterProvider = state.New(repoOpts, appOpts)
@@ -192,14 +194,14 @@ func (o *Okctl) newBinariesProvider() error {
 		return errors.E(err, "failed to create binaries fetcher", errors.Internal)
 	}
 
-	o.BinariesProvider = binaries.New(o.Out, o.CredentialsProvider, fetcher)
+	o.BinariesProvider = binaries.New(o.Out, o.CredentialsProvider.Aws(), fetcher)
 
 	return nil
 }
 
 // newCloudProvider creates a provider for running cloud operations
 func (o *Okctl) newCloudProvider() error {
-	c, err := cloud.New(o.Region(), o.CredentialsProvider)
+	c, err := cloud.New(o.Region(), o.CredentialsProvider.Aws())
 	if err != nil {
 		return err
 	}
@@ -215,9 +217,9 @@ func (o *Okctl) newCredentialsProvider(awsAccountID string) error {
 		return errors.E(errors.Errorf("we only support retrieving credentials interactively for now"), errors.Invalid)
 	}
 
-	o.CredentialsProvider = credentials.New(
-		aws.New(awsAccountID, o.Region(), aws.Interactive(o.Username()), aws.AuthTypeSAML),
-	)
+	saml := aws.NewAuthSAML(awsAccountID, o.Region(), scrape.New(), aws.DefaultStsProvider, aws.Interactive(o.Username()))
+
+	o.CredentialsProvider = credentials.New(aws.New(saml))
 
 	return nil
 }

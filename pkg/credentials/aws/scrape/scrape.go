@@ -18,6 +18,11 @@ const (
 	DefaultURL = v1alpha1.OkSamlURL
 )
 
+// Scraper defines methods for scraping SAML
+type Scraper interface {
+	Scrape(username, password, mfaToken string) (string, error)
+}
+
 // FormAction knows how to find the URL for
 // the next stage of the parsing
 type FormAction struct {

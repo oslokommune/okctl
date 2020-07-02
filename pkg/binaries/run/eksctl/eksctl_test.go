@@ -11,6 +11,8 @@ import (
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/binaries/run"
 	"github.com/oslokommune/okctl/pkg/binaries/run/eksctl"
+	"github.com/oslokommune/okctl/pkg/credentials/aws"
+	"github.com/oslokommune/okctl/pkg/mock"
 	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,32 +28,28 @@ func TestEksctlDeleteCluster(t *testing.T) {
 		{
 			name: "Should work",
 			cfg:  v1alpha1.NewClusterConfig(),
-			eksctl: func() *eksctl.Eksctl {
-				e := eksctl.New(storage.NewEphemeralStorage(), ioutil.Discard, "eksctl", []string{"AWS_SOMETHING"})
-
-				r, ok := e.Runner.(*run.Run)
-				assert.True(t, ok)
-
-				r.CmdFn = fakeExecCommandSuccess()
-
-				return e
-			}(),
-			expect: "wd=/, path=eksctl, env=AWS_SOMETHING, args=delete,cluster,--config-file,/cluster-config.yml",
+			eksctl: eksctl.New(
+				storage.NewEphemeralStorage(),
+				ioutil.Discard,
+				"eksctl",
+				aws.New(aws.NewAuthStatic(mock.DefaultValidStsCredentials())),
+				fakeExecCommandSuccess(),
+			),
+			// nolint: lll
+			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX, args=delete,cluster,--config-file,/cluster-config.yml",
 		},
 		{
 			name: "Should fail",
 			cfg:  v1alpha1.NewClusterConfig(),
-			eksctl: func() *eksctl.Eksctl {
-				e := eksctl.New(storage.NewEphemeralStorage(), ioutil.Discard, "eksctl", []string{"AWS_SOMETHING"})
-
-				r, ok := e.Runner.(*run.Run)
-				assert.True(t, ok)
-
-				r.CmdFn = fakeExecCommandFailure()
-
-				return e
-			}(),
-			expect:      "failed to delete: wd=/, path=eksctl, env=AWS_SOMETHING, args=delete,cluster,--config-file,/cluster-config.yml: exit status 1",
+			eksctl: eksctl.New(
+				storage.NewEphemeralStorage(),
+				ioutil.Discard,
+				"eksctl",
+				aws.New(aws.NewAuthStatic(mock.DefaultValidStsCredentials())),
+				fakeExecCommandFailure(),
+			),
+			// nolint: lll
+			expect:      "failed to delete: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX, args=delete,cluster,--config-file,/cluster-config.yml: exit status 1",
 			expectError: true,
 		},
 	}
@@ -82,32 +80,28 @@ func TestEksctlCreateCluster(t *testing.T) {
 		{
 			name: "Should work",
 			cfg:  v1alpha1.NewClusterConfig(),
-			eksctl: func() *eksctl.Eksctl {
-				e := eksctl.New(storage.NewEphemeralStorage(), ioutil.Discard, "eksctl", []string{"AWS_SOMETHING"})
-
-				r, ok := e.Runner.(*run.Run)
-				assert.True(t, ok)
-
-				r.CmdFn = fakeExecCommandSuccess()
-
-				return e
-			}(),
-			expect: "wd=/, path=eksctl, env=AWS_SOMETHING, args=create,cluster,--write-kubeconfig=false,--config-file,/cluster-config.yml",
+			eksctl: eksctl.New(
+				storage.NewEphemeralStorage(),
+				ioutil.Discard,
+				"eksctl",
+				aws.New(aws.NewAuthStatic(mock.DefaultValidStsCredentials())),
+				fakeExecCommandSuccess(),
+			),
+			// nolint: lll
+			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX, args=create,cluster,--write-kubeconfig=false,--config-file,/cluster-config.yml",
 		},
 		{
 			name: "Should fail",
 			cfg:  v1alpha1.NewClusterConfig(),
-			eksctl: func() *eksctl.Eksctl {
-				e := eksctl.New(storage.NewEphemeralStorage(), ioutil.Discard, "eksctl", []string{"AWS_SOMETHING"})
-
-				r, ok := e.Runner.(*run.Run)
-				assert.True(t, ok)
-
-				r.CmdFn = fakeExecCommandFailure()
-
-				return e
-			}(),
-			expect:      "failed to create: wd=/, path=eksctl, env=AWS_SOMETHING, args=create,cluster,--write-kubeconfig=false,--config-file,/cluster-config.yml: exit status 1",
+			eksctl: eksctl.New(
+				storage.NewEphemeralStorage(),
+				ioutil.Discard,
+				"eksctl",
+				aws.New(aws.NewAuthStatic(mock.DefaultValidStsCredentials())),
+				fakeExecCommandFailure(),
+			),
+			// nolint: lll
+			expect:      "failed to create: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX, args=create,cluster,--write-kubeconfig=false,--config-file,/cluster-config.yml: exit status 1",
 			expectError: true,
 		},
 	}
@@ -158,7 +152,7 @@ func fakeExecCommandSuccess() run.CmdFn {
 			"--",
 			fmt.Sprintf("wd=%s", workingDir),
 			fmt.Sprintf("path=%s", path),
-			fmt.Sprintf("env=%s", strings.Join(env, ",")),
+			fmt.Sprintf("env=%s", strings.Join(run.AnonymizeEnv(env), ",")),
 			fmt.Sprintf("args=%s", strings.Join(args, ",")),
 		}
 
@@ -178,7 +172,7 @@ func fakeExecCommandFailure() run.CmdFn {
 			"--",
 			fmt.Sprintf("wd=%s", workingDir),
 			fmt.Sprintf("path=%s", path),
-			fmt.Sprintf("env=%s", strings.Join(env, ",")),
+			fmt.Sprintf("env=%s", strings.Join(run.AnonymizeEnv(env), ",")),
 			fmt.Sprintf("args=%s", strings.Join(args, ",")),
 		}
 

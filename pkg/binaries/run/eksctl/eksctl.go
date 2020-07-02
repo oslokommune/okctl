@@ -8,6 +8,7 @@ import (
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/binaries/run"
+	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	"github.com/oslokommune/okctl/pkg/storage"
 )
 
@@ -25,18 +26,29 @@ type Eksctl struct {
 	Progress   io.Writer
 	BinaryPath string
 	WorkingDir string
-	Runner     run.Runner
 	Store      storage.StoreCleaner
+	Auth       aws.Authenticator
+	CmdFn      run.CmdFn
 }
 
 // New returns a new wrapper around the eksctl cli
-func New(store storage.StoreCleaner, progress io.Writer, binaryPath string, envs []string) *Eksctl {
+func New(store storage.StoreCleaner, progress io.Writer, binaryPath string, auth aws.Authenticator, fn run.CmdFn) *Eksctl {
 	return &Eksctl{
 		Progress:   progress,
 		BinaryPath: binaryPath,
-		Runner:     run.New(store.Path(), binaryPath, envs),
 		Store:      store,
+		Auth:       auth,
+		CmdFn:      fn,
 	}
+}
+
+func (e *Eksctl) runner() (run.Runner, error) {
+	envs, err := e.Auth.AsEnv()
+	if err != nil {
+		return nil, err
+	}
+
+	return run.New(e.Store.Path(), e.BinaryPath, envs, e.CmdFn), nil
 }
 
 func (e *Eksctl) writeClusterConfig(cfg *v1alpha1.ClusterConfig) error {
@@ -75,7 +87,12 @@ func (e *Eksctl) run(args []string, cfg *v1alpha1.ClusterConfig) ([]byte, error)
 		return nil, err
 	}
 
-	return e.Runner.Run(e.Progress, append(args, "--config-file", e.Store.Abs(defaultClusterConfig)))
+	runner, err := e.runner()
+	if err != nil {
+		return nil, err
+	}
+
+	return runner.Run(e.Progress, append(args, "--config-file", e.Store.Abs(defaultClusterConfig)))
 }
 
 // DeleteCluster invokes eksctl delete cluster using the provided

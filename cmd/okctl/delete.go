@@ -60,7 +60,7 @@ including VPC, this is a highly destructive operation.`,
 
 			r := request.New(fmt.Sprintf("http://%s/v1/", o.Destination))
 
-			resp, err := r.Post("clusters/", data)
+			resp, err := r.Delete("clusters/", data)
 			if err != nil {
 				return err
 			}

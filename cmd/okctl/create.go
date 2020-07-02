@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/request"
@@ -44,6 +45,7 @@ and database subnets.`,
 			opts.RepositoryName = o.RepoData.Name
 			opts.ClusterName = o.ClusterName(opts.Environment)
 
+			fmt.Println(opts)
 			err := opts.Validate()
 			if err != nil {
 				return err
@@ -59,9 +61,9 @@ and database subnets.`,
 
 			r := request.New(fmt.Sprintf("http://%s/v1/", o.Destination))
 
-			resp, err := r.Delete("clusters/", data)
+			resp, err := r.Post("clusters/", data)
 			if err != nil {
-				return err
+				return errors.E(err, resp, errors.Internal)
 			}
 
 			_, err = io.Copy(o.Out, strings.NewReader(resp))

@@ -11,11 +11,11 @@ import (
 
 const (
 	envMinLength     = 3
-	envMaxLength     = 10
+	envMaxLength     = 100
 	repoMinLength    = 3
-	repoMaxLength    = 10
+	repoMaxLength    = 100
 	clusterMinLength = 3
-	clusterMaxLength = 10
+	clusterMaxLength = 100
 )
 
 // Cluster contains the core state for a cluster
@@ -28,7 +28,9 @@ type Cluster struct {
 
 // ClusterCreateOpts specifies the required inputs for creating a cluster
 type ClusterCreateOpts struct {
-	Cluster
+	Environment    string
+	AWSAccountID   string
+	Cidr           string
 	RepositoryName string
 	Region         string
 	ClusterName    string
@@ -57,6 +59,9 @@ func (o *ClusterCreateOpts) Validate() error {
 		val.Field(&o.Cidr,
 			val.Required,
 		),
+		val.Field(&o.Region,
+			val.Required,
+		),
 	)
 }
 
@@ -72,6 +77,9 @@ func (o *ClusterDeleteOpts) Validate() error {
 		val.Field(&o.Environment,
 			val.Required,
 			val.Length(envMinLength, envMaxLength),
+		),
+		val.Field(&o.RepositoryName,
+			val.Required,
 		),
 	)
 }

@@ -15,7 +15,7 @@ require (
 	github.com/go-git/go-git/v5 v5.1.0
 	github.com/go-kit/kit v0.10.0
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
-	github.com/google/go-cmp v0.4.0 // indirect
+	github.com/google/go-cmp v0.5.0
 	github.com/google/uuid v1.1.1
 	github.com/jarcoal/httpmock v1.0.5
 	github.com/kr/pty v1.1.8 // indirect

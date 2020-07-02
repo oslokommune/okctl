@@ -1,0 +1,296 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  ControlPlaneSecurityGroup:
+    Properties:
+      GroupDescription: ControlPlaneSecurityGroup
+      VpcId:
+        Ref: Vpc
+    Type: AWS::EC2::SecurityGroup
+  DatabaseSubnet00:
+    Properties:
+      AvailabilityZone: eu-west-1a
+      CidrBlock: 192.168.2.0/24
+      VpcId:
+        Ref: Vpc
+    Type: AWS::EC2::Subnet
+  DatabaseSubnet01:
+    Properties:
+      AvailabilityZone: eu-west-1b
+      CidrBlock: 192.168.5.0/24
+      VpcId:
+        Ref: Vpc
+    Type: AWS::EC2::Subnet
+  DatabaseSubnet02:
+    Properties:
+      AvailabilityZone: eu-west-1c
+      CidrBlock: 192.168.8.0/24
+      VpcId:
+        Ref: Vpc
+    Type: AWS::EC2::Subnet
+  DatabaseSubnetGroup:
+    Properties:
+      DBSubnetGroupDescription: DatabaseSubnetGroup
+      SubnetIds:
+      - Ref: DatabaseSubnet00
+      - Ref: DatabaseSubnet01
+      - Ref: DatabaseSubnet02
+    Type: AWS::RDS::DBSubnetGroup
+  InternetGateway:
+    Properties: {}
+    Type: AWS::EC2::InternetGateway
+  NatGateway00:
+    DependsOn:
+    - NatGatewayEIP00
+    - PrivateSubnet00
+    - VPCGatewayAttachment
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - NatGatewayEIP00
+        - AllocationId
+      SubnetId:
+        Ref: PrivateSubnet00
+    Type: AWS::EC2::NatGateway
+  NatGateway01:
+    DependsOn:
+    - NatGatewayEIP01
+    - PrivateSubnet01
+    - VPCGatewayAttachment
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - NatGatewayEIP01
+        - AllocationId
+      SubnetId:
+        Ref: PrivateSubnet01
+    Type: AWS::EC2::NatGateway
+  NatGateway02:
+    DependsOn:
+    - NatGatewayEIP02
+    - PrivateSubnet02
+    - VPCGatewayAttachment
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - NatGatewayEIP02
+        - AllocationId
+      SubnetId:
+        Ref: PrivateSubnet02
+    Type: AWS::EC2::NatGateway
+  NatGatewayEIP00:
+    DependsOn:
+    - VPCGatewayAttachment
+    Properties:
+      Domain: vpc
+    Type: AWS::EC2::EIP
+  NatGatewayEIP01:
+    DependsOn:
+    - VPCGatewayAttachment
+    Properties:
+      Domain: vpc
+    Type: AWS::EC2::EIP
+  NatGatewayEIP02:
+    DependsOn:
+    - VPCGatewayAttachment
+    Properties:
+      Domain: vpc
+    Type: AWS::EC2::EIP
+  PrivateRoute00:
+    DependsOn:
+    - VPCGatewayAttachment
+    - NatGateway00
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: NatGateway00
+      RouteTableId:
+        Ref: PrivateRouteTable00
+    Type: AWS::EC2::Route
+  PrivateRoute01:
+    DependsOn:
+    - VPCGatewayAttachment
+    - NatGateway01
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: NatGateway01
+      RouteTableId:
+        Ref: PrivateRouteTable01
+    Type: AWS::EC2::Route
+  PrivateRoute02:
+    DependsOn:
+    - VPCGatewayAttachment
+    - NatGateway02
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: NatGateway02
+      RouteTableId:
+        Ref: PrivateRouteTable02
+    Type: AWS::EC2::Route
+  PrivateRouteTable00:
+    Properties:
+      VpcId:
+        Ref: Vpc
+    Type: AWS::EC2::RouteTable
+  PrivateRouteTable01:
+    Properties:
+      VpcId:
+        Ref: Vpc
+    Type: AWS::EC2::RouteTable
+  PrivateRouteTable02:
+    Properties:
+      VpcId:
+        Ref: Vpc
+    Type: AWS::EC2::RouteTable
+  PrivateSubnet00:
+    Properties:
+      AvailabilityZone: eu-west-1a
+      CidrBlock: 192.168.1.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: kubernetes.io/cluster/test-test
+        Value: shared
+      - Key: kubernetes.io/role/internal-elb
+        Value: "1"
+      VpcId:
+        Ref: Vpc
+    Type: AWS::EC2::Subnet
+  PrivateSubnet00RouteTableAssociation:
+    Properties:
+      RouteTableId:
+        Ref: PrivateRouteTable00
+      SubnetId:
+        Ref: PrivateSubnet00
+    Type: AWS::EC2::SubnetRouteTableAssociation
+  PrivateSubnet01:
+    Properties:
+      AvailabilityZone: eu-west-1b
+      CidrBlock: 192.168.4.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: kubernetes.io/cluster/test-test
+        Value: shared
+      - Key: kubernetes.io/role/internal-elb
+        Value: "1"
+      VpcId:
+        Ref: Vpc
+    Type: AWS::EC2::Subnet
+  PrivateSubnet01RouteTableAssociation:
+    Properties:
+      RouteTableId:
+        Ref: PrivateRouteTable01
+      SubnetId:
+        Ref: PrivateSubnet01
+    Type: AWS::EC2::SubnetRouteTableAssociation
+  PrivateSubnet02:
+    Properties:
+      AvailabilityZone: eu-west-1c
+      CidrBlock: 192.168.7.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: kubernetes.io/cluster/test-test
+        Value: shared
+      - Key: kubernetes.io/role/internal-elb
+        Value: "1"
+      VpcId:
+        Ref: Vpc
+    Type: AWS::EC2::Subnet
+  PrivateSubnet02RouteTableAssociation:
+    Properties:
+      RouteTableId:
+        Ref: PrivateRouteTable02
+      SubnetId:
+        Ref: PrivateSubnet02
+    Type: AWS::EC2::SubnetRouteTableAssociation
+  PublicRoute:
+    DependsOn:
+    - VPCGatewayAttachment
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: InternetGateway
+      RouteTableId:
+        Ref: PublicRouteTable
+    Type: AWS::EC2::Route
+  PublicRouteTable:
+    Properties:
+      VpcId:
+        Ref: Vpc
+    Type: AWS::EC2::RouteTable
+  PublicSubnet00:
+    Properties:
+      AvailabilityZone: eu-west-1a
+      CidrBlock: 192.168.0.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: kubernetes.io/cluster/test-test
+        Value: shared
+      - Key: kubernetes.io/role/elb
+        Value: "1"
+      VpcId:
+        Ref: Vpc
+    Type: AWS::EC2::Subnet
+  PublicSubnet00RouteTableAssociation:
+    Properties:
+      RouteTableId:
+        Ref: PublicRouteTable
+      SubnetId:
+        Ref: PublicSubnet00
+    Type: AWS::EC2::SubnetRouteTableAssociation
+  PublicSubnet01:
+    Properties:
+      AvailabilityZone: eu-west-1b
+      CidrBlock: 192.168.3.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: kubernetes.io/cluster/test-test
+        Value: shared
+      - Key: kubernetes.io/role/elb
+        Value: "1"
+      VpcId:
+        Ref: Vpc
+    Type: AWS::EC2::Subnet
+  PublicSubnet01RouteTableAssociation:
+    Properties:
+      RouteTableId:
+        Ref: PublicRouteTable
+      SubnetId:
+        Ref: PublicSubnet01
+    Type: AWS::EC2::SubnetRouteTableAssociation
+  PublicSubnet02:
+    Properties:
+      AvailabilityZone: eu-west-1c
+      CidrBlock: 192.168.6.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: kubernetes.io/cluster/test-test
+        Value: shared
+      - Key: kubernetes.io/role/elb
+        Value: "1"
+      VpcId:
+        Ref: Vpc
+    Type: AWS::EC2::Subnet
+  PublicSubnet02RouteTableAssociation:
+    Properties:
+      RouteTableId:
+        Ref: PublicRouteTable
+      SubnetId:
+        Ref: PublicSubnet02
+    Type: AWS::EC2::SubnetRouteTableAssociation
+  VPCGatewayAttachment:
+    Properties:
+      InternetGatewayId:
+        Ref: InternetGateway
+      VpcId:
+        Ref: Vpc
+    Type: AWS::EC2::VPCGatewayAttachment
+  Vpc:
+    Properties:
+      CidrBlock: 192.168.0.0/20
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+      - Key: kubernetes.io/cluster/test-test
+        Value: shared
+    Type: AWS::EC2::VPC

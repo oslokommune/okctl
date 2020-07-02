@@ -52,8 +52,6 @@ func (m *Manager) Exists() (bool, error) {
 		StackName: aws.String(m.Builder.StackName()),
 	}
 
-	fmt.Println(req)
-
 	stack, err := m.Provider.CloudFormation().DescribeStacks(req)
 	if err != nil {
 		switch e := err.(type) {

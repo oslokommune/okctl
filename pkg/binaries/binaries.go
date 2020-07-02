@@ -7,6 +7,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
 	"github.com/oslokommune/okctl/pkg/binaries/run/eksctl"
 	"github.com/oslokommune/okctl/pkg/credentials"
+	"github.com/oslokommune/okctl/pkg/storage"
 )
 
 // Provider defines the CLIs that are available
@@ -17,7 +18,7 @@ type Provider interface {
 type provider struct {
 	progress    io.Writer
 	credentials credentials.Provider
-	binaries    fetch.Provider
+	fetcher     fetch.Provider
 	eksctl      map[string]*eksctl.Eksctl
 }
 
@@ -26,7 +27,7 @@ func (p *provider) Eksctl(version string) (*eksctl.Eksctl, error) {
 	_, ok := p.eksctl[version]
 
 	if !ok {
-		binaryPath, err := p.binaries.Fetch(eksctl.Name, version)
+		binaryPath, err := p.fetcher.Fetch(eksctl.Name, version)
 		if err != nil {
 			return nil, err
 		}
@@ -36,12 +37,12 @@ func (p *provider) Eksctl(version string) (*eksctl.Eksctl, error) {
 			return nil, err
 		}
 
-		e, err := eksctl.New(p.progress, binaryPath, envs)
+		store, err := storage.NewTemporaryStorage()
 		if err != nil {
 			return nil, err
 		}
 
-		p.eksctl[version] = e
+		p.eksctl[version] = eksctl.New(store, p.progress, binaryPath, envs)
 	}
 
 	return p.eksctl[version], nil
@@ -49,11 +50,11 @@ func (p *provider) Eksctl(version string) (*eksctl.Eksctl, error) {
 
 // New returns a provider that knows how to fetch binaries and make
 // them available for other commands
-func New(progress io.Writer, credentials credentials.Provider, binaries fetch.Provider) Provider {
+func New(progress io.Writer, credentials credentials.Provider, fetcher fetch.Provider) Provider {
 	return &provider{
 		progress:    progress,
 		credentials: credentials,
-		binaries:    binaries,
+		fetcher:     fetcher,
 		eksctl:      map[string]*eksctl.Eksctl{},
 	}
 }

@@ -19,7 +19,9 @@ func (c *cluster) CreateCluster(config *v1alpha1.ClusterConfig) error {
 		return err
 	}
 
-	return cli.CreateCluster(config)
+	_, err = cli.CreateCluster(config)
+
+	return err
 }
 
 // DeleteCluster invokes a CLI for performing delete
@@ -29,7 +31,9 @@ func (c *cluster) DeleteCluster(config *v1alpha1.ClusterConfig) error {
 		return err
 	}
 
-	return cli.DeleteCluster(config)
+	_, err = cli.DeleteCluster(config)
+
+	return err
 }
 
 // NewClusterExe returns a executor for cluster

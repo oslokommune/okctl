@@ -2,8 +2,10 @@
 package eksctl
 
 import (
+	"fmt"
 	"io"
 
+	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/binaries/run"
 	"github.com/oslokommune/okctl/pkg/storage"
@@ -28,21 +30,16 @@ type Eksctl struct {
 }
 
 // New returns a new wrapper around the eksctl cli
-func New(progress io.Writer, binaryPath string, envs []string) (*Eksctl, error) {
-	store, err := storage.NewTemporaryStorage()
-	if err != nil {
-		return nil, err
-	}
-
+func New(store storage.StoreCleaner, progress io.Writer, binaryPath string, envs []string) *Eksctl {
 	return &Eksctl{
 		Progress:   progress,
 		BinaryPath: binaryPath,
-		Runner:     run.New(store.Path, binaryPath, envs),
+		Runner:     run.New(store.Path(), binaryPath, envs),
 		Store:      store,
-	}, nil
+	}
 }
 
-func (e *Eksctl) writeTemporaryClusterConfig(cfg *v1alpha1.ClusterConfig) error {
+func (e *Eksctl) writeClusterConfig(cfg *v1alpha1.ClusterConfig) error {
 	data, err := cfg.YAML()
 	if err != nil {
 		return err
@@ -66,61 +63,50 @@ func (e *Eksctl) writeTemporaryClusterConfig(cfg *v1alpha1.ClusterConfig) error 
 	return nil
 }
 
-// DeleteCluster invokes eksctl delete cluster using the provided
-// cluster configuration as input
-func (e *Eksctl) DeleteCluster(cfg *v1alpha1.ClusterConfig) error {
+func (e *Eksctl) run(args []string, cfg *v1alpha1.ClusterConfig) ([]byte, error) {
 	var err error
 
 	defer func() {
 		err = e.Store.Clean()
 	}()
 
-	err = e.writeTemporaryClusterConfig(cfg)
+	err = e.writeClusterConfig(cfg)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	return e.Runner.Run(e.Progress, append(args, "--config-file", e.Store.Abs(defaultClusterConfig)))
+}
+
+// DeleteCluster invokes eksctl delete cluster using the provided
+// cluster configuration as input
+func (e *Eksctl) DeleteCluster(cfg *v1alpha1.ClusterConfig) ([]byte, error) {
 	args := []string{
 		"delete",
 		"cluster",
-		"--config-file",
-		e.Store.Abs(defaultClusterConfig),
 	}
 
-	_, err = e.Runner.Run(e.Progress, args)
+	b, err := e.run(args, cfg)
 	if err != nil {
-		return err
+		return nil, errors.E(err, fmt.Sprintf("failed to delete: %s", string(b)), errors.IO)
 	}
 
-	return nil
+	return b, nil
 }
 
 // CreateCluster invokes eksctl create cluster using the provided
 // cluster configuration as input
-func (e *Eksctl) CreateCluster(cfg *v1alpha1.ClusterConfig) error {
-	var err error
-
-	defer func() {
-		err = e.Store.Clean()
-	}()
-
-	err = e.writeTemporaryClusterConfig(cfg)
-	if err != nil {
-		return err
-	}
-
+func (e *Eksctl) CreateCluster(cfg *v1alpha1.ClusterConfig) ([]byte, error) {
 	args := []string{
 		"create",
 		"cluster",
 		"--write-kubeconfig=false",
-		"--config-file",
-		e.Store.Abs(defaultClusterConfig),
 	}
 
-	_, err = e.Runner.Run(e.Progress, args)
+	b, err := e.run(args, cfg)
 	if err != nil {
-		return err
+		return nil, errors.E(err, fmt.Sprintf("failed to create: %s", string(b)), errors.IO)
 	}
 
-	return nil
+	return b, nil
 }

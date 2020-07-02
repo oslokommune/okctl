@@ -182,16 +182,17 @@ func (o *Okctl) newBinariesProvider() error {
 		return err
 	}
 
-	str := storage.NewFileSystemStorage(appDataDir)
-
-	stagers, err := fetch.New(o.Host(), str).FromConfig(true, o.Binaries())
+	fetcher, err := fetch.New(
+		true,
+		o.Host(),
+		o.Binaries(),
+		storage.NewFileSystemStorage(appDataDir),
+	)
 	if err != nil {
-		return err
+		return errors.E(err, "failed to create binaries fetcher", errors.Internal)
 	}
 
-	bin := binaries.New(o.Out, o.CredentialsProvider, stagers)
-
-	o.BinariesProvider = bin
+	o.BinariesProvider = binaries.New(o.Out, o.CredentialsProvider, fetcher)
 
 	return nil
 }

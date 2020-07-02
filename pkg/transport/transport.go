@@ -7,8 +7,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/davecgh/go-spew/spew"
 	kit "github.com/go-kit/kit/transport/http"
+	"github.com/sanity-io/litter"
 	"sigs.k8s.io/yaml"
 )
 
@@ -79,7 +79,7 @@ func EncodeTextResponse(_ context.Context, w http.ResponseWriter, response inter
 		return nil
 	}
 
-	data := []byte(spew.Sdump(response))
+	data := []byte(litter.Sdump(response))
 	if t, ok := response.(Texter); ok {
 		data = t.Text()
 	}

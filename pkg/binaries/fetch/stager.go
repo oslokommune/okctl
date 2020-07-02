@@ -8,27 +8,16 @@ import (
 	"strings"
 
 	"github.com/dustin/go-humanize"
+	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/binaries/digest"
 	"github.com/oslokommune/okctl/pkg/config/application"
 	"github.com/oslokommune/okctl/pkg/storage"
-	"github.com/pkg/errors"
 )
 
 // Provider defines the interface for fetching a binary
 // and returning a path to its location
 type Provider interface {
 	Fetch(name, version string) (string, error)
-}
-
-// NewStager creates a new stager for fetching and verifying a binary
-func NewStager(dest io.WriteCloser, s Storage, f Fetcher, v Verifier, d Decompressor) *Stager {
-	return &Stager{
-		Destination:  dest,
-		Storage:      s,
-		Fetcher:      f,
-		Verifier:     v,
-		Decompressor: d,
-	}
 }
 
 // Stager stores the state required for fetching and verifying a binary
@@ -40,6 +29,17 @@ type Stager struct {
 	Fetcher      Fetcher
 	Verifier     Verifier
 	Decompressor Decompressor
+}
+
+// NewStager creates a new stager for fetching and verifying a binary
+func NewStager(dest io.WriteCloser, s Storage, f Fetcher, v Verifier, d Decompressor) *Stager {
+	return &Stager{
+		Destination:  dest,
+		Storage:      s,
+		Fetcher:      f,
+		Verifier:     v,
+		Decompressor: d,
+	}
 }
 
 // Fetch the binary and ensure that no errors occurred
@@ -62,53 +62,59 @@ func (s *Stager) Fetch() error {
 
 	raw, err := s.Storage.Create("raw-content")
 	if err != nil {
-		return err
+		return errors.E(err, "failed to create temporary storage", errors.Transient)
 	}
 
 	_, err = s.Fetcher.Fetch(raw)
 	if err != nil {
-		return err
+		return errors.E(err, "failed to fetch binary", errors.IO)
 	}
 
 	if _, err = raw.Seek(0, 0); err != nil {
-		return err
+		return errors.E(err, "failed to reset buffer", errors.Internal)
 	}
 
 	err = s.Verifier.Verify(raw)
 	if err != nil {
-		return err
+		return errors.E(err, "failed to verify binary signature", errors.Invalid)
 	}
 
 	if _, err = raw.Seek(0, 0); err != nil {
-		return err
+		return errors.E(err, "failed to reset buffer", errors.Internal)
 	}
 
 	err = s.Decompressor.Decompress(raw, s.Destination)
 	if err != nil {
-		return err
+		return errors.E(err, "failed to decompress binary", errors.Invalid)
 	}
 
 	return err
 }
 
-// DefaultProvider is a provider that knows how to fetch binaries via https
-type DefaultProvider struct {
-	Host     application.Host
-	Store    storage.Storer
-	Binaries map[string]*Stager
+// Processor is a provider that knows how to fetch binaries via https
+type Processor struct {
+	Host           application.Host
+	Store          storage.Storer
+	Preload        bool
+	Binaries       []application.Binary
+	LoadedBinaries map[string]*Stager
 }
 
 // New returns a provider that knows how to fetch binaries via https
-func New(host application.Host, store storage.Storer) *DefaultProvider {
-	return &DefaultProvider{
-		Host:     host,
-		Store:    store,
-		Binaries: map[string]*Stager{},
+func New(preload bool, host application.Host, binaries []application.Binary, store storage.Storer) (*Processor, error) {
+	p := &Processor{
+		Host:           host,
+		Store:          store,
+		Preload:        preload,
+		Binaries:       binaries,
+		LoadedBinaries: map[string]*Stager{},
 	}
+
+	return p.prepareAndLoad()
 }
 
 // Stager returns a configured stager
-func (s *DefaultProvider) Stager(baseDir string, bufferSize int64, binary application.Binary) (*Stager, error) {
+func (s *Processor) Stager(baseDir string, bufferSize int64, binary application.Binary) (*Stager, error) {
 	var d Decompressor
 
 	switch binary.Archive.Type {
@@ -144,19 +150,19 @@ func (s *DefaultProvider) Stager(baseDir string, bufferSize int64, binary applic
 	return stager, nil
 }
 
-// FromConfig loads a set of stagers from a config
-func (s *DefaultProvider) FromConfig(preload bool, binaries []application.Binary) (*DefaultProvider, error) {
-	for _, binary := range binaries {
+// prepareAndLoad a set of stagers
+func (s *Processor) prepareAndLoad() (*Processor, error) {
+	for _, binary := range s.Binaries {
 		binaryBaseDir := path.Join("binaries", binary.Name, binary.Version, s.Host.Os, s.Host.Arch)
 		binaryPath := path.Join(binaryBaseDir, binary.Name)
 
 		exists, err := s.Store.Exists(binaryPath)
 		if err != nil {
-			return nil, err
+			return nil, errors.E(err, "failed to determine if binary exists", errors.IO)
 		}
 
 		if exists {
-			s.Binaries[binaryIndex(binary.Name, binary.Version)] = &Stager{
+			s.LoadedBinaries[binaryIndex(binary.Name, binary.Version)] = &Stager{
 				BinaryPath: s.Store.Abs(binaryPath),
 			}
 
@@ -165,30 +171,32 @@ func (s *DefaultProvider) FromConfig(preload bool, binaries []application.Binary
 
 		bufferSize, err := humanize.ParseBytes(binary.BufferSize)
 		if err != nil {
-			return nil, err
+			return nil, errors.E(err, "failed to parse buffer size", errors.Invalid)
 		}
 
 		stager, err := s.Stager(binaryBaseDir, int64(bufferSize), binary)
 		if err != nil {
-			return nil, err
+			return nil, errors.E(err, "failed to create stager", errors.Invalid)
 		}
 
-		if preload {
-			err = errors.Wrap(stager.Fetch(), "failed to preload binaries")
+		stager.BinaryPath = s.Store.Abs(binaryPath)
+
+		if s.Preload {
+			err = errors.E(stager.Fetch(), "failed to preload binaries", errors.IO)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		s.Binaries[binaryIndex(binary.Name, binary.Version)] = stager
+		s.LoadedBinaries[binaryIndex(binary.Name, binary.Version)] = stager
 	}
 
 	return s, nil
 }
 
 // Fetch attempts to download and verify the binary
-func (s *DefaultProvider) Fetch(name, version string) (string, error) {
-	binary, hasKey := s.Binaries[binaryIndex(name, version)]
+func (s *Processor) Fetch(name, version string) (string, error) {
+	binary, hasKey := s.LoadedBinaries[binaryIndex(name, version)]
 	if !hasKey {
 		return "", fmt.Errorf("could not find configuration for binary: %s, with version: %s", name, version)
 	}

@@ -14,6 +14,11 @@ type cluster struct {
 	store api.ClusterStore
 }
 
+const (
+	msgFailedToCreateCluster = "failed to create cluster"
+	msgFailedToDeleteCluster = "failed to delete cluster"
+)
+
 // CreateCluster creates an EKS cluster and VPC
 func (c *cluster) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error) {
 	err := opts.Validate()
@@ -23,12 +28,12 @@ func (c *cluster) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (
 
 	clusterConfig, err := c.cloud.CreateCluster(opts.AWSAccountID, opts.ClusterName, opts.Environment, opts.RepositoryName, opts.Cidr, opts.Region)
 	if err != nil {
-		return nil, errors.E(err, "failed to create cluster")
+		return nil, errors.E(err, msgFailedToCreateCluster)
 	}
 
 	err = c.exe.CreateCluster(clusterConfig)
 	if err != nil {
-		return nil, errors.E(err, "failed to create cluster")
+		return nil, errors.E(err, msgFailedToCreateCluster)
 	}
 
 	res := &api.Cluster{
@@ -40,7 +45,7 @@ func (c *cluster) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (
 
 	err = c.store.SaveCluster(res)
 	if err != nil {
-		return nil, errors.E(err, "failed to create cluster")
+		return nil, errors.E(err, msgFailedToCreateCluster)
 	}
 
 	return res, nil
@@ -60,15 +65,15 @@ func (c *cluster) DeleteCluster(_ context.Context, opts api.ClusterDeleteOpts) e
 
 	err = c.exe.DeleteCluster(clus.Config)
 	if err != nil {
-		return errors.E(err, "failed to delete cluster")
+		return errors.E(err, msgFailedToDeleteCluster)
 	}
 
 	err = c.cloud.DeleteCluster(opts.Environment, opts.RepositoryName)
 	if err != nil {
-		return errors.E(err, "failed to delete cluster")
+		return errors.E(err, msgFailedToDeleteCluster)
 	}
 
-	return errors.E(c.store.DeleteCluster(opts.Environment), "failed to delete cluster")
+	return errors.E(c.store.DeleteCluster(opts.Environment), msgFailedToDeleteCluster)
 }
 
 // NewClusterService returns a service operator for the cluster operations

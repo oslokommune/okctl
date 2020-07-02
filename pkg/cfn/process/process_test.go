@@ -9,6 +9,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	// DefaultSubnetID is a valid, but fake, AWS subnet id
+	DefaultSubnetID = "subnet-0bb1c79de3EXAMPLE"
+	// DefaultSubnetCIDR is a valid CIDR
+	DefaultSubnetCIDR = "192.168.0.0/24"
+	// DefaultAvailabilityZone is a valid AWS availability zone
+	DefaultAvailabilityZone = "eu-west-1a"
+)
+
 func TestSubnets(t *testing.T) {
 	testCases := []struct {
 		name        string
@@ -20,18 +29,18 @@ func TestSubnets(t *testing.T) {
 		{
 			name:     "Should work",
 			provider: mock.NewGoodCloudProvider(),
-			value:    "subnet-0bb1c79de3EXAMPLE",
+			value:    DefaultSubnetID,
 			expect: map[string]v1alpha1.ClusterNetwork{
-				"eu-west-1a": {
-					ID:   "subnet-0bb1c79de3EXAMPLE",
-					CIDR: "192.168.0.0/24",
+				DefaultAvailabilityZone: {
+					ID:   DefaultSubnetID,
+					CIDR: DefaultSubnetCIDR,
 				},
 			},
 		},
 		{
 			name:        "Should fail",
 			provider:    mock.NewBadCloudProvider(),
-			value:       "subnet-0bb1c79de3EXAMPLE",
+			value:       DefaultSubnetID,
 			expect:      "failed to describe subnet outputs: something bad",
 			expectError: true,
 		},

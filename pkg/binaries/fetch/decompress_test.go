@@ -10,6 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	zipTestFile   = "testdata/myFile.zip"
+	tarGzTestFile = "testdata/myFile.tar.gz"
+)
+
 func readFile(t *testing.T, file string) io.Reader {
 	//nolint: gosec
 	b, err := ioutil.ReadFile(file)
@@ -36,33 +41,33 @@ func TestDecompressor(t *testing.T) {
 		{
 			name:         "ZipDecompressor returns targeted file",
 			decompressor: fetch.NewZipDecompressor("myFile", 1000),
-			data:         readFile(t, "testdata/myFile.zip"),
+			data:         readFile(t, zipTestFile),
 			expect:       []byte("some content\n"),
 		},
 		{
 			name:         "ZipDecompressor returns error when file not found",
 			decompressor: fetch.NewZipDecompressor("does_not_exist", 1000),
-			data:         readFile(t, "testdata/myFile.zip"),
+			data:         readFile(t, zipTestFile),
 			expect:       "couldn't find: does_not_exist, in archive",
 			expectError:  true,
 		},
 		{
 			name:         "ZipDecompressor returns error when size exceeds buffer",
 			decompressor: fetch.NewZipDecompressor("myFile", 40),
-			data:         readFile(t, "testdata/myFile.zip"),
+			data:         readFile(t, zipTestFile),
 			expect:       "zip: not a valid zip file",
 			expectError:  true,
 		},
 		{
 			name:         "GzipTarDecompressor returns targeted file",
 			decompressor: fetch.NewGzipTarDecompressor("myFile", 1000),
-			data:         readFile(t, "testdata/myFile.tar.gz"),
+			data:         readFile(t, tarGzTestFile),
 			expect:       []byte("some content\n"),
 		},
 		{
 			name:         "GzipTarDecompressor returns errors when file not found",
 			decompressor: fetch.NewGzipTarDecompressor("does_not_exist", 1000),
-			data:         readFile(t, "testdata/myFile.tar.gz"),
+			data:         readFile(t, tarGzTestFile),
 			expect:       "couldn't find: does_not_exist, in archive",
 			expectError:  true,
 		},

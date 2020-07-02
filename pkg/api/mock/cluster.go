@@ -36,6 +36,9 @@ const (
 	DefaultPrivateSubnetCidr = "192.168.2.0/24"
 )
 
+// ErrBad just defines a mocked error
+var ErrBad = fmt.Errorf("something bad")
+
 // DefaultClusterCreateOpts returns options for creating a cluster with defaults set
 func DefaultClusterCreateOpts() api.ClusterCreateOpts {
 	return api.ClusterCreateOpts{
@@ -129,10 +132,10 @@ func NewGoodClusterService() *ClusterService {
 func NewBadClusterService() *ClusterService {
 	return &ClusterService{
 		CreateClusterFn: func(context.Context, api.ClusterCreateOpts) (*api.Cluster, error) {
-			return nil, fmt.Errorf("something bad")
+			return nil, ErrBad
 		},
 		DeleteClusterFn: func(context.Context, api.ClusterDeleteOpts) error {
-			return fmt.Errorf("something bad")
+			return ErrBad
 		},
 	}
 }
@@ -169,10 +172,10 @@ func NewGoodClusterCloud() *ClusterCloud {
 func NewBadClusterCloud() *ClusterCloud {
 	return &ClusterCloud{
 		CreateClusterFn: func(awsAccountID, clusterName, env, repoName, cidr, region string) (*v1alpha1.ClusterConfig, error) {
-			return nil, fmt.Errorf("something bad")
+			return nil, ErrBad
 		},
 		DeleteClusterFn: func(env, repoName string) error {
-			return fmt.Errorf("something bad")
+			return ErrBad
 		},
 	}
 }
@@ -209,10 +212,10 @@ func NewGoodClusterExe() *ClusterExe {
 func NewBadClusterExe() *ClusterExe {
 	return &ClusterExe{
 		CreateClusterFn: func(config *v1alpha1.ClusterConfig) error {
-			return fmt.Errorf("something bad")
+			return ErrBad
 		},
 		DeleteClusterFn: func(config *v1alpha1.ClusterConfig) error {
-			return fmt.Errorf("something bad")
+			return ErrBad
 		},
 	}
 }
@@ -258,13 +261,13 @@ func NewGoodClusterStore() *ClusterStore {
 func NewBadClusterStore() *ClusterStore {
 	return &ClusterStore{
 		SaveClusterFn: func(cluster *api.Cluster) error {
-			return fmt.Errorf("something bad")
+			return ErrBad
 		},
 		DeleteClusterFn: func(env string) error {
-			return fmt.Errorf("something bad")
+			return ErrBad
 		},
 		GetClusterFn: func(env string) (*api.Cluster, error) {
-			return nil, fmt.Errorf("something bad")
+			return nil, ErrBad
 		},
 	}
 }

@@ -191,7 +191,7 @@ func NewAuthSAML(awsAccountID, region string, scraper scrape.Scraper, providerFn
 		Scraper:      scraper,
 		ProviderFn:   providerFn,
 		PopulateFn:   fn,
-		IsValid:      false,
+		IsValid:      true,
 	}
 }
 

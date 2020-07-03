@@ -38,7 +38,10 @@ func New() *Context {
 	_, debug := os.LookupEnv(DefaultDebugEnv)
 	_, noInput := os.LookupEnv(DefaultNoInputEnv)
 
-	logger := logrus.StandardLogger()
+	logger := logrus.New()
+
+	logger.Out = os.Stderr
+	logger.Formatter = &logrus.TextFormatter{}
 
 	if debug {
 		logger.SetLevel(logrus.DebugLevel)

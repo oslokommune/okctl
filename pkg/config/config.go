@@ -74,6 +74,7 @@ type Config struct {
 	RepoData       *repository.Data
 
 	Destination string
+	ServerURL   string
 
 	format  core.EncodeResponseType
 	homeDir string
@@ -82,11 +83,14 @@ type Config struct {
 
 // New Config initialises a default okctl configuration
 func New() *Config {
+	dest := "127.0.0.1:8085"
+
 	return &Config{
 		Context:        context.New(),
 		AppDataLoader:  NoopDataLoader,
 		RepoDataLoader: NoopDataLoader,
-		Destination:    "127.0.0.1:8085",
+		Destination:    dest,
+		ServerURL:      fmt.Sprintf("http://%s/v1/", dest),
 	}
 }
 

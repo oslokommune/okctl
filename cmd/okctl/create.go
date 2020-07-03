@@ -1,15 +1,10 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"strings"
-
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/okctl"
-	"github.com/oslokommune/okctl/pkg/request"
 	"github.com/spf13/cobra"
 )
 
@@ -55,76 +50,31 @@ and database subnets.`,
 			return o.Initialise(opts.Environment, opts.AWSAccountID)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			r := request.New(fmt.Sprintf("http://%s/v1/", o.Destination))
+			c := client.New(o.Out, o.ServerURL)
 
-			{
-				vpcOpts := &api.CreateVpcOpts{
-					AwsAccountID: opts.AWSAccountID,
-					ClusterName:  opts.ClusterName,
-					Env:          opts.Environment,
-					RepoName:     opts.RepositoryName,
-					Cidr:         opts.Cidr,
-					Region:       opts.Region,
-				}
-
-				vpcData, err := json.Marshal(vpcOpts)
-				if err != nil {
-					return errors.E(err, "failed to marshal create vpc request")
-				}
-
-				resp, err := r.Post("vpcs/", vpcData)
-				if err != nil {
-					return errors.E(err, resp, errors.Internal)
-				}
-
-				_, err = io.Copy(o.Out, strings.NewReader(resp))
-				if err != nil {
-					return err
-				}
+			err := c.CreateVpc(&api.CreateVpcOpts{
+				AwsAccountID: opts.AWSAccountID,
+				ClusterName:  opts.ClusterName,
+				Env:          opts.Environment,
+				RepoName:     opts.RepositoryName,
+				Cidr:         opts.Cidr,
+				Region:       opts.Region,
+			})
+			if err != nil {
+				return err
 			}
 
-			{
-				cfgOpts := &api.CreateClusterConfigOpts{
-					ClusterName:  opts.ClusterName,
-					Region:       opts.Region,
-					Cidr:         opts.Cidr,
-					AwsAccountID: opts.AWSAccountID,
-				}
-
-				cfgData, err := json.Marshal(cfgOpts)
-				if err != nil {
-					return errors.E(err, "failed to marshal create cluster config request")
-				}
-
-				resp, err := r.Post("vpcs/", cfgData)
-				if err != nil {
-					return errors.E(err, resp, errors.Internal)
-				}
-
-				_, err = io.Copy(o.Out, strings.NewReader(resp))
-				if err != nil {
-					return err
-				}
+			err = c.CreateClusterConfig(&api.CreateClusterConfigOpts{
+				ClusterName:  opts.ClusterName,
+				Region:       opts.Region,
+				Cidr:         opts.Cidr,
+				AwsAccountID: opts.AWSAccountID,
+			})
+			if err != nil {
+				return err
 			}
 
-			{
-				data, err := json.Marshal(opts)
-				if err != nil {
-					return errors.E(err, "failed to marshal create cluster request")
-				}
-
-				resp, err := r.Post("clusters/", data)
-				if err != nil {
-					return errors.E(err, resp, errors.Internal)
-				}
-
-				_, err = io.Copy(o.Out, strings.NewReader(resp))
-				if err != nil {
-					return err
-				}
-
-				return nil
-			}
+			return c.CreateCluster(opts)
 		},
 	}
 

@@ -112,15 +112,21 @@ type Services struct {
 // middlewares
 type EndpointOption func(Endpoints) Endpoints
 
+const (
+	clusterTag       = "cluster"
+	clusterConfigTag = "clusterConfig"
+	vpcTag           = "vpc"
+)
+
 // InstrumentEndpoints adds instrumentation to the endpoints
 func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 	return func(endpoints Endpoints) Endpoints {
 		return Endpoints{
-			CreateCluster:       middleware.Logging(logger)(endpoints.CreateCluster),
-			DeleteCluster:       middleware.Logging(logger)(endpoints.DeleteCluster),
-			CreateClusterConfig: middleware.Logging(logger)(endpoints.CreateClusterConfig),
-			CreateVpc:           middleware.Logging(logger)(endpoints.CreateVpc),
-			DeleteVpc:           middleware.Logging(logger)(endpoints.DeleteVpc),
+			CreateCluster:       middleware.Logging(logger, clusterTag, "create")(endpoints.CreateCluster),
+			DeleteCluster:       middleware.Logging(logger, clusterTag, "delete")(endpoints.DeleteCluster),
+			CreateClusterConfig: middleware.Logging(logger, clusterConfigTag, "create")(endpoints.CreateClusterConfig),
+			CreateVpc:           middleware.Logging(logger, vpcTag, "create")(endpoints.CreateVpc),
+			DeleteVpc:           middleware.Logging(logger, vpcTag, "delete")(endpoints.DeleteVpc),
 		}
 	}
 }

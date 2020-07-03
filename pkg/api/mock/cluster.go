@@ -43,6 +43,34 @@ const (
 // ErrBad just defines a mocked error
 var ErrBad = fmt.Errorf("something bad")
 
+// DefaultVpcCreateOpts returns options for creating a vpc with defaults set
+func DefaultVpcCreateOpts() api.CreateVpcOpts {
+	return api.CreateVpcOpts{
+		AwsAccountID: DefaultAWSAccountID,
+		ClusterName:  DefaultClusterName,
+		Env:          DefaultEnv,
+		RepoName:     DefaultRepositoryName,
+		Cidr:         DefaultCidr,
+		Region:       DefaultRegion,
+	}
+}
+
+// DefaultVpcDeleteOpts returns options for deleting a vpc with defaults set
+func DefaultVpcDeleteOpts() api.DeleteVpcOpts {
+	return api.DeleteVpcOpts{
+		Env:      DefaultEnv,
+		RepoName: DefaultRepositoryName,
+	}
+}
+
+// DefaultClusterDeleteOpts returns options for deleting a cluster with defaults set
+func DefaultClusterDeleteOpts() api.ClusterDeleteOpts {
+	return api.ClusterDeleteOpts{
+		Environment:    DefaultEnv,
+		RepositoryName: DefaultRepositoryName,
+	}
+}
+
 // DefaultClusterCreateOpts returns options for creating a cluster with defaults set
 func DefaultClusterCreateOpts() api.ClusterCreateOpts {
 	return api.ClusterCreateOpts{

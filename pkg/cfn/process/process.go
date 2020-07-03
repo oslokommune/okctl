@@ -37,7 +37,7 @@ func Subnets(p v1alpha1.CloudProvider, to *[]api.VpcSubnet) manager.ProcessOutpu
 // String knows how to process the output from a value
 func String(to *string) manager.ProcessOutputFn {
 	return func(v string) error {
-		to = &v
+		*to = v
 
 		return nil
 	}

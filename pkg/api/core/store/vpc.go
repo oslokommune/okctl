@@ -116,7 +116,7 @@ func (v *vpc) DeleteVpc(env, repoName string) error {
 
 // GetVpc returns a vpc from storage
 func (v *vpc) GetVpc() (*api.Vpc, error) {
-	data, err := v.provider.Repository().ReadFromDefault("vpc_state")
+	data, err := v.provider.Repository().ReadFromDefault("vpc_outputs")
 	if err != nil {
 		return nil, errors.E(err, "failed to read vpc state")
 	}
@@ -125,7 +125,7 @@ func (v *vpc) GetVpc() (*api.Vpc, error) {
 
 	err = json.Unmarshal(data, vpcStored)
 	if err != nil {
-		return nil, errors.E(err, "failed to unmarshal vpc state")
+		return nil, errors.E(err, "failed to unmarshal vpc outputs")
 	}
 
 	ret := defFromStore(vpcStored)

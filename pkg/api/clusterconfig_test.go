@@ -1,15 +1,15 @@
-package v1alpha1_test
+package api_test
 
 import (
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewClusterConfig(t *testing.T) {
-	cfg := v1alpha1.NewClusterConfig()
+	cfg := api.NewClusterConfig()
 	got, err := cfg.YAML()
 	assert.NoError(t, err)
 

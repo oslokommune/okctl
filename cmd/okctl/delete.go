@@ -1,14 +1,10 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"strings"
-
+	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/okctl"
-	"github.com/oslokommune/okctl/pkg/request"
 	"github.com/spf13/cobra"
 )
 
@@ -27,6 +23,7 @@ func buildDeleteCommand(o *okctl.Okctl) *cobra.Command {
 	return cmd
 }
 
+// nolint: funlen
 func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &api.ClusterDeleteOpts{}
 
@@ -42,7 +39,7 @@ including VPC, this is a highly destructive operation.`,
 
 			err := opts.Validate()
 			if err != nil {
-				return err
+				return errors.E(err, "failed to validate delete cluster options")
 			}
 
 			awsAccountID, err := o.AWSAccountID(opts.Environment)
@@ -53,24 +50,17 @@ including VPC, this is a highly destructive operation.`,
 			return o.Initialise(opts.Environment, awsAccountID)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			data, err := json.Marshal(opts)
+			c := client.New(o.Out, o.ServerURL)
+
+			err := c.DeleteCluster(opts)
 			if err != nil {
 				return err
 			}
 
-			r := request.New(fmt.Sprintf("http://%s/v1/", o.Destination))
-
-			resp, err := r.Post("clusters/", data)
-			if err != nil {
-				return err
-			}
-
-			_, err = io.Copy(o.Out, strings.NewReader(resp))
-			if err != nil {
-				return err
-			}
-
-			return nil
+			return c.DeleteVpc(&api.DeleteVpcOpts{
+				Env:      opts.Environment,
+				RepoName: opts.RepositoryName,
+			})
 		},
 	}
 

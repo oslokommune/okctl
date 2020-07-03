@@ -1,14 +1,10 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"strings"
-
+	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/okctl"
-	"github.com/oslokommune/okctl/pkg/request"
 	"github.com/spf13/cobra"
 )
 
@@ -28,6 +24,7 @@ func buildCreateCommand(o *okctl.Okctl) *cobra.Command {
 	return cmd
 }
 
+// nolint: funlen
 func buildCreateClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &api.ClusterCreateOpts{}
 
@@ -43,33 +40,41 @@ and database subnets.`,
 			opts.AWSAccountID = args[1]
 			opts.RepositoryName = o.RepoData.Name
 			opts.ClusterName = o.ClusterName(opts.Environment)
+			opts.Region = o.Region()
 
 			err := opts.Validate()
 			if err != nil {
-				return err
+				return errors.E(err, "failed to validate create cluster options", errors.Invalid)
 			}
 
 			return o.Initialise(opts.Environment, opts.AWSAccountID)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			data, err := json.Marshal(opts)
+			c := client.New(o.Out, o.ServerURL)
+
+			err := c.CreateVpc(&api.CreateVpcOpts{
+				AwsAccountID: opts.AWSAccountID,
+				ClusterName:  opts.ClusterName,
+				Env:          opts.Environment,
+				RepoName:     opts.RepositoryName,
+				Cidr:         opts.Cidr,
+				Region:       opts.Region,
+			})
 			if err != nil {
 				return err
 			}
 
-			r := request.New(fmt.Sprintf("http://%s/v1/", o.Destination))
-
-			resp, err := r.Delete("clusters/", data)
+			err = c.CreateClusterConfig(&api.CreateClusterConfigOpts{
+				ClusterName:  opts.ClusterName,
+				Region:       opts.Region,
+				Cidr:         opts.Cidr,
+				AwsAccountID: opts.AWSAccountID,
+			})
 			if err != nil {
 				return err
 			}
 
-			_, err = io.Copy(o.Out, strings.NewReader(resp))
-			if err != nil {
-				return err
-			}
-
-			return nil
+			return c.CreateCluster(opts)
 		},
 	}
 

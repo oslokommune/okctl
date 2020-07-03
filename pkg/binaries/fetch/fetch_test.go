@@ -41,7 +41,7 @@ func TestHttpFetcherFetch(t *testing.T) {
 			name:      "Internal error",
 			url:       "https://internal",
 			expectErr: true,
-			expect:    "bad status: 500",
+			expect:    "failed to download file at: https://internal",
 			response:  httpmock.NewBytesResponder(http.StatusInternalServerError, []byte("oops")),
 		},
 	}

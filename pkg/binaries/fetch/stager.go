@@ -179,14 +179,14 @@ func (s *Processor) prepareAndLoad() (*Processor, error) {
 			return nil, errors.E(err, "failed to create stager", errors.Invalid)
 		}
 
-		stager.BinaryPath = s.Store.Abs(binaryPath)
-
 		if s.Preload {
 			err = errors.E(stager.Fetch(), "failed to preload binaries", errors.IO)
 			if err != nil {
 				return nil, err
 			}
 		}
+
+		stager.BinaryPath = s.Store.Abs(binaryPath)
 
 		s.LoadedBinaries[binaryIndex(binary.Name, binary.Version)] = stager
 	}

@@ -52,7 +52,7 @@ func TestRun(t *testing.T) {
 		{
 			name: "Should work",
 			run: func() *run.Run {
-				r := run.New("working_dir", "binary_path", []string{"env_var"})
+				r := run.New("working_dir", "binary_path", []string{"env_var"}, run.Cmd())
 				r.CmdFn = fakeExecCommandSuccess()
 				return r
 			}(),

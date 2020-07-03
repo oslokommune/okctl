@@ -111,29 +111,54 @@ func New() *Data {
 			Os:   runtime.GOOS,
 			Arch: runtime.GOARCH,
 		},
-		Binaries: []Binary{
-			{
-				Name:       "eksctl",
-				Version:    "0.21.0",
-				BufferSize: "100mb",
-				URLPattern: "https://github.com/weaveworks/eksctl/releases/download/#{ver}/eksctl_#{os}_#{arch}.tar.gz",
-				Archive: Archive{
-					Type:   ".tar.gz",
-					Target: "eksctl",
+		Binaries: KnownBinaries(),
+	}
+}
+
+// KnownBinaries returns a list of known binaries
+func KnownBinaries() []Binary {
+	return []Binary{
+		{
+			Name:       "kubectl",
+			Version:    "1.16.8",
+			BufferSize: "100mb",
+			URLPattern: "https://amazon-eks.s3.us-west-2.amazonaws.com/#{ver}/2020-04-16/bin/#{os}/#{arch}/kubectl",
+			Checksums: []Checksum{
+				{
+					Os:     "darwin",
+					Arch:   "amd64",
+					Type:   "sha256",
+					Digest: "6e8439099c5a7d8d2f8f550f2f04301f9b0bb229a5f7c56477743a2cd11de2aa",
 				},
-				Checksums: []Checksum{
-					{
-						Os:     "darwin",
-						Arch:   "amd64",
-						Type:   "sha256",
-						Digest: "3cdcbb1792bb131cc0ed944cbfc51dd6f1b2261a480436efc6f8124dea7c8c14",
-					},
-					{
-						Os:     "linux",
-						Arch:   "amd64",
-						Type:   "sha256",
-						Digest: "4573bca35af67fa002fb722b4d41fae2224a27576619ed2f1e269dd7bd15c214",
-					},
+				{
+					Os:     "linux",
+					Arch:   "amd64",
+					Type:   "sha256",
+					Digest: "e29544e1334f68e81546b8c8774c2484cbf82e8e5723d2a7e654f8a8fd79a7b2",
+				},
+			},
+		},
+		{
+			Name:       "eksctl",
+			Version:    "0.21.0",
+			BufferSize: "100mb",
+			URLPattern: "https://github.com/weaveworks/eksctl/releases/download/#{ver}/eksctl_#{os}_#{arch}.tar.gz",
+			Archive: Archive{
+				Type:   ".tar.gz",
+				Target: "eksctl",
+			},
+			Checksums: []Checksum{
+				{
+					Os:     "darwin",
+					Arch:   "amd64",
+					Type:   "sha256",
+					Digest: "3cdcbb1792bb131cc0ed944cbfc51dd6f1b2261a480436efc6f8124dea7c8c14",
+				},
+				{
+					Os:     "linux",
+					Arch:   "amd64",
+					Type:   "sha256",
+					Digest: "4573bca35af67fa002fb722b4d41fae2224a27576619ed2f1e269dd7bd15c214",
 				},
 			},
 		},

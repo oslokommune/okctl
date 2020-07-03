@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"strings"
 	"syscall"
 
 	"github.com/mishudark/errors"
@@ -23,6 +24,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/config/application"
 	"github.com/oslokommune/okctl/pkg/credentials"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
+	"github.com/oslokommune/okctl/pkg/credentials/aws/scrape"
 	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/oslokommune/okctl/pkg/storage/state"
 )
@@ -39,19 +41,36 @@ type Okctl struct {
 
 // Initialise okctl for receiving requests
 func (o *Okctl) Initialise(env, awsAccountID string) error {
-	err := o.initialiseProviders(env, awsAccountID)
+	err := o.EnableFileLog()
 	if err != nil {
 		return err
 	}
 
+	err = o.initialiseProviders(env, awsAccountID)
+	if err != nil {
+		return err
+	}
+
+	vpcService := core.NewVpcService(
+		cld.NewVpcCloud(o.CloudProvider),
+		store.NewVpcStore(o.PersisterProvider),
+	)
+
+	clusterConfigService := core.NewClusterConfigService(
+		store.NewClusterConfigStore(o.PersisterProvider),
+		store.NewVpcStore(o.PersisterProvider),
+	)
+
 	clusterService := core.NewClusterService(
 		store.NewClusterStore(o.PersisterProvider),
-		cld.NewCluster(o.CloudProvider),
+		store.NewClusterConfigStore(o.PersisterProvider),
 		exe.NewClusterExe(o.BinariesProvider),
 	)
 
 	services := core.Services{
-		Cluster: clusterService,
+		Cluster:       clusterService,
+		ClusterConfig: clusterConfigService,
+		Vpc:           vpcService,
 	}
 
 	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))
@@ -66,7 +85,7 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		Addr:    o.Destination,
 	}
 
-	// nolint: mnd
+	// nolint: gomnd
 	errs := make(chan error, 2)
 
 	go func() {
@@ -147,7 +166,7 @@ func (o *Okctl) newPersisterProvider(env string) error {
 			ConfigFile: config.DefaultConfig,
 			Defaults:   map[string]string{},
 		},
-		State: nil,
+		State: o.AppData,
 	}
 
 	repoDir, err := o.GetRepoDir()
@@ -160,14 +179,20 @@ func (o *Okctl) newPersisterProvider(env string) error {
 		return err
 	}
 
+	outputDir = strings.TrimPrefix(outputDir, repoDir)
+	outputDir = strings.TrimPrefix(outputDir, "/")
+
 	repoOpts := state.RepoStoreOpts{
 		Opts: state.Opts{
 			BaseDir:    repoDir,
 			ConfigFile: config.DefaultRepositoryConfig,
 			Defaults: map[string]string{
-				"cluster_config": path.Join(outputDir, config.DefaultClusterBaseDir, config.DefaultClusterConfig),
+				"cluster_config":      path.Join(outputDir, config.DefaultClusterBaseDir, config.DefaultClusterConfig),
+				"vpc_cloud_formation": path.Join(outputDir, config.DefaultVpcBaseDir, config.DefaultVpcCloudFormationTemplate),
+				"vpc_outputs":         path.Join(outputDir, config.DefaultVpcBaseDir, config.DefaultVpcOutputs),
 			},
 		},
+		State: o.RepoData,
 	}
 
 	o.PersisterProvider = state.New(repoOpts, appOpts)
@@ -192,14 +217,14 @@ func (o *Okctl) newBinariesProvider() error {
 		return errors.E(err, "failed to create binaries fetcher", errors.Internal)
 	}
 
-	o.BinariesProvider = binaries.New(o.Out, o.CredentialsProvider, fetcher)
+	o.BinariesProvider = binaries.New(o.Out, o.CredentialsProvider.Aws(), fetcher)
 
 	return nil
 }
 
 // newCloudProvider creates a provider for running cloud operations
 func (o *Okctl) newCloudProvider() error {
-	c, err := cloud.New(o.Region(), o.CredentialsProvider)
+	c, err := cloud.New(o.Region(), o.CredentialsProvider.Aws())
 	if err != nil {
 		return err
 	}
@@ -215,9 +240,9 @@ func (o *Okctl) newCredentialsProvider(awsAccountID string) error {
 		return errors.E(errors.Errorf("we only support retrieving credentials interactively for now"), errors.Invalid)
 	}
 
-	o.CredentialsProvider = credentials.New(
-		aws.New(awsAccountID, o.Region(), aws.Interactive(o.Username()), aws.AuthTypeSAML),
-	)
+	saml := aws.NewAuthSAML(awsAccountID, o.Region(), scrape.New(), aws.DefaultStsProvider, aws.Interactive(o.Username()))
+
+	o.CredentialsProvider = credentials.New(aws.New(saml))
 
 	return nil
 }

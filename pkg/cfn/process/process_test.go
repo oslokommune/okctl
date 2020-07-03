@@ -3,6 +3,7 @@ package process_test
 import (
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn/process"
 	"github.com/oslokommune/okctl/pkg/mock"
@@ -30,10 +31,11 @@ func TestSubnets(t *testing.T) {
 			name:     "Should work",
 			provider: mock.NewGoodCloudProvider(),
 			value:    DefaultSubnetID,
-			expect: map[string]v1alpha1.ClusterNetwork{
-				DefaultAvailabilityZone: {
-					ID:   DefaultSubnetID,
-					CIDR: DefaultSubnetCIDR,
+			expect: []api.VpcSubnet{
+				{
+					ID:               DefaultSubnetID,
+					Cidr:             DefaultSubnetCIDR,
+					AvailabilityZone: DefaultAvailabilityZone,
 				},
 			},
 		},
@@ -49,9 +51,9 @@ func TestSubnets(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			got := map[string]v1alpha1.ClusterNetwork{}
+			var got []api.VpcSubnet
 
-			err := process.Subnets(tc.provider, got)(tc.value)
+			err := process.Subnets(tc.provider, &got)(tc.value)
 
 			if tc.expectError {
 				assert.Error(t, err)
@@ -60,6 +62,28 @@ func TestSubnets(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.expect, got)
 			}
+		})
+	}
+}
+
+func TestString(t *testing.T) {
+	testCases := []struct {
+		name  string
+		value string
+		input string
+	}{
+		{
+			name:  "Should work",
+			input: "hi there",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			err := process.String(&tc.value)(tc.input)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.input, tc.value)
 		})
 	}
 }

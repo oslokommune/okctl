@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// nolint: funlen
 func TestStorer(t *testing.T) {
 	testCases := []struct {
 		name    string

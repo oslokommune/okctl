@@ -5,6 +5,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/binaries"
 	"github.com/oslokommune/okctl/pkg/binaries/run/eksctl"
+	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
 )
 
 type cluster struct {
@@ -13,10 +14,17 @@ type cluster struct {
 
 // CreateCluster invokes a CLI for performing create
 func (c *cluster) CreateCluster(config *api.ClusterConfig) error {
+	k, err := c.provider.Kubectl(kubectl.Version)
+	if err != nil {
+		return err
+	}
+
 	cli, err := c.provider.Eksctl(eksctl.Version)
 	if err != nil {
 		return err
 	}
+
+	cli.AddToPath(k.BinaryPath)
 
 	_, err = cli.CreateCluster(config)
 

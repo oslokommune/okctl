@@ -113,6 +113,26 @@ func New() *Data {
 		},
 		Binaries: []Binary{
 			{
+				Name:       "kubectl",
+				Version:    "1.16.8",
+				BufferSize: "100mb",
+				URLPattern: "https://amazon-eks.s3.us-west-2.amazonaws.com/#{ver}/2020-04-16/bin/${os}/${arch}/kubectl",
+				Checksums: []Checksum{
+					{
+						Os:     "darwin",
+						Arch:   "amd64",
+						Type:   "sha256",
+						Digest: "6e8439099c5a7d8d2f8f550f2f04301f9b0bb229a5f7c56477743a2cd11de2aa",
+					},
+					{
+						Os:     "linux",
+						Arch:   "amd64",
+						Type:   "sha256",
+						Digest: "e29544e1334f68e81546b8c8774c2484cbf82e8e5723d2a7e654f8a8fd79a7b2",
+					},
+				},
+			},
+			{
 				Name:       "eksctl",
 				Version:    "0.21.0",
 				BufferSize: "100mb",

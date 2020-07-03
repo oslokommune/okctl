@@ -4,6 +4,8 @@ package eksctl
 import (
 	"fmt"
 	"io"
+	"path/filepath"
+	"strings"
 
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
@@ -29,6 +31,7 @@ type Eksctl struct {
 	Store      storage.StoreCleaner
 	Auth       aws.Authenticator
 	CmdFn      run.CmdFn
+	CmdPath    []string
 }
 
 // New returns a new wrapper around the eksctl cli
@@ -46,6 +49,10 @@ func (e *Eksctl) runner() (run.Runner, error) {
 	envs, err := e.Auth.AsEnv()
 	if err != nil {
 		return nil, err
+	}
+
+	if len(e.CmdPath) > 0 {
+		envs = append(envs, fmt.Sprintf("PATH=$PATH:%s", strings.Join(e.CmdPath, ":")))
 	}
 
 	return run.New(e.Store.Path(), e.BinaryPath, envs, e.CmdFn), nil
@@ -93,6 +100,11 @@ func (e *Eksctl) run(args []string, cfg *api.ClusterConfig) ([]byte, error) {
 	}
 
 	return runner.Run(e.Progress, append(args, "--config-file", e.Store.Abs(defaultClusterConfig)))
+}
+
+// AddToPath strips the base of the binary and adds it to the PATH
+func (e *Eksctl) AddToPath(binaryPath string) {
+	e.CmdPath = append(e.CmdPath, filepath.Dir(binaryPath))
 }
 
 // DeleteCluster invokes eksctl delete cluster using the provided

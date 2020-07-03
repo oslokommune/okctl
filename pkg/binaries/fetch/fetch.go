@@ -57,13 +57,26 @@ func (f *httpFetcher) Fetch(w io.Writer) (int64, error) {
 		return 0, err
 	}
 
+	if resp.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("failed to download file at: %s", f.url)
+	}
+
 	defer func() {
 		err = resp.Body.Close()
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf("bad status: %s", resp.Status)
+		return 0, fmt.Errorf("bad status: %s, failed download of: %s", resp.Status, f.url)
 	}
 
-	return io.Copy(w, resp.Body)
+	n, err := io.Copy(w, resp.Body)
+	if err != nil {
+		return 0, err
+	}
+
+	if n == 0 {
+		return 0, fmt.Errorf("downloaded file was size: 0, for url: %s", f.url)
+	}
+
+	return n, nil
 }

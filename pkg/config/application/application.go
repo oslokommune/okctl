@@ -122,7 +122,7 @@ func KnownBinaries() []Binary {
 			Name:       "kubectl",
 			Version:    "1.16.8",
 			BufferSize: "100mb",
-			URLPattern: "https://amazon-eks.s3.us-west-2.amazonaws.com/#{ver}/2020-04-16/bin/${os}/${arch}/kubectl",
+			URLPattern: "https://amazon-eks.s3.us-west-2.amazonaws.com/#{ver}/2020-04-16/bin/#{os}/#{arch}/kubectl",
 			Checksums: []Checksum{
 				{
 					Os:     "darwin",

@@ -117,7 +117,6 @@ func (e *Eksctl) CreateCluster(cfg *api.ClusterConfig) ([]byte, error) {
 	args := []string{
 		"create",
 		"cluster",
-		"--fargate",
 		"--write-kubeconfig=false",
 	}
 

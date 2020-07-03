@@ -88,7 +88,7 @@ func TestEksctlCreateCluster(t *testing.T) {
 				fakeExecCommandSuccess(),
 			),
 			// nolint: lll
-			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX, args=create,cluster,--fargate,--write-kubeconfig=false,--config-file,/cluster-config.yml",
+			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX, args=create,cluster,--write-kubeconfig=false,--config-file,/cluster-config.yml",
 		},
 		{
 			name: "Should fail",
@@ -101,7 +101,7 @@ func TestEksctlCreateCluster(t *testing.T) {
 				fakeExecCommandFailure(),
 			),
 			// nolint: lll
-			expect:      "failed to create: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX, args=create,cluster,--fargate,--write-kubeconfig=false,--config-file,/cluster-config.yml: exit status 1",
+			expect:      "failed to create: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX, args=create,cluster,--write-kubeconfig=false,--config-file,/cluster-config.yml: exit status 1",
 			expectError: true,
 		},
 	}

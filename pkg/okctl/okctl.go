@@ -41,7 +41,12 @@ type Okctl struct {
 
 // Initialise okctl for receiving requests
 func (o *Okctl) Initialise(env, awsAccountID string) error {
-	err := o.initialiseProviders(env, awsAccountID)
+	err := o.EnableFileLog()
+	if err != nil {
+		return err
+	}
+
+	err = o.initialiseProviders(env, awsAccountID)
 	if err != nil {
 		return err
 	}

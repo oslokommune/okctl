@@ -18,6 +18,7 @@ const (
 )
 
 // Context provides access to ephemeral state
+// nolint: maligned
 type Context struct {
 	FileSystem *afero.Afero
 
@@ -30,7 +31,8 @@ type Context struct {
 
 	Ctx context.Context
 
-	Logger *logrus.Logger
+	Logger   *logrus.Logger
+	LogLevel logrus.Level
 }
 
 // New returns a context with sensible defaults
@@ -42,9 +44,10 @@ func New() *Context {
 
 	logger.Out = os.Stderr
 	logger.Formatter = &logrus.TextFormatter{}
+	logger.Level = logrus.InfoLevel
 
 	if debug {
-		logger.SetLevel(logrus.DebugLevel)
+		logger.Level = logrus.DebugLevel
 	}
 
 	return &Context{
@@ -56,5 +59,6 @@ func New() *Context {
 		Err:        os.Stderr,
 		Ctx:        context.Background(),
 		Logger:     logger,
+		LogLevel:   logger.Level,
 	}
 }

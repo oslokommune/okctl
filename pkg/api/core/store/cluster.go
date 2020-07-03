@@ -5,17 +5,15 @@ import (
 	"fmt"
 
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/config/repository"
 	"github.com/oslokommune/okctl/pkg/storage/state"
-	"sigs.k8s.io/yaml"
 )
 
 type cluster struct {
 	provider state.PersisterProvider
 }
 
-// SaveCluster knows how to save cluster state
+// SaveClusterConfig knows how to save cluster state
 func (c *cluster) SaveCluster(clu *api.Cluster) error {
 	s := c.provider.Repository().State()
 
@@ -27,20 +25,10 @@ func (c *cluster) SaveCluster(clu *api.Cluster) error {
 		},
 	})
 
-	err := c.provider.Repository().SaveState()
-	if err != nil {
-		return err
-	}
-
-	data, err := clu.Config.YAML()
-	if err != nil {
-		return err
-	}
-
-	return c.provider.Repository().WriteToDefault("cluster_config", data)
+	return c.provider.Repository().SaveState()
 }
 
-// DeleteCluster knows how to delete cluster state
+// DeleteClusterConfig knows how to delete cluster state
 func (c *cluster) DeleteCluster(env string) error {
 	s := c.provider.Repository().State()
 
@@ -55,20 +43,8 @@ func (c *cluster) DeleteCluster(env string) error {
 	return c.provider.Repository().SaveState()
 }
 
-// GetCluster knows how to get cluster state
+// GetClusterConfig knows how to get cluster state
 func (c *cluster) GetCluster(env string) (*api.Cluster, error) {
-	data, err := c.provider.Repository().ReadFromDefault("cluster_config")
-	if err != nil {
-		return nil, err
-	}
-
-	cfg := v1alpha1.NewClusterConfig()
-
-	err = yaml.Unmarshal(data, cfg)
-	if err != nil {
-		return nil, err
-	}
-
 	clusters := c.provider.Repository().State().Clusters
 
 	for _, cluster := range clusters {
@@ -77,7 +53,6 @@ func (c *cluster) GetCluster(env string) (*api.Cluster, error) {
 				Environment:  cluster.Environment,
 				AWSAccountID: cluster.AWS.AccountID,
 				Cidr:         cluster.AWS.Cidr,
-				Config:       cfg,
 			}, nil
 		}
 	}

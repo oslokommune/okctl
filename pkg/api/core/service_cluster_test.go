@@ -23,7 +23,7 @@ func TestClusterCreateCluster(t *testing.T) {
 			name: "Valid request",
 			service: core.NewClusterService(
 				mock.NewGoodClusterStore(),
-				mock.NewGoodClusterCloud(),
+				mock.NewGoodClusterConfigStore(),
 				mock.NewGoodClusterExe(),
 			),
 			opts:   mock.DefaultClusterCreateOpts(),
@@ -33,7 +33,7 @@ func TestClusterCreateCluster(t *testing.T) {
 			name: "Invalid opts",
 			service: core.NewClusterService(
 				mock.NewGoodClusterStore(),
-				mock.NewGoodClusterCloud(),
+				mock.NewGoodClusterConfigStore(),
 				mock.NewGoodClusterExe(),
 			),
 			opts: api.ClusterCreateOpts{},

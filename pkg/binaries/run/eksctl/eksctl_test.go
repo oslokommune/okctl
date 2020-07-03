@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/binaries/run"
 	"github.com/oslokommune/okctl/pkg/binaries/run/eksctl"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
@@ -21,13 +21,13 @@ func TestEksctlDeleteCluster(t *testing.T) {
 	testCases := []struct {
 		name        string
 		eksctl      *eksctl.Eksctl
-		cfg         *v1alpha1.ClusterConfig
+		cfg         *api.ClusterConfig
 		expect      interface{}
 		expectError bool
 	}{
 		{
 			name: "Should work",
-			cfg:  v1alpha1.NewClusterConfig(),
+			cfg:  api.NewClusterConfig(),
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
@@ -40,7 +40,7 @@ func TestEksctlDeleteCluster(t *testing.T) {
 		},
 		{
 			name: "Should fail",
-			cfg:  v1alpha1.NewClusterConfig(),
+			cfg:  api.NewClusterConfig(),
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
@@ -73,13 +73,13 @@ func TestEksctlCreateCluster(t *testing.T) {
 	testCases := []struct {
 		name        string
 		eksctl      *eksctl.Eksctl
-		cfg         *v1alpha1.ClusterConfig
+		cfg         *api.ClusterConfig
 		expect      interface{}
 		expectError bool
 	}{
 		{
 			name: "Should work",
-			cfg:  v1alpha1.NewClusterConfig(),
+			cfg:  api.NewClusterConfig(),
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
@@ -88,11 +88,11 @@ func TestEksctlCreateCluster(t *testing.T) {
 				fakeExecCommandSuccess(),
 			),
 			// nolint: lll
-			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX, args=create,cluster,--write-kubeconfig=false,--config-file,/cluster-config.yml",
+			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX, args=create,cluster,--fargate,--write-kubeconfig=false,--config-file,/cluster-config.yml",
 		},
 		{
 			name: "Should fail",
-			cfg:  v1alpha1.NewClusterConfig(),
+			cfg:  api.NewClusterConfig(),
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
@@ -101,7 +101,7 @@ func TestEksctlCreateCluster(t *testing.T) {
 				fakeExecCommandFailure(),
 			),
 			// nolint: lll
-			expect:      "failed to create: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX, args=create,cluster,--write-kubeconfig=false,--config-file,/cluster-config.yml: exit status 1",
+			expect:      "failed to create: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX, args=create,cluster,--fargate,--write-kubeconfig=false,--config-file,/cluster-config.yml: exit status 1",
 			expectError: true,
 		},
 	}

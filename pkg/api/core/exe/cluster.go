@@ -3,7 +3,6 @@ package exe
 
 import (
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/binaries"
 	"github.com/oslokommune/okctl/pkg/binaries/run/eksctl"
 )
@@ -13,7 +12,7 @@ type cluster struct {
 }
 
 // CreateCluster invokes a CLI for performing create
-func (c *cluster) CreateCluster(config *v1alpha1.ClusterConfig) error {
+func (c *cluster) CreateCluster(config *api.ClusterConfig) error {
 	cli, err := c.provider.Eksctl(eksctl.Version)
 	if err != nil {
 		return err
@@ -24,8 +23,8 @@ func (c *cluster) CreateCluster(config *v1alpha1.ClusterConfig) error {
 	return err
 }
 
-// DeleteCluster invokes a CLI for performing delete
-func (c *cluster) DeleteCluster(config *v1alpha1.ClusterConfig) error {
+// DeleteClusterConfig invokes a CLI for performing delete
+func (c *cluster) DeleteCluster(config *api.ClusterConfig) error {
 	cli, err := c.provider.Eksctl(eksctl.Version)
 	if err != nil {
 		return err

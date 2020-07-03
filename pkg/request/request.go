@@ -43,12 +43,15 @@ func (r *request) Do(method, endpoint string, body []byte) (string, error) {
 	out := make([]byte, resp.ContentLength)
 
 	_, err = resp.Body.Read(out)
+	if err != nil {
+		return "", err
+	}
 
 	defer func() {
 		err = resp.Body.Close()
 	}()
 
-	return string(out), err
+	return string(out), nil
 }
 
 // Post sends a POST request to the given endpoint

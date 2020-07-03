@@ -41,6 +41,13 @@ const (
 	// DefaultClusterBaseDir is the default directory name of the eksctl cluster config
 	DefaultClusterBaseDir = "cluster"
 
+	// DefaultVpcOutputs is the default filename of the vpc outputs information
+	DefaultVpcOutputs = "outputs.json"
+	// DefaultVpcCloudFormationTemplate is the default filename of the vpc cloud formation template
+	DefaultVpcCloudFormationTemplate = "vpc.yml"
+	// DefaultVpcBaseDir is the default directory of the vpc resources
+	DefaultVpcBaseDir = "vpc"
+
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"
 	// EnvHome is the default env var parsed for determining the application home

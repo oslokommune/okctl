@@ -6,7 +6,6 @@ import (
 	"regexp"
 
 	val "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 )
 
 const (
@@ -23,7 +22,7 @@ type Cluster struct {
 	Environment  string
 	AWSAccountID string
 	Cidr         string
-	Config       *v1alpha1.ClusterConfig
+	Config       *ClusterConfig
 }
 
 // ClusterCreateOpts specifies the required inputs for creating a cluster
@@ -56,12 +55,8 @@ func (o *ClusterCreateOpts) Validate() error {
 			val.Required,
 			val.Length(envMinLength, envMaxLength),
 		),
-		val.Field(&o.Cidr,
-			val.Required,
-		),
-		val.Field(&o.Region,
-			val.Required,
-		),
+		val.Field(&o.Cidr, val.Required),
+		val.Field(&o.Region, val.Required),
 	)
 }
 
@@ -92,14 +87,8 @@ type ClusterService interface {
 
 // ClusterExe provides an interface for running CLIs
 type ClusterExe interface {
-	CreateCluster(*v1alpha1.ClusterConfig) error
-	DeleteCluster(*v1alpha1.ClusterConfig) error
-}
-
-// ClusterCloud provides an interface for running actions towards the cloud
-type ClusterCloud interface {
-	CreateCluster(awsAccountID, clusterName, env, repoName, cidr, region string) (*v1alpha1.ClusterConfig, error)
-	DeleteCluster(env, repoName string) error
+	CreateCluster(*ClusterConfig) error
+	DeleteCluster(*ClusterConfig) error
 }
 
 // ClusterStore provides an interface for storag operations

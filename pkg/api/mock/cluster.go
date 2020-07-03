@@ -34,6 +34,10 @@ const (
 	DefaultPrivateSubnetID = "subnet-8EXAMPLE"
 	// DefaultPrivateSubnetCidr is a default private subnet cidr used in mocks
 	DefaultPrivateSubnetCidr = "192.168.2.0/24"
+	// DefaultVpcStackName is the default stack name for a vpc
+	DefaultVpcStackName = "test-vpc-pro"
+	// DefaultVpcCloudFormationTemplate is a default cloud formation template
+	DefaultVpcCloudFormationTemplate = "something"
 )
 
 // ErrBad just defines a mocked error
@@ -51,9 +55,20 @@ func DefaultClusterCreateOpts() api.ClusterCreateOpts {
 	}
 }
 
+// DefaultCreateClusterConfigOpts returns options for creating a cluster configuration
+// with defaults set
+func DefaultCreateClusterConfigOpts() api.CreateClusterConfigOpts {
+	return api.CreateClusterConfigOpts{
+		ClusterName:  DefaultClusterName,
+		Region:       DefaultRegion,
+		Cidr:         DefaultCidr,
+		AwsAccountID: DefaultAWSAccountID,
+	}
+}
+
 // DefaultPublicSubnets returns a map of public subnets with defaults set
-func DefaultPublicSubnets() map[string]v1alpha1.ClusterNetwork {
-	return map[string]v1alpha1.ClusterNetwork{
+func DefaultPublicSubnets() map[string]api.ClusterNetwork {
+	return map[string]api.ClusterNetwork{
 		DefaultAvailabilityZone: {
 			ID:   DefaultPublicSubnetID,
 			CIDR: DefaultPublicSubnetCidr,
@@ -61,9 +76,20 @@ func DefaultPublicSubnets() map[string]v1alpha1.ClusterNetwork {
 	}
 }
 
+// DefaultVpcPublicSubnets returns a list of public subnets with defaults set
+func DefaultVpcPublicSubnets() []api.VpcSubnet {
+	return []api.VpcSubnet{
+		{
+			ID:               DefaultPublicSubnetID,
+			Cidr:             DefaultPublicSubnetCidr,
+			AvailabilityZone: DefaultAvailabilityZone,
+		},
+	}
+}
+
 // DefaultPrivateSubnets returns a map of private subnets with defaults set
-func DefaultPrivateSubnets() map[string]v1alpha1.ClusterNetwork {
-	return map[string]v1alpha1.ClusterNetwork{
+func DefaultPrivateSubnets() map[string]api.ClusterNetwork {
+	return map[string]api.ClusterNetwork{
 		DefaultAvailabilityZone: {
 			ID:   DefaultPrivateSubnetID,
 			CIDR: DefaultPrivateSubnetCidr,
@@ -71,9 +97,20 @@ func DefaultPrivateSubnets() map[string]v1alpha1.ClusterNetwork {
 	}
 }
 
+// DefaultVpcPrivateSubnets returns a list of private subnets with defaults set
+func DefaultVpcPrivateSubnets() []api.VpcSubnet {
+	return []api.VpcSubnet{
+		{
+			ID:               DefaultPrivateSubnetID,
+			Cidr:             DefaultPrivateSubnetCidr,
+			AvailabilityZone: DefaultAvailabilityZone,
+		},
+	}
+}
+
 // DefaultClusterConfig returns a cluster config with defaults set
-func DefaultClusterConfig() *v1alpha1.ClusterConfig {
-	cfg := v1alpha1.NewClusterConfig()
+func DefaultClusterConfig() *api.ClusterConfig {
+	cfg := api.NewClusterConfig()
 
 	cfg.Metadata.Name = DefaultClusterName
 	cfg.Metadata.Region = DefaultRegion
@@ -88,6 +125,17 @@ func DefaultClusterConfig() *v1alpha1.ClusterConfig {
 	cfg.IAM.ServiceRolePermissionsBoundary = v1alpha1.PermissionsBoundaryARN(DefaultAWSAccountID)
 
 	return cfg
+}
+
+// DefaultVpc returns a vpc with defaults set
+func DefaultVpc() *api.Vpc {
+	return &api.Vpc{
+		StackName:              DefaultVpcStackName,
+		CloudFormationTemplate: []byte(DefaultVpcCloudFormationTemplate),
+		ID:                     DefaultVpcID,
+		PublicSubnets:          DefaultVpcPublicSubnets(),
+		PrivateSubnets:         DefaultVpcPrivateSubnets(),
+	}
 }
 
 // DefaultCluster returns an api cluster definition with defaults set
@@ -140,41 +188,41 @@ func NewBadClusterService() *ClusterService {
 	}
 }
 
-// ClusterCloud provides a mock for the cluster cloud interface
-type ClusterCloud struct {
-	CreateClusterFn func(awsAccountID, clusterName, env, repoName, cidr, region string) (*v1alpha1.ClusterConfig, error)
-	DeleteClusterFn func(env, repoName string) error
+// VpcCloud provides a mock for the cluster cloud interface
+type VpcCloud struct {
+	CreateVpcFn func(opts api.CreateVpcOpts) (*api.Vpc, error)
+	DeleteVpcFn func(opts api.DeleteVpcOpts) error
 }
 
-// CreateCluster invokes the mocked create cluster function
-func (c *ClusterCloud) CreateCluster(awsAccountID, clusterName, env, repoName, cidr, region string) (*v1alpha1.ClusterConfig, error) {
-	return c.CreateClusterFn(awsAccountID, clusterName, env, repoName, cidr, region)
+// CreateVpc invokes the mocked create cluster function
+func (c *VpcCloud) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
+	return c.CreateVpcFn(opts)
 }
 
-// DeleteCluster invokes the mocked delete cluster function
-func (c *ClusterCloud) DeleteCluster(env, repoName string) error {
-	return c.DeleteClusterFn(env, repoName)
+// DeleteVpc invokes the mocked delete cluster function
+func (c *VpcCloud) DeleteVpc(opts api.DeleteVpcOpts) error {
+	return c.DeleteVpcFn(opts)
 }
 
-// NewGoodClusterCloud returns a cluster cloud that will succeed
-func NewGoodClusterCloud() *ClusterCloud {
-	return &ClusterCloud{
-		CreateClusterFn: func(awsAccountID, clusterName, env, repoName, cidr, region string) (*v1alpha1.ClusterConfig, error) {
-			return DefaultClusterConfig(), nil
+// NewGoodVpcCloud returns a cluster cloud that will succeed
+func NewGoodVpcCloud() *VpcCloud {
+	return &VpcCloud{
+		CreateVpcFn: func(opts api.CreateVpcOpts) (*api.Vpc, error) {
+			return DefaultVpc(), nil
 		},
-		DeleteClusterFn: func(env, repoName string) error {
+		DeleteVpcFn: func(opts api.DeleteVpcOpts) error {
 			return nil
 		},
 	}
 }
 
-// NewBadClusterCloud returns a cluster cloud that will fail
-func NewBadClusterCloud() *ClusterCloud {
-	return &ClusterCloud{
-		CreateClusterFn: func(awsAccountID, clusterName, env, repoName, cidr, region string) (*v1alpha1.ClusterConfig, error) {
+// NewBadVpcCloud returns a cluster cloud that will fail
+func NewBadVpcCloud() *VpcCloud {
+	return &VpcCloud{
+		CreateVpcFn: func(opts api.CreateVpcOpts) (*api.Vpc, error) {
 			return nil, ErrBad
 		},
-		DeleteClusterFn: func(env, repoName string) error {
+		DeleteVpcFn: func(opts api.DeleteVpcOpts) error {
 			return ErrBad
 		},
 	}
@@ -182,27 +230,27 @@ func NewBadClusterCloud() *ClusterCloud {
 
 // ClusterExe provides a mock for the cluster exe interface
 type ClusterExe struct {
-	CreateClusterFn func(*v1alpha1.ClusterConfig) error
-	DeleteClusterFn func(*v1alpha1.ClusterConfig) error
+	CreateClusterFn func(*api.ClusterConfig) error
+	DeleteClusterFn func(*api.ClusterConfig) error
 }
 
 // CreateCluster invokes the mocked create cluster function
-func (c *ClusterExe) CreateCluster(config *v1alpha1.ClusterConfig) error {
+func (c *ClusterExe) CreateCluster(config *api.ClusterConfig) error {
 	return c.CreateClusterFn(config)
 }
 
 // DeleteCluster invokes the mocked delete cluster function
-func (c *ClusterExe) DeleteCluster(config *v1alpha1.ClusterConfig) error {
+func (c *ClusterExe) DeleteCluster(config *api.ClusterConfig) error {
 	return c.DeleteClusterFn(config)
 }
 
 // NewGoodClusterExe returns a cluster exe that will succeed
 func NewGoodClusterExe() *ClusterExe {
 	return &ClusterExe{
-		CreateClusterFn: func(config *v1alpha1.ClusterConfig) error {
+		CreateClusterFn: func(config *api.ClusterConfig) error {
 			return nil
 		},
-		DeleteClusterFn: func(config *v1alpha1.ClusterConfig) error {
+		DeleteClusterFn: func(config *api.ClusterConfig) error {
 			return nil
 		},
 	}
@@ -211,10 +259,10 @@ func NewGoodClusterExe() *ClusterExe {
 // NewBadClusterExe returns a cluster exe that will fail
 func NewBadClusterExe() *ClusterExe {
 	return &ClusterExe{
-		CreateClusterFn: func(config *v1alpha1.ClusterConfig) error {
+		CreateClusterFn: func(config *api.ClusterConfig) error {
 			return ErrBad
 		},
-		DeleteClusterFn: func(config *v1alpha1.ClusterConfig) error {
+		DeleteClusterFn: func(config *api.ClusterConfig) error {
 			return ErrBad
 		},
 	}
@@ -268,6 +316,43 @@ func NewBadClusterStore() *ClusterStore {
 		},
 		GetClusterFn: func(env string) (*api.Cluster, error) {
 			return nil, ErrBad
+		},
+	}
+}
+
+// ClusterConfigStore provides a mock for the cluster config store
+type ClusterConfigStore struct {
+	SaveClusterConfigFn   func(*api.ClusterConfig) error
+	DeleteClusterConfigFn func(env string) error
+	GetClusterConfigFn    func(env string) (*api.ClusterConfig, error)
+}
+
+// SaveClusterConfig invokes the mocked save cluster config function
+func (c *ClusterConfigStore) SaveClusterConfig(config *api.ClusterConfig) error {
+	return c.SaveClusterConfigFn(config)
+}
+
+// DeleteClusterConfig invokes the mocked delete cluster config function
+func (c *ClusterConfigStore) DeleteClusterConfig(env string) error {
+	return c.DeleteClusterConfigFn(env)
+}
+
+// GetClusterConfig invokes the mocked get cluster config function
+func (c *ClusterConfigStore) GetClusterConfig(env string) (*api.ClusterConfig, error) {
+	return c.GetClusterConfigFn(env)
+}
+
+// NewGoodClusterConfigStore returns a cluster config store that will succeed
+func NewGoodClusterConfigStore() *ClusterConfigStore {
+	return &ClusterConfigStore{
+		SaveClusterConfigFn: func(config *api.ClusterConfig) error {
+			return nil
+		},
+		DeleteClusterConfigFn: func(env string) error {
+			return nil
+		},
+		GetClusterConfigFn: func(env string) (*api.ClusterConfig, error) {
+			return DefaultClusterConfig(), nil
 		},
 	}
 }

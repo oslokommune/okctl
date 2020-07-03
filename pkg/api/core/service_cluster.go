@@ -9,9 +9,9 @@ import (
 )
 
 type cluster struct {
-	exe   api.ClusterExe
-	cloud api.ClusterCloud
-	store api.ClusterStore
+	exe         api.ClusterExe
+	store       api.ClusterStore
+	configStore api.ClusterConfigStore
 }
 
 const (
@@ -26,9 +26,9 @@ func (c *cluster) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (
 		return nil, errors.E(err, "failed to validate create cluster input", errors.Invalid)
 	}
 
-	clusterConfig, err := c.cloud.CreateCluster(opts.AWSAccountID, opts.ClusterName, opts.Environment, opts.RepositoryName, opts.Cidr, opts.Region)
+	clusterConfig, err := c.configStore.GetClusterConfig(opts.Environment)
 	if err != nil {
-		return nil, errors.E(err, msgFailedToCreateCluster)
+		return nil, errors.E(err, "failed to retrieve cluster config")
 	}
 
 	err = c.exe.CreateCluster(clusterConfig)
@@ -51,7 +51,7 @@ func (c *cluster) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (
 	return res, nil
 }
 
-// DeleteCluster deletes an EKS cluster and VPC
+// DeleteClusterConfig deletes an EKS cluster and VPC
 func (c *cluster) DeleteCluster(_ context.Context, opts api.ClusterDeleteOpts) error {
 	err := opts.Validate()
 	if err != nil {
@@ -68,7 +68,7 @@ func (c *cluster) DeleteCluster(_ context.Context, opts api.ClusterDeleteOpts) e
 		return errors.E(err, msgFailedToDeleteCluster)
 	}
 
-	err = c.cloud.DeleteCluster(opts.Environment, opts.RepositoryName)
+	err = c.configStore.DeleteClusterConfig(opts.Environment)
 	if err != nil {
 		return errors.E(err, msgFailedToDeleteCluster)
 	}
@@ -77,10 +77,10 @@ func (c *cluster) DeleteCluster(_ context.Context, opts api.ClusterDeleteOpts) e
 }
 
 // NewClusterService returns a service operator for the cluster operations
-func NewClusterService(store api.ClusterStore, cloud api.ClusterCloud, exe api.ClusterExe) api.ClusterService {
+func NewClusterService(store api.ClusterStore, configStore api.ClusterConfigStore, exe api.ClusterExe) api.ClusterService {
 	return &cluster{
-		exe:   exe,
-		cloud: cloud,
-		store: store,
+		exe:         exe,
+		store:       store,
+		configStore: configStore,
 	}
 }

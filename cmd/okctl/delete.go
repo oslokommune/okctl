@@ -28,6 +28,7 @@ func buildDeleteCommand(o *okctl.Okctl) *cobra.Command {
 	return cmd
 }
 
+// nolint: funlen
 func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &api.ClusterDeleteOpts{}
 
@@ -54,21 +55,45 @@ including VPC, this is a highly destructive operation.`,
 			return o.Initialise(opts.Environment, awsAccountID)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			data, err := json.Marshal(opts)
-			if err != nil {
-				return err
-			}
-
 			r := request.New(fmt.Sprintf("http://%s/v1/", o.Destination))
 
-			resp, err := r.Delete("clusters/", data)
-			if err != nil {
-				return err
+			{
+				data, err := json.Marshal(opts)
+				if err != nil {
+					return err
+				}
+
+				resp, err := r.Delete("clusters/", data)
+				if err != nil {
+					return err
+				}
+
+				_, err = io.Copy(o.Out, strings.NewReader(resp))
+				if err != nil {
+					return err
+				}
 			}
 
-			_, err = io.Copy(o.Out, strings.NewReader(resp))
-			if err != nil {
-				return err
+			{
+				vpcOpts := &api.DeleteVpcOpts{
+					Env:      opts.Environment,
+					RepoName: opts.RepositoryName,
+				}
+
+				vpcData, err := json.Marshal(vpcOpts)
+				if err != nil {
+					return err
+				}
+
+				resp, err := r.Delete("vpcs/", vpcData)
+				if err != nil {
+					return err
+				}
+
+				_, err = io.Copy(o.Out, strings.NewReader(resp))
+				if err != nil {
+					return err
+				}
 			}
 
 			return nil

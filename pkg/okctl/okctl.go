@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"strings"
 	"syscall"
 
 	"github.com/mishudark/errors"
@@ -45,14 +46,26 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		return err
 	}
 
+	vpcService := core.NewVpcService(
+		cld.NewVpcCloud(o.CloudProvider),
+		store.NewVpcStore(o.PersisterProvider),
+	)
+
+	clusterConfigService := core.NewClusterConfigService(
+		store.NewClusterConfigStore(o.PersisterProvider),
+		store.NewVpcStore(o.PersisterProvider),
+	)
+
 	clusterService := core.NewClusterService(
 		store.NewClusterStore(o.PersisterProvider),
-		cld.NewCluster(o.CloudProvider),
+		store.NewClusterConfigStore(o.PersisterProvider),
 		exe.NewClusterExe(o.BinariesProvider),
 	)
 
 	services := core.Services{
-		Cluster: clusterService,
+		Cluster:       clusterService,
+		ClusterConfig: clusterConfigService,
+		Vpc:           vpcService,
 	}
 
 	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))
@@ -161,12 +174,17 @@ func (o *Okctl) newPersisterProvider(env string) error {
 		return err
 	}
 
+	outputDir = strings.TrimPrefix(outputDir, repoDir)
+	outputDir = strings.TrimPrefix(outputDir, "/")
+
 	repoOpts := state.RepoStoreOpts{
 		Opts: state.Opts{
 			BaseDir:    repoDir,
 			ConfigFile: config.DefaultRepositoryConfig,
 			Defaults: map[string]string{
-				"cluster_config": path.Join(outputDir, config.DefaultClusterBaseDir, config.DefaultClusterConfig),
+				"cluster_config":      path.Join(outputDir, config.DefaultClusterBaseDir, config.DefaultClusterConfig),
+				"vpc_cloud_formation": path.Join(outputDir, config.DefaultVpcBaseDir, config.DefaultVpcCloudFormationTemplate),
+				"vpc_outputs":         path.Join(outputDir, config.DefaultVpcBaseDir, config.DefaultVpcOutputs),
 			},
 		},
 		State: o.RepoData,

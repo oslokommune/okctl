@@ -58,12 +58,12 @@ func (c *cluster) DeleteCluster(_ context.Context, opts api.ClusterDeleteOpts) e
 		return errors.E(err, "failed to validate delete cluster inputs", errors.Invalid)
 	}
 
-	clus, err := c.store.GetCluster(opts.Environment)
+	cfg, err := c.configStore.GetClusterConfig(opts.Environment)
 	if err != nil {
 		return errors.E(err, "failed to get cluster from config", errors.Invalid)
 	}
 
-	err = c.exe.DeleteCluster(clus.Config)
+	err = c.exe.DeleteCluster(cfg)
 	if err != nil {
 		return errors.E(err, msgFailedToDeleteCluster)
 	}

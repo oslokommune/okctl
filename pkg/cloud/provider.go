@@ -10,23 +10,23 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
-	"github.com/oslokommune/okctl/pkg/credentials"
+	awsauth "github.com/oslokommune/okctl/pkg/credentials/aws"
 )
 
 // Provider stores state required for interacting with the AWS API
 type Provider struct {
-	Provider    v1alpha1.CloudProvider
-	Credentials credentials.Provider
+	Provider v1alpha1.CloudProvider
+	Auth     awsauth.Authenticator
 }
 
 // New returns a new AWS API provider
-func New(region string, c credentials.Provider) (*Provider, error) {
+func New(region string, a awsauth.Authenticator) (*Provider, error) {
 	services := &Services{
 		region: region,
 	}
 	p := &Provider{
-		Provider:    services,
-		Credentials: c,
+		Provider: services,
+		Auth:     a,
 	}
 
 	sess, err := p.newSession()
@@ -41,7 +41,7 @@ func New(region string, c credentials.Provider) (*Provider, error) {
 }
 
 func (p *Provider) newSession() (*session.Session, error) {
-	creds, err := p.Credentials.AwsRaw()
+	creds, err := p.Auth.Raw()
 	if err != nil {
 		return nil, err
 	}

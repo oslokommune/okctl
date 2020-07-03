@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/mitchellh/go-homedir"
@@ -15,8 +16,10 @@ import (
 	"github.com/oslokommune/okctl/pkg/config/application"
 	"github.com/oslokommune/okctl/pkg/config/repository"
 	"github.com/oslokommune/okctl/pkg/context"
+	"github.com/oslokommune/okctl/pkg/rotatefilehook"
 	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -28,6 +31,16 @@ const (
 	DefaultConfigName = "conf"
 	// DefaultConfigType is the default type of the okctl application config
 	DefaultConfigType = "yml"
+	//DefaultLogDir is the default directory name for logs
+	DefaultLogDir = "logs"
+	//DefaultLogName is the default name of the file to log to
+	DefaultLogName = "console.log"
+	// DefaultLogDays determines how many days we keep the logs
+	DefaultLogDays = 28
+	// DefaultLogBackups determines how many backups we will keep
+	DefaultLogBackups = 3
+	// DefaultLogSizeInMb determines how much storage we will consume
+	DefaultLogSizeInMb = 50
 
 	// DefaultRepositoryConfig is the default filename of the okctl repository config
 	DefaultRepositoryConfig = ".okctl.yml"
@@ -40,6 +53,13 @@ const (
 	DefaultClusterConfig = "cluster.yml"
 	// DefaultClusterBaseDir is the default directory name of the eksctl cluster config
 	DefaultClusterBaseDir = "cluster"
+
+	// DefaultVpcOutputs is the default filename of the vpc outputs information
+	DefaultVpcOutputs = "outputs.json"
+	// DefaultVpcCloudFormationTemplate is the default filename of the vpc cloud formation template
+	DefaultVpcCloudFormationTemplate = "vpc.yml"
+	// DefaultVpcBaseDir is the default directory of the vpc resources
+	DefaultVpcBaseDir = "vpc"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"
@@ -67,6 +87,7 @@ type Config struct {
 	RepoData       *repository.Data
 
 	Destination string
+	ServerURL   string
 
 	format  core.EncodeResponseType
 	homeDir string
@@ -75,12 +96,41 @@ type Config struct {
 
 // New Config initialises a default okctl configuration
 func New() *Config {
+	dest := "127.0.0.1:8085"
+
 	return &Config{
 		Context:        context.New(),
 		AppDataLoader:  NoopDataLoader,
 		RepoDataLoader: NoopDataLoader,
-		Destination:    "127.0.0.1:8085",
+		Destination:    dest,
+		ServerURL:      fmt.Sprintf("http://%s/v1/", dest),
 	}
+}
+
+// EnableFileLog turns on logging to files in addition to console
+func (c *Config) EnableFileLog() error {
+	logFile, err := c.GetLogName()
+	if err != nil {
+		return err
+	}
+
+	rotateFileHook, err := rotatefilehook.NewRotateFileHook(rotatefilehook.RotateFileConfig{
+		Filename:   logFile,
+		MaxSize:    DefaultLogSizeInMb,
+		MaxBackups: DefaultLogBackups,
+		MaxAge:     DefaultLogDays,
+		Level:      logrus.DebugLevel,
+		Formatter: &logrus.JSONFormatter{
+			TimestampFormat: time.RFC822,
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to initialize file rotate hook: %v", err)
+	}
+
+	c.Logger.AddHook(rotateFileHook)
+
+	return nil
 }
 
 // SetFormat sets the encode response type
@@ -278,6 +328,16 @@ func (c *Config) GetAppDataPath() (string, error) {
 	}
 
 	return filepath.Join(base, DefaultConfig), nil
+}
+
+// GetLogName returns the path to a logfile
+func (c *Config) GetLogName() (string, error) {
+	base, err := c.GetAppDataDir()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(base, DefaultLogDir, DefaultLogName), nil
 }
 
 // GetRepoOutputDir return the repository output directory,

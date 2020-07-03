@@ -23,6 +23,7 @@ type Persister interface {
 	WriteConfig(b []byte) error
 	ReadFromDefault(def string) ([]byte, error)
 	WriteToDefault(def string, b []byte) error
+	DeleteDefault(def string) error
 }
 
 // RepositoryPersister defines an interface for working on the repo state
@@ -141,6 +142,16 @@ func newStore(baseDir, configFile string, defaults map[string]string) *store {
 		configFile: configFile,
 		defaults:   defaults,
 	}
+}
+
+// DeleteDefault knows how to remove default locations
+func (s *store) DeleteDefault(def string) error {
+	loc, ok := s.defaults[def]
+	if !ok {
+		return fmt.Errorf("no default for: %s, when trying to delete", def)
+	}
+
+	return s.store.RemoveAll(loc)
 }
 
 // ReadFromDefault knows how to load a file from a predefined default

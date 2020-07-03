@@ -157,6 +157,29 @@ func loadFlagsAppData(cmd *cobra.Command) LoaderFn {
 	}
 }
 
+func updateKnownBinaries(cfg *config.Config) {
+	candidates := application.KnownBinaries()
+
+	var update []application.Binary
+
+	for _, candidate := range candidates {
+		found := false
+
+		for _, existing := range cfg.AppData.Binaries {
+			if candidate.Name == existing.Name && candidate.Version == existing.Version {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			update = append(update, candidate)
+		}
+	}
+
+	cfg.AppData.Binaries = append(cfg.AppData.Binaries, update...)
+}
+
 func buildAppDataLoader(loaders ...LoaderFn) config.DataLoaderFn {
 	return func(cfg *config.Config) error {
 		var err error
@@ -179,6 +202,8 @@ func buildAppDataLoader(loaders ...LoaderFn) config.DataLoaderFn {
 		}
 
 		cfg.AppData = appData
+
+		updateKnownBinaries(cfg)
 
 		return nil
 	}

@@ -14,23 +14,32 @@ import (
 
 // Endpoints defines all available endpoints
 type Endpoints struct {
-	CreateCluster endpoint.Endpoint
-	DeleteCluster endpoint.Endpoint
+	CreateCluster       endpoint.Endpoint
+	DeleteCluster       endpoint.Endpoint
+	CreateClusterConfig endpoint.Endpoint
+	CreateVpc           endpoint.Endpoint
+	DeleteVpc           endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
 // corresponding service
 func MakeEndpoints(s Services) Endpoints {
 	return Endpoints{
-		CreateCluster: makeCreateClusterEndpoint(s.Cluster),
-		DeleteCluster: makeDeleteClusterEndpoint(s.Cluster),
+		CreateCluster:       makeCreateClusterEndpoint(s.Cluster),
+		DeleteCluster:       makeDeleteClusterEndpoint(s.Cluster),
+		CreateClusterConfig: makeCreateClusterConfigEndpoint(s.ClusterConfig),
+		CreateVpc:           makeCreateVpcEndpoint(s.Vpc),
+		DeleteVpc:           makeDeleteVpcEndpoint(s.Vpc),
 	}
 }
 
 // Handlers defines http handlers for processing requests
 type Handlers struct {
-	CreateCluster http.Handler
-	DeleteCluster http.Handler
+	CreateCluster       http.Handler
+	DeleteCluster       http.Handler
+	CreateClusterConfig http.Handler
+	CreateVpc           http.Handler
+	DeleteVpc           http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -63,8 +72,11 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 	}
 
 	return &Handlers{
-		CreateCluster: newServer(endpoints.CreateCluster, decodeClusterCreateRequest),
-		DeleteCluster: newServer(endpoints.DeleteCluster, decodeClusterDeleteRequest),
+		CreateCluster:       newServer(endpoints.CreateCluster, decodeClusterCreateRequest),
+		DeleteCluster:       newServer(endpoints.DeleteCluster, decodeClusterDeleteRequest),
+		CreateClusterConfig: newServer(endpoints.CreateClusterConfig, decodeClusterConfigCreateRequest),
+		CreateVpc:           newServer(endpoints.CreateVpc, decodeVpcCreateRequest),
+		DeleteVpc:           newServer(endpoints.DeleteVpc, decodeVpcDeleteRequest),
 	}
 }
 
@@ -77,6 +89,13 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			r.Method(http.MethodPost, "/", handlers.CreateCluster)
 			r.Method(http.MethodDelete, "/", handlers.DeleteCluster)
 		})
+		r.Route("/vpcs", func(r chi.Router) {
+			r.Method(http.MethodPost, "/", handlers.CreateVpc)
+			r.Method(http.MethodDelete, "/", handlers.DeleteVpc)
+		})
+		r.Route("/clusterconfigs", func(r chi.Router) {
+			r.Method(http.MethodPost, "/", handlers.CreateClusterConfig)
+		})
 	})
 
 	return r
@@ -84,19 +103,30 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 
 // Services defines all available services
 type Services struct {
-	Cluster api.ClusterService
+	Cluster       api.ClusterService
+	ClusterConfig api.ClusterConfigService
+	Vpc           api.VpcService
 }
 
 // EndpointOption makes it easy to enable and disable the endpoint
 // middlewares
 type EndpointOption func(Endpoints) Endpoints
 
+const (
+	clusterTag       = "cluster"
+	clusterConfigTag = "clusterConfig"
+	vpcTag           = "vpc"
+)
+
 // InstrumentEndpoints adds instrumentation to the endpoints
 func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 	return func(endpoints Endpoints) Endpoints {
 		return Endpoints{
-			CreateCluster: middleware.Logging(logger)(endpoints.CreateCluster),
-			DeleteCluster: middleware.Logging(logger)(endpoints.DeleteCluster),
+			CreateCluster:       middleware.Logging(logger, clusterTag, "create")(endpoints.CreateCluster),
+			DeleteCluster:       middleware.Logging(logger, clusterTag, "delete")(endpoints.DeleteCluster),
+			CreateClusterConfig: middleware.Logging(logger, clusterConfigTag, "create")(endpoints.CreateClusterConfig),
+			CreateVpc:           middleware.Logging(logger, vpcTag, "create")(endpoints.CreateVpc),
+			DeleteVpc:           middleware.Logging(logger, vpcTag, "delete")(endpoints.DeleteVpc),
 		}
 	}
 }

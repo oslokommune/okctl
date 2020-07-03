@@ -11,11 +11,21 @@ import (
 func decodeClusterCreateRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var cluster api.ClusterCreateOpts
 
-	return cluster, json.NewDecoder(r.Body).Decode(&cluster)
+	err := json.NewDecoder(r.Body).Decode(&cluster)
+	if err != nil {
+		return nil, err
+	}
+
+	return cluster, nil
 }
 
 func decodeClusterDeleteRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var cluster api.ClusterDeleteOpts
 
-	return cluster, json.NewDecoder(r.Body).Decode(&cluster)
+	err := json.NewDecoder(r.Body).Decode(&cluster)
+	if err != nil {
+		return nil, err
+	}
+
+	return cluster, nil
 }

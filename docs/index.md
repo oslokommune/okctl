@@ -8,12 +8,10 @@ To download the latest release, run the command matching your operating system:
 
 ```bash
 # Linux
-curl --silent --location "https://github.com/oslokommune/okctl/releases/latest/download/okctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
-sudo mv /tmp/okctl /usr/local/bin
+curl --silent --location "https://github.com/oslokommune/okctl/releases/latest/download/okctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp && sudo mv /tmp/okctl /usr/local/bin
 
 # macOS
-brew tap oslokommune/tap
-brew install oslokommune/tap/okctl
+brew tap oslokommune/tap && brew install oslokommune/tap/okctl
 ```
 
 # Usage

@@ -9,7 +9,7 @@ require (
 	github.com/awslabs/goformation/v4 v4.8.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dustin/go-humanize v1.0.0
-	github.com/foolin/pagser v0.1.4
+	github.com/foolin/pagser v0.1.5
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-git/go-git/v5 v5.1.0

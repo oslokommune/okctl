@@ -14,7 +14,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn/components/route"
 	"github.com/oslokommune/okctl/pkg/cfn/components/routetable"
 	"github.com/oslokommune/okctl/pkg/cfn/components/routetableassociation"
-	"github.com/oslokommune/okctl/pkg/cfn/components/securitygroup"
 	"github.com/oslokommune/okctl/pkg/cfn/components/subnet"
 	vpcPkg "github.com/oslokommune/okctl/pkg/cfn/components/vpc"
 	"github.com/oslokommune/okctl/pkg/cfn/components/vpcgatewayattachment"
@@ -106,11 +105,8 @@ func (b *Builder) Build() error {
 	}
 
 	dsg := dbsubnetgroup.New(dbSubnets)
-	cpsg := securitygroup.ControlPlane(vpc)
 
-	b.outputs = append(b.outputs, cpsg)
-
-	b.resources = append(b.resources, dsg, cpsg)
+	b.resources = append(b.resources, dsg)
 
 	return nil
 }

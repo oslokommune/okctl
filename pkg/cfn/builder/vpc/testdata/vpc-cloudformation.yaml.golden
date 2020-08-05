@@ -1,11 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
 Resources:
-  ControlPlaneSecurityGroup:
-    Properties:
-      GroupDescription: ControlPlaneSecurityGroup
-      VpcId:
-        Ref: Vpc
-    Type: AWS::EC2::SecurityGroup
   DatabaseSubnet00:
     Properties:
       AvailabilityZone: eu-west-1a

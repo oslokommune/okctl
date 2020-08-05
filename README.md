@@ -1,4 +1,4 @@
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md) [![codecov](https://codecov.io/gh/oslokommune/okctl/branch/master/graph/badge.svg)](https://codecov.io/gh/oslokommune/okctl) [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=oslokommune_okctl&metric=security_rating)](https://sonarcloud.io/dashboard?id=oslokommune_okctl) [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=oslokommune_okctl&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=oslokommune_okctl) [![Go Report Card](https://goreportcard.com/badge/github.com/oslokommune/okctl)](https://goreportcard.com/report/github.com/oslokommune/okctl)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](CODE_OF_CONDUCT.md) [![codecov](https://codecov.io/gh/oslokommune/okctl/branch/master/graph/badge.svg)](https://codecov.io/gh/oslokommune/okctl) [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=oslokommune_okctl&metric=security_rating)](https://sonarcloud.io/dashboard?id=oslokommune_okctl) [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=oslokommune_okctl&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=oslokommune_okctl) [![Go Report Card](https://goreportcard.com/badge/github.com/oslokommune/okctl)](https://goreportcard.com/report/github.com/oslokommune/okctl)
 
 # `okctl` - Opinionated and effortless infrastructure and application management
 
@@ -25,6 +25,19 @@ brew install oslokommune/tap/okctl
 ```bash
 okctl --help
 ```
+
+## Roadmap
+
+We have a basic cluster up and running, and we are currently working on getting the basic components of the cluster deployed:
+
+- [ ] [SealedSecrets](https://github.com/bitnami-labs/sealed-secrets) for storing secrets securely in git
+- [ ] [AWS ALB Ingress Controller](https://github.com/kubernetes-sigs/aws-alb-ingress-controller) creates load balancers for incoming traffic
+- [ ] [ExternalDNS](https://github.com/kubernetes-sigs/external-dns) ensures humane DNS hostnames 
+- [ ] [Autoscaler](https://github.com/kubernetes/autoscaler/) for adjusting the size of pods and nodes
+- [ ] [Argo CD](https://github.com/argoproj/argo-cd) gives us continuous delivery
+- [ ] [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator) for monitoring
+- [ ] [Amazon Elastic Block Store (EBS) CSI driver](https://github.com/kubernetes-sigs/aws-ebs-csi-driver/) for block storage
+- [ ] [Loki](https://github.com/grafana/loki) for consuming logs
 
 ## Compare and contrast
 

@@ -3,7 +3,7 @@ module github.com/oslokommune/okctl
 go 1.14
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.0.7
+	github.com/AlecAivazis/survey/v2 v2.1.0
 	github.com/apparentlymart/go-cidr v1.0.1
 	github.com/aws/aws-sdk-go v1.27.0
 	github.com/awslabs/goformation/v4 v4.8.0

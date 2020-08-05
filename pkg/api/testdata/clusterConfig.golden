@@ -1,4 +1,9 @@
 apiVersion: eksctl.io/v1alpha5
+fargateProfiles:
+- name: fp-default
+  selectors:
+  - namespace: default
+  - namespace: kube-system
 iam:
   fargatePodExecutionRolePermissionsBoundary: ""
   serviceRolePermissionsBoundary: ""

@@ -21,10 +21,11 @@ const (
 type ClusterConfig struct {
 	metav1.TypeMeta `json:",inline"`
 
-	Metadata   ClusterMeta `json:"metadata"`
-	IAM        ClusterIAM  `json:"iam"`
-	VPC        ClusterVPC  `json:"vpc"`
-	NodeGroups []NodeGroup `json:"nodeGroups"`
+	Metadata        ClusterMeta      `json:"metadata"`
+	IAM             ClusterIAM       `json:"iam"`
+	VPC             ClusterVPC       `json:"vpc"`
+	FargateProfiles []FargateProfile `json:"fargateProfiles,omitempty"`
+	NodeGroups      []NodeGroup      `json:"nodeGroups"`
 }
 
 // ClusterMeta comes from eksctl and maps up what we need
@@ -66,6 +67,18 @@ type ClusterNetwork struct {
 	CIDR string `json:"cidr"`
 }
 
+// FargateProfile comes from eksctl and maps up what we need
+type FargateProfile struct {
+	Name      string                   `json:"name"`
+	Selectors []FargateProfileSelector `json:"selectors"`
+}
+
+// FargateProfileSelector comes from eksctl and maps up what we need
+type FargateProfileSelector struct {
+	Namespace string            `json:"namespace"`
+	Labels    map[string]string `json:"labels,omitempty"`
+}
+
 // NodeGroup comes from eksctl and maps up what we need
 type NodeGroup struct {
 }
@@ -85,6 +98,15 @@ func NewClusterConfig() *ClusterConfig {
 		TypeMeta: ClusterConfigTypeMeta(),
 		IAM: ClusterIAM{
 			WithOIDC: true,
+		},
+		FargateProfiles: []FargateProfile{
+			{
+				Name: "fp-default",
+				Selectors: []FargateProfileSelector{
+					{Namespace: "default"},
+					{Namespace: "kube-system"},
+				},
+			},
 		},
 		VPC: ClusterVPC{
 			ClusterEndpoints: ClusterEndpoints{

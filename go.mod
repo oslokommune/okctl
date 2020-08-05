@@ -29,7 +29,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sanity-io/litter v1.2.0
 	github.com/sebdah/goldie/v2 v2.5.1
-	github.com/sirupsen/logrus v1.4.2
+	github.com/sirupsen/logrus v1.6.0
 	github.com/smartystreets/assertions v1.0.0 // indirect
 	github.com/spf13/afero v1.3.3
 	github.com/spf13/cobra v1.0.0

@@ -6,7 +6,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.1.0
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/aws/aws-sdk-go v1.27.0
-	github.com/awslabs/goformation/v4 v4.8.0
+	github.com/awslabs/goformation/v4 v4.14.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dustin/go-humanize v1.0.0
 	github.com/foolin/pagser v0.1.5

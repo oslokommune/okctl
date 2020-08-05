@@ -146,7 +146,9 @@ func (m *Manager) collectOutputs() error {
 				return fmt.Errorf("already have output with name: %s", key)
 			}
 
-			m.Template.Outputs[key] = value
+			m.Template.Outputs[key] = cloudformation.Output{
+				Value: value,
+			}
 		}
 	}
 

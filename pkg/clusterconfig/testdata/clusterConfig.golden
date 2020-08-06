@@ -27,11 +27,11 @@ nodeGroups:
     k8s.io/cluster-autoscaler/enabled: "true"
     k8s.io/cluster-autoscaler/test: owned
 vpc:
-  cidr: ""
+  cidr: 192.168.0.0/20
   clusterEndpoints:
     privateAccess: true
     publicAccess: true
-  id: ""
+  id: vpc-0e9801d129EXAMPLE
   subnets:
     private:
       eu-west-1a:

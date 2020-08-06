@@ -134,6 +134,8 @@ func (a *args) Build() *api.ClusterConfig {
 			},
 		},
 		VPC: api.ClusterVPC{
+			ID:   a.vpcID,
+			CIDR: a.vpcCidr,
 			ClusterEndpoints: api.ClusterEndpoints{
 				PrivateAccess: true,
 				PublicAccess:  true,

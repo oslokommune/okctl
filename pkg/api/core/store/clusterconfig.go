@@ -32,7 +32,7 @@ func (c *clusterConfig) GetClusterConfig(env string) (*api.ClusterConfig, error)
 		return nil, err
 	}
 
-	cfg := api.NewClusterConfig()
+	cfg := &api.ClusterConfig{}
 
 	err = yaml.Unmarshal(data, cfg)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/clusterconfig"
 )
 
 type clusterConfig struct {
@@ -25,28 +26,12 @@ func (c *clusterConfig) CreateClusterConfig(_ context.Context, opts api.CreateCl
 		return nil, errors.E(err, "failed to retrieve stored vpc state")
 	}
 
-	cfg := api.NewClusterConfig()
-
-	cfg.Metadata.Name = opts.ClusterName
-	cfg.Metadata.Region = opts.Region
-	cfg.VPC.ID = vpc.ID
-	cfg.VPC.CIDR = opts.Cidr
-	cfg.IAM.FargatePodExecutionRolePermissionsBoundary = v1alpha1.PermissionsBoundaryARN(opts.AwsAccountID)
-	cfg.IAM.ServiceRolePermissionsBoundary = v1alpha1.PermissionsBoundaryARN(opts.AwsAccountID)
-
-	for _, p := range vpc.PublicSubnets {
-		cfg.VPC.Subnets.Public[p.AvailabilityZone] = api.ClusterNetwork{
-			ID:   p.ID,
-			CIDR: p.Cidr,
-		}
-	}
-
-	for _, p := range vpc.PrivateSubnets {
-		cfg.VPC.Subnets.Private[p.AvailabilityZone] = api.ClusterNetwork{
-			ID:   p.ID,
-			CIDR: p.Cidr,
-		}
-	}
+	cfg := clusterconfig.New(opts.ClusterName).
+		PermissionsBoundary(v1alpha1.PermissionsBoundaryARN(opts.AwsAccountID)).
+		Region(opts.Region).
+		Vpc(vpc.ID, opts.Cidr).
+		Subnets(vpc.PublicSubnets, vpc.PrivateSubnets).
+		Build()
 
 	err = c.store.SaveClusterConfig(cfg)
 	if err != nil {

@@ -27,7 +27,7 @@ func TestEksctlDeleteCluster(t *testing.T) {
 	}{
 		{
 			name: "Should work",
-			cfg:  api.NewClusterConfig(),
+			cfg:  &api.ClusterConfig{},
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
@@ -40,7 +40,7 @@ func TestEksctlDeleteCluster(t *testing.T) {
 		},
 		{
 			name: "Should fail",
-			cfg:  api.NewClusterConfig(),
+			cfg:  &api.ClusterConfig{},
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
@@ -79,7 +79,7 @@ func TestEksctlCreateCluster(t *testing.T) {
 	}{
 		{
 			name: "Should work",
-			cfg:  api.NewClusterConfig(),
+			cfg:  &api.ClusterConfig{},
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
@@ -92,7 +92,7 @@ func TestEksctlCreateCluster(t *testing.T) {
 		},
 		{
 			name: "Should fail",
-			cfg:  api.NewClusterConfig(),
+			cfg:  &api.ClusterConfig{},
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,

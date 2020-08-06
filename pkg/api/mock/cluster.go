@@ -7,6 +7,7 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/clusterconfig"
 )
 
 const (
@@ -138,21 +139,12 @@ func DefaultVpcPrivateSubnets() []api.VpcSubnet {
 
 // DefaultClusterConfig returns a cluster config with defaults set
 func DefaultClusterConfig() *api.ClusterConfig {
-	cfg := api.NewClusterConfig()
-
-	cfg.Metadata.Name = DefaultClusterName
-	cfg.Metadata.Region = DefaultRegion
-
-	cfg.VPC.ID = DefaultVpcID
-	cfg.VPC.CIDR = DefaultCidr
-
-	cfg.VPC.Subnets.Public = DefaultPublicSubnets()
-	cfg.VPC.Subnets.Private = DefaultPrivateSubnets()
-
-	cfg.IAM.FargatePodExecutionRolePermissionsBoundary = v1alpha1.PermissionsBoundaryARN(DefaultAWSAccountID)
-	cfg.IAM.ServiceRolePermissionsBoundary = v1alpha1.PermissionsBoundaryARN(DefaultAWSAccountID)
-
-	return cfg
+	return clusterconfig.New(DefaultClusterName).
+		PermissionsBoundary(v1alpha1.PermissionsBoundaryARN(DefaultAWSAccountID)).
+		Region(DefaultRegion).
+		Vpc(DefaultVpcID, DefaultCidr).
+		Subnets(DefaultVpcPublicSubnets(), DefaultVpcPrivateSubnets()).
+		Build()
 }
 
 // DefaultVpc returns a vpc with defaults set

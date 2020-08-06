@@ -24,7 +24,7 @@ type ClusterConfig struct {
 	Metadata        ClusterMeta      `json:"metadata"`
 	IAM             ClusterIAM       `json:"iam"`
 	VPC             ClusterVPC       `json:"vpc"`
-	FargateProfiles []FargateProfile `json:"fargateProfiles,omitempty"`
+	FargateProfiles []FargateProfile `json:"fargateProfiles"`
 	NodeGroups      []NodeGroup      `json:"nodeGroups"`
 }
 
@@ -75,50 +75,31 @@ type FargateProfile struct {
 
 // FargateProfileSelector comes from eksctl and maps up what we need
 type FargateProfileSelector struct {
-	Namespace string            `json:"namespace"`
-	Labels    map[string]string `json:"labels,omitempty"`
+	Namespace string `json:"namespace"`
 }
 
 // NodeGroup comes from eksctl and maps up what we need
 type NodeGroup struct {
+	Name              string            `json:"name"`
+	InstanceType      string            `json:"instanceType"`
+	Labels            map[string]string `json:"labels"`
+	Tags              map[string]string `json:"tags"`
+	PrivateNetworking bool              `json:"privateNetworking"`
+	IAM               NodeGroupIAM      `json:"iam"`
+
+	ScalingConfig `json:",inline"`
 }
 
-// ClusterConfigTypeMeta returns the defaults
-func ClusterConfigTypeMeta() metav1.TypeMeta {
-	return metav1.TypeMeta{
-		Kind:       ClusterConfigKind,
-		APIVersion: ClusterConfigAPIVersion,
-	}
+// NodeGroupIAM comes from eksctl and maps up what we need
+type NodeGroupIAM struct {
+	InstanceRolePermissionsBoundary string `json:"instanceRolePermissionsBoundary"`
 }
 
-// NewClusterConfig fills in all known default
-// values
-func NewClusterConfig() *ClusterConfig {
-	return &ClusterConfig{
-		TypeMeta: ClusterConfigTypeMeta(),
-		IAM: ClusterIAM{
-			WithOIDC: true,
-		},
-		FargateProfiles: []FargateProfile{
-			{
-				Name: "fp-default",
-				Selectors: []FargateProfileSelector{
-					{Namespace: "default"},
-					{Namespace: "kube-system"},
-				},
-			},
-		},
-		VPC: ClusterVPC{
-			ClusterEndpoints: ClusterEndpoints{
-				PrivateAccess: true,
-				PublicAccess:  true,
-			},
-			Subnets: ClusterSubnets{
-				Private: map[string]ClusterNetwork{},
-				Public:  map[string]ClusterNetwork{},
-			},
-		},
-	}
+// ScalingConfig comes from eksctl and maps up what we need
+type ScalingConfig struct {
+	DesiredCapacity int `json:"desiredCapacity"`
+	MinSize         int `json:"minSize"`
+	MaxSize         int `json:"maxSize"`
 }
 
 // YAML returns a serializes version of the config

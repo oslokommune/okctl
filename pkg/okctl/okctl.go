@@ -160,12 +160,14 @@ func (o *Okctl) newPersisterProvider(env string) error {
 	if err != nil {
 		return err
 	}
-
+	
 	appOpts := state.AppStoreOpts{
 		Opts: state.Opts{
 			BaseDir:    appDir,
 			ConfigFile: config.DefaultConfig,
-			Defaults:   map[string]string{},
+			Defaults:   map[string]string{
+				"kubeconfig": path.Join(config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterKubeConfig),
+			},
 		},
 		State: o.AppData,
 	}
@@ -189,7 +191,6 @@ func (o *Okctl) newPersisterProvider(env string) error {
 			ConfigFile: config.DefaultRepositoryConfig,
 			Defaults: map[string]string{
 				"cluster_config":      path.Join(outputDir, config.DefaultClusterBaseDir, config.DefaultClusterConfig),
-				"kubeconfig":          path.Join(outputDir, config.DefaultClusterBaseDir, config.DefaultClusterKubeConfig),
 				"vpc_cloud_formation": path.Join(outputDir, config.DefaultVpcBaseDir, config.DefaultVpcCloudFormationTemplate),
 				"vpc_outputs":         path.Join(outputDir, config.DefaultVpcBaseDir, config.DefaultVpcOutputs),
 			},

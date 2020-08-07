@@ -41,6 +41,8 @@ const (
 	DefaultLogBackups = 3
 	// DefaultLogSizeInMb determines how much storage we will consume
 	DefaultLogSizeInMb = 50
+	// DefaultCredentialsDirName sets the name of the directory for creds
+	DefaultCredentialsDirName = "credentials"
 
 	// DefaultRepositoryConfig is the default filename of the okctl repository config
 	DefaultRepositoryConfig = ".okctl.yml"

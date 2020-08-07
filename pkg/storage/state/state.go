@@ -24,6 +24,7 @@ type Persister interface {
 	ReadFromDefault(def string) ([]byte, error)
 	WriteToDefault(def string, b []byte) error
 	DeleteDefault(def string) error
+	GetDefaultPath(def string) (string, error)
 }
 
 // RepositoryPersister defines an interface for working on the repo state
@@ -87,6 +88,16 @@ type repoStore struct {
 	state *repository.Data
 }
 
+// GetDefaultPath returns the path to the default
+func (r *repoStore) GetDefaultPath(def string) (string, error) {
+	loc, ok := r.defaults[def]
+	if !ok {
+		return "", fmt.Errorf("no default for: %s, when trying to get", def)
+	}
+
+	return loc, nil
+}
+
 // SaveState will write the current repository state
 func (r *repoStore) SaveState() error {
 	data, err := r.state.YAML()
@@ -111,6 +122,16 @@ type AppStoreOpts struct {
 type appStore struct {
 	*store
 	state *application.Data
+}
+
+// GetDefaultPath returns the path to the default
+func (a *appStore) GetDefaultPath(def string) (string, error) {
+	loc, ok := a.defaults[def]
+	if !ok {
+		return "", fmt.Errorf("no default for: %s, when trying to get", def)
+	}
+
+	return loc, nil
 }
 
 // SaveState will write the current application state

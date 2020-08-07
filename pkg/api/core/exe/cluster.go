@@ -4,6 +4,7 @@ package exe
 import (
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/binaries"
+	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/binaries/run/eksctl"
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
 )
@@ -13,7 +14,12 @@ type cluster struct {
 }
 
 // CreateCluster invokes a CLI for performing create
-func (c *cluster) CreateCluster(config *api.ClusterConfig) error {
+func (c *cluster) CreateCluster(kubeConfigPath string, config *api.ClusterConfig) error {
+	a, err := c.provider.AwsIamAuthenticator(awsiamauthenticator.Version)
+	if err != nil {
+		return err
+	}
+
 	k, err := c.provider.Kubectl(kubectl.Version)
 	if err != nil {
 		return err
@@ -24,9 +30,10 @@ func (c *cluster) CreateCluster(config *api.ClusterConfig) error {
 		return err
 	}
 
+	cli.AddToPath(a.BinaryPath)
 	cli.AddToPath(k.BinaryPath)
 
-	_, err = cli.CreateCluster(config)
+	_, err = cli.CreateCluster(kubeConfigPath, config)
 
 	return err
 }

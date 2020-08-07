@@ -39,10 +39,22 @@ const (
 	DefaultVpcStackName = "test-vpc-pro"
 	// DefaultVpcCloudFormationTemplate is a default cloud formation template
 	DefaultVpcCloudFormationTemplate = "something"
+	// DefaultKubeConfigPath is the default path for the kubeconfig
+	DefaultKubeConfigPath = "/cluster/kubeconfig"
+	// DefaultKubeConfigContent is the default content of kubeconfig
+	DefaultKubeConfigContent = "meh"
 )
 
 // ErrBad just defines a mocked error
 var ErrBad = fmt.Errorf("something bad")
+
+// DefaultKubeConfig returns an initialised kubeconfig
+func DefaultKubeConfig() *api.KubeConfig {
+	return &api.KubeConfig{
+		Path:    DefaultKubeConfigPath,
+		Content: DefaultKubeConfigContent,
+	}
+}
 
 // DefaultVpcCreateOpts returns options for creating a vpc with defaults set
 func DefaultVpcCreateOpts() api.CreateVpcOpts {
@@ -250,13 +262,13 @@ func NewBadVpcCloud() *VpcCloud {
 
 // ClusterExe provides a mock for the cluster exe interface
 type ClusterExe struct {
-	CreateClusterFn func(*api.ClusterConfig) error
+	CreateClusterFn func(string, *api.ClusterConfig) error
 	DeleteClusterFn func(*api.ClusterConfig) error
 }
 
 // CreateCluster invokes the mocked create cluster function
-func (c *ClusterExe) CreateCluster(config *api.ClusterConfig) error {
-	return c.CreateClusterFn(config)
+func (c *ClusterExe) CreateCluster(path string, config *api.ClusterConfig) error {
+	return c.CreateClusterFn(path, config)
 }
 
 // DeleteCluster invokes the mocked delete cluster function
@@ -267,7 +279,7 @@ func (c *ClusterExe) DeleteCluster(config *api.ClusterConfig) error {
 // NewGoodClusterExe returns a cluster exe that will succeed
 func NewGoodClusterExe() *ClusterExe {
 	return &ClusterExe{
-		CreateClusterFn: func(config *api.ClusterConfig) error {
+		CreateClusterFn: func(path string, config *api.ClusterConfig) error {
 			return nil
 		},
 		DeleteClusterFn: func(config *api.ClusterConfig) error {
@@ -279,7 +291,7 @@ func NewGoodClusterExe() *ClusterExe {
 // NewBadClusterExe returns a cluster exe that will fail
 func NewBadClusterExe() *ClusterExe {
 	return &ClusterExe{
-		CreateClusterFn: func(config *api.ClusterConfig) error {
+		CreateClusterFn: func(path string, config *api.ClusterConfig) error {
 			return ErrBad
 		},
 		DeleteClusterFn: func(config *api.ClusterConfig) error {
@@ -373,6 +385,43 @@ func NewGoodClusterConfigStore() *ClusterConfigStore {
 		},
 		GetClusterConfigFn: func(env string) (*api.ClusterConfig, error) {
 			return DefaultClusterConfig(), nil
+		},
+	}
+}
+
+// KubeConfigStore provides a mock for the kubeconfig store
+type KubeConfigStore struct {
+	CreateKubeConfigFn func() (string, error)
+	GetKubeConfigFn    func() (*api.KubeConfig, error)
+	DeleteKubeConfigFn func() error
+}
+
+// CreateKubeConfig mocks the create
+func (k *KubeConfigStore) CreateKubeConfig() (string, error) {
+	return k.CreateKubeConfigFn()
+}
+
+// GetKubeConfig mocks the get
+func (k *KubeConfigStore) GetKubeConfig() (*api.KubeConfig, error) {
+	return k.GetKubeConfigFn()
+}
+
+// DeleteKubeConfig mocks the delete
+func (k *KubeConfigStore) DeleteKubeConfig() error {
+	return k.DeleteKubeConfigFn()
+}
+
+// NewGoodKubeConfigStore returns a store that succeeds
+func NewGoodKubeConfigStore() *KubeConfigStore {
+	return &KubeConfigStore{
+		CreateKubeConfigFn: func() (string, error) {
+			return DefaultKubeConfigPath, nil
+		},
+		GetKubeConfigFn: func() (*api.KubeConfig, error) {
+			return DefaultKubeConfig(), nil
+		},
+		DeleteKubeConfigFn: func() error {
+			return nil
 		},
 	}
 }

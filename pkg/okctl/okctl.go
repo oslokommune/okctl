@@ -64,6 +64,7 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 	clusterService := core.NewClusterService(
 		store.NewClusterStore(o.PersisterProvider),
 		store.NewClusterConfigStore(o.PersisterProvider),
+		store.NewKubeConfigStore(o.PersisterProvider),
 		exe.NewClusterExe(o.BinariesProvider),
 	)
 
@@ -188,6 +189,7 @@ func (o *Okctl) newPersisterProvider(env string) error {
 			ConfigFile: config.DefaultRepositoryConfig,
 			Defaults: map[string]string{
 				"cluster_config":      path.Join(outputDir, config.DefaultClusterBaseDir, config.DefaultClusterConfig),
+				"kubeconfig":          path.Join(outputDir, config.DefaultClusterBaseDir, config.DefaultClusterKubeConfig),
 				"vpc_cloud_formation": path.Join(outputDir, config.DefaultVpcBaseDir, config.DefaultVpcCloudFormationTemplate),
 				"vpc_outputs":         path.Join(outputDir, config.DefaultVpcBaseDir, config.DefaultVpcOutputs),
 			},

@@ -125,11 +125,12 @@ func (e *Eksctl) DeleteCluster(cfg *api.ClusterConfig) ([]byte, error) {
 
 // CreateCluster invokes eksctl create cluster using the provided
 // cluster configuration as input
-func (e *Eksctl) CreateCluster(cfg *api.ClusterConfig) ([]byte, error) {
+func (e *Eksctl) CreateCluster(kubeConfigPath string, cfg *api.ClusterConfig) ([]byte, error) {
 	args := []string{
 		"create",
 		"cluster",
-		"--write-kubeconfig=false",
+		"--write-kubeconfig=true",
+		fmt.Sprintf("--kubeconfig=%s", kubeConfigPath),
 	}
 
 	b, err := e.run(args, cfg)

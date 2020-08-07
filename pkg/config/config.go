@@ -51,6 +51,8 @@ const (
 
 	// DefaultClusterConfig is the default filename of the eksctl cluster config
 	DefaultClusterConfig = "cluster.yml"
+	// DefaultClusterKubeConfig is the default filename of the kubectl kubeconfig
+	DefaultClusterKubeConfig = "kubeconfig"
 	// DefaultClusterBaseDir is the default directory name of the eksctl cluster config
 	DefaultClusterBaseDir = "cluster"
 

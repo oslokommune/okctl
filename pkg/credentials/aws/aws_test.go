@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	aws2 "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 	"github.com/oslokommune/okctl/pkg/api/mock"
@@ -54,7 +53,6 @@ func TestNewAuthSAML(t *testing.T) {
 func TestAuthRaw(t *testing.T) {
 	c := awsmock.DefaultCredentials()
 	c.Expires = time.Now().Add(60 * time.Minute)
-	c.Source.Expiration = aws2.Time(c.Expires)
 
 	testCases := []struct {
 		name        string
@@ -64,19 +62,20 @@ func TestAuthRaw(t *testing.T) {
 	}{
 		{
 			name:        "Should work",
-			auth:        aws.New(aws.NewAuthStatic(c)),
+			auth:        aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(c)),
 			expect:      c,
 			expectError: false,
 		},
 		{
 			name:        "Should fail, because the creds have expired",
-			auth:        aws.New(aws.NewAuthStatic(awsmock.DefaultCredentials())),
+			auth:        aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(awsmock.DefaultCredentials())),
 			expect:      "no valid credentials: authenticator[0]: expired credentials",
 			expectError: true,
 		},
 		{
 			name: "Should work, because one set of creds are valid",
 			auth: aws.New(
+				aws.NewInMemoryStorage(),
 				aws.NewAuthStatic(awsmock.DefaultCredentials()),
 				aws.NewAuthStatic(c),
 			),

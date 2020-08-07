@@ -40,7 +40,7 @@ require (
 	golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79 // indirect
 	golang.org/x/net v0.0.0-20200505041828-1ed23360d12c // indirect
 	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1 // indirect
-	gopkg.in/ini.v1 v1.56.0 // indirect
+	gopkg.in/ini.v1 v1.57.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	k8s.io/apimachinery v0.18.6
 	sigs.k8s.io/yaml v1.2.0

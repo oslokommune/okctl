@@ -131,7 +131,12 @@ func (o *Okctl) Region() string {
 
 // initialiseProviders knows how to create all required providers
 func (o *Okctl) initialiseProviders(env, awsAccountID string) error {
-	err := o.newCredentialsProvider(awsAccountID)
+	err := o.newPersisterProvider(env)
+	if err != nil {
+		return err
+	}
+
+	err = o.newCredentialsProvider(awsAccountID)
 	if err != nil {
 		return err
 	}
@@ -142,11 +147,6 @@ func (o *Okctl) initialiseProviders(env, awsAccountID string) error {
 	}
 
 	err = o.newCloudProvider()
-	if err != nil {
-		return err
-	}
-
-	err = o.newPersisterProvider(env)
 	if err != nil {
 		return err
 	}
@@ -166,7 +166,9 @@ func (o *Okctl) newPersisterProvider(env string) error {
 			BaseDir:    appDir,
 			ConfigFile: config.DefaultConfig,
 			Defaults: map[string]string{
-				"kubeconfig": path.Join(config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterKubeConfig),
+				"kubeconfig":      path.Join(config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterKubeConfig),
+				"aws_config":      path.Join(config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterAwsConfig),
+				"aws_credentials": path.Join(config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterAwsCredentials),
 			},
 		},
 		State: o.AppData,
@@ -243,9 +245,10 @@ func (o *Okctl) newCredentialsProvider(awsAccountID string) error {
 		return errors.E(errors.Errorf("we only support retrieving credentials interactively for now"), errors.Invalid)
 	}
 
+	authStore := aws.NewIniStorage(o.PersisterProvider)
 	saml := aws.NewAuthSAML(awsAccountID, o.Region(), scrape.New(), aws.DefaultStsProvider, aws.Interactive(o.Username()))
 
-	o.CredentialsProvider = credentials.New(aws.New(saml))
+	o.CredentialsProvider = credentials.New(aws.New(authStore, saml))
 
 	return nil
 }

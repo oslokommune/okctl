@@ -45,7 +45,6 @@ func DefaultCredentials() *awspkg.Credentials {
 		PrincipalARN:    DefaultPrincipalARN,
 		Expires:         t.Local(),
 		Region:          DefaultRegion,
-		Source:          DefaultStsCredentials(),
 	}
 }
 
@@ -66,7 +65,6 @@ func DefaultValidCredentials() *awspkg.Credentials {
 	creds := DefaultCredentials()
 
 	creds.Expires = time.Now().Add(1 * time.Hour).Local()
-	creds.Source.Expiration = aws.Time(creds.Expires)
 
 	return creds
 }

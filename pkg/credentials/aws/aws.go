@@ -2,6 +2,7 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
 	"regexp"
 	"strings"
@@ -16,6 +17,8 @@ import (
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/credentials/aws/scrape"
+	"github.com/oslokommune/okctl/pkg/storage/state"
+	"gopkg.in/ini.v1"
 )
 
 const (
@@ -31,8 +34,6 @@ type Credentials struct {
 	PrincipalARN    string    // x_principal_arn
 	Expires         time.Time // x_security_token_expires
 	Region          string
-
-	Source *sts.Credentials
 }
 
 // Authenticator knows how to orchestrate getting credentials
@@ -48,12 +49,19 @@ type Retriever interface {
 	Valid() bool
 }
 
+// Storer knows how to store and retrieve credentials
+type Storer interface {
+	Save(credentials *Credentials) error
+	Get() (*Credentials, error)
+}
+
 // StsProviderFn knows how to create an STS API client
 type StsProviderFn func(session *session.Session) stsiface.STSAPI
 
 // Auth stores state for fetching credentials
 type Auth struct {
 	Retrievers []Retriever
+	Store      Storer
 	creds      *Credentials
 }
 
@@ -89,6 +97,12 @@ func (a *Auth) Raw() (*Credentials, error) {
 		a.creds = creds
 	}
 
+	// Save the credentials for future use
+	err := a.Store.Save(a.creds)
+	if err != nil {
+		return nil, err
+	}
+
 	return a.creds, nil
 }
 
@@ -100,6 +114,13 @@ func AreExpired(expires time.Time) bool {
 // Resolve the available authenticators until we succeed
 func (a *Auth) Resolve() (*Credentials, error) {
 	var accumulatedErrors []string
+
+	// Lets try storage first, if there is no error and
+	// they aren't expired, simply return them
+	creds, err := a.Store.Get()
+	if err == nil && !AreExpired(creds.Expires) {
+		return creds, nil
+	}
 
 	for i, retriever := range a.Retrievers {
 		if retriever.Valid() {
@@ -113,11 +134,14 @@ func (a *Auth) Resolve() (*Credentials, error) {
 					fmt.Sprintf("authenticator[%d]: %s", i, err.Error()),
 				)
 
+				// Invalidate the retriever
+				retriever.Invalidate()
+
 				continue
 			}
 
 			// We just got these credentials, they shouldn't have expired already
-			// which means they are static or expired from an AWS credentials profile
+			// which means this retriever is static or otherwise broken
 			if AreExpired(creds.Expires) {
 				retriever.Invalidate()
 
@@ -138,8 +162,9 @@ func (a *Auth) Resolve() (*Credentials, error) {
 
 // New returns an AWS credentials provider, it will attempt to retrieve valid credentials
 // by following the retrievers in the order they are provided
-func New(retriever Retriever, retrievers ...Retriever) *Auth {
+func New(store Storer, retriever Retriever, retrievers ...Retriever) *Auth {
 	return &Auth{
+		Store:      store,
 		Retrievers: append([]Retriever{retriever}, retrievers...),
 	}
 }
@@ -285,7 +310,6 @@ func (a *AuthSAML) Retrieve() (*Credentials, error) {
 		PrincipalARN:    aws.StringValue(resp.AssumedRoleUser.Arn),
 		Expires:         resp.Credentials.Expiration.Local(),
 		Region:          a.Region,
-		Source:          resp.Credentials,
 	}, nil
 }
 
@@ -346,4 +370,119 @@ func Interactive(userName string) PopulateFn {
 
 		return a.Validate()
 	}
+}
+
+// IniStorage contains state for storage
+type IniStorage struct {
+	provider state.PersisterProvider
+}
+
+// IniCredentials represents aws credentials in ini format
+type IniCredentials struct {
+	AccessKeyID     string    `ini:"aws_access_key_id"`
+	SecretAccessKey string    `ini:"aws_secret_access_key"`
+	SessionToken    string    `ini:"aws_session_token"`
+	SecurityToken   string    `ini:"aws_security_token"`
+	PrincipalARN    string    `ini:"x_principal_arn"`
+	Expires         time.Time `ini:"x_security_token_expires"`
+}
+
+// IniConfig represents the config portion of aws config
+type IniConfig struct {
+	Region string `ini:"region"`
+}
+
+// Save stores the credentials
+func (s *IniStorage) Save(credentials *Credentials) error {
+	cfg := ini.Empty()
+
+	profile, err := cfg.NewSection("default")
+	if err != nil {
+		return err
+	}
+
+	iniCreds := &IniCredentials{
+		AccessKeyID:     credentials.AccessKeyID,
+		SecretAccessKey: credentials.SecretAccessKey,
+		SessionToken:    credentials.SessionToken,
+		SecurityToken:   credentials.SecurityToken,
+		PrincipalARN:    credentials.PrincipalARN,
+		Expires:         credentials.Expires,
+	}
+
+	err = profile.ReflectFrom(iniCreds)
+	if err != nil {
+		return err
+	}
+
+	buf := new(bytes.Buffer)
+
+	_, err = cfg.WriteTo(buf)
+	if err != nil {
+		return err
+	}
+	
+	return s.provider.Application().WriteToDefault("aws_credentials", buf.Bytes())
+}
+
+// Get retrieves the credentials
+func (s *IniStorage) Get() (*Credentials, error) {
+	data, err := s.provider.Application().ReadFromDefault("aws_credentials")
+	if err != nil {
+		return nil, err
+	}
+
+	creds := &IniCredentials{}
+
+	cfg, err := ini.Load(data)
+	if err != nil {
+		return nil, err
+	}
+
+	err = cfg.Section("default").MapTo(creds)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Credentials{
+		AccessKeyID:     creds.AccessKeyID,
+		SecretAccessKey: creds.SecretAccessKey,
+		SessionToken:    creds.SessionToken,
+		SecurityToken:   creds.SecurityToken,
+		PrincipalARN:    creds.PrincipalARN,
+		Expires:         creds.Expires,
+	}, nil
+}
+
+// NewIniStorage creates a new ini storer
+func NewIniStorage(provider state.PersisterProvider) *IniStorage {
+	return &IniStorage{
+		provider: provider,
+	}
+}
+
+// InMemoryStorage stores the config in memory
+type InMemoryStorage struct {
+	creds *Credentials
+}
+
+// Save the credentials in memory
+func (n *InMemoryStorage) Save(credentials *Credentials) error {
+	n.creds = credentials
+
+	return nil
+}
+
+// Get the credentials from memory
+func (n *InMemoryStorage) Get() (*Credentials, error) {
+	if n.creds == nil {
+		return nil, fmt.Errorf("no credentials available")
+	}
+
+	return n.creds, nil
+}
+
+// NewInMemoryStorage creates a new in memory store, useful for tests
+func NewInMemoryStorage() *InMemoryStorage {
+	return &InMemoryStorage{}
 }

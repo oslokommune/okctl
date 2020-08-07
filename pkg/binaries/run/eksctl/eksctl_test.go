@@ -32,7 +32,7 @@ func TestEksctlDeleteCluster(t *testing.T) {
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
 				"eksctl",
-				aws.New(aws.NewAuthStatic(mock.DefaultValidCredentials())),
+				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
 				fakeExecCommandSuccess(),
 			),
 			// nolint: lll
@@ -45,7 +45,7 @@ func TestEksctlDeleteCluster(t *testing.T) {
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
 				"eksctl",
-				aws.New(aws.NewAuthStatic(mock.DefaultValidCredentials())),
+				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
 				fakeExecCommandFailure(),
 			),
 			// nolint: lll
@@ -86,7 +86,7 @@ func TestEksctlCreateCluster(t *testing.T) {
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
 				"eksctl",
-				aws.New(aws.NewAuthStatic(mock.DefaultValidCredentials())),
+				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
 				fakeExecCommandSuccess(),
 			),
 			// nolint: lll
@@ -100,7 +100,7 @@ func TestEksctlCreateCluster(t *testing.T) {
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
 				"eksctl",
-				aws.New(aws.NewAuthStatic(mock.DefaultValidCredentials())),
+				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
 				fakeExecCommandFailure(),
 			),
 			// nolint: lll

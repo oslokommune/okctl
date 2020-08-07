@@ -4,6 +4,7 @@ package aws
 import (
 	"bytes"
 	"fmt"
+	"path"
 	"regexp"
 	"strings"
 	"time"
@@ -17,7 +18,7 @@ import (
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/credentials/aws/scrape"
-	"github.com/oslokommune/okctl/pkg/storage/state"
+	"github.com/spf13/afero"
 	"gopkg.in/ini.v1"
 )
 
@@ -27,12 +28,12 @@ const (
 
 // Credentials contains all data required for using AWS
 type Credentials struct {
-	AccessKeyID     string    // aws_access_key_id
-	SecretAccessKey string    // aws_secret_access_key
-	SessionToken    string    // aws_session_token
-	SecurityToken   string    // aws_security_token
-	PrincipalARN    string    // x_principal_arn
-	Expires         time.Time // x_security_token_expires
+	AccessKeyID     string
+	SecretAccessKey string
+	SessionToken    string
+	SecurityToken   string
+	PrincipalARN    string
+	Expires         time.Time
 	Region          string
 }
 
@@ -49,8 +50,9 @@ type Retriever interface {
 	Valid() bool
 }
 
-// Storer knows how to store and retrieve credentials
-type Storer interface {
+// Persister defines the operations required for a concrete
+// implementation for persisting the credentials
+type Persister interface {
 	Save(credentials *Credentials) error
 	Get() (*Credentials, error)
 }
@@ -61,7 +63,7 @@ type StsProviderFn func(session *session.Session) stsiface.STSAPI
 // Auth stores state for fetching credentials
 type Auth struct {
 	Retrievers []Retriever
-	Store      Storer
+	Persister  Persister
 	creds      *Credentials
 }
 
@@ -95,12 +97,12 @@ func (a *Auth) Raw() (*Credentials, error) {
 		}
 
 		a.creds = creds
-	}
 
-	// Save the credentials for future use
-	err := a.Store.Save(a.creds)
-	if err != nil {
-		return nil, err
+		// Save the credentials for future use
+		err = a.Persister.Save(a.creds)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return a.creds, nil
@@ -117,7 +119,7 @@ func (a *Auth) Resolve() (*Credentials, error) {
 
 	// Lets try storage first, if there is no error and
 	// they aren't expired, simply return them
-	creds, err := a.Store.Get()
+	creds, err := a.Persister.Get()
 	if err == nil && !AreExpired(creds.Expires) {
 		return creds, nil
 	}
@@ -162,9 +164,9 @@ func (a *Auth) Resolve() (*Credentials, error) {
 
 // New returns an AWS credentials provider, it will attempt to retrieve valid credentials
 // by following the retrievers in the order they are provided
-func New(store Storer, retriever Retriever, retrievers ...Retriever) *Auth {
+func New(persister Persister, retriever Retriever, retrievers ...Retriever) *Auth {
 	return &Auth{
-		Store:      store,
+		Persister:  persister,
 		Retrievers: append([]Retriever{retriever}, retrievers...),
 	}
 }
@@ -372,12 +374,85 @@ func Interactive(userName string) PopulateFn {
 	}
 }
 
-// IniStorage contains state for storage
-type IniStorage struct {
-	provider state.PersisterProvider
+// IniStorer defines the operations required for writing and reading
+// the serialised credentials
+type IniStorer interface {
+	Write(*IniStorerData) error
+	Read() (*IniStorerData, error)
 }
 
-// IniCredentials represents aws credentials in ini format
+// IniStorerData contains the data to be read and written
+type IniStorerData struct {
+	AwsCredentials []byte
+	AwsConfig      []byte
+}
+
+// FileSystemIniStorer maintains the required state for reading and writing
+// the aws credentials from a file system
+type FileSystemIniStorer struct {
+	FileSystem             *afero.Afero
+	BaseDir                string
+	AwsCredentialsFileName string
+	AwsConfigFileName      string
+}
+
+// NewFileSystemIniStorer returns an initialises file system ini storer
+func NewFileSystemIniStorer(awsConfigFileName, awsCredentialsFileName, baseDir string, fileSystem *afero.Afero) *FileSystemIniStorer {
+	return &FileSystemIniStorer{
+		FileSystem:             fileSystem,
+		BaseDir:                baseDir,
+		AwsCredentialsFileName: awsCredentialsFileName,
+		AwsConfigFileName:      awsConfigFileName,
+	}
+}
+
+// Write the data to the filesystem
+func (f *FileSystemIniStorer) Write(data *IniStorerData) error {
+	err := f.FileSystem.MkdirAll(f.BaseDir, 0744)
+	if err != nil {
+		return err
+	}
+
+	err = f.FileSystem.WriteFile(path.Join(f.BaseDir, f.AwsConfigFileName), data.AwsConfig, 0644)
+	if err != nil {
+		return err
+	}
+
+	return f.FileSystem.WriteFile(path.Join(f.BaseDir, f.AwsCredentialsFileName), data.AwsCredentials, 0644)
+}
+
+// Read the data from the filesystem
+func (f *FileSystemIniStorer) Read() (*IniStorerData, error) {
+	cfg, err := f.FileSystem.ReadFile(path.Join(f.BaseDir, f.AwsConfigFileName))
+	if err != nil {
+		return nil, err
+	}
+
+	creds, err := f.FileSystem.ReadFile(path.Join(f.BaseDir, f.AwsCredentialsFileName))
+	if err != nil {
+		return nil, err
+	}
+
+	return &IniStorerData{
+		AwsCredentials: creds,
+		AwsConfig:      cfg,
+	}, nil
+}
+
+// IniPersister knows how to serialise the credentials to a format
+// compatible with the aws-cli
+type IniPersister struct {
+	store IniStorer
+}
+
+// NewIniPersister creates a new ini storer
+func NewIniPersister(store IniStorer) *IniPersister {
+	return &IniPersister{
+		store: store,
+	}
+}
+
+// IniCredentials serialises the credentials into a ~/.aws/credentials format
 type IniCredentials struct {
 	AccessKeyID     string    `ini:"aws_access_key_id"`
 	SecretAccessKey string    `ini:"aws_secret_access_key"`
@@ -387,59 +462,90 @@ type IniCredentials struct {
 	Expires         time.Time `ini:"x_security_token_expires"`
 }
 
-// IniConfig represents the config portion of aws config
+// IniConfig serialises the credentials into a ~/.aws/config format
 type IniConfig struct {
 	Region string `ini:"region"`
 }
 
-// Save stores the credentials
-func (s *IniStorage) Save(credentials *Credentials) error {
+// IniProfileName sets the aws profile name, we use the default, umm, default
+const IniProfileName = "default"
+
+func serialiseAsIni(v interface{}) ([]byte, error) {
 	cfg := ini.Empty()
 
-	profile, err := cfg.NewSection("default")
+	profile, err := cfg.NewSection(IniProfileName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	iniCreds := &IniCredentials{
-		AccessKeyID:     credentials.AccessKeyID,
-		SecretAccessKey: credentials.SecretAccessKey,
-		SessionToken:    credentials.SessionToken,
-		SecurityToken:   credentials.SecurityToken,
-		PrincipalARN:    credentials.PrincipalARN,
-		Expires:         credentials.Expires,
-	}
-
-	err = profile.ReflectFrom(iniCreds)
+	err = profile.ReflectFrom(v)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	buf := new(bytes.Buffer)
 
 	_, err = cfg.WriteTo(buf)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	
-	return s.provider.Application().WriteToDefault("aws_credentials", buf.Bytes())
+
+	return buf.Bytes(), nil
 }
 
-// Get retrieves the credentials
-func (s *IniStorage) Get() (*Credentials, error) {
-	data, err := s.provider.Application().ReadFromDefault("aws_credentials")
+// Save serialises and stores the provided credentials
+func (s *IniPersister) Save(credentials *Credentials) error {
+	creds, err := serialiseAsIni(&IniCredentials{
+		AccessKeyID:     credentials.AccessKeyID,
+		SecretAccessKey: credentials.SecretAccessKey,
+		SessionToken:    credentials.SessionToken,
+		SecurityToken:   credentials.SecurityToken,
+		PrincipalARN:    credentials.PrincipalARN,
+		Expires:         credentials.Expires,
+	})
+	if err != nil {
+		return err
+	}
+
+	cfg, err := serialiseAsIni(&IniConfig{
+		Region: credentials.Region,
+	})
+	if err != nil {
+		return err
+	}
+
+	return s.store.Write(&IniStorerData{
+		AwsCredentials: creds,
+		AwsConfig:      cfg,
+	})
+}
+
+func deserialiseFromIni(to interface{}, from interface{}) error {
+	cfg, err := ini.Load(from)
+	if err != nil {
+		return err
+	}
+
+	return cfg.Section(IniProfileName).MapTo(to)
+}
+
+// Get retrieves credentials from store and deserializes them
+func (s *IniPersister) Get() (*Credentials, error) {
+	data, err := s.store.Read()
 	if err != nil {
 		return nil, err
 	}
 
 	creds := &IniCredentials{}
 
-	cfg, err := ini.Load(data)
+	err = deserialiseFromIni(creds, data.AwsCredentials)
 	if err != nil {
 		return nil, err
 	}
 
-	err = cfg.Section("default").MapTo(creds)
+	cfg := &IniConfig{}
+
+	err = deserialiseFromIni(cfg, data.AwsConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -451,30 +557,25 @@ func (s *IniStorage) Get() (*Credentials, error) {
 		SecurityToken:   creds.SecurityToken,
 		PrincipalARN:    creds.PrincipalARN,
 		Expires:         creds.Expires,
+		Region:          cfg.Region,
 	}, nil
 }
 
-// NewIniStorage creates a new ini storer
-func NewIniStorage(provider state.PersisterProvider) *IniStorage {
-	return &IniStorage{
-		provider: provider,
-	}
-}
-
-// InMemoryStorage stores the config in memory
-type InMemoryStorage struct {
+// InMemoryPersister is useful for tests and stores the
+// credentials in memory
+type InMemoryPersister struct {
 	creds *Credentials
 }
 
 // Save the credentials in memory
-func (n *InMemoryStorage) Save(credentials *Credentials) error {
+func (n *InMemoryPersister) Save(credentials *Credentials) error {
 	n.creds = credentials
 
 	return nil
 }
 
 // Get the credentials from memory
-func (n *InMemoryStorage) Get() (*Credentials, error) {
+func (n *InMemoryPersister) Get() (*Credentials, error) {
 	if n.creds == nil {
 		return nil, fmt.Errorf("no credentials available")
 	}
@@ -482,7 +583,7 @@ func (n *InMemoryStorage) Get() (*Credentials, error) {
 	return n.creds, nil
 }
 
-// NewInMemoryStorage creates a new in memory store, useful for tests
-func NewInMemoryStorage() *InMemoryStorage {
-	return &InMemoryStorage{}
+// NewInMemoryStorage creates a new in memory persister
+func NewInMemoryStorage() *InMemoryPersister {
+	return &InMemoryPersister{}
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/api/mock"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	awsmock "github.com/oslokommune/okctl/pkg/mock"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -95,6 +96,51 @@ func TestAuthRaw(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.expect, got)
 			}
+		})
+	}
+}
+
+func TestPersister(t *testing.T) {
+	testCases := []struct {
+		name      string
+		persister aws.Persister
+		creds     *aws.Credentials
+	}{
+		{
+			name: "Ini persister",
+			persister: aws.NewIniPersister(aws.NewFileSystemIniStorer(
+				"conf",
+				"creds",
+				"/",
+				&afero.Afero{Fs: afero.NewMemMapFs()},
+			)),
+			creds: awsmock.DefaultCredentials(),
+		},
+		{
+			name:      "In memory persister",
+			persister: aws.NewInMemoryStorage(),
+			creds:     awsmock.DefaultCredentials(),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Run("Get before save should fail", func(t *testing.T) {
+				got, err := tc.persister.Get()
+				assert.Error(t, err)
+				assert.Nil(t, got)
+			})
+
+			t.Run("Save then get should succeed", func(t *testing.T) {
+				err := tc.persister.Save(tc.creds)
+				assert.NoError(t, err)
+
+				got, err := tc.persister.Get()
+				assert.NoError(t, err)
+				assert.Equal(t, tc.creds, got)
+			})
 		})
 	}
 }

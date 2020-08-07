@@ -38,7 +38,7 @@ func (c *cluster) CreateCluster(kubeConfigPath string, config *api.ClusterConfig
 	cli.AddToEnv(
 		fmt.Sprintf("AWS_CONFIG_FILE=%s", c.awsConfigPath),
 		fmt.Sprintf("AWS_SHARED_CREDENTIALS_FILE=%s", c.awsCredentialsPath),
-		fmt.Sprintf("AWS_PROFILE=default"),
+		"AWS_PROFILE=default",
 	)
 
 	_, err = cli.CreateCluster(kubeConfigPath, config)

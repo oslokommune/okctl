@@ -60,7 +60,13 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 			_, err = io.Copy(
 				o.Out,
 				strings.NewReader(
-					fmt.Sprintf("export AWS_CONFIG_FILE=%s\nexport AWS_SHARED_CREDENTIALS_FILE=%s\nexport AWS_PROFILE=default\nexport KUBECONFIG=%s\n", awsConfig, awsCredentials, kubeConfig)),
+					fmt.Sprintf(
+						"export AWS_CONFIG_FILE=%s\nexport AWS_SHARED_CREDENTIALS_FILE=%s\nexport AWS_PROFILE=default\nexport KUBECONFIG=%s\n",
+						awsConfig,
+						awsCredentials,
+						kubeConfig,
+					),
+				),
 			)
 
 			return err

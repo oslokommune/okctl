@@ -95,7 +95,7 @@ func (r *repoStore) GetDefaultPath(def string) (string, error) {
 		return "", fmt.Errorf("no default for: %s, when trying to get", def)
 	}
 
-	return loc, nil
+	return path.Join(r.baseDir, loc), nil
 }
 
 // SaveState will write the current repository state
@@ -131,7 +131,7 @@ func (a *appStore) GetDefaultPath(def string) (string, error) {
 		return "", fmt.Errorf("no default for: %s, when trying to get", def)
 	}
 
-	return loc, nil
+	return path.Join(a.baseDir, loc), nil
 }
 
 // SaveState will write the current application state

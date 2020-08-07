@@ -22,15 +22,28 @@ const (
 	awsAccountIDLength = 12
 )
 
+// Credentials contains all data required for using AWS
+type Credentials struct {
+	AccessKeyID     string    // aws_access_key_id
+	SecretAccessKey string    // aws_secret_access_key
+	SessionToken    string    // aws_session_token
+	SecurityToken   string    // aws_security_token
+	PrincipalARN    string    // x_principal_arn
+	Expires         time.Time // x_security_token_expires
+	Region          string
+
+	Source *sts.Credentials
+}
+
 // Authenticator knows how to orchestrate getting credentials
 type Authenticator interface {
-	Raw() (*sts.Credentials, error)
+	Raw() (*Credentials, error)
 	AsEnv() ([]string, error)
 }
 
 // Retriever knows how to retrieve credentials
 type Retriever interface {
-	Retrieve() (*sts.Credentials, error)
+	Retrieve() (*Credentials, error)
 	Invalidate()
 	Valid() bool
 }
@@ -41,7 +54,7 @@ type StsProviderFn func(session *session.Session) stsiface.STSAPI
 // Auth stores state for fetching credentials
 type Auth struct {
 	Retrievers []Retriever
-	creds      *sts.Credentials
+	creds      *Credentials
 }
 
 // AsEnv returns the AWS credentials as env vars
@@ -52,16 +65,17 @@ func (a *Auth) AsEnv() ([]string, error) {
 	}
 
 	return []string{
-		fmt.Sprintf("AWS_ACCESS_KEY_ID=%s", *creds.AccessKeyId),
-		fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", *creds.SecretAccessKey),
-		fmt.Sprintf("AWS_SESSION_TOKEN=%s", *creds.SessionToken),
+		fmt.Sprintf("AWS_ACCESS_KEY_ID=%s", creds.AccessKeyID),
+		fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", creds.SecretAccessKey),
+		fmt.Sprintf("AWS_SESSION_TOKEN=%s", creds.SessionToken),
+		fmt.Sprintf("AWS_DEFAULT_REGION=%s", creds.Region),
 	}, nil
 }
 
 // Raw returns the raw credentials
-func (a *Auth) Raw() (*sts.Credentials, error) {
+func (a *Auth) Raw() (*Credentials, error) {
 	// Credentials have expired
-	if a.creds != nil && AreExpired(a.creds) {
+	if a.creds != nil && AreExpired(a.creds.Expires) {
 		a.creds = nil
 	}
 
@@ -79,12 +93,12 @@ func (a *Auth) Raw() (*sts.Credentials, error) {
 }
 
 // AreExpired returns true if the credentials have expired
-func AreExpired(creds *sts.Credentials) bool {
-	return time.Since(*creds.Expiration) >= 0
+func AreExpired(expires time.Time) bool {
+	return time.Since(expires) >= 0
 }
 
 // Resolve the available authenticators until we succeed
-func (a *Auth) Resolve() (*sts.Credentials, error) {
+func (a *Auth) Resolve() (*Credentials, error) {
 	var accumulatedErrors []string
 
 	for i, retriever := range a.Retrievers {
@@ -104,7 +118,7 @@ func (a *Auth) Resolve() (*sts.Credentials, error) {
 
 			// We just got these credentials, they shouldn't have expired already
 			// which means they are static or expired from an AWS credentials profile
-			if AreExpired(creds) {
+			if AreExpired(creds.Expires) {
 				retriever.Invalidate()
 
 				accumulatedErrors = append(
@@ -132,7 +146,7 @@ func New(retriever Retriever, retrievers ...Retriever) *Auth {
 
 // AuthStatic simply returns the provided credentials
 type AuthStatic struct {
-	Credentials *sts.Credentials
+	Credentials *Credentials
 	IsValid     bool
 }
 
@@ -147,12 +161,12 @@ func (a *AuthStatic) Valid() bool {
 }
 
 // Retrieve returns the stored credentials
-func (a *AuthStatic) Retrieve() (*sts.Credentials, error) {
+func (a *AuthStatic) Retrieve() (*Credentials, error) {
 	return a.Credentials, nil
 }
 
 // NewAuthStatic returns an initialised static authenticator
-func NewAuthStatic(creds *sts.Credentials) *AuthStatic {
+func NewAuthStatic(creds *Credentials) *AuthStatic {
 	return &AuthStatic{
 		Credentials: creds,
 		IsValid:     true,
@@ -230,7 +244,7 @@ func (a *AuthSAML) Validate() error {
 }
 
 // Retrieve initiates a saml based sts authentication
-func (a *AuthSAML) Retrieve() (*sts.Credentials, error) {
+func (a *AuthSAML) Retrieve() (*Credentials, error) {
 	err := a.PopulateFn(a)
 	if err != nil {
 		return nil, errors.E(err, "failed to populate required fields")
@@ -263,7 +277,16 @@ func (a *AuthSAML) Retrieve() (*sts.Credentials, error) {
 		return nil, errors.E(err, "error retrieving STS credentials using SAML", errors.Unknown)
 	}
 
-	return resp.Credentials, nil
+	return &Credentials{
+		AccessKeyID:     aws.StringValue(resp.Credentials.AccessKeyId),
+		SecretAccessKey: aws.StringValue(resp.Credentials.SecretAccessKey),
+		SessionToken:    aws.StringValue(resp.Credentials.SessionToken),
+		SecurityToken:   aws.StringValue(resp.Credentials.SessionToken),
+		PrincipalARN:    aws.StringValue(resp.AssumedRoleUser.Arn),
+		Expires:         resp.Credentials.Expiration.Local(),
+		Region:          a.Region,
+		Source:          resp.Credentials,
+	}, nil
 }
 
 // Static returns a populate method that returns the statically declared credentials

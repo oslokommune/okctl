@@ -160,12 +160,12 @@ func (o *Okctl) newPersisterProvider(env string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	appOpts := state.AppStoreOpts{
 		Opts: state.Opts{
 			BaseDir:    appDir,
 			ConfigFile: config.DefaultConfig,
-			Defaults:   map[string]string{
+			Defaults: map[string]string{
 				"kubeconfig": path.Join(config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterKubeConfig),
 			},
 		},

@@ -50,9 +50,9 @@ func (p *Provider) newSession() (*session.Session, error) {
 		WithRegion(p.Provider.Region()).
 		WithCredentials(
 			awsCreds.NewStaticCredentials(
-				*creds.AccessKeyId,
-				*creds.SecretAccessKey,
-				*creds.SessionToken,
+				creds.AccessKeyID,
+				creds.SecretAccessKey,
+				creds.SessionToken,
 			),
 		)
 

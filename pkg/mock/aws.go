@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	awspkg "github.com/oslokommune/okctl/pkg/credentials/aws"
 )
 
 const (
@@ -26,7 +27,27 @@ const (
 	DefaultSessionToken = "IQoJb3JpZ2luX2VjEOz////////////////////wEXAMPLEtMSJHMEUCIDoKK3JH9uG\nQE1z0sINr5M4jk+Na8KHDcCYRVjJCZEvOAiEA3OvJGtw1EcViOleS2vhs8VdCKFJQWP\nQrmGdeehM4IC1NtBmUpp2wUE8phUZampKsburEDy0KPkyQDYwT7WZ0wq5VSXDvp75YU\n9HFvlRd8Tx6q6fE8YQcHNVXAkiY9q6d+xo0rKwT38xVqr7ZD0u0iPPkUL64lIZbqBAz\n+scqKmlzm8FDrypNC9Yjc8fPOLn9FX9KSYvKTr4rvx3iSIlTJabIQwj2ICCR/oLxBA=="
 	// DefaultExpiration is a mocked aws expiration
 	DefaultExpiration = "2019-11-01T20:26:47Z"
+	// DefaultPrincipalARN is a mocked principal arn
+	DefaultPrincipalARN = "arn:aws:sts::123456789012:assumed-role/admin/user"
+	// DefaultRegion is a mocked default region
+	DefaultRegion = "eu-west-1"
 )
+
+// DefaultCredentials returns a mocked set of aws credentials
+func DefaultCredentials() *awspkg.Credentials {
+	t, _ := time.Parse(time.RFC3339, DefaultExpiration)
+
+	return &awspkg.Credentials{
+		AccessKeyID:     DefaultAccessKeyID,
+		SecretAccessKey: DefaultSecretAccessKey,
+		SessionToken:    DefaultSessionToken,
+		SecurityToken:   DefaultSessionToken,
+		PrincipalARN:    DefaultPrincipalARN,
+		Expires:         t.Local(),
+		Region:          DefaultRegion,
+		Source:          DefaultStsCredentials(),
+	}
+}
 
 // DefaultStsCredentials returns a mocked set of aws sts credentials
 func DefaultStsCredentials() *sts.Credentials {
@@ -34,10 +55,20 @@ func DefaultStsCredentials() *sts.Credentials {
 
 	return &sts.Credentials{
 		AccessKeyId:     aws.String(DefaultAccessKeyID),
-		Expiration:      aws.Time(t),
+		Expiration:      aws.Time(t.Local()),
 		SecretAccessKey: aws.String(DefaultSecretAccessKey),
 		SessionToken:    aws.String(DefaultSessionToken),
 	}
+}
+
+// DefaultValidCredentials returns a mocked set of valid credentials
+func DefaultValidCredentials() *awspkg.Credentials {
+	creds := DefaultCredentials()
+
+	creds.Expires = time.Now().Add(1 * time.Hour).Local()
+	creds.Source.Expiration = aws.Time(creds.Expires)
+
+	return creds
 }
 
 // DefaultValidStsCredentials returns a mocked set of valid aws sts credentials
@@ -66,6 +97,9 @@ func NewGoodSTSAPI() stsiface.STSAPI {
 	return &STSAPI{
 		AssumeRoleWithSAMLFn: func(input *sts.AssumeRoleWithSAMLInput) (*sts.AssumeRoleWithSAMLOutput, error) {
 			return &sts.AssumeRoleWithSAMLOutput{
+				AssumedRoleUser: &sts.AssumedRoleUser{
+					Arn: aws.String(DefaultPrincipalARN),
+				},
 				Credentials: DefaultStsCredentials(),
 			}, nil
 		},

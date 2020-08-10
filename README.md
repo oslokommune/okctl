@@ -62,3 +62,4 @@ We have begged, borrowed and stolen various ideas from the following CLIs:
 - https://github.com/kubernetes/kops
 - https://kubernetes.io/docs/tasks/tools/install-kubectl/
 - https://github.com/go-kit/kit
+- https://github.com/Versent/saml2aws/

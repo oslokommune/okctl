@@ -15,6 +15,7 @@ type cluster struct {
 	awsCredentialsPath string
 	awsConfigPath      string
 	provider           binaries.Provider
+	debug              bool
 }
 
 // CreateCluster invokes a CLI for performing create
@@ -34,6 +35,7 @@ func (c *cluster) CreateCluster(kubeConfigPath string, config *api.ClusterConfig
 		return err
 	}
 
+	cli.Debug(c.debug)
 	cli.AddToPath(a.BinaryPath, k.BinaryPath)
 	cli.AddToEnv(
 		fmt.Sprintf("AWS_CONFIG_FILE=%s", c.awsConfigPath),
@@ -59,8 +61,9 @@ func (c *cluster) DeleteCluster(config *api.ClusterConfig) error {
 }
 
 // NewClusterExe returns a executor for cluster
-func NewClusterExe(awsCredentialsPath, awsConfigPath string, provider binaries.Provider) api.ClusterExe {
+func NewClusterExe(debug bool, awsCredentialsPath, awsConfigPath string, provider binaries.Provider) api.ClusterExe {
 	return &cluster{
+		debug:              debug,
 		awsCredentialsPath: awsCredentialsPath,
 		awsConfigPath:      awsConfigPath,
 		provider:           provider,

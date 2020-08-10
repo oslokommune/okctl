@@ -33,6 +33,7 @@ type Eksctl struct {
 	CmdFn      run.CmdFn
 	CmdPath    []string
 	CmdEnv     []string
+	DoDebug    bool
 }
 
 // New returns a new wrapper around the eksctl cli
@@ -119,6 +120,12 @@ func (e *Eksctl) AddToEnv(envs ...string) {
 	e.CmdEnv = append(e.CmdEnv, envs...)
 }
 
+// Debug sets whether we should increase log output from eksctl,
+// the default behavior is off
+func (e *Eksctl) Debug(enable bool) {
+	e.DoDebug = enable
+}
+
 // DeleteCluster invokes eksctl delete cluster using the provided
 // cluster configuration as input
 func (e *Eksctl) DeleteCluster(cfg *api.ClusterConfig) ([]byte, error) {
@@ -143,6 +150,10 @@ func (e *Eksctl) CreateCluster(kubeConfigPath string, cfg *api.ClusterConfig) ([
 		"cluster",
 		"--write-kubeconfig=true",
 		fmt.Sprintf("--kubeconfig=%s", kubeConfigPath),
+	}
+
+	if e.DoDebug {
+		args = append(args, "--verbose=5")
 	}
 
 	b, err := e.run(args, cfg)

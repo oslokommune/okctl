@@ -8,14 +8,13 @@ import (
 	"os"
 	"os/signal"
 	"path"
-	"strings"
 	"syscall"
 
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api/core"
 	cld "github.com/oslokommune/okctl/pkg/api/core/cloud"
 	"github.com/oslokommune/okctl/pkg/api/core/exe"
-	"github.com/oslokommune/okctl/pkg/api/core/store"
+	"github.com/oslokommune/okctl/pkg/api/core/store/filesystem"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/binaries"
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
@@ -26,7 +25,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	"github.com/oslokommune/okctl/pkg/credentials/aws/scrape"
 	"github.com/oslokommune/okctl/pkg/storage"
-	"github.com/oslokommune/okctl/pkg/storage/state"
 )
 
 // Okctl stores all state required for invoking commands
@@ -36,10 +34,10 @@ type Okctl struct {
 	CloudProvider       v1alpha1.CloudProvider
 	BinariesProvider    binaries.Provider
 	CredentialsProvider credentials.Provider
-	PersisterProvider   state.PersisterProvider
 }
 
 // Initialise okctl for receiving requests
+// nolint: funlen
 func (o *Okctl) Initialise(env, awsAccountID string) error {
 	err := o.EnableFileLog()
 	if err != nil {
@@ -51,20 +49,66 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		return err
 	}
 
+	appDir, err := o.GetAppDataDir()
+	if err != nil {
+		return err
+	}
+
+	repoDir, err := o.GetRepoDir()
+	if err != nil {
+		return err
+	}
+
+	outputDir, err := o.GetRepoOutputDir(env)
+	if err != nil {
+		return err
+	}
+
+	vpcStore := filesystem.NewVpcStore(
+		config.DefaultVpcOutputs,
+		config.DefaultVpcCloudFormationTemplate,
+		path.Join(outputDir, config.DefaultVpcBaseDir),
+		o.FileSystem,
+	)
+
+	kubeConfigStore := filesystem.NewKubeConfigStore(
+		config.DefaultClusterKubeConfig,
+		path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env)),
+		o.FileSystem,
+	)
+
+	clusterConfigStore := filesystem.NewClusterConfigStore(
+		config.DefaultClusterConfig,
+		path.Join(outputDir, config.DefaultClusterBaseDir),
+		o.FileSystem,
+	)
+
+	clusterStore := filesystem.NewClusterStore(
+		config.DefaultRepositoryConfig,
+		repoDir,
+		o.FileSystem,
+		o.RepoData,
+	)
+
 	vpcService := core.NewVpcService(
 		cld.NewVpcCloud(o.CloudProvider),
-		store.NewVpcStore(o.PersisterProvider),
+		vpcStore,
 	)
 
 	clusterConfigService := core.NewClusterConfigService(
-		store.NewClusterConfigStore(o.PersisterProvider),
-		store.NewVpcStore(o.PersisterProvider),
+		clusterConfigStore,
+		vpcStore,
 	)
 
 	clusterService := core.NewClusterService(
-		store.NewClusterStore(o.PersisterProvider),
-		store.NewClusterConfigStore(o.PersisterProvider),
-		exe.NewClusterExe(o.BinariesProvider),
+		clusterStore,
+		clusterConfigStore,
+		kubeConfigStore,
+		exe.NewClusterExe(
+			path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterAwsConfig),
+			path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterAwsCredentials),
+			o.BinariesProvider,
+		),
 	)
 
 	services := core.Services{
@@ -130,7 +174,7 @@ func (o *Okctl) Region() string {
 
 // initialiseProviders knows how to create all required providers
 func (o *Okctl) initialiseProviders(env, awsAccountID string) error {
-	err := o.newCredentialsProvider(awsAccountID)
+	err := o.newCredentialsProvider(env, awsAccountID)
 	if err != nil {
 		return err
 	}
@@ -144,58 +188,6 @@ func (o *Okctl) initialiseProviders(env, awsAccountID string) error {
 	if err != nil {
 		return err
 	}
-
-	err = o.newPersisterProvider(env)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// newPersisterProvider creates a provider for persisting state
-func (o *Okctl) newPersisterProvider(env string) error {
-	appDir, err := o.GetAppDataDir()
-	if err != nil {
-		return err
-	}
-
-	appOpts := state.AppStoreOpts{
-		Opts: state.Opts{
-			BaseDir:    appDir,
-			ConfigFile: config.DefaultConfig,
-			Defaults:   map[string]string{},
-		},
-		State: o.AppData,
-	}
-
-	repoDir, err := o.GetRepoDir()
-	if err != nil {
-		return err
-	}
-
-	outputDir, err := o.GetRepoOutputDir(env)
-	if err != nil {
-		return err
-	}
-
-	outputDir = strings.TrimPrefix(outputDir, repoDir)
-	outputDir = strings.TrimPrefix(outputDir, "/")
-
-	repoOpts := state.RepoStoreOpts{
-		Opts: state.Opts{
-			BaseDir:    repoDir,
-			ConfigFile: config.DefaultRepositoryConfig,
-			Defaults: map[string]string{
-				"cluster_config":      path.Join(outputDir, config.DefaultClusterBaseDir, config.DefaultClusterConfig),
-				"vpc_cloud_formation": path.Join(outputDir, config.DefaultVpcBaseDir, config.DefaultVpcCloudFormationTemplate),
-				"vpc_outputs":         path.Join(outputDir, config.DefaultVpcBaseDir, config.DefaultVpcOutputs),
-			},
-		},
-		State: o.RepoData,
-	}
-
-	o.PersisterProvider = state.New(repoOpts, appOpts)
 
 	return nil
 }
@@ -235,14 +227,26 @@ func (o *Okctl) newCloudProvider() error {
 }
 
 // newCredentialsProvider knows how to load credentials
-func (o *Okctl) newCredentialsProvider(awsAccountID string) error {
+func (o *Okctl) newCredentialsProvider(env, awsAccountID string) error {
 	if o.NoInput {
 		return errors.E(errors.Errorf("we only support retrieving credentials interactively for now"), errors.Invalid)
 	}
 
+	appDir, err := o.GetAppDataDir()
+	if err != nil {
+		return err
+	}
+
+	authStore := aws.NewIniPersister(aws.NewFileSystemIniStorer(
+		config.DefaultClusterAwsConfig,
+		config.DefaultClusterAwsCredentials,
+		path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env)),
+		o.FileSystem,
+	))
+
 	saml := aws.NewAuthSAML(awsAccountID, o.Region(), scrape.New(), aws.DefaultStsProvider, aws.Interactive(o.Username()))
 
-	o.CredentialsProvider = credentials.New(aws.New(saml))
+	o.CredentialsProvider = credentials.New(aws.New(authStore, saml))
 
 	return nil
 }

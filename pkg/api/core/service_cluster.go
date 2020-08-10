@@ -9,9 +9,10 @@ import (
 )
 
 type cluster struct {
-	exe         api.ClusterExe
-	store       api.ClusterStore
-	configStore api.ClusterConfigStore
+	exe             api.ClusterExe
+	store           api.ClusterStore
+	configStore     api.ClusterConfigStore
+	kubeConfigStore api.KubeConfigStore
 }
 
 const (
@@ -31,7 +32,12 @@ func (c *cluster) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (
 		return nil, errors.E(err, "failed to retrieve cluster config")
 	}
 
-	err = c.exe.CreateCluster(clusterConfig)
+	kubeConfigPath, err := c.kubeConfigStore.CreateKubeConfig()
+	if err != nil {
+		return nil, errors.E(err, "failed to create kubeconfig")
+	}
+
+	err = c.exe.CreateCluster(kubeConfigPath, clusterConfig)
 	if err != nil {
 		return nil, errors.E(err, msgFailedToCreateCluster)
 	}
@@ -77,10 +83,11 @@ func (c *cluster) DeleteCluster(_ context.Context, opts api.ClusterDeleteOpts) e
 }
 
 // NewClusterService returns a service operator for the cluster operations
-func NewClusterService(store api.ClusterStore, configStore api.ClusterConfigStore, exe api.ClusterExe) api.ClusterService {
+func NewClusterService(store api.ClusterStore, configStore api.ClusterConfigStore, kubeConfigStore api.KubeConfigStore, exe api.ClusterExe) api.ClusterService {
 	return &cluster{
-		exe:         exe,
-		store:       store,
-		configStore: configStore,
+		exe:             exe,
+		store:           store,
+		configStore:     configStore,
+		kubeConfigStore: kubeConfigStore,
 	}
 }

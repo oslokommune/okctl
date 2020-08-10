@@ -87,7 +87,7 @@ type ClusterService interface {
 
 // ClusterExe provides an interface for running CLIs
 type ClusterExe interface {
-	CreateCluster(*ClusterConfig) error
+	CreateCluster(string, *ClusterConfig) error
 	DeleteCluster(*ClusterConfig) error
 }
 

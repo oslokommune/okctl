@@ -41,6 +41,8 @@ const (
 	DefaultLogBackups = 3
 	// DefaultLogSizeInMb determines how much storage we will consume
 	DefaultLogSizeInMb = 50
+	// DefaultCredentialsDirName sets the name of the directory for creds
+	DefaultCredentialsDirName = "credentials"
 
 	// DefaultRepositoryConfig is the default filename of the okctl repository config
 	DefaultRepositoryConfig = ".okctl.yml"
@@ -51,6 +53,12 @@ const (
 
 	// DefaultClusterConfig is the default filename of the eksctl cluster config
 	DefaultClusterConfig = "cluster.yml"
+	// DefaultClusterKubeConfig is the default filename of the kubectl kubeconfig
+	DefaultClusterKubeConfig = "kubeconfig"
+	// DefaultClusterAwsConfig is the default filename of the aws config
+	DefaultClusterAwsConfig = "aws-config"
+	// DefaultClusterAwsCredentials is the default filename of the aws credentials
+	DefaultClusterAwsCredentials = "aws-credentials"
 	// DefaultClusterBaseDir is the default directory name of the eksctl cluster config
 	DefaultClusterBaseDir = "cluster"
 

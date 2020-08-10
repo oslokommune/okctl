@@ -27,29 +27,29 @@ func TestEksctlDeleteCluster(t *testing.T) {
 	}{
 		{
 			name: "Should work",
-			cfg:  api.NewClusterConfig(),
+			cfg:  &api.ClusterConfig{},
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
 				"eksctl",
-				aws.New(aws.NewAuthStatic(mock.DefaultValidStsCredentials())),
+				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
 				fakeExecCommandSuccess(),
 			),
 			// nolint: lll
-			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX, args=delete,cluster,--config-file,/cluster-config.yml",
+			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,cluster,--config-file,/cluster-config.yml",
 		},
 		{
 			name: "Should fail",
-			cfg:  api.NewClusterConfig(),
+			cfg:  &api.ClusterConfig{},
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
 				"eksctl",
-				aws.New(aws.NewAuthStatic(mock.DefaultValidStsCredentials())),
+				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
 				fakeExecCommandFailure(),
 			),
 			// nolint: lll
-			expect:      "failed to delete: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX, args=delete,cluster,--config-file,/cluster-config.yml: exit status 1",
+			expect:      "failed to delete: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,cluster,--config-file,/cluster-config.yml: exit status 1",
 			expectError: true,
 		},
 	}
@@ -73,35 +73,38 @@ func TestEksctlCreateCluster(t *testing.T) {
 	testCases := []struct {
 		name        string
 		eksctl      *eksctl.Eksctl
+		kubePath    string
 		cfg         *api.ClusterConfig
 		expect      interface{}
 		expectError bool
 	}{
 		{
-			name: "Should work",
-			cfg:  api.NewClusterConfig(),
+			name:     "Should work",
+			cfg:      &api.ClusterConfig{},
+			kubePath: "/some/path",
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
 				"eksctl",
-				aws.New(aws.NewAuthStatic(mock.DefaultValidStsCredentials())),
+				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
 				fakeExecCommandSuccess(),
 			),
 			// nolint: lll
-			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX, args=create,cluster,--write-kubeconfig=false,--config-file,/cluster-config.yml",
+			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,cluster,--write-kubeconfig=true,--kubeconfig=/some/path,--config-file,/cluster-config.yml",
 		},
 		{
-			name: "Should fail",
-			cfg:  api.NewClusterConfig(),
+			name:     "Should fail",
+			cfg:      &api.ClusterConfig{},
+			kubePath: "/some/path",
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
 				"eksctl",
-				aws.New(aws.NewAuthStatic(mock.DefaultValidStsCredentials())),
+				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
 				fakeExecCommandFailure(),
 			),
 			// nolint: lll
-			expect:      "failed to create: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX, args=create,cluster,--write-kubeconfig=false,--config-file,/cluster-config.yml: exit status 1",
+			expect:      "failed to create: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,cluster,--write-kubeconfig=true,--kubeconfig=/some/path,--config-file,/cluster-config.yml: exit status 1",
 			expectError: true,
 		},
 	}
@@ -109,7 +112,7 @@ func TestEksctlCreateCluster(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := tc.eksctl.CreateCluster(tc.cfg)
+			got, err := tc.eksctl.CreateCluster(tc.kubePath, tc.cfg)
 			if tc.expectError {
 				assert.Error(t, err)
 				assert.Equal(t, tc.expect, err.Error())

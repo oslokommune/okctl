@@ -24,6 +24,7 @@ func TestClusterCreateCluster(t *testing.T) {
 			service: core.NewClusterService(
 				mock.NewGoodClusterStore(),
 				mock.NewGoodClusterConfigStore(),
+				mock.NewGoodKubeConfigStore(),
 				mock.NewGoodClusterExe(),
 			),
 			opts:   mock.DefaultClusterCreateOpts(),
@@ -34,6 +35,7 @@ func TestClusterCreateCluster(t *testing.T) {
 			service: core.NewClusterService(
 				mock.NewGoodClusterStore(),
 				mock.NewGoodClusterConfigStore(),
+				mock.NewGoodKubeConfigStore(),
 				mock.NewGoodClusterExe(),
 			),
 			opts: api.ClusterCreateOpts{},

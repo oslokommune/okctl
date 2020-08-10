@@ -2,18 +2,28 @@
 package exe
 
 import (
+	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/binaries"
+	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/binaries/run/eksctl"
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
 )
 
 type cluster struct {
-	provider binaries.Provider
+	awsCredentialsPath string
+	awsConfigPath      string
+	provider           binaries.Provider
 }
 
 // CreateCluster invokes a CLI for performing create
-func (c *cluster) CreateCluster(config *api.ClusterConfig) error {
+func (c *cluster) CreateCluster(kubeConfigPath string, config *api.ClusterConfig) error {
+	a, err := c.provider.AwsIamAuthenticator(awsiamauthenticator.Version)
+	if err != nil {
+		return err
+	}
+
 	k, err := c.provider.Kubectl(kubectl.Version)
 	if err != nil {
 		return err
@@ -24,9 +34,14 @@ func (c *cluster) CreateCluster(config *api.ClusterConfig) error {
 		return err
 	}
 
-	cli.AddToPath(k.BinaryPath)
+	cli.AddToPath(a.BinaryPath, k.BinaryPath)
+	cli.AddToEnv(
+		fmt.Sprintf("AWS_CONFIG_FILE=%s", c.awsConfigPath),
+		fmt.Sprintf("AWS_SHARED_CREDENTIALS_FILE=%s", c.awsCredentialsPath),
+		"AWS_PROFILE=default",
+	)
 
-	_, err = cli.CreateCluster(config)
+	_, err = cli.CreateCluster(kubeConfigPath, config)
 
 	return err
 }
@@ -44,8 +59,10 @@ func (c *cluster) DeleteCluster(config *api.ClusterConfig) error {
 }
 
 // NewClusterExe returns a executor for cluster
-func NewClusterExe(provider binaries.Provider) api.ClusterExe {
+func NewClusterExe(awsCredentialsPath, awsConfigPath string, provider binaries.Provider) api.ClusterExe {
 	return &cluster{
-		provider: provider,
+		awsCredentialsPath: awsCredentialsPath,
+		awsConfigPath:      awsConfigPath,
+		provider:           provider,
 	}
 }

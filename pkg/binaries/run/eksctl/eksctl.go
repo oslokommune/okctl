@@ -32,6 +32,7 @@ type Eksctl struct {
 	Auth       aws.Authenticator
 	CmdFn      run.CmdFn
 	CmdPath    []string
+	CmdEnv     []string
 }
 
 // New returns a new wrapper around the eksctl cli
@@ -53,6 +54,10 @@ func (e *Eksctl) runner() (run.Runner, error) {
 
 	if len(e.CmdPath) > 0 {
 		envs = append(envs, fmt.Sprintf("PATH=$PATH:%s", strings.Join(e.CmdPath, ":")))
+	}
+
+	if len(e.CmdEnv) > 0 {
+		envs = append(envs, e.CmdEnv...)
 	}
 
 	return run.New(e.Store.Path(), e.BinaryPath, envs, e.CmdFn), nil
@@ -103,8 +108,15 @@ func (e *Eksctl) run(args []string, cfg *api.ClusterConfig) ([]byte, error) {
 }
 
 // AddToPath strips the base of the binary and adds it to the PATH
-func (e *Eksctl) AddToPath(binaryPath string) {
-	e.CmdPath = append(e.CmdPath, filepath.Dir(binaryPath))
+func (e *Eksctl) AddToPath(binaryPaths ...string) {
+	for _, binaryPath := range binaryPaths {
+		e.CmdPath = append(e.CmdPath, filepath.Dir(binaryPath))
+	}
+}
+
+// AddToEnv adds additional environment variables to the command
+func (e *Eksctl) AddToEnv(envs ...string) {
+	e.CmdEnv = append(e.CmdEnv, envs...)
 }
 
 // DeleteCluster invokes eksctl delete cluster using the provided
@@ -125,11 +137,12 @@ func (e *Eksctl) DeleteCluster(cfg *api.ClusterConfig) ([]byte, error) {
 
 // CreateCluster invokes eksctl create cluster using the provided
 // cluster configuration as input
-func (e *Eksctl) CreateCluster(cfg *api.ClusterConfig) ([]byte, error) {
+func (e *Eksctl) CreateCluster(kubeConfigPath string, cfg *api.ClusterConfig) ([]byte, error) {
 	args := []string{
 		"create",
 		"cluster",
-		"--write-kubeconfig=false",
+		"--write-kubeconfig=true",
+		fmt.Sprintf("--kubeconfig=%s", kubeConfigPath),
 	}
 
 	b, err := e.run(args, cfg)

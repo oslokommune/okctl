@@ -81,6 +81,7 @@ being captured. Together with slack and slick.`,
 
 	cmd.AddCommand(buildCreateCommand(o))
 	cmd.AddCommand(buildDeleteCommand(o))
+	cmd.AddCommand(buildShowCommand(o))
 
 	f := cmd.Flags()
 	f.StringVarP(&outputFormat, "output", "o", "text",

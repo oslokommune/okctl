@@ -24,6 +24,7 @@ import (
 
 const (
 	awsAccountIDLength = 12
+	defaultSessionDuration = 14400
 )
 
 // Credentials contains all data required for using AWS
@@ -296,9 +297,10 @@ func (a *AuthSAML) Retrieve() (*Credentials, error) {
 	svc := a.ProviderFn(sess)
 
 	resp, err := svc.AssumeRoleWithSAML(&sts.AssumeRoleWithSAMLInput{
-		PrincipalArn:  aws.String(v1alpha1.PrincipalARN(a.AwsAccountID)),
-		RoleArn:       aws.String(v1alpha1.RoleARN(a.AwsAccountID)),
-		SAMLAssertion: aws.String(samlAssertion),
+		DurationSeconds: aws.Int64(defaultSessionDuration),
+		PrincipalArn:    aws.String(v1alpha1.PrincipalARN(a.AwsAccountID)),
+		RoleArn:         aws.String(v1alpha1.RoleARN(a.AwsAccountID)),
+		SAMLAssertion:   aws.String(samlAssertion),
 	})
 	if err != nil {
 		return nil, errors.E(err, "error retrieving STS credentials using SAML", errors.Unknown)

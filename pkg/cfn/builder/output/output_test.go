@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestJoined(t *testing.T) {
+func TestOutput(t *testing.T) {
 	testCases := []struct {
 		name     string
 		outputer output.Outputer

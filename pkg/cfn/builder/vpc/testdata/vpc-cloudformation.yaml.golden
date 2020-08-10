@@ -141,7 +141,6 @@ Resources:
     Properties:
       AvailabilityZone: eu-west-1a
       CidrBlock: 192.168.1.0/24
-      MapPublicIpOnLaunch: true
       Tags:
       - Key: kubernetes.io/cluster/test-test
         Value: shared
@@ -161,7 +160,6 @@ Resources:
     Properties:
       AvailabilityZone: eu-west-1b
       CidrBlock: 192.168.4.0/24
-      MapPublicIpOnLaunch: true
       Tags:
       - Key: kubernetes.io/cluster/test-test
         Value: shared
@@ -181,7 +179,6 @@ Resources:
     Properties:
       AvailabilityZone: eu-west-1c
       CidrBlock: 192.168.7.0/24
-      MapPublicIpOnLaunch: true
       Tags:
       - Key: kubernetes.io/cluster/test-test
         Value: shared

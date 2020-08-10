@@ -1,13 +1,17 @@
-package store
+package filesystem
 
 import (
+	"path"
+
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/storage/state"
+	"github.com/spf13/afero"
 	"sigs.k8s.io/yaml"
 )
 
 type clusterConfig struct {
-	provider state.PersisterProvider
+	clusterConfigFileName string
+	baseDir               string
+	fs                    *afero.Afero
 }
 
 // SaveClusterConfig stores the cluster config
@@ -17,22 +21,27 @@ func (c *clusterConfig) SaveClusterConfig(config *api.ClusterConfig) error {
 		return err
 	}
 
-	return c.provider.Repository().WriteToDefault("cluster_config", data)
+	err = c.fs.MkdirAll(c.baseDir, 0744)
+	if err != nil {
+		return err
+	}
+
+	return c.fs.WriteFile(path.Join(c.baseDir, c.clusterConfigFileName), data, 0644)
 }
 
 // DeleteClusterConfig deletes a cluster config
 func (c *clusterConfig) DeleteClusterConfig(env string) error {
-	return c.provider.Repository().DeleteDefault("cluster_config")
+	return c.fs.Remove(path.Join(c.baseDir, c.clusterConfigFileName))
 }
 
 // GetClusterConfig returns a stored cluster config
 func (c *clusterConfig) GetClusterConfig(env string) (*api.ClusterConfig, error) {
-	data, err := c.provider.Repository().ReadFromDefault("cluster_config")
+	data, err := c.fs.ReadFile(path.Join(c.baseDir, c.clusterConfigFileName))
 	if err != nil {
 		return nil, err
 	}
 
-	cfg := api.NewClusterConfig()
+	cfg := &api.ClusterConfig{}
 
 	err = yaml.Unmarshal(data, cfg)
 	if err != nil {
@@ -43,8 +52,10 @@ func (c *clusterConfig) GetClusterConfig(env string) (*api.ClusterConfig, error)
 }
 
 // NewClusterConfigStore returns an instantiated cluster config store
-func NewClusterConfigStore(provider state.PersisterProvider) api.ClusterConfigStore {
+func NewClusterConfigStore(clusterConfigFileName, baseDir string, fs *afero.Afero) api.ClusterConfigStore {
 	return &clusterConfig{
-		provider: provider,
+		clusterConfigFileName: clusterConfigFileName,
+		baseDir:               baseDir,
+		fs:                    fs,
 	}
 }

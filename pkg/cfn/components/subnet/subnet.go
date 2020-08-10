@@ -85,6 +85,7 @@ func (s *Subnet) Resource() cloudformation.Resource {
 			Key:   "kubernetes.io/role/internal-elb",
 			Value: "1",
 		})
+		mapPublicIPonLaunch = false
 	case TypeDatabase:
 		t = []tags.Tag{}
 		mapPublicIPonLaunch = false

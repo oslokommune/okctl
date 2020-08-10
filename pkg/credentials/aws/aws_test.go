@@ -4,12 +4,12 @@ import (
 	"testing"
 	"time"
 
-	aws2 "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 	"github.com/oslokommune/okctl/pkg/api/mock"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	awsmock "github.com/oslokommune/okctl/pkg/mock"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,7 +32,7 @@ func TestNewAuthSAML(t *testing.T) {
 				},
 				aws.Static("byr999999", "the", "123456"),
 			),
-			expect: awsmock.DefaultStsCredentials(),
+			expect: awsmock.DefaultCredentials(),
 		},
 	}
 
@@ -52,8 +52,8 @@ func TestNewAuthSAML(t *testing.T) {
 }
 
 func TestAuthRaw(t *testing.T) {
-	c := awsmock.DefaultStsCredentials()
-	c.Expiration = aws2.Time(time.Now().Add(60 * time.Minute))
+	c := awsmock.DefaultCredentials()
+	c.Expires = time.Now().Add(60 * time.Minute)
 
 	testCases := []struct {
 		name        string
@@ -63,20 +63,21 @@ func TestAuthRaw(t *testing.T) {
 	}{
 		{
 			name:        "Should work",
-			auth:        aws.New(aws.NewAuthStatic(c)),
+			auth:        aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(c)),
 			expect:      c,
 			expectError: false,
 		},
 		{
 			name:        "Should fail, because the creds have expired",
-			auth:        aws.New(aws.NewAuthStatic(awsmock.DefaultStsCredentials())),
+			auth:        aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(awsmock.DefaultCredentials())),
 			expect:      "no valid credentials: authenticator[0]: expired credentials",
 			expectError: true,
 		},
 		{
 			name: "Should work, because one set of creds are valid",
 			auth: aws.New(
-				aws.NewAuthStatic(awsmock.DefaultStsCredentials()),
+				aws.NewInMemoryStorage(),
+				aws.NewAuthStatic(awsmock.DefaultCredentials()),
 				aws.NewAuthStatic(c),
 			),
 			expect: c,
@@ -95,6 +96,51 @@ func TestAuthRaw(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.expect, got)
 			}
+		})
+	}
+}
+
+func TestPersister(t *testing.T) {
+	testCases := []struct {
+		name      string
+		persister aws.Persister
+		creds     *aws.Credentials
+	}{
+		{
+			name: "Ini persister",
+			persister: aws.NewIniPersister(aws.NewFileSystemIniStorer(
+				"conf",
+				"creds",
+				"/",
+				&afero.Afero{Fs: afero.NewMemMapFs()},
+			)),
+			creds: awsmock.DefaultCredentials(),
+		},
+		{
+			name:      "In memory persister",
+			persister: aws.NewInMemoryStorage(),
+			creds:     awsmock.DefaultCredentials(),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Run("Get before save should fail", func(t *testing.T) {
+				got, err := tc.persister.Get()
+				assert.Error(t, err)
+				assert.Nil(t, got)
+			})
+
+			t.Run("Save then get should succeed", func(t *testing.T) {
+				err := tc.persister.Save(tc.creds)
+				assert.NoError(t, err)
+
+				got, err := tc.persister.Get()
+				assert.NoError(t, err)
+				assert.Equal(t, tc.creds, got)
+			})
 		})
 	}
 }

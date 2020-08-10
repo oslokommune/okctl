@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	awsAccountIDLength = 12
+	awsAccountIDLength     = 12
 	defaultSessionDuration = 14400
 )
 

@@ -128,7 +128,7 @@ func eksctlBinaries() []Binary {
 	return []Binary{
 		{
 			Name:       "eksctl",
-			Version:    "0.21.0",
+			Version:    "0.25.0",
 			BufferSize: "100mb",
 			URLPattern: "https://github.com/weaveworks/eksctl/releases/download/#{ver}/eksctl_#{os}_#{arch}.tar.gz",
 			Archive: Archive{
@@ -140,13 +140,13 @@ func eksctlBinaries() []Binary {
 					Os:     "darwin",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "3cdcbb1792bb131cc0ed944cbfc51dd6f1b2261a480436efc6f8124dea7c8c14",
+					Digest: "e232f48e4995f711620ea34c09f582b097e5b006f45fbe82a11fc8955636c9c4",
 				},
 				{
 					Os:     "linux",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "4573bca35af67fa002fb722b4d41fae2224a27576619ed2f1e269dd7bd15c214",
+					Digest: "e94e4ec335c036d8f511ea214d5a55dfd097e2053747d7d04d6db49fff107531",
 				},
 			},
 		},

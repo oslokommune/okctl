@@ -19,13 +19,12 @@ func TestCreate(t *testing.T) {
 		{
 			name: "Should work",
 			manager: manager.
-				New(
+				New(mock.DefaultStackName, []byte{},
 					mock.NewCloudProvider().
 						DescribeStacksEmpty().
 						CreateStackSuccess().
 						DescribeStacksResponse(cloudformation.StackStatusCreateComplete),
-				).
-				WithBuilder(mock.NewGoodBuilder()),
+				),
 		},
 	}
 
@@ -53,19 +52,18 @@ func TestDelete(t *testing.T) {
 		{
 			name: "Should work",
 			manager: manager.
-				New(
+				New(mock.DefaultStackName, []byte{},
 					mock.NewCloudProvider().
 						DeleteStackSuccess().
 						DescribeStacksResponse(cloudformation.StackStatusDeleteComplete),
-				).
-				WithBuilder(mock.NewGoodBuilder()),
+				),
 		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.manager.Delete(mock.DefaultStackName)
+			err := tc.manager.Delete()
 			if tc.expectError {
 				assert.Error(t, err)
 				assert.Equal(t, tc.expect, err.Error())

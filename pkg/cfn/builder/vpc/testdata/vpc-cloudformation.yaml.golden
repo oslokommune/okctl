@@ -1,4 +1,22 @@
 AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  PrivateSubnetIds:
+    Value:
+      Fn::Join:
+      - ','
+      - - Ref: PrivateSubnet00
+        - Ref: PrivateSubnet01
+        - Ref: PrivateSubnet02
+  PublicSubnetIds:
+    Value:
+      Fn::Join:
+      - ','
+      - - Ref: PublicSubnet00
+        - Ref: PublicSubnet01
+        - Ref: PublicSubnet02
+  Vpc:
+    Value:
+      Ref: Vpc
 Resources:
   DatabaseSubnet00:
     Properties:

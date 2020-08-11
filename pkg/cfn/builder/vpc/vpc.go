@@ -4,6 +4,7 @@ package vpc
 import (
 	"fmt"
 
+	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/oslokommune/okctl/pkg/cfn"
 	cidrPkg "github.com/oslokommune/okctl/pkg/cfn/components/cidr"
 	clusterPkg "github.com/oslokommune/okctl/pkg/cfn/components/cluster"
@@ -28,6 +29,8 @@ type Builder struct {
 
 	outputs   []cfn.Outputer
 	resources []cfn.ResourceNamer
+
+	template *cloudformation.Template
 }
 
 // New returns a VPC builder
@@ -37,6 +40,7 @@ func New(name, env, cidrBlock, region string) *Builder {
 		Env:       env,
 		CidrBlock: cidrBlock,
 		Region:    region,
+		template:  cloudformation.NewTemplate(),
 	}
 }
 
@@ -56,7 +60,53 @@ func (b *Builder) StackName() string {
 }
 
 // Build all resources needed for creating a cloud formation VPC
-func (b *Builder) Build() error {
+func (b *Builder) Build() ([]byte, error) {
+	err := b.create()
+	if err != nil {
+		return nil, err
+	}
+
+	err = b.collectOutputs()
+	if err != nil {
+		return nil, err
+	}
+
+	err = b.collectResources()
+	if err != nil {
+		return nil, err
+	}
+
+	return b.template.YAML()
+}
+
+func (b *Builder) collectResources() error {
+	for _, resource := range b.Resources() {
+		if _, hasKey := b.template.Resources[resource.Name()]; hasKey {
+			return fmt.Errorf("already have resource with name: %s", resource.Name())
+		}
+
+		b.template.Resources[resource.Name()] = resource.Resource()
+	}
+
+	return nil
+}
+
+func (b *Builder) collectOutputs() error {
+	for _, output := range b.Outputs() {
+		for key, value := range output.NamedOutputs() {
+			if _, hasKey := b.template.Outputs[key]; hasKey {
+				return fmt.Errorf("already have output with name: %s", key)
+			}
+
+			b.template.Outputs[key] = value
+		}
+	}
+
+	return nil
+}
+
+//nolint: funlen
+func (b *Builder) create() error {
 	cluster := clusterPkg.New(b.Name, b.Env)
 
 	cidr, err := cidrPkg.NewDefault(b.CidrBlock)
@@ -81,6 +131,7 @@ func (b *Builder) Build() error {
 	prt := routetable.NewPublic(vpc)
 	pr := route.NewPublic(gwa, prt, igw)
 	b.resources = append(b.resources, prt, pr)
+
 	for i, sub := range subnets.Public {
 		// Create one NAT gateway for each public subnet
 		e := eip.New(i, gwa)
@@ -124,5 +175,5 @@ func (b *Builder) Build() error {
 
 // StackName returns a consistent stack name for a VPC
 func StackName(name, env string) string {
-	return fmt.Sprintf("%s-%s-okctl-vpc", name, env)
+	return fmt.Sprintf("okctl-vpc-%s-%s", name, env)
 }

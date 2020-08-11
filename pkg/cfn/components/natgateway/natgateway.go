@@ -15,7 +15,7 @@ type NatGateway struct {
 	StoredName        string
 	Number            int
 	EIP               cfn.Namer
-	Subnet            cfn.NameReferencer
+	PublicSubnet      cfn.NameReferencer
 	GatewayAttachment cfn.Namer
 }
 
@@ -23,10 +23,10 @@ type NatGateway struct {
 func (n *NatGateway) Resource() cloudformation.Resource {
 	return &ec2.NatGateway{
 		AllocationId: cloudformation.GetAtt(n.EIP.Name(), "AllocationId"),
-		SubnetId:     n.Subnet.Ref(),
+		SubnetId:     n.PublicSubnet.Ref(),
 		AWSCloudFormationDependsOn: []string{
 			n.EIP.Name(),
-			n.Subnet.Name(),
+			n.PublicSubnet.Name(),
 			n.GatewayAttachment.Name(),
 		},
 	}
@@ -48,12 +48,12 @@ func (n *NatGateway) Ref() string {
 // enabling connectivity between the internet and the VPC.
 //
 // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-vpc-gateway-attachment.html
-func New(number int, gatewayAttachment cfn.Namer, eip cfn.Namer, subnet cfn.NameReferencer) *NatGateway {
+func New(number int, gatewayAttachment cfn.Namer, eip cfn.Namer, publicSubnet cfn.NameReferencer) *NatGateway {
 	return &NatGateway{
 		StoredName:        fmt.Sprintf("NatGateway%02d", number),
 		Number:            0,
 		EIP:               eip,
-		Subnet:            subnet,
+		PublicSubnet:      publicSubnet,
 		GatewayAttachment: gatewayAttachment,
 	}
 }

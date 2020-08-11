@@ -67,10 +67,7 @@ func (b *Builder) Build() error {
 	vpc := vpcPkg.New(cluster, cidr.Block)
 	igw := internetgateway.New()
 	gwa := vpcgatewayattachment.New(vpc, igw)
-	prt := routetable.NewPublic(vpc)
-	pr := route.NewPublic(gwa, prt, igw)
-
-	b.resources = append(b.resources, vpc, igw, gwa, prt, pr)
+	b.resources = append(b.resources, vpc, igw, gwa)
 	b.outputs = append(b.outputs, vpc)
 
 	subnets, err := subnet.NewDefault(cidr.Block, b.Region, vpc, cluster)
@@ -78,20 +75,34 @@ func (b *Builder) Build() error {
 		return err
 	}
 
-	for i, sub := range subnets.Private {
-		rt := routetable.NewPrivate(i, vpc)
+	nats := make([]*natgateway.NatGateway, len(subnets.Public))
+
+	// Public subnets
+	prt := routetable.NewPublic(vpc)
+	pr := route.NewPublic(gwa, prt, igw)
+	b.resources = append(b.resources, prt, pr)
+	for i, sub := range subnets.Public {
+		// Create one NAT gateway for each public subnet
 		e := eip.New(i, gwa)
 		ngw := natgateway.New(i, gwa, e, sub)
-		r := route.NewPrivate(i, gwa, rt, ngw)
-		assoc := routetableassociation.NewPrivate(i, sub, rt)
+		nats[i] = ngw
 
-		b.resources = append(b.resources, sub, rt, e, ngw, r, assoc)
-	}
-
-	for i, sub := range subnets.Public {
+		// Associate the public subnet with the public route table
 		assoc := routetableassociation.NewPublic(i, sub, prt)
 
-		b.resources = append(b.resources, sub, assoc)
+		b.resources = append(b.resources, sub, assoc, ngw, e)
+	}
+
+	// Private subnets
+	for i, sub := range subnets.Private {
+		// Create a route table for each private subnet and associate
+		// it with the subnet. Also add a route to the NAT gateway
+		// so the instances can reach the internet
+		rt := routetable.NewPrivate(i, vpc)
+		r := route.NewPrivate(i, gwa, rt, nats[i%len(subnets.Private)])
+		assoc := routetableassociation.NewPrivate(i, sub, rt)
+
+		b.resources = append(b.resources, sub, rt, r, assoc)
 	}
 
 	b.outputs = append(b.outputs, subnets)

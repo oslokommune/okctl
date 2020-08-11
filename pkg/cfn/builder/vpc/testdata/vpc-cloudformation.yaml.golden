@@ -35,7 +35,7 @@ Resources:
   NatGateway00:
     DependsOn:
     - NatGatewayEIP00
-    - PrivateSubnet00
+    - PublicSubnet00
     - VPCGatewayAttachment
     Properties:
       AllocationId:
@@ -43,12 +43,12 @@ Resources:
         - NatGatewayEIP00
         - AllocationId
       SubnetId:
-        Ref: PrivateSubnet00
+        Ref: PublicSubnet00
     Type: AWS::EC2::NatGateway
   NatGateway01:
     DependsOn:
     - NatGatewayEIP01
-    - PrivateSubnet01
+    - PublicSubnet01
     - VPCGatewayAttachment
     Properties:
       AllocationId:
@@ -56,12 +56,12 @@ Resources:
         - NatGatewayEIP01
         - AllocationId
       SubnetId:
-        Ref: PrivateSubnet01
+        Ref: PublicSubnet01
     Type: AWS::EC2::NatGateway
   NatGateway02:
     DependsOn:
     - NatGatewayEIP02
-    - PrivateSubnet02
+    - PublicSubnet02
     - VPCGatewayAttachment
     Properties:
       AllocationId:
@@ -69,7 +69,7 @@ Resources:
         - NatGatewayEIP02
         - AllocationId
       SubnetId:
-        Ref: PrivateSubnet02
+        Ref: PublicSubnet02
     Type: AWS::EC2::NatGateway
   NatGatewayEIP00:
     DependsOn:

@@ -23,7 +23,16 @@ brew install oslokommune/tap/okctl
 ## Usage
 
 ```bash
-okctl --help
+$ okctl --help
+
+# Create a cluster
+$ okctl create cluster pro 123456789012
+
+# Show credentials for cluster
+$ okctl show credentials pro
+
+# Delete the cluster
+$ okctl delete cluster pro
 ```
 
 ## Roadmap

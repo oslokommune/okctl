@@ -17,7 +17,7 @@ require (
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
 	github.com/google/go-cmp v0.5.1
 	github.com/google/uuid v1.1.1
-	github.com/jarcoal/httpmock v1.0.5
+	github.com/jarcoal/httpmock v1.0.6
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mishudark/errors v0.0.0-20190221111348-b16f7e94bb58

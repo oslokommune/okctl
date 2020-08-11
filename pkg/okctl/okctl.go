@@ -105,6 +105,7 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		clusterConfigStore,
 		kubeConfigStore,
 		exe.NewClusterExe(
+			o.Debug,
 			path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterAwsConfig),
 			path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterAwsCredentials),
 			o.BinariesProvider,

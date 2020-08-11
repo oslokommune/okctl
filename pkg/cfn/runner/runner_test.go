@@ -1,10 +1,10 @@
-package manager_test
+package runner_test
 
 import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/oslokommune/okctl/pkg/cfn/manager"
+	"github.com/oslokommune/okctl/pkg/cfn/runner"
 	"github.com/oslokommune/okctl/pkg/mock"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,27 +12,26 @@ import (
 func TestCreate(t *testing.T) {
 	testCases := []struct {
 		name        string
-		manager     *manager.Manager
+		runner      *runner.Runner
 		expect      interface{}
 		expectError bool
 	}{
 		{
 			name: "Should work",
-			manager: manager.
-				New(
+			runner: runner.
+				New(mock.DefaultStackName, []byte{},
 					mock.NewCloudProvider().
 						DescribeStacksEmpty().
 						CreateStackSuccess().
 						DescribeStacksResponse(cloudformation.StackStatusCreateComplete),
-				).
-				WithBuilder(mock.NewGoodBuilder()),
+				),
 		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.manager.CreateIfNotExists(10)
+			err := tc.runner.CreateIfNotExists(10)
 			if tc.expectError {
 				assert.Error(t, err)
 				assert.Equal(t, tc.expect, err.Error())
@@ -46,26 +45,25 @@ func TestCreate(t *testing.T) {
 func TestDelete(t *testing.T) {
 	testCases := []struct {
 		name        string
-		manager     *manager.Manager
+		runner      *runner.Runner
 		expect      interface{}
 		expectError bool
 	}{
 		{
 			name: "Should work",
-			manager: manager.
-				New(
+			runner: runner.
+				New(mock.DefaultStackName, []byte{},
 					mock.NewCloudProvider().
 						DeleteStackSuccess().
 						DescribeStacksResponse(cloudformation.StackStatusDeleteComplete),
-				).
-				WithBuilder(mock.NewGoodBuilder()),
+				),
 		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.manager.Delete(mock.DefaultStackName)
+			err := tc.runner.Delete()
 			if tc.expectError {
 				assert.Error(t, err)
 				assert.Equal(t, tc.expect, err.Error())

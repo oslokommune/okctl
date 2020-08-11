@@ -18,7 +18,7 @@ const (
 	// Name sets the name of the binary/cli
 	Name = "eksctl"
 	// Version sets the currently used version of the binary/cli
-	Version = "0.21.0"
+	Version = "0.25.0"
 
 	defaultClusterConfig = "cluster-config.yml"
 )
@@ -33,6 +33,7 @@ type Eksctl struct {
 	CmdFn      run.CmdFn
 	CmdPath    []string
 	CmdEnv     []string
+	DoDebug    bool
 }
 
 // New returns a new wrapper around the eksctl cli
@@ -94,6 +95,13 @@ func (e *Eksctl) run(args []string, cfg *api.ClusterConfig) ([]byte, error) {
 		err = e.Store.Clean()
 	}()
 
+	verbosity := "--verbose=3"
+	if e.DoDebug {
+		verbosity = "--verbose=4"
+	}
+
+	args = append(args, verbosity)
+
 	err = e.writeClusterConfig(cfg)
 	if err != nil {
 		return nil, err
@@ -117,6 +125,12 @@ func (e *Eksctl) AddToPath(binaryPaths ...string) {
 // AddToEnv adds additional environment variables to the command
 func (e *Eksctl) AddToEnv(envs ...string) {
 	e.CmdEnv = append(e.CmdEnv, envs...)
+}
+
+// Debug sets whether we should increase log output from eksctl,
+// the default behavior is off
+func (e *Eksctl) Debug(enable bool) {
+	e.DoDebug = enable
 }
 
 // DeleteCluster invokes eksctl delete cluster using the provided

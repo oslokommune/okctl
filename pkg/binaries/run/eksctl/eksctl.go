@@ -95,6 +95,13 @@ func (e *Eksctl) run(args []string, cfg *api.ClusterConfig) ([]byte, error) {
 		err = e.Store.Clean()
 	}()
 
+	verbosity := "--verbose=3"
+	if e.DoDebug {
+		verbosity = "--verbose=4"
+	}
+
+	args = append(args, verbosity)
+
 	err = e.writeClusterConfig(cfg)
 	if err != nil {
 		return nil, err
@@ -150,10 +157,6 @@ func (e *Eksctl) CreateCluster(kubeConfigPath string, cfg *api.ClusterConfig) ([
 		"cluster",
 		"--write-kubeconfig=true",
 		fmt.Sprintf("--kubeconfig=%s", kubeConfigPath),
-	}
-
-	if e.DoDebug {
-		args = append(args, "--verbose=5")
 	}
 
 	b, err := e.run(args, cfg)

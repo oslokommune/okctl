@@ -1,5 +1,5 @@
-// Package manager knows how to interact with AWS cloud formation stacks
-package manager
+// Package runner knows how to interact with AWS cloud formation stacks
+package runner
 
 import (
 	"fmt"
@@ -21,17 +21,17 @@ const (
 // Stack defines a single cloud formation stack
 type Stack = cfPkg.Stack
 
-// Manager stores state required for interacting with the AWS
+// Runner stores state required for interacting with the AWS
 // cloud formation API
-type Manager struct {
+type Runner struct {
 	StackName    string
 	TemplateBody []byte
 	Provider     v1alpha1.CloudProvider
 }
 
-// New returns a new manager
-func New(stackName string, templateBody []byte, provider v1alpha1.CloudProvider) *Manager {
-	return &Manager{
+// New returns a new runner
+func New(stackName string, templateBody []byte, provider v1alpha1.CloudProvider) *Runner {
+	return &Runner{
 		StackName:    stackName,
 		TemplateBody: templateBody,
 		Provider:     provider,
@@ -39,7 +39,7 @@ func New(stackName string, templateBody []byte, provider v1alpha1.CloudProvider)
 }
 
 // Exists returns true if a cloud formation stack already exists
-func (m *Manager) Exists() (bool, error) {
+func (m *Runner) Exists() (bool, error) {
 	req := &cfPkg.DescribeStacksInput{
 		StackName: aws.String(m.StackName),
 	}
@@ -65,7 +65,7 @@ func (m *Manager) Exists() (bool, error) {
 type ProcessOutputFn func(string) error
 
 // Outputs processes the cloud formation stacks given the provided processors
-func (m *Manager) Outputs(processors map[string]ProcessOutputFn) error {
+func (m *Runner) Outputs(processors map[string]ProcessOutputFn) error {
 	stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
 		StackName: aws.String(m.StackName),
 	})
@@ -88,7 +88,7 @@ func (m *Manager) Outputs(processors map[string]ProcessOutputFn) error {
 }
 
 // Ready returns true if the stack is in a valid steady state
-func (m *Manager) Ready() (bool, error) {
+func (m *Runner) Ready() (bool, error) {
 	stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
 		StackName: aws.String(m.StackName),
 	})
@@ -99,7 +99,7 @@ func (m *Manager) Ready() (bool, error) {
 	return m.StackStatusIsNotTransitional(stack.Stacks[0]), nil
 }
 
-func (m *Manager) existsAndReady() (bool, error) {
+func (m *Runner) existsAndReady() (bool, error) {
 	exists, err := m.Exists()
 	if err != nil {
 		return false, err
@@ -122,7 +122,7 @@ func (m *Manager) existsAndReady() (bool, error) {
 }
 
 // Delete a cloud formation stack
-func (m *Manager) Delete() error {
+func (m *Runner) Delete() error {
 	_, err := m.Provider.CloudFormation().DeleteStack(&cfPkg.DeleteStackInput{
 		StackName: aws.String(m.StackName),
 	})
@@ -134,7 +134,7 @@ func (m *Manager) Delete() error {
 }
 
 // CreateIfNotExists creates a cloud formation stack if none exists from before
-func (m *Manager) CreateIfNotExists(timeout int64) error {
+func (m *Runner) CreateIfNotExists(timeout int64) error {
 	yes, err := m.existsAndReady()
 	if err != nil {
 		return err
@@ -157,7 +157,7 @@ func (m *Manager) CreateIfNotExists(timeout int64) error {
 	return m.watchCreate(r)
 }
 
-func (m *Manager) watchDelete(stackName string) error {
+func (m *Runner) watchDelete(stackName string) error {
 	for {
 		stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
 			StackName: aws.String(stackName),
@@ -186,7 +186,7 @@ func (m *Manager) watchDelete(stackName string) error {
 }
 
 // Reimplement this as wait
-func (m *Manager) watchCreate(r *cfPkg.CreateStackOutput) error {
+func (m *Runner) watchCreate(r *cfPkg.CreateStackOutput) error {
 	for {
 		stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
 			StackName: r.StackId,

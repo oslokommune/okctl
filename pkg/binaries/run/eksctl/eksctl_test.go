@@ -36,7 +36,7 @@ func TestEksctlDeleteCluster(t *testing.T) {
 				fakeExecCommandSuccess(),
 			),
 			// nolint: lll
-			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,cluster,--config-file,/cluster-config.yml",
+			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,cluster,--verbose=3,--config-file,/cluster-config.yml",
 		},
 		{
 			name: "Should fail",
@@ -49,7 +49,7 @@ func TestEksctlDeleteCluster(t *testing.T) {
 				fakeExecCommandFailure(),
 			),
 			// nolint: lll
-			expect:      "failed to delete: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,cluster,--config-file,/cluster-config.yml: exit status 1",
+			expect:      "failed to delete: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,cluster,--verbose=3,--config-file,/cluster-config.yml: exit status 1",
 			expectError: true,
 		},
 	}
@@ -90,7 +90,7 @@ func TestEksctlCreateCluster(t *testing.T) {
 				fakeExecCommandSuccess(),
 			),
 			// nolint: lll
-			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,cluster,--write-kubeconfig=true,--kubeconfig=/some/path,--config-file,/cluster-config.yml",
+			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,cluster,--write-kubeconfig=true,--kubeconfig=/some/path,--verbose=3,--config-file,/cluster-config.yml",
 		},
 		{
 			name:     "Should fail",
@@ -104,7 +104,7 @@ func TestEksctlCreateCluster(t *testing.T) {
 				fakeExecCommandFailure(),
 			),
 			// nolint: lll
-			expect:      "failed to create: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,cluster,--write-kubeconfig=true,--kubeconfig=/some/path,--config-file,/cluster-config.yml: exit status 1",
+			expect:      "failed to create: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,cluster,--write-kubeconfig=true,--kubeconfig=/some/path,--verbose=3,--config-file,/cluster-config.yml: exit status 1",
 			expectError: true,
 		},
 	}

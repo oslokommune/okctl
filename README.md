@@ -23,7 +23,16 @@ brew install oslokommune/tap/okctl
 ## Usage
 
 ```bash
-okctl --help
+$ okctl --help
+
+# Create a cluster
+$ okctl create cluster pro 123456789012
+
+# Show credentials for cluster
+$ okctl show credentials pro
+
+# Delete the cluster
+$ okctl delete cluster pro
 ```
 
 ## Roadmap
@@ -62,3 +71,4 @@ We have begged, borrowed and stolen various ideas from the following CLIs:
 - https://github.com/kubernetes/kops
 - https://kubernetes.io/docs/tasks/tools/install-kubectl/
 - https://github.com/go-kit/kit
+- https://github.com/Versent/saml2aws/

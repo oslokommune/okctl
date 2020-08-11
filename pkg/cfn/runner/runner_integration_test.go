@@ -1,6 +1,6 @@
 // +build integration
 
-package manager
+package runner
 
 import (
 	"log"
@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	gfn "github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn/builder/vpc"
@@ -35,17 +34,7 @@ func NewCloudFormationSession(t *testing.T) *cloudformation.CloudFormation {
 func NewVPC(t *testing.T) string {
 	builder := vpc.New("test", "dev", "172.16.10.0/20", "eu-west-1")
 
-	err := builder.Build()
-	assert.NoError(t, err)
-
-	resources := builder.Resources()
-
-	template := gfn.NewTemplate()
-	for _, resource := range resources {
-		template.Resources[resource.Name()] = resource.Resource()
-	}
-
-	got, err := template.YAML()
+	got, err := builder.Build()
 	assert.NoError(t, err)
 
 	return string(got)

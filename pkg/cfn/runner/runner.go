@@ -1,5 +1,5 @@
-// Package manager knows how to interact with AWS cloud formation stacks
-package manager
+// Package runner knows how to interact with AWS cloud formation stacks
+package runner
 
 import (
 	"fmt"
@@ -8,9 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	cfPkg "github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
-	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
 const (
@@ -23,42 +21,38 @@ const (
 // Stack defines a single cloud formation stack
 type Stack = cfPkg.Stack
 
-// Manager stores state required for interacting with the AWS
+// Runner stores state required for interacting with the AWS
 // cloud formation API
-type Manager struct {
-	Builder  cfn.Builder
-	Provider v1alpha1.CloudProvider
-	Template *cloudformation.Template
+type Runner struct {
+	StackName    string
+	TemplateBody []byte
+	Provider     v1alpha1.CloudProvider
 }
 
-// New returns a new manager
-func New(provider v1alpha1.CloudProvider) *Manager {
-	return &Manager{
-		Provider: provider,
-		Template: cloudformation.NewTemplate(),
+// New returns a new runner
+func New(stackName string, templateBody []byte, provider v1alpha1.CloudProvider) *Runner {
+	return &Runner{
+		StackName:    stackName,
+		TemplateBody: templateBody,
+		Provider:     provider,
 	}
 }
 
-// WithBuilder adds a builder to cloud formation stack manager
-func (m *Manager) WithBuilder(builder cfn.Builder) *Manager {
-	m.Builder = builder
-
-	return m
-}
-
 // Exists returns true if a cloud formation stack already exists
-func (m *Manager) Exists() (bool, error) {
+func (m *Runner) Exists() (bool, error) {
 	req := &cfPkg.DescribeStacksInput{
-		StackName: aws.String(m.Builder.StackName()),
+		StackName: aws.String(m.StackName),
 	}
 
 	stack, err := m.Provider.CloudFormation().DescribeStacks(req)
 	if err != nil {
 		switch e := err.(type) {
 		case awserr.Error:
-			if e.Code() == awsErrValidationError && fmt.Sprintf(stackDoesNotExistPattern, m.Builder.StackName()) == e.Message() {
+			if e.Code() == awsErrValidationError && fmt.Sprintf(stackDoesNotExistPattern, m.StackName) == e.Message() {
 				return false, nil
 			}
+
+			return false, err
 		default:
 			return false, err
 		}
@@ -71,9 +65,9 @@ func (m *Manager) Exists() (bool, error) {
 type ProcessOutputFn func(string) error
 
 // Outputs processes the cloud formation stacks given the provided processors
-func (m *Manager) Outputs(processors map[string]ProcessOutputFn) error {
+func (m *Runner) Outputs(processors map[string]ProcessOutputFn) error {
 	stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
-		StackName: aws.String(m.Builder.StackName()),
+		StackName: aws.String(m.StackName),
 	})
 	if err != nil {
 		return err
@@ -94,9 +88,9 @@ func (m *Manager) Outputs(processors map[string]ProcessOutputFn) error {
 }
 
 // Ready returns true if the stack is in a valid steady state
-func (m *Manager) Ready() (bool, error) {
+func (m *Runner) Ready() (bool, error) {
 	stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
-		StackName: aws.String(m.Builder.StackName()),
+		StackName: aws.String(m.StackName),
 	})
 	if err != nil {
 		return false, err
@@ -105,7 +99,7 @@ func (m *Manager) Ready() (bool, error) {
 	return m.StackStatusIsNotTransitional(stack.Stacks[0]), nil
 }
 
-func (m *Manager) existsAndReady() (bool, error) {
+func (m *Runner) existsAndReady() (bool, error) {
 	exists, err := m.Exists()
 	if err != nil {
 		return false, err
@@ -121,52 +115,26 @@ func (m *Manager) existsAndReady() (bool, error) {
 			return true, nil
 		}
 
-		return false, fmt.Errorf("stack: %s exists and is in a transitional state", m.Builder.StackName())
+		return false, fmt.Errorf("stack: %s exists and is in a transitional state", m.StackName)
 	}
 
 	return false, nil
 }
 
-func (m *Manager) collectResources() error {
-	for _, resource := range m.Builder.Resources() {
-		if _, hasKey := m.Template.Resources[resource.Name()]; hasKey {
-			return fmt.Errorf("already have resource with name: %s", resource.Name())
-		}
-
-		m.Template.Resources[resource.Name()] = resource.Resource()
-	}
-
-	return nil
-}
-
-func (m *Manager) collectOutputs() error {
-	for _, output := range m.Builder.Outputs() {
-		for key, value := range output.NamedOutputs() {
-			if _, hasKey := m.Template.Outputs[key]; hasKey {
-				return fmt.Errorf("already have output with name: %s", key)
-			}
-
-			m.Template.Outputs[key] = value
-		}
-	}
-
-	return nil
-}
-
 // Delete a cloud formation stack
-func (m *Manager) Delete(stackName string) error {
+func (m *Runner) Delete() error {
 	_, err := m.Provider.CloudFormation().DeleteStack(&cfPkg.DeleteStackInput{
-		StackName: aws.String(stackName),
+		StackName: aws.String(m.StackName),
 	})
 	if err != nil {
 		return err
 	}
 
-	return m.watchDelete(stackName)
+	return m.watchDelete(m.StackName)
 }
 
 // CreateIfNotExists creates a cloud formation stack if none exists from before
-func (m *Manager) CreateIfNotExists(timeout int64) error {
+func (m *Runner) CreateIfNotExists(timeout int64) error {
 	yes, err := m.existsAndReady()
 	if err != nil {
 		return err
@@ -176,30 +144,10 @@ func (m *Manager) CreateIfNotExists(timeout int64) error {
 		return nil
 	}
 
-	err = m.Builder.Build()
-	if err != nil {
-		return err
-	}
-
-	err = m.collectResources()
-	if err != nil {
-		return err
-	}
-
-	err = m.collectOutputs()
-	if err != nil {
-		return err
-	}
-
-	body, err := m.Template.YAML()
-	if err != nil {
-		return err
-	}
-
 	r, err := m.Provider.CloudFormation().CreateStack(&cfPkg.CreateStackInput{
 		OnFailure:        aws.String(cfPkg.OnFailureDelete),
-		StackName:        aws.String(m.Builder.StackName()),
-		TemplateBody:     aws.String(string(body)),
+		StackName:        aws.String(m.StackName),
+		TemplateBody:     aws.String(string(m.TemplateBody)),
 		TimeoutInMinutes: aws.Int64(timeout),
 	})
 	if err != nil {
@@ -209,7 +157,7 @@ func (m *Manager) CreateIfNotExists(timeout int64) error {
 	return m.watchCreate(r)
 }
 
-func (m *Manager) watchDelete(stackName string) error {
+func (m *Runner) watchDelete(stackName string) error {
 	for {
 		stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
 			StackName: aws.String(stackName),
@@ -238,7 +186,7 @@ func (m *Manager) watchDelete(stackName string) error {
 }
 
 // Reimplement this as wait
-func (m *Manager) watchCreate(r *cfPkg.CreateStackOutput) error {
+func (m *Runner) watchCreate(r *cfPkg.CreateStackOutput) error {
 	for {
 		stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
 			StackName: r.StackId,
@@ -264,14 +212,4 @@ func (m *Manager) watchCreate(r *cfPkg.CreateStackOutput) error {
 			return fmt.Errorf("wtf")
 		}
 	}
-}
-
-// YAML returns the cloud formation template in a yaml serialisation
-func (m *Manager) YAML() ([]byte, error) {
-	return m.Template.YAML()
-}
-
-// JSON returns the cloud formation template in a json serialisation
-func (m *Manager) JSON() ([]byte, error) {
-	return m.Template.JSON()
 }

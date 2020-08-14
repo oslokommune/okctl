@@ -4,6 +4,7 @@ package okctl
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/keyring"
 	"net/http"
 	"os"
 	"os/signal"
@@ -245,7 +246,23 @@ func (o *Okctl) newCredentialsProvider(env, awsAccountID string) error {
 		o.FileSystem,
 	))
 
-	saml := aws.NewAuthSAML(awsAccountID, o.Region(), scrape.New(), aws.DefaultStsProvider, aws.Interactive(o.Username()))
+	defaultring, err := keyring.DefaultKeyring()
+	if err != nil {
+		return err
+	}
+
+	k, err := keyring.New(defaultring)
+	if err != nil {
+		return err
+	}
+
+	storedPassword, _ := k.Fetch(keyring.KeyTypeUserPassword)
+	fn := func(username, password string) {
+		// TODO should we handle this error?
+		_ = k.Store(keyring.KeyTypeUserPassword, password)
+	}
+
+	saml := aws.NewAuthSAML(awsAccountID, o.Region(), scrape.New(), aws.DefaultStsProvider, aws.Interactive(o.Username(), storedPassword, fn))
 
 	o.CredentialsProvider = credentials.New(aws.New(authStore, saml))
 

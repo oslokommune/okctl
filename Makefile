@@ -128,7 +128,7 @@ lint: $(GOLANGCILINT)
 	$(GOLANGCILINT) run
 
 ## Testing
-TIMEOUT  = 5m
+TIMEOUT  = 10m
 TESTPKGS = $(shell env GO111MODULE=on $(GO) list -f \
             '{{ if or .TestGoFiles .XTestGoFiles }}{{ .ImportPath }}{{ end }}' \
             $(PKGS))
@@ -139,7 +139,7 @@ test-verbose: ARGS=-v
 test-race:    ARGS=-race
 $(TEST_TARGETS): test
 check test tests: fmt lint $(RICHGO)
-	$(GO) test -timeout $(TIMEOUT)s $(ARGS) $(TESTPKGS) | tee >(RICHGO_FORCE_COLOR=1 $(RICHGO) testfilter)
+	$(GO) test -timeout $(TIMEOUT) $(ARGS) $(TESTPKGS) | tee >(RICHGO_FORCE_COLOR=1 $(RICHGO) testfilter)
 
 test-update:
 	$(GO) test ./... -update

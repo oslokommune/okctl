@@ -8,7 +8,4 @@ package okctl
 import (
 	_ "github.com/containerd/containerd"
 	_ "github.com/docker/distribution"
-	_ "k8s.io/api"
-	_ "k8s.io/apimachinery"
-	_ "k8s.io/client-go"
 )

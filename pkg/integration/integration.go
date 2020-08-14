@@ -1,3 +1,4 @@
+// Package integration implements functionality for more easily running integration tests
 package integration
 
 import (
@@ -22,8 +23,8 @@ type KubernetesCluster struct {
 	kubeConfigDir  string
 	kubeConfigPath string
 
-	ctx            context.Context
-	fs *afero.Afero
+	ctx context.Context
+	fs  *afero.Afero
 }
 
 // NewKubernetesCluster returns an initialised struct for managing kubernetes
@@ -60,9 +61,9 @@ func (k *KubernetesCluster) Create(timeout time.Duration) error {
 	}
 
 	cluster := &k3d.Cluster{
-		Name: RandStringBytes(10),
+		Name: RandStringBytes(10), //nolint: gomnd
 		Network: k3d.ClusterNetwork{
-			Name:     RandStringBytes(10),
+			Name:     RandStringBytes(10), //nolint: gomnd
 			External: true,
 		},
 		Nodes: []*k3d.Node{
@@ -97,7 +98,7 @@ func (k *KubernetesCluster) Destroy() error {
 	if err != nil {
 		return fmt.Errorf("failed to destroy cluster: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -130,21 +131,21 @@ func (k *KubernetesCluster) KubeConfig() (string, error) {
 // Cleanup removes all created resources
 func (k *KubernetesCluster) Cleanup() error {
 	var errors []string
-	
+
 	err := k.fs.RemoveAll(k.kubeConfigDir)
 	if err != nil {
 		errors = append(errors, fmt.Errorf("failed to cleanup kubeconfig dir: %w", err).Error())
 	}
-	
+
 	err = k.Destroy()
 	if err != nil {
 		errors = append(errors, fmt.Errorf("failed to cleanup cluster: %w", err).Error())
 	}
-	
+
 	if len(errors) > 0 {
 		return fmt.Errorf("%s", strings.Join(errors, ", "))
 	}
-	
+
 	return nil
 }
 

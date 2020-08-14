@@ -51,6 +51,10 @@ func TestEstablishEnv(t *testing.T) {
 
 // nolint: funlen
 func TestHelm(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping helm integration tests in short mode")
+	}
+
 	dir, err := ioutil.TempDir("", "testHelm")
 	assert.NoError(t, err)
 

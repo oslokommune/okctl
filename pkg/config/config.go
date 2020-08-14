@@ -62,6 +62,17 @@ const (
 	// DefaultClusterBaseDir is the default directory name of the eksctl cluster config
 	DefaultClusterBaseDir = "cluster"
 
+	// DefaultHelmBaseDir is the default directory for storing helm related stuff
+	DefaultHelmBaseDir = "helm"
+	// DefaultHelmRegistryConfig is the name of the registry config file
+	DefaultHelmRegistryConfig = "registry.json"
+	// DefaultHelmRepositoryConfig is the name of the repositories file
+	DefaultHelmRepositoryConfig = "repositories.yaml"
+	// DefaultHelmRepositoryCache is the name of the repository cache directory
+	DefaultHelmRepositoryCache = "repository"
+	// DefaultHelmPluginsDirectory is the name of the plugins directory
+	DefaultHelmPluginsDirectory = "plugins"
+
 	// DefaultVpcOutputs is the default filename of the vpc outputs information
 	DefaultVpcOutputs = "outputs.json"
 	// DefaultVpcCloudFormationTemplate is the default filename of the vpc cloud formation template

@@ -42,6 +42,6 @@ require (
 	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1 // indirect
 	gopkg.in/ini.v1 v1.57.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
-	k8s.io/apimachinery v0.18.6
+	k8s.io/apimachinery v0.18.8
 	sigs.k8s.io/yaml v1.2.0
 )

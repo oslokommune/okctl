@@ -128,7 +128,7 @@ lint: $(GOLANGCILINT)
 	$(GOLANGCILINT) run
 
 ## Testing
-TIMEOUT  = 20
+TIMEOUT  = 5m
 TESTPKGS = $(shell env GO111MODULE=on $(GO) list -f \
             '{{ if or .TestGoFiles .XTestGoFiles }}{{ .ImportPath }}{{ end }}' \
             $(PKGS))

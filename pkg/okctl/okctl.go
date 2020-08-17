@@ -4,7 +4,6 @@ package okctl
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/keyring"
 	"net/http"
 	"os"
 	"os/signal"
@@ -25,6 +24,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/credentials"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	"github.com/oslokommune/okctl/pkg/credentials/aws/scrape"
+	"github.com/oslokommune/okctl/pkg/keyring"
 	"github.com/oslokommune/okctl/pkg/storage"
 )
 
@@ -258,7 +258,8 @@ func (o *Okctl) newCredentialsProvider(env, awsAccountID string) error {
 
 	storedPassword, _ := k.Fetch(keyring.KeyTypeUserPassword)
 	fn := func(username, password string) {
-		// TODO should we handle this error?
+		// We do not handle this error, since we do not want the process to stop even if we cannot
+		// save password
 		_ = k.Store(keyring.KeyTypeUserPassword, password)
 	}
 

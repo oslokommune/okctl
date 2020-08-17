@@ -1,0 +1,16 @@
+{
+    "Version": "2012-10-17",
+    "Id": "4CFB8EB0-B7A8-4A6D-870A-A2C23FCD01CC",
+    "Statement": [
+        {
+            "Sid": "1",
+            "Effect": "Allow",
+            "Action": [
+                "*"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}

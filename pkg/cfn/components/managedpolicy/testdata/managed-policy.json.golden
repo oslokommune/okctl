@@ -1,0 +1,1 @@
+{"Type":"AWS::IAM::ManagedPolicy","Properties":{"Description":"some desc","ManagedPolicyName":"somePolicyName","PolicyDocument":{"Document":"TestDocument"}}}

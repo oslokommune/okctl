@@ -5,7 +5,6 @@ import (
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/ec2"
 	"github.com/oslokommune/okctl/pkg/cfn"
-	"github.com/oslokommune/okctl/pkg/cfn/builder/output"
 )
 
 // SecurityGroup stores state required for creating a
@@ -17,7 +16,7 @@ type SecurityGroup struct {
 
 // NamedOutputs returns the outputs commonly used by other stacks or components
 func (s *SecurityGroup) NamedOutputs() map[string]map[string]interface{} {
-	return output.NewValue(s.Name(), s.Ref()).NamedOutputs()
+	return cfn.NewValue(s.Name(), s.Ref()).NamedOutputs()
 }
 
 // Resource returns the cloud formation resource for creating a SG

@@ -9,7 +9,6 @@ import (
 	"github.com/awslabs/goformation/v4/cloudformation/ec2"
 	"github.com/awslabs/goformation/v4/cloudformation/tags"
 	"github.com/oslokommune/okctl/pkg/cfn"
-	"github.com/oslokommune/okctl/pkg/cfn/builder/output"
 )
 
 // VPC stores the state for creating a cloud formation VPC
@@ -21,7 +20,7 @@ type VPC struct {
 
 // NamedOutputs returns the commonly used named outputs of a VPC
 func (v *VPC) NamedOutputs() map[string]map[string]interface{} {
-	return output.NewValue(v.Name(), v.Ref()).NamedOutputs()
+	return cfn.NewValue(v.Name(), v.Ref()).NamedOutputs()
 }
 
 // Resource returns the cloud formation resource of the VPC

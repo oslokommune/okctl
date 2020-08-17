@@ -5,9 +5,8 @@ import (
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
-	vpcBuilder "github.com/oslokommune/okctl/pkg/cfn/builder/vpc"
-	"github.com/oslokommune/okctl/pkg/cfn/process"
-	"github.com/oslokommune/okctl/pkg/cfn/runner"
+	"github.com/oslokommune/okctl/pkg/cfn"
+	"github.com/oslokommune/okctl/pkg/cfn/components"
 )
 
 const (
@@ -20,26 +19,28 @@ type vpc struct {
 
 // CreateCluster will use the cloud provider to create a cluster in the cloud
 func (c *vpc) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
-	builder := vpcBuilder.New(opts.RepoName, opts.Env, opts.Cidr, opts.Region)
+	b := cfn.New(components.NewVPCComposer(opts.RepoName, opts.Env, opts.Cidr, opts.Region))
 
-	body, err := builder.Build()
+	body, err := b.Build()
 	if err != nil {
 		return nil, errors.E(err, "failed to build vpc cloud formation template", errors.Internal)
 	}
 
-	m := runner.New(builder.StackName(), body, c.provider)
+	stackName := cfn.NewStackNamer().Vpc(opts.RepoName, opts.Env)
 
-	err = m.CreateIfNotExists(defaultTimeOut)
+	r := cfn.NewRunner(stackName, body, c.provider)
+
+	err = r.CreateIfNotExists(defaultTimeOut)
 	if err != nil {
 		return nil, errors.E(err, "failed to create vpc")
 	}
 
-	v, err := processOutputs(m, c.provider)
+	v, err := processOutputs(r, c.provider)
 	if err != nil {
 		return nil, errors.E(err, "failed to process vpc outputs")
 	}
 
-	v.StackName = vpcBuilder.StackName(opts.RepoName, opts.Env)
+	v.StackName = stackName
 	v.CloudFormationTemplate = body
 
 	return v, nil
@@ -47,7 +48,13 @@ func (c *vpc) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
 
 // DeleteVpc will use the cloud provider to delete a cluster in the cloud
 func (c *vpc) DeleteVpc(opts api.DeleteVpcOpts) error {
-	return runner.New(vpcBuilder.StackName(opts.RepoName, opts.Env), nil, c.provider).Delete()
+	r := cfn.NewRunner(
+		cfn.NewStackNamer().Vpc(opts.RepoName, opts.Env),
+		nil,
+		c.provider,
+	)
+
+	return r.Delete()
 }
 
 // NewVpcCloud returns a cloud provider for cluster
@@ -58,13 +65,13 @@ func NewVpcCloud(provider v1alpha1.CloudProvider) api.VpcCloud {
 }
 
 // processOutputs extracts the outputs we are interested in from the cloud formation stack
-func processOutputs(m *runner.Runner, provider v1alpha1.CloudProvider) (*api.Vpc, error) {
+func processOutputs(m *cfn.Runner, provider v1alpha1.CloudProvider) (*api.Vpc, error) {
 	v := &api.Vpc{}
 
-	err := m.Outputs(map[string]runner.ProcessOutputFn{
-		"PrivateSubnetIds": process.Subnets(provider, &v.PrivateSubnets),
-		"PublicSubnetIds":  process.Subnets(provider, &v.PublicSubnets),
-		"Vpc":              process.String(&v.ID),
+	err := m.Outputs(map[string]cfn.ProcessOutputFn{
+		"PrivateSubnetIds": cfn.Subnets(provider, &v.PrivateSubnets),
+		"PublicSubnetIds":  cfn.Subnets(provider, &v.PublicSubnets),
+		"Vpc":              cfn.String(&v.ID),
 	})
 	if err != nil {
 		return nil, err

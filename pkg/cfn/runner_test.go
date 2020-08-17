@@ -1,10 +1,10 @@
-package runner_test
+package cfn_test
 
 import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/oslokommune/okctl/pkg/cfn/runner"
+	"github.com/oslokommune/okctl/pkg/cfn"
 	"github.com/oslokommune/okctl/pkg/mock"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,19 +12,18 @@ import (
 func TestCreate(t *testing.T) {
 	testCases := []struct {
 		name        string
-		runner      *runner.Runner
+		runner      *cfn.Runner
 		expect      interface{}
 		expectError bool
 	}{
 		{
 			name: "Should work",
-			runner: runner.
-				New(mock.DefaultStackName, []byte{},
-					mock.NewCloudProvider().
-						DescribeStacksEmpty().
-						CreateStackSuccess().
-						DescribeStacksResponse(cloudformation.StackStatusCreateComplete),
-				),
+			runner: cfn.NewRunner(mock.DefaultStackName, []byte{},
+				mock.NewCloudProvider().
+					DescribeStacksEmpty().
+					CreateStackSuccess().
+					DescribeStacksResponse(cloudformation.StackStatusCreateComplete),
+			),
 		},
 	}
 
@@ -45,18 +44,17 @@ func TestCreate(t *testing.T) {
 func TestDelete(t *testing.T) {
 	testCases := []struct {
 		name        string
-		runner      *runner.Runner
+		runner      *cfn.Runner
 		expect      interface{}
 		expectError bool
 	}{
 		{
 			name: "Should work",
-			runner: runner.
-				New(mock.DefaultStackName, []byte{},
-					mock.NewCloudProvider().
-						DeleteStackSuccess().
-						DescribeStacksResponse(cloudformation.StackStatusDeleteComplete),
-				),
+			runner: cfn.NewRunner(mock.DefaultStackName, []byte{},
+				mock.NewCloudProvider().
+					DeleteStackSuccess().
+					DescribeStacksResponse(cloudformation.StackStatusDeleteComplete),
+			),
 		},
 	}
 

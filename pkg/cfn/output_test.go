@@ -1,11 +1,12 @@
-package process_test
+package cfn_test
 
 import (
+	"encoding/base64"
 	"testing"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
-	"github.com/oslokommune/okctl/pkg/cfn/process"
+	"github.com/oslokommune/okctl/pkg/cfn"
 	"github.com/oslokommune/okctl/pkg/mock"
 	"github.com/stretchr/testify/assert"
 )
@@ -53,7 +54,7 @@ func TestSubnets(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var got []api.VpcSubnet
 
-			err := process.Subnets(tc.provider, &got)(tc.value)
+			err := cfn.Subnets(tc.provider, &got)(tc.value)
 
 			if tc.expectError {
 				assert.Error(t, err)
@@ -81,9 +82,43 @@ func TestString(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			err := process.String(&tc.value)(tc.input)
+			err := cfn.String(&tc.value)(tc.input)
 			assert.NoError(t, err)
 			assert.Equal(t, tc.input, tc.value)
+		})
+	}
+}
+
+func TestOutput(t *testing.T) {
+	testCases := []struct {
+		name     string
+		outputer cfn.StackOutputer
+		expect   map[string]map[string]interface{}
+	}{
+		{
+			name:     "Joined",
+			outputer: cfn.NewJoined("JoinedTest").Add("value"),
+			expect: map[string]map[string]interface{}{
+				"JoinedTest": {
+					"Value": base64.StdEncoding.EncodeToString([]byte("{ \"Fn::Join\": [ \",\", [ \"value\" ] ] }")),
+				},
+			},
+		},
+		{
+			name:     "Value",
+			outputer: cfn.NewValue("ValueTest", "value"),
+			expect: map[string]map[string]interface{}{
+				"ValueTest": {
+					"Value": "value",
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expect, tc.outputer.NamedOutputs())
 		})
 	}
 }

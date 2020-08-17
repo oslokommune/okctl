@@ -1,18 +1,15 @@
-// Package output provides functionality for creating cloud formation output
-package output
+package cfn
 
 import (
-	"github.com/awslabs/goformation/v4/cloudformation"
-	"github.com/oslokommune/okctl/pkg/cfn"
-)
+	"fmt"
+	"strings"
 
-// Outputer defines the required interface for
-// fetching output information
-type Outputer interface {
-	cfn.Outputer
-	Outputs() map[string]interface{}
-	Name() string
-}
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/awslabs/goformation/v4/cloudformation"
+	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+)
 
 // Joined stores state for creating an intrinsic join
 type Joined struct {
@@ -56,6 +53,9 @@ func NewJoined(name string) *Joined {
 	}
 }
 
+// Ensure that Joined implements the StackOutputer interface
+var _ StackOutputer = &Joined{}
+
 // Value stores the state for creating an output
 type Value struct {
 	StoredName string
@@ -87,5 +87,39 @@ func NewValue(name, v string) *Value {
 	return &Value{
 		StoredName: name,
 		Value:      v,
+	}
+}
+
+// Ensure that Value implements the StackOutputer interface
+var _ StackOutputer = &Value{}
+
+// Subnets knows how to process the output from a subnet creation
+func Subnets(p v1alpha1.CloudProvider, to *[]api.VpcSubnet) ProcessOutputFn {
+	return func(v string) error {
+		got, err := p.EC2().DescribeSubnets(&ec2.DescribeSubnetsInput{
+			SubnetIds: aws.StringSlice(strings.Split(v, ",")),
+		})
+		if err != nil {
+			return fmt.Errorf("failed to describe subnet outputs: %w", err)
+		}
+
+		for _, s := range got.Subnets {
+			*to = append(*to, api.VpcSubnet{
+				ID:               *s.SubnetId,
+				Cidr:             *s.CidrBlock,
+				AvailabilityZone: *s.AvailabilityZone,
+			})
+		}
+
+		return nil
+	}
+}
+
+// String knows how to process the output from a value
+func String(to *string) ProcessOutputFn {
+	return func(v string) error {
+		*to = v
+
+		return nil
 	}
 }

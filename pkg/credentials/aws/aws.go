@@ -329,32 +329,58 @@ func Static(userName, password, mfatoken string) PopulateFn {
 	}
 }
 
+// InteractiveCallbackFn is used to store username and password from an interactive session
+type InteractiveCallbackFn func(username, password string)
+
+// nolint : Funlength too long
 // Interactive returns a populate method that queries the user interactively
-func Interactive(userName string) PopulateFn {
+func Interactive(userName, storedPassword string, interactiveCallbackFn InteractiveCallbackFn) PopulateFn {
+	hasCredentials := len(storedPassword) > 0 && len(userName) > 0
+	useStoredCredentials := false
+
+	mfaQuestion := &survey.Question{
+		Name: "mfatoken",
+		Prompt: &survey.Password{
+			Message: "Multi-factor authentication token:",
+			Help:    "Oslo kommune multi-factor token, for authentication towards KeyCloak and AWS",
+		},
+	}
+
 	return func(a *AuthSAML) error {
-		qs := []*survey.Question{
-			{
-				Name: "username",
-				Prompt: &survey.Input{
-					Message: "Username:",
-					Default: userName,
-					Help:    "Oslo kommune username (byrXXXXXX), for authentication towards Keycloak and AWS",
+		var qs []*survey.Question
+		if hasCredentials {
+			prompt := &survey.Confirm{
+				Message: fmt.Sprintf("Use stored credentials for username and password? Username: %s, Password: *******", userName),
+			}
+			err := survey.AskOne(prompt, &useStoredCredentials)
+			if err != nil {
+				return err
+			}
+		}
+
+		if useStoredCredentials {
+			qs = []*survey.Question{
+				mfaQuestion,
+			}
+		} else {
+			qs = []*survey.Question{
+				{
+					Name: "username",
+					Prompt: &survey.Input{
+						Message: "Username:",
+						Default: userName,
+						Help:    "Oslo kommune username (byrXXXXXX), for authentication towards Keycloak and AWS",
+					},
 				},
-			},
-			{
-				Name: "password",
-				Prompt: &survey.Password{
-					Message: "Password:",
-					Help:    "Oslo kommune password, for authentication towards KeyCloak and AWS",
+				{
+					Name: "password",
+					Prompt: &survey.Password{
+						Message: "Password:",
+						Help:    "Oslo kommune password, for authentication towards KeyCloak and AWS",
+					},
 				},
-			},
-			{
-				Name: "mfatoken",
-				Prompt: &survey.Password{
-					Message: "Multi-factor authentication token:",
-					Help:    "Oslo kommune multi-factor token, for authentication towards KeyCloak and AWS",
-				},
-			},
+				mfaQuestion,
+			}
 		}
 
 		answers := struct {
@@ -371,6 +397,15 @@ func Interactive(userName string) PopulateFn {
 		a.Username = answers.Username
 		a.Password = answers.Password
 		a.MFAToken = answers.MFAToken
+
+		if useStoredCredentials {
+			a.Username = userName
+			a.Password = storedPassword
+		}
+
+		if interactiveCallbackFn != nil {
+			interactiveCallbackFn(a.Username, a.Password)
+		}
 
 		return a.Validate()
 	}

@@ -24,6 +24,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/credentials"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	"github.com/oslokommune/okctl/pkg/credentials/aws/scrape"
+	"github.com/oslokommune/okctl/pkg/keyring"
 	"github.com/oslokommune/okctl/pkg/storage"
 )
 
@@ -245,7 +246,24 @@ func (o *Okctl) newCredentialsProvider(env, awsAccountID string) error {
 		o.FileSystem,
 	))
 
-	saml := aws.NewAuthSAML(awsAccountID, o.Region(), scrape.New(), aws.DefaultStsProvider, aws.Interactive(o.Username()))
+	defaultring, err := keyring.DefaultKeyring()
+	if err != nil {
+		return err
+	}
+
+	k, err := keyring.New(defaultring)
+	if err != nil {
+		return err
+	}
+
+	storedPassword, _ := k.Fetch(keyring.KeyTypeUserPassword)
+	fn := func(username, password string) {
+		// We do not handle this error, since we do not want the process to stop even if we cannot
+		// save password
+		_ = k.Store(keyring.KeyTypeUserPassword, password)
+	}
+
+	saml := aws.NewAuthSAML(awsAccountID, o.Region(), scrape.New(), aws.DefaultStsProvider, aws.Interactive(o.Username(), storedPassword, fn))
 
 	o.CredentialsProvider = credentials.New(aws.New(authStore, saml))
 

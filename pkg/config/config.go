@@ -73,6 +73,9 @@ const (
 	EnvPrefix = "OKCTL"
 	// EnvHome is the default env var parsed for determining the application home
 	EnvHome = "OKCTL_HOME"
+
+	// DefaultKeyringServiceName is the name of the keyring or encrypted file used to store client secrets
+	DefaultKeyringServiceName = "okctlService"
 )
 
 // DataLoaderFn is the type for loading configuration data

@@ -1,3 +1,4 @@
+// Package mock provides mocks
 package mock
 
 import (
@@ -31,6 +32,8 @@ const (
 	DefaultPrincipalARN = "arn:aws:sts::123456789012:assumed-role/admin/user"
 	// DefaultRegion is a mocked default region
 	DefaultRegion = "eu-west-1"
+	// DefaultStackName is a mocked default stack name
+	DefaultStackName = "myStack"
 )
 
 // DefaultCredentials returns a mocked set of aws credentials

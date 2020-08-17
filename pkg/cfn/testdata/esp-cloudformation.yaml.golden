@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  ExternalSecretsPolicy:
+    Value:
+      Ref: ExternalSecretsPolicy
+Resources:
+  ExternalSecretsPolicy:
+    Properties:
+      Description: Service account policy for reading SSM parameters
+      ManagedPolicyName: okctl-test-ExternalSecretsServiceAccountPolicy
+      PolicyDocument:
+        Statement:
+        - Action:
+          - ssm:GetParameter
+          Effect: Allow
+          Resource:
+          - Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*
+        Version: 2012-10-17
+    Type: AWS::IAM::ManagedPolicy

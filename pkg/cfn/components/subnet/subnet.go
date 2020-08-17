@@ -13,7 +13,6 @@ import (
 	"github.com/awslabs/goformation/v4/cloudformation/tags"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn"
-	"github.com/oslokommune/okctl/pkg/cfn/builder/output"
 )
 
 const (
@@ -39,6 +38,11 @@ const (
 	DefaultSubnets = 9
 	// DefaultPrefixLen defines the size of the subnets, e.g., how many IPs they contain
 	DefaultPrefixLen = 24
+
+	// DefaultPrivateSubnetsLogicalID defines the logical id for the stack outputs
+	DefaultPrivateSubnetsLogicalID = "PrivateSubnetIds"
+	// DefaultPublicSubnetsLogicalID defines the logical id for the stack outputs
+	DefaultPublicSubnetsLogicalID = "PublicSubnetIds"
 )
 
 // Subnet stores state required for creating a
@@ -229,13 +233,13 @@ type Subnets struct {
 // NamedOutputs returns the cloud formation outputs commonly
 // required for the given subnets
 func (s *Subnets) NamedOutputs() map[string]map[string]interface{} {
-	private := output.NewJoined("PrivateSubnetIds")
+	private := cfn.NewJoined(DefaultPrivateSubnetsLogicalID)
 
 	for _, p := range s.Private {
 		private.Add(p.Ref())
 	}
 
-	public := output.NewJoined("PublicSubnetIds")
+	public := cfn.NewJoined(DefaultPublicSubnetsLogicalID)
 
 	for _, p := range s.Public {
 		public.Add(p.Ref())

@@ -1,5 +1,4 @@
-// Package runner knows how to interact with AWS cloud formation stacks
-package runner
+package cfn
 
 import (
 	"fmt"
@@ -29,8 +28,8 @@ type Runner struct {
 	Provider     v1alpha1.CloudProvider
 }
 
-// New returns a new runner
-func New(stackName string, templateBody []byte, provider v1alpha1.CloudProvider) *Runner {
+// NewRunner returns a new runner
+func NewRunner(stackName string, templateBody []byte, provider v1alpha1.CloudProvider) *Runner {
 	return &Runner{
 		StackName:    stackName,
 		TemplateBody: templateBody,
@@ -162,6 +161,8 @@ func (m *Runner) watchDelete(stackName string) error {
 		stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
 			StackName: aws.String(stackName),
 		})
+		// https://docs.aws.amazon.com/sdk-for-go/api/service/cloudformation/#CloudFormation.DeleteStack
+		// Deleted stacks do not show up in the DescribeStacks API if the deletion has been completed successfully.
 		if err != nil {
 			return err
 		}
@@ -211,5 +212,87 @@ func (m *Runner) watchCreate(r *cfPkg.CreateStackOutput) error {
 		default:
 			return fmt.Errorf("wtf")
 		}
+	}
+}
+
+// This is verbatim stolen from: https://github.com/weaveworks/eksctl/blob/master/pkg/cfn/manager/api.go
+
+// StackStatusIsNotTransitional returns true if stack is in a steady state
+func (*Runner) StackStatusIsNotTransitional(s *Stack) bool {
+	for _, state := range nonTransitionalReadyStackStatuses() {
+		if *s.StackStatus == state {
+			return true
+		}
+	}
+
+	return false
+}
+
+func nonTransitionalReadyStackStatuses() []string {
+	return []string{
+		cfPkg.StackStatusCreateComplete,
+		cfPkg.StackStatusUpdateComplete,
+		cfPkg.StackStatusRollbackComplete,
+		cfPkg.StackStatusUpdateRollbackComplete,
+	}
+}
+
+// StackStatusIsNotReady returns true if the stack is in a transitional state
+func (*Runner) StackStatusIsNotReady(s *Stack) bool {
+	for _, state := range nonReadyStackStatuses() {
+		if *s.StackStatus == state {
+			return true
+		}
+	}
+
+	return false
+}
+
+func nonReadyStackStatuses() []string {
+	return []string{
+		cfPkg.StackStatusCreateInProgress,
+		cfPkg.StackStatusCreateFailed,
+		cfPkg.StackStatusRollbackInProgress,
+		cfPkg.StackStatusRollbackFailed,
+		cfPkg.StackStatusDeleteInProgress,
+		cfPkg.StackStatusDeleteFailed,
+		cfPkg.StackStatusUpdateInProgress,
+		cfPkg.StackStatusUpdateCompleteCleanupInProgress,
+		cfPkg.StackStatusUpdateRollbackInProgress,
+		cfPkg.StackStatusUpdateRollbackFailed,
+		cfPkg.StackStatusUpdateRollbackCompleteCleanupInProgress,
+		cfPkg.StackStatusReviewInProgress,
+	}
+}
+
+// StackStatusIsNotDeleted returns true if the stack exists in some form
+func (*Runner) StackStatusIsNotDeleted(s *Stack) bool {
+	for _, state := range allNonDeletedStackStatuses() {
+		if *s.StackStatus == state {
+			return true
+		}
+	}
+
+	return false
+}
+
+func allNonDeletedStackStatuses() []string {
+	return []string{
+		cfPkg.StackStatusCreateInProgress,
+		cfPkg.StackStatusCreateFailed,
+		cfPkg.StackStatusCreateComplete,
+		cfPkg.StackStatusRollbackInProgress,
+		cfPkg.StackStatusRollbackFailed,
+		cfPkg.StackStatusRollbackComplete,
+		cfPkg.StackStatusDeleteInProgress,
+		cfPkg.StackStatusDeleteFailed,
+		cfPkg.StackStatusUpdateInProgress,
+		cfPkg.StackStatusUpdateCompleteCleanupInProgress,
+		cfPkg.StackStatusUpdateComplete,
+		cfPkg.StackStatusUpdateRollbackInProgress,
+		cfPkg.StackStatusUpdateRollbackFailed,
+		cfPkg.StackStatusUpdateRollbackCompleteCleanupInProgress,
+		cfPkg.StackStatusUpdateRollbackComplete,
+		cfPkg.StackStatusReviewInProgress,
 	}
 }

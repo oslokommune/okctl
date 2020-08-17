@@ -1,4 +1,3 @@
-// Package cfn defines interfaces for creating cloud formation
 package cfn
 
 import (
@@ -39,15 +38,16 @@ type Referencer interface {
 	Ref() string
 }
 
-// Outputer knows how to create cloud formation outputs
-type Outputer interface {
+// StackOutputer ensures that the receiver will be
+// returned a set of named output values that can
+// be associated with a cloud formation stack and extracted
+// after stack creation:
+// - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html
+type StackOutputer interface {
 	NamedOutputs() map[string]map[string]interface{}
 }
 
-// Builder knows how to create a cloud formation stack
-type Builder interface {
-	Build() error
-	StackName() string
-	Outputs() []Outputer
-	Resources() []ResourceNamer
+// StackBuilder knows how to create a cloud formation stack
+type StackBuilder interface {
+	Build() ([]byte, error)
 }

@@ -2,9 +2,10 @@ package keyring_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/oslokommune/okctl/pkg/keyring"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestStore(t *testing.T) {
@@ -50,7 +51,7 @@ func TestStore(t *testing.T) {
 func TestFetch(t *testing.T) {
 	testCases := []struct {
 		name      string
-		ring	  keyring.Keyringer
+		ring      keyring.Keyringer
 		keytype   keyring.KeyType
 		secret    string
 		expect    string
@@ -65,7 +66,7 @@ func TestFetch(t *testing.T) {
 				return r
 			}(),
 			keytype: keyring.KeyTypeUserPassword,
-			secret : "s3cret",
+			secret:  "s3cret",
 			expect:  "s3cret",
 		},
 		{
@@ -85,7 +86,10 @@ func TestFetch(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			tc.ring.Store(keyring.KeyTypeUserPassword, tc.expect)
+			err := tc.ring.Store(keyring.KeyTypeUserPassword, tc.expect)
+			if err != nil {
+				fmt.Print("Ignore error")
+			}
 			got, err := tc.ring.Fetch(tc.keytype)
 			assert.NoError(t, err)
 			assert.Equal(t, tc.expect, got)

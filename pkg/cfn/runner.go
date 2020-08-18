@@ -2,6 +2,7 @@ package cfn
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,10 +12,9 @@ import (
 )
 
 const (
-	//stackStatus              = "Stacks[].StackStatus"
-	stackDoesNotExistPattern = "Stack with id %s does not exist"
-	defaultSleepTime         = 30
-	awsErrValidationError    = "ValidationError"
+	stackDoesNotExitRegex = "^Stack with id (.*)%s(.*) does not exist$"
+	defaultSleepTime      = 30
+	awsErrValidationError = "ValidationError"
 )
 
 // Stack defines a single cloud formation stack
@@ -38,16 +38,21 @@ func NewRunner(stackName string, templateBody []byte, provider v1alpha1.CloudPro
 }
 
 // Exists returns true if a cloud formation stack already exists
-func (m *Runner) Exists() (bool, error) {
+func (r *Runner) Exists() (bool, error) {
 	req := &cfPkg.DescribeStacksInput{
-		StackName: aws.String(m.StackName),
+		StackName: aws.String(r.StackName),
 	}
 
-	stack, err := m.Provider.CloudFormation().DescribeStacks(req)
+	re, err := regexp.Compile(fmt.Sprintf(stackDoesNotExitRegex, r.StackName))
+	if err != nil {
+		return false, fmt.Errorf("failed to compile regex for stack existence: %w", err)
+	}
+
+	stack, err := r.Provider.CloudFormation().DescribeStacks(req)
 	if err != nil {
 		switch e := err.(type) {
 		case awserr.Error:
-			if e.Code() == awsErrValidationError && fmt.Sprintf(stackDoesNotExistPattern, m.StackName) == e.Message() {
+			if e.Code() == awsErrValidationError && re.MatchString(e.Message()) {
 				return false, nil
 			}
 
@@ -57,16 +62,16 @@ func (m *Runner) Exists() (bool, error) {
 		}
 	}
 
-	return m.StackStatusIsNotDeleted(stack.Stacks[0]), nil
+	return r.StackStatusIsNotDeleted(stack.Stacks[0]), nil
 }
 
 // ProcessOutputFn defines a callback for handling output data
 type ProcessOutputFn func(string) error
 
 // Outputs processes the cloud formation stacks given the provided processors
-func (m *Runner) Outputs(processors map[string]ProcessOutputFn) error {
-	stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
-		StackName: aws.String(m.StackName),
+func (r *Runner) Outputs(processors map[string]ProcessOutputFn) error {
+	stack, err := r.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
+		StackName: aws.String(r.StackName),
 	})
 	if err != nil {
 		return err
@@ -87,25 +92,25 @@ func (m *Runner) Outputs(processors map[string]ProcessOutputFn) error {
 }
 
 // Ready returns true if the stack is in a valid steady state
-func (m *Runner) Ready() (bool, error) {
-	stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
-		StackName: aws.String(m.StackName),
+func (r *Runner) Ready() (bool, error) {
+	stack, err := r.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
+		StackName: aws.String(r.StackName),
 	})
 	if err != nil {
 		return false, err
 	}
 
-	return m.StackStatusIsNotTransitional(stack.Stacks[0]), nil
+	return r.StackStatusIsNotTransitional(stack.Stacks[0]), nil
 }
 
-func (m *Runner) existsAndReady() (bool, error) {
-	exists, err := m.Exists()
+func (r *Runner) existsAndReady() (bool, error) {
+	exists, err := r.Exists()
 	if err != nil {
 		return false, err
 	}
 
 	if exists {
-		ready, err := m.Ready()
+		ready, err := r.Ready()
 		if err != nil {
 			return false, err
 		}
@@ -114,27 +119,27 @@ func (m *Runner) existsAndReady() (bool, error) {
 			return true, nil
 		}
 
-		return false, fmt.Errorf("stack: %s exists and is in a transitional state", m.StackName)
+		return false, fmt.Errorf("stack: %s exists and is in a transitional state", r.StackName)
 	}
 
 	return false, nil
 }
 
 // Delete a cloud formation stack
-func (m *Runner) Delete() error {
-	_, err := m.Provider.CloudFormation().DeleteStack(&cfPkg.DeleteStackInput{
-		StackName: aws.String(m.StackName),
+func (r *Runner) Delete() error {
+	_, err := r.Provider.CloudFormation().DeleteStack(&cfPkg.DeleteStackInput{
+		StackName: aws.String(r.StackName),
 	})
 	if err != nil {
 		return err
 	}
 
-	return m.watchDelete(m.StackName)
+	return r.watchDelete(r.StackName)
 }
 
 // CreateIfNotExists creates a cloud formation stack if none exists from before
-func (m *Runner) CreateIfNotExists(timeout int64) error {
-	yes, err := m.existsAndReady()
+func (r *Runner) CreateIfNotExists(timeout int64) error {
+	yes, err := r.existsAndReady()
 	if err != nil {
 		return err
 	}
@@ -143,22 +148,22 @@ func (m *Runner) CreateIfNotExists(timeout int64) error {
 		return nil
 	}
 
-	r, err := m.Provider.CloudFormation().CreateStack(&cfPkg.CreateStackInput{
+	_, err = r.Provider.CloudFormation().CreateStack(&cfPkg.CreateStackInput{
 		OnFailure:        aws.String(cfPkg.OnFailureDelete),
-		StackName:        aws.String(m.StackName),
-		TemplateBody:     aws.String(string(m.TemplateBody)),
+		StackName:        aws.String(r.StackName),
+		TemplateBody:     aws.String(string(r.TemplateBody)),
 		TimeoutInMinutes: aws.Int64(timeout),
 	})
 	if err != nil {
 		return err
 	}
 
-	return m.watchCreate(r)
+	return r.watchCreate(r.StackName)
 }
 
-func (m *Runner) watchDelete(stackName string) error {
+func (r *Runner) watchDelete(stackName string) error {
 	for {
-		stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
+		stack, err := r.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
 			StackName: aws.String(stackName),
 		})
 		// https://docs.aws.amazon.com/sdk-for-go/api/service/cloudformation/#CloudFormation.DeleteStack
@@ -187,13 +192,16 @@ func (m *Runner) watchDelete(stackName string) error {
 }
 
 // Reimplement this as wait
-func (m *Runner) watchCreate(r *cfPkg.CreateStackOutput) error {
+// - Should provide a context, where we can wait for some timeout
+// - How should we handle describe that fails?
+func (r *Runner) watchCreate(stackName string) error {
 	for {
-		stack, err := m.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
-			StackName: r.StackId,
+		stack, err := r.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
+			StackName: aws.String(stackName),
 		})
+
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to describe stack after create: %w", err)
 		}
 
 		if len(stack.Stacks) != 1 {

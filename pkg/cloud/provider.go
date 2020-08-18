@@ -2,6 +2,8 @@
 package cloud
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	awsCreds "github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -16,22 +18,27 @@ import (
 // Provider stores state required for interacting with the AWS API
 type Provider struct {
 	Provider v1alpha1.CloudProvider
-	Auth     awsauth.Authenticator
 }
 
-// New returns a new AWS API provider
+// New returns a new AWS API provider and builds a session from
+// the provided authenticator
 func New(region string, a awsauth.Authenticator) (*Provider, error) {
+	sess, err := NewSession(region, a)
+	if err != nil {
+		return nil, fmt.Errorf("failed to authenticate with aws: %w", err)
+	}
+
+	return NewFromSession(region, sess)
+}
+
+// NewFromSession returns a new AWS API provider and builds a session
+// from the provided authenticator
+func NewFromSession(region string, sess *session.Session) (*Provider, error) {
 	services := &Services{
 		region: region,
 	}
 	p := &Provider{
 		Provider: services,
-		Auth:     a,
-	}
-
-	sess, err := p.newSession()
-	if err != nil {
-		return nil, err
 	}
 
 	services.cfn = cloudformation.New(sess)
@@ -40,14 +47,15 @@ func New(region string, a awsauth.Authenticator) (*Provider, error) {
 	return p, nil
 }
 
-func (p *Provider) newSession() (*session.Session, error) {
-	creds, err := p.Auth.Raw()
+// NewSession returns an AWS session using the provided authenticator
+func NewSession(region string, auth awsauth.Authenticator) (*session.Session, error) {
+	creds, err := auth.Raw()
 	if err != nil {
 		return nil, err
 	}
 
 	config := aws.NewConfig().
-		WithRegion(p.Provider.Region()).
+		WithRegion(region).
 		WithCredentials(
 			awsCreds.NewStaticCredentials(
 				creds.AccessKeyID,

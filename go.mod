@@ -7,6 +7,7 @@ replace github.com/docker/distribution => github.com/docker/distribution v2.7.1-
 require (
 	github.com/99designs/keyring v1.1.5
 	github.com/AlecAivazis/survey/v2 v2.1.1
+	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d // indirect
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/aws/aws-sdk-go v1.34.4
@@ -47,6 +48,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.3.0 // indirect
 	github.com/onsi/ginkgo v1.13.0 // indirect
+	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/rancher/k3d/v3 v3.0.0

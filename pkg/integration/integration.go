@@ -78,40 +78,7 @@ func (l *Localstack) Create(timeout time.Duration) error {
 		return fmt.Errorf("failed to start localstack container: %w", err)
 	}
 
-	err = pool.Retry(func() error {
-		resp, err := http.Get(fmt.Sprintf("http://localhost:%d/health?reload", l.edgePort))
-		if err != nil {
-			return err
-		}
-
-		var services map[string]map[string]string
-
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return fmt.Errorf("failed to read body: %w", err)
-		}
-
-		err = json.Unmarshal(body, &services)
-		if err != nil {
-			return fmt.Errorf("failed to unmarshal json: %w", err)
-		}
-
-		for service, status := range services["services"] {
-			if status != "running" {
-				return fmt.Errorf("waiting for: %s, to get to running state, currently: %s", service, status)
-			}
-		}
-
-		defer func() {
-			_ = resp.Body.Close()
-		}()
-
-		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("got response code from localstack: %d, not 200 OK", resp.StatusCode)
-		}
-
-		return nil
-	})
+	err = pool.Retry(l.Health)
 	if err != nil {
 		return fmt.Errorf("failed to wait for localstack: %w", err)
 	}
@@ -155,6 +122,42 @@ func (l *Localstack) Cleanup() error {
 		if err != nil {
 			return fmt.Errorf("failed to cleanup resources: %w", err)
 		}
+	}
+
+	return nil
+}
+
+// Health returns nil if the localstack instance is up and running
+func (l *Localstack) Health() error {
+	resp, err := http.Get(fmt.Sprintf("http://localhost:%d/health?reload", l.edgePort))
+	if err != nil {
+		return err
+	}
+
+	var services map[string]map[string]string
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read body: %w", err)
+	}
+
+	err = json.Unmarshal(body, &services)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal json: %w", err)
+	}
+
+	for service, status := range services["services"] {
+		if status != "running" {
+			return fmt.Errorf("waiting for: %s, to get to running state, currently: %s", service, status)
+		}
+	}
+
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("got response code from localstack: %d, not 200 OK", resp.StatusCode)
 	}
 
 	return nil

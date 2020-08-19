@@ -23,7 +23,7 @@ type CreateExternalSecretsPolicyOpts struct {
 }
 
 // Validate determines if the options are valid
-func (o *CreateExternalSecretsPolicyOpts) Validate() error {
+func (o CreateExternalSecretsPolicyOpts) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.Environment, validation.Required),
 		validation.Field(&o.Repository, validation.Required),

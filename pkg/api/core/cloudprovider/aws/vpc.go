@@ -28,9 +28,9 @@ func (c *vpcCloudProvider) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
 
 	stackName := cfn.NewStackNamer().Vpc(opts.RepoName, opts.Env)
 
-	r := cfn.NewRunner(stackName, template, c.provider)
+	r := cfn.NewRunner(c.provider)
 
-	err = r.CreateIfNotExists(defaultTimeOut)
+	err = r.CreateIfNotExists(stackName, template, defaultTimeOut)
 	if err != nil {
 		return nil, errors.E(err, "failed to create vpc")
 	}
@@ -40,7 +40,7 @@ func (c *vpcCloudProvider) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
 		CloudFormationTemplate: template,
 	}
 
-	err = r.Outputs(map[string]cfn.ProcessOutputFn{
+	err = r.Outputs(stackName, map[string]cfn.ProcessOutputFn{
 		"PrivateSubnetIds": cfn.Subnets(c.provider, &v.PrivateSubnets),
 		"PublicSubnetIds":  cfn.Subnets(c.provider, &v.PublicSubnets),
 		"Vpc":              cfn.String(&v.ID),
@@ -54,13 +54,7 @@ func (c *vpcCloudProvider) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
 
 // DeleteVpc will use the cloud provider to delete a cluster in the cloud
 func (c *vpcCloudProvider) DeleteVpc(opts api.DeleteVpcOpts) error {
-	r := cfn.NewRunner(
-		cfn.NewStackNamer().Vpc(opts.RepoName, opts.Env),
-		nil,
-		c.provider,
-	)
-
-	return r.Delete()
+	return cfn.NewRunner(c.provider).Delete(cfn.NewStackNamer().Vpc(opts.RepoName, opts.Env))
 }
 
 // NewVpcCloud returns a cloud provider for cluster

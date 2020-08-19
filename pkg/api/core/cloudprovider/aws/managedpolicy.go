@@ -23,9 +23,9 @@ func (m *managedPolicy) CreateExternalSecretsPolicy(opts api.CreateExternalSecre
 
 	stackName := cfn.NewStackNamer().ExternalSecretsPolicy(opts.Repository, opts.Environment)
 
-	r := cfn.NewRunner(stackName, template, m.provider)
+	r := cfn.NewRunner(m.provider)
 
-	err = r.CreateIfNotExists(defaultTimeOut)
+	err = r.CreateIfNotExists(stackName, template, defaultTimeOut)
 	if err != nil {
 		return nil, errors.E(err, "cloud provider failed to create policy", errors.Unknown)
 	}
@@ -37,7 +37,7 @@ func (m *managedPolicy) CreateExternalSecretsPolicy(opts api.CreateExternalSecre
 		CloudFormationTemplate: template,
 	}
 
-	err = r.Outputs(map[string]cfn.ProcessOutputFn{
+	err = r.Outputs(stackName, map[string]cfn.ProcessOutputFn{
 		"ExternalSecretsPolicy": cfn.String(&p.PolicyARN),
 	})
 	if err != nil {

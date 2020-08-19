@@ -15,9 +15,10 @@ import (
 )
 
 const (
-	targetVpcs           = "vpcs/"
-	targetClusters       = "clusters/"
-	targetClusterConfigs = "clusterconfigs/"
+	targetVpcs            = "vpcs/"
+	targetClusters        = "clusters/"
+	targetClusterConfigs  = "clusterconfigs/"
+	targetExternalSecrets = "managedpolicies/externalsecrets/"
 )
 
 // Cluster client API calls
@@ -37,6 +38,11 @@ type Vpc interface {
 	DeleteVpc(opts *api.DeleteVpcOpts) error
 }
 
+// ManagedPolicy API calls
+type ManagedPolicy interface {
+	CreateExternalSecretsPolicy(opts *api.CreateExternalSecretsPolicyOpts) error
+}
+
 // Client stores state for invoking API operations
 type Client struct {
 	BaseURL  string
@@ -51,6 +57,11 @@ func New(progress io.Writer, serverURL string) *Client {
 		BaseURL:  serverURL,
 		Client:   &http.Client{},
 	}
+}
+
+// CreateExternalSecretsPolicy invokes the external secrets policy create operation
+func (c *Client) CreateExternalSecretsPolicy(opts *api.CreateExternalSecretsPolicyOpts) error {
+	return c.DoPost(targetExternalSecrets, opts)
 }
 
 // CreateClusterConfig invokes the cluster config create operation

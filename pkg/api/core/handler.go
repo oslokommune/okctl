@@ -2,6 +2,7 @@ package core
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi"
 	"github.com/go-kit/kit/endpoint"
@@ -14,32 +15,35 @@ import (
 
 // Endpoints defines all available endpoints
 type Endpoints struct {
-	CreateCluster       endpoint.Endpoint
-	DeleteCluster       endpoint.Endpoint
-	CreateClusterConfig endpoint.Endpoint
-	CreateVpc           endpoint.Endpoint
-	DeleteVpc           endpoint.Endpoint
+	CreateCluster               endpoint.Endpoint
+	DeleteCluster               endpoint.Endpoint
+	CreateClusterConfig         endpoint.Endpoint
+	CreateVpc                   endpoint.Endpoint
+	DeleteVpc                   endpoint.Endpoint
+	CreateExternalSecretsPolicy endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
 // corresponding service
 func MakeEndpoints(s Services) Endpoints {
 	return Endpoints{
-		CreateCluster:       makeCreateClusterEndpoint(s.Cluster),
-		DeleteCluster:       makeDeleteClusterEndpoint(s.Cluster),
-		CreateClusterConfig: makeCreateClusterConfigEndpoint(s.ClusterConfig),
-		CreateVpc:           makeCreateVpcEndpoint(s.Vpc),
-		DeleteVpc:           makeDeleteVpcEndpoint(s.Vpc),
+		CreateCluster:               makeCreateClusterEndpoint(s.Cluster),
+		DeleteCluster:               makeDeleteClusterEndpoint(s.Cluster),
+		CreateClusterConfig:         makeCreateClusterConfigEndpoint(s.ClusterConfig),
+		CreateVpc:                   makeCreateVpcEndpoint(s.Vpc),
+		DeleteVpc:                   makeDeleteVpcEndpoint(s.Vpc),
+		CreateExternalSecretsPolicy: makeCreateExternalSecretsPolicyEndpoint(s.ManagedPolicy),
 	}
 }
 
 // Handlers defines http handlers for processing requests
 type Handlers struct {
-	CreateCluster       http.Handler
-	DeleteCluster       http.Handler
-	CreateClusterConfig http.Handler
-	CreateVpc           http.Handler
-	DeleteVpc           http.Handler
+	CreateCluster               http.Handler
+	DeleteCluster               http.Handler
+	CreateClusterConfig         http.Handler
+	CreateVpc                   http.Handler
+	DeleteVpc                   http.Handler
+	CreateExternalSecretsPolicy http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -72,11 +76,12 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 	}
 
 	return &Handlers{
-		CreateCluster:       newServer(endpoints.CreateCluster, decodeClusterCreateRequest),
-		DeleteCluster:       newServer(endpoints.DeleteCluster, decodeClusterDeleteRequest),
-		CreateClusterConfig: newServer(endpoints.CreateClusterConfig, decodeClusterConfigCreateRequest),
-		CreateVpc:           newServer(endpoints.CreateVpc, decodeVpcCreateRequest),
-		DeleteVpc:           newServer(endpoints.DeleteVpc, decodeVpcDeleteRequest),
+		CreateCluster:               newServer(endpoints.CreateCluster, decodeClusterCreateRequest),
+		DeleteCluster:               newServer(endpoints.DeleteCluster, decodeClusterDeleteRequest),
+		CreateClusterConfig:         newServer(endpoints.CreateClusterConfig, decodeClusterConfigCreateRequest),
+		CreateVpc:                   newServer(endpoints.CreateVpc, decodeVpcCreateRequest),
+		DeleteVpc:                   newServer(endpoints.DeleteVpc, decodeVpcDeleteRequest),
+		CreateExternalSecretsPolicy: newServer(endpoints.CreateExternalSecretsPolicy, decodeCreateExternalSecretsPolicyRequest),
 	}
 }
 
@@ -96,6 +101,11 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/clusterconfigs", func(r chi.Router) {
 			r.Method(http.MethodPost, "/", handlers.CreateClusterConfig)
 		})
+		r.Route("/managedpolicies", func(r chi.Router) {
+			r.Route("/externalsecrets", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateExternalSecretsPolicy)
+			})
+		})
 	})
 
 	return r
@@ -106,6 +116,7 @@ type Services struct {
 	Cluster       api.ClusterService
 	ClusterConfig api.ClusterConfigService
 	Vpc           api.VpcService
+	ManagedPolicy api.ManagedPolicyService
 }
 
 // EndpointOption makes it easy to enable and disable the endpoint
@@ -116,17 +127,20 @@ const (
 	clusterTag       = "cluster"
 	clusterConfigTag = "clusterConfig"
 	vpcTag           = "vpc"
+	managedPolicies  = "managedPolicies"
+	externalSecrets  = "externalSecrets"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
 func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 	return func(endpoints Endpoints) Endpoints {
 		return Endpoints{
-			CreateCluster:       middleware.Logging(logger, clusterTag, "create")(endpoints.CreateCluster),
-			DeleteCluster:       middleware.Logging(logger, clusterTag, "delete")(endpoints.DeleteCluster),
-			CreateClusterConfig: middleware.Logging(logger, clusterConfigTag, "create")(endpoints.CreateClusterConfig),
-			CreateVpc:           middleware.Logging(logger, vpcTag, "create")(endpoints.CreateVpc),
-			DeleteVpc:           middleware.Logging(logger, vpcTag, "delete")(endpoints.DeleteVpc),
+			CreateCluster:               middleware.Logging(logger, clusterTag, "create")(endpoints.CreateCluster),
+			DeleteCluster:               middleware.Logging(logger, clusterTag, "delete")(endpoints.DeleteCluster),
+			CreateClusterConfig:         middleware.Logging(logger, clusterConfigTag, "create")(endpoints.CreateClusterConfig),
+			CreateVpc:                   middleware.Logging(logger, vpcTag, "create")(endpoints.CreateVpc),
+			DeleteVpc:                   middleware.Logging(logger, vpcTag, "delete")(endpoints.DeleteVpc),
+			CreateExternalSecretsPolicy: middleware.Logging(logger, strings.Join([]string{managedPolicies, externalSecrets}, "/"), "create")(endpoints.CreateExternalSecretsPolicy), // nolint: lll
 		}
 	}
 }

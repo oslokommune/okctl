@@ -1,8 +1,9 @@
 package api
 
 import (
+	"context"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/oslokommune/okctl/pkg/context"
 )
 
 // ManagedPolicy contains all state for a policy

@@ -91,6 +91,13 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		o.RepoData,
 	)
 
+	managedPolicyStore := filesystem.NewManagedPolicyStore(
+		config.DefaultExternalSecretsOutputs,
+		config.DefaultExternalSecretsCloudFormationTemplate,
+		path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+		o.FileSystem,
+	)
+
 	vpcService := core.NewVpcService(
 		awsProvider.NewVpcCloud(o.CloudProvider),
 		vpcStore,
@@ -113,10 +120,16 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		),
 	)
 
+	managedPolicyService := core.NewManagedPolicyService(
+		awsProvider.NewManagedPolicyCloudProvider(o.CloudProvider),
+		managedPolicyStore,
+	)
+
 	services := core.Services{
 		Cluster:       clusterService,
 		ClusterConfig: clusterConfigService,
 		Vpc:           vpcService,
+		ManagedPolicy: managedPolicyService,
 	}
 
 	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))

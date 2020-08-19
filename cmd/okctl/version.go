@@ -12,7 +12,7 @@ import (
 var GitCommit string
 
 // nolint: globalvar
-// The current version of OkCLI
+// The current version of okctl
 var OkctlVersion string
 
 func buildVersionCommand(o *okctl.Okctl) *cobra.Command {

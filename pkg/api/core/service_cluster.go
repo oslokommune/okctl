@@ -9,7 +9,7 @@ import (
 )
 
 type cluster struct {
-	exe             api.ClusterExe
+	exe             api.ClusterRun
 	store           api.ClusterStore
 	configStore     api.ClusterConfigStore
 	kubeConfigStore api.KubeConfigStore
@@ -83,7 +83,7 @@ func (c *cluster) DeleteCluster(_ context.Context, opts api.ClusterDeleteOpts) e
 }
 
 // NewClusterService returns a service operator for the cluster operations
-func NewClusterService(store api.ClusterStore, configStore api.ClusterConfigStore, kubeConfigStore api.KubeConfigStore, exe api.ClusterExe) api.ClusterService {
+func NewClusterService(store api.ClusterStore, configStore api.ClusterConfigStore, kubeConfigStore api.KubeConfigStore, exe api.ClusterRun) api.ClusterService {
 	return &cluster{
 		exe:             exe,
 		store:           store,

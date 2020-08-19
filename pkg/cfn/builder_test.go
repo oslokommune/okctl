@@ -23,7 +23,7 @@ func TestBuilderAndComposers(t *testing.T) {
 		{
 			name:     "Builder with ExternalSecretsPolicy composer",
 			golden:   "esp-cloudformation.yaml",
-			composer: components.NewExternalSecretsPolicyComposer("test"),
+			composer: components.NewExternalSecretsPolicyComposer("repo", "test"),
 		},
 	}
 

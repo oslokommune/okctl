@@ -43,9 +43,19 @@ func (c *clusterRun) CreateCluster(kubeConfigPath string, config *api.ClusterCon
 		"AWS_PROFILE=default",
 	)
 
-	_, err = cli.CreateCluster(kubeConfigPath, config)
+	exists, err := cli.HasCluster(config)
+	if err != nil {
+		return fmt.Errorf("unable to determine if cluster exists: %w", err)
+	}
 
-	return err
+	if !exists {
+		_, err = cli.CreateCluster(kubeConfigPath, config)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // DeleteCluster invokes a CLI for performing delete

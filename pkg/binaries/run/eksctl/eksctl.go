@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/mishudark/errors"
@@ -88,7 +89,25 @@ func (e *Eksctl) writeClusterConfig(cfg *api.ClusterConfig) error {
 	return nil
 }
 
-func (e *Eksctl) run(args []string, cfg *api.ClusterConfig) ([]byte, error) {
+func (e *Eksctl) run(args []string) ([]byte, error) {
+	var err error
+
+	verbosity := "--verbose=3"
+	if e.DoDebug {
+		verbosity = "--verbose=4"
+	}
+
+	args = append(args, verbosity)
+
+	runner, err := e.runner()
+	if err != nil {
+		return nil, err
+	}
+
+	return runner.Run(e.Progress, args)
+}
+
+func (e *Eksctl) runWithConfig(args []string, cfg *api.ClusterConfig) ([]byte, error) {
 	var err error
 
 	defer func() {
@@ -141,7 +160,7 @@ func (e *Eksctl) DeleteCluster(cfg *api.ClusterConfig) ([]byte, error) {
 		"cluster",
 	}
 
-	b, err := e.run(args, cfg)
+	b, err := e.runWithConfig(args, cfg)
 	if err != nil {
 		return nil, errors.E(err, fmt.Sprintf("failed to delete: %s", string(b)), errors.IO)
 	}
@@ -159,10 +178,42 @@ func (e *Eksctl) CreateCluster(kubeConfigPath string, cfg *api.ClusterConfig) ([
 		fmt.Sprintf("--kubeconfig=%s", kubeConfigPath),
 	}
 
-	b, err := e.run(args, cfg)
+	b, err := e.runWithConfig(args, cfg)
 	if err != nil {
 		return nil, errors.E(err, fmt.Sprintf("failed to create: %s", string(b)), errors.IO)
 	}
 
 	return b, nil
+}
+
+// HasCluster invokes eksctl get cluster using the provided
+// cluster config as input and returns an error if the cluster
+// does not exist.
+func (e *Eksctl) HasCluster(cfg *api.ClusterConfig) (bool, error) {
+	pattern := fmt.Sprintf("ResourceNotFoundException: No cluster found for name: %s", cfg.Metadata.Name)
+
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return false, fmt.Errorf("failed to compile has cluster regex: %w", err)
+	}
+
+	args := []string{
+		"get",
+		"cluster",
+		"--name",
+		cfg.Metadata.Name,
+		"--region",
+		cfg.Metadata.Region,
+	}
+
+	out, err := e.run(args)
+	if err != nil {
+		if re.Match(out) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
 }

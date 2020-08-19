@@ -18,7 +18,7 @@ func TestCreate(t *testing.T) {
 	}{
 		{
 			name: "Should work",
-			runner: cfn.NewRunner(mock.DefaultStackName, []byte{},
+			runner: cfn.NewRunner(
 				mock.NewCloudProvider().
 					DescribeStacksEmpty().
 					CreateStackSuccess().
@@ -30,7 +30,7 @@ func TestCreate(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.runner.CreateIfNotExists(10)
+			err := tc.runner.CreateIfNotExists(mock.DefaultStackName, []byte{}, 10)
 			if tc.expectError {
 				assert.Error(t, err)
 				assert.Equal(t, tc.expect, err.Error())
@@ -50,7 +50,7 @@ func TestDelete(t *testing.T) {
 	}{
 		{
 			name: "Should work",
-			runner: cfn.NewRunner(mock.DefaultStackName, []byte{},
+			runner: cfn.NewRunner(
 				mock.NewCloudProvider().
 					DeleteStackSuccess().
 					DescribeStacksResponse(cloudformation.StackStatusDeleteComplete),
@@ -61,7 +61,7 @@ func TestDelete(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.runner.Delete()
+			err := tc.runner.Delete(mock.DefaultStackName)
 			if tc.expectError {
 				assert.Error(t, err)
 				assert.Equal(t, tc.expect, err.Error())

@@ -2,7 +2,6 @@ package cfn
 
 import (
 	"fmt"
-	"strings"
 )
 
 // Not sure about this approach, will need to read up.
@@ -14,7 +13,7 @@ const (
 	// DefaultStackNameVpcID defines an identifier for a vpc
 	DefaultStackNameVpcID = "vpc"
 	// DefaultStackNameExternalSecretsPolicyID defines an identifier for an external secrets policy
-	DefaultStackNameExternalSecretsPolicyID = "externalSecretsPolicy"
+	DefaultStackNameExternalSecretsPolicyID = "externalsecretspolicy"
 )
 
 // StackNamer knows how to name cloud formation stacks
@@ -27,20 +26,20 @@ func NewStackNamer() *StackNamer {
 
 // Vpc returns the stack name of a vpc
 func (n *StackNamer) Vpc(repository, env string) string {
-	return fmt.Sprintf("%s-%s-%s%s",
+	return fmt.Sprintf("%s-%s-%s-%s",
 		DefaultStackNamePrefix,
 		DefaultStackNameVpcID,
-		strings.Title(repository),
-		strings.Title(env),
+		repository,
+		env,
 	)
 }
 
 // ExternalSecretsPolicy returns the stack name of an external secrets policy
 func (n *StackNamer) ExternalSecretsPolicy(repository, env string) string {
-	return fmt.Sprintf("%s-%s-%s%s",
+	return fmt.Sprintf("%s-%s-%s-%s",
 		DefaultStackNamePrefix,
 		DefaultStackNameExternalSecretsPolicyID,
-		strings.Title(repository),
-		strings.Title(env),
+		repository,
+		env,
 	)
 }

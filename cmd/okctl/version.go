@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
 
@@ -14,14 +15,14 @@ var GitCommit string
 // The current version of OkCLI
 var OkctlVersion string
 
-func buildVersionCommand() *cobra.Command {
+func buildVersionCommand(o *okctl.Okctl) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Prints version info",
 		Long:  `Prints version number and git-sha of okctl-build.`,
 		RunE: func(_ *cobra.Command, args []string) error {
-			fmt.Printf("Version: %s\n", OkctlVersion)
-			fmt.Printf("Commit : %s\n", GitCommit)
+			fmt.Fprintf(o.Out, "Version: %s\n", OkctlVersion)
+			fmt.Fprintf(o.Out, "Commit : %s\n", GitCommit)
 			return nil
 		},
 	}

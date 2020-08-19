@@ -8,7 +8,7 @@ import (
 )
 
 type vpc struct {
-	cloud api.VpcCloud
+	cloud api.VpcCloudProvider
 	store api.VpcStore
 }
 
@@ -16,7 +16,7 @@ type vpc struct {
 func (v *vpc) CreateVpc(_ context.Context, opts api.CreateVpcOpts) (*api.Vpc, error) {
 	err := opts.Validate()
 	if err != nil {
-		return nil, errors.E(err, "failed to validate create vpc options")
+		return nil, errors.E(err, "failed to validate create vpc options", errors.Invalid)
 	}
 
 	got, err := v.cloud.CreateVpc(opts)
@@ -43,7 +43,7 @@ func (v *vpc) DeleteVpc(_ context.Context, opts api.DeleteVpcOpts) error {
 }
 
 // NewVpcService returns an instantiated vpc service
-func NewVpcService(cloud api.VpcCloud, store api.VpcStore) api.VpcService {
+func NewVpcService(cloud api.VpcCloudProvider, store api.VpcStore) api.VpcService {
 	return &vpc{
 		cloud: cloud,
 		store: store,

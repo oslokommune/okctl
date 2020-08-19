@@ -85,8 +85,8 @@ type ClusterService interface {
 	DeleteCluster(context.Context, ClusterDeleteOpts) error
 }
 
-// ClusterExe provides an interface for running CLIs
-type ClusterExe interface {
+// ClusterRun provides an interface for running CLIs
+type ClusterRun interface {
 	CreateCluster(string, *ClusterConfig) error
 	DeleteCluster(*ClusterConfig) error
 }

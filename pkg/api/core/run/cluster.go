@@ -1,5 +1,5 @@
-// Package exe implements the exe layer
-package exe
+// Package run implements the runnable layer
+package run
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
 )
 
-type cluster struct {
+type clusterRun struct {
 	awsCredentialsPath string
 	awsConfigPath      string
 	provider           binaries.Provider
@@ -19,7 +19,7 @@ type cluster struct {
 }
 
 // CreateCluster invokes a CLI for performing create
-func (c *cluster) CreateCluster(kubeConfigPath string, config *api.ClusterConfig) error {
+func (c *clusterRun) CreateCluster(kubeConfigPath string, config *api.ClusterConfig) error {
 	a, err := c.provider.AwsIamAuthenticator(awsiamauthenticator.Version)
 	if err != nil {
 		return err
@@ -48,8 +48,8 @@ func (c *cluster) CreateCluster(kubeConfigPath string, config *api.ClusterConfig
 	return err
 }
 
-// DeleteClusterConfig invokes a CLI for performing delete
-func (c *cluster) DeleteCluster(config *api.ClusterConfig) error {
+// DeleteCluster invokes a CLI for performing delete
+func (c *clusterRun) DeleteCluster(config *api.ClusterConfig) error {
 	cli, err := c.provider.Eksctl(eksctl.Version)
 	if err != nil {
 		return err
@@ -60,9 +60,9 @@ func (c *cluster) DeleteCluster(config *api.ClusterConfig) error {
 	return err
 }
 
-// NewClusterExe returns a executor for cluster
-func NewClusterExe(debug bool, awsCredentialsPath, awsConfigPath string, provider binaries.Provider) api.ClusterExe {
-	return &cluster{
+// NewClusterRun returns a executor for clusterRun
+func NewClusterRun(debug bool, awsCredentialsPath, awsConfigPath string, provider binaries.Provider) api.ClusterRun {
+	return &clusterRun{
 		debug:              debug,
 		awsCredentialsPath: awsCredentialsPath,
 		awsConfigPath:      awsConfigPath,

@@ -18,7 +18,6 @@ require (
 	github.com/bugsnag/bugsnag-go v1.5.3 // indirect
 	github.com/bugsnag/panicwrap v1.2.0 // indirect
 	github.com/containerd/containerd v1.3.4
-	github.com/davecgh/go-spew v1.1.1
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
@@ -29,20 +28,17 @@ require (
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-git/go-git/v5 v5.1.0
 	github.com/go-kit/kit v0.10.0
-	github.com/golangci/golangci-lint v1.30.0 // indirect
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.2
 	github.com/gofrs/flock v0.7.1
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/google/go-cmp v0.5.1
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/handlers v1.4.2 // indirect
+	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
 	github.com/jarcoal/httpmock v1.0.6
 	github.com/jmoiron/sqlx v1.2.1-0.20190826204134-d7d95172beb5 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/kr/pty v1.1.8 // indirect
-	github.com/mishudark/errors v0.0.0-20190221111348-b16f7e94bb58
-	github.com/mitchellh/go-homedir v1.1.0
-	github.com/mitchellh/mapstructure v1.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mishudark/errors v0.0.0-20190221111348-b16f7e94bb58
 	github.com/mitchellh/go-homedir v1.1.0

@@ -11,6 +11,9 @@ builds:
       - netgo
     env:
       - CGO_ENABLED=0
+    ldflags:
+      - -X main.GitCommit={{.Commit}}
+      - -X main.OkctlVersion={{.Version}}
     goos:
       - darwin
       - linux

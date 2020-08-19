@@ -7,7 +7,7 @@ Resources:
   ExternalSecretsPolicy:
     Properties:
       Description: Service account policy for reading SSM parameters
-      ManagedPolicyName: okctl-test-ExternalSecretsServiceAccountPolicy
+      ManagedPolicyName: okctl-repo-test-ExternalSecretsServiceAccountPolicy
       PolicyDocument:
         Statement:
         - Action:

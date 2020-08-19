@@ -119,14 +119,16 @@ var _ cfn.Composer = &VPCComposer{}
 // ExternalSecretsPolicyComposer contains state for building
 // a managed iam policy compatible with external-secrets
 type ExternalSecretsPolicyComposer struct {
+	Repository  string
 	Environment string
 }
 
 // NewExternalSecretsPolicyComposer returns a managed IAM policy
 // that allows: https://github.com/godaddy/kubernetes-external-secrets
 // to read SSM parameters and make them available as Kubernetes Secrets
-func NewExternalSecretsPolicyComposer(env string) *ExternalSecretsPolicyComposer {
+func NewExternalSecretsPolicyComposer(repository, env string) *ExternalSecretsPolicyComposer {
 	return &ExternalSecretsPolicyComposer{
+		Repository:  repository,
 		Environment: env,
 	}
 }
@@ -144,7 +146,7 @@ func (e *ExternalSecretsPolicyComposer) Compose() (*cfn.Composition, error) {
 
 // ManagedPolicy returns a managed policy
 func (e *ExternalSecretsPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
-	policyName := fmt.Sprintf("okctl-%s-ExternalSecretsServiceAccountPolicy", e.Environment)
+	policyName := fmt.Sprintf("okctl-%s-%s-ExternalSecretsServiceAccountPolicy", e.Repository, e.Environment)
 	policyDesc := "Service account policy for reading SSM parameters"
 
 	d := &policydocument.PolicyDocument{

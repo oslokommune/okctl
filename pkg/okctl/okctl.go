@@ -12,8 +12,8 @@ import (
 
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api/core"
-	cld "github.com/oslokommune/okctl/pkg/api/core/cloud"
-	"github.com/oslokommune/okctl/pkg/api/core/exe"
+	awsProvider "github.com/oslokommune/okctl/pkg/api/core/cloudprovider/aws"
+	"github.com/oslokommune/okctl/pkg/api/core/run"
 	"github.com/oslokommune/okctl/pkg/api/core/store/filesystem"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/binaries"
@@ -92,7 +92,7 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 	)
 
 	vpcService := core.NewVpcService(
-		cld.NewVpcCloud(o.CloudProvider),
+		awsProvider.NewVpcCloud(o.CloudProvider),
 		vpcStore,
 	)
 
@@ -105,7 +105,7 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		clusterStore,
 		clusterConfigStore,
 		kubeConfigStore,
-		exe.NewClusterExe(
+		run.NewClusterRun(
 			o.Debug,
 			path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterAwsConfig),
 			path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterAwsCredentials),

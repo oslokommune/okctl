@@ -56,8 +56,8 @@ type VpcService interface {
 	DeleteVpc(ctx context.Context, opts DeleteVpcOpts) error
 }
 
-// VpcCloud defines the cloud actions that a Vpc service requires
-type VpcCloud interface {
+// VpcCloudProvider defines the cloud actions that a Vpc service requires
+type VpcCloudProvider interface {
 	CreateVpc(opts CreateVpcOpts) (*Vpc, error)
 	DeleteVpc(opts DeleteVpcOpts) error
 }

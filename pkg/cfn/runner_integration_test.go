@@ -135,7 +135,7 @@ func TestTemplates(t *testing.T) {
 			name:      "ExternalSecretsPolicy should be valid",
 			stackName: "externalSecrets",
 			templateBody: func() []byte {
-				b, err := cfn.New(components.NewExternalSecretsPolicyComposer("test")).Build()
+				b, err := cfn.New(components.NewExternalSecretsPolicyComposer("repo", "test")).Build()
 				assert.NoError(t, err)
 
 				return b

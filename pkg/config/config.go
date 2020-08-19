@@ -74,11 +74,18 @@ const (
 	DefaultHelmPluginsDirectory = "plugins"
 
 	// DefaultVpcOutputs is the default filename of the vpc outputs information
-	DefaultVpcOutputs = "outputs.json"
+	DefaultVpcOutputs = "vpc-outputs.json"
 	// DefaultVpcCloudFormationTemplate is the default filename of the vpc cloud formation template
-	DefaultVpcCloudFormationTemplate = "vpc.yml"
+	DefaultVpcCloudFormationTemplate = "vpc-cf.yml"
 	// DefaultVpcBaseDir is the default directory of the vpc resources
 	DefaultVpcBaseDir = "vpc"
+
+	// DefaultExternalSecretsCloudFormationTemplate is the default filename of the cloud formation template
+	DefaultExternalSecretsCloudFormationTemplate = "external-secrets-policy-cf.yml"
+	// DefaultExternalSecretsOutputs is the default filename of the outputs
+	DefaultExternalSecretsOutputs = "external-secrets-outputs.json"
+	// DefaultExternalSecretsBaseDir is the default directory of the external secrets resources
+	DefaultExternalSecretsBaseDir = "external-secrets"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"

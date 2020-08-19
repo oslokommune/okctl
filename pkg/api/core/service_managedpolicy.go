@@ -1,9 +1,10 @@
 package core
 
 import (
+	"context"
+
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/context"
 )
 
 type managedPolicyService struct {

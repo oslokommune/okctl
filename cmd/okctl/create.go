@@ -74,7 +74,15 @@ and database subnets.`,
 				return err
 			}
 
-			return c.CreateCluster(opts)
+			err = c.CreateCluster(opts)
+			if err != nil {
+				return err
+			}
+
+			return c.CreateExternalSecretsPolicy(&api.CreateExternalSecretsPolicyOpts{
+				Repository:  opts.RepositoryName,
+				Environment: opts.Environment,
+			})
 		},
 	}
 

@@ -23,27 +23,23 @@ type Stack = cfPkg.Stack
 // Runner stores state required for interacting with the AWS
 // cloud formation API
 type Runner struct {
-	StackName    string
-	TemplateBody []byte
-	Provider     v1alpha1.CloudProvider
+	Provider v1alpha1.CloudProvider
 }
 
 // NewRunner returns a new runner
-func NewRunner(stackName string, templateBody []byte, provider v1alpha1.CloudProvider) *Runner {
+func NewRunner(provider v1alpha1.CloudProvider) *Runner {
 	return &Runner{
-		StackName:    stackName,
-		TemplateBody: templateBody,
-		Provider:     provider,
+		Provider: provider,
 	}
 }
 
 // Exists returns true if a cloud formation stack already exists
-func (r *Runner) Exists() (bool, error) {
+func (r *Runner) Exists(stackName string) (bool, error) {
 	req := &cfPkg.DescribeStacksInput{
-		StackName: aws.String(r.StackName),
+		StackName: aws.String(stackName),
 	}
 
-	re, err := regexp.Compile(fmt.Sprintf(stackDoesNotExitRegex, r.StackName))
+	re, err := regexp.Compile(fmt.Sprintf(stackDoesNotExitRegex, stackName))
 	if err != nil {
 		return false, fmt.Errorf("failed to compile regex for stack existence: %w", err)
 	}
@@ -69,9 +65,9 @@ func (r *Runner) Exists() (bool, error) {
 type ProcessOutputFn func(string) error
 
 // Outputs processes the cloud formation stacks given the provided processors
-func (r *Runner) Outputs(processors map[string]ProcessOutputFn) error {
+func (r *Runner) Outputs(stackName string, processors map[string]ProcessOutputFn) error {
 	stack, err := r.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
-		StackName: aws.String(r.StackName),
+		StackName: aws.String(stackName),
 	})
 	if err != nil {
 		return err
@@ -92,9 +88,9 @@ func (r *Runner) Outputs(processors map[string]ProcessOutputFn) error {
 }
 
 // Ready returns true if the stack is in a valid steady state
-func (r *Runner) Ready() (bool, error) {
+func (r *Runner) Ready(stackName string) (bool, error) {
 	stack, err := r.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
-		StackName: aws.String(r.StackName),
+		StackName: aws.String(stackName),
 	})
 	if err != nil {
 		return false, err
@@ -103,14 +99,14 @@ func (r *Runner) Ready() (bool, error) {
 	return r.StackStatusIsNotTransitional(stack.Stacks[0]), nil
 }
 
-func (r *Runner) existsAndReady() (bool, error) {
-	exists, err := r.Exists()
+func (r *Runner) existsAndReady(stackName string) (bool, error) {
+	exists, err := r.Exists(stackName)
 	if err != nil {
 		return false, err
 	}
 
 	if exists {
-		ready, err := r.Ready()
+		ready, err := r.Ready(stackName)
 		if err != nil {
 			return false, err
 		}
@@ -119,27 +115,27 @@ func (r *Runner) existsAndReady() (bool, error) {
 			return true, nil
 		}
 
-		return false, fmt.Errorf("stack: %s exists and is in a transitional state", r.StackName)
+		return false, fmt.Errorf("stack: %s exists and is in a transitional state", stackName)
 	}
 
 	return false, nil
 }
 
 // Delete a cloud formation stack
-func (r *Runner) Delete() error {
+func (r *Runner) Delete(stackName string) error {
 	_, err := r.Provider.CloudFormation().DeleteStack(&cfPkg.DeleteStackInput{
-		StackName: aws.String(r.StackName),
+		StackName: aws.String(stackName),
 	})
 	if err != nil {
 		return err
 	}
 
-	return r.watchDelete(r.StackName)
+	return r.watchDelete(stackName)
 }
 
 // CreateIfNotExists creates a cloud formation stack if none exists from before
-func (r *Runner) CreateIfNotExists(timeout int64) error {
-	yes, err := r.existsAndReady()
+func (r *Runner) CreateIfNotExists(stackName string, template []byte, timeout int64) error {
+	yes, err := r.existsAndReady(stackName)
 	if err != nil {
 		return err
 	}
@@ -150,26 +146,40 @@ func (r *Runner) CreateIfNotExists(timeout int64) error {
 
 	_, err = r.Provider.CloudFormation().CreateStack(&cfPkg.CreateStackInput{
 		OnFailure:        aws.String(cfPkg.OnFailureDelete),
-		StackName:        aws.String(r.StackName),
-		TemplateBody:     aws.String(string(r.TemplateBody)),
+		StackName:        aws.String(stackName),
+		TemplateBody:     aws.String(string(template)),
 		TimeoutInMinutes: aws.Int64(timeout),
 	})
 	if err != nil {
 		return err
 	}
 
-	return r.watchCreate(r.StackName)
+	return r.watchCreate(stackName)
 }
 
 func (r *Runner) watchDelete(stackName string) error {
+	re, err := regexp.Compile(fmt.Sprintf(stackDoesNotExitRegex, stackName))
+	if err != nil {
+		return fmt.Errorf("failed to compile regex for stack existence: %w", err)
+	}
+
 	for {
+		// https://docs.aws.amazon.com/sdk-for-go/api/service/cloudformation/#CloudFormation.DeleteStack
+		// Deleted stacks do not show up in the DescribeStacks API if the deletion has been completed successfully.
 		stack, err := r.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
 			StackName: aws.String(stackName),
 		})
-		// https://docs.aws.amazon.com/sdk-for-go/api/service/cloudformation/#CloudFormation.DeleteStack
-		// Deleted stacks do not show up in the DescribeStacks API if the deletion has been completed successfully.
 		if err != nil {
-			return err
+			switch e := err.(type) {
+			case awserr.Error:
+				if e.Code() == awsErrValidationError && re.MatchString(e.Message()) {
+					return nil
+				}
+
+				return err
+			default:
+				return err
+			}
 		}
 
 		if len(stack.Stacks) != 1 {

@@ -98,6 +98,13 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		o.FileSystem,
 	)
 
+	serviceAccountStore := filesystem.NewServiceAccountStore(
+		config.DefaultExternalSecretsServiceAccountOutputs,
+		config.DefaultExternalSecretsServiceAccountConfig,
+		path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+		o.FileSystem,
+	)
+
 	vpcService := core.NewVpcService(
 		awsProvider.NewVpcCloud(o.CloudProvider),
 		vpcStore,
@@ -125,16 +132,27 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		managedPolicyStore,
 	)
 
+	serviceAccountService := core.NewServiceAccountService(
+		serviceAccountStore,
+		run.NewServiceAccountRun(
+			o.Debug,
+			path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterAwsConfig),
+			path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterAwsCredentials),
+			o.BinariesProvider,
+		),
+	)
+
 	services := core.Services{
-		Cluster:       clusterService,
-		ClusterConfig: clusterConfigService,
-		Vpc:           vpcService,
-		ManagedPolicy: managedPolicyService,
+		Cluster:        clusterService,
+		ClusterConfig:  clusterConfigService,
+		Vpc:            vpcService,
+		ManagedPolicy:  managedPolicyService,
+		ServiceAccount: serviceAccountService,
 	}
 
 	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))
 
-	handlers := core.MakeHandlers(o.Format(), endpoints)
+	handlers := core.MakeHandlers(core.EncodeJSONResponse, endpoints)
 
 	router := http.NewServeMux()
 	router.Handle("/", core.AttachRoutes(handlers))

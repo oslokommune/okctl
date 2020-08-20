@@ -9,7 +9,7 @@ import (
 )
 
 type cluster struct {
-	exe             api.ClusterRun
+	run             api.ClusterRun
 	store           api.ClusterStore
 	configStore     api.ClusterConfigStore
 	kubeConfigStore api.KubeConfigStore
@@ -37,7 +37,7 @@ func (c *cluster) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (
 		return nil, errors.E(err, "failed to create kubeconfig")
 	}
 
-	err = c.exe.CreateCluster(kubeConfigPath, clusterConfig)
+	err = c.run.CreateCluster(kubeConfigPath, clusterConfig)
 	if err != nil {
 		return nil, errors.E(err, msgFailedToCreateCluster)
 	}
@@ -69,7 +69,7 @@ func (c *cluster) DeleteCluster(_ context.Context, opts api.ClusterDeleteOpts) e
 		return errors.E(err, "failed to get cluster from config", errors.Invalid)
 	}
 
-	err = c.exe.DeleteCluster(cfg)
+	err = c.run.DeleteCluster(cfg)
 	if err != nil {
 		return errors.E(err, msgFailedToDeleteCluster)
 	}
@@ -83,9 +83,9 @@ func (c *cluster) DeleteCluster(_ context.Context, opts api.ClusterDeleteOpts) e
 }
 
 // NewClusterService returns a service operator for the cluster operations
-func NewClusterService(store api.ClusterStore, configStore api.ClusterConfigStore, kubeConfigStore api.KubeConfigStore, exe api.ClusterRun) api.ClusterService {
+func NewClusterService(store api.ClusterStore, configStore api.ClusterConfigStore, kubeConfigStore api.KubeConfigStore, run api.ClusterRun) api.ClusterService {
 	return &cluster{
-		exe:             exe,
+		run:             run,
 		store:           store,
 		configStore:     configStore,
 		kubeConfigStore: kubeConfigStore,

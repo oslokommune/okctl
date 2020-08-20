@@ -84,10 +84,15 @@ and database subnets.`,
 				return err
 			}
 
-			return c.CreateExternalSecretsPolicy(&api.CreateExternalSecretsPolicyOpts{
+			err = c.CreateExternalSecretsPolicy(&api.CreateExternalSecretsPolicyOpts{
 				Repository:  opts.RepositoryName,
 				Environment: opts.Environment,
 			})
+			if err != nil {
+				return err
+			}
+
+			return nil
 		},
 	}
 

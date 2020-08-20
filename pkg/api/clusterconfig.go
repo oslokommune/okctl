@@ -142,6 +142,25 @@ func (o CreateClusterConfigOpts) Validate() error {
 	)
 }
 
+// CreateServiceAccountClusterConfigOpts defines the required
+// inputs for creating a new service account
+type CreateServiceAccountClusterConfigOpts struct {
+	ClusterName  string
+	Region       string
+	AwsAccountID string
+	PolicyArn    string
+}
+
+// Validate the service account config options
+func (o CreateServiceAccountClusterConfigOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ClusterName, validation.Required),
+		validation.Field(&o.Region, validation.Required),
+		validation.Field(&o.AwsAccountID, validation.Required),
+		validation.Field(&o.PolicyArn, validation.Required),
+	)
+}
+
 // ClusterConfigService defines the service interface for the cluster config
 type ClusterConfigService interface {
 	CreateClusterConfig(ctx context.Context, opts CreateClusterConfigOpts) (*ClusterConfig, error)

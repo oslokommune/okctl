@@ -148,7 +148,7 @@ func TestTemplates(t *testing.T) {
 
 		// If test fails, grab the docker logs I think
 		t.Run(tc.name, func(t *testing.T) {
-			err := cfn.NewRunner(provider.Provider).CreateIfNotExists(tc.stackName, tc.templateBody, 30)
+			err := cfn.NewRunner(provider.Provider).CreateIfNotExists(tc.stackName, tc.templateBody, nil, 30)
 			assert.NoError(t, err)
 
 			if err != nil {

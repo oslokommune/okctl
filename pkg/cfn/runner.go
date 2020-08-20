@@ -12,6 +12,13 @@ import (
 )
 
 const (
+	// CapabilityIam is required when a stack affects permissions
+	CapabilityIam = cfPkg.CapabilityCapabilityIam
+	// CapabilityNamedIam is required when a stack affects permissions
+	CapabilityNamedIam = cfPkg.CapabilityCapabilityNamedIam
+	// CapabilityAutoExpand is required when a stack contains macros
+	CapabilityAutoExpand = cfPkg.CapabilityCapabilityAutoExpand
+
 	stackDoesNotExitRegex = "^Stack with id (.*)%s(.*) does not exist$"
 	defaultSleepTime      = 30
 	awsErrValidationError = "ValidationError"
@@ -134,7 +141,7 @@ func (r *Runner) Delete(stackName string) error {
 }
 
 // CreateIfNotExists creates a cloud formation stack if none exists from before
-func (r *Runner) CreateIfNotExists(stackName string, template []byte, timeout int64) error {
+func (r *Runner) CreateIfNotExists(stackName string, template []byte, capabilities []string, timeout int64) error {
 	yes, err := r.existsAndReady(stackName)
 	if err != nil {
 		return err
@@ -144,12 +151,19 @@ func (r *Runner) CreateIfNotExists(stackName string, template []byte, timeout in
 		return nil
 	}
 
-	_, err = r.Provider.CloudFormation().CreateStack(&cfPkg.CreateStackInput{
+	stackInput := &cfPkg.CreateStackInput{
 		OnFailure:        aws.String(cfPkg.OnFailureDelete),
 		StackName:        aws.String(stackName),
 		TemplateBody:     aws.String(string(template)),
 		TimeoutInMinutes: aws.Int64(timeout),
-	})
+	}
+
+	for _, c := range capabilities {
+		c := c
+		stackInput.Capabilities = append(stackInput.Capabilities, &c)
+	}
+
+	_, err = r.Provider.CloudFormation().CreateStack(stackInput)
 	if err != nil {
 		return err
 	}

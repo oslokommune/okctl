@@ -1,6 +1,8 @@
 package main
 
 import (
+	"io/ioutil"
+
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -50,7 +52,10 @@ and database subnets.`,
 			return o.Initialise(opts.Environment, opts.AWSAccountID)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			c := client.New(o.Out, o.ServerURL)
+			// Discarding the output for now, until we restructure
+			// the API to return everything we need to write
+			// the result ourselves
+			c := client.New(ioutil.Discard, o.ServerURL)
 
 			err := c.CreateVpc(&api.CreateVpcOpts{
 				AwsAccountID: opts.AWSAccountID,

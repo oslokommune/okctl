@@ -1,6 +1,8 @@
 package main
 
 import (
+	"io/ioutil"
+
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -50,7 +52,10 @@ including VPC, this is a highly destructive operation.`,
 			return o.Initialise(opts.Environment, awsAccountID)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			c := client.New(o.Out, o.ServerURL)
+			// Discarding the output for now until we have
+			// restructured the API and handle the response
+			// properly
+			c := client.New(ioutil.Discard, o.ServerURL)
 
 			err := c.DeleteCluster(opts)
 			if err != nil {

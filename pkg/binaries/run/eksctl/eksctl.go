@@ -152,6 +152,41 @@ func (e *Eksctl) Debug(enable bool) {
 	e.DoDebug = enable
 }
 
+// CreateServiceAccount invokes eksctl create iamserviceaccount using the provided
+// configuration file
+func (e *Eksctl) CreateServiceAccount(cfg *api.ClusterConfig) ([]byte, error) {
+	args := []string{
+		"create",
+		"iamserviceaccount",
+		"--override-existing-serviceaccounts",
+		"--approve",
+	}
+
+	b, err := e.runWithConfig(args, cfg)
+	if err != nil {
+		return nil, errors.E(err, fmt.Sprintf("failed to create service account: %s", string(b)))
+	}
+
+	return b, nil
+}
+
+// DeleteServiceAccount invokes eksctl delete iamserviceaccount using the provided
+// configuration file
+func (e *Eksctl) DeleteServiceAccount(cfg *api.ClusterConfig) ([]byte, error) {
+	args := []string{
+		"delete",
+		"iamserviceaccount",
+		"--approve",
+	}
+
+	b, err := e.runWithConfig(args, cfg)
+	if err != nil {
+		return nil, errors.E(err, fmt.Sprintf("failed to delete service account: %s", string(b)))
+	}
+
+	return b, nil
+}
+
 // DeleteCluster invokes eksctl delete cluster using the provided
 // cluster configuration as input
 func (e *Eksctl) DeleteCluster(cfg *api.ClusterConfig) ([]byte, error) {
@@ -212,7 +247,7 @@ func (e *Eksctl) HasCluster(cfg *api.ClusterConfig) (bool, error) {
 			return false, nil
 		}
 
-		return false, err
+		return false, fmt.Errorf("failed to get cluster information: %s: %w", string(out), err)
 	}
 
 	return true, nil

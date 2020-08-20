@@ -84,7 +84,7 @@ and database subnets.`,
 				return err
 			}
 
-			err = c.CreateExternalSecretsPolicy(&api.CreateExternalSecretsPolicyOpts{
+			policy, err := c.CreateExternalSecretsPolicy(&api.CreateExternalSecretsPolicyOpts{
 				Repository:  opts.RepositoryName,
 				Environment: opts.Environment,
 			})
@@ -92,7 +92,13 @@ and database subnets.`,
 				return err
 			}
 
-			return nil
+			return c.CreateExternalSecretsServiceAccount(&api.CreateExternalSecretsServiceAccountOpts{
+				ClusterName:  opts.ClusterName,
+				Environment:  opts.Environment,
+				Region:       opts.Region,
+				AWSAccountID: opts.AWSAccountID,
+				PolicyArn:    policy.PolicyARN,
+			})
 		},
 	}
 

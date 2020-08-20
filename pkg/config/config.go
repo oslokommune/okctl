@@ -84,6 +84,10 @@ const (
 	DefaultExternalSecretsCloudFormationTemplate = "external-secrets-policy-cf.yml"
 	// DefaultExternalSecretsOutputs is the default filename of the outputs
 	DefaultExternalSecretsOutputs = "external-secrets-outputs.json"
+	// DefaultExternalSecretsServiceAccountOutputs is the default file name of the service account outputs
+	DefaultExternalSecretsServiceAccountOutputs = "external-secrets-service-account-outputs.json"
+	//DefaultExternalSecretsServiceAccountConfig is the default file name of the service account config
+	DefaultExternalSecretsServiceAccountConfig = "external-secrets-service-account-config.yml"
 	// DefaultExternalSecretsBaseDir is the default directory of the external secrets resources
 	DefaultExternalSecretsBaseDir = "external-secrets"
 

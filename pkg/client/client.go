@@ -15,10 +15,11 @@ import (
 )
 
 const (
-	targetVpcs            = "vpcs/"
-	targetClusters        = "clusters/"
-	targetClusterConfigs  = "clusterconfigs/"
-	targetExternalSecrets = "managedpolicies/externalsecrets/"
+	targetVpcs                          = "vpcs/"
+	targetClusters                      = "clusters/"
+	targetClusterConfigs                = "clusterconfigs/"
+	targetExternalSecretsPolicy         = "managedpolicies/externalsecrets/"
+	targetExternalSecretsServiceAccount = "serviceaccounts/externalsecrets/"
 )
 
 // Cluster client API calls
@@ -40,7 +41,12 @@ type Vpc interface {
 
 // ManagedPolicy API calls
 type ManagedPolicy interface {
-	CreateExternalSecretsPolicy(opts *api.CreateExternalSecretsPolicyOpts) error
+	CreateExternalSecretsPolicy(opts *api.CreateExternalSecretsPolicyOpts) (*api.ManagedPolicy, error)
+}
+
+// ServiceAccount API calls
+type ServiceAccount interface {
+	CreateExternalSecretsServiceAccount(opts *api.CreateExternalSecretsServiceAccountOpts) error
 }
 
 // Client stores state for invoking API operations
@@ -59,19 +65,25 @@ func New(progress io.Writer, serverURL string) *Client {
 	}
 }
 
+// CreateExternalSecretsServiceAccount invokes the external secrets service account operation
+func (c *Client) CreateExternalSecretsServiceAccount(opts *api.CreateExternalSecretsServiceAccountOpts) error {
+	return c.DoPost(targetExternalSecretsServiceAccount, opts, nil)
+}
+
 // CreateExternalSecretsPolicy invokes the external secrets policy create operation
-func (c *Client) CreateExternalSecretsPolicy(opts *api.CreateExternalSecretsPolicyOpts) error {
-	return c.DoPost(targetExternalSecrets, opts)
+func (c *Client) CreateExternalSecretsPolicy(opts *api.CreateExternalSecretsPolicyOpts) (*api.ManagedPolicy, error) {
+	into := &api.ManagedPolicy{}
+	return into, c.DoPost(targetExternalSecretsPolicy, opts, into)
 }
 
 // CreateClusterConfig invokes the cluster config create operation
 func (c *Client) CreateClusterConfig(opts *api.CreateClusterConfigOpts) error {
-	return c.DoPost(targetClusterConfigs, opts)
+	return c.DoPost(targetClusterConfigs, opts, nil)
 }
 
 // CreateVpc invokes the vpc create operation
 func (c *Client) CreateVpc(opts *api.CreateVpcOpts) error {
-	return c.DoPost(targetVpcs, opts)
+	return c.DoPost(targetVpcs, opts, nil)
 }
 
 // DeleteVpc invokes the vpc delete operation
@@ -81,7 +93,7 @@ func (c *Client) DeleteVpc(opts *api.DeleteVpcOpts) error {
 
 // CreateCluster invokes the cluster create operation
 func (c *Client) CreateCluster(opts *api.ClusterCreateOpts) error {
-	return c.DoPost(targetClusters, opts)
+	return c.DoPost(targetClusters, opts, nil)
 }
 
 // DeleteCluster invokes the cluster delete operation
@@ -90,17 +102,17 @@ func (c *Client) DeleteCluster(opts *api.ClusterDeleteOpts) error {
 }
 
 // DoPost sends a POST request to the given endpoint
-func (c *Client) DoPost(endpoint string, body interface{}) error {
-	return c.Do(http.MethodPost, endpoint, body)
+func (c *Client) DoPost(endpoint string, body interface{}, into interface{}) error {
+	return c.Do(http.MethodPost, endpoint, body, into)
 }
 
 // DoDelete sends a DELETE request to the given endpoint
 func (c *Client) DoDelete(endpoint string, body interface{}) error {
-	return c.Do(http.MethodDelete, endpoint, body)
+	return c.Do(http.MethodDelete, endpoint, body, nil)
 }
 
 // Do performs the request
-func (c *Client) Do(method, endpoint string, body interface{}) error {
+func (c *Client) Do(method, endpoint string, body interface{}, into interface{}) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return errors.E(err, pretty("failed to marshal data for", method, endpoint))
@@ -126,6 +138,13 @@ func (c *Client) Do(method, endpoint string, body interface{}) error {
 	defer func() {
 		err = resp.Body.Close()
 	}()
+
+	if into != nil {
+		err = json.Unmarshal(out, into)
+		if err != nil {
+			return fmt.Errorf("failed to parse response: %w", err)
+		}
+	}
 
 	_, err = io.Copy(c.Progress, strings.NewReader(string(out)))
 	if err != nil {

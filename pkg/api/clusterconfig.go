@@ -16,16 +16,16 @@ const (
 )
 
 // ClusterConfig is a recreation of:
-// https://github.com/weaveworks/eksctl/blob/master/pkg/apis/eksctl.io/v1alpha5/types.go#L451
+// https://github.com/weaveworks/eksctl/blob/master/pkg/apis/eksctl.io/v1alpha5/types.go
 // where we have extract the parts that we are interested in for managing a eksctl cluster
 type ClusterConfig struct {
 	metav1.TypeMeta `json:",inline"`
 
 	Metadata        ClusterMeta      `json:"metadata"`
 	IAM             ClusterIAM       `json:"iam"`
-	VPC             ClusterVPC       `json:"vpc"`
-	FargateProfiles []FargateProfile `json:"fargateProfiles"`
-	NodeGroups      []NodeGroup      `json:"nodeGroups"`
+	VPC             *ClusterVPC      `json:"vpc,omitempty"`
+	FargateProfiles []FargateProfile `json:"fargateProfiles,omitempty"`
+	NodeGroups      []NodeGroup      `json:"nodeGroups,omitempty"`
 }
 
 // ClusterMeta comes from eksctl and maps up what we need
@@ -36,9 +36,25 @@ type ClusterMeta struct {
 
 // ClusterIAM comes from eksctl and maps up what we need
 type ClusterIAM struct {
-	ServiceRolePermissionsBoundary             string `json:"serviceRolePermissionsBoundary"`
-	FargatePodExecutionRolePermissionsBoundary string `json:"fargatePodExecutionRolePermissionsBoundary"`
-	WithOIDC                                   bool   `json:"withOIDC"`
+	ServiceRolePermissionsBoundary             string                      `json:"serviceRolePermissionsBoundary,omitempty"`
+	FargatePodExecutionRolePermissionsBoundary string                      `json:"fargatePodExecutionRolePermissionsBoundary,omitempty"`
+	WithOIDC                                   bool                        `json:"withOIDC"`
+	ServiceAccounts                            []*ClusterIAMServiceAccount `json:"serviceAccounts,omitempty"`
+}
+
+// ClusterIAMMeta holds information we can use to create ObjectMeta for service
+// accounts
+type ClusterIAMMeta struct {
+	Name      string            `json:"name,omitempty"`
+	Namespace string            `json:"namespace,omitempty"`
+	Labels    map[string]string `json:"labels,omitempty"`
+}
+
+// ClusterIAMServiceAccount comes from eksctl and maps up what we need
+type ClusterIAMServiceAccount struct {
+	ClusterIAMMeta      `json:"metadata,omitempty"`
+	AttachPolicyARNs    []string `json:"attachPolicyARNs"`
+	PermissionsBoundary string   `json:"permissionsBoundary"`
 }
 
 // ClusterVPC comes from eksctl and maps up what we need

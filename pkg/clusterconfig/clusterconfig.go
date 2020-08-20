@@ -4,102 +4,57 @@ package clusterconfig
 import (
 	"fmt"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// PermissionsBoundary sets the ARN of the permissions boundary
-type PermissionsBoundary interface {
-	PermissionsBoundary(arn string) Region
-}
-
-// Region sets the AWS region
-type Region interface {
-	Region(region string) Vpc
-}
-
-// Vpc sets the vpc id and cidr
-type Vpc interface {
-	Vpc(id, cidr string) Subnets
-}
-
-// Subnets sets the public and private subnets
-type Subnets interface {
-	Subnets(public, private []api.VpcSubnet) Build
-}
-
-// Build creates a cluster config using the given args
-type Build interface {
-	Build() *api.ClusterConfig
-}
-
-type args struct {
-	clusterName            string
-	region                 string
-	permissionsBoundaryARN string
-	vpcID                  string
-	vpcCidr                string
-	publicSubnets          []api.VpcSubnet
-	privateSubnets         []api.VpcSubnet
+// Args contains the input arguments for creating a valid
+// cluster configuration
+type Args struct {
+	ClusterName            string
+	PermissionsBoundaryARN string
+	PrivateSubnets         []api.VpcSubnet
+	PublicSubnets          []api.VpcSubnet
+	Region                 string
+	VpcCidr                string
+	VpcID                  string
 }
 
 // New initialises the creation of a new cluster config
-func New(clusterName string) PermissionsBoundary {
-	return &args{
-		clusterName: clusterName,
+func New(a *Args) (*api.ClusterConfig, error) {
+	err := a.validate()
+	if err != nil {
+		return nil, err
 	}
+
+	return a.build(), nil
 }
 
-// PermissionsBoundary sets the AWS IAM permissions boundary
-func (a *args) PermissionsBoundary(arn string) Region {
-	a.permissionsBoundaryARN = arn
-
-	return a
-}
-
-// Region sets the AWS region
-func (a *args) Region(region string) Vpc {
-	a.region = region
-
-	return a
-}
-
-// Vpc sets the vpc id and cidr
-func (a *args) Vpc(id, cidr string) Subnets {
-	a.vpcID = id
-	a.vpcCidr = cidr
-
-	return a
-}
-
-// Subnets sets the private and public subnets
-func (a *args) Subnets(public, private []api.VpcSubnet) Build {
-	a.publicSubnets = public
-	a.privateSubnets = private
-
-	return a
-}
-
-// TypeMeta returns the defaults
-func TypeMeta() metav1.TypeMeta {
-	return metav1.TypeMeta{
-		Kind:       api.ClusterConfigKind,
-		APIVersion: api.ClusterConfigAPIVersion,
-	}
+func (a *Args) validate() error {
+	return validation.ValidateStruct(a,
+		validation.Field(&a.ClusterName, validation.Required),
+		validation.Field(&a.PermissionsBoundaryARN, validation.Required),
+		validation.Field(&a.PrivateSubnets, validation.Required),
+		validation.Field(&a.PublicSubnets, validation.Required),
+		validation.Field(&a.Region, validation.Required),
+		validation.Field(&a.VpcCidr, validation.Required),
+		validation.Field(&a.VpcID, validation.Required),
+	)
 }
 
 // New creates a cluster config
 // nolint: funlen
-func (a *args) Build() *api.ClusterConfig {
+func (a *Args) build() *api.ClusterConfig {
 	cfg := &api.ClusterConfig{
 		TypeMeta: TypeMeta(),
 		Metadata: api.ClusterMeta{
-			Name:   a.clusterName,
-			Region: a.region,
+			Name:   a.ClusterName,
+			Region: a.Region,
 		},
 		IAM: api.ClusterIAM{
-			ServiceRolePermissionsBoundary:             a.permissionsBoundaryARN,
-			FargatePodExecutionRolePermissionsBoundary: a.permissionsBoundaryARN,
+			ServiceRolePermissionsBoundary:             a.PermissionsBoundaryARN,
+			FargatePodExecutionRolePermissionsBoundary: a.PermissionsBoundaryARN,
 			WithOIDC: true,
 		},
 		FargateProfiles: []api.FargateProfile{
@@ -125,17 +80,17 @@ func (a *args) Build() *api.ClusterConfig {
 				},
 				Tags: map[string]string{
 					"k8s.io/cluster-autoscaler/enabled":                        "true",
-					fmt.Sprintf("k8s.io/cluster-autoscaler/%s", a.clusterName): "owned",
+					fmt.Sprintf("k8s.io/cluster-autoscaler/%s", a.ClusterName): "owned",
 				},
 				PrivateNetworking: true,
 				IAM: api.NodeGroupIAM{
-					InstanceRolePermissionsBoundary: a.permissionsBoundaryARN,
+					InstanceRolePermissionsBoundary: a.PermissionsBoundaryARN,
 				},
 			},
 		},
-		VPC: api.ClusterVPC{
-			ID:   a.vpcID,
-			CIDR: a.vpcCidr,
+		VPC: &api.ClusterVPC{
+			ID:   a.VpcID,
+			CIDR: a.VpcCidr,
 			ClusterEndpoints: api.ClusterEndpoints{
 				PrivateAccess: true,
 				PublicAccess:  true,
@@ -147,14 +102,14 @@ func (a *args) Build() *api.ClusterConfig {
 		},
 	}
 
-	for _, p := range a.publicSubnets {
+	for _, p := range a.PublicSubnets {
 		cfg.VPC.Subnets.Public[p.AvailabilityZone] = api.ClusterNetwork{
 			ID:   p.ID,
 			CIDR: p.Cidr,
 		}
 	}
 
-	for _, p := range a.privateSubnets {
+	for _, p := range a.PrivateSubnets {
 		cfg.VPC.Subnets.Private[p.AvailabilityZone] = api.ClusterNetwork{
 			ID:   p.ID,
 			CIDR: p.Cidr,
@@ -162,4 +117,89 @@ func (a *args) Build() *api.ClusterConfig {
 	}
 
 	return cfg
+}
+
+// TypeMeta returns the defaults
+func TypeMeta() metav1.TypeMeta {
+	return metav1.TypeMeta{
+		Kind:       api.ClusterConfigKind,
+		APIVersion: api.ClusterConfigAPIVersion,
+	}
+}
+
+// ServiceAccountArgs contains the arguments for creating a valid
+// service account
+type ServiceAccountArgs struct {
+	ClusterName            string
+	Labels                 map[string]string
+	Name                   string
+	Namespace              string
+	PermissionsBoundaryArn string
+	PolicyArn              string
+	Region                 string
+}
+
+// NewServiceAccount returns an initialised cluster config for creating a service account
+// with an associated IAM managed policy
+func NewServiceAccount(a *ServiceAccountArgs) (*api.ClusterConfig, error) {
+	err := a.validate()
+	if err != nil {
+		return nil, err
+	}
+
+	return a.build(), nil
+}
+
+func (a *ServiceAccountArgs) validate() error {
+	return validation.ValidateStruct(a,
+		validation.Field(&a.ClusterName, validation.Required),
+		validation.Field(&a.Labels, validation.Required),
+		validation.Field(&a.Name, validation.Required),
+		validation.Field(&a.Namespace, validation.Required),
+		validation.Field(&a.PermissionsBoundaryArn, validation.Required),
+		validation.Field(&a.PolicyArn, validation.Required),
+		validation.Field(&a.Region, validation.Required),
+	)
+}
+
+func (a *ServiceAccountArgs) build() *api.ClusterConfig {
+	return &api.ClusterConfig{
+		TypeMeta: TypeMeta(),
+		Metadata: api.ClusterMeta{
+			Name:   a.ClusterName,
+			Region: a.Region,
+		},
+		IAM: api.ClusterIAM{
+			WithOIDC: true,
+			ServiceAccounts: []*api.ClusterIAMServiceAccount{
+				{
+					ClusterIAMMeta: api.ClusterIAMMeta{
+						Name:      a.Name,
+						Namespace: a.Namespace,
+						Labels:    a.Labels,
+					},
+					AttachPolicyARNs: []string{
+						a.PolicyArn,
+					},
+					PermissionsBoundary: a.PermissionsBoundaryArn,
+				},
+			},
+		},
+	}
+}
+
+// NewExternalSecretsServiceAccount returns an initialised configuration for
+// creating an external secrets service account
+func NewExternalSecretsServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*api.ClusterConfig, error) {
+	return NewServiceAccount(&ServiceAccountArgs{
+		ClusterName: clusterName,
+		Labels: map[string]string{
+			"aws-usage": "cluster-ops",
+		},
+		Name:                   "external-secrets",
+		Namespace:              "kube-system",
+		PermissionsBoundaryArn: permissionsBoundaryArn,
+		PolicyArn:              policyArn,
+		Region:                 region,
+	})
 }

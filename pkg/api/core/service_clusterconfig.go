@@ -26,12 +26,18 @@ func (c *clusterConfig) CreateClusterConfig(_ context.Context, opts api.CreateCl
 		return nil, errors.E(err, "failed to retrieve stored vpc state")
 	}
 
-	cfg := clusterconfig.New(opts.ClusterName).
-		PermissionsBoundary(v1alpha1.PermissionsBoundaryARN(opts.AwsAccountID)).
-		Region(opts.Region).
-		Vpc(vpc.ID, opts.Cidr).
-		Subnets(vpc.PublicSubnets, vpc.PrivateSubnets).
-		Build()
+	cfg, err := clusterconfig.New(&clusterconfig.Args{
+		ClusterName:            opts.ClusterName,
+		PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(opts.AwsAccountID),
+		PrivateSubnets:         vpc.PrivateSubnets,
+		PublicSubnets:          vpc.PublicSubnets,
+		Region:                 opts.Region,
+		VpcCidr:                opts.Cidr,
+		VpcID:                  vpc.ID,
+	})
+	if err != nil {
+		return nil, errors.E(err, "failed to create cluster config")
+	}
 
 	err = c.store.SaveClusterConfig(cfg)
 	if err != nil {

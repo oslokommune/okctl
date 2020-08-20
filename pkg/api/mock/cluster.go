@@ -43,6 +43,8 @@ const (
 	DefaultKubeConfigPath = "/cluster/kubeconfig"
 	// DefaultKubeConfigContent is the default content of kubeconfig
 	DefaultKubeConfigContent = "meh"
+	// DefaultPolicyARN is the default ARN of some policy
+	DefaultPolicyARN = "arn:aws:iam::123456789012:policy/somePolicy"
 )
 
 // ErrBad just defines a mocked error
@@ -151,12 +153,17 @@ func DefaultVpcPrivateSubnets() []api.VpcSubnet {
 
 // DefaultClusterConfig returns a cluster config with defaults set
 func DefaultClusterConfig() *api.ClusterConfig {
-	return clusterconfig.New(DefaultClusterName).
-		PermissionsBoundary(v1alpha1.PermissionsBoundaryARN(DefaultAWSAccountID)).
-		Region(DefaultRegion).
-		Vpc(DefaultVpcID, DefaultCidr).
-		Subnets(DefaultVpcPublicSubnets(), DefaultVpcPrivateSubnets()).
-		Build()
+	c, _ := clusterconfig.New(&clusterconfig.Args{
+		ClusterName:            "test",
+		PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(DefaultAWSAccountID),
+		PrivateSubnets:         DefaultVpcPrivateSubnets(),
+		PublicSubnets:          DefaultVpcPublicSubnets(),
+		Region:                 DefaultRegion,
+		VpcCidr:                DefaultCidr,
+		VpcID:                  DefaultVpcID,
+	})
+
+	return c
 }
 
 // DefaultVpc returns a vpc with defaults set

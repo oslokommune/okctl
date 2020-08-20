@@ -25,7 +25,7 @@ func (m *managedPolicy) CreateExternalSecretsPolicy(opts api.CreateExternalSecre
 
 	r := cfn.NewRunner(m.provider)
 
-	err = r.CreateIfNotExists(stackName, template, defaultTimeOut)
+	err = r.CreateIfNotExists(stackName, template, []string{cfn.CapabilityNamedIam}, defaultTimeOut)
 	if err != nil {
 		return nil, errors.E(err, "cloud provider failed to create policy", errors.Unknown)
 	}

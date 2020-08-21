@@ -88,6 +88,12 @@ const (
 	DefaultExternalSecretsServiceAccountOutputs = "external-secrets-service-account-outputs.json"
 	//DefaultExternalSecretsServiceAccountConfig is the default file name of the service account config
 	DefaultExternalSecretsServiceAccountConfig = "external-secrets-service-account-config.yml"
+	//DefaultExternalSecretsHelmOutput is the default file name of the helm output
+	DefaultExternalSecretsHelmOutput = "external-secrets-helm-outputs.json"
+	// DefaultExternalSecretsHelmRelease is the default file name of the helm release
+	DefaultExternalSecretsHelmRelease = "external-secrets-helm-release.json"
+	// DefaultExternalSecretsHelmChart is the default file name of the chart
+	DefaultExternalSecretsHelmChart = "external-secrets-helm-chart.json"
 	// DefaultExternalSecretsBaseDir is the default directory of the external secrets resources
 	DefaultExternalSecretsBaseDir = "external-secrets"
 

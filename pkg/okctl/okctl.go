@@ -24,6 +24,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/credentials"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	"github.com/oslokommune/okctl/pkg/credentials/aws/scrape"
+	"github.com/oslokommune/okctl/pkg/helm"
 	"github.com/oslokommune/okctl/pkg/keyring"
 	"github.com/oslokommune/okctl/pkg/storage"
 )
@@ -46,6 +47,11 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 	}
 
 	err = o.initialiseProviders(env, awsAccountID)
+	if err != nil {
+		return err
+	}
+
+	homeDir, err := o.GetHomeDir()
 	if err != nil {
 		return err
 	}
@@ -105,6 +111,14 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		o.FileSystem,
 	)
 
+	helmStore := filesystem.NewHelmStore(
+		config.DefaultExternalSecretsHelmOutput,
+		config.DefaultExternalSecretsHelmChart,
+		config.DefaultExternalSecretsHelmRelease,
+		path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+		o.FileSystem,
+	)
+
 	vpcService := core.NewVpcService(
 		awsProvider.NewVpcCloud(o.CloudProvider),
 		vpcStore,
@@ -142,12 +156,34 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		),
 	)
 
+	helmRun := run.NewHelmRun(
+		helm.New(&helm.Config{
+			HomeDir:              homeDir,
+			HelmPluginsDirectory: path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
+			HelmRegistryConfig:   path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
+			HelmRepositoryConfig: path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryConfig),
+			HelmRepositoryCache:  path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryCache),
+			HelmBaseDir:          path.Join(appDir, config.DefaultHelmBaseDir),
+			Debug:                false,
+			DebugOutput:          nil,
+		},
+			o.FileSystem,
+		),
+		kubeConfigStore,
+	)
+
+	helmService := core.NewHelmService(
+		helmRun,
+		helmStore,
+	)
+
 	services := core.Services{
 		Cluster:        clusterService,
 		ClusterConfig:  clusterConfigService,
 		Vpc:            vpcService,
 		ManagedPolicy:  managedPolicyService,
 		ServiceAccount: serviceAccountService,
+		Helm:           helmService,
 	}
 
 	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))

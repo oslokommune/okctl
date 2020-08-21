@@ -20,6 +20,7 @@ const (
 	targetClusterConfigs                = "clusterconfigs/"
 	targetExternalSecretsPolicy         = "managedpolicies/externalsecrets/"
 	targetExternalSecretsServiceAccount = "serviceaccounts/externalsecrets/"
+	targetExternalSecretsHelm           = "helm/externalsecrets/"
 )
 
 // Cluster client API calls
@@ -49,6 +50,11 @@ type ServiceAccount interface {
 	CreateExternalSecretsServiceAccount(opts *api.CreateExternalSecretsServiceAccountOpts) error
 }
 
+// Helm API calls
+type Helm interface {
+	CreateExternalSecretsHelmChart(opts *api.CreateExternalSecretsHelmChartOpts) (*Helm, error)
+}
+
 // Client stores state for invoking API operations
 type Client struct {
 	BaseURL  string
@@ -63,6 +69,12 @@ func New(progress io.Writer, serverURL string) *Client {
 		BaseURL:  serverURL,
 		Client:   &http.Client{},
 	}
+}
+
+// CreateExternalSecretsHelmChart invokes the external secrets helm chart operation
+func (c *Client) CreateExternalSecretsHelmChart(opts *api.CreateExternalSecretsHelmChartOpts) (*api.Helm, error) {
+	into := &api.Helm{}
+	return into, c.DoPost(targetExternalSecretsHelm, opts, into)
 }
 
 // CreateExternalSecretsServiceAccount invokes the external secrets service account operation

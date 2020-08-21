@@ -13,10 +13,21 @@ type kubeConfig struct {
 	fileSystem         *afero.Afero
 }
 
+// This is not good, we need to rewrite this, together with
+// much of the API
 func (k *kubeConfig) CreateKubeConfig() (string, error) {
 	err := k.fileSystem.MkdirAll(k.baseDir, 0744)
 	if err != nil {
 		return "", err
+	}
+
+	exists, err := k.fileSystem.Exists(path.Join(k.baseDir, k.kubeConfigFileName))
+	if err != nil {
+		return "", err
+	}
+
+	if exists {
+		return path.Join(k.baseDir, k.kubeConfigFileName), nil
 	}
 
 	err = k.fileSystem.WriteFile(path.Join(k.baseDir, k.kubeConfigFileName), []byte{}, 0644)

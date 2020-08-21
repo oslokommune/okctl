@@ -164,7 +164,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteVpc:                           middleware.Logging(logger, vpcTag, "delete")(endpoints.DeleteVpc),
 			CreateExternalSecretsPolicy:         middleware.Logging(logger, strings.Join([]string{managedPoliciesTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsPolicy),         // nolint: lll
 			CreateExternalSecretsServiceAccount: middleware.Logging(logger, strings.Join([]string{serviceAccountsTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsServiceAccount), // nolint: lll
-			CreateExternalSecretsHelmChart:      middleware.Logging(logger, strings.Join([]string{helmTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsHelmChart),
+			CreateExternalSecretsHelmChart:      middleware.Logging(logger, strings.Join([]string{helmTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsHelmChart),                 // nolint: lll
 		}
 	}
 }

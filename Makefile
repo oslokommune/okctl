@@ -70,8 +70,8 @@ GOCOV          := $(GOBIN)/gocov
 RICHGO         := $(GOBIN)/richgo
 MAKEDOC        := $(GOBIN)/makedoc
 STATIK         := $(GOBIN)/statik
-GORELEASER     := $(GOBIN)/goreleaser
-GOFUMPT		   := $(GOBIN)/gofumpt
+GORELEASER     := goreleaser
+GOFUMPT	       := $(GOBIN)/gofumpt
 
 $(GOLANGCILINT):
 	$(GO) get github.com/golangci/golangci-lint/cmd/golangci-lint
@@ -101,7 +101,7 @@ $(GOFUMPT):
 	$(GO) get -u mvdan.cc/gofumpt
 
 $(GORELEASER):
-	$(GO) get -u github.com/goreleaser/goreleaser@v0.132.1
+	curl -sL http://git.io/goreleaser >> goreleaser
 
 GO := $(shell command -v go 2> /dev/null)
 ifndef GO
@@ -113,7 +113,7 @@ FILES = $(shell find . -name '.?*' -prune -o -name vendor -prune -o -name '*.go'
 
 ## Release
 release-local: $(GORELEASER)
-	$(GORELEASER) release --config=.goreleaser-local.yml --snapshot --skip-publish --rm-dist
+	$(GORELEASER) release --config=.goreleaser-local.yml --snapshot --skip-publish --rm-dist && rm goreleaser
 
 ## Generate
 generate: $(STATIK)

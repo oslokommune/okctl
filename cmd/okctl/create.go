@@ -92,13 +92,26 @@ and database subnets.`,
 				return err
 			}
 
-			return c.CreateExternalSecretsServiceAccount(&api.CreateExternalSecretsServiceAccountOpts{
+			err = c.CreateExternalSecretsServiceAccount(&api.CreateExternalSecretsServiceAccountOpts{
 				ClusterName:  opts.ClusterName,
 				Environment:  opts.Environment,
 				Region:       opts.Region,
 				AWSAccountID: opts.AWSAccountID,
 				PolicyArn:    policy.PolicyARN,
 			})
+			if err != nil {
+				return err
+			}
+
+			_, err = c.CreateExternalSecretsHelmChart(&api.CreateExternalSecretsHelmChartOpts{
+				Repository:  opts.RepositoryName,
+				Environment: opts.Environment,
+			})
+			if err != nil {
+				return err
+			}
+
+			return nil
 		},
 	}
 

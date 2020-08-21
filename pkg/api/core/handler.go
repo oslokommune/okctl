@@ -22,6 +22,7 @@ type Endpoints struct {
 	DeleteVpc                           endpoint.Endpoint
 	CreateExternalSecretsPolicy         endpoint.Endpoint
 	CreateExternalSecretsServiceAccount endpoint.Endpoint
+	CreateExternalSecretsHelmChart      endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -35,6 +36,7 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteVpc:                           makeDeleteVpcEndpoint(s.Vpc),
 		CreateExternalSecretsPolicy:         makeCreateExternalSecretsPolicyEndpoint(s.ManagedPolicy),
 		CreateExternalSecretsServiceAccount: makeCreateExternalSecretsServiceAccountEndpoint(s.ServiceAccount),
+		CreateExternalSecretsHelmChart:      makeCreateExternalSecretsHelmChartEndpoint(s.Helm),
 	}
 }
 
@@ -47,6 +49,7 @@ type Handlers struct {
 	DeleteVpc                           http.Handler
 	CreateExternalSecretsPolicy         http.Handler
 	CreateExternalSecretsServiceAccount http.Handler
+	CreateExternalSecretsHelmChart      http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -86,6 +89,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteVpc:                           newServer(endpoints.DeleteVpc, decodeVpcDeleteRequest),
 		CreateExternalSecretsPolicy:         newServer(endpoints.CreateExternalSecretsPolicy, decodeCreateExternalSecretsPolicyRequest),
 		CreateExternalSecretsServiceAccount: newServer(endpoints.CreateExternalSecretsServiceAccount, decodeCreateExternalSecretsServiceAccount),
+		CreateExternalSecretsHelmChart:      newServer(endpoints.CreateExternalSecretsHelmChart, decodeCreateExternalSecretsHelmChart),
 	}
 }
 
@@ -115,6 +119,11 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalSecretsServiceAccount)
 			})
 		})
+		r.Route("/helm", func(r chi.Router) {
+			r.Route("/externalsecrets", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateExternalSecretsHelmChart)
+			})
+		})
 	})
 
 	return r
@@ -127,6 +136,7 @@ type Services struct {
 	Vpc            api.VpcService
 	ManagedPolicy  api.ManagedPolicyService
 	ServiceAccount api.ServiceAccountService
+	Helm           api.HelmService
 }
 
 // EndpointOption makes it easy to enable and disable the endpoint
@@ -134,12 +144,13 @@ type Services struct {
 type EndpointOption func(Endpoints) Endpoints
 
 const (
-	clusterTag       = "cluster"
-	clusterConfigTag = "clusterConfig"
-	vpcTag           = "vpc"
-	managedPolicies  = "managedPolicies"
-	externalSecrets  = "externalSecrets"
-	serviceAccounts  = "serviceAccounts"
+	clusterTag         = "cluster"
+	clusterConfigTag   = "clusterConfig"
+	vpcTag             = "vpc"
+	managedPoliciesTag = "managedPolicies"
+	externalSecretsTag = "externalSecrets"
+	serviceAccountsTag = "serviceAccounts"
+	helmTag            = "helm"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -151,8 +162,9 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateClusterConfig:                 middleware.Logging(logger, clusterConfigTag, "create")(endpoints.CreateClusterConfig),
 			CreateVpc:                           middleware.Logging(logger, vpcTag, "create")(endpoints.CreateVpc),
 			DeleteVpc:                           middleware.Logging(logger, vpcTag, "delete")(endpoints.DeleteVpc),
-			CreateExternalSecretsPolicy:         middleware.Logging(logger, strings.Join([]string{managedPolicies, externalSecrets}, "/"), "create")(endpoints.CreateExternalSecretsPolicy),         // nolint: lll
-			CreateExternalSecretsServiceAccount: middleware.Logging(logger, strings.Join([]string{serviceAccounts, externalSecrets}, "/"), "create")(endpoints.CreateExternalSecretsServiceAccount), // nolint: lll
+			CreateExternalSecretsPolicy:         middleware.Logging(logger, strings.Join([]string{managedPoliciesTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsPolicy),         // nolint: lll
+			CreateExternalSecretsServiceAccount: middleware.Logging(logger, strings.Join([]string{serviceAccountsTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsServiceAccount), // nolint: lll
+			CreateExternalSecretsHelmChart:      middleware.Logging(logger, strings.Join([]string{helmTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsHelmChart),
 		}
 	}
 }

@@ -4,12 +4,15 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"sort"
 	"testing"
 	"time"
 
 	"github.com/oslokommune/okctl/pkg/config"
+	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	"github.com/oslokommune/okctl/pkg/helm"
 	"github.com/oslokommune/okctl/pkg/integration"
+	"github.com/oslokommune/okctl/pkg/mock"
 	"github.com/sanathkr/go-yaml"
 	"github.com/sebdah/goldie/v2"
 	"github.com/spf13/afero"
@@ -44,8 +47,11 @@ func TestEstablishEnv(t *testing.T) {
 			assert.Equal(t, tc.expect, os.Environ())
 
 			err = restoreFn()
+			after := os.Environ()
 			assert.NoError(t, err)
-			assert.Equal(t, before, os.Environ())
+			sort.Strings(before)
+			sort.Strings(after)
+			assert.Equal(t, before, after)
 		})
 	}
 }
@@ -86,18 +92,22 @@ func TestHelm(t *testing.T) {
 	}{
 		{
 			name: "Mysql should work",
-			helm: helm.New(&helm.Config{
-				HomeDir:              dir,
-				HelmPluginsDirectory: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
-				HelmRegistryConfig:   path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
-				HelmRepositoryConfig: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryConfig),
-				HelmRepositoryCache:  path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryCache),
-				HelmBaseDir:          path.Join(dir, config.DefaultHelmBaseDir),
-				Debug:                true,
-				DebugOutput:          os.Stderr,
-			}, &afero.Afero{
-				Fs: afero.NewOsFs(),
-			}),
+			helm: helm.New(
+				&helm.Config{
+					HomeDir:              dir,
+					HelmPluginsDirectory: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
+					HelmRegistryConfig:   path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
+					HelmRepositoryConfig: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryConfig),
+					HelmRepositoryCache:  path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryCache),
+					HelmBaseDir:          path.Join(dir, config.DefaultHelmBaseDir),
+					Debug:                true,
+					DebugOutput:          os.Stderr,
+				},
+				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
+				&afero.Afero{
+					Fs: afero.NewOsFs(),
+				},
+			),
 			chart: helm.Mysql(&helm.MysqlValues{
 				MysqlRootPassword: "admin@123",
 				Persistence: helm.MysqlPersistence{

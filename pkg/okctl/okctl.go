@@ -18,6 +18,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/binaries"
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
+	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/cloud"
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/config/application"
@@ -156,9 +157,15 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		),
 	)
 
+	awsIamAuth, err := o.BinariesProvider.AwsIamAuthenticator(awsiamauthenticator.Version)
+	if err != nil {
+		return err
+	}
+
 	helmRun := run.NewHelmRun(
 		helm.New(&helm.Config{
 			HomeDir:              homeDir,
+			Path:                 fmt.Sprintf("/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:%s", awsIamAuth.BinaryPath),
 			HelmPluginsDirectory: path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
 			HelmRegistryConfig:   path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
 			HelmRepositoryConfig: path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryConfig),
@@ -167,6 +174,7 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 			Debug:                false,
 			DebugOutput:          nil,
 		},
+			o.CredentialsProvider.Aws(),
 			o.FileSystem,
 		),
 		kubeConfigStore,

@@ -31,6 +31,7 @@ func (s *helmService) CreateExternalSecretsHelmChart(_ context.Context, opts api
 	return h, nil
 }
 
+// NewHelmService returns an initialised helm service
 func NewHelmService(run api.HelmRun, store api.HelmStore) api.HelmService {
 	return &helmService{
 		run:   run,

@@ -8,13 +8,13 @@ import (
 )
 
 type helmRun struct {
-	helm helm.Helmer
+	helm            helm.Helmer
 	kubeConfigStore api.KubeConfigStore
 }
 
 func (r *helmRun) CreateExternalSecretsHelmChart(opts api.CreateExternalSecretsHelmChartOpts) (*api.Helm, error) {
 	chart := helm.ExternalSecrets(helm.DefaultExternalSecretsValues())
-	
+
 	err := r.helm.RepoAdd(chart.RepositoryName, chart.RepositoryURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to add repository: %w", err)
@@ -29,25 +29,29 @@ func (r *helmRun) CreateExternalSecretsHelmChart(opts api.CreateExternalSecretsH
 	if err != nil {
 		return nil, fmt.Errorf("failed to create install config: %w", err)
 	}
-	
+
 	kubeConf, err := r.kubeConfigStore.GetKubeConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get kubeconfig: %w", err)
 	}
 
 	release, err := r.helm.Install(kubeConf.Path, cfg)
-	
+	if err != nil {
+		return nil, fmt.Errorf("failed to install chart: %w", err)
+	}
+
 	return &api.Helm{
 		Repository:  opts.Repository,
 		Environment: opts.Environment,
 		Release:     release,
-		Chart: chart,
+		Chart:       chart,
 	}, nil
 }
 
+// NewHelmRun returns an initialised helm runner
 func NewHelmRun(helm helm.Helmer, kubeConfigStore api.KubeConfigStore) api.HelmRun {
 	return &helmRun{
-		helm: helm,
+		helm:            helm,
 		kubeConfigStore: kubeConfigStore,
 	}
 }

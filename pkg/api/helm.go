@@ -8,6 +8,7 @@ import (
 	"helm.sh/helm/v3/pkg/release"
 )
 
+// Helm contains the data of a helm release
 type Helm struct {
 	Repository  string
 	Environment string
@@ -15,11 +16,14 @@ type Helm struct {
 	Chart       *helm.Chart
 }
 
+// CreateExternalSecretsHelmChartOpts contains the data
+// required for creating a helm chart
 type CreateExternalSecretsHelmChartOpts struct {
 	Repository  string
 	Environment string
 }
 
+// Validate the helm create inputs
 func (o CreateExternalSecretsHelmChartOpts) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.Environment, validation.Required),
@@ -27,14 +31,17 @@ func (o CreateExternalSecretsHelmChartOpts) Validate() error {
 	)
 }
 
+// HelmService defines the service layer interface
 type HelmService interface {
 	CreateExternalSecretsHelmChart(ctx context.Context, opts CreateExternalSecretsHelmChartOpts) (*Helm, error)
 }
 
+// HelmRun defines the runner layer
 type HelmRun interface {
 	CreateExternalSecretsHelmChart(opts CreateExternalSecretsHelmChartOpts) (*Helm, error)
 }
 
+// HelmStore defines the storage layer
 type HelmStore interface {
 	SaveExternalSecretsHelmChart(*Helm) error
 }

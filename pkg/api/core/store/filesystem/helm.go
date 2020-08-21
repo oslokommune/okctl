@@ -17,6 +17,7 @@ type helmStore struct {
 	fs                *afero.Afero
 }
 
+// Helm contains the outputs we will store
 type Helm struct {
 	Repository  string
 	Environment string
@@ -66,6 +67,7 @@ func (s *helmStore) SaveExternalSecretsHelmChart(helm *api.Helm) error {
 	return nil
 }
 
+// NewHelmStore returns an initialised helm store
 func NewHelmStore(extSecOutputFile, extSecChartFile, extSecReleaseFile, extSecBaseDir string, fs *afero.Afero) api.HelmStore {
 	return &helmStore{
 		extSecBaseDir:     extSecBaseDir,

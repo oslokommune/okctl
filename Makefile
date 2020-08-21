@@ -139,7 +139,8 @@ test-verbose: ARGS=-v
 test-race:    ARGS=-race
 $(TEST_TARGETS): test
 check test tests: fmt lint $(RICHGO)
-	$(GO) test -timeout $(TIMEOUT) $(ARGS) $(TESTPKGS) | tee >(RICHGO_FORCE_COLOR=1 $(RICHGO) testfilter)
+	$(GO) test -timeout $(TIMEOUT) $(ARGS) $(TESTPKGS) | tee >(RICHGO_FORCE_COLOR=1 $(RICHGO) testfilter); \
+		test $${PIPESTATUS[0]} -eq 0
 
 test-update:
 	$(GO) test ./... -update
@@ -151,7 +152,6 @@ COVERAGE_MODE    = atomic
 COVERAGE_PROFILE = $(COVERAGE_DIR)/profile.out
 COVERAGE_XML     = $(COVERAGE_DIR)/coverage.xml
 COVERAGE_HTML    = $(COVERAGE_DIR)/index.html
-test-coverage-tools: | $(GOCOVMERGE) $(GOCOV) $(GOCOVXML)
 test-coverage: COVERAGE_DIR := $(BUILD_DIR)/test/coverage.$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 test-coverage: fmt lint test-coverage-tools
 	@mkdir -p $(COVERAGE_DIR)/coverage

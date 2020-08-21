@@ -11,6 +11,8 @@ import (
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/helm"
 	"github.com/oslokommune/okctl/pkg/integration"
+	"github.com/sanathkr/go-yaml"
+	"github.com/sebdah/goldie/v2"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
@@ -79,11 +81,12 @@ func TestHelm(t *testing.T) {
 	testCases := []struct {
 		name      string
 		helm      *helm.Helm
+		chart     *helm.Chart
 		expect    interface{}
 		expectErr bool
 	}{
 		{
-			name: "Should work",
+			name: "Mysql should work",
 			helm: helm.New(&helm.Config{
 				Namespace:            "test-helm",
 				KubeConfig:           kubeConfPath,
@@ -98,6 +101,36 @@ func TestHelm(t *testing.T) {
 			}, &afero.Afero{
 				Fs: afero.NewOsFs(),
 			}),
+			chart: helm.Mysql(&helm.MysqlValues{
+				MysqlRootPassword: "admin@123",
+				Persistence: helm.MysqlPersistence{
+					Enabled: false,
+				},
+				ImagePullPolicy: "Always",
+			}),
+			expect:    nil,
+			expectErr: false,
+		},
+		{
+			// FIXME: We need to bring up localstack I think..
+			name: "ExternalSecrets should work",
+			helm: helm.New(&helm.Config{
+				Namespace:            "kube-system",
+				KubeConfig:           kubeConfPath,
+				HomeDir:              dir,
+				HelmPluginsDirectory: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
+				HelmRegistryConfig:   path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
+				HelmRepositoryConfig: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryConfig),
+				HelmRepositoryCache:  path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryCache),
+				HelmBaseDir:          path.Join(dir, config.DefaultHelmBaseDir),
+				Debug:                true,
+				DebugOutput:          os.Stderr,
+			}, &afero.Afero{
+				Fs: afero.NewOsFs(),
+			}),
+			chart:     helm.ExternalSecrets(helm.DefaultExternalSecretsValues()),
+			expect:    nil,
+			expectErr: false,
 		},
 	}
 
@@ -105,26 +138,44 @@ func TestHelm(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.helm.RepoAdd("stable", "https://kubernetes-charts.storage.googleapis.com")
+			err := tc.helm.RepoAdd(tc.chart.RepositoryName, tc.chart.RepositoryURL)
 			assert.NoError(t, err)
 
 			err = tc.helm.RepoUpdate()
 			assert.NoError(t, err)
 
-			mysql := helm.Mysql(&helm.MysqlValues{
-				MysqlRootPassword: "admin@123",
-				Persistence: helm.MysqlPersistence{
-					Enabled: false,
-				},
-				ImagePullPolicy: "Always",
-			})
-
-			cfg, err := mysql.InstallConfig()
+			cfg, err := tc.chart.InstallConfig()
 			assert.NoError(t, err)
 
 			release, err := tc.helm.Install(cfg)
 			assert.NoError(t, err)
 			log.Printf("Released: %s, to namespace: %s", release.Name, release.Namespace)
+		})
+	}
+}
+
+func TestDefaultExternalSecretsValues(t *testing.T) {
+	testCases := []struct {
+		name   string
+		values *helm.ExternalSecretsValues
+		golden string
+	}{
+		{
+			name:   "External secrets value are valid",
+			values: helm.DefaultExternalSecretsValues(),
+			golden: "external-secrets-values.yml",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			b, err := yaml.Marshal(tc.values)
+			assert.NoError(t, err)
+
+			g := goldie.New(t)
+			g.Assert(t, tc.golden, b)
 		})
 	}
 }

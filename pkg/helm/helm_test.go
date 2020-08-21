@@ -2,7 +2,6 @@ package helm_test
 
 import (
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"testing"
@@ -88,8 +87,6 @@ func TestHelm(t *testing.T) {
 		{
 			name: "Mysql should work",
 			helm: helm.New(&helm.Config{
-				Namespace:            "test-helm",
-				KubeConfig:           kubeConfPath,
 				HomeDir:              dir,
 				HelmPluginsDirectory: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
 				HelmRegistryConfig:   path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
@@ -115,8 +112,6 @@ func TestHelm(t *testing.T) {
 			// FIXME: We need to bring up localstack I think..
 			name: "ExternalSecrets should work",
 			helm: helm.New(&helm.Config{
-				Namespace:            "kube-system",
-				KubeConfig:           kubeConfPath,
 				HomeDir:              dir,
 				HelmPluginsDirectory: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
 				HelmRegistryConfig:   path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
@@ -147,9 +142,9 @@ func TestHelm(t *testing.T) {
 			cfg, err := tc.chart.InstallConfig()
 			assert.NoError(t, err)
 
-			release, err := tc.helm.Install(cfg)
+			release, err := tc.helm.Install(kubeConfPath, cfg)
 			assert.NoError(t, err)
-			log.Printf("Released: %s, to namespace: %s", release.Name, release.Namespace)
+			assert.NotNil(t, release)
 		})
 	}
 }

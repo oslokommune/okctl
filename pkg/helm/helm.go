@@ -49,7 +49,7 @@ type RepoUpdater interface {
 
 // Installer defines the interface for installing a helm chart
 type Installer interface {
-	Install(releaseName, repoName, chartName string, args map[string]string) (*release.Release, error)
+	Install(kubeConfigPath string, cfg *InstallConfig) (*release.Release, error)
 }
 
 // Helmer defines all available helm operations
@@ -61,18 +61,17 @@ type Helmer interface {
 
 // Helm stores all state required for running helm tasks
 type Helm struct {
-	restClient genericclioptions.RESTClientGetter
-	providers  getter.Providers
-	config     *Config
-	fs         *afero.Afero
+	providers getter.Providers
+	config    *Config
+	fs        *afero.Afero
 }
+
+// Ensure that Helm implements the Helmer interface
+var _ Helmer = &Helm{}
 
 // Config lists all configuration variables that must be set
 // to configure the environment for helm correctly
 type Config struct {
-	Namespace  string
-	KubeConfig string
-
 	// HomeDir allows us to modify where $HOME/.kube
 	// ends up
 	HomeDir string
@@ -91,7 +90,6 @@ type Config struct {
 // set of env vars
 func (c *Config) Envs() map[string]string {
 	return map[string]string{
-		"KUBECONFIG": c.KubeConfig,
 
 		"HOME": c.HomeDir,
 
@@ -102,7 +100,6 @@ func (c *Config) Envs() map[string]string {
 		"HELM_REGISTRY_CONFIG":   c.HelmRegistryConfig,
 		"HELM_REPOSITORY_CONFIG": c.HelmRepositoryConfig,
 		"HELM_REPOSITORY_CACHE":  c.HelmRepositoryCache,
-		"HELM_NAMESPACE":         c.Namespace,
 
 		"HELM_DEBUG": fmt.Sprintf("%t", c.Debug),
 	}
@@ -117,10 +114,6 @@ func New(config *Config, fs *afero.Afero) *Helm {
 				Schemes: []string{"https"},
 				New:     getter.NewHTTPGetter,
 			},
-		},
-		restClient: &genericclioptions.ConfigFlags{
-			KubeConfig: &config.KubeConfig,
-			Namespace:  &config.Namespace,
 		},
 		fs: fs,
 	}
@@ -249,6 +242,8 @@ type InstallConfig struct {
 	Chart string
 	// Repo is the name of the repository from which to install
 	Repo string
+	// Namespace is the namespace the chart will be installed in
+	Namespace string
 	// Values is a yaml encoded byte array of the values.yaml file
 	ValuesBody []byte
 }
@@ -263,8 +258,12 @@ func (c *InstallConfig) RepoChart() string {
 // Some details to consider about CRDs:
 // - https://helm.sh/docs/chart_best_practices/custom_resource_definitions/#some-caveats-and-explanations
 // nolint: funlen
-func (h *Helm) Install(cfg *InstallConfig) (*release.Release, error) {
-	restoreFn, err := EstablishEnv(h.config.Envs())
+func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Release, error) {
+	envs := h.config.Envs()
+	envs["HELM_NAMESPACE"] = cfg.Namespace
+	envs["KUBECONFIG"] = kubeConfigPath
+
+	restoreFn, err := EstablishEnv(envs)
 
 	defer func() {
 		err = restoreFn()
@@ -284,7 +283,12 @@ func (h *Helm) Install(cfg *InstallConfig) (*release.Release, error) {
 		}
 	}
 
-	err = actionConfig.Init(h.restClient, settings.Namespace(), DefaultHelmDriver, debug)
+	restClient := &genericclioptions.ConfigFlags{
+		KubeConfig: &kubeConfigPath,
+		Namespace:  &cfg.Namespace,
+	}
+
+	err = actionConfig.Init(restClient, settings.Namespace(), DefaultHelmDriver, debug)
 	if err != nil {
 		return nil, err
 	}
@@ -455,6 +459,7 @@ type Chart struct {
 	ReleaseName string
 	Version     string
 	Chart       string
+	Namespace   string
 
 	Values interface{}
 }
@@ -471,6 +476,7 @@ func (c *Chart) InstallConfig() (*InstallConfig, error) {
 		Version:     c.Version,
 		Chart:       c.Chart,
 		Repo:        c.RepositoryName,
+		Namespace:   c.Namespace,
 		ValuesBody:  values,
 	}, nil
 }
@@ -495,6 +501,7 @@ func Mysql(values interface{}) *Chart {
 		ReleaseName:    "mysql",
 		Version:        "1.6.6",
 		Chart:          "mysql",
+		Namespace:      "test-helm",
 		Values:         values,
 	}
 }
@@ -586,6 +593,7 @@ func ExternalSecrets(values interface{}) *Chart {
 		ReleaseName:    "external-secrets",
 		Version:        "5.2.0",
 		Chart:          "kubernetes-external-secrets",
+		Namespace:      "kube-system",
 		Values:         values,
 	}
 }

@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/release"
@@ -63,6 +64,7 @@ type Helmer interface {
 type Helm struct {
 	providers getter.Providers
 	config    *Config
+	auth      aws.Authenticator
 	fs        *afero.Afero
 }
 
@@ -75,6 +77,7 @@ type Config struct {
 	// HomeDir allows us to modify where $HOME/.kube
 	// ends up
 	HomeDir string
+	Path    string
 
 	HelmPluginsDirectory string
 	HelmRegistryConfig   string
@@ -92,6 +95,7 @@ func (c *Config) Envs() map[string]string {
 	return map[string]string{
 
 		"HOME": c.HomeDir,
+		"PATH": c.Path,
 
 		"HELM_CACHE_HOME":        c.HelmBaseDir,
 		"HELM_CONFIG_HOME":       c.HelmBaseDir,
@@ -106,7 +110,7 @@ func (c *Config) Envs() map[string]string {
 }
 
 // New initialises a new Helm operator
-func New(config *Config, fs *afero.Afero) *Helm {
+func New(config *Config, auth aws.Authenticator, fs *afero.Afero) *Helm {
 	return &Helm{
 		config: config,
 		providers: getter.Providers{
@@ -115,7 +119,8 @@ func New(config *Config, fs *afero.Afero) *Helm {
 				New:     getter.NewHTTPGetter,
 			},
 		},
-		fs: fs,
+		auth: auth,
+		fs:   fs,
 	}
 }
 
@@ -262,6 +267,15 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 	envs := h.config.Envs()
 	envs["HELM_NAMESPACE"] = cfg.Namespace
 	envs["KUBECONFIG"] = kubeConfigPath
+
+	awsEnvs, err := h.auth.AsEnv()
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range SplitEnv(awsEnvs) {
+		envs[k] = v
+	}
 
 	restoreFn, err := EstablishEnv(envs)
 
@@ -416,23 +430,10 @@ func EstablishEnv(envs map[string]string) (RestoreEnvFn, error) {
 
 		os.Clearenv()
 
-		for _, envVar := range originalEnvVars {
-			e := strings.SplitN(envVar, "=", 2)
+		originalSplit := SplitEnv(originalEnvVars)
 
-			var key, val string
-
-			switch len(e) {
-			case 0:
-				continue
-			case 1:
-				key = e[0]
-				val = ""
-			case 2: // nolint: gomnd
-				key = e[0]
-				val = e[1]
-			}
-
-			err := os.Setenv(key, val)
+		for k, v := range originalSplit {
+			err := os.Setenv(k, v)
 			if err != nil {
 				return err
 			}
@@ -449,6 +450,32 @@ func EstablishEnv(envs map[string]string) (RestoreEnvFn, error) {
 	}
 
 	return fn, nil
+}
+
+// SplitEnv returns the split envvars
+func SplitEnv(envs []string) map[string]string {
+	out := map[string]string{}
+
+	for _, envVar := range envs {
+		e := strings.SplitN(envVar, "=", 2)
+
+		var key, val string
+
+		switch len(e) {
+		case 0:
+			continue
+		case 1:
+			key = e[0]
+			val = ""
+		case 2: // nolint: gomnd
+			key = e[0]
+			val = e[1]
+		}
+
+		out[key] = val
+	}
+
+	return out
 }
 
 // Chart contains the state for installing a chart

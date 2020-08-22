@@ -2,9 +2,11 @@ package helm_test
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -155,6 +157,15 @@ func TestHelm(t *testing.T) {
 			release, err := tc.helm.Install(kubeConfPath, cfg)
 			assert.NoError(t, err)
 			assert.NotNil(t, release)
+
+			if err != nil {
+				items, err := cluster.Debug(tc.chart.Namespace)
+				assert.NoError(t, err)
+				for title, item := range items {
+					log.Printf("debug information for: %s\n", title)
+					log.Println(strings.Join(item, "\n"))
+				}
+			}
 		})
 	}
 }

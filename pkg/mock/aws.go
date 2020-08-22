@@ -76,7 +76,7 @@ func DefaultValidCredentials() *awspkg.Credentials {
 func DefaultValidStsCredentials() *sts.Credentials {
 	creds := DefaultStsCredentials()
 
-	creds.Expiration = aws.Time(time.Now().Add(1 * time.Hour))
+	creds.Expiration = aws.Time(time.Now().Add(1 * time.Hour).Local())
 
 	return creds
 }

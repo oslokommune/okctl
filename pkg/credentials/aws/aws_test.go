@@ -53,7 +53,8 @@ func TestNewAuthSAML(t *testing.T) {
 
 func TestAuthRaw(t *testing.T) {
 	c := awsmock.DefaultCredentials()
-	c.Expires = time.Now().Add(60 * time.Minute)
+	t0 := time.Now().Add(60 * time.Minute)
+	c.Expires = &t0
 
 	testCases := []struct {
 		name        string

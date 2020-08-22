@@ -39,6 +39,7 @@ const (
 // DefaultCredentials returns a mocked set of aws credentials
 func DefaultCredentials() *awspkg.Credentials {
 	t, _ := time.Parse(time.RFC3339, DefaultExpiration)
+	l := t.Local()
 
 	return &awspkg.Credentials{
 		AccessKeyID:     DefaultAccessKeyID,
@@ -46,7 +47,7 @@ func DefaultCredentials() *awspkg.Credentials {
 		SessionToken:    DefaultSessionToken,
 		SecurityToken:   DefaultSessionToken,
 		PrincipalARN:    DefaultPrincipalARN,
-		Expires:         t.Local(),
+		Expires:         &l,
 		Region:          DefaultRegion,
 	}
 }
@@ -67,7 +68,8 @@ func DefaultStsCredentials() *sts.Credentials {
 func DefaultValidCredentials() *awspkg.Credentials {
 	creds := DefaultCredentials()
 
-	creds.Expires = time.Now().Add(1 * time.Hour).Local()
+	t0 := time.Now().Add(1 * time.Hour).Local()
+	creds.Expires = &t0
 
 	return creds
 }
@@ -76,7 +78,7 @@ func DefaultValidCredentials() *awspkg.Credentials {
 func DefaultValidStsCredentials() *sts.Credentials {
 	creds := DefaultStsCredentials()
 
-	creds.Expiration = aws.Time(time.Now().Add(1 * time.Hour))
+	creds.Expiration = aws.Time(time.Now().Add(1 * time.Hour).Local())
 
 	return creds
 }

@@ -10,3 +10,4 @@ show_downloads: false
 exclude:
   - release_notes/
 timezone: Europe/Oslo
+markdown: GFM

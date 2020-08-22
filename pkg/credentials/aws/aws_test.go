@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
+	"github.com/google/go-cmp/cmp"
 	"github.com/oslokommune/okctl/pkg/api/mock"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	awsmock "github.com/oslokommune/okctl/pkg/mock"
@@ -139,7 +140,7 @@ func TestPersister(t *testing.T) {
 
 				got, err := tc.persister.Get()
 				assert.NoError(t, err)
-				assert.Equal(t, tc.creds, got)
+				assert.Empty(t, cmp.Diff(tc.creds, got))
 			})
 		})
 	}

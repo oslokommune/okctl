@@ -27,7 +27,7 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ~/.cache/go-build
-          key: ${{ runner.os }}-go-build-${{ hashFiles('**/**') }}
+          key: ${{ runner.os }}-go-build-${{ hashFiles('log.txt') }}
           restore-keys: |
             ${{ runner.os }}-go-build-
       - name: Checkout code

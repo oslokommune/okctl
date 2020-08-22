@@ -24,6 +24,12 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-go-build-${{ hashFiles('**/**') }}
+          restore-keys: |
+            ${{ runner.os }}-go-build-
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Run golang checks

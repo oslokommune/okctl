@@ -280,6 +280,7 @@ func (k *KubernetesCluster) KubeConfig() (string, error) {
 }
 
 // Debug returns podspecs, podlogs and events generated in a given namespace
+// nolint: funlen
 func (k *KubernetesCluster) Debug(namespace string) (map[string][]string, error) {
 	kubeConfigPath, err := k.KubeConfig()
 	if err != nil {

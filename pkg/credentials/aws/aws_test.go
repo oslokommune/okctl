@@ -9,6 +9,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/api/mock"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	awsmock "github.com/oslokommune/okctl/pkg/mock"
+	"github.com/sanity-io/litter"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
@@ -53,8 +54,7 @@ func TestNewAuthSAML(t *testing.T) {
 
 func TestAuthRaw(t *testing.T) {
 	c := awsmock.DefaultCredentials()
-	t0 := time.Now().Add(60 * time.Minute)
-	c.Expires = &t0
+	c.Expires = time.Now().Add(60 * time.Minute)
 
 	testCases := []struct {
 		name        string
@@ -141,6 +141,7 @@ func TestPersister(t *testing.T) {
 				got, err := tc.persister.Get()
 				assert.NoError(t, err)
 				assert.Equal(t, tc.creds, got)
+				assert.Equal(t, litter.Sdump(tc.creds), litter.Sdump(got))
 			})
 		})
 	}

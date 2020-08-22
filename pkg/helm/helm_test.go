@@ -159,9 +159,12 @@ func TestHelm(t *testing.T) {
 			assert.NotNil(t, release)
 
 			if err != nil {
-				events, err := cluster.Events(tc.chart.Namespace)
+				items, err := cluster.Debug(tc.chart.Namespace)
 				assert.NoError(t, err)
-				log.Println(strings.Join(events, "\n"))
+				for title, item := range items {
+					log.Printf("debug information for: %s\n", title)
+					log.Println(strings.Join(item, "\n"))
+				}
 			}
 		})
 	}

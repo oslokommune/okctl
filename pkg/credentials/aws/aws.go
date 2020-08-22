@@ -34,7 +34,7 @@ type Credentials struct {
 	SessionToken    string
 	SecurityToken   string
 	PrincipalARN    string
-	Expires         *time.Time
+	Expires         time.Time
 	Region          string
 }
 
@@ -86,7 +86,7 @@ func (a *Auth) AsEnv() ([]string, error) {
 // Raw returns the raw credentials
 func (a *Auth) Raw() (*Credentials, error) {
 	// Credentials have expired
-	if a.creds != nil && AreExpired(*a.creds.Expires) {
+	if a.creds != nil && AreExpired(a.creds.Expires) {
 		a.creds = nil
 	}
 
@@ -121,7 +121,7 @@ func (a *Auth) Resolve() (*Credentials, error) {
 	// Lets try storage first, if there is no error and
 	// they aren't expired, simply return them
 	creds, err := a.Persister.Get()
-	if err == nil && !AreExpired(*creds.Expires) {
+	if err == nil && !AreExpired(creds.Expires) {
 		return creds, nil
 	}
 
@@ -145,7 +145,7 @@ func (a *Auth) Resolve() (*Credentials, error) {
 
 			// We just got these credentials, they shouldn't have expired already
 			// which means this retriever is static or otherwise broken
-			if AreExpired(*creds.Expires) {
+			if AreExpired(creds.Expires) {
 				retriever.Invalidate()
 
 				accumulatedErrors = append(
@@ -312,7 +312,7 @@ func (a *AuthSAML) Retrieve() (*Credentials, error) {
 		SessionToken:    aws.StringValue(resp.Credentials.SessionToken),
 		SecurityToken:   aws.StringValue(resp.Credentials.SessionToken),
 		PrincipalARN:    aws.StringValue(resp.AssumedRoleUser.Arn),
-		Expires:         aws.Time(resp.Credentials.Expiration.Local()),
+		Expires:         resp.Credentials.Expiration.Local(),
 		Region:          a.Region,
 	}, nil
 }
@@ -538,7 +538,7 @@ func (s *IniPersister) Save(credentials *Credentials) error {
 		SessionToken:    credentials.SessionToken,
 		SecurityToken:   credentials.SecurityToken,
 		PrincipalARN:    credentials.PrincipalARN,
-		Expires:         *credentials.Expires,
+		Expires:         credentials.Expires,
 	})
 	if err != nil {
 		return err
@@ -593,7 +593,7 @@ func (s *IniPersister) Get() (*Credentials, error) {
 		SessionToken:    creds.SessionToken,
 		SecurityToken:   creds.SecurityToken,
 		PrincipalARN:    creds.PrincipalARN,
-		Expires:         &creds.Expires,
+		Expires:         creds.Expires,
 		Region:          cfg.Region,
 	}, nil
 }

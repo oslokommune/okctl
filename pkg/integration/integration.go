@@ -23,6 +23,7 @@ import (
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
 	"github.com/spf13/afero"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -278,8 +279,8 @@ func (k *KubernetesCluster) KubeConfig() (string, error) {
 	return k.kubeConfigPath, nil
 }
 
-// Events returns all events generated in a given namespace
-func (k *KubernetesCluster) Events(namespace string) ([]string, error) {
+// Debug returns podspecs, podlogs and events generated in a given namespace
+func (k *KubernetesCluster) Debug(namespace string) (map[string][]string, error) {
 	kubeConfigPath, err := k.KubeConfig()
 	if err != nil {
 		return nil, err
@@ -311,7 +312,37 @@ func (k *KubernetesCluster) Events(namespace string) ([]string, error) {
 		eventStrings[i] = string(j)
 	}
 
-	return eventStrings, nil
+	pods, err := clientSet.CoreV1().Pods(namespace).List(k.ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	podLogs := make([]string, len(pods.Items))
+	podSpec := make([]string, len(pods.Items))
+
+	for i, pod := range pods.Items {
+		request := clientSet.CoreV1().Pods(namespace).GetLogs(pod.Name, &v1.PodLogOptions{})
+
+		raw, err := request.DoRaw(k.ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		podLogs[i] = string(raw)
+
+		j, err := json.MarshalIndent(pod, "", "  ")
+		if err != nil {
+			return nil, err
+		}
+
+		podSpec[i] = string(j)
+	}
+
+	return map[string][]string{
+		"podLogs":  podLogs,
+		"podSpecs": podSpec,
+		"events":   eventStrings,
+	}, nil
 }
 
 // Cleanup removes all created resources

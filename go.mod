@@ -72,6 +72,7 @@ require (
 	helm.sh/helm/v3 v3.3.0
 	k8s.io/apimachinery v0.18.4
 	k8s.io/cli-runtime v0.18.4
+	k8s.io/client-go v0.18.4
 	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/yaml v1.2.0
 )

@@ -23,6 +23,9 @@ import (
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
 	"github.com/spf13/afero"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 // Localstack contains all state for managing the lifecycle
@@ -273,6 +276,42 @@ func (k *KubernetesCluster) KubeConfig() (string, error) {
 	}
 
 	return k.kubeConfigPath, nil
+}
+
+// Events returns all events generated in a given namespace
+func (k *KubernetesCluster) Events(namespace string) ([]string, error) {
+	kubeConfigPath, err := k.KubeConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
+	if err != nil {
+		return nil, err
+	}
+
+	clientSet, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
+	events, err := clientSet.CoreV1().Events(namespace).List(k.ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, nil
+	}
+
+	eventStrings := make([]string, len(events.Items))
+
+	for i, event := range events.Items {
+		j, err := json.MarshalIndent(event, "", "  ")
+		if err != nil {
+			return nil, err
+		}
+
+		eventStrings[i] = string(j)
+	}
+
+	return eventStrings, nil
 }
 
 // Cleanup removes all created resources

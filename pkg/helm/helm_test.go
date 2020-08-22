@@ -2,9 +2,11 @@ package helm_test
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -155,6 +157,12 @@ func TestHelm(t *testing.T) {
 			release, err := tc.helm.Install(kubeConfPath, cfg)
 			assert.NoError(t, err)
 			assert.NotNil(t, release)
+
+			if err != nil {
+				events, err := cluster.Events(tc.chart.Namespace)
+				assert.NoError(t, err)
+				log.Println(strings.Join(events, "\n"))
+			}
 		})
 	}
 }

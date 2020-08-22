@@ -314,6 +314,7 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 	client.Namespace = settings.Namespace()
 	client.CreateNamespace = true
 	client.Wait = true
+	client.Timeout = 90 * time.Second // nolint: gomnd Need to make this configurable
 
 	cp, err := client.ChartPathOptions.LocateChart(cfg.RepoChart(), settings)
 	if err != nil {

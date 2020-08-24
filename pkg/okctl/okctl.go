@@ -106,9 +106,16 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 	)
 
 	serviceAccountStore := filesystem.NewServiceAccountStore(
-		config.DefaultExternalSecretsServiceAccountOutputs,
-		config.DefaultExternalSecretsServiceAccountConfig,
-		path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+		filesystem.Paths{
+			OutputFile: config.DefaultExternalSecretsServiceAccountOutputs,
+			ConfigFile: config.DefaultExternalSecretsServiceAccountConfig,
+			BaseDir:    path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+		},
+		filesystem.Paths{
+			OutputFile: config.DefaultAlbIngressControllerServiceAccountOutputs,
+			ConfigFile: config.DefaultAlbIngressControllerServiceAccountConfig,
+			BaseDir:    path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
+		},
 		o.FileSystem,
 	)
 

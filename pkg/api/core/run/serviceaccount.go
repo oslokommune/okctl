@@ -18,7 +18,7 @@ type serviceAccountRun struct {
 	debug              bool
 }
 
-func (r *serviceAccountRun) CreateExternalSecretsServiceAccount(config *api.ClusterConfig) error {
+func (r *serviceAccountRun) CreateServiceAccount(config *api.ClusterConfig) error {
 	a, err := r.provider.AwsIamAuthenticator(awsiamauthenticator.Version)
 	if err != nil {
 		return err

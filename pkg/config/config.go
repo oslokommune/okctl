@@ -97,6 +97,23 @@ const (
 	// DefaultExternalSecretsBaseDir is the default directory of the external secrets resources
 	DefaultExternalSecretsBaseDir = "external-secrets"
 
+	// DefaultAlbIngressControllerCloudFormationTemplate is the default filename of the cloud formation template
+	DefaultAlbIngressControllerCloudFormationTemplate = "alb-ingress-controller-policy-cf.yml"
+	// DefaultAlbIngressControllerOutputs is the default filename of the outputs
+	DefaultAlbIngressControllerOutputs = "alb-ingress-controller-outputs.json"
+	// DefaultAlbIngressControllerServiceAccountOutputs is the default file name of the service account outputs
+	DefaultAlbIngressControllerServiceAccountOutputs = "alb-ingress-controller-service-account-outputs.json"
+	//DefaultAlbIngressControllerServiceAccountConfig is the default file name of the service account config
+	DefaultAlbIngressControllerServiceAccountConfig = "alb-ingress-controller-service-account-config.yml"
+	//DefaultAlbIngressControllerHelmOutput is the default file name of the helm output
+	DefaultAlbIngressControllerHelmOutput = "alb-ingress-controller-helm-outputs.json"
+	// DefaultAlbIngressControllerHelmRelease is the default file name of the helm release
+	DefaultAlbIngressControllerHelmRelease = "alb-ingress-controller-helm-release.json"
+	// DefaultAlbIngressControllerHelmChart is the default file name of the chart
+	DefaultAlbIngressControllerHelmChart = "alb-ingress-controller-helm-chart.json"
+	// DefaultAlbIngressControllerBaseDir is the default directory of the external secrets resources
+	DefaultAlbIngressControllerBaseDir = "alb-ingress-controller"
+
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"
 	// EnvHome is the default env var parsed for determining the application home

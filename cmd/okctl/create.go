@@ -93,11 +93,13 @@ and database subnets.`,
 			}
 
 			err = c.CreateExternalSecretsServiceAccount(&api.CreateExternalSecretsServiceAccountOpts{
-				ClusterName:  opts.ClusterName,
-				Environment:  opts.Environment,
-				Region:       opts.Region,
-				AWSAccountID: opts.AWSAccountID,
-				PolicyArn:    policy.PolicyARN,
+				CreateServiceAccountOpts: api.CreateServiceAccountOpts{
+					ClusterName:  opts.ClusterName,
+					Environment:  opts.Environment,
+					Region:       opts.Region,
+					AWSAccountID: opts.AWSAccountID,
+					PolicyArn:    policy.PolicyARN,
+				},
 			})
 			if err != nil {
 				return err

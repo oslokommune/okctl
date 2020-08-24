@@ -24,6 +24,7 @@ type Endpoints struct {
 	CreateExternalSecretsServiceAccount      endpoint.Endpoint
 	CreateExternalSecretsHelmChart           endpoint.Endpoint
 	CreateAlbIngressControllerServiceAccount endpoint.Endpoint
+	CreateAlbIngressControllerPolicy         endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -39,6 +40,7 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateExternalSecretsServiceAccount:      makeCreateExternalSecretsServiceAccountEndpoint(s.ServiceAccount),
 		CreateExternalSecretsHelmChart:           makeCreateExternalSecretsHelmChartEndpoint(s.Helm),
 		CreateAlbIngressControllerServiceAccount: makeCreateAlbIngressControllerServiceAccountEndpoint(s.ServiceAccount),
+		CreateAlbIngressControllerPolicy:         makeCreateAlbIngressControllerPolicy(s.ManagedPolicy),
 	}
 }
 
@@ -53,6 +55,7 @@ type Handlers struct {
 	CreateExternalSecretsServiceAccount      http.Handler
 	CreateExternalSecretsHelmChart           http.Handler
 	CreateAlbIngressControllerServiceAccount http.Handler
+	CreateAlbIngressControllerPolicy         http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -94,6 +97,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateExternalSecretsServiceAccount:      newServer(endpoints.CreateExternalSecretsServiceAccount, decodeCreateExternalSecretsServiceAccount),
 		CreateExternalSecretsHelmChart:           newServer(endpoints.CreateExternalSecretsHelmChart, decodeCreateExternalSecretsHelmChart),
 		CreateAlbIngressControllerServiceAccount: newServer(endpoints.CreateAlbIngressControllerServiceAccount, decodeCreateAlbIngressControllerServiceAccount),
+		CreateAlbIngressControllerPolicy:         newServer(endpoints.CreateAlbIngressControllerPolicy, decodeCreateAlbIngressControllerPolicyRequest),
 	}
 }
 
@@ -116,6 +120,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/managedpolicies", func(r chi.Router) {
 			r.Route("/externalsecrets", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalSecretsPolicy)
+			})
+			r.Route("/albingresscontroller", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateAlbIngressControllerPolicy)
 			})
 		})
 		r.Route("/serviceaccounts", func(r chi.Router) {
@@ -174,6 +181,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateExternalSecretsServiceAccount:      middleware.Logging(logger, strings.Join([]string{serviceAccountsTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsServiceAccount),           // nolint: lll
 			CreateExternalSecretsHelmChart:           middleware.Logging(logger, strings.Join([]string{helmTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsHelmChart),                           // nolint: lll
 			CreateAlbIngressControllerServiceAccount: middleware.Logging(logger, strings.Join([]string{serviceAccountsTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerServiceAccount), // nolint: lll
+			CreateAlbIngressControllerPolicy:         middleware.Logging(logger, strings.Join([]string{managedPoliciesTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerPolicy),         // nolint: lll
 		}
 	}
 }

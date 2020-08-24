@@ -117,14 +117,6 @@ func (s *serviceAccount) getServiceAccount(paths Paths) (*api.ServiceAccount, er
 	return account, nil
 }
 
-// Paths contains the paths where the output should
-// be stored
-type Paths struct {
-	OutputFile string
-	ConfigFile string
-	BaseDir    string
-}
-
 // NewServiceAccountStore returns an initialised service account store
 func NewServiceAccountStore(externalSecrets, albIngressController Paths, fs *afero.Afero) api.ServiceAccountStore {
 	return &serviceAccount{

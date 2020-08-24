@@ -113,6 +113,27 @@ and database subnets.`,
 				return err
 			}
 
+			policy, err = c.CreateAlbIngressControllerPolicy(&api.CreateAlbIngressControllerPolicyOpts{
+				Repository:  opts.RepositoryName,
+				Environment: opts.Environment,
+			})
+			if err != nil {
+				return err
+			}
+
+			err = c.CreateAlbIngressControllerServiceAccount(&api.CreateAlbIngressControllerServiceAccountOpts{
+				CreateServiceAccountOpts: api.CreateServiceAccountOpts{
+					ClusterName:  opts.ClusterName,
+					Environment:  opts.Environment,
+					Region:       opts.Region,
+					AWSAccountID: opts.AWSAccountID,
+					PolicyArn:    policy.PolicyARN,
+				},
+			})
+			if err != nil {
+				return err
+			}
+
 			return nil
 		},
 	}

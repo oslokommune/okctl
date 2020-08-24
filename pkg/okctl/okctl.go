@@ -99,9 +99,16 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 	)
 
 	managedPolicyStore := filesystem.NewManagedPolicyStore(
-		config.DefaultExternalSecretsOutputs,
-		config.DefaultExternalSecretsCloudFormationTemplate,
-		path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+		filesystem.Paths{
+			OutputFile:         config.DefaultExternalSecretsOutputs,
+			CloudFormationFile: config.DefaultExternalSecretsCloudFormationTemplate,
+			BaseDir:            path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+		},
+		filesystem.Paths{
+			OutputFile:         config.DefaultAlbIngressControllerOutputs,
+			CloudFormationFile: config.DefaultAlbIngressControllerCloudFormationTemplate,
+			BaseDir:            path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
+		},
 		o.FileSystem,
 	)
 

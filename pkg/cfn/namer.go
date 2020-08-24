@@ -14,6 +14,8 @@ const (
 	DefaultStackNameVpcID = "vpc"
 	// DefaultStackNameExternalSecretsPolicyID defines an identifier for an external secrets policy
 	DefaultStackNameExternalSecretsPolicyID = "externalsecretspolicy"
+	// DefaultStackNameAlbIngressControllerPolicyID defines an identifier for alb ingress controller policy
+	DefaultStackNameAlbIngressControllerPolicyID = "albingresscontrollerpolicy"
 )
 
 // StackNamer knows how to name cloud formation stacks
@@ -39,6 +41,16 @@ func (n *StackNamer) ExternalSecretsPolicy(repository, env string) string {
 	return fmt.Sprintf("%s-%s-%s-%s",
 		DefaultStackNamePrefix,
 		DefaultStackNameExternalSecretsPolicyID,
+		repository,
+		env,
+	)
+}
+
+// AlbIngressControllerPolicy returns the stack name of the policy
+func (n *StackNamer) AlbIngressControllerPolicy(repository, env string) string {
+	return fmt.Sprintf("%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameAlbIngressControllerPolicyID,
 		repository,
 		env,
 	)

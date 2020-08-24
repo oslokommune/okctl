@@ -1,4 +1,4 @@
-clusterName: myCluster
+clusterName: my-cluster
 autoDiscoverAwsRegion: true
 autoDiscoverAwsVpcID: true
 scope:
@@ -15,7 +15,7 @@ rbac:
   create: true
   serviceAccount:
     create: false
-    name: myServiceAccount
+    name: my-service-account
 image:
   repository: docker.io/amazon/aws-alb-ingress-controller
   tag: v1.1.8

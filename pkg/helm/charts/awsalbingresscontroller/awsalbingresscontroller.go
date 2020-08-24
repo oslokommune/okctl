@@ -30,11 +30,11 @@ func NewDefaultValues(clusterName, serviceAccountName string) *Values {
 			SingleNamespace: false,
 		},
 		EnableReadinessProbe:       true,
-		ReadinessProbeInterval:     60,
-		ReadinessProbeTimeout:      3,
-		ReadinessProbeInitialDelay: 30,
+		ReadinessProbeInterval:     60, // nolint: gomnd
+		ReadinessProbeTimeout:      3,  // nolint: gomnd
+		ReadinessProbeInitialDelay: 30, // nolint: gomnd
 		EnableLivenessProbe:        true,
-		LivenessProbeInitialDelay:  30,
+		LivenessProbeInitialDelay:  30, // nolint: gomnd
 		LivenessProbeTimeout:       1,
 		Rbac: Rbac{
 			Create: true,
@@ -106,28 +106,33 @@ type Scope struct {
 	WatchNamespace  string `yaml:"watchNamespace,omitempty"`
 }
 
+// ServiceAccount determines how the service account is created
 type ServiceAccount struct {
 	Create      bool        `yaml:"create"`
 	Name        string      `yaml:"name"`
 	Annotations interface{} `yaml:"annotations,omitempty"`
 }
 
+// Rbac determines if rbac should be setup
 type Rbac struct {
 	Create         bool           `yaml:"create"`
 	ServiceAccount ServiceAccount `yaml:"serviceAccount"`
 }
 
+// Image defines the container image to use
 type Image struct {
 	Repository string `yaml:"repository"`
 	Tag        string `yaml:"tag"`
 	PullPolicy string `yaml:"pullPolicy"`
 }
 
+// Resources determines the limits and requests of the pod
 type Resources struct {
 	Limits   ResourceEntry `yaml:"limits"`
 	Requests ResourceEntry `yaml:"requests"`
 }
 
+// ResourceEntry determines the cpu and memory usage
 type ResourceEntry struct {
 	CPU    string `yaml:"cpu"`
 	Memory string `yaml:"memory"`

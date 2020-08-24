@@ -5,6 +5,7 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/helm"
+	"github.com/oslokommune/okctl/pkg/helm/charts/externalsecrets"
 )
 
 type helmRun struct {
@@ -13,7 +14,7 @@ type helmRun struct {
 }
 
 func (r *helmRun) CreateExternalSecretsHelmChart(opts api.CreateExternalSecretsHelmChartOpts) (*api.Helm, error) {
-	chart := helm.ExternalSecrets(helm.DefaultExternalSecretsValues())
+	chart := externalsecrets.ExternalSecrets(externalsecrets.DefaultExternalSecretsValues())
 
 	err := r.helm.RepoAdd(chart.RepositoryName, chart.RepositoryURL)
 	if err != nil {

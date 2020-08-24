@@ -1,0 +1,30 @@
+clusterName: myCluster
+autoDiscoverAwsRegion: true
+autoDiscoverAwsVpcID: true
+scope:
+  ingressClass: alb
+  singleNamespace: false
+enableReadinessProbe: true
+readinessProbeInterval: 60
+readinessProbeTimeout: 3
+readinessProbeInitialDelay: 30
+enableLivenessProbe: true
+livenessProbeInitialDelay: 30
+livenessProbeTimeout: 1
+rbac:
+  create: true
+  serviceAccount:
+    create: false
+    name: myServiceAccount
+image:
+  repository: docker.io/amazon/aws-alb-ingress-controller
+  tag: v1.1.8
+  pullPolicy: IfNotPresent
+replicaCount: 1
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi

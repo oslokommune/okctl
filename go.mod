@@ -66,7 +66,7 @@ require (
 	golang.org/x/net v0.0.0-20200625001655-4c5254603344 // indirect
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208 // indirect
 	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1 // indirect
-	gopkg.in/ini.v1 v1.60.0
+	gopkg.in/ini.v1 v1.60.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v2 v2.3.0
 	helm.sh/helm/v3 v3.3.0

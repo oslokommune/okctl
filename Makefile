@@ -10,6 +10,7 @@ skip = $(info $@: skipping, target disabled)
 COMMIT := $(shell git rev-parse HEAD)
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 SLUG   := $(shell git remote -v | grep "(fetch)" | awk '{print$$2}' | sed -E 's/^.*(\/|:)([^ ]*)\/([^ ]*)$$/\2\/\3/;s/\.git//')
+OS     := $(shell uname)
 
 # Directories
 #
@@ -101,7 +102,7 @@ $(GOFUMPT):
 	$(GO) get -u mvdan.cc/gofumpt
 
 $(GORELEASER):
-	curl -sL http://git.io/goreleaser >> goreleaser
+	bin/goreleaser/v0.142.0/$(OS)/goreleaser
 
 GO := $(shell command -v go 2> /dev/null)
 ifndef GO
@@ -113,7 +114,7 @@ FILES = $(shell find . -name '.?*' -prune -o -name vendor -prune -o -name '*.go'
 
 ## Release
 release-local: $(GORELEASER)
-	$(GORELEASER) release --config=.goreleaser-local.yml --snapshot --skip-publish --rm-dist && rm goreleaser
+	$(GORELEASER) release --config=.goreleaser-local.yml --snapshot --skip-publish --rm-dist
 
 ## Generate
 generate: $(STATIK)

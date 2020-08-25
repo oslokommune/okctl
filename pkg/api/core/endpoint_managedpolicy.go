@@ -12,3 +12,9 @@ func makeCreateExternalSecretsPolicyEndpoint(s api.ManagedPolicyService) endpoin
 		return s.CreateExternalSecretsPolicy(ctx, request.(api.CreateExternalSecretsPolicyOpts))
 	}
 }
+
+func makeCreateAlbIngressControllerPolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return s.CreateAlbIngressControllerPolicy(ctx, request.(api.CreateAlbIngressControllerPolicyOpts))
+	}
+}

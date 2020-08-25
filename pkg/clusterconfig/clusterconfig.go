@@ -203,3 +203,19 @@ func NewExternalSecretsServiceAccount(clusterName, region, policyArn, permission
 		Region:                 region,
 	})
 }
+
+// NewAlbIngressControllerServiceAccount returns an initialised configuration
+// for creating an aws-alb-ingress-controller service account
+func NewAlbIngressControllerServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*api.ClusterConfig, error) {
+	return NewServiceAccount(&ServiceAccountArgs{
+		ClusterName: clusterName,
+		Labels: map[string]string{
+			"aws-usage": "cluster-ops",
+		},
+		Name:                   "alb-ingress-controller",
+		Namespace:              "kube-system",
+		PermissionsBoundaryArn: permissionsBoundaryArn,
+		PolicyArn:              policyArn,
+		Region:                 region,
+	})
+}

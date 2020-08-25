@@ -99,24 +99,46 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 	)
 
 	managedPolicyStore := filesystem.NewManagedPolicyStore(
-		config.DefaultExternalSecretsOutputs,
-		config.DefaultExternalSecretsCloudFormationTemplate,
-		path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+		filesystem.Paths{
+			OutputFile:         config.DefaultPolicyOutputFile,
+			CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
+			BaseDir:            path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+		},
+		filesystem.Paths{
+			OutputFile:         config.DefaultPolicyOutputFile,
+			CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
+			BaseDir:            path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
+		},
 		o.FileSystem,
 	)
 
 	serviceAccountStore := filesystem.NewServiceAccountStore(
-		config.DefaultExternalSecretsServiceAccountOutputs,
-		config.DefaultExternalSecretsServiceAccountConfig,
-		path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+		filesystem.Paths{
+			OutputFile: config.DefaultServiceAccountOutputsFile,
+			ConfigFile: config.DefaultServiceAccountConfigFile,
+			BaseDir:    path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+		},
+		filesystem.Paths{
+			OutputFile: config.DefaultServiceAccountOutputsFile,
+			ConfigFile: config.DefaultServiceAccountConfigFile,
+			BaseDir:    path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
+		},
 		o.FileSystem,
 	)
 
 	helmStore := filesystem.NewHelmStore(
-		config.DefaultExternalSecretsHelmOutput,
-		config.DefaultExternalSecretsHelmChart,
-		config.DefaultExternalSecretsHelmRelease,
-		path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+		filesystem.Paths{
+			OutputFile:  config.DefaultHelmOutputsFile,
+			ReleaseFile: config.DefaultHelmReleaseFile,
+			ChartFile:   config.DefaultHelmChartFile,
+			BaseDir:     path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+		},
+		filesystem.Paths{
+			OutputFile:  config.DefaultHelmOutputsFile,
+			ReleaseFile: config.DefaultHelmReleaseFile,
+			ChartFile:   config.DefaultHelmChartFile,
+			BaseDir:     path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
+		},
 		o.FileSystem,
 	)
 

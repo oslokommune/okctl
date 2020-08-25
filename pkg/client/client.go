@@ -15,12 +15,15 @@ import (
 )
 
 const (
-	targetVpcs                          = "vpcs/"
-	targetClusters                      = "clusters/"
-	targetClusterConfigs                = "clusterconfigs/"
-	targetExternalSecretsPolicy         = "managedpolicies/externalsecrets/"
-	targetExternalSecretsServiceAccount = "serviceaccounts/externalsecrets/"
-	targetExternalSecretsHelm           = "helm/externalsecrets/"
+	targetVpcs                               = "vpcs/"
+	targetClusters                           = "clusters/"
+	targetClusterConfigs                     = "clusterconfigs/"
+	targetExternalSecretsPolicy              = "managedpolicies/externalsecrets/"
+	targetExternalSecretsServiceAccount      = "serviceaccounts/externalsecrets/"
+	targetExternalSecretsHelm                = "helm/externalsecrets/"
+	targetAlbIngressControllerPolicy         = "managedpolicies/albingresscontroller/"
+	targetAlbIngressControllerServiceAccount = "serviceaccounts/albingresscontroller/"
+	targetAlbIngressControllerHelm           = "helm/albingresscontroller/"
 )
 
 // Cluster client API calls
@@ -43,16 +46,19 @@ type Vpc interface {
 // ManagedPolicy API calls
 type ManagedPolicy interface {
 	CreateExternalSecretsPolicy(opts *api.CreateExternalSecretsPolicyOpts) (*api.ManagedPolicy, error)
+	CreateAlbIngressControllerPolicy(opts *api.CreateAlbIngressControllerPolicyOpts) (*api.ManagedPolicy, error)
 }
 
 // ServiceAccount API calls
 type ServiceAccount interface {
 	CreateExternalSecretsServiceAccount(opts *api.CreateExternalSecretsServiceAccountOpts) error
+	CreateAlbIngressControllerServiceAccount(opts *api.CreateAlbIngressControllerServiceAccountOpts) error
 }
 
 // Helm API calls
 type Helm interface {
-	CreateExternalSecretsHelmChart(opts *api.CreateExternalSecretsHelmChartOpts) (*Helm, error)
+	CreateExternalSecretsHelmChart(opts *api.CreateExternalSecretsHelmChartOpts) (*api.Helm, error)
+	CreateAlbIngressControllerHelmChart(opts *api.CreateAlbIngressControllerHelmChartOpts) (*api.Helm, error)
 }
 
 // Client stores state for invoking API operations
@@ -69,6 +75,23 @@ func New(progress io.Writer, serverURL string) *Client {
 		BaseURL:  serverURL,
 		Client:   &http.Client{},
 	}
+}
+
+// CreateAlbIngressControllerHelmChart invokes the alb ingress controller helm chart creator
+func (c *Client) CreateAlbIngressControllerHelmChart(opts *api.CreateAlbIngressControllerHelmChartOpts) (*api.Helm, error) {
+	into := &api.Helm{}
+	return into, c.DoPost(targetAlbIngressControllerHelm, opts, into)
+}
+
+// CreateAlbIngressControllerServiceAccount invokes the alb ingress controller service account creator
+func (c *Client) CreateAlbIngressControllerServiceAccount(opts *api.CreateAlbIngressControllerServiceAccountOpts) error {
+	return c.DoPost(targetAlbIngressControllerServiceAccount, opts, nil)
+}
+
+// CreateAlbIngressControllerPolicy invokes the alb policy creator
+func (c *Client) CreateAlbIngressControllerPolicy(opts *api.CreateAlbIngressControllerPolicyOpts) (*api.ManagedPolicy, error) {
+	into := &api.ManagedPolicy{}
+	return into, c.DoPost(targetAlbIngressControllerPolicy, opts, into)
 }
 
 // CreateExternalSecretsHelmChart invokes the external secrets helm chart operation

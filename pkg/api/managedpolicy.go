@@ -30,18 +30,36 @@ func (o CreateExternalSecretsPolicyOpts) Validate() error {
 	)
 }
 
+// CreateAlbIngressControllerPolicyOpts contains the input
+type CreateAlbIngressControllerPolicyOpts struct {
+	Repository  string
+	Environment string
+}
+
+// Validate the input
+func (o CreateAlbIngressControllerPolicyOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.Repository, validation.Required),
+		validation.Field(&o.Environment, validation.Required),
+	)
+}
+
 // ManagedPolicyService defines the service layer for managed policies
 type ManagedPolicyService interface {
 	CreateExternalSecretsPolicy(ctx context.Context, opts CreateExternalSecretsPolicyOpts) (*ManagedPolicy, error)
+	CreateAlbIngressControllerPolicy(ctx context.Context, opts CreateAlbIngressControllerPolicyOpts) (*ManagedPolicy, error)
 }
 
 // ManagedPolicyCloudProvider defines the cloud provider layer for managed policies
 type ManagedPolicyCloudProvider interface {
 	CreateExternalSecretsPolicy(opts CreateExternalSecretsPolicyOpts) (*ManagedPolicy, error)
+	CreateAlbIngressControllerPolicy(opts CreateAlbIngressControllerPolicyOpts) (*ManagedPolicy, error)
 }
 
 // ManagedPolicyStore defines the storage layer for managed policies
 type ManagedPolicyStore interface {
 	SaveExternalSecretsPolicy(policy *ManagedPolicy) error
 	GetExternalSecretsPolicy() (*ManagedPolicy, error)
+	SaveAlbIngressControllerPolicy(policy *ManagedPolicy) error
+	GetAlbIngressControllerPolicy() (*ManagedPolicy, error)
 }

@@ -11,10 +11,9 @@ import (
 )
 
 type serviceAccount struct {
-	externalSecretsServiceAccountOutputFile string
-	externalSecretsServiceAccountConfigFile string
-	externalSecretsBaseDir                  string
-	fs                                      *afero.Afero
+	externalSecrets      Paths
+	albIngressController Paths
+	fs                   *afero.Afero
 }
 
 // ServiceAccount contains the data that should
@@ -27,7 +26,23 @@ type ServiceAccount struct {
 	PolicyArn    string
 }
 
-func (m *serviceAccount) SaveExternalSecretsServiceAccount(account *api.ServiceAccount) error {
+func (s *serviceAccount) SaveAlbIngressControllerServiceAccount(account *api.ServiceAccount) error {
+	return s.saveServiceAccount(s.albIngressController, account)
+}
+
+func (s *serviceAccount) GetAlbIngressControllerServiceAccount() (*api.ServiceAccount, error) {
+	return s.getServiceAccount(s.albIngressController)
+}
+
+func (s *serviceAccount) SaveExternalSecretsServiceAccount(account *api.ServiceAccount) error {
+	return s.saveServiceAccount(s.externalSecrets, account)
+}
+
+func (s *serviceAccount) GetExternalSecretsServiceAccount() (*api.ServiceAccount, error) {
+	return s.getServiceAccount(s.externalSecrets)
+}
+
+func (s *serviceAccount) saveServiceAccount(paths Paths, account *api.ServiceAccount) error {
 	p := &ServiceAccount{
 		ClusterName:  account.ClusterName,
 		Environment:  account.Environment,
@@ -41,31 +56,31 @@ func (m *serviceAccount) SaveExternalSecretsServiceAccount(account *api.ServiceA
 		return fmt.Errorf("failed to marshal service account: %w", err)
 	}
 
-	err = m.fs.MkdirAll(m.externalSecretsBaseDir, 0744)
+	err = s.fs.MkdirAll(paths.BaseDir, 0744)
 	if err != nil {
 		return fmt.Errorf("failed to create service account directory: %w", err)
 	}
 
-	err = m.fs.WriteFile(path.Join(m.externalSecretsBaseDir, m.externalSecretsServiceAccountOutputFile), data, 0644)
+	err = s.fs.WriteFile(path.Join(paths.BaseDir, paths.OutputFile), data, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write service account: %w", err)
 	}
 
 	d, err := account.Config.YAML()
 	if err != nil {
-		return fmt.Errorf("failed to marshal service account: %w", err)
+		return fmt.Errorf("failed to marshal config file: %w", err)
 	}
 
-	err = m.fs.WriteFile(path.Join(m.externalSecretsBaseDir, m.externalSecretsServiceAccountConfigFile), d, 0644)
+	err = s.fs.WriteFile(path.Join(paths.BaseDir, paths.ConfigFile), d, 0644)
 	if err != nil {
-		return fmt.Errorf("failed to write template: %w", err)
+		return fmt.Errorf("failed to write config file: %w", err)
 	}
 
 	return nil
 }
 
-func (m *serviceAccount) GetExternalSecretsServiceAccount() (*api.ServiceAccount, error) {
-	data, err := m.fs.ReadFile(path.Join(m.externalSecretsBaseDir, m.externalSecretsServiceAccountOutputFile))
+func (s *serviceAccount) getServiceAccount(paths Paths) (*api.ServiceAccount, error) {
+	data, err := s.fs.ReadFile(path.Join(paths.BaseDir, paths.OutputFile))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read service account file: %w", err)
 	}
@@ -85,7 +100,7 @@ func (m *serviceAccount) GetExternalSecretsServiceAccount() (*api.ServiceAccount
 		PolicyArn:    a.PolicyArn,
 	}
 
-	template, err := m.fs.ReadFile(path.Join(m.externalSecretsBaseDir, m.externalSecretsServiceAccountConfigFile))
+	template, err := s.fs.ReadFile(path.Join(paths.BaseDir, paths.ConfigFile))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read template: %w", err)
 	}
@@ -103,12 +118,10 @@ func (m *serviceAccount) GetExternalSecretsServiceAccount() (*api.ServiceAccount
 }
 
 // NewServiceAccountStore returns an initialised service account store
-// nolint: lll
-func NewServiceAccountStore(externalSecretsServiceAccountOutputFile, externalSecretsServiceAccountConfigFile, externalSecretsBaseDir string, fs *afero.Afero) api.ServiceAccountStore {
+func NewServiceAccountStore(externalSecrets, albIngressController Paths, fs *afero.Afero) api.ServiceAccountStore {
 	return &serviceAccount{
-		externalSecretsServiceAccountOutputFile: externalSecretsServiceAccountOutputFile,
-		externalSecretsServiceAccountConfigFile: externalSecretsServiceAccountConfigFile,
-		externalSecretsBaseDir:                  externalSecretsBaseDir,
-		fs:                                      fs,
+		externalSecrets:      externalSecrets,
+		albIngressController: albIngressController,
+		fs:                   fs,
 	}
 }

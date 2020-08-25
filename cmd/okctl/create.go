@@ -93,17 +93,49 @@ and database subnets.`,
 			}
 
 			err = c.CreateExternalSecretsServiceAccount(&api.CreateExternalSecretsServiceAccountOpts{
-				ClusterName:  opts.ClusterName,
-				Environment:  opts.Environment,
-				Region:       opts.Region,
-				AWSAccountID: opts.AWSAccountID,
-				PolicyArn:    policy.PolicyARN,
+				CreateServiceAccountOpts: api.CreateServiceAccountOpts{
+					ClusterName:  opts.ClusterName,
+					Environment:  opts.Environment,
+					Region:       opts.Region,
+					AWSAccountID: opts.AWSAccountID,
+					PolicyArn:    policy.PolicyARN,
+				},
 			})
 			if err != nil {
 				return err
 			}
 
 			_, err = c.CreateExternalSecretsHelmChart(&api.CreateExternalSecretsHelmChartOpts{
+				Repository:  opts.RepositoryName,
+				Environment: opts.Environment,
+			})
+			if err != nil {
+				return err
+			}
+
+			policy, err = c.CreateAlbIngressControllerPolicy(&api.CreateAlbIngressControllerPolicyOpts{
+				Repository:  opts.RepositoryName,
+				Environment: opts.Environment,
+			})
+			if err != nil {
+				return err
+			}
+
+			err = c.CreateAlbIngressControllerServiceAccount(&api.CreateAlbIngressControllerServiceAccountOpts{
+				CreateServiceAccountOpts: api.CreateServiceAccountOpts{
+					ClusterName:  opts.ClusterName,
+					Environment:  opts.Environment,
+					Region:       opts.Region,
+					AWSAccountID: opts.AWSAccountID,
+					PolicyArn:    policy.PolicyARN,
+				},
+			})
+			if err != nil {
+				return err
+			}
+
+			_, err = c.CreateAlbIngressControllerHelmChart(&api.CreateAlbIngressControllerHelmChartOpts{
+				ClusterName: opts.ClusterName,
 				Repository:  opts.RepositoryName,
 				Environment: opts.Environment,
 			})

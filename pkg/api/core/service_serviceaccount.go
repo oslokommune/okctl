@@ -16,6 +16,44 @@ type serviceAccount struct {
 	store api.ServiceAccountStore
 }
 
+func (c *serviceAccount) CreateAlbIngressControllerServiceAccount(_ context.Context, opts api.CreateAlbIngressControllerServiceAccountOpts) (*api.ServiceAccount, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, errors.E(err, "failed to validate alb ingress controller sa", errors.Invalid)
+	}
+
+	config, err := clusterconfig.NewAlbIngressControllerServiceAccount(
+		opts.ClusterName,
+		opts.Region,
+		opts.PolicyArn,
+		v1alpha1.PermissionsBoundaryARN(opts.AWSAccountID),
+	)
+	if err != nil {
+		return nil, errors.E(err, "failed to create alb ingress controller sa configuration")
+	}
+
+	err = c.run.CreateServiceAccount(config)
+	if err != nil {
+		return nil, errors.E(err, "failed to create service account", errors.Internal)
+	}
+
+	account := &api.ServiceAccount{
+		ClusterName:  opts.ClusterName,
+		Environment:  opts.Environment,
+		Region:       opts.Region,
+		AWSAccountID: opts.AWSAccountID,
+		PolicyArn:    opts.PolicyArn,
+		Config:       config,
+	}
+
+	err = c.store.SaveAlbIngressControllerServiceAccount(account)
+	if err != nil {
+		return nil, errors.E(err, "failed to store alb service account")
+	}
+
+	return account, nil
+}
+
 func (c *serviceAccount) CreateExternalSecretsServiceAccount(_ context.Context, opts api.CreateExternalSecretsServiceAccountOpts) (*api.ServiceAccount, error) {
 	err := opts.Validate()
 	if err != nil {
@@ -32,7 +70,7 @@ func (c *serviceAccount) CreateExternalSecretsServiceAccount(_ context.Context, 
 		return nil, fmt.Errorf("failed to create configuration for service account: %w", err)
 	}
 
-	err = c.run.CreateExternalSecretsServiceAccount(config)
+	err = c.run.CreateServiceAccount(config)
 	if err != nil {
 		return nil, errors.E(err, "failed to create service account")
 	}

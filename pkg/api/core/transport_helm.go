@@ -18,3 +18,14 @@ func decodeCreateExternalSecretsHelmChart(_ context.Context, r *http.Request) (i
 
 	return opts, nil
 }
+
+func decodeCreateAlbIngressControllerHelmChart(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.CreateAlbIngressControllerHelmChartOpts
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}

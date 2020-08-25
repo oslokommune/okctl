@@ -15,8 +15,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/helm"
 	"github.com/oslokommune/okctl/pkg/integration"
 	"github.com/oslokommune/okctl/pkg/mock"
-	"github.com/sanathkr/go-yaml"
-	"github.com/sebdah/goldie/v2"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
@@ -120,9 +118,31 @@ func TestHelm(t *testing.T) {
 			expect:    nil,
 			expectErr: false,
 		},
+		// We need to bring up localstack for these tests to pass, something to be done..
 		//{
-		//	// We need to bring up localstack for this task to pass, which means we need to setup some policies..
-		//	name: "ExternalSecrets should work",
+		//	name: "aws-alb-ingress-controller should work",
+		//	helm: helm.New(&helm.Config{
+		//		HomeDir:              dir,
+		//		HelmPluginsDirectory: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
+		//		HelmRegistryConfig:   path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
+		//		HelmRepositoryConfig: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryConfig),
+		//		HelmRepositoryCache:  path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryCache),
+		//		HelmBaseDir:          path.Join(dir, config.DefaultHelmBaseDir),
+		//		Debug:                true,
+		//		DebugOutput:          os.Stderr,
+		//	},
+		//		aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
+		//		&afero.Afero{
+		//			Fs: afero.NewOsFs(),
+		//		}),
+		//	chart: awsalbingresscontroller.New(
+		//		awsalbingresscontroller.NewDefaultValues("my-cluster", "my-service-account"),
+		//	),
+		//	expect:    nil,
+		//	expectErr: false,
+		//},
+		//{
+		//	name: "external-secrets should work",
 		//	helm: helm.New(&helm.Config{
 		//		HomeDir:              dir,
 		//		HelmPluginsDirectory: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
@@ -166,32 +186,6 @@ func TestHelm(t *testing.T) {
 					log.Println(strings.Join(item, "\n"))
 				}
 			}
-		})
-	}
-}
-
-func TestDefaultExternalSecretsValues(t *testing.T) {
-	testCases := []struct {
-		name   string
-		values *helm.ExternalSecretsValues
-		golden string
-	}{
-		{
-			name:   "External secrets value are valid",
-			values: helm.DefaultExternalSecretsValues(),
-			golden: "external-secrets-values.yml",
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			b, err := yaml.Marshal(tc.values)
-			assert.NoError(t, err)
-
-			g := goldie.New(t)
-			g.Assert(t, tc.golden, b)
 		})
 	}
 }

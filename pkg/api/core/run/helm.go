@@ -5,6 +5,8 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/helm"
+	"github.com/oslokommune/okctl/pkg/helm/charts/awsalbingresscontroller"
+	"github.com/oslokommune/okctl/pkg/helm/charts/externalsecrets"
 )
 
 type helmRun struct {
@@ -12,9 +14,19 @@ type helmRun struct {
 	kubeConfigStore api.KubeConfigStore
 }
 
-func (r *helmRun) CreateExternalSecretsHelmChart(opts api.CreateExternalSecretsHelmChartOpts) (*api.Helm, error) {
-	chart := helm.ExternalSecrets(helm.DefaultExternalSecretsValues())
+func (r *helmRun) CreateAlbIngressControllerHelmChart(opts api.CreateAlbIngressControllerHelmChartOpts) (*api.Helm, error) {
+	chart := awsalbingresscontroller.New(awsalbingresscontroller.NewDefaultValues(opts.ClusterName))
 
+	return r.createHelmChart(opts.Repository, opts.Environment, chart)
+}
+
+func (r *helmRun) CreateExternalSecretsHelmChart(opts api.CreateExternalSecretsHelmChartOpts) (*api.Helm, error) {
+	chart := externalsecrets.ExternalSecrets(externalsecrets.DefaultExternalSecretsValues())
+
+	return r.createHelmChart(opts.Repository, opts.Environment, chart)
+}
+
+func (r *helmRun) createHelmChart(repository, env string, chart *helm.Chart) (*api.Helm, error) {
 	err := r.helm.RepoAdd(chart.RepositoryName, chart.RepositoryURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to add repository: %w", err)
@@ -41,8 +53,8 @@ func (r *helmRun) CreateExternalSecretsHelmChart(opts api.CreateExternalSecretsH
 	}
 
 	return &api.Helm{
-		Repository:  opts.Repository,
-		Environment: opts.Environment,
+		Repository:  repository,
+		Environment: env,
 		Release:     release,
 		Chart:       chart,
 	}, nil

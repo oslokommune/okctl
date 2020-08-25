@@ -4,7 +4,7 @@
 
 We will be building up the functionality of this CLI within the coming weeks, and the aim is to release frequently. At this stage we are mostly setting the CI/CD and release processes.
 
-![okctl](logo/okctl-fit.png)
+<span style="display:block;text-align:center">![okctl](logo/okctl-gopher.png)</span>
 
 ## Installation
 
@@ -39,8 +39,8 @@ $ okctl delete cluster pro
 
 We have a basic cluster up and running, and we are currently working on getting the basic components of the cluster deployed:
 
-- [ ] [SealedSecrets](https://github.com/bitnami-labs/sealed-secrets) for storing secrets securely in git
-- [ ] [AWS ALB Ingress Controller](https://github.com/kubernetes-sigs/aws-alb-ingress-controller) creates load balancers for incoming traffic
+- [x] [ExternalSecrets](https://github.com/godaddy/kubernetes-external-secrets/) for storing secrets securely
+- [x] [AWS ALB Ingress Controller](https://github.com/kubernetes-sigs/aws-alb-ingress-controller) creates load balancers for incoming traffic
 - [ ] [ExternalDNS](https://github.com/kubernetes-sigs/external-dns) ensures humane DNS hostnames 
 - [ ] [Autoscaler](https://github.com/kubernetes/autoscaler/) for adjusting the size of pods and nodes
 - [ ] [Argo CD](https://github.com/argoproj/argo-cd) gives us continuous delivery

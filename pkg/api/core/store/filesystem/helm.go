@@ -10,11 +10,9 @@ import (
 )
 
 type helmStore struct {
-	extSecBaseDir     string
-	extSecReleaseFile string
-	extSecChartFile   string
-	extSecOutputFile  string
-	fs                *afero.Afero
+	externalSecrets      Paths
+	albIngressController Paths
+	fs                   *afero.Afero
 }
 
 // Helm contains the outputs we will store
@@ -23,7 +21,15 @@ type Helm struct {
 	Environment string
 }
 
+func (s *helmStore) SaveAlbIngressControllerHelmChar(helm *api.Helm) error {
+	return s.saveHelmChart(s.albIngressController, helm)
+}
+
 func (s *helmStore) SaveExternalSecretsHelmChart(helm *api.Helm) error {
+	return s.saveHelmChart(s.externalSecrets, helm)
+}
+
+func (s *helmStore) saveHelmChart(paths Paths, helm *api.Helm) error {
 	h := &Helm{
 		Repository:  helm.Repository,
 		Environment: helm.Environment,
@@ -34,12 +40,12 @@ func (s *helmStore) SaveExternalSecretsHelmChart(helm *api.Helm) error {
 		return fmt.Errorf("failed to marshal outputs: %w", err)
 	}
 
-	err = s.fs.MkdirAll(s.extSecBaseDir, 0744)
+	err = s.fs.MkdirAll(paths.BaseDir, 0744)
 	if err != nil {
 		return fmt.Errorf("failed to directory: %w", err)
 	}
 
-	err = s.fs.WriteFile(path.Join(s.extSecBaseDir, s.extSecOutputFile), outputs, 0644)
+	err = s.fs.WriteFile(path.Join(paths.BaseDir, paths.OutputFile), outputs, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write outputs: %w", err)
 	}
@@ -49,7 +55,7 @@ func (s *helmStore) SaveExternalSecretsHelmChart(helm *api.Helm) error {
 		return fmt.Errorf("failed to marshal release: %w", err)
 	}
 
-	err = s.fs.WriteFile(path.Join(s.extSecBaseDir, s.extSecOutputFile), release, 0644)
+	err = s.fs.WriteFile(path.Join(paths.BaseDir, paths.ReleaseFile), release, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write release: %w", err)
 	}
@@ -59,7 +65,7 @@ func (s *helmStore) SaveExternalSecretsHelmChart(helm *api.Helm) error {
 		return fmt.Errorf("failed to marshal chart: %w", err)
 	}
 
-	err = s.fs.WriteFile(path.Join(s.extSecBaseDir, s.extSecChartFile), chart, 0644)
+	err = s.fs.WriteFile(path.Join(paths.BaseDir, paths.ChartFile), chart, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write chart: %w", err)
 	}
@@ -68,12 +74,10 @@ func (s *helmStore) SaveExternalSecretsHelmChart(helm *api.Helm) error {
 }
 
 // NewHelmStore returns an initialised helm store
-func NewHelmStore(extSecOutputFile, extSecChartFile, extSecReleaseFile, extSecBaseDir string, fs *afero.Afero) api.HelmStore {
+func NewHelmStore(externalSecrets, albIngressController Paths, fs *afero.Afero) api.HelmStore {
 	return &helmStore{
-		extSecBaseDir:     extSecBaseDir,
-		extSecReleaseFile: extSecReleaseFile,
-		extSecChartFile:   extSecChartFile,
-		extSecOutputFile:  extSecOutputFile,
-		fs:                fs,
+		externalSecrets:      externalSecrets,
+		albIngressController: albIngressController,
+		fs:                   fs,
 	}
 }

@@ -179,3 +179,198 @@ func ssmParameterARN(resource string) string {
 		),
 	)
 }
+
+// AlbIngressControllerPolicyComposer contains state for building
+// a managed iam policy compatible with aws-alb-ingress-controller
+type AlbIngressControllerPolicyComposer struct {
+	Repository  string
+	Environment string
+}
+
+// NewAlbIngressControllerPolicyComposer returns an initialised alb ingress controller composer
+func NewAlbIngressControllerPolicyComposer(repository, env string) *AlbIngressControllerPolicyComposer {
+	return &AlbIngressControllerPolicyComposer{
+		Repository:  repository,
+		Environment: env,
+	}
+}
+
+// Compose builds the policy and returns the result
+func (a *AlbIngressControllerPolicyComposer) Compose() (*cfn.Composition, error) {
+	p := a.ManagedPolicy()
+
+	return &cfn.Composition{
+		Outputs:   []cfn.StackOutputer{p},
+		Resources: []cfn.ResourceNamer{p},
+	}, nil
+}
+
+// ManagedPolicy creates a managed policy
+// nolint: funlen
+func (a *AlbIngressControllerPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
+	policyName := fmt.Sprintf("okctl-%s-%s-AlbIngressControllServiceAccountPolicy", a.Repository, a.Environment)
+	policyDesc := "Service account policy for creat ALBs"
+
+	d := &policydocument.PolicyDocument{
+		Version: policydocument.Version,
+		Statement: []policydocument.StatementEntry{
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"acm:DescribeCertificate",
+					"acm:ListCertificates",
+					"acm:GetCertificate",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"ec2:AuthorizeSecurityGroupIngress",
+					"ec2:CreateSecurityGroup",
+					"ec2:CreateTags",
+					"ec2:DeleteTags",
+					"ec2:DeleteSecurityGroup",
+					"ec2:DescribeAccountAttributes",
+					"ec2:DescribeAddresses",
+					"ec2:DescribeInstances",
+					"ec2:DescribeInstanceStatus",
+					"ec2:DescribeInternetGateways",
+					"ec2:DescribeNetworkInterfaces",
+					"ec2:DescribeSecurityGroups",
+					"ec2:DescribeSubnets",
+					"ec2:DescribeTags",
+					"ec2:DescribeVpcs",
+					"ec2:ModifyInstanceAttribute",
+					"ec2:ModifyNetworkInterfaceAttribute",
+					"ec2:RevokeSecurityGroupIngress",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"elasticloadbalancing:AddListenerCertificates",
+					"elasticloadbalancing:AddTags",
+					"elasticloadbalancing:CreateListener",
+					"elasticloadbalancing:CreateLoadBalancer",
+					"elasticloadbalancing:CreateRule",
+					"elasticloadbalancing:CreateTargetGroup",
+					"elasticloadbalancing:DeleteListener",
+					"elasticloadbalancing:DeleteLoadBalancer",
+					"elasticloadbalancing:DeleteRule",
+					"elasticloadbalancing:DeleteTargetGroup",
+					"elasticloadbalancing:DeregisterTargets",
+					"elasticloadbalancing:DescribeListenerCertificates",
+					"elasticloadbalancing:DescribeListeners",
+					"elasticloadbalancing:DescribeLoadBalancers",
+					"elasticloadbalancing:DescribeLoadBalancerAttributes",
+					"elasticloadbalancing:DescribeRules",
+					"elasticloadbalancing:DescribeSSLPolicies",
+					"elasticloadbalancing:DescribeTags",
+					"elasticloadbalancing:DescribeTargetGroups",
+					"elasticloadbalancing:DescribeTargetGroupAttributes",
+					"elasticloadbalancing:DescribeTargetHealth",
+					"elasticloadbalancing:ModifyListener",
+					"elasticloadbalancing:ModifyLoadBalancerAttributes",
+					"elasticloadbalancing:ModifyRule",
+					"elasticloadbalancing:ModifyTargetGroup",
+					"elasticloadbalancing:ModifyTargetGroupAttributes",
+					"elasticloadbalancing:RegisterTargets",
+					"elasticloadbalancing:RemoveListenerCertificates",
+					"elasticloadbalancing:RemoveTags",
+					"elasticloadbalancing:SetIpAddressType",
+					"elasticloadbalancing:SetSecurityGroups",
+					"elasticloadbalancing:SetSubnets",
+					"elasticloadbalancing:SetWebACL",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"iam:CreateServiceLinkedRole",
+					"iam:GetServerCertificate",
+					"iam:ListServerCertificates",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"cognito-idp:DescribeUserPoolClient",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"waf-regional:GetWebACLForResource",
+					"waf-regional:GetWebACL",
+					"waf-regional:AssociateWebACL",
+					"waf-regional:DisassociateWebACL",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"tag:GetResources",
+					"tag:TagResources",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"waf:GetWebACL",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"wafv2:GetWebACL",
+					"wafv2:GetWebACLForResource",
+					"wafv2:AssociateWebACL",
+					"wafv2:DisassociateWebACL",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"shield:DescribeProtection",
+					"shield:GetSubscriptionState",
+					"shield:DeleteProtection",
+					"shield:CreateProtection",
+					"shield:DescribeSubscription",
+					"shield:ListProtections",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+		},
+	}
+
+	return managedpolicy.New("AlbIngressControllerPolicy", policyName, policyDesc, d)
+}

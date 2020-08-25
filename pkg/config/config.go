@@ -80,22 +80,25 @@ const (
 	// DefaultVpcBaseDir is the default directory of the vpc resources
 	DefaultVpcBaseDir = "vpc"
 
-	// DefaultExternalSecretsCloudFormationTemplate is the default filename of the cloud formation template
-	DefaultExternalSecretsCloudFormationTemplate = "external-secrets-policy-cf.yml"
-	// DefaultExternalSecretsOutputs is the default filename of the outputs
-	DefaultExternalSecretsOutputs = "external-secrets-outputs.json"
-	// DefaultExternalSecretsServiceAccountOutputs is the default file name of the service account outputs
-	DefaultExternalSecretsServiceAccountOutputs = "external-secrets-service-account-outputs.json"
-	//DefaultExternalSecretsServiceAccountConfig is the default file name of the service account config
-	DefaultExternalSecretsServiceAccountConfig = "external-secrets-service-account-config.yml"
-	//DefaultExternalSecretsHelmOutput is the default file name of the helm output
-	DefaultExternalSecretsHelmOutput = "external-secrets-helm-outputs.json"
-	// DefaultExternalSecretsHelmRelease is the default file name of the helm release
-	DefaultExternalSecretsHelmRelease = "external-secrets-helm-release.json"
-	// DefaultExternalSecretsHelmChart is the default file name of the chart
-	DefaultExternalSecretsHelmChart = "external-secrets-helm-chart.json"
+	// DefaultPolicyCloudFormationTemplateFile is the default filename of the cloud formation template
+	DefaultPolicyCloudFormationTemplateFile = "policy-cf.yml"
+	// DefaultPolicyOutputFile is the default filename of the outputs
+	DefaultPolicyOutputFile = "policy-outputs.json"
+	// DefaultServiceAccountOutputsFile is the default file name of the service account outputs
+	DefaultServiceAccountOutputsFile = "service-account-outputs.json"
+	//DefaultServiceAccountConfigFile is the default file name of the service account config
+	DefaultServiceAccountConfigFile = "service-account-config.yml"
+	//DefaultHelmOutputsFile is the default file name of the helm output
+	DefaultHelmOutputsFile = "helm-outputs.json"
+	// DefaultHelmReleaseFile is the default file name of the helm release
+	DefaultHelmReleaseFile = "helm-release.json"
+	// DefaultHelmChartFile is the default file name of the chart
+	DefaultHelmChartFile = "helm-chart.json"
+
 	// DefaultExternalSecretsBaseDir is the default directory of the external secrets resources
 	DefaultExternalSecretsBaseDir = "external-secrets"
+	// DefaultAlbIngressControllerBaseDir is the default directory of the external secrets resources
+	DefaultAlbIngressControllerBaseDir = "alb-ingress-controller"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"

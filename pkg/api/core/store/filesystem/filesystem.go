@@ -6,5 +6,7 @@ type Paths struct {
 	OutputFile         string
 	ConfigFile         string
 	CloudFormationFile string
+	ReleaseFile        string
+	ChartFile          string
 	BaseDir            string
 }

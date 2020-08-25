@@ -15,7 +15,7 @@ rbac:
   create: true
   serviceAccount:
     create: false
-    name: my-service-account
+    name: alb-ingress-controller
 image:
   repository: docker.io/amazon/aws-alb-ingress-controller
   tag: v1.1.8

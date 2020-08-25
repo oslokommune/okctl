@@ -17,7 +17,7 @@ func TestNewDefaultValues(t *testing.T) {
 	}{
 		{
 			name:   "Default values should generate valid yaml",
-			values: awsalbingresscontroller.NewDefaultValues("my-cluster", "my-service-account"),
+			values: awsalbingresscontroller.NewDefaultValues("my-cluster"),
 			golden: "aws-alb-ingress-controller-values.yaml",
 		},
 	}

@@ -4,12 +4,32 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
 type helmService struct {
 	run   api.HelmRun
 	store api.HelmStore
+}
+
+func (s *helmService) CreateAlbIngressControllerHelmChart(_ context.Context, opts api.CreateAlbIngressControllerHelmChartOpts) (*api.Helm, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, errors.E(err, "failed to validate input options")
+	}
+
+	h, err := s.run.CreateAlbIngressControllerHelmChart(opts)
+	if err != nil {
+		return nil, errors.E(err, "failed to create alb ingress controller helm chart")
+	}
+
+	err = s.store.SaveAlbIngressControllerHelmChar(h)
+	if err != nil {
+		return nil, errors.E(err, "failed to store alb ingress controller helm chart")
+	}
+
+	return h, nil
 }
 
 func (s *helmService) CreateExternalSecretsHelmChart(_ context.Context, opts api.CreateExternalSecretsHelmChartOpts) (*api.Helm, error) {

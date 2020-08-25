@@ -25,6 +25,7 @@ type Endpoints struct {
 	CreateExternalSecretsHelmChart           endpoint.Endpoint
 	CreateAlbIngressControllerServiceAccount endpoint.Endpoint
 	CreateAlbIngressControllerPolicy         endpoint.Endpoint
+	CreateAlbIngressControllerHelmChart      endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -40,7 +41,8 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateExternalSecretsServiceAccount:      makeCreateExternalSecretsServiceAccountEndpoint(s.ServiceAccount),
 		CreateExternalSecretsHelmChart:           makeCreateExternalSecretsHelmChartEndpoint(s.Helm),
 		CreateAlbIngressControllerServiceAccount: makeCreateAlbIngressControllerServiceAccountEndpoint(s.ServiceAccount),
-		CreateAlbIngressControllerPolicy:         makeCreateAlbIngressControllerPolicy(s.ManagedPolicy),
+		CreateAlbIngressControllerPolicy:         makeCreateAlbIngressControllerPolicyEndpoint(s.ManagedPolicy),
+		CreateAlbIngressControllerHelmChart:      makeCreateAlbIngressControllerHelmChartEndpoint(s.Helm),
 	}
 }
 
@@ -56,6 +58,7 @@ type Handlers struct {
 	CreateExternalSecretsHelmChart           http.Handler
 	CreateAlbIngressControllerServiceAccount http.Handler
 	CreateAlbIngressControllerPolicy         http.Handler
+	CreateAlbIngressControllerHelmChart      http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -98,6 +101,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateExternalSecretsHelmChart:           newServer(endpoints.CreateExternalSecretsHelmChart, decodeCreateExternalSecretsHelmChart),
 		CreateAlbIngressControllerServiceAccount: newServer(endpoints.CreateAlbIngressControllerServiceAccount, decodeCreateAlbIngressControllerServiceAccount),
 		CreateAlbIngressControllerPolicy:         newServer(endpoints.CreateAlbIngressControllerPolicy, decodeCreateAlbIngressControllerPolicyRequest),
+		CreateAlbIngressControllerHelmChart:      newServer(endpoints.CreateAlbIngressControllerHelmChart, decodeCreateAlbIngressControllerHelmChart),
 	}
 }
 
@@ -137,6 +141,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			r.Route("/externalsecrets", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalSecretsHelmChart)
 			})
+			r.Route("/albingresscontroller", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateAlbIngressControllerHelmChart)
+			})
 		})
 	})
 
@@ -169,6 +176,7 @@ const (
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
+// nolint: lll
 func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 	return func(endpoints Endpoints) Endpoints {
 		return Endpoints{
@@ -177,11 +185,12 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateClusterConfig:                      middleware.Logging(logger, clusterConfigTag, "create")(endpoints.CreateClusterConfig),
 			CreateVpc:                                middleware.Logging(logger, vpcTag, "create")(endpoints.CreateVpc),
 			DeleteVpc:                                middleware.Logging(logger, vpcTag, "delete")(endpoints.DeleteVpc),
-			CreateExternalSecretsPolicy:              middleware.Logging(logger, strings.Join([]string{managedPoliciesTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsPolicy),                   // nolint: lll
-			CreateExternalSecretsServiceAccount:      middleware.Logging(logger, strings.Join([]string{serviceAccountsTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsServiceAccount),           // nolint: lll
-			CreateExternalSecretsHelmChart:           middleware.Logging(logger, strings.Join([]string{helmTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsHelmChart),                           // nolint: lll
-			CreateAlbIngressControllerServiceAccount: middleware.Logging(logger, strings.Join([]string{serviceAccountsTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerServiceAccount), // nolint: lll
-			CreateAlbIngressControllerPolicy:         middleware.Logging(logger, strings.Join([]string{managedPoliciesTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerPolicy),         // nolint: lll
+			CreateExternalSecretsPolicy:              middleware.Logging(logger, strings.Join([]string{managedPoliciesTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsPolicy),
+			CreateExternalSecretsServiceAccount:      middleware.Logging(logger, strings.Join([]string{serviceAccountsTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsServiceAccount),
+			CreateExternalSecretsHelmChart:           middleware.Logging(logger, strings.Join([]string{helmTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsHelmChart),
+			CreateAlbIngressControllerServiceAccount: middleware.Logging(logger, strings.Join([]string{serviceAccountsTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerServiceAccount),
+			CreateAlbIngressControllerPolicy:         middleware.Logging(logger, strings.Join([]string{managedPoliciesTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerPolicy),
+			CreateAlbIngressControllerHelmChart:      middleware.Logging(logger, strings.Join([]string{helmTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerHelmChart),
 		}
 	}
 }

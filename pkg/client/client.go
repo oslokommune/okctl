@@ -23,6 +23,7 @@ const (
 	targetExternalSecretsHelm                = "helm/externalsecrets/"
 	targetAlbIngressControllerPolicy         = "managedpolicies/albingresscontroller/"
 	targetAlbIngressControllerServiceAccount = "serviceaccounts/albingresscontroller/"
+	targetAlbIngressControllerHelm           = "helm/albingresscontroller/"
 )
 
 // Cluster client API calls
@@ -56,7 +57,8 @@ type ServiceAccount interface {
 
 // Helm API calls
 type Helm interface {
-	CreateExternalSecretsHelmChart(opts *api.CreateExternalSecretsHelmChartOpts) (*Helm, error)
+	CreateExternalSecretsHelmChart(opts *api.CreateExternalSecretsHelmChartOpts) (*api.Helm, error)
+	CreateAlbIngressControllerHelmChart(opts *api.CreateAlbIngressControllerHelmChartOpts) (*api.Helm, error)
 }
 
 // Client stores state for invoking API operations
@@ -73,6 +75,12 @@ func New(progress io.Writer, serverURL string) *Client {
 		BaseURL:  serverURL,
 		Client:   &http.Client{},
 	}
+}
+
+// CreateAlbIngressControllerHelmChart invokes the alb ingress controller helm chart creator
+func (c *Client) CreateAlbIngressControllerHelmChart(opts *api.CreateAlbIngressControllerHelmChartOpts) (*api.Helm, error) {
+	into := &api.Helm{}
+	return into, c.DoPost(targetAlbIngressControllerHelm, opts, into)
 }
 
 // CreateAlbIngressControllerServiceAccount invokes the alb ingress controller service account creator

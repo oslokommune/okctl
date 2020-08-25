@@ -134,6 +134,15 @@ and database subnets.`,
 				return err
 			}
 
+			_, err = c.CreateAlbIngressControllerHelmChart(&api.CreateAlbIngressControllerHelmChartOpts{
+				ClusterName: opts.ClusterName,
+				Repository:  opts.RepositoryName,
+				Environment: opts.Environment,
+			})
+			if err != nil {
+				return err
+			}
+
 			return nil
 		},
 	}

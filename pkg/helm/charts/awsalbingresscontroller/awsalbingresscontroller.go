@@ -20,7 +20,7 @@ func New(values *Values) *helm.Chart {
 
 // NewDefaultValues returns the mapped values.yml containing the default
 // values
-func NewDefaultValues(clusterName, serviceAccountName string) *Values {
+func NewDefaultValues(clusterName string) *Values {
 	return &Values{
 		ClusterName:           clusterName,
 		AutoDiscoverAwsRegion: true,
@@ -40,7 +40,7 @@ func NewDefaultValues(clusterName, serviceAccountName string) *Values {
 			Create: true,
 			ServiceAccount: ServiceAccount{
 				Create: false,
-				Name:   serviceAccountName,
+				Name:   "alb-ingress-controller", // this is too fragile, refactor
 			},
 		},
 		Image: Image{

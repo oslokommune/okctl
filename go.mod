@@ -53,7 +53,7 @@ require (
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/rancher/k3d/v3 v3.0.0
+	github.com/rancher/k3d/v3 v3.0.1
 	github.com/rogpeppe/go-internal v1.6.1 // indirect
 	github.com/sanathkr/go-yaml v0.0.0-20170819195128-ed9d249f429b
 	github.com/sanity-io/litter v1.3.0

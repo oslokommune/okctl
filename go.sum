@@ -850,6 +850,8 @@ github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40T
 github.com/quasilyte/go-consistent v0.0.0-20190521200055-c6f3937de18c/go.mod h1:5STLWrekHfjyYwxBRVRXNOSewLJ3PWfDJd1VyTS21fI=
 github.com/rancher/k3d/v3 v3.0.0 h1:yORjD0EAcb6p1yeMQ1beYAHhwxFy5xR6TCr0vOy4lk0=
 github.com/rancher/k3d/v3 v3.0.0/go.mod h1:+55GxRRh7dJarpVV6IbIo96zwxylhQ4gJjGrkmBQ3cs=
+github.com/rancher/k3d/v3 v3.0.1 h1:XCU3dkImcVKYtmVHKwfv0CYiyM4evFTXm8rYqZgSAoo=
+github.com/rancher/k3d/v3 v3.0.1/go.mod h1:+55GxRRh7dJarpVV6IbIo96zwxylhQ4gJjGrkmBQ3cs=
 github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/rogpeppe/fastuuid v0.0.0-20150106093220-6724a57986af/go.mod h1:XWv6SoW27p1b0cqNHllgS5HIMJraePCO15w5zCzIWYg=
 github.com/rogpeppe/go-internal v1.1.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=

@@ -45,6 +45,8 @@ const (
 	DefaultKubeConfigContent = "meh"
 	// DefaultPolicyARN is the default ARN of some policy
 	DefaultPolicyARN = "arn:aws:iam::123456789012:policy/somePolicy"
+	// DefaultDomainName is the default domain name
+	DefaultDomainName = "test.oslo.systems"
 )
 
 // ErrBad just defines a mocked error

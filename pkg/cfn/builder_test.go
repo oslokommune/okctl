@@ -30,6 +30,11 @@ func TestBuilderAndComposers(t *testing.T) {
 			golden:   "alb-ingress-cloudformation.yaml",
 			composer: components.NewAlbIngressControllerPolicyComposer("repo", "env"),
 		},
+		{
+			name:     "Builder with ExternalDnsPolicy composer",
+			golden:   "external-dns-cloudformation.yaml",
+			composer: components.NewExternalDnsPolicyComposer("repo", "env"),
+		},
 	}
 
 	for _, tc := range testCases {

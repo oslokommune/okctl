@@ -374,3 +374,61 @@ func (a *AlbIngressControllerPolicyComposer) ManagedPolicy() *managedpolicy.Mana
 
 	return managedpolicy.New("AlbIngressControllerPolicy", policyName, policyDesc, d)
 }
+
+// ExternalDnsPolicyComposer contains state for building
+// a managed iam policy compatible with aws-alb-ingress-controller
+type ExternalDnsPolicyComposer struct {
+	Repository  string
+	Environment string
+}
+
+// NewExternalDnsPolicyComposer returns an initialised alb ingress controller composer
+func NewExternalDnsPolicyComposer(repository, env string) *ExternalDnsPolicyComposer {
+	return &ExternalDnsPolicyComposer{
+		Repository:  repository,
+		Environment: env,
+	}
+}
+
+// Compose builds the policy and returns the result
+func (c *ExternalDnsPolicyComposer) Compose() (*cfn.Composition, error) {
+	p := c.ManagedPolicy()
+
+	return &cfn.Composition{
+		Outputs:   []cfn.StackOutputer{p},
+		Resources: []cfn.ResourceNamer{p},
+	}, nil
+}
+
+// ManagedPolicy returns the policy
+func (c *ExternalDnsPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
+	policyName := fmt.Sprintf("okctl-%s-%s-ExternalDnsServiceAccountPolicy", c.Repository, c.Environment)
+	policyDesc := "Service account policy for creating route53 hostnames"
+
+	d := &policydocument.PolicyDocument{
+		Version: policydocument.Version,
+		Statement: []policydocument.StatementEntry{
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"route53:ChangeResourceRecordSets",
+				},
+				Resource: []string{
+					"arn:aws:route53:::hostedzone/*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"route53:ListHostedZones",
+					"route53:ListResourceRecordSets",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+		},
+	}
+
+	return managedpolicy.New("ExternalDnsPolicy", policyName, policyDesc, d)
+}

@@ -12,67 +12,62 @@ type managedPolicy struct {
 	provider v1alpha1.CloudProvider
 }
 
+func (m *managedPolicy) CreateExternalDnsPolicy(opts api.CreateExternalDnsPolicyOpts) (*api.ManagedPolicy, error) {
+	b := cfn.New(
+		components.NewExternalDnsPolicyComposer(opts.Repository, opts.Environment),
+	)
+
+	stackName := cfn.NewStackNamer().
+		ExternalDnsPolicy(opts.Repository, opts.Environment)
+
+	return m.createPolicy(stackName, opts.Environment, opts.Repository, "ExternalDnsPolicy", b)
+}
+
 func (m *managedPolicy) CreateAlbIngressControllerPolicy(opts api.CreateAlbIngressControllerPolicyOpts) (*api.ManagedPolicy, error) {
-	b := cfn.New(components.NewAlbIngressControllerPolicyComposer(opts.Repository, opts.Environment))
+	b := cfn.New(
+		components.NewAlbIngressControllerPolicyComposer(opts.Repository, opts.Environment),
+	)
 
-	template, err := b.Build()
-	if err != nil {
-		return nil, errors.E(err, "failed to build cloud formation template")
-	}
+	stackName := cfn.NewStackNamer().
+		AlbIngressControllerPolicy(opts.Repository, opts.Environment)
 
-	stackName := cfn.NewStackNamer().AlbIngressControllerPolicy(opts.Repository, opts.Environment)
-
-	r := cfn.NewRunner(m.provider)
-
-	err = r.CreateIfNotExists(stackName, template, []string{cfn.CapabilityNamedIam}, defaultTimeOut)
-	if err != nil {
-		return nil, errors.E(err, "cloud provider failed to create policy")
-	}
-
-	p := &api.ManagedPolicy{
-		StackName:              stackName,
-		Repository:             opts.Repository,
-		Environment:            opts.Environment,
-		CloudFormationTemplate: template,
-	}
-
-	err = r.Outputs(stackName, map[string]cfn.ProcessOutputFn{
-		"AlbIngressControllerPolicy": cfn.String(&p.PolicyARN),
-	})
-	if err != nil {
-		return nil, errors.E(err, "failed to process outputs")
-	}
-
-	return p, nil
+	return m.createPolicy(stackName, opts.Environment, opts.Repository, "AlbIngressControllerPolicy", b)
 }
 
 // CreateExternalSecretsPolicy builds and applies a cloud formation template
 func (m *managedPolicy) CreateExternalSecretsPolicy(opts api.CreateExternalSecretsPolicyOpts) (*api.ManagedPolicy, error) {
-	b := cfn.New(components.NewExternalSecretsPolicyComposer(opts.Repository, opts.Environment))
+	b := cfn.New(
+		components.NewExternalSecretsPolicyComposer(opts.Repository, opts.Environment),
+	)
 
-	template, err := b.Build()
+	stackName := cfn.NewStackNamer().
+		ExternalSecretsPolicy(opts.Repository, opts.Environment)
+
+	return m.createPolicy(stackName, opts.Environment, opts.Repository, "ExternalSecretsPolicy", b)
+}
+
+func (m *managedPolicy) createPolicy(stackName, env, repoName, outputName string, builder *cfn.Builder) (*api.ManagedPolicy, error) {
+	template, err := builder.Build()
 	if err != nil {
-		return nil, errors.E(err, "failed to build cloud formation template", errors.Internal)
+		return nil, errors.E(err, "failed to build cloud formation template")
 	}
-
-	stackName := cfn.NewStackNamer().ExternalSecretsPolicy(opts.Repository, opts.Environment)
 
 	r := cfn.NewRunner(m.provider)
 
 	err = r.CreateIfNotExists(stackName, template, []string{cfn.CapabilityNamedIam}, defaultTimeOut)
 	if err != nil {
-		return nil, errors.E(err, "cloud provider failed to create policy", errors.Unknown)
+		return nil, errors.E(err, "failed to create cloud formation template")
 	}
 
 	p := &api.ManagedPolicy{
 		StackName:              stackName,
-		Repository:             opts.Repository,
-		Environment:            opts.Environment,
+		Repository:             repoName,
+		Environment:            env,
 		CloudFormationTemplate: template,
 	}
 
 	err = r.Outputs(stackName, map[string]cfn.ProcessOutputFn{
-		"ExternalSecretsPolicy": cfn.String(&p.PolicyARN),
+		outputName: cfn.String(&p.PolicyARN),
 	})
 	if err != nil {
 		return nil, errors.E(err, "failed to process outputs")

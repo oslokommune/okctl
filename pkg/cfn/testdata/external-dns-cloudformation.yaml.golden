@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  ExternalDnsPolicy:
+    Value:
+      Ref: ExternalDnsPolicy
+Resources:
+  ExternalDnsPolicy:
+    Properties:
+      Description: Service account policy for creating route53 hostnames
+      ManagedPolicyName: okctl-repo-env-ExternalDnsServiceAccountPolicy
+      PolicyDocument:
+        Statement:
+        - Action:
+          - route53:ChangeResourceRecordSets
+          Effect: Allow
+          Resource:
+          - arn:aws:route53:::hostedzone/*
+        - Action:
+          - route53:ListHostedZones
+          - route53:ListResourceRecordSets
+          Effect: Allow
+          Resource:
+          - '*'
+        Version: 2012-10-17
+    Type: AWS::IAM::ManagedPolicy

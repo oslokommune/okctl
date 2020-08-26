@@ -29,3 +29,14 @@ func decodeCreateAlbIngressControllerPolicyRequest(_ context.Context, r *http.Re
 
 	return opts, nil
 }
+
+func decodeCreateExternalDnsPolicyRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.CreateExternalDnsPolicyOpts
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}

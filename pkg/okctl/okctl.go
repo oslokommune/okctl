@@ -109,6 +109,11 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 			CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
 			BaseDir:            path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
 		},
+		filesystem.Paths{
+			OutputFile:         config.DefaultPolicyOutputFile,
+			CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
+			BaseDir:            path.Join(outputDir, config.DefaultExternalDNSBaseDir),
+		},
 		o.FileSystem,
 	)
 
@@ -122,6 +127,11 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 			OutputFile: config.DefaultServiceAccountOutputsFile,
 			ConfigFile: config.DefaultServiceAccountConfigFile,
 			BaseDir:    path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
+		},
+		filesystem.Paths{
+			OutputFile: config.DefaultServiceAccountOutputsFile,
+			ConfigFile: config.DefaultServiceAccountConfigFile,
+			BaseDir:    path.Join(outputDir, config.DefaultExternalDNSBaseDir),
 		},
 		o.FileSystem,
 	)

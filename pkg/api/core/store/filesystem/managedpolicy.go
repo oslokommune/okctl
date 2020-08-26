@@ -12,6 +12,7 @@ import (
 type managedPolicy struct {
 	externalSecrets      Paths
 	albIngressController Paths
+	externalDns          Paths
 	fs                   *afero.Afero
 }
 
@@ -22,6 +23,14 @@ type ManagedPolicy struct {
 	Repository  string
 	Environment string
 	PolicyARN   string
+}
+
+func (m *managedPolicy) SaveExternalDnsPolicy(policy *api.ManagedPolicy) error {
+	return m.savePolicy(m.externalDns, policy)
+}
+
+func (m *managedPolicy) GetExternalDnsPolicy() (*api.ManagedPolicy, error) {
+	return m.getPolicy(m.externalDns)
 }
 
 func (m *managedPolicy) SaveAlbIngressControllerPolicy(policy *api.ManagedPolicy) error {
@@ -102,10 +111,11 @@ func (m *managedPolicy) getPolicy(paths Paths) (*api.ManagedPolicy, error) {
 }
 
 // NewManagedPolicyStore returns an initialised managed policy store
-func NewManagedPolicyStore(externalSecrets Paths, albIngressController Paths, fs *afero.Afero) api.ManagedPolicyStore {
+func NewManagedPolicyStore(externalSecrets, albIngressController, externalDns Paths, fs *afero.Afero) api.ManagedPolicyStore {
 	return &managedPolicy{
 		externalSecrets:      externalSecrets,
 		albIngressController: albIngressController,
+		externalDns:          externalDns,
 		fs:                   fs,
 	}
 }

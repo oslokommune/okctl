@@ -90,6 +90,30 @@ func NewValue(name, v string) *Value {
 	}
 }
 
+// ValueMap stores the state for creating multiple outputs
+type ValueMap struct {
+	Values map[string]map[string]interface{}
+}
+
+// NamedOutputs returns the named outputs
+func (v *ValueMap) NamedOutputs() map[string]map[string]interface{} {
+	return v.Values
+}
+
+// Add a value to the named outputs
+func (v *ValueMap) Add(val *Value) *ValueMap {
+	v.Values[val.Name()] = val.Outputs()
+
+	return v
+}
+
+// NewValueMap returns an initialised value map
+func NewValueMap() *ValueMap {
+	return &ValueMap{
+		Values: map[string]map[string]interface{}{},
+	}
+}
+
 // Ensure that Value implements the StackOutputer interface
 var _ StackOutputer = &Value{}
 
@@ -119,6 +143,15 @@ func Subnets(p v1alpha1.CloudProvider, to *[]api.VpcSubnet) ProcessOutputFn {
 func String(to *string) ProcessOutputFn {
 	return func(v string) error {
 		*to = v
+
+		return nil
+	}
+}
+
+// StringSlice knows how to process a string slice
+func StringSlice(to *[]string) ProcessOutputFn {
+	return func(s string) error {
+		*to = strings.Split(s, ",")
 
 		return nil
 	}

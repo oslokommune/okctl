@@ -89,6 +89,30 @@ func TestString(t *testing.T) {
 	}
 }
 
+func TestStringSlice(t *testing.T) {
+	testCases := []struct {
+		name   string
+		value  []string
+		input  string
+		expect []string
+	}{
+		{
+			name:   "Should work",
+			input:  "hi,there",
+			expect: []string{"hi", "there"},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			err := cfn.StringSlice(&tc.value)(tc.input)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expect, tc.value)
+		})
+	}
+}
+
 func TestOutput(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -110,6 +134,18 @@ func TestOutput(t *testing.T) {
 			expect: map[string]map[string]interface{}{
 				"ValueTest": {
 					"Value": "value",
+				},
+			},
+		},
+		{
+			name:     "ValueMap",
+			outputer: cfn.NewValueMap().Add(cfn.NewValue("Something", "v1")).Add(cfn.NewValue("Else", "v2")),
+			expect: map[string]map[string]interface{}{
+				"Something": {
+					"Value": "v1",
+				},
+				"Else": {
+					"Value": "v2",
 				},
 			},
 		},

@@ -96,6 +96,10 @@ const (
 	DefaultHelmChartFile = "helm-chart.json"
 	// DefaultKubeOutputsFile is the default file name of the kube output
 	DefaultKubeOutputsFile = "kube-outputs.json"
+	// DefaultDomainOutputsFile is the default file name of the domain output
+	DefaultDomainOutputsFile = "domains-outputs.json"
+	// DefaultDomainCloudFormationTemplate is the default file name of the cloud formation template
+	DefaultDomainCloudFormationTemplate = "domains-cf.yml"
 
 	// DefaultExternalSecretsBaseDir is the default directory of the external secrets resources
 	DefaultExternalSecretsBaseDir = "external-secrets"
@@ -103,6 +107,8 @@ const (
 	DefaultAlbIngressControllerBaseDir = "alb-ingress-controller"
 	// DefaultExternalDNSBaseDir is the default directory of the external dns resources
 	DefaultExternalDNSBaseDir = "external-dns"
+	// DefaultDomainBaseDir is the default directory for domains
+	DefaultDomainBaseDir = "domains"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"

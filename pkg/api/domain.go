@@ -1,15 +1,21 @@
 package api
 
-import "context"
+import (
+	"context"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+)
 
 // Domain contains the state after creating a domain
 type Domain struct {
-	Repository   string
-	Environment  string
-	FQDN         string
-	Domain       string
-	HostedZoneID string
-	NameServers  []string
+	Repository             string
+	Environment            string
+	FQDN                   string
+	Domain                 string
+	HostedZoneID           string
+	NameServers            []string
+	StackName              string
+	CloudFormationTemplate []byte
 }
 
 // CreateDomainOpts contains the input required for creating a domain
@@ -18,6 +24,16 @@ type CreateDomainOpts struct {
 	Environment string
 	Domain      string
 	FQDN        string
+}
+
+// Validate the inputs
+func (o CreateDomainOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.Domain, validation.Required),
+		validation.Field(&o.Repository, validation.Required),
+		validation.Field(&o.FQDN, validation.Required),
+		validation.Field(&o.Environment, validation.Required),
+	)
 }
 
 // DomainService provides the service layer

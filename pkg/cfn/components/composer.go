@@ -11,6 +11,7 @@ import (
 	clusterPkg "github.com/oslokommune/okctl/pkg/cfn/components/cluster"
 	"github.com/oslokommune/okctl/pkg/cfn/components/dbsubnetgroup"
 	"github.com/oslokommune/okctl/pkg/cfn/components/eip"
+	"github.com/oslokommune/okctl/pkg/cfn/components/hostedzone"
 	"github.com/oslokommune/okctl/pkg/cfn/components/internetgateway"
 	"github.com/oslokommune/okctl/pkg/cfn/components/managedpolicy"
 	"github.com/oslokommune/okctl/pkg/cfn/components/natgateway"
@@ -431,4 +432,29 @@ func (c *ExternalDNSPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy
 	}
 
 	return managedpolicy.New("ExternalDNSPolicy", policyName, policyDesc, d)
+}
+
+// HostedZoneComposer contains state for creating a hosted zone
+type HostedZoneComposer struct {
+	FQDN    string
+	Comment string
+}
+
+// NewHostedZoneComposer returns an initialised hosted zone composer
+func NewHostedZoneComposer(fqdn, comment string) *HostedZoneComposer {
+	return &HostedZoneComposer{
+		FQDN:    fqdn,
+		Comment: comment,
+	}
+}
+
+// Compose returns the cloud formation components required for building
+// the hosted zone
+func (h *HostedZoneComposer) Compose() (*cfn.Composition, error) {
+	zone := hostedzone.New(h.FQDN, h.Comment)
+
+	return &cfn.Composition{
+		Outputs:   []cfn.StackOutputer{zone},
+		Resources: []cfn.ResourceNamer{zone},
+	}, nil
 }

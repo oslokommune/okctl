@@ -160,6 +160,15 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		o.FileSystem,
 	)
 
+	domainStore := filesystem.NewDomainStore(
+		filesystem.Paths{
+			OutputFile:         config.DefaultDomainOutputsFile,
+			CloudFormationFile: config.DefaultDomainCloudFormationTemplate,
+			BaseDir:            path.Join(outputDir, config.DefaultDomainBaseDir),
+		},
+		o.FileSystem,
+	)
+
 	vpcService := core.NewVpcService(
 		awsProvider.NewVpcCloud(o.CloudProvider),
 		vpcStore,
@@ -230,6 +239,11 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		helmStore,
 	)
 
+	domainService := core.NewDomainService(
+		awsProvider.NewDomainCloudProvider(o.CloudProvider),
+		domainStore,
+	)
+
 	services := core.Services{
 		Cluster:        clusterService,
 		ClusterConfig:  clusterConfigService,
@@ -238,6 +252,7 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		ServiceAccount: serviceAccountService,
 		Helm:           helmService,
 		Kube:           kubeService,
+		Domain:         domainService,
 	}
 
 	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))

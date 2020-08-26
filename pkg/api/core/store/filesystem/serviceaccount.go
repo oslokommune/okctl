@@ -13,7 +13,7 @@ import (
 type serviceAccount struct {
 	externalSecrets      Paths
 	albIngressController Paths
-	externalDns          Paths
+	externalDNS          Paths
 	fs                   *afero.Afero
 }
 
@@ -27,12 +27,12 @@ type ServiceAccount struct {
 	PolicyArn    string
 }
 
-func (s *serviceAccount) SaveExternalDnsServiceAccount(account *api.ServiceAccount) error {
-	return s.saveServiceAccount(s.externalDns, account)
+func (s *serviceAccount) SaveExternalDNSServiceAccount(account *api.ServiceAccount) error {
+	return s.saveServiceAccount(s.externalDNS, account)
 }
 
-func (s *serviceAccount) GetExternalDnsServiceAccount() (*api.ServiceAccount, error) {
-	return s.getServiceAccount(s.externalDns)
+func (s *serviceAccount) GetExternalDNSServiceAccount() (*api.ServiceAccount, error) {
+	return s.getServiceAccount(s.externalDNS)
 }
 
 func (s *serviceAccount) SaveAlbIngressControllerServiceAccount(account *api.ServiceAccount) error {
@@ -127,10 +127,10 @@ func (s *serviceAccount) getServiceAccount(paths Paths) (*api.ServiceAccount, er
 }
 
 // NewServiceAccountStore returns an initialised service account store
-func NewServiceAccountStore(externalSecrets, albIngressController, externalDns Paths, fs *afero.Afero) api.ServiceAccountStore {
+func NewServiceAccountStore(externalSecrets, albIngressController, externalDNS Paths, fs *afero.Afero) api.ServiceAccountStore {
 	return &serviceAccount{
 		externalSecrets:      externalSecrets,
-		externalDns:          externalDns,
+		externalDNS:          externalDNS,
 		albIngressController: albIngressController,
 		fs:                   fs,
 	}

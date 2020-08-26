@@ -1,13 +1,13 @@
 AWSTemplateFormatVersion: 2010-09-09
 Outputs:
-  ExternalDnsPolicy:
+  ExternalDNSPolicy:
     Value:
-      Ref: ExternalDnsPolicy
+      Ref: ExternalDNSPolicy
 Resources:
-  ExternalDnsPolicy:
+  ExternalDNSPolicy:
     Properties:
       Description: Service account policy for creating route53 hostnames
-      ManagedPolicyName: okctl-repo-env-ExternalDnsServiceAccountPolicy
+      ManagedPolicyName: okctl-repo-env-ExternalDNSServiceAccountPolicy
       PolicyDocument:
         Statement:
         - Action:

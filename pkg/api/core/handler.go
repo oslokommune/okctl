@@ -26,8 +26,9 @@ type Endpoints struct {
 	CreateAlbIngressControllerServiceAccount endpoint.Endpoint
 	CreateAlbIngressControllerPolicy         endpoint.Endpoint
 	CreateAlbIngressControllerHelmChart      endpoint.Endpoint
-	CreateExternalDnsPolicy                  endpoint.Endpoint
-	CreateExternalDnsServiceAccount          endpoint.Endpoint
+	CreateExternalDNSPolicy                  endpoint.Endpoint
+	CreateExternalDNSServiceAccount          endpoint.Endpoint
+	CreateExternalDNSKubeDeployment          endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -45,8 +46,9 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateAlbIngressControllerServiceAccount: makeCreateAlbIngressControllerServiceAccountEndpoint(s.ServiceAccount),
 		CreateAlbIngressControllerPolicy:         makeCreateAlbIngressControllerPolicyEndpoint(s.ManagedPolicy),
 		CreateAlbIngressControllerHelmChart:      makeCreateAlbIngressControllerHelmChartEndpoint(s.Helm),
-		CreateExternalDnsPolicy:                  makeCreateExternalDnsPolicyEndpoint(s.ManagedPolicy),
-		CreateExternalDnsServiceAccount:          makeCreateExternalDnsServiceAccountEndpoint(s.ServiceAccount),
+		CreateExternalDNSPolicy:                  makeCreateExternalDNSPolicyEndpoint(s.ManagedPolicy),
+		CreateExternalDNSServiceAccount:          makeCreateExternalDNSServiceAccountEndpoint(s.ServiceAccount),
+		CreateExternalDNSKubeDeployment:          makeCreateExternalDNSKubeDeploymentEndpoint(s.Kube),
 	}
 }
 
@@ -63,8 +65,9 @@ type Handlers struct {
 	CreateAlbIngressControllerServiceAccount http.Handler
 	CreateAlbIngressControllerPolicy         http.Handler
 	CreateAlbIngressControllerHelmChart      http.Handler
-	CreateExternalDnsPolicy                  http.Handler
-	CreateExternalDnsServiceAccount          http.Handler
+	CreateExternalDNSPolicy                  http.Handler
+	CreateExternalDNSServiceAccount          http.Handler
+	CreateExternalDNSKubeDeployment          http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -108,8 +111,9 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateAlbIngressControllerServiceAccount: newServer(endpoints.CreateAlbIngressControllerServiceAccount, decodeCreateAlbIngressControllerServiceAccount),
 		CreateAlbIngressControllerPolicy:         newServer(endpoints.CreateAlbIngressControllerPolicy, decodeCreateAlbIngressControllerPolicyRequest),
 		CreateAlbIngressControllerHelmChart:      newServer(endpoints.CreateAlbIngressControllerHelmChart, decodeCreateAlbIngressControllerHelmChart),
-		CreateExternalDnsPolicy:                  newServer(endpoints.CreateExternalDnsPolicy, decodeCreateExternalDnsPolicyRequest),
-		CreateExternalDnsServiceAccount:          newServer(endpoints.CreateExternalDnsServiceAccount, decodeCreateExternalDnsServiceAccount),
+		CreateExternalDNSPolicy:                  newServer(endpoints.CreateExternalDNSPolicy, decodeCreateExternalDNSPolicyRequest),
+		CreateExternalDNSServiceAccount:          newServer(endpoints.CreateExternalDNSServiceAccount, decodeCreateExternalDNSServiceAccount),
+		CreateExternalDNSKubeDeployment:          newServer(endpoints.CreateExternalDNSKubeDeployment, decodeCreateExternalDNSKubeDeployment),
 	}
 }
 
@@ -137,7 +141,7 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 				r.Method(http.MethodPost, "/", handlers.CreateAlbIngressControllerPolicy)
 			})
 			r.Route("/externaldns", func(r chi.Router) {
-				r.Method(http.MethodPost, "/", handlers.CreateExternalDnsPolicy)
+				r.Method(http.MethodPost, "/", handlers.CreateExternalDNSPolicy)
 			})
 		})
 		r.Route("/serviceaccounts", func(r chi.Router) {
@@ -148,7 +152,7 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 				r.Method(http.MethodPost, "/", handlers.CreateAlbIngressControllerServiceAccount)
 			})
 			r.Route("/externaldns", func(r chi.Router) {
-				r.Method(http.MethodPost, "/", handlers.CreateExternalDnsServiceAccount)
+				r.Method(http.MethodPost, "/", handlers.CreateExternalDNSServiceAccount)
 			})
 		})
 		r.Route("/helm", func(r chi.Router) {
@@ -157,6 +161,11 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			})
 			r.Route("/albingresscontroller", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAlbIngressControllerHelmChart)
+			})
+		})
+		r.Route("/kube", func(r chi.Router) {
+			r.Route("/externaldns", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateExternalDNSKubeDeployment)
 			})
 		})
 	})
@@ -172,6 +181,7 @@ type Services struct {
 	ManagedPolicy  api.ManagedPolicyService
 	ServiceAccount api.ServiceAccountService
 	Helm           api.HelmService
+	Kube           api.KubeService
 }
 
 // EndpointOption makes it easy to enable and disable the endpoint
@@ -188,6 +198,7 @@ const (
 	helmTag                 = "helm"
 	albIngressControllerTag = "albingresscontroller"
 	externalDNSTag          = "externaldns"
+	kubeTag                 = "kube"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -206,8 +217,9 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateAlbIngressControllerServiceAccount: middleware.Logging(logger, strings.Join([]string{serviceAccountsTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerServiceAccount),
 			CreateAlbIngressControllerPolicy:         middleware.Logging(logger, strings.Join([]string{managedPoliciesTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerPolicy),
 			CreateAlbIngressControllerHelmChart:      middleware.Logging(logger, strings.Join([]string{helmTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerHelmChart),
-			CreateExternalDnsPolicy:                  middleware.Logging(logger, strings.Join([]string{managedPoliciesTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDnsPolicy),
-			CreateExternalDnsServiceAccount:          middleware.Logging(logger, strings.Join([]string{serviceAccountsTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDnsServiceAccount),
+			CreateExternalDNSPolicy:                  middleware.Logging(logger, strings.Join([]string{managedPoliciesTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDNSPolicy),
+			CreateExternalDNSServiceAccount:          middleware.Logging(logger, strings.Join([]string{serviceAccountsTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDNSServiceAccount),
+			CreateExternalDNSKubeDeployment:          middleware.Logging(logger, strings.Join([]string{kubeTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDNSKubeDeployment),
 		}
 	}
 }

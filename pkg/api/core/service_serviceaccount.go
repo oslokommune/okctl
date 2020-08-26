@@ -16,7 +16,7 @@ type serviceAccount struct {
 	store api.ServiceAccountStore
 }
 
-func (c *serviceAccount) CreateExternalDnsServiceAccount(_ context.Context, opts api.CreateExternalDnsServiceAccountOpts) (*api.ServiceAccount, error) {
+func (c *serviceAccount) CreateExternalDNSServiceAccount(_ context.Context, opts api.CreateExternalDNSServiceAccountOpts) (*api.ServiceAccount, error) {
 	err := opts.Validate()
 	if err != nil {
 		return nil, errors.E(err, "failed to validate external dns inputs", errors.Invalid)

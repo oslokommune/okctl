@@ -12,6 +12,25 @@ type managedPolicyService struct {
 	store    api.ManagedPolicyStore
 }
 
+func (m *managedPolicyService) CreateExternalDNSPolicy(_ context.Context, opts api.CreateExternalDNSPolicyOpts) (*api.ManagedPolicy, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, errors.E(err, "failed to validate external dns opts")
+	}
+
+	got, err := m.provider.CreateExternalDNSPolicy(opts)
+	if err != nil {
+		return nil, errors.E(err, "failed to create external dns policy")
+	}
+
+	err = m.store.SaveExternalDNSPolicy(got)
+	if err != nil {
+		return nil, errors.E(err, "failed to save external dns policy")
+	}
+
+	return got, nil
+}
+
 func (m *managedPolicyService) CreateAlbIngressControllerPolicy(_ context.Context, opts api.CreateAlbIngressControllerPolicyOpts) (*api.ManagedPolicy, error) {
 	err := opts.Validate()
 	if err != nil {

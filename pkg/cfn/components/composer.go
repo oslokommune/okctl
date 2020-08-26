@@ -375,23 +375,23 @@ func (a *AlbIngressControllerPolicyComposer) ManagedPolicy() *managedpolicy.Mana
 	return managedpolicy.New("AlbIngressControllerPolicy", policyName, policyDesc, d)
 }
 
-// ExternalDnsPolicyComposer contains state for building
+// ExternalDNSPolicyComposer contains state for building
 // a managed iam policy compatible with aws-alb-ingress-controller
-type ExternalDnsPolicyComposer struct {
+type ExternalDNSPolicyComposer struct {
 	Repository  string
 	Environment string
 }
 
-// NewExternalDnsPolicyComposer returns an initialised alb ingress controller composer
-func NewExternalDnsPolicyComposer(repository, env string) *ExternalDnsPolicyComposer {
-	return &ExternalDnsPolicyComposer{
+// NewExternalDNSPolicyComposer returns an initialised alb ingress controller composer
+func NewExternalDNSPolicyComposer(repository, env string) *ExternalDNSPolicyComposer {
+	return &ExternalDNSPolicyComposer{
 		Repository:  repository,
 		Environment: env,
 	}
 }
 
 // Compose builds the policy and returns the result
-func (c *ExternalDnsPolicyComposer) Compose() (*cfn.Composition, error) {
+func (c *ExternalDNSPolicyComposer) Compose() (*cfn.Composition, error) {
 	p := c.ManagedPolicy()
 
 	return &cfn.Composition{
@@ -401,8 +401,8 @@ func (c *ExternalDnsPolicyComposer) Compose() (*cfn.Composition, error) {
 }
 
 // ManagedPolicy returns the policy
-func (c *ExternalDnsPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
-	policyName := fmt.Sprintf("okctl-%s-%s-ExternalDnsServiceAccountPolicy", c.Repository, c.Environment)
+func (c *ExternalDNSPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
+	policyName := fmt.Sprintf("okctl-%s-%s-ExternalDNSServiceAccountPolicy", c.Repository, c.Environment)
 	policyDesc := "Service account policy for creating route53 hostnames"
 
 	d := &policydocument.PolicyDocument{
@@ -430,5 +430,5 @@ func (c *ExternalDnsPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy
 		},
 	}
 
-	return managedpolicy.New("ExternalDnsPolicy", policyName, policyDesc, d)
+	return managedpolicy.New("ExternalDNSPolicy", policyName, policyDesc, d)
 }

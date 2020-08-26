@@ -1,11 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
+	"log"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
+	"github.com/oslokommune/okctl/pkg/domain"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
@@ -26,12 +30,36 @@ func buildCreateCommand(o *okctl.Okctl) *cobra.Command {
 	return cmd
 }
 
+type CreateClusterOpts struct {
+	Environment    string
+	AWSAccountID   string
+	Cidr           string
+	RepositoryName string
+	Region         string
+	ClusterName    string
+	DomainName     string
+}
+
+func (o *CreateClusterOpts) Validate() error {
+	return validation.ValidateStruct(o,
+		validation.Field(&o.Environment, validation.Required),
+		validation.Field(&o.AWSAccountID, validation.Required),
+		validation.Field(&o.Cidr, validation.Required),
+		validation.Field(&o.RepositoryName, validation.Required),
+		validation.Field(&o.Region, validation.Required),
+		validation.Field(&o.ClusterName, validation.Required),
+		validation.Field(&o.DomainName, validation.Required),
+	)
+}
+
 // nolint: funlen
 func buildCreateClusterCommand(o *okctl.Okctl) *cobra.Command {
-	opts := &api.ClusterCreateOpts{}
+	// This should probably be a local struct, since we do much
+	// more now then before
+	opts := &CreateClusterOpts{}
 
 	cmd := &cobra.Command{
-		Use:   "cluster [env] [AWS account id]",
+		Use:   "cluster ENV AWS_ACCOUNT_ID",
 		Short: "Create a cluster",
 		Long: `Fetch all tasks required to get an EKS cluster up and running on AWS.
 This includes creating an EKS compatible VPC with private, public
@@ -44,7 +72,20 @@ and database subnets.`,
 			opts.ClusterName = o.ClusterName(opts.Environment)
 			opts.Region = o.Region()
 
-			err := opts.Validate()
+			if o.NoInput {
+				return fmt.Errorf("we currently don't support no user input")
+			}
+
+			d := domain.New(fmt.Sprintf("%s-%s.oslo.systems", opts.RepositoryName, opts.Environment))
+
+			err := d.Survey()
+			if err != nil {
+				return err
+			}
+
+			opts.DomainName = d.FQDN
+
+			err = opts.Validate()
 			if err != nil {
 				return errors.E(err, "failed to validate create cluster options", errors.Invalid)
 			}
@@ -79,7 +120,14 @@ and database subnets.`,
 				return err
 			}
 
-			err = c.CreateCluster(opts)
+			err = c.CreateCluster(&api.ClusterCreateOpts{
+				Environment:    opts.Environment,
+				AWSAccountID:   opts.AWSAccountID,
+				Cidr:           opts.Cidr,
+				RepositoryName: opts.RepositoryName,
+				Region:         opts.Region,
+				ClusterName:    opts.ClusterName,
+			})
 			if err != nil {
 				return err
 			}
@@ -142,6 +190,39 @@ and database subnets.`,
 			if err != nil {
 				return err
 			}
+
+			d, err := c.CreateDomain(&api.CreateDomainOpts{
+				Repository:  opts.RepositoryName,
+				Environment: opts.Environment,
+				FQDN:        opts.DomainName,
+			})
+			if err != nil {
+				return err
+			}
+
+			policy, err = c.CreateExternalDnsPolicy(&api.CreateExternalDnsPolicyOpts{
+				Repository:  opts.RepositoryName,
+				Environment: opts.Environment,
+			})
+			if err != nil {
+				return err
+			}
+
+			err = c.CreateExternalDnsServiceAccount(&api.CreateExternalDnsServiceAccountOpts{
+				CreateServiceAccountOpts: api.CreateServiceAccountOpts{
+					ClusterName:  opts.ClusterName,
+					Environment:  opts.Environment,
+					Region:       opts.Region,
+					AWSAccountID: opts.AWSAccountID,
+					PolicyArn:    policy.PolicyARN,
+				},
+			})
+			if err != nil {
+				return err
+			}
+
+			// Need a kubectl thingy to create the thingy
+			log.Println(d)
 
 			return nil
 		},

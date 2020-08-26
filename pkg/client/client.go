@@ -24,6 +24,9 @@ const (
 	targetAlbIngressControllerPolicy         = "managedpolicies/albingresscontroller/"
 	targetAlbIngressControllerServiceAccount = "serviceaccounts/albingresscontroller/"
 	targetAlbIngressControllerHelm           = "helm/albingresscontroller/"
+	targetExternalDnsPolicy                  = "managedpolicies/externaldns/"
+	targetExternalDnsServiceAccount          = "serviceaccounts/externaldns/"
+	targetDomain                             = "domains/"
 )
 
 // Cluster client API calls
@@ -47,18 +50,25 @@ type Vpc interface {
 type ManagedPolicy interface {
 	CreateExternalSecretsPolicy(opts *api.CreateExternalSecretsPolicyOpts) (*api.ManagedPolicy, error)
 	CreateAlbIngressControllerPolicy(opts *api.CreateAlbIngressControllerPolicyOpts) (*api.ManagedPolicy, error)
+	CreateExternalDnsPolicy(opts *api.CreateExternalDnsPolicyOpts) (*api.ManagedPolicy, error)
 }
 
 // ServiceAccount API calls
 type ServiceAccount interface {
 	CreateExternalSecretsServiceAccount(opts *api.CreateExternalSecretsServiceAccountOpts) error
 	CreateAlbIngressControllerServiceAccount(opts *api.CreateAlbIngressControllerServiceAccountOpts) error
+	CreateExternalDnsServiceAccount(opts *api.CreateExternalDnsServiceAccountOpts) error
 }
 
 // Helm API calls
 type Helm interface {
 	CreateExternalSecretsHelmChart(opts *api.CreateExternalSecretsHelmChartOpts) (*api.Helm, error)
 	CreateAlbIngressControllerHelmChart(opts *api.CreateAlbIngressControllerHelmChartOpts) (*api.Helm, error)
+}
+
+// Domain API calls
+type Domain interface {
+	CreateDomain(opts *api.CreateDomainOpts) (*api.Domain, error)
 }
 
 // Client stores state for invoking API operations
@@ -75,6 +85,22 @@ func New(progress io.Writer, serverURL string) *Client {
 		BaseURL:  serverURL,
 		Client:   &http.Client{},
 	}
+}
+
+func (c *Client) CreateDomain(opts *api.CreateDomainOpts) (*api.Domain, error) {
+	into := &api.Domain{}
+	return into, c.DoPost(targetDomain, opts, into)
+}
+
+// CreateExternalDnsPolicy invokes the external dns policy creation
+func (c *Client) CreateExternalDnsPolicy(opts *api.CreateExternalDnsPolicyOpts) (*api.ManagedPolicy, error) {
+	into := &api.ManagedPolicy{}
+	return into, c.DoPost(targetExternalDnsPolicy, opts, into)
+}
+
+// CreateExternalDnsServiceAccount invokes the external dns service account creation
+func (c *Client) CreateExternalDnsServiceAccount(opts *api.CreateExternalDnsServiceAccountOpts) error {
+	return c.DoPost(targetExternalDnsServiceAccount, opts, nil)
 }
 
 // CreateAlbIngressControllerHelmChart invokes the alb ingress controller helm chart creator

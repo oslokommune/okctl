@@ -47,6 +47,7 @@ func (d *Data) Validate() error {
 // cluster
 type Cluster struct {
 	Environment string
+	Domain      string
 	AWS         AWS
 }
 
@@ -62,6 +63,7 @@ func (c Cluster) Validate() error {
 			validation.Required,
 			validation.Length(envMinLength, envMaxLength),
 		),
+		validation.Field(&c.Domain, validation.Required),
 		validation.Field(&c.AWS),
 	)
 }

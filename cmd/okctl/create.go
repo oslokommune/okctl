@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/mishudark/errors"
@@ -223,8 +222,13 @@ and database subnets.`,
 				return err
 			}
 
-			// Need a kubectl thingy to create the thingy
-			log.Println(d)
+			_, err = c.CreateExternalDNSKubeDeployment(&api.CreateExternalDNSKubeDeploymentOpts{
+				HostedZoneID: d.HostedZoneID,
+				DomainFilter: d.Domain,
+			})
+			if err != nil {
+				return err
+			}
 
 			return nil
 		},

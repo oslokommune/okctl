@@ -30,6 +30,7 @@ func buildCreateCommand(o *okctl.Okctl) *cobra.Command {
 	return cmd
 }
 
+// CreateClusterOpts contains all the required inputs
 type CreateClusterOpts struct {
 	Environment    string
 	AWSAccountID   string
@@ -40,6 +41,7 @@ type CreateClusterOpts struct {
 	DomainName     string
 }
 
+// Validate the inputs
 func (o *CreateClusterOpts) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.Environment, validation.Required),
@@ -52,7 +54,7 @@ func (o *CreateClusterOpts) Validate() error {
 	)
 }
 
-// nolint: funlen
+// nolint: funlen gocyclo
 func buildCreateClusterCommand(o *okctl.Okctl) *cobra.Command {
 	// This should probably be a local struct, since we do much
 	// more now then before
@@ -200,7 +202,7 @@ and database subnets.`,
 				return err
 			}
 
-			policy, err = c.CreateExternalDnsPolicy(&api.CreateExternalDnsPolicyOpts{
+			policy, err = c.CreateExternalDNSPolicy(&api.CreateExternalDNSPolicyOpts{
 				Repository:  opts.RepositoryName,
 				Environment: opts.Environment,
 			})
@@ -208,7 +210,7 @@ and database subnets.`,
 				return err
 			}
 
-			err = c.CreateExternalDnsServiceAccount(&api.CreateExternalDnsServiceAccountOpts{
+			err = c.CreateExternalDNSServiceAccount(&api.CreateExternalDNSServiceAccountOpts{
 				CreateServiceAccountOpts: api.CreateServiceAccountOpts{
 					ClusterName:  opts.ClusterName,
 					Environment:  opts.Environment,

@@ -30,8 +30,8 @@ func decodeCreateAlbIngressControllerPolicyRequest(_ context.Context, r *http.Re
 	return opts, nil
 }
 
-func decodeCreateExternalDnsPolicyRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var opts api.CreateExternalDnsPolicyOpts
+func decodeCreateExternalDNSPolicyRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.CreateExternalDNSPolicyOpts
 
 	err := json.NewDecoder(r.Body).Decode(&opts)
 	if err != nil {

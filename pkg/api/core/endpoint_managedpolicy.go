@@ -19,8 +19,8 @@ func makeCreateAlbIngressControllerPolicyEndpoint(s api.ManagedPolicyService) en
 	}
 }
 
-func makeCreateExternalDnsPolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
+func makeCreateExternalDNSPolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateExternalDnsPolicy(ctx, request.(api.CreateExternalDnsPolicyOpts))
+		return s.CreateExternalDNSPolicy(ctx, request.(api.CreateExternalDNSPolicyOpts))
 	}
 }

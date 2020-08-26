@@ -30,8 +30,8 @@ func decodeCreateAlbIngressControllerServiceAccount(_ context.Context, r *http.R
 	return opts, nil
 }
 
-func decodeCreateExternalDnsServiceAccount(_ context.Context, r *http.Request) (interface{}, error) {
-	var opts api.CreateExternalDnsServiceAccountOpts
+func decodeCreateExternalDNSServiceAccount(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.CreateExternalDNSServiceAccountOpts
 
 	err := json.NewDecoder(r.Body).Decode(&opts)
 	if err != nil {

@@ -12,15 +12,15 @@ type managedPolicy struct {
 	provider v1alpha1.CloudProvider
 }
 
-func (m *managedPolicy) CreateExternalDnsPolicy(opts api.CreateExternalDnsPolicyOpts) (*api.ManagedPolicy, error) {
+func (m *managedPolicy) CreateExternalDNSPolicy(opts api.CreateExternalDNSPolicyOpts) (*api.ManagedPolicy, error) {
 	b := cfn.New(
-		components.NewExternalDnsPolicyComposer(opts.Repository, opts.Environment),
+		components.NewExternalDNSPolicyComposer(opts.Repository, opts.Environment),
 	)
 
 	stackName := cfn.NewStackNamer().
-		ExternalDnsPolicy(opts.Repository, opts.Environment)
+		ExternalDNSPolicy(opts.Repository, opts.Environment)
 
-	return m.createPolicy(stackName, opts.Environment, opts.Repository, "ExternalDnsPolicy", b)
+	return m.createPolicy(stackName, opts.Environment, opts.Repository, "ExternalDNSPolicy", b)
 }
 
 func (m *managedPolicy) CreateAlbIngressControllerPolicy(opts api.CreateAlbIngressControllerPolicyOpts) (*api.ManagedPolicy, error) {
@@ -46,7 +46,7 @@ func (m *managedPolicy) CreateExternalSecretsPolicy(opts api.CreateExternalSecre
 	return m.createPolicy(stackName, opts.Environment, opts.Repository, "ExternalSecretsPolicy", b)
 }
 
-func (m *managedPolicy) createPolicy(stackName, env, repoName, outputName string, builder *cfn.Builder) (*api.ManagedPolicy, error) {
+func (m *managedPolicy) createPolicy(stackName, env, repoName, outputName string, builder cfn.StackBuilder) (*api.ManagedPolicy, error) {
 	template, err := builder.Build()
 	if err != nil {
 		return nil, errors.E(err, "failed to build cloud formation template")

@@ -18,6 +18,8 @@ const (
 	DefaultStackNameAlbIngressControllerPolicyID = "albingresscontrollerpolicy"
 	// DefaultStackNameExternalDNSPolicyID defines an identifier for external dns policy
 	DefaultStackNameExternalDNSPolicyID = "externaldns"
+	// DefaultStackNameDomainID defines an identifier for a domain stack
+	DefaultStackNameDomainID = "domain"
 )
 
 // StackNamer knows how to name cloud formation stacks
@@ -65,5 +67,17 @@ func (n *StackNamer) ExternalDNSPolicy(repository, env string) string {
 		DefaultStackNameExternalDNSPolicyID,
 		repository,
 		env,
+	)
+}
+
+// Domain returns the stack name of the domain
+// we probably need to store something more here
+func (n *StackNamer) Domain(repository, env, subdomain string) string {
+	return fmt.Sprintf("%s-%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameDomainID,
+		repository,
+		env,
+		subdomain,
 	)
 }

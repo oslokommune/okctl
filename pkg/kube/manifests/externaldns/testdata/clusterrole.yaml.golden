@@ -1,0 +1,32 @@
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: external-dns
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - get
+  - watch
+  - list
+  verbs:
+  - services
+  - endpoints
+  - pods
+- apiGroups:
+  - extensions
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - list
+  - watch

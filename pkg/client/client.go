@@ -24,9 +24,10 @@ const (
 	targetAlbIngressControllerPolicy         = "managedpolicies/albingresscontroller/"
 	targetAlbIngressControllerServiceAccount = "serviceaccounts/albingresscontroller/"
 	targetAlbIngressControllerHelm           = "helm/albingresscontroller/"
-	targetExternalDnsPolicy                  = "managedpolicies/externaldns/"
-	targetExternalDnsServiceAccount          = "serviceaccounts/externaldns/"
+	targetExternalDNSPolicy                  = "managedpolicies/externaldns/"
+	targetExternalDNSServiceAccount          = "serviceaccounts/externaldns/"
 	targetDomain                             = "domains/"
+	targetKubeExternalDNS                    = "/kube/externaldns/"
 )
 
 // Cluster client API calls
@@ -50,20 +51,25 @@ type Vpc interface {
 type ManagedPolicy interface {
 	CreateExternalSecretsPolicy(opts *api.CreateExternalSecretsPolicyOpts) (*api.ManagedPolicy, error)
 	CreateAlbIngressControllerPolicy(opts *api.CreateAlbIngressControllerPolicyOpts) (*api.ManagedPolicy, error)
-	CreateExternalDnsPolicy(opts *api.CreateExternalDnsPolicyOpts) (*api.ManagedPolicy, error)
+	CreateExternalDNSPolicy(opts *api.CreateExternalDNSPolicyOpts) (*api.ManagedPolicy, error)
 }
 
 // ServiceAccount API calls
 type ServiceAccount interface {
 	CreateExternalSecretsServiceAccount(opts *api.CreateExternalSecretsServiceAccountOpts) error
 	CreateAlbIngressControllerServiceAccount(opts *api.CreateAlbIngressControllerServiceAccountOpts) error
-	CreateExternalDnsServiceAccount(opts *api.CreateExternalDnsServiceAccountOpts) error
+	CreateExternalDNSServiceAccount(opts *api.CreateExternalDNSServiceAccountOpts) error
 }
 
 // Helm API calls
 type Helm interface {
 	CreateExternalSecretsHelmChart(opts *api.CreateExternalSecretsHelmChartOpts) (*api.Helm, error)
 	CreateAlbIngressControllerHelmChart(opts *api.CreateAlbIngressControllerHelmChartOpts) (*api.Helm, error)
+}
+
+// Kube API calls
+type Kube interface {
+	CreateExternalDNSKubeDeployment(opts *api.CreateExternalDNSKubeDeploymentOpts) (*api.Kube, error)
 }
 
 // Domain API calls
@@ -87,20 +93,27 @@ func New(progress io.Writer, serverURL string) *Client {
 	}
 }
 
+// CreateExternalDNSKubeDeployment invokes the external dns kube deployment
+func (c *Client) CreateExternalDNSKubeDeployment(opts *api.CreateExternalDNSKubeDeploymentOpts) (*api.Kube, error) {
+	into := &api.Kube{}
+	return into, c.DoPost(targetKubeExternalDNS, opts, into)
+}
+
+// CreateDomain invokes the domain creation
 func (c *Client) CreateDomain(opts *api.CreateDomainOpts) (*api.Domain, error) {
 	into := &api.Domain{}
 	return into, c.DoPost(targetDomain, opts, into)
 }
 
-// CreateExternalDnsPolicy invokes the external dns policy creation
-func (c *Client) CreateExternalDnsPolicy(opts *api.CreateExternalDnsPolicyOpts) (*api.ManagedPolicy, error) {
+// CreateExternalDNSPolicy invokes the external dns policy creation
+func (c *Client) CreateExternalDNSPolicy(opts *api.CreateExternalDNSPolicyOpts) (*api.ManagedPolicy, error) {
 	into := &api.ManagedPolicy{}
-	return into, c.DoPost(targetExternalDnsPolicy, opts, into)
+	return into, c.DoPost(targetExternalDNSPolicy, opts, into)
 }
 
-// CreateExternalDnsServiceAccount invokes the external dns service account creation
-func (c *Client) CreateExternalDnsServiceAccount(opts *api.CreateExternalDnsServiceAccountOpts) error {
-	return c.DoPost(targetExternalDnsServiceAccount, opts, nil)
+// CreateExternalDNSServiceAccount invokes the external dns service account creation
+func (c *Client) CreateExternalDNSServiceAccount(opts *api.CreateExternalDNSServiceAccountOpts) error {
+	return c.DoPost(targetExternalDNSServiceAccount, opts, nil)
 }
 
 // CreateAlbIngressControllerHelmChart invokes the alb ingress controller helm chart creator

@@ -1,3 +1,4 @@
+// Package kube implements a kubernetes client
 package kube
 
 import (

@@ -19,8 +19,8 @@ func makeCreateAlbIngressControllerServiceAccountEndpoint(s api.ServiceAccountSe
 	}
 }
 
-func makeCreateExternalDnsServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
+func makeCreateExternalDNSServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateExternalDnsServiceAccount(ctx, request.(api.CreateExternalDnsServiceAccountOpts))
+		return s.CreateExternalDNSServiceAccount(ctx, request.(api.CreateExternalDNSServiceAccountOpts))
 	}
 }

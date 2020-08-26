@@ -27,7 +27,7 @@ func TestNotTaken(t *testing.T) {
 			name:        "Taken domain",
 			fqdn:        "test.oslo.systems",
 			expectError: true,
-			expect:      "domain: test.oslo.systems., already in use, found name servers",
+			expect:      "domain 'test.oslo.systems' already in use, found name servers",
 		},
 	}
 

@@ -1,3 +1,4 @@
+// Package externaldns provides kubernetes manifests for deploy external dns
 package externaldns
 
 import (
@@ -10,6 +11,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
+
+const requiredFsGroup = 65534
 
 // ExternalDNS contains the state for apply the external-dns
 // manifests to kubernetes
@@ -31,7 +34,7 @@ func New(hostedZoneID, domainFilter string) *ExternalDNS {
 		DomainFilter: domainFilter,
 		Version:      "v0.7.3",
 		OwnerID:      hostedZoneID,
-		FsGroup:      65534,
+		FsGroup:      requiredFsGroup,
 		RunAsNonRoot: true,
 		Replicas:     1,
 		Ctx:          context.Background(),
@@ -46,6 +49,7 @@ func (e *ExternalDNS) CreateDeployment(clientSet kubernetes.Interface) error {
 	return err
 }
 
+// DeploymentManifest returns the deployment manifest
 func (e *ExternalDNS) DeploymentManifest() *appsv1.Deployment {
 	return &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
@@ -109,6 +113,7 @@ func (e *ExternalDNS) CreateClusterRole(clientSet kubernetes.Interface) error {
 	return err
 }
 
+// ClusterRoleManifest returns the cluster role manifest
 func (e *ExternalDNS) ClusterRoleManifest() *v1beta1.ClusterRole {
 	return &v1beta1.ClusterRole{
 		TypeMeta: metav1.TypeMeta{
@@ -146,6 +151,7 @@ func (e *ExternalDNS) CreateClusterRoleBinding(clientSet kubernetes.Interface) e
 	return err
 }
 
+// ClusterRoleBindingManifest returns the cluster role binding manifest
 func (e *ExternalDNS) ClusterRoleBindingManifest() *v1beta1.ClusterRoleBinding {
 	return &v1beta1.ClusterRoleBinding{
 		TypeMeta: metav1.TypeMeta{

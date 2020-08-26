@@ -94,6 +94,8 @@ const (
 	DefaultHelmReleaseFile = "helm-release.json"
 	// DefaultHelmChartFile is the default file name of the chart
 	DefaultHelmChartFile = "helm-chart.json"
+	// DefaultKubeOutputsFile is the default file name of the kube output
+	DefaultKubeOutputsFile = "kube-outputs.json"
 
 	// DefaultExternalSecretsBaseDir is the default directory of the external secrets resources
 	DefaultExternalSecretsBaseDir = "external-secrets"

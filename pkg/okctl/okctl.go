@@ -152,6 +152,14 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		o.FileSystem,
 	)
 
+	kubeStore := filesystem.NewKubeStore(
+		filesystem.Paths{
+			OutputFile: config.DefaultKubeOutputsFile,
+			BaseDir:    path.Join(outputDir, config.DefaultExternalDNSBaseDir),
+		},
+		o.FileSystem,
+	)
+
 	vpcService := core.NewVpcService(
 		awsProvider.NewVpcCloud(o.CloudProvider),
 		vpcStore,
@@ -189,6 +197,11 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		),
 	)
 
+	kubeService := core.NewKubeService(
+		kubeStore,
+		run.NewKubeRun(kubeConfigStore),
+	)
+
 	awsIamAuth, err := o.BinariesProvider.AwsIamAuthenticator(awsiamauthenticator.Version)
 	if err != nil {
 		return err
@@ -224,6 +237,7 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		ManagedPolicy:  managedPolicyService,
 		ServiceAccount: serviceAccountService,
 		Helm:           helmService,
+		Kube:           kubeService,
 	}
 
 	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))

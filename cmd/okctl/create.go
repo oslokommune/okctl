@@ -38,6 +38,7 @@ type CreateClusterOpts struct {
 	Region         string
 	ClusterName    string
 	DomainName     string
+	FQDN           string
 }
 
 // Validate the inputs
@@ -50,6 +51,7 @@ func (o *CreateClusterOpts) Validate() error {
 		validation.Field(&o.Region, validation.Required),
 		validation.Field(&o.ClusterName, validation.Required),
 		validation.Field(&o.DomainName, validation.Required),
+		validation.Field(&o.FQDN, validation.Required),
 	)
 }
 
@@ -84,7 +86,8 @@ and database subnets.`,
 				return err
 			}
 
-			opts.DomainName = d.FQDN
+			opts.DomainName = d.Domain
+			opts.FQDN = d.FQDN
 
 			err = opts.Validate()
 			if err != nil {
@@ -195,7 +198,8 @@ and database subnets.`,
 			d, err := c.CreateDomain(&api.CreateDomainOpts{
 				Repository:  opts.RepositoryName,
 				Environment: opts.Environment,
-				FQDN:        opts.DomainName,
+				FQDN:        opts.FQDN,
+				Domain:      opts.DomainName,
 			})
 			if err != nil {
 				return err

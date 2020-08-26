@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  NameServers:
+    Value:
+      Fn::Join:
+      - ','
+      - - Fn::GetAtt:
+          - PublicHostedZone
+          - NameServers
+  PublicHostedZone:
+    Value:
+      Ref: PublicHostedZone
+Resources:
+  PublicHostedZone:
+    Properties:
+      HostedZoneConfig:
+        Comment: some comment
+      Name: test.oslo.systems.
+    Type: AWS::Route53::HostedZone

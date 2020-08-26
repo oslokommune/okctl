@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  name: external-dns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: external-dns
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: external-dns
+    spec:
+      containers:
+      - args:
+        - --source=service
+        - --source=ingress
+        - --domain-filter=test.oslo.systems
+        - --provider=aws
+        - --aws-zone-type=public
+        - --registry=txt
+        - --txt-owner-id=ABC123456
+        image: registry.opensource.zalan.do/teapot/external-dns:v0.7.3
+        name: external-dns
+        resources: {}
+      securityContext:
+        fsGroup: 65534
+        runAsNonRoot: true
+      serviceAccountName: external-dns
+status: {}

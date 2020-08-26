@@ -35,7 +35,7 @@ const (
 	// DefaultHelmLockExt is the extension used to create a file lock
 	DefaultHelmLockExt = ".lock"
 	// DefaultHelmLockTimeout is the default timeout in seconds
-	DefaultHelmLockTimeout = 30 * time.Second
+	DefaultHelmLockTimeout = 120 * time.Second
 )
 
 // RepoAdder defines the interface for adding a helm repository

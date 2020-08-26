@@ -26,6 +26,8 @@ type Endpoints struct {
 	CreateAlbIngressControllerServiceAccount endpoint.Endpoint
 	CreateAlbIngressControllerPolicy         endpoint.Endpoint
 	CreateAlbIngressControllerHelmChart      endpoint.Endpoint
+	CreateExternalDnsPolicy                  endpoint.Endpoint
+	CreateExternalDnsServiceAccount          endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -43,6 +45,8 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateAlbIngressControllerServiceAccount: makeCreateAlbIngressControllerServiceAccountEndpoint(s.ServiceAccount),
 		CreateAlbIngressControllerPolicy:         makeCreateAlbIngressControllerPolicyEndpoint(s.ManagedPolicy),
 		CreateAlbIngressControllerHelmChart:      makeCreateAlbIngressControllerHelmChartEndpoint(s.Helm),
+		CreateExternalDnsPolicy:                  makeCreateExternalDnsPolicyEndpoint(s.ManagedPolicy),
+		CreateExternalDnsServiceAccount:          makeCreateExternalDnsServiceAccountEndpoint(s.ServiceAccount),
 	}
 }
 
@@ -59,6 +63,8 @@ type Handlers struct {
 	CreateAlbIngressControllerServiceAccount http.Handler
 	CreateAlbIngressControllerPolicy         http.Handler
 	CreateAlbIngressControllerHelmChart      http.Handler
+	CreateExternalDnsPolicy                  http.Handler
+	CreateExternalDnsServiceAccount          http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -102,6 +108,8 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateAlbIngressControllerServiceAccount: newServer(endpoints.CreateAlbIngressControllerServiceAccount, decodeCreateAlbIngressControllerServiceAccount),
 		CreateAlbIngressControllerPolicy:         newServer(endpoints.CreateAlbIngressControllerPolicy, decodeCreateAlbIngressControllerPolicyRequest),
 		CreateAlbIngressControllerHelmChart:      newServer(endpoints.CreateAlbIngressControllerHelmChart, decodeCreateAlbIngressControllerHelmChart),
+		CreateExternalDnsPolicy:                  newServer(endpoints.CreateExternalDnsPolicy, decodeCreateExternalDnsPolicyRequest),
+		CreateExternalDnsServiceAccount:          newServer(endpoints.CreateExternalDnsServiceAccount, decodeCreateExternalDnsServiceAccount),
 	}
 }
 
@@ -128,6 +136,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			r.Route("/albingresscontroller", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAlbIngressControllerPolicy)
 			})
+			r.Route("/externaldns", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateExternalDnsPolicy)
+			})
 		})
 		r.Route("/serviceaccounts", func(r chi.Router) {
 			r.Route("/externalsecrets", func(r chi.Router) {
@@ -135,6 +146,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			})
 			r.Route("/albingresscontroller", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAlbIngressControllerServiceAccount)
+			})
+			r.Route("/externaldns", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateExternalDnsServiceAccount)
 			})
 		})
 		r.Route("/helm", func(r chi.Router) {
@@ -173,6 +187,7 @@ const (
 	serviceAccountsTag      = "serviceAccounts"
 	helmTag                 = "helm"
 	albIngressControllerTag = "albingresscontroller"
+	externalDNSTag          = "externaldns"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -191,6 +206,8 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateAlbIngressControllerServiceAccount: middleware.Logging(logger, strings.Join([]string{serviceAccountsTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerServiceAccount),
 			CreateAlbIngressControllerPolicy:         middleware.Logging(logger, strings.Join([]string{managedPoliciesTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerPolicy),
 			CreateAlbIngressControllerHelmChart:      middleware.Logging(logger, strings.Join([]string{helmTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerHelmChart),
+			CreateExternalDnsPolicy:                  middleware.Logging(logger, strings.Join([]string{managedPoliciesTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDnsPolicy),
+			CreateExternalDnsServiceAccount:          middleware.Logging(logger, strings.Join([]string{serviceAccountsTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDnsServiceAccount),
 		}
 	}
 }

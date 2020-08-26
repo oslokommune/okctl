@@ -58,10 +58,22 @@ func (o CreateAlbIngressControllerServiceAccountOpts) Validate() error {
 	return o.ValidateStruct()
 }
 
+// CreateExternalDnsServiceAccountOpts contains the configuration
+// for creating an external dns service account
+type CreateExternalDnsServiceAccountOpts struct {
+	CreateServiceAccountOpts
+}
+
+// Validate the input
+func (o CreateExternalDnsServiceAccountOpts) Validate() error {
+	return o.ValidateStruct()
+}
+
 // ServiceAccountService provides the interface for all service account operations
 type ServiceAccountService interface {
 	CreateExternalSecretsServiceAccount(context.Context, CreateExternalSecretsServiceAccountOpts) (*ServiceAccount, error)
 	CreateAlbIngressControllerServiceAccount(context.Context, CreateAlbIngressControllerServiceAccountOpts) (*ServiceAccount, error)
+	CreateExternalDnsServiceAccount(context.Context, CreateExternalDnsServiceAccountOpts) (*ServiceAccount, error)
 }
 
 // ServiceAccountRun provides the interface for running operations
@@ -75,4 +87,6 @@ type ServiceAccountStore interface {
 	GetExternalSecretsServiceAccount() (*ServiceAccount, error)
 	SaveAlbIngressControllerServiceAccount(*ServiceAccount) error
 	GetAlbIngressControllerServiceAccount() (*ServiceAccount, error)
+	SaveExternalDnsServiceAccount(*ServiceAccount) error
+	GetExternalDnsServiceAccount() (*ServiceAccount, error)
 }

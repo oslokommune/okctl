@@ -99,6 +99,8 @@ const (
 	DefaultExternalSecretsBaseDir = "external-secrets"
 	// DefaultAlbIngressControllerBaseDir is the default directory of the external secrets resources
 	DefaultAlbIngressControllerBaseDir = "alb-ingress-controller"
+	// DefaultExternalDNSBaseDir is the default directory of the external dns resources
+	DefaultExternalDNSBaseDir = "external-dns"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"

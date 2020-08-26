@@ -219,3 +219,19 @@ func NewAlbIngressControllerServiceAccount(clusterName, region, policyArn, permi
 		Region:                 region,
 	})
 }
+
+// NewExternalDNSServiceAccount returns an initialised configuration
+// for creating an external-dns service account
+func NewExternalDNSServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*api.ClusterConfig, error) {
+	return NewServiceAccount(&ServiceAccountArgs{
+		ClusterName: clusterName,
+		Labels: map[string]string{
+			"aws-usage": "cluster-ops",
+		},
+		Name:                   "external-dns",
+		Namespace:              "kube-system",
+		PermissionsBoundaryArn: permissionsBoundaryArn,
+		PolicyArn:              policyArn,
+		Region:                 region,
+	})
+}

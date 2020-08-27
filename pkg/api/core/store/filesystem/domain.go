@@ -6,12 +6,15 @@ import (
 	"path"
 
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/config/repository"
 	"github.com/spf13/afero"
 )
 
 type domainStore struct {
-	paths Paths
-	fs    *afero.Afero
+	paths     Paths
+	repoPaths Paths
+	repoState *repository.Data
+	fs        *afero.Afero
 }
 
 // Domain contains the outputs we will store
@@ -56,13 +59,31 @@ func (d *domainStore) SaveDomain(domain *api.Domain) error {
 		return fmt.Errorf("failed to write cloud formation template: %w", err)
 	}
 
-	return nil
+	for _, cluster := range d.repoState.Clusters {
+		if cluster.Environment == domain.Environment {
+			cluster.Domain = domain.Domain
+		}
+	}
+
+	err = d.fs.MkdirAll(d.repoPaths.BaseDir, 0o744)
+	if err != nil {
+		return err
+	}
+
+	state, err := d.repoState.YAML()
+	if err != nil {
+		return err
+	}
+
+	return d.fs.WriteFile(path.Join(d.repoPaths.BaseDir, d.repoPaths.ConfigFile), state, 0o644)
 }
 
 // NewDomainStore returns an initialised domain store
-func NewDomainStore(paths Paths, fs *afero.Afero) api.DomainStore {
+func NewDomainStore(repoState *repository.Data, paths, repoPaths Paths, fs *afero.Afero) api.DomainStore {
 	return &domainStore{
-		paths: paths,
-		fs:    fs,
+		paths:     paths,
+		repoPaths: repoPaths,
+		repoState: repoState,
+		fs:        fs,
 	}
 }

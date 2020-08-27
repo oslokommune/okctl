@@ -161,10 +161,15 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 	)
 
 	domainStore := filesystem.NewDomainStore(
+		o.RepoData,
 		filesystem.Paths{
 			OutputFile:         config.DefaultDomainOutputsFile,
 			CloudFormationFile: config.DefaultDomainCloudFormationTemplate,
 			BaseDir:            path.Join(outputDir, config.DefaultDomainBaseDir),
+		},
+		filesystem.Paths{
+			ConfigFile: config.DefaultRepositoryConfig,
+			BaseDir:    repoDir,
 		},
 		o.FileSystem,
 	)

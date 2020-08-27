@@ -25,6 +25,18 @@ type Domain struct {
 	Err io.Writer
 }
 
+// NewDefaultWithSurvey returns a default domain by using a survey
+func NewDefaultWithSurvey(repo, env string) (*Domain, error) {
+	d := New(fmt.Sprintf("%s-%s.oslo.systems", repo, env))
+
+	err := d.Survey()
+	if err != nil {
+		return nil, err
+	}
+
+	return d, nil
+}
+
 // New returns an initialised domain
 func New(domain string) *Domain {
 	return &Domain{

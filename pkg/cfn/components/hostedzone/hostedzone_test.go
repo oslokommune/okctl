@@ -36,11 +36,16 @@ func TestNew(t *testing.T) {
 				template.Outputs[k] = v
 			}
 
+			hostedzone.PatchYAML([]byte{})
+
 			got, err := template.YAML()
 			assert.NoError(t, err)
 
+			patched, err := hostedzone.PatchYAML(got)
+			assert.NoError(t, err)
+
 			g := goldie.New(t)
-			g.Assert(t, tc.golden, got)
+			g.Assert(t, tc.golden, patched)
 		})
 	}
 }

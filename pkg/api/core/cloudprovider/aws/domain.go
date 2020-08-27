@@ -9,6 +9,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn"
 	"github.com/oslokommune/okctl/pkg/cfn/components"
+	"github.com/oslokommune/okctl/pkg/cfn/components/hostedzone"
 )
 
 type domain struct {
@@ -28,6 +29,11 @@ func (d *domain) CreateDomain(opts api.CreateDomainOpts) (*api.Domain, error) {
 	template, err := b.Build()
 	if err != nil {
 		return nil, errors.E(err, "failed to build cloud formation template")
+	}
+
+	template, err = hostedzone.PatchYAML(template)
+	if err != nil {
+		return nil, errors.E(err, "failed to patch template body")
 	}
 
 	r := cfn.NewRunner(d.provider)

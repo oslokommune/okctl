@@ -5,6 +5,7 @@ import (
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/route53"
 	"github.com/oslokommune/okctl/pkg/cfn"
+	"github.com/sanathkr/go-yaml"
 )
 
 // HostedZone contains the state for creating a cloud formation resources and outputs
@@ -18,7 +19,10 @@ type HostedZone struct {
 func (h *HostedZone) NamedOutputs() map[string]map[string]interface{} {
 	return cfn.NewValueMap().
 		Add(cfn.NewValue(h.Name(), h.Ref())).
-		Add(cfn.NewValue("NameServers", cloudformation.Join(",", []string{h.GetAtt("NameServers")}))).
+		// This doesn't work, so we need to patch this after the fact, this
+		// is because cloudformation.Join doesn't support Fn::Join with an
+		// Fn::GetAtt.
+		Add(cfn.NewValue("NameServers", "I need to be patched.")).
 		NamedOutputs()
 }
 
@@ -54,4 +58,65 @@ func New(fqdn, comment string) *HostedZone {
 		FQDN:       fqdn,
 		Comment:    comment,
 	}
+}
+
+// Patcher struct contains what we want
+// to patch
+type Patcher struct {
+	AWSTemplateFormatVersion string `yaml:"AWSTemplateFormatVersion"`
+	Outputs                  struct {
+		NameServers struct {
+			Value interface{} `yaml:"Value"`
+		} `yaml:"NameServers"`
+		PublicHostedZone struct {
+			Value struct {
+				Ref string `yaml:"Ref"`
+			} `yaml:"Value"`
+		} `yaml:"PublicHostedZone"`
+	} `yaml:"Outputs"`
+	Resources struct {
+		PublicHostedZone struct {
+			Properties struct {
+				HostedZoneConfig struct {
+					Comment string `yaml:"Comment"`
+				} `yaml:"HostedZoneConfig"`
+				Name string `yaml:"Name"`
+			} `yaml:"Properties"`
+			Type string `yaml:"Type"`
+		} `yaml:"PublicHostedZone"`
+	} `yaml:"Resources"`
+}
+
+// PatchYAML the template body, so it is valid
+// cloud formation
+func PatchYAML(templateBody []byte) ([]byte, error) {
+	getAtt := map[string][]string{
+		"Fn::GetAtt": {
+			"PublicHostedZone",
+			"NameServers",
+		},
+	}
+	list := []interface{}{
+		",",
+		getAtt,
+	}
+	join := map[string]interface{}{
+		"Fn::Join": list,
+	}
+
+	patched := &Patcher{}
+
+	err := yaml.Unmarshal(templateBody, patched)
+	if err != nil {
+		return nil, err
+	}
+
+	patched.Outputs.NameServers.Value = join
+
+	d, err := yaml.Marshal(patched)
+	if err != nil {
+		return nil, err
+	}
+
+	return d, nil
 }

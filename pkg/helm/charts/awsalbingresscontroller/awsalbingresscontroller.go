@@ -20,11 +20,13 @@ func New(values *Values) *helm.Chart {
 
 // NewDefaultValues returns the mapped values.yml containing the default
 // values
-func NewDefaultValues(clusterName string) *Values {
+func NewDefaultValues(clusterName, vpcID, region string) *Values {
 	return &Values{
 		ClusterName:           clusterName,
-		AutoDiscoverAwsRegion: true,
-		AutoDiscoverAwsVpcID:  true,
+		AwsRegion:             region,
+		AutoDiscoverAwsRegion: false,
+		AwsVpcID:              vpcID,
+		AutoDiscoverAwsVpcID:  false,
 		Scope: Scope{
 			IngressClass:    "alb",
 			SingleNamespace: false,
@@ -63,6 +65,7 @@ func NewDefaultValues(clusterName string) *Values {
 }
 
 // Values maps up the aws-alb-ingress-controller helm chart values.yml
+// - https://github.com/helm/charts/blob/master/incubator/aws-alb-ingress-controller/values.yaml
 // nolint: maligned
 type Values struct {
 	ClusterName                string            `yaml:"clusterName"`

@@ -102,7 +102,7 @@ and database subnets.`,
 			// the result ourselves
 			c := client.New(ioutil.Discard, o.ServerURL)
 
-			err := c.CreateVpc(&api.CreateVpcOpts{
+			vpc, err := c.CreateVpc(&api.CreateVpcOpts{
 				AwsAccountID: opts.AWSAccountID,
 				ClusterName:  opts.ClusterName,
 				Env:          opts.Environment,
@@ -190,6 +190,8 @@ and database subnets.`,
 				ClusterName: opts.ClusterName,
 				Repository:  opts.RepositoryName,
 				Environment: opts.Environment,
+				VpcID:       vpc.ID,
+				Region:      opts.Region,
 			})
 			if err != nil {
 				return err

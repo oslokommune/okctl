@@ -15,7 +15,7 @@ type helmRun struct {
 }
 
 func (r *helmRun) CreateAlbIngressControllerHelmChart(opts api.CreateAlbIngressControllerHelmChartOpts) (*api.Helm, error) {
-	chart := awsalbingresscontroller.New(awsalbingresscontroller.NewDefaultValues(opts.ClusterName))
+	chart := awsalbingresscontroller.New(awsalbingresscontroller.NewDefaultValues(opts.ClusterName, opts.VpcID, opts.Region))
 
 	return r.createHelmChart(opts.Repository, opts.Environment, chart)
 }

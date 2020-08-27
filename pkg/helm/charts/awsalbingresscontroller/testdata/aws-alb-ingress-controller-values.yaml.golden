@@ -1,6 +1,8 @@
 clusterName: my-cluster
-autoDiscoverAwsRegion: true
-autoDiscoverAwsVpcID: true
+awsRegion: eu-west-1
+autoDiscoverAwsRegion: false
+awsVpcID: vpc-0e9801d129EXAMPLE
+autoDiscoverAwsVpcID: false
 scope:
   ingressClass: alb
   singleNamespace: false

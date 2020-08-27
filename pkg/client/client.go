@@ -156,8 +156,9 @@ func (c *Client) CreateClusterConfig(opts *api.CreateClusterConfigOpts) error {
 }
 
 // CreateVpc invokes the vpc create operation
-func (c *Client) CreateVpc(opts *api.CreateVpcOpts) error {
-	return c.DoPost(targetVpcs, opts, nil)
+func (c *Client) CreateVpc(opts *api.CreateVpcOpts) (*api.Vpc, error) {
+	into := &api.Vpc{}
+	return into, c.DoPost(targetVpcs, opts, into)
 }
 
 // DeleteVpc invokes the vpc delete operation

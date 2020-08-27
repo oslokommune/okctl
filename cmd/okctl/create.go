@@ -7,6 +7,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/ask"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/domain"
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -200,6 +201,11 @@ and database subnets.`,
 				FQDN:        opts.FQDN,
 				Domain:      opts.DomainName,
 			})
+			if err != nil {
+				return err
+			}
+
+			err = ask.New().ConfirmPostingNameServers(o.Out, d.Domain, d.NameServers)
 			if err != nil {
 				return err
 			}

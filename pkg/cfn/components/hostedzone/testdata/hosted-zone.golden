@@ -4,9 +4,9 @@ Outputs:
     Value:
       Fn::Join:
       - ','
-      - - Fn::GetAtt:
-          - PublicHostedZone
-          - NameServers
+      - Fn::GetAtt:
+        - PublicHostedZone
+        - NameServers
   PublicHostedZone:
     Value:
       Ref: PublicHostedZone

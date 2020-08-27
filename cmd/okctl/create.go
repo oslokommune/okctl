@@ -69,27 +69,26 @@ This includes creating an EKS compatible VPC with private, public
 and database subnets.`,
 		Args: cobra.ExactArgs(createClusterArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
+			if o.NoInput {
+				return fmt.Errorf("we currently don't support no user input")
+			}
+
 			opts.Environment = args[0]
 			opts.AWSAccountID = args[1]
 			opts.RepositoryName = o.RepoData.Name
 			opts.ClusterName = o.ClusterName(opts.Environment)
 			opts.Region = o.Region()
 
-			if o.NoInput {
-				return fmt.Errorf("we currently don't support no user input")
+			if len(o.Domain(opts.Environment)) == 0 {
+				d, err := domain.NewDefaultWithSurvey(opts.RepositoryName, opts.Environment)
+				if err != nil {
+					return fmt.Errorf("failed to get domain name: %w", err)
+				}
+				opts.DomainName = d.Domain
+				opts.FQDN = d.FQDN
 			}
 
-			d := domain.New(fmt.Sprintf("%s-%s.oslo.systems", opts.RepositoryName, opts.Environment))
-
-			err := d.Survey()
-			if err != nil {
-				return err
-			}
-
-			opts.DomainName = d.Domain
-			opts.FQDN = d.FQDN
-
-			err = opts.Validate()
+			err := opts.Validate()
 			if err != nil {
 				return errors.E(err, "failed to validate create cluster options", errors.Invalid)
 			}

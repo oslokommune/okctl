@@ -37,6 +37,8 @@ type CreateAlbIngressControllerHelmChartOpts struct {
 	ClusterName string
 	Repository  string
 	Environment string
+	VpcID       string
+	Region      string
 }
 
 // Validate the input options
@@ -45,6 +47,8 @@ func (o CreateAlbIngressControllerHelmChartOpts) Validate() error {
 		validation.Field(&o.ClusterName, validation.Required),
 		validation.Field(&o.Repository, validation.Required),
 		validation.Field(&o.Environment, validation.Required),
+		validation.Field(&o.VpcID, validation.Required),
+		validation.Field(&o.Region, validation.Required),
 	)
 }
 

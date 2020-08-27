@@ -3,6 +3,7 @@ package awsalbingresscontroller_test
 import (
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/api/mock"
 	"github.com/oslokommune/okctl/pkg/helm/charts/awsalbingresscontroller"
 	"github.com/sanathkr/go-yaml"
 	"github.com/sebdah/goldie/v2"
@@ -17,7 +18,7 @@ func TestNewDefaultValues(t *testing.T) {
 	}{
 		{
 			name:   "Default values should generate valid yaml",
-			values: awsalbingresscontroller.NewDefaultValues("my-cluster"),
+			values: awsalbingresscontroller.NewDefaultValues("my-cluster", mock.DefaultVpcID, mock.DefaultRegion),
 			golden: "aws-alb-ingress-controller-values.yaml",
 		},
 	}

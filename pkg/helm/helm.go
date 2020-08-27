@@ -258,11 +258,31 @@ func (c *InstallConfig) RepoChart() string {
 	return fmt.Sprintf("%s/%s", c.Repo, c.Chart)
 }
 
+func (h *Helm) findRelease(releaseName string, config *action.Configuration) (*release.Release, error) {
+	client := action.NewList(config)
+	client.All = true
+
+	client.SetStateMask()
+
+	releases, err := client.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, r := range releases {
+		if r.Name == releaseName {
+			return r, nil
+		}
+	}
+
+	return nil, nil
+}
+
 // Install a chart, comparable to: https://helm.sh/docs/helm/helm_install/
 // though we have not implemented all the functionality found there
 // Some details to consider about CRDs:
 // - https://helm.sh/docs/chart_best_practices/custom_resource_definitions/#some-caveats-and-explanations
-// nolint: funlen
+// nolint: funlen gocyclo
 func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Release, error) {
 	envs := h.config.Envs()
 	envs["HELM_NAMESPACE"] = cfg.Namespace
@@ -307,6 +327,22 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 		return nil, err
 	}
 
+	rel, err := h.findRelease(cfg.ReleaseName, actionConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	if rel != nil {
+		switch rel.Info.Status {
+		case release.StatusDeployed, release.StatusSuperseded, release.StatusPendingUpgrade, release.StatusPendingRollback, release.StatusPendingInstall:
+			return rel, nil
+		case release.StatusUninstalled:
+			break
+		case release.StatusFailed, release.StatusUninstalling, release.StatusUnknown:
+			return nil, fmt.Errorf("release is in state: %s, cannot continue", rel.Info.Status)
+		}
+	}
+
 	client := action.NewInstall(actionConfig)
 
 	client.Version = cfg.Version
@@ -314,7 +350,8 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 	client.Namespace = settings.Namespace()
 	client.CreateNamespace = true
 	client.Wait = true
-	client.Timeout = 90 * time.Second // nolint: gomnd Need to make this configurable
+	client.Timeout = 150 * time.Second // nolint: gomnd Need to make this configurable
+	client.Atomic = true
 
 	cp, err := client.ChartPathOptions.LocateChart(cfg.RepoChart(), settings)
 	if err != nil {

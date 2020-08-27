@@ -59,9 +59,10 @@ func (d *domainStore) SaveDomain(domain *api.Domain) error {
 		return fmt.Errorf("failed to write cloud formation template: %w", err)
 	}
 
-	for _, cluster := range d.repoState.Clusters {
+	for i, cluster := range d.repoState.Clusters {
 		if cluster.Environment == domain.Environment {
 			cluster.Domain = domain.Domain
+			d.repoState.Clusters[i] = cluster
 		}
 	}
 

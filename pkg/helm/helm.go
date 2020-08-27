@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
+	"github.com/oslokommune/okctl/pkg/kube"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/release"
@@ -391,6 +392,24 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 
 	r, err := client.Run(chart, values)
 	if err != nil {
+		if h.config.Debug {
+			k, debugErr := kube.New(kubeConfigPath)
+			if debugErr != nil {
+				_, _ = fmt.Fprintf(h.config.DebugOutput, "failed to create debug client: %s", err)
+				return nil, err
+			}
+
+			output, debugErr := k.Debug(settings.Namespace())
+			if debugErr != nil {
+				_, _ = fmt.Fprintf(h.config.DebugOutput, "failed to get debug information: %s", debugErr)
+				return nil, err
+			}
+
+			for title, data := range output {
+				_, _ = fmt.Fprintf(h.config.DebugOutput, "\n\ntitle: %s\ndata: %s\n", title, data)
+			}
+		}
+
 		return nil, err
 	}
 

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/oslokommune/okctl/pkg/config"
+	"github.com/oslokommune/okctl/pkg/helm"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
@@ -56,6 +57,26 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 			kubeConfig := path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(opts.Environment), config.DefaultClusterKubeConfig)
 			awsConfig := path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(opts.Environment), config.DefaultClusterAwsConfig)
 			awsCredentials := path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(opts.Environment), config.DefaultClusterAwsCredentials)
+
+			h := &helm.Config{
+				HelmPluginsDirectory: path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
+				HelmRegistryConfig:   path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
+				HelmRepositoryConfig: path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryConfig),
+				HelmRepositoryCache:  path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryCache),
+				HelmBaseDir:          path.Join(appDir, config.DefaultHelmBaseDir),
+				Debug:                o.Debug,
+			}
+
+			for k, v := range h.Envs() {
+				if k == "HOME" || k == "PATH" {
+					continue
+				}
+
+				_, err = io.Copy(o.Out, strings.NewReader(fmt.Sprintf("export %s=%s\n", k, v)))
+				if err != nil {
+					return err
+				}
+			}
 
 			_, err = io.Copy(
 				o.Out,

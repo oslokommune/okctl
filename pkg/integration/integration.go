@@ -18,15 +18,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
+	"github.com/oslokommune/okctl/pkg/kube"
 	"github.com/rancher/k3d/v3/cmd/util"
 	k3dCluster "github.com/rancher/k3d/v3/pkg/cluster"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
 	"github.com/spf13/afero"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 // Localstack contains all state for managing the lifecycle
@@ -287,63 +284,12 @@ func (k *KubernetesCluster) Debug(namespace string) (map[string][]string, error)
 		return nil, err
 	}
 
-	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
+	ku, err := kube.New(kubeConfigPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create debug client")
 	}
 
-	clientSet, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	events, err := clientSet.CoreV1().Events(namespace).List(k.ctx, metav1.ListOptions{})
-	if err != nil {
-		return nil, nil
-	}
-
-	eventStrings := make([]string, len(events.Items))
-
-	for i, event := range events.Items {
-		j, err := json.MarshalIndent(event, "", "  ")
-		if err != nil {
-			return nil, err
-		}
-
-		eventStrings[i] = string(j)
-	}
-
-	pods, err := clientSet.CoreV1().Pods(namespace).List(k.ctx, metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	podLogs := make([]string, len(pods.Items))
-	podSpec := make([]string, len(pods.Items))
-
-	for i, pod := range pods.Items {
-		request := clientSet.CoreV1().Pods(namespace).GetLogs(pod.Name, &v1.PodLogOptions{})
-
-		raw, err := request.DoRaw(k.ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		podLogs[i] = string(raw)
-
-		j, err := json.MarshalIndent(pod, "", "  ")
-		if err != nil {
-			return nil, err
-		}
-
-		podSpec[i] = string(j)
-	}
-
-	return map[string][]string{
-		"podLogs":  podLogs,
-		"podSpecs": podSpec,
-		"events":   eventStrings,
-	}, nil
+	return ku.Debug(namespace)
 }
 
 // Cleanup removes all created resources

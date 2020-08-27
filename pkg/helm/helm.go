@@ -354,6 +354,11 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 	client.Timeout = 150 * time.Second // nolint: gomnd Need to make this configurable
 	client.Atomic = true
 
+	// Keep the chart running when we are debugging
+	if h.config.Debug {
+		client.Atomic = false
+	}
+
 	cp, err := client.ChartPathOptions.LocateChart(cfg.RepoChart(), settings)
 	if err != nil {
 		return nil, err

@@ -418,3 +418,14 @@ func (c *Config) AWSAccountID(env string) (string, error) {
 
 	return "", fmt.Errorf("could not find configuration for cluster: %s", env)
 }
+
+// Domain returns the domain for the given env
+func (c *Config) Domain(env string) string {
+	for _, cluster := range c.RepoData.Clusters {
+		if cluster.Environment == env {
+			return cluster.Domain
+		}
+	}
+
+	return ""
+}

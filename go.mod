@@ -7,6 +7,7 @@ replace github.com/docker/distribution => github.com/docker/distribution v2.7.1-
 require (
 	github.com/99designs/keyring v1.1.5
 	github.com/AlecAivazis/survey/v2 v2.1.1
+	github.com/Microsoft/hcsshim/test v0.0.0-20200826032352-301c83a30e7c // indirect
 	github.com/Netflix/go-expect v0.0.0-20180615182759-c93bf25de8e8
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d // indirect
@@ -18,9 +19,9 @@ require (
 	github.com/bshuster-repo/logrus-logstash-hook v1.0.0 // indirect
 	github.com/bugsnag/bugsnag-go v1.5.3 // indirect
 	github.com/bugsnag/panicwrap v1.2.0 // indirect
-	github.com/containerd/containerd v1.3.4
+	github.com/containerd/cgroups v0.0.0-20200824123100-0b889c03f102 // indirect
+	github.com/containerd/containerd v1.4.0
 	github.com/docker/distribution v2.7.1+incompatible
-	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.9.0 // indirect
@@ -30,7 +31,7 @@ require (
 	github.com/go-git/go-git/v5 v5.1.0
 	github.com/go-kit/kit v0.10.0
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.2
-	github.com/gofrs/flock v0.7.3
+	github.com/gofrs/flock v0.8.0
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/google/go-cmp v0.5.2
@@ -53,10 +54,11 @@ require (
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/onsi/ginkgo v1.13.0 // indirect
+	github.com/opencontainers/selinux v1.6.0 // indirect
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/rancher/k3d/v3 v3.0.0
+	github.com/rancher/k3d/v3 v3.0.1
 	github.com/rogpeppe/go-internal v1.6.1 // indirect
 	github.com/sanathkr/go-yaml v0.0.0-20170819195128-ed9d249f429b
 	github.com/sanity-io/litter v1.3.0

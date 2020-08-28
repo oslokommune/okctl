@@ -3,7 +3,11 @@
 // - https://github.com/helm/charts/tree/master/incubator/aws-alb-ingress-controller
 package awsalbingresscontroller
 
-import "github.com/oslokommune/okctl/pkg/helm"
+import (
+	"time"
+
+	"github.com/oslokommune/okctl/pkg/helm"
+)
 
 // New returns an initialised Helm chart for installing aws-alb-ingress-controller
 func New(values *Values) *helm.Chart {
@@ -14,6 +18,7 @@ func New(values *Values) *helm.Chart {
 		Version:        "1.0.2",
 		Chart:          "aws-alb-ingress-controller",
 		Namespace:      "kube-system",
+		Timeout:        5 * time.Minute, // nolint: gomnd
 		Values:         values,
 	}
 }

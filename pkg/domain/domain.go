@@ -149,7 +149,7 @@ func NotTaken(domain string) error {
 
 	q := req.URL.Query()
 	q.Add("name", domain)
-	q.Add("type", fmt.Sprintf("%d", dns.TypeNS))
+	q.Add("type", fmt.Sprintf("%d", dns.TypeANY))
 	q.Add("ct", "application/x-javascript")
 
 	req.URL.RawQuery = q.Encode()
@@ -177,13 +177,18 @@ func NotTaken(domain string) error {
 		return err
 	}
 
-	if dnsResponse.Status != 0 {
-		return fmt.Errorf("got status: %d", dnsResponse.Status)
+	switch dnsResponse.Status {
+	case dns.RcodeSuccess:
+		break
+	case dns.RcodeNameError:
+		return nil
+	default:
+		return fmt.Errorf("don't know how to handle DNS response code: %d", dnsResponse.Status)
 	}
 
 	for _, a := range dnsResponse.Answer {
 		if a.Type == dns.TypeNS {
-			return fmt.Errorf("domain '%s' already in use, found name servers", domain)
+			return fmt.Errorf("domain '%s' already in use, found DNS records", domain)
 		}
 	}
 

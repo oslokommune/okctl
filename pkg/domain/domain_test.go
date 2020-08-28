@@ -27,7 +27,7 @@ func TestNotTaken(t *testing.T) {
 			name:        "Taken domain",
 			fqdn:        "test.oslo.systems",
 			expectError: true,
-			expect:      "domain 'test.oslo.systems' already in use, found name servers",
+			expect:      "domain 'test.oslo.systems' already in use, found DNS records",
 		},
 	}
 
@@ -128,7 +128,7 @@ func TestDomainSurvey(t *testing.T) {
 			procedure: func(c *expect.Console, _ *vt10x.State) {
 				_, _ = c.ExpectString("? Provide the name of the domain you want to delegate to this cluster [? for help] (test.oslo.systems)")
 				_, _ = c.SendLine("")
-				_, _ = c.ExpectString("X Sorry, your reply was invalid: domain 'test.oslo.systems' already in use, found name servers")
+				_, _ = c.ExpectString("X Sorry, your reply was invalid: domain 'test.oslo.systems' already in use, found DNS records")
 				_, _ = c.ExpectString("? Provide the name of the domain you want to delegate to this cluster [? for help] (test.oslo.systems)")
 				_, _ = c.SendLine("domain-not-in-use.oslo.systems")
 				_, _ = c.ExpectEOF()

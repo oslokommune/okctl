@@ -79,3 +79,31 @@ func (e *EchoServer) DeploymentManifest() *appsv1.Deployment {
 		},
 	}
 }
+
+//apiVersion: v1
+//kind: Service
+//metadata:
+//  name: echoserver
+//spec:
+//  ports:
+//  - port: 80
+//    targetPort: 8080
+//    protocol: TCP
+//  selector:
+//    app: echoserver
+
+//apiVersion: extensions/v1beta1
+//kind: Ingress
+//metadata:
+//  name: echoserver
+//  annotations:
+//    kubernetes.io/ingress.class: "nginx"
+//spec:
+//  rules:
+//  - host: echo.example.com
+//    http:
+//      paths:
+//      - path: /
+//        backend:
+//          serviceName: echoserver
+//          servicePort: 80

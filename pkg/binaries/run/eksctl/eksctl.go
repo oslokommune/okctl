@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/binaries/run"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
@@ -164,7 +163,7 @@ func (e *Eksctl) CreateServiceAccount(cfg *api.ClusterConfig) ([]byte, error) {
 
 	b, err := e.runWithConfig(args, cfg)
 	if err != nil {
-		return nil, errors.E(err, fmt.Sprintf("failed to create service account: %s", string(b)))
+		return nil, fmt.Errorf("failed to create service account: %s, because: %w", string(b), err)
 	}
 
 	return b, nil
@@ -181,7 +180,7 @@ func (e *Eksctl) DeleteServiceAccount(cfg *api.ClusterConfig) ([]byte, error) {
 
 	b, err := e.runWithConfig(args, cfg)
 	if err != nil {
-		return nil, errors.E(err, fmt.Sprintf("failed to delete service account: %s", string(b)))
+		return nil, fmt.Errorf("failed to delete service account: %s, because: %w", string(b), err)
 	}
 
 	return b, nil
@@ -189,15 +188,16 @@ func (e *Eksctl) DeleteServiceAccount(cfg *api.ClusterConfig) ([]byte, error) {
 
 // DeleteCluster invokes eksctl delete cluster using the provided
 // cluster configuration as input
-func (e *Eksctl) DeleteCluster(cfg *api.ClusterConfig) ([]byte, error) {
+func (e *Eksctl) DeleteCluster(clusterName string) ([]byte, error) {
 	args := []string{
 		"delete",
 		"cluster",
+		fmt.Sprintf("--name=%s", clusterName),
 	}
 
-	b, err := e.runWithConfig(args, cfg)
+	b, err := e.run(args)
 	if err != nil {
-		return nil, errors.E(err, fmt.Sprintf("failed to delete: %s", string(b)), errors.IO)
+		return nil, fmt.Errorf("failed to delete: %s, because: %w", string(b), err)
 	}
 
 	return b, nil
@@ -215,7 +215,7 @@ func (e *Eksctl) CreateCluster(kubeConfigPath string, cfg *api.ClusterConfig) ([
 
 	b, err := e.runWithConfig(args, cfg)
 	if err != nil {
-		return nil, errors.E(err, fmt.Sprintf("failed to create: %s", string(b)), errors.IO)
+		return nil, fmt.Errorf("failed to create: %s, because: %w", string(b), err)
 	}
 
 	return b, nil

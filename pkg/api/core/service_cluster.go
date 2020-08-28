@@ -4,6 +4,9 @@ package core
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/clusterconfig"
+
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 )
@@ -11,14 +14,8 @@ import (
 type cluster struct {
 	run             api.ClusterRun
 	store           api.ClusterStore
-	configStore     api.ClusterConfigStore
 	kubeConfigStore api.KubeConfigStore
 }
-
-const (
-	msgFailedToCreateCluster = "failed to create cluster"
-	msgFailedToDeleteCluster = "failed to delete cluster"
-)
 
 // CreateCluster creates an EKS cluster and VPC
 func (c *cluster) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error) {
@@ -27,67 +24,72 @@ func (c *cluster) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (
 		return nil, errors.E(err, "failed to validate create cluster input", errors.Invalid)
 	}
 
-	clusterConfig, err := c.configStore.GetClusterConfig(opts.Environment)
-	if err != nil {
-		return nil, errors.E(err, "failed to retrieve cluster config")
-	}
-
 	kubeConfigPath, err := c.kubeConfigStore.CreateKubeConfig()
 	if err != nil {
-		return nil, errors.E(err, "failed to create kubeconfig")
+		return nil, errors.E(err, "failed to create kubeconfig", errors.IO)
 	}
 
-	err = c.run.CreateCluster(kubeConfigPath, clusterConfig)
+	cfg, err := clusterconfig.New(&clusterconfig.Args{
+		ClusterName:            opts.ClusterName,
+		PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(opts.AWSAccountID),
+		PrivateSubnets:         opts.VpcPrivateSubnets,
+		PublicSubnets:          opts.VpcPublicSubnets,
+		Region:                 opts.Region,
+		VpcCidr:                opts.Cidr,
+		VpcID:                  opts.VpcID,
+	})
 	if err != nil {
-		return nil, errors.E(err, msgFailedToCreateCluster)
+		return nil, errors.E(err, "failed to create cluster config", errors.Internal)
+	}
+
+	err = c.run.CreateCluster(kubeConfigPath, cfg)
+	if err != nil {
+		return nil, errors.E(err, "failed to create cluster", errors.Internal)
 	}
 
 	res := &api.Cluster{
-		Environment:  opts.Environment,
-		AWSAccountID: opts.AWSAccountID,
-		Cidr:         opts.Cidr,
-		Config:       clusterConfig,
+		Environment:    opts.Environment,
+		AWSAccountID:   opts.AWSAccountID,
+		Cidr:           opts.Cidr,
+		ClusterName:    opts.ClusterName,
+		RepositoryName: opts.RepositoryName,
+		Region:         opts.Region,
+		Config:         cfg,
 	}
 
 	err = c.store.SaveCluster(res)
 	if err != nil {
-		return nil, errors.E(err, msgFailedToCreateCluster)
+		return nil, errors.E(err, "failed to save cluster", errors.IO)
 	}
 
 	return res, nil
 }
 
-// DeleteClusterConfig deletes an EKS cluster and VPC
+// DeleteClusterConfig deletes an EKS cluster
 func (c *cluster) DeleteCluster(_ context.Context, opts api.ClusterDeleteOpts) error {
 	err := opts.Validate()
 	if err != nil {
 		return errors.E(err, "failed to validate delete cluster inputs", errors.Invalid)
 	}
 
-	cfg, err := c.configStore.GetClusterConfig(opts.Environment)
+	err = c.run.DeleteCluster(opts.ClusterName)
 	if err != nil {
-		return errors.E(err, "failed to get cluster from config", errors.Invalid)
+		return errors.E(err, "failed to delete cluster", errors.Internal)
 	}
 
-	err = c.run.DeleteCluster(cfg)
+	err = c.store.DeleteCluster(opts.Environment)
 	if err != nil {
-		return errors.E(err, msgFailedToDeleteCluster)
+		return errors.E(err, "failed to delete cluster", errors.Internal)
 	}
 
-	err = c.configStore.DeleteClusterConfig(opts.Environment)
-	if err != nil {
-		return errors.E(err, msgFailedToDeleteCluster)
-	}
-
-	return errors.E(c.store.DeleteCluster(opts.Environment), msgFailedToDeleteCluster)
+	return nil
 }
 
 // NewClusterService returns a service operator for the cluster operations
-func NewClusterService(store api.ClusterStore, configStore api.ClusterConfigStore, kubeConfigStore api.KubeConfigStore, run api.ClusterRun) api.ClusterService {
+func NewClusterService(store api.ClusterStore, kubeConfigStore api.KubeConfigStore, run api.ClusterRun) api.ClusterService {
 	return &cluster{
 		run:             run,
 		store:           store,
-		configStore:     configStore,
 		kubeConfigStore: kubeConfigStore,
 	}
 }

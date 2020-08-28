@@ -17,7 +17,6 @@ import (
 type Endpoints struct {
 	CreateCluster                            endpoint.Endpoint
 	DeleteCluster                            endpoint.Endpoint
-	CreateClusterConfig                      endpoint.Endpoint
 	CreateVpc                                endpoint.Endpoint
 	DeleteVpc                                endpoint.Endpoint
 	CreateExternalSecretsPolicy              endpoint.Endpoint
@@ -38,7 +37,6 @@ func MakeEndpoints(s Services) Endpoints {
 	return Endpoints{
 		CreateCluster:                            makeCreateClusterEndpoint(s.Cluster),
 		DeleteCluster:                            makeDeleteClusterEndpoint(s.Cluster),
-		CreateClusterConfig:                      makeCreateClusterConfigEndpoint(s.ClusterConfig),
 		CreateVpc:                                makeCreateVpcEndpoint(s.Vpc),
 		DeleteVpc:                                makeDeleteVpcEndpoint(s.Vpc),
 		CreateExternalSecretsPolicy:              makeCreateExternalSecretsPolicyEndpoint(s.ManagedPolicy),
@@ -58,7 +56,6 @@ func MakeEndpoints(s Services) Endpoints {
 type Handlers struct {
 	CreateCluster                            http.Handler
 	DeleteCluster                            http.Handler
-	CreateClusterConfig                      http.Handler
 	CreateVpc                                http.Handler
 	DeleteVpc                                http.Handler
 	CreateExternalSecretsPolicy              http.Handler
@@ -105,7 +102,6 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 	return &Handlers{
 		CreateCluster:                            newServer(endpoints.CreateCluster, decodeClusterCreateRequest),
 		DeleteCluster:                            newServer(endpoints.DeleteCluster, decodeClusterDeleteRequest),
-		CreateClusterConfig:                      newServer(endpoints.CreateClusterConfig, decodeClusterConfigCreateRequest),
 		CreateVpc:                                newServer(endpoints.CreateVpc, decodeVpcCreateRequest),
 		DeleteVpc:                                newServer(endpoints.DeleteVpc, decodeVpcDeleteRequest),
 		CreateExternalSecretsPolicy:              newServer(endpoints.CreateExternalSecretsPolicy, decodeCreateExternalSecretsPolicyRequest),
@@ -133,9 +129,6 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/vpcs", func(r chi.Router) {
 			r.Method(http.MethodPost, "/", handlers.CreateVpc)
 			r.Method(http.MethodDelete, "/", handlers.DeleteVpc)
-		})
-		r.Route("/clusterconfigs", func(r chi.Router) {
-			r.Method(http.MethodPost, "/", handlers.CreateClusterConfig)
 		})
 		r.Route("/managedpolicies", func(r chi.Router) {
 			r.Route("/externalsecrets", func(r chi.Router) {
@@ -183,7 +176,6 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 // Services defines all available services
 type Services struct {
 	Cluster        api.ClusterService
-	ClusterConfig  api.ClusterConfigService
 	Vpc            api.VpcService
 	ManagedPolicy  api.ManagedPolicyService
 	ServiceAccount api.ServiceAccountService
@@ -198,7 +190,6 @@ type EndpointOption func(Endpoints) Endpoints
 
 const (
 	clusterTag              = "cluster"
-	clusterConfigTag        = "clusterConfig"
 	vpcTag                  = "vpc"
 	managedPoliciesTag      = "managedPolicies"
 	externalSecretsTag      = "externalSecrets"
@@ -217,7 +208,6 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 		return Endpoints{
 			CreateCluster:                            middleware.Logging(logger, clusterTag, "create")(endpoints.CreateCluster),
 			DeleteCluster:                            middleware.Logging(logger, clusterTag, "delete")(endpoints.DeleteCluster),
-			CreateClusterConfig:                      middleware.Logging(logger, clusterConfigTag, "create")(endpoints.CreateClusterConfig),
 			CreateVpc:                                middleware.Logging(logger, vpcTag, "create")(endpoints.CreateVpc),
 			DeleteVpc:                                middleware.Logging(logger, vpcTag, "delete")(endpoints.DeleteVpc),
 			CreateExternalSecretsPolicy:              middleware.Logging(logger, strings.Join([]string{managedPoliciesTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsPolicy),

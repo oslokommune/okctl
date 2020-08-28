@@ -21,13 +21,13 @@ func TestEksctlDeleteCluster(t *testing.T) {
 	testCases := []struct {
 		name        string
 		eksctl      *eksctl.Eksctl
-		cfg         *api.ClusterConfig
+		clusterName string
 		expect      interface{}
 		expectError bool
 	}{
 		{
-			name: "Should work",
-			cfg:  &api.ClusterConfig{},
+			name:        "Should work",
+			clusterName: "myCluster",
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
@@ -36,11 +36,11 @@ func TestEksctlDeleteCluster(t *testing.T) {
 				fakeExecCommandSuccess(),
 			),
 			// nolint: lll
-			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,cluster,--verbose=3,--config-file,/cluster-config.yml",
+			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,cluster,--name=myCluster,--verbose=3",
 		},
 		{
-			name: "Should fail",
-			cfg:  &api.ClusterConfig{},
+			name:        "Should fail",
+			clusterName: "myCluster",
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
@@ -49,7 +49,7 @@ func TestEksctlDeleteCluster(t *testing.T) {
 				fakeExecCommandFailure(),
 			),
 			// nolint: lll
-			expect:      "failed to delete: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,cluster,--verbose=3,--config-file,/cluster-config.yml: exit status 1",
+			expect:      "failed to delete: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,cluster,--name=myCluster,--verbose=3, because: exit status 1",
 			expectError: true,
 		},
 	}
@@ -57,7 +57,7 @@ func TestEksctlDeleteCluster(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := tc.eksctl.DeleteCluster(tc.cfg)
+			got, err := tc.eksctl.DeleteCluster(tc.clusterName)
 			if tc.expectError {
 				assert.Error(t, err)
 				assert.Equal(t, tc.expect, err.Error())
@@ -104,7 +104,7 @@ func TestEksctlCreateCluster(t *testing.T) {
 				fakeExecCommandFailure(),
 			),
 			// nolint: lll
-			expect:      "failed to create: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,cluster,--write-kubeconfig=true,--kubeconfig=/some/path,--verbose=3,--config-file,/cluster-config.yml: exit status 1",
+			expect:      "failed to create: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,cluster,--write-kubeconfig=true,--kubeconfig=/some/path,--verbose=3,--config-file,/cluster-config.yml, because: exit status 1",
 			expectError: true,
 		},
 	}
@@ -217,7 +217,7 @@ func TestEksctlCreateServiceAccount(t *testing.T) {
 				fakeExecCommandFailure(),
 			),
 			// nolint: lll
-			expect:      "failed to create service account: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,iamserviceaccount,--override-existing-serviceaccounts,--approve,--verbose=3,--config-file,/cluster-config.yml: exit status 1",
+			expect:      "failed to create service account: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,iamserviceaccount,--override-existing-serviceaccounts,--approve,--verbose=3,--config-file,/cluster-config.yml, because: exit status 1",
 			expectError: true,
 		},
 	}
@@ -272,7 +272,7 @@ func TestEksctlDeleteServiceAccount(t *testing.T) {
 				fakeExecCommandFailure(),
 			),
 			// nolint: lll
-			expect:      "failed to delete service account: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,iamserviceaccount,--approve,--verbose=3,--config-file,/cluster-config.yml: exit status 1",
+			expect:      "failed to delete service account: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,iamserviceaccount,--approve,--verbose=3,--config-file,/cluster-config.yml, because: exit status 1",
 			expectError: true,
 		},
 	}

@@ -11,10 +11,10 @@ import (
 )
 
 type cluster struct {
-	repoConfigFileName string
-	repoBaseDir        string
-	fs                 *afero.Afero
-	repoState          *repository.Data
+	repoStatePaths Paths
+	clusterConfig  Paths
+	fs             *afero.Afero
+	repoState      *repository.Data
 }
 
 // SaveCluster knows how to save cluster state
@@ -33,7 +33,22 @@ func (c *cluster) SaveCluster(clu *api.Cluster) error {
 		},
 	})
 
-	return c.updateConfigFile()
+	err := c.updateRepoStateFile()
+	if err != nil {
+		return fmt.Errorf("failed to update cluster state: %w", err)
+	}
+
+	data, err := clu.Config.YAML()
+	if err != nil {
+		return err
+	}
+
+	err = c.fs.MkdirAll(c.clusterConfig.BaseDir, 0o744)
+	if err != nil {
+		return err
+	}
+
+	return c.fs.WriteFile(path.Join(c.clusterConfig.BaseDir, c.clusterConfig.ConfigFile), data, 0o644)
 }
 
 // DeleteCluster knows how to delete cluster state
@@ -48,11 +63,16 @@ func (c *cluster) DeleteCluster(env string) error {
 		}
 	}
 
-	return c.updateConfigFile()
+	err := c.updateRepoStateFile()
+	if err != nil {
+		return fmt.Errorf("failed to delete cluster state: %w", err)
+	}
+
+	return c.fs.Remove(path.Join(c.clusterConfig.BaseDir, c.clusterConfig.ConfigFile))
 }
 
-func (c *cluster) updateConfigFile() error {
-	err := c.fs.MkdirAll(c.repoBaseDir, 0o744)
+func (c *cluster) updateRepoStateFile() error {
+	err := c.fs.MkdirAll(c.repoStatePaths.BaseDir, 0o744)
 	if err != nil {
 		return err
 	}
@@ -62,7 +82,7 @@ func (c *cluster) updateConfigFile() error {
 		return err
 	}
 
-	return c.fs.WriteFile(path.Join(c.repoBaseDir, c.repoConfigFileName), data, 0o644)
+	return c.fs.WriteFile(path.Join(c.repoStatePaths.BaseDir, c.repoStatePaths.ConfigFile), data, 0o644)
 }
 
 // GetCluster knows how to get cluster state
@@ -83,11 +103,11 @@ func (c *cluster) GetCluster(env string) (*api.Cluster, error) {
 }
 
 // NewClusterStore returns a store for cluster
-func NewClusterStore(repoConfigFileName, repoBaseDir string, fs *afero.Afero, repoState *repository.Data) api.ClusterStore {
+func NewClusterStore(repoStatePaths, clusterConfig Paths, fs *afero.Afero, repoState *repository.Data) api.ClusterStore {
 	return &cluster{
-		repoConfigFileName: repoConfigFileName,
-		repoBaseDir:        repoBaseDir,
-		fs:                 fs,
-		repoState:          repoState,
+		repoStatePaths: repoStatePaths,
+		clusterConfig:  clusterConfig,
+		fs:             fs,
+		repoState:      repoState,
 	}
 }

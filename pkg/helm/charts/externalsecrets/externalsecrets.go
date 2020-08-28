@@ -2,7 +2,11 @@
 // - https://github.com/godaddy/kubernetes-external-secrets
 package externalsecrets
 
-import "github.com/oslokommune/okctl/pkg/helm"
+import (
+	"time"
+
+	"github.com/oslokommune/okctl/pkg/helm"
+)
 
 // Values maps up the values.yaml file
 // nolint: maligned
@@ -92,6 +96,7 @@ func ExternalSecrets(values interface{}) *helm.Chart {
 		Version:        "5.2.0",
 		Chart:          "kubernetes-external-secrets",
 		Namespace:      "kube-system",
+		Timeout:        3 * time.Minute, // nolint: gomnd
 		Values:         values,
 	}
 }

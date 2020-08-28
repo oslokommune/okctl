@@ -1,4 +1,4 @@
-//Package cluster knows how to return a consistent cluster name
+// Package cluster knows how to return a consistent cluster name
 package cluster
 
 import "fmt"

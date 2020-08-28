@@ -128,7 +128,6 @@ func (a *Auth) Resolve() (*Credentials, error) {
 	for i, retriever := range a.Retrievers {
 		if retriever.Valid() {
 			creds, err := retriever.Retrieve()
-
 			// We got an error, but lets just accumulate it and try the
 			// next authenticator
 			if err != nil {
@@ -445,17 +444,17 @@ func NewFileSystemIniStorer(awsConfigFileName, awsCredentialsFileName, baseDir s
 
 // Write the data to the filesystem
 func (f *FileSystemIniStorer) Write(data *IniStorerData) error {
-	err := f.FileSystem.MkdirAll(f.BaseDir, 0744)
+	err := f.FileSystem.MkdirAll(f.BaseDir, 0o744)
 	if err != nil {
 		return err
 	}
 
-	err = f.FileSystem.WriteFile(path.Join(f.BaseDir, f.AwsConfigFileName), data.AwsConfig, 0644)
+	err = f.FileSystem.WriteFile(path.Join(f.BaseDir, f.AwsConfigFileName), data.AwsConfig, 0o644)
 	if err != nil {
 		return err
 	}
 
-	return f.FileSystem.WriteFile(path.Join(f.BaseDir, f.AwsCredentialsFileName), data.AwsCredentials, 0644)
+	return f.FileSystem.WriteFile(path.Join(f.BaseDir, f.AwsCredentialsFileName), data.AwsCredentials, 0o644)
 }
 
 // Read the data from the filesystem

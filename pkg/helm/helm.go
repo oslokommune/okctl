@@ -140,7 +140,7 @@ func (h *Helm) RepoAdd(name, url string) error {
 
 	settings := cli.New()
 
-	err = h.fs.MkdirAll(h.config.HelmBaseDir, 0744)
+	err = h.fs.MkdirAll(h.config.HelmBaseDir, 0o744)
 	if err != nil {
 		return err
 	}
@@ -187,7 +187,7 @@ func (h *Helm) RepoAdd(name, url string) error {
 
 	f.Update(&entry)
 
-	err = f.WriteFile(settings.RepositoryConfig, 0644)
+	err = f.WriteFile(settings.RepositoryConfig, 0o644)
 	if err != nil {
 		return err
 	}
@@ -351,7 +351,7 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 	client.Namespace = settings.Namespace()
 	client.CreateNamespace = true
 	client.Wait = true
-	client.Timeout = 150 * time.Second // nolint: gomnd Need to make this configurable
+	client.Timeout = 250 * time.Second // nolint: gomnd Need to make this configurable
 	client.Atomic = true
 
 	// Keep the chart running when we are debugging

@@ -65,12 +65,12 @@ func (s *serviceAccount) saveServiceAccount(paths Paths, account *api.ServiceAcc
 		return fmt.Errorf("failed to marshal service account: %w", err)
 	}
 
-	err = s.fs.MkdirAll(paths.BaseDir, 0744)
+	err = s.fs.MkdirAll(paths.BaseDir, 0o744)
 	if err != nil {
 		return fmt.Errorf("failed to create service account directory: %w", err)
 	}
 
-	err = s.fs.WriteFile(path.Join(paths.BaseDir, paths.OutputFile), data, 0644)
+	err = s.fs.WriteFile(path.Join(paths.BaseDir, paths.OutputFile), data, 0o644)
 	if err != nil {
 		return fmt.Errorf("failed to write service account: %w", err)
 	}
@@ -80,7 +80,7 @@ func (s *serviceAccount) saveServiceAccount(paths Paths, account *api.ServiceAcc
 		return fmt.Errorf("failed to marshal config file: %w", err)
 	}
 
-	err = s.fs.WriteFile(path.Join(paths.BaseDir, paths.ConfigFile), d, 0644)
+	err = s.fs.WriteFile(path.Join(paths.BaseDir, paths.ConfigFile), d, 0o644)
 	if err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}

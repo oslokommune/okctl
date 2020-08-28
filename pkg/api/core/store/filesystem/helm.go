@@ -40,12 +40,12 @@ func (s *helmStore) saveHelmChart(paths Paths, helm *api.Helm) error {
 		return fmt.Errorf("failed to marshal outputs: %w", err)
 	}
 
-	err = s.fs.MkdirAll(paths.BaseDir, 0744)
+	err = s.fs.MkdirAll(paths.BaseDir, 0o744)
 	if err != nil {
 		return fmt.Errorf("failed to directory: %w", err)
 	}
 
-	err = s.fs.WriteFile(path.Join(paths.BaseDir, paths.OutputFile), outputs, 0644)
+	err = s.fs.WriteFile(path.Join(paths.BaseDir, paths.OutputFile), outputs, 0o644)
 	if err != nil {
 		return fmt.Errorf("failed to write outputs: %w", err)
 	}
@@ -55,7 +55,7 @@ func (s *helmStore) saveHelmChart(paths Paths, helm *api.Helm) error {
 		return fmt.Errorf("failed to marshal release: %w", err)
 	}
 
-	err = s.fs.WriteFile(path.Join(paths.BaseDir, paths.ReleaseFile), release, 0644)
+	err = s.fs.WriteFile(path.Join(paths.BaseDir, paths.ReleaseFile), release, 0o644)
 	if err != nil {
 		return fmt.Errorf("failed to write release: %w", err)
 	}
@@ -65,7 +65,7 @@ func (s *helmStore) saveHelmChart(paths Paths, helm *api.Helm) error {
 		return fmt.Errorf("failed to marshal chart: %w", err)
 	}
 
-	err = s.fs.WriteFile(path.Join(paths.BaseDir, paths.ChartFile), chart, 0644)
+	err = s.fs.WriteFile(path.Join(paths.BaseDir, paths.ChartFile), chart, 0o644)
 	if err != nil {
 		return fmt.Errorf("failed to write chart: %w", err)
 	}

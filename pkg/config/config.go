@@ -31,9 +31,9 @@ const (
 	DefaultConfigName = "conf"
 	// DefaultConfigType is the default type of the okctl application config
 	DefaultConfigType = "yml"
-	//DefaultLogDir is the default directory name for logs
+	// DefaultLogDir is the default directory name for logs
 	DefaultLogDir = "logs"
-	//DefaultLogName is the default name of the file to log to
+	// DefaultLogName is the default name of the file to log to
 	DefaultLogName = "console.log"
 	// DefaultLogDays determines how many days we keep the logs
 	DefaultLogDays = 28
@@ -86,9 +86,9 @@ const (
 	DefaultPolicyOutputFile = "policy-outputs.json"
 	// DefaultServiceAccountOutputsFile is the default file name of the service account outputs
 	DefaultServiceAccountOutputsFile = "service-account-outputs.json"
-	//DefaultServiceAccountConfigFile is the default file name of the service account config
+	// DefaultServiceAccountConfigFile is the default file name of the service account config
 	DefaultServiceAccountConfigFile = "service-account-config.yml"
-	//DefaultHelmOutputsFile is the default file name of the helm output
+	// DefaultHelmOutputsFile is the default file name of the helm output
 	DefaultHelmOutputsFile = "helm-outputs.json"
 	// DefaultHelmReleaseFile is the default file name of the helm release
 	DefaultHelmReleaseFile = "helm-release.json"
@@ -226,7 +226,7 @@ func (c *Config) WriteAppData(b []byte) error {
 
 	store := storage.NewFileSystemStorage(home)
 
-	writer, err := store.Recreate(DefaultDir, DefaultConfig, 0644)
+	writer, err := store.Recreate(DefaultDir, DefaultConfig, 0o644)
 	if err != nil {
 		return err
 	}
@@ -316,7 +316,7 @@ func (c *Config) WriteRepoData(b []byte) error {
 
 	store := storage.NewFileSystemStorage(repo)
 
-	writer, err := store.Recreate("", DefaultRepositoryConfig, 0644)
+	writer, err := store.Recreate("", DefaultRepositoryConfig, 0o644)
 	if err != nil {
 		return err
 	}

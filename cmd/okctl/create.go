@@ -79,6 +79,8 @@ and database subnets.`,
 			opts.RepositoryName = o.RepoData.Name
 			opts.ClusterName = o.ClusterName(opts.Environment)
 			opts.Region = o.Region()
+			opts.DomainName = o.Domain(opts.Environment)
+			opts.FQDN = o.FQDN(opts.Environment)
 
 			if len(o.Domain(opts.Environment)) == 0 {
 				d, err := domain.NewDefaultWithSurvey(opts.RepositoryName, opts.Environment)

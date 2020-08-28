@@ -429,3 +429,14 @@ func (c *Config) Domain(env string) string {
 
 	return ""
 }
+
+// FQDN returns the fully qualified domain name for a given env
+func (c *Config) FQDN(env string) string {
+	for _, cluster := range c.RepoData.Clusters {
+		if cluster.Environment == env {
+			return cluster.FQDN
+		}
+	}
+
+	return ""
+}

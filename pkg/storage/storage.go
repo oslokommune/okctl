@@ -67,13 +67,13 @@ func (s *Storage) RemoveAll(path string) error {
 // MkdirAll creates a directory and all preceding directories
 // if they do not exist
 func (s *Storage) MkdirAll(dir string) error {
-	return s.Fs.MkdirAll(dir, 0755)
+	return s.Fs.MkdirAll(dir, 0o755)
 }
 
 // Create will create all directories leading to a file
 // and then the file itself
 func (s *Storage) Create(dir, file string, perms os.FileMode) (afero.File, error) {
-	err := s.Fs.MkdirAll(dir, 0755)
+	err := s.Fs.MkdirAll(dir, 0o755)
 	if err != nil {
 		return nil, err
 	}

@@ -71,7 +71,7 @@ func (e *Eksctl) writeClusterConfig(cfg *api.ClusterConfig) error {
 		return err
 	}
 
-	file, err := e.Store.Create("", defaultClusterConfig, 0644)
+	file, err := e.Store.Create("", defaultClusterConfig, 0o644)
 	if err != nil {
 		return err
 	}

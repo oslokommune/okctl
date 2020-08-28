@@ -46,7 +46,7 @@ func buildRootCommand() *cobra.Command {
 
 	o := okctl.New()
 
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "okctl",
 		Short: "Opinionated and effortless infrastructure and application management",
 		Long: `A highly opinionated CLI for creating a Kubernetes cluster in AWS with

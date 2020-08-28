@@ -21,12 +21,12 @@ func (c *clusterConfig) SaveClusterConfig(config *api.ClusterConfig) error {
 		return err
 	}
 
-	err = c.fs.MkdirAll(c.baseDir, 0744)
+	err = c.fs.MkdirAll(c.baseDir, 0o744)
 	if err != nil {
 		return err
 	}
 
-	return c.fs.WriteFile(path.Join(c.baseDir, c.clusterConfigFileName), data, 0644)
+	return c.fs.WriteFile(path.Join(c.baseDir, c.clusterConfigFileName), data, 0o644)
 }
 
 // DeleteClusterConfig deletes a cluster config

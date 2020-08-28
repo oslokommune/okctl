@@ -36,8 +36,6 @@ func TestNew(t *testing.T) {
 				template.Outputs[k] = v
 			}
 
-			hostedzone.PatchYAML([]byte{})
-
 			got, err := template.YAML()
 			assert.NoError(t, err)
 

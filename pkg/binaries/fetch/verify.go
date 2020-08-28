@@ -46,10 +46,8 @@ type verifier struct {
 	digestTypes []digest.Type
 }
 
-var (
-	// ErrNoDigests indicates that no digests were provided
-	ErrNoDigests = errors.New("no digests provided")
-)
+// ErrNoDigests indicates that no digests were provided
+var ErrNoDigests = errors.New("no digests provided")
 
 // VerifyDigests using the provided input.
 func (v *verifier) Verify(reader io.Reader) error {

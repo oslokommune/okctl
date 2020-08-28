@@ -16,7 +16,7 @@ type kubeConfig struct {
 // This is not good, we need to rewrite this, together with
 // much of the API
 func (k *kubeConfig) CreateKubeConfig() (string, error) {
-	err := k.fileSystem.MkdirAll(k.baseDir, 0744)
+	err := k.fileSystem.MkdirAll(k.baseDir, 0o744)
 	if err != nil {
 		return "", err
 	}
@@ -30,7 +30,7 @@ func (k *kubeConfig) CreateKubeConfig() (string, error) {
 		return path.Join(k.baseDir, k.kubeConfigFileName), nil
 	}
 
-	err = k.fileSystem.WriteFile(path.Join(k.baseDir, k.kubeConfigFileName), []byte{}, 0644)
+	err = k.fileSystem.WriteFile(path.Join(k.baseDir, k.kubeConfigFileName), []byte{}, 0o644)
 	if err != nil {
 		return "", err
 	}

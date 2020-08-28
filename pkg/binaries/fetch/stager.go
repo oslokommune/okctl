@@ -126,7 +126,7 @@ func (s *Processor) Stager(baseDir string, bufferSize int64, binary application.
 		d = NewNoopDecompressor()
 	}
 
-	binaryWriter, err := s.Store.Create(baseDir, binary.Name, 0755)
+	binaryWriter, err := s.Store.Create(baseDir, binary.Name, 0o755)
 	if err != nil {
 		return nil, err
 	}

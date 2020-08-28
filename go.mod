@@ -79,6 +79,7 @@ require (
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208 // indirect
 	golang.org/x/sys v0.0.0-20200824131525-c12d262b63d8 // indirect
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
+	golang.org/x/tools v0.0.0-20200828013309-97019fc2e64b // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/genproto v0.0.0-20200815001618-f69a88009b70 // indirect
@@ -93,6 +94,7 @@ require (
 	k8s.io/apimachinery v0.18.4
 	k8s.io/cli-runtime v0.18.4
 	k8s.io/client-go v0.18.4
+	mvdan.cc/gofumpt v0.0.0-20200802201014-ab5a8192947d // indirect
 	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/yaml v1.2.0
 )

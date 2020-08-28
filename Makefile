@@ -71,6 +71,7 @@ RICHGO         := $(GOBIN)/richgo
 MAKEDOC        := $(GOBIN)/makedoc
 STATIK         := $(GOBIN)/statik
 GORELEASER     := $(GOBIN)/goreleaser
+GOFUMPT		   := $(GOBIN)/gofumpt
 
 $(GOLANGCILINT):
 	$(GO) get github.com/golangci/golangci-lint/cmd/golangci-lint
@@ -96,6 +97,9 @@ $(MAKEDOC):
 $(STATIK):
 	$(GO) get -u github.com/rakyll/statik
 
+$(GOFUMPT):
+	$(GO) get -u mvdan.cc/gofumpt
+
 $(GORELEASER):
 	$(GO) get -u github.com/goreleaser/goreleaser@v0.132.1
 
@@ -116,8 +120,9 @@ generate: $(STATIK)
 	$(GO) generate
 
 ## Format
-fmt:
+fmt: $(GOFUMPT)
 	$(GO) fmt $(PKGS)
+	$(GOFUMPT) -s -w $(FILES)
 
 ## Imports
 imports: $(GOIMPORTS)

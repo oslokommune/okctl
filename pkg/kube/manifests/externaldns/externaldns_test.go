@@ -100,8 +100,6 @@ func TestExternalDNS(t *testing.T) {
 			outputs, err := cluster.Debug("kube-system")
 			assert.NoError(t, err)
 
-			time.Sleep(30 * time.Second)
-
 			for title, data := range outputs {
 				log.Println(title)
 				log.Println(data)

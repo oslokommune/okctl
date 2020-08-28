@@ -20,8 +20,8 @@ func TestClient(t *testing.T) {
 	defaultVpcDeleteOpts := mock.DefaultVpcDeleteOpts()
 	defaultClusterConfigCreateOpts := mock.DefaultCreateClusterConfigOpts()
 
-	defaultResponse := []byte("hi there")
-	defaultExpect := "hi there"
+	defaultResponse := []byte(`{"hi": "there"}`)
+	defaultExpect := `{"hi": "there"}`
 
 	testCases := []struct {
 		name      string

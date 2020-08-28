@@ -100,7 +100,7 @@ func TestClient(t *testing.T) {
 
 			got := new(bytes.Buffer)
 
-			c := client.New(got, fmt.Sprintf("%s/", server.URL))
+			c := client.New(true, got, fmt.Sprintf("%s/", server.URL))
 
 			err := tc.fn(c)
 			if tc.expectErr {

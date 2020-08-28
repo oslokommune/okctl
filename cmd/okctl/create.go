@@ -102,7 +102,7 @@ and database subnets.`,
 			// Discarding the output for now, until we restructure
 			// the API to return everything we need to write
 			// the result ourselves
-			c := client.New(ioutil.Discard, o.ServerURL)
+			c := client.New(o.Debug, ioutil.Discard, o.ServerURL)
 
 			vpc, err := c.CreateVpc(&api.CreateVpcOpts{
 				AwsAccountID: opts.AWSAccountID,

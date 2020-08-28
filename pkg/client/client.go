@@ -12,6 +12,7 @@ import (
 
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/sanity-io/litter"
 )
 
 const (
@@ -27,7 +28,7 @@ const (
 	targetExternalDNSPolicy                  = "managedpolicies/externaldns/"
 	targetExternalDNSServiceAccount          = "serviceaccounts/externaldns/"
 	targetDomain                             = "domains/"
-	targetKubeExternalDNS                    = "/kube/externaldns/"
+	targetKubeExternalDNS                    = "kube/externaldns/"
 )
 
 // Cluster client API calls
@@ -82,14 +83,16 @@ type Client struct {
 	BaseURL  string
 	Client   *http.Client
 	Progress io.Writer
+	Debug    bool
 }
 
 // New returns a client that wraps the common API operations
-func New(progress io.Writer, serverURL string) *Client {
+func New(debug bool, progress io.Writer, serverURL string) *Client {
 	return &Client{
 		Progress: progress,
 		BaseURL:  serverURL,
 		Client:   &http.Client{},
+		Debug:    debug,
 	}
 }
 
@@ -188,6 +191,10 @@ func (c *Client) DoDelete(endpoint string, body interface{}) error {
 
 // Do performs the request
 func (c *Client) Do(method, endpoint string, body interface{}, into interface{}) error {
+	if c.Debug {
+		fmt.Printf("client (method: %s, endpoint: %s) starting request: %s", method, endpoint, litter.Sdump(body))
+	}
+
 	data, err := json.Marshal(body)
 	if err != nil {
 		return errors.E(err, pretty("failed to marshal data for", method, endpoint))
@@ -215,6 +222,10 @@ func (c *Client) Do(method, endpoint string, body interface{}, into interface{})
 	}()
 
 	if into != nil {
+		if c.Debug {
+			fmt.Printf("client (method: %s, endpoint: %s) received data: %s", method, endpoint, out)
+		}
+
 		err = json.Unmarshal(out, into)
 		if err != nil {
 			return fmt.Errorf("failed to parse response: %w", err)

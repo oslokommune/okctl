@@ -45,7 +45,7 @@ func (u User) Valid() error {
 		),
 		validation.Field(&u.Username,
 			validation.Required,
-			validation.Match(regexp.MustCompile("^byr[0-9]{6}$")).Error("username must be in the form: byrXXXXXX"),
+			validation.Match(regexp.MustCompile("^[a-z]{3}[0-9]{6}$")).Error("username must be in the form: yyyXXXXXX (y = letter, x = digit)"),
 		),
 	)
 }
@@ -211,7 +211,7 @@ func (d *Data) Survey() (*Data, error) {
 			Name: "username",
 			Prompt: &survey.Input{
 				Message: "Your username:",
-				Help:    "This is your byr user, e.g., byrXXXXXX. We store it in the application configuration so you don't have to enter it each time.",
+				Help:    "This is your AD user, e.g., yyyXXXXXX (y = letter, x = digit). We store it in the application configuration so you don't have to enter it each time.",
 			},
 		},
 	}

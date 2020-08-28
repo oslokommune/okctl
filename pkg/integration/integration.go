@@ -95,7 +95,7 @@ func (l *Localstack) AWSSession() *session.Session {
 	return session.Must(session.NewSession(&aws.Config{
 		Region:   aws.String("eu-west-1"),
 		Endpoint: aws.String(fmt.Sprintf("http://localhost:%d", l.edgePort)),
-		//DisableSSL:  aws.Bool(true),
+		// DisableSSL:  aws.Bool(true),
 		Credentials: credentials.NewStaticCredentials("fake", "fake", "fake"),
 	}))
 }

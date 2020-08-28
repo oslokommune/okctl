@@ -1,4 +1,4 @@
-//Package transport implements some basic functionality for transport encoding
+// Package transport implements some basic functionality for transport encoding
 package transport
 
 import (

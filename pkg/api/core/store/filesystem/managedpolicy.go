@@ -62,17 +62,17 @@ func (m *managedPolicy) savePolicy(paths Paths, policy *api.ManagedPolicy) error
 		return fmt.Errorf("failed to marshal policy: %w", err)
 	}
 
-	err = m.fs.MkdirAll(paths.BaseDir, 0744)
+	err = m.fs.MkdirAll(paths.BaseDir, 0o744)
 	if err != nil {
 		return fmt.Errorf("failed to create policy directory: %w", err)
 	}
 
-	err = m.fs.WriteFile(path.Join(paths.BaseDir, paths.OutputFile), data, 0644)
+	err = m.fs.WriteFile(path.Join(paths.BaseDir, paths.OutputFile), data, 0o644)
 	if err != nil {
 		return fmt.Errorf("failed to write policy: %w", err)
 	}
 
-	err = m.fs.WriteFile(path.Join(paths.BaseDir, paths.CloudFormationFile), policy.CloudFormationTemplate, 0644)
+	err = m.fs.WriteFile(path.Join(paths.BaseDir, paths.CloudFormationFile), policy.CloudFormationTemplate, 0o644)
 	if err != nil {
 		return fmt.Errorf("failed to write cloud formation template: %w", err)
 	}

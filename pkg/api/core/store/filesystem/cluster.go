@@ -52,7 +52,7 @@ func (c *cluster) DeleteCluster(env string) error {
 }
 
 func (c *cluster) updateConfigFile() error {
-	err := c.fs.MkdirAll(c.repoBaseDir, 0744)
+	err := c.fs.MkdirAll(c.repoBaseDir, 0o744)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func (c *cluster) updateConfigFile() error {
 		return err
 	}
 
-	return c.fs.WriteFile(path.Join(c.repoBaseDir, c.repoConfigFileName), data, 0644)
+	return c.fs.WriteFile(path.Join(c.repoBaseDir, c.repoConfigFileName), data, 0o644)
 }
 
 // GetCluster knows how to get cluster state

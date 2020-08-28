@@ -59,7 +59,9 @@ func TestClient(t *testing.T) {
 			expect:   defaultExpect,
 			response: defaultResponse,
 			fn: func(c *client.Client) error {
-				return c.CreateVpc(&defaultVpcCreateOpts)
+				_, err := c.CreateVpc(&defaultVpcCreateOpts)
+
+				return err
 			},
 		},
 		{

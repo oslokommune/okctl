@@ -223,7 +223,6 @@ func (r *Runner) watchCreate(stackName string) error {
 		stack, err := r.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
 			StackName: aws.String(stackName),
 		})
-
 		if err != nil {
 			return fmt.Errorf("failed to describe stack after create: %w", err)
 		}

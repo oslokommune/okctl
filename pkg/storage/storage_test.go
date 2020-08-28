@@ -42,7 +42,7 @@ func TestStorer(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			relative := filepath.Join(tc.dir, tc.file)
 
-			f, err := tc.storer.Create(tc.dir, tc.file, 0644)
+			f, err := tc.storer.Create(tc.dir, tc.file, 0o644)
 			assert.NoError(t, err)
 
 			_, err = f.WriteString(tc.content)
@@ -65,7 +65,7 @@ func TestStorer(t *testing.T) {
 			err = tc.storer.MkdirAll(tc.dir)
 			assert.NoError(t, err)
 
-			f, err = tc.storer.Recreate(tc.dir, tc.file, 0644)
+			f, err = tc.storer.Recreate(tc.dir, tc.file, 0o644)
 			assert.NoError(t, err)
 
 			_, err = f.WriteString(tc.content)

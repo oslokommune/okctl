@@ -100,17 +100,17 @@ func (v *vpc) SaveVpc(vpc *api.Vpc) error {
 		return errors.E(err, "failed to create json of vpc state")
 	}
 
-	err = v.fs.MkdirAll(v.baseDir, 0744)
+	err = v.fs.MkdirAll(v.baseDir, 0o744)
 	if err != nil {
 		return err
 	}
 
-	err = v.fs.WriteFile(path.Join(v.baseDir, v.stackOutputsFileName), data, 0644)
+	err = v.fs.WriteFile(path.Join(v.baseDir, v.stackOutputsFileName), data, 0o644)
 	if err != nil {
 		return err
 	}
 
-	return v.fs.WriteFile(path.Join(v.baseDir, v.cloudFormationFileName), vpc.CloudFormationTemplate, 0644)
+	return v.fs.WriteFile(path.Join(v.baseDir, v.cloudFormationFileName), vpc.CloudFormationTemplate, 0o644)
 }
 
 // DeleteVpc removes a vpc from storage

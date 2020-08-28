@@ -145,7 +145,7 @@ func TestDomainSurvey(t *testing.T) {
 			c, state, err := vt10x.NewVT10XConsole(
 				expect.WithStdout(buf),
 				// Uncomment this line to get debug output:
-				//expect.WithLogger(log.New(os.Stdout, "state", log.LstdFlags)),
+				// expect.WithLogger(log.New(os.Stdout, "state", log.LstdFlags)),
 			)
 			require.Nil(t, err)
 			defer func() {

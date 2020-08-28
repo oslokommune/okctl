@@ -252,6 +252,8 @@ type InstallConfig struct {
 	Namespace string
 	// Values is a yaml encoded byte array of the values.yaml file
 	ValuesBody []byte
+	// Timeout determines how long we will wait for the deployment to succeed
+	Timeout time.Duration
 }
 
 // RepoChart returns the [repo]/[chart] string
@@ -351,7 +353,8 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 	client.Namespace = settings.Namespace()
 	client.CreateNamespace = true
 	client.Wait = true
-	client.Timeout = 250 * time.Second // nolint: gomnd Need to make this configurable
+	// This should be configurable
+	client.Timeout = 250 * time.Second // nolint: gomnd
 	client.Atomic = true
 
 	// Keep the chart running when we are debugging
@@ -550,6 +553,8 @@ type Chart struct {
 	Chart       string
 	Namespace   string
 
+	Timeout time.Duration
+
 	Values interface{}
 }
 
@@ -566,6 +571,7 @@ func (c *Chart) InstallConfig() (*InstallConfig, error) {
 		Chart:       c.Chart,
 		Repo:        c.RepositoryName,
 		Namespace:   c.Namespace,
+		Timeout:     c.Timeout,
 		ValuesBody:  values,
 	}, nil
 }
@@ -591,6 +597,7 @@ func Mysql(values interface{}) *Chart {
 		Version:        "1.6.6",
 		Chart:          "mysql",
 		Namespace:      "test-helm",
+		Timeout:        2 * time.Minute, // nolint: gomnd
 		Values:         values,
 	}
 }

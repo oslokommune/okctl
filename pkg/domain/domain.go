@@ -3,10 +3,13 @@
 package domain
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"regexp"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
@@ -115,26 +118,71 @@ func Validate(fqdn string) error {
 	)
 }
 
+// DNSResponse maps up the parts we are interested
+// in from the response
+type DNSResponse struct {
+	Status int `json:"Status"`
+	Answer []DNSAnswerSection
+}
+
+// DNSAnswerSection contains the answer part
+type DNSAnswerSection struct {
+	Name string `json:"name"`
+	Type uint16 `json:"type"`
+	TTL  int    `json:"TTL"`
+	Data string `json:"data"`
+}
+
 // NotTaken ensures that the host is available
 // Well, not really, but close enough
 func NotTaken(domain string) error {
-	msg := new(dns.Msg)
-	msg.Id = dns.Id()
-	msg.RecursionDesired = true
-	msg.Question = make([]dns.Question, 1)
-	msg.Question[0] = dns.Question{
-		Name:   dns.Fqdn(domain),
-		Qtype:  dns.TypeNS,
-		Qclass: dns.ClassINET,
+	client := &http.Client{
+		Timeout: 5 * time.Second, // nolint: gomnd
 	}
 
-	in, err := dns.Exchange(msg, "8.8.8.8:53")
+	// Use DNS over HTTPS service provided by google:
+	// - https://developers.google.com/speed/public-dns/docs/doh/json
+	req, err := http.NewRequest(http.MethodGet, "https://dns.google/resolve", nil)
 	if err != nil {
 		return err
 	}
 
-	for _, a := range in.Answer {
-		if _, ok := a.(*dns.NS); ok {
+	q := req.URL.Query()
+	q.Add("name", domain)
+	q.Add("type", fmt.Sprintf("%d", dns.TypeNS))
+	q.Add("ct", "application/x-javascript")
+
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	switch resp.StatusCode {
+	case http.StatusBadRequest:
+		return fmt.Errorf("invalid domain: %s", domain)
+	case http.StatusInternalServerError:
+		return fmt.Errorf("holy crap")
+	}
+
+	dnsResponse := &DNSResponse{}
+
+	err = json.NewDecoder(resp.Body).Decode(dnsResponse)
+	if err != nil {
+		return err
+	}
+
+	if dnsResponse.Status != 0 {
+		return fmt.Errorf("got status: %d", dnsResponse.Status)
+	}
+
+	for _, a := range dnsResponse.Answer {
+		if a.Type == dns.TypeNS {
 			return fmt.Errorf("domain '%s' already in use, found name servers", domain)
 		}
 	}

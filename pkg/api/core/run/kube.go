@@ -2,8 +2,8 @@ package run
 
 import (
 	"fmt"
+	"time"
 
-	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/kube"
 	"github.com/oslokommune/okctl/pkg/kube/manifests/externaldns"
@@ -17,7 +17,7 @@ type kubeRun struct {
 func (k *kubeRun) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKubeDeploymentOpts) (*api.Kube, error) {
 	kubeConfig, err := k.kubeConfStore.GetKubeConfig()
 	if err != nil {
-		return nil, errors.E(err, "failed to retrieve kubeconfig")
+		return nil, fmt.Errorf("failed to retrieve kubeconfig: %w", err)
 	}
 
 	ext := externaldns.New(opts.HostedZoneID, opts.DomainFilter)
@@ -27,9 +27,14 @@ func (k *kubeRun) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKube
 		return nil, fmt.Errorf("failed to create kubernetes client: %w", err)
 	}
 
-	err = client.Apply(ext.CreateDeployment, ext.CreateClusterRole, ext.CreateClusterRoleBinding)
+	resources, err := client.Apply(ext.CreateDeployment, ext.CreateClusterRole, ext.CreateClusterRoleBinding)
 	if err != nil {
 		return nil, fmt.Errorf("failed to apply kubernets manifests: %w", err)
+	}
+
+	err = client.Watch(resources, 2*time.Minute)
+	if err != nil {
+		return nil, fmt.Errorf("failed while waiting for resources to be created: %w", w)
 	}
 
 	deployment, err := yaml.Marshal(ext.DeploymentManifest())

@@ -55,7 +55,7 @@ including VPC, this is a highly destructive operation.`,
 			// Discarding the output for now until we have
 			// restructured the API and handle the response
 			// properly
-			c := client.New(ioutil.Discard, o.ServerURL)
+			c := client.New(o.Debug, ioutil.Discard, o.ServerURL)
 
 			err := c.DeleteCluster(opts)
 			if err != nil {

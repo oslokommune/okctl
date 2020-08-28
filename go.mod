@@ -41,7 +41,6 @@ require (
 	github.com/jarcoal/httpmock v1.0.6
 	github.com/jmoiron/sqlx v1.2.1-0.20190826204134-d7d95172beb5 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
-	github.com/kr/pretty v0.2.0 // indirect
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/magiconair/properties v1.8.2 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
@@ -87,7 +86,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 	helm.sh/helm/v3 v3.3.0
 	k8s.io/api v0.18.4
-	k8s.io/apimachinery v0.18.4
+	k8s.io/apimachinery v0.19.0
 	k8s.io/cli-runtime v0.18.4
 	k8s.io/client-go v0.18.4
 	rsc.io/letsencrypt v0.0.3 // indirect

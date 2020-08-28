@@ -62,6 +62,7 @@ func (d *domainStore) SaveDomain(domain *api.Domain) error {
 	for i, cluster := range d.repoState.Clusters {
 		if cluster.Environment == domain.Environment {
 			cluster.Domain = domain.Domain
+			cluster.FQDN = domain.Domain
 			d.repoState.Clusters[i] = cluster
 		}
 	}

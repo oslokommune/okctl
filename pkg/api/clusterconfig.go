@@ -1,9 +1,6 @@
 package api
 
 import (
-	"context"
-
-	validation "github.com/go-ozzo/ozzo-validation/v4"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 )
@@ -121,55 +118,4 @@ type ScalingConfig struct {
 // YAML returns a serializes version of the config
 func (c *ClusterConfig) YAML() ([]byte, error) {
 	return yaml.Marshal(c)
-}
-
-// CreateClusterConfigOpts defines the required inputs
-// for creating a new cluster config
-type CreateClusterConfigOpts struct {
-	ClusterName  string
-	Region       string
-	Cidr         string
-	AwsAccountID string
-}
-
-// Validate the cluster config options
-func (o CreateClusterConfigOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ClusterName, validation.Required),
-		validation.Field(&o.Region, validation.Required),
-		validation.Field(&o.Cidr, validation.Required),
-		validation.Field(&o.AwsAccountID, validation.Required),
-	)
-}
-
-// CreateServiceAccountClusterConfigOpts defines the required
-// inputs for creating a new service account
-type CreateServiceAccountClusterConfigOpts struct {
-	ClusterName  string
-	Region       string
-	AwsAccountID string
-	PolicyArn    string
-}
-
-// Validate the service account config options
-func (o CreateServiceAccountClusterConfigOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ClusterName, validation.Required),
-		validation.Field(&o.Region, validation.Required),
-		validation.Field(&o.AwsAccountID, validation.Required),
-		validation.Field(&o.PolicyArn, validation.Required),
-	)
-}
-
-// ClusterConfigService defines the service interface for the cluster config
-type ClusterConfigService interface {
-	CreateClusterConfig(ctx context.Context, opts CreateClusterConfigOpts) (*ClusterConfig, error)
-}
-
-// ClusterConfigStore defines the storage operations
-// for a cluster config
-type ClusterConfigStore interface {
-	SaveClusterConfig(*ClusterConfig) error
-	DeleteClusterConfig(env string) error
-	GetClusterConfig(env string) (*ClusterConfig, error)
 }

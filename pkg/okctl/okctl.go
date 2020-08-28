@@ -85,15 +85,15 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		o.FileSystem,
 	)
 
-	clusterConfigStore := filesystem.NewClusterConfigStore(
-		config.DefaultClusterConfig,
-		path.Join(outputDir, config.DefaultClusterBaseDir),
-		o.FileSystem,
-	)
-
 	clusterStore := filesystem.NewClusterStore(
-		config.DefaultRepositoryConfig,
-		repoDir,
+		filesystem.Paths{
+			ConfigFile: config.DefaultRepositoryConfig,
+			BaseDir:    repoDir,
+		},
+		filesystem.Paths{
+			ConfigFile: config.DefaultClusterConfig,
+			BaseDir:    path.Join(outputDir, config.DefaultClusterBaseDir),
+		},
 		o.FileSystem,
 		o.RepoData,
 	)
@@ -179,14 +179,8 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		vpcStore,
 	)
 
-	clusterConfigService := core.NewClusterConfigService(
-		clusterConfigStore,
-		vpcStore,
-	)
-
 	clusterService := core.NewClusterService(
 		clusterStore,
-		clusterConfigStore,
 		kubeConfigStore,
 		run.NewClusterRun(
 			o.Debug,
@@ -251,7 +245,6 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 
 	services := core.Services{
 		Cluster:        clusterService,
-		ClusterConfig:  clusterConfigService,
 		Vpc:            vpcService,
 		ManagedPolicy:  managedPolicyService,
 		ServiceAccount: serviceAccountService,

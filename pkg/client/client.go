@@ -18,7 +18,6 @@ import (
 const (
 	targetVpcs                               = "vpcs/"
 	targetClusters                           = "clusters/"
-	targetClusterConfigs                     = "clusterconfigs/"
 	targetExternalSecretsPolicy              = "managedpolicies/externalsecrets/"
 	targetExternalSecretsServiceAccount      = "serviceaccounts/externalsecrets/"
 	targetExternalSecretsHelm                = "helm/externalsecrets/"
@@ -35,11 +34,6 @@ const (
 type Cluster interface {
 	CreateCluster(opts *api.ClusterCreateOpts) error
 	DeleteCluster(opts *api.ClusterDeleteOpts) error
-}
-
-// ClusterConfig client API calls
-type ClusterConfig interface {
-	CreateClusterConfig(opts *api.CreateClusterConfigOpts) error
 }
 
 // Vpc client API calls
@@ -151,11 +145,6 @@ func (c *Client) CreateExternalSecretsServiceAccount(opts *api.CreateExternalSec
 func (c *Client) CreateExternalSecretsPolicy(opts *api.CreateExternalSecretsPolicyOpts) (*api.ManagedPolicy, error) {
 	into := &api.ManagedPolicy{}
 	return into, c.DoPost(targetExternalSecretsPolicy, opts, into)
-}
-
-// CreateClusterConfig invokes the cluster config create operation
-func (c *Client) CreateClusterConfig(opts *api.CreateClusterConfigOpts) error {
-	return c.DoPost(targetClusterConfigs, opts, nil)
 }
 
 // CreateVpc invokes the vpc create operation

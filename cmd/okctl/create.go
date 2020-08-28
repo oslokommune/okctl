@@ -116,23 +116,16 @@ and database subnets.`,
 				return err
 			}
 
-			err = c.CreateClusterConfig(&api.CreateClusterConfigOpts{
-				ClusterName:  opts.ClusterName,
-				Region:       opts.Region,
-				Cidr:         opts.Cidr,
-				AwsAccountID: opts.AWSAccountID,
-			})
-			if err != nil {
-				return err
-			}
-
 			err = c.CreateCluster(&api.ClusterCreateOpts{
-				Environment:    opts.Environment,
-				AWSAccountID:   opts.AWSAccountID,
-				Cidr:           opts.Cidr,
-				RepositoryName: opts.RepositoryName,
-				Region:         opts.Region,
-				ClusterName:    opts.ClusterName,
+				Environment:       opts.Environment,
+				AWSAccountID:      opts.AWSAccountID,
+				Cidr:              opts.Cidr,
+				RepositoryName:    opts.RepositoryName,
+				Region:            opts.Region,
+				ClusterName:       opts.ClusterName,
+				VpcID:             vpc.ID,
+				VpcPrivateSubnets: vpc.PrivateSubnets,
+				VpcPublicSubnets:  vpc.PublicSubnets,
 			})
 			if err != nil {
 				return err

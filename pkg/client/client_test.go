@@ -18,7 +18,6 @@ func TestClient(t *testing.T) {
 	defaultClusterDeleteOpts := mock.DefaultClusterDeleteOpts()
 	defaultVpcCreateOpts := mock.DefaultVpcCreateOpts()
 	defaultVpcDeleteOpts := mock.DefaultVpcDeleteOpts()
-	defaultClusterConfigCreateOpts := mock.DefaultCreateClusterConfigOpts()
 
 	defaultResponse := []byte(`{"hi": "there"}`)
 	defaultExpect := `{"hi": "there"}`
@@ -72,17 +71,6 @@ func TestClient(t *testing.T) {
 			response: defaultResponse,
 			fn: func(c *client.Client) error {
 				return c.DeleteVpc(&defaultVpcDeleteOpts)
-			},
-		},
-		{
-			name:      "Create cluster config works",
-			path:      "/clusterconfigs/",
-			method:    http.MethodPost,
-			expect:    defaultExpect,
-			response:  defaultResponse,
-			expectErr: false,
-			fn: func(c *client.Client) error {
-				return c.CreateClusterConfig(&defaultClusterConfigCreateOpts)
 			},
 		},
 	}

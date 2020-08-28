@@ -85,29 +85,22 @@ func DefaultClusterDeleteOpts() api.ClusterDeleteOpts {
 	return api.ClusterDeleteOpts{
 		Environment:    DefaultEnv,
 		RepositoryName: DefaultRepositoryName,
+		ClusterName:    DefaultClusterName,
 	}
 }
 
 // DefaultClusterCreateOpts returns options for creating a cluster with defaults set
 func DefaultClusterCreateOpts() api.ClusterCreateOpts {
 	return api.ClusterCreateOpts{
-		Environment:    DefaultEnv,
-		AWSAccountID:   DefaultAWSAccountID,
-		Cidr:           DefaultCidr,
-		RepositoryName: DefaultRepositoryName,
-		Region:         DefaultRegion,
-		ClusterName:    DefaultClusterName,
-	}
-}
-
-// DefaultCreateClusterConfigOpts returns options for creating a cluster configuration
-// with defaults set
-func DefaultCreateClusterConfigOpts() api.CreateClusterConfigOpts {
-	return api.CreateClusterConfigOpts{
-		ClusterName:  DefaultClusterName,
-		Region:       DefaultRegion,
-		Cidr:         DefaultCidr,
-		AwsAccountID: DefaultAWSAccountID,
+		Environment:       DefaultEnv,
+		AWSAccountID:      DefaultAWSAccountID,
+		Cidr:              DefaultCidr,
+		RepositoryName:    DefaultRepositoryName,
+		Region:            DefaultRegion,
+		ClusterName:       DefaultClusterName,
+		VpcID:             DefaultVpcID,
+		VpcPrivateSubnets: DefaultVpcPrivateSubnets(),
+		VpcPublicSubnets:  DefaultVpcPublicSubnets(),
 	}
 }
 
@@ -156,7 +149,7 @@ func DefaultVpcPrivateSubnets() []api.VpcSubnet {
 // DefaultClusterConfig returns a cluster config with defaults set
 func DefaultClusterConfig() *api.ClusterConfig {
 	c, _ := clusterconfig.New(&clusterconfig.Args{
-		ClusterName:            "test",
+		ClusterName:            DefaultClusterName,
 		PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(DefaultAWSAccountID),
 		PrivateSubnets:         DefaultVpcPrivateSubnets(),
 		PublicSubnets:          DefaultVpcPublicSubnets(),
@@ -182,10 +175,13 @@ func DefaultVpc() *api.Vpc {
 // DefaultCluster returns an api cluster definition with defaults set
 func DefaultCluster() *api.Cluster {
 	return &api.Cluster{
-		Environment:  DefaultEnv,
-		AWSAccountID: DefaultAWSAccountID,
-		Cidr:         DefaultCidr,
-		Config:       DefaultClusterConfig(),
+		Environment:    DefaultEnv,
+		AWSAccountID:   DefaultAWSAccountID,
+		Cidr:           DefaultCidr,
+		ClusterName:    DefaultClusterName,
+		RepositoryName: DefaultRepositoryName,
+		Region:         DefaultRegion,
+		Config:         DefaultClusterConfig(),
 	}
 }
 
@@ -272,7 +268,7 @@ func NewBadVpcCloud() *VpcCloud {
 // ClusterExe provides a mock for the cluster exe interface
 type ClusterExe struct {
 	CreateClusterFn func(string, *api.ClusterConfig) error
-	DeleteClusterFn func(*api.ClusterConfig) error
+	DeleteClusterFn func(string) error
 }
 
 // CreateCluster invokes the mocked create cluster function
@@ -281,8 +277,8 @@ func (c *ClusterExe) CreateCluster(path string, config *api.ClusterConfig) error
 }
 
 // DeleteCluster invokes the mocked delete cluster function
-func (c *ClusterExe) DeleteCluster(config *api.ClusterConfig) error {
-	return c.DeleteClusterFn(config)
+func (c *ClusterExe) DeleteCluster(clusterName string) error {
+	return c.DeleteClusterFn(clusterName)
 }
 
 // NewGoodClusterExe returns a cluster exe that will succeed
@@ -291,7 +287,7 @@ func NewGoodClusterExe() *ClusterExe {
 		CreateClusterFn: func(path string, config *api.ClusterConfig) error {
 			return nil
 		},
-		DeleteClusterFn: func(config *api.ClusterConfig) error {
+		DeleteClusterFn: func(clusterName string) error {
 			return nil
 		},
 	}
@@ -303,7 +299,7 @@ func NewBadClusterExe() *ClusterExe {
 		CreateClusterFn: func(path string, config *api.ClusterConfig) error {
 			return ErrBad
 		},
-		DeleteClusterFn: func(config *api.ClusterConfig) error {
+		DeleteClusterFn: func(string) error {
 			return ErrBad
 		},
 	}

@@ -19,10 +19,13 @@ const (
 
 // Cluster contains the core state for a cluster
 type Cluster struct {
-	Environment  string
-	AWSAccountID string
-	Cidr         string
-	Config       *ClusterConfig
+	Environment    string
+	AWSAccountID   string
+	Cidr           string
+	ClusterName    string
+	RepositoryName string
+	Region         string
+	Config         *ClusterConfig
 }
 
 // ClusterCreateOpts specifies the required inputs for creating a cluster
@@ -33,6 +36,10 @@ type ClusterCreateOpts struct {
 	RepositoryName string
 	Region         string
 	ClusterName    string
+
+	VpcID             string
+	VpcPrivateSubnets []VpcSubnet
+	VpcPublicSubnets  []VpcSubnet
 }
 
 // Validate the create inputs
@@ -57,6 +64,9 @@ func (o *ClusterCreateOpts) Validate() error {
 		),
 		val.Field(&o.Cidr, val.Required),
 		val.Field(&o.Region, val.Required),
+		val.Field(&o.VpcID, val.Required),
+		val.Field(&o.VpcPrivateSubnets, val.Required),
+		val.Field(&o.VpcPublicSubnets, val.Required),
 	)
 }
 
@@ -64,6 +74,7 @@ func (o *ClusterCreateOpts) Validate() error {
 type ClusterDeleteOpts struct {
 	Environment    string
 	RepositoryName string
+	ClusterName    string
 }
 
 // Validate the delete inputs
@@ -73,9 +84,8 @@ func (o *ClusterDeleteOpts) Validate() error {
 			val.Required,
 			val.Length(envMinLength, envMaxLength),
 		),
-		val.Field(&o.RepositoryName,
-			val.Required,
-		),
+		val.Field(&o.RepositoryName, val.Required),
+		val.Field(&o.ClusterName, val.Required),
 	)
 }
 
@@ -88,12 +98,12 @@ type ClusterService interface {
 // ClusterRun provides an interface for running CLIs
 type ClusterRun interface {
 	CreateCluster(string, *ClusterConfig) error
-	DeleteCluster(*ClusterConfig) error
+	DeleteCluster(string) error
 }
 
-// ClusterStore provides an interface for storag operations
+// ClusterStore provides an interface for storage operations
 type ClusterStore interface {
 	SaveCluster(*Cluster) error
-	DeleteCluster(env string) error
-	GetCluster(env string) (*Cluster, error)
+	DeleteCluster(string) error
+	GetCluster(string) (*Cluster, error)
 }

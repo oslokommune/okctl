@@ -4,6 +4,8 @@ package run
 import (
 	"fmt"
 
+	"github.com/mishudark/errors"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/binaries"
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
@@ -22,17 +24,17 @@ type clusterRun struct {
 func (c *clusterRun) CreateCluster(kubeConfigPath string, config *api.ClusterConfig) error {
 	a, err := c.provider.AwsIamAuthenticator(awsiamauthenticator.Version)
 	if err != nil {
-		return err
+		return errors.E(err, "failed to get aws-iam-authenticator cli", errors.Internal)
 	}
 
 	k, err := c.provider.Kubectl(kubectl.Version)
 	if err != nil {
-		return err
+		return errors.E(err, "failed to get kubectl cli", errors.Internal)
 	}
 
 	cli, err := c.provider.Eksctl(eksctl.Version)
 	if err != nil {
-		return err
+		return errors.E(err, "failed to get eksctl cli", errors.Internal)
 	}
 
 	cli.Debug(c.debug)
@@ -45,13 +47,13 @@ func (c *clusterRun) CreateCluster(kubeConfigPath string, config *api.ClusterCon
 
 	exists, err := cli.HasCluster(config)
 	if err != nil {
-		return fmt.Errorf("unable to determine if cluster exists: %w", err)
+		return errors.E(err, "unable to determine if cluster exists")
 	}
 
 	if !exists {
 		_, err = cli.CreateCluster(kubeConfigPath, config)
 		if err != nil {
-			return err
+			return errors.E(err, "failed to create cluster", errors.Internal)
 		}
 	}
 
@@ -59,13 +61,13 @@ func (c *clusterRun) CreateCluster(kubeConfigPath string, config *api.ClusterCon
 }
 
 // DeleteCluster invokes a CLI for performing delete
-func (c *clusterRun) DeleteCluster(config *api.ClusterConfig) error {
+func (c *clusterRun) DeleteCluster(clusterName string) error {
 	cli, err := c.provider.Eksctl(eksctl.Version)
 	if err != nil {
 		return err
 	}
 
-	_, err = cli.DeleteCluster(config)
+	_, err = cli.DeleteCluster(clusterName)
 
 	return err
 }

@@ -93,9 +93,8 @@ func TestExternalDNS(t *testing.T) {
 			k, err := kube.New(kubeConfPath)
 			assert.NoError(t, err)
 
-			// Should probably implement some kind of health check also..
-			// could be the last apply I guess..
-			err = k.Apply(tc.ext.CreateDeployment, tc.ext.CreateClusterRole, tc.ext.CreateClusterRoleBinding)
+			// Need to add k.Watch to the output her, but that means bringing up localstack, I think?
+			_, err = k.Apply(tc.ext.CreateDeployment, tc.ext.CreateClusterRole, tc.ext.CreateClusterRoleBinding)
 			assert.NoError(t, err)
 
 			outputs, err := cluster.Debug("kube-system")

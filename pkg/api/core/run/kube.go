@@ -32,9 +32,9 @@ func (k *kubeRun) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKube
 		return nil, fmt.Errorf("failed to apply kubernets manifests: %w", err)
 	}
 
-	err = client.Watch(resources, 2*time.Minute)
+	err = client.Watch(resources, 2*time.Minute) // nolint: gomnd
 	if err != nil {
-		return nil, fmt.Errorf("failed while waiting for resources to be created: %w", w)
+		return nil, fmt.Errorf("failed while waiting for resources to be created: %w", err)
 	}
 
 	deployment, err := yaml.Marshal(ext.DeploymentManifest())

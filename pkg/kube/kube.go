@@ -132,7 +132,7 @@ func (k *Kube) WatchDeployment(deployment *appsv1.Deployment, timeout time.Durat
 			return false, nil
 		}
 
-		return false, nil
+		return true, nil
 	})
 }
 

@@ -42,11 +42,9 @@ func New(hostedZoneID, domainFilter string) *ExternalDNS {
 }
 
 // CreateDeployment creates the external-dns Deployment manifest
-func (e *ExternalDNS) CreateDeployment(clientSet kubernetes.Interface) error {
+func (e *ExternalDNS) CreateDeployment(clientSet kubernetes.Interface) (interface{}, error) {
 	deployClient := clientSet.AppsV1().Deployments(e.Namespace)
-	_, err := deployClient.Create(e.Ctx, e.DeploymentManifest(), metav1.CreateOptions{})
-
-	return err
+	return deployClient.Create(e.Ctx, e.DeploymentManifest(), metav1.CreateOptions{})
 }
 
 // DeploymentManifest returns the deployment manifest
@@ -106,11 +104,9 @@ func (e *ExternalDNS) DeploymentManifest() *appsv1.Deployment {
 }
 
 // CreateClusterRole creates the cluster role manifest
-func (e *ExternalDNS) CreateClusterRole(clientSet kubernetes.Interface) error {
+func (e *ExternalDNS) CreateClusterRole(clientSet kubernetes.Interface) (interface{}, error) {
 	clusterRoleClient := clientSet.RbacV1beta1().ClusterRoles()
-	_, err := clusterRoleClient.Create(e.Ctx, e.ClusterRoleManifest(), metav1.CreateOptions{})
-
-	return err
+	return clusterRoleClient.Create(e.Ctx, e.ClusterRoleManifest(), metav1.CreateOptions{})
 }
 
 // ClusterRoleManifest returns the cluster role manifest
@@ -144,11 +140,9 @@ func (e *ExternalDNS) ClusterRoleManifest() *v1beta1.ClusterRole {
 }
 
 // CreateClusterRoleBinding creates the cluster role binding manifest
-func (e *ExternalDNS) CreateClusterRoleBinding(clientSet kubernetes.Interface) error {
+func (e *ExternalDNS) CreateClusterRoleBinding(clientSet kubernetes.Interface) (interface{}, error) {
 	clusterRoleBindingClient := clientSet.RbacV1beta1().ClusterRoleBindings()
-	_, err := clusterRoleBindingClient.Create(e.Ctx, e.ClusterRoleBindingManifest(), metav1.CreateOptions{})
-
-	return err
+	return clusterRoleBindingClient.Create(e.Ctx, e.ClusterRoleBindingManifest(), metav1.CreateOptions{})
 }
 
 // ClusterRoleBindingManifest returns the cluster role binding manifest

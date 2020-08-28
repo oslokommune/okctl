@@ -3,7 +3,6 @@ package core
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
@@ -16,10 +15,26 @@ type serviceAccount struct {
 	store api.ServiceAccountStore
 }
 
+var errCreateServiceAccount = func(err error) error {
+	return errors.E(err, "failed to create service account", errors.Internal)
+}
+
+var errInvalidInputs = func(err error) error {
+	return errors.E(err, "failed to validate inputs", errors.Invalid)
+}
+
+var errBuildServiceAccount = func(err error) error {
+	return errors.E(err, "failed to build service account config", errors.Internal)
+}
+
+var errStoreServiceAccount = func(err error) error {
+	return errors.E(err, "failed to store service account", errors.Internal)
+}
+
 func (c *serviceAccount) CreateExternalDNSServiceAccount(_ context.Context, opts api.CreateExternalDNSServiceAccountOpts) (*api.ServiceAccount, error) {
 	err := opts.Validate()
 	if err != nil {
-		return nil, errors.E(err, "failed to validate external dns inputs", errors.Invalid)
+		return nil, errInvalidInputs(err)
 	}
 
 	config, err := clusterconfig.NewExternalDNSServiceAccount(
@@ -29,16 +44,26 @@ func (c *serviceAccount) CreateExternalDNSServiceAccount(_ context.Context, opts
 		v1alpha1.PermissionsBoundaryARN(opts.AWSAccountID),
 	)
 	if err != nil {
-		return nil, errors.E(err, "failed to create external dns sa config")
+		return nil, errBuildServiceAccount(err)
 	}
 
-	return c.createServiceAccount(opts.CreateServiceAccountOpts, config)
+	account, err := c.createServiceAccount(opts.CreateServiceAccountOpts, config)
+	if err != nil {
+		return nil, errCreateServiceAccount(err)
+	}
+
+	err = c.store.SaveExternalDNSServiceAccount(account)
+	if err != nil {
+		return nil, errStoreServiceAccount(err)
+	}
+
+	return account, nil
 }
 
 func (c *serviceAccount) CreateAlbIngressControllerServiceAccount(_ context.Context, opts api.CreateAlbIngressControllerServiceAccountOpts) (*api.ServiceAccount, error) {
 	err := opts.Validate()
 	if err != nil {
-		return nil, errors.E(err, "failed to validate alb ingress controller sa", errors.Invalid)
+		return nil, errInvalidInputs(err)
 	}
 
 	config, err := clusterconfig.NewAlbIngressControllerServiceAccount(
@@ -48,16 +73,26 @@ func (c *serviceAccount) CreateAlbIngressControllerServiceAccount(_ context.Cont
 		v1alpha1.PermissionsBoundaryARN(opts.AWSAccountID),
 	)
 	if err != nil {
-		return nil, errors.E(err, "failed to create alb ingress controller sa configuration")
+		return nil, errBuildServiceAccount(err)
 	}
 
-	return c.createServiceAccount(opts.CreateServiceAccountOpts, config)
+	account, err := c.createServiceAccount(opts.CreateServiceAccountOpts, config)
+	if err != nil {
+		return nil, errCreateServiceAccount(err)
+	}
+
+	err = c.store.SaveAlbIngressControllerServiceAccount(account)
+	if err != nil {
+		return nil, errStoreServiceAccount(err)
+	}
+
+	return account, nil
 }
 
 func (c *serviceAccount) CreateExternalSecretsServiceAccount(_ context.Context, opts api.CreateExternalSecretsServiceAccountOpts) (*api.ServiceAccount, error) {
 	err := opts.Validate()
 	if err != nil {
-		return nil, errors.E(err, "failed to validate service account input", errors.Invalid)
+		return nil, errInvalidInputs(err)
 	}
 
 	config, err := clusterconfig.NewExternalSecretsServiceAccount(
@@ -67,16 +102,26 @@ func (c *serviceAccount) CreateExternalSecretsServiceAccount(_ context.Context, 
 		v1alpha1.PermissionsBoundaryARN(opts.AWSAccountID),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create configuration for service account: %w", err)
+		return nil, errBuildServiceAccount(err)
 	}
 
-	return c.createServiceAccount(opts.CreateServiceAccountOpts, config)
+	account, err := c.createServiceAccount(opts.CreateServiceAccountOpts, config)
+	if err != nil {
+		return nil, errCreateServiceAccount(err)
+	}
+
+	err = c.store.SaveExternalSecretsServiceAccount(account)
+	if err != nil {
+		return nil, errStoreServiceAccount(err)
+	}
+
+	return account, nil
 }
 
 func (c *serviceAccount) createServiceAccount(opts api.CreateServiceAccountOpts, config *api.ClusterConfig) (*api.ServiceAccount, error) {
 	err := c.run.CreateServiceAccount(config)
 	if err != nil {
-		return nil, errors.E(err, "failed to create service account")
+		return nil, errors.E(err, "failed to create service account", errors.Internal)
 	}
 
 	account := &api.ServiceAccount{
@@ -86,11 +131,6 @@ func (c *serviceAccount) createServiceAccount(opts api.CreateServiceAccountOpts,
 		AWSAccountID: opts.AWSAccountID,
 		PolicyArn:    opts.PolicyArn,
 		Config:       config,
-	}
-
-	err = c.store.SaveExternalSecretsServiceAccount(account)
-	if err != nil {
-		return nil, errors.E(err, "failed to store service account")
 	}
 
 	return account, nil

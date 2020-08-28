@@ -251,8 +251,8 @@ func (a *AuthSAML) Valid() bool {
 func (a *AuthSAML) Validate() error {
 	return validation.ValidateStruct(a,
 		validation.Field(&a.Username,
-			validation.Match(regexp.MustCompile("^byr[0-9]{6}$")).
-				Error("username must match: byrXXXXXX, replacing each X with a digit"),
+			validation.Match(regexp.MustCompile("^[a-z]{3}[0-9]{6}$")).
+				Error("username must match: yyyXXXXXX (y = letter, x = digit"),
 		),
 		validation.Field(&a.Password,
 			validation.Required,
@@ -369,7 +369,7 @@ func Interactive(userName, storedPassword string, interactiveCallbackFn Interact
 					Prompt: &survey.Input{
 						Message: "Username:",
 						Default: userName,
-						Help:    "Oslo kommune username (byrXXXXXX), for authentication towards Keycloak and AWS",
+						Help:    "Oslo kommune username (yyyXXXXXX, y = letter, x = character), for authentication towards Keycloak and AWS",
 					},
 				},
 				{

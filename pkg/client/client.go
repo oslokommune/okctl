@@ -28,6 +28,7 @@ const (
 	targetExternalDNSServiceAccount          = "serviceaccounts/externaldns/"
 	targetDomain                             = "domains/"
 	targetKubeExternalDNS                    = "kube/externaldns/"
+	targetCertificate                        = "certificates/"
 )
 
 // Cluster client API calls
@@ -72,6 +73,11 @@ type Domain interface {
 	CreateDomain(opts *api.CreateDomainOpts) (*api.Domain, error)
 }
 
+// Certificate API calls
+type Certificate interface {
+	CreateCertificate(opts *api.CreateCertificateOpts) (*api.Certificate, error)
+}
+
 // Client stores state for invoking API operations
 type Client struct {
 	BaseURL  string
@@ -88,6 +94,12 @@ func New(debug bool, progress io.Writer, serverURL string) *Client {
 		Client:   &http.Client{},
 		Debug:    debug,
 	}
+}
+
+// CreateCertificate invokes the certificate creation operation
+func (c *Client) CreateCertificate(opts *api.CreateCertificateOpts) (*api.Certificate, error) {
+	into := &api.Certificate{}
+	return into, c.DoPost(targetCertificate, opts, into)
 }
 
 // CreateExternalDNSKubeDeployment invokes the external dns kube deployment

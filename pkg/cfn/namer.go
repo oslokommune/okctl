@@ -20,6 +20,8 @@ const (
 	DefaultStackNameExternalDNSPolicyID = "externaldns"
 	// DefaultStackNameDomainID defines an identifier for a domain stack
 	DefaultStackNameDomainID = "domain"
+	// DefaultStackNameCertificateID defines an identifier for a certificate stack
+	DefaultStackNameCertificateID = "certificate"
 )
 
 // StackNamer knows how to name cloud formation stacks
@@ -71,11 +73,21 @@ func (n *StackNamer) ExternalDNSPolicy(repository, env string) string {
 }
 
 // Domain returns the stack name of the domain
-// we probably need to store something more here
 func (n *StackNamer) Domain(repository, env, subdomain string) string {
 	return fmt.Sprintf("%s-%s-%s-%s-%s",
 		DefaultStackNamePrefix,
 		DefaultStackNameDomainID,
+		repository,
+		env,
+		subdomain,
+	)
+}
+
+// Certificate returns the stack name of the certificate
+func (n *StackNamer) Certificate(repository, env, subdomain string) string {
+	return fmt.Sprintf("%s-%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameCertificateID,
 		repository,
 		env,
 		subdomain,

@@ -35,6 +35,11 @@ func TestBuilderAndComposers(t *testing.T) {
 			golden:   "external-dns-cloudformation.yaml",
 			composer: components.NewExternalDNSPolicyComposer("repo", "env"),
 		},
+		{
+			name:     "Builder with PublicCertificate composer",
+			golden:   "public-certificate-cf.yaml",
+			composer: components.NewPublicCertificateComposer("test.oslo.systems.", "AZ12345"),
+		},
 	}
 
 	for _, tc := range testCases {

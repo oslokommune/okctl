@@ -5,6 +5,8 @@ package components
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/cfn/components/certificate"
+
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/oslokommune/okctl/pkg/cfn"
 	cidrPkg "github.com/oslokommune/okctl/pkg/cfn/components/cidr"
@@ -456,5 +458,29 @@ func (h *HostedZoneComposer) Compose() (*cfn.Composition, error) {
 	return &cfn.Composition{
 		Outputs:   []cfn.StackOutputer{zone},
 		Resources: []cfn.ResourceNamer{zone},
+	}, nil
+}
+
+// PublicCertificateComposer stores the state for the composer
+type PublicCertificateComposer struct {
+	FQDN         string
+	HostedZoneID string
+}
+
+// NewPublicCertificateComposer returns an initialised composer
+func NewPublicCertificateComposer(fqdn, hostedZoneID string) *PublicCertificateComposer {
+	return &PublicCertificateComposer{
+		FQDN:         fqdn,
+		HostedZoneID: hostedZoneID,
+	}
+}
+
+// Compose returns the resources and outputts for creating a certificate
+func (c *PublicCertificateComposer) Compose() (*cfn.Composition, error) {
+	cert := certificate.New(c.FQDN, c.HostedZoneID)
+
+	return &cfn.Composition{
+		Outputs:   []cfn.StackOutputer{cert},
+		Resources: []cfn.ResourceNamer{cert},
 	}, nil
 }

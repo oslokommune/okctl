@@ -46,10 +46,11 @@ func (d *Data) Validate() error {
 // Cluster represents an okctl created
 // cluster
 type Cluster struct {
-	Environment string
-	Domain      string
-	FQDN        string
-	AWS         AWS
+	Environment  string
+	Domain       string
+	FQDN         string
+	AWS          AWS
+	Certificates []Certificate
 }
 
 const (
@@ -67,6 +68,7 @@ func (c Cluster) Validate() error {
 		validation.Field(&c.Domain, validation.Required),
 		validation.Field(&c.FQDN, validation.Required),
 		validation.Field(&c.AWS),
+		validation.Field(&c.Certificates),
 	)
 }
 
@@ -83,6 +85,22 @@ func (a AWS) Validate() error {
 			validation.Required,
 			validation.Match(regexp.MustCompile("^[0-9]{12}$")),
 		),
+	)
+}
+
+// Certificate represents a certificate
+type Certificate struct {
+	ARN    string
+	Domain string
+	FQDN   string
+}
+
+// Validate the certificate data
+func (c Certificate) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.ARN, validation.Required),
+		validation.Field(&c.Domain, validation.Required),
+		validation.Field(&c.FQDN, validation.Required),
 	)
 }
 

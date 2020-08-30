@@ -174,6 +174,20 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		o.FileSystem,
 	)
 
+	certificateStore := filesystem.NewCertificateStore(
+		o.RepoData,
+		filesystem.Paths{
+			OutputFile:         config.DefaultCertificateOutputsFile,
+			CloudFormationFile: config.DefaultCertificateCloudFormationTemplate,
+			BaseDir:            path.Join(outputDir, config.DefaultCertificateBaseDir),
+		},
+		filesystem.Paths{
+			ConfigFile: config.DefaultRepositoryConfig,
+			BaseDir:    repoDir,
+		},
+		o.FileSystem,
+	)
+
 	vpcService := core.NewVpcService(
 		awsProvider.NewVpcCloud(o.CloudProvider),
 		vpcStore,
@@ -243,6 +257,11 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		domainStore,
 	)
 
+	certificateService := core.NewCertificateService(
+		awsProvider.NewCertificateCloudProvider(o.CloudProvider),
+		certificateStore,
+	)
+
 	services := core.Services{
 		Cluster:        clusterService,
 		Vpc:            vpcService,
@@ -251,6 +270,7 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		Helm:           helmService,
 		Kube:           kubeService,
 		Domain:         domainService,
+		Certificate:    certificateService,
 	}
 
 	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))

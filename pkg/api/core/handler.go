@@ -29,6 +29,7 @@ type Endpoints struct {
 	CreateExternalDNSServiceAccount          endpoint.Endpoint
 	CreateExternalDNSKubeDeployment          endpoint.Endpoint
 	CreateDomain                             endpoint.Endpoint
+	CreateCertificate                        endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -49,6 +50,7 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateExternalDNSServiceAccount:          makeCreateExternalDNSServiceAccountEndpoint(s.ServiceAccount),
 		CreateExternalDNSKubeDeployment:          makeCreateExternalDNSKubeDeploymentEndpoint(s.Kube),
 		CreateDomain:                             makeCreateDomainEndpoint(s.Domain),
+		CreateCertificate:                        makeCreateCertificateEndpoint(s.Certificate),
 	}
 }
 
@@ -68,6 +70,7 @@ type Handlers struct {
 	CreateExternalDNSServiceAccount          http.Handler
 	CreateExternalDNSKubeDeployment          http.Handler
 	CreateDomain                             http.Handler
+	CreateCertificate                        http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -114,6 +117,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateExternalDNSServiceAccount:          newServer(endpoints.CreateExternalDNSServiceAccount, decodeCreateExternalDNSServiceAccount),
 		CreateExternalDNSKubeDeployment:          newServer(endpoints.CreateExternalDNSKubeDeployment, decodeCreateExternalDNSKubeDeployment),
 		CreateDomain:                             newServer(endpoints.CreateDomain, decodeCreateDomain),
+		CreateCertificate:                        newServer(endpoints.CreateCertificate, decodeCreateCertificate),
 	}
 }
 
@@ -168,6 +172,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/domains", func(r chi.Router) {
 			r.Method(http.MethodPost, "/", handlers.CreateDomain)
 		})
+		r.Route("/certificates", func(r chi.Router) {
+			r.Method(http.MethodPost, "/", handlers.CreateCertificate)
+		})
 	})
 
 	return r
@@ -182,6 +189,7 @@ type Services struct {
 	Helm           api.HelmService
 	Kube           api.KubeService
 	Domain         api.DomainService
+	Certificate    api.CertificateService
 }
 
 // EndpointOption makes it easy to enable and disable the endpoint
@@ -199,6 +207,7 @@ const (
 	externalDNSTag          = "externaldns"
 	kubeTag                 = "kube"
 	domainTag               = "domain"
+	certificateTag          = "certificate"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -220,6 +229,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateExternalDNSServiceAccount:          middleware.Logging(logger, strings.Join([]string{serviceAccountsTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDNSServiceAccount),
 			CreateExternalDNSKubeDeployment:          middleware.Logging(logger, strings.Join([]string{kubeTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDNSKubeDeployment),
 			CreateDomain:                             middleware.Logging(logger, domainTag, "create")(endpoints.CreateDomain),
+			CreateCertificate:                        middleware.Logging(logger, certificateTag, "create")(endpoints.CreateCertificate),
 		}
 	}
 }

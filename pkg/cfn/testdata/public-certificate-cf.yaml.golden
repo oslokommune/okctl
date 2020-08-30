@@ -1,0 +1,14 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  PublicCertificate:
+    Value:
+      Ref: PublicCertificate
+Resources:
+  PublicCertificate:
+    Properties:
+      DomainName: test.oslo.systems.
+      DomainValidationOptions:
+      - DomainName: test.oslo.systems.
+        HostedZoneId: AZ12345
+      ValidationMethod: DNS
+    Type: AWS::CertificateManager::Certificate

@@ -38,6 +38,7 @@ including VPC, this is a highly destructive operation.`,
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			opts.Environment = args[0]
 			opts.RepositoryName = o.RepoData.Name
+			opts.ClusterName = o.ClusterName(opts.Environment)
 
 			err := opts.Validate()
 			if err != nil {

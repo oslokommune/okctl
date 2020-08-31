@@ -159,10 +159,12 @@ func TestAuthRaw(t *testing.T) {
 			}, github.NewAuthStatic(&github.Credentials{
 				AccessToken: "token",
 				ClientID:    "client_id",
+				Type:        github.CredentialsTypeDeviceFlow,
 			})),
 			expect: &github.Credentials{
 				AccessToken: "token",
 				ClientID:    "client_id",
+				Type:        github.CredentialsTypeDeviceFlow,
 			},
 		},
 	}
@@ -194,6 +196,7 @@ func TestNewKeyringPersister(t *testing.T) {
 			credentials: &github.Credentials{
 				AccessToken: "token",
 				ClientID:    "client_id",
+				Type:        github.CredentialsTypeDeviceFlow,
 			},
 			keyring: func() keyring.Keyringer {
 				k, err := keyring.New(keyring.NewInMemoryKeyring())

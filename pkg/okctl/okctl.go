@@ -9,6 +9,9 @@ import (
 	"os/signal"
 	"path"
 	"syscall"
+	"time"
+
+	"github.com/oslokommune/okctl/pkg/credentials/github"
 
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api/core"
@@ -400,12 +403,12 @@ func (o *Okctl) newCredentialsProvider(env, awsAccountID string) error {
 		o.FileSystem,
 	))
 
-	defaultring, err := keyring.DefaultKeyring()
+	defaultRing, err := keyring.DefaultKeyring()
 	if err != nil {
 		return err
 	}
 
-	k, err := keyring.New(defaultring)
+	k, err := keyring.New(defaultRing)
 	if err != nil {
 		return err
 	}
@@ -419,7 +422,15 @@ func (o *Okctl) newCredentialsProvider(env, awsAccountID string) error {
 
 	saml := aws.NewAuthSAML(awsAccountID, o.Region(), scrape.New(), aws.DefaultStsProvider, aws.Interactive(o.Username(), storedPassword, fn))
 
-	o.CredentialsProvider = credentials.New(aws.New(authStore, saml))
+	gh := github.New(
+		github.NewKeyringPersister(k),
+		&http.Client{
+			Timeout: 5 * time.Second, // nolint: gomnd
+		},
+		github.NewAuthDeviceFlow(github.DefaultGithubOauthClientID, github.RequiredScopes()),
+	)
+
+	o.CredentialsProvider = credentials.New(aws.New(authStore, saml), gh)
 
 	return nil
 }

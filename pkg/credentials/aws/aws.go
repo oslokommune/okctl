@@ -331,8 +331,8 @@ func Static(userName, password, mfatoken string) PopulateFn {
 // InteractiveCallbackFn is used to store username and password from an interactive session
 type InteractiveCallbackFn func(username, password string)
 
-// nolint : Funlength too long
 // Interactive returns a populate method that queries the user interactively
+// nolint: funlen
 func Interactive(userName, storedPassword string, interactiveCallbackFn InteractiveCallbackFn) PopulateFn {
 	hasCredentials := len(storedPassword) > 0 && len(userName) > 0
 	useStoredCredentials := false
@@ -347,10 +347,12 @@ func Interactive(userName, storedPassword string, interactiveCallbackFn Interact
 
 	return func(a *AuthSAML) error {
 		var qs []*survey.Question
+
 		if hasCredentials {
 			prompt := &survey.Confirm{
 				Message: fmt.Sprintf("Use stored credentials for username and password? Username: %s, Password: *******", userName),
 			}
+
 			err := survey.AskOne(prompt, &useStoredCredentials)
 			if err != nil {
 				return err

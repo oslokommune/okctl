@@ -191,6 +191,14 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		o.FileSystem,
 	)
 
+	parameterStore := filesystem.NewParameterStore(
+		filesystem.Paths{
+			OutputFile: config.DefaultParameterOutputsFile,
+			BaseDir:    path.Join(outputDir, config.DefaultParameterBaseDir),
+		},
+		o.FileSystem,
+	)
+
 	vpcService := core.NewVpcService(
 		awsProvider.NewVpcCloud(o.CloudProvider),
 		vpcStore,
@@ -265,6 +273,11 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		certificateStore,
 	)
 
+	parameterService := core.NewParameterService(
+		awsProvider.NewParameterCloudProvider(o.CloudProvider),
+		parameterStore,
+	)
+
 	services := core.Services{
 		Cluster:        clusterService,
 		Vpc:            vpcService,
@@ -274,6 +287,7 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		Kube:           kubeService,
 		Domain:         domainService,
 		Certificate:    certificateService,
+		Parameter:      parameterService,
 	}
 
 	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))

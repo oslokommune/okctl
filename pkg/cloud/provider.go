@@ -4,6 +4,9 @@ package cloud
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go/service/ssm/ssmiface"
+
 	"github.com/aws/aws-sdk-go/aws"
 	awsCreds "github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -43,6 +46,7 @@ func NewFromSession(region string, sess *session.Session) (*Provider, error) {
 
 	services.cfn = cloudformation.New(sess)
 	services.ec2 = ec2.New(sess)
+	services.ssm = ssm.New(sess)
 
 	return p, nil
 }
@@ -76,8 +80,14 @@ func NewSession(region string, auth awsauth.Authenticator) (*session.Session, er
 type Services struct {
 	cfn cloudformationiface.CloudFormationAPI
 	ec2 ec2iface.EC2API
+	ssm ssmiface.SSMAPI
 
 	region string
+}
+
+// SSM returns an interface to the AWS SSM API
+func (s *Services) SSM() ssmiface.SSMAPI {
+	return s.ssm
 }
 
 // EC2 returns an interface to the AWS EC2 API

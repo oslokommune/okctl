@@ -31,6 +31,13 @@ const DefaultGithubOauthClientID = "3e9b474f17b2bf31b07c"
 // code URL
 const DefaultDeviceCodeURL = "https://github.com/login/device/code"
 
+const (
+	// CredentialsTypeDeviceFlow indicate that these are device flow credentials
+	CredentialsTypeDeviceFlow = "device-flow"
+	// CredentialsTypePersonalAccessToken indicate that these are personal access token
+	CredentialsTypePersonalAccessToken = "personal-access-token"
+)
+
 // RequiredScopes returns the scopes required by okctl
 // to perform its operations towards the Github API, see for all:
 // - https://docs.github.com/en/developers/apps/scopes-for-oauth-apps
@@ -51,6 +58,7 @@ func ReviewURL(clientID string) string {
 type Credentials struct {
 	AccessToken string
 	ClientID    string
+	Type        string
 }
 
 // Authenticator provides the client interface
@@ -126,7 +134,13 @@ type HTTPClient interface {
 
 // AreValid checks to see if the credentials are still good
 // - https://docs.github.com/en/rest/reference/apps#check-a-token
+// nolint: funlen
 func AreValid(credentials *Credentials, client HTTPClient) error {
+	if credentials.Type == CredentialsTypePersonalAccessToken {
+		// For now, lets just return
+		return nil
+	}
+
 	apiURL := fmt.Sprintf("https://api.github.com/applications/%s/token", credentials.ClientID)
 
 	form := url.Values{
@@ -217,14 +231,14 @@ func (a *Auth) Resolve() (*Credentials, error) {
 				continue
 			}
 
-			// We just got these credentials, they shouldn't have expired already
+			// We just got these credentials, they shouldn't be invalid already
 			// which means this retriever is static or otherwise broken
 			if err := AreValid(creds, a.client); err != nil {
 				retriever.Invalidate()
 
 				accumulatedErrors = append(
 					accumulatedErrors,
-					fmt.Sprintf("authenticator[%d]: expired credentials", i),
+					fmt.Errorf("authenticator[%d]: invalid credentials, because: %w", i, err).Error(),
 				)
 
 				continue
@@ -317,7 +331,9 @@ func (a *AuthDeviceFlow) Retrieve() (*Credentials, error) {
 	}
 
 	a.Credentials = &Credentials{
+		ClientID:    cfg.ClientID,
 		AccessToken: accessToken.AccessToken,
+		Type:        CredentialsTypeDeviceFlow,
 	}
 
 	return a.Credentials, nil
@@ -381,6 +397,7 @@ type KeyringPersister struct {
 type KeyringCredentialsState struct {
 	AccessToken string `json:"access_token"`
 	ClientID    string `json:"client_id"`
+	Type        string `json:"type"`
 }
 
 // Save the access token to the keyring
@@ -388,6 +405,7 @@ func (k *KeyringPersister) Save(credentials *Credentials) error {
 	s := &KeyringCredentialsState{
 		AccessToken: credentials.AccessToken,
 		ClientID:    credentials.ClientID,
+		Type:        credentials.Type,
 	}
 
 	data, err := json.Marshal(s)
@@ -415,6 +433,7 @@ func (k *KeyringPersister) Get() (*Credentials, error) {
 	return &Credentials{
 		AccessToken: data.AccessToken,
 		ClientID:    data.ClientID,
+		Type:        data.Type,
 	}, nil
 }
 

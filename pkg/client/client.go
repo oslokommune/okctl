@@ -29,6 +29,7 @@ const (
 	targetDomain                             = "domains/"
 	targetKubeExternalDNS                    = "kube/externaldns/"
 	targetCertificate                        = "certificates/"
+	targetParameterSecret                    = "parameters/secret/"
 )
 
 // Cluster client API calls
@@ -78,6 +79,11 @@ type Certificate interface {
 	CreateCertificate(opts *api.CreateCertificateOpts) (*api.Certificate, error)
 }
 
+// Parameter API calls
+type Parameter interface {
+	CreateSecret(opts *api.CreateSecretOpts) (*api.SecretParameter, error)
+}
+
 // Client stores state for invoking API operations
 type Client struct {
 	BaseURL  string
@@ -94,6 +100,12 @@ func New(debug bool, progress io.Writer, serverURL string) *Client {
 		Client:   &http.Client{},
 		Debug:    debug,
 	}
+}
+
+// CreateSecret invokes the secret creation operation
+func (c *Client) CreateSecret(opts *api.CreateSecretOpts) (*api.SecretParameter, error) {
+	into := &api.SecretParameter{}
+	return into, c.DoPost(targetParameterSecret, opts, into)
 }
 
 // CreateCertificate invokes the certificate creation operation

@@ -104,6 +104,8 @@ const (
 	DefaultCertificateOutputsFile = "certificate-outputs.json"
 	// DefaultCertificateCloudFormationTemplate is the default file name of the cloud formation template
 	DefaultCertificateCloudFormationTemplate = "certificate-cf.yml"
+	// DefaultParameterOutputsFile is the default file name of the outputs
+	DefaultParameterOutputsFile = "parameter-outputs.json"
 
 	// DefaultExternalSecretsBaseDir is the default directory of the external secrets resources
 	DefaultExternalSecretsBaseDir = "external-secrets"
@@ -115,6 +117,8 @@ const (
 	DefaultDomainBaseDir = "domains"
 	// DefaultCertificateBaseDir is the default directory for certificates
 	DefaultCertificateBaseDir = "certificates"
+	// DefaultParameterBaseDir is the default directory for parameters
+	DefaultParameterBaseDir = "parameters"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"

@@ -36,7 +36,6 @@ const message = `	We have created a domain for you at: %s
 
 		- Slack: #kjøremiljø-support on slack
 		- Email: okctl@oslo.kommune.no
-		- Github issue: https://github.com/oslokommune/okctl/issues
 
 	----
 	Hi!

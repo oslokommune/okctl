@@ -1,0 +1,31 @@
+	We will now be creating an oauth application
+	for authorising access to a UI. Below you will find the
+	the steps to follow and information you will need to fill
+	in:
+
+	1. Open the following URL: https://github.com/settings/developers
+	   or answer Yes to the terminal query.
+
+	2. Click on "Register a new application"
+
+	3. Fill in the fields with the information below:
+
+		Application name: 'okctl'
+		Homepage URL: 'https://something'
+		Application description: 'okctl'
+		Authorization callback URL: 'https://something/callback'
+
+	4. Click on "Register application"
+
+	5. Respond to the terminal queries for the "Client ID" and
+	   "Client Secret"
+
+	6. Click on the "Transfer Ownership" button
+
+	7. Enter the following information:
+
+		Type the name of the application to confirm: 'okctl'
+		New owner’s GitHub username or organization name: 'oslokommune'
+
+	8. Click on "Transfer this application"
+

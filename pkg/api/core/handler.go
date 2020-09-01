@@ -31,6 +31,7 @@ type Endpoints struct {
 	CreateDomain                             endpoint.Endpoint
 	CreateCertificate                        endpoint.Endpoint
 	CreateSecret                             endpoint.Endpoint
+	CreateArgoCD                             endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -53,6 +54,7 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateDomain:                             makeCreateDomainEndpoint(s.Domain),
 		CreateCertificate:                        makeCreateCertificateEndpoint(s.Certificate),
 		CreateSecret:                             makeCreateSecret(s.Parameter),
+		CreateArgoCD:                             makeCreateArgoCD(s.Helm),
 	}
 }
 
@@ -74,6 +76,7 @@ type Handlers struct {
 	CreateDomain                             http.Handler
 	CreateCertificate                        http.Handler
 	CreateSecret                             http.Handler
+	CreateArgoCD                             http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -122,10 +125,12 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateDomain:                             newServer(endpoints.CreateDomain, decodeCreateDomain),
 		CreateCertificate:                        newServer(endpoints.CreateCertificate, decodeCreateCertificate),
 		CreateSecret:                             newServer(endpoints.CreateSecret, decodeCreateSecret),
+		CreateArgoCD:                             newServer(endpoints.CreateArgoCD, decodeCreateArgoCD),
 	}
 }
 
 // AttachRoutes creates a router and adds handlers to the corresponding routes
+// nolint: funlen
 func AttachRoutes(handlers *Handlers) http.Handler {
 	r := chi.NewRouter()
 
@@ -166,6 +171,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			})
 			r.Route("/albingresscontroller", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAlbIngressControllerHelmChart)
+			})
+			r.Route("/argocd", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateArgoCD)
 			})
 		})
 		r.Route("/kube", func(r chi.Router) {
@@ -220,6 +228,7 @@ const (
 	certificateTag          = "certificate"
 	parameterTag            = "parameter"
 	secretTag               = "secret"
+	argocdTag               = "argocd"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -243,6 +252,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateDomain:                             middleware.Logging(logger, domainTag, "create")(endpoints.CreateDomain),
 			CreateCertificate:                        middleware.Logging(logger, certificateTag, "create")(endpoints.CreateCertificate),
 			CreateSecret:                             middleware.Logging(logger, strings.Join([]string{parameterTag, secretTag}, "/"), "create")(endpoints.CreateSecret),
+			CreateArgoCD:                             middleware.Logging(logger, strings.Join([]string{helmTag, argocdTag}, "/"), "create")(endpoints.CreateArgoCD),
 		}
 	}
 }

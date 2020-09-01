@@ -152,6 +152,12 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 			ChartFile:   config.DefaultHelmChartFile,
 			BaseDir:     path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
 		},
+		filesystem.Paths{
+			OutputFile:  config.DefaultHelmOutputsFile,
+			ReleaseFile: config.DefaultHelmReleaseFile,
+			ChartFile:   config.DefaultHelmChartFile,
+			BaseDir:     path.Join(outputDir, config.DefaultArgoCDBaseDir),
+		},
 		o.FileSystem,
 	)
 

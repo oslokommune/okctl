@@ -12,13 +12,19 @@ import (
 type helmStore struct {
 	externalSecrets      Paths
 	albIngressController Paths
+	argoCD               Paths
 	fs                   *afero.Afero
 }
 
 // Helm contains the outputs we will store
 type Helm struct {
+	ClusterName string
 	Repository  string
 	Environment string
+}
+
+func (s *helmStore) SaveArgoCD(helm *api.Helm) error {
+	return s.saveHelmChart(s.argoCD, helm)
 }
 
 func (s *helmStore) SaveAlbIngressControllerHelmChar(helm *api.Helm) error {
@@ -31,6 +37,7 @@ func (s *helmStore) SaveExternalSecretsHelmChart(helm *api.Helm) error {
 
 func (s *helmStore) saveHelmChart(paths Paths, helm *api.Helm) error {
 	h := &Helm{
+		ClusterName: helm.ClusterName,
 		Repository:  helm.Repository,
 		Environment: helm.Environment,
 	}
@@ -74,10 +81,11 @@ func (s *helmStore) saveHelmChart(paths Paths, helm *api.Helm) error {
 }
 
 // NewHelmStore returns an initialised helm store
-func NewHelmStore(externalSecrets, albIngressController Paths, fs *afero.Afero) api.HelmStore {
+func NewHelmStore(externalSecrets, albIngressController, argocd Paths, fs *afero.Afero) api.HelmStore {
 	return &helmStore{
 		externalSecrets:      externalSecrets,
 		albIngressController: albIngressController,
+		argoCD:               argocd,
 		fs:                   fs,
 	}
 }

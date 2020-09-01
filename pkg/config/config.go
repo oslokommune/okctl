@@ -119,6 +119,8 @@ const (
 	DefaultCertificateBaseDir = "certificates"
 	// DefaultParameterBaseDir is the default directory for parameters
 	DefaultParameterBaseDir = "parameters"
+	// DefaultArgoCDBaseDir is the default directory for argo cd
+	DefaultArgoCDBaseDir = "argocd"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"

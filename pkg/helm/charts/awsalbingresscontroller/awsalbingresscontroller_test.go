@@ -3,9 +3,10 @@ package awsalbingresscontroller_test
 import (
 	"testing"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/oslokommune/okctl/pkg/api/mock"
 	"github.com/oslokommune/okctl/pkg/helm/charts/awsalbingresscontroller"
-	"github.com/sanathkr/go-yaml"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 )

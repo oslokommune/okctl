@@ -62,7 +62,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rancher/k3d/v3 v3.0.1
 	github.com/rogpeppe/go-internal v1.6.1 // indirect
-	github.com/sanathkr/go-yaml v0.0.0-20170819195128-ed9d249f429b
 	github.com/sanity-io/litter v1.3.0
 	github.com/sebdah/goldie/v2 v2.5.1
 	github.com/sirupsen/logrus v1.6.0
@@ -92,8 +91,7 @@ require (
 	gopkg.in/h2non/gock.v1 v1.0.15
 	gopkg.in/ini.v1 v1.60.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
-	gopkg.in/yaml.v2 v2.3.0
-	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 	helm.sh/helm/v3 v3.3.0
 	k8s.io/api v0.18.4
 	k8s.io/apimachinery v0.18.4

@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/helm/charts/argocd"
+
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	"github.com/oslokommune/okctl/pkg/helm"
@@ -115,6 +117,39 @@ func TestHelm(t *testing.T) {
 				},
 				ImagePullPolicy: "Always",
 			}),
+			expect:    nil,
+			expectErr: false,
+		},
+		{
+			name: "argocd should work",
+			helm: helm.New(
+				&helm.Config{
+					HomeDir:              dir,
+					HelmPluginsDirectory: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
+					HelmRegistryConfig:   path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
+					HelmRepositoryConfig: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryConfig),
+					HelmRepositoryCache:  path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryCache),
+					HelmBaseDir:          path.Join(dir, config.DefaultHelmBaseDir),
+					Debug:                true,
+					DebugOutput:          os.Stderr,
+				},
+				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
+				&afero.Afero{
+					Fs: afero.NewOsFs(),
+				},
+			),
+			chart: argocd.New(argocd.NewDefaultValues(argocd.ValuesOpts{
+				URL:                  "https://argocd.test.oslo.systems",
+				HostName:             "argocd.test.oslo.systems",
+				CertificateARN:       "arn:aws:acm:eu-west-1:123456789012/certificate/12345abc",
+				ClientID:             "client12345",
+				Organisation:         "oslokommune",
+				Team:                 "test",
+				RepoURL:              "git@github.com:oslokommune/test.git",
+				RepoName:             "test",
+				PrivateKeySecretName: "argocd-test-oslokommune-private-key",
+				PrivateKeySecretKey:  "ssh-private-key",
+			})),
 			expect:    nil,
 			expectErr: false,
 		},

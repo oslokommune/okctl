@@ -6,7 +6,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/helm/charts/externalsecrets"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func TestDefaultExternalSecretsValues(t *testing.T) {

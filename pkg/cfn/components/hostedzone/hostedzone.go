@@ -5,7 +5,7 @@ import (
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/route53"
 	"github.com/oslokommune/okctl/pkg/cfn"
-	"github.com/sanathkr/go-yaml"
+	"gopkg.in/yaml.v3"
 )
 
 // HostedZone contains the state for creating a cloud formation resources and outputs

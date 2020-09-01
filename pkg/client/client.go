@@ -30,6 +30,7 @@ const (
 	targetKubeExternalDNS                    = "kube/externaldns/"
 	targetCertificate                        = "certificates/"
 	targetParameterSecret                    = "parameters/secret/"
+	targetHelmArgoCD                         = "helm/argocd/"
 )
 
 // Cluster client API calls
@@ -62,6 +63,7 @@ type ServiceAccount interface {
 type Helm interface {
 	CreateExternalSecretsHelmChart(opts *api.CreateExternalSecretsHelmChartOpts) (*api.Helm, error)
 	CreateAlbIngressControllerHelmChart(opts *api.CreateAlbIngressControllerHelmChartOpts) (*api.Helm, error)
+	CreateArgoCD(opts *api.CreateArgoCDOpts) (*api.Helm, error)
 }
 
 // Kube API calls
@@ -100,6 +102,12 @@ func New(debug bool, progress io.Writer, serverURL string) *Client {
 		Client:   &http.Client{},
 		Debug:    debug,
 	}
+}
+
+// CreateArgoCD invokes the argocd creation operation
+func (c *Client) CreateArgoCD(opts *api.CreateArgoCDOpts) (*api.Helm, error) {
+	into := &api.Helm{}
+	return into, c.DoPost(targetHelmArgoCD, opts, into)
 }
 
 // CreateSecret invokes the secret creation operation

@@ -17,6 +17,15 @@ type Parameter struct {
 	Content        string
 }
 
+// AnonymizeResponse ensures that sensitive data is removed from the logs
+func (p *Parameter) AnonymizeResponse(response interface{}) interface{} {
+	r, _ := response.(*Parameter)
+	rCopy := *r
+	rCopy.Content = "XXXXXXXX"
+
+	return &rCopy
+}
+
 // SecretParameter contains the state for a secret parameter
 type SecretParameter struct {
 	Parameter
@@ -29,6 +38,15 @@ type CreateSecretOpts struct {
 	Environment    string
 	Name           string
 	Secret         string
+}
+
+// AnonymizeRequest ensures that sensitive data is removed from the logs
+func (o CreateSecretOpts) AnonymizeRequest(request interface{}) interface{} {
+	r, _ := request.(CreateSecretOpts)
+	rCopy := r
+	rCopy.Secret = "XXXXXXXXX"
+
+	return rCopy
 }
 
 // Validate the inputs

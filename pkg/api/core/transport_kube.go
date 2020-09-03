@@ -19,7 +19,7 @@ func decodeCreateExternalDNSKubeDeployment(_ context.Context, r *http.Request) (
 	return opts, nil
 }
 
-func decodeCreateArgoCDSecrets(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeCreateExternalSecrets(_ context.Context, r *http.Request) (interface{}, error) {
 	var opts api.CreateExternalSecretsOpts
 
 	err := json.NewDecoder(r.Body).Decode(&opts)

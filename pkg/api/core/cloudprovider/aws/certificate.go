@@ -41,7 +41,7 @@ func (c *certificate) CreateCertificate(opts api.CreateCertificateOpts) (*api.Ce
 	}
 
 	err = r.Outputs(stackName, map[string]cfn.ProcessOutputFn{
-		"Certificate": cfn.String(&p.CertificateARN),
+		"PublicCertificate": cfn.String(&p.CertificateARN),
 	})
 	if err != nil {
 		return nil, errors.E(err, "failed to process outputs")

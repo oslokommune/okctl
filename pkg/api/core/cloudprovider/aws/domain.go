@@ -1,9 +1,7 @@
 package aws
 
 import (
-	"fmt"
-	"strings"
-
+	"github.com/gosimple/slug"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
@@ -19,12 +17,7 @@ type domain struct {
 func (d *domain) CreateDomain(opts api.CreateDomainOpts) (*api.Domain, error) {
 	b := cfn.New(components.NewHostedZoneComposer(opts.FQDN, "A public hosted zone for creating ingresses with"))
 
-	parts := strings.SplitN(opts.Domain, ".", 2)
-	if len(parts) != 2 { // nolint: gomnd
-		return nil, fmt.Errorf("failed to extract sub domain")
-	}
-
-	stackName := cfn.NewStackNamer().Domain(opts.Repository, opts.Environment, parts[0])
+	stackName := cfn.NewStackNamer().Domain(opts.Repository, opts.Environment, slug.Make(opts.Domain))
 
 	template, err := b.Build()
 	if err != nil {

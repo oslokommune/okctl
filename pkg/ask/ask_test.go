@@ -272,6 +272,10 @@ func TestAskCreateOauthApp(t *testing.T) {
 			},
 			golden: "oauth-message",
 			expect: &ask.OauthApp{
+				Name:         "okctl",
+				Organisation: "oslokommune",
+				URL:          "https://something",
+				CallbackURL:  "https://something/callback",
 				ClientID:     "client_id",
 				ClientSecret: "client_secret",
 			},

@@ -1,4 +1,4 @@
-// Package middleware implements som common middlewares
+// Package logger implements a logging middleware
 package logger
 
 import (

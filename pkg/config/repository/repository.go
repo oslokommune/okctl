@@ -20,6 +20,30 @@ type Data struct {
 	Clusters  []Cluster
 }
 
+// ClusterForEnv returns the cluster for the given environment
+func (d *Data) ClusterForEnv(env string) *Cluster {
+	for _, cluster := range d.Clusters {
+		if cluster.Environment == env {
+			return &cluster
+		}
+	}
+
+	return nil
+}
+
+// SetClusterForEnv saves the cluster for the given environment
+func (d *Data) SetClusterForEnv(cluster *Cluster, env string) {
+	for i, c := range d.Clusters {
+		if c.Environment == env {
+			d.Clusters[i] = *cluster
+
+			return
+		}
+	}
+
+	d.Clusters = append(d.Clusters, *cluster)
+}
+
 // Validate the provided data
 func (d *Data) Validate() error {
 	return validation.ValidateStruct(d,
@@ -50,6 +74,7 @@ type Cluster struct {
 	HostedZone   HostedZone
 	AWS          AWS
 	Certificates []Certificate
+	Github       Github
 }
 
 const (
@@ -68,6 +93,36 @@ func (c Cluster) Validate() error {
 		validation.Field(&c.AWS),
 		validation.Field(&c.Certificates),
 	)
+}
+
+// Github contains information about the
+// clusters configuration towards github
+type Github struct {
+	Organisation string
+	Team         string
+	DeployKey    DeployKey
+	OauthApp     OauthApp
+	Repository   Repository
+}
+
+// Repository contains github repository data
+type Repository struct {
+	Name   string
+	GitURL string
+}
+
+// OauthApp contains github oauth application data
+type OauthApp struct {
+	Name             string
+	ClientID         string
+	ClientSecretPath string
+}
+
+// DeployKey contains github deploy key data
+type DeployKey struct {
+	Title string
+	ID    int64
+	Path  string
 }
 
 // HostedZone contains information about the

@@ -225,6 +225,10 @@ const oauthAppHelp = `	We will be creating an oauth app that authorises
 
 // OauthApp contains the oauth app state
 type OauthApp struct {
+	Name         string
+	Organisation string
+	URL          string
+	CallbackURL  string
 	ClientID     string
 	ClientSecret string
 }
@@ -285,6 +289,10 @@ func (a *Ask) CreateOauthApp(to io.Writer, opts OauthAppOpts) (*OauthApp, error)
 	}
 
 	return &OauthApp{
+		Name:         opts.Name,
+		Organisation: opts.Organisation,
+		URL:          opts.URL,
+		CallbackURL:  opts.CallbackURL,
 		ClientID:     answers.ClientID,
 		ClientSecret: answers.ClientSecret,
 	}, nil

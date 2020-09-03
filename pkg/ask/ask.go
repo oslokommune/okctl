@@ -269,7 +269,7 @@ func (a *Ask) CreateOauthApp(to io.Writer, opts OauthAppOpts) (*OauthApp, error)
 		},
 		{
 			Name:     "clientsecret",
-			Prompt:   &survey.Input{Message: "Enter Client Secret of the oauth app:"},
+			Prompt:   &survey.Password{Message: "Enter Client Secret of the oauth app:"},
 			Validate: survey.Required,
 		},
 	}

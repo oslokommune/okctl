@@ -10,8 +10,9 @@ import (
 )
 
 type kubeStore struct {
-	externalDNS Paths
-	fs          *afero.Afero
+	externalDNS     Paths
+	externalSecrets Paths
+	fs              *afero.Afero
 }
 
 // Kube contains the stored state for a kube deployment
@@ -19,6 +20,11 @@ type Kube struct {
 	HostedZoneID string
 	DomainFilter string
 	Manifests    []string
+}
+
+// This is not good, we need to refactor
+func (k *kubeStore) SaveExternalSecrets(kube *api.Kube) error {
+	return k.saveKubeDeployment(k.externalSecrets, kube)
 }
 
 func (k *kubeStore) SaveExternalDNSKubeDeployment(kube *api.Kube) error {
@@ -94,9 +100,10 @@ func (k *kubeStore) saveKubeDeployment(paths Paths, kube *api.Kube) error {
 }
 
 // NewKubeStore returns an initialised kube store
-func NewKubeStore(externalDNS Paths, fs *afero.Afero) api.KubeStore {
+func NewKubeStore(externalDNS, externalSecrets Paths, fs *afero.Afero) api.KubeStore {
 	return &kubeStore{
-		externalDNS: externalDNS,
-		fs:          fs,
+		externalSecrets: externalSecrets,
+		externalDNS:     externalDNS,
+		fs:              fs,
 	}
 }

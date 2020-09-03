@@ -64,14 +64,16 @@ type CreateArgoCDOpts struct {
 	ArgoDomain         string
 	ArgoCertificateARN string
 
-	GithubOrganisation  string
-	GithubTeam          string
-	GithubRepoURL       string
-	GithubRepoName      string
-	GithubOauthClientID string
+	GithubOrganisation          string
+	GithubTeam                  string
+	GithubRepoURL               string
+	GithubRepoName              string
+	GithubOauthClientID         string
+	GithubOauthClientSecretPath string
+	GithubDeployKeySecretPath   string
 
-	ExternalSecretName string
-	ExternalSecretKey  string
+	PrivateKeyName string
+	PrivateKeyKey  string
 }
 
 // Validate the input options
@@ -87,6 +89,10 @@ func (o CreateArgoCDOpts) Validate() error {
 		validation.Field(&o.GithubRepoURL, validation.Required),
 		validation.Field(&o.GithubRepoName, validation.Required),
 		validation.Field(&o.GithubOauthClientID, validation.Required),
+		validation.Field(&o.GithubOauthClientSecretPath, validation.Required),
+		validation.Field(&o.GithubDeployKeySecretPath, validation.Required),
+		validation.Field(&o.PrivateKeyName, validation.Required),
+		validation.Field(&o.PrivateKeyKey, validation.Required),
 	)
 }
 

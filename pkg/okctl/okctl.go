@@ -166,6 +166,10 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 			OutputFile: config.DefaultKubeOutputsFile,
 			BaseDir:    path.Join(outputDir, config.DefaultExternalDNSBaseDir),
 		},
+		filesystem.Paths{
+			OutputFile: config.DefaultKubeOutputsFile,
+			BaseDir:    path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+		},
 		o.FileSystem,
 	)
 

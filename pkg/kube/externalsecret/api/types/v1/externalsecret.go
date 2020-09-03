@@ -1,3 +1,4 @@
+// nolint
 //go:generate controller-gen object paths=$GOFILE
 package v1
 
@@ -29,6 +30,6 @@ type ExternalSecret struct {
 type ExternalSecretList struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	
+
 	Items []ExternalSecret `json:"items"`
 }

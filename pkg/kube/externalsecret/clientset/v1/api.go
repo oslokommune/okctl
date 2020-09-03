@@ -1,7 +1,8 @@
+// nolint
 package v1
 
 import (
-	v1 "github.com/oslokommune/okctl/pkg/kube/externalsecret/clientset/v1"
+	v1 "github.com/oslokommune/okctl/pkg/kube/externalsecret/api/types/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -9,7 +10,7 @@ import (
 )
 
 type Interface interface {
-	ExternalSecrets(namespace string) v1.ExternalSecretInterface
+	ExternalSecrets(namespace string) ExternalSecretInterface
 }
 
 type Client struct {
@@ -17,12 +18,12 @@ type Client struct {
 }
 
 func NewForConfig(config *rest.Config) (*Client, error) {
-	err := AddToScheme(scheme.Scheme)
+	err := v1.AddToScheme(scheme.Scheme)
 	if err != nil {
 		return nil, err
 	}
 	crdConfig := *config
-	crdConfig.ContentConfig.GroupVersion = &schema.GroupVersion{Group: GroupName, Version: GroupVersion}
+	crdConfig.ContentConfig.GroupVersion = &schema.GroupVersion{Group: v1.GroupName, Version: v1.GroupVersion}
 	crdConfig.APIPath = "/apis"
 	crdConfig.NegotiatedSerializer = serializer.NewCodecFactory(scheme.Scheme)
 	crdConfig.UserAgent = rest.DefaultKubernetesUserAgent()
@@ -37,8 +38,8 @@ func NewForConfig(config *rest.Config) (*Client, error) {
 	}, nil
 }
 
-func (v *Client) ExternalSecrets(namespace string) v1.ExternalSecretInterface {
-	return &v1.externalSecretClient{
+func (v *Client) ExternalSecrets(namespace string) ExternalSecretInterface {
+	return &externalSecretClient{
 		restClient: v.client,
 		ns:         namespace,
 	}

@@ -32,6 +32,7 @@ type Endpoints struct {
 	CreateCertificate                        endpoint.Endpoint
 	CreateSecret                             endpoint.Endpoint
 	CreateArgoCD                             endpoint.Endpoint
+	CreateArgoCDSecrets                      endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -55,6 +56,7 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateCertificate:                        makeCreateCertificateEndpoint(s.Certificate),
 		CreateSecret:                             makeCreateSecret(s.Parameter),
 		CreateArgoCD:                             makeCreateArgoCD(s.Helm),
+		CreateArgoCDSecrets:                      makeCreateArgoCDSecretsEndpoint(s.Kube),
 	}
 }
 
@@ -77,6 +79,7 @@ type Handlers struct {
 	CreateCertificate                        http.Handler
 	CreateSecret                             http.Handler
 	CreateArgoCD                             http.Handler
+	CreateArgoCDSecrets                      http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -126,6 +129,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateCertificate:                        newServer(endpoints.CreateCertificate, decodeCreateCertificate),
 		CreateSecret:                             newServer(endpoints.CreateSecret, decodeCreateSecret),
 		CreateArgoCD:                             newServer(endpoints.CreateArgoCD, decodeCreateArgoCD),
+		CreateArgoCDSecrets:                      newServer(endpoints.CreateArgoCDSecrets, decodeCreateArgoCDSecrets),
 	}
 }
 
@@ -179,6 +183,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/kube", func(r chi.Router) {
 			r.Route("/externaldns", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalDNSKubeDeployment)
+			})
+			r.Route("/argocd", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateArgoCDSecrets)
 			})
 		})
 		r.Route("/domains", func(r chi.Router) {
@@ -253,6 +260,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateCertificate:                        middleware.Logging(logger, certificateTag, "create")(endpoints.CreateCertificate),
 			CreateSecret:                             middleware.Logging(logger, strings.Join([]string{parameterTag, secretTag}, "/"), "create")(endpoints.CreateSecret),
 			CreateArgoCD:                             middleware.Logging(logger, strings.Join([]string{helmTag, argocdTag}, "/"), "create")(endpoints.CreateArgoCD),
+			CreateArgoCDSecrets:                      middleware.Logging(logger, strings.Join([]string{kubeTag, argocdTag}, "/"), "create")(endpoints.CreateArgoCDSecrets),
 		}
 	}
 }

@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 
+	"k8s.io/client-go/rest"
+
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,7 +35,7 @@ func New(namespace string) *EchoServer {
 }
 
 // CreateDeployment creates the echoserver deployment manifest
-func (e *EchoServer) CreateDeployment(clientSet kubernetes.Interface) (interface{}, error) {
+func (e *EchoServer) CreateDeployment(clientSet kubernetes.Interface, _ *rest.Config) (interface{}, error) {
 	deployClient := clientSet.AppsV1().Deployments(e.Namespace)
 	return deployClient.Create(e.Ctx, e.DeploymentManifest(), metav1.CreateOptions{})
 }

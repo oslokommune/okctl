@@ -77,6 +77,8 @@ func buildRepoDataLoader(notFoundFn DataNotFoundFn, viperCfg func(v *viper.Viper
 			return err
 		}
 
+		cfg.RepoData = &repository.Data{}
+
 		v := viper.New()
 		v.SetFs(cfg.FileSystem.Fs)
 		v.SetConfigName(config.DefaultRepositoryConfigName)

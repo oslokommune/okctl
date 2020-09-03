@@ -87,7 +87,7 @@ and database subnets.`,
 			opts.DomainName = o.Domain(opts.Environment)
 			opts.FQDN = o.FQDN(opts.Environment)
 
-			if len(o.Domain(opts.Environment)) == 0 {
+			if !o.HostedZoneIsCreated(opts.Environment) {
 				d, err := domain.NewDefaultWithSurvey(opts.RepositoryName, opts.Environment)
 				if err != nil {
 					return fmt.Errorf("failed to get domain name: %w", err)
@@ -208,11 +208,27 @@ and database subnets.`,
 				return err
 			}
 
-			a := ask.New()
+			o.SetHostedZoneIsCreated(true, opts.Environment)
 
-			err = a.ConfirmPostingNameServers(o.Out, d.Domain, d.NameServers)
+			err = o.WriteCurrentRepoData()
 			if err != nil {
 				return err
+			}
+
+			a := ask.New()
+
+			if !o.HostedZoneIsDelegated(opts.Environment) {
+				err = a.ConfirmPostingNameServers(o.Out, d.Domain, d.NameServers)
+				if err != nil {
+					return err
+				}
+
+				o.SetHostedZoneIsDelegated(true, opts.Environment)
+
+				err := o.WriteCurrentRepoData()
+				if err != nil {
+					return err
+				}
 			}
 
 			policy, err = c.CreateExternalDNSPolicy(&api.CreateExternalDNSPolicyOpts{

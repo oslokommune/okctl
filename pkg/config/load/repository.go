@@ -100,14 +100,10 @@ func buildRepoDataLoader(notFoundFn DataNotFoundFn, viperCfg func(v *viper.Viper
 			viperCfg(v)
 		}
 
-		repoData := &repository.Data{}
-
-		err = v.Unmarshal(repoData)
+		err = v.Unmarshal(cfg.RepoData)
 		if err != nil {
 			return err
 		}
-
-		cfg.RepoData = repoData
 
 		return nil
 	}

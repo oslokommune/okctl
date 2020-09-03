@@ -31,7 +31,7 @@ const (
 	targetCertificate                        = "certificates/"
 	targetParameterSecret                    = "parameters/secret/"
 	targetHelmArgoCD                         = "helm/argocd/"
-	targetKubeExternalSecret                 = "kube/externalsecret/"
+	targetKubeExternalSecret                 = "kube/externalsecrets/"
 )
 
 // Cluster client API calls

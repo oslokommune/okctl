@@ -160,6 +160,7 @@ and database subnets.`,
 			_, err = c.CreateExternalSecretsHelmChart(&api.CreateExternalSecretsHelmChartOpts{
 				Repository:  opts.RepositoryName,
 				Environment: opts.Environment,
+				ClusterName: opts.ClusterName,
 			})
 			if err != nil {
 				return err
@@ -338,8 +339,8 @@ and database subnets.`,
 						Namespace: "argocd",
 						Data: []api.Data{
 							{
-								Key:  "ssh-private-key",
-								Name: privateKey.Path,
+								Name: "ssh-private-key",
+								Key:  privateKey.Path,
 							},
 						},
 					},
@@ -348,8 +349,8 @@ and database subnets.`,
 						Namespace: "argocd",
 						Data: []api.Data{
 							{
-								Key:  "dex.github.clientSecret",
-								Name: clientSecret.Path,
+								Name: "dex.github.clientSecret",
+								Key:  clientSecret.Path,
 							},
 						},
 					},

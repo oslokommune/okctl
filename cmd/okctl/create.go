@@ -45,6 +45,7 @@ type CreateClusterOpts struct {
 	ClusterName    string
 	DomainName     string
 	FQDN           string
+	Organisation   string
 }
 
 // Validate the inputs
@@ -58,6 +59,7 @@ func (o *CreateClusterOpts) Validate() error {
 		validation.Field(&o.ClusterName, validation.Required),
 		validation.Field(&o.DomainName, validation.Required),
 		validation.Field(&o.FQDN, validation.Required),
+		validation.Field(&o.Organisation, validation.Required),
 	)
 }
 
@@ -86,6 +88,7 @@ and database subnets.`,
 			opts.Region = o.Region()
 			opts.DomainName = o.Domain(opts.Environment)
 			opts.FQDN = o.FQDN(opts.Environment)
+			opts.Organisation = github.DefaultOrg
 
 			if !o.HostedZoneIsCreated(opts.Environment) {
 				d, err := domain.NewDefaultWithSurvey(opts.RepositoryName, opts.Environment)
@@ -108,6 +111,12 @@ and database subnets.`,
 			// the API to return everything we need to write
 			// the result ourselves
 			c := client.New(o.Debug, ioutil.Discard, o.ServerURL)
+
+			o.SetGithubOrganisationName(opts.Organisation, opts.Environment)
+			err := o.WriteCurrentRepoData()
+			if err != nil {
+				return err
+			}
 
 			vpc, err := c.CreateVpc(&api.CreateVpcOpts{
 				AwsAccountID: opts.AWSAccountID,
@@ -276,76 +285,125 @@ and database subnets.`,
 				return err
 			}
 
-			repo, err := git.GithubRepoFullName("oslokommune", repoDir)
+			g, err := github.New(opts.Organisation, o.CredentialsProvider.Github())
 			if err != nil {
 				return err
 			}
 
-			g, err := github.New("oslokommune", o.CredentialsProvider.Github())
-			if err != nil {
-				return err
+			githubRepo := o.GithubRepository(opts.Environment)
+			if len(githubRepo.Name) == 0 || len(githubRepo.GitURL) == 0 {
+				repo, err := git.GithubRepoFullName(opts.Organisation, repoDir)
+				if err != nil {
+					return err
+				}
+
+				repos, err := g.Repositories()
+				if err != nil {
+					return err
+				}
+
+				selectedRepo, err := a.SelectInfrastructureRepository(repo, repos)
+				if err != nil {
+					return err
+				}
+
+				githubRepo.Name = selectedRepo.GetName()
+				githubRepo.GitURL = selectedRepo.GetGitURL()
+
+				o.SetGithubRepository(githubRepo, opts.Environment)
+				err = o.WriteCurrentRepoData()
+				if err != nil {
+					return err
+				}
 			}
 
-			repos, err := g.Repositories()
-			if err != nil {
-				return err
+			team := o.GithubTeamName(opts.Environment)
+			if len(team) == 0 {
+				teams, err := g.Teams()
+				if err != nil {
+					return err
+				}
+
+				selectedTeam, err := a.SelectTeam(teams)
+				if err != nil {
+					return err
+				}
+
+				o.SetGithubTeamName(selectedTeam.GetName(), opts.Environment)
+				err = o.WriteCurrentRepoData()
+				if err != nil {
+					return err
+				}
+
+				team = selectedTeam.GetName()
 			}
 
-			selectedRepo, err := a.SelectInfrastructureRepository(repo, repos)
-			if err != nil {
-				return err
+			oauthApp := o.GithubOauthApp(opts.Environment)
+			if len(oauthApp.Name) == 0 || len(oauthApp.ClientID) == 0 || len(oauthApp.ClientSecretPath) == 0 {
+				app, err := a.CreateOauthApp(o.Out, ask.OauthAppOpts{
+					Organisation: opts.Organisation,
+					Name:         fmt.Sprintf("okctl-argocd-%s-%s", opts.RepositoryName, opts.Environment),
+					URL:          fmt.Sprintf("https://%s", cert.Domain),
+					CallbackURL:  fmt.Sprintf("https://%s/api/dex/callback", cert.Domain),
+				})
+				if err != nil {
+					return err
+				}
+
+				clientSecret, err := c.CreateSecret(&api.CreateSecretOpts{
+					AWSAccountID:   opts.AWSAccountID,
+					RepositoryName: opts.RepositoryName,
+					Environment:    opts.Environment,
+					Name:           "client_secret",
+					Secret:         app.ClientSecret,
+				})
+				if err != nil {
+					return err
+				}
+
+				oauthApp.Name = app.Name
+				oauthApp.ClientID = app.ClientID
+				oauthApp.ClientSecretPath = clientSecret.Path
+
+				o.SetGithubOauthApp(oauthApp, opts.Environment)
+				err = o.WriteCurrentRepoData()
+				if err != nil {
+					return err
+				}
 			}
 
-			teams, err := g.Teams()
-			if err != nil {
-				return err
-			}
+			deployKey := o.GithubDeployKey(opts.Environment)
+			if len(deployKey.Title) == 0 || deployKey.ID == 0 || len(deployKey.Path) == 0 {
+				key, err := keypair.New(keypair.DefaultRandReader(), keypair.DefaultBitSize).Generate()
+				if err != nil {
+					return err
+				}
 
-			selectedTeam, err := a.SelectTeam(teams)
-			if err != nil {
-				return err
-			}
+				dk, err := g.CreateDeployKey(githubRepo.Name, "okctl-argocd-read-key", string(key.PublicKey))
+				if err != nil {
+					return err
+				}
 
-			oauthApp, err := a.CreateOauthApp(o.Out, ask.OauthAppOpts{
-				Organisation: "oslokommune",
-				Name:         fmt.Sprintf("okctl-argocd-%s-%s", opts.RepositoryName, opts.Environment),
-				URL:          fmt.Sprintf("https://%s", cert.Domain),
-				CallbackURL:  fmt.Sprintf("https://%s/api/dex/callback", cert.Domain),
-			})
-			if err != nil {
-				return err
-			}
+				privateKey, err := c.CreateSecret(&api.CreateSecretOpts{
+					AWSAccountID:   opts.AWSAccountID,
+					RepositoryName: opts.RepositoryName,
+					Environment:    opts.Environment,
+					Name:           "private_key",
+					Secret:         string(key.PrivateKey),
+				})
+				if err != nil {
+					return err
+				}
 
-			key, err := keypair.New(keypair.DefaultRandReader(), keypair.DefaultBitSize).Generate()
-			if err != nil {
-				return err
-			}
+				deployKey.Title = dk.GetTitle()
+				deployKey.ID = dk.GetID()
+				deployKey.Path = privateKey.Path
 
-			_, err = g.CreateDeployKey(selectedRepo.GetName(), "okctl-argocd-read-key", string(key.PublicKey))
-			if err != nil {
-				return err
-			}
-
-			clientSecret, err := c.CreateSecret(&api.CreateSecretOpts{
-				AWSAccountID:   opts.AWSAccountID,
-				RepositoryName: opts.RepositoryName,
-				Environment:    opts.Environment,
-				Name:           "client_secret",
-				Secret:         oauthApp.ClientSecret,
-			})
-			if err != nil {
-				return err
-			}
-
-			privateKey, err := c.CreateSecret(&api.CreateSecretOpts{
-				AWSAccountID:   opts.AWSAccountID,
-				RepositoryName: opts.RepositoryName,
-				Environment:    opts.Environment,
-				Name:           "private_key",
-				Secret:         string(key.PrivateKey),
-			})
-			if err != nil {
-				return err
+				o.SetGithubDeployKey(deployKey, opts.Environment)
+				err = o.WriteCurrentRepoData()
+				if err != nil {
+					return err
+				}
 			}
 
 			_, err = c.CreateExternalSecrets(&api.CreateExternalSecretsOpts{
@@ -356,7 +414,7 @@ and database subnets.`,
 						Data: []api.Data{
 							{
 								Name: "ssh-private-key",
-								Key:  privateKey.Path,
+								Key:  deployKey.Path,
 							},
 						},
 					},
@@ -366,7 +424,7 @@ and database subnets.`,
 						Data: []api.Data{
 							{
 								Name: "dex.github.clientSecret",
-								Key:  clientSecret.Path,
+								Key:  oauthApp.ClientSecretPath,
 							},
 						},
 					},
@@ -377,20 +435,18 @@ and database subnets.`,
 			}
 
 			_, err = c.CreateArgoCD(&api.CreateArgoCDOpts{
-				ClusterName:                 opts.ClusterName,
-				Repository:                  opts.RepositoryName,
-				Environment:                 opts.Environment,
-				ArgoDomain:                  cert.Domain,
-				ArgoCertificateARN:          cert.CertificateARN,
-				GithubOrganisation:          "oslokommune",
-				GithubTeam:                  selectedTeam.GetName(),
-				GithubRepoURL:               selectedRepo.GetGitURL(),
-				GithubRepoName:              selectedRepo.GetName(),
-				GithubOauthClientID:         oauthApp.ClientID,
-				GithubOauthClientSecretPath: clientSecret.Path,
-				GithubDeployKeySecretPath:   privateKey.Path,
-				PrivateKeyName:              "argocd-privatekey",
-				PrivateKeyKey:               "ssh-private-key",
+				ClusterName:         opts.ClusterName,
+				Repository:          opts.RepositoryName,
+				Environment:         opts.Environment,
+				ArgoDomain:          cert.Domain,
+				ArgoCertificateARN:  cert.CertificateARN,
+				GithubOrganisation:  opts.Organisation,
+				GithubTeam:          team,
+				GithubRepoURL:       githubRepo.GitURL,
+				GithubRepoName:      githubRepo.Name,
+				GithubOauthClientID: oauthApp.ClientID,
+				PrivateKeyName:      "argocd-privatekey",
+				PrivateKeyKey:       "ssh-private-key",
 			})
 
 			return nil

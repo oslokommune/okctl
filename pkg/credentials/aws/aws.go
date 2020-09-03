@@ -351,6 +351,7 @@ func Interactive(userName, storedPassword string, interactiveCallbackFn Interact
 		if hasCredentials {
 			prompt := &survey.Confirm{
 				Message: fmt.Sprintf("Use stored credentials for username and password? Username: %s, Password: *******", userName),
+				Default: true,
 			}
 
 			err := survey.AskOne(prompt, &useStoredCredentials)

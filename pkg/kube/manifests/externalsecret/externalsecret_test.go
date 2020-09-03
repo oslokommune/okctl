@@ -43,6 +43,7 @@ func TestNew(t *testing.T) {
 	}
 }
 
+// nolint: funlen
 func TestExternalDNS(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping external dns kube integration tests in short mode")

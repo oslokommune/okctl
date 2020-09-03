@@ -496,3 +496,113 @@ func (c *Config) SetHostedZoneIsCreated(val bool, env string) {
 		c.RepoData.Clusters[i] = cluster
 	}
 }
+
+// GithubRepository returns the selected github repository name and url
+func (c *Config) GithubRepository(env string) *repository.Repository {
+	cluster := c.RepoData.ClusterForEnv(env)
+	if cluster == nil {
+		return nil
+	}
+
+	return &cluster.Github.Repository
+}
+
+// SetGithubRepository sets the github repository name and url
+func (c *Config) SetGithubRepository(repository *repository.Repository, env string) {
+	cluster := c.RepoData.ClusterForEnv(env)
+	if cluster == nil {
+		return
+	}
+
+	cluster.Github.Repository = *repository
+
+	c.RepoData.SetClusterForEnv(cluster, env)
+}
+
+// GithubTeamName returns the selected github team
+func (c *Config) GithubTeamName(env string) string {
+	cluster := c.RepoData.ClusterForEnv(env)
+	if cluster == nil {
+		return ""
+	}
+
+	return cluster.Github.Team
+}
+
+// SetGithubTeamName sets the github team
+func (c *Config) SetGithubTeamName(name, env string) {
+	cluster := c.RepoData.ClusterForEnv(env)
+	if cluster == nil {
+		return
+	}
+
+	cluster.Github.Team = name
+
+	c.RepoData.SetClusterForEnv(cluster, env)
+}
+
+// GithubOrganisationName returns the selected github organisation
+func (c *Config) GithubOrganisationName(env string) string {
+	cluster := c.RepoData.ClusterForEnv(env)
+	if cluster == nil {
+		return ""
+	}
+
+	return cluster.Github.Organisation
+}
+
+// SetGithubOrganisationName sets the github organisation
+func (c *Config) SetGithubOrganisationName(name, env string) {
+	cluster := c.RepoData.ClusterForEnv(env)
+	if cluster == nil {
+		return
+	}
+
+	cluster.Github.Organisation = name
+
+	c.RepoData.SetClusterForEnv(cluster, env)
+}
+
+// GithubOauthApp returns the name and client id
+func (c *Config) GithubOauthApp(env string) *repository.OauthApp {
+	cluster := c.RepoData.ClusterForEnv(env)
+	if cluster == nil {
+		return nil
+	}
+
+	return &cluster.Github.OauthApp
+}
+
+// SetGithubOauthApp sets the name and client id
+func (c *Config) SetGithubOauthApp(app *repository.OauthApp, env string) {
+	cluster := c.RepoData.ClusterForEnv(env)
+	if cluster == nil {
+		return
+	}
+
+	cluster.Github.OauthApp = *app
+
+	c.RepoData.SetClusterForEnv(cluster, env)
+}
+
+// GithubDeployKey returns the github deploy key title and id
+func (c *Config) GithubDeployKey(env string) *repository.DeployKey {
+	cluster := c.RepoData.ClusterForEnv(env)
+	if cluster == nil {
+		return nil
+	}
+
+	return &cluster.Github.DeployKey
+}
+
+// SetGithubDeployKey sets the github deploy key title and id
+func (c *Config) SetGithubDeployKey(key *repository.DeployKey, env string) {
+	cluster := c.RepoData.ClusterForEnv(env)
+	if cluster == nil {
+		return
+	}
+
+	cluster.Github.DeployKey = *key
+
+	c.RepoData.SetClusterForEnv(cluster, env)
+}

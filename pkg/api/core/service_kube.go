@@ -12,6 +12,25 @@ type kubeService struct {
 	store api.KubeStore
 }
 
+func (k *kubeService) CreateExternalSecrets(_ context.Context, opts api.CreateExternalSecretsOpts) (*api.Kube, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, errors.E(err, "failed to validate input options")
+	}
+
+	kube, err := k.run.CreateExternalSecrets(opts)
+	if err != nil {
+		return nil, errors.E(err, "failed to deploy kubernetes manifests")
+	}
+
+	err = k.store.SaveExternalSecrets(kube)
+	if err != nil {
+		return nil, errors.E(err, "failed to save kubernetes manifests")
+	}
+
+	return kube, nil
+}
+
 func (k *kubeService) CreateExternalDNSKubeDeployment(_ context.Context, opts api.CreateExternalDNSKubeDeploymentOpts) (*api.Kube, error) {
 	err := opts.Validate()
 	if err != nil {

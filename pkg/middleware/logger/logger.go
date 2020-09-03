@@ -1,5 +1,5 @@
 // Package middleware implements som common middlewares
-package middleware
+package logger
 
 import (
 	"context"
@@ -9,6 +9,18 @@ import (
 	"github.com/sanity-io/litter"
 	"github.com/sirupsen/logrus"
 )
+
+// AnonymizeRequestLogger can be implemented by the request types that want to conceal
+// items from the logs
+type AnonymizeRequestLogger interface {
+	AnonymizeRequest(request interface{}) interface{}
+}
+
+// AnonymizeResponseLogger can be implemented by the response types that want to conceal
+// things from the logs
+type AnonymizeResponseLogger interface {
+	AnonymizeResponse(response interface{}) interface{}
+}
 
 // Logging returns a logging middleware
 func Logging(logger *logrus.Logger, serviceTag, endpointTag string) endpoint.Middleware {
@@ -20,6 +32,12 @@ func Logging(logger *logrus.Logger, serviceTag, endpointTag string) endpoint.Mid
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 			logCtx.Info("handling request")
+
+			anonReq, ok := request.(AnonymizeRequestLogger)
+			if ok {
+				request = anonReq.AnonymizeRequest(request)
+			}
+
 			logCtx.Debug(litter.Sdump(request))
 
 			defer func(begin time.Time) {
@@ -30,6 +48,12 @@ func Logging(logger *logrus.Logger, serviceTag, endpointTag string) endpoint.Mid
 
 				if err == nil {
 					logCtx.Info("done with request, sending response")
+
+					anonResp, ok := request.(AnonymizeResponseLogger)
+					if ok {
+						response = anonResp.AnonymizeResponse(response)
+					}
+
 					logCtx.Debug(litter.Sdump(response))
 				}
 

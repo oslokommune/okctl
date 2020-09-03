@@ -435,7 +435,7 @@ func (c *Config) AWSAccountID(env string) (string, error) {
 func (c *Config) Domain(env string) string {
 	for _, cluster := range c.RepoData.Clusters {
 		if cluster.Environment == env {
-			return cluster.Domain
+			return cluster.HostedZone.Domain
 		}
 	}
 
@@ -446,9 +446,53 @@ func (c *Config) Domain(env string) string {
 func (c *Config) FQDN(env string) string {
 	for _, cluster := range c.RepoData.Clusters {
 		if cluster.Environment == env {
-			return cluster.FQDN
+			return cluster.HostedZone.FQDN
 		}
 	}
 
 	return ""
+}
+
+// HostedZoneIsDelegated returns whether the hosted zone has been delegated or not
+func (c *Config) HostedZoneIsDelegated(env string) bool {
+	for _, cluster := range c.RepoData.Clusters {
+		if cluster.Environment == env {
+			return cluster.HostedZone.IsDelegated
+		}
+	}
+
+	return false
+}
+
+// SetHostedZoneIsDelegated to the provided value
+func (c *Config) SetHostedZoneIsDelegated(val bool, env string) {
+	for i, cluster := range c.RepoData.Clusters {
+		if cluster.Environment == env {
+			cluster.HostedZone.IsDelegated = val
+		}
+
+		c.RepoData.Clusters[i] = cluster
+	}
+}
+
+// HostedZoneIsCreated returns whether the hosted zone has been created or not
+func (c *Config) HostedZoneIsCreated(env string) bool {
+	for _, cluster := range c.RepoData.Clusters {
+		if cluster.Environment == env {
+			return cluster.HostedZone.IsCreated
+		}
+	}
+
+	return false
+}
+
+// SetHostedZoneIsCreated to the provided value
+func (c *Config) SetHostedZoneIsCreated(val bool, env string) {
+	for i, cluster := range c.RepoData.Clusters {
+		if cluster.Environment == env {
+			cluster.HostedZone.IsCreated = val
+		}
+
+		c.RepoData.Clusters[i] = cluster
+	}
 }

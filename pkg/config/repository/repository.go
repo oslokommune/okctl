@@ -47,8 +47,7 @@ func (d *Data) Validate() error {
 // cluster
 type Cluster struct {
 	Environment  string
-	Domain       string
-	FQDN         string
+	HostedZone   HostedZone
 	AWS          AWS
 	Certificates []Certificate
 }
@@ -65,10 +64,29 @@ func (c Cluster) Validate() error {
 			validation.Required,
 			validation.Length(envMinLength, envMaxLength),
 		),
-		validation.Field(&c.Domain, validation.Required),
-		validation.Field(&c.FQDN, validation.Required),
+		validation.Field(&c.HostedZone, validation.Required),
 		validation.Field(&c.AWS),
 		validation.Field(&c.Certificates),
+	)
+}
+
+// HostedZone contains information about the
+// clusters hostedzone delegation
+type HostedZone struct {
+	IsDelegated bool
+	IsCreated   bool
+	Domain      string
+	FQDN        string
+	NameServers []string
+}
+
+// Validate the hostedzone
+func (h *HostedZone) Validate() error {
+	return validation.ValidateStruct(&h,
+		validation.Field(&h.Domain, validation.Required),
+		validation.Field(&h.FQDN, validation.Required),
+		validation.Field(&h.IsDelegated, validation.Required),
+		validation.Field(&h.IsCreated, validation.Required),
 	)
 }
 

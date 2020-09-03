@@ -10,6 +10,8 @@ import (
 	"io/ioutil"
 	"time"
 
+	"k8s.io/client-go/rest"
+
 	deploymentUtil "github.com/oslokommune/okctl/internal/third_party/k8s.io/kubernetes/deployment/util"
 	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -32,13 +34,14 @@ type Kuber interface {
 type Kube struct {
 	KubeConfigPath string
 	ClientSet      *kubernetes.Clientset
+	RestConfig     *rest.Config
 	Ctx            context.Context
 	Log            *logrus.Logger
 }
 
 // ApplyFn defines the signature of a function that applies
 // some operation to the kubernetes cluster
-type ApplyFn func(clientSet kubernetes.Interface) (interface{}, error)
+type ApplyFn func(clientSet kubernetes.Interface, config *rest.Config) (interface{}, error)
 
 // New returns an initialised kubernetes client
 func New(kubeConfigPath string) (*Kube, error) {
@@ -57,6 +60,7 @@ func New(kubeConfigPath string) (*Kube, error) {
 
 	return &Kube{
 		KubeConfigPath: kubeConfigPath,
+		RestConfig:     config,
 		ClientSet:      clientSet,
 		Ctx:            context.Background(),
 		Log:            logger,
@@ -71,12 +75,11 @@ func (k *Kube) WithLogger(log *logrus.Logger) *Kube {
 }
 
 // Apply all the functions to the cluster
-func (k *Kube) Apply(first ApplyFn, rest ...ApplyFn) ([]interface{}, error) {
-	fns := append([]ApplyFn{first}, rest...)
+func (k *Kube) Apply(fns ...ApplyFn) ([]interface{}, error) {
 	values := make([]interface{}, len(fns))
 
 	for i, fn := range fns {
-		v, err := fn(k.ClientSet)
+		v, err := fn(k.ClientSet, k.RestConfig)
 		if err != nil {
 			return nil, err
 		}

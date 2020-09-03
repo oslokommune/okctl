@@ -12,3 +12,9 @@ func makeCreateExternalDNSKubeDeploymentEndpoint(s api.KubeService) endpoint.End
 		return s.CreateExternalDNSKubeDeployment(ctx, request.(api.CreateExternalDNSKubeDeploymentOpts))
 	}
 }
+
+func makeCreateArgoCDSecretsEndpoint(s api.KubeService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return s.CreateExternalSecrets(ctx, request.(api.CreateExternalSecretsOpts))
+	}
+}

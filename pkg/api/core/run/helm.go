@@ -26,8 +26,8 @@ func (r *helmRun) CreateArgoCD(opts api.CreateArgoCDOpts) (*api.Helm, error) {
 		Team:                 opts.GithubTeam,
 		RepoURL:              opts.GithubRepoURL,
 		RepoName:             opts.GithubRepoName,
-		PrivateKeySecretName: opts.ExternalSecretName,
-		PrivateKeySecretKey:  opts.ExternalSecretKey,
+		PrivateKeySecretName: opts.PrivateKeyName,
+		PrivateKeySecretKey:  opts.PrivateKeyKey,
 	}))
 
 	return r.createHelmChart(opts.ClusterName, opts.Repository, opts.Environment, chart)

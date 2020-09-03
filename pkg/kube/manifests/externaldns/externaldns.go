@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 
+	"k8s.io/client-go/rest"
+
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/api/rbac/v1beta1"
@@ -42,7 +44,7 @@ func New(hostedZoneID, domainFilter string) *ExternalDNS {
 }
 
 // CreateDeployment creates the external-dns Deployment manifest
-func (e *ExternalDNS) CreateDeployment(clientSet kubernetes.Interface) (interface{}, error) {
+func (e *ExternalDNS) CreateDeployment(clientSet kubernetes.Interface, _ *rest.Config) (interface{}, error) {
 	deployClient := clientSet.AppsV1().Deployments(e.Namespace)
 	return deployClient.Create(e.Ctx, e.DeploymentManifest(), metav1.CreateOptions{})
 }
@@ -104,7 +106,7 @@ func (e *ExternalDNS) DeploymentManifest() *appsv1.Deployment {
 }
 
 // CreateClusterRole creates the cluster role manifest
-func (e *ExternalDNS) CreateClusterRole(clientSet kubernetes.Interface) (interface{}, error) {
+func (e *ExternalDNS) CreateClusterRole(clientSet kubernetes.Interface, _ *rest.Config) (interface{}, error) {
 	clusterRoleClient := clientSet.RbacV1beta1().ClusterRoles()
 	return clusterRoleClient.Create(e.Ctx, e.ClusterRoleManifest(), metav1.CreateOptions{})
 }
@@ -140,7 +142,7 @@ func (e *ExternalDNS) ClusterRoleManifest() *v1beta1.ClusterRole {
 }
 
 // CreateClusterRoleBinding creates the cluster role binding manifest
-func (e *ExternalDNS) CreateClusterRoleBinding(clientSet kubernetes.Interface) (interface{}, error) {
+func (e *ExternalDNS) CreateClusterRoleBinding(clientSet kubernetes.Interface, _ *rest.Config) (interface{}, error) {
 	clusterRoleBindingClient := clientSet.RbacV1beta1().ClusterRoleBindings()
 	return clusterRoleBindingClient.Create(e.Ctx, e.ClusterRoleBindingManifest(), metav1.CreateOptions{})
 }

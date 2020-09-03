@@ -1,3 +1,5 @@
+// Package v1 implements the types for external secret
+// nolint: gochecknoglobals
 package v1
 
 import (
@@ -6,14 +8,21 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-const GroupName = "kubernetes-client.io"
-const GroupVersion = "v1"
+const (
+	// GroupName for the CRD
+	GroupName = "kubernetes-client.io"
+	// GroupVersion for the CRD
+	GroupVersion = "v1"
+)
 
+// SchemeGroupVersion ...
 var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: GroupVersion}
 
 var (
+	// SchemeBuilder ...
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
-	AddToScheme   = SchemeBuilder.AddToScheme
+	// AddToScheme ...
+	AddToScheme = SchemeBuilder.AddToScheme
 )
 
 func addKnownTypes(scheme *runtime.Scheme) error {
@@ -23,5 +32,6 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	)
 
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
+
 	return nil
 }

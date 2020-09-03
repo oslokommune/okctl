@@ -184,6 +184,8 @@ func buildAppDataLoader(loaders ...LoaderFn) config.DataLoaderFn {
 	return func(cfg *config.Config) error {
 		var err error
 
+		cfg.AppData = &application.Data{}
+
 		v := viper.New()
 		v.SetFs(cfg.FileSystem.Fs)
 

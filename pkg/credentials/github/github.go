@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
-	"strconv"
 	"strings"
 
 	"github.com/oslokommune/okctl/pkg/keyring"
@@ -121,40 +119,27 @@ func (a *Auth) Raw() (*Credentials, error) {
 	return a.creds, nil
 }
 
-// TokenVerification contains the parts of the
-// token validity response we are interested in
-type TokenVerification struct {
-	Scopes []string `json:"scopes"`
-}
-
 // HTTPClient defines the http client interface
 type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
 // AreValid checks to see if the credentials are still good
-// - https://docs.github.com/en/rest/reference/apps#check-a-token
-// nolint: funlen
 func AreValid(credentials *Credentials, client HTTPClient) error {
 	if credentials.Type == CredentialsTypePersonalAccessToken {
 		// For now, lets just return
 		return nil
 	}
 
-	apiURL := fmt.Sprintf("https://api.github.com/applications/%s/token", credentials.ClientID)
+	apiURL := "https://api.github.com"
 
-	form := url.Values{
-		"access_token": {credentials.AccessToken},
-	}
-
-	r, err := http.NewRequest(http.MethodPost, apiURL, strings.NewReader(form.Encode()))
+	r, err := http.NewRequest(http.MethodGet, apiURL, nil)
 	if err != nil {
 		return fmt.Errorf("failed to build token verification request: %w", err)
 	}
 
 	r.Header.Add("Accept", "application/vnd.github.v3+json")
-	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	r.Header.Add("Content-Length", strconv.Itoa(len(form.Encode())))
+	r.Header.Add("Authorization", fmt.Sprintf("token %s", credentials.AccessToken))
 
 	resp, err := client.Do(r)
 	if err != nil {
@@ -168,34 +153,6 @@ func AreValid(credentials *Credentials, client HTTPClient) error {
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("HTTP error %v (%v) when requesting token validation",
 			resp.StatusCode, http.StatusText(resp.StatusCode))
-	}
-
-	var token TokenVerification
-
-	err = json.NewDecoder(resp.Body).Decode(&token)
-	if err != nil {
-		return fmt.Errorf("failed to parse token response: %w", err)
-	}
-
-	var missing []string
-
-	for _, requiredScope := range RequiredScopes() {
-		found := false
-
-		for _, scope := range token.Scopes {
-			if scope == requiredScope {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			missing = append(missing, requiredScope)
-		}
-	}
-
-	if len(missing) > 0 {
-		return fmt.Errorf("token does not contain required scopes: %s", strings.Join(missing, ", "))
 	}
 
 	return nil
@@ -345,7 +302,7 @@ func (a *AuthDeviceFlow) Survey(verificationURI, userCode string) error {
 
 	prompt := &survey.Confirm{
 		Message: fmt.Sprintf("To complete the github device authentication flow, visit: %v and enter: %v. Attempt to open browser for you?", verificationURI, userCode),
-		Default: false,
+		Default: true,
 	}
 
 	err := survey.AskOne(prompt, &open)

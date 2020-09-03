@@ -194,14 +194,10 @@ func buildAppDataLoader(loaders ...LoaderFn) config.DataLoaderFn {
 			}
 		}
 
-		appData := &application.Data{}
-
-		err = v.Unmarshal(appData)
+		err = v.Unmarshal(cfg.AppData)
 		if err != nil {
 			return err
 		}
-
-		cfg.AppData = appData
 
 		updateKnownBinaries(cfg)
 

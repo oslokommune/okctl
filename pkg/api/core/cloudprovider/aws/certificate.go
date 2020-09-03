@@ -1,9 +1,7 @@
 package aws
 
 import (
-	"fmt"
-	"strings"
-
+	"github.com/gosimple/slug"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
@@ -16,14 +14,9 @@ type certificate struct {
 }
 
 func (c *certificate) CreateCertificate(opts api.CreateCertificateOpts) (*api.Certificate, error) {
-	b := cfn.New(components.NewPublicCertificateComposer(opts.FQDN, opts.HostedZoneID))
+	b := cfn.New(components.NewPublicCertificateComposer(opts.Domain, opts.HostedZoneID))
 
-	parts := strings.SplitN(opts.Domain, ".", 2)
-	if len(parts) != 2 { // nolint: gomnd
-		return nil, fmt.Errorf("failed to extract sub domain")
-	}
-
-	stackName := cfn.NewStackNamer().Certificate(opts.Repository, opts.Environment, parts[0])
+	stackName := cfn.NewStackNamer().Certificate(opts.Repository, opts.Environment, slug.Make(opts.Domain))
 
 	template, err := b.Build()
 	if err != nil {

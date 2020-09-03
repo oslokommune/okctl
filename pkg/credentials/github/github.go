@@ -166,7 +166,7 @@ func (a *Auth) Resolve() (*Credentials, error) {
 	// they aren't expired, simply return them
 	creds, err := a.Persister.Get()
 	if err == nil { // We were able to get creds from storage
-		if err := AreValid(creds, a.client); err != nil {
+		if err := AreValid(creds, a.client); err == nil { // And they are still valid
 			return creds, nil
 		}
 	}

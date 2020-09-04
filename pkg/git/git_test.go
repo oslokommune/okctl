@@ -1,6 +1,7 @@
 package git_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/oslokommune/okctl/pkg/git"
@@ -8,6 +9,10 @@ import (
 )
 
 func TestGithubRemotes(t *testing.T) {
+	if os.Getenv("CI") == "true" {
+		t.Skip("Skipping the github remotes test in CI")
+	}
+
 	testCases := []struct {
 		name   string
 		path   string

@@ -75,6 +75,7 @@ type Cluster struct {
 	AWS          AWS
 	Certificates []Certificate
 	Github       Github
+	ArgoCD       ArgoCD
 }
 
 const (
@@ -93,6 +94,13 @@ func (c Cluster) Validate() error {
 		validation.Field(&c.AWS),
 		validation.Field(&c.Certificates),
 	)
+}
+
+// ArgoCD contains information about the
+// argocd setup
+type ArgoCD struct {
+	URL           string
+	SecretKeyPath string
 }
 
 // Github contains information about the

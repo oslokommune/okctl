@@ -33,12 +33,12 @@ func Logging(logger *logrus.Logger, serviceTag, endpointTag string) endpoint.Mid
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 			logCtx.Info("handling request")
 
-			anonReq, ok := request.(AnonymizeRequestLogger)
-			if ok {
-				request = anonReq.AnonymizeRequest(request)
+			if anonReq, ok := request.(AnonymizeRequestLogger); ok {
+				anon := anonReq.AnonymizeRequest(request)
+				logCtx.Debug(litter.Sdump(anon))
+			} else {
+				logCtx.Debug(litter.Sdump(request))
 			}
-
-			logCtx.Debug(litter.Sdump(request))
 
 			defer func(begin time.Time) {
 				if err != nil {
@@ -49,12 +49,13 @@ func Logging(logger *logrus.Logger, serviceTag, endpointTag string) endpoint.Mid
 				if err == nil {
 					logCtx.Info("done with request, sending response")
 
-					anonResp, ok := request.(AnonymizeResponseLogger)
-					if ok {
-						response = anonResp.AnonymizeResponse(response)
+					if anonResp, ok := request.(AnonymizeResponseLogger); ok {
+						anon := anonResp.AnonymizeResponse(response)
+						logCtx.Debug(litter.Sdump(anon))
+					} else {
+						logCtx.Debug(litter.Sdump(response))
 					}
 
-					logCtx.Debug(litter.Sdump(response))
 				}
 
 				logCtx.Info("request completed in: ", time.Since(begin).String())

@@ -37,7 +37,7 @@ func New(hostedZoneID, domainFilter string) *ExternalDNS {
 		Version:      "v0.7.3",
 		OwnerID:      hostedZoneID,
 		FsGroup:      requiredFsGroup,
-		RunAsNonRoot: true,
+		RunAsNonRoot: false,
 		Replicas:     1,
 		Ctx:          context.Background(),
 	}
@@ -46,6 +46,23 @@ func New(hostedZoneID, domainFilter string) *ExternalDNS {
 // CreateDeployment creates the external-dns Deployment manifest
 func (e *ExternalDNS) CreateDeployment(clientSet kubernetes.Interface, _ *rest.Config) (interface{}, error) {
 	deployClient := clientSet.AppsV1().Deployments(e.Namespace)
+
+	deployments, err := deployClient.List(e.Ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, deployment := range deployments.Items {
+		if deployment.Name == "external-dns" {
+			d, err := deployClient.Get(e.Ctx, deployment.Name, metav1.GetOptions{})
+			if err != nil {
+				return nil, err
+			}
+
+			return d, nil
+		}
+	}
+
 	return deployClient.Create(e.Ctx, e.DeploymentManifest(), metav1.CreateOptions{})
 }
 
@@ -83,6 +100,8 @@ func (e *ExternalDNS) DeploymentManifest() *appsv1.Deployment {
 								fmt.Sprintf("--domain-filter=%s", e.DomainFilter),
 								"--provider=aws",
 								"--aws-zone-type=public",
+								"--log-level=debug",
+								"--events",
 								"--registry=txt",
 								fmt.Sprintf("--txt-owner-id=%s", e.OwnerID),
 							},
@@ -95,7 +114,9 @@ func (e *ExternalDNS) DeploymentManifest() *appsv1.Deployment {
 					},
 				},
 			},
-			Strategy:                appsv1.DeploymentStrategy{},
+			Strategy: appsv1.DeploymentStrategy{
+				Type: "Recreate",
+			},
 			MinReadySeconds:         0,
 			RevisionHistoryLimit:    nil,
 			Paused:                  false,
@@ -108,6 +129,23 @@ func (e *ExternalDNS) DeploymentManifest() *appsv1.Deployment {
 // CreateClusterRole creates the cluster role manifest
 func (e *ExternalDNS) CreateClusterRole(clientSet kubernetes.Interface, _ *rest.Config) (interface{}, error) {
 	clusterRoleClient := clientSet.RbacV1beta1().ClusterRoles()
+
+	roles, err := clusterRoleClient.List(e.Ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, role := range roles.Items {
+		if role.Name == "external-dns" {
+			c, err := clusterRoleClient.Get(e.Ctx, role.Name, metav1.GetOptions{})
+			if err != nil {
+				return nil, err
+			}
+
+			return c, nil
+		}
+	}
+
 	return clusterRoleClient.Create(e.Ctx, e.ClusterRoleManifest(), metav1.CreateOptions{})
 }
 
@@ -144,6 +182,23 @@ func (e *ExternalDNS) ClusterRoleManifest() *v1beta1.ClusterRole {
 // CreateClusterRoleBinding creates the cluster role binding manifest
 func (e *ExternalDNS) CreateClusterRoleBinding(clientSet kubernetes.Interface, _ *rest.Config) (interface{}, error) {
 	clusterRoleBindingClient := clientSet.RbacV1beta1().ClusterRoleBindings()
+
+	bindings, err := clusterRoleBindingClient.List(e.Ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, binding := range bindings.Items {
+		if binding.Name == "external-dns-viewer" {
+			c, err := clusterRoleBindingClient.Get(e.Ctx, binding.Name, metav1.GetOptions{})
+			if err != nil {
+				return nil, err
+			}
+
+			return c, nil
+		}
+	}
+
 	return clusterRoleBindingClient.Create(e.Ctx, e.ClusterRoleBindingManifest(), metav1.CreateOptions{})
 }
 

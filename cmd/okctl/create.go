@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -310,7 +311,7 @@ and database subnets.`,
 				}
 
 				githubRepo.Name = selectedRepo.GetName()
-				githubRepo.GitURL = selectedRepo.GetGitURL()
+				githubRepo.GitURL = fmt.Sprintf("git@github.com:%s", strings.TrimPrefix(selectedRepo.GetGitURL(), "git://github.com/"))
 
 				o.SetGithubRepository(githubRepo, opts.Environment)
 				err = o.WriteCurrentRepoData()

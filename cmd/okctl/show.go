@@ -49,7 +49,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 			return o.Initialise(opts.Environment, awsAccountID)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			appDir, err := o.GetAppDataDir()
+			appDir, err := o.GetUserDataDir()
 			if err != nil {
 				return err
 			}

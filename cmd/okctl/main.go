@@ -29,16 +29,16 @@ func repoDataLoader(o *okctl.Okctl, cmd *cobra.Command) error {
 	return o.LoadRepoData()
 }
 
-func appDataLoader(o *okctl.Okctl, cmd *cobra.Command) error {
-	appDataNotFound := load.CreateOnAppDataNotFound()
+func userDataLoader(o *okctl.Okctl, cmd *cobra.Command) error {
+	userDataNotFound := load.CreateOnUserDataNotFound()
 
 	if o.NoInput {
-		appDataNotFound = load.ErrOnAppDataNotFound()
+		userDataNotFound = load.ErrOnUserDataNotFound()
 	}
 
-	o.AppDataLoader = load.AppDataFromFlagsEnvConfigDefaults(cmd, appDataNotFound)
+	o.UserDataLoader = load.UserDataFromFlagsEnvConfigDefaults(cmd, userDataNotFound)
 
-	return o.LoadAppData()
+	return o.LoadUserData()
 }
 
 func buildRootCommand() *cobra.Command {
@@ -60,7 +60,7 @@ being captured. Together with slack and slick.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
-			err = appDataLoader(o, cmd)
+			err = userDataLoader(o, cmd)
 			if err != nil {
 				return errors.Wrap(err, "failed to load application data")
 			}

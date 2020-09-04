@@ -13,8 +13,8 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/mitchellh/go-homedir"
 	"github.com/oslokommune/okctl/pkg/api/core"
-	"github.com/oslokommune/okctl/pkg/config/application"
 	"github.com/oslokommune/okctl/pkg/config/repository"
+	"github.com/oslokommune/okctl/pkg/config/user"
 	"github.com/oslokommune/okctl/pkg/context"
 	"github.com/oslokommune/okctl/pkg/rotatefilehook"
 	"github.com/oslokommune/okctl/pkg/storage"
@@ -144,8 +144,8 @@ func NoopDataLoader(_ *Config) error {
 type Config struct {
 	*context.Context
 
-	AppDataLoader DataLoaderFn
-	AppData       *application.Data
+	UserDataLoader DataLoaderFn
+	UserData       *user.Data
 
 	RepoDataLoader DataLoaderFn
 	RepoData       *repository.Data
@@ -164,7 +164,7 @@ func New() *Config {
 
 	return &Config{
 		Context:        context.New(),
-		AppDataLoader:  NoopDataLoader,
+		UserDataLoader: NoopDataLoader,
 		RepoDataLoader: NoopDataLoader,
 		Destination:    dest,
 		ServerURL:      fmt.Sprintf("http://%s/v1/", dest),
@@ -218,19 +218,19 @@ func (c *Config) LoadRepoData() error {
 	return c.RepoDataLoader(c)
 }
 
-// LoadAppData will attempt to load okctl application data
-func (c *Config) LoadAppData() error {
-	c.AppData = nil
+// LoadUserData will attempt to load okctl application data
+func (c *Config) LoadUserData() error {
+	c.UserData = nil
 
-	if c.AppDataLoader == nil {
-		c.AppDataLoader = NoopDataLoader
+	if c.UserDataLoader == nil {
+		c.UserDataLoader = NoopDataLoader
 	}
 
-	return c.AppDataLoader(c)
+	return c.UserDataLoader(c)
 }
 
-// WriteAppData will store the current app data state to disk
-func (c *Config) WriteAppData(b []byte) error {
+// WriteUserData will store the current app data state to disk
+func (c *Config) WriteUserData(b []byte) error {
 	home, err := c.GetHomeDir()
 	if err != nil {
 		return err
@@ -255,15 +255,15 @@ func (c *Config) WriteAppData(b []byte) error {
 	return nil
 }
 
-// WriteCurrentAppData writes the current app data state
+// WriteCurrentUserData writes the current app data state
 // to disk
-func (c *Config) WriteCurrentAppData() error {
-	b, err := c.AppData.YAML()
+func (c *Config) WriteCurrentUserData() error {
+	b, err := c.UserData.YAML()
 	if err != nil {
 		return err
 	}
 
-	return c.WriteAppData(b)
+	return c.WriteUserData(b)
 }
 
 // GetRepoDir will return the currently active repository directory
@@ -372,9 +372,9 @@ func (c *Config) GetHomeDir() (string, error) {
 	return c.homeDir, nil
 }
 
-// GetAppDataDir will get the directory to where okctl
+// GetUserDataDir will get the directory to where okctl
 // application data should be written
-func (c *Config) GetAppDataDir() (string, error) {
+func (c *Config) GetUserDataDir() (string, error) {
 	home, err := c.GetHomeDir()
 	if err != nil {
 		return "", err
@@ -383,10 +383,10 @@ func (c *Config) GetAppDataDir() (string, error) {
 	return filepath.Join(home, DefaultDir), nil
 }
 
-// GetAppDataPath returns the path to the okctl application
+// GetUserDataPath returns the path to the okctl application
 // config path
-func (c *Config) GetAppDataPath() (string, error) {
-	base, err := c.GetAppDataDir()
+func (c *Config) GetUserDataPath() (string, error) {
+	base, err := c.GetUserDataDir()
 	if err != nil {
 		return "", err
 	}
@@ -396,7 +396,7 @@ func (c *Config) GetAppDataPath() (string, error) {
 
 // GetLogName returns the path to a logfile
 func (c *Config) GetLogName() (string, error) {
-	base, err := c.GetAppDataDir()
+	base, err := c.GetUserDataDir()
 	if err != nil {
 		return "", err
 	}
@@ -607,7 +607,7 @@ func (c *Config) SetGithubDeployKey(key repository.DeployKey, env string) {
 	c.RepoData.SetClusterForEnv(cluster, env)
 }
 
-// ArgoCDD returns the argo cd state
+// ArgoCD returns the argo cd state
 func (c *Config) ArgoCD(env string) repository.ArgoCD {
 	cluster := c.RepoData.ClusterForEnv(env)
 	if cluster == nil {
@@ -619,7 +619,6 @@ func (c *Config) ArgoCD(env string) repository.ArgoCD {
 
 // SetArgoCD sets the argocd to the provided state
 func (c *Config) SetArgoCD(argo repository.ArgoCD, env string) {
-
 	cluster := c.RepoData.ClusterForEnv(env)
 	if cluster == nil {
 		return

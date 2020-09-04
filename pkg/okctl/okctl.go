@@ -24,7 +24,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/cloud"
 	"github.com/oslokommune/okctl/pkg/config"
-	"github.com/oslokommune/okctl/pkg/config/application"
+	"github.com/oslokommune/okctl/pkg/config/user"
 	"github.com/oslokommune/okctl/pkg/credentials"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	"github.com/oslokommune/okctl/pkg/credentials/aws/scrape"
@@ -60,7 +60,7 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		return err
 	}
 
-	appDir, err := o.GetAppDataDir()
+	appDir, err := o.GetUserDataDir()
 	if err != nil {
 		return err
 	}
@@ -336,18 +336,18 @@ func New() *Okctl {
 }
 
 // Binaries returns the application binaries
-func (o *Okctl) Binaries() []application.Binary {
-	return o.AppData.Binaries
+func (o *Okctl) Binaries() []user.Binary {
+	return o.UserData.Binaries
 }
 
 // Host returns the host information
-func (o *Okctl) Host() application.Host {
-	return o.AppData.Host
+func (o *Okctl) Host() user.Host {
+	return o.UserData.Host
 }
 
 // Username returns the username of the active user
 func (o *Okctl) Username() string {
-	return o.AppData.User.Username
+	return o.UserData.User.Username
 }
 
 // Region returns the AWS region of the repository
@@ -377,7 +377,7 @@ func (o *Okctl) initialiseProviders(env, awsAccountID string) error {
 
 // newBinariesProvider creates a provider for loading binaries
 func (o *Okctl) newBinariesProvider() error {
-	appDataDir, err := o.GetAppDataDir()
+	userDataDir, err := o.GetUserDataDir()
 	if err != nil {
 		return err
 	}
@@ -386,7 +386,7 @@ func (o *Okctl) newBinariesProvider() error {
 		true,
 		o.Host(),
 		o.Binaries(),
-		storage.NewFileSystemStorage(appDataDir),
+		storage.NewFileSystemStorage(userDataDir),
 	)
 	if err != nil {
 		return errors.E(err, "failed to create binaries fetcher", errors.Internal)
@@ -415,7 +415,7 @@ func (o *Okctl) newCredentialsProvider(env, awsAccountID string) error {
 		return errors.E(errors.Errorf("we only support retrieving credentials interactively for now"), errors.Invalid)
 	}
 
-	appDir, err := o.GetAppDataDir()
+	appDir, err := o.GetUserDataDir()
 	if err != nil {
 		return err
 	}

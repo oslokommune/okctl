@@ -25,8 +25,11 @@ func GithubRepoFullName(org, gitPath string) (string, error) {
 
 	for _, remote := range remotes {
 		matches := re.FindStringSubmatch(remote.String())
-		names := re.SubexpNames()
+		if len(matches) == 0 {
+			continue
+		}
 
+		names := re.SubexpNames()
 		for i, name := range names {
 			if name == "repo" {
 				return matches[i], nil

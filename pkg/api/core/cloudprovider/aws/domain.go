@@ -17,7 +17,7 @@ type domain struct {
 func (d *domain) CreateDomain(opts api.CreateDomainOpts) (*api.Domain, error) {
 	b := cfn.New(components.NewHostedZoneComposer(opts.FQDN, "A public hosted zone for creating ingresses with"))
 
-	stackName := cfn.NewStackNamer().Domain(opts.Repository, opts.Environment, slug.Make(opts.Domain))
+	stackName := cfn.NewStackNamer().Domain(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Domain))
 
 	template, err := b.Build()
 	if err != nil {
@@ -37,8 +37,7 @@ func (d *domain) CreateDomain(opts api.CreateDomainOpts) (*api.Domain, error) {
 	}
 
 	p := &api.Domain{
-		Repository:             opts.Repository,
-		Environment:            opts.Environment,
+		ID:                     opts.ID,
 		FQDN:                   opts.FQDN,
 		Domain:                 opts.Domain,
 		StackName:              stackName,

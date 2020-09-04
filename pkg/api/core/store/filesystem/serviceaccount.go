@@ -20,11 +20,8 @@ type serviceAccount struct {
 // ServiceAccount contains the data that should
 // be serialised to the output file
 type ServiceAccount struct {
-	ClusterName  string
-	Environment  string
-	Region       string
-	AWSAccountID string
-	PolicyArn    string
+	ID        api.ID
+	PolicyArn string
 }
 
 func (s *serviceAccount) SaveExternalDNSServiceAccount(account *api.ServiceAccount) error {
@@ -53,11 +50,8 @@ func (s *serviceAccount) GetExternalSecretsServiceAccount() (*api.ServiceAccount
 
 func (s *serviceAccount) saveServiceAccount(paths Paths, account *api.ServiceAccount) error {
 	p := &ServiceAccount{
-		ClusterName:  account.ClusterName,
-		Environment:  account.Environment,
-		Region:       account.Region,
-		AWSAccountID: account.AWSAccountID,
-		PolicyArn:    account.PolicyArn,
+		ID:        account.ID,
+		PolicyArn: account.PolicyArn,
 	}
 
 	data, err := json.Marshal(p)
@@ -102,11 +96,8 @@ func (s *serviceAccount) getServiceAccount(paths Paths) (*api.ServiceAccount, er
 	}
 
 	account := &api.ServiceAccount{
-		ClusterName:  a.ClusterName,
-		Environment:  a.Environment,
-		Region:       a.Region,
-		AWSAccountID: a.AWSAccountID,
-		PolicyArn:    a.PolicyArn,
+		ID:        a.ID,
+		PolicyArn: a.PolicyArn,
 	}
 
 	template, err := s.fs.ReadFile(path.Join(paths.BaseDir, paths.ConfigFile))

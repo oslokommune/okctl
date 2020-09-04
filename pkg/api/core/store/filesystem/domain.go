@@ -19,8 +19,7 @@ type domainStore struct {
 
 // Domain contains the outputs we will store
 type Domain struct {
-	Repository   string
-	Environment  string
+	ID           api.ID
 	FQDN         string
 	Domain       string
 	HostedZoneID string
@@ -30,8 +29,7 @@ type Domain struct {
 
 func (d *domainStore) SaveDomain(domain *api.Domain) error {
 	p := Domain{
-		Repository:   domain.Repository,
-		Environment:  domain.Environment,
+		ID:           domain.ID,
 		FQDN:         domain.FQDN,
 		Domain:       domain.Domain,
 		HostedZoneID: domain.HostedZoneID,
@@ -60,7 +58,7 @@ func (d *domainStore) SaveDomain(domain *api.Domain) error {
 	}
 
 	for i, cluster := range d.repoState.Clusters {
-		if cluster.Environment == domain.Environment {
+		if cluster.Environment == domain.ID.Environment {
 			cluster.HostedZone.Domain = domain.Domain
 			cluster.HostedZone.FQDN = domain.Domain
 			d.repoState.Clusters[i] = cluster

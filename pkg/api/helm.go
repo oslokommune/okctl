@@ -10,56 +10,42 @@ import (
 
 // Helm contains the data of a helm release
 type Helm struct {
-	ClusterName string
-	Repository  string
-	Environment string
-	Release     *release.Release
-	Chart       *helm.Chart
+	ID      ID
+	Release *release.Release
+	Chart   *helm.Chart
 }
 
 // CreateExternalSecretsHelmChartOpts contains the data
 // required for creating a helm chart
 type CreateExternalSecretsHelmChartOpts struct {
-	ClusterName string
-	Repository  string
-	Environment string
+	ID ID
 }
 
 // Validate the helm create inputs
 func (o CreateExternalSecretsHelmChartOpts) Validate() error {
 	return validation.ValidateStruct(&o,
-		validation.Field(&o.ClusterName, validation.Required),
-		validation.Field(&o.Environment, validation.Required),
-		validation.Field(&o.Repository, validation.Required),
+		validation.Field(&o.ID, validation.Required),
 	)
 }
 
 // CreateAlbIngressControllerHelmChartOpts contains the data
 // required for creating a helm chart
 type CreateAlbIngressControllerHelmChartOpts struct {
-	ClusterName string
-	Repository  string
-	Environment string
-	VpcID       string
-	Region      string
+	ID    ID
+	VpcID string
 }
 
 // Validate the input options
 func (o CreateAlbIngressControllerHelmChartOpts) Validate() error {
 	return validation.ValidateStruct(&o,
-		validation.Field(&o.ClusterName, validation.Required),
-		validation.Field(&o.Repository, validation.Required),
-		validation.Field(&o.Environment, validation.Required),
+		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.VpcID, validation.Required),
-		validation.Field(&o.Region, validation.Required),
 	)
 }
 
 // CreateArgoCDOpts contains the required inputs
 type CreateArgoCDOpts struct {
-	ClusterName string
-	Repository  string
-	Environment string
+	ID ID
 
 	ArgoDomain         string
 	ArgoCertificateARN string
@@ -77,9 +63,7 @@ type CreateArgoCDOpts struct {
 // Validate the input options
 func (o CreateArgoCDOpts) Validate() error {
 	return validation.ValidateStruct(&o,
-		validation.Field(&o.ClusterName, validation.Required),
-		validation.Field(&o.Repository, validation.Required),
-		validation.Field(&o.Environment, validation.Required),
+		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.ArgoDomain, validation.Required),
 		validation.Field(&o.ArgoCertificateARN, validation.Required),
 		validation.Field(&o.GithubOrganisation, validation.Required),

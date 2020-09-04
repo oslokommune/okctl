@@ -8,53 +8,46 @@ import (
 
 // ManagedPolicy contains all state for a policy
 type ManagedPolicy struct {
+	ID                     ID
 	StackName              string
-	Repository             string
-	Environment            string
-	CloudFormationTemplate []byte
 	PolicyARN              string
+	CloudFormationTemplate []byte
 }
 
 // CreateExternalSecretsPolicyOpts contains the options
 // that are required for creating an external secrets policy
 type CreateExternalSecretsPolicyOpts struct {
-	Repository  string
-	Environment string
+	ID ID
 }
 
 // Validate determines if the options are valid
 func (o CreateExternalSecretsPolicyOpts) Validate() error {
 	return validation.ValidateStruct(&o,
-		validation.Field(&o.Environment, validation.Required),
-		validation.Field(&o.Repository, validation.Required),
+		validation.Field(&o.ID, validation.Required),
 	)
 }
 
 // CreateAlbIngressControllerPolicyOpts contains the input
 type CreateAlbIngressControllerPolicyOpts struct {
-	Repository  string
-	Environment string
+	ID ID
 }
 
 // Validate the input
 func (o CreateAlbIngressControllerPolicyOpts) Validate() error {
 	return validation.ValidateStruct(&o,
-		validation.Field(&o.Repository, validation.Required),
-		validation.Field(&o.Environment, validation.Required),
+		validation.Field(&o.ID, validation.Required),
 	)
 }
 
 // CreateExternalDNSPolicyOpts contains the input
 type CreateExternalDNSPolicyOpts struct {
-	Repository  string
-	Environment string
+	ID ID
 }
 
 // Validate the input
 func (o CreateExternalDNSPolicyOpts) Validate() error {
 	return validation.ValidateStruct(&o,
-		validation.Field(&o.Repository, validation.Required),
-		validation.Field(&o.Environment, validation.Required),
+		validation.Field(&o.ID, validation.Required),
 	)
 }
 

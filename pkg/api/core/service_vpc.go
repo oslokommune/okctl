@@ -39,7 +39,7 @@ func (v *vpc) DeleteVpc(_ context.Context, opts api.DeleteVpcOpts) error {
 		return err
 	}
 
-	return v.store.DeleteVpc(opts.Env, opts.RepoName)
+	return v.store.DeleteVpc(opts.ID.Environment, opts.ID.Repository)
 }
 
 // NewVpcService returns an instantiated vpc service

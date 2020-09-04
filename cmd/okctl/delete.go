@@ -3,6 +3,8 @@ package main
 import (
 	"io/ioutil"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -25,9 +27,28 @@ func buildDeleteCommand(o *okctl.Okctl) *cobra.Command {
 	return cmd
 }
 
+// DeleteClusterOpts contains the required inputs
+type DeleteClusterOpts struct {
+	Region       string
+	AWSAccountID string
+	Environment  string
+	Repository   string
+	ClusterName  string
+}
+
+// Validate the inputs
+func (o *DeleteClusterOpts) Validate() error {
+	return validation.ValidateStruct(o,
+		validation.Field(&o.Environment, validation.Required),
+		validation.Field(&o.AWSAccountID, validation.Required),
+		validation.Field(&o.Region, validation.Required),
+		validation.Field(&o.ClusterName, validation.Required),
+	)
+}
+
 // nolint: funlen
 func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
-	opts := &api.ClusterDeleteOpts{}
+	opts := &DeleteClusterOpts{}
 
 	cmd := &cobra.Command{
 		Use:   "cluster [env]",
@@ -36,21 +57,20 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 including VPC, this is a highly destructive operation.`,
 		Args: cobra.ExactArgs(deleteClusterArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			opts.Environment = args[0]
-			opts.RepositoryName = o.RepoData.Name
-			opts.ClusterName = o.ClusterName(opts.Environment)
+			environment := args[0]
+
+			opts.Region = o.Region()
+			opts.AWSAccountID = o.AWSAccountID(environment)
+			opts.Environment = environment
+			opts.Repository = o.RepoData.Name
+			opts.ClusterName = o.ClusterName(environment)
 
 			err := opts.Validate()
 			if err != nil {
 				return errors.E(err, "failed to validate delete cluster options")
 			}
 
-			awsAccountID, err := o.AWSAccountID(opts.Environment)
-			if err != nil {
-				return err
-			}
-
-			return o.Initialise(opts.Environment, awsAccountID)
+			return o.Initialise(opts.Environment, opts.AWSAccountID)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			// Discarding the output for now until we have
@@ -58,14 +78,23 @@ including VPC, this is a highly destructive operation.`,
 			// properly
 			c := client.New(o.Debug, ioutil.Discard, o.ServerURL)
 
-			err := c.DeleteCluster(opts)
+			id := api.ID{
+				Region:       opts.Region,
+				AWSAccountID: opts.AWSAccountID,
+				Environment:  opts.Environment,
+				Repository:   opts.Repository,
+				ClusterName:  opts.ClusterName,
+			}
+
+			err := c.DeleteCluster(&api.ClusterDeleteOpts{
+				ID: id,
+			})
 			if err != nil {
 				return err
 			}
 
 			return c.DeleteVpc(&api.DeleteVpcOpts{
-				Env:      opts.Environment,
-				RepoName: opts.RepositoryName,
+				ID: id,
 			})
 		},
 	}

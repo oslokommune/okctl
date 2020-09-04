@@ -8,22 +8,11 @@ import (
 
 // Parameter contains the state for a parameter
 type Parameter struct {
-	AWSAccountID   string
-	RepositoryName string
-	Environment    string
-	Name           string
-	Path           string
-	Version        int64
-	Content        string
-}
-
-// AnonymizeResponse ensures that sensitive data is removed from the logs
-func (p *Parameter) AnonymizeResponse(response interface{}) interface{} {
-	r, _ := response.(*Parameter)
-	rCopy := *r
-	rCopy.Content = "XXXXXXXX"
-
-	return &rCopy
+	ID      ID
+	Name    string
+	Path    string
+	Version int64
+	Content string
 }
 
 // SecretParameter contains the state for a secret parameter
@@ -31,13 +20,20 @@ type SecretParameter struct {
 	Parameter
 }
 
+// AnonymizeResponse ensures that sensitive data is removed from the logs
+func (p *SecretParameter) AnonymizeResponse(response interface{}) interface{} {
+	r, _ := response.(*Parameter)
+	rCopy := *r
+	rCopy.Content = "XXXXXXXX"
+
+	return &rCopy
+}
+
 // CreateSecretOpts contains the input required for creating a secret parameter
 type CreateSecretOpts struct {
-	AWSAccountID   string
-	RepositoryName string
-	Environment    string
-	Name           string
-	Secret         string
+	ID     ID
+	Name   string
+	Secret string
 }
 
 // AnonymizeRequest ensures that sensitive data is removed from the logs
@@ -52,9 +48,7 @@ func (o CreateSecretOpts) AnonymizeRequest(request interface{}) interface{} {
 // Validate the inputs
 func (o CreateSecretOpts) Validate() error {
 	return validation.ValidateStruct(&o,
-		validation.Field(&o.AWSAccountID, validation.Required),
-		validation.Field(&o.RepositoryName, validation.Required),
-		validation.Field(&o.Environment, validation.Required),
+		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.Name, validation.Required),
 		validation.Field(&o.Secret, validation.Required),
 	)

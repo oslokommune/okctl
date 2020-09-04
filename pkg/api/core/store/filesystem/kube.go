@@ -17,6 +17,7 @@ type kubeStore struct {
 
 // Kube contains the stored state for a kube deployment
 type Kube struct {
+	ID           api.ID
 	HostedZoneID string
 	DomainFilter string
 	Manifests    []string
@@ -60,6 +61,7 @@ func (k *kubeStore) getKubeDeployment(paths Paths) (*api.Kube, error) {
 	}
 
 	return &api.Kube{
+		ID:           o.ID,
 		HostedZoneID: o.HostedZoneID,
 		DomainFilter: o.DomainFilter,
 		Manifests:    manifests,
@@ -73,6 +75,7 @@ func (k *kubeStore) saveKubeDeployment(paths Paths, kube *api.Kube) error {
 	}
 
 	o := Kube{
+		ID:           kube.ID,
 		HostedZoneID: kube.HostedZoneID,
 		DomainFilter: kube.DomainFilter,
 	}

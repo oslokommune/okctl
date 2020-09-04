@@ -14,7 +14,7 @@ type parameter struct {
 }
 
 func (p *parameter) CreateSecret(opts api.CreateSecretOpts) (*api.SecretParameter, error) {
-	path := fmt.Sprintf("/okctl/%s/%s/%s", opts.RepositoryName, opts.Environment, opts.Name)
+	path := fmt.Sprintf("/okctl/%s/%s/%s", opts.ID.Repository, opts.ID.Environment, opts.Name)
 
 	got, err := p.provider.SSM().PutParameter(&ssm.PutParameterInput{
 		DataType:    aws.String("text"),
@@ -30,12 +30,10 @@ func (p *parameter) CreateSecret(opts api.CreateSecretOpts) (*api.SecretParamete
 
 	return &api.SecretParameter{
 		Parameter: api.Parameter{
-			AWSAccountID:   opts.AWSAccountID,
-			RepositoryName: opts.RepositoryName,
-			Environment:    opts.Environment,
-			Name:           opts.Name,
-			Version:        *got.Version,
-			Path:           path,
+			ID:      opts.ID,
+			Name:    opts.Name,
+			Version: *got.Version,
+			Path:    path,
 		},
 	}, nil
 }

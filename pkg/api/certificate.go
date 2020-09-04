@@ -8,8 +8,7 @@ import (
 
 // Certificate contains the state for a certificate
 type Certificate struct {
-	Repository             string
-	Environment            string
+	ID                     ID
 	FQDN                   string
 	Domain                 string
 	HostedZoneID           string
@@ -20,8 +19,7 @@ type Certificate struct {
 
 // CreateCertificateOpts contains the input required for creating a certificate
 type CreateCertificateOpts struct {
-	Repository   string
-	Environment  string
+	ID           ID
 	FQDN         string
 	Domain       string
 	HostedZoneID string
@@ -30,8 +28,7 @@ type CreateCertificateOpts struct {
 // Validate the input
 func (o CreateCertificateOpts) Validate() error {
 	return validation.ValidateStruct(&o,
-		validation.Field(&o.Repository, validation.Required),
-		validation.Field(&o.Environment, validation.Required),
+		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.FQDN, validation.Required),
 		validation.Field(&o.Domain, validation.Required),
 		validation.Field(&o.HostedZoneID, validation.Required),

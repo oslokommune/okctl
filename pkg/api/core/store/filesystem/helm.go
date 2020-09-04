@@ -18,9 +18,7 @@ type helmStore struct {
 
 // Helm contains the outputs we will store
 type Helm struct {
-	ClusterName string
-	Repository  string
-	Environment string
+	ID api.ID
 }
 
 func (s *helmStore) SaveArgoCD(helm *api.Helm) error {
@@ -37,9 +35,7 @@ func (s *helmStore) SaveExternalSecretsHelmChart(helm *api.Helm) error {
 
 func (s *helmStore) saveHelmChart(paths Paths, helm *api.Helm) error {
 	h := &Helm{
-		ClusterName: helm.ClusterName,
-		Repository:  helm.Repository,
-		Environment: helm.Environment,
+		ID: helm.ID,
 	}
 
 	outputs, err := json.Marshal(h)

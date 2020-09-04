@@ -60,44 +60,44 @@ func DefaultKubeConfig() *api.KubeConfig {
 	}
 }
 
+// DefaultID returns an ID initialised with defaults
+func DefaultID() api.ID {
+	return api.ID{
+		Region:       DefaultRegion,
+		AWSAccountID: DefaultAWSAccountID,
+		Environment:  DefaultEnv,
+		Repository:   DefaultRepositoryName,
+		ClusterName:  DefaultClusterName,
+	}
+}
+
 // DefaultVpcCreateOpts returns options for creating a vpc with defaults set
 func DefaultVpcCreateOpts() api.CreateVpcOpts {
 	return api.CreateVpcOpts{
-		AwsAccountID: DefaultAWSAccountID,
-		ClusterName:  DefaultClusterName,
-		Env:          DefaultEnv,
-		RepoName:     DefaultRepositoryName,
-		Cidr:         DefaultCidr,
-		Region:       DefaultRegion,
+		ID:   DefaultID(),
+		Cidr: DefaultCidr,
 	}
 }
 
 // DefaultVpcDeleteOpts returns options for deleting a vpc with defaults set
 func DefaultVpcDeleteOpts() api.DeleteVpcOpts {
 	return api.DeleteVpcOpts{
-		Env:      DefaultEnv,
-		RepoName: DefaultRepositoryName,
+		ID: DefaultID(),
 	}
 }
 
 // DefaultClusterDeleteOpts returns options for deleting a cluster with defaults set
 func DefaultClusterDeleteOpts() api.ClusterDeleteOpts {
 	return api.ClusterDeleteOpts{
-		Environment:    DefaultEnv,
-		RepositoryName: DefaultRepositoryName,
-		ClusterName:    DefaultClusterName,
+		ID: DefaultID(),
 	}
 }
 
 // DefaultClusterCreateOpts returns options for creating a cluster with defaults set
 func DefaultClusterCreateOpts() api.ClusterCreateOpts {
 	return api.ClusterCreateOpts{
-		Environment:       DefaultEnv,
-		AWSAccountID:      DefaultAWSAccountID,
+		ID:                DefaultID(),
 		Cidr:              DefaultCidr,
-		RepositoryName:    DefaultRepositoryName,
-		Region:            DefaultRegion,
-		ClusterName:       DefaultClusterName,
 		VpcID:             DefaultVpcID,
 		VpcPrivateSubnets: DefaultVpcPrivateSubnets(),
 		VpcPublicSubnets:  DefaultVpcPublicSubnets(),
@@ -166,7 +166,7 @@ func DefaultVpc() *api.Vpc {
 	return &api.Vpc{
 		StackName:              DefaultVpcStackName,
 		CloudFormationTemplate: []byte(DefaultVpcCloudFormationTemplate),
-		ID:                     DefaultVpcID,
+		VpcID:                  DefaultVpcID,
 		PublicSubnets:          DefaultVpcPublicSubnets(),
 		PrivateSubnets:         DefaultVpcPrivateSubnets(),
 	}
@@ -175,13 +175,9 @@ func DefaultVpc() *api.Vpc {
 // DefaultCluster returns an api cluster definition with defaults set
 func DefaultCluster() *api.Cluster {
 	return &api.Cluster{
-		Environment:    DefaultEnv,
-		AWSAccountID:   DefaultAWSAccountID,
-		Cidr:           DefaultCidr,
-		ClusterName:    DefaultClusterName,
-		RepositoryName: DefaultRepositoryName,
-		Region:         DefaultRegion,
-		Config:         DefaultClusterConfig(),
+		ID:     DefaultID(),
+		Cidr:   DefaultCidr,
+		Config: DefaultClusterConfig(),
 	}
 }
 

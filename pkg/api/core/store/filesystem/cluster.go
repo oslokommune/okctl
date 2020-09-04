@@ -20,15 +20,16 @@ type cluster struct {
 // SaveCluster knows how to save cluster state
 func (c *cluster) SaveCluster(clu *api.Cluster) error {
 	for _, cluster := range c.repoState.Clusters {
-		if cluster.Environment == clu.Environment {
+		if cluster.Environment == clu.ID.Environment {
 			return nil
 		}
 	}
 
 	c.repoState.Clusters = append(c.repoState.Clusters, repository.Cluster{
-		Environment: clu.Environment,
+		Name:        clu.ID.ClusterName,
+		Environment: clu.ID.Environment,
 		AWS: repository.AWS{
-			AccountID: clu.AWSAccountID,
+			AccountID: clu.ID.AWSAccountID,
 			Cidr:      clu.Cidr,
 		},
 	})
@@ -92,9 +93,14 @@ func (c *cluster) GetCluster(env string) (*api.Cluster, error) {
 	for _, cluster := range clusters {
 		if cluster.Environment == env {
 			return &api.Cluster{
-				Environment:  cluster.Environment,
-				AWSAccountID: cluster.AWS.AccountID,
-				Cidr:         cluster.AWS.Cidr,
+				ID: api.ID{
+					Region:       c.repoState.Region,
+					AWSAccountID: cluster.AWS.AccountID,
+					Environment:  cluster.Environment,
+					Repository:   c.repoState.Name,
+					ClusterName:  cluster.Name,
+				},
+				Cidr: cluster.AWS.Cidr,
 			}, nil
 		}
 	}

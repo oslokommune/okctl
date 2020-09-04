@@ -16,7 +16,7 @@ type certificate struct {
 func (c *certificate) CreateCertificate(opts api.CreateCertificateOpts) (*api.Certificate, error) {
 	b := cfn.New(components.NewPublicCertificateComposer(opts.Domain, opts.HostedZoneID))
 
-	stackName := cfn.NewStackNamer().Certificate(opts.Repository, opts.Environment, slug.Make(opts.Domain))
+	stackName := cfn.NewStackNamer().Certificate(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Domain))
 
 	template, err := b.Build()
 	if err != nil {
@@ -31,8 +31,7 @@ func (c *certificate) CreateCertificate(opts api.CreateCertificateOpts) (*api.Ce
 	}
 
 	p := &api.Certificate{
-		Repository:             opts.Repository,
-		Environment:            opts.Environment,
+		ID:                     opts.ID,
 		FQDN:                   opts.FQDN,
 		Domain:                 opts.Domain,
 		HostedZoneID:           opts.HostedZoneID,

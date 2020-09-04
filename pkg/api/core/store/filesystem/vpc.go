@@ -19,8 +19,9 @@ type vpc struct {
 // Vpc represents the information that is stored
 // about a vpc
 type Vpc struct {
+	ID             api.ID
 	StackName      string
-	ID             string
+	VpcID          string
 	PublicSubnets  []VpcSubnet
 	PrivateSubnets []VpcSubnet
 }
@@ -55,8 +56,9 @@ func storeFromDef(vpc *api.Vpc) Vpc {
 	}
 
 	vpcState := Vpc{
-		StackName:      vpc.StackName,
 		ID:             vpc.ID,
+		StackName:      vpc.StackName,
+		VpcID:          vpc.VpcID,
 		PublicSubnets:  pub,
 		PrivateSubnets: pri,
 	}
@@ -86,8 +88,9 @@ func defFromStore(vpc *Vpc) *api.Vpc {
 	}
 
 	return &api.Vpc{
-		StackName:      vpc.StackName,
 		ID:             vpc.ID,
+		StackName:      vpc.StackName,
+		VpcID:          vpc.VpcID,
 		PublicSubnets:  pub,
 		PrivateSubnets: pri,
 	}

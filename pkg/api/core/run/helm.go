@@ -30,22 +30,22 @@ func (r *helmRun) CreateArgoCD(opts api.CreateArgoCDOpts) (*api.Helm, error) {
 		PrivateKeySecretKey:  opts.PrivateKeyKey,
 	}))
 
-	return r.createHelmChart(opts.ClusterName, opts.Repository, opts.Environment, chart)
+	return r.createHelmChart(opts.ID, chart)
 }
 
 func (r *helmRun) CreateAlbIngressControllerHelmChart(opts api.CreateAlbIngressControllerHelmChartOpts) (*api.Helm, error) {
-	chart := awsalbingresscontroller.New(awsalbingresscontroller.NewDefaultValues(opts.ClusterName, opts.VpcID, opts.Region))
+	chart := awsalbingresscontroller.New(awsalbingresscontroller.NewDefaultValues(opts.ID.ClusterName, opts.VpcID, opts.ID.Region))
 
-	return r.createHelmChart(opts.ClusterName, opts.Repository, opts.Environment, chart)
+	return r.createHelmChart(opts.ID, chart)
 }
 
 func (r *helmRun) CreateExternalSecretsHelmChart(opts api.CreateExternalSecretsHelmChartOpts) (*api.Helm, error) {
 	chart := externalsecrets.ExternalSecrets(externalsecrets.DefaultExternalSecretsValues())
 
-	return r.createHelmChart(opts.ClusterName, opts.Repository, opts.Environment, chart)
+	return r.createHelmChart(opts.ID, chart)
 }
 
-func (r *helmRun) createHelmChart(clusterName, repository, env string, chart *helm.Chart) (*api.Helm, error) {
+func (r *helmRun) createHelmChart(id api.ID, chart *helm.Chart) (*api.Helm, error) {
 	err := r.helm.RepoAdd(chart.RepositoryName, chart.RepositoryURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to add repository: %w", err)
@@ -72,11 +72,9 @@ func (r *helmRun) createHelmChart(clusterName, repository, env string, chart *he
 	}
 
 	return &api.Helm{
-		ClusterName: clusterName,
-		Repository:  repository,
-		Environment: env,
-		Release:     release,
-		Chart:       chart,
+		ID:      id,
+		Release: release,
+		Chart:   chart,
 	}, nil
 }
 

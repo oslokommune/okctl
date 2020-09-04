@@ -8,10 +8,11 @@ import (
 
 // Vpc represents the state of an aws vpc
 type Vpc struct {
+	ID                     ID
 	StackName              string
 	CloudFormationTemplate []byte
 
-	ID             string
+	VpcID          string
 	PublicSubnets  []VpcSubnet
 	PrivateSubnets []VpcSubnet
 }
@@ -25,28 +26,20 @@ type VpcSubnet struct {
 
 // CreateVpcOpts defines the inputs to create a vpc
 type CreateVpcOpts struct {
-	AwsAccountID string
-	ClusterName  string // not needed
-	Env          string
-	RepoName     string
-	Cidr         string
-	Region       string
+	ID   ID
+	Cidr string
 }
 
 // DeleteVpcOpts defines the inputs to delete a vpc
 type DeleteVpcOpts struct {
-	Env      string
-	RepoName string
+	ID ID
 }
 
 // Validate a vpc create request
 func (o CreateVpcOpts) Validate() error {
 	return validation.ValidateStruct(&o,
-		validation.Field(&o.Env, validation.Required),
-		validation.Field(&o.Region, validation.Required),
+		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.Cidr, validation.Required),
-		validation.Field(&o.AwsAccountID, validation.Required),
-		validation.Field(&o.RepoName, validation.Required),
 	)
 }
 

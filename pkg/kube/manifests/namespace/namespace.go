@@ -1,3 +1,4 @@
+// Package namespace provides a namespace creator and applier
 package namespace
 
 import (

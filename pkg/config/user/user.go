@@ -1,5 +1,5 @@
-// Package application provides functionality for interacting with okctl application data
-package application
+// Package user provides functionality for interacting with okctl application data
+package user
 
 import (
 	"regexp"

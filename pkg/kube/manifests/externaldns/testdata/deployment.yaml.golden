@@ -8,7 +8,8 @@ spec:
   selector:
     matchLabels:
       app: external-dns
-  strategy: {}
+  strategy:
+    type: Recreate
   template:
     metadata:
       creationTimestamp: null
@@ -22,6 +23,8 @@ spec:
         - --domain-filter=test.oslo.systems
         - --provider=aws
         - --aws-zone-type=public
+        - --log-level=debug
+        - --events
         - --registry=txt
         - --txt-owner-id=ABC123456
         image: registry.opensource.zalan.do/teapot/external-dns:v0.7.3
@@ -29,6 +32,6 @@ spec:
         resources: {}
       securityContext:
         fsGroup: 65534
-        runAsNonRoot: true
+        runAsNonRoot: false
       serviceAccountName: external-dns
 status: {}

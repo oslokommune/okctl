@@ -90,7 +90,7 @@ package load_test
 //			appCfgFn: func() *application.Data {
 //				return stableAppCfg("1")
 //			},
-//			notFoundFn:  load.ErrOnAppDataNotFound(),
+//			notFoundFn:  load.ErrOnUserDataNotFound(),
 //			expectError: true,
 //		},
 //	}
@@ -104,7 +104,7 @@ package load_test
 //				tc.preFn()
 //			}
 //
-//			err := load.AppDataFromFlagsEnvConfigDefaults(cobra.Command{}, createAppTestConfig(t, tc.content, tc.fileName), tc.appCfgFn, tc.notFoundFn)()
+//			err := load.UserDataFromFlagsEnvConfigDefaults(cobra.Command{}, createAppTestConfig(t, tc.content, tc.fileName), tc.appCfgFn, tc.notFoundFn)()
 //			if tc.expectError {
 //				if tc.expect == nil {
 //					assert.NotNil(t, err)

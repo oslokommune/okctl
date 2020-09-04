@@ -3,40 +3,21 @@ package api
 
 import (
 	"context"
-	"regexp"
 
-	val "github.com/go-ozzo/ozzo-validation/v4"
-)
-
-const (
-	envMinLength     = 3
-	envMaxLength     = 100
-	repoMinLength    = 3
-	repoMaxLength    = 100
-	clusterMinLength = 3
-	clusterMaxLength = 100
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 // Cluster contains the core state for a cluster
 type Cluster struct {
-	Environment    string
-	AWSAccountID   string
-	Cidr           string
-	ClusterName    string
-	RepositoryName string
-	Region         string
-	Config         *ClusterConfig
+	ID     ID
+	Cidr   string
+	Config *ClusterConfig
 }
 
 // ClusterCreateOpts specifies the required inputs for creating a cluster
 type ClusterCreateOpts struct {
-	Environment    string
-	AWSAccountID   string
-	Cidr           string
-	RepositoryName string
-	Region         string
-	ClusterName    string
-
+	ID                ID
+	Cidr              string
 	VpcID             string
 	VpcPrivateSubnets []VpcSubnet
 	VpcPublicSubnets  []VpcSubnet
@@ -44,48 +25,24 @@ type ClusterCreateOpts struct {
 
 // Validate the create inputs
 func (o *ClusterCreateOpts) Validate() error {
-	return val.ValidateStruct(o,
-		val.Field(&o.AWSAccountID,
-			val.Required,
-			val.Match(regexp.MustCompile("^[0-9]{12}$")).
-				Error("must consist of 12 digits"),
-		),
-		val.Field(&o.RepositoryName,
-			val.Required,
-			val.Length(repoMinLength, repoMaxLength),
-		),
-		val.Field(&o.ClusterName,
-			val.Required,
-			val.Length(clusterMinLength, clusterMaxLength),
-		),
-		val.Field(&o.Environment,
-			val.Required,
-			val.Length(envMinLength, envMaxLength),
-		),
-		val.Field(&o.Cidr, val.Required),
-		val.Field(&o.Region, val.Required),
-		val.Field(&o.VpcID, val.Required),
-		val.Field(&o.VpcPrivateSubnets, val.Required),
-		val.Field(&o.VpcPublicSubnets, val.Required),
+	return validation.ValidateStruct(o,
+		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.Cidr, validation.Required),
+		validation.Field(&o.VpcID, validation.Required),
+		validation.Field(&o.VpcPrivateSubnets, validation.Required),
+		validation.Field(&o.VpcPublicSubnets, validation.Required),
 	)
 }
 
 // ClusterDeleteOpts specifies the required inputs for deleting a cluster
 type ClusterDeleteOpts struct {
-	Environment    string
-	RepositoryName string
-	ClusterName    string
+	ID ID
 }
 
 // Validate the delete inputs
 func (o *ClusterDeleteOpts) Validate() error {
-	return val.ValidateStruct(o,
-		val.Field(&o.Environment,
-			val.Required,
-			val.Length(envMinLength, envMaxLength),
-		),
-		val.Field(&o.RepositoryName, val.Required),
-		val.Field(&o.ClusterName, val.Required),
+	return validation.ValidateStruct(o,
+		validation.Field(&o.ID, validation.Required),
 	)
 }
 

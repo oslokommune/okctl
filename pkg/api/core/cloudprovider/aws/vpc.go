@@ -19,14 +19,14 @@ type vpcCloudProvider struct {
 
 // CreateCluster will use the cloud provider to create a cluster in the cloud
 func (c *vpcCloudProvider) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
-	b := cfn.New(components.NewVPCComposer(opts.RepoName, opts.Env, opts.Cidr, opts.Region))
+	b := cfn.New(components.NewVPCComposer(opts.ID.Repository, opts.ID.Environment, opts.Cidr, opts.ID.Region))
 
 	template, err := b.Build()
 	if err != nil {
 		return nil, errors.E(err, "failed to build cloud formation template", errors.Internal)
 	}
 
-	stackName := cfn.NewStackNamer().Vpc(opts.RepoName, opts.Env)
+	stackName := cfn.NewStackNamer().Vpc(opts.ID.Repository, opts.ID.Environment)
 
 	r := cfn.NewRunner(c.provider)
 
@@ -43,7 +43,7 @@ func (c *vpcCloudProvider) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
 	err = r.Outputs(stackName, map[string]cfn.ProcessOutputFn{
 		"PrivateSubnetIds": cfn.Subnets(c.provider, &v.PrivateSubnets),
 		"PublicSubnetIds":  cfn.Subnets(c.provider, &v.PublicSubnets),
-		"Vpc":              cfn.String(&v.ID),
+		"Vpc":              cfn.String(&v.VpcID),
 	})
 	if err != nil {
 		return nil, errors.E(err, "failed to process outputs")
@@ -54,7 +54,7 @@ func (c *vpcCloudProvider) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
 
 // DeleteVpc will use the cloud provider to delete a cluster in the cloud
 func (c *vpcCloudProvider) DeleteVpc(opts api.DeleteVpcOpts) error {
-	return cfn.NewRunner(c.provider).Delete(cfn.NewStackNamer().Vpc(opts.RepoName, opts.Env))
+	return cfn.NewRunner(c.provider).Delete(cfn.NewStackNamer().Vpc(opts.ID.Repository, opts.ID.Environment))
 }
 
 // NewVpcCloud returns a cloud provider for cluster

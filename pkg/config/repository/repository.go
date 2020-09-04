@@ -70,6 +70,7 @@ func (d *Data) Validate() error {
 // Cluster represents an okctl created
 // cluster
 type Cluster struct {
+	Name         string
 	Environment  string
 	HostedZone   HostedZone
 	AWS          AWS
@@ -86,6 +87,7 @@ const (
 // Validate the cluster data
 func (c Cluster) Validate() error {
 	return validation.ValidateStruct(&c,
+		validation.Field(&c.Name, validation.Required),
 		validation.Field(&c.Environment,
 			validation.Required,
 			validation.Length(envMinLength, envMaxLength),

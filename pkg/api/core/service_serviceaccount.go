@@ -38,10 +38,10 @@ func (c *serviceAccount) CreateExternalDNSServiceAccount(_ context.Context, opts
 	}
 
 	config, err := clusterconfig.NewExternalDNSServiceAccount(
-		opts.ClusterName,
-		opts.Region,
+		opts.ID.ClusterName,
+		opts.ID.Region,
 		opts.PolicyArn,
-		v1alpha1.PermissionsBoundaryARN(opts.AWSAccountID),
+		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
 	)
 	if err != nil {
 		return nil, errBuildServiceAccount(err)
@@ -67,10 +67,10 @@ func (c *serviceAccount) CreateAlbIngressControllerServiceAccount(_ context.Cont
 	}
 
 	config, err := clusterconfig.NewAlbIngressControllerServiceAccount(
-		opts.ClusterName,
-		opts.Region,
+		opts.ID.ClusterName,
+		opts.ID.Region,
 		opts.PolicyArn,
-		v1alpha1.PermissionsBoundaryARN(opts.AWSAccountID),
+		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
 	)
 	if err != nil {
 		return nil, errBuildServiceAccount(err)
@@ -96,10 +96,10 @@ func (c *serviceAccount) CreateExternalSecretsServiceAccount(_ context.Context, 
 	}
 
 	config, err := clusterconfig.NewExternalSecretsServiceAccount(
-		opts.ClusterName,
-		opts.Region,
+		opts.ID.ClusterName,
+		opts.ID.Region,
 		opts.PolicyArn,
-		v1alpha1.PermissionsBoundaryARN(opts.AWSAccountID),
+		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
 	)
 	if err != nil {
 		return nil, errBuildServiceAccount(err)
@@ -125,12 +125,9 @@ func (c *serviceAccount) createServiceAccount(opts api.CreateServiceAccountOpts,
 	}
 
 	account := &api.ServiceAccount{
-		ClusterName:  opts.ClusterName,
-		Environment:  opts.Environment,
-		Region:       opts.Region,
-		AWSAccountID: opts.AWSAccountID,
-		PolicyArn:    opts.PolicyArn,
-		Config:       config,
+		ID:        opts.ID,
+		PolicyArn: opts.PolicyArn,
+		Config:    config,
 	}
 
 	return account, nil

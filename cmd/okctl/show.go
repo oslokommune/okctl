@@ -6,6 +6,10 @@ import (
 	"path"
 	"strings"
 
+	"github.com/mishudark/errors"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/helm"
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -27,11 +31,28 @@ func buildShowCommand(o *okctl.Okctl) *cobra.Command {
 	return cmd
 }
 
+// ShowCredentialsOpts contains the required inputs
+type ShowCredentialsOpts struct {
+	Region       string
+	AWSAccountID string
+	Environment  string
+	Repository   string
+	ClusterName  string
+}
+
+// Validate the inputs
+func (o *ShowCredentialsOpts) Validate() error {
+	return validation.ValidateStruct(o,
+		validation.Field(&o.Environment, validation.Required),
+		validation.Field(&o.AWSAccountID, validation.Required),
+		validation.Field(&o.Region, validation.Required),
+		validation.Field(&o.ClusterName, validation.Required),
+	)
+}
+
 // nolint: funlen
 func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
-	opts := struct {
-		Environment string
-	}{}
+	opts := ShowCredentialsOpts{}
 
 	cmd := &cobra.Command{
 		Use:   "credentials [env]",
@@ -39,14 +60,20 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 		Long:  `This makes it possible to source the output from this command to run with kubectl`,
 		Args:  cobra.ExactArgs(showCredentialsArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			opts.Environment = args[0]
+			environment := args[0]
 
-			awsAccountID, err := o.AWSAccountID(opts.Environment)
+			opts.Region = o.Region()
+			opts.AWSAccountID = o.AWSAccountID(environment)
+			opts.Environment = environment
+			opts.Repository = o.RepoData.Name
+			opts.ClusterName = o.ClusterName(environment)
+
+			err := opts.Validate()
 			if err != nil {
-				return err
+				return errors.E(err, "failed to validate show credentials options")
 			}
 
-			return o.Initialise(opts.Environment, awsAccountID)
+			return o.Initialise(opts.Environment, opts.AWSAccountID)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			appDir, err := o.GetUserDataDir()

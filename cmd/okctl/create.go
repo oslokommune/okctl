@@ -115,6 +115,14 @@ and database subnets.`,
 			// the result ourselves
 			c := client.New(o.Debug, ioutil.Discard, o.ServerURL)
 
+			id := api.ID{
+				Region:       opts.Region,
+				AWSAccountID: opts.AWSAccountID,
+				Environment:  opts.Environment,
+				Repository:   opts.RepositoryName,
+				ClusterName:  opts.ClusterName,
+			}
+
 			o.SetGithubOrganisationName(opts.Organisation, opts.Environment)
 			err := o.WriteCurrentRepoData()
 			if err != nil {
@@ -122,25 +130,17 @@ and database subnets.`,
 			}
 
 			vpc, err := c.CreateVpc(&api.CreateVpcOpts{
-				AwsAccountID: opts.AWSAccountID,
-				ClusterName:  opts.ClusterName,
-				Env:          opts.Environment,
-				RepoName:     opts.RepositoryName,
-				Cidr:         opts.Cidr,
-				Region:       opts.Region,
+				ID:   id,
+				Cidr: opts.Cidr,
 			})
 			if err != nil {
 				return err
 			}
 
 			err = c.CreateCluster(&api.ClusterCreateOpts{
-				Environment:       opts.Environment,
-				AWSAccountID:      opts.AWSAccountID,
+				ID:                id,
 				Cidr:              opts.Cidr,
-				RepositoryName:    opts.RepositoryName,
-				Region:            opts.Region,
-				ClusterName:       opts.ClusterName,
-				VpcID:             vpc.ID,
+				VpcID:             vpc.VpcID,
 				VpcPrivateSubnets: vpc.PrivateSubnets,
 				VpcPublicSubnets:  vpc.PublicSubnets,
 			})
@@ -149,8 +149,7 @@ and database subnets.`,
 			}
 
 			policy, err := c.CreateExternalSecretsPolicy(&api.CreateExternalSecretsPolicyOpts{
-				Repository:  opts.RepositoryName,
-				Environment: opts.Environment,
+				ID: id,
 			})
 			if err != nil {
 				return err
@@ -158,11 +157,8 @@ and database subnets.`,
 
 			err = c.CreateExternalSecretsServiceAccount(&api.CreateExternalSecretsServiceAccountOpts{
 				CreateServiceAccountOpts: api.CreateServiceAccountOpts{
-					ClusterName:  opts.ClusterName,
-					Environment:  opts.Environment,
-					Region:       opts.Region,
-					AWSAccountID: opts.AWSAccountID,
-					PolicyArn:    policy.PolicyARN,
+					ID:        id,
+					PolicyArn: policy.PolicyARN,
 				},
 			})
 			if err != nil {
@@ -170,17 +166,14 @@ and database subnets.`,
 			}
 
 			_, err = c.CreateExternalSecretsHelmChart(&api.CreateExternalSecretsHelmChartOpts{
-				Repository:  opts.RepositoryName,
-				Environment: opts.Environment,
-				ClusterName: opts.ClusterName,
+				ID: id,
 			})
 			if err != nil {
 				return err
 			}
 
 			policy, err = c.CreateAlbIngressControllerPolicy(&api.CreateAlbIngressControllerPolicyOpts{
-				Repository:  opts.RepositoryName,
-				Environment: opts.Environment,
+				ID: id,
 			})
 			if err != nil {
 				return err
@@ -188,11 +181,8 @@ and database subnets.`,
 
 			err = c.CreateAlbIngressControllerServiceAccount(&api.CreateAlbIngressControllerServiceAccountOpts{
 				CreateServiceAccountOpts: api.CreateServiceAccountOpts{
-					ClusterName:  opts.ClusterName,
-					Environment:  opts.Environment,
-					Region:       opts.Region,
-					AWSAccountID: opts.AWSAccountID,
-					PolicyArn:    policy.PolicyARN,
+					ID:        id,
+					PolicyArn: policy.PolicyARN,
 				},
 			})
 			if err != nil {
@@ -200,21 +190,17 @@ and database subnets.`,
 			}
 
 			_, err = c.CreateAlbIngressControllerHelmChart(&api.CreateAlbIngressControllerHelmChartOpts{
-				ClusterName: opts.ClusterName,
-				Repository:  opts.RepositoryName,
-				Environment: opts.Environment,
-				VpcID:       vpc.ID,
-				Region:      opts.Region,
+				ID:    id,
+				VpcID: vpc.VpcID,
 			})
 			if err != nil {
 				return err
 			}
 
 			d, err := c.CreateDomain(&api.CreateDomainOpts{
-				Repository:  opts.RepositoryName,
-				Environment: opts.Environment,
-				FQDN:        opts.FQDN,
-				Domain:      opts.DomainName,
+				ID:     id,
+				FQDN:   opts.FQDN,
+				Domain: opts.DomainName,
 			})
 			if err != nil {
 				return err
@@ -244,8 +230,7 @@ and database subnets.`,
 			}
 
 			policy, err = c.CreateExternalDNSPolicy(&api.CreateExternalDNSPolicyOpts{
-				Repository:  opts.RepositoryName,
-				Environment: opts.Environment,
+				ID: id,
 			})
 			if err != nil {
 				return err
@@ -253,11 +238,8 @@ and database subnets.`,
 
 			err = c.CreateExternalDNSServiceAccount(&api.CreateExternalDNSServiceAccountOpts{
 				CreateServiceAccountOpts: api.CreateServiceAccountOpts{
-					ClusterName:  opts.ClusterName,
-					Environment:  opts.Environment,
-					Region:       opts.Region,
-					AWSAccountID: opts.AWSAccountID,
-					PolicyArn:    policy.PolicyARN,
+					ID:        id,
+					PolicyArn: policy.PolicyARN,
 				},
 			})
 			if err != nil {
@@ -265,6 +247,7 @@ and database subnets.`,
 			}
 
 			_, err = c.CreateExternalDNSKubeDeployment(&api.CreateExternalDNSKubeDeploymentOpts{
+				ID:           id,
 				HostedZoneID: d.HostedZoneID,
 				DomainFilter: d.Domain,
 			})
@@ -273,8 +256,7 @@ and database subnets.`,
 			}
 
 			cert, err := c.CreateCertificate(&api.CreateCertificateOpts{
-				Repository:   opts.RepositoryName,
-				Environment:  opts.Environment,
+				ID:           id,
 				FQDN:         fmt.Sprintf("argocd.%s", opts.FQDN),
 				Domain:       fmt.Sprintf("argocd.%s", opts.DomainName),
 				HostedZoneID: d.HostedZoneID,
@@ -354,11 +336,9 @@ and database subnets.`,
 				}
 
 				clientSecret, err := c.CreateSecret(&api.CreateSecretOpts{
-					AWSAccountID:   opts.AWSAccountID,
-					RepositoryName: opts.RepositoryName,
-					Environment:    opts.Environment,
-					Name:           "client_secret",
-					Secret:         app.ClientSecret,
+					ID:     id,
+					Name:   "client_secret",
+					Secret: app.ClientSecret,
 				})
 				if err != nil {
 					return err
@@ -388,11 +368,9 @@ and database subnets.`,
 				}
 
 				privateKey, err := c.CreateSecret(&api.CreateSecretOpts{
-					AWSAccountID:   opts.AWSAccountID,
-					RepositoryName: opts.RepositoryName,
-					Environment:    opts.Environment,
-					Name:           "private_key",
-					Secret:         string(key.PrivateKey),
+					ID:     id,
+					Name:   "private_key",
+					Secret: string(key.PrivateKey),
 				})
 				if err != nil {
 					return err
@@ -412,11 +390,9 @@ and database subnets.`,
 			argocd := o.ArgoCD(opts.Environment)
 			if len(argocd.SecretKeyPath) == 0 {
 				secretKey, err := c.CreateSecret(&api.CreateSecretOpts{
-					AWSAccountID:   opts.AWSAccountID,
-					RepositoryName: opts.RepositoryName,
-					Environment:    opts.Environment,
-					Name:           "argocd_secret_key",
-					Secret:         uuid.New().String(),
+					ID:     id,
+					Name:   "argocd_secret_key",
+					Secret: uuid.New().String(),
 				})
 				if err != nil {
 					return err
@@ -432,6 +408,7 @@ and database subnets.`,
 			}
 
 			_, err = c.CreateExternalSecrets(&api.CreateExternalSecretsOpts{
+				ID: id,
 				Manifests: []api.Manifest{
 					{
 						Name:      "argocd-privatekey",
@@ -464,9 +441,7 @@ and database subnets.`,
 			}
 
 			_, err = c.CreateArgoCD(&api.CreateArgoCDOpts{
-				ClusterName:         opts.ClusterName,
-				Repository:          opts.RepositoryName,
-				Environment:         opts.Environment,
+				ID:                  id,
 				ArgoDomain:          cert.Domain,
 				ArgoCertificateARN:  cert.CertificateARN,
 				GithubOrganisation:  opts.Organisation,

@@ -19,10 +19,9 @@ type managedPolicy struct {
 // ManagedPolicy contains the state that is stored to
 // and retrieved from the filesystem
 type ManagedPolicy struct {
-	StackName   string
-	Repository  string
-	Environment string
-	PolicyARN   string
+	ID        api.ID
+	StackName string
+	PolicyARN string
 }
 
 func (m *managedPolicy) SaveExternalDNSPolicy(policy *api.ManagedPolicy) error {
@@ -51,10 +50,9 @@ func (m *managedPolicy) GetExternalSecretsPolicy() (*api.ManagedPolicy, error) {
 
 func (m *managedPolicy) savePolicy(paths Paths, policy *api.ManagedPolicy) error {
 	p := &ManagedPolicy{
-		StackName:   policy.StackName,
-		Repository:  policy.Repository,
-		Environment: policy.Environment,
-		PolicyARN:   policy.PolicyARN,
+		ID:        policy.ID,
+		StackName: policy.StackName,
+		PolicyARN: policy.PolicyARN,
 	}
 
 	data, err := json.Marshal(p)
@@ -94,10 +92,9 @@ func (m *managedPolicy) getPolicy(paths Paths) (*api.ManagedPolicy, error) {
 	}
 
 	policy := &api.ManagedPolicy{
-		StackName:   p.StackName,
-		Repository:  p.Repository,
-		Environment: p.Environment,
-		PolicyARN:   p.PolicyARN,
+		ID:        p.ID,
+		StackName: p.StackName,
+		PolicyARN: p.PolicyARN,
 	}
 
 	template, err := m.fs.ReadFile(path.Join(paths.BaseDir, paths.CloudFormationFile))

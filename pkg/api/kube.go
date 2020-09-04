@@ -8,14 +8,15 @@ import (
 
 // Kube contains the state for a kube deployment
 type Kube struct {
+	ID           ID
 	HostedZoneID string
 	DomainFilter string
-
-	Manifests map[string][]byte
+	Manifests    map[string][]byte
 }
 
 // CreateExternalDNSKubeDeploymentOpts contains input options
 type CreateExternalDNSKubeDeploymentOpts struct {
+	ID           ID
 	HostedZoneID string
 	DomainFilter string
 }
@@ -23,6 +24,7 @@ type CreateExternalDNSKubeDeploymentOpts struct {
 // Validate the input
 func (o CreateExternalDNSKubeDeploymentOpts) Validate() error {
 	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.HostedZoneID, validation.Required),
 		validation.Field(&o.DomainFilter, validation.Required),
 	)
@@ -30,12 +32,14 @@ func (o CreateExternalDNSKubeDeploymentOpts) Validate() error {
 
 // CreateExternalSecretsOpts contains the required inputs
 type CreateExternalSecretsOpts struct {
+	ID        ID
 	Manifests []Manifest
 }
 
 // Validate the inputs
 func (o CreateExternalSecretsOpts) Validate() error {
 	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.Manifests, validation.Required),
 	)
 }

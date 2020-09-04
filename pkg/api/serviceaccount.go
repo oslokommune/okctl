@@ -8,31 +8,22 @@ import (
 
 // ServiceAccount holds state for a service account
 type ServiceAccount struct {
-	ClusterName  string
-	Environment  string
-	Region       string
-	AWSAccountID string
-	PolicyArn    string
-	Config       *ClusterConfig
+	ID        ID
+	PolicyArn string
+	Config    *ClusterConfig
 }
 
 // CreateServiceAccountOpts contains opts shared state
 type CreateServiceAccountOpts struct {
-	ClusterName  string
-	Environment  string
-	Region       string
-	AWSAccountID string
-	PolicyArn    string
+	ID        ID
+	PolicyArn string
 }
 
 // ValidateStruct validates the shared state
 func (o CreateServiceAccountOpts) ValidateStruct() error {
 	return validation.ValidateStruct(&o,
-		validation.Field(&o.Environment, validation.Required),
-		validation.Field(&o.AWSAccountID, validation.Required),
+		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.PolicyArn, validation.Required),
-		validation.Field(&o.ClusterName, validation.Required),
-		validation.Field(&o.Region, validation.Required),
 	)
 }
 

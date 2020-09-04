@@ -30,11 +30,11 @@ func (c *cluster) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (
 	}
 
 	cfg, err := clusterconfig.New(&clusterconfig.Args{
-		ClusterName:            opts.ClusterName,
-		PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(opts.AWSAccountID),
+		ClusterName:            opts.ID.ClusterName,
+		PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
 		PrivateSubnets:         opts.VpcPrivateSubnets,
 		PublicSubnets:          opts.VpcPublicSubnets,
-		Region:                 opts.Region,
+		Region:                 opts.ID.Region,
 		VpcCidr:                opts.Cidr,
 		VpcID:                  opts.VpcID,
 	})
@@ -48,13 +48,9 @@ func (c *cluster) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (
 	}
 
 	res := &api.Cluster{
-		Environment:    opts.Environment,
-		AWSAccountID:   opts.AWSAccountID,
-		Cidr:           opts.Cidr,
-		ClusterName:    opts.ClusterName,
-		RepositoryName: opts.RepositoryName,
-		Region:         opts.Region,
-		Config:         cfg,
+		ID:     opts.ID,
+		Cidr:   opts.Cidr,
+		Config: cfg,
 	}
 
 	err = c.store.SaveCluster(res)
@@ -72,12 +68,12 @@ func (c *cluster) DeleteCluster(_ context.Context, opts api.ClusterDeleteOpts) e
 		return errors.E(err, "failed to validate delete cluster inputs", errors.Invalid)
 	}
 
-	err = c.run.DeleteCluster(opts.ClusterName)
+	err = c.run.DeleteCluster(opts.ID.ClusterName)
 	if err != nil {
 		return errors.E(err, "failed to delete cluster", errors.Internal)
 	}
 
-	err = c.store.DeleteCluster(opts.Environment)
+	err = c.store.DeleteCluster(opts.ID.Environment)
 	if err != nil {
 		return errors.E(err, "failed to delete cluster", errors.Internal)
 	}

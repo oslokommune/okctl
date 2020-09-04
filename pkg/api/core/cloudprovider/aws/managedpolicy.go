@@ -14,39 +14,39 @@ type managedPolicy struct {
 
 func (m *managedPolicy) CreateExternalDNSPolicy(opts api.CreateExternalDNSPolicyOpts) (*api.ManagedPolicy, error) {
 	b := cfn.New(
-		components.NewExternalDNSPolicyComposer(opts.Repository, opts.Environment),
+		components.NewExternalDNSPolicyComposer(opts.ID.Repository, opts.ID.Environment),
 	)
 
 	stackName := cfn.NewStackNamer().
-		ExternalDNSPolicy(opts.Repository, opts.Environment)
+		ExternalDNSPolicy(opts.ID.Repository, opts.ID.Environment)
 
-	return m.createPolicy(stackName, opts.Environment, opts.Repository, "ExternalDNSPolicy", b)
+	return m.createPolicy(stackName, opts.ID, "ExternalDNSPolicy", b)
 }
 
 func (m *managedPolicy) CreateAlbIngressControllerPolicy(opts api.CreateAlbIngressControllerPolicyOpts) (*api.ManagedPolicy, error) {
 	b := cfn.New(
-		components.NewAlbIngressControllerPolicyComposer(opts.Repository, opts.Environment),
+		components.NewAlbIngressControllerPolicyComposer(opts.ID.Repository, opts.ID.Environment),
 	)
 
 	stackName := cfn.NewStackNamer().
-		AlbIngressControllerPolicy(opts.Repository, opts.Environment)
+		AlbIngressControllerPolicy(opts.ID.Repository, opts.ID.Environment)
 
-	return m.createPolicy(stackName, opts.Environment, opts.Repository, "AlbIngressControllerPolicy", b)
+	return m.createPolicy(stackName, opts.ID, "AlbIngressControllerPolicy", b)
 }
 
 // CreateExternalSecretsPolicy builds and applies a cloud formation template
 func (m *managedPolicy) CreateExternalSecretsPolicy(opts api.CreateExternalSecretsPolicyOpts) (*api.ManagedPolicy, error) {
 	b := cfn.New(
-		components.NewExternalSecretsPolicyComposer(opts.Repository, opts.Environment),
+		components.NewExternalSecretsPolicyComposer(opts.ID.Repository, opts.ID.Environment),
 	)
 
 	stackName := cfn.NewStackNamer().
-		ExternalSecretsPolicy(opts.Repository, opts.Environment)
+		ExternalSecretsPolicy(opts.ID.Repository, opts.ID.Environment)
 
-	return m.createPolicy(stackName, opts.Environment, opts.Repository, "ExternalSecretsPolicy", b)
+	return m.createPolicy(stackName, opts.ID, "ExternalSecretsPolicy", b)
 }
 
-func (m *managedPolicy) createPolicy(stackName, env, repoName, outputName string, builder cfn.StackBuilder) (*api.ManagedPolicy, error) {
+func (m *managedPolicy) createPolicy(stackName string, id api.ID, outputName string, builder cfn.StackBuilder) (*api.ManagedPolicy, error) {
 	template, err := builder.Build()
 	if err != nil {
 		return nil, errors.E(err, "failed to build cloud formation template")
@@ -60,9 +60,8 @@ func (m *managedPolicy) createPolicy(stackName, env, repoName, outputName string
 	}
 
 	p := &api.ManagedPolicy{
+		ID:                     id,
 		StackName:              stackName,
-		Repository:             repoName,
-		Environment:            env,
 		CloudFormationTemplate: template,
 	}
 

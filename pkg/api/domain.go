@@ -8,8 +8,7 @@ import (
 
 // Domain contains the state after creating a domain
 type Domain struct {
-	Repository             string
-	Environment            string
+	ID                     ID
 	FQDN                   string
 	Domain                 string
 	HostedZoneID           string
@@ -20,19 +19,17 @@ type Domain struct {
 
 // CreateDomainOpts contains the input required for creating a domain
 type CreateDomainOpts struct {
-	Repository  string
-	Environment string
-	Domain      string
-	FQDN        string
+	ID     ID
+	Domain string
+	FQDN   string
 }
 
 // Validate the inputs
 func (o CreateDomainOpts) Validate() error {
 	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.Domain, validation.Required),
-		validation.Field(&o.Repository, validation.Required),
 		validation.Field(&o.FQDN, validation.Required),
-		validation.Field(&o.Environment, validation.Required),
 	)
 }
 

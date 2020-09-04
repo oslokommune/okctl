@@ -19,8 +19,7 @@ type certificateStore struct {
 
 // Certificate contains the data we store to the outputs
 type Certificate struct {
-	Repository     string
-	Environment    string
+	ID             api.ID
 	FQDN           string
 	Domain         string
 	HostedZoneID   string
@@ -31,8 +30,7 @@ type Certificate struct {
 // nolint: funlen
 func (c *certificateStore) SaveCertificate(certificate *api.Certificate) error {
 	cert := Certificate{
-		Repository:     certificate.Repository,
-		Environment:    certificate.Environment,
+		ID:             certificate.ID,
 		FQDN:           certificate.FQDN,
 		Domain:         certificate.Domain,
 		HostedZoneID:   certificate.HostedZoneID,
@@ -61,7 +59,7 @@ func (c *certificateStore) SaveCertificate(certificate *api.Certificate) error {
 	}
 
 	for i, cluster := range c.repoState.Clusters {
-		if cluster.Environment == certificate.Environment {
+		if cluster.Environment == certificate.ID.Environment {
 			found := false
 
 			for _, storedCert := range cluster.Certificates {

@@ -17,22 +17,18 @@ type parameter struct {
 
 // SecretParameter contains the data we store to the outputs
 type SecretParameter struct {
-	AWSAccountID   string
-	RepositoryName string
-	Environment    string
-	Name           string
-	Path           string
-	Version        int64
+	ID      api.ID
+	Name    string
+	Path    string
+	Version int64
 }
 
 func (p *parameter) SaveSecret(parameter *api.SecretParameter) error {
 	param := SecretParameter{
-		AWSAccountID:   parameter.AWSAccountID,
-		RepositoryName: parameter.RepositoryName,
-		Environment:    parameter.Environment,
-		Name:           parameter.Name,
-		Path:           parameter.Path,
-		Version:        parameter.Version,
+		ID:      parameter.ID,
+		Name:    parameter.Name,
+		Path:    parameter.Path,
+		Version: parameter.Version,
 	}
 
 	data, err := json.Marshal(param)

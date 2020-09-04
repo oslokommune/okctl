@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/google/uuid"
+
 	"github.com/oslokommune/okctl/pkg/keypair"
 
 	"github.com/oslokommune/okctl/pkg/git"
@@ -406,6 +408,28 @@ and database subnets.`,
 				}
 			}
 
+			argocd := o.ArgoCD(opts.Environment)
+			if len(argocd.SecretKeyPath) == 0 {
+				secretKey, err := c.CreateSecret(&api.CreateSecretOpts{
+					AWSAccountID:   opts.AWSAccountID,
+					RepositoryName: opts.RepositoryName,
+					Environment:    opts.Environment,
+					Name:           "argocd_secret_key",
+					Secret:         uuid.New().String(),
+				})
+				if err != nil {
+					return err
+				}
+
+				argocd.SecretKeyPath = secretKey.Path
+
+				o.SetArgoCD(argocd, opts.Environment)
+				err = o.WriteCurrentRepoData()
+				if err != nil {
+					return err
+				}
+			}
+
 			_, err = c.CreateExternalSecrets(&api.CreateExternalSecretsOpts{
 				Manifests: []api.Manifest{
 					{
@@ -425,6 +449,10 @@ and database subnets.`,
 							{
 								Name: "dex.github.clientSecret",
 								Key:  oauthApp.ClientSecretPath,
+							},
+							{
+								Name: "server.secretkey",
+								Key:  argocd.SecretKeyPath,
 							},
 						},
 					},
@@ -448,6 +476,14 @@ and database subnets.`,
 				PrivateKeyName:      "argocd-privatekey",
 				PrivateKeyKey:       "ssh-private-key",
 			})
+
+			argocd = o.ArgoCD(opts.Environment)
+			argocd.URL = fmt.Sprintf("https://%s", cert.Domain)
+			o.SetArgoCD(argocd, opts.Environment)
+			err = o.WriteCurrentRepoData()
+			if err != nil {
+				return err
+			}
 
 			return nil
 		},

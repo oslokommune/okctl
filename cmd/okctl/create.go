@@ -137,7 +137,7 @@ and database subnets.`,
 				return err
 			}
 
-			err = c.CreateCluster(&api.ClusterCreateOpts{
+			_, err = c.CreateCluster(&api.ClusterCreateOpts{
 				ID:                id,
 				Cidr:              opts.Cidr,
 				VpcID:             vpc.VpcID,
@@ -155,7 +155,7 @@ and database subnets.`,
 				return err
 			}
 
-			err = c.CreateExternalSecretsServiceAccount(&api.CreateExternalSecretsServiceAccountOpts{
+			_, err = c.CreateExternalSecretsServiceAccount(&api.CreateExternalSecretsServiceAccountOpts{
 				CreateServiceAccountOpts: api.CreateServiceAccountOpts{
 					ID:        id,
 					PolicyArn: policy.PolicyARN,
@@ -179,7 +179,7 @@ and database subnets.`,
 				return err
 			}
 
-			err = c.CreateAlbIngressControllerServiceAccount(&api.CreateAlbIngressControllerServiceAccountOpts{
+			_, err = c.CreateAlbIngressControllerServiceAccount(&api.CreateAlbIngressControllerServiceAccountOpts{
 				CreateServiceAccountOpts: api.CreateServiceAccountOpts{
 					ID:        id,
 					PolicyArn: policy.PolicyARN,
@@ -236,7 +236,7 @@ and database subnets.`,
 				return err
 			}
 
-			err = c.CreateExternalDNSServiceAccount(&api.CreateExternalDNSServiceAccountOpts{
+			_, err = c.CreateExternalDNSServiceAccount(&api.CreateExternalDNSServiceAccountOpts{
 				CreateServiceAccountOpts: api.CreateServiceAccountOpts{
 					ID:        id,
 					PolicyArn: policy.PolicyARN,

@@ -55,7 +55,6 @@ func Logging(logger *logrus.Logger, serviceTag, endpointTag string) endpoint.Mid
 					} else {
 						logCtx.Debug(litter.Sdump(response))
 					}
-
 				}
 
 				logCtx.Info("request completed in: ", time.Since(begin).String())

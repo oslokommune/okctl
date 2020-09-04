@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/oslokommune/okctl/pkg/config"
-	"github.com/oslokommune/okctl/pkg/config/application"
+	"github.com/oslokommune/okctl/pkg/config/user"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -16,11 +16,11 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// ErrOnAppDataNotFound returns a handler that errors
+// ErrOnUserDataNotFound returns a handler that errors
 // when the app configuration cannot be loaded
-func ErrOnAppDataNotFound() DataNotFoundFn {
+func ErrOnUserDataNotFound() DataNotFoundFn {
 	return func(c *config.Config) error {
-		f, _ := c.GetAppDataPath()
+		f, _ := c.GetUserDataPath()
 
 		return &DataNotFoundErr{
 			err: fmt.Errorf("failed to load app configuration from: %s", f),
@@ -28,10 +28,10 @@ func ErrOnAppDataNotFound() DataNotFoundFn {
 	}
 }
 
-// CreateOnAppDataNotFound will start an interactive survey
+// CreateOnUserDataNotFound will start an interactive survey
 // that allows the end user to configure okctl for their
 // use
-func CreateOnAppDataNotFound() DataNotFoundFn {
+func CreateOnUserDataNotFound() DataNotFoundFn {
 	return func(c *config.Config) error {
 		var err error
 
@@ -43,33 +43,33 @@ func CreateOnAppDataNotFound() DataNotFoundFn {
 			return err
 		}
 
-		appDataPath, err := c.GetAppDataPath()
+		userDataPath, err := c.GetUserDataPath()
 		if err != nil {
 			return err
 		}
 
 		err = PromptContinue(
-			fmt.Sprintf("Configuration will be written to: %s. Continue?", appDataPath),
+			fmt.Sprintf("Configuration will be written to: %s. Continue?", userDataPath),
 			"user aborted interactive configuration",
 		)
 		if err != nil {
 			return err
 		}
 
-		data, err := application.New().Survey()
+		data, err := user.New().Survey()
 		if err != nil {
 			return errors.Wrap(err, "failed to get interactive user data")
 		}
 
-		c.AppData = data
+		c.UserData = data
 
-		err = c.WriteCurrentAppData()
+		err = c.WriteCurrentUserData()
 		if err != nil {
 			return errors.Wrap(err, "failed to write current app data")
 		}
 
 		c.Logger.WithFields(logrus.Fields{
-			"configuration_file": appDataPath,
+			"configuration_file": userDataPath,
 		}).Info("cli configuration completed")
 
 		return nil
@@ -79,28 +79,28 @@ func CreateOnAppDataNotFound() DataNotFoundFn {
 // LoaderFn defines an interface for loading configuration
 type LoaderFn func(cfg *config.Config, v *viper.Viper) error
 
-// AppDataFromFlagsEnvConfigDefaults returns the default behavior for loading
+// UserDataFromFlagsEnvConfigDefaults returns the default behavior for loading
 // application state
-func AppDataFromFlagsEnvConfigDefaults(cmd *cobra.Command, notFoundFn DataNotFoundFn) config.DataLoaderFn {
-	return buildAppDataLoader(
-		loadDefaultAppData,
-		loadStoredAppData(notFoundFn),
-		loadEnvAppData,
-		loadFlagsAppData(cmd),
+func UserDataFromFlagsEnvConfigDefaults(cmd *cobra.Command, notFoundFn DataNotFoundFn) config.DataLoaderFn {
+	return buildUserDataLoader(
+		loadDefaultUserData,
+		loadStoredUserData(notFoundFn),
+		loadEnvUserData,
+		loadFlagsUserData(cmd),
 	)
 }
 
-func loadDefaultAppData(_ *config.Config, v *viper.Viper) error {
-	b, err := yaml.Marshal(application.New())
+func loadDefaultUserData(_ *config.Config, v *viper.Viper) error {
+	b, err := yaml.Marshal(user.New())
 	if err != nil {
 		return err
 	}
 
-	defaultAppData := bytes.NewReader(b)
+	defaultUserData := bytes.NewReader(b)
 
 	v.SetConfigType(config.DefaultConfigType)
 
-	err = v.MergeConfig(defaultAppData)
+	err = v.MergeConfig(defaultUserData)
 	if err != nil {
 		return err
 	}
@@ -108,9 +108,9 @@ func loadDefaultAppData(_ *config.Config, v *viper.Viper) error {
 	return nil
 }
 
-func loadStoredAppData(notFoundFn DataNotFoundFn) LoaderFn {
+func loadStoredUserData(notFoundFn DataNotFoundFn) LoaderFn {
 	return func(cfg *config.Config, v *viper.Viper) error {
-		configPath, err := cfg.GetAppDataDir()
+		configPath, err := cfg.GetUserDataDir()
 		if err != nil {
 			return err
 		}
@@ -135,7 +135,7 @@ func loadStoredAppData(notFoundFn DataNotFoundFn) LoaderFn {
 	}
 }
 
-func loadEnvAppData(_ *config.Config, v *viper.Viper) error {
+func loadEnvUserData(_ *config.Config, v *viper.Viper) error {
 	v.AutomaticEnv()
 	v.SetEnvPrefix(config.EnvPrefix)
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
@@ -143,7 +143,7 @@ func loadEnvAppData(_ *config.Config, v *viper.Viper) error {
 	return nil
 }
 
-func loadFlagsAppData(cmd *cobra.Command) LoaderFn {
+func loadFlagsUserData(cmd *cobra.Command) LoaderFn {
 	return func(cfg *config.Config, v *viper.Viper) error {
 		cmd.Flags().VisitAll(func(f *pflag.Flag) {
 			viperName := strings.ReplaceAll(f.Name, "-", "_")
@@ -158,14 +158,14 @@ func loadFlagsAppData(cmd *cobra.Command) LoaderFn {
 }
 
 func updateKnownBinaries(cfg *config.Config) {
-	candidates := application.KnownBinaries()
+	candidates := user.KnownBinaries()
 
-	var update []application.Binary
+	var update []user.Binary
 
 	for _, candidate := range candidates {
 		found := false
 
-		for _, existing := range cfg.AppData.Binaries {
+		for _, existing := range cfg.UserData.Binaries {
 			if candidate.Name == existing.Name && candidate.Version == existing.Version {
 				found = true
 				break
@@ -177,14 +177,14 @@ func updateKnownBinaries(cfg *config.Config) {
 		}
 	}
 
-	cfg.AppData.Binaries = append(cfg.AppData.Binaries, update...)
+	cfg.UserData.Binaries = append(cfg.UserData.Binaries, update...)
 }
 
-func buildAppDataLoader(loaders ...LoaderFn) config.DataLoaderFn {
+func buildUserDataLoader(loaders ...LoaderFn) config.DataLoaderFn {
 	return func(cfg *config.Config) error {
 		var err error
 
-		cfg.AppData = &application.Data{}
+		cfg.UserData = &user.Data{}
 
 		v := viper.New()
 		v.SetFs(cfg.FileSystem.Fs)
@@ -196,7 +196,7 @@ func buildAppDataLoader(loaders ...LoaderFn) config.DataLoaderFn {
 			}
 		}
 
-		err = v.Unmarshal(cfg.AppData)
+		err = v.Unmarshal(cfg.UserData)
 		if err != nil {
 			return err
 		}

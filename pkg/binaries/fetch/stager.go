@@ -10,7 +10,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/binaries/digest"
-	"github.com/oslokommune/okctl/pkg/config/application"
+	"github.com/oslokommune/okctl/pkg/config/user"
 	"github.com/oslokommune/okctl/pkg/storage"
 )
 
@@ -93,15 +93,15 @@ func (s *Stager) Fetch() error {
 
 // Processor is a provider that knows how to fetch binaries via https
 type Processor struct {
-	Host           application.Host
+	Host           user.Host
 	Store          storage.Storer
 	Preload        bool
-	Binaries       []application.Binary
+	Binaries       []user.Binary
 	LoadedBinaries map[string]*Stager
 }
 
 // New returns a provider that knows how to fetch binaries via https
-func New(preload bool, host application.Host, binaries []application.Binary, store storage.Storer) (*Processor, error) {
+func New(preload bool, host user.Host, binaries []user.Binary, store storage.Storer) (*Processor, error) {
 	p := &Processor{
 		Host:           host,
 		Store:          store,
@@ -114,7 +114,7 @@ func New(preload bool, host application.Host, binaries []application.Binary, sto
 }
 
 // Stager returns a configured stager
-func (s *Processor) Stager(baseDir string, bufferSize int64, binary application.Binary) (*Stager, error) {
+func (s *Processor) Stager(baseDir string, bufferSize int64, binary user.Binary) (*Stager, error) {
 	var d Decompressor
 
 	switch binary.Archive.Type {
@@ -209,7 +209,7 @@ func (s *Processor) Fetch(name, version string) (string, error) {
 	return binary.BinaryPath, nil
 }
 
-func checksumsFor(h application.Host, cs []application.Checksum) map[digest.Type]string {
+func checksumsFor(h user.Host, cs []user.Checksum) map[digest.Type]string {
 	out := map[digest.Type]string{}
 
 	for _, c := range cs {

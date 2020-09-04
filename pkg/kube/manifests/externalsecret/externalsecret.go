@@ -39,6 +39,22 @@ func (a *ExternalSecret) CreateSecret(_ kubernetes.Interface, config *rest.Confi
 		return nil, fmt.Errorf("failed to create external secrets client set: %w", err)
 	}
 
+	externalSecrets, err := clientSet.ExternalSecrets(a.Namespace).List(a.Ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, es := range externalSecrets.Items {
+		if es.Name == a.Name {
+			got, err := clientSet.ExternalSecrets(a.Namespace).Get(a.Ctx, es.Name, metav1.GetOptions{})
+			if err != nil {
+				return nil, err
+			}
+
+			return got, nil
+		}
+	}
+
 	return clientSet.ExternalSecrets(a.Namespace).Create(a.Ctx, a.SecretManifest())
 }
 

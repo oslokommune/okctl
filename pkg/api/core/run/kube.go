@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/kube/manifests/namespace"
+
 	"github.com/oslokommune/okctl/pkg/kube/manifests/externalsecret"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -24,6 +26,7 @@ func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*ap
 
 	fns := make([]kube.ApplyFn, len(opts.Manifests))
 	manifests := map[string][]byte{}
+	namespaces := map[string]struct{}{}
 
 	for i, manifest := range opts.Manifests {
 		data := map[string]string{}
@@ -41,7 +44,20 @@ func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*ap
 
 		fns[i] = fn.CreateSecret
 
-		manifests[fmt.Sprintf("%s.yml", manifest.Name)] = raw
+		manifests[fmt.Sprintf("external-secret-%s.yml", manifest.Name)] = raw
+		namespaces[manifest.Namespace] = struct{}{}
+	}
+
+	for ns := range namespaces {
+		newNS := namespace.New(ns)
+		fns = append(fns, newNS.CreateNamespace)
+
+		data, err := yaml.Marshal(newNS.NamespaceManifest())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal manifest: %w", err)
+		}
+
+		manifests[fmt.Sprintf("namespace-%s.yml", ns)] = data
 	}
 
 	client, err := kube.New(kubeConfig.Path)

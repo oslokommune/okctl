@@ -208,7 +208,7 @@ func NewDefaultValues(opts ValuesOpts) *Values {
 				Enabled: false,
 			},
 			Service: serverService{
-				Type:                     "ClusterIP",
+				Type:                     "NodePort",
 				ServicePortHTTP:          80,
 				ServicePortHTTPS:         443,
 				ServicePortHTTPName:      "http",
@@ -235,7 +235,7 @@ func NewDefaultValues(opts ValuesOpts) *Values {
 					"alb.ingress.kubernetes.io/certificate-arn":      opts.CertificateARN,
 				},
 				Hosts: []string{opts.HostName},
-				Paths: []string{"/"},
+				Paths: []string{"/*"},
 				ExtraPaths: []path{
 					{
 						Path: "/*",
@@ -344,7 +344,7 @@ const repositoriesConfig = `- url: %s
 `
 
 const dexConfig = `connectors:
-- type: gihub
+- type: github
   id: github
   name: Github
   config:

@@ -1,12 +1,12 @@
 package filesystem
 
 import (
-	"encoding/json"
 	"fmt"
 	"path"
-	"strings"
 
+	"github.com/gosimple/slug"
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/spf13/afero"
 )
 
@@ -23,29 +23,19 @@ type SecretParameter struct {
 	Version int64
 }
 
-func (p *parameter) SaveSecret(parameter *api.SecretParameter) error {
+func (p *parameter) SaveSecret(s *api.SecretParameter) error {
 	param := SecretParameter{
-		ID:      parameter.ID,
-		Name:    parameter.Name,
-		Path:    parameter.Path,
-		Version: parameter.Version,
+		ID:      s.ID,
+		Name:    s.Name,
+		Path:    s.Path,
+		Version: s.Version,
 	}
 
-	data, err := json.Marshal(param)
+	_, err := store.NewFileSystem(path.Join(p.paths.BaseDir, slug.Make(s.Path)), p.fs).
+		StoreStruct(p.paths.OutputFile, &param, store.ToJSON()).
+		Do()
 	if err != nil {
-		return fmt.Errorf("failed to marshal: %w", err)
-	}
-
-	basePath := path.Join(p.paths.BaseDir, strings.ReplaceAll(parameter.Path, "/", "-"))
-
-	err = p.fs.MkdirAll(basePath, 0o744)
-	if err != nil {
-		return fmt.Errorf("failed to create directory: %w", err)
-	}
-
-	err = p.fs.WriteFile(path.Join(basePath, p.paths.OutputFile), data, 0o644)
-	if err != nil {
-		return fmt.Errorf("failed to write outputs: %w", err)
+		return fmt.Errorf("failed to store secret parameter: %w", err)
 	}
 
 	return nil

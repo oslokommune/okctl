@@ -1,9 +1,9 @@
 package filesystem
 
 import (
-	"encoding/json"
 	"fmt"
-	"path"
+
+	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/spf13/afero"
@@ -39,25 +39,31 @@ func (k *kubeStore) GetExternalDNSKubeDeployment() (*api.Kube, error) {
 func (k *kubeStore) getKubeDeployment(paths Paths) (*api.Kube, error) {
 	o := Kube{}
 
-	outputs, err := k.fs.ReadFile(path.Join(paths.BaseDir, paths.OutputFile))
-	if err != nil {
-		return nil, fmt.Errorf("failed to read outputs: %w", err)
-	}
-
-	err = json.Unmarshal(outputs, &o)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal outputs: %w", err)
-	}
-
 	manifests := map[string][]byte{}
 
-	for _, file := range o.Manifests {
-		d, err := k.fs.ReadFile(path.Join(paths.BaseDir, file))
-		if err != nil {
-			return nil, fmt.Errorf("failed to read manifest: %w", err)
+	callback := func(name string, data []byte) error {
+		manifests[name] = data
+		return nil
+	}
+
+	process := func(data interface{}, operations store.Operations) error {
+		if d, ok := data.(*Kube); ok {
+			for _, name := range d.Manifests {
+				operations.GetBytes(name, callback)
+			}
+
+			return nil
 		}
 
-		manifests[file] = d
+		return fmt.Errorf("failed to cast to *Kube")
+	}
+
+	_, err := store.NewFileSystem(paths.BaseDir, k.fs).
+		GetStruct(paths.OutputFile, &o, store.FromJSON()).
+		ProcessGetStruct(paths.OutputFile, process).
+		Do()
+	if err != nil {
+		return nil, fmt.Errorf("faileed to get kube: %w", err)
 	}
 
 	return &api.Kube{
@@ -69,34 +75,29 @@ func (k *kubeStore) getKubeDeployment(paths Paths) (*api.Kube, error) {
 }
 
 func (k *kubeStore) saveKubeDeployment(paths Paths, kube *api.Kube) error {
-	err := k.fs.MkdirAll(paths.BaseDir, 0o744)
-	if err != nil {
-		return fmt.Errorf("failed to create base directory: %w", err)
-	}
-
 	o := Kube{
 		ID:           kube.ID,
 		HostedZoneID: kube.HostedZoneID,
 		DomainFilter: kube.DomainFilter,
 	}
 
-	for file, data := range kube.Manifests {
-		err = k.fs.WriteFile(path.Join(paths.BaseDir, file), data, 0o644)
-		if err != nil {
-			return fmt.Errorf("failed to write manifest: %w", err)
-		}
+	manifests := make([]store.AddStoreBytes, len(kube.Manifests))
 
-		o.Manifests = append(o.Manifests, file)
+	for name, data := range kube.Manifests {
+		manifests = append(manifests, store.AddStoreBytes{
+			Name: name,
+			Data: data,
+		})
+
+		o.Manifests = append(o.Manifests, name)
 	}
 
-	outputs, err := json.Marshal(&o)
+	_, err := store.NewFileSystem(paths.BaseDir, k.fs).
+		StoreStruct(paths.OutputFile, &o, store.ToJSON()).
+		AddStoreBytes(manifests...).
+		Do()
 	if err != nil {
-		return fmt.Errorf("failed to serialise outputs: %w", err)
-	}
-
-	err = k.fs.WriteFile(path.Join(paths.BaseDir, paths.OutputFile), outputs, 0o644)
-	if err != nil {
-		return fmt.Errorf("failed to write outputs: %w", err)
+		return fmt.Errorf("failed to write kube: %w", err)
 	}
 
 	return nil

@@ -3,7 +3,8 @@ package filesystem
 
 import (
 	"fmt"
-	"path"
+
+	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/config/repository"
@@ -34,22 +35,16 @@ func (c *cluster) SaveCluster(clu *api.Cluster) error {
 		},
 	})
 
-	err := c.updateRepoStateFile()
+	_, err := store.NewFileSystem(c.repoStatePaths.BaseDir, c.fs).
+		StoreStruct(c.repoStatePaths.ConfigFile, c.repoState, store.ToYAML()).
+		AlterStore(store.SetBaseDir(c.clusterConfig.BaseDir)).
+		StoreStruct(c.clusterConfig.ConfigFile, clu.Config, store.ToYAML()).
+		Do()
 	if err != nil {
-		return fmt.Errorf("failed to update cluster state: %w", err)
+		return fmt.Errorf("failed to store cluster: %w", err)
 	}
 
-	data, err := clu.Config.YAML()
-	if err != nil {
-		return err
-	}
-
-	err = c.fs.MkdirAll(c.clusterConfig.BaseDir, 0o744)
-	if err != nil {
-		return err
-	}
-
-	return c.fs.WriteFile(path.Join(c.clusterConfig.BaseDir, c.clusterConfig.ConfigFile), data, 0o644)
+	return nil
 }
 
 // DeleteCluster knows how to delete cluster state
@@ -64,26 +59,16 @@ func (c *cluster) DeleteCluster(env string) error {
 		}
 	}
 
-	err := c.updateRepoStateFile()
+	_, err := store.NewFileSystem(c.repoStatePaths.BaseDir, c.fs).
+		StoreStruct(c.repoStatePaths.ConfigFile, c.repoState, store.ToYAML()).
+		AlterStore(store.SetBaseDir(c.clusterConfig.BaseDir)).
+		Remove(c.clusterConfig.ConfigFile).
+		Do()
 	if err != nil {
-		return fmt.Errorf("failed to delete cluster state: %w", err)
+		return fmt.Errorf("failed to remove cluster from storage: %w", err)
 	}
 
-	return c.fs.Remove(path.Join(c.clusterConfig.BaseDir, c.clusterConfig.ConfigFile))
-}
-
-func (c *cluster) updateRepoStateFile() error {
-	err := c.fs.MkdirAll(c.repoStatePaths.BaseDir, 0o744)
-	if err != nil {
-		return err
-	}
-
-	data, err := c.repoState.YAML()
-	if err != nil {
-		return err
-	}
-
-	return c.fs.WriteFile(path.Join(c.repoStatePaths.BaseDir, c.repoStatePaths.ConfigFile), data, 0o644)
+	return nil
 }
 
 // GetCluster knows how to get cluster state
@@ -105,7 +90,7 @@ func (c *cluster) GetCluster(env string) (*api.Cluster, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("failed to find cluster configuration for env: %s", env)
+	return nil, fmt.Errorf("failed to find cluster for env: %s", env)
 }
 
 // NewClusterStore returns a store for cluster

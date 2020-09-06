@@ -1,9 +1,10 @@
 package filesystem
 
 import (
-	"encoding/json"
 	"fmt"
 	"path"
+
+	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/config/repository"
@@ -37,26 +38,6 @@ func (d *domainStore) SaveDomain(domain *api.Domain) error {
 		StackName:    domain.StackName,
 	}
 
-	data, err := json.Marshal(p)
-	if err != nil {
-		return fmt.Errorf("failed to marshal: %w", err)
-	}
-
-	err = d.fs.MkdirAll(path.Join(d.paths.BaseDir, domain.Domain), 0o744)
-	if err != nil {
-		return fmt.Errorf("failed to create directory: %w", err)
-	}
-
-	err = d.fs.WriteFile(path.Join(d.paths.BaseDir, domain.Domain, d.paths.OutputFile), data, 0o644)
-	if err != nil {
-		return fmt.Errorf("failed to write outputs: %w", err)
-	}
-
-	err = d.fs.WriteFile(path.Join(d.paths.BaseDir, domain.Domain, d.paths.CloudFormationFile), domain.CloudFormationTemplate, 0o644)
-	if err != nil {
-		return fmt.Errorf("failed to write cloud formation template: %w", err)
-	}
-
 	for i, cluster := range d.repoState.Clusters {
 		if cluster.Environment == domain.ID.Environment {
 			cluster.HostedZone.Domain = domain.Domain
@@ -65,17 +46,17 @@ func (d *domainStore) SaveDomain(domain *api.Domain) error {
 		}
 	}
 
-	err = d.fs.MkdirAll(d.repoPaths.BaseDir, 0o744)
+	_, err := store.NewFileSystem(path.Join(d.paths.BaseDir, domain.Domain), d.fs).
+		StoreStruct(d.paths.OutputFile, &p, store.ToJSON()).
+		StoreBytes(d.paths.CloudFormationFile, domain.CloudFormationTemplate).
+		AlterStore(store.SetBaseDir(d.repoPaths.BaseDir)).
+		StoreStruct(d.repoPaths.ConfigFile, d.repoState, store.ToYAML()).
+		Do()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to store domain: %w", err)
 	}
 
-	state, err := d.repoState.YAML()
-	if err != nil {
-		return err
-	}
-
-	return d.fs.WriteFile(path.Join(d.repoPaths.BaseDir, d.repoPaths.ConfigFile), state, 0o644)
+	return nil
 }
 
 // NewDomainStore returns an initialised domain store

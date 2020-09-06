@@ -1,9 +1,10 @@
 package filesystem
 
 import (
-	"encoding/json"
 	"fmt"
 	"path"
+
+	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/config/repository"
@@ -38,26 +39,6 @@ func (c *certificateStore) SaveCertificate(certificate *api.Certificate) error {
 		StackName:      certificate.CertificateARN,
 	}
 
-	data, err := json.Marshal(cert)
-	if err != nil {
-		return fmt.Errorf("failed to marshal: %w", err)
-	}
-
-	err = c.fs.MkdirAll(path.Join(c.paths.BaseDir, certificate.Domain), 0o744)
-	if err != nil {
-		return fmt.Errorf("failed to create directory: %w", err)
-	}
-
-	err = c.fs.WriteFile(path.Join(c.paths.BaseDir, certificate.Domain, c.paths.OutputFile), data, 0o644)
-	if err != nil {
-		return fmt.Errorf("failed to write outputs: %w", err)
-	}
-
-	err = c.fs.WriteFile(path.Join(c.paths.BaseDir, certificate.Domain, c.paths.CloudFormationFile), certificate.CloudFormationTemplate, 0o644)
-	if err != nil {
-		return fmt.Errorf("failed to write cloud formation template: %w", err)
-	}
-
 	for i, cluster := range c.repoState.Clusters {
 		if cluster.Environment == certificate.ID.Environment {
 			found := false
@@ -81,17 +62,17 @@ func (c *certificateStore) SaveCertificate(certificate *api.Certificate) error {
 		}
 	}
 
-	err = c.fs.MkdirAll(c.repoPaths.BaseDir, 0o744)
+	_, err := store.NewFileSystem(path.Join(c.paths.BaseDir, certificate.Domain), c.fs).
+		StoreStruct(c.paths.OutputFile, &cert, store.ToJSON()).
+		StoreBytes(c.paths.CloudFormationFile, certificate.CloudFormationTemplate).
+		AlterStore(store.SetBaseDir(c.repoPaths.BaseDir)).
+		StoreStruct(c.repoPaths.ConfigFile, c.repoState, store.ToYAML()).
+		Do()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to store certificate: %w", err)
 	}
 
-	state, err := c.repoState.YAML()
-	if err != nil {
-		return err
-	}
-
-	return c.fs.WriteFile(path.Join(c.repoPaths.BaseDir, c.repoPaths.ConfigFile), state, 0o644)
+	return nil
 }
 
 // NewCertificateStore returns an initialised certificate store

@@ -1,10 +1,10 @@
 package filesystem
 
 import (
-	"encoding/json"
-	"path"
+	"fmt"
 
-	"github.com/mishudark/errors"
+	"github.com/oslokommune/okctl/pkg/client/store"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/spf13/afero"
 )
@@ -98,55 +98,50 @@ func defFromStore(vpc *Vpc) *api.Vpc {
 
 // SaveVpc stores a vpc
 func (v *vpc) SaveVpc(vpc *api.Vpc) error {
-	data, err := json.Marshal(storeFromDef(vpc))
+	_, err := store.NewFileSystem(v.baseDir, v.fs).
+		StoreStruct(v.stackOutputsFileName, storeFromDef(vpc), store.ToJSON()).
+		StoreBytes(v.cloudFormationFileName, vpc.CloudFormationTemplate).
+		Do()
 	if err != nil {
-		return errors.E(err, "failed to create json of vpc state")
+		return fmt.Errorf("failed to store vpc: %w", err)
 	}
 
-	err = v.fs.MkdirAll(v.baseDir, 0o744)
-	if err != nil {
-		return err
-	}
-
-	err = v.fs.WriteFile(path.Join(v.baseDir, v.stackOutputsFileName), data, 0o644)
-	if err != nil {
-		return err
-	}
-
-	return v.fs.WriteFile(path.Join(v.baseDir, v.cloudFormationFileName), vpc.CloudFormationTemplate, 0o644)
+	return nil
 }
 
 // DeleteVpc removes a vpc from storage
-func (v *vpc) DeleteVpc(env, repoName string) error {
-	err := v.fs.Remove(path.Join(v.baseDir, v.stackOutputsFileName))
+func (v *vpc) DeleteVpc(_, _ string) error {
+	_, err := store.NewFileSystem(v.baseDir, v.fs).
+		Remove(v.stackOutputsFileName).
+		Remove(v.cloudFormationFileName).
+		Do()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to delete vpc: %w", err)
 	}
 
-	return v.fs.Remove(path.Join(v.baseDir, v.cloudFormationFileName))
+	return nil
 }
 
 // GetVpc returns a vpc from storage
 func (v *vpc) GetVpc() (*api.Vpc, error) {
-	data, err := v.fs.ReadFile(path.Join(v.baseDir, v.stackOutputsFileName))
-	if err != nil {
-		return nil, errors.E(err, "failed to read vpc state")
-	}
-
 	vpcOutputs := &Vpc{}
 
-	err = json.Unmarshal(data, vpcOutputs)
+	var template []byte
+
+	callback := func(_ string, data []byte) error {
+		template = data
+		return nil
+	}
+
+	_, err := store.NewFileSystem(v.baseDir, v.fs).
+		GetStruct(v.stackOutputsFileName, vpcOutputs, store.FromJSON()).
+		GetBytes(v.cloudFormationFileName, callback).
+		Do()
 	if err != nil {
-		return nil, errors.E(err, "failed to unmarshal vpc outputs")
+		return nil, fmt.Errorf("failed to get vpc: %w", err)
 	}
 
 	ret := defFromStore(vpcOutputs)
-
-	template, err := v.fs.ReadFile(path.Join(v.baseDir, v.cloudFormationFileName))
-	if err != nil {
-		return nil, errors.E(err, "failed to read vpc cloud formation template")
-	}
-
 	ret.CloudFormationTemplate = template
 
 	return ret, nil

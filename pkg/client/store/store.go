@@ -40,6 +40,25 @@ type Alterer interface {
 	Type() string
 }
 
+// AddStoreStruct contains the fields required for adding
+// a StoreStruct operation, useful when operations are
+// created dynamically from a slice or map
+type AddStoreStruct struct {
+	Name         string
+	Data         interface{}
+	PreProcessor PreProcessor
+	Options      []OperationOption
+}
+
+// AddStoreBytes contains the fields require for adding
+// a StoreBytes operation, useful when operations are
+// created dynamically from a slice or map
+type AddStoreBytes struct {
+	Name    string
+	Data    []byte
+	Options []OperationOption
+}
+
 // Operations defines the functions that can be chained
 // before being executed
 type Operations interface {
@@ -53,10 +72,18 @@ type Operations interface {
 	// This method is chainable, so multiple actions may be performed.
 	StoreStruct(name string, data interface{}, preProcessor PreProcessor, options ...OperationOption) Operations
 
+	// AddStoreStruct makes it possible to add operations when
+	// iterating over a map or slice.
+	AddStoreStruct(operations ...AddStoreStruct) Operations
+
 	// StoreBytes stores the provided data under the given name, how this
 	// data is stored is given by the underlying implementation.
 	// This method is chainable, so multiple actions may be performed.
 	StoreBytes(name string, data []byte, options ...OperationOption) Operations
+
+	// AddStoreBytes makes it possible to add operations when
+	// iterating over a map or slice.
+	AddStoreBytes(operations ...AddStoreBytes) Operations
 
 	// Remove will delete the data under the given name, how this data is
 	// removed is given by the underlying implementation
@@ -217,6 +244,22 @@ func SetBaseDir(baseDir string) Alterer {
 
 type fileSystemSetBaseDir struct {
 	baseDir string
+}
+
+func (f *fileSystem) AddStoreStruct(operations ...AddStoreStruct) Operations {
+	for _, o := range operations {
+		f.StoreStruct(o.Name, o.Data, o.PreProcessor, o.Options...)
+	}
+
+	return f
+}
+
+func (f *fileSystem) AddStoreBytes(operations ...AddStoreBytes) Operations {
+	for _, o := range operations {
+		f.StoreBytes(o.Name, o.Data, o.Options...)
+	}
+
+	return f
 }
 
 func (f *fileSystemSetBaseDir) Alter(implementation interface{}) error {

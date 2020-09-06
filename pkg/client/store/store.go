@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 
@@ -32,9 +33,20 @@ type PreProcessor interface {
 // can be evaluated by the implementations.
 type OperationOption func() interface{}
 
+// Alterer defines the interface for performing a run-time
+// alteration of the underlying store
+type Alterer interface {
+	Alter(implementation interface{}) error
+	Type() string
+}
+
 // Operations defines the functions that can be chained
 // before being executed
 type Operations interface {
+	// AlterStore makes it possible to perform a modification of the store
+	// during processing.
+	AlterStore(alterers ...Alterer) Operations
+
 	// StoreStruct will preprocess the data with the given preprocessor
 	// and then store the processed data under the given name, how this
 	// data is stored is given by the underlying implementation.
@@ -120,12 +132,11 @@ func ToYAML() PreProcessor {
 }
 
 // fileSystemWork is invoked during task processing
-type fileSystemWork func() error
+type fileSystemWork func() (string, error)
 
 // fileSystemTask represents a task to be performed
 type fileSystemTask struct {
 	Name string
-	Path string
 	Type string
 	Work fileSystemWork
 }
@@ -133,10 +144,10 @@ type fileSystemTask struct {
 // fileSystem contains state for the file system
 // storage implementation
 type fileSystem struct {
-	baseDir           string
+	BaseDir           string
+	CreateDirectories bool
+	OverwriteExisting bool
 	fs                *afero.Afero
-	createDirectories bool
-	overwriteExisting bool
 	report            *Report
 	tasks             []*fileSystemTask
 }
@@ -150,7 +161,7 @@ type FileSystemOption func(fs *fileSystem)
 // true
 func FileSystemCreateDirectories(v bool) FileSystemOption {
 	return func(fs *fileSystem) {
-		fs.createDirectories = v
+		fs.CreateDirectories = v
 	}
 }
 
@@ -158,7 +169,7 @@ func FileSystemCreateDirectories(v bool) FileSystemOption {
 // are overwritten if set to true
 func FileSystemOverwriteExisting(v bool) FileSystemOption {
 	return func(fs *fileSystem) {
-		fs.overwriteExisting = v
+		fs.OverwriteExisting = v
 	}
 }
 
@@ -168,10 +179,10 @@ var _ Operations = &fileSystem{}
 // NewFileSystem returns an initialised filesystem store
 func NewFileSystem(baseDir string, fs *afero.Afero, options ...FileSystemOption) Operations {
 	f := &fileSystem{
-		baseDir:           baseDir,
+		BaseDir:           baseDir,
 		fs:                fs,
-		createDirectories: true,
-		overwriteExisting: true,
+		CreateDirectories: true,
+		OverwriteExisting: true,
 	}
 
 	for _, option := range options {
@@ -181,10 +192,9 @@ func NewFileSystem(baseDir string, fs *afero.Afero, options ...FileSystemOption)
 	f.report = &Report{
 		Type: "FileSystem",
 		Configuration: fmt.Sprintf(
-			"BaseDir: %s\nCreateDirectories: %t\nOverWriteExisting: %t\n",
-			f.baseDir,
-			f.createDirectories,
-			f.overwriteExisting,
+			"CreateDirectories: %t\nOverWriteExisting: %t\n",
+			f.CreateDirectories,
+			f.OverwriteExisting,
 		),
 	}
 
@@ -198,10 +208,63 @@ func WithFilePermissionsMode(mode os.FileMode) OperationOption {
 	}
 }
 
+// SetBaseDir to the provided value
+func SetBaseDir(baseDir string) Alterer {
+	return &fileSystemSetBaseDir{
+		baseDir: baseDir,
+	}
+}
+
+type fileSystemSetBaseDir struct {
+	baseDir string
+}
+
+func (f *fileSystemSetBaseDir) Alter(implementation interface{}) error {
+	to, ok := implementation.(*fileSystem)
+	if !ok {
+		return fmt.Errorf("could not cast implemenation to *fileSystem")
+	}
+
+	to.BaseDir = f.baseDir
+
+	return nil
+}
+
+func (f *fileSystemSetBaseDir) Type() string {
+	return "SetBaseDir"
+}
+
+func (f *fileSystem) AlterStore(alterers ...Alterer) Operations {
+	types := make([]string, len(alterers))
+	for i, a := range alterers {
+		types[i] = a.Type()
+	}
+
+	f.tasks = append(f.tasks, &fileSystemTask{
+		Name: "n/a",
+		Type: fmt.Sprintf("Alter[%s]", strings.Join(types, ", ")),
+		Work: f.alterStore(alterers...),
+	})
+
+	return f
+}
+
+func (f *fileSystem) alterStore(alterers ...Alterer) fileSystemWork {
+	return func() (string, error) {
+		for _, a := range alterers {
+			err := a.Alter(f)
+			if err != nil {
+				return "", fmt.Errorf("failed to apply alteration %s: %w", a.Type(), err)
+			}
+		}
+
+		return "n/a", nil
+	}
+}
+
 func (f *fileSystem) StoreStruct(name string, data interface{}, preProcessor PreProcessor, options ...OperationOption) Operations {
 	f.tasks = append(f.tasks, &fileSystemTask{
 		Name: name,
-		Path: path.Join(f.baseDir, name),
 		Type: fmt.Sprintf("StoreStruct[preprocessing=%s]", preProcessor.Type()),
 		Work: f.storeStruct(name, data, preProcessor, options...),
 	})
@@ -210,10 +273,10 @@ func (f *fileSystem) StoreStruct(name string, data interface{}, preProcessor Pre
 }
 
 func (f *fileSystem) storeStruct(name string, data interface{}, preProcessor PreProcessor, options ...OperationOption) fileSystemWork {
-	return func() error {
+	return func() (string, error) {
 		d, err := preProcessor.PreProcess(data)
 		if err != nil {
-			return fmt.Errorf("failed to preprocess data: %w", err)
+			return "", fmt.Errorf("failed to preprocess data: %w", err)
 		}
 
 		return f.storeBytes(name, d.Data, options...)()
@@ -223,7 +286,6 @@ func (f *fileSystem) storeStruct(name string, data interface{}, preProcessor Pre
 func (f *fileSystem) StoreBytes(name string, data []byte, options ...OperationOption) Operations {
 	f.tasks = append(f.tasks, &fileSystemTask{
 		Name: name,
-		Path: path.Join(f.baseDir, name),
 		Type: "StoreBytes",
 		Work: f.storeBytes(name, data, options...),
 	})
@@ -232,32 +294,32 @@ func (f *fileSystem) StoreBytes(name string, data []byte, options ...OperationOp
 }
 
 func (f *fileSystem) storeBytes(name string, data []byte, options ...OperationOption) fileSystemWork {
-	return func() error {
-		if !f.overwriteExisting {
-			exists, err := f.fs.Exists(path.Join(f.baseDir, name))
+	return func() (string, error) {
+		if !f.OverwriteExisting {
+			exists, err := f.fs.Exists(path.Join(f.BaseDir, name))
 			if err != nil {
-				return fmt.Errorf("failed to determine if file exists: %w", err)
+				return "", fmt.Errorf("failed to determine if file exists: %w", err)
 			}
 
 			if exists {
-				return fmt.Errorf("file: %s exists, and overwrite existing is: %t", path.Join(f.baseDir, name), f.overwriteExisting)
+				return "", fmt.Errorf("file '%s' exists and overwrite is disabled", path.Join(f.BaseDir, name))
 			}
 		}
 
-		if f.createDirectories {
-			err := f.fs.MkdirAll(f.baseDir, 0o744)
+		if f.CreateDirectories {
+			err := f.fs.MkdirAll(f.BaseDir, 0o744)
 			if err != nil {
-				return fmt.Errorf("failed to create directories: %w", err)
+				return "", fmt.Errorf("failed to create directories: %w", err)
 			}
 		}
 
-		exists, err := f.fs.DirExists(f.baseDir)
+		exists, err := f.fs.DirExists(f.BaseDir)
 		if err != nil {
-			return fmt.Errorf("failed to determine if directory exists: %w", err)
+			return "", fmt.Errorf("failed to determine if directory exists: %w", err)
 		}
 
 		if !exists {
-			return fmt.Errorf("directory does not exist: %s", f.baseDir)
+			return "", fmt.Errorf("directory does not exist '%s' and create directories disabled", f.BaseDir)
 		}
 
 		var fileMode os.FileMode = 0o644
@@ -267,23 +329,22 @@ func (f *fileSystem) storeBytes(name string, data []byte, options ...OperationOp
 			case os.FileMode:
 				fileMode = o
 			default:
-				return fmt.Errorf("cannot process unknown operation option: %v", o)
+				return "", fmt.Errorf("cannot process unknown operation option: %v", o)
 			}
 		}
 
-		err = f.fs.WriteFile(path.Join(f.baseDir, name), data, fileMode)
+		err = f.fs.WriteFile(path.Join(f.BaseDir, name), data, fileMode)
 		if err != nil {
-			return fmt.Errorf("failed to write file: %w", err)
+			return "", fmt.Errorf("failed to write file: %w", err)
 		}
 
-		return nil
+		return path.Join(f.BaseDir, name), nil
 	}
 }
 
 func (f *fileSystem) Remove(name string, options ...OperationOption) Operations {
 	f.tasks = append(f.tasks, &fileSystemTask{
 		Name: name,
-		Path: path.Join(f.baseDir, name),
 		Type: "Remove",
 		Work: f.remove(name, options...),
 	})
@@ -292,22 +353,22 @@ func (f *fileSystem) Remove(name string, options ...OperationOption) Operations 
 }
 
 func (f *fileSystem) remove(name string, _ ...OperationOption) fileSystemWork {
-	return func() error {
-		exists, err := f.fs.Exists(path.Join(f.baseDir, name))
+	return func() (string, error) {
+		exists, err := f.fs.Exists(path.Join(f.BaseDir, name))
 		if err != nil {
-			return fmt.Errorf("failed to determine if file exists: %w", err)
+			return "", fmt.Errorf("failed to determine if file exists: %w", err)
 		}
 
 		if !exists {
-			return nil
+			return path.Join(f.BaseDir, name), nil
 		}
 
-		err = f.fs.Remove(path.Join(f.baseDir, name))
+		err = f.fs.Remove(path.Join(f.BaseDir, name))
 		if err != nil {
-			return fmt.Errorf("failed to remove file: %w", err)
+			return "", fmt.Errorf("failed to remove file: %w", err)
 		}
 
-		return nil
+		return path.Join(f.BaseDir, name), nil
 	}
 }
 
@@ -315,16 +376,16 @@ func (f *fileSystem) Do() (*Report, error) {
 	f.report.Actions = make([]Action, len(f.tasks))
 
 	for i, task := range f.tasks {
-		err := task.Work()
+		p, err := task.Work()
 		if err != nil {
-			return nil, fmt.Errorf("failed to process task: %s (%s), because: %w", task.Name, task.Path, err)
+			return nil, fmt.Errorf("failed to process task %s(%s): %w", task.Type, task.Name, err)
 		}
 
 		f.report.Actions[i] = Action{
 			Name:        task.Name,
-			Path:        task.Path,
+			Path:        p,
 			Type:        task.Type,
-			Description: fmt.Sprintf("task #%d %s: %s (%s)", i, task.Type, task.Name, task.Path),
+			Description: fmt.Sprintf("task.%d %s to file '%s' (path: %s)", i+1, task.Type, task.Name, p),
 		}
 	}
 

@@ -33,25 +33,25 @@ func TestOperations(t *testing.T) {
 				StoreBytes("plain", []byte("hello")),
 			expect: &store.Report{
 				Type:          "FileSystem",
-				Configuration: "BaseDir: test\nCreateDirectories: true\nOverWriteExisting: true\n",
+				Configuration: "CreateDirectories: true\nOverWriteExisting: true\n",
 				Actions: []store.Action{
 					{
 						Name:        "test.json",
 						Path:        "test/test.json",
 						Type:        "StoreStruct[preprocessing=json]",
-						Description: "task #0 StoreStruct[preprocessing=json]: test.json (test/test.json)",
+						Description: "task.1 StoreStruct[preprocessing=json] to file 'test.json' (path: test/test.json)",
 					},
 					{
 						Name:        "test.yml",
 						Path:        "test/test.yml",
 						Type:        "StoreStruct[preprocessing=yaml]",
-						Description: "task #1 StoreStruct[preprocessing=yaml]: test.yml (test/test.yml)",
+						Description: "task.2 StoreStruct[preprocessing=yaml] to file 'test.yml' (path: test/test.yml)",
 					},
 					{
 						Name:        "plain",
 						Path:        "test/plain",
 						Type:        "StoreBytes",
-						Description: "task #2 StoreBytes: plain (test/plain)",
+						Description: "task.3 StoreBytes to file 'plain' (path: test/plain)",
 					},
 				},
 			},
@@ -65,7 +65,7 @@ func TestOperations(t *testing.T) {
 			name: "Do not create directories",
 			operations: store.NewFileSystem("fail/this", fs, store.FileSystemCreateDirectories(false)).
 				StoreBytes("fail", []byte("should fail")),
-			expect:    "failed to process task: fail (fail/this/fail), because: directory does not exist: fail/this",
+			expect:    "failed to process task StoreBytes(fail): directory does not exist 'fail/this' and create directories disabled",
 			expectErr: true,
 		},
 		{
@@ -73,7 +73,7 @@ func TestOperations(t *testing.T) {
 			operations: store.NewFileSystem("", fs, store.FileSystemOverwriteExisting(false)).
 				StoreBytes("myfile", []byte("content")).
 				StoreBytes("myfile", []byte("new content")),
-			expect:    "failed to process task: myfile (myfile), because: file: myfile exists, and overwrite existing is: false",
+			expect:    "failed to process task StoreBytes(myfile): file 'myfile' exists and overwrite is disabled",
 			expectErr: true,
 		},
 		{
@@ -85,31 +85,31 @@ func TestOperations(t *testing.T) {
 				StoreBytes("file", []byte("new content")),
 			expect: &store.Report{
 				Type:          "FileSystem",
-				Configuration: "BaseDir: test\nCreateDirectories: true\nOverWriteExisting: false\n",
+				Configuration: "CreateDirectories: true\nOverWriteExisting: false\n",
 				Actions: []store.Action{
 					{
 						Name:        "doesNotExist",
 						Path:        "test/doesNotExist",
 						Type:        "Remove",
-						Description: "task #0 Remove: doesNotExist (test/doesNotExist)",
+						Description: "task.1 Remove to file 'doesNotExist' (path: test/doesNotExist)",
 					},
 					{
 						Name:        "file",
 						Path:        "test/file",
 						Type:        "StoreBytes",
-						Description: "task #1 StoreBytes: file (test/file)",
+						Description: "task.2 StoreBytes to file 'file' (path: test/file)",
 					},
 					{
 						Name:        "file",
 						Path:        "test/file",
 						Type:        "Remove",
-						Description: "task #2 Remove: file (test/file)",
+						Description: "task.3 Remove to file 'file' (path: test/file)",
 					},
 					{
 						Name:        "file",
 						Path:        "test/file",
 						Type:        "StoreBytes",
-						Description: "task #3 StoreBytes: file (test/file)",
+						Description: "task.4 StoreBytes to file 'file' (path: test/file)",
 					},
 				},
 			},
@@ -118,6 +118,42 @@ func TestOperations(t *testing.T) {
 				"new content", // This is hacky, only reads last state, obviously
 				"",            // Remove
 				"new content",
+			},
+		},
+		{
+			name: "Alter should work",
+			operations: store.NewFileSystem("test", fs).
+				StoreBytes("plain", []byte("hello")).
+				AlterStore(store.SetBaseDir("new")).
+				StoreBytes("second", []byte("hi")),
+			expect: &store.Report{
+				Type:          "FileSystem",
+				Configuration: "CreateDirectories: true\nOverWriteExisting: true\n",
+				Actions: []store.Action{
+					{
+						Name:        "plain",
+						Path:        "test/plain",
+						Type:        "StoreBytes",
+						Description: "task.1 StoreBytes to file 'plain' (path: test/plain)",
+					},
+					{
+						Name:        "n/a",
+						Path:        "n/a",
+						Type:        "Alter[SetBaseDir]",
+						Description: "task.2 Alter[SetBaseDir] to file 'n/a' (path: n/a)",
+					},
+					{
+						Name:        "second",
+						Path:        "new/second",
+						Type:        "StoreBytes",
+						Description: "task.3 StoreBytes to file 'second' (path: new/second)",
+					},
+				},
+			},
+			expectContent: []string{
+				"hello",
+				"", // Alter
+				"hi",
 			},
 		},
 	}
@@ -135,7 +171,7 @@ func TestOperations(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.expect, got)
 				for i, task := range got.Actions {
-					if task.Type == "Remove" {
+					if task.Type == "Remove" || task.Type == "Alter[SetBaseDir]" {
 						continue
 					}
 					content, err := fs.ReadFile(task.Path)
@@ -166,13 +202,13 @@ func TestWithFilePermissionsMode(t *testing.T) {
 				StoreBytes("plain", []byte("hello")),
 			expect: &store.Report{
 				Type:          "FileSystem",
-				Configuration: "BaseDir: test\nCreateDirectories: true\nOverWriteExisting: true\n",
+				Configuration: "CreateDirectories: true\nOverWriteExisting: true\n",
 				Actions: []store.Action{
 					{
 						Name:        "plain",
 						Path:        "test/plain",
 						Type:        "StoreBytes",
-						Description: "task #0 StoreBytes: plain (test/plain)",
+						Description: "task.1 StoreBytes to file 'plain' (path: test/plain)",
 					},
 				},
 			},
@@ -184,13 +220,13 @@ func TestWithFilePermissionsMode(t *testing.T) {
 				StoreBytes("plain", []byte("hello"), store.WithFilePermissionsMode(0o400)),
 			expect: &store.Report{
 				Type:          "FileSystem",
-				Configuration: "BaseDir: test\nCreateDirectories: true\nOverWriteExisting: true\n",
+				Configuration: "CreateDirectories: true\nOverWriteExisting: true\n",
 				Actions: []store.Action{
 					{
 						Name:        "plain",
 						Path:        "test/plain",
 						Type:        "StoreBytes",
-						Description: "task #0 StoreBytes: plain (test/plain)",
+						Description: "task.1 StoreBytes to file 'plain' (path: test/plain)",
 					},
 				},
 			},

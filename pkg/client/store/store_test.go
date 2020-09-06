@@ -156,6 +156,41 @@ func TestOperations(t *testing.T) {
 				"hi",
 			},
 		},
+		{
+			name: "Add operations should work",
+			operations: store.NewFileSystem("test", fs).
+				AddStoreStruct(store.AddStoreStruct{
+					Name:         "test.json",
+					Data:         &TestStruct{Name: "hi"},
+					PreProcessor: store.ToJSON(),
+				}).
+				AddStoreBytes(store.AddStoreBytes{
+					Name: "plain",
+					Data: []byte("hello"),
+				}),
+			expect: &store.Report{
+				Type:          "FileSystem",
+				Configuration: "CreateDirectories: true\nOverWriteExisting: true\n",
+				Actions: []store.Action{
+					{
+						Name:        "test.json",
+						Path:        "test/test.json",
+						Type:        "StoreStruct[preprocessing=json]",
+						Description: "task.1 StoreStruct[preprocessing=json] to file 'test.json' (path: test/test.json)",
+					},
+					{
+						Name:        "plain",
+						Path:        "test/plain",
+						Type:        "StoreBytes",
+						Description: "task.2 StoreBytes to file 'plain' (path: test/plain)",
+					},
+				},
+			},
+			expectContent: []string{
+				"{\n  \"Name\": \"hi\"\n}",
+				"hello",
+			},
+		},
 	}
 
 	for _, tc := range testCases {

@@ -18,6 +18,8 @@ type TestStruct struct {
 func TestOperations(t *testing.T) {
 	fs := &afero.Afero{Fs: afero.NewMemMapFs()}
 
+	inline := &TestStruct{}
+
 	testCases := []struct {
 		name          string
 		operations    store.Operations
@@ -54,6 +56,7 @@ func TestOperations(t *testing.T) {
 						Description: "task.3 StoreBytes to file 'plain' (path: test/plain)",
 					},
 				},
+				Data: map[string]interface{}{},
 			},
 			expectContent: []string{
 				"{\n  \"Name\": \"hi\"\n}",
@@ -91,7 +94,7 @@ func TestOperations(t *testing.T) {
 						Name:        "doesNotExist",
 						Path:        "test/doesNotExist",
 						Type:        "Remove",
-						Description: "task.1 Remove to file 'doesNotExist' (path: test/doesNotExist)",
+						Description: "task.1 Remove file 'doesNotExist' (path: test/doesNotExist)",
 					},
 					{
 						Name:        "file",
@@ -103,7 +106,7 @@ func TestOperations(t *testing.T) {
 						Name:        "file",
 						Path:        "test/file",
 						Type:        "Remove",
-						Description: "task.3 Remove to file 'file' (path: test/file)",
+						Description: "task.3 Remove file 'file' (path: test/file)",
 					},
 					{
 						Name:        "file",
@@ -112,6 +115,7 @@ func TestOperations(t *testing.T) {
 						Description: "task.4 StoreBytes to file 'file' (path: test/file)",
 					},
 				},
+				Data: map[string]interface{}{},
 			},
 			expectContent: []string{
 				"",            // Remove
@@ -137,10 +141,8 @@ func TestOperations(t *testing.T) {
 						Description: "task.1 StoreBytes to file 'plain' (path: test/plain)",
 					},
 					{
-						Name:        "n/a",
-						Path:        "n/a",
-						Type:        "Alter[SetBaseDir]",
-						Description: "task.2 Alter[SetBaseDir] to file 'n/a' (path: n/a)",
+						Type:        "Alter[alterer=SetBaseDir]",
+						Description: "task.2 Alter[alterer=SetBaseDir]",
 					},
 					{
 						Name:        "second",
@@ -149,6 +151,7 @@ func TestOperations(t *testing.T) {
 						Description: "task.3 StoreBytes to file 'second' (path: new/second)",
 					},
 				},
+				Data: map[string]interface{}{},
 			},
 			expectContent: []string{
 				"hello",
@@ -185,10 +188,100 @@ func TestOperations(t *testing.T) {
 						Description: "task.2 StoreBytes to file 'plain' (path: test/plain)",
 					},
 				},
+				Data: map[string]interface{}{},
 			},
 			expectContent: []string{
 				"{\n  \"Name\": \"hi\"\n}",
 				"hello",
+			},
+		},
+		{
+			name: "Read should work",
+			operations: store.NewFileSystem("test", fs).
+				StoreBytes("first", []byte("first")).
+				GetBytes("first", nil),
+			expect: &store.Report{
+				Type:          "FileSystem",
+				Configuration: "CreateDirectories: true\nOverWriteExisting: true\n",
+				Actions: []store.Action{
+					{
+						Name:        "first",
+						Path:        "test/first",
+						Type:        "StoreBytes",
+						Description: "task.1 StoreBytes to file 'first' (path: test/first)",
+					},
+					{
+						Name:        "first",
+						Path:        "test/first",
+						Type:        "GetBytes",
+						Description: "task.2 GetBytes from file 'first' (path: test/first)",
+					},
+				},
+				Data: map[string]interface{}{
+					"first": []byte("first"),
+				},
+			},
+			expectContent: []string{
+				"first",
+				"first",
+			},
+			expectErr: false,
+		},
+		{
+			name: "Process should work",
+			operations: store.NewFileSystem("", fs).
+				StoreBytes("post-file", []byte("some content")).
+				StoreStruct("something", &TestStruct{Name: "post-file"}, store.ToJSON()).
+				GetStruct("something", inline, store.FromJSON()).
+				ProcessGetStruct("something", func(data interface{}, operations store.Operations) error {
+					_ = operations.GetBytes("post-file", nil)
+					return nil
+				}),
+			expect: &store.Report{
+				Type:          "FileSystem",
+				Configuration: "CreateDirectories: true\nOverWriteExisting: true\n",
+				Actions: []store.Action{
+					{
+						Name:        "post-file",
+						Path:        "post-file",
+						Type:        "StoreBytes",
+						Description: "task.1 StoreBytes to file 'post-file' (path: post-file)",
+					},
+					{
+						Name:        "something",
+						Path:        "something",
+						Type:        "StoreStruct[preprocessing=json]",
+						Description: "task.2 StoreStruct[preprocessing=json] to file 'something' (path: something)",
+					},
+					{
+						Name:        "something",
+						Path:        "something",
+						Type:        "GetStruct[postprocessor=json]",
+						Description: "task.3 GetStruct[postprocessor=json] from file 'something' (path: something)",
+					},
+					{
+						Name:        "something",
+						Type:        "ProcessGetStruct",
+						Description: "task.4 ProcessGetStruct on name 'something",
+					},
+					{
+						Name:        "post-file",
+						Path:        "post-file",
+						Type:        "GetBytes",
+						Description: "task.5 GetBytes from file 'post-file' (path: post-file)",
+					},
+				},
+				Data: map[string]interface{}{
+					"something": &TestStruct{Name: "post-file"},
+					"post-file": []byte("some content"),
+				},
+			},
+			expectContent: []string{
+				"some content",
+				"{\n  \"Name\": \"post-file\"\n}",
+				"{\n  \"Name\": \"post-file\"\n}",
+				"",
+				"some content",
 			},
 		},
 	}
@@ -206,7 +299,7 @@ func TestOperations(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.expect, got)
 				for i, task := range got.Actions {
-					if task.Type == "Remove" || task.Type == "Alter[SetBaseDir]" {
+					if task.Type == "Remove" || task.Type == "Alter[SetBaseDir]" || task.Type == "ProcessGetStruct" {
 						continue
 					}
 					content, err := fs.ReadFile(task.Path)
@@ -246,6 +339,7 @@ func TestWithFilePermissionsMode(t *testing.T) {
 						Description: "task.1 StoreBytes to file 'plain' (path: test/plain)",
 					},
 				},
+				Data: map[string]interface{}{},
 			},
 			expectPermissions: 0o644,
 		},
@@ -264,6 +358,7 @@ func TestWithFilePermissionsMode(t *testing.T) {
 						Description: "task.1 StoreBytes to file 'plain' (path: test/plain)",
 					},
 				},
+				Data: map[string]interface{}{},
 			},
 			expectPermissions: 0o400,
 		},

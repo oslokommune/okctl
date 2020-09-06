@@ -1,11 +1,10 @@
 package filesystem
 
 import (
-	"encoding/json"
 	"fmt"
-	"path"
 
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/spf13/afero"
 )
 
@@ -38,39 +37,13 @@ func (s *helmStore) saveHelmChart(paths Paths, helm *api.Helm) error {
 		ID: helm.ID,
 	}
 
-	outputs, err := json.Marshal(h)
+	_, err := store.NewFileSystem(paths.BaseDir, s.fs).
+		StoreStruct(paths.OutputFile, &h, store.ToJSON()).
+		StoreStruct(paths.ReleaseFile, helm.Release, store.ToJSON()).
+		StoreStruct(paths.ChartFile, helm.Chart, store.ToJSON()).
+		Do()
 	if err != nil {
-		return fmt.Errorf("failed to marshal outputs: %w", err)
-	}
-
-	err = s.fs.MkdirAll(paths.BaseDir, 0o744)
-	if err != nil {
-		return fmt.Errorf("failed to directory: %w", err)
-	}
-
-	err = s.fs.WriteFile(path.Join(paths.BaseDir, paths.OutputFile), outputs, 0o644)
-	if err != nil {
-		return fmt.Errorf("failed to write outputs: %w", err)
-	}
-
-	release, err := json.MarshalIndent(helm.Release, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal release: %w", err)
-	}
-
-	err = s.fs.WriteFile(path.Join(paths.BaseDir, paths.ReleaseFile), release, 0o644)
-	if err != nil {
-		return fmt.Errorf("failed to write release: %w", err)
-	}
-
-	chart, err := json.MarshalIndent(helm.Chart, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal chart: %w", err)
-	}
-
-	err = s.fs.WriteFile(path.Join(paths.BaseDir, paths.ChartFile), chart, 0o644)
-	if err != nil {
-		return fmt.Errorf("failed to write chart: %w", err)
+		return fmt.Errorf("failed to store helm: %w", err)
 	}
 
 	return nil

@@ -1,11 +1,10 @@
 package filesystem
 
 import (
-	"encoding/json"
 	"fmt"
-	"path"
 
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/spf13/afero"
 )
 
@@ -55,56 +54,41 @@ func (m *managedPolicy) savePolicy(paths Paths, policy *api.ManagedPolicy) error
 		PolicyARN: policy.PolicyARN,
 	}
 
-	data, err := json.Marshal(p)
+	_, err := store.NewFileSystem(paths.BaseDir, m.fs).
+		StoreStruct(paths.OutputFile, &p, store.ToJSON()).
+		StoreBytes(paths.CloudFormationFile, policy.CloudFormationTemplate).
+		Do()
 	if err != nil {
-		return fmt.Errorf("failed to marshal policy: %w", err)
-	}
-
-	err = m.fs.MkdirAll(paths.BaseDir, 0o744)
-	if err != nil {
-		return fmt.Errorf("failed to create policy directory: %w", err)
-	}
-
-	err = m.fs.WriteFile(path.Join(paths.BaseDir, paths.OutputFile), data, 0o644)
-	if err != nil {
-		return fmt.Errorf("failed to write policy: %w", err)
-	}
-
-	err = m.fs.WriteFile(path.Join(paths.BaseDir, paths.CloudFormationFile), policy.CloudFormationTemplate, 0o644)
-	if err != nil {
-		return fmt.Errorf("failed to write cloud formation template: %w", err)
+		return fmt.Errorf("failed to store policy: %w", err)
 	}
 
 	return nil
 }
 
 func (m *managedPolicy) getPolicy(paths Paths) (*api.ManagedPolicy, error) {
-	data, err := m.fs.ReadFile(path.Join(paths.BaseDir, paths.OutputFile))
-	if err != nil {
-		return nil, fmt.Errorf("failed to read policy file: %w", err)
+	var template []byte
+
+	callback := func(_ string, data []byte) error {
+		template = data
+		return nil
 	}
 
 	p := &ManagedPolicy{}
 
-	err = json.Unmarshal(data, p)
+	_, err := store.NewFileSystem(paths.BaseDir, m.fs).
+		GetStruct(paths.OutputFile, p, store.FromJSON()).
+		GetBytes(paths.CloudFormationFile, callback).
+		Do()
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal policy: %w", err)
+		return nil, fmt.Errorf("failed to get managed policy: %w", err)
 	}
 
-	policy := &api.ManagedPolicy{
-		ID:        p.ID,
-		StackName: p.StackName,
-		PolicyARN: p.PolicyARN,
-	}
-
-	template, err := m.fs.ReadFile(path.Join(paths.BaseDir, paths.CloudFormationFile))
-	if err != nil {
-		return nil, fmt.Errorf("failed to read cloud formation template: %w", err)
-	}
-
-	policy.CloudFormationTemplate = template
-
-	return policy, nil
+	return &api.ManagedPolicy{
+		ID:                     p.ID,
+		StackName:              p.StackName,
+		PolicyARN:              p.PolicyARN,
+		CloudFormationTemplate: template,
+	}, nil
 }
 
 // NewManagedPolicyStore returns an initialised managed policy store

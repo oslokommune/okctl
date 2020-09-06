@@ -88,7 +88,7 @@ type Action struct {
 type toJSON struct{}
 
 func (t *toJSON) PreProcess(data interface{}) (*Processed, error) {
-	d, err := json.Marshal(data)
+	d, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal as json: %w", err)
 	}

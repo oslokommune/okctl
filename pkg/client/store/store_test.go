@@ -56,7 +56,7 @@ func TestOperations(t *testing.T) {
 				},
 			},
 			expectContent: []string{
-				"{\"Name\":\"hi\"}",
+				"{\n  \"Name\": \"hi\"\n}",
 				"name: ho\n",
 				"hello",
 			},

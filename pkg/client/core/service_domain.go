@@ -18,7 +18,7 @@ func (s *domainService) CreateDomain(_ context.Context, opts api.CreateDomainOpt
 		return nil, err
 	}
 
-	err = s.store.SaveDomain(domain)
+	_, err = s.store.SaveDomain(domain)
 	if err != nil {
 		return nil, err
 	}

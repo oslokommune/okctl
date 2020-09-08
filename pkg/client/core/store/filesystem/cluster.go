@@ -20,9 +20,9 @@ type clusterStore struct {
 	repoState      *repository.Data
 }
 
-func (s *clusterStore) SaveCluster(c *api.Cluster) error {
+func (s *clusterStore) SaveCluster(c *api.Cluster) (*store.Report, error) {
 	if _, ok := s.repoState.Clusters[c.ID.Environment]; ok {
-		return nil
+		return nil, nil
 	}
 
 	s.repoState.Clusters[c.ID.Environment] = &repository.Cluster{
@@ -35,32 +35,32 @@ func (s *clusterStore) SaveCluster(c *api.Cluster) error {
 		},
 	}
 
-	_, err := store.NewFileSystem(s.repoStatePaths.BaseDir, s.fs).
+	report, err := store.NewFileSystem(s.repoStatePaths.BaseDir, s.fs).
 		StoreStruct(s.repoStatePaths.ConfigFile, s.repoState, store.ToYAML()).
 		AlterStore(store.SetBaseDir(s.clusterConfig.BaseDir)).
 		StoreStruct(s.clusterConfig.ConfigFile, c.Config, store.ToYAML()).
 		Do()
 	if err != nil {
-		return fmt.Errorf("failed to store cluster: %w", err)
+		return nil, fmt.Errorf("failed to store cluster: %w", err)
 	}
 
-	return nil
+	return report, nil
 }
 
 // DeleteCluster knows how to delete clusterStore state
-func (s *clusterStore) DeleteCluster(id api.ID) error {
+func (s *clusterStore) DeleteCluster(id api.ID) (*store.Report, error) {
 	delete(s.repoState.Clusters, id.Environment)
 
-	_, err := store.NewFileSystem(s.repoStatePaths.BaseDir, s.fs).
+	report, err := store.NewFileSystem(s.repoStatePaths.BaseDir, s.fs).
 		StoreStruct(s.repoStatePaths.ConfigFile, s.repoState, store.ToYAML()).
 		AlterStore(store.SetBaseDir(s.clusterConfig.BaseDir)).
 		Remove(s.clusterConfig.ConfigFile).
 		Do()
 	if err != nil {
-		return fmt.Errorf("failed to remove cluster from storage: %w", err)
+		return nil, fmt.Errorf("failed to remove cluster from storage: %w", err)
 	}
 
-	return nil
+	return report, nil
 }
 
 // GetCluster knows how to get clusterStore state

@@ -18,7 +18,7 @@ func (s *vpcService) CreateVpc(_ context.Context, opts api.CreateVpcOpts) (*api.
 		return nil, err
 	}
 
-	err = s.store.SaveVpc(vpc)
+	_, err = s.store.SaveVpc(vpc)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (s *vpcService) DeleteVpc(_ context.Context, opts api.DeleteVpcOpts) error 
 		return err
 	}
 
-	err = s.store.DeleteVpc(opts.ID)
+	_, err = s.store.DeleteVpc(opts.ID)
 	if err != nil {
 		return err
 	}

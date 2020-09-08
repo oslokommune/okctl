@@ -18,7 +18,7 @@ func (c *clusterService) CreateCluster(_ context.Context, opts api.ClusterCreate
 		return nil, err
 	}
 
-	err = c.store.SaveCluster(cluster)
+	_, err = c.store.SaveCluster(cluster)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (c *clusterService) DeleteCluster(_ context.Context, opts api.ClusterDelete
 		return err
 	}
 
-	err = c.store.DeleteCluster(opts.ID)
+	_, err = c.store.DeleteCluster(opts.ID)
 	if err != nil {
 		return err
 	}

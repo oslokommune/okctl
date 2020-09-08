@@ -1,21 +1,23 @@
 package client
 
-import "github.com/oslokommune/okctl/pkg/api"
+import (
+	"context"
 
-// We are shadowing the api interfaces for now, but
-// this is probably not sustainable.
+	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/client/store"
+)
 
 // DomainService orchestrates the creation of a hosted zone
 type DomainService interface {
-	api.DomainService
+	CreateDomain(ctx context.Context, opts api.CreateDomainOpts) (*api.Domain, error)
 }
 
 // DomainAPI invokes the API
 type DomainAPI interface {
-	api.DomainCloudProvider
+	CreateDomain(opts api.CreateDomainOpts) (*api.Domain, error)
 }
 
 // DomainStore stores the data
 type DomainStore interface {
-	api.DomainStore
+	SaveDomain(*api.Domain) (*store.Report, error)
 }

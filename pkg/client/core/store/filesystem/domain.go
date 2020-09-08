@@ -30,7 +30,7 @@ type Domain struct {
 	StackName    string
 }
 
-func (d *domainStore) SaveDomain(domain *api.Domain) error {
+func (d *domainStore) SaveDomain(domain *api.Domain) (*store.Report, error) {
 	p := Domain{
 		ID:           domain.ID,
 		FQDN:         domain.FQDN,
@@ -42,7 +42,7 @@ func (d *domainStore) SaveDomain(domain *api.Domain) error {
 
 	cluster, ok := d.repoState.Clusters[domain.ID.Environment]
 	if !ok {
-		return fmt.Errorf("failed to find cluster for env: %s", domain.ID.Environment)
+		return nil, fmt.Errorf("failed to find cluster for env: %s", domain.ID.Environment)
 	}
 
 	cluster.HostedZone[domain.Domain] = &repository.HostedZone{
@@ -52,17 +52,17 @@ func (d *domainStore) SaveDomain(domain *api.Domain) error {
 		NameServers: domain.NameServers,
 	}
 
-	_, err := store.NewFileSystem(path.Join(d.paths.BaseDir, domain.Domain), d.fs).
+	report, err := store.NewFileSystem(path.Join(d.paths.BaseDir, domain.Domain), d.fs).
 		StoreStruct(d.paths.OutputFile, &p, store.ToJSON()).
 		StoreBytes(d.paths.CloudFormationFile, domain.CloudFormationTemplate).
 		AlterStore(store.SetBaseDir(d.repoPaths.BaseDir)).
 		StoreStruct(d.repoPaths.ConfigFile, d.repoState, store.ToYAML()).
 		Do()
 	if err != nil {
-		return fmt.Errorf("failed to store domain: %w", err)
+		return nil, fmt.Errorf("failed to store domain: %w", err)
 	}
 
-	return nil
+	return report, nil
 }
 
 // NewDomainStore returns an initialised domain store

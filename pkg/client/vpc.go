@@ -1,6 +1,9 @@
 package client
 
-import "github.com/oslokommune/okctl/pkg/api"
+import (
+	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/client/store"
+)
 
 // We are shadowing the api interfaces for now, but
 // this is probably not sustainable.
@@ -17,5 +20,7 @@ type VPCAPI interface {
 
 // VPCStore stores the data
 type VPCStore interface {
-	api.VpcStore
+	SaveVpc(vpc *api.Vpc) (*store.Report, error)
+	DeleteVpc(id api.ID) (*store.Report, error)
+	GetVpc(id api.ID) (*api.Vpc, error)
 }

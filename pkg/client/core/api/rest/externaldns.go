@@ -28,8 +28,8 @@ func (a *externalDNSAPI) CreateExternalDNSServiceAccount(opts api.CreateExternal
 	return into, a.client.DoPost(TargetExternalDNSServiceAccount, &opts, into)
 }
 
-func (a *externalDNSAPI) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKubeDeploymentOpts) (*api.Kube, error) {
-	into := &api.Kube{}
+func (a *externalDNSAPI) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKubeDeploymentOpts) (*api.ExternalDNSKube, error) {
+	into := &api.ExternalDNSKube{}
 	return into, a.client.DoPost(TargetKubeExternalDNS, &opts, into)
 }
 

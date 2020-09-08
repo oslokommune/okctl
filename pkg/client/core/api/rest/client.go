@@ -1,4 +1,3 @@
-// Package client provides convenience functions for invoking API operations
 package rest
 
 import (

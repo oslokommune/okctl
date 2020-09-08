@@ -6,8 +6,14 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
-// Kube contains the state for a kube deployment
-type Kube struct {
+// ExternalSecretsKube is the state of an external secrets deployment
+type ExternalSecretsKube struct {
+	ID        ID
+	Manifests map[string][]byte
+}
+
+// ExternalDNSKube is the state of an external dns deployment
+type ExternalDNSKube struct {
 	ID           ID
 	HostedZoneID string
 	DomainFilter string
@@ -76,19 +82,19 @@ func (d Data) Validate() error {
 
 // KubeService provides kube deployment service layer
 type KubeService interface {
-	CreateExternalDNSKubeDeployment(ctx context.Context, opts CreateExternalDNSKubeDeploymentOpts) (*Kube, error)
-	CreateExternalSecrets(ctx context.Context, opts CreateExternalSecretsOpts) (*Kube, error)
+	CreateExternalDNSKubeDeployment(ctx context.Context, opts CreateExternalDNSKubeDeploymentOpts) (*ExternalDNSKube, error)
+	CreateExternalSecrets(ctx context.Context, opts CreateExternalSecretsOpts) (*ExternalSecretsKube, error)
 }
 
 // KubeRun provides kube deployment run layer
 type KubeRun interface {
-	CreateExternalDNSKubeDeployment(opts CreateExternalDNSKubeDeploymentOpts) (*Kube, error)
-	CreateExternalSecrets(opts CreateExternalSecretsOpts) (*Kube, error)
+	CreateExternalDNSKubeDeployment(opts CreateExternalDNSKubeDeploymentOpts) (*ExternalDNSKube, error)
+	CreateExternalSecrets(opts CreateExternalSecretsOpts) (*ExternalSecretsKube, error)
 }
 
 // KubeStore provides kube store layer
 type KubeStore interface {
-	SaveExternalDNSKubeDeployment(kube *Kube) error
-	GetExternalDNSKubeDeployment() (*Kube, error)
-	SaveExternalSecrets(kube *Kube) error
+	SaveExternalDNSKubeDeployment(kube *ExternalDNSKube) error
+	GetExternalDNSKubeDeployment() (*ExternalDNSKube, error)
+	SaveExternalSecrets(kube *ExternalSecretsKube) error
 }

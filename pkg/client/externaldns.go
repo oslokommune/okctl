@@ -11,7 +11,7 @@ import (
 type ExternalDNS struct {
 	Policy         *api.ManagedPolicy
 	ServiceAccount *api.ServiceAccount
-	Kube           *api.Kube
+	Kube           *api.ExternalDNSKube
 }
 
 // CreateExternalDNSOpts contains required inputs
@@ -30,7 +30,7 @@ type ExternalDNSService interface {
 type ExternalDNSAPI interface {
 	CreateExternalDNSPolicy(opts api.CreateExternalDNSPolicyOpts) (*api.ManagedPolicy, error)
 	CreateExternalDNSServiceAccount(opts api.CreateExternalDNSServiceAccountOpts) (*api.ServiceAccount, error)
-	CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKubeDeploymentOpts) (*api.Kube, error)
+	CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKubeDeploymentOpts) (*api.ExternalDNSKube, error)
 }
 
 // ExternalDNSStore implements the storage layer

@@ -26,7 +26,7 @@ type ManifestService interface {
 
 // ManifestAPI invokes the API
 type ManifestAPI interface {
-	CreateExternalSecret(opts CreateExternalSecretOpts) (*api.Kube, error)
+	CreateExternalSecret(opts CreateExternalSecretOpts) (*api.ExternalSecretsKube, error)
 }
 
 // ManifestStore defines the storage layer

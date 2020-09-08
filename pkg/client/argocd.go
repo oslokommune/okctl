@@ -15,7 +15,7 @@ type ArgoCD struct {
 	ArgoURL        string
 	Certificate    *api.Certificate
 	GithubOauthApp *GithubOauthApp
-	ExternalSecret *api.Kube
+	ExternalSecret *api.ExternalSecretsKube
 	Chart          *api.Helm
 }
 

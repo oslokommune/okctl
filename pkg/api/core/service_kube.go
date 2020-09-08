@@ -12,7 +12,7 @@ type kubeService struct {
 	store api.KubeStore
 }
 
-func (k *kubeService) CreateExternalSecrets(_ context.Context, opts api.CreateExternalSecretsOpts) (*api.Kube, error) {
+func (k *kubeService) CreateExternalSecrets(_ context.Context, opts api.CreateExternalSecretsOpts) (*api.ExternalSecretsKube, error) {
 	err := opts.Validate()
 	if err != nil {
 		return nil, errors.E(err, "failed to validate input options")
@@ -31,7 +31,7 @@ func (k *kubeService) CreateExternalSecrets(_ context.Context, opts api.CreateEx
 	return kube, nil
 }
 
-func (k *kubeService) CreateExternalDNSKubeDeployment(_ context.Context, opts api.CreateExternalDNSKubeDeploymentOpts) (*api.Kube, error) {
+func (k *kubeService) CreateExternalDNSKubeDeployment(_ context.Context, opts api.CreateExternalDNSKubeDeploymentOpts) (*api.ExternalDNSKube, error) {
 	err := opts.Validate()
 	if err != nil {
 		return nil, errors.E(err, "failed to validate input options")

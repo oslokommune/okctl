@@ -3,6 +3,8 @@ package filesystem
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/api"
+
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/spf13/afero"
@@ -13,6 +15,14 @@ type externalDNSStore struct {
 	serviceAccount Paths
 	kube           Paths
 	fs             *afero.Afero
+}
+
+// ExternalDNSKube contains the stored state for a kube deployment
+type ExternalDNSKube struct {
+	ID           api.ID
+	HostedZoneID string
+	DomainFilter string
+	Manifests    []string
 }
 
 func (s *externalDNSStore) SaveExternalDNS(d *client.ExternalDNS) (*store.Report, error) {
@@ -27,7 +37,7 @@ func (s *externalDNSStore) SaveExternalDNS(d *client.ExternalDNS) (*store.Report
 		PolicyArn: d.ServiceAccount.PolicyArn,
 	}
 
-	kube := &Kube{
+	kube := &ExternalDNSKube{
 		ID:           d.Kube.ID,
 		HostedZoneID: d.Kube.HostedZoneID,
 		DomainFilter: d.Kube.DomainFilter,

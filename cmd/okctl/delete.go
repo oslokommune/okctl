@@ -137,6 +137,9 @@ including VPC, this is a highly destructive operation.`,
 			err = vpcService.DeleteVpc(o.Ctx, api.DeleteVpcOpts{
 				ID: id,
 			})
+			if err != nil {
+				return err
+			}
 
 			return nil
 		},

@@ -32,13 +32,3 @@ type ServiceAccount struct {
 type Helm struct {
 	ID api.ID
 }
-
-// Kube contains the stored state for a kube deployment
-// nolint: godox
-// FIXME: We need to add a metadata map[string]interface{} type to the kube thingy
-type Kube struct {
-	ID           api.ID
-	HostedZoneID string
-	DomainFilter string
-	Manifests    []string
-}

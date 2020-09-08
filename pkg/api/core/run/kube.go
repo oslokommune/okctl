@@ -18,7 +18,7 @@ type kubeRun struct {
 	kubeConfStore api.KubeConfigStore
 }
 
-func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*api.Kube, error) {
+func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*api.ExternalSecretsKube, error) {
 	kubeConfig, err := k.kubeConfStore.GetKubeConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve kubeconfig: %w", err)
@@ -71,12 +71,13 @@ func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*ap
 		return nil, fmt.Errorf("failed to apply kubernetes manifests: %w", err)
 	}
 
-	return &api.Kube{
+	return &api.ExternalSecretsKube{
+		ID:        opts.ID,
 		Manifests: manifests,
 	}, nil
 }
 
-func (k *kubeRun) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKubeDeploymentOpts) (*api.Kube, error) {
+func (k *kubeRun) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKubeDeploymentOpts) (*api.ExternalDNSKube, error) {
 	kubeConfig, err := k.kubeConfStore.GetKubeConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve kubeconfig: %w", err)
@@ -114,7 +115,7 @@ func (k *kubeRun) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKube
 		return nil, fmt.Errorf("failed to serialise ClusterRoleBinding manifest: %w", err)
 	}
 
-	return &api.Kube{
+	return &api.ExternalDNSKube{
 		HostedZoneID: opts.HostedZoneID,
 		DomainFilter: opts.DomainFilter,
 		Manifests: map[string][]byte{

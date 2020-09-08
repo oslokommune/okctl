@@ -12,8 +12,8 @@ type manifestAPI struct {
 	client *HTTPClient
 }
 
-func (a *manifestAPI) CreateExternalSecret(opts client.CreateExternalSecretOpts) (*api.Kube, error) {
-	into := &api.Kube{}
+func (a *manifestAPI) CreateExternalSecret(opts client.CreateExternalSecretOpts) (*api.ExternalSecretsKube, error) {
+	into := &api.ExternalSecretsKube{}
 	return into, a.client.DoPost(TargetKubeExternalSecret, &opts, into)
 }
 

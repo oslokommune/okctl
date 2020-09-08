@@ -1,6 +1,10 @@
 package rest
 
 import (
+	"fmt"
+
+	"github.com/oslokommune/okctl/pkg/domain"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -12,9 +16,19 @@ type domainAPI struct {
 	client *HTTPClient
 }
 
-func (a *domainAPI) CreateHostedZone(opts api.CreateHostedZoneOpts) (*api.HostedZone, error) {
+func (a *domainAPI) CreatePrimaryHostedZone(opts client.CreatePrimaryHostedZoneOpts) (*api.HostedZone, error) {
+	d, err := domain.NewDefaultWithSurvey(opts.ID.Repository, opts.ID.Environment)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get domain name: %w", err)
+	}
+
 	into := &api.HostedZone{}
-	return into, a.client.DoPost(TargetHostedZone, &opts, into)
+
+	return into, a.client.DoPost(TargetHostedZone, &api.CreateHostedZoneOpts{
+		ID:     opts.ID,
+		Domain: d.Domain,
+		FQDN:   d.FQDN,
+	}, into)
 }
 
 // NewDomainAPI returns an initialised REST API client

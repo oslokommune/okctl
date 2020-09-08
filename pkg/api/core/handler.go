@@ -223,7 +223,7 @@ type Services struct {
 type EndpointOption func(Endpoints) Endpoints
 
 const (
-	clusterTag              = "cluster"
+	clusterTag              = "clusterService"
 	vpcTag                  = "vpc"
 	managedPoliciesTag      = "managedPolicies"
 	externalSecretsTag      = "externalSecrets"

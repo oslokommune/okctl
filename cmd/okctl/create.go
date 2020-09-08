@@ -3,11 +3,13 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"strings"
+	"path"
 
-	"github.com/google/uuid"
+	"github.com/oslokommune/okctl/pkg/client/core"
 
-	"github.com/oslokommune/okctl/pkg/keypair"
+	"github.com/oslokommune/okctl/pkg/client/core/api/rest"
+	"github.com/oslokommune/okctl/pkg/client/core/store/filesystem"
+	"github.com/oslokommune/okctl/pkg/config"
 
 	"github.com/oslokommune/okctl/pkg/git"
 	"github.com/oslokommune/okctl/pkg/github"
@@ -68,8 +70,6 @@ func (o *CreateClusterOpts) Validate() error {
 
 // nolint: funlen gocyclo
 func buildCreateClusterCommand(o *okctl.Okctl) *cobra.Command {
-	// This should probably be a local struct, since we do much
-	// more now then before
 	opts := &CreateClusterOpts{}
 
 	cmd := &cobra.Command{
@@ -89,11 +89,12 @@ and database subnets.`,
 			opts.RepositoryName = o.RepoData.Name
 			opts.ClusterName = o.ClusterName(opts.Environment)
 			opts.Region = o.Region()
-			opts.DomainName = o.Domain(opts.Environment)
-			opts.FQDN = o.FQDN(opts.Environment)
+			opts.DomainName = o.PrimaryDomain(opts.Environment)
+			opts.FQDN = o.PrimaryFQDN(opts.Environment)
 			opts.Organisation = github.DefaultOrg
 
-			if !o.HostedZoneIsCreated(opts.Environment) {
+			// FIXME: Move this into the domain ask thingy
+			if !o.HostedZoneIsCreated(opts.DomainName, opts.Environment) {
 				d, err := domain.NewDefaultWithSurvey(opts.RepositoryName, opts.Environment)
 				if err != nil {
 					return fmt.Errorf("failed to get domain name: %w", err)
@@ -110,6 +111,16 @@ and database subnets.`,
 			return o.Initialise(opts.Environment, opts.AWSAccountID)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
+			repoDir, err := o.GetRepoDir()
+			if err != nil {
+				return err
+			}
+
+			outputDir, err := o.GetRepoOutputDir(opts.Environment)
+			if err != nil {
+				return err
+			}
+
 			// Discarding the output for now, until we restructure
 			// the API to return everything we need to write
 			// the result ourselves
@@ -124,12 +135,22 @@ and database subnets.`,
 			}
 
 			o.SetGithubOrganisationName(opts.Organisation, opts.Environment)
-			err := o.WriteCurrentRepoData()
+			err = o.WriteCurrentRepoData()
 			if err != nil {
 				return err
 			}
 
-			vpc, err := c.CreateVpc(&api.CreateVpcOpts{
+			vpcService := core.NewVPCService(
+				rest.NewVPCAPI(c),
+				filesystem.NewVpcStore(
+					config.DefaultVpcOutputs,
+					config.DefaultVpcCloudFormationTemplate,
+					path.Join(outputDir, config.DefaultVpcBaseDir),
+					o.FileSystem,
+				),
+			)
+
+			vpc, err := vpcService.CreateVpc(o.Ctx, api.CreateVpcOpts{
 				ID:   id,
 				Cidr: opts.Cidr,
 			})
@@ -137,7 +158,23 @@ and database subnets.`,
 				return err
 			}
 
-			_, err = c.CreateCluster(&api.ClusterCreateOpts{
+			clusterService := core.NewClusterService(
+				rest.NewClusterAPI(c),
+				filesystem.NewClusterStore(
+					filesystem.Paths{
+						ConfigFile: config.DefaultRepositoryConfig,
+						BaseDir:    repoDir,
+					},
+					filesystem.Paths{
+						ConfigFile: config.DefaultClusterConfig,
+						BaseDir:    path.Join(outputDir, config.DefaultClusterBaseDir),
+					},
+					o.FileSystem,
+					o.RepoData,
+				),
+			)
+
+			_, err = clusterService.CreateCluster(o.Ctx, api.ClusterCreateOpts{
 				ID:                id,
 				Cidr:              opts.Cidr,
 				VpcID:             vpc.VpcID,
@@ -148,80 +185,95 @@ and database subnets.`,
 				return err
 			}
 
-			policy, err := c.CreateExternalSecretsPolicy(&api.CreateExternalSecretsPolicyOpts{
+			externalSecretsService := core.NewExternalSecretsService(
+				rest.NewExternalSecretsAPI(c),
+				filesystem.NewExternalSecretsStore(
+					filesystem.Paths{
+						OutputFile:         config.DefaultPolicyOutputFile,
+						CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
+						BaseDir:            path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+					},
+					filesystem.Paths{
+						OutputFile: config.DefaultServiceAccountOutputsFile,
+						ConfigFile: config.DefaultServiceAccountConfigFile,
+						BaseDir:    path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+					},
+					filesystem.Paths{
+						OutputFile:  config.DefaultHelmOutputsFile,
+						ReleaseFile: config.DefaultHelmReleaseFile,
+						ChartFile:   config.DefaultHelmChartFile,
+						BaseDir:     path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+					},
+					o.FileSystem,
+				),
+			)
+
+			_, err = externalSecretsService.CreateExternalSecrets(o.Ctx, client.CreateExternalSecretsOpts{
 				ID: id,
 			})
-			if err != nil {
-				return err
-			}
 
-			_, err = c.CreateExternalSecretsServiceAccount(&api.CreateExternalSecretsServiceAccountOpts{
-				CreateServiceAccountOpts: api.CreateServiceAccountOpts{
-					ID:        id,
-					PolicyArn: policy.PolicyARN,
-				},
-			})
-			if err != nil {
-				return err
-			}
+			// alb ingress
+			albIngressControllerService := core.NewALBIngressControllerService(
+				rest.NewALBIngressControllerAPI(c),
+				filesystem.NewALBIngressControllerStore(
+					filesystem.Paths{
+						OutputFile:         config.DefaultPolicyOutputFile,
+						CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
+						BaseDir:            path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
+					},
+					filesystem.Paths{
+						OutputFile: config.DefaultServiceAccountOutputsFile,
+						ConfigFile: config.DefaultServiceAccountConfigFile,
+						BaseDir:    path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
+					},
+					filesystem.Paths{
+						OutputFile:  config.DefaultHelmOutputsFile,
+						ReleaseFile: config.DefaultHelmReleaseFile,
+						ChartFile:   config.DefaultHelmChartFile,
+						BaseDir:     path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
+					},
+					o.FileSystem,
+				),
+			)
 
-			_, err = c.CreateExternalSecretsHelmChart(&api.CreateExternalSecretsHelmChartOpts{
-				ID: id,
-			})
-			if err != nil {
-				return err
-			}
-
-			policy, err = c.CreateAlbIngressControllerPolicy(&api.CreateAlbIngressControllerPolicyOpts{
-				ID: id,
-			})
-			if err != nil {
-				return err
-			}
-
-			_, err = c.CreateAlbIngressControllerServiceAccount(&api.CreateAlbIngressControllerServiceAccountOpts{
-				CreateServiceAccountOpts: api.CreateServiceAccountOpts{
-					ID:        id,
-					PolicyArn: policy.PolicyARN,
-				},
-			})
-			if err != nil {
-				return err
-			}
-
-			_, err = c.CreateAlbIngressControllerHelmChart(&api.CreateAlbIngressControllerHelmChartOpts{
+			_, err = albIngressControllerService.CreateALBIngressController(o.Ctx, client.CreateALBIngressControllerOpts{
 				ID:    id,
-				VpcID: vpc.VpcID,
+				VPCID: vpc.VpcID,
 			})
-			if err != nil {
-				return err
-			}
 
-			d, err := c.CreateDomain(&api.CreateDomainOpts{
+			domainService := core.NewDomainService(
+				rest.NewDomainAPI(c),
+				filesystem.NewDomainStore(
+					o.RepoData,
+					filesystem.Paths{
+						OutputFile:         config.DefaultDomainOutputsFile,
+						CloudFormationFile: config.DefaultDomainCloudFormationTemplate,
+						BaseDir:            path.Join(outputDir, config.DefaultDomainBaseDir),
+					},
+					filesystem.Paths{
+						ConfigFile: config.DefaultRepositoryConfig,
+						BaseDir:    repoDir,
+					},
+					o.FileSystem,
+				),
+			)
+
+			d, err := domainService.CreateDomain(o.Ctx, api.CreateDomainOpts{
 				ID:     id,
-				FQDN:   opts.FQDN,
 				Domain: opts.DomainName,
+				FQDN:   opts.FQDN,
 			})
-			if err != nil {
-				return err
-			}
 
-			o.SetHostedZoneIsCreated(true, opts.Environment)
-
-			err = o.WriteCurrentRepoData()
-			if err != nil {
-				return err
-			}
-
+			// FIXME: Move this stuff into the domain create
 			a := ask.New()
 
-			if !o.HostedZoneIsDelegated(opts.Environment) {
+			if !o.HostedZoneIsDelegated(opts.DomainName, opts.Environment) {
 				err = a.ConfirmPostingNameServers(o.Out, d.Domain, d.NameServers)
 				if err != nil {
 					return err
 				}
 
-				o.SetHostedZoneIsDelegated(true, opts.Environment)
+				o.SetHostedZoneIsDelegated(true, opts.DomainName, opts.Environment)
 
 				err := o.WriteCurrentRepoData()
 				if err != nil {
@@ -229,234 +281,119 @@ and database subnets.`,
 				}
 			}
 
-			policy, err = c.CreateExternalDNSPolicy(&api.CreateExternalDNSPolicyOpts{
-				ID: id,
-			})
-			if err != nil {
-				return err
-			}
+			// external dns
+			externalDNSService := core.NewExternalDNSService(
+				rest.NewExternalDNSAPI(c),
+				filesystem.NewExternalDNSStore(
+					filesystem.Paths{
+						OutputFile:         config.DefaultPolicyOutputFile,
+						CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
+						BaseDir:            path.Join(outputDir, config.DefaultExternalDNSBaseDir),
+					},
+					filesystem.Paths{
+						OutputFile: config.DefaultServiceAccountOutputsFile,
+						ConfigFile: config.DefaultServiceAccountConfigFile,
+						BaseDir:    path.Join(outputDir, config.DefaultExternalDNSBaseDir),
+					},
+					filesystem.Paths{
+						OutputFile: config.DefaultKubeOutputsFile,
+						BaseDir:    path.Join(outputDir, config.DefaultExternalDNSBaseDir),
+					},
+					o.FileSystem,
+				),
+			)
 
-			_, err = c.CreateExternalDNSServiceAccount(&api.CreateExternalDNSServiceAccountOpts{
-				CreateServiceAccountOpts: api.CreateServiceAccountOpts{
-					ID:        id,
-					PolicyArn: policy.PolicyARN,
-				},
-			})
-			if err != nil {
-				return err
-			}
-
-			_, err = c.CreateExternalDNSKubeDeployment(&api.CreateExternalDNSKubeDeploymentOpts{
+			_, err = externalDNSService.CreateExternalDNS(o.Ctx, client.CreateExternalDNSOpts{
 				ID:           id,
 				HostedZoneID: d.HostedZoneID,
-				DomainFilter: d.Domain,
+				Domain:       d.Domain,
 			})
+
+			g, err := github.New(o.Ctx, o.CredentialsProvider.Github())
 			if err != nil {
 				return err
 			}
 
-			cert, err := c.CreateCertificate(&api.CreateCertificateOpts{
+			repo, err := git.GithubRepoFullName(opts.Organisation, repoDir)
+			if err != nil {
+				return err
+			}
+
+			githubService := core.NewGithubService(
+				rest.NewGithubAPI(
+					rest.NewParameterAPI(c),
+					g,
+				),
+				filesystem.NewGithubStore(
+					filesystem.Paths{
+						ConfigFile: config.DefaultRepositoryConfig,
+						BaseDir:    repoDir,
+					},
+					o.RepoData,
+					o.FileSystem,
+				),
+			)
+
+			githubRepo, err := githubService.ReadyGithubInfrastructureRepository(o.Ctx, client.ReadyGithubInfrastructureRepositoryOpts{
 				ID:           id,
-				FQDN:         fmt.Sprintf("argocd.%s", opts.FQDN),
-				Domain:       fmt.Sprintf("argocd.%s", opts.DomainName),
-				HostedZoneID: d.HostedZoneID,
+				Organisation: opts.Organisation,
+				Repository:   repo,
 			})
 			if err != nil {
 				return err
 			}
 
-			repoDir, err := o.GetRepoDir()
-			if err != nil {
-				return err
-			}
+			// Everything below here goes into ArgoCD
 
-			g, err := github.New(opts.Organisation, o.CredentialsProvider.Github())
-			if err != nil {
-				return err
-			}
+			argoBaseDir := path.Join(outputDir, config.DefaultArgoCDBaseDir)
 
-			githubRepo := o.GithubRepository(opts.Environment)
-			if len(githubRepo.Name) == 0 || len(githubRepo.GitURL) == 0 {
-				repo, err := git.GithubRepoFullName(opts.Organisation, repoDir)
-				if err != nil {
-					return err
-				}
-
-				repos, err := g.Repositories()
-				if err != nil {
-					return err
-				}
-
-				selectedRepo, err := a.SelectInfrastructureRepository(repo, repos)
-				if err != nil {
-					return err
-				}
-
-				githubRepo.Name = selectedRepo.GetName()
-				githubRepo.GitURL = fmt.Sprintf("git@github.com:%s", strings.TrimPrefix(selectedRepo.GetGitURL(), "git://github.com/"))
-
-				o.SetGithubRepository(githubRepo, opts.Environment)
-				err = o.WriteCurrentRepoData()
-				if err != nil {
-					return err
-				}
-			}
-
-			team := o.GithubTeamName(opts.Environment)
-			if len(team) == 0 {
-				teams, err := g.Teams()
-				if err != nil {
-					return err
-				}
-
-				selectedTeam, err := a.SelectTeam(teams)
-				if err != nil {
-					return err
-				}
-
-				o.SetGithubTeamName(selectedTeam.GetName(), opts.Environment)
-				err = o.WriteCurrentRepoData()
-				if err != nil {
-					return err
-				}
-
-				team = selectedTeam.GetName()
-			}
-
-			oauthApp := o.GithubOauthApp(opts.Environment)
-			if len(oauthApp.Name) == 0 || len(oauthApp.ClientID) == 0 || len(oauthApp.ClientSecretPath) == 0 {
-				app, err := a.CreateOauthApp(o.Out, ask.OauthAppOpts{
-					Organisation: opts.Organisation,
-					Name:         fmt.Sprintf("okctl-argocd-%s-%s", opts.RepositoryName, opts.Environment),
-					URL:          fmt.Sprintf("https://%s", cert.Domain),
-					CallbackURL:  fmt.Sprintf("https://%s/api/dex/callback", cert.Domain),
-				})
-				if err != nil {
-					return err
-				}
-
-				clientSecret, err := c.CreateSecret(&api.CreateSecretOpts{
-					ID:     id,
-					Name:   "client_secret",
-					Secret: app.ClientSecret,
-				})
-				if err != nil {
-					return err
-				}
-
-				oauthApp.Name = app.Name
-				oauthApp.ClientID = app.ClientID
-				oauthApp.ClientSecretPath = clientSecret.Path
-
-				o.SetGithubOauthApp(oauthApp, opts.Environment)
-				err = o.WriteCurrentRepoData()
-				if err != nil {
-					return err
-				}
-			}
-
-			deployKey := o.GithubDeployKey(opts.Environment)
-			if len(deployKey.Title) == 0 || deployKey.ID == 0 || len(deployKey.Path) == 0 {
-				key, err := keypair.New(keypair.DefaultRandReader(), keypair.DefaultBitSize).Generate()
-				if err != nil {
-					return err
-				}
-
-				dk, err := g.CreateDeployKey(githubRepo.Name, "okctl-argocd-read-key", string(key.PublicKey))
-				if err != nil {
-					return err
-				}
-
-				privateKey, err := c.CreateSecret(&api.CreateSecretOpts{
-					ID:     id,
-					Name:   "private_key",
-					Secret: string(key.PrivateKey),
-				})
-				if err != nil {
-					return err
-				}
-
-				deployKey.Title = dk.GetTitle()
-				deployKey.ID = dk.GetID()
-				deployKey.Path = privateKey.Path
-
-				o.SetGithubDeployKey(deployKey, opts.Environment)
-				err = o.WriteCurrentRepoData()
-				if err != nil {
-					return err
-				}
-			}
-
-			argocd := o.ArgoCD(opts.Environment)
-			if len(argocd.SecretKeyPath) == 0 {
-				secretKey, err := c.CreateSecret(&api.CreateSecretOpts{
-					ID:     id,
-					Name:   "argocd_secret_key",
-					Secret: uuid.New().String(),
-				})
-				if err != nil {
-					return err
-				}
-
-				argocd.SecretKeyPath = secretKey.Path
-
-				o.SetArgoCD(argocd, opts.Environment)
-				err = o.WriteCurrentRepoData()
-				if err != nil {
-					return err
-				}
-			}
-
-			_, err = c.CreateExternalSecrets(&api.CreateExternalSecretsOpts{
-				ID: id,
-				Manifests: []api.Manifest{
-					{
-						Name:      "argocd-privatekey",
-						Namespace: "argocd",
-						Data: []api.Data{
-							{
-								Name: "ssh-private-key",
-								Key:  deployKey.Path,
-							},
-						},
-					},
-					{
-						Name:      "argocd-secret",
-						Namespace: "argocd",
-						Data: []api.Data{
-							{
-								Name: "dex.github.clientSecret",
-								Key:  oauthApp.ClientSecretPath,
-							},
-							{
-								Name: "server.secretkey",
-								Key:  argocd.SecretKeyPath,
-							},
-						},
-					},
+			certStore := filesystem.NewCertificateStore(
+				o.RepoData,
+				filesystem.Paths{
+					OutputFile:         config.DefaultCertificateOutputsFile,
+					CloudFormationFile: config.DefaultCertificateCloudFormationTemplate,
+					BaseDir:            path.Join(argoBaseDir, config.DefaultCertificateBaseDir),
 				},
-			})
-			if err != nil {
-				return err
-			}
+				filesystem.Paths{
+					ConfigFile: config.DefaultRepositoryConfig,
+					BaseDir:    repoDir,
+				},
+				o.FileSystem,
+			)
 
-			_, err = c.CreateArgoCD(&api.CreateArgoCDOpts{
-				ID:                  id,
-				ArgoDomain:          cert.Domain,
-				ArgoCertificateARN:  cert.CertificateARN,
-				GithubOrganisation:  opts.Organisation,
-				GithubTeam:          team,
-				GithubRepoURL:       githubRepo.GitURL,
-				GithubRepoName:      githubRepo.Name,
-				GithubOauthClientID: oauthApp.ClientID,
-				PrivateKeyName:      "argocd-privatekey",
-				PrivateKeyKey:       "ssh-private-key",
-			})
+			manifestStore := filesystem.NewManifestStore(
+				filesystem.Paths{
+					OutputFile: config.DefaultKubeOutputsFile,
+					BaseDir:    path.Join(argoBaseDir, config.DefaultExternalSecretsBaseDir),
+				},
+				o.FileSystem,
+			)
 
-			argocd = o.ArgoCD(opts.Environment)
-			argocd.URL = fmt.Sprintf("https://%s", cert.Domain)
-			o.SetArgoCD(argocd, opts.Environment)
-			err = o.WriteCurrentRepoData()
+			argoService := core.NewArgoCDService(
+				rest.NewArgoCDAPI(
+					githubService,
+					rest.NewParameterAPI(c),
+					rest.NewManifestAPI(c),
+					rest.NewCertificateAPI(c),
+					c,
+				),
+				filesystem.NewArgoCDStore(
+					filesystem.Paths{},
+					certStore,
+					manifestStore,
+					o.FileSystem,
+				),
+			)
+
+			// FIXME: argocd should also update the repostate with some stuff
+			_, err = argoService.CreateArgoCD(o.Ctx, client.CreateArgoCDOpts{
+				ID:                 id,
+				Domain:             d.Domain,
+				FQDN:               d.FQDN,
+				HostedZoneID:       d.HostedZoneID,
+				GithubOrganisation: opts.Organisation,
+				Repository:         githubRepo,
+			})
 			if err != nil {
 				return err
 			}

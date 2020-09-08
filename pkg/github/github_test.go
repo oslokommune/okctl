@@ -1,6 +1,7 @@
 package github_test
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -29,7 +30,7 @@ func TestGithubRepositories(t *testing.T) {
 		{
 			name: "Should work",
 			github: func() *github.Github {
-				gh, err := github.New(github.DefaultOrg, githubAuth.New(githubAuth.NewInMemoryPersister(), &http.Client{}, githubAuth.NewAuthStatic(&githubAuth.Credentials{
+				gh, err := github.New(context.Background(), githubAuth.New(githubAuth.NewInMemoryPersister(), &http.Client{}, githubAuth.NewAuthStatic(&githubAuth.Credentials{
 					AccessToken: "meh",
 					Type:        githubAuth.CredentialsTypePersonalAccessToken,
 				})))
@@ -53,7 +54,7 @@ func TestGithubRepositories(t *testing.T) {
 				Reply(http.StatusOK).
 				JSON(repositories)
 
-			got, err := tc.github.Repositories()
+			got, err := tc.github.Repositories(github.DefaultOrg)
 			assert.NoError(t, err)
 			assert.Equal(t, tc.expect, got)
 		})
@@ -77,7 +78,7 @@ func TestGithubTeams(t *testing.T) {
 		{
 			name: "Should work",
 			github: func() *github.Github {
-				gh, err := github.New(github.DefaultOrg, githubAuth.New(githubAuth.NewInMemoryPersister(), &http.Client{}, githubAuth.NewAuthStatic(&githubAuth.Credentials{
+				gh, err := github.New(context.Background(), githubAuth.New(githubAuth.NewInMemoryPersister(), &http.Client{}, githubAuth.NewAuthStatic(&githubAuth.Credentials{
 					AccessToken: "meh",
 					Type:        githubAuth.CredentialsTypePersonalAccessToken,
 				})))
@@ -101,7 +102,7 @@ func TestGithubTeams(t *testing.T) {
 				Reply(http.StatusOK).
 				JSON(teams)
 
-			got, err := tc.github.Teams()
+			got, err := tc.github.Teams(github.DefaultOrg)
 			assert.NoError(t, err)
 			assert.Equal(t, tc.expect, got)
 		})
@@ -125,7 +126,7 @@ func TestGithubCreateDeployKey(t *testing.T) {
 		{
 			name: "Should work",
 			github: func() *github.Github {
-				gh, err := github.New(github.DefaultOrg, githubAuth.New(githubAuth.NewInMemoryPersister(), &http.Client{}, githubAuth.NewAuthStatic(&githubAuth.Credentials{
+				gh, err := github.New(context.Background(), githubAuth.New(githubAuth.NewInMemoryPersister(), &http.Client{}, githubAuth.NewAuthStatic(&githubAuth.Credentials{
 					AccessToken: "meh",
 					Type:        githubAuth.CredentialsTypePersonalAccessToken,
 				})))
@@ -148,7 +149,7 @@ func TestGithubCreateDeployKey(t *testing.T) {
 				Reply(http.StatusOK).
 				JSON(key)
 
-			got, err := tc.github.CreateDeployKey("myRepo", "myTitle", "ssh-rsa 1234567abc")
+			got, err := tc.github.CreateDeployKey(github.DefaultOrg, "myRepo", "myTitle", "ssh-rsa 1234567abc")
 			assert.NoError(t, err)
 			assert.Equal(t, tc.expect, got)
 		})

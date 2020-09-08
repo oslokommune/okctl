@@ -15,6 +15,7 @@ type TestStruct struct {
 	Name string
 }
 
+// nolint: funlen
 func TestOperations(t *testing.T) {
 	fs := &afero.Afero{Fs: afero.NewMemMapFs()}
 
@@ -314,6 +315,7 @@ func TestOperations(t *testing.T) {
 	}
 }
 
+// nolint: funlen
 func TestWithFilePermissionsMode(t *testing.T) {
 	fs := &afero.Afero{Fs: afero.NewMemMapFs()}
 

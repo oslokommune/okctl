@@ -13,12 +13,21 @@ import (
 // DefaultOrg is the default organisation used with okctl
 const DefaultOrg = "oslokommune"
 
+// Githuber invokes the github API
+type Githuber interface {
+	Teams(org string) ([]*Team, error)
+	Repositories(org string) ([]*Repository, error)
+	CreateDeployKey(org, repository, title, publicKey string) (*Key, error)
+}
+
 // Github contains the state for interacting with the github API
 type Github struct {
-	Organisation string
-	Ctx          context.Context
-	Client       *github.Client
+	Ctx    context.Context
+	Client *github.Client
 }
+
+// Ensure that Github implements Githuber
+var _ Githuber = &Github{}
 
 // Repository shadows github.Repository
 type Repository = github.Repository
@@ -30,9 +39,7 @@ type Team = github.Team
 type Key = github.Key
 
 // New returns an initialised github API client
-func New(org string, auth githubAuth.Authenticator) (*Github, error) {
-	ctx := context.Background()
-
+func New(ctx context.Context, auth githubAuth.Authenticator) (*Github, error) {
 	credentials, err := auth.Raw()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get github credentials: %w", err)
@@ -49,14 +56,13 @@ func New(org string, auth githubAuth.Authenticator) (*Github, error) {
 	)
 
 	return &Github{
-		Organisation: org,
-		Ctx:          ctx,
-		Client:       client,
+		Ctx:    ctx,
+		Client: client,
 	}, nil
 }
 
 // Teams fetches all teams within the given organisation
-func (g *Github) Teams() ([]*Team, error) {
+func (g *Github) Teams(org string) ([]*Team, error) {
 	opts := &github.ListOptions{
 		PerPage: 10, // nolint: gomnd
 	}
@@ -64,7 +70,7 @@ func (g *Github) Teams() ([]*Team, error) {
 	var allTeams []*github.Team
 
 	for {
-		teams, resp, err := g.Client.Teams.ListTeams(g.Ctx, g.Organisation, opts)
+		teams, resp, err := g.Client.Teams.ListTeams(g.Ctx, org, opts)
 		if err != nil {
 			return nil, fmt.Errorf("failed to retrieve teams: %w", err)
 		}
@@ -82,7 +88,7 @@ func (g *Github) Teams() ([]*Team, error) {
 }
 
 // Repositories fetches all the repositories within the given organisation
-func (g *Github) Repositories() ([]*Repository, error) {
+func (g *Github) Repositories(org string) ([]*Repository, error) {
 	opts := &github.RepositoryListByOrgOptions{
 		ListOptions: github.ListOptions{
 			PerPage: 10, // nolint: gomnd
@@ -92,7 +98,7 @@ func (g *Github) Repositories() ([]*Repository, error) {
 	var allRepos []*github.Repository
 
 	for {
-		repos, resp, err := g.Client.Repositories.ListByOrg(g.Ctx, g.Organisation, opts)
+		repos, resp, err := g.Client.Repositories.ListByOrg(g.Ctx, org, opts)
 		if err != nil {
 			return nil, fmt.Errorf("failed to retrieve repositories: %w", err)
 		}
@@ -110,8 +116,8 @@ func (g *Github) Repositories() ([]*Repository, error) {
 }
 
 // CreateDeployKey creates a read-only deploy key for the given owner/repo
-func (g *Github) CreateDeployKey(repository, title, publicKey string) (*Key, error) {
-	key, _, err := g.Client.Repositories.CreateKey(g.Ctx, g.Organisation, repository, &github.Key{
+func (g *Github) CreateDeployKey(org, repository, title, publicKey string) (*Key, error) {
+	key, _, err := g.Client.Repositories.CreateKey(g.Ctx, org, repository, &github.Key{
 		Title:    &title,
 		Key:      &publicKey,
 		ReadOnly: BoolPtr(true),

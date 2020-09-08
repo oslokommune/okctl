@@ -9,20 +9,20 @@ import (
 const TargetVPC = "vpcs/"
 
 type vpcAPI struct {
-	client *client.HTTPClient
+	client *HTTPClient
 }
 
 func (a *vpcAPI) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
 	into := &api.Vpc{}
-	return into, a.client.DoPost(TargetVPC, opts, into)
+	return into, a.client.DoPost(TargetVPC, &opts, into)
 }
 
 func (a *vpcAPI) DeleteVpc(opts api.DeleteVpcOpts) error {
-	return a.client.DoDelete(TargetVPC, opts)
+	return a.client.DoDelete(TargetVPC, &opts)
 }
 
 // NewVPCAPI returns an initialised API REST client
-func NewVPCAPI(client *client.HTTPClient) client.VPCAPI {
+func NewVPCAPI(client *HTTPClient) client.VPCAPI {
 	return &vpcAPI{
 		client: client,
 	}

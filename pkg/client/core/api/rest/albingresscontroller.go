@@ -15,26 +15,26 @@ const (
 )
 
 type albIngressControllerAPI struct {
-	client *client.HTTPClient
+	client *HTTPClient
 }
 
 func (a *albIngressControllerAPI) CreateAlbIngressControllerPolicy(opts api.CreateAlbIngressControllerPolicyOpts) (*api.ManagedPolicy, error) {
 	into := &api.ManagedPolicy{}
-	return into, a.client.DoPost(TargetAlbIngressControllerPolicy, opts, into)
+	return into, a.client.DoPost(TargetAlbIngressControllerPolicy, &opts, into)
 }
 
 func (a *albIngressControllerAPI) CreateAlbIngressControllerServiceAccount(opts api.CreateAlbIngressControllerServiceAccountOpts) (*api.ServiceAccount, error) {
 	into := &api.ServiceAccount{}
-	return into, a.client.DoPost(TargetAlbIngressControllerServiceAccount, opts, into)
+	return into, a.client.DoPost(TargetAlbIngressControllerServiceAccount, &opts, into)
 }
 
 func (a *albIngressControllerAPI) CreateAlbIngressControllerHelmChart(opts api.CreateAlbIngressControllerHelmChartOpts) (*api.Helm, error) {
 	into := &api.Helm{}
-	return into, a.client.DoPost(TargetAlbIngressControllerHelm, opts, into)
+	return into, a.client.DoPost(TargetAlbIngressControllerHelm, &opts, into)
 }
 
 // NewALBIngressControllerAPI returns an initialised REST API client
-func NewALBIngressControllerAPI(client *client.HTTPClient) client.ALBIngressControllerAPI {
+func NewALBIngressControllerAPI(client *HTTPClient) client.ALBIngressControllerAPI {
 	return &albIngressControllerAPI{
 		client: client,
 	}

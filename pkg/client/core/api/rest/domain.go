@@ -9,16 +9,16 @@ import (
 const TargetDomain = "domains/"
 
 type domainAPI struct {
-	client *client.HTTPClient
+	client *HTTPClient
 }
 
 func (a *domainAPI) CreateDomain(opts api.CreateDomainOpts) (*api.Domain, error) {
 	into := &api.Domain{}
-	return into, a.client.DoPost(TargetDomain, opts, into)
+	return into, a.client.DoPost(TargetDomain, &opts, into)
 }
 
 // NewDomainAPI returns an initialised REST API client
-func NewDomainAPI(client *client.HTTPClient) client.DomainAPI {
+func NewDomainAPI(client *HTTPClient) client.DomainAPI {
 	return &domainAPI{
 		client: client,
 	}

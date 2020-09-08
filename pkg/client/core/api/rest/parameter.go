@@ -9,16 +9,16 @@ import (
 const TargetParameterSecret = "parameters/secret/"
 
 type parameterAPI struct {
-	client *client.HTTPClient
+	client *HTTPClient
 }
 
 func (a *parameterAPI) CreateSecret(opts api.CreateSecretOpts) (*api.SecretParameter, error) {
 	into := &api.SecretParameter{}
-	return into, a.client.DoPost(TargetParameterSecret, opts, into)
+	return into, a.client.DoPost(TargetParameterSecret, &opts, into)
 }
 
 // NewParameterAPI returns an initialised REST API client
-func NewParameterAPI(client *client.HTTPClient) client.ParameterAPI {
+func NewParameterAPI(client *HTTPClient) client.ParameterAPI {
 	return &parameterAPI{
 		client: client,
 	}

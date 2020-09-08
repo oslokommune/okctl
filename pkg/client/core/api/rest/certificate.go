@@ -9,16 +9,16 @@ import (
 const TargetCertificate = "certificates/"
 
 type certificateAPI struct {
-	client *client.HTTPClient
+	client *HTTPClient
 }
 
 func (a *certificateAPI) CreateCertificate(opts api.CreateCertificateOpts) (*api.Certificate, error) {
 	into := &api.Certificate{}
-	return into, a.client.DoPost(TargetCertificate, opts, into)
+	return into, a.client.DoPost(TargetCertificate, &opts, into)
 }
 
 // NewCertificateAPI returns an initialised REST API client
-func NewCertificateAPI(client *client.HTTPClient) client.CertificateAPI {
+func NewCertificateAPI(client *HTTPClient) client.CertificateAPI {
 	return &certificateAPI{
 		client: client,
 	}

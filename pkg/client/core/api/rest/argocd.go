@@ -14,7 +14,7 @@ import (
 const TargetHelmArgoCD = "helm/argocd/"
 
 type argoCDAPI struct {
-	client   *client.HTTPClient
+	client   *HTTPClient
 	gh       client.GithubService // We use the Service, because this updates state
 	cert     client.CertificateAPI
 	manifest client.ManifestAPI
@@ -123,7 +123,7 @@ func (a *argoCDAPI) CreateArgoCD(opts client.CreateArgoCDOpts) (*client.ArgoCD, 
 }
 
 // NewArgoCDAPI returns an initialised service
-func NewArgoCDAPI(gh client.GithubService, param client.ParameterAPI, manifest client.ManifestAPI, cert client.CertificateAPI, client *client.HTTPClient) client.ArgoCDAPI { // nolint: lll
+func NewArgoCDAPI(gh client.GithubService, param client.ParameterAPI, manifest client.ManifestAPI, cert client.CertificateAPI, client *HTTPClient) client.ArgoCDAPI { // nolint: lll
 	return &argoCDAPI{
 		client:   client,
 		gh:       gh,

@@ -2,13 +2,17 @@ package main
 
 import (
 	"io/ioutil"
-	"log"
+	"path"
+
+	"github.com/oslokommune/okctl/pkg/client/core"
+	"github.com/oslokommune/okctl/pkg/client/core/api/rest"
+	"github.com/oslokommune/okctl/pkg/client/core/store/filesystem"
+	"github.com/oslokommune/okctl/pkg/config"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
@@ -77,7 +81,7 @@ including VPC, this is a highly destructive operation.`,
 			// Discarding the output for now until we have
 			// restructured the API and handle the response
 			// properly
-			c := client.New(o.Debug, ioutil.Discard, o.ServerURL)
+			c := rest.New(o.Debug, ioutil.Discard, o.ServerURL)
 
 			id := api.ID{
 				Region:       opts.Region,
@@ -86,20 +90,54 @@ including VPC, this is a highly destructive operation.`,
 				Repository:   opts.Repository,
 				ClusterName:  opts.ClusterName,
 			}
-			log.Println(c, id)
 
-			// nolint: godox
-			// FIXME: put back
-			//err := c.DeleteCluster(&api.ClusterDeleteOpts{
-			//	ID: id,
-			//})
-			//if err != nil {
-			//	return err
-			//}
-			//
-			//return c.DeleteVpc(&api.DeleteVpcOpts{
-			//	ID: id,
-			//})
+			outputDir, err := o.GetRepoOutputDir(opts.Environment)
+			if err != nil {
+				return err
+			}
+
+			repoDir, err := o.GetRepoDir()
+			if err != nil {
+				return err
+			}
+
+			clusterService := core.NewClusterService(
+				rest.NewClusterAPI(c),
+				filesystem.NewClusterStore(
+					filesystem.Paths{
+						ConfigFile: config.DefaultRepositoryConfig,
+						BaseDir:    repoDir,
+					},
+					filesystem.Paths{
+						ConfigFile: config.DefaultClusterConfig,
+						BaseDir:    path.Join(outputDir, config.DefaultClusterBaseDir),
+					},
+					o.FileSystem,
+					o.RepoData,
+				),
+			)
+
+			err = clusterService.DeleteCluster(o.Ctx, api.ClusterDeleteOpts{
+				ID: id,
+			})
+			if err != nil {
+				return err
+			}
+
+			vpcService := core.NewVPCService(
+				rest.NewVPCAPI(c),
+				filesystem.NewVpcStore(
+					config.DefaultVpcOutputs,
+					config.DefaultVpcCloudFormationTemplate,
+					path.Join(outputDir, config.DefaultVpcBaseDir),
+					o.FileSystem,
+				),
+			)
+
+			err = vpcService.DeleteVpc(o.Ctx, api.DeleteVpcOpts{
+				ID: id,
+			})
+
 			return nil
 		},
 	}

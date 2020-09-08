@@ -14,6 +14,11 @@ const (
 	TypeInfrastructure = "infrastructure"
 	// TypeApplication identifies a repository for applications
 	TypeApplication = "application"
+
+	// SubnetTypePublic is a public subnet
+	SubnetTypePublic = "public"
+	// SubnetTypePrivate is a private subnet
+	SubnetTypePrivate = "private"
 )
 
 // Data stores the configured state of a repository
@@ -91,14 +96,22 @@ func (c Cluster) Validate() error {
 
 // VPC contains state about the VPC
 type VPC struct {
-	VpcID string
-	CIDR  string
+	VpcID   string
+	CIDR    string
+	Subnets map[string][]*VPCSubnet
+}
+
+// VPCSubnet is a vpc subnet
+type VPCSubnet struct {
+	CIDR             string
+	AvailabilityZone string
 }
 
 // ArgoCD contains information about the
 // argocd setup
 type ArgoCD struct {
-	URL       string
+	SiteURL   string
+	Domain    string
 	SecretKey *SecretKeySecret
 }
 

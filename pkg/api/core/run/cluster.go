@@ -74,9 +74,12 @@ func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, er
 	}
 
 	cluster := &api.Cluster{
-		ID:     opts.ID,
-		Cidr:   opts.Cidr,
-		Config: cfg,
+		ID:                opts.ID,
+		Cidr:              opts.Cidr,
+		VpcID:             opts.VpcID,
+		VpcPrivateSubnets: opts.VpcPrivateSubnets,
+		VpcPublicSubnets:  opts.VpcPublicSubnets,
+		Config:            cfg,
 	}
 
 	if exists {

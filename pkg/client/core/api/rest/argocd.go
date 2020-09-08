@@ -119,6 +119,7 @@ func (a *argoCDAPI) CreateArgoCD(opts client.CreateArgoCDOpts) (*client.ArgoCD, 
 		GithubOauthApp: app,
 		ExternalSecret: manifest,
 		Chart:          chart,
+		SecretKey:      secretKey,
 	}, nil
 }
 

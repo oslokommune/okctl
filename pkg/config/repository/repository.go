@@ -2,13 +2,18 @@
 package repository
 
 import (
-	"regexp"
-
 	"github.com/AlecAivazis/survey/v2"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
+)
+
+const (
+	// TypeInfrastructure identifies a repository infrastructure as code
+	TypeInfrastructure = "infrastructure"
+	// TypeApplication identifies a repository for applications
+	TypeApplication = "application"
 )
 
 // Data stores the configured state of a repository
@@ -17,31 +22,16 @@ type Data struct {
 	Name      string
 	Region    string
 	OutputDir string
-	Clusters  []Cluster
+	Clusters  map[string]*Cluster
 }
 
 // ClusterForEnv returns the cluster for the given environment
 func (d *Data) ClusterForEnv(env string) *Cluster {
-	for _, cluster := range d.Clusters {
-		if cluster.Environment == env {
-			return &cluster
-		}
+	if c, ok := d.Clusters[env]; ok {
+		return c
 	}
 
 	return nil
-}
-
-// SetClusterForEnv saves the cluster for the given environment
-func (d *Data) SetClusterForEnv(cluster *Cluster, env string) {
-	for i, c := range d.Clusters {
-		if c.Environment == env {
-			d.Clusters[i] = *cluster
-
-			return
-		}
-	}
-
-	d.Clusters = append(d.Clusters, *cluster)
 }
 
 // Validate the provided data
@@ -72,11 +62,12 @@ func (d *Data) Validate() error {
 type Cluster struct {
 	Name         string
 	Environment  string
-	HostedZone   HostedZone
-	AWS          AWS
-	Certificates []Certificate
-	Github       Github
-	ArgoCD       ArgoCD
+	AWSAccountID string
+	HostedZone   map[string]*HostedZone
+	VPC          *VPC
+	Certificates map[string]string // domain:arn
+	Github       *Github
+	ArgoCD       *ArgoCD
 }
 
 const (
@@ -93,46 +84,81 @@ func (c Cluster) Validate() error {
 			validation.Length(envMinLength, envMaxLength),
 		),
 		validation.Field(&c.HostedZone, validation.Required),
-		validation.Field(&c.AWS),
+		validation.Field(&c.VPC),
 		validation.Field(&c.Certificates),
 	)
+}
+
+// VPC contains state about the VPC
+type VPC struct {
+	VpcID string
+	CIDR  string
 }
 
 // ArgoCD contains information about the
 // argocd setup
 type ArgoCD struct {
-	URL           string
-	SecretKeyPath string
+	URL       string
+	SecretKey *SecretKeySecret
+}
+
+// SecretKeySecret contains state about
+// an argo cd secret key
+type SecretKeySecret struct {
+	Name    string
+	Path    string
+	Version int64
 }
 
 // Github contains information about the
 // clusters configuration towards github
 type Github struct {
 	Organisation string
-	Team         string
-	DeployKey    DeployKey
-	OauthApp     OauthApp
-	Repository   Repository
+	OauthApp     map[string]*OauthApp
+	Repositories map[string]*Repository
 }
 
 // Repository contains github repository data
 type Repository struct {
-	Name   string
-	GitURL string
+	Name      string
+	FullName  string
+	Types     []string
+	GitURL    string
+	DeployKey *DeployKey
 }
 
 // OauthApp contains github oauth application data
 type OauthApp struct {
-	Name             string
-	ClientID         string
-	ClientSecretPath string
+	Team         string
+	Name         string
+	SiteURL      string
+	CallbackURL  string
+	ClientID     string
+	ClientSecret *ClientSecret
+}
+
+// ClientSecret contains state about
+// an oauth app client secret
+type ClientSecret struct {
+	Name    string
+	Path    string
+	Version int64
 }
 
 // DeployKey contains github deploy key data
 type DeployKey struct {
-	Title string
-	ID    int64
-	Path  string
+	Title            string
+	ID               int64
+	PublicKey        string
+	PrivateKeySecret *PrivateKeySecret
+}
+
+// PrivateKeySecret contains information
+// about a private key
+type PrivateKeySecret struct {
+	Name    string
+	Path    string
+	Version int64
 }
 
 // HostedZone contains information about the
@@ -140,6 +166,7 @@ type DeployKey struct {
 type HostedZone struct {
 	IsDelegated bool
 	IsCreated   bool
+	Primary     bool
 	Domain      string
 	FQDN        string
 	NameServers []string
@@ -152,38 +179,6 @@ func (h *HostedZone) Validate() error {
 		validation.Field(&h.FQDN, validation.Required),
 		validation.Field(&h.IsDelegated, validation.Required),
 		validation.Field(&h.IsCreated, validation.Required),
-	)
-}
-
-// AWS represents the required information
-type AWS struct {
-	AccountID string
-	Cidr      string
-}
-
-// Validate the data
-func (a AWS) Validate() error {
-	return validation.ValidateStruct(&a,
-		validation.Field(&a.AccountID,
-			validation.Required,
-			validation.Match(regexp.MustCompile("^[0-9]{12}$")),
-		),
-	)
-}
-
-// Certificate represents a certificate
-type Certificate struct {
-	ARN    string
-	Domain string
-	FQDN   string
-}
-
-// Validate the certificate data
-func (c Certificate) Validate() error {
-	return validation.ValidateStruct(&c,
-		validation.Field(&c.ARN, validation.Required),
-		validation.Field(&c.Domain, validation.Required),
-		validation.Field(&c.FQDN, validation.Required),
 	)
 }
 

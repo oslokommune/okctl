@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/oslokommune/okctl/pkg/client"
+
 	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -38,12 +40,16 @@ func (d *domainStore) SaveDomain(domain *api.Domain) error {
 		StackName:    domain.StackName,
 	}
 
-	for i, cluster := range d.repoState.Clusters {
-		if cluster.Environment == domain.ID.Environment {
-			cluster.HostedZone.Domain = domain.Domain
-			cluster.HostedZone.FQDN = domain.Domain
-			d.repoState.Clusters[i] = cluster
-		}
+	cluster, ok := d.repoState.Clusters[domain.ID.Environment]
+	if !ok {
+		return fmt.Errorf("failed to find cluster for env: %s", domain.ID.Environment)
+	}
+
+	cluster.HostedZone[domain.Domain] = &repository.HostedZone{
+		IsCreated:   true,
+		Domain:      domain.Domain,
+		FQDN:        domain.FQDN,
+		NameServers: domain.NameServers,
 	}
 
 	_, err := store.NewFileSystem(path.Join(d.paths.BaseDir, domain.Domain), d.fs).
@@ -60,7 +66,7 @@ func (d *domainStore) SaveDomain(domain *api.Domain) error {
 }
 
 // NewDomainStore returns an initialised domain store
-func NewDomainStore(repoState *repository.Data, paths, repoPaths Paths, fs *afero.Afero) api.DomainStore {
+func NewDomainStore(repoState *repository.Data, paths, repoPaths Paths, fs *afero.Afero) client.DomainStore {
 	return &domainStore{
 		paths:     paths,
 		repoPaths: repoPaths,

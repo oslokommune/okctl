@@ -263,27 +263,27 @@ func NewBadVpcCloud() *VpcCloud {
 
 // ClusterExe provides a mock for the cluster exe interface
 type ClusterExe struct {
-	CreateClusterFn func(string, *api.ClusterConfig) error
-	DeleteClusterFn func(string) error
+	CreateClusterFn func(opts api.ClusterCreateOpts) (*api.Cluster, error)
+	DeleteClusterFn func(opts api.ClusterDeleteOpts) error
 }
 
 // CreateCluster invokes the mocked create cluster function
-func (c *ClusterExe) CreateCluster(path string, config *api.ClusterConfig) error {
-	return c.CreateClusterFn(path, config)
+func (c *ClusterExe) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, error) {
+	return c.CreateClusterFn(opts)
 }
 
 // DeleteCluster invokes the mocked delete cluster function
-func (c *ClusterExe) DeleteCluster(clusterName string) error {
-	return c.DeleteClusterFn(clusterName)
+func (c *ClusterExe) DeleteCluster(opts api.ClusterDeleteOpts) error {
+	return c.DeleteClusterFn(opts)
 }
 
 // NewGoodClusterExe returns a cluster exe that will succeed
 func NewGoodClusterExe() *ClusterExe {
 	return &ClusterExe{
-		CreateClusterFn: func(path string, config *api.ClusterConfig) error {
-			return nil
+		CreateClusterFn: func(api.ClusterCreateOpts) (*api.Cluster, error) {
+			return DefaultCluster(), nil
 		},
-		DeleteClusterFn: func(clusterName string) error {
+		DeleteClusterFn: func(opts api.ClusterDeleteOpts) error {
 			return nil
 		},
 	}
@@ -292,10 +292,10 @@ func NewGoodClusterExe() *ClusterExe {
 // NewBadClusterExe returns a cluster exe that will fail
 func NewBadClusterExe() *ClusterExe {
 	return &ClusterExe{
-		CreateClusterFn: func(path string, config *api.ClusterConfig) error {
-			return ErrBad
+		CreateClusterFn: func(opts api.ClusterCreateOpts) (*api.Cluster, error) {
+			return nil, ErrBad
 		},
-		DeleteClusterFn: func(string) error {
+		DeleteClusterFn: func(opts api.ClusterDeleteOpts) error {
 			return ErrBad
 		},
 	}
@@ -304,8 +304,8 @@ func NewBadClusterExe() *ClusterExe {
 // ClusterStore provides a mock for the cluster store interface
 type ClusterStore struct {
 	SaveClusterFn   func(*api.Cluster) error
-	DeleteClusterFn func(env string) error
-	GetClusterFn    func(env string) (*api.Cluster, error)
+	DeleteClusterFn func(id api.ID) error
+	GetClusterFn    func(id api.ID) (*api.Cluster, error)
 }
 
 // SaveCluster invokes the mocked save function
@@ -314,13 +314,13 @@ func (c *ClusterStore) SaveCluster(cluster *api.Cluster) error {
 }
 
 // DeleteCluster invokes the mocked delete function
-func (c *ClusterStore) DeleteCluster(env string) error {
-	return c.DeleteClusterFn(env)
+func (c *ClusterStore) DeleteCluster(id api.ID) error {
+	return c.DeleteClusterFn(id)
 }
 
 // GetCluster invokes the mocked get function
-func (c *ClusterStore) GetCluster(env string) (*api.Cluster, error) {
-	return c.GetClusterFn(env)
+func (c *ClusterStore) GetCluster(id api.ID) (*api.Cluster, error) {
+	return c.GetClusterFn(id)
 }
 
 // NewGoodClusterStore returns a cluster store that will succeed
@@ -329,10 +329,10 @@ func NewGoodClusterStore() *ClusterStore {
 		SaveClusterFn: func(cluster *api.Cluster) error {
 			return nil
 		},
-		DeleteClusterFn: func(env string) error {
+		DeleteClusterFn: func(id api.ID) error {
 			return nil
 		},
-		GetClusterFn: func(env string) (*api.Cluster, error) {
+		GetClusterFn: func(id api.ID) (*api.Cluster, error) {
 			return DefaultCluster(), nil
 		},
 	}
@@ -344,10 +344,10 @@ func NewBadClusterStore() *ClusterStore {
 		SaveClusterFn: func(cluster *api.Cluster) error {
 			return ErrBad
 		},
-		DeleteClusterFn: func(env string) error {
+		DeleteClusterFn: func(id api.ID) error {
 			return ErrBad
 		},
-		GetClusterFn: func(env string) (*api.Cluster, error) {
+		GetClusterFn: func(id api.ID) (*api.Cluster, error) {
 			return nil, ErrBad
 		},
 	}

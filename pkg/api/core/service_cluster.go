@@ -4,88 +4,57 @@ package core
 import (
 	"context"
 
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
-	"github.com/oslokommune/okctl/pkg/clusterconfig"
-
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
-type cluster struct {
-	run             api.ClusterRun
-	store           api.ClusterStore
-	kubeConfigStore api.KubeConfigStore
+type clusterService struct {
+	store api.ClusterStore
+	run   api.ClusterRun
 }
 
-// CreateCluster creates an EKS cluster and VPC
-func (c *cluster) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error) {
+func (s *clusterService) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error) {
 	err := opts.Validate()
 	if err != nil {
-		return nil, errors.E(err, "failed to validate create cluster input", errors.Invalid)
+		return nil, errors.E(err, "failed to validate inputs", errors.Invalid)
 	}
 
-	kubeConfigPath, err := c.kubeConfigStore.CreateKubeConfig()
-	if err != nil {
-		return nil, errors.E(err, "failed to create kubeconfig", errors.IO)
-	}
-
-	cfg, err := clusterconfig.New(&clusterconfig.Args{
-		ClusterName:            opts.ID.ClusterName,
-		PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
-		PrivateSubnets:         opts.VpcPrivateSubnets,
-		PublicSubnets:          opts.VpcPublicSubnets,
-		Region:                 opts.ID.Region,
-		VpcCidr:                opts.Cidr,
-		VpcID:                  opts.VpcID,
-	})
-	if err != nil {
-		return nil, errors.E(err, "failed to create cluster config", errors.Internal)
-	}
-
-	err = c.run.CreateCluster(kubeConfigPath, cfg)
+	cluster, err := s.run.CreateCluster(opts)
 	if err != nil {
 		return nil, errors.E(err, "failed to create cluster", errors.Internal)
 	}
 
-	res := &api.Cluster{
-		ID:     opts.ID,
-		Cidr:   opts.Cidr,
-		Config: cfg,
-	}
-
-	err = c.store.SaveCluster(res)
+	err = s.store.SaveCluster(cluster)
 	if err != nil {
 		return nil, errors.E(err, "failed to save cluster", errors.IO)
 	}
 
-	return res, nil
+	return cluster, nil
 }
 
-// DeleteClusterConfig deletes an EKS cluster
-func (c *cluster) DeleteCluster(_ context.Context, opts api.ClusterDeleteOpts) error {
+func (s *clusterService) DeleteCluster(_ context.Context, opts api.ClusterDeleteOpts) error {
 	err := opts.Validate()
 	if err != nil {
-		return errors.E(err, "failed to validate delete cluster inputs", errors.Invalid)
+		return errors.E(err, "failed to validate inputs", errors.Invalid)
 	}
 
-	err = c.run.DeleteCluster(opts.ID.ClusterName)
+	err = s.run.DeleteCluster(opts)
 	if err != nil {
 		return errors.E(err, "failed to delete cluster", errors.Internal)
 	}
 
-	err = c.store.DeleteCluster(opts.ID.Environment)
+	err = s.store.DeleteCluster(opts.ID)
 	if err != nil {
-		return errors.E(err, "failed to delete cluster", errors.Internal)
+		return errors.E(err, "failed to remove cluster", errors.IO)
 	}
 
 	return nil
 }
 
-// NewClusterService returns a service operator for the cluster operations
-func NewClusterService(store api.ClusterStore, kubeConfigStore api.KubeConfigStore, run api.ClusterRun) api.ClusterService {
-	return &cluster{
-		run:             run,
-		store:           store,
-		kubeConfigStore: kubeConfigStore,
+// NewClusterService returns a service operator for the clusterService operations
+func NewClusterService(store api.ClusterStore, run api.ClusterRun) api.ClusterService {
+	return &clusterService{
+		store: store,
+		run:   run,
 	}
 }

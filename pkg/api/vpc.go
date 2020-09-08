@@ -58,6 +58,6 @@ type VpcCloudProvider interface {
 // VpcStore defines the storage actions that a vpc service requires
 type VpcStore interface {
 	SaveVpc(vpc *Vpc) error
-	DeleteVpc(env, repoName string) error
-	GetVpc() (*Vpc, error)
+	DeleteVpc(id ID) error
+	GetVpc(id ID) (*Vpc, error)
 }

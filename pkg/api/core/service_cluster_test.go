@@ -23,7 +23,6 @@ func TestClusterCreateCluster(t *testing.T) {
 			name: "Valid request",
 			service: core.NewClusterService(
 				mock.NewGoodClusterStore(),
-				mock.NewGoodKubeConfigStore(),
 				mock.NewGoodClusterExe(),
 			),
 			opts:   mock.DefaultClusterCreateOpts(),
@@ -33,12 +32,11 @@ func TestClusterCreateCluster(t *testing.T) {
 			name: "Invalid opts",
 			service: core.NewClusterService(
 				mock.NewGoodClusterStore(),
-				mock.NewGoodKubeConfigStore(),
 				mock.NewGoodClusterExe(),
 			),
 			opts: api.ClusterCreateOpts{},
 			//nolint: lll
-			expect:      "failed to validate create cluster input: Cidr: cannot be blank; ID: (AWSAccountID: cannot be blank; ClusterName: cannot be blank; Environment: cannot be blank; Region: cannot be blank; Repository: cannot be blank.); VpcID: cannot be blank; VpcPrivateSubnets: cannot be blank; VpcPublicSubnets: cannot be blank.",
+			expect:      "failed to validate inputs: Cidr: cannot be blank; ID: (AWSAccountID: cannot be blank; ClusterName: cannot be blank; Environment: cannot be blank; Region: cannot be blank; Repository: cannot be blank.); VpcID: cannot be blank; VpcPrivateSubnets: cannot be blank; VpcPublicSubnets: cannot be blank.",
 			expectError: true,
 		},
 	}

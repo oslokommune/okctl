@@ -114,7 +114,7 @@ func TestAskSelectInfrastructureRepository(t *testing.T) {
 				},
 			},
 			procedure: func(c *expect.Console, state *vt10x.State) {
-				_, _ = c.ExpectString("? Select repository that Argo CD will use for infrastructure as code:  [Use arrows to move, type to filter, ? for more help]\r\n  oslokommune/something\r\n> oslokommune/else\r\n")
+				_, _ = c.ExpectString("? Select infrastructure as code repository:  [Use arrows to move, type to filter, ? for more help]\r\n  oslokommune/something\r\n> oslokommune/else\r\n")
 				_, _ = c.SendLine("")
 				_, _ = c.ExpectEOF()
 			},

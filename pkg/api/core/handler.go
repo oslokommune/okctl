@@ -29,7 +29,7 @@ type Endpoints struct {
 	CreateExternalDNSPolicy                  endpoint.Endpoint
 	CreateExternalDNSServiceAccount          endpoint.Endpoint
 	CreateExternalDNSKubeDeployment          endpoint.Endpoint
-	CreateDomain                             endpoint.Endpoint
+	CreateHostedZone                         endpoint.Endpoint
 	CreateCertificate                        endpoint.Endpoint
 	CreateSecret                             endpoint.Endpoint
 	CreateArgoCD                             endpoint.Endpoint
@@ -53,7 +53,7 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateExternalDNSPolicy:                  makeCreateExternalDNSPolicyEndpoint(s.ManagedPolicy),
 		CreateExternalDNSServiceAccount:          makeCreateExternalDNSServiceAccountEndpoint(s.ServiceAccount),
 		CreateExternalDNSKubeDeployment:          makeCreateExternalDNSKubeDeploymentEndpoint(s.Kube),
-		CreateDomain:                             makeCreateDomainEndpoint(s.Domain),
+		CreateHostedZone:                         makeCreateHostedZoneEndpoint(s.Domain),
 		CreateCertificate:                        makeCreateCertificateEndpoint(s.Certificate),
 		CreateSecret:                             makeCreateSecret(s.Parameter),
 		CreateArgoCD:                             makeCreateArgoCD(s.Helm),
@@ -76,7 +76,7 @@ type Handlers struct {
 	CreateExternalDNSPolicy                  http.Handler
 	CreateExternalDNSServiceAccount          http.Handler
 	CreateExternalDNSKubeDeployment          http.Handler
-	CreateDomain                             http.Handler
+	CreateHostedZone                         http.Handler
 	CreateCertificate                        http.Handler
 	CreateSecret                             http.Handler
 	CreateArgoCD                             http.Handler
@@ -126,7 +126,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateExternalDNSPolicy:                  newServer(endpoints.CreateExternalDNSPolicy, decodeCreateExternalDNSPolicyRequest),
 		CreateExternalDNSServiceAccount:          newServer(endpoints.CreateExternalDNSServiceAccount, decodeCreateExternalDNSServiceAccount),
 		CreateExternalDNSKubeDeployment:          newServer(endpoints.CreateExternalDNSKubeDeployment, decodeCreateExternalDNSKubeDeployment),
-		CreateDomain:                             newServer(endpoints.CreateDomain, decodeCreateDomain),
+		CreateHostedZone:                         newServer(endpoints.CreateHostedZone, decodeCreateHostedZone),
 		CreateCertificate:                        newServer(endpoints.CreateCertificate, decodeCreateCertificate),
 		CreateSecret:                             newServer(endpoints.CreateSecret, decodeCreateSecret),
 		CreateArgoCD:                             newServer(endpoints.CreateArgoCD, decodeCreateArgoCD),
@@ -190,7 +190,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			})
 		})
 		r.Route("/domains", func(r chi.Router) {
-			r.Method(http.MethodPost, "/", handlers.CreateDomain)
+			r.Route("/hostedzones", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateHostedZone)
+			})
 		})
 		r.Route("/certificates", func(r chi.Router) {
 			r.Method(http.MethodPost, "/", handlers.CreateCertificate)
@@ -233,6 +235,7 @@ const (
 	externalDNSTag          = "externaldns"
 	kubeTag                 = "kube"
 	domainTag               = "domain"
+	hostedZoneTag           = "hostedZone"
 	certificateTag          = "certificate"
 	parameterTag            = "parameter"
 	secretTag               = "secret"
@@ -257,7 +260,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateExternalDNSPolicy:                  logger2.Logging(logger, strings.Join([]string{managedPoliciesTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDNSPolicy),
 			CreateExternalDNSServiceAccount:          logger2.Logging(logger, strings.Join([]string{serviceAccountsTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDNSServiceAccount),
 			CreateExternalDNSKubeDeployment:          logger2.Logging(logger, strings.Join([]string{kubeTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDNSKubeDeployment),
-			CreateDomain:                             logger2.Logging(logger, domainTag, "create")(endpoints.CreateDomain),
+			CreateHostedZone:                         logger2.Logging(logger, strings.Join([]string{domainTag, hostedZoneTag}, "/"), "create")(endpoints.CreateHostedZone),
 			CreateCertificate:                        logger2.Logging(logger, certificateTag, "create")(endpoints.CreateCertificate),
 			CreateSecret:                             logger2.Logging(logger, strings.Join([]string{parameterTag, secretTag}, "/"), "create")(endpoints.CreateSecret),
 			CreateArgoCD:                             logger2.Logging(logger, strings.Join([]string{helmTag, argocdTag}, "/"), "create")(endpoints.CreateArgoCD),

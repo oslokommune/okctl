@@ -7,8 +7,8 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
-func makeCreateDomainEndpoint(s api.DomainService) endpoint.Endpoint {
+func makeCreateHostedZoneEndpoint(s api.DomainService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateDomain(ctx, request.(api.CreateDomainOpts))
+		return s.CreateHostedZone(ctx, request.(api.CreateHostedZoneOpts))
 	}
 }

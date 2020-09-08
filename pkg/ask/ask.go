@@ -115,7 +115,7 @@ func (a *Ask) SelectInfrastructureRepository(defaultRepo string, repos []*github
 	repo := ""
 
 	prompt := &survey.Select{
-		Message: "Select repository that Argo CD will use for infrastructure as code:",
+		Message: "Select infrastructure as code repository:",
 		Options: keys,
 		Help:    iacHelp,
 		Default: defaultRepo,

@@ -4,7 +4,7 @@ import "github.com/oslokommune/okctl/pkg/api"
 
 type domainStore struct{}
 
-func (s *domainStore) SaveDomain(_ *api.Domain) error {
+func (s *domainStore) SaveHostedZone(_ *api.HostedZone) error {
 	return nil
 }
 

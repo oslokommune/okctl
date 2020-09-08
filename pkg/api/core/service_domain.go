@@ -12,18 +12,18 @@ type domainService struct {
 	store         api.DomainStore
 }
 
-func (d *domainService) CreateDomain(_ context.Context, opts api.CreateDomainOpts) (*api.Domain, error) {
+func (d *domainService) CreateHostedZone(_ context.Context, opts api.CreateHostedZoneOpts) (*api.HostedZone, error) {
 	err := opts.Validate()
 	if err != nil {
 		return nil, errors.E(err, "failed to validate domain inputs")
 	}
 
-	domain, err := d.cloudProvider.CreateDomain(opts)
+	domain, err := d.cloudProvider.CreateHostedZone(opts)
 	if err != nil {
 		return nil, errors.E(err, "failed to create domain")
 	}
 
-	err = d.store.SaveDomain(domain)
+	err = d.store.SaveHostedZone(domain)
 	if err != nil {
 		return nil, errors.E(err, "failed to store domain")
 	}

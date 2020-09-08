@@ -20,8 +20,8 @@ type domainStore struct {
 	fs        *afero.Afero
 }
 
-// Domain contains the outputs we will store
-type Domain struct {
+// HostedZone contains the outputs we will store
+type HostedZone struct {
 	ID           api.ID
 	FQDN         string
 	Domain       string
@@ -30,8 +30,8 @@ type Domain struct {
 	StackName    string
 }
 
-func (d *domainStore) SaveDomain(domain *api.Domain) (*store.Report, error) {
-	p := Domain{
+func (d *domainStore) SaveHostedZone(domain *api.HostedZone) (*store.Report, error) {
+	p := HostedZone{
 		ID:           domain.ID,
 		FQDN:         domain.FQDN,
 		Domain:       domain.Domain,
@@ -59,7 +59,7 @@ func (d *domainStore) SaveDomain(domain *api.Domain) (*store.Report, error) {
 		StoreStruct(d.repoPaths.ConfigFile, d.repoState, store.ToYAML()).
 		Do()
 	if err != nil {
-		return nil, fmt.Errorf("failed to store domain: %w", err)
+		return nil, fmt.Errorf("failed to store hosted zone: %w", err)
 	}
 
 	return report, nil

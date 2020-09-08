@@ -1,5 +1,5 @@
 // Package client provides convenience functions for invoking API operations
-package client
+package rest
 
 import (
 	"bytes"

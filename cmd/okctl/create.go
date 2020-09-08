@@ -124,7 +124,7 @@ and database subnets.`,
 			// Discarding the output for now, until we restructure
 			// the API to return everything we need to write
 			// the result ourselves
-			c := client.New(o.Debug, ioutil.Discard, o.ServerURL)
+			c := rest.New(o.Debug, ioutil.Discard, o.ServerURL)
 
 			id := api.ID{
 				Region:       opts.Region,

@@ -9,16 +9,16 @@ import (
 const TargetKubeExternalSecret = "kube/externalsecrets/"
 
 type manifestAPI struct {
-	client *client.HTTPClient
+	client *HTTPClient
 }
 
 func (a *manifestAPI) CreateExternalSecret(opts client.CreateExternalSecretOpts) (*api.Kube, error) {
 	into := &api.Kube{}
-	return into, a.client.DoPost(TargetKubeExternalSecret, opts, into)
+	return into, a.client.DoPost(TargetKubeExternalSecret, &opts, into)
 }
 
 // NewManifestAPI returns an initialised API client
-func NewManifestAPI(client *client.HTTPClient) client.ManifestAPI {
+func NewManifestAPI(client *HTTPClient) client.ManifestAPI {
 	return &manifestAPI{
 		client: client,
 	}

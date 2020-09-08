@@ -15,26 +15,26 @@ const (
 )
 
 type externalSecretsAPI struct {
-	client *client.HTTPClient
+	client *HTTPClient
 }
 
 func (a *externalSecretsAPI) CreateExternalSecretsPolicy(opts api.CreateExternalSecretsPolicyOpts) (*api.ManagedPolicy, error) {
 	into := &api.ManagedPolicy{}
-	return into, a.client.DoPost(TargetExternalSecretsPolicy, opts, into)
+	return into, a.client.DoPost(TargetExternalSecretsPolicy, &opts, into)
 }
 
 func (a *externalSecretsAPI) CreateExternalSecretsServiceAccount(opts api.CreateExternalSecretsServiceAccountOpts) (*api.ServiceAccount, error) {
 	into := &api.ServiceAccount{}
-	return into, a.client.DoPost(TargetExternalSecretsServiceAccount, opts, into)
+	return into, a.client.DoPost(TargetExternalSecretsServiceAccount, &opts, into)
 }
 
 func (a *externalSecretsAPI) CreateExternalSecretsHelmChart(opts api.CreateExternalSecretsHelmChartOpts) (*api.Helm, error) {
 	into := &api.Helm{}
-	return into, a.client.DoPost(TargetExternalSecretsHelm, opts, into)
+	return into, a.client.DoPost(TargetExternalSecretsHelm, &opts, into)
 }
 
 // NewExternalSecretsAPI returns an initialised API client
-func NewExternalSecretsAPI(client *client.HTTPClient) client.ExternalSecretsAPI {
+func NewExternalSecretsAPI(client *HTTPClient) client.ExternalSecretsAPI {
 	return &externalSecretsAPI{
 		client: client,
 	}

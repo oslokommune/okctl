@@ -5,16 +5,16 @@ import (
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
-// TargetDomain matches the REST API route
-const TargetDomain = "domains/"
+// TargetHostedZone matches the REST API route
+const TargetHostedZone = "domains/hostedzones/"
 
 type domainAPI struct {
 	client *HTTPClient
 }
 
-func (a *domainAPI) CreateDomain(opts api.CreateDomainOpts) (*api.Domain, error) {
-	into := &api.Domain{}
-	return into, a.client.DoPost(TargetDomain, &opts, into)
+func (a *domainAPI) CreateHostedZone(opts api.CreateHostedZoneOpts) (*api.HostedZone, error) {
+	into := &api.HostedZone{}
+	return into, a.client.DoPost(TargetHostedZone, &opts, into)
 }
 
 // NewDomainAPI returns an initialised REST API client

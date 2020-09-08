@@ -8,8 +8,8 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
-func decodeCreateDomain(_ context.Context, r *http.Request) (interface{}, error) {
-	var opts api.CreateDomainOpts
+func decodeCreateHostedZone(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.CreateHostedZoneOpts
 
 	err := json.NewDecoder(r.Body).Decode(&opts)
 	if err != nil {

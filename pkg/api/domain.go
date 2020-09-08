@@ -6,8 +6,8 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
-// Domain contains the state after creating a domain
-type Domain struct {
+// HostedZone contains the state for a hosted zone
+type HostedZone struct {
 	ID                     ID
 	FQDN                   string
 	Domain                 string
@@ -17,15 +17,15 @@ type Domain struct {
 	CloudFormationTemplate []byte
 }
 
-// CreateDomainOpts contains the input required for creating a domain
-type CreateDomainOpts struct {
+// CreateHostedZoneOpts contains required inputs
+type CreateHostedZoneOpts struct {
 	ID     ID
 	Domain string
 	FQDN   string
 }
 
 // Validate the inputs
-func (o CreateDomainOpts) Validate() error {
+func (o CreateHostedZoneOpts) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.Domain, validation.Required),
@@ -35,15 +35,15 @@ func (o CreateDomainOpts) Validate() error {
 
 // DomainService provides the service layer
 type DomainService interface {
-	CreateDomain(ctx context.Context, opts CreateDomainOpts) (*Domain, error)
+	CreateHostedZone(ctx context.Context, opts CreateHostedZoneOpts) (*HostedZone, error)
 }
 
 // DomainCloudProvider provides the cloud provider layer
 type DomainCloudProvider interface {
-	CreateDomain(opts CreateDomainOpts) (*Domain, error)
+	CreateHostedZone(opts CreateHostedZoneOpts) (*HostedZone, error)
 }
 
 // DomainStore provides the storage layer
 type DomainStore interface {
-	SaveDomain(*Domain) error
+	SaveHostedZone(*HostedZone) error
 }

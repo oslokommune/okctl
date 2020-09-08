@@ -12,13 +12,13 @@ type domainService struct {
 	store client.DomainStore
 }
 
-func (s *domainService) CreateDomain(_ context.Context, opts api.CreateDomainOpts) (*api.Domain, error) {
-	domain, err := s.api.CreateDomain(opts)
+func (s *domainService) CreateHostedZone(_ context.Context, opts api.CreateHostedZoneOpts) (*api.HostedZone, error) {
+	domain, err := s.api.CreateHostedZone(opts)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = s.store.SaveDomain(domain)
+	_, err = s.store.SaveHostedZone(domain)
 	if err != nil {
 		return nil, err
 	}

@@ -9,9 +9,12 @@ import (
 
 // Cluster contains the core state for a cluster
 type Cluster struct {
-	ID     ID
-	Cidr   string
-	Config *ClusterConfig
+	ID                ID
+	Cidr              string
+	VpcID             string
+	VpcPrivateSubnets []VpcSubnet
+	VpcPublicSubnets  []VpcSubnet
+	Config            *ClusterConfig
 }
 
 // ClusterCreateOpts specifies the required inputs for creating a cluster

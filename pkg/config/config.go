@@ -106,6 +106,8 @@ const (
 	DefaultCertificateCloudFormationTemplate = "certificate-cf.yml"
 	// DefaultParameterOutputsFile is the default file name of the outputs
 	DefaultParameterOutputsFile = "parameter-outputs.json"
+	// DefaultArgoOutputsFile is the default output file name
+	DefaultArgoOutputsFile = "argocd-outputs.json"
 
 	// DefaultExternalSecretsBaseDir is the default directory of the external secrets resources
 	DefaultExternalSecretsBaseDir = "external-secrets"
@@ -171,7 +173,7 @@ func New() *Config {
 	}
 }
 
-// EnableFileLog turns on logging to files in addition to console
+// EnableFileLog for writing logs to a file
 func (c *Config) EnableFileLog() error {
 	logFile, err := c.GetLogName()
 	if err != nil {
@@ -197,7 +199,7 @@ func (c *Config) EnableFileLog() error {
 	return nil
 }
 
-// SetFormat sets the encode response type
+// SetFormat sets the response type when encoding
 func (c *Config) SetFormat(responseType core.EncodeResponseType) {
 	c.format = responseType
 }

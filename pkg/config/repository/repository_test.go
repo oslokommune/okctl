@@ -40,6 +40,20 @@ func TestData(t *testing.T) {
 							},
 						},
 						VPC: &repository.VPC{
+							Subnets: map[string][]*repository.VPCSubnet{
+								repository.SubnetTypePublic: {
+									{
+										CIDR:             "192.168.0.0/24",
+										AvailabilityZone: "eu-west-1a",
+									},
+								},
+								repository.SubnetTypePrivate: {
+									{
+										CIDR:             "192.168.10.0/24",
+										AvailabilityZone: "eu-west-1c",
+									},
+								},
+							},
 							VpcID: "3456ygfghj",
 							CIDR:  "192.168.0.0/20",
 						},

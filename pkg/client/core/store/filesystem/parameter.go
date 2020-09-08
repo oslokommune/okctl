@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/oslokommune/okctl/pkg/client"
+
 	"github.com/gosimple/slug"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client/store"
@@ -23,7 +25,7 @@ type SecretParameter struct {
 	Version int64
 }
 
-func (p *parameter) SaveSecret(s *api.SecretParameter) error {
+func (p *parameter) SaveSecret(s *api.SecretParameter) (*store.Report, error) {
 	param := SecretParameter{
 		ID:      s.ID,
 		Name:    s.Name,
@@ -31,18 +33,18 @@ func (p *parameter) SaveSecret(s *api.SecretParameter) error {
 		Version: s.Version,
 	}
 
-	_, err := store.NewFileSystem(path.Join(p.paths.BaseDir, slug.Make(s.Path)), p.fs).
+	report, err := store.NewFileSystem(path.Join(p.paths.BaseDir, slug.Make(s.Path)), p.fs).
 		StoreStruct(p.paths.OutputFile, &param, store.ToJSON()).
 		Do()
 	if err != nil {
-		return fmt.Errorf("failed to store secret parameter: %w", err)
+		return nil, fmt.Errorf("failed to store secret parameter: %w", err)
 	}
 
-	return nil
+	return report, nil
 }
 
 // NewParameterStore returns an initialised parameter store
-func NewParameterStore(paths Paths, fs *afero.Afero) api.ParameterStore {
+func NewParameterStore(paths Paths, fs *afero.Afero) client.ParameterStore {
 	return &parameter{
 		paths: paths,
 		fs:    fs,

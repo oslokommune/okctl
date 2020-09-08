@@ -422,42 +422,48 @@ func (c *Config) ClusterName(env string) string {
 
 // AWSAccountID returns the aws account ID for the given env
 func (c *Config) AWSAccountID(env string) string {
-	for _, cluster := range c.RepoData.Clusters {
-		if cluster.Environment == env {
-			return cluster.AWS.AccountID
+	cluster := c.RepoData.ClusterForEnv(env)
+	if cluster != nil {
+		return cluster.AWSAccountID
+	}
+
+	return ""
+}
+
+// PrimaryDomain returns the primary domain for the given env
+func (c *Config) PrimaryDomain(env string) string {
+	cluster := c.RepoData.ClusterForEnv(env)
+	if cluster != nil {
+		for _, hz := range cluster.HostedZone {
+			if hz.Primary {
+				return hz.Domain
+			}
 		}
 	}
 
 	return ""
 }
 
-// Domain returns the domain for the given env
-func (c *Config) Domain(env string) string {
-	for _, cluster := range c.RepoData.Clusters {
-		if cluster.Environment == env {
-			return cluster.HostedZone.Domain
+// PrimaryFQDN returns the fully qualified domain name for a given env
+func (c *Config) PrimaryFQDN(env string) string {
+	cluster := c.RepoData.ClusterForEnv(env)
+	if cluster != nil {
+		for _, hz := range cluster.HostedZone {
+			if hz.Primary {
+				return hz.FQDN
+			}
 		}
 	}
 
 	return ""
 }
 
-// FQDN returns the fully qualified domain name for a given env
-func (c *Config) FQDN(env string) string {
-	for _, cluster := range c.RepoData.Clusters {
-		if cluster.Environment == env {
-			return cluster.HostedZone.FQDN
-		}
-	}
-
-	return ""
-}
-
-// HostedZoneIsDelegated returns whether the hosted zone has been delegated or not
-func (c *Config) HostedZoneIsDelegated(env string) bool {
-	for _, cluster := range c.RepoData.Clusters {
-		if cluster.Environment == env {
-			return cluster.HostedZone.IsDelegated
+// HostedZoneIsDelegated returns the delegated status
+func (c *Config) HostedZoneIsDelegated(domain, env string) bool {
+	cluster := c.RepoData.ClusterForEnv(env)
+	if cluster != nil {
+		if hz, ok := cluster.HostedZone[domain]; ok {
+			return hz.IsDelegated
 		}
 	}
 
@@ -465,80 +471,25 @@ func (c *Config) HostedZoneIsDelegated(env string) bool {
 }
 
 // SetHostedZoneIsDelegated to the provided value
-func (c *Config) SetHostedZoneIsDelegated(val bool, env string) {
-	for i, cluster := range c.RepoData.Clusters {
-		if cluster.Environment == env {
-			cluster.HostedZone.IsDelegated = val
+func (c *Config) SetHostedZoneIsDelegated(val bool, domain, env string) {
+	cluster := c.RepoData.ClusterForEnv(env)
+	if cluster != nil {
+		if hz, ok := cluster.HostedZone[domain]; ok {
+			hz.IsDelegated = val
 		}
-
-		c.RepoData.Clusters[i] = cluster
 	}
 }
 
 // HostedZoneIsCreated returns whether the hosted zone has been created or not
-func (c *Config) HostedZoneIsCreated(env string) bool {
-	for _, cluster := range c.RepoData.Clusters {
-		if cluster.Environment == env {
-			return cluster.HostedZone.IsCreated
+func (c *Config) HostedZoneIsCreated(domain, env string) bool {
+	cluster := c.RepoData.ClusterForEnv(env)
+	if cluster != nil {
+		if hz, ok := cluster.HostedZone[domain]; ok {
+			return hz.IsCreated
 		}
 	}
 
 	return false
-}
-
-// SetHostedZoneIsCreated to the provided value
-func (c *Config) SetHostedZoneIsCreated(val bool, env string) {
-	for i, cluster := range c.RepoData.Clusters {
-		if cluster.Environment == env {
-			cluster.HostedZone.IsCreated = val
-		}
-
-		c.RepoData.Clusters[i] = cluster
-	}
-}
-
-// GithubRepository returns the selected github repository name and url
-func (c *Config) GithubRepository(env string) repository.Repository {
-	cluster := c.RepoData.ClusterForEnv(env)
-	if cluster == nil {
-		return repository.Repository{}
-	}
-
-	return cluster.Github.Repository
-}
-
-// SetGithubRepository sets the github repository name and url
-func (c *Config) SetGithubRepository(repository repository.Repository, env string) {
-	cluster := c.RepoData.ClusterForEnv(env)
-	if cluster == nil {
-		return
-	}
-
-	cluster.Github.Repository = repository
-
-	c.RepoData.SetClusterForEnv(cluster, env)
-}
-
-// GithubTeamName returns the selected github team
-func (c *Config) GithubTeamName(env string) string {
-	cluster := c.RepoData.ClusterForEnv(env)
-	if cluster == nil {
-		return ""
-	}
-
-	return cluster.Github.Team
-}
-
-// SetGithubTeamName sets the github team
-func (c *Config) SetGithubTeamName(name, env string) {
-	cluster := c.RepoData.ClusterForEnv(env)
-	if cluster == nil {
-		return
-	}
-
-	cluster.Github.Team = name
-
-	c.RepoData.SetClusterForEnv(cluster, env)
 }
 
 // GithubOrganisationName returns the selected github organisation
@@ -559,72 +510,4 @@ func (c *Config) SetGithubOrganisationName(name, env string) {
 	}
 
 	cluster.Github.Organisation = name
-
-	c.RepoData.SetClusterForEnv(cluster, env)
-}
-
-// GithubOauthApp returns the name and client id
-func (c *Config) GithubOauthApp(env string) repository.OauthApp {
-	cluster := c.RepoData.ClusterForEnv(env)
-	if cluster == nil {
-		return repository.OauthApp{}
-	}
-
-	return cluster.Github.OauthApp
-}
-
-// SetGithubOauthApp sets the name and client id
-func (c *Config) SetGithubOauthApp(app repository.OauthApp, env string) {
-	cluster := c.RepoData.ClusterForEnv(env)
-	if cluster == nil {
-		return
-	}
-
-	cluster.Github.OauthApp = app
-
-	c.RepoData.SetClusterForEnv(cluster, env)
-}
-
-// GithubDeployKey returns the github deploy key title and id
-func (c *Config) GithubDeployKey(env string) repository.DeployKey {
-	cluster := c.RepoData.ClusterForEnv(env)
-	if cluster == nil {
-		return repository.DeployKey{}
-	}
-
-	return cluster.Github.DeployKey
-}
-
-// SetGithubDeployKey sets the github deploy key title and id
-func (c *Config) SetGithubDeployKey(key repository.DeployKey, env string) {
-	cluster := c.RepoData.ClusterForEnv(env)
-	if cluster == nil {
-		return
-	}
-
-	cluster.Github.DeployKey = key
-
-	c.RepoData.SetClusterForEnv(cluster, env)
-}
-
-// ArgoCD returns the argo cd state
-func (c *Config) ArgoCD(env string) repository.ArgoCD {
-	cluster := c.RepoData.ClusterForEnv(env)
-	if cluster == nil {
-		return repository.ArgoCD{}
-	}
-
-	return cluster.ArgoCD
-}
-
-// SetArgoCD sets the argocd to the provided state
-func (c *Config) SetArgoCD(argo repository.ArgoCD, env string) {
-	cluster := c.RepoData.ClusterForEnv(env)
-	if cluster == nil {
-		return
-	}
-
-	cluster.ArgoCD = argo
-
-	c.RepoData.SetClusterForEnv(cluster, env)
 }

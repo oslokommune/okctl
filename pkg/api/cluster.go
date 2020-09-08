@@ -54,13 +54,13 @@ type ClusterService interface {
 
 // ClusterRun provides an interface for running CLIs
 type ClusterRun interface {
-	CreateCluster(string, *ClusterConfig) error
-	DeleteCluster(string) error
+	CreateCluster(opts ClusterCreateOpts) (*Cluster, error)
+	DeleteCluster(opts ClusterDeleteOpts) error
 }
 
 // ClusterStore provides an interface for storage operations
 type ClusterStore interface {
-	SaveCluster(*Cluster) error
-	DeleteCluster(string) error
-	GetCluster(string) (*Cluster, error)
+	SaveCluster(cluster *Cluster) error
+	DeleteCluster(id ID) error
+	GetCluster(id ID) (*Cluster, error)
 }

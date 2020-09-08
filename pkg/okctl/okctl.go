@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/api/core/store/noop"
+
 	"github.com/oslokommune/okctl/pkg/credentials/github"
 
 	"github.com/mishudark/errors"
@@ -65,149 +67,21 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		return err
 	}
 
-	repoDir, err := o.GetRepoDir()
-	if err != nil {
-		return err
-	}
-
-	outputDir, err := o.GetRepoOutputDir(env)
-	if err != nil {
-		return err
-	}
-
-	vpcStore := filesystem.NewVpcStore(
-		config.DefaultVpcOutputs,
-		config.DefaultVpcCloudFormationTemplate,
-		path.Join(outputDir, config.DefaultVpcBaseDir),
-		o.FileSystem,
-	)
-
 	kubeConfigStore := filesystem.NewKubeConfigStore(
 		config.DefaultClusterKubeConfig,
 		path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env)),
 		o.FileSystem,
 	)
 
-	clusterStore := filesystem.NewClusterStore(
-		filesystem.Paths{
-			ConfigFile: config.DefaultRepositoryConfig,
-			BaseDir:    repoDir,
-		},
-		filesystem.Paths{
-			ConfigFile: config.DefaultClusterConfig,
-			BaseDir:    path.Join(outputDir, config.DefaultClusterBaseDir),
-		},
-		o.FileSystem,
-		o.RepoData,
-	)
-
-	managedPolicyStore := filesystem.NewManagedPolicyStore(
-		filesystem.Paths{
-			OutputFile:         config.DefaultPolicyOutputFile,
-			CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
-			BaseDir:            path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
-		},
-		filesystem.Paths{
-			OutputFile:         config.DefaultPolicyOutputFile,
-			CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
-			BaseDir:            path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
-		},
-		filesystem.Paths{
-			OutputFile:         config.DefaultPolicyOutputFile,
-			CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
-			BaseDir:            path.Join(outputDir, config.DefaultExternalDNSBaseDir),
-		},
-		o.FileSystem,
-	)
-
-	serviceAccountStore := filesystem.NewServiceAccountStore(
-		filesystem.Paths{
-			OutputFile: config.DefaultServiceAccountOutputsFile,
-			ConfigFile: config.DefaultServiceAccountConfigFile,
-			BaseDir:    path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
-		},
-		filesystem.Paths{
-			OutputFile: config.DefaultServiceAccountOutputsFile,
-			ConfigFile: config.DefaultServiceAccountConfigFile,
-			BaseDir:    path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
-		},
-		filesystem.Paths{
-			OutputFile: config.DefaultServiceAccountOutputsFile,
-			ConfigFile: config.DefaultServiceAccountConfigFile,
-			BaseDir:    path.Join(outputDir, config.DefaultExternalDNSBaseDir),
-		},
-		o.FileSystem,
-	)
-
-	helmStore := filesystem.NewHelmStore(
-		filesystem.Paths{
-			OutputFile:  config.DefaultHelmOutputsFile,
-			ReleaseFile: config.DefaultHelmReleaseFile,
-			ChartFile:   config.DefaultHelmChartFile,
-			BaseDir:     path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
-		},
-		filesystem.Paths{
-			OutputFile:  config.DefaultHelmOutputsFile,
-			ReleaseFile: config.DefaultHelmReleaseFile,
-			ChartFile:   config.DefaultHelmChartFile,
-			BaseDir:     path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
-		},
-		filesystem.Paths{
-			OutputFile:  config.DefaultHelmOutputsFile,
-			ReleaseFile: config.DefaultHelmReleaseFile,
-			ChartFile:   config.DefaultHelmChartFile,
-			BaseDir:     path.Join(outputDir, config.DefaultArgoCDBaseDir),
-		},
-		o.FileSystem,
-	)
-
-	kubeStore := filesystem.NewKubeStore(
-		filesystem.Paths{
-			OutputFile: config.DefaultKubeOutputsFile,
-			BaseDir:    path.Join(outputDir, config.DefaultExternalDNSBaseDir),
-		},
-		filesystem.Paths{
-			OutputFile: config.DefaultKubeOutputsFile,
-			BaseDir:    path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
-		},
-		o.FileSystem,
-	)
-
-	domainStore := filesystem.NewDomainStore(
-		o.RepoData,
-		filesystem.Paths{
-			OutputFile:         config.DefaultDomainOutputsFile,
-			CloudFormationFile: config.DefaultDomainCloudFormationTemplate,
-			BaseDir:            path.Join(outputDir, config.DefaultDomainBaseDir),
-		},
-		filesystem.Paths{
-			ConfigFile: config.DefaultRepositoryConfig,
-			BaseDir:    repoDir,
-		},
-		o.FileSystem,
-	)
-
-	certificateStore := filesystem.NewCertificateStore(
-		o.RepoData,
-		filesystem.Paths{
-			OutputFile:         config.DefaultCertificateOutputsFile,
-			CloudFormationFile: config.DefaultCertificateCloudFormationTemplate,
-			BaseDir:            path.Join(outputDir, config.DefaultCertificateBaseDir),
-		},
-		filesystem.Paths{
-			ConfigFile: config.DefaultRepositoryConfig,
-			BaseDir:    repoDir,
-		},
-		o.FileSystem,
-	)
-
-	parameterStore := filesystem.NewParameterStore(
-		filesystem.Paths{
-			OutputFile: config.DefaultParameterOutputsFile,
-			BaseDir:    path.Join(outputDir, config.DefaultParameterBaseDir),
-		},
-		o.FileSystem,
-	)
+	vpcStore := noop.NewVpcStore()
+	clusterStore := noop.NewClusterStore()
+	managedPolicyStore := noop.NewManagedPolicyStore()
+	serviceAccountStore := noop.NewServiceAccountStore()
+	helmStore := noop.NewHelmStore()
+	kubeStore := noop.NewKubeStore()
+	domainStore := noop.NewDomainStore()
+	certificateStore := noop.NewCertificateStore()
+	parameterStore := noop.NewParameterStore()
 
 	vpcService := core.NewVpcService(
 		awsProvider.NewVpcCloud(o.CloudProvider),
@@ -216,9 +90,9 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 
 	clusterService := core.NewClusterService(
 		clusterStore,
-		kubeConfigStore,
 		run.NewClusterRun(
 			o.Debug,
+			kubeConfigStore,
 			path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterAwsConfig),
 			path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterAwsCredentials),
 			o.BinariesProvider,

@@ -20,7 +20,7 @@ type SecretParameter struct {
 	Parameter
 }
 
-// AnonymizeResponse ensures that sensitive data is removed from the logs
+// AnonymizeResponse removes sensitive data from the logs
 func (p *SecretParameter) AnonymizeResponse(response interface{}) interface{} {
 	r, _ := response.(*Parameter)
 	rCopy := *r
@@ -36,7 +36,7 @@ type CreateSecretOpts struct {
 	Secret string
 }
 
-// AnonymizeRequest ensures that sensitive data is removed from the logs
+// AnonymizeRequest removes sensitive data from the logs
 func (o CreateSecretOpts) AnonymizeRequest(request interface{}) interface{} {
 	r, _ := request.(CreateSecretOpts)
 	rCopy := r

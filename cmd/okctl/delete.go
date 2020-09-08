@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"log"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 
@@ -85,17 +86,21 @@ including VPC, this is a highly destructive operation.`,
 				Repository:   opts.Repository,
 				ClusterName:  opts.ClusterName,
 			}
+			log.Println(c, id)
 
-			err := c.DeleteCluster(&api.ClusterDeleteOpts{
-				ID: id,
-			})
-			if err != nil {
-				return err
-			}
-
-			return c.DeleteVpc(&api.DeleteVpcOpts{
-				ID: id,
-			})
+			// nolint: godox
+			// FIXME: put back
+			//err := c.DeleteCluster(&api.ClusterDeleteOpts{
+			//	ID: id,
+			//})
+			//if err != nil {
+			//	return err
+			//}
+			//
+			//return c.DeleteVpc(&api.DeleteVpcOpts{
+			//	ID: id,
+			//})
+			return nil
 		},
 	}
 

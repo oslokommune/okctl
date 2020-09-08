@@ -31,7 +31,7 @@ package client_test
 //		expect    interface{}
 //		response  []byte
 //		expectErr bool
-//		fn        func(c *client.Client) error
+//		fn        func(c *client.HTTPClient) error
 //	}{
 //		{
 //			name:     "Create cluster works",
@@ -39,7 +39,7 @@ package client_test
 //			method:   http.MethodPost,
 //			response: defaultResponse,
 //			expect:   defaultExpect,
-//			fn: func(c *client.Client) error {
+//			fn: func(c *client.HTTPClient) error {
 //				return c.CreateCluster(&defaultClusterCreateOpts)
 //			},
 //		},
@@ -49,7 +49,7 @@ package client_test
 //			method:   http.MethodDelete,
 //			response: defaultResponse,
 //			expect:   defaultExpect,
-//			fn: func(c *client.Client) error {
+//			fn: func(c *client.HTTPClient) error {
 //				return c.DeleteCluster(&defaultClusterDeleteOpts)
 //			},
 //		},
@@ -59,7 +59,7 @@ package client_test
 //			method:   http.MethodPost,
 //			expect:   defaultExpect,
 //			response: defaultResponse,
-//			fn: func(c *client.Client) error {
+//			fn: func(c *client.HTTPClient) error {
 //				_, err := c.CreateVpc(&defaultVpcCreateOpts)
 //
 //				return err
@@ -71,7 +71,7 @@ package client_test
 //			method:   http.MethodDelete,
 //			expect:   defaultExpect,
 //			response: defaultResponse,
-//			fn: func(c *client.Client) error {
+//			fn: func(c *client.HTTPClient) error {
 //				return c.DeleteVpc(&defaultVpcDeleteOpts)
 //			},
 //		},

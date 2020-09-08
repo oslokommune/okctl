@@ -14,7 +14,7 @@ type domain struct {
 	provider v1alpha1.CloudProvider
 }
 
-func (d *domain) CreateDomain(opts api.CreateDomainOpts) (*api.Domain, error) {
+func (d *domain) CreateHostedZone(opts api.CreateHostedZoneOpts) (*api.HostedZone, error) {
 	b := cfn.New(components.NewHostedZoneComposer(opts.FQDN, "A public hosted zone for creating ingresses with"))
 
 	stackName := cfn.NewStackNamer().Domain(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Domain))
@@ -36,7 +36,7 @@ func (d *domain) CreateDomain(opts api.CreateDomainOpts) (*api.Domain, error) {
 		return nil, errors.E(err, "failed to create cloud formation template")
 	}
 
-	p := &api.Domain{
+	p := &api.HostedZone{
 		ID:                     opts.ID,
 		FQDN:                   opts.FQDN,
 		Domain:                 opts.Domain,

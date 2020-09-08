@@ -258,7 +258,7 @@ and database subnets.`,
 				),
 			)
 
-			d, err := domainService.CreateDomain(o.Ctx, api.CreateDomainOpts{
+			d, err := domainService.CreateHostedZone(o.Ctx, api.CreateHostedZoneOpts{
 				ID:     id,
 				Domain: opts.DomainName,
 				FQDN:   opts.FQDN,

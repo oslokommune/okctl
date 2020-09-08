@@ -9,15 +9,15 @@ import (
 
 // DomainService orchestrates the creation of a hosted zone
 type DomainService interface {
-	CreateDomain(ctx context.Context, opts api.CreateDomainOpts) (*api.Domain, error)
+	CreateHostedZone(ctx context.Context, opts api.CreateHostedZoneOpts) (*api.HostedZone, error)
 }
 
 // DomainAPI invokes the API
 type DomainAPI interface {
-	CreateDomain(opts api.CreateDomainOpts) (*api.Domain, error)
+	CreateHostedZone(opts api.CreateHostedZoneOpts) (*api.HostedZone, error)
 }
 
 // DomainStore stores the data
 type DomainStore interface {
-	SaveDomain(*api.Domain) (*store.Report, error)
+	SaveHostedZone(*api.HostedZone) (*store.Report, error)
 }

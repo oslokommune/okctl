@@ -7,17 +7,30 @@ import (
 	"github.com/oslokommune/okctl/pkg/client/store"
 )
 
+// HostedZone contains the state we are interested in
+type HostedZone struct {
+	IsDelegated bool
+	Primary     bool
+	HostedZone  *api.HostedZone
+}
+
+// CreatePrimaryHostedZoneOpts is the required inputs
+type CreatePrimaryHostedZoneOpts struct {
+	ID api.ID
+}
+
 // DomainService orchestrates the creation of a hosted zone
 type DomainService interface {
-	CreateHostedZone(ctx context.Context, opts api.CreateHostedZoneOpts) (*api.HostedZone, error)
+	CreatePrimaryHostedZone(ctx context.Context, opts CreatePrimaryHostedZoneOpts) (*api.HostedZone, error)
 }
 
 // DomainAPI invokes the API
 type DomainAPI interface {
-	CreateHostedZone(opts api.CreateHostedZoneOpts) (*api.HostedZone, error)
+	CreatePrimaryHostedZone(opts CreatePrimaryHostedZoneOpts) (*api.HostedZone, error)
 }
 
 // DomainStore stores the data
 type DomainStore interface {
-	SaveHostedZone(*api.HostedZone) (*store.Report, error)
+	SaveHostedZone(*HostedZone) (*store.Report, error)
+	GetPrimaryHostedZone(id api.ID) (*HostedZone, error)
 }

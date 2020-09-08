@@ -19,7 +19,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/ask"
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/domain"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
@@ -48,8 +47,6 @@ type CreateClusterOpts struct {
 	RepositoryName string
 	Region         string
 	ClusterName    string
-	DomainName     string
-	FQDN           string
 	Organisation   string
 }
 
@@ -62,8 +59,6 @@ func (o *CreateClusterOpts) Validate() error {
 		validation.Field(&o.RepositoryName, validation.Required),
 		validation.Field(&o.Region, validation.Required),
 		validation.Field(&o.ClusterName, validation.Required),
-		validation.Field(&o.DomainName, validation.Required),
-		validation.Field(&o.FQDN, validation.Required),
 		validation.Field(&o.Organisation, validation.Required),
 	)
 }
@@ -89,19 +84,7 @@ and database subnets.`,
 			opts.RepositoryName = o.RepoData.Name
 			opts.ClusterName = o.ClusterName(opts.Environment)
 			opts.Region = o.Region()
-			opts.DomainName = o.PrimaryDomain(opts.Environment)
-			opts.FQDN = o.PrimaryFQDN(opts.Environment)
 			opts.Organisation = github.DefaultOrg
-
-			// FIXME: Move this into the domain ask thingy
-			if !o.HostedZoneIsCreated(opts.DomainName, opts.Environment) {
-				d, err := domain.NewDefaultWithSurvey(opts.RepositoryName, opts.Environment)
-				if err != nil {
-					return fmt.Errorf("failed to get domain name: %w", err)
-				}
-				opts.DomainName = d.Domain
-				opts.FQDN = d.FQDN
-			}
 
 			err := opts.Validate()
 			if err != nil {
@@ -241,7 +224,12 @@ and database subnets.`,
 				VPCID: vpc.VpcID,
 			})
 
+			a := ask.New()
+
 			domainService := core.NewDomainService(
+				o.Out,
+				o.RepoData,
+				a,
 				rest.NewDomainAPI(c),
 				filesystem.NewDomainStore(
 					o.RepoData,
@@ -258,28 +246,9 @@ and database subnets.`,
 				),
 			)
 
-			d, err := domainService.CreateHostedZone(o.Ctx, api.CreateHostedZoneOpts{
-				ID:     id,
-				Domain: opts.DomainName,
-				FQDN:   opts.FQDN,
+			d, err := domainService.CreatePrimaryHostedZone(o.Ctx, client.CreatePrimaryHostedZoneOpts{
+				ID: id,
 			})
-
-			// FIXME: Move this stuff into the domain create
-			a := ask.New()
-
-			if !o.HostedZoneIsDelegated(opts.DomainName, opts.Environment) {
-				err = a.ConfirmPostingNameServers(o.Out, d.Domain, d.NameServers)
-				if err != nil {
-					return err
-				}
-
-				o.SetHostedZoneIsDelegated(true, opts.DomainName, opts.Environment)
-
-				err := o.WriteCurrentRepoData()
-				if err != nil {
-					return err
-				}
-			}
 
 			// external dns
 			externalDNSService := core.NewExternalDNSService(

@@ -70,7 +70,7 @@ func TestConfirmPostingNameServers(t *testing.T) {
 			a.Out = c.Tty()
 
 			msgBuf := new(bytes.Buffer)
-			err = a.ConfirmPostingNameServers(msgBuf, tc.domain, tc.nameServers)
+			_, err = a.ConfirmPostingNameServers(msgBuf, tc.domain, tc.nameServers)
 			require.Nil(t, err)
 
 			g := goldie.New(t)

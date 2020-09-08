@@ -55,10 +55,10 @@ const nameServersMsg = `	We have created a domain for you at: %s
 
 // ConfirmPostingNameServers asks the user to confirm that they have posted the nameservers
 // to a channel where we can receive them
-func (a *Ask) ConfirmPostingNameServers(to io.Writer, domain string, nameServers []string) error {
+func (a *Ask) ConfirmPostingNameServers(to io.Writer, domain string, nameServers []string) (bool, error) {
 	_, err := fmt.Fprintf(to, nameServersMsg, domain, domain, strings.Join(nameServers, ","))
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	prompt := &survey.Confirm{
@@ -71,17 +71,17 @@ func (a *Ask) ConfirmPostingNameServers(to io.Writer, domain string, nameServers
 
 	err = survey.AskOne(prompt, &haveSent, survey.WithStdio(a.In, a.Out, a.Err))
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if !haveSent {
 		_, err = fmt.Fprintf(to, "! You have not sent the domain and name server, your DNS records will not resolve until you do so")
 		if err != nil {
-			return err
+			return false, err
 		}
 	}
 
-	return nil
+	return true, nil
 }
 
 const iacHelp = `	The github repository that you select will

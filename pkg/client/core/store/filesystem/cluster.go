@@ -30,8 +30,30 @@ func (s *clusterStore) SaveCluster(c *api.Cluster) (*store.Report, error) {
 		Environment:  c.ID.Environment,
 		AWSAccountID: c.ID.AWSAccountID,
 		VPC: &repository.VPC{
-			VpcID: "",
+			VpcID: c.VpcID,
 			CIDR:  c.Cidr,
+			Subnets: map[string][]*repository.VPCSubnet{
+				repository.SubnetTypePublic: func() (subnets []*repository.VPCSubnet) {
+					for _, s := range c.VpcPublicSubnets {
+						subnets = append(subnets, &repository.VPCSubnet{
+							CIDR:             s.Cidr,
+							AvailabilityZone: s.AvailabilityZone,
+						})
+					}
+
+					return subnets
+				}(),
+				repository.SubnetTypePrivate: func() (subnets []*repository.VPCSubnet) {
+					for _, s := range c.VpcPrivateSubnets {
+						subnets = append(subnets, &repository.VPCSubnet{
+							CIDR:             s.Cidr,
+							AvailabilityZone: s.AvailabilityZone,
+						})
+					}
+
+					return subnets
+				}(),
+			},
 		},
 	}
 
@@ -67,8 +89,30 @@ func (s *clusterStore) DeleteCluster(id api.ID) (*store.Report, error) {
 func (s *clusterStore) GetCluster(id api.ID) (*api.Cluster, error) {
 	if c, ok := s.repoState.Clusters[id.Environment]; ok {
 		return &api.Cluster{
-			ID:   id,
-			Cidr: c.VPC.CIDR,
+			ID:    id,
+			Cidr:  c.VPC.CIDR,
+			VpcID: c.VPC.VpcID,
+			VpcPrivateSubnets: func() (subnets []api.VpcSubnet) {
+				for _, sub := range c.VPC.Subnets[repository.SubnetTypePrivate] {
+					subnets = append(subnets, api.VpcSubnet{
+						Cidr:             sub.CIDR,
+						AvailabilityZone: sub.AvailabilityZone,
+					})
+				}
+
+				return subnets
+			}(),
+			VpcPublicSubnets: func() (subnets []api.VpcSubnet) {
+				for _, sub := range c.VPC.Subnets[repository.SubnetTypePublic] {
+					subnets = append(subnets, api.VpcSubnet{
+						Cidr:             sub.CIDR,
+						AvailabilityZone: sub.AvailabilityZone,
+					})
+				}
+
+				return subnets
+			}(),
+			Config: nil,
 		}, nil
 	}
 

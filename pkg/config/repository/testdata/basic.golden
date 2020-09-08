@@ -46,6 +46,13 @@ Clusters:
     Name: okctl-pro
     VPC:
       CIDR: 192.168.0.0/20
+      Subnets:
+        private:
+        - AvailabilityZone: eu-west-1c
+          CIDR: 192.168.10.0/24
+        public:
+        - AvailabilityZone: eu-west-1a
+          CIDR: 192.168.0.0/24
       VpcID: 3456ygfghj
 Name: okctl
 OutputDir: infrastructure

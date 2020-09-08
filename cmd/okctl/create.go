@@ -369,6 +369,14 @@ and database subnets.`,
 				o.FileSystem,
 			)
 
+			paramStore := filesystem.NewParameterStore(
+				filesystem.Paths{
+					OutputFile: config.DefaultParameterOutputsFile,
+					BaseDir:    path.Join(argoBaseDir, config.DefaultParameterBaseDir),
+				},
+				o.FileSystem,
+			)
+
 			argoService := core.NewArgoCDService(
 				rest.NewArgoCDAPI(
 					githubService,
@@ -378,14 +386,28 @@ and database subnets.`,
 					c,
 				),
 				filesystem.NewArgoCDStore(
-					filesystem.Paths{},
+					filesystem.Paths{
+						OutputFile:  config.DefaultHelmOutputsFile,
+						ReleaseFile: config.DefaultHelmReleaseFile,
+						ChartFile:   config.DefaultHelmChartFile,
+						BaseDir:     path.Join(argoBaseDir, config.DefaultHelmBaseDir),
+					},
+					filesystem.Paths{
+						OutputFile: config.DefaultArgoOutputsFile,
+						BaseDir:    argoBaseDir,
+					},
+					o.RepoData,
+					filesystem.Paths{
+						ConfigFile: config.DefaultRepositoryConfig,
+						BaseDir:    repoDir,
+					},
+					paramStore,
 					certStore,
 					manifestStore,
 					o.FileSystem,
 				),
 			)
 
-			// FIXME: argocd should also update the repostate with some stuff
 			_, err = argoService.CreateArgoCD(o.Ctx, client.CreateArgoCDOpts{
 				ID:                 id,
 				Domain:             d.Domain,

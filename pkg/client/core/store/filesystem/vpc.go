@@ -98,28 +98,28 @@ func defFromStore(vpc *Vpc) *api.Vpc {
 	}
 }
 
-func (s *vpcStore) SaveVpc(vpc *api.Vpc) error {
-	_, err := store.NewFileSystem(s.baseDir, s.fs).
+func (s *vpcStore) SaveVpc(vpc *api.Vpc) (*store.Report, error) {
+	report, err := store.NewFileSystem(s.baseDir, s.fs).
 		StoreStruct(s.stackOutputsFileName, storeFromDef(vpc), store.ToJSON()).
 		StoreBytes(s.cloudFormationFileName, vpc.CloudFormationTemplate).
 		Do()
 	if err != nil {
-		return fmt.Errorf("failed to store vpc: %w", err)
+		return nil, fmt.Errorf("failed to store vpc: %w", err)
 	}
 
-	return nil
+	return report, nil
 }
 
-func (s *vpcStore) DeleteVpc(_ api.ID) error {
-	_, err := store.NewFileSystem(s.baseDir, s.fs).
+func (s *vpcStore) DeleteVpc(_ api.ID) (*store.Report, error) {
+	report, err := store.NewFileSystem(s.baseDir, s.fs).
 		Remove(s.stackOutputsFileName).
 		Remove(s.cloudFormationFileName).
 		Do()
 	if err != nil {
-		return fmt.Errorf("failed to delete vpc: %w", err)
+		return nil, fmt.Errorf("failed to delete vpc: %w", err)
 	}
 
-	return nil
+	return report, nil
 }
 
 func (s *vpcStore) GetVpc(_ api.ID) (*api.Vpc, error) {

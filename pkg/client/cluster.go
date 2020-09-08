@@ -1,23 +1,27 @@
 package client
 
 import (
-	"github.com/oslokommune/okctl/pkg/api"
-)
+	"context"
 
-// We are shadowing the api interfaces for now, but
-// this is probably not sustainable.
+	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/client/store"
+)
 
 // ClusterService orchestrates the creation of a cluster
 type ClusterService interface {
-	api.ClusterService
+	CreateCluster(context.Context, api.ClusterCreateOpts) (*api.Cluster, error)
+	DeleteCluster(context.Context, api.ClusterDeleteOpts) error
 }
 
 // ClusterAPI invokes the API calls for creating a cluster
 type ClusterAPI interface {
-	api.ClusterRun
+	CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, error)
+	DeleteCluster(opts api.ClusterDeleteOpts) error
 }
 
 // ClusterStore stores the data
 type ClusterStore interface {
-	api.ClusterStore
+	SaveCluster(cluster *api.Cluster) (*store.Report, error)
+	DeleteCluster(id api.ID) (*store.Report, error)
+	GetCluster(id api.ID) (*api.Cluster, error)
 }

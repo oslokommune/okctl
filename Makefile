@@ -72,7 +72,7 @@ RICHGO         := $(GOBIN)/richgo
 MAKEDOC        := $(GOBIN)/makedoc
 STATIK         := $(GOBIN)/statik
 GORELEASER     := bin/goreleaser/v.0.142.0/$(OS)/goreleaser
-GOFUMPT	       := $(GOBIN)/gofumpt
+GOFUMPT        := $(GOBIN)/gofumpt
 
 $(GOLANGCILINT):
 	$(GO) get github.com/golangci/golangci-lint/cmd/golangci-lint

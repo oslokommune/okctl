@@ -37,3 +37,8 @@ type ALBIngressControllerAPI interface {
 type ALBIngressControllerStore interface {
 	SaveALBIngressController(controller *ALBIngressController) (*store.Report, error)
 }
+
+// ALBIngressControllerReport defines the report layer
+type ALBIngressControllerReport interface {
+	ALBIngressControllerReport(report *store.Report) error
+}

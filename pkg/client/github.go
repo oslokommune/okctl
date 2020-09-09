@@ -144,3 +144,9 @@ type GithubStore interface {
 	SaveGithubOauthApp(app *GithubOauthApp) (*store.Report, error)
 	GetGithubOauthApp(appName string, id api.ID) (*GithubOauthApp, error)
 }
+
+// GithubReport is the report layer
+type GithubReport interface {
+	ReadyGithubInfrastructureRepository(repository *GithubRepository, report *store.Report) error
+	CreateGithubOauthApp(app *GithubOauthApp, report *store.Report) error
+}

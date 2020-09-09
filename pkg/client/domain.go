@@ -34,3 +34,8 @@ type DomainStore interface {
 	SaveHostedZone(*HostedZone) (*store.Report, error)
 	GetPrimaryHostedZone(id api.ID) (*HostedZone, error)
 }
+
+// DomainReport implements the report layer
+type DomainReport interface {
+	ReportCreatePrimaryHostedZone(zone *HostedZone, report *store.Report) error
+}

@@ -8,8 +8,9 @@ import (
 )
 
 type externalDNSService struct {
-	api   client.ExternalDNSAPI
-	store client.ExternalDNSStore
+	api    client.ExternalDNSAPI
+	store  client.ExternalDNSStore
+	report client.ExternalDNSReport
 }
 
 func (s *externalDNSService) CreateExternalDNS(_ context.Context, opts client.CreateExternalDNSOpts) (*client.ExternalDNS, error) {
@@ -45,7 +46,12 @@ func (s *externalDNSService) CreateExternalDNS(_ context.Context, opts client.Cr
 		Kube:           kube,
 	}
 
-	_, err = s.store.SaveExternalDNS(externalDNS)
+	report, err := s.store.SaveExternalDNS(externalDNS)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.ReportCreateExternalDNS(externalDNS, report)
 	if err != nil {
 		return nil, err
 	}
@@ -54,9 +60,10 @@ func (s *externalDNSService) CreateExternalDNS(_ context.Context, opts client.Cr
 }
 
 // NewExternalDNSService returns an initialised service
-func NewExternalDNSService(api client.ExternalDNSAPI, store client.ExternalDNSStore) client.ExternalDNSService {
+func NewExternalDNSService(api client.ExternalDNSAPI, store client.ExternalDNSStore, report client.ExternalDNSReport) client.ExternalDNSService {
 	return &externalDNSService{
-		api:   api,
-		store: store,
+		api:    api,
+		store:  store,
+		report: report,
 	}
 }

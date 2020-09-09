@@ -1,8 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path"
+	"time"
+
+	"github.com/hako/durafmt"
+	"github.com/oslokommune/okctl/pkg/client/core/report/console"
+	"github.com/theckman/yacspin"
 
 	"github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/client/core/api/rest"
@@ -101,6 +107,42 @@ including VPC, this is a highly destructive operation.`,
 				return err
 			}
 
+			cfg := yacspin.Config{
+				Frequency:       100 * time.Millisecond, // nolint: gomnd
+				CharSet:         yacspin.CharSets[59],
+				Suffix:          " deleting",
+				SuffixAutoColon: true,
+				StopCharacter:   "✓",
+				StopColors:      []string{"fgGreen"},
+				Writer:          o.Out,
+			}
+
+			spinner, err := yacspin.New(cfg)
+			if err != nil {
+				return fmt.Errorf("failed to create spinner")
+			}
+
+			timer := func(component string) chan struct{} {
+				exit := make(chan struct{})
+
+				go func(ch chan struct{}, start time.Time) {
+					tick := time.Tick(1 * time.Millisecond)
+
+					for {
+						select {
+						case <-ch:
+							return
+						case <-tick:
+							spinner.Message(component + " (elapsed: " + durafmt.Parse(time.Since(start)).LimitFirstN(2).String() + ")") // nolint: gomnd
+						}
+					}
+				}(exit, time.Now())
+
+				return exit
+			}
+
+			_ = spinner.Start()
+			exit := timer("cluster")
 			clusterService := core.NewClusterService(
 				rest.NewClusterAPI(c),
 				filesystem.NewClusterStore(
@@ -115,6 +157,7 @@ including VPC, this is a highly destructive operation.`,
 					o.FileSystem,
 					o.RepoData,
 				),
+				console.NewClusterReport(o.Err, exit, spinner),
 			)
 
 			err = clusterService.DeleteCluster(o.Ctx, api.ClusterDeleteOpts{
@@ -124,6 +167,8 @@ including VPC, this is a highly destructive operation.`,
 				return err
 			}
 
+			_ = spinner.Start()
+			exit = timer("vpc")
 			vpcService := core.NewVPCService(
 				rest.NewVPCAPI(c),
 				filesystem.NewVpcStore(
@@ -132,6 +177,7 @@ including VPC, this is a highly destructive operation.`,
 					path.Join(outputDir, config.DefaultVpcBaseDir),
 					o.FileSystem,
 				),
+				console.NewVPCReport(o.Err, spinner, exit),
 			)
 
 			err = vpcService.DeleteVpc(o.Ctx, api.DeleteVpcOpts{

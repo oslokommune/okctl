@@ -7,8 +7,9 @@ import (
 )
 
 type githubService struct {
-	api   client.GithubAPI
-	store client.GithubStore
+	api    client.GithubAPI
+	store  client.GithubStore
+	report client.GithubReport
 }
 
 func (s *githubService) ReadyGithubInfrastructureRepository(_ context.Context, opts client.ReadyGithubInfrastructureRepositoryOpts) (*client.GithubRepository, error) {
@@ -49,7 +50,12 @@ func (s *githubService) ReadyGithubInfrastructureRepository(_ context.Context, o
 		DeployKey:    key,
 	}
 
-	_, err = s.store.SaveGithubInfrastructureRepository(repository)
+	report, err := s.store.SaveGithubInfrastructureRepository(repository)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.ReadyGithubInfrastructureRepository(repository, report)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +98,12 @@ func (s *githubService) CreateGithubOauthApp(_ context.Context, opts client.Crea
 		return nil, err
 	}
 
-	_, err = s.store.SaveGithubOauthApp(app)
+	report, err := s.store.SaveGithubOauthApp(app)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.CreateGithubOauthApp(app, report)
 	if err != nil {
 		return nil, err
 	}
@@ -101,9 +112,10 @@ func (s *githubService) CreateGithubOauthApp(_ context.Context, opts client.Crea
 }
 
 // NewGithubService returns an initialised service
-func NewGithubService(api client.GithubAPI, store client.GithubStore) client.GithubService {
+func NewGithubService(api client.GithubAPI, store client.GithubStore, report client.GithubReport) client.GithubService {
 	return &githubService{
-		api:   api,
-		store: store,
+		api:    api,
+		store:  store,
+		report: report,
 	}
 }

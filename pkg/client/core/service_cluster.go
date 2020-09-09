@@ -8,8 +8,9 @@ import (
 )
 
 type clusterService struct {
-	api   client.ClusterAPI
-	store client.ClusterStore
+	api    client.ClusterAPI
+	store  client.ClusterStore
+	report client.ClusterReport
 }
 
 func (c *clusterService) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error) {
@@ -18,7 +19,12 @@ func (c *clusterService) CreateCluster(_ context.Context, opts api.ClusterCreate
 		return nil, err
 	}
 
-	_, err = c.store.SaveCluster(cluster)
+	report, err := c.store.SaveCluster(cluster)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.report.ReportCreateCluster(cluster, report)
 	if err != nil {
 		return nil, err
 	}
@@ -41,9 +47,10 @@ func (c *clusterService) DeleteCluster(_ context.Context, opts api.ClusterDelete
 }
 
 // NewClusterService returns an initialised cluster service
-func NewClusterService(api client.ClusterAPI, store client.ClusterStore) client.ClusterService {
+func NewClusterService(api client.ClusterAPI, store client.ClusterStore, report client.ClusterReport) client.ClusterService {
 	return &clusterService{
-		api:   api,
-		store: store,
+		api:    api,
+		store:  store,
+		report: report,
 	}
 }

@@ -37,3 +37,8 @@ type ExternalDNSAPI interface {
 type ExternalDNSStore interface {
 	SaveExternalDNS(dns *ExternalDNS) (*store.Report, error)
 }
+
+// ExternalDNSReport implements the report layer
+type ExternalDNSReport interface {
+	ReportCreateExternalDNS(dns *ExternalDNS, report *store.Report) error
+}

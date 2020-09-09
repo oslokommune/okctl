@@ -8,8 +8,9 @@ import (
 )
 
 type vpcService struct {
-	api   client.VPCAPI
-	store client.VPCStore
+	api    client.VPCAPI
+	store  client.VPCStore
+	report client.VPCReport
 }
 
 func (s *vpcService) CreateVpc(_ context.Context, opts api.CreateVpcOpts) (*api.Vpc, error) {
@@ -18,7 +19,12 @@ func (s *vpcService) CreateVpc(_ context.Context, opts api.CreateVpcOpts) (*api.
 		return nil, err
 	}
 
-	_, err = s.store.SaveVpc(vpc)
+	report, err := s.store.SaveVpc(vpc)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.ReportCreateVPC(vpc, report)
 	if err != nil {
 		return nil, err
 	}
@@ -41,9 +47,10 @@ func (s *vpcService) DeleteVpc(_ context.Context, opts api.DeleteVpcOpts) error 
 }
 
 // NewVPCService returns an initialised VPC service
-func NewVPCService(api client.VPCAPI, store client.VPCStore) client.VPCService {
+func NewVPCService(api client.VPCAPI, store client.VPCStore, report client.VPCReport) client.VPCService {
 	return &vpcService{
-		api:   api,
-		store: store,
+		api:    api,
+		store:  store,
+		report: report,
 	}
 }

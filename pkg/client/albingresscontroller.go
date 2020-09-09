@@ -40,5 +40,5 @@ type ALBIngressControllerStore interface {
 
 // ALBIngressControllerReport defines the report layer
 type ALBIngressControllerReport interface {
-	ALBIngressControllerReport(report *store.Report) error
+	ReportCreateALBIngressController(controller *ALBIngressController, report *store.Report) error
 }

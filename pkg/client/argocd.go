@@ -45,3 +45,8 @@ type ArgoCDAPI interface {
 type ArgoCDStore interface {
 	SaveArgoCD(cd *ArgoCD) ([]*store.Report, error)
 }
+
+// ArgoCDReport implements the report layer
+type ArgoCDReport interface {
+	CreateArgoCD(cd *ArgoCD, reports []*store.Report) error
+}

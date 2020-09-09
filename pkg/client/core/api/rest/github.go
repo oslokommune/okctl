@@ -5,6 +5,8 @@ import (
 	"io"
 	"strings"
 
+	"github.com/theckman/yacspin"
+
 	"github.com/oslokommune/okctl/pkg/ask"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -18,6 +20,7 @@ type githubAPI struct {
 	parameterAPI client.ParameterAPI
 	ask          *ask.Ask
 	out          io.Writer
+	spinner      *yacspin.Spinner
 }
 
 func (a *githubAPI) SelectGithubInfrastructureRepository(opts client.SelectGithubInfrastructureRepositoryOpts) (*client.SelectedGithubRepository, error) {
@@ -26,7 +29,17 @@ func (a *githubAPI) SelectGithubInfrastructureRepository(opts client.SelectGithu
 		return nil, err
 	}
 
+	err = a.spinner.Pause()
+	if err != nil {
+		return nil, err
+	}
+
 	repo, err := a.ask.SelectInfrastructureRepository(opts.Repository, repos)
+	if err != nil {
+		return nil, err
+	}
+
+	err = a.spinner.Unpause()
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +94,17 @@ func (a *githubAPI) SelectGithubTeam(opts client.SelectGithubTeam) (*client.Gith
 		return nil, err
 	}
 
+	err = a.spinner.Pause()
+	if err != nil {
+		return nil, err
+	}
+
 	team, err := a.ask.SelectTeam(teams)
+	if err != nil {
+		return nil, err
+	}
+
+	err = a.spinner.Unpause()
 	if err != nil {
 		return nil, err
 	}
@@ -130,9 +153,12 @@ func (a *githubAPI) CreateGithubOauthApp(opts client.CreateGithubOauthAppOpts) (
 }
 
 // NewGithubAPI returns an instantiated github API client
-func NewGithubAPI(paramAPI client.ParameterAPI, client github.Githuber) client.GithubAPI {
+func NewGithubAPI(out io.Writer, ask *ask.Ask, spinner *yacspin.Spinner, paramAPI client.ParameterAPI, client github.Githuber) client.GithubAPI {
 	return &githubAPI{
 		client:       client,
 		parameterAPI: paramAPI,
+		ask:          ask,
+		out:          out,
+		spinner:      spinner,
 	}
 }

@@ -44,7 +44,7 @@ func New() *Context {
 
 	logger.Out = os.Stderr
 	logger.Formatter = &logrus.TextFormatter{}
-	logger.Level = logrus.InfoLevel
+	logger.Level = logrus.WarnLevel
 
 	if debug {
 		logger.Level = logrus.DebugLevel

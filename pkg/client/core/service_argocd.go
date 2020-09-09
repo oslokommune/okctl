@@ -7,8 +7,9 @@ import (
 )
 
 type argoCDService struct {
-	api   client.ArgoCDAPI
-	store client.ArgoCDStore
+	api    client.ArgoCDAPI
+	store  client.ArgoCDStore
+	report client.ArgoCDReport
 }
 
 func (s *argoCDService) CreateArgoCD(_ context.Context, opts client.CreateArgoCDOpts) (*client.ArgoCD, error) {
@@ -17,7 +18,12 @@ func (s *argoCDService) CreateArgoCD(_ context.Context, opts client.CreateArgoCD
 		return nil, err
 	}
 
-	_, err = s.store.SaveArgoCD(argo)
+	reports, err := s.store.SaveArgoCD(argo)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.CreateArgoCD(argo, reports)
 	if err != nil {
 		return nil, err
 	}
@@ -26,9 +32,10 @@ func (s *argoCDService) CreateArgoCD(_ context.Context, opts client.CreateArgoCD
 }
 
 // NewArgoCDService returns an initialised service
-func NewArgoCDService(api client.ArgoCDAPI, store client.ArgoCDStore) client.ArgoCDService {
+func NewArgoCDService(api client.ArgoCDAPI, store client.ArgoCDStore, report client.ArgoCDReport) client.ArgoCDService {
 	return &argoCDService{
-		api:   api,
-		store: store,
+		api:    api,
+		store:  store,
+		report: report,
 	}
 }

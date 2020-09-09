@@ -153,47 +153,47 @@ func TestHelm(t *testing.T) {
 			expect:    nil,
 			expectErr: false,
 		},
-		// We need to bring up localstack for these tests to pass, something to be done..
-		//{
-		//	name: "aws-alb-ingress-controller should work",
-		//	helm: helm.New(&helm.Config{
-		//		HomeDir:              dir,
-		//		HelmPluginsDirectory: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
-		//		HelmRegistryConfig:   path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
-		//		HelmRepositoryConfig: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryConfig),
-		//		HelmRepositoryCache:  path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryCache),
-		//		HelmBaseDir:          path.Join(dir, config.DefaultHelmBaseDir),
-		//		Debug:                true,
-		//		DebugOutput:          os.Stderr,
-		//	},
-		//		aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
-		//		&afero.Afero{
-		//			Fs: afero.NewOsFs(),
-		//		}),
-		//	chart: awsalbingresscontroller.New(
-		//		awsalbingresscontroller.NewDefaultValues("my-cluster", "my-service-account"),
-		//	),
-		//	expect:    nil,
-		//	expectErr: false,
-		//},
-		//{
-		//	name: "external-secrets should work",
-		//	helm: helm.New(&helm.Config{
-		//		HomeDir:              dir,
-		//		HelmPluginsDirectory: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
-		//		HelmRegistryConfig:   path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
-		//		HelmRepositoryConfig: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryConfig),
-		//		HelmRepositoryCache:  path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryCache),
-		//		HelmBaseDir:          path.Join(dir, config.DefaultHelmBaseDir),
-		//		Debug:                true,
-		//		DebugOutput:          os.Stderr,
-		//	}, &afero.Afero{
-		//		Fs: afero.NewOsFs(),
-		//	}),
-		//	chart:     helm.ExternalSecrets(helm.DefaultExternalSecretsValues()),
-		//	expect:    nil,
-		//	expectErr: false,
-		//},
+		//  We need to bring up localstack for these tests to pass, something to be done..
+		//  {
+		// 	name: "aws-alb-ingress-controller should work",
+		// 	helm: helm.New(&helm.Config{
+		// 		HomeDir:              dir,
+		// 		HelmPluginsDirectory: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
+		// 		HelmRegistryConfig:   path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
+		// 		HelmRepositoryConfig: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryConfig),
+		// 		HelmRepositoryCache:  path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryCache),
+		// 		HelmBaseDir:          path.Join(dir, config.DefaultHelmBaseDir),
+		// 		Debug:                true,
+		// 		DebugOutput:          os.Stderr,
+		// 	},
+		// 		aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
+		// 		&afero.Afero{
+		// 			Fs: afero.NewOsFs(),
+		// 		}),
+		// 	chart: awsalbingresscontroller.New(
+		// 		awsalbingresscontroller.NewDefaultValues("my-cluster", "my-service-account"),
+		// 	),
+		// 	expect:    nil,
+		// 	expectErr: false,
+		// },
+		// {
+		// 	name: "external-secrets should work",
+		// 	helm: helm.New(&helm.Config{
+		// 		HomeDir:              dir,
+		// 		HelmPluginsDirectory: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
+		// 		HelmRegistryConfig:   path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
+		// 		HelmRepositoryConfig: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryConfig),
+		// 		HelmRepositoryCache:  path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryCache),
+		// 		HelmBaseDir:          path.Join(dir, config.DefaultHelmBaseDir),
+		// 		Debug:                true,
+		// 		DebugOutput:          os.Stderr,
+		// 	}, &afero.Afero{
+		// 		Fs: afero.NewOsFs(),
+		// 	}),
+		// 	chart:     helm.ExternalSecrets(helm.DefaultExternalSecretsValues()),
+		// 	expect:    nil,
+		// 	expectErr: false,
+		// },
 	}
 
 	for _, tc := range testCases {

@@ -223,7 +223,7 @@ func checksumsFor(h user.Host, cs []user.Checksum) map[digest.Type]string {
 
 func replaceVars(content string, vars map[string]string) string {
 	for v, r := range vars {
-		content = strings.Replace(content, v, r, -1)
+		content = strings.ReplaceAll(content, v, r)
 	}
 
 	return content

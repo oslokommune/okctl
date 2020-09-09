@@ -198,8 +198,10 @@ func (h *HostedZone) Validate() error {
 // New returns repository data with defaults set
 func New() *Data {
 	return &Data{
+		Name:      "",
 		Region:    v1alpha1.RegionEuWest1,
 		OutputDir: "infrastructure",
+		Clusters:  map[string]*Cluster{},
 	}
 }
 

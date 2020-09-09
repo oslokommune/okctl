@@ -48,6 +48,10 @@ func (s githubStore) SaveGithubInfrastructureRepository(r *client.GithubReposito
 		},
 	}
 
+	if cluster.Github.Repositories == nil {
+		cluster.Github.Repositories = map[string]*repository.Repository{}
+	}
+
 	cluster.Github.Repositories[local.FullName] = local
 
 	report, err := store.NewFileSystem(s.repoPaths.BaseDir, s.fs).
@@ -113,6 +117,10 @@ func (s githubStore) SaveGithubOauthApp(app *client.GithubOauthApp) (*store.Repo
 			Path:    app.ClientSecret.Path,
 			Version: app.ClientSecret.Version,
 		},
+	}
+
+	if cluster.Github.OauthApp == nil {
+		cluster.Github.OauthApp = map[string]*repository.OauthApp{}
 	}
 
 	cluster.Github.OauthApp[app.Name] = local

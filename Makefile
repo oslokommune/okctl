@@ -71,7 +71,7 @@ GOCOV          := $(GOBIN)/gocov
 RICHGO         := $(GOBIN)/richgo
 MAKEDOC        := $(GOBIN)/makedoc
 STATIK         := $(GOBIN)/statik
-GORELEASER     := goreleaser
+GORELEASER     := bin/goreleaser/v.0.142.0/$(OS)/goreleaser
 GOFUMPT	       := $(GOBIN)/gofumpt
 
 $(GOLANGCILINT):
@@ -100,9 +100,6 @@ $(STATIK):
 
 $(GOFUMPT):
 	$(GO) get -u mvdan.cc/gofumpt
-
-$(GORELEASER):
-	bin/goreleaser/v0.142.0/$(OS)/goreleaser
 
 GO := $(shell command -v go 2> /dev/null)
 ifndef GO

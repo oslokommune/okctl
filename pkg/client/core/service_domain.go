@@ -4,6 +4,8 @@ import (
 	"context"
 	"io"
 
+	"github.com/theckman/yacspin"
+
 	"github.com/oslokommune/okctl/pkg/config/repository"
 
 	"github.com/oslokommune/okctl/pkg/ask"
@@ -16,8 +18,10 @@ type domainService struct {
 	api       client.DomainAPI
 	out       io.Writer
 	store     client.DomainStore
+	report    client.DomainReport
 	repoState *repository.Data
 	ask       *ask.Ask
+	spinner   *yacspin.Spinner
 }
 
 func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.CreatePrimaryHostedZoneOpts) (*api.HostedZone, error) {
@@ -40,7 +44,17 @@ func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.C
 	}
 
 	if !hz.IsDelegated {
+		err = s.spinner.Pause()
+		if err != nil {
+			return nil, err
+		}
+
 		delegated, err := s.ask.ConfirmPostingNameServers(s.out, hz.HostedZone.Domain, hz.HostedZone.NameServers)
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.spinner.Unpause()
 		if err != nil {
 			return nil, err
 		}
@@ -48,7 +62,12 @@ func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.C
 		hz.IsDelegated = delegated
 	}
 
-	_, err = s.store.SaveHostedZone(hz)
+	report, err := s.store.SaveHostedZone(hz)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.ReportCreatePrimaryHostedZone(hz, report)
 	if err != nil {
 		return nil, err
 	}
@@ -57,12 +76,22 @@ func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.C
 }
 
 // NewDomainService returns an initialised service
-func NewDomainService(out io.Writer, repoState *repository.Data, ask *ask.Ask, api client.DomainAPI, store client.DomainStore) client.DomainService {
+func NewDomainService(
+	out io.Writer,
+	repoState *repository.Data,
+	ask *ask.Ask,
+	api client.DomainAPI,
+	store client.DomainStore,
+	report client.DomainReport,
+	spinner *yacspin.Spinner,
+) client.DomainService {
 	return &domainService{
 		out:       out,
 		ask:       ask,
 		repoState: repoState,
 		api:       api,
 		store:     store,
+		report:    report,
+		spinner:   spinner,
 	}
 }

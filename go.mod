@@ -43,6 +43,7 @@ require (
 	github.com/gorilla/handlers v1.4.2 // indirect
 	github.com/gosimple/slug v1.9.0
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
+	github.com/hako/durafmt v0.0.0-20200710122514-c0fb7b4da026
 	github.com/hinshun/vt10x v0.0.0-20180616224451-1954e6464174
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
@@ -50,6 +51,8 @@ require (
 	github.com/jmoiron/sqlx v1.2.1-0.20190826204134-d7d95172beb5 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/kr/pty v1.1.8 // indirect
+	github.com/logrusorgru/aurora v0.0.0-20181002194514-a7b3b318ed4e
+	github.com/logrusorgru/aurora/v3 v3.0.0
 	github.com/magiconair/properties v1.8.2 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/miekg/dns v1.0.14
@@ -76,6 +79,7 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.6.1
+	github.com/theckman/yacspin v0.8.0
 	github.com/yvasiyarov/go-metrics v0.0.0-20150112132944-c25f46c4b940 // indirect
 	github.com/yvasiyarov/gorelic v0.0.7 // indirect
 	github.com/yvasiyarov/newrelic_platform_go v0.0.0-20160601141957-9c099fbc30e9 // indirect

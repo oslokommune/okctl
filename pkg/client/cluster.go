@@ -25,3 +25,8 @@ type ClusterStore interface {
 	DeleteCluster(id api.ID) (*store.Report, error)
 	GetCluster(id api.ID) (*api.Cluster, error)
 }
+
+// ClusterReport provides output of the actions
+type ClusterReport interface {
+	ReportCreateCluster(cluster *api.Cluster, report *store.Report) error
+}

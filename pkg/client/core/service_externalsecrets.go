@@ -9,8 +9,9 @@ import (
 )
 
 type externalSecretsService struct {
-	api   client.ExternalSecretsAPI
-	store client.ExternalSecretsStore
+	api    client.ExternalSecretsAPI
+	store  client.ExternalSecretsStore
+	report client.ExternalSecretsReport
 }
 
 func (s *externalSecretsService) CreateExternalSecrets(_ context.Context, opts client.CreateExternalSecretsOpts) (*client.ExternalSecrets, error) {
@@ -44,7 +45,12 @@ func (s *externalSecretsService) CreateExternalSecrets(_ context.Context, opts c
 		Chart:          chart,
 	}
 
-	_, err = s.store.SaveExternalSecrets(externalSecrets)
+	report, err := s.store.SaveExternalSecrets(externalSecrets)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.ReportCreateExternalSecrets(externalSecrets, report)
 	if err != nil {
 		return nil, err
 	}
@@ -53,9 +59,10 @@ func (s *externalSecretsService) CreateExternalSecrets(_ context.Context, opts c
 }
 
 // NewExternalSecretsService returns an initialised service
-func NewExternalSecretsService(api client.ExternalSecretsAPI, store client.ExternalSecretsStore) client.ExternalSecretsService {
+func NewExternalSecretsService(api client.ExternalSecretsAPI, store client.ExternalSecretsStore, report client.ExternalSecretsReport) client.ExternalSecretsService {
 	return &externalSecretsService{
-		api:   api,
-		store: store,
+		api:    api,
+		store:  store,
+		report: report,
 	}
 }

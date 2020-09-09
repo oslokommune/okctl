@@ -8,8 +8,9 @@ import (
 )
 
 type albIngressControllerService struct {
-	api   client.ALBIngressControllerAPI
-	store client.ALBIngressControllerStore
+	api    client.ALBIngressControllerAPI
+	store  client.ALBIngressControllerStore
+	report client.ALBIngressControllerReport
 }
 
 func (s *albIngressControllerService) CreateALBIngressController(_ context.Context, opts client.CreateALBIngressControllerOpts) (*client.ALBIngressController, error) {
@@ -44,7 +45,12 @@ func (s *albIngressControllerService) CreateALBIngressController(_ context.Conte
 		Chart:          chart,
 	}
 
-	_, err = s.store.SaveALBIngressController(albIngressController)
+	report, err := s.store.SaveALBIngressController(albIngressController)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.ReportCreateALBIngressController(albIngressController, report)
 	if err != nil {
 		return nil, err
 	}
@@ -53,9 +59,14 @@ func (s *albIngressControllerService) CreateALBIngressController(_ context.Conte
 }
 
 // NewALBIngressControllerService returns an initialised service
-func NewALBIngressControllerService(api client.ALBIngressControllerAPI, store client.ALBIngressControllerStore) client.ALBIngressControllerService {
+func NewALBIngressControllerService(
+	api client.ALBIngressControllerAPI,
+	store client.ALBIngressControllerStore,
+	report client.ALBIngressControllerReport,
+) client.ALBIngressControllerService {
 	return &albIngressControllerService{
-		api:   api,
-		store: store,
+		api:    api,
+		store:  store,
+		report: report,
 	}
 }

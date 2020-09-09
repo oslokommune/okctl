@@ -36,3 +36,8 @@ type ExternalSecretsAPI interface {
 type ExternalSecretsStore interface {
 	SaveExternalSecrets(externalSecrets *ExternalSecrets) (*store.Report, error)
 }
+
+// ExternalSecretsReport is a report layer
+type ExternalSecretsReport interface {
+	ReportCreateExternalSecrets(secret *ExternalSecrets, report *store.Report) error
+}

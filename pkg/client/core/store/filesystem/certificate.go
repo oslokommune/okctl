@@ -45,6 +45,10 @@ func (s *certificateStore) SaveCertificate(c *api.Certificate) (*store.Report, e
 		return nil, fmt.Errorf("found no cluster for environment: %s", c.ID.Environment)
 	}
 
+	if cluster.Certificates == nil {
+		cluster.Certificates = map[string]string{}
+	}
+
 	cluster.Certificates[c.Domain] = c.CertificateARN
 
 	report, err := store.NewFileSystem(path.Join(s.paths.BaseDir, c.Domain), s.fs).

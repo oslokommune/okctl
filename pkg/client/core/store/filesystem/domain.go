@@ -49,6 +49,10 @@ func (s *domainStore) SaveHostedZone(d *client.HostedZone) (*store.Report, error
 		return nil, fmt.Errorf("failed to find cluster for env: %s", d.HostedZone.ID.Environment)
 	}
 
+	if cluster.HostedZone == nil {
+		cluster.HostedZone = map[string]*repository.HostedZone{}
+	}
+
 	cluster.HostedZone[d.HostedZone.Domain] = &repository.HostedZone{
 		IsCreated:   true,
 		IsDelegated: d.IsDelegated,

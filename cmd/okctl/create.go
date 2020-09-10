@@ -19,7 +19,7 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/client/core/report/console"
 
-	"github.com/oslokommune/okctl/pkg/config/repository"
+	"github.com/oslokommune/okctl/pkg/config/state"
 
 	"github.com/spf13/afero"
 
@@ -522,7 +522,7 @@ type cluster struct {
 	cidr      string
 	id        api.ID
 	c         *rest.HTTPClient
-	repoData  *repository.Data
+	repoData  *state.Repository
 	outputDir string
 	repoDir   string
 	fs        *afero.Afero
@@ -650,7 +650,7 @@ type hostedZone struct {
 	ctx       context.Context
 	out       io.Writer
 	spinner   *yacspin.Spinner
-	repoData  *repository.Data
+	repoData  *state.Repository
 	c         *rest.HTTPClient
 	outputDir string
 	repoDir   string
@@ -741,7 +741,7 @@ type githubClient struct {
 	spinner               *yacspin.Spinner
 	repoDir, organisation string
 	id                    api.ID
-	repoData              *repository.Data
+	repoData              *state.Repository
 	c                     *rest.HTTPClient
 	fs                    *afero.Afero
 	auth                  github2.Authenticator
@@ -801,7 +801,7 @@ type argocdSetup struct {
 	organisation  string
 	fs            *afero.Afero
 	c             *rest.HTTPClient
-	repoData      *repository.Data
+	repoData      *state.Repository
 }
 
 // nolint: funlen

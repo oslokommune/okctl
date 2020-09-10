@@ -6,7 +6,7 @@ import (
 
 	"github.com/theckman/yacspin"
 
-	"github.com/oslokommune/okctl/pkg/config/repository"
+	"github.com/oslokommune/okctl/pkg/config/state"
 
 	"github.com/oslokommune/okctl/pkg/ask"
 
@@ -19,7 +19,7 @@ type domainService struct {
 	out       io.Writer
 	store     client.DomainStore
 	report    client.DomainReport
-	repoState *repository.Data
+	repoState *state.Repository
 	ask       *ask.Ask
 	spinner   *yacspin.Spinner
 }
@@ -78,7 +78,7 @@ func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.C
 // NewDomainService returns an initialised service
 func NewDomainService(
 	out io.Writer,
-	repoState *repository.Data,
+	repoState *state.Repository,
 	ask *ask.Ask,
 	api client.DomainAPI,
 	store client.DomainStore,

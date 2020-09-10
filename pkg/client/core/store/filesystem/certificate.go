@@ -9,14 +9,14 @@ import (
 	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/config/repository"
+	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/spf13/afero"
 )
 
 type certificateStore struct {
 	paths     Paths
 	repoPaths Paths
-	repoState *repository.Data
+	repoState *state.Repository
 	fs        *afero.Afero
 }
 
@@ -65,7 +65,7 @@ func (s *certificateStore) SaveCertificate(c *api.Certificate) (*store.Report, e
 }
 
 // NewCertificateStore returns an initialised certificate store
-func NewCertificateStore(repoState *repository.Data, paths, repoPaths Paths, fs *afero.Afero) client.CertificateStore {
+func NewCertificateStore(repoState *state.Repository, paths, repoPaths Paths, fs *afero.Afero) client.CertificateStore {
 	return &certificateStore{
 		paths:     paths,
 		repoPaths: repoPaths,

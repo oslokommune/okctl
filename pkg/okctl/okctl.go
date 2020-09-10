@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/config/state"
+
 	"github.com/oslokommune/okctl/pkg/api/core/store/noop"
 
 	"github.com/oslokommune/okctl/pkg/credentials/github"
@@ -27,7 +29,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/cloud"
 	"github.com/oslokommune/okctl/pkg/config"
-	"github.com/oslokommune/okctl/pkg/config/user"
 	"github.com/oslokommune/okctl/pkg/credentials"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	"github.com/oslokommune/okctl/pkg/credentials/aws/scrape"
@@ -212,12 +213,12 @@ func New() *Okctl {
 }
 
 // Binaries returns the application binaries
-func (o *Okctl) Binaries() []user.Binary {
+func (o *Okctl) Binaries() []state.Binary {
 	return o.UserData.Binaries
 }
 
 // Host returns the host information
-func (o *Okctl) Host() user.Host {
+func (o *Okctl) Host() state.Host {
 	return o.UserData.Host
 }
 

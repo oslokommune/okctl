@@ -6,8 +6,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/ask"
+	"github.com/oslokommune/okctl/pkg/binaries"
+
+	"github.com/oslokommune/okctl/pkg/config/state"
+
 	"github.com/oslokommune/okctl/pkg/config"
-	"github.com/oslokommune/okctl/pkg/config/user"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -56,10 +60,14 @@ func CreateOnUserDataNotFound() DataNotFoundFn {
 			return err
 		}
 
-		data, err := user.New().Survey()
+		data := state.NewUser()
+
+		username, err := ask.New().Username()
 		if err != nil {
 			return errors.Wrap(err, "failed to get interactive user data")
 		}
+
+		data.User.Username = username
 
 		c.UserData = data
 
@@ -91,7 +99,7 @@ func UserDataFromFlagsEnvConfigDefaults(cmd *cobra.Command, notFoundFn DataNotFo
 }
 
 func loadDefaultUserData(_ *config.Config, v *viper.Viper) error {
-	b, err := yaml.Marshal(user.New())
+	b, err := yaml.Marshal(state.NewUser())
 	if err != nil {
 		return err
 	}
@@ -158,9 +166,9 @@ func loadFlagsUserData(cmd *cobra.Command) LoaderFn {
 }
 
 func updateKnownBinaries(cfg *config.Config) {
-	candidates := user.KnownBinaries()
+	candidates := binaries.KnownBinaries()
 
-	var update []user.Binary
+	var update []state.Binary
 
 	for _, candidate := range candidates {
 		found := false
@@ -184,7 +192,7 @@ func buildUserDataLoader(loaders ...LoaderFn) config.DataLoaderFn {
 	return func(cfg *config.Config) error {
 		var err error
 
-		cfg.UserData = &user.Data{}
+		cfg.UserData = &state.User{}
 
 		v := viper.New()
 		v.SetFs(cfg.FileSystem.Fs)

@@ -3,8 +3,10 @@ package load
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/ask"
+
 	"github.com/oslokommune/okctl/pkg/config"
-	"github.com/oslokommune/okctl/pkg/config/repository"
+	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -40,15 +42,21 @@ func CreateOnRepoDataNotFound() DataNotFoundFn {
 			return err
 		}
 
-		err = PromptContinue(fmt.Sprintf("Repository configuration will be written to: %s. Continue?", repoDataPath), "user aborted configuration")
+		err = PromptContinue(fmt.Sprintf("GithubRepository configuration will be written to: %s. Continue?", repoDataPath), "user aborted configuration")
 		if err != nil {
 			return err
 		}
 
-		data, err := repository.New().Survey()
+		data := state.NewRepository()
+
+		cfg, err := ask.New().RepositoryConfig()
 		if err != nil {
 			return err
 		}
+
+		data.Name = cfg.Name
+		data.Region = cfg.Region
+		data.OutputDir = cfg.BaseDir
 
 		c.RepoData = data
 
@@ -77,7 +85,7 @@ func buildRepoDataLoader(notFoundFn DataNotFoundFn, viperCfg func(v *viper.Viper
 			return err
 		}
 
-		cfg.RepoData = &repository.Data{}
+		cfg.RepoData = &state.Repository{}
 
 		v := viper.New()
 		v.SetFs(cfg.FileSystem.Fs)

@@ -8,11 +8,11 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
-	"github.com/oslokommune/okctl/pkg/config/repository"
+	"github.com/oslokommune/okctl/pkg/config/state"
 )
 
 type githubStore struct {
-	repoState *repository.Data
+	repoState *state.Repository
 	repoPaths Paths
 	fs        *afero.Afero
 }
@@ -25,22 +25,22 @@ func (s githubStore) SaveGithubInfrastructureRepository(r *client.GithubReposito
 
 	for _, repo := range cluster.Github.Repositories {
 		for _, t := range repo.Types {
-			if t == repository.TypeInfrastructure && repo.FullName == r.FullName {
+			if t == state.TypeInfrastructure && repo.FullName == r.FullName {
 				return nil, fmt.Errorf("cluster already has an infrastructure repository: %s", repo.FullName)
 			}
 		}
 	}
 
-	local := &repository.Repository{
+	local := &state.GithubRepository{
 		Name:     r.Repository,
 		FullName: r.FullName,
-		Types:    []string{repository.TypeInfrastructure},
+		Types:    []string{state.TypeInfrastructure},
 		GitURL:   r.GitURL,
-		DeployKey: &repository.DeployKey{
+		DeployKey: &state.DeployKey{
 			ID:        r.DeployKey.Identifier,
 			Title:     r.DeployKey.Title,
 			PublicKey: r.DeployKey.PublicKey,
-			PrivateKeySecret: &repository.PrivateKeySecret{
+			PrivateKeySecret: &state.PrivateKeySecret{
 				Name:    r.DeployKey.PrivateKeySecret.Name,
 				Path:    r.DeployKey.PrivateKeySecret.Path,
 				Version: r.DeployKey.PrivateKeySecret.Version,
@@ -49,7 +49,7 @@ func (s githubStore) SaveGithubInfrastructureRepository(r *client.GithubReposito
 	}
 
 	if cluster.Github.Repositories == nil {
-		cluster.Github.Repositories = map[string]*repository.Repository{}
+		cluster.Github.Repositories = map[string]*state.GithubRepository{}
 	}
 
 	cluster.Github.Repositories[local.FullName] = local
@@ -72,7 +72,7 @@ func (s githubStore) GetGithubInfrastructureRepository(id api.ID) (*client.Githu
 
 	for _, repo := range cluster.Github.Repositories {
 		for _, t := range repo.Types {
-			if t == repository.TypeInfrastructure {
+			if t == state.TypeInfrastructure {
 				return &client.GithubRepository{
 					ID:           id,
 					Organisation: cluster.Github.Organisation,
@@ -106,13 +106,13 @@ func (s githubStore) SaveGithubOauthApp(app *client.GithubOauthApp) (*store.Repo
 		return nil, fmt.Errorf("no cluster found for environment: %s", app.ID.Environment)
 	}
 
-	local := &repository.OauthApp{
+	local := &state.GithubOauthApp{
 		Team:        app.Team.Name,
 		Name:        app.Name,
 		SiteURL:     app.SiteURL,
 		CallbackURL: app.CallbackURL,
 		ClientID:    app.ClientID,
-		ClientSecret: &repository.ClientSecret{
+		ClientSecret: &state.ClientSecret{
 			Name:    app.ClientSecret.Name,
 			Path:    app.ClientSecret.Path,
 			Version: app.ClientSecret.Version,
@@ -120,7 +120,7 @@ func (s githubStore) SaveGithubOauthApp(app *client.GithubOauthApp) (*store.Repo
 	}
 
 	if cluster.Github.OauthApp == nil {
-		cluster.Github.OauthApp = map[string]*repository.OauthApp{}
+		cluster.Github.OauthApp = map[string]*state.GithubOauthApp{}
 	}
 
 	cluster.Github.OauthApp[app.Name] = local
@@ -166,7 +166,7 @@ func (s githubStore) GetGithubOauthApp(appName string, id api.ID) (*client.Githu
 }
 
 // NewGithubStore returns an initialised store
-func NewGithubStore(repoPaths Paths, repoState *repository.Data, fs *afero.Afero) client.GithubStore {
+func NewGithubStore(repoPaths Paths, repoState *state.Repository, fs *afero.Afero) client.GithubStore {
 	return &githubStore{
 		repoState: repoState,
 		repoPaths: repoPaths,

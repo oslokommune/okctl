@@ -7,9 +7,10 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/config/state"
+
 	"github.com/jarcoal/httpmock"
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
-	"github.com/oslokommune/okctl/pkg/config/user"
 	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/stretchr/testify/assert"
 )
@@ -75,22 +76,22 @@ func readBytesFromFile(t *testing.T, file string) []byte {
 
 //nolint: funlen
 func TestProcessor(t *testing.T) {
-	host := user.Host{
+	host := state.Host{
 		Os:   "darwin",
 		Arch: "amd64",
 	}
 
-	binaries := []user.Binary{
+	binaries := []state.Binary{
 		{
 			Name:       "myBinary",
 			Version:    "v0.1.0",
 			BufferSize: "10mb",
 			URLPattern: "https://localhost/myFile.tar.gz",
-			Archive: user.Archive{
+			Archive: state.Archive{
 				Type:   ".tar.gz",
 				Target: "myFile",
 			},
-			Checksums: []user.Checksum{
+			Checksums: []state.Checksum{
 				{
 					Os:     "darwin",
 					Arch:   "amd64",

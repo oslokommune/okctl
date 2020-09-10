@@ -9,7 +9,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/config/repository"
+	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/spf13/afero"
 )
 
@@ -17,25 +17,25 @@ type clusterStore struct {
 	repoStatePaths Paths
 	clusterConfig  Paths
 	fs             *afero.Afero
-	repoState      *repository.Data
+	repoState      *state.Repository
 }
 
 func (s *clusterStore) SaveCluster(c *api.Cluster) (*store.Report, error) {
 	if s.repoState.Clusters == nil {
-		s.repoState.Clusters = map[string]*repository.Cluster{}
+		s.repoState.Clusters = map[string]*state.Cluster{}
 	}
 
-	s.repoState.Clusters[c.ID.Environment] = &repository.Cluster{
+	s.repoState.Clusters[c.ID.Environment] = &state.Cluster{
 		Name:         c.ID.ClusterName,
 		Environment:  c.ID.Environment,
 		AWSAccountID: c.ID.AWSAccountID,
-		VPC: &repository.VPC{
+		VPC: &state.VPC{
 			VpcID: c.VpcID,
 			CIDR:  c.Cidr,
-			Subnets: map[string][]*repository.VPCSubnet{
-				repository.SubnetTypePublic: func() (subnets []*repository.VPCSubnet) {
+			Subnets: map[string][]*state.VPCSubnet{
+				state.SubnetTypePublic: func() (subnets []*state.VPCSubnet) {
 					for _, s := range c.VpcPublicSubnets {
-						subnets = append(subnets, &repository.VPCSubnet{
+						subnets = append(subnets, &state.VPCSubnet{
 							CIDR:             s.Cidr,
 							AvailabilityZone: s.AvailabilityZone,
 						})
@@ -43,9 +43,9 @@ func (s *clusterStore) SaveCluster(c *api.Cluster) (*store.Report, error) {
 
 					return subnets
 				}(),
-				repository.SubnetTypePrivate: func() (subnets []*repository.VPCSubnet) {
+				state.SubnetTypePrivate: func() (subnets []*state.VPCSubnet) {
 					for _, s := range c.VpcPrivateSubnets {
-						subnets = append(subnets, &repository.VPCSubnet{
+						subnets = append(subnets, &state.VPCSubnet{
 							CIDR:             s.Cidr,
 							AvailabilityZone: s.AvailabilityZone,
 						})
@@ -93,7 +93,7 @@ func (s *clusterStore) GetCluster(id api.ID) (*api.Cluster, error) {
 			Cidr:  c.VPC.CIDR,
 			VpcID: c.VPC.VpcID,
 			VpcPrivateSubnets: func() (subnets []api.VpcSubnet) {
-				for _, sub := range c.VPC.Subnets[repository.SubnetTypePrivate] {
+				for _, sub := range c.VPC.Subnets[state.SubnetTypePrivate] {
 					subnets = append(subnets, api.VpcSubnet{
 						Cidr:             sub.CIDR,
 						AvailabilityZone: sub.AvailabilityZone,
@@ -103,7 +103,7 @@ func (s *clusterStore) GetCluster(id api.ID) (*api.Cluster, error) {
 				return subnets
 			}(),
 			VpcPublicSubnets: func() (subnets []api.VpcSubnet) {
-				for _, sub := range c.VPC.Subnets[repository.SubnetTypePublic] {
+				for _, sub := range c.VPC.Subnets[state.SubnetTypePublic] {
 					subnets = append(subnets, api.VpcSubnet{
 						Cidr:             sub.CIDR,
 						AvailabilityZone: sub.AvailabilityZone,
@@ -120,7 +120,7 @@ func (s *clusterStore) GetCluster(id api.ID) (*api.Cluster, error) {
 }
 
 // NewClusterStore returns a store for clusterStore
-func NewClusterStore(repoStatePaths, clusterConfig Paths, fs *afero.Afero, repoState *repository.Data) client.ClusterStore {
+func NewClusterStore(repoStatePaths, clusterConfig Paths, fs *afero.Afero, repoState *state.Repository) client.ClusterStore {
 	return &clusterStore{
 		repoStatePaths: repoStatePaths,
 		clusterConfig:  clusterConfig,

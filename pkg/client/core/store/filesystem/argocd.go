@@ -3,7 +3,7 @@ package filesystem
 import (
 	"fmt"
 
-	"github.com/oslokommune/okctl/pkg/config/repository"
+	"github.com/oslokommune/okctl/pkg/config/state"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -21,7 +21,7 @@ type ArgoCD struct {
 type argoCDStore struct {
 	paths     Paths
 	helmPaths Paths
-	repoState *repository.Data
+	repoState *state.Repository
 	repoPaths Paths
 	cert      client.CertificateStore
 	manifest  client.ManifestStore
@@ -46,10 +46,10 @@ func (s *argoCDStore) SaveArgoCD(cd *client.ArgoCD) ([]*store.Report, error) {
 		return nil, fmt.Errorf("failed to find cluster: %s", cd.ID.ClusterName)
 	}
 
-	cluster.ArgoCD = &repository.ArgoCD{
+	cluster.ArgoCD = &state.ArgoCD{
 		SiteURL: cd.ArgoURL,
 		Domain:  cd.ArgoDomain,
-		SecretKey: &repository.SecretKeySecret{
+		SecretKey: &state.SecretKeySecret{
 			Name:    cd.SecretKey.Name,
 			Path:    cd.SecretKey.Path,
 			Version: cd.SecretKey.Version,
@@ -98,7 +98,7 @@ func (s *argoCDStore) SaveArgoCD(cd *client.ArgoCD) ([]*store.Report, error) {
 }
 
 // NewArgoCDStore returns an initialised store
-func NewArgoCDStore(helmPaths, paths Paths, repoState *repository.Data, repoPaths Paths, param client.ParameterStore, cert client.CertificateStore, manifest client.ManifestStore, fs *afero.Afero) client.ArgoCDStore { // nolint: lll
+func NewArgoCDStore(helmPaths, paths Paths, repoState *state.Repository, repoPaths Paths, param client.ParameterStore, cert client.CertificateStore, manifest client.ManifestStore, fs *afero.Afero) client.ArgoCDStore { // nolint: lll
 	return &argoCDStore{
 		paths:     paths,
 		helmPaths: helmPaths,

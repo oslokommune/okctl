@@ -35,6 +35,11 @@ type DomainStore interface {
 	GetPrimaryHostedZone(id api.ID) (*HostedZone, error)
 }
 
+// DomainState implements the in-memory state handling
+type DomainState interface {
+	SaveHostedZone(zone *HostedZone) error
+}
+
 // DomainReport implements the report layer
 type DomainReport interface {
 	ReportCreatePrimaryHostedZone(zone *HostedZone, report *store.Report) error

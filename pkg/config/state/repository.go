@@ -1,12 +1,8 @@
-// Package repository knows how to interact with repository data
-package repository
+package state
 
 import (
-	"github.com/AlecAivazis/survey/v2"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
-	"github.com/pkg/errors"
-	"sigs.k8s.io/yaml"
 )
 
 const (
@@ -21,9 +17,9 @@ const (
 	SubnetTypePrivate = "private"
 )
 
-// Data stores the configured state of a repository
+// Repository stores the configured state of a repository
 // as used by okctl
-type Data struct {
+type Repository struct {
 	Name      string
 	Region    string
 	OutputDir string
@@ -31,7 +27,7 @@ type Data struct {
 }
 
 // ClusterForEnv returns the cluster for the given environment
-func (d *Data) ClusterForEnv(env string) *Cluster {
+func (d *Repository) ClusterForEnv(env string) *Cluster {
 	if c, ok := d.Clusters[env]; ok {
 		return c
 	}
@@ -40,7 +36,7 @@ func (d *Data) ClusterForEnv(env string) *Cluster {
 }
 
 // Validate the provided data
-func (d *Data) Validate() error {
+func (d *Repository) Validate() error {
 	return validation.ValidateStruct(d,
 		validation.Field(&d.Name,
 			validation.Required,
@@ -127,12 +123,12 @@ type SecretKeySecret struct {
 // clusters configuration towards github
 type Github struct {
 	Organisation string
-	OauthApp     map[string]*OauthApp
-	Repositories map[string]*Repository
+	OauthApp     map[string]*GithubOauthApp
+	Repositories map[string]*GithubRepository
 }
 
-// Repository contains github repository data
-type Repository struct {
+// GithubRepository contains github repository data
+type GithubRepository struct {
 	Name      string
 	FullName  string
 	Types     []string
@@ -140,8 +136,8 @@ type Repository struct {
 	DeployKey *DeployKey
 }
 
-// OauthApp contains github oauth application data
-type OauthApp struct {
+// GithubOauthApp contains github oauth application data
+type GithubOauthApp struct {
 	Team         string
 	Name         string
 	SiteURL      string
@@ -195,64 +191,12 @@ func (h *HostedZone) Validate() error {
 	)
 }
 
-// New returns repository data with defaults set
-func New() *Data {
-	return &Data{
+// NewUser returns repository data with defaults set
+func NewRepository() *Repository {
+	return &Repository{
 		Name:      "",
 		Region:    v1alpha1.RegionEuWest1,
 		OutputDir: "infrastructure",
 		Clusters:  map[string]*Cluster{},
 	}
-}
-
-// Survey starts an interactive survey that queries
-// the user for input
-func (d *Data) Survey() (*Data, error) {
-	qs := []*survey.Question{
-		{
-			Name: "name",
-			Prompt: &survey.Input{
-				Message: "Name:",
-				Help:    "A descriptive name, e.g., team or project, used among other things to prefix AWS resources",
-			},
-		},
-		{
-			Name: "region",
-			Prompt: &survey.Select{
-				Message: "Choose AWS region:",
-				Options: v1alpha1.SupportedRegions(),
-				Help:    "The AWS region resources will be created in",
-			},
-		},
-		{
-			Name: "basedir",
-			Prompt: &survey.Input{
-				Message: "Output directory:",
-				Default: "infrastructure",
-				Help:    "Path in the repository where generated files are stored",
-			},
-		},
-	}
-
-	answers := struct {
-		Name    string
-		Region  string
-		BaseDir string
-	}{}
-
-	err := survey.Ask(qs, &answers)
-	if err != nil {
-		return nil, err
-	}
-
-	d.Name = answers.Name
-	d.Region = answers.Region
-	d.OutputDir = answers.BaseDir
-
-	return d, errors.Wrap(d.Validate(), "failed to validate repository data")
-}
-
-// YAML returns the state of the data object in YAML
-func (d *Data) YAML() ([]byte, error) {
-	return yaml.Marshal(d)
 }

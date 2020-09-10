@@ -49,7 +49,7 @@ func TestValidate(t *testing.T) {
 		expect      interface{}
 	}{
 		{
-			name: "Valid domain",
+			name: "Validate domain",
 			fqdn: "test.oslo.systems",
 		},
 		{
@@ -59,7 +59,7 @@ func TestValidate(t *testing.T) {
 			expect:      "'not a domain.oslo.systems' is not a valid domain",
 		},
 		{
-			name:        "Valid domain, doesn't end with oslo.systems",
+			name:        "Validate domain, doesn't end with oslo.systems",
 			fqdn:        "some.other.domain.com",
 			expectError: true,
 			expect:      "'some.other.domain.com' must end with .oslo.systems",

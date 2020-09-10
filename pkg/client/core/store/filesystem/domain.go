@@ -9,14 +9,14 @@ import (
 	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/config/repository"
+	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/spf13/afero"
 )
 
 type domainStore struct {
 	paths     Paths
 	repoPaths Paths
-	repoState *repository.Data
+	repoState *state.Repository
 	fs        *afero.Afero
 }
 
@@ -50,10 +50,10 @@ func (s *domainStore) SaveHostedZone(d *client.HostedZone) (*store.Report, error
 	}
 
 	if cluster.HostedZone == nil {
-		cluster.HostedZone = map[string]*repository.HostedZone{}
+		cluster.HostedZone = map[string]*state.HostedZone{}
 	}
 
-	cluster.HostedZone[d.HostedZone.Domain] = &repository.HostedZone{
+	cluster.HostedZone[d.HostedZone.Domain] = &state.HostedZone{
 		IsCreated:   true,
 		IsDelegated: d.IsDelegated,
 		Primary:     d.Primary,
@@ -111,7 +111,7 @@ func (s *domainStore) GetPrimaryHostedZone(id api.ID) (*client.HostedZone, error
 }
 
 // NewDomainStore returns an initialised domain store
-func NewDomainStore(repoState *repository.Data, paths, repoPaths Paths, fs *afero.Afero) client.DomainStore {
+func NewDomainStore(repoState *state.Repository, paths, repoPaths Paths, fs *afero.Afero) client.DomainStore {
 	return &domainStore{
 		paths:     paths,
 		repoPaths: repoPaths,

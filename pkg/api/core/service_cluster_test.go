@@ -20,7 +20,7 @@ func TestClusterCreateCluster(t *testing.T) {
 		expectError bool
 	}{
 		{
-			name: "Valid request",
+			name: "Validate request",
 			service: core.NewClusterService(
 				mock.NewGoodClusterStore(),
 				mock.NewGoodClusterExe(),

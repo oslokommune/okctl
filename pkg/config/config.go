@@ -10,11 +10,12 @@ import (
 	"path/filepath"
 	"time"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/go-git/go-git/v5"
 	"github.com/mitchellh/go-homedir"
 	"github.com/oslokommune/okctl/pkg/api/core"
-	"github.com/oslokommune/okctl/pkg/config/repository"
-	"github.com/oslokommune/okctl/pkg/config/user"
+	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/context"
 	"github.com/oslokommune/okctl/pkg/rotatefilehook"
 	"github.com/oslokommune/okctl/pkg/storage"
@@ -147,10 +148,10 @@ type Config struct {
 	*context.Context
 
 	UserDataLoader DataLoaderFn
-	UserData       *user.Data
+	UserData       *state.User
 
 	RepoDataLoader DataLoaderFn
-	RepoData       *repository.Data
+	RepoData       *state.Repository
 
 	Destination string
 	ServerURL   string
@@ -260,7 +261,7 @@ func (c *Config) WriteUserData(b []byte) error {
 // WriteCurrentUserData writes the current app data state
 // to disk
 func (c *Config) WriteCurrentUserData() error {
-	b, err := c.UserData.YAML()
+	b, err := yaml.Marshal(c.UserData)
 	if err != nil {
 		return err
 	}
@@ -311,7 +312,7 @@ func (c *Config) GetRepoDataPath() (string, error) {
 
 // WriteCurrentRepoData will write current repo state to disk
 func (c *Config) WriteCurrentRepoData() error {
-	data, err := c.RepoData.YAML()
+	data, err := yaml.Marshal(c.RepoData)
 	if err != nil {
 		return err
 	}

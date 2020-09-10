@@ -16,7 +16,7 @@ func TestNew(t *testing.T) {
 		cert   *certificate.Certificate
 	}{
 		{
-			name:   "Valid output",
+			name:   "Validate output",
 			golden: "certificate",
 			cert:   certificate.New("test.oslo.systems.", "AZ12345678"),
 		},

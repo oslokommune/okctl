@@ -23,7 +23,7 @@ func TestNew(t *testing.T) {
 		resource cloudformation.Resource
 	}{
 		{
-			name:   "Valid output",
+			name:   "Validate output",
 			golden: "managed-policy.json",
 			resource: managedpolicy.New(
 				"MyPolicy",

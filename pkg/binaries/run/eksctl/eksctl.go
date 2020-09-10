@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/config/state"
+
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/binaries/run"
@@ -250,4 +252,34 @@ func (e *Eksctl) HasCluster(cfg *v1alpha1.ClusterConfig) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// KnownBinaries returns the known binaries
+func KnownBinaries() []state.Binary {
+	return []state.Binary{
+		{
+			Name:       "eksctl",
+			Version:    "0.25.0",
+			BufferSize: "100mb",
+			URLPattern: "https://github.com/weaveworks/eksctl/releases/download/#{ver}/eksctl_#{os}_#{arch}.tar.gz",
+			Archive: state.Archive{
+				Type:   ".tar.gz",
+				Target: "eksctl",
+			},
+			Checksums: []state.Checksum{
+				{
+					Os:     "darwin",
+					Arch:   "amd64",
+					Type:   "sha256",
+					Digest: "e232f48e4995f711620ea34c09f582b097e5b006f45fbe82a11fc8955636c9c4",
+				},
+				{
+					Os:     "linux",
+					Arch:   "amd64",
+					Type:   "sha256",
+					Digest: "e94e4ec335c036d8f511ea214d5a55dfd097e2053747d7d04d6db49fff107531",
+				},
+			},
+		},
+	}
 }

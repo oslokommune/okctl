@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/domain"
 
 	"github.com/miekg/dns"
@@ -431,4 +433,88 @@ func (a *Ask) askDomain(defaultDomain string) (string, error) {
 	}
 
 	return d, nil
+}
+
+// Username asks the user for their username
+func (a *Ask) Username() (string, error) {
+	username := ""
+
+	prompt := &survey.Input{
+		Message: "Your username:",
+		Help:    "This is your AD user, e.g., yyyXXXXXX (y = letter, x = digit). We store it in the application configuration, so you don't have to enter it each time.",
+	}
+
+	if a.spinner != nil {
+		err := a.spinner.Pause()
+		if err != nil {
+			return "", fmt.Errorf("stopping spinner: %w", err)
+		}
+
+		defer func() {
+			_ = a.spinner.Unpause()
+		}()
+	}
+
+	err := survey.AskOne(prompt, &username, survey.WithStdio(a.In, a.Out, a.Err))
+	if err != nil {
+		return "", err
+	}
+
+	return username, nil
+}
+
+// RepositoryConfig contains the user provided inputs
+type RepositoryConfig struct {
+	Name    string
+	Region  string
+	BaseDir string
+}
+
+// RepositoryConfig asks the user for repo configuration
+func (a *Ask) RepositoryConfig() (*RepositoryConfig, error) {
+	qs := []*survey.Question{
+		{
+			Name: "name",
+			Prompt: &survey.Input{
+				Message: "Project or product name:",
+				Help:    "A descriptive name, e.g., team or project, used among other things to prefix AWS resources",
+			},
+		},
+		{
+			Name: "region",
+			Prompt: &survey.Select{
+				Message: "Choose AWS region:",
+				Options: v1alpha1.SupportedRegions(),
+				Help:    "The AWS region to create resources in",
+			},
+		},
+		{
+			Name: "basedir",
+			Prompt: &survey.Input{
+				Message: "Output directory:",
+				Default: "infrastructure",
+				Help:    "Directory in the repository to store the data in",
+			},
+		},
+	}
+
+	answers := &RepositoryConfig{}
+
+	if a.spinner != nil {
+		err := a.spinner.Pause()
+		if err != nil {
+			return nil, fmt.Errorf("stopping spinner: %w", err)
+		}
+
+		defer func() {
+			_ = a.spinner.Unpause()
+		}()
+	}
+
+	err := survey.Ask(qs, &answers)
+	if err != nil {
+		return nil, err
+	}
+
+	return answers, nil
 }

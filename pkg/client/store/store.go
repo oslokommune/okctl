@@ -82,7 +82,7 @@ type AddGetBytes struct {
 
 // GetBytesCallback allows the receiver to process the
 // data immediately without having to go via the report
-type GetBytesCallback func(name string, data []byte) error
+type GetBytesCallback func(name string, data []byte)
 
 // ProcessGetStruct defines the function interface that allows for inline
 // processing of a recently retrieved struct.

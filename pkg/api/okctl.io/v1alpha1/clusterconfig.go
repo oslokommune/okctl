@@ -1,6 +1,8 @@
-package api
+package v1alpha1
 
 import (
+	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 )
@@ -23,12 +25,25 @@ type ClusterConfig struct {
 	VPC             *ClusterVPC      `json:"vpc,omitempty"`
 	FargateProfiles []FargateProfile `json:"fargateProfiles,omitempty"`
 	NodeGroups      []NodeGroup      `json:"nodeGroups,omitempty"`
+	Status          *ClusterStatus   `json:"status,omitempty"`
+}
+
+// ClusterStatus hold read-only attributes of a cluster
+type ClusterStatus struct {
+	Endpoint                 string `json:"endpoint,omitempty"`
+	CertificateAuthorityData []byte `json:"certificateAuthorityData,omitempty"`
+	ARN                      string `json:"arn,omitempty"`
+	StackName                string `json:"stackName,omitempty"`
 }
 
 // ClusterMeta comes from eksctl and maps up what we need
 type ClusterMeta struct {
 	Name   string `json:"name"`
 	Region string `json:"region"`
+}
+
+func (c *ClusterMeta) String() string {
+	return fmt.Sprintf("%s.%s.eksctl.io", c.Name, c.Region)
 }
 
 // ClusterIAM comes from eksctl and maps up what we need

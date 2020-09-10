@@ -21,8 +21,8 @@ type clusterStore struct {
 }
 
 func (s *clusterStore) SaveCluster(c *api.Cluster) (*store.Report, error) {
-	if _, ok := s.repoState.Clusters[c.ID.Environment]; ok {
-		return nil, nil
+	if s.repoState.Clusters == nil {
+		s.repoState.Clusters = map[string]*repository.Cluster{}
 	}
 
 	s.repoState.Clusters[c.ID.Environment] = &repository.Cluster{

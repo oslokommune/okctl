@@ -4,6 +4,8 @@ package clusterconfig
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,7 +24,7 @@ type Args struct {
 }
 
 // New initialises the creation of a new cluster config
-func New(a *Args) (*api.ClusterConfig, error) {
+func New(a *Args) (*v1alpha1.ClusterConfig, error) {
 	err := a.validate()
 	if err != nil {
 		return nil, err
@@ -45,32 +47,32 @@ func (a *Args) validate() error {
 
 // New creates a cluster config
 // nolint: funlen
-func (a *Args) build() *api.ClusterConfig {
-	cfg := &api.ClusterConfig{
+func (a *Args) build() *v1alpha1.ClusterConfig {
+	cfg := &v1alpha1.ClusterConfig{
 		TypeMeta: TypeMeta(),
-		Metadata: api.ClusterMeta{
+		Metadata: v1alpha1.ClusterMeta{
 			Name:   a.ClusterName,
 			Region: a.Region,
 		},
-		IAM: api.ClusterIAM{
+		IAM: v1alpha1.ClusterIAM{
 			ServiceRolePermissionsBoundary:             a.PermissionsBoundaryARN,
 			FargatePodExecutionRolePermissionsBoundary: a.PermissionsBoundaryARN,
 			WithOIDC: true,
 		},
-		FargateProfiles: []api.FargateProfile{
+		FargateProfiles: []v1alpha1.FargateProfile{
 			{
 				Name: "fp-default",
-				Selectors: []api.FargateProfileSelector{
+				Selectors: []v1alpha1.FargateProfileSelector{
 					{Namespace: "default"},
 					{Namespace: "kube-system"},
 				},
 			},
 		},
-		NodeGroups: []api.NodeGroup{
+		NodeGroups: []v1alpha1.NodeGroup{
 			{
 				Name:         "ng-generic",
 				InstanceType: "m5.large",
-				ScalingConfig: api.ScalingConfig{
+				ScalingConfig: v1alpha1.ScalingConfig{
 					DesiredCapacity: 2, //nolint: gomnd
 					MinSize:         1,
 					MaxSize:         10, //nolint: gomnd
@@ -83,34 +85,34 @@ func (a *Args) build() *api.ClusterConfig {
 					fmt.Sprintf("k8s.io/cluster-autoscaler/%s", a.ClusterName): "owned",
 				},
 				PrivateNetworking: true,
-				IAM: api.NodeGroupIAM{
+				IAM: v1alpha1.NodeGroupIAM{
 					InstanceRolePermissionsBoundary: a.PermissionsBoundaryARN,
 				},
 			},
 		},
-		VPC: &api.ClusterVPC{
+		VPC: &v1alpha1.ClusterVPC{
 			ID:   a.VpcID,
 			CIDR: a.VpcCidr,
-			ClusterEndpoints: api.ClusterEndpoints{
+			ClusterEndpoints: v1alpha1.ClusterEndpoints{
 				PrivateAccess: true,
 				PublicAccess:  true,
 			},
-			Subnets: api.ClusterSubnets{
-				Private: map[string]api.ClusterNetwork{},
-				Public:  map[string]api.ClusterNetwork{},
+			Subnets: v1alpha1.ClusterSubnets{
+				Private: map[string]v1alpha1.ClusterNetwork{},
+				Public:  map[string]v1alpha1.ClusterNetwork{},
 			},
 		},
 	}
 
 	for _, p := range a.PublicSubnets {
-		cfg.VPC.Subnets.Public[p.AvailabilityZone] = api.ClusterNetwork{
+		cfg.VPC.Subnets.Public[p.AvailabilityZone] = v1alpha1.ClusterNetwork{
 			ID:   p.ID,
 			CIDR: p.Cidr,
 		}
 	}
 
 	for _, p := range a.PrivateSubnets {
-		cfg.VPC.Subnets.Private[p.AvailabilityZone] = api.ClusterNetwork{
+		cfg.VPC.Subnets.Private[p.AvailabilityZone] = v1alpha1.ClusterNetwork{
 			ID:   p.ID,
 			CIDR: p.Cidr,
 		}
@@ -122,8 +124,8 @@ func (a *Args) build() *api.ClusterConfig {
 // TypeMeta returns the defaults
 func TypeMeta() metav1.TypeMeta {
 	return metav1.TypeMeta{
-		Kind:       api.ClusterConfigKind,
-		APIVersion: api.ClusterConfigAPIVersion,
+		Kind:       v1alpha1.ClusterConfigKind,
+		APIVersion: v1alpha1.ClusterConfigAPIVersion,
 	}
 }
 
@@ -141,7 +143,7 @@ type ServiceAccountArgs struct {
 
 // NewServiceAccount returns an initialised cluster config for creating a service account
 // with an associated IAM managed policy
-func NewServiceAccount(a *ServiceAccountArgs) (*api.ClusterConfig, error) {
+func NewServiceAccount(a *ServiceAccountArgs) (*v1alpha1.ClusterConfig, error) {
 	err := a.validate()
 	if err != nil {
 		return nil, err
@@ -162,18 +164,18 @@ func (a *ServiceAccountArgs) validate() error {
 	)
 }
 
-func (a *ServiceAccountArgs) build() *api.ClusterConfig {
-	return &api.ClusterConfig{
+func (a *ServiceAccountArgs) build() *v1alpha1.ClusterConfig {
+	return &v1alpha1.ClusterConfig{
 		TypeMeta: TypeMeta(),
-		Metadata: api.ClusterMeta{
+		Metadata: v1alpha1.ClusterMeta{
 			Name:   a.ClusterName,
 			Region: a.Region,
 		},
-		IAM: api.ClusterIAM{
+		IAM: v1alpha1.ClusterIAM{
 			WithOIDC: true,
-			ServiceAccounts: []*api.ClusterIAMServiceAccount{
+			ServiceAccounts: []*v1alpha1.ClusterIAMServiceAccount{
 				{
-					ClusterIAMMeta: api.ClusterIAMMeta{
+					ClusterIAMMeta: v1alpha1.ClusterIAMMeta{
 						Name:      a.Name,
 						Namespace: a.Namespace,
 						Labels:    a.Labels,
@@ -190,7 +192,7 @@ func (a *ServiceAccountArgs) build() *api.ClusterConfig {
 
 // NewExternalSecretsServiceAccount returns an initialised configuration for
 // creating an external secrets service account
-func NewExternalSecretsServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*api.ClusterConfig, error) {
+func NewExternalSecretsServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha1.ClusterConfig, error) {
 	return NewServiceAccount(&ServiceAccountArgs{
 		ClusterName: clusterName,
 		Labels: map[string]string{
@@ -206,7 +208,7 @@ func NewExternalSecretsServiceAccount(clusterName, region, policyArn, permission
 
 // NewAlbIngressControllerServiceAccount returns an initialised configuration
 // for creating an aws-alb-ingress-controller service account
-func NewAlbIngressControllerServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*api.ClusterConfig, error) {
+func NewAlbIngressControllerServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha1.ClusterConfig, error) {
 	return NewServiceAccount(&ServiceAccountArgs{
 		ClusterName: clusterName,
 		Labels: map[string]string{
@@ -222,7 +224,7 @@ func NewAlbIngressControllerServiceAccount(clusterName, region, policyArn, permi
 
 // NewExternalDNSServiceAccount returns an initialised configuration
 // for creating an external-dns service account
-func NewExternalDNSServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*api.ClusterConfig, error) {
+func NewExternalDNSServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha1.ClusterConfig, error) {
 	return NewServiceAccount(&ServiceAccountArgs{
 		ClusterName: clusterName,
 		Labels: map[string]string{

@@ -4,6 +4,8 @@ package run
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/binaries"
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
@@ -18,7 +20,7 @@ type serviceAccountRun struct {
 	debug              bool
 }
 
-func (r *serviceAccountRun) CreateServiceAccount(config *api.ClusterConfig) error {
+func (r *serviceAccountRun) CreateServiceAccount(config *v1alpha1.ClusterConfig) error {
 	a, err := r.provider.AwsIamAuthenticator(awsiamauthenticator.Version)
 	if err != nil {
 		return err

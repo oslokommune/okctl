@@ -127,14 +127,11 @@ func (s *vpcStore) GetVpc(_ api.ID) (*api.Vpc, error) {
 
 	var template []byte
 
-	callback := func(_ string, data []byte) error {
-		template = data
-		return nil
-	}
-
 	_, err := store.NewFileSystem(s.baseDir, s.fs).
 		GetStruct(s.stackOutputsFileName, vpcOutputs, store.FromJSON()).
-		GetBytes(s.cloudFormationFileName, callback).
+		GetBytes(s.cloudFormationFileName, func(_ string, data []byte) {
+			template = data
+		}).
 		Do()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get vpc: %w", err)

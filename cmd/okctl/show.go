@@ -6,6 +6,11 @@ import (
 	"path"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+
+	"github.com/oslokommune/okctl/pkg/kubeconfig"
+	"sigs.k8s.io/yaml"
+
 	"github.com/mishudark/errors"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -76,6 +81,11 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 			return o.Initialise(opts.Environment, opts.AWSAccountID)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
+			outputDir, err := o.GetRepoOutputDir(opts.Environment)
+			if err != nil {
+				return err
+			}
+
 			appDir, err := o.GetUserDataDir()
 			if err != nil {
 				return err
@@ -116,6 +126,36 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 					),
 				),
 			)
+			if err != nil {
+				return err
+			}
+
+			data, err := o.FileSystem.ReadFile(path.Join(outputDir, config.DefaultClusterBaseDir, config.DefaultClusterConfig))
+			if err != nil {
+				return err
+			}
+
+			clusterConfig := &v1alpha1.ClusterConfig{}
+
+			err = yaml.Unmarshal(data, clusterConfig)
+			if err != nil {
+				return err
+			}
+
+			cfg, err := kubeconfig.New(clusterConfig, o.CloudProvider).Get()
+			if err != nil {
+				return err
+			}
+
+			data, err = cfg.Bytes()
+			if err != nil {
+				return err
+			}
+
+			err = o.FileSystem.WriteFile(path.Join(outputDir, config.DefaultClusterBaseDir), data, 0o644)
+			if err != nil {
+				return err
+			}
 
 			return err
 		},

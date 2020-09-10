@@ -50,9 +50,9 @@ func (c *Console) Report(actions []store.Action, component, description string) 
 		}
 
 		for _, a := range actions {
-			actionPath := a.Path[len(a.Path)-30:]
+			actionPath := a.Path
 			if len(a.Path) > 33 { // nolint: gomnd
-				actionPath = fmt.Sprintf("...%s", actionPath)
+				actionPath = fmt.Sprintf("...%s", a.Path[len(a.Path)-30:]) // nolint: gomnd
 			}
 
 			_, err := fmt.Fprintf(c.out, "\t%s: %s (%s)\n", aurora.Gray(12, a.Type), aurora.Blue(a.Name), actionPath) // nolint: gomnd

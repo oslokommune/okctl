@@ -8,6 +8,8 @@ import (
 	"path"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
+
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
 
 	github2 "github.com/oslokommune/okctl/pkg/credentials/github"
@@ -93,7 +95,7 @@ Requirements:
 	- Be a member of the %s github organisation
 	- Know the name of your %s on github
 	- Have setup an %s on github
-	- The infrastructure as code repository, must be %s
+	- The infrastructure as code repository must be %s
 
 If you are uncertain about any of these things, please
 go to our slack channel and ask for help:
@@ -118,10 +120,17 @@ Now you can use %s to list nodes, pods, etc. Try out some commands:
 $ %s get pods --all-namespaces
 $ %s get nodes
 
-You can also install %s to your system from:
-https://kubernetes.io/docs/tasks/tools/install-kubectl/
+This also requires %s, which you can add to your PATH from here:
 
-The installed version needs to be within 2 versions of the
+%s
+
+Optionally, install kubectl and aws-iam-authenticator to your 
+system from:
+
+- https://kubernetes.io/docs/tasks/tools/install-kubectl/
+- https://docs.aws.amazon.com/eks/latest/userguide/install-aws-iam-authenticator.html
+
+The installed version of kubectl needs to be within 2 versions of the
 kubernetes cluster version, which is: %s.
 
 We have also setup %s for continuous deployment, you can access
@@ -142,10 +151,10 @@ you can %s of the command by running:
 
 $ OKCTL_DEBUG=true okctl create cluster %s %s
 
-These commands are idempotent and can be run as
+These commands are %s and can be run as
 many times as you like.
 
-You can also inspect the logs, which contain more
+You can also inspect the %s, which contain more
 information already, at:
 
 %s
@@ -204,8 +213,10 @@ and database subnets.`,
 					aurora.Blue("enable debugging"),
 					opts.Environment,
 					opts.AWSAccountID,
-					aurora.Bold("#kjøremiljø-support"),
+					aurora.Blue("idempotent"),
+					aurora.Blue("logs"),
 					path.Join(appDir, config.DefaultLogDir, config.DefaultLogName),
+					aurora.Bold("#kjøremiljø-support"),
 				)
 			}
 
@@ -227,12 +238,6 @@ and database subnets.`,
 				Environment:  opts.Environment,
 				Repository:   opts.RepositoryName,
 				ClusterName:  opts.ClusterName,
-			}
-
-			o.SetGithubOrganisationName(opts.Organisation, opts.Environment)
-			err = o.WriteCurrentRepoData()
-			if err != nil {
-				return prettyErr(err)
 			}
 
 			_, err = fmt.Fprintf(o.Err, startMsg,
@@ -383,6 +388,12 @@ and database subnets.`,
 				auth:         o.CredentialsProvider.Github(),
 			})
 
+			o.SetGithubOrganisationName(opts.Organisation, opts.Environment)
+			err = o.WriteCurrentRepoData()
+			if err != nil {
+				return prettyErr(err)
+			}
+
 			argoCD, err := createArgoCD(&argocdSetup{
 				ctx:           o.Ctx,
 				out:           o.Err,
@@ -418,6 +429,11 @@ and database subnets.`,
 				return prettyErr(err)
 			}
 
+			a, err := o.BinariesProvider.AwsIamAuthenticator(awsiamauthenticator.Version)
+			if err != nil {
+				return prettyErr(err)
+			}
+
 			_, err = fmt.Fprintf(o.Err, endMsg,
 				aurora.Green("kubernetes cluster"),
 				exports,
@@ -425,7 +441,8 @@ and database subnets.`,
 				aurora.Green("kubectl"),
 				k.BinaryPath,
 				k.BinaryPath,
-				aurora.Green("kubectl"),
+				aurora.Green("aws-iam-authenticator"),
+				a.BinaryPath,
 				aurora.Green("1.17"),
 				aurora.Green("ArgoCD"),
 				argoCD.ArgoURL,

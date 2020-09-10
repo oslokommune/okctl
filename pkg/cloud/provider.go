@@ -4,6 +4,9 @@ package cloud
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/aws/aws-sdk-go/service/eks/eksiface"
+
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/ssm/ssmiface"
 
@@ -26,19 +29,20 @@ type Provider struct {
 // New returns a new AWS API provider and builds a session from
 // the provided authenticator
 func New(region string, a awsauth.Authenticator) (*Provider, error) {
-	sess, err := NewSession(region, a)
+	sess, creds, err := NewSession(region, a)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authenticate with aws: %w", err)
 	}
 
-	return NewFromSession(region, sess)
+	return NewFromSession(region, creds.PrincipalARN, sess)
 }
 
 // NewFromSession returns a new AWS API provider and builds a session
 // from the provided authenticator
-func NewFromSession(region string, sess *session.Session) (*Provider, error) {
+func NewFromSession(region, principalARN string, sess *session.Session) (*Provider, error) {
 	services := &Services{
-		region: region,
+		region:       region,
+		principalARN: principalARN,
 	}
 	p := &Provider{
 		Provider: services,
@@ -46,16 +50,17 @@ func NewFromSession(region string, sess *session.Session) (*Provider, error) {
 
 	services.cfn = cloudformation.New(sess)
 	services.ec2 = ec2.New(sess)
+	services.eks = eks.New(sess)
 	services.ssm = ssm.New(sess)
 
 	return p, nil
 }
 
 // NewSession returns an AWS session using the provided authenticator
-func NewSession(region string, auth awsauth.Authenticator) (*session.Session, error) {
+func NewSession(region string, auth awsauth.Authenticator) (*session.Session, *awsauth.Credentials, error) {
 	creds, err := auth.Raw()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	config := aws.NewConfig().
@@ -70,19 +75,21 @@ func NewSession(region string, auth awsauth.Authenticator) (*session.Session, er
 
 	sess, err := session.NewSession(config)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return sess, err
+	return sess, creds, err
 }
 
 // Services stores access to the various AWS APIs
 type Services struct {
 	cfn cloudformationiface.CloudFormationAPI
 	ec2 ec2iface.EC2API
+	eks eksiface.EKSAPI
 	ssm ssmiface.SSMAPI
 
-	region string
+	region       string
+	principalARN string
 }
 
 // SSM returns an interface to the AWS SSM API
@@ -95,6 +102,11 @@ func (s *Services) EC2() ec2iface.EC2API {
 	return s.ec2
 }
 
+// EKS returns an interface to the AWS EKS API
+func (s *Services) EKS() eksiface.EKSAPI {
+	return s.eks
+}
+
 // CloudFormation returns an interface to the AWS CloudFormation API
 func (s *Services) CloudFormation() cloudformationiface.CloudFormationAPI {
 	return s.cfn
@@ -103,4 +115,9 @@ func (s *Services) CloudFormation() cloudformationiface.CloudFormationAPI {
 // Region returns the configured AWS region
 func (s *Services) Region() string {
 	return s.region
+}
+
+// PrincipalARN return the principal arn of the authenticated party
+func (s *Services) PrincipalARN() string {
+	return s.principalARN
 }

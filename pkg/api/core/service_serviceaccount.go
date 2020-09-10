@@ -118,7 +118,7 @@ func (c *serviceAccount) CreateExternalSecretsServiceAccount(_ context.Context, 
 	return account, nil
 }
 
-func (c *serviceAccount) createServiceAccount(opts api.CreateServiceAccountOpts, config *api.ClusterConfig) (*api.ServiceAccount, error) {
+func (c *serviceAccount) createServiceAccount(opts api.CreateServiceAccountOpts, config *v1alpha1.ClusterConfig) (*api.ServiceAccount, error) {
 	err := c.run.CreateServiceAccount(config)
 	if err != nil {
 		return nil, errors.E(err, "failed to create service account", errors.Internal)

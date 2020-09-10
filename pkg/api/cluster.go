@@ -4,6 +4,8 @@ package api
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
@@ -14,7 +16,7 @@ type Cluster struct {
 	VpcID             string
 	VpcPrivateSubnets []VpcSubnet
 	VpcPublicSubnets  []VpcSubnet
-	Config            *ClusterConfig
+	Config            *v1alpha1.ClusterConfig
 }
 
 // ClusterCreateOpts specifies the required inputs for creating a cluster

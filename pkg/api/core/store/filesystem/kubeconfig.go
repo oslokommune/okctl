@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/oslokommune/okctl/pkg/kubeconfig"
+
 	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -18,24 +20,20 @@ type kubeConfig struct {
 
 // This is not good, we need to rewrite this, together with
 // much of the API
-func (k *kubeConfig) CreateKubeConfig() (string, error) {
-	exists, err := k.fs.Exists(path.Join(k.baseDir, k.kubeConfigFileName))
+func (k *kubeConfig) SaveKubeConfig(config *kubeconfig.Config) error {
+	cfg, err := config.Bytes()
 	if err != nil {
-		return "", fmt.Errorf("failed to determine if kubeconfig exists: %w", err)
-	}
-
-	if exists {
-		return path.Join(k.baseDir, k.kubeConfigFileName), nil
+		return fmt.Errorf("creating kubeconfig: %w", err)
 	}
 
 	_, err = store.NewFileSystem(k.baseDir, k.fs).
-		StoreBytes(k.kubeConfigFileName, []byte{}).
+		StoreBytes(k.kubeConfigFileName, cfg).
 		Do()
 	if err != nil {
-		return "", fmt.Errorf("failed to create kubeconfig: %w", err)
+		return fmt.Errorf("failed to create kubeconfig: %w", err)
 	}
 
-	return path.Join(k.baseDir, k.kubeConfigFileName), nil
+	return nil
 }
 
 func (k *kubeConfig) GetKubeConfig() (*api.KubeConfig, error) {
@@ -43,13 +41,10 @@ func (k *kubeConfig) GetKubeConfig() (*api.KubeConfig, error) {
 		Path: path.Join(k.baseDir, k.kubeConfigFileName),
 	}
 
-	callback := func(_ string, data []byte) error {
-		kube.Content = string(data)
-		return nil
-	}
-
 	_, err := store.NewFileSystem(k.baseDir, k.fs).
-		GetBytes(k.kubeConfigFileName, callback).
+		GetBytes(k.kubeConfigFileName, func(_ string, data []byte) {
+			kube.Content = string(data)
+		}).
 		Do()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get kubeconfig: %w", err)

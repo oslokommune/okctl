@@ -246,10 +246,7 @@ func (f *fileSystem) getBytes(name string, callback GetBytesCallback, _ ...Opera
 		}
 
 		if callback != nil {
-			err = callback(name, data)
-			if err != nil {
-				return fmt.Errorf("callback failed: %w", err)
-			}
+			callback(name, data)
 		}
 
 		work.Path = path.Join(f.BaseDir, name)

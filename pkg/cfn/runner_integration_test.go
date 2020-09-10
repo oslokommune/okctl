@@ -113,7 +113,7 @@ func TestTemplates(t *testing.T) {
 		assert.NoError(t, err)
 	}()
 
-	provider, err := cloud.NewFromSession("eu-west-1", s.AWSSession())
+	provider, err := cloud.NewFromSession("eu-west-1", "", s.AWSSession())
 	assert.NoError(t, err)
 
 	testCases := []struct {

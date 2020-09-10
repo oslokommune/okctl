@@ -4,6 +4,8 @@ package run
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/kubeconfig"
+
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/clusterconfig"
 
@@ -20,6 +22,7 @@ type clusterRun struct {
 	awsCredentialsPath string
 	awsConfigPath      string
 	provider           binaries.Provider
+	cloud              v1alpha1.CloudProvider
 	debug              bool
 	kubeConfigStore    api.KubeConfigStore
 }
@@ -29,22 +32,17 @@ type clusterRun struct {
 func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, error) {
 	a, err := c.provider.AwsIamAuthenticator(awsiamauthenticator.Version)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve aws-iam-authenticator binary: %w", err)
+		return nil, fmt.Errorf("retrieving aws-iam-authenticator binary: %w", err)
 	}
 
 	k, err := c.provider.Kubectl(kubectl.Version)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve kubectl binary: %w", err)
+		return nil, fmt.Errorf("retrieving kubectl binary: %w", err)
 	}
 
 	cli, err := c.provider.Eksctl(eksctl.Version)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve eksctl binary: %w", err)
-	}
-
-	kubeConfigPath, err := c.kubeConfigStore.CreateKubeConfig()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create kubeconfig: %w", err)
+		return nil, fmt.Errorf("retrieving eksctl binary: %w", err)
 	}
 
 	cfg, err := clusterconfig.New(&clusterconfig.Args{
@@ -57,7 +55,7 @@ func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, er
 		VpcID:                  opts.VpcID,
 	})
 	if err != nil {
-		return nil, errors.E(err, "failed to create cluster config", errors.Internal)
+		return nil, errors.E(err, "creating cluster config", errors.Internal)
 	}
 
 	cli.Debug(c.debug)
@@ -70,7 +68,7 @@ func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, er
 
 	exists, err := cli.HasCluster(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to determine if cluster exists: %w", err)
+		return nil, fmt.Errorf("if cluster exists: %w", err)
 	}
 
 	cluster := &api.Cluster{
@@ -86,9 +84,19 @@ func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, er
 		return cluster, nil
 	}
 
-	_, err = cli.CreateCluster(kubeConfigPath, cfg)
+	_, err = cli.CreateCluster(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create cluster: %w", err)
+		return nil, fmt.Errorf("creating the cluster: %w", err)
+	}
+
+	kubeConf, err := kubeconfig.New(cfg, c.cloud).Get()
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.kubeConfigStore.SaveKubeConfig(kubeConf)
+	if err != nil {
+		return nil, err
 	}
 
 	return cluster, nil
@@ -110,12 +118,19 @@ func (c *clusterRun) DeleteCluster(opts api.ClusterDeleteOpts) error {
 }
 
 // NewClusterRun returns a executor for clusterRun
-func NewClusterRun(debug bool, kubeConfigStore api.KubeConfigStore, awsCredentialsPath, awsConfigPath string, provider binaries.Provider) api.ClusterRun {
+func NewClusterRun(
+	debug bool,
+	kubeConfigStore api.KubeConfigStore,
+	awsCredentialsPath, awsConfigPath string,
+	provider binaries.Provider,
+	cloud v1alpha1.CloudProvider,
+) api.ClusterRun {
 	return &clusterRun{
 		kubeConfigStore:    kubeConfigStore,
 		debug:              debug,
 		awsCredentialsPath: awsCredentialsPath,
 		awsConfigPath:      awsConfigPath,
 		provider:           provider,
+		cloud:              cloud,
 	}
 }

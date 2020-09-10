@@ -2,8 +2,13 @@
 package mock
 
 import (
+	"encoding/base64"
 	"fmt"
 	"time"
+
+	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/aws/aws-sdk-go/service/eks/eksiface"
+	"github.com/oslokommune/okctl/pkg/api/mock"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -107,6 +112,18 @@ func NewGoodSTSAPI() stsiface.STSAPI {
 	}
 }
 
+// EKSAPI mocks eksiface.EKSAPI
+type EKSAPI struct {
+	eksiface.EKSAPI
+
+	DescribeClusterFn func(*eks.DescribeClusterInput) (*eks.DescribeClusterOutput, error)
+}
+
+// DescribeCluster mocks describe cluster invocation
+func (a *EKSAPI) DescribeCluster(input *eks.DescribeClusterInput) (*eks.DescribeClusterOutput, error) {
+	return a.DescribeClusterFn(input)
+}
+
 // EC2API provides a mocked structure of the ec2 API
 type EC2API struct {
 	ec2iface.EC2API
@@ -198,6 +215,7 @@ type CloudProvider struct {
 
 	EC2API *EC2API
 	CFAPI  *CFAPI
+	EKSAPI *EKSAPI
 }
 
 // CloudFormation returns the mocked CF API
@@ -210,11 +228,22 @@ func (p *CloudProvider) EC2() ec2iface.EC2API {
 	return p.EC2API
 }
 
+// EKS returns the mocked EKS API
+func (p *CloudProvider) EKS() eksiface.EKSAPI {
+	return p.EKSAPI
+}
+
+// PrincipalARN mocks the principal arn
+func (p *CloudProvider) PrincipalARN() string {
+	return "arn:::::/someuser"
+}
+
 // NewCloudProvider returns a mocked cloud provider with no mocks sets
 func NewCloudProvider() *CloudProvider {
 	return &CloudProvider{
 		EC2API: &EC2API{},
 		CFAPI:  &CFAPI{},
+		EKSAPI: &EKSAPI{},
 	}
 }
 
@@ -225,6 +254,21 @@ func NewGoodCloudProvider() *CloudProvider {
 			DescribeSubnetsFn: func(*ec2.DescribeSubnetsInput) (*ec2.DescribeSubnetsOutput, error) {
 				return &ec2.DescribeSubnetsOutput{
 					Subnets: Subnets(),
+				}, nil
+			},
+		},
+		EKSAPI: &EKSAPI{
+			DescribeClusterFn: func(*eks.DescribeClusterInput) (*eks.DescribeClusterOutput, error) {
+				return &eks.DescribeClusterOutput{
+					Cluster: &eks.Cluster{
+						Arn: aws.String("arn:::something"),
+						CertificateAuthority: &eks.Certificate{
+							Data: aws.String(base64.StdEncoding.EncodeToString([]byte("something"))),
+						},
+						Endpoint: aws.String("https://something"),
+						Name:     aws.String(mock.DefaultClusterName),
+						Status:   aws.String(eks.ClusterStatusActive),
+					},
 				}, nil
 			},
 		},

@@ -8,7 +8,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/binaries/run"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	"github.com/oslokommune/okctl/pkg/storage"
@@ -64,7 +65,7 @@ func (e *Eksctl) runner() (run.Runner, error) {
 	return run.New(e.Store.Path(), e.BinaryPath, envs, e.CmdFn), nil
 }
 
-func (e *Eksctl) writeClusterConfig(cfg *api.ClusterConfig) error {
+func (e *Eksctl) writeClusterConfig(cfg *v1alpha1.ClusterConfig) error {
 	data, err := cfg.YAML()
 	if err != nil {
 		return err
@@ -106,7 +107,7 @@ func (e *Eksctl) run(args []string) ([]byte, error) {
 	return runner.Run(e.Progress, args)
 }
 
-func (e *Eksctl) runWithConfig(args []string, cfg *api.ClusterConfig) ([]byte, error) {
+func (e *Eksctl) runWithConfig(args []string, cfg *v1alpha1.ClusterConfig) ([]byte, error) {
 	var err error
 
 	defer func() {
@@ -153,7 +154,7 @@ func (e *Eksctl) Debug(enable bool) {
 
 // CreateServiceAccount invokes eksctl create iamserviceaccount using the provided
 // configuration file
-func (e *Eksctl) CreateServiceAccount(cfg *api.ClusterConfig) ([]byte, error) {
+func (e *Eksctl) CreateServiceAccount(cfg *v1alpha1.ClusterConfig) ([]byte, error) {
 	args := []string{
 		"create",
 		"iamserviceaccount",
@@ -171,7 +172,7 @@ func (e *Eksctl) CreateServiceAccount(cfg *api.ClusterConfig) ([]byte, error) {
 
 // DeleteServiceAccount invokes eksctl delete iamserviceaccount using the provided
 // configuration file
-func (e *Eksctl) DeleteServiceAccount(cfg *api.ClusterConfig) ([]byte, error) {
+func (e *Eksctl) DeleteServiceAccount(cfg *v1alpha1.ClusterConfig) ([]byte, error) {
 	args := []string{
 		"delete",
 		"iamserviceaccount",
@@ -205,12 +206,10 @@ func (e *Eksctl) DeleteCluster(clusterName string) ([]byte, error) {
 
 // CreateCluster invokes eksctl create cluster using the provided
 // cluster configuration as input
-func (e *Eksctl) CreateCluster(kubeConfigPath string, cfg *api.ClusterConfig) ([]byte, error) {
+func (e *Eksctl) CreateCluster(cfg *v1alpha1.ClusterConfig) ([]byte, error) {
 	args := []string{
 		"create",
 		"cluster",
-		"--write-kubeconfig=true",
-		fmt.Sprintf("--kubeconfig=%s", kubeConfigPath),
 	}
 
 	b, err := e.runWithConfig(args, cfg)
@@ -224,7 +223,7 @@ func (e *Eksctl) CreateCluster(kubeConfigPath string, cfg *api.ClusterConfig) ([
 // HasCluster invokes eksctl get cluster using the provided
 // cluster config as input and returns an error if the cluster
 // does not exist.
-func (e *Eksctl) HasCluster(cfg *api.ClusterConfig) (bool, error) {
+func (e *Eksctl) HasCluster(cfg *v1alpha1.ClusterConfig) (bool, error) {
 	pattern := fmt.Sprintf("ResourceNotFoundException: No cluster found for name: %s", cfg.Metadata.Name)
 
 	re, err := regexp.Compile(pattern)

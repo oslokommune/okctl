@@ -4,6 +4,7 @@ package okctl
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
@@ -96,6 +97,7 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 			path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterAwsConfig),
 			path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterAwsCredentials),
 			o.BinariesProvider,
+			o.CloudProvider,
 		),
 	)
 
@@ -266,7 +268,7 @@ func (o *Okctl) newBinariesProvider() error {
 		return errors.E(err, "failed to create binaries fetcher", errors.Internal)
 	}
 
-	o.BinariesProvider = binaries.New(o.Out, o.CredentialsProvider.Aws(), fetcher)
+	o.BinariesProvider = binaries.New(ioutil.Discard, o.CredentialsProvider.Aws(), fetcher)
 
 	return nil
 }

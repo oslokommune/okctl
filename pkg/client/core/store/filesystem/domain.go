@@ -85,14 +85,11 @@ func (s *domainStore) GetPrimaryHostedZone(id api.ID) (*client.HostedZone, error
 
 	var template []byte
 
-	callback := func(_ string, data []byte) error {
-		template = data
-		return nil
-	}
-
 	_, err := store.NewFileSystem(path.Join(s.paths.BaseDir, "primary"), s.fs).
 		GetStruct(s.paths.OutputFile, hz, store.FromJSON()).
-		GetBytes(s.paths.CloudFormationFile, callback).
+		GetBytes(s.paths.CloudFormationFile, func(_ string, data []byte) {
+			template = data
+		}).
 		Do()
 	if err != nil {
 		return nil, err

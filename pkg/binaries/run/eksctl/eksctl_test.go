@@ -8,7 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/binaries/run"
 	"github.com/oslokommune/okctl/pkg/binaries/run/eksctl"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
@@ -74,13 +75,13 @@ func TestEksctlCreateCluster(t *testing.T) {
 		name        string
 		eksctl      *eksctl.Eksctl
 		kubePath    string
-		cfg         *api.ClusterConfig
+		cfg         *v1alpha1.ClusterConfig
 		expect      interface{}
 		expectError bool
 	}{
 		{
 			name:     "Should work",
-			cfg:      &api.ClusterConfig{},
+			cfg:      &v1alpha1.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
@@ -90,11 +91,11 @@ func TestEksctlCreateCluster(t *testing.T) {
 				fakeExecCommandSuccess(),
 			),
 			// nolint: lll
-			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,cluster,--write-kubeconfig=true,--kubeconfig=/some/path,--verbose=3,--config-file,/cluster-config.yml",
+			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,cluster,--verbose=3,--config-file,/cluster-config.yml",
 		},
 		{
 			name:     "Should fail",
-			cfg:      &api.ClusterConfig{},
+			cfg:      &v1alpha1.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
@@ -104,7 +105,7 @@ func TestEksctlCreateCluster(t *testing.T) {
 				fakeExecCommandFailure(),
 			),
 			// nolint: lll
-			expect:      "failed to create: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,cluster,--write-kubeconfig=true,--kubeconfig=/some/path,--verbose=3,--config-file,/cluster-config.yml, because: exit status 1",
+			expect:      "failed to create: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,cluster,--verbose=3,--config-file,/cluster-config.yml, because: exit status 1",
 			expectError: true,
 		},
 	}
@@ -112,7 +113,7 @@ func TestEksctlCreateCluster(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := tc.eksctl.CreateCluster(tc.kubePath, tc.cfg)
+			got, err := tc.eksctl.CreateCluster(tc.cfg)
 			if tc.expectError {
 				assert.Error(t, err)
 				assert.Equal(t, tc.expect, err.Error())
@@ -129,13 +130,13 @@ func TestEksctlHasCluster(t *testing.T) {
 		name        string
 		eksctl      *eksctl.Eksctl
 		kubePath    string
-		cfg         *api.ClusterConfig
+		cfg         *v1alpha1.ClusterConfig
 		expect      interface{}
 		expectError bool
 	}{
 		{
 			name:     "Should work",
-			cfg:      &api.ClusterConfig{},
+			cfg:      &v1alpha1.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
@@ -148,8 +149,8 @@ func TestEksctlHasCluster(t *testing.T) {
 		},
 		{
 			name: "Should fail",
-			cfg: &api.ClusterConfig{
-				Metadata: api.ClusterMeta{
+			cfg: &v1alpha1.ClusterConfig{
+				Metadata: v1alpha1.ClusterMeta{
 					Name: "test",
 				},
 			},
@@ -187,13 +188,13 @@ func TestEksctlCreateServiceAccount(t *testing.T) {
 		name        string
 		eksctl      *eksctl.Eksctl
 		kubePath    string
-		cfg         *api.ClusterConfig
+		cfg         *v1alpha1.ClusterConfig
 		expect      interface{}
 		expectError bool
 	}{
 		{
 			name:     "Should work",
-			cfg:      &api.ClusterConfig{},
+			cfg:      &v1alpha1.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
@@ -207,7 +208,7 @@ func TestEksctlCreateServiceAccount(t *testing.T) {
 		},
 		{
 			name:     "Should fail",
-			cfg:      &api.ClusterConfig{},
+			cfg:      &v1alpha1.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
@@ -242,13 +243,13 @@ func TestEksctlDeleteServiceAccount(t *testing.T) {
 		name        string
 		eksctl      *eksctl.Eksctl
 		kubePath    string
-		cfg         *api.ClusterConfig
+		cfg         *v1alpha1.ClusterConfig
 		expect      interface{}
 		expectError bool
 	}{
 		{
 			name:     "Should work",
-			cfg:      &api.ClusterConfig{},
+			cfg:      &v1alpha1.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),
@@ -262,7 +263,7 @@ func TestEksctlDeleteServiceAccount(t *testing.T) {
 		},
 		{
 			name:     "Should fail",
-			cfg:      &api.ClusterConfig{},
+			cfg:      &v1alpha1.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
 				storage.NewEphemeralStorage(),

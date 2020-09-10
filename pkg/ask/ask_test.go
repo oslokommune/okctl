@@ -327,3 +327,99 @@ func TestAskCreateOauthApp(t *testing.T) {
 		})
 	}
 }
+
+// This test is based on the tests from:
+// - https://github.com/AlecAivazis/survey
+// nolint: funlen
+func TestDomainSurvey(t *testing.T) {
+	// disable color output for all prompts to simplify testing
+	core.DisableColor = true
+
+	testCases := []struct {
+		name      string
+		domain    string
+		ask       *ask.Ask
+		procedure func(console *expect.Console, state *vt10x.State)
+		expect    string
+	}{
+		{
+			name:   "Valid domain",
+			domain: "domain-not-in-use.oslo.systems",
+			ask:    ask.New(),
+			procedure: func(c *expect.Console, _ *vt10x.State) {
+				_, _ = c.ExpectString("? Provide the name of the domain you want to delegate to this cluster [? for help] (domain-not-in-use.oslo.systems)")
+				_, _ = c.SendLine("")
+				_, _ = c.ExpectEOF()
+			},
+			expect: "domain-not-in-use.oslo.systems",
+		},
+		{
+			name:   "Invalid domain",
+			domain: "test.oslo.com",
+			ask:    ask.New(),
+			procedure: func(c *expect.Console, _ *vt10x.State) {
+				_, _ = c.ExpectString("? Provide the name of the domain you want to delegate to this cluster [? for help] (test.oslo.com)")
+				_, _ = c.SendLine("")
+				_, _ = c.ExpectString("X Sorry, your reply was invalid: 'test.oslo.com' must end with .oslo.systems")
+				_, _ = c.ExpectString("? Provide the name of the domain you want to delegate to this cluster [? for help] (test.oslo.com)")
+				_, _ = c.SendLine("domain-not-in-use.oslo.systems")
+				_, _ = c.ExpectEOF()
+			},
+			expect: "domain-not-in-use.oslo.systems",
+		},
+		{
+			name:   "Domain taken",
+			domain: "test.oslo.systems",
+			ask:    ask.New(),
+			procedure: func(c *expect.Console, _ *vt10x.State) {
+				_, _ = c.ExpectString("? Provide the name of the domain you want to delegate to this cluster [? for help] (test.oslo.systems)")
+				_, _ = c.SendLine("")
+				_, _ = c.ExpectString("X Sorry, your reply was invalid: domain 'test.oslo.systems' already in use, found DNS records")
+				_, _ = c.ExpectString("? Provide the name of the domain you want to delegate to this cluster [? for help] (test.oslo.systems)")
+				_, _ = c.SendLine("domain-not-in-use.oslo.systems")
+				_, _ = c.ExpectEOF()
+			},
+			expect: "domain-not-in-use.oslo.systems",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			buf := new(bytes.Buffer)
+			c, state, err := vt10x.NewVT10XConsole(
+				expect.WithStdout(buf),
+				// Uncomment this line to get debug output:
+				// expect.WithLogger(log.New(os.Stdout, "state", log.LstdFlags)),
+			)
+			require.Nil(t, err)
+			defer func() {
+				_ = c.Close()
+			}()
+
+			donec := make(chan struct{})
+			go func() {
+				defer close(donec)
+				tc.procedure(c, state)
+			}()
+
+			tc.ask.In = c.Tty()
+			tc.ask.Err = c.Tty()
+			tc.ask.Out = c.Tty()
+
+			d, err := tc.ask.Domain(tc.domain)
+			require.Nil(t, err)
+			assert.Equal(t, tc.expect, d.Domain)
+
+			// Close the slave end of the pty, and read the remaining bytes from the master end.
+			_ = c.Tty().Close()
+			<-donec
+
+			t.Logf("Raw output: %q", buf.String())
+
+			// Dump the terminal's screen.
+			t.Logf("\n%s", expect.StripTrailingEmptyLines(state.String()))
+		})
+	}
+}

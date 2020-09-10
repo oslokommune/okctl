@@ -662,13 +662,13 @@ func createPrimaryHostedZone(h *hostedZone) (*api.HostedZone, error) {
 	_ = h.spinner.Start()
 	exit := timer(h.spinner, "primary-hosted-zone")
 
-	a := ask.New()
+	a := ask.New().WithSpinner(h.spinner)
 
 	domainService := core.NewDomainService(
 		h.out,
 		h.repoData,
 		a,
-		rest.NewDomainAPI(h.c),
+		rest.NewDomainAPI(a, h.c),
 		filesystem.NewDomainStore(
 			h.repoData,
 			filesystem.Paths{
@@ -764,8 +764,7 @@ func createGithubRepo(c *githubClient) (client.GithubService, *client.GithubRepo
 	githubService := core.NewGithubService(
 		rest.NewGithubAPI(
 			c.out,
-			ask.New(),
-			c.spinner,
+			ask.New().WithSpinner(c.spinner),
 			rest.NewParameterAPI(c.c),
 			g,
 		),

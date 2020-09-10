@@ -5,109 +5,18 @@ package domain
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-	"os"
 	"regexp"
 	"time"
 
-	"github.com/AlecAivazis/survey/v2"
-	"github.com/AlecAivazis/survey/v2/terminal"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/miekg/dns"
 )
 
-// Domain contains the state for a domain
-type Domain struct {
-	Domain string
-	FQDN   string
-
-	In  terminal.FileReader
-	Out terminal.FileWriter
-	Err io.Writer
-}
-
-// NewDefaultWithSurvey returns a default domain by using a survey
-func NewDefaultWithSurvey(repo, env string) (*Domain, error) {
-	d := New(fmt.Sprintf("%s-%s.oslo.systems", repo, env))
-
-	err := d.Survey()
-	if err != nil {
-		return nil, err
-	}
-
-	return d, nil
-}
-
-// New returns an initialised domain
-func New(domain string) *Domain {
-	return &Domain{
-		Domain: domain,
-		FQDN:   dns.Fqdn(domain),
-		In:     os.Stdin,
-		Out:    os.Stdout,
-		Err:    os.Stderr,
-	}
-}
-
-// Survey asks the user if they accept the given domain
-func (d *Domain) Survey() error {
-	for {
-		domain, err := d.ask()
-		if err != nil {
-			if err == terminal.InterruptErr {
-				return err
-			}
-
-			_, err = fmt.Fprintln(d.Err, err.Error())
-			if err != nil {
-				return err
-			}
-
-			continue
-		}
-
-		d.FQDN = dns.Fqdn(domain)
-		d.Domain = domain
-
-		return nil
-	}
-}
-
-func (d *Domain) ask() (string, error) {
-	domain := ""
-
-	q := &survey.Input{
-		Message: "Provide the name of the domain you want to delegate to this cluster",
-		Default: d.Domain,
-		Help:    "This is the domain name we will delegate to your AWS account and that the cluster will create hostnames from",
-	}
-
-	validatorFn := func(val interface{}) error {
-		f, ok := val.(string)
-		if !ok {
-			return fmt.Errorf("could not convert input to a string")
-		}
-
-		err := Validate(f)
-		if err != nil {
-			return err
-		}
-
-		return NotTaken(f)
-	}
-
-	err := survey.AskOne(q, &domain,
-		survey.WithStdio(d.In, d.Out, d.Err),
-		survey.WithValidator(survey.Required),
-		survey.WithValidator(validatorFn),
-	)
-	if err != nil {
-		return "", err
-	}
-
-	return domain, nil
+// Default returns the default domain name
+func Default(repo, env string) string {
+	return fmt.Sprintf("%s-%s.oslo.systems", repo, env)
 }
 
 // Validate the provided domain

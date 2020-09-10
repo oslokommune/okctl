@@ -7,6 +7,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/domain"
+
+	"github.com/miekg/dns"
+
+	"github.com/theckman/yacspin"
+
 	"github.com/pkg/browser"
 
 	"github.com/oslokommune/okctl/pkg/github"
@@ -17,9 +23,10 @@ import (
 
 // Ask contains stating for asking stuff
 type Ask struct {
-	In  terminal.FileReader
-	Out terminal.FileWriter
-	Err io.Writer
+	In      terminal.FileReader
+	Out     terminal.FileWriter
+	Err     io.Writer
+	spinner *yacspin.Spinner
 }
 
 // New returns an initialised ask
@@ -29,6 +36,13 @@ func New() *Ask {
 		Out: os.Stdout,
 		Err: os.Stderr,
 	}
+}
+
+// WithSpinner will allow the package to pause and unpause
+// the spinner
+func (a *Ask) WithSpinner(spinner *yacspin.Spinner) *Ask {
+	a.spinner = spinner
+	return a
 }
 
 const nameServersMsg = `	We have created a domain for you at: %s
@@ -68,6 +82,17 @@ func (a *Ask) ConfirmPostingNameServers(to io.Writer, domain string, nameServers
 	}
 
 	haveSent := false
+
+	if a.spinner != nil {
+		err = a.spinner.Pause()
+		if err != nil {
+			return false, fmt.Errorf("stopping spinner: %w", err)
+		}
+
+		defer func() {
+			_ = a.spinner.Unpause()
+		}()
+	}
 
 	err = survey.AskOne(prompt, &haveSent, survey.WithStdio(a.In, a.Out, a.Err))
 	if err != nil {
@@ -135,6 +160,17 @@ func (a *Ask) SelectInfrastructureRepository(defaultRepo string, repos []*github
 		return nil
 	}
 
+	if a.spinner != nil {
+		err := a.spinner.Pause()
+		if err != nil {
+			return nil, fmt.Errorf("stopping spinner: %w", err)
+		}
+
+		defer func() {
+			_ = a.spinner.Unpause()
+		}()
+	}
+
 	err := survey.AskOne(
 		prompt,
 		&repo,
@@ -169,6 +205,17 @@ func (a *Ask) SelectTeam(teams []*github.Team) (*github.Team, error) {
 		Message: "Select team that is authorised to access the Argo CD UI:",
 		Options: keys,
 		Help:    teamHelp,
+	}
+
+	if a.spinner != nil {
+		err := a.spinner.Pause()
+		if err != nil {
+			return nil, fmt.Errorf("stopping spinner: %w", err)
+		}
+
+		defer func() {
+			_ = a.spinner.Unpause()
+		}()
 	}
 
 	err := survey.AskOne(
@@ -242,6 +289,7 @@ type OauthAppOpts struct {
 }
 
 // CreateOauthApp helps the user create and transfer and oauth app
+// nolint: funlen
 func (a *Ask) CreateOauthApp(to io.Writer, opts OauthAppOpts) (*OauthApp, error) {
 	_, err := fmt.Fprintf(to, oauthAppMsg, opts.Name, opts.URL, opts.Name, opts.CallbackURL, opts.Name, opts.Organisation)
 	if err != nil {
@@ -255,6 +303,17 @@ func (a *Ask) CreateOauthApp(to io.Writer, opts OauthAppOpts) (*OauthApp, error)
 	}
 
 	doOpen := false
+
+	if a.spinner != nil {
+		err := a.spinner.Pause()
+		if err != nil {
+			return nil, fmt.Errorf("stopping spinner: %w", err)
+		}
+
+		defer func() {
+			_ = a.spinner.Unpause()
+		}()
+	}
 
 	err = survey.AskOne(prompt, &doOpen, survey.WithStdio(a.In, a.Out, a.Err))
 	if err != nil {
@@ -296,4 +355,80 @@ func (a *Ask) CreateOauthApp(to io.Writer, opts OauthAppOpts) (*OauthApp, error)
 		ClientID:     answers.ClientID,
 		ClientSecret: answers.ClientSecret,
 	}, nil
+}
+
+// Domain contains the response
+type Domain struct {
+	FQDN   string
+	Domain string
+}
+
+// Domain asks the user if they accept the given domain
+func (a *Ask) Domain(defaultDomain string) (*Domain, error) {
+	for {
+		d, err := a.askDomain(defaultDomain)
+		if err != nil {
+			if err == terminal.InterruptErr {
+				return nil, err
+			}
+
+			_, err = fmt.Fprintln(a.Err, err.Error())
+			if err != nil {
+				return nil, err
+			}
+
+			continue
+		}
+
+		return &Domain{
+			FQDN:   dns.Fqdn(d),
+			Domain: d,
+		}, nil
+	}
+}
+
+func (a *Ask) askDomain(defaultDomain string) (string, error) {
+	d := ""
+
+	q := &survey.Input{
+		Message: "Provide the name of the domain you want to delegate to this cluster",
+		Default: defaultDomain,
+		Help:    "This is the domain name we will delegate to your AWS account and that the cluster will create hostnames from",
+	}
+
+	validatorFn := func(val interface{}) error {
+		f, ok := val.(string)
+		if !ok {
+			return fmt.Errorf("could not convert input to a string")
+		}
+
+		err := domain.Validate(f)
+		if err != nil {
+			return err
+		}
+
+		return domain.NotTaken(f)
+	}
+
+	if a.spinner != nil {
+		err := a.spinner.Pause()
+		if err != nil {
+			return "", fmt.Errorf("stopping spinner: %w", err)
+		}
+
+		defer func() {
+			_ = a.spinner.Unpause()
+		}()
+	}
+
+	err := survey.AskOne(q, &d,
+		survey.WithStdio(a.In, a.Out, a.Err),
+		survey.WithValidator(survey.Required),
+		survey.WithValidator(validatorFn),
+	)
+	if err != nil {
+		return "", err
+	}
+
+	return d, nil
 }

@@ -1,7 +1,7 @@
 package rest
 
 import (
-	"fmt"
+	"github.com/oslokommune/okctl/pkg/ask"
 
 	"github.com/oslokommune/okctl/pkg/domain"
 
@@ -14,12 +14,13 @@ const TargetHostedZone = "domains/hostedzones/"
 
 type domainAPI struct {
 	client *HTTPClient
+	ask    *ask.Ask
 }
 
 func (a *domainAPI) CreatePrimaryHostedZone(opts client.CreatePrimaryHostedZoneOpts) (*api.HostedZone, error) {
-	d, err := domain.NewDefaultWithSurvey(opts.ID.Repository, opts.ID.Environment)
+	d, err := a.ask.Domain(domain.Default(opts.ID.Repository, opts.ID.Environment))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get domain name: %w", err)
+		return nil, err
 	}
 
 	into := &api.HostedZone{}
@@ -32,8 +33,9 @@ func (a *domainAPI) CreatePrimaryHostedZone(opts client.CreatePrimaryHostedZoneO
 }
 
 // NewDomainAPI returns an initialised REST API client
-func NewDomainAPI(client *HTTPClient) client.DomainAPI {
+func NewDomainAPI(ask *ask.Ask, client *HTTPClient) client.DomainAPI {
 	return &domainAPI{
 		client: client,
+		ask:    ask,
 	}
 }

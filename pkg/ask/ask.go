@@ -498,7 +498,11 @@ func (a *Ask) RepositoryConfig() (*RepositoryConfig, error) {
 		},
 	}
 
-	answers := &RepositoryConfig{}
+	answers := struct {
+		Name    string
+		Region  string
+		Basedir string
+	}{}
 
 	if a.spinner != nil {
 		err := a.spinner.Pause()
@@ -513,8 +517,12 @@ func (a *Ask) RepositoryConfig() (*RepositoryConfig, error) {
 
 	err := survey.Ask(qs, &answers)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting repository config: %w", err)
 	}
 
-	return answers, nil
+	return &RepositoryConfig{
+		Name:    answers.Name,
+		Region:  answers.Region,
+		BaseDir: answers.Basedir,
+	}, nil
 }

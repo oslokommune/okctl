@@ -101,6 +101,10 @@ go to our slack channel and ask for help:
 
 	- %s
 
+You can tail the logs to get more output:
+
+$ tail -f %s
+
 `
 
 const endMsg = `Congratulations, your %s is now up and running.
@@ -189,7 +193,7 @@ and database subnets.`,
 			environment := args[0]
 			awsAccountID := args[1]
 
-			err := o.Initialise(environment)
+			err := o.InitialiseWithEnvAndAWSAccountID(environment, awsAccountID)
 			if err != nil {
 				return err
 			}
@@ -257,6 +261,7 @@ and database subnets.`,
 				aurora.Blue("infrastructure as code repository"),
 				aurora.Blue("private"),
 				aurora.Bold("#kjøremiljø-support"),
+				path.Join(userDir, config.DefaultLogDir, config.DefaultLogName),
 			)
 			if err != nil {
 				return prettyErr(err)

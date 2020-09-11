@@ -68,7 +68,7 @@ including VPC, this is a highly destructive operation.`,
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			environment := args[0]
 
-			err := o.Initialise(environment)
+			err := o.InitialiseWithOnlyEnv(environment)
 			if err != nil {
 				return err
 			}

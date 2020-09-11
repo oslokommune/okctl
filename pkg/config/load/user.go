@@ -47,7 +47,7 @@ func CreateOnUserDataNotFound() DataNotFoundFn {
 
 		userDataPath, err := c.GetUserDataPath()
 		if err != nil {
-			return err
+			return fmt.Errorf("getting user data path: %w", err)
 		}
 
 		err = PromptContinue(

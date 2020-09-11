@@ -46,9 +46,31 @@ type Okctl struct {
 	CredentialsProvider credentials.Provider
 }
 
+// InitialiseWithOnlyEnv initialises okctl when the aws account is has been
+// set previously
+func (o *Okctl) InitialiseWithOnlyEnv(env string) error {
+	return o.initialise(env)
+}
+
+// InitialiseWithEnvAndAWSAccountID initialises okctl when aws account id hasn't
+// been set yet
+func (o *Okctl) InitialiseWithEnvAndAWSAccountID(env, awsAccountID string) error {
+	if o.RepoState.Clusters == nil {
+		o.RepoState.Clusters = map[string]*state.Cluster{
+			env: {
+				Name:         o.RepoState.Metadata.Name,
+				Environment:  env,
+				AWSAccountID: awsAccountID,
+			},
+		}
+	}
+
+	return o.initialise(env)
+}
+
 // Initialise okctl for receiving requests
 // nolint: funlen
-func (o *Okctl) Initialise(env string) error {
+func (o *Okctl) initialise(env string) error {
 	repoDir, err := o.GetRepoDir()
 	if err != nil {
 		return err
@@ -277,7 +299,7 @@ func (o *Okctl) newBinariesProvider() error {
 		return errors.E(err, "failed to create binaries fetcher", errors.Internal)
 	}
 
-	o.BinariesProvider = binaries.New(ioutil.Discard, o.CredentialsProvider.Aws(), fetcher)
+	o.BinariesProvider = binaries.New(o.Logger, ioutil.Discard, o.CredentialsProvider.Aws(), fetcher)
 
 	return nil
 }

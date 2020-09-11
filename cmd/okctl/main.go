@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -8,7 +9,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api/core"
 	"github.com/oslokommune/okctl/pkg/config/load"
 	"github.com/oslokommune/okctl/pkg/okctl"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -64,12 +64,12 @@ being captured. Together with slack and slick.`,
 
 			err = loadUserData(o, cmd)
 			if err != nil {
-				return errors.Wrap(err, "failed to load application data")
+				return fmt.Errorf("failed to load application data: %w", err)
 			}
 
 			err = loadRepoData(o, cmd)
 			if err != nil {
-				return errors.Wrap(err, "failed to load repository data")
+				return fmt.Errorf("failed to load repository data: %w", err)
 			}
 
 			o.Out = cmd.OutOrStdout()

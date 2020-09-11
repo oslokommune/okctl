@@ -28,6 +28,7 @@ func New(out io.Writer, exit chan struct{}, spinner *yacspin.Spinner) *Console {
 }
 
 // Report writes the content to the provided io.Writer
+// nolint: funlen gocognit
 func (c *Console) Report(actions []store.Action, component, description string) error {
 	close(c.exit)
 
@@ -61,12 +62,31 @@ func (c *Console) Report(actions []store.Action, component, description string) 
 		}
 
 		for _, a := range actions {
-			actionPath := a.Path
-			if len(a.Path) > 33 { // nolint: gomnd
-				actionPath = fmt.Sprintf("...%s", a.Path[len(a.Path)-30:]) // nolint: gomnd
+			_, err := fmt.Fprintf(c.out, "\t%s", aurora.Gray(12, a.Type)) // nolint: gomnd
+			if err != nil {
+				return err
 			}
 
-			_, err := fmt.Fprintf(c.out, "\t%s: %s (%s)\n", aurora.Gray(12, a.Type), aurora.Blue(a.Name), actionPath) // nolint: gomnd
+			if len(a.Name) > 0 {
+				_, err := fmt.Fprintf(c.out, ": %s", aurora.Blue(a.Name))
+				if err != nil {
+					return err
+				}
+			}
+
+			if len(a.Path) > 0 {
+				actionPath := a.Path
+				if len(a.Path) > 33 { // nolint: gomnd
+					actionPath = fmt.Sprintf("...%s", a.Path[len(a.Path)-30:]) // nolint: gomnd
+				}
+
+				_, err := fmt.Fprintf(c.out, " (%s)", actionPath)
+				if err != nil {
+					return err
+				}
+			}
+
+			_, err = fmt.Fprint(c.out, "\n")
 			if err != nil {
 				return err
 			}

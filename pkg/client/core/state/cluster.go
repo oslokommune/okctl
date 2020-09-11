@@ -1,6 +1,8 @@
 package state
 
 import (
+	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
@@ -18,7 +20,20 @@ func (s *clusterState) SaveCluster(c *api.Cluster) (*store.Report, error) {
 	cluster.Environment = c.ID.Environment
 	cluster.AWSAccountID = c.ID.AWSAccountID
 
-	return s.state.SaveCluster(cluster)
+	report, err := s.state.SaveCluster(cluster)
+	if err != nil {
+		return nil, err
+	}
+
+	report.Actions = append([]store.Action{
+		{
+			Name: "Cluster",
+			Path: fmt.Sprintf("clusterName=%s", c.ID.ClusterName),
+			Type: "StateUpdate[add]",
+		},
+	}, report.Actions...)
+
+	return report, nil
 }
 
 func (s *clusterState) DeleteCluster(_ api.ID) (*store.Report, error) {

@@ -11,7 +11,7 @@ type argoCDState struct {
 }
 
 func (s *argoCDState) SaveArgoCD(cd *client.ArgoCD) (*store.Report, error) {
-	return s.state.SaveArgoCD(&state.ArgoCD{
+	report, err := s.state.SaveArgoCD(&state.ArgoCD{
 		SiteURL: cd.ArgoURL,
 		Domain:  cd.ArgoDomain,
 		SecretKey: &state.SecretKeySecret{
@@ -20,6 +20,19 @@ func (s *argoCDState) SaveArgoCD(cd *client.ArgoCD) (*store.Report, error) {
 			Version: cd.SecretKey.Version,
 		},
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	report.Actions = append([]store.Action{
+		{
+			Name: "ArgoCD",
+			Path: "cluster=" + cd.ID.ClusterName,
+			Type: "StateUpdate[add]",
+		},
+	}, report.Actions...)
+
+	return report, nil
 }
 
 // NewArgoCDState returns an initialised state layer

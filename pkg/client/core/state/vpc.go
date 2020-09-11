@@ -1,6 +1,8 @@
 package state
 
 import (
+	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
@@ -43,7 +45,22 @@ func (s *vpcState) SaveVpc(vpc *api.Vpc) (*store.Report, error) {
 		}(),
 	}
 
-	return s.state.SaveVPC(v)
+	report, err := s.state.SaveVPC(v)
+	if err != nil {
+		return nil, err
+	}
+
+	report.Actions = append([]store.Action{
+		{
+			Name: "VPC",
+			Path: fmt.Sprintf("id=%s",
+				vpc.VpcID,
+			),
+			Type: "StateUpdate[add]",
+		},
+	}, report.Actions...)
+
+	return report, nil
 }
 
 // NewVpcState returns an initialised vpc state handler

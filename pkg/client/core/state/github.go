@@ -112,6 +112,18 @@ func (s *githubState) SaveGithubInfrastructureRepository(r *client.GithubReposit
 		return nil, err
 	}
 
+	report.Actions = append([]store.Action{
+		{
+			Name: "GithubRepository",
+			Path: fmt.Sprintf("repository=%s, deploykey=%s, clusterName=%s",
+				r.FullName,
+				r.DeployKey.Title,
+				r.ID.ClusterName,
+			),
+			Type: "StateUpdate[add]",
+		},
+	}, report.Actions...)
+
 	return report, nil
 }
 
@@ -141,6 +153,14 @@ func (s *githubState) SaveGithubOauthApp(app *client.GithubOauthApp) (*store.Rep
 	if err != nil {
 		return nil, err
 	}
+
+	report.Actions = append([]store.Action{
+		{
+			Name: "GithubOauthApp",
+			Path: fmt.Sprintf("name=%s, clusterName=%s", app.Name, app.ID.ClusterName),
+			Type: "StateUpdate[add]",
+		},
+	}, report.Actions...)
 
 	return report, nil
 }

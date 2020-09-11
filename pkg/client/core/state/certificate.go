@@ -1,6 +1,8 @@
 package state
 
 import (
+	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
@@ -21,10 +23,23 @@ func (s *certificateState) GetCertificate(domain string) *api.Certificate {
 }
 
 func (s *certificateState) SaveCertificate(c *api.Certificate) (*store.Report, error) {
-	return s.state.SaveCertificate(&state.Certificate{
+	report, err := s.state.SaveCertificate(&state.Certificate{
 		Domain: c.Domain,
 		ARN:    c.CertificateARN,
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	report.Actions = append([]store.Action{
+		{
+			Name: "Certificate",
+			Path: fmt.Sprintf("domain=%s, clusterName=%s", c.Domain, c.ID.ClusterName),
+			Type: "StateUpdate[add]",
+		},
+	}, report.Actions...)
+
+	return report, nil
 }
 
 // NewCertificateState returns an initialised state handler

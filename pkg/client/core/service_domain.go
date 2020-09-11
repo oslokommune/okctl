@@ -4,11 +4,12 @@ import (
 	"context"
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/domain"
+
 	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/ask"
 
-	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
@@ -21,42 +22,56 @@ type domainService struct {
 	report client.DomainReport
 }
 
-func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.CreatePrimaryHostedZoneOpts) (*api.HostedZone, error) {
-	zone, err := s.api.CreatePrimaryHostedZone(opts)
-	if err != nil {
-		return nil, err
-	}
+func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.CreatePrimaryHostedZoneOpts) (*client.HostedZone, error) {
+	var zone *client.HostedZone
 
-	hz := &client.HostedZone{
-		Primary:    true,
-		HostedZone: zone,
-	}
-
-	if !hz.IsDelegated {
-		delegated, err := s.ask.ConfirmPostingNameServers(s.out, hz.HostedZone.Domain, hz.HostedZone.NameServers)
-		if err != nil {
-			return nil, err
+	for _, z := range s.state.GetHostedZones() {
+		if z.Primary {
+			zone = z
 		}
-
-		hz.IsDelegated = delegated
 	}
 
-	r1, err := s.store.SaveHostedZone(hz)
+	if zone != nil {
+		return s.store.GetHostedZone(zone.HostedZone.Domain)
+	}
+
+	// Shouldn't be doing this in here I think
+	d, err := s.ask.Domain(domain.Default(opts.ID.Repository, opts.ID.Environment))
 	if err != nil {
 		return nil, err
 	}
 
-	r2, err := s.state.SaveHostedZone(hz)
+	opts.Domain = d.Domain
+	opts.FQDN = d.FQDN
+
+	zone, err = s.api.CreatePrimaryHostedZone(opts)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.report.ReportCreatePrimaryHostedZone(hz, []*store.Report{r1, r2})
+	delegated, err := s.ask.ConfirmPostingNameServers(s.out, zone.HostedZone.Domain, zone.HostedZone.NameServers)
 	if err != nil {
 		return nil, err
 	}
 
-	return hz.HostedZone, nil
+	zone.IsDelegated = delegated
+
+	r1, err := s.store.SaveHostedZone(zone)
+	if err != nil {
+		return nil, err
+	}
+
+	r2, err := s.state.SaveHostedZone(zone)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.ReportCreatePrimaryHostedZone(zone, []*store.Report{r1, r2})
+	if err != nil {
+		return nil, err
+	}
+
+	return zone, nil
 }
 
 // NewDomainService returns an initialised service

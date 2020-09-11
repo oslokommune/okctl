@@ -41,12 +41,7 @@ func (s *domainStore) SaveHostedZone(d *client.HostedZone) (*store.Report, error
 		Primary:      d.Primary,
 	}
 
-	subDir := d.HostedZone.Domain
-	if d.Primary {
-		subDir = "primary"
-	}
-
-	report, err := store.NewFileSystem(path.Join(s.paths.BaseDir, subDir), s.fs).
+	report, err := store.NewFileSystem(path.Join(s.paths.BaseDir, d.HostedZone.Domain), s.fs).
 		StoreStruct(s.paths.OutputFile, &p, store.ToJSON()).
 		StoreBytes(s.paths.CloudFormationFile, d.HostedZone.CloudFormationTemplate).
 		Do()
@@ -57,12 +52,12 @@ func (s *domainStore) SaveHostedZone(d *client.HostedZone) (*store.Report, error
 	return report, nil
 }
 
-func (s *domainStore) GetPrimaryHostedZone(_ api.ID) (*client.HostedZone, error) {
+func (s *domainStore) GetHostedZone(domain string) (*client.HostedZone, error) {
 	hz := &HostedZone{}
 
 	var template []byte
 
-	_, err := store.NewFileSystem(path.Join(s.paths.BaseDir, "primary"), s.fs).
+	_, err := store.NewFileSystem(path.Join(s.paths.BaseDir, domain), s.fs).
 		GetStruct(s.paths.OutputFile, hz, store.FromJSON()).
 		GetBytes(s.paths.CloudFormationFile, func(_ string, data []byte) {
 			template = data

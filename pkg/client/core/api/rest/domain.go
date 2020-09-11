@@ -1,10 +1,6 @@
 package rest
 
 import (
-	"github.com/oslokommune/okctl/pkg/ask"
-
-	"github.com/oslokommune/okctl/pkg/domain"
-
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -14,28 +10,30 @@ const TargetHostedZone = "domains/hostedzones/"
 
 type domainAPI struct {
 	client *HTTPClient
-	ask    *ask.Ask
 }
 
-func (a *domainAPI) CreatePrimaryHostedZone(opts client.CreatePrimaryHostedZoneOpts) (*api.HostedZone, error) {
-	d, err := a.ask.Domain(domain.Default(opts.ID.Repository, opts.ID.Environment))
+func (a *domainAPI) CreatePrimaryHostedZone(opts client.CreatePrimaryHostedZoneOpts) (*client.HostedZone, error) {
+	into := &api.HostedZone{}
+
+	err := a.client.DoPost(TargetHostedZone, &api.CreateHostedZoneOpts{
+		ID:     opts.ID,
+		Domain: opts.Domain,
+		FQDN:   opts.FQDN,
+	}, into)
 	if err != nil {
 		return nil, err
 	}
 
-	into := &api.HostedZone{}
-
-	return into, a.client.DoPost(TargetHostedZone, &api.CreateHostedZoneOpts{
-		ID:     opts.ID,
-		Domain: d.Domain,
-		FQDN:   d.FQDN,
-	}, into)
+	return &client.HostedZone{
+		IsDelegated: false,
+		Primary:     true,
+		HostedZone:  into,
+	}, nil
 }
 
 // NewDomainAPI returns an initialised REST API client
-func NewDomainAPI(ask *ask.Ask, client *HTTPClient) client.DomainAPI {
+func NewDomainAPI(client *HTTPClient) client.DomainAPI {
 	return &domainAPI{
 		client: client,
-		ask:    ask,
 	}
 }

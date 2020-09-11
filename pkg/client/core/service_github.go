@@ -19,7 +19,7 @@ func (s *githubService) ReadyGithubInfrastructureRepository(_ context.Context, o
 	}
 
 	repository := s.state.GetGithubInfrastructureRepository(opts.ID)
-	if repository != nil {
+	if repository != nil && repository.Validate() == nil {
 		return repository, nil
 	}
 
@@ -31,7 +31,7 @@ func (s *githubService) ReadyGithubInfrastructureRepository(_ context.Context, o
 	key, err := s.api.CreateGithubDeployKey(client.CreateGithubDeployKey{
 		ID:           opts.ID,
 		Organisation: opts.Organisation,
-		Repository:   repository.Repository,
+		Repository:   selected.Repository,
 	})
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (s *githubService) CreateGithubOauthApp(_ context.Context, opts client.Crea
 	}
 
 	app := s.state.GetGithubOauthApp(opts.Name, opts.ID)
-	if app != nil {
+	if app != nil && app.Validate() == nil {
 		return app, nil
 	}
 

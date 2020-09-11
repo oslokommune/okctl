@@ -20,6 +20,17 @@ type GithubRepository struct {
 	DeployKey    *GithubDeployKey
 }
 
+// Validate the github repository
+func (r *GithubRepository) Validate() error {
+	return validation.ValidateStruct(r,
+		validation.Field(&r.DeployKey, validation.Required),
+		validation.Field(&r.Organisation, validation.Required),
+		validation.Field(&r.FullName, validation.Required),
+		validation.Field(&r.GitURL, validation.Required),
+		validation.Field(&r.Repository, validation.Required),
+	)
+}
+
 // ReadyGithubInfrastructureRepositoryOpts contains required inputs
 type ReadyGithubInfrastructureRepositoryOpts struct {
 	ID           api.ID
@@ -58,6 +69,14 @@ type GithubSecret struct {
 	Version int64
 }
 
+// Validate the data
+func (s *GithubSecret) Validate() error {
+	return validation.ValidateStruct(s,
+		validation.Field(&s.Name, validation.Required),
+		validation.Field(&s.Path, validation.Required),
+	)
+}
+
 // GithubOauthApp is a github oauth app
 type GithubOauthApp struct {
 	ID           api.ID
@@ -68,6 +87,19 @@ type GithubOauthApp struct {
 	ClientID     string
 	ClientSecret *GithubSecret
 	Team         *GithubTeam
+}
+
+// Validate the data
+func (a *GithubOauthApp) Validate() error {
+	return validation.ValidateStruct(a,
+		validation.Field(&a.Organisation, validation.Required),
+		validation.Field(&a.Name, validation.Required),
+		validation.Field(&a.SiteURL, validation.Required),
+		validation.Field(&a.CallbackURL, validation.Required),
+		validation.Field(&a.ClientID, validation.Required),
+		validation.Field(&a.ClientSecret, validation.Required),
+		validation.Field(&a.Team, validation.Required),
+	)
 }
 
 // CreateGithubOauthAppOpts contains required inputs
@@ -98,6 +130,13 @@ type GithubTeam struct {
 	Name         string
 }
 
+// Validate the data
+func (t *GithubTeam) Validate() error {
+	return validation.ValidateStruct(t,
+		validation.Field(&t.Name, validation.Required),
+	)
+}
+
 // SelectGithubTeam contains required inputs
 type SelectGithubTeam struct {
 	ID           api.ID
@@ -113,6 +152,18 @@ type GithubDeployKey struct {
 	Title            string
 	PublicKey        string
 	PrivateKeySecret *GithubSecret
+}
+
+// Validate the data
+func (k *GithubDeployKey) Validate() error {
+	return validation.ValidateStruct(k,
+		validation.Field(&k.Organisation, validation.Required),
+		validation.Field(&k.Repository, validation.Required),
+		validation.Field(&k.Identifier, validation.Required),
+		validation.Field(&k.Title, validation.Required),
+		validation.Field(&k.PublicKey, validation.Required),
+		validation.Field(&k.PrivateKeySecret, validation.Required),
+	)
 }
 
 // CreateGithubDeployKey contains required inputs

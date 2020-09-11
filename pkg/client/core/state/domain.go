@@ -1,6 +1,7 @@
 package state
 
 import (
+	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/oslokommune/okctl/pkg/config/state"
@@ -8,6 +9,22 @@ import (
 
 type domainState struct {
 	state state.HostedZoner
+}
+
+func (s *domainState) GetHostedZones() (zones []*client.HostedZone) {
+	for _, z := range s.state.GetHostedZones() {
+		zones = append(zones, &client.HostedZone{
+			IsDelegated: z.IsDelegated,
+			Primary:     z.Primary,
+			HostedZone: &api.HostedZone{
+				FQDN:        z.FQDN,
+				Domain:      z.Domain,
+				NameServers: z.NameServers,
+			},
+		})
+	}
+
+	return zones
 }
 
 func (s *domainState) SaveHostedZone(zone *client.HostedZone) (*store.Report, error) {

@@ -343,7 +343,7 @@ and database subnets.`,
 
 			_, err = createExternalDNS(&externalDNS{
 				common:     common,
-				HostedZone: hostedZone,
+				HostedZone: hostedZone.HostedZone,
 			})
 			if err != nil {
 				return prettyErr(err)
@@ -366,7 +366,7 @@ and database subnets.`,
 
 			argoCD, err := createArgoCD(&argocdSetup{
 				common:       common,
-				HostedZone:   hostedZone,
+				HostedZone:   hostedZone.HostedZone,
 				GithubRepo:   githubRepo,
 				Organisation: opts.Organisation,
 			})
@@ -578,7 +578,7 @@ type hostedZone struct {
 	*common
 }
 
-func createPrimaryHostedZone(h *hostedZone) (*api.HostedZone, error) {
+func createPrimaryHostedZone(h *hostedZone) (*client.HostedZone, error) {
 	_ = h.Spinner.Start()
 	exit := spinner.Timer("primary-hosted-zone", h.Spinner)
 
@@ -587,7 +587,7 @@ func createPrimaryHostedZone(h *hostedZone) (*api.HostedZone, error) {
 	domainService := core.NewDomainService(
 		h.Out,
 		a,
-		rest.NewDomainAPI(a, h.Client),
+		rest.NewDomainAPI(h.Client),
 		filesystem.NewDomainStore(
 			filesystem.Paths{
 				OutputFile:         config.DefaultDomainOutputsFile,

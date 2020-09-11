@@ -16,28 +16,31 @@ type HostedZone struct {
 
 // CreatePrimaryHostedZoneOpts is the required inputs
 type CreatePrimaryHostedZoneOpts struct {
-	ID api.ID
+	ID     api.ID
+	Domain string
+	FQDN   string
 }
 
 // DomainService orchestrates the creation of a hosted zone
 type DomainService interface {
-	CreatePrimaryHostedZone(ctx context.Context, opts CreatePrimaryHostedZoneOpts) (*api.HostedZone, error)
+	CreatePrimaryHostedZone(ctx context.Context, opts CreatePrimaryHostedZoneOpts) (*HostedZone, error)
 }
 
 // DomainAPI invokes the API
 type DomainAPI interface {
-	CreatePrimaryHostedZone(opts CreatePrimaryHostedZoneOpts) (*api.HostedZone, error)
+	CreatePrimaryHostedZone(opts CreatePrimaryHostedZoneOpts) (*HostedZone, error)
 }
 
 // DomainStore stores the data
 type DomainStore interface {
 	SaveHostedZone(*HostedZone) (*store.Report, error)
-	GetPrimaryHostedZone(id api.ID) (*HostedZone, error)
+	GetHostedZone(domain string) (*HostedZone, error)
 }
 
 // DomainState implements the in-memory state handling
 type DomainState interface {
 	SaveHostedZone(zone *HostedZone) (*store.Report, error)
+	GetHostedZones() []*HostedZone
 }
 
 // DomainReport implements the report layer

@@ -2,6 +2,8 @@ package main
 
 import (
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/oslokommune/okctl/pkg/api/core"
 	"github.com/oslokommune/okctl/pkg/config/load"
@@ -74,6 +76,13 @@ being captured. Together with slack and slick.`,
 			o.Err = cmd.OutOrStderr()
 
 			o.SetFormat(core.EncodeResponseType(outputFormat))
+
+			c := make(chan os.Signal)
+			signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+			go func() {
+				<-c
+				os.Exit(1)
+			}()
 
 			return nil
 		},

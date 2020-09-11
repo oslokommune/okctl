@@ -18,9 +18,16 @@ type vpcReport struct {
 	console *Console
 }
 
-func (r *vpcReport) ReportCreateVPC(vpc *api.Vpc, report *store.Report) error {
+func (r *vpcReport) ReportCreateVPC(vpc *api.Vpc, reports []*store.Report) error {
+	var actions []store.Action // nolint: prealloc
+
+	for _, report := range reports {
+		actions = append(actions, report.Actions...)
+	}
+
 	description := fmt.Sprintf("%s (%s)", aurora.Green(vpc.StackName), vpc.VpcID)
-	return r.console.Report(report.Actions, "vpc", description)
+
+	return r.console.Report(actions, "vpc", description)
 }
 
 // NewVPCReport returns an initialised VPC reporter

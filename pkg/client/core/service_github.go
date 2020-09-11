@@ -8,8 +8,8 @@ import (
 
 type githubService struct {
 	api    client.GithubAPI
-	store  client.GithubStore
 	report client.GithubReport
+	state  client.GithubState
 }
 
 func (s *githubService) ReadyGithubInfrastructureRepository(_ context.Context, opts client.ReadyGithubInfrastructureRepositoryOpts) (*client.GithubRepository, error) {
@@ -18,11 +18,7 @@ func (s *githubService) ReadyGithubInfrastructureRepository(_ context.Context, o
 		return nil, err
 	}
 
-	repository, err := s.store.GetGithubInfrastructureRepository(opts.ID)
-	if err != nil {
-		return nil, err
-	}
-
+	repository := s.state.GetGithubInfrastructureRepository(opts.ID)
 	if repository != nil {
 		return repository, nil
 	}
@@ -50,7 +46,7 @@ func (s *githubService) ReadyGithubInfrastructureRepository(_ context.Context, o
 		DeployKey:    key,
 	}
 
-	report, err := s.store.SaveGithubInfrastructureRepository(repository)
+	report, err := s.state.SaveGithubInfrastructureRepository(repository)
 	if err != nil {
 		return nil, err
 	}
@@ -69,11 +65,7 @@ func (s *githubService) CreateGithubOauthApp(_ context.Context, opts client.Crea
 		return nil, err
 	}
 
-	app, err := s.store.GetGithubOauthApp(opts.Name, opts.ID)
-	if err != nil {
-		return nil, err
-	}
-
+	app := s.state.GetGithubOauthApp(opts.Name, opts.ID)
 	if app != nil {
 		return app, nil
 	}
@@ -98,7 +90,7 @@ func (s *githubService) CreateGithubOauthApp(_ context.Context, opts client.Crea
 		return nil, err
 	}
 
-	report, err := s.store.SaveGithubOauthApp(app)
+	report, err := s.state.SaveGithubOauthApp(app)
 	if err != nil {
 		return nil, err
 	}
@@ -112,10 +104,10 @@ func (s *githubService) CreateGithubOauthApp(_ context.Context, opts client.Crea
 }
 
 // NewGithubService returns an initialised service
-func NewGithubService(api client.GithubAPI, store client.GithubStore, report client.GithubReport) client.GithubService {
+func NewGithubService(api client.GithubAPI, report client.GithubReport, state client.GithubState) client.GithubService {
 	return &githubService{
 		api:    api,
-		store:  store,
 		report: report,
+		state:  state,
 	}
 }

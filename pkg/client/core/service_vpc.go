@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/client/store"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -11,6 +13,7 @@ type vpcService struct {
 	api    client.VPCAPI
 	store  client.VPCStore
 	report client.VPCReport
+	state  client.VPCState
 }
 
 func (s *vpcService) CreateVpc(_ context.Context, opts api.CreateVpcOpts) (*api.Vpc, error) {
@@ -19,12 +22,17 @@ func (s *vpcService) CreateVpc(_ context.Context, opts api.CreateVpcOpts) (*api.
 		return nil, err
 	}
 
-	report, err := s.store.SaveVpc(vpc)
+	r1, err := s.store.SaveVpc(vpc)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.report.ReportCreateVPC(vpc, report)
+	r2, err := s.state.SaveVpc(vpc)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.ReportCreateVPC(vpc, []*store.Report{r1, r2})
 	if err != nil {
 		return nil, err
 	}
@@ -43,14 +51,20 @@ func (s *vpcService) DeleteVpc(_ context.Context, opts api.DeleteVpcOpts) error 
 		return err
 	}
 
+	_, err = s.state.DeleteVpc(opts.ID)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // NewVPCService returns an initialised VPC service
-func NewVPCService(api client.VPCAPI, store client.VPCStore, report client.VPCReport) client.VPCService {
+func NewVPCService(api client.VPCAPI, store client.VPCStore, report client.VPCReport, state client.VPCState) client.VPCService {
 	return &vpcService{
 		api:    api,
 		store:  store,
 		report: report,
+		state:  state,
 	}
 }

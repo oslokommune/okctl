@@ -38,15 +38,20 @@ type ArgoCDService interface {
 
 // ArgoCDAPI invokes the APIs for creating resources
 type ArgoCDAPI interface {
-	CreateArgoCD(opts CreateArgoCDOpts) (*ArgoCD, error)
+	CreateArgoCD(opts api.CreateArgoCDOpts) (*ArgoCD, error)
 }
 
 // ArgoCDStore implements the storage layer
 type ArgoCDStore interface {
-	SaveArgoCD(cd *ArgoCD) ([]*store.Report, error)
+	SaveArgoCD(cd *ArgoCD) (*store.Report, error)
 }
 
 // ArgoCDReport implements the report layer
 type ArgoCDReport interface {
 	CreateArgoCD(cd *ArgoCD, reports []*store.Report) error
+}
+
+// ArgoCDState implements the state layer
+type ArgoCDState interface {
+	SaveArgoCD(cd *ArgoCD) (*store.Report, error)
 }

@@ -26,7 +26,13 @@ type ClusterStore interface {
 	GetCluster(id api.ID) (*api.Cluster, error)
 }
 
+// ClusterState implements the state layer
+type ClusterState interface {
+	SaveCluster(cluster *api.Cluster) (*store.Report, error)
+	DeleteCluster(id api.ID) (*store.Report, error)
+}
+
 // ClusterReport provides output of the actions
 type ClusterReport interface {
-	ReportCreateCluster(cluster *api.Cluster, report *store.Report) error
+	ReportCreateCluster(cluster *api.Cluster, reports []*store.Report) error
 }

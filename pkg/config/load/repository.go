@@ -54,11 +54,13 @@ func CreateOnRepoDataNotFound() DataNotFoundFn {
 			return err
 		}
 
-		data.Name = cfg.Name
-		data.Region = cfg.Region
-		data.OutputDir = cfg.BaseDir
+		data.Metadata = &state.Metadata{
+			Name:      cfg.Name,
+			Region:    cfg.Region,
+			OutputDir: cfg.BaseDir,
+		}
 
-		c.RepoData = data
+		c.RepoState = data
 
 		err = c.WriteCurrentRepoData()
 		if err != nil {
@@ -85,7 +87,7 @@ func buildRepoDataLoader(notFoundFn DataNotFoundFn, viperCfg func(v *viper.Viper
 			return err
 		}
 
-		cfg.RepoData = &state.Repository{}
+		cfg.RepoState = &state.Repository{}
 
 		v := viper.New()
 		v.SetFs(cfg.FileSystem.Fs)
@@ -110,7 +112,7 @@ func buildRepoDataLoader(notFoundFn DataNotFoundFn, viperCfg func(v *viper.Viper
 			viperCfg(v)
 		}
 
-		err = v.Unmarshal(cfg.RepoData)
+		err = v.Unmarshal(cfg.RepoState)
 		if err != nil {
 			return err
 		}

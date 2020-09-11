@@ -2,15 +2,13 @@
 package config
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"time"
 
-	"gopkg.in/yaml.v3"
+	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/mitchellh/go-homedir"
@@ -18,7 +16,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/context"
 	"github.com/oslokommune/okctl/pkg/rotatefilehook"
-	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -148,10 +145,11 @@ type Config struct {
 	*context.Context
 
 	UserDataLoader DataLoaderFn
-	UserData       *state.User
+	UserState      *state.User
 
 	RepoDataLoader DataLoaderFn
-	RepoData       *state.Repository
+	RepoState      *state.Repository
+	RepoSaver      state.ClusterSaverForEnv
 
 	Destination string
 	ServerURL   string
@@ -192,7 +190,7 @@ func (c *Config) EnableFileLog() error {
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("failed to initialize file rotate hook: %v", err)
+		return fmt.Errorf("initialising the file rotate hook: %v", err)
 	}
 
 	c.Logger.AddHook(rotateFileHook)
@@ -212,7 +210,7 @@ func (c *Config) Format() core.EncodeResponseType {
 
 // LoadRepoData will attempt to load repository data
 func (c *Config) LoadRepoData() error {
-	c.RepoData = nil
+	c.RepoState = nil
 
 	if c.RepoDataLoader == nil {
 		c.RepoDataLoader = NoopDataLoader
@@ -223,7 +221,7 @@ func (c *Config) LoadRepoData() error {
 
 // LoadUserData will attempt to load okctl application data
 func (c *Config) LoadUserData() error {
-	c.UserData = nil
+	c.UserState = nil
 
 	if c.UserDataLoader == nil {
 		c.UserDataLoader = NoopDataLoader
@@ -232,41 +230,22 @@ func (c *Config) LoadUserData() error {
 	return c.UserDataLoader(c)
 }
 
-// WriteUserData will store the current app data state to disk
-func (c *Config) WriteUserData(b []byte) error {
-	home, err := c.GetHomeDir()
+// WriteCurrentUserData writes the current app data state
+// to disk
+func (c *Config) WriteCurrentUserData() error {
+	userDir, err := c.GetUserDataDir()
 	if err != nil {
 		return err
 	}
 
-	store := storage.NewFileSystemStorage(home)
-
-	writer, err := store.Recreate(DefaultDir, DefaultConfig, 0o644)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		err = writer.Close()
-	}()
-
-	_, err = io.Copy(writer, bytes.NewReader(b))
+	_, err = store.NewFileSystem(userDir, c.FileSystem).
+		StoreStruct(DefaultConfig, c.UserState, store.ToYAML()).
+		Do()
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-// WriteCurrentUserData writes the current app data state
-// to disk
-func (c *Config) WriteCurrentUserData() error {
-	b, err := yaml.Marshal(c.UserData)
-	if err != nil {
-		return err
-	}
-
-	return c.WriteUserData(b)
 }
 
 // GetRepoDir will return the currently active repository directory
@@ -312,35 +291,14 @@ func (c *Config) GetRepoDataPath() (string, error) {
 
 // WriteCurrentRepoData will write current repo state to disk
 func (c *Config) WriteCurrentRepoData() error {
-	data, err := yaml.Marshal(c.RepoData)
+	repoDir, err := c.GetRepoDir()
 	if err != nil {
 		return err
 	}
 
-	c.Logger.Debugf("write current repo data: %s", string(data))
-
-	return c.WriteRepoData(data)
-}
-
-// WriteRepoData will write the provided repo state to disk
-func (c *Config) WriteRepoData(b []byte) error {
-	repo, err := c.GetRepoDir()
-	if err != nil {
-		return err
-	}
-
-	store := storage.NewFileSystemStorage(repo)
-
-	writer, err := store.Recreate("", DefaultRepositoryConfig, 0o644)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		err = writer.Close()
-	}()
-
-	_, err = io.Copy(writer, bytes.NewReader(b))
+	_, err = store.NewFileSystem(repoDir, c.FileSystem).
+		StoreStruct(DefaultRepositoryConfig, c.RepoState, store.ToYAML()).
+		Do()
 	if err != nil {
 		return err
 	}
@@ -415,29 +373,41 @@ func (c *Config) GetRepoOutputDir(env string) (string, error) {
 		return "", err
 	}
 
-	return path.Join(base, c.RepoData.OutputDir, env), nil
+	return path.Join(base, c.RepoState.Metadata.OutputDir, env), nil
 }
 
 // ClusterName returns a consistent cluster name
 func (c *Config) ClusterName(env string) string {
-	return fmt.Sprintf("%s-%s", c.RepoData.Name, env)
+	return fmt.Sprintf("%s-%s", c.RepoState.Metadata.Name, env)
 }
 
 // AWSAccountID returns the aws account ID for the given env
 func (c *Config) AWSAccountID(env string) string {
-	cluster := c.RepoData.ClusterForEnv(env)
-	if cluster != nil {
-		return cluster.AWSAccountID
+	if c.RepoState.Clusters == nil {
+		return ""
 	}
 
-	return ""
+	cluster, ok := c.RepoState.Clusters[env]
+	if !ok {
+		return ""
+	}
+
+	return cluster.AWSAccountID
 }
 
 // SetGithubOrganisationName sets the github organisation
 func (c *Config) SetGithubOrganisationName(name, env string) {
-	cluster := c.RepoData.ClusterForEnv(env)
-	if cluster == nil {
+	if c.RepoState.Clusters == nil {
 		return
+	}
+
+	cluster, ok := c.RepoState.Clusters[env]
+	if !ok {
+		return
+	}
+
+	if cluster.Github == nil {
+		cluster.Github = &state.Github{}
 	}
 
 	cluster.Github.Organisation = name

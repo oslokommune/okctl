@@ -20,28 +20,32 @@ const (
 // Repository stores the configured state of a repository
 // as used by okctl
 type Repository struct {
+	Metadata *Metadata
+	Clusters map[string]*Cluster
+}
+
+// Validate the repository
+func (r *Repository) Validate() error {
+	return validation.ValidateStruct(r,
+		validation.Field(r.Metadata),
+		validation.Field(r.Clusters),
+	)
+}
+
+// Metadata contains repository metadata
+type Metadata struct {
 	Name      string
 	Region    string
 	OutputDir string
-	Clusters  map[string]*Cluster
 }
 
-// ClusterForEnv returns the cluster for the given environment
-func (d *Repository) ClusterForEnv(env string) *Cluster {
-	if c, ok := d.Clusters[env]; ok {
-		return c
-	}
-
-	return nil
-}
-
-// Validate the provided data
-func (d *Repository) Validate() error {
-	return validation.ValidateStruct(d,
-		validation.Field(&d.Name,
+// Validate the metadata
+func (m *Metadata) Validate() error {
+	return validation.ValidateStruct(m,
+		validation.Field(&m.Name,
 			validation.Required,
 		),
-		validation.Field(&d.Region,
+		validation.Field(&m.Region,
 			validation.Required,
 			validation.In(func() []interface{} {
 				var o []interface{}
@@ -51,10 +55,9 @@ func (d *Repository) Validate() error {
 				return o
 			}()...),
 		),
-		validation.Field(&d.OutputDir,
+		validation.Field(&m.OutputDir,
 			validation.Required,
 		),
-		validation.Field(&d.Clusters),
 	)
 }
 
@@ -66,7 +69,7 @@ type Cluster struct {
 	AWSAccountID string
 	HostedZone   map[string]*HostedZone
 	VPC          *VPC
-	Certificates map[string]string // domain:arn
+	Certificates map[string]*Certificate
 	Github       *Github
 	ArgoCD       *ArgoCD
 }
@@ -77,7 +80,7 @@ const (
 )
 
 // Validate the cluster data
-func (c Cluster) Validate() error {
+func (c *Cluster) Validate() error {
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.Name, validation.Required),
 		validation.Field(&c.Environment,
@@ -88,6 +91,12 @@ func (c Cluster) Validate() error {
 		validation.Field(&c.VPC),
 		validation.Field(&c.Certificates),
 	)
+}
+
+// Certificate contains state about a certificate
+type Certificate struct {
+	Domain string
+	ARN    string
 }
 
 // VPC contains state about the VPC
@@ -174,7 +183,6 @@ type PrivateKeySecret struct {
 // clusters hostedzone delegation
 type HostedZone struct {
 	IsDelegated bool
-	IsCreated   bool
 	Primary     bool
 	Domain      string
 	FQDN        string
@@ -183,20 +191,20 @@ type HostedZone struct {
 
 // Validate the hostedzone
 func (h *HostedZone) Validate() error {
-	return validation.ValidateStruct(&h,
+	return validation.ValidateStruct(h,
 		validation.Field(&h.Domain, validation.Required),
 		validation.Field(&h.FQDN, validation.Required),
-		validation.Field(&h.IsDelegated, validation.Required),
-		validation.Field(&h.IsCreated, validation.Required),
+		validation.Field(h.NameServers, validation.Each(validation.Required)),
 	)
 }
 
-// NewUser returns repository data with defaults set
+// NewRepository returns repository data with defaults set
 func NewRepository() *Repository {
 	return &Repository{
-		Name:      "",
-		Region:    v1alpha1.RegionEuWest1,
-		OutputDir: "infrastructure",
-		Clusters:  map[string]*Cluster{},
+		Metadata: &Metadata{
+			Region:    v1alpha1.RegionEuWest1,
+			OutputDir: "infrastructure",
+		},
+		Clusters: map[string]*Cluster{},
 	}
 }

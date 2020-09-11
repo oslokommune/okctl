@@ -54,6 +54,17 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		return err
 	}
 
+	repoDir, err := o.GetRepoDir()
+	if err != nil {
+		return err
+	}
+
+	o.RepoSaver = state.NewClusterSaverForEnv(env, o.RepoState, state.DefaultFileSystemSaver(
+		config.DefaultRepositoryConfig,
+		repoDir,
+		o.FileSystem,
+	))
+
 	err = o.initialiseProviders(env, awsAccountID)
 	if err != nil {
 		return err
@@ -214,22 +225,22 @@ func New() *Okctl {
 
 // Binaries returns the application binaries
 func (o *Okctl) Binaries() []state.Binary {
-	return o.UserData.Binaries
+	return o.UserState.Binaries
 }
 
 // Host returns the host information
 func (o *Okctl) Host() state.Host {
-	return o.UserData.Host
+	return o.UserState.Host
 }
 
 // Username returns the username of the active user
 func (o *Okctl) Username() string {
-	return o.UserData.User.Username
+	return o.UserState.User.Username
 }
 
 // Region returns the AWS region of the repository
 func (o *Okctl) Region() string {
-	return o.RepoData.Region
+	return o.RepoState.Metadata.Region
 }
 
 // initialiseProviders knows how to create all required providers

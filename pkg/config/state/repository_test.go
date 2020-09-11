@@ -21,9 +21,11 @@ func TestData(t *testing.T) {
 		{
 			name: "Should work",
 			data: &state.Repository{
-				Name:      "okctl",
-				Region:    "eu-west-1",
-				OutputDir: "infrastructure",
+				Metadata: &state.Metadata{
+					Name:      "okctl",
+					Region:    "eu-west-1",
+					OutputDir: "infrastructure",
+				},
 				Clusters: map[string]*state.Cluster{
 					"pro": {
 						Name:         "okctl-pro",
@@ -32,7 +34,6 @@ func TestData(t *testing.T) {
 						HostedZone: map[string]*state.HostedZone{
 							"test.oslo.systems": {
 								IsDelegated: true,
-								IsCreated:   false,
 								Domain:      "test.oslo.systems",
 								FQDN:        "test.oslo.systems",
 								NameServers: []string{
@@ -59,8 +60,12 @@ func TestData(t *testing.T) {
 							VpcID: "3456ygfghj",
 							CIDR:  "192.168.0.0/20",
 						},
-						Certificates: map[string]string{
-							"argocd.test.oslo.systems": "arn:::cert/something",
+						Certificates: map[string]*state.Certificate{
+							"argocd.test.oslo.systems": {
+
+								Domain: "argocd.test.oslo.systems",
+								ARN:    "arn:::cert/something",
+							},
 						},
 						Github: &state.Github{
 							Organisation: "oslokommune",
@@ -92,6 +97,15 @@ func TestData(t *testing.T) {
 										},
 									},
 								},
+							},
+						},
+						ArgoCD: &state.ArgoCD{
+							SiteURL: "https://argocd.oslo.systems",
+							Domain:  "argocd.oslo.systems",
+							SecretKey: &state.SecretKeySecret{
+								Name:    "something",
+								Path:    "/some/path",
+								Version: 1,
 							},
 						},
 					},

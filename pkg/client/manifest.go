@@ -33,3 +33,8 @@ type ManifestAPI interface {
 type ManifestStore interface {
 	SaveExternalSecret(externalSecret *ExternalSecret) (*store.Report, error)
 }
+
+// ManifestReport defines the report layer
+type ManifestReport interface {
+	SaveExternalSecret(secret *ExternalSecret, report *store.Report) error
+}

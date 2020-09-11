@@ -137,16 +137,16 @@ type GithubAPI interface {
 	CreateGithubOauthApp(opts CreateGithubOauthAppOpts) (*GithubOauthApp, error)
 }
 
-// GithubStore is the storage layer
-type GithubStore interface {
-	SaveGithubInfrastructureRepository(repository *GithubRepository) (*store.Report, error)
-	GetGithubInfrastructureRepository(id api.ID) (*GithubRepository, error)
-	SaveGithubOauthApp(app *GithubOauthApp) (*store.Report, error)
-	GetGithubOauthApp(appName string, id api.ID) (*GithubOauthApp, error)
-}
-
 // GithubReport is the report layer
 type GithubReport interface {
 	ReadyGithubInfrastructureRepository(repository *GithubRepository, report *store.Report) error
 	CreateGithubOauthApp(app *GithubOauthApp, report *store.Report) error
+}
+
+// GithubState is the state layer
+type GithubState interface {
+	SaveGithubInfrastructureRepository(repository *GithubRepository) (*store.Report, error)
+	GetGithubInfrastructureRepository(id api.ID) *GithubRepository
+	SaveGithubOauthApp(app *GithubOauthApp) (*store.Report, error)
+	GetGithubOauthApp(appName string, id api.ID) *GithubOauthApp
 }

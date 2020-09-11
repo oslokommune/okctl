@@ -31,14 +31,25 @@ func New(out io.Writer, exit chan struct{}, spinner *yacspin.Spinner) *Console {
 func (c *Console) Report(actions []store.Action, component, description string) error {
 	close(c.exit)
 
-	err := c.spinner.Stop()
-	if err != nil {
-		return err
+	if c.exit == nil {
+		err := c.spinner.Pause()
+		if err != nil {
+			return err
+		}
+
+		defer func() {
+			err = c.spinner.Unpause()
+		}()
+	} else {
+		err := c.spinner.Stop()
+		if err != nil {
+			return err
+		}
 	}
 
 	time.Sleep(100 * time.Millisecond) // nolint: gomnd
 
-	_, err = fmt.Fprintf(c.out, "created %s: %s\n", component, description)
+	_, err := fmt.Fprintf(c.out, "created %s: %s\n", component, description)
 	if err != nil {
 		return err
 	}

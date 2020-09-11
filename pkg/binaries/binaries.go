@@ -4,8 +4,6 @@ package binaries
 import (
 	"io"
 
-	"github.com/oslokommune/okctl/pkg/config/state"
-
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
 	"github.com/oslokommune/okctl/pkg/binaries/run"
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
@@ -96,13 +94,4 @@ func New(progress io.Writer, auth aws.Authenticator, fetcher fetch.Provider) Pro
 		kubectl:             map[string]*kubectl.Kubectl{},
 		awsIamAuthenticator: map[string]*awsiamauthenticator.AwsIamAuthenticator{},
 	}
-}
-
-// KnownBinaries returns a list of known binaries
-func KnownBinaries() (binaries []state.Binary) {
-	binaries = append(binaries, eksctl.KnownBinaries()...)
-	binaries = append(binaries, awsiamauthenticator.KnownBinaries()...)
-	binaries = append(binaries, kubectl.KnownBinaries()...)
-
-	return binaries
 }

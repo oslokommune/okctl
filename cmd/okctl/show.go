@@ -70,7 +70,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 			opts.Region = o.Region()
 			opts.AWSAccountID = o.AWSAccountID(environment)
 			opts.Environment = environment
-			opts.Repository = o.RepoData.Name
+			opts.Repository = o.RepoState.Metadata.Name
 			opts.ClusterName = o.ClusterName(environment)
 
 			err := opts.Validate()

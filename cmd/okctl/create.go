@@ -6,13 +6,14 @@ import (
 	"io"
 	"io/ioutil"
 	"path"
-	"time"
+
+	"github.com/oslokommune/okctl/pkg/spinner"
+
+	stateSaver "github.com/oslokommune/okctl/pkg/client/core/state"
 
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
-
-	github2 "github.com/oslokommune/okctl/pkg/credentials/github"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/logrusorgru/aurora"
@@ -22,8 +23,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/config/state"
 
 	"github.com/spf13/afero"
-
-	"github.com/hako/durafmt"
 
 	"github.com/theckman/yacspin"
 
@@ -189,7 +188,7 @@ and database subnets.`,
 
 			opts.Environment = args[0]
 			opts.AWSAccountID = args[1]
-			opts.RepositoryName = o.RepoData.Name
+			opts.RepositoryName = o.RepoState.Metadata.Name
 			opts.ClusterName = o.ClusterName(opts.Environment)
 			opts.Region = o.Region()
 			opts.Organisation = github.DefaultOrg
@@ -202,7 +201,7 @@ and database subnets.`,
 			return o.Initialise(opts.Environment, opts.AWSAccountID)
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			appDir, err := o.GetUserDataDir()
+			userDir, err := o.GetUserDataDir()
 			if err != nil {
 				return err
 			}
@@ -215,7 +214,7 @@ and database subnets.`,
 					opts.AWSAccountID,
 					aurora.Blue("idempotent"),
 					aurora.Blue("logs"),
-					path.Join(appDir, config.DefaultLogDir, config.DefaultLogName),
+					path.Join(userDir, config.DefaultLogDir, config.DefaultLogName),
 					aurora.Bold("#kjøremiljø-support"),
 				)
 			}
@@ -272,120 +271,79 @@ and database subnets.`,
 				return nil
 			}
 
-			cfg := yacspin.Config{
-				Frequency:       100 * time.Millisecond,
-				CharSet:         yacspin.CharSets[59],
-				Suffix:          " creating",
-				SuffixAutoColon: true,
-				StopCharacter:   "✓",
-				StopColors:      []string{"fgGreen"},
-				Writer:          o.Out,
+			spin, err := spinner.New("creating", o.Err)
+			if err != nil {
+				return prettyErr(err)
 			}
 
-			spinner, err := yacspin.New(cfg)
+			common := &common{
+				Client:    c,
+				Ctx:       o.Ctx,
+				Fs:        o.FileSystem,
+				ID:        id,
+				OutputDir: outputDir,
+				Out:       o.Err,
+				Spinner:   spin,
+				State:     o.RepoSaver,
+			}
+
+			ghClient, err := github.New(o.Ctx, o.CredentialsProvider.Github())
 			if err != nil {
-				return fmt.Errorf("failed to create spinner")
+				return err
 			}
 
 			vpc, err := createVPC(&vpc{
-				ctx:       o.Ctx,
-				out:       o.Err,
-				spinner:   spinner,
-				cidr:      opts.Cidr,
-				id:        id,
-				c:         c,
-				outputDir: outputDir,
-				fs:        o.FileSystem,
+				common: common,
+				CIDR:   opts.Cidr,
 			})
 			if err != nil {
-				spinner.StopFailMessage(err.Error())
 				return prettyErr(err)
 			}
 
 			_, err = createCluster(&cluster{
-				ctx:       o.Ctx,
-				out:       o.Err,
-				spinner:   spinner,
-				vpc:       vpc,
-				cidr:      opts.Cidr,
-				id:        id,
-				c:         c,
-				repoData:  o.RepoData,
-				outputDir: outputDir,
-				repoDir:   repoDir,
-				fs:        o.FileSystem,
+				common: common,
+				CIDR:   opts.Cidr,
+				VPC:    vpc,
 			})
 			if err != nil {
 				return prettyErr(err)
 			}
 
 			_, err = createExternalSecrets(&externalSecrets{
-				ctx:       o.Ctx,
-				out:       o.Err,
-				spinner:   spinner,
-				c:         c,
-				outputDir: outputDir,
-				fs:        o.FileSystem,
-				id:        id,
+				common: common,
 			})
 			if err != nil {
 				return prettyErr(err)
 			}
 
 			_, err = createAlbIngressController(&ingressController{
-				ctx:       o.Ctx,
-				out:       o.Err,
-				spinner:   spinner,
-				outputDir: outputDir,
-				c:         c,
-				fs:        o.FileSystem,
-				id:        id,
-				vpc:       vpc,
+				common: common,
+				VPC:    vpc,
 			})
 			if err != nil {
 				return prettyErr(err)
 			}
 
-			d, err := createPrimaryHostedZone(&hostedZone{
-				ctx:       o.Ctx,
-				out:       o.Err,
-				spinner:   spinner,
-				repoData:  o.RepoData,
-				c:         c,
-				outputDir: outputDir,
-				repoDir:   repoDir,
-				fs:        o.FileSystem,
-				id:        id,
+			hostedZone, err := createPrimaryHostedZone(&hostedZone{
+				common: common,
 			})
 			if err != nil {
 				return prettyErr(err)
 			}
 
 			_, err = createExternalDNS(&externalDNS{
-				ctx:       o.Ctx,
-				out:       o.Err,
-				spinner:   spinner,
-				id:        id,
-				outputDir: outputDir,
-				c:         c,
-				fs:        o.FileSystem,
-				d:         d,
+				common:     common,
+				HostedZone: hostedZone,
 			})
 			if err != nil {
 				return prettyErr(err)
 			}
 
-			githubService, githubRepo, err := createGithubRepo(&githubClient{
-				ctx:          o.Ctx,
-				out:          o.Err,
-				spinner:      spinner,
-				repoDir:      repoDir,
-				organisation: opts.Organisation,
-				id:           id,
-				repoData:     o.RepoData,
-				c:            c,
-				fs:           o.FileSystem,
-				auth:         o.CredentialsProvider.Github(),
+			githubRepo, err := createGithubRepo(&githubClient{
+				common:       common,
+				Github:       ghClient,
+				Organisation: opts.Organisation,
+				RepoDir:      repoDir,
 			})
 
 			o.SetGithubOrganisationName(opts.Organisation, opts.Environment)
@@ -395,27 +353,18 @@ and database subnets.`,
 			}
 
 			argoCD, err := createArgoCD(&argocdSetup{
-				ctx:           o.Ctx,
-				out:           o.Err,
-				spinner:       spinner,
-				id:            id,
-				githubRepo:    githubRepo,
-				githubService: githubService,
-				d:             d,
-				outputDir:     outputDir,
-				repoDir:       repoDir,
-				organisation:  opts.Organisation,
-				fs:            o.FileSystem,
-				c:             c,
-				repoData:      o.RepoData,
+				common:       common,
+				HostedZone:   hostedZone,
+				GithubRepo:   githubRepo,
+				Organisation: opts.Organisation,
 			})
 			if err != nil {
 				return prettyErr(err)
 			}
 
-			kubeConfig := path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(opts.Environment), config.DefaultClusterKubeConfig)
-			awsConfig := path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(opts.Environment), config.DefaultClusterAwsConfig)
-			awsCredentials := path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(opts.Environment), config.DefaultClusterAwsCredentials)
+			kubeConfig := path.Join(userDir, config.DefaultCredentialsDirName, o.ClusterName(opts.Environment), config.DefaultClusterKubeConfig)
+			awsConfig := path.Join(userDir, config.DefaultCredentialsDirName, o.ClusterName(opts.Environment), config.DefaultClusterAwsConfig)
+			awsCredentials := path.Join(userDir, config.DefaultCredentialsDirName, o.ClusterName(opts.Environment), config.DefaultClusterAwsCredentials)
 
 			exports := fmt.Sprintf(
 				"export AWS_CONFIG_FILE=%s\nexport AWS_SHARED_CREDENTIALS_FILE=%s\nexport AWS_PROFILE=default\nexport KUBECONFIG=%s\n",
@@ -463,392 +412,329 @@ and database subnets.`,
 	return cmd
 }
 
-func timer(spinner *yacspin.Spinner, component string) chan struct{} {
-	exit := make(chan struct{})
-
-	go func(ch chan struct{}, start time.Time) {
-		tick := time.Tick(1 * time.Millisecond)
-
-		for {
-			select {
-			case <-ch:
-				return
-			case <-tick:
-				spinner.Message(component + " (elapsed: " + durafmt.Parse(time.Since(start)).LimitFirstN(2).String() + ")") // nolint: gomnd
-			}
-		}
-	}(exit, time.Now())
-
-	return exit
+type common struct {
+	Client    *rest.HTTPClient
+	Ctx       context.Context
+	Fs        *afero.Afero
+	ID        api.ID
+	OutputDir string
+	Out       io.Writer
+	Spinner   *yacspin.Spinner
+	State     state.ClusterSaverForEnv
 }
 
 type vpc struct {
-	ctx       context.Context
-	out       io.Writer
-	spinner   *yacspin.Spinner
-	cidr      string
-	id        api.ID
-	c         *rest.HTTPClient
-	outputDir string
-	fs        *afero.Afero
+	*common
+	CIDR string
 }
 
 func createVPC(v *vpc) (*api.Vpc, error) {
-	_ = v.spinner.Start()
-	exit := timer(v.spinner, "vpc")
+	_ = v.Spinner.Start()
+	exit := spinner.Timer("vpc", v.Spinner)
 
 	vpcService := core.NewVPCService(
-		rest.NewVPCAPI(v.c),
+		rest.NewVPCAPI(v.Client),
 		filesystem.NewVpcStore(
-			config.DefaultVpcOutputs,
-			config.DefaultVpcCloudFormationTemplate,
-			path.Join(v.outputDir, config.DefaultVpcBaseDir),
-			v.fs,
+			filesystem.Paths{
+				OutputFile:         config.DefaultVpcOutputs,
+				CloudFormationFile: config.DefaultVpcCloudFormationTemplate,
+				BaseDir:            path.Join(v.OutputDir, config.DefaultVpcBaseDir),
+			},
+			v.Fs,
 		),
-		console.NewVPCReport(v.out, v.spinner, exit),
+		console.NewVPCReport(v.Out, v.Spinner, exit),
+		stateSaver.NewVpcState(v.State),
 	)
 
-	return vpcService.CreateVpc(v.ctx, api.CreateVpcOpts{
-		ID:   v.id,
-		Cidr: v.cidr,
+	return vpcService.CreateVpc(v.Ctx, api.CreateVpcOpts{
+		ID:   v.ID,
+		Cidr: v.CIDR,
 	})
 }
 
 type cluster struct {
-	ctx       context.Context
-	out       io.Writer
-	spinner   *yacspin.Spinner
-	vpc       *api.Vpc
-	cidr      string
-	id        api.ID
-	c         *rest.HTTPClient
-	repoData  *state.Repository
-	outputDir string
-	repoDir   string
-	fs        *afero.Afero
+	*common
+	CIDR string
+	VPC  *api.Vpc
 }
 
 func createCluster(c *cluster) (*api.Cluster, error) {
-	_ = c.spinner.Start()
-	exit := timer(c.spinner, "cluster")
+	_ = c.Spinner.Start()
+	exit := spinner.Timer("cluster", c.Spinner)
 
 	clusterService := core.NewClusterService(
-		rest.NewClusterAPI(c.c),
+		rest.NewClusterAPI(c.Client),
 		filesystem.NewClusterStore(
 			filesystem.Paths{
-				ConfigFile: config.DefaultRepositoryConfig,
-				BaseDir:    c.repoDir,
-			},
-			filesystem.Paths{
 				ConfigFile: config.DefaultClusterConfig,
-				BaseDir:    path.Join(c.outputDir, config.DefaultClusterBaseDir),
+				BaseDir:    path.Join(c.OutputDir, config.DefaultClusterBaseDir),
 			},
-			c.fs,
-			c.repoData,
+			c.Fs,
 		),
-		console.NewClusterReport(c.out, exit, c.spinner),
+		console.NewClusterReport(c.Out, exit, c.Spinner),
+		stateSaver.NewClusterState(c.State),
 	)
 
-	return clusterService.CreateCluster(c.ctx, api.ClusterCreateOpts{
-		ID:                c.id,
-		Cidr:              c.cidr,
-		VpcID:             c.vpc.VpcID,
-		VpcPrivateSubnets: c.vpc.PrivateSubnets,
-		VpcPublicSubnets:  c.vpc.PublicSubnets,
+	return clusterService.CreateCluster(c.Ctx, api.ClusterCreateOpts{
+		ID:                c.ID,
+		Cidr:              c.CIDR,
+		VpcID:             c.VPC.VpcID,
+		VpcPrivateSubnets: c.VPC.PrivateSubnets,
+		VpcPublicSubnets:  c.VPC.PublicSubnets,
 	})
 }
 
 type externalSecrets struct {
-	ctx       context.Context
-	out       io.Writer
-	spinner   *yacspin.Spinner
-	c         *rest.HTTPClient
-	outputDir string
-	fs        *afero.Afero
-	id        api.ID
+	*common
 }
 
 func createExternalSecrets(e *externalSecrets) (*client.ExternalSecrets, error) {
-	_ = e.spinner.Start()
-	exit := timer(e.spinner, "external-secrets")
+	_ = e.Spinner.Start()
+	exit := spinner.Timer("external-secrets", e.Spinner)
 
 	externalSecretsService := core.NewExternalSecretsService(
-		rest.NewExternalSecretsAPI(e.c),
+		rest.NewExternalSecretsAPI(e.Client),
 		filesystem.NewExternalSecretsStore(
 			filesystem.Paths{
 				OutputFile:         config.DefaultPolicyOutputFile,
 				CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
-				BaseDir:            path.Join(e.outputDir, config.DefaultExternalSecretsBaseDir),
+				BaseDir:            path.Join(e.OutputDir, config.DefaultExternalSecretsBaseDir),
 			},
 			filesystem.Paths{
 				OutputFile: config.DefaultServiceAccountOutputsFile,
 				ConfigFile: config.DefaultServiceAccountConfigFile,
-				BaseDir:    path.Join(e.outputDir, config.DefaultExternalSecretsBaseDir),
+				BaseDir:    path.Join(e.OutputDir, config.DefaultExternalSecretsBaseDir),
 			},
 			filesystem.Paths{
 				OutputFile:  config.DefaultHelmOutputsFile,
 				ReleaseFile: config.DefaultHelmReleaseFile,
 				ChartFile:   config.DefaultHelmChartFile,
-				BaseDir:     path.Join(e.outputDir, config.DefaultExternalSecretsBaseDir),
+				BaseDir:     path.Join(e.OutputDir, config.DefaultExternalSecretsBaseDir),
 			},
-			e.fs,
+			e.Fs,
 		),
-		console.NewExternalSecretsReport(e.out, exit, e.spinner),
+		console.NewExternalSecretsReport(e.Out, exit, e.Spinner),
 	)
 
-	return externalSecretsService.CreateExternalSecrets(e.ctx, client.CreateExternalSecretsOpts{
-		ID: e.id,
+	return externalSecretsService.CreateExternalSecrets(e.Ctx, client.CreateExternalSecretsOpts{
+		ID: e.ID,
 	})
 }
 
 type ingressController struct {
-	ctx       context.Context
-	out       io.Writer
-	spinner   *yacspin.Spinner
-	outputDir string
-	c         *rest.HTTPClient
-	fs        *afero.Afero
-	id        api.ID
-	vpc       *api.Vpc
+	*common
+	VPC *api.Vpc
 }
 
 func createAlbIngressController(c *ingressController) (*client.ALBIngressController, error) {
-	_ = c.spinner.Start()
-	exit := timer(c.spinner, "alb-ingress-controller")
+	_ = c.Spinner.Start()
+	exit := spinner.Timer("alb-ingress-controller", c.Spinner)
 
 	albIngressControllerService := core.NewALBIngressControllerService(
-		rest.NewALBIngressControllerAPI(c.c),
+		rest.NewALBIngressControllerAPI(c.Client),
 		filesystem.NewALBIngressControllerStore(
 			filesystem.Paths{
 				OutputFile:         config.DefaultPolicyOutputFile,
 				CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
-				BaseDir:            path.Join(c.outputDir, config.DefaultAlbIngressControllerBaseDir),
+				BaseDir:            path.Join(c.OutputDir, config.DefaultAlbIngressControllerBaseDir),
 			},
 			filesystem.Paths{
 				OutputFile: config.DefaultServiceAccountOutputsFile,
 				ConfigFile: config.DefaultServiceAccountConfigFile,
-				BaseDir:    path.Join(c.outputDir, config.DefaultAlbIngressControllerBaseDir),
+				BaseDir:    path.Join(c.OutputDir, config.DefaultAlbIngressControllerBaseDir),
 			},
 			filesystem.Paths{
 				OutputFile:  config.DefaultHelmOutputsFile,
 				ReleaseFile: config.DefaultHelmReleaseFile,
 				ChartFile:   config.DefaultHelmChartFile,
-				BaseDir:     path.Join(c.outputDir, config.DefaultAlbIngressControllerBaseDir),
+				BaseDir:     path.Join(c.OutputDir, config.DefaultAlbIngressControllerBaseDir),
 			},
-			c.fs,
+			c.Fs,
 		),
-		console.NewAlbIngressControllerReport(c.out, exit, c.spinner),
+		console.NewAlbIngressControllerReport(c.Out, exit, c.Spinner),
 	)
 
-	return albIngressControllerService.CreateALBIngressController(c.ctx, client.CreateALBIngressControllerOpts{
-		ID:    c.id,
-		VPCID: c.vpc.VpcID,
+	return albIngressControllerService.CreateALBIngressController(c.Ctx, client.CreateALBIngressControllerOpts{
+		ID:    c.ID,
+		VPCID: c.VPC.VpcID,
 	})
 }
 
 type hostedZone struct {
-	ctx       context.Context
-	out       io.Writer
-	spinner   *yacspin.Spinner
-	repoData  *state.Repository
-	c         *rest.HTTPClient
-	outputDir string
-	repoDir   string
-	fs        *afero.Afero
-	id        api.ID
+	*common
 }
 
 func createPrimaryHostedZone(h *hostedZone) (*api.HostedZone, error) {
-	_ = h.spinner.Start()
-	exit := timer(h.spinner, "primary-hosted-zone")
+	_ = h.Spinner.Start()
+	exit := spinner.Timer("primary-hosted-zone", h.Spinner)
 
-	a := ask.New().WithSpinner(h.spinner)
+	a := ask.New().WithSpinner(h.Spinner)
 
 	domainService := core.NewDomainService(
-		h.out,
-		h.repoData,
+		h.Out,
 		a,
-		rest.NewDomainAPI(a, h.c),
+		rest.NewDomainAPI(a, h.Client),
 		filesystem.NewDomainStore(
-			h.repoData,
 			filesystem.Paths{
 				OutputFile:         config.DefaultDomainOutputsFile,
 				CloudFormationFile: config.DefaultDomainCloudFormationTemplate,
-				BaseDir:            path.Join(h.outputDir, config.DefaultDomainBaseDir),
+				BaseDir:            path.Join(h.OutputDir, config.DefaultDomainBaseDir),
 			},
-			filesystem.Paths{
-				ConfigFile: config.DefaultRepositoryConfig,
-				BaseDir:    h.repoDir,
-			},
-			h.fs,
+			h.Fs,
 		),
-		console.NewDomainReport(h.out, exit, h.spinner),
-		h.spinner,
+		console.NewDomainReport(h.Out, exit, h.Spinner),
+		stateSaver.NewDomainState(h.State),
 	)
 
-	return domainService.CreatePrimaryHostedZone(h.ctx, client.CreatePrimaryHostedZoneOpts{
-		ID: h.id,
+	return domainService.CreatePrimaryHostedZone(h.Ctx, client.CreatePrimaryHostedZoneOpts{
+		ID: h.ID,
 	})
 }
 
 type externalDNS struct {
-	ctx       context.Context
-	out       io.Writer
-	spinner   *yacspin.Spinner
-	id        api.ID
-	outputDir string
-	c         *rest.HTTPClient
-	fs        *afero.Afero
-	d         *api.HostedZone
+	*common
+	HostedZone *api.HostedZone
 }
 
 func createExternalDNS(e *externalDNS) (*client.ExternalDNS, error) {
-	_ = e.spinner.Start()
-	exit := timer(e.spinner, "external-dns")
+	_ = e.Spinner.Start()
+	exit := spinner.Timer("external-dns", e.Spinner)
 
 	externalDNSService := core.NewExternalDNSService(
-		rest.NewExternalDNSAPI(e.c),
+		rest.NewExternalDNSAPI(e.Client),
 		filesystem.NewExternalDNSStore(
 			filesystem.Paths{
 				OutputFile:         config.DefaultPolicyOutputFile,
 				CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
-				BaseDir:            path.Join(e.outputDir, config.DefaultExternalDNSBaseDir),
+				BaseDir:            path.Join(e.OutputDir, config.DefaultExternalDNSBaseDir),
 			},
 			filesystem.Paths{
 				OutputFile: config.DefaultServiceAccountOutputsFile,
 				ConfigFile: config.DefaultServiceAccountConfigFile,
-				BaseDir:    path.Join(e.outputDir, config.DefaultExternalDNSBaseDir),
+				BaseDir:    path.Join(e.OutputDir, config.DefaultExternalDNSBaseDir),
 			},
 			filesystem.Paths{
 				OutputFile: config.DefaultKubeOutputsFile,
-				BaseDir:    path.Join(e.outputDir, config.DefaultExternalDNSBaseDir),
+				BaseDir:    path.Join(e.OutputDir, config.DefaultExternalDNSBaseDir),
 			},
-			e.fs,
+			e.Fs,
 		),
-		console.NewExternalDNSReport(e.out, exit, e.spinner),
+		console.NewExternalDNSReport(e.Out, exit, e.Spinner),
 	)
 
-	return externalDNSService.CreateExternalDNS(e.ctx, client.CreateExternalDNSOpts{
-		ID:           e.id,
-		HostedZoneID: e.d.HostedZoneID,
-		Domain:       e.d.Domain,
+	return externalDNSService.CreateExternalDNS(e.Ctx, client.CreateExternalDNSOpts{
+		ID:           e.ID,
+		HostedZoneID: e.HostedZone.HostedZoneID,
+		Domain:       e.HostedZone.Domain,
 	})
 }
 
 type githubClient struct {
-	ctx                   context.Context
-	out                   io.Writer
-	spinner               *yacspin.Spinner
-	repoDir, organisation string
-	id                    api.ID
-	repoData              *state.Repository
-	c                     *rest.HTTPClient
-	fs                    *afero.Afero
-	auth                  github2.Authenticator
+	*common
+	Github       github.Githuber
+	Organisation string
+	RepoDir      string
 }
 
-func createGithubRepo(c *githubClient) (client.GithubService, *client.GithubRepository, error) {
-	g, err := github.New(c.ctx, c.auth)
+func createGithubRepo(c *githubClient) (*client.GithubRepository, error) {
+	repo, err := git.GithubRepoFullName(c.Organisation, c.RepoDir)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	repo, err := git.GithubRepoFullName(c.organisation, c.repoDir)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	_ = c.spinner.Start()
-	exit := timer(c.spinner, "github")
+	_ = c.Spinner.Start()
+	exit := spinner.Timer("github", c.Spinner)
 
 	githubService := core.NewGithubService(
 		rest.NewGithubAPI(
-			c.out,
-			ask.New().WithSpinner(c.spinner),
-			rest.NewParameterAPI(c.c),
-			g,
+			c.Out,
+			ask.New().WithSpinner(c.Spinner),
+			rest.NewParameterAPI(c.Client),
+			c.Github,
 		),
-		filesystem.NewGithubStore(
-			filesystem.Paths{
-				ConfigFile: config.DefaultRepositoryConfig,
-				BaseDir:    c.repoDir,
-			},
-			c.repoData,
-			c.fs,
-		),
-		console.NewGithubReport(c.out, exit, c.spinner),
+		console.NewGithubReport(c.Out, exit, c.Spinner),
+		stateSaver.NewGithubState(c.State),
 	)
 
-	githubRepo, err := githubService.ReadyGithubInfrastructureRepository(c.ctx, client.ReadyGithubInfrastructureRepositoryOpts{
-		ID:           c.id,
-		Organisation: c.organisation,
+	githubRepo, err := githubService.ReadyGithubInfrastructureRepository(c.Ctx, client.ReadyGithubInfrastructureRepositoryOpts{
+		ID:           c.ID,
+		Organisation: c.Organisation,
 		Repository:   repo,
 	})
 
-	return githubService, githubRepo, err
+	return githubRepo, err
 }
 
 type argocdSetup struct {
-	ctx           context.Context
-	out           io.Writer
-	spinner       *yacspin.Spinner
-	id            api.ID
-	githubRepo    *client.GithubRepository
-	githubService client.GithubService
-	d             *api.HostedZone
-	outputDir     string
-	repoDir       string
-	organisation  string
-	fs            *afero.Afero
-	c             *rest.HTTPClient
-	repoData      *state.Repository
+	*common
+	HostedZone   *api.HostedZone
+	Github       github.Githuber
+	GithubRepo   *client.GithubRepository
+	Organisation string
 }
 
 // nolint: funlen
 func createArgoCD(a *argocdSetup) (*client.ArgoCD, error) {
-	argoBaseDir := path.Join(a.outputDir, config.DefaultArgoCDBaseDir)
+	argoBaseDir := path.Join(a.OutputDir, config.DefaultArgoCDBaseDir)
 
-	_ = a.spinner.Start()
-	exit := timer(a.spinner, "argocd")
+	_ = a.Spinner.Start()
+	exit := spinner.Timer("argocd", a.Spinner)
 
-	certStore := filesystem.NewCertificateStore(
-		a.repoData,
-		filesystem.Paths{
-			OutputFile:         config.DefaultCertificateOutputsFile,
-			CloudFormationFile: config.DefaultCertificateCloudFormationTemplate,
-			BaseDir:            path.Join(argoBaseDir, config.DefaultCertificateBaseDir),
-		},
-		filesystem.Paths{
-			ConfigFile: config.DefaultRepositoryConfig,
-			BaseDir:    a.repoDir,
-		},
-		a.fs,
+	githubService := core.NewGithubService(
+		rest.NewGithubAPI(
+			a.Out,
+			ask.New().WithSpinner(a.Spinner),
+			rest.NewParameterAPI(a.Client),
+			a.Github,
+		),
+		console.NewGithubReport(a.Out, nil, a.Spinner),
+		stateSaver.NewGithubState(a.State),
 	)
 
-	manifestStore := filesystem.NewManifestStore(
-		filesystem.Paths{
-			OutputFile: config.DefaultKubeOutputsFile,
-			BaseDir:    path.Join(argoBaseDir, config.DefaultExternalSecretsBaseDir),
-		},
-		a.fs,
+	certService := core.NewCertificateService(
+		rest.NewCertificateAPI(a.Client),
+		filesystem.NewCertificateStore(
+			filesystem.Paths{
+				OutputFile:         config.DefaultCertificateOutputsFile,
+				CloudFormationFile: config.DefaultCertificateCloudFormationTemplate,
+				BaseDir:            path.Join(argoBaseDir, config.DefaultCertificateBaseDir),
+			},
+			a.Fs,
+		),
+		stateSaver.NewCertificateState(a.State),
+		console.NewCertificateReport(a.Out, nil, a.Spinner),
 	)
 
-	paramStore := filesystem.NewParameterStore(
-		filesystem.Paths{
-			OutputFile: config.DefaultParameterOutputsFile,
-			BaseDir:    path.Join(argoBaseDir, config.DefaultParameterBaseDir),
-		},
-		a.fs,
+	manifestService := core.NewManifestService(
+		rest.NewManifestAPI(a.Client),
+		filesystem.NewManifestStore(
+			filesystem.Paths{
+				OutputFile: config.DefaultKubeOutputsFile,
+				BaseDir:    path.Join(argoBaseDir, config.DefaultExternalSecretsBaseDir),
+			},
+			a.Fs,
+		),
+		console.NewManifestReport(a.Out, nil, a.Spinner),
+	)
+
+	paramService := core.NewParameterService(
+		rest.NewParameterAPI(a.Client),
+		filesystem.NewParameterStore(
+			filesystem.Paths{
+				OutputFile: config.DefaultParameterOutputsFile,
+				BaseDir:    path.Join(argoBaseDir, config.DefaultParameterBaseDir),
+			},
+			a.Fs,
+		),
+		console.NewParameterReport(a.Out, nil, a.Spinner),
 	)
 
 	argoService := core.NewArgoCDService(
-		rest.NewArgoCDAPI(
-			a.githubService,
-			rest.NewParameterAPI(a.c),
-			rest.NewManifestAPI(a.c),
-			rest.NewCertificateAPI(a.c),
-			a.c,
-		),
+		githubService,
+		certService,
+		manifestService,
+		paramService,
+		rest.NewArgoCDAPI(a.Client),
 		filesystem.NewArgoCDStore(
 			filesystem.Paths{
 				OutputFile:  config.DefaultHelmOutputsFile,
@@ -860,25 +746,18 @@ func createArgoCD(a *argocdSetup) (*client.ArgoCD, error) {
 				OutputFile: config.DefaultArgoOutputsFile,
 				BaseDir:    argoBaseDir,
 			},
-			a.repoData,
-			filesystem.Paths{
-				ConfigFile: config.DefaultRepositoryConfig,
-				BaseDir:    a.repoDir,
-			},
-			paramStore,
-			certStore,
-			manifestStore,
-			a.fs,
+			a.Fs,
 		),
-		console.NewArgoCDReport(a.out, exit, a.spinner),
+		console.NewArgoCDReport(a.Out, exit, a.Spinner),
+		stateSaver.NewArgoCDState(a.State),
 	)
 
-	return argoService.CreateArgoCD(a.ctx, client.CreateArgoCDOpts{
-		ID:                 a.id,
-		Domain:             a.d.Domain,
-		FQDN:               a.d.FQDN,
-		HostedZoneID:       a.d.HostedZoneID,
-		GithubOrganisation: a.organisation,
-		Repository:         a.githubRepo,
+	return argoService.CreateArgoCD(a.Ctx, client.CreateArgoCDOpts{
+		ID:                 a.ID,
+		Domain:             a.HostedZone.Domain,
+		FQDN:               a.HostedZone.FQDN,
+		HostedZoneID:       a.HostedZone.HostedZoneID,
+		GithubOrganisation: a.Organisation,
+		Repository:         a.GithubRepo,
 	})
 }

@@ -4,8 +4,6 @@ import (
 	"regexp"
 	"runtime"
 
-	"github.com/oslokommune/okctl/pkg/binaries"
-
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/google/uuid"
@@ -110,6 +108,6 @@ func NewUser() *User {
 			Os:   runtime.GOOS,
 			Arch: runtime.GOARCH,
 		},
-		Binaries: binaries.KnownBinaries(),
+		Binaries: KnownBinaries(),
 	}
 }

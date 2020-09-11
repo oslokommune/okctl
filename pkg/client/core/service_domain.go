@@ -4,9 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/theckman/yacspin"
-
-	"github.com/oslokommune/okctl/pkg/config/state"
+	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/ask"
 
@@ -15,46 +13,27 @@ import (
 )
 
 type domainService struct {
-	api       client.DomainAPI
-	out       io.Writer
-	store     client.DomainStore
-	report    client.DomainReport
-	repoState *state.Repository
-	ask       *ask.Ask
-	spinner   *yacspin.Spinner
+	out    io.Writer
+	ask    *ask.Ask
+	api    client.DomainAPI
+	store  client.DomainStore
+	state  client.DomainState
+	report client.DomainReport
 }
 
 func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.CreatePrimaryHostedZoneOpts) (*api.HostedZone, error) {
-	hz, err := s.store.GetPrimaryHostedZone(opts.ID)
+	zone, err := s.api.CreatePrimaryHostedZone(opts)
 	if err != nil {
 		return nil, err
 	}
 
-	if hz == nil {
-		zone, err := s.api.CreatePrimaryHostedZone(opts)
-		if err != nil {
-			return nil, err
-		}
-
-		hz = &client.HostedZone{
-			IsDelegated: false,
-			Primary:     true,
-			HostedZone:  zone,
-		}
+	hz := &client.HostedZone{
+		Primary:    true,
+		HostedZone: zone,
 	}
 
 	if !hz.IsDelegated {
-		err = s.spinner.Pause()
-		if err != nil {
-			return nil, err
-		}
-
 		delegated, err := s.ask.ConfirmPostingNameServers(s.out, hz.HostedZone.Domain, hz.HostedZone.NameServers)
-		if err != nil {
-			return nil, err
-		}
-
-		err = s.spinner.Unpause()
 		if err != nil {
 			return nil, err
 		}
@@ -62,12 +41,17 @@ func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.C
 		hz.IsDelegated = delegated
 	}
 
-	report, err := s.store.SaveHostedZone(hz)
+	r1, err := s.store.SaveHostedZone(hz)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.report.ReportCreatePrimaryHostedZone(hz, report)
+	r2, err := s.state.SaveHostedZone(hz)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.ReportCreatePrimaryHostedZone(hz, []*store.Report{r1, r2})
 	if err != nil {
 		return nil, err
 	}
@@ -78,20 +62,18 @@ func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.C
 // NewDomainService returns an initialised service
 func NewDomainService(
 	out io.Writer,
-	repoState *state.Repository,
 	ask *ask.Ask,
 	api client.DomainAPI,
 	store client.DomainStore,
 	report client.DomainReport,
-	spinner *yacspin.Spinner,
+	state client.DomainState,
 ) client.DomainService {
 	return &domainService{
-		out:       out,
-		ask:       ask,
-		repoState: repoState,
-		api:       api,
-		store:     store,
-		report:    report,
-		spinner:   spinner,
+		api:    api,
+		out:    out,
+		store:  store,
+		report: report,
+		ask:    ask,
+		state:  state,
 	}
 }

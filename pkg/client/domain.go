@@ -37,10 +37,10 @@ type DomainStore interface {
 
 // DomainState implements the in-memory state handling
 type DomainState interface {
-	SaveHostedZone(zone *HostedZone) error
+	SaveHostedZone(zone *HostedZone) (*store.Report, error)
 }
 
 // DomainReport implements the report layer
 type DomainReport interface {
-	ReportCreatePrimaryHostedZone(zone *HostedZone, report *store.Report) error
+	ReportCreatePrimaryHostedZone(zone *HostedZone, reports []*store.Report) error
 }

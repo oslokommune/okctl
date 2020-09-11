@@ -1,17 +1,15 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"path"
-	"time"
 
-	"github.com/hako/durafmt"
-	"github.com/oslokommune/okctl/pkg/client/core/report/console"
-	"github.com/theckman/yacspin"
+	"github.com/oslokommune/okctl/pkg/client/core/state"
+	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/client/core/api/rest"
+	"github.com/oslokommune/okctl/pkg/client/core/report/console"
 	"github.com/oslokommune/okctl/pkg/client/core/store/filesystem"
 	"github.com/oslokommune/okctl/pkg/config"
 
@@ -73,7 +71,7 @@ including VPC, this is a highly destructive operation.`,
 			opts.Region = o.Region()
 			opts.AWSAccountID = o.AWSAccountID(environment)
 			opts.Environment = environment
-			opts.Repository = o.RepoData.Name
+			opts.Repository = o.RepoState.Metadata.Name
 			opts.ClusterName = o.ClusterName(environment)
 
 			err := opts.Validate()
@@ -102,62 +100,24 @@ including VPC, this is a highly destructive operation.`,
 				return err
 			}
 
-			repoDir, err := o.GetRepoDir()
+			spin, err := spinner.New("deleting", o.Err)
 			if err != nil {
 				return err
 			}
 
-			cfg := yacspin.Config{
-				Frequency:       100 * time.Millisecond, // nolint: gomnd
-				CharSet:         yacspin.CharSets[59],
-				Suffix:          " deleting",
-				SuffixAutoColon: true,
-				StopCharacter:   "✓",
-				StopColors:      []string{"fgGreen"},
-				Writer:          o.Out,
-			}
-
-			spinner, err := yacspin.New(cfg)
-			if err != nil {
-				return fmt.Errorf("failed to create spinner")
-			}
-
-			timer := func(component string) chan struct{} {
-				exit := make(chan struct{})
-
-				go func(ch chan struct{}, start time.Time) {
-					tick := time.Tick(1 * time.Millisecond)
-
-					for {
-						select {
-						case <-ch:
-							return
-						case <-tick:
-							spinner.Message(component + " (elapsed: " + durafmt.Parse(time.Since(start)).LimitFirstN(2).String() + ")") // nolint: gomnd
-						}
-					}
-				}(exit, time.Now())
-
-				return exit
-			}
-
-			_ = spinner.Start()
-			exit := timer("cluster")
+			_ = spin.Start()
+			exit := spinner.Timer("cluster", spin)
 			clusterService := core.NewClusterService(
 				rest.NewClusterAPI(c),
 				filesystem.NewClusterStore(
-					filesystem.Paths{
-						ConfigFile: config.DefaultRepositoryConfig,
-						BaseDir:    repoDir,
-					},
 					filesystem.Paths{
 						ConfigFile: config.DefaultClusterConfig,
 						BaseDir:    path.Join(outputDir, config.DefaultClusterBaseDir),
 					},
 					o.FileSystem,
-					o.RepoData,
 				),
-				console.NewClusterReport(o.Err, exit, spinner),
+				console.NewClusterReport(o.Err, exit, spin),
+				state.NewClusterState(o.RepoSaver),
 			)
 
 			err = clusterService.DeleteCluster(o.Ctx, api.ClusterDeleteOpts{
@@ -167,17 +127,20 @@ including VPC, this is a highly destructive operation.`,
 				return err
 			}
 
-			_ = spinner.Start()
-			exit = timer("vpc")
+			_ = spin.Start()
+			exit = spinner.Timer("vpc", spin)
 			vpcService := core.NewVPCService(
 				rest.NewVPCAPI(c),
 				filesystem.NewVpcStore(
-					config.DefaultVpcOutputs,
-					config.DefaultVpcCloudFormationTemplate,
-					path.Join(outputDir, config.DefaultVpcBaseDir),
+					filesystem.Paths{
+						OutputFile:         config.DefaultVpcOutputs,
+						CloudFormationFile: config.DefaultVpcCloudFormationTemplate,
+						BaseDir:            path.Join(outputDir, config.DefaultVpcBaseDir),
+					},
 					o.FileSystem,
 				),
-				console.NewVPCReport(o.Err, spinner, exit),
+				console.NewVPCReport(o.Err, spin, exit),
+				state.NewVpcState(o.RepoSaver),
 			)
 
 			err = vpcService.DeleteVpc(o.Ctx, api.DeleteVpcOpts{

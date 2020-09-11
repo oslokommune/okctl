@@ -7,11 +7,12 @@ import (
 )
 
 type manifestService struct {
-	api   client.ManifestAPI
-	store client.ManifestStore
+	api    client.ManifestAPI
+	store  client.ManifestStore
+	report client.ManifestReport
 }
 
-func (s *manifestService) CreateExternalSecret(ctx context.Context, opts client.CreateExternalSecretOpts) (*client.ExternalSecret, error) {
+func (s *manifestService) CreateExternalSecret(_ context.Context, opts client.CreateExternalSecretOpts) (*client.ExternalSecret, error) {
 	m, err := s.api.CreateExternalSecret(opts)
 	if err != nil {
 		return nil, err
@@ -22,7 +23,12 @@ func (s *manifestService) CreateExternalSecret(ctx context.Context, opts client.
 		Manifests: m.Manifests,
 	}
 
-	_, err = s.store.SaveExternalSecret(manifest)
+	report, err := s.store.SaveExternalSecret(manifest)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.SaveExternalSecret(manifest, report)
 	if err != nil {
 		return nil, err
 	}
@@ -31,9 +37,10 @@ func (s *manifestService) CreateExternalSecret(ctx context.Context, opts client.
 }
 
 // NewManifestService returns an initialised service
-func NewManifestService(api client.ManifestAPI, store client.ManifestStore) client.ManifestService {
+func NewManifestService(api client.ManifestAPI, store client.ManifestStore, report client.ManifestReport) client.ManifestService {
 	return &manifestService{
-		api:   api,
-		store: store,
+		api:    api,
+		store:  store,
+		report: report,
 	}
 }

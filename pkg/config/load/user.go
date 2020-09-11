@@ -7,8 +7,6 @@ import (
 	"strings"
 
 	"github.com/oslokommune/okctl/pkg/ask"
-	"github.com/oslokommune/okctl/pkg/binaries"
-
 	"github.com/oslokommune/okctl/pkg/config/state"
 
 	"github.com/oslokommune/okctl/pkg/config"
@@ -69,7 +67,7 @@ func CreateOnUserDataNotFound() DataNotFoundFn {
 
 		data.User.Username = username
 
-		c.UserData = data
+		c.UserState = data
 
 		err = c.WriteCurrentUserData()
 		if err != nil {
@@ -166,14 +164,14 @@ func loadFlagsUserData(cmd *cobra.Command) LoaderFn {
 }
 
 func updateKnownBinaries(cfg *config.Config) {
-	candidates := binaries.KnownBinaries()
+	candidates := state.KnownBinaries()
 
 	var update []state.Binary
 
 	for _, candidate := range candidates {
 		found := false
 
-		for _, existing := range cfg.UserData.Binaries {
+		for _, existing := range cfg.UserState.Binaries {
 			if candidate.Name == existing.Name && candidate.Version == existing.Version {
 				found = true
 				break
@@ -185,14 +183,14 @@ func updateKnownBinaries(cfg *config.Config) {
 		}
 	}
 
-	cfg.UserData.Binaries = append(cfg.UserData.Binaries, update...)
+	cfg.UserState.Binaries = append(cfg.UserState.Binaries, update...)
 }
 
 func buildUserDataLoader(loaders ...LoaderFn) config.DataLoaderFn {
 	return func(cfg *config.Config) error {
 		var err error
 
-		cfg.UserData = &state.User{}
+		cfg.UserState = &state.User{}
 
 		v := viper.New()
 		v.SetFs(cfg.FileSystem.Fs)
@@ -204,7 +202,7 @@ func buildUserDataLoader(loaders ...LoaderFn) config.DataLoaderFn {
 			}
 		}
 
-		err = v.Unmarshal(cfg.UserData)
+		err = v.Unmarshal(cfg.UserState)
 		if err != nil {
 			return err
 		}

@@ -21,4 +21,16 @@ type CertificateAPI interface {
 // CertificateStore defines the storage operations
 type CertificateStore interface {
 	SaveCertificate(certificate *api.Certificate) (*store.Report, error)
+	GetCertificate(domain string) (*api.Certificate, error)
+}
+
+// CertificateReport defines the report layer
+type CertificateReport interface {
+	SaveCertificate(certificate *api.Certificate, reports []*store.Report) error
+}
+
+// CertificateState defines the state layer
+type CertificateState interface {
+	SaveCertificate(certificate *api.Certificate) (*store.Report, error)
+	GetCertificate(domain string) *api.Certificate
 }

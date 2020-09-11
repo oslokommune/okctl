@@ -55,7 +55,7 @@ func (o *ShowCredentialsOpts) Validate() error {
 	)
 }
 
-// nolint: funlen
+// nolint: funlen gocognit
 func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 	opts := ShowCredentialsOpts{}
 
@@ -67,18 +67,26 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			environment := args[0]
 
-			opts.Region = o.Region()
-			opts.AWSAccountID = o.AWSAccountID(environment)
-			opts.Environment = environment
-			opts.Repository = o.RepoState.Metadata.Name
-			opts.ClusterName = o.ClusterName(environment)
+			err := o.Initialise(environment)
+			if err != nil {
+				return err
+			}
 
-			err := opts.Validate()
+			meta := o.RepoStateWithEnv.GetMetadata()
+			cluster := o.RepoStateWithEnv.GetCluster()
+
+			opts.Repository = meta.Name
+			opts.Region = meta.Region
+			opts.AWSAccountID = cluster.AWSAccountID
+			opts.Environment = cluster.Environment
+			opts.ClusterName = cluster.Name
+
+			err = opts.Validate()
 			if err != nil {
 				return errors.E(err, "failed to validate show credentials options")
 			}
 
-			return o.Initialise(opts.Environment, opts.AWSAccountID)
+			return nil
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			outputDir, err := o.GetRepoOutputDir(opts.Environment)
@@ -91,9 +99,9 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			kubeConfig := path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(opts.Environment), config.DefaultClusterKubeConfig)
-			awsConfig := path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(opts.Environment), config.DefaultClusterAwsConfig)
-			awsCredentials := path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(opts.Environment), config.DefaultClusterAwsCredentials)
+			kubeConfig := path.Join(appDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterKubeConfig)
+			awsConfig := path.Join(appDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterAwsConfig)
+			awsCredentials := path.Join(appDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterAwsCredentials)
 
 			h := &helm.Config{
 				HelmPluginsDirectory: path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),

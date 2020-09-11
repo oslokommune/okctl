@@ -68,18 +68,26 @@ including VPC, this is a highly destructive operation.`,
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			environment := args[0]
 
-			opts.Region = o.Region()
-			opts.AWSAccountID = o.AWSAccountID(environment)
-			opts.Environment = environment
-			opts.Repository = o.RepoState.Metadata.Name
-			opts.ClusterName = o.ClusterName(environment)
+			err := o.Initialise(environment)
+			if err != nil {
+				return err
+			}
 
-			err := opts.Validate()
+			meta := o.RepoStateWithEnv.GetMetadata()
+			cluster := o.RepoStateWithEnv.GetCluster()
+
+			opts.Repository = meta.Name
+			opts.Region = meta.Region
+			opts.AWSAccountID = cluster.AWSAccountID
+			opts.Environment = cluster.Environment
+			opts.ClusterName = cluster.Name
+
+			err = opts.Validate()
 			if err != nil {
 				return errors.E(err, "failed to validate delete cluster options")
 			}
 
-			return o.Initialise(opts.Environment, opts.AWSAccountID)
+			return nil
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			// Discarding the output for now until we have
@@ -117,7 +125,7 @@ including VPC, this is a highly destructive operation.`,
 					o.FileSystem,
 				),
 				console.NewClusterReport(o.Err, exit, spin),
-				state.NewClusterState(o.RepoSaver),
+				state.NewClusterState(o.RepoStateWithEnv),
 			)
 
 			err = clusterService.DeleteCluster(o.Ctx, api.ClusterDeleteOpts{
@@ -140,7 +148,7 @@ including VPC, this is a highly destructive operation.`,
 					o.FileSystem,
 				),
 				console.NewVPCReport(o.Err, spin, exit),
-				state.NewVpcState(o.RepoSaver),
+				state.NewVpcState(o.RepoStateWithEnv),
 			)
 
 			err = vpcService.DeleteVpc(o.Ctx, api.DeleteVpcOpts{

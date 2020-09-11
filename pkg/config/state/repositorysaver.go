@@ -1,6 +1,8 @@
 package state
 
 import (
+	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/spf13/afero"
 )
@@ -53,8 +55,9 @@ type Metadataer interface {
 	GetMetadata() *Metadata
 }
 
-// ClusterSaverForEnv provides actions for interacting with a cluster
-type ClusterSaverForEnv interface {
+// RepositoryStateWithEnv provides actions for interacting with
+// the state of a repository
+type RepositoryStateWithEnv interface {
 	HostedZoner
 	Clusterer
 	Vpcer
@@ -62,6 +65,7 @@ type ClusterSaverForEnv interface {
 	Argocder
 	Certificater
 	Metadataer
+	GetClusterName() string
 }
 
 // SaverFn implements the storage operation of the state
@@ -82,8 +86,8 @@ type repository struct {
 	saverFn SaverFn
 }
 
-// NewClusterSaverForEnv returns an initialised setter for a given env
-func NewClusterSaverForEnv(env string, r *Repository, fn SaverFn) ClusterSaverForEnv {
+// NewRepositoryStateWithEnv returns an initialised setter for a given env
+func NewRepositoryStateWithEnv(env string, r *Repository, fn SaverFn) RepositoryStateWithEnv {
 	return &repository{
 		state:   r,
 		env:     env,
@@ -288,6 +292,12 @@ func (r *repository) GetCluster() *Cluster {
 	}
 
 	return r.state.Clusters[r.env]
+}
+
+// GetClusterName returns the cluster name
+func (r *repository) GetClusterName() string {
+	cluster := r.GetCluster()
+	return fmt.Sprintf("%s-%s", r.state.Metadata.Name, cluster.Environment)
 }
 
 func (r *repository) save() (*store.Report, error) {

@@ -17,7 +17,7 @@ func main() {
 	}
 }
 
-func repoDataLoader(o *okctl.Okctl, cmd *cobra.Command) error {
+func loadRepoData(o *okctl.Okctl, cmd *cobra.Command) error {
 	repoDataNotFound := load.CreateOnRepoDataNotFound()
 
 	if o.NoInput {
@@ -29,7 +29,7 @@ func repoDataLoader(o *okctl.Okctl, cmd *cobra.Command) error {
 	return o.LoadRepoData()
 }
 
-func userDataLoader(o *okctl.Okctl, cmd *cobra.Command) error {
+func loadUserData(o *okctl.Okctl, cmd *cobra.Command) error {
 	userDataNotFound := load.CreateOnUserDataNotFound()
 
 	if o.NoInput {
@@ -60,12 +60,12 @@ being captured. Together with slack and slick.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
-			err = userDataLoader(o, cmd)
+			err = loadUserData(o, cmd)
 			if err != nil {
 				return errors.Wrap(err, "failed to load application data")
 			}
 
-			err = repoDataLoader(o, cmd)
+			err = loadRepoData(o, cmd)
 			if err != nil {
 				return errors.Wrap(err, "failed to load repository data")
 			}

@@ -64,10 +64,10 @@ func buildCreateCommand(o *okctl.Okctl) *cobra.Command {
 type CreateClusterOpts struct {
 	Environment    string
 	AWSAccountID   string
-	Cidr           string
 	RepositoryName string
 	Region         string
 	ClusterName    string
+	Cidr           string
 	Organisation   string
 }
 
@@ -186,19 +186,29 @@ and database subnets.`,
 				return fmt.Errorf("we currently don't support no user input")
 			}
 
-			opts.Environment = args[0]
-			opts.AWSAccountID = args[1]
-			opts.RepositoryName = o.RepoState.Metadata.Name
-			opts.ClusterName = o.ClusterName(opts.Environment)
-			opts.Region = o.Region()
-			opts.Organisation = github.DefaultOrg
+			environment := args[0]
+			awsAccountID := args[1]
 
-			err := opts.Validate()
+			err := o.Initialise(environment)
+			if err != nil {
+				return err
+			}
+
+			meta := o.RepoStateWithEnv.GetMetadata()
+			clusterName := o.RepoStateWithEnv.GetClusterName()
+
+			opts.Environment = environment
+			opts.AWSAccountID = awsAccountID
+			opts.ClusterName = clusterName
+			opts.RepositoryName = meta.Name
+			opts.Region = meta.Region
+
+			err = opts.Validate()
 			if err != nil {
 				return errors.E(err, "failed to validate create cluster options", errors.Invalid)
 			}
 
-			return o.Initialise(opts.Environment, opts.AWSAccountID)
+			return nil
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			userDir, err := o.GetUserDataDir()
@@ -284,7 +294,7 @@ and database subnets.`,
 				OutputDir: outputDir,
 				Out:       o.Err,
 				Spinner:   spin,
-				State:     o.RepoSaver,
+				State:     o.RepoStateWithEnv,
 			}
 
 			ghClient, err := github.New(o.Ctx, o.CredentialsProvider.Github())
@@ -346,8 +356,10 @@ and database subnets.`,
 				RepoDir:      repoDir,
 			})
 
-			o.SetGithubOrganisationName(opts.Organisation, opts.Environment)
-			err = o.WriteCurrentRepoData()
+			gh := o.RepoStateWithEnv.GetGithub()
+			gh.Organisation = opts.Organisation
+
+			_, err = o.RepoStateWithEnv.SaveGithub(gh)
 			if err != nil {
 				return prettyErr(err)
 			}
@@ -362,9 +374,9 @@ and database subnets.`,
 				return prettyErr(err)
 			}
 
-			kubeConfig := path.Join(userDir, config.DefaultCredentialsDirName, o.ClusterName(opts.Environment), config.DefaultClusterKubeConfig)
-			awsConfig := path.Join(userDir, config.DefaultCredentialsDirName, o.ClusterName(opts.Environment), config.DefaultClusterAwsConfig)
-			awsCredentials := path.Join(userDir, config.DefaultCredentialsDirName, o.ClusterName(opts.Environment), config.DefaultClusterAwsCredentials)
+			kubeConfig := path.Join(userDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterKubeConfig)
+			awsConfig := path.Join(userDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterAwsConfig)
+			awsCredentials := path.Join(userDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterAwsCredentials)
 
 			exports := fmt.Sprintf(
 				"export AWS_CONFIG_FILE=%s\nexport AWS_SHARED_CREDENTIALS_FILE=%s\nexport AWS_PROFILE=default\nexport KUBECONFIG=%s\n",
@@ -408,6 +420,8 @@ and database subnets.`,
 	f := cmd.Flags()
 	f.StringVarP(&opts.Cidr, "cidr", "c", defaultCidr,
 		"CIDR block the AWS VPC and subnets are created within")
+	f.StringVarP(&opts.Organisation, "github-organisation", "o", github.DefaultOrg,
+		"The Github organisation where we will look for your team and repository")
 
 	return cmd
 }
@@ -420,7 +434,7 @@ type common struct {
 	OutputDir string
 	Out       io.Writer
 	Spinner   *yacspin.Spinner
-	State     state.ClusterSaverForEnv
+	State     state.RepositoryStateWithEnv
 }
 
 type vpc struct {

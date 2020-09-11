@@ -147,9 +147,9 @@ type Config struct {
 	UserDataLoader DataLoaderFn
 	UserState      *state.User
 
-	RepoDataLoader DataLoaderFn
-	RepoState      *state.Repository
-	RepoSaver      state.ClusterSaverForEnv
+	RepoDataLoader   DataLoaderFn
+	RepoState        *state.Repository
+	RepoStateWithEnv state.RepositoryStateWithEnv
 
 	Destination string
 	ServerURL   string
@@ -166,7 +166,9 @@ func New() *Config {
 	return &Config{
 		Context:        context.New(),
 		UserDataLoader: NoopDataLoader,
+		UserState:      &state.User{},
 		RepoDataLoader: NoopDataLoader,
+		RepoState:      &state.Repository{},
 		Destination:    dest,
 		ServerURL:      fmt.Sprintf("http://%s/v1/", dest),
 	}
@@ -374,41 +376,4 @@ func (c *Config) GetRepoOutputDir(env string) (string, error) {
 	}
 
 	return path.Join(base, c.RepoState.Metadata.OutputDir, env), nil
-}
-
-// ClusterName returns a consistent cluster name
-func (c *Config) ClusterName(env string) string {
-	return fmt.Sprintf("%s-%s", c.RepoState.Metadata.Name, env)
-}
-
-// AWSAccountID returns the aws account ID for the given env
-func (c *Config) AWSAccountID(env string) string {
-	if c.RepoState.Clusters == nil {
-		return ""
-	}
-
-	cluster, ok := c.RepoState.Clusters[env]
-	if !ok {
-		return ""
-	}
-
-	return cluster.AWSAccountID
-}
-
-// SetGithubOrganisationName sets the github organisation
-func (c *Config) SetGithubOrganisationName(name, env string) {
-	if c.RepoState.Clusters == nil {
-		return
-	}
-
-	cluster, ok := c.RepoState.Clusters[env]
-	if !ok {
-		return
-	}
-
-	if cluster.Github == nil {
-		cluster.Github = &state.Github{}
-	}
-
-	cluster.Github.Organisation = name
 }

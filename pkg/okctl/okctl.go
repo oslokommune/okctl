@@ -49,28 +49,6 @@ type Okctl struct {
 // InitialiseWithOnlyEnv initialises okctl when the aws account is has been
 // set previously
 func (o *Okctl) InitialiseWithOnlyEnv(env string) error {
-	return o.initialise(env)
-}
-
-// InitialiseWithEnvAndAWSAccountID initialises okctl when aws account id hasn't
-// been set yet
-func (o *Okctl) InitialiseWithEnvAndAWSAccountID(env, awsAccountID string) error {
-	if o.RepoState.Clusters == nil {
-		o.RepoState.Clusters = map[string]state.Cluster{
-			env: {
-				Name:         o.RepoState.Metadata.Name,
-				Environment:  env,
-				AWSAccountID: awsAccountID,
-			},
-		}
-	}
-
-	return o.initialise(env)
-}
-
-// Initialise okctl for receiving requests
-// nolint: funlen
-func (o *Okctl) initialise(env string) error {
 	repoDir, err := o.GetRepoDir()
 	if err != nil {
 		return err
@@ -82,7 +60,40 @@ func (o *Okctl) initialise(env string) error {
 		o.FileSystem,
 	))
 
-	_, err = o.RepoStateWithEnv.Save()
+	return o.initialise(env)
+}
+
+// InitialiseWithEnvAndAWSAccountID initialises okctl when aws account id hasn't
+// been set yet
+func (o *Okctl) InitialiseWithEnvAndAWSAccountID(env, awsAccountID string) error {
+	repoDir, err := o.GetRepoDir()
+	if err != nil {
+		return err
+	}
+
+	o.RepoStateWithEnv = state.NewRepositoryStateWithEnv(env, o.RepoState, state.DefaultFileSystemSaver(
+		config.DefaultRepositoryConfig,
+		repoDir,
+		o.FileSystem,
+	))
+
+	cluster := o.RepoStateWithEnv.GetCluster()
+	cluster.AWSAccountID = awsAccountID
+	cluster.Environment = env
+	cluster.Name = o.RepoState.Metadata.Name
+
+	_, err = o.RepoStateWithEnv.SaveCluster(cluster)
+	if err != nil {
+		return err
+	}
+
+	return o.initialise(env)
+}
+
+// Initialise okctl for receiving requests
+// nolint: funlen
+func (o *Okctl) initialise(env string) error {
+	err := o.EnableFileLog()
 	if err != nil {
 		return err
 	}
@@ -290,6 +301,8 @@ func (o *Okctl) newBinariesProvider() error {
 	}
 
 	fetcher, err := fetch.New(
+		o.Err,
+		o.Logger,
 		true,
 		o.Host(),
 		o.Binaries(),
@@ -304,7 +317,7 @@ func (o *Okctl) newBinariesProvider() error {
 		out = o.Err
 	}
 
-	o.BinariesProvider = binaries.New(out, o.CredentialsProvider.Aws(), fetcher)
+	o.BinariesProvider = binaries.New(o.Logger, out, o.CredentialsProvider.Aws(), fetcher)
 
 	return nil
 }

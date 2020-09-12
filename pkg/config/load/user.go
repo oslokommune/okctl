@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/client/store"
+
 	"github.com/oslokommune/okctl/pkg/ask"
 	"github.com/oslokommune/okctl/pkg/config/state"
 
@@ -30,6 +32,24 @@ func ErrOnUserDataNotFound() DataNotFoundFn {
 	}
 }
 
+const localMsg = `
+Since you haven't used okctl before, we will now setup a directory
+where we can store state specific to your user, e.g., binaries, logs,
+credentials, and some other configuration:
+
+(config): %s
+(data)  : %s
+
+We will also ask some further questions about the setup of your
+user. One of these questions is the use of a keyring, encrypted
+file or similar.
+
+We use this functionality to store your password and a Github
+token securely, so you don't have to enter your credentials
+all the time, if you so choose.
+
+`
+
 // CreateOnUserDataNotFound will start an interactive survey
 // that allows the end user to configure okctl for their
 // use
@@ -45,15 +65,22 @@ func CreateOnUserDataNotFound() DataNotFoundFn {
 			return err
 		}
 
+		userDir, err := c.GetUserDataDir()
+		if err != nil {
+			return fmt.Errorf("getting user data dir: %w", err)
+		}
+
 		userDataPath, err := c.GetUserDataPath()
 		if err != nil {
 			return fmt.Errorf("getting user data path: %w", err)
 		}
 
-		err = PromptContinue(
-			fmt.Sprintf("Configuration will be written to: %s. Continue?", userDataPath),
-			"user aborted interactive configuration",
-		)
+		_, err = fmt.Fprintf(c.Err, localMsg, userDataPath, userDir)
+		if err != nil {
+			return err
+		}
+
+		err = PromptContinue("Do you want to continue?", "user aborted interactive configuration")
 		if err != nil {
 			return err
 		}
@@ -69,9 +96,11 @@ func CreateOnUserDataNotFound() DataNotFoundFn {
 
 		c.UserState = data
 
-		err = c.WriteCurrentUserData()
+		_, err = store.NewFileSystem(userDir, c.FileSystem).
+			StoreStruct(config.DefaultConfig, c.UserState, store.ToYAML()).
+			Do()
 		if err != nil {
-			return errors.Wrap(err, "failed to write current app data")
+			return err
 		}
 
 		c.Logger.WithFields(logrus.Fields{
@@ -190,8 +219,6 @@ func buildUserDataLoader(loaders ...LoaderFn) config.DataLoaderFn {
 	return func(cfg *config.Config) error {
 		var err error
 
-		cfg.UserState = &state.User{}
-
 		v := viper.New()
 		v.SetFs(cfg.FileSystem.Fs)
 
@@ -202,10 +229,21 @@ func buildUserDataLoader(loaders ...LoaderFn) config.DataLoaderFn {
 			}
 		}
 
-		err = v.Unmarshal(cfg.UserState)
+		loadedState := &state.User{}
+
+		// This unmarshal wipes the user
+		// name.
+		err = v.Unmarshal(loadedState)
 		if err != nil {
 			return err
 		}
+
+		// So we do this weird thing on first run, for now.
+		if len(cfg.UserState.User.Username) > 0 {
+			loadedState.User.Username = cfg.UserState.User.Username
+		}
+
+		cfg.UserState = loadedState
 
 		updateKnownBinaries(cfg)
 

@@ -30,6 +30,7 @@ func TestEksctlDeleteCluster(t *testing.T) {
 			name:        "Should work",
 			clusterName: "myCluster",
 			eksctl: eksctl.New(
+				nil,
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
 				"eksctl",
@@ -43,6 +44,7 @@ func TestEksctlDeleteCluster(t *testing.T) {
 			name:        "Should fail",
 			clusterName: "myCluster",
 			eksctl: eksctl.New(
+				nil,
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
 				"eksctl",
@@ -50,7 +52,7 @@ func TestEksctlDeleteCluster(t *testing.T) {
 				fakeExecCommandFailure(),
 			),
 			// nolint: lll
-			expect:      "failed to delete: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,cluster,--name=myCluster,--verbose=3, because: exit status 1",
+			expect:      "failed to delete: , because: executing command: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,cluster,--name=myCluster,--verbose=3, got: exit status 1",
 			expectError: true,
 		},
 	}
@@ -84,6 +86,7 @@ func TestEksctlCreateCluster(t *testing.T) {
 			cfg:      &v1alpha1.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
+				nil,
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
 				"eksctl",
@@ -98,6 +101,7 @@ func TestEksctlCreateCluster(t *testing.T) {
 			cfg:      &v1alpha1.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
+				nil,
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
 				"eksctl",
@@ -105,7 +109,7 @@ func TestEksctlCreateCluster(t *testing.T) {
 				fakeExecCommandFailure(),
 			),
 			// nolint: lll
-			expect:      "failed to create: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,cluster,--verbose=3,--config-file,/cluster-config.yml, because: exit status 1",
+			expect:      "failed to create: , because: executing command: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,cluster,--verbose=3,--config-file,/cluster-config.yml, got: exit status 1",
 			expectError: true,
 		},
 	}
@@ -139,6 +143,7 @@ func TestEksctlHasCluster(t *testing.T) {
 			cfg:      &v1alpha1.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
+				nil,
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
 				"eksctl",
@@ -156,6 +161,7 @@ func TestEksctlHasCluster(t *testing.T) {
 			},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
+				nil,
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
 				"eksctl",
@@ -163,7 +169,7 @@ func TestEksctlHasCluster(t *testing.T) {
 				fakeExecCommandFailure(),
 			),
 			// nolint: lll
-			expect:      "failed to get cluster information: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=get,cluster,--name,test,--region,,--verbose=3: exit status 1",
+			expect:      "failed to get cluster information: : executing command: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=get,cluster,--name,test,--region,,--verbose=3, got: exit status 1",
 			expectError: true,
 		},
 	}
@@ -197,6 +203,7 @@ func TestEksctlCreateServiceAccount(t *testing.T) {
 			cfg:      &v1alpha1.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
+				nil,
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
 				"eksctl",
@@ -211,6 +218,7 @@ func TestEksctlCreateServiceAccount(t *testing.T) {
 			cfg:      &v1alpha1.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
+				nil,
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
 				"eksctl",
@@ -218,7 +226,7 @@ func TestEksctlCreateServiceAccount(t *testing.T) {
 				fakeExecCommandFailure(),
 			),
 			// nolint: lll
-			expect:      "failed to create service account: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,iamserviceaccount,--override-existing-serviceaccounts,--approve,--verbose=3,--config-file,/cluster-config.yml, because: exit status 1",
+			expect:      "failed to create service account: , because: executing command: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,iamserviceaccount,--override-existing-serviceaccounts,--approve,--verbose=3,--config-file,/cluster-config.yml, got: exit status 1",
 			expectError: true,
 		},
 	}
@@ -252,6 +260,7 @@ func TestEksctlDeleteServiceAccount(t *testing.T) {
 			cfg:      &v1alpha1.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
+				nil,
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
 				"eksctl",
@@ -266,6 +275,7 @@ func TestEksctlDeleteServiceAccount(t *testing.T) {
 			cfg:      &v1alpha1.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
+				nil,
 				storage.NewEphemeralStorage(),
 				ioutil.Discard,
 				"eksctl",
@@ -273,7 +283,7 @@ func TestEksctlDeleteServiceAccount(t *testing.T) {
 				fakeExecCommandFailure(),
 			),
 			// nolint: lll
-			expect:      "failed to delete service account: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,iamserviceaccount,--approve,--verbose=3,--config-file,/cluster-config.yml, because: exit status 1",
+			expect:      "failed to delete service account: , because: executing command: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,iamserviceaccount,--approve,--verbose=3,--config-file,/cluster-config.yml, got: exit status 1",
 			expectError: true,
 		},
 	}

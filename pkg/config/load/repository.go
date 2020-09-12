@@ -10,7 +10,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/config/state"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -27,6 +26,17 @@ func ErrOnRepoDataNotFound() DataNotFoundFn {
 		}
 	}
 }
+
+const repoMsg = `
+We will now setup this repository for use with okctl by
+creating a configuration file in it and for writing state
+to, such as cloud formation templates, output from actions,
+and more.
+
+We will ask some questions about where and how this state
+will be stored, together with your AWS account details.
+
+`
 
 // CreateOnRepoDataNotFound will start an interactive survey
 // that allows the end user to configure okctl when a repository
@@ -45,7 +55,12 @@ func CreateOnRepoDataNotFound() DataNotFoundFn {
 			return err
 		}
 
-		err = PromptContinue(fmt.Sprintf("GithubRepository configuration will be written to: %s. Continue?", repoDataPath), "user aborted configuration")
+		_, err = fmt.Fprint(c.Err, repoMsg)
+		if err != nil {
+			return err
+		}
+
+		err = PromptContinue(fmt.Sprintf("Repository configuration will be written to: %s. Continue?", repoDataPath), "user aborted configuration")
 		if err != nil {
 			return err
 		}
@@ -65,9 +80,16 @@ func CreateOnRepoDataNotFound() DataNotFoundFn {
 
 		c.RepoState = data
 
-		err = c.WriteCurrentRepoData()
+		repoDir, err := c.GetRepoDir()
 		if err != nil {
-			return errors.Wrap(err, "failed to write current repo data")
+			return err
+		}
+
+		_, err = store.NewFileSystem(repoDir, c.FileSystem).
+			StoreStruct(config.DefaultRepositoryConfig, c.RepoState, store.ToYAML()).
+			Do()
+		if err != nil {
+			return err
 		}
 
 		c.Logger.WithFields(logrus.Fields{

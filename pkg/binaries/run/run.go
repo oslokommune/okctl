@@ -2,11 +2,14 @@
 package run
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
 	"os/exec"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 // Runner defines the interface required by a concrete
@@ -21,6 +24,7 @@ type Run struct {
 	BinaryPath       string
 	Env              []string
 	CmdFn            CmdFn
+	Logger           *logrus.Logger
 }
 
 // AnonymizeEnv will conceal any secret portions of the
@@ -51,7 +55,7 @@ func AnonymizeEnv(entries []string) []string {
 // CmdFn defines a type for creating a compatible *exec.Cmd
 type CmdFn func(workingDir, path string, env, args []string) *exec.Cmd
 
-// Cmd returns a standard *exec.Cmd creator
+// Cmd returns a standard *exec.Cmd creator.
 func Cmd() CmdFn {
 	return func(workingDir, path string, env, args []string) *exec.Cmd {
 		return &exec.Cmd{
@@ -65,8 +69,6 @@ func Cmd() CmdFn {
 
 // Run a command and record the progress to the provided writer
 func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
-	var errOut, errErr error
-
 	cmd := r.CmdFn(r.WorkingDirectory, r.BinaryPath, r.Env, args)
 
 	stdoutIn, err := cmd.StdoutPipe()
@@ -79,42 +81,47 @@ func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 		return nil, err
 	}
 
-	var errBuff, outBuff bytes.Buffer
-	stdout := io.MultiWriter(progress, &outBuff)
-	stderr := io.MultiWriter(progress, &errBuff)
+	var buff bytes.Buffer
+
+	multi := io.MultiReader(stdoutIn, stderrIn)
+	out := io.MultiWriter(progress, &buff)
+	logger := logrus.StandardLogger()
+	scanner := bufio.NewScanner(multi)
 
 	err = cmd.Start()
 	if err != nil {
 		return nil, err
 	}
 
-	go func() {
-		_, errOut = io.Copy(stdout, stdoutIn)
-	}()
+	for scanner.Scan() {
+		s := scanner.Text()
 
-	go func() {
-		_, errErr = io.Copy(stderr, stderrIn)
-	}()
+		_, err = io.Copy(out, strings.NewReader(s))
+		if err != nil {
+			return nil, err
+		}
+
+		if logger != nil {
+			logger.Info(s)
+		}
+	}
 
 	err = cmd.Wait()
 	if err != nil {
-		return errBuff.Bytes(), err
+		return nil, fmt.Errorf("executing command: %s, got: %w", buff.Bytes(), err)
 	}
 
-	if errOut != nil || errErr != nil {
-		return errBuff.Bytes(), err
-	}
-
-	return outBuff.Bytes(), nil
+	return buff.Bytes(), nil
 }
 
 // New returns a runner capable of executing
 // commands using the provided binary
-func New(workingDirectory, binaryPath string, env []string, cmdFn CmdFn) *Run {
+func New(logger *logrus.Logger, workingDirectory, binaryPath string, env []string, cmdFn CmdFn) *Run {
 	return &Run{
 		WorkingDirectory: workingDirectory,
 		BinaryPath:       binaryPath,
 		Env:              env,
 		CmdFn:            cmdFn,
+		Logger:           logger,
 	}
 }

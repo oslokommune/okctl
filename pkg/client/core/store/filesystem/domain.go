@@ -9,15 +9,12 @@ import (
 	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/config/repository"
 	"github.com/spf13/afero"
 )
 
 type domainStore struct {
-	paths     Paths
-	repoPaths Paths
-	repoState *repository.Data
-	fs        *afero.Afero
+	paths Paths
+	fs    *afero.Afero
 }
 
 // HostedZone contains the outputs we will store
@@ -44,34 +41,9 @@ func (s *domainStore) SaveHostedZone(d *client.HostedZone) (*store.Report, error
 		Primary:      d.Primary,
 	}
 
-	cluster, ok := s.repoState.Clusters[d.HostedZone.ID.Environment]
-	if !ok {
-		return nil, fmt.Errorf("failed to find cluster for env: %s", d.HostedZone.ID.Environment)
-	}
-
-	if cluster.HostedZone == nil {
-		cluster.HostedZone = map[string]*repository.HostedZone{}
-	}
-
-	cluster.HostedZone[d.HostedZone.Domain] = &repository.HostedZone{
-		IsCreated:   true,
-		IsDelegated: d.IsDelegated,
-		Primary:     d.Primary,
-		Domain:      d.HostedZone.Domain,
-		FQDN:        d.HostedZone.FQDN,
-		NameServers: d.HostedZone.NameServers,
-	}
-
-	subDir := d.HostedZone.Domain
-	if d.Primary {
-		subDir = "primary"
-	}
-
-	report, err := store.NewFileSystem(path.Join(s.paths.BaseDir, subDir), s.fs).
+	report, err := store.NewFileSystem(path.Join(s.paths.BaseDir, d.HostedZone.Domain), s.fs).
 		StoreStruct(s.paths.OutputFile, &p, store.ToJSON()).
 		StoreBytes(s.paths.CloudFormationFile, d.HostedZone.CloudFormationTemplate).
-		AlterStore(store.SetBaseDir(s.repoPaths.BaseDir)).
-		StoreStruct(s.repoPaths.ConfigFile, s.repoState, store.ToYAML()).
 		Do()
 	if err != nil {
 		return nil, fmt.Errorf("failed to store hosted zone: %w", err)
@@ -80,12 +52,12 @@ func (s *domainStore) SaveHostedZone(d *client.HostedZone) (*store.Report, error
 	return report, nil
 }
 
-func (s *domainStore) GetPrimaryHostedZone(id api.ID) (*client.HostedZone, error) {
+func (s *domainStore) GetHostedZone(domain string) (*client.HostedZone, error) {
 	hz := &HostedZone{}
 
 	var template []byte
 
-	_, err := store.NewFileSystem(path.Join(s.paths.BaseDir, "primary"), s.fs).
+	_, err := store.NewFileSystem(path.Join(s.paths.BaseDir, domain), s.fs).
 		GetStruct(s.paths.OutputFile, hz, store.FromJSON()).
 		GetBytes(s.paths.CloudFormationFile, func(_ string, data []byte) {
 			template = data
@@ -111,11 +83,9 @@ func (s *domainStore) GetPrimaryHostedZone(id api.ID) (*client.HostedZone, error
 }
 
 // NewDomainStore returns an initialised domain store
-func NewDomainStore(repoState *repository.Data, paths, repoPaths Paths, fs *afero.Afero) client.DomainStore {
+func NewDomainStore(paths Paths, fs *afero.Afero) client.DomainStore {
 	return &domainStore{
-		paths:     paths,
-		repoPaths: repoPaths,
-		repoState: repoState,
-		fs:        fs,
+		paths: paths,
+		fs:    fs,
 	}
 }

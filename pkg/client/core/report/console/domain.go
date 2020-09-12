@@ -15,9 +15,16 @@ type domainReport struct {
 	console *Console
 }
 
-func (r *domainReport) ReportCreatePrimaryHostedZone(zone *client.HostedZone, report *store.Report) error {
+func (r *domainReport) ReportCreatePrimaryHostedZone(zone *client.HostedZone, reports []*store.Report) error {
+	var actions []store.Action // nolint: prealloc
+
+	for _, report := range reports {
+		actions = append(actions, report.Actions...)
+	}
+
 	description := fmt.Sprintf("%s (%s)", aurora.Green(zone.HostedZone.StackName), zone.HostedZone.HostedZoneID)
-	return r.console.Report(report.Actions, "primary-hosted-zone", description)
+
+	return r.console.Report(actions, "primary-hosted-zone", description)
 }
 
 // NewDomainReport returns an initialised domain reporter

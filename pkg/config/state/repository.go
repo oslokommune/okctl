@@ -1,0 +1,267 @@
+package state
+
+import (
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+)
+
+const (
+	// TypeInfrastructure identifies a repository infrastructure as code
+	TypeInfrastructure = "infrastructure"
+	// TypeApplication identifies a repository for applications
+	TypeApplication = "application"
+
+	// SubnetTypePublic is a public subnet
+	SubnetTypePublic = "public"
+	// SubnetTypePrivate is a private subnet
+	SubnetTypePrivate = "private"
+)
+
+// Repository stores the configured state of a repository
+// as used by okctl
+type Repository struct {
+	Metadata Metadata
+	Clusters map[string]Cluster
+}
+
+// Validate the repository
+func (r Repository) Validate() error {
+	return validation.ValidateStruct(&r,
+		validation.Field(r.Metadata),
+		validation.Field(r.Clusters),
+	)
+}
+
+// Metadata contains repository metadata
+type Metadata struct {
+	Name      string
+	Region    string
+	OutputDir string
+}
+
+// Validate the metadata
+func (m Metadata) Validate() error {
+	return validation.ValidateStruct(&m,
+		validation.Field(&m.Name,
+			validation.Required,
+		),
+		validation.Field(&m.Region,
+			validation.Required,
+			validation.In(func() []interface{} {
+				var o []interface{}
+				for _, r := range v1alpha1.SupportedRegions() {
+					o = append(o, r)
+				}
+				return o
+			}()...),
+		),
+		validation.Field(&m.OutputDir,
+			validation.Required,
+		),
+	)
+}
+
+// Cluster represents an okctl created
+// cluster
+type Cluster struct {
+	Name         string
+	Environment  string
+	AWSAccountID string
+	HostedZone   map[string]HostedZone
+	VPC          VPC
+	Certificates map[string]Certificate
+	Github       Github
+	ArgoCD       ArgoCD
+}
+
+const (
+	envMinLength = 3
+	envMaxLength = 10
+)
+
+// Validate the cluster data
+func (c Cluster) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.Name, validation.Required),
+		validation.Field(&c.Environment,
+			validation.Required,
+			validation.Length(envMinLength, envMaxLength),
+		),
+		validation.Field(&c.HostedZone, validation.Required),
+		validation.Field(&c.VPC),
+		validation.Field(&c.Certificates),
+	)
+}
+
+// Certificate contains state about a certificate
+type Certificate struct {
+	Domain string
+	ARN    string
+}
+
+// Validate the data
+func (c Certificate) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.Domain, validation.Required),
+		validation.Field(&c.ARN, validation.Required),
+	)
+}
+
+// VPC contains state about the VPC
+type VPC struct {
+	VpcID   string
+	CIDR    string
+	Subnets map[string][]VPCSubnet
+}
+
+// VPCSubnet is a vpc subnet
+type VPCSubnet struct {
+	CIDR             string
+	AvailabilityZone string
+}
+
+// ArgoCD contains information about the
+// argocd setup
+type ArgoCD struct {
+	SiteURL   string
+	Domain    string
+	SecretKey SecretKeySecret
+}
+
+// SecretKeySecret contains state about
+// an argo cd secret key
+type SecretKeySecret struct {
+	Name    string
+	Path    string
+	Version int64
+}
+
+// Github contains information about the
+// clusters configuration towards github
+type Github struct {
+	Organisation string
+	OauthApp     map[string]GithubOauthApp
+	Repositories map[string]GithubRepository
+}
+
+// GithubRepository contains github repository data
+type GithubRepository struct {
+	Name      string
+	FullName  string
+	Types     []string
+	GitURL    string
+	DeployKey DeployKey
+}
+
+// Validate the data
+func (r GithubRepository) Validate() error {
+	return validation.ValidateStruct(&r,
+		validation.Field(&r.Name, validation.Required),
+		validation.Field(&r.FullName, validation.Required),
+		validation.Field(&r.Types, validation.Required),
+		validation.Field(&r.GitURL, validation.Required),
+	)
+}
+
+// GithubOauthApp contains github oauth application data
+type GithubOauthApp struct {
+	Team         string
+	Name         string
+	SiteURL      string
+	CallbackURL  string
+	ClientID     string
+	ClientSecret ClientSecret
+}
+
+// Validate the data
+func (a GithubOauthApp) Validate() error {
+	return validation.ValidateStruct(&a,
+		validation.Field(&a.Team, validation.Required),
+		validation.Field(&a.Name, validation.Required),
+		validation.Field(&a.SiteURL, validation.Required),
+		validation.Field(&a.CallbackURL, validation.Required),
+		validation.Field(&a.ClientSecret, validation.Required),
+		validation.Field(&a.ClientID, validation.Required),
+	)
+}
+
+// ClientSecret contains state about
+// an oauth app client secret
+type ClientSecret struct {
+	Name    string
+	Path    string
+	Version int64
+}
+
+// Validate the data
+func (s ClientSecret) Validate() error {
+	return validation.ValidateStruct(&s,
+		validation.Field(&s.Name, validation.Required),
+		validation.Field(&s.Path, validation.Required),
+		validation.Field(&s.Version, validation.Required),
+	)
+}
+
+// DeployKey contains github deploy key data
+type DeployKey struct {
+	Title            string
+	ID               int64
+	PublicKey        string
+	PrivateKeySecret PrivateKeySecret
+}
+
+// Validate the data
+func (k DeployKey) Validate() error {
+	return validation.ValidateStruct(&k,
+		validation.Field(&k.Title, validation.Required),
+		validation.Field(&k.ID, validation.Required),
+		validation.Field(&k.PublicKey, validation.Required),
+		validation.Field(&k.PrivateKeySecret, validation.Required),
+	)
+}
+
+// PrivateKeySecret contains information
+// about a private key
+type PrivateKeySecret struct {
+	Name    string
+	Path    string
+	Version int64
+}
+
+// Validate the data
+func (s PrivateKeySecret) Validate() error {
+	return validation.ValidateStruct(&s,
+		validation.Field(&s.Name, validation.Required),
+		validation.Field(&s.Path, validation.Required),
+	)
+}
+
+// HostedZone contains information about the
+// clusters hostedzone delegation
+type HostedZone struct {
+	IsDelegated bool
+	Primary     bool
+	Domain      string
+	FQDN        string
+	NameServers []string
+}
+
+// Validate the hostedzone
+func (h HostedZone) Validate() error {
+	return validation.ValidateStruct(&h,
+		validation.Field(&h.Domain, validation.Required),
+		validation.Field(&h.FQDN, validation.Required),
+		validation.Field(h.NameServers, validation.Each(validation.Required)),
+	)
+}
+
+// NewRepository returns repository data with defaults set
+func NewRepository() *Repository {
+	return &Repository{
+		Metadata: Metadata{
+			Region:    v1alpha1.RegionEuWest1,
+			OutputDir: "infrastructure",
+		},
+		Clusters: map[string]Cluster{},
+	}
+}

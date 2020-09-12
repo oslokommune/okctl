@@ -8,8 +8,9 @@ import (
 )
 
 type parameterService struct {
-	api   client.ParameterAPI
-	store client.ParameterStore
+	api    client.ParameterAPI
+	store  client.ParameterStore
+	report client.ParameterReport
 }
 
 func (s *parameterService) CreateSecret(_ context.Context, opts api.CreateSecretOpts) (*api.SecretParameter, error) {
@@ -18,7 +19,12 @@ func (s *parameterService) CreateSecret(_ context.Context, opts api.CreateSecret
 		return nil, err
 	}
 
-	_, err = s.store.SaveSecret(secret)
+	report, err := s.store.SaveSecret(secret)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.SaveSecret(secret, report)
 	if err != nil {
 		return nil, err
 	}
@@ -27,9 +33,10 @@ func (s *parameterService) CreateSecret(_ context.Context, opts api.CreateSecret
 }
 
 // NewParameterService returns an initialised service
-func NewParameterService(api client.ParameterAPI, store client.ParameterStore) client.ParameterService {
+func NewParameterService(api client.ParameterAPI, store client.ParameterStore, report client.ParameterReport) client.ParameterService {
 	return &parameterService{
-		api:   api,
-		store: store,
+		api:    api,
+		store:  store,
+		report: report,
 	}
 }

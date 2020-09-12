@@ -1,8 +1,6 @@
 package filesystem
 
 import (
-	"fmt"
-
 	"github.com/oslokommune/okctl/pkg/client"
 
 	"github.com/oslokommune/okctl/pkg/client/store"
@@ -12,10 +10,8 @@ import (
 )
 
 type vpcStore struct {
-	stackOutputsFileName   string
-	cloudFormationFileName string
-	baseDir                string
-	fs                     *afero.Afero
+	paths Paths
+	fs    *afero.Afero
 }
 
 // Vpc represents the information that is stored
@@ -99,24 +95,24 @@ func defFromStore(vpc *Vpc) *api.Vpc {
 }
 
 func (s *vpcStore) SaveVpc(vpc *api.Vpc) (*store.Report, error) {
-	report, err := store.NewFileSystem(s.baseDir, s.fs).
-		StoreStruct(s.stackOutputsFileName, storeFromDef(vpc), store.ToJSON()).
-		StoreBytes(s.cloudFormationFileName, vpc.CloudFormationTemplate).
+	report, err := store.NewFileSystem(s.paths.BaseDir, s.fs).
+		StoreStruct(s.paths.OutputFile, storeFromDef(vpc), store.ToJSON()).
+		StoreBytes(s.paths.CloudFormationFile, vpc.CloudFormationTemplate).
 		Do()
 	if err != nil {
-		return nil, fmt.Errorf("failed to store vpc: %w", err)
+		return nil, err
 	}
 
 	return report, nil
 }
 
 func (s *vpcStore) DeleteVpc(_ api.ID) (*store.Report, error) {
-	report, err := store.NewFileSystem(s.baseDir, s.fs).
-		Remove(s.stackOutputsFileName).
-		Remove(s.cloudFormationFileName).
+	report, err := store.NewFileSystem(s.paths.BaseDir, s.fs).
+		Remove(s.paths.OutputFile).
+		Remove(s.paths.CloudFormationFile).
 		Do()
 	if err != nil {
-		return nil, fmt.Errorf("failed to delete vpc: %w", err)
+		return nil, err
 	}
 
 	return report, nil
@@ -127,14 +123,14 @@ func (s *vpcStore) GetVpc(_ api.ID) (*api.Vpc, error) {
 
 	var template []byte
 
-	_, err := store.NewFileSystem(s.baseDir, s.fs).
-		GetStruct(s.stackOutputsFileName, vpcOutputs, store.FromJSON()).
-		GetBytes(s.cloudFormationFileName, func(_ string, data []byte) {
+	_, err := store.NewFileSystem(s.paths.BaseDir, s.fs).
+		GetStruct(s.paths.OutputFile, vpcOutputs, store.FromJSON()).
+		GetBytes(s.paths.CloudFormationFile, func(_ string, data []byte) {
 			template = data
 		}).
 		Do()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vpc: %w", err)
+		return nil, err
 	}
 
 	ret := defFromStore(vpcOutputs)
@@ -144,11 +140,9 @@ func (s *vpcStore) GetVpc(_ api.ID) (*api.Vpc, error) {
 }
 
 // NewVpcStore returns an instantiated vpc store
-func NewVpcStore(stackOutputsFileName, cloudFormationFileName, baseDir string, fs *afero.Afero) client.VPCStore {
+func NewVpcStore(paths Paths, fs *afero.Afero) client.VPCStore {
 	return &vpcStore{
-		stackOutputsFileName:   stackOutputsFileName,
-		cloudFormationFileName: cloudFormationFileName,
-		baseDir:                baseDir,
-		fs:                     fs,
+		paths: paths,
+		fs:    fs,
 	}
 }

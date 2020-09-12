@@ -343,7 +343,7 @@ func TestDomainSurvey(t *testing.T) {
 		expect    string
 	}{
 		{
-			name:   "Valid domain",
+			name:   "Validate domain",
 			domain: "domain-not-in-use.oslo.systems",
 			ask:    ask.New(),
 			procedure: func(c *expect.Console, _ *vt10x.State) {

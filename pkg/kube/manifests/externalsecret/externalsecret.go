@@ -16,19 +16,23 @@ import (
 
 // ExternalSecret contains the state for building and applying the manifest
 type ExternalSecret struct {
-	Namespace string
-	Name      string
-	Data      map[string]string
-	Ctx       context.Context
+	Namespace   string
+	Name        string
+	Labels      map[string]string
+	Annotations map[string]string
+	Data        map[string]string
+	Ctx         context.Context
 }
 
 // New returns an initialised runner
-func New(name, namespace string, data map[string]string) *ExternalSecret {
+func New(name, namespace string, annotations, labels, data map[string]string) *ExternalSecret {
 	return &ExternalSecret{
-		Namespace: namespace,
-		Name:      name,
-		Data:      data,
-		Ctx:       context.Background(),
+		Namespace:   namespace,
+		Name:        name,
+		Labels:      annotations,
+		Annotations: labels,
+		Data:        data,
+		Ctx:         context.Background(),
 	}
 }
 
@@ -73,6 +77,15 @@ func (a *ExternalSecret) SecretManifest() *v13.ExternalSecret {
 			BackendType: "systemManager",
 			Data:        []v13.ExternalSecretData{},
 		},
+	}
+
+	if a.Labels != nil || a.Annotations != nil {
+		e.Spec.Template = &v13.ExternalSecretTemplate{
+			Metadata: v13.ExternalSecretTemplateMetadata{
+				Annotations: a.Annotations,
+				Labels:      a.Labels,
+			},
+		}
 	}
 
 	for name, key := range a.Data {

@@ -23,7 +23,7 @@ func TestNew(t *testing.T) {
 	}{
 		{
 			name: "Should work",
-			ext: externalsecret.New("name", "default", map[string]string{
+			ext: externalsecret.New("name", "default", nil, nil, map[string]string{
 				"from": "/path",
 			}),
 		},
@@ -79,7 +79,7 @@ func TestExternalDNS(t *testing.T) {
 		// - https://github.com/godaddy/kubernetes-external-secrets/blob/master/charts/kubernetes-external-secrets/crds/kubernetes-client.io_externalsecrets_crd.yaml
 		{
 			name: "Should work",
-			ext: externalsecret.New("name", "default", map[string]string{
+			ext: externalsecret.New("name", "default", nil, nil, map[string]string{
 				"from": "/path",
 			}),
 		},

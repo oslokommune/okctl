@@ -19,7 +19,7 @@ func TestNew(t *testing.T) {
 		err       string
 	}{
 		{
-			name: "Valid cluster config",
+			name: "Validate cluster config",
 			args: &clusterconfig.Args{
 				ClusterName:            "test",
 				PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(mock.DefaultAWSAccountID),
@@ -69,7 +69,7 @@ func TestNewServiceAccount(t *testing.T) {
 		err       string
 	}{
 		{
-			name: "Valid service account",
+			name: "Validate service account",
 			args: &clusterconfig.ServiceAccountArgs{
 				ClusterName: "test",
 				Labels: map[string]string{
@@ -124,7 +124,7 @@ func TestNewExternalSecretsServiceAccount(t *testing.T) {
 		err                    string
 	}{
 		{
-			name:                   "Valid service account",
+			name:                   "Validate service account",
 			clusterName:            "test",
 			region:                 mock.DefaultRegion,
 			policyArn:              mock.DefaultPolicyARN,
@@ -166,7 +166,7 @@ func TestNewAlbIngressControllerServiceAccount(t *testing.T) {
 		err                    string
 	}{
 		{
-			name:                   "Valid service account",
+			name:                   "Validate service account",
 			clusterName:            "test",
 			region:                 mock.DefaultRegion,
 			policyArn:              mock.DefaultPolicyARN,
@@ -208,7 +208,7 @@ func TestNewExternalDNSServiceAccount(t *testing.T) {
 		err                    string
 	}{
 		{
-			name:                   "Valid service account",
+			name:                   "Validate service account",
 			clusterName:            "test",
 			region:                 mock.DefaultRegion,
 			policyArn:              mock.DefaultPolicyARN,

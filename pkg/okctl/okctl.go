@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/config/state"
+
 	"github.com/oslokommune/okctl/pkg/api/core/store/noop"
 
 	"github.com/oslokommune/okctl/pkg/credentials/github"
@@ -27,7 +29,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/cloud"
 	"github.com/oslokommune/okctl/pkg/config"
-	"github.com/oslokommune/okctl/pkg/config/user"
 	"github.com/oslokommune/okctl/pkg/credentials"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	"github.com/oslokommune/okctl/pkg/credentials/aws/scrape"
@@ -45,15 +46,48 @@ type Okctl struct {
 	CredentialsProvider credentials.Provider
 }
 
+// InitialiseWithOnlyEnv initialises okctl when the aws account is has been
+// set previously
+func (o *Okctl) InitialiseWithOnlyEnv(env string) error {
+	return o.initialise(env)
+}
+
+// InitialiseWithEnvAndAWSAccountID initialises okctl when aws account id hasn't
+// been set yet
+func (o *Okctl) InitialiseWithEnvAndAWSAccountID(env, awsAccountID string) error {
+	if o.RepoState.Clusters == nil {
+		o.RepoState.Clusters = map[string]state.Cluster{
+			env: {
+				Name:         o.RepoState.Metadata.Name,
+				Environment:  env,
+				AWSAccountID: awsAccountID,
+			},
+		}
+	}
+
+	return o.initialise(env)
+}
+
 // Initialise okctl for receiving requests
 // nolint: funlen
-func (o *Okctl) Initialise(env, awsAccountID string) error {
-	err := o.EnableFileLog()
+func (o *Okctl) initialise(env string) error {
+	repoDir, err := o.GetRepoDir()
 	if err != nil {
 		return err
 	}
 
-	err = o.initialiseProviders(env, awsAccountID)
+	o.RepoStateWithEnv = state.NewRepositoryStateWithEnv(env, o.RepoState, state.DefaultFileSystemSaver(
+		config.DefaultRepositoryConfig,
+		repoDir,
+		o.FileSystem,
+	))
+
+	_, err = o.RepoStateWithEnv.Save()
+	if err != nil {
+		return err
+	}
+
+	err = o.initialiseProviders()
 	if err != nil {
 		return err
 	}
@@ -68,9 +102,11 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		return err
 	}
 
+	clusterName := o.RepoStateWithEnv.GetClusterName()
+
 	kubeConfigStore := filesystem.NewKubeConfigStore(
 		config.DefaultClusterKubeConfig,
-		path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env)),
+		path.Join(appDir, config.DefaultCredentialsDirName, clusterName),
 		o.FileSystem,
 	)
 
@@ -94,8 +130,8 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		run.NewClusterRun(
 			o.Debug,
 			kubeConfigStore,
-			path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterAwsConfig),
-			path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterAwsCredentials),
+			path.Join(appDir, config.DefaultCredentialsDirName, clusterName, config.DefaultClusterAwsConfig),
+			path.Join(appDir, config.DefaultCredentialsDirName, clusterName, config.DefaultClusterAwsCredentials),
 			o.BinariesProvider,
 			o.CloudProvider,
 		),
@@ -110,8 +146,8 @@ func (o *Okctl) Initialise(env, awsAccountID string) error {
 		serviceAccountStore,
 		run.NewServiceAccountRun(
 			o.Debug,
-			path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterAwsConfig),
-			path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env), config.DefaultClusterAwsCredentials),
+			path.Join(appDir, config.DefaultCredentialsDirName, clusterName, config.DefaultClusterAwsConfig),
+			path.Join(appDir, config.DefaultCredentialsDirName, clusterName, config.DefaultClusterAwsCredentials),
 			o.BinariesProvider,
 		),
 	)
@@ -212,28 +248,23 @@ func New() *Okctl {
 }
 
 // Binaries returns the application binaries
-func (o *Okctl) Binaries() []user.Binary {
-	return o.UserData.Binaries
+func (o *Okctl) Binaries() []state.Binary {
+	return o.UserState.Binaries
 }
 
 // Host returns the host information
-func (o *Okctl) Host() user.Host {
-	return o.UserData.Host
+func (o *Okctl) Host() state.Host {
+	return o.UserState.Host
 }
 
 // Username returns the username of the active user
 func (o *Okctl) Username() string {
-	return o.UserData.User.Username
-}
-
-// Region returns the AWS region of the repository
-func (o *Okctl) Region() string {
-	return o.RepoData.Region
+	return o.UserState.User.Username
 }
 
 // initialiseProviders knows how to create all required providers
-func (o *Okctl) initialiseProviders(env, awsAccountID string) error {
-	err := o.newCredentialsProvider(env, awsAccountID)
+func (o *Okctl) initialiseProviders() error {
+	err := o.newCredentialsProvider()
 	if err != nil {
 		return err
 	}
@@ -268,14 +299,19 @@ func (o *Okctl) newBinariesProvider() error {
 		return errors.E(err, "failed to create binaries fetcher", errors.Internal)
 	}
 
-	o.BinariesProvider = binaries.New(ioutil.Discard, o.CredentialsProvider.Aws(), fetcher)
+	out := ioutil.Discard
+	if o.Debug {
+		out = o.Err
+	}
+
+	o.BinariesProvider = binaries.New(out, o.CredentialsProvider.Aws(), fetcher)
 
 	return nil
 }
 
 // newCloudProvider creates a provider for running cloud operations
 func (o *Okctl) newCloudProvider() error {
-	c, err := cloud.New(o.Region(), o.CredentialsProvider.Aws())
+	c, err := cloud.New(o.RepoStateWithEnv.GetMetadata().Region, o.CredentialsProvider.Aws())
 	if err != nil {
 		return err
 	}
@@ -286,7 +322,7 @@ func (o *Okctl) newCloudProvider() error {
 }
 
 // newCredentialsProvider knows how to load credentials
-func (o *Okctl) newCredentialsProvider(env, awsAccountID string) error {
+func (o *Okctl) newCredentialsProvider() error {
 	if o.NoInput {
 		return errors.E(errors.Errorf("we only support retrieving credentials interactively for now"), errors.Invalid)
 	}
@@ -299,7 +335,7 @@ func (o *Okctl) newCredentialsProvider(env, awsAccountID string) error {
 	authStore := aws.NewIniPersister(aws.NewFileSystemIniStorer(
 		config.DefaultClusterAwsConfig,
 		config.DefaultClusterAwsCredentials,
-		path.Join(appDir, config.DefaultCredentialsDirName, o.ClusterName(env)),
+		path.Join(appDir, config.DefaultCredentialsDirName, o.RepoStateWithEnv.GetClusterName()),
 		o.FileSystem,
 	))
 
@@ -320,7 +356,13 @@ func (o *Okctl) newCredentialsProvider(env, awsAccountID string) error {
 		_ = k.Store(keyring.KeyTypeUserPassword, password)
 	}
 
-	saml := aws.NewAuthSAML(awsAccountID, o.Region(), scrape.New(), aws.DefaultStsProvider, aws.Interactive(o.Username(), storedPassword, fn))
+	saml := aws.NewAuthSAML(
+		o.RepoStateWithEnv.GetCluster().AWSAccountID,
+		o.RepoStateWithEnv.GetMetadata().Region,
+		scrape.New(),
+		aws.DefaultStsProvider,
+		aws.Interactive(o.Username(), storedPassword, fn),
+	)
 
 	gh := github.New(
 		github.NewKeyringPersister(k),

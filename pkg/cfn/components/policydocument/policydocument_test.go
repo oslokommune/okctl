@@ -16,7 +16,7 @@ func TestPolicyDocument(t *testing.T) {
 		document *policydocument.PolicyDocument
 	}{
 		{
-			name:   "Valid action and resource",
+			name:   "Validate action and resource",
 			golden: "action-resource.json",
 			document: &policydocument.PolicyDocument{
 				Version: policydocument.Version,

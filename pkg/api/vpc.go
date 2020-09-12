@@ -13,6 +13,7 @@ type Vpc struct {
 	CloudFormationTemplate []byte
 
 	VpcID          string
+	Cidr           string
 	PublicSubnets  []VpcSubnet
 	PrivateSubnets []VpcSubnet
 }

@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/ask"
+	"github.com/oslokommune/okctl/pkg/config/state"
+
 	"github.com/oslokommune/okctl/pkg/config"
-	"github.com/oslokommune/okctl/pkg/config/user"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -45,7 +47,7 @@ func CreateOnUserDataNotFound() DataNotFoundFn {
 
 		userDataPath, err := c.GetUserDataPath()
 		if err != nil {
-			return err
+			return fmt.Errorf("getting user data path: %w", err)
 		}
 
 		err = PromptContinue(
@@ -56,12 +58,16 @@ func CreateOnUserDataNotFound() DataNotFoundFn {
 			return err
 		}
 
-		data, err := user.New().Survey()
+		data := state.NewUser()
+
+		username, err := ask.New().Username()
 		if err != nil {
 			return errors.Wrap(err, "failed to get interactive user data")
 		}
 
-		c.UserData = data
+		data.User.Username = username
+
+		c.UserState = data
 
 		err = c.WriteCurrentUserData()
 		if err != nil {
@@ -91,7 +97,7 @@ func UserDataFromFlagsEnvConfigDefaults(cmd *cobra.Command, notFoundFn DataNotFo
 }
 
 func loadDefaultUserData(_ *config.Config, v *viper.Viper) error {
-	b, err := yaml.Marshal(user.New())
+	b, err := yaml.Marshal(state.NewUser())
 	if err != nil {
 		return err
 	}
@@ -158,14 +164,14 @@ func loadFlagsUserData(cmd *cobra.Command) LoaderFn {
 }
 
 func updateKnownBinaries(cfg *config.Config) {
-	candidates := user.KnownBinaries()
+	candidates := state.KnownBinaries()
 
-	var update []user.Binary
+	var update []state.Binary
 
 	for _, candidate := range candidates {
 		found := false
 
-		for _, existing := range cfg.UserData.Binaries {
+		for _, existing := range cfg.UserState.Binaries {
 			if candidate.Name == existing.Name && candidate.Version == existing.Version {
 				found = true
 				break
@@ -177,14 +183,14 @@ func updateKnownBinaries(cfg *config.Config) {
 		}
 	}
 
-	cfg.UserData.Binaries = append(cfg.UserData.Binaries, update...)
+	cfg.UserState.Binaries = append(cfg.UserState.Binaries, update...)
 }
 
 func buildUserDataLoader(loaders ...LoaderFn) config.DataLoaderFn {
 	return func(cfg *config.Config) error {
 		var err error
 
-		cfg.UserData = &user.Data{}
+		cfg.UserState = &state.User{}
 
 		v := viper.New()
 		v.SetFs(cfg.FileSystem.Fs)
@@ -196,7 +202,7 @@ func buildUserDataLoader(loaders ...LoaderFn) config.DataLoaderFn {
 			}
 		}
 
-		err = v.Unmarshal(cfg.UserData)
+		err = v.Unmarshal(cfg.UserState)
 		if err != nil {
 			return err
 		}

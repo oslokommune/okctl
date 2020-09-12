@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/config/state"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 
 	"github.com/oslokommune/okctl/pkg/client/store"
@@ -18,6 +20,17 @@ type GithubRepository struct {
 	FullName     string
 	GitURL       string
 	DeployKey    *GithubDeployKey
+}
+
+// Validate the github repository
+func (r GithubRepository) Validate() error {
+	return validation.ValidateStruct(&r,
+		validation.Field(&r.DeployKey, validation.Required),
+		validation.Field(&r.Organisation, validation.Required),
+		validation.Field(&r.FullName, validation.Required),
+		validation.Field(&r.GitURL, validation.Required),
+		validation.Field(&r.Repository, validation.Required),
+	)
 }
 
 // ReadyGithubInfrastructureRepositoryOpts contains required inputs
@@ -58,6 +71,14 @@ type GithubSecret struct {
 	Version int64
 }
 
+// Validate the data
+func (s GithubSecret) Validate() error {
+	return validation.ValidateStruct(&s,
+		validation.Field(&s.Name, validation.Required),
+		validation.Field(&s.Path, validation.Required),
+	)
+}
+
 // GithubOauthApp is a github oauth app
 type GithubOauthApp struct {
 	ID           api.ID
@@ -68,6 +89,19 @@ type GithubOauthApp struct {
 	ClientID     string
 	ClientSecret *GithubSecret
 	Team         *GithubTeam
+}
+
+// Validate the data
+func (a GithubOauthApp) Validate() error {
+	return validation.ValidateStruct(&a,
+		validation.Field(&a.Organisation, validation.Required),
+		validation.Field(&a.Name, validation.Required),
+		validation.Field(&a.SiteURL, validation.Required),
+		validation.Field(&a.CallbackURL, validation.Required),
+		validation.Field(&a.ClientID, validation.Required),
+		validation.Field(&a.ClientSecret, validation.Required),
+		validation.Field(&a.Team, validation.Required),
+	)
 }
 
 // CreateGithubOauthAppOpts contains required inputs
@@ -98,6 +132,13 @@ type GithubTeam struct {
 	Name         string
 }
 
+// Validate the data
+func (t GithubTeam) Validate() error {
+	return validation.ValidateStruct(&t,
+		validation.Field(&t.Name, validation.Required),
+	)
+}
+
 // SelectGithubTeam contains required inputs
 type SelectGithubTeam struct {
 	ID           api.ID
@@ -113,6 +154,18 @@ type GithubDeployKey struct {
 	Title            string
 	PublicKey        string
 	PrivateKeySecret *GithubSecret
+}
+
+// Validate the data
+func (k GithubDeployKey) Validate() error {
+	return validation.ValidateStruct(&k,
+		validation.Field(&k.Organisation, validation.Required),
+		validation.Field(&k.Repository, validation.Required),
+		validation.Field(&k.Identifier, validation.Required),
+		validation.Field(&k.Title, validation.Required),
+		validation.Field(&k.PublicKey, validation.Required),
+		validation.Field(&k.PrivateKeySecret, validation.Required),
+	)
 }
 
 // CreateGithubDeployKey contains required inputs
@@ -137,16 +190,16 @@ type GithubAPI interface {
 	CreateGithubOauthApp(opts CreateGithubOauthAppOpts) (*GithubOauthApp, error)
 }
 
-// GithubStore is the storage layer
-type GithubStore interface {
-	SaveGithubInfrastructureRepository(repository *GithubRepository) (*store.Report, error)
-	GetGithubInfrastructureRepository(id api.ID) (*GithubRepository, error)
-	SaveGithubOauthApp(app *GithubOauthApp) (*store.Report, error)
-	GetGithubOauthApp(appName string, id api.ID) (*GithubOauthApp, error)
-}
-
 // GithubReport is the report layer
 type GithubReport interface {
 	ReadyGithubInfrastructureRepository(repository *GithubRepository, report *store.Report) error
 	CreateGithubOauthApp(app *GithubOauthApp, report *store.Report) error
+}
+
+// GithubState is the state layer
+type GithubState interface {
+	SaveGithubInfrastructureRepository(repository *GithubRepository) (*store.Report, error)
+	GetGithubInfrastructureRepository(id api.ID) state.GithubRepository
+	SaveGithubOauthApp(app *GithubOauthApp) (*store.Report, error)
+	GetGithubOauthApp(appName string, id api.ID) state.GithubOauthApp
 }

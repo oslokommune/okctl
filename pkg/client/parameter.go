@@ -22,3 +22,8 @@ type ParameterAPI interface {
 type ParameterStore interface {
 	SaveSecret(*api.SecretParameter) (*store.Report, error)
 }
+
+// ParameterReport defines the reporting layer
+type ParameterReport interface {
+	SaveSecret(parameter *api.SecretParameter, report *store.Report) error
+}

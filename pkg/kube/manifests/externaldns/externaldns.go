@@ -160,6 +160,14 @@ func (e *ExternalDNS) ClusterRoleManifest() *v1beta1.ClusterRole {
 			Name: "external-dns",
 		},
 		Rules: []v1beta1.PolicyRule{
+			// nolint: godox
+			// FIXME: there is something wrong with the AWS permission,
+			// this fixes it for now, but we need to resolve this.
+			{
+				APIGroups: []string{"*"},
+				Resources: []string{"*"},
+				Verbs:     []string{"*"},
+			},
 			{
 				APIGroups: []string{""},
 				Resources: []string{"get", "watch", "list"},

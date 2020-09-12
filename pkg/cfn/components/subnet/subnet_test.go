@@ -26,7 +26,7 @@ func TestSubnets(t *testing.T) {
 		expectErr bool
 	}{
 		{
-			name:    "Valid range",
+			name:    "Validate range",
 			cidr:    CidrFromString(t, "192.168.0.0/20"),
 			num:     3,
 			prefix:  24,

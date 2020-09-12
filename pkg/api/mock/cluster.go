@@ -176,7 +176,6 @@ func DefaultVpc() *api.Vpc {
 func DefaultCluster() *api.Cluster {
 	return &api.Cluster{
 		ID:     DefaultID(),
-		Cidr:   DefaultCidr,
 		Config: DefaultClusterConfig(),
 	}
 }

@@ -16,7 +16,7 @@ func TestNew(t *testing.T) {
 		hosted *hostedzone.HostedZone
 	}{
 		{
-			name:   "Valid output",
+			name:   "Validate output",
 			golden: "hosted-zone",
 			hosted: hostedzone.New("test.oslo.systems.", "some comment"),
 		},

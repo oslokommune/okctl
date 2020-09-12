@@ -19,7 +19,7 @@ func TestHttpFetcherFetch(t *testing.T) {
 		response  httpmock.Responder
 	}{
 		{
-			name:     "Valid request",
+			name:     "Validate request",
 			url:      "https://valid",
 			expect:   "hi there",
 			response: httpmock.NewBytesResponder(200, []byte("hi there")),

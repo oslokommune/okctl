@@ -1,0 +1,67 @@
+metadata:
+    name: okctl
+    region: eu-west-1
+    outputdir: infrastructure
+clusters:
+    pro:
+        name: okctl-pro
+        environment: pro
+        awsaccountid: "123456789012"
+        hostedzone:
+            test.oslo.systems:
+                isdelegated: true
+                primary: false
+                domain: test.oslo.systems
+                fqdn: test.oslo.systems
+                nameservers:
+                    - ns1.aws.com
+                    - ns2.aws.com
+        vpc:
+            vpcid: 3456ygfghj
+            cidr: 192.168.0.0/20
+            subnets:
+                private:
+                    - cidr: 192.168.10.0/24
+                      availabilityzone: eu-west-1c
+                public:
+                    - cidr: 192.168.0.0/24
+                      availabilityzone: eu-west-1a
+        certificates:
+            argocd.test.oslo.systems:
+                domain: argocd.test.oslo.systems
+                arn: arn:::cert/something
+        github:
+            organisation: oslokommune
+            oauthapp:
+                okctl-kjøremlijø-pro:
+                    team: kjøremiljø
+                    name: okctl-kjøremiljø-pro
+                    siteurl: ""
+                    callbackurl: ""
+                    clientid: asdfg123456
+                    clientsecret:
+                        name: argocd-client-secret
+                        path: /something/argocd
+                        version: 1
+            repositories:
+                oslokommune/okctl-iac:
+                    name: okctl-iac
+                    fullname: ""
+                    types:
+                        - infrastructure
+                    giturl: git@github.com/oslokommune/okctl-iac
+                    deploykey:
+                        title: okctl-kjøremlijø-pro
+                        id: 23456865
+                        publickey: ssh-rsa 098f09ujf9rewjvjlejf3jf933
+                        privatekeysecret:
+                            name: okctl-kjøremiljø-pro
+                            path: /something/privatekey
+                            version: 1
+        argocd:
+            siteurl: https://argocd.oslo.systems
+            domain: argocd.oslo.systems
+            secretkey:
+                name: something
+                path: /some/path
+                version: 1

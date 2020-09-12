@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/oslokommune/okctl/pkg/api/core"
 	"github.com/oslokommune/okctl/pkg/config/load"
 	"github.com/oslokommune/okctl/pkg/okctl"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +19,7 @@ func main() {
 	}
 }
 
-func repoDataLoader(o *okctl.Okctl, cmd *cobra.Command) error {
+func loadRepoData(o *okctl.Okctl, cmd *cobra.Command) error {
 	repoDataNotFound := load.CreateOnRepoDataNotFound()
 
 	if o.NoInput {
@@ -29,7 +31,7 @@ func repoDataLoader(o *okctl.Okctl, cmd *cobra.Command) error {
 	return o.LoadRepoData()
 }
 
-func userDataLoader(o *okctl.Okctl, cmd *cobra.Command) error {
+func loadUserData(o *okctl.Okctl, cmd *cobra.Command) error {
 	userDataNotFound := load.CreateOnUserDataNotFound()
 
 	if o.NoInput {
@@ -60,20 +62,27 @@ being captured. Together with slack and slick.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
-			err = userDataLoader(o, cmd)
+			err = loadUserData(o, cmd)
 			if err != nil {
-				return errors.Wrap(err, "failed to load application data")
+				return fmt.Errorf("failed to load application data: %w", err)
 			}
 
-			err = repoDataLoader(o, cmd)
+			err = loadRepoData(o, cmd)
 			if err != nil {
-				return errors.Wrap(err, "failed to load repository data")
+				return fmt.Errorf("failed to load repository data: %w", err)
 			}
 
 			o.Out = cmd.OutOrStdout()
 			o.Err = cmd.OutOrStderr()
 
 			o.SetFormat(core.EncodeResponseType(outputFormat))
+
+			c := make(chan os.Signal)
+			signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+			go func() {
+				<-c
+				os.Exit(1)
+			}()
 
 			return nil
 		},

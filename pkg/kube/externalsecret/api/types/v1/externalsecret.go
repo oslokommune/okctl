@@ -12,8 +12,21 @@ type ExternalSecretData struct {
 
 //+kubebuilder:object:generate:=true
 type ExternalSecretSpec struct {
-	BackendType string               `json:"backendType"`
-	Data        []ExternalSecretData `json:"data"`
+	BackendType string `json:"backendType"`
+	// +optional
+	Template *ExternalSecretTemplate `json:"template,omitempty"`
+	Data     []ExternalSecretData    `json:"data"`
+}
+
+//+kubebuilder:object:generate:=true
+type ExternalSecretTemplate struct {
+	Metadata ExternalSecretTemplateMetadata `json:"metadata"`
+}
+
+//+kubebuilder:object:generate:=true
+type ExternalSecretTemplateMetadata struct {
+	Annotations map[string]string `json:"annotations"`
+	Labels      map[string]string `json:"labels"`
 }
 
 //+kubebuilder:object:root:=true

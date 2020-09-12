@@ -36,8 +36,10 @@ func (c *vpcCloudProvider) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
 	}
 
 	v := &api.Vpc{
+		ID:                     opts.ID,
 		StackName:              stackName,
 		CloudFormationTemplate: template,
+		Cidr:                   opts.Cidr,
 	}
 
 	err = r.Outputs(stackName, map[string]cfn.ProcessOutputFn{

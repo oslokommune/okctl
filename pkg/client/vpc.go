@@ -31,5 +31,11 @@ type VPCStore interface {
 
 // VPCReport summaries the creation of a VPC
 type VPCReport interface {
-	ReportCreateVPC(vpc *api.Vpc, report *store.Report) error
+	ReportCreateVPC(vpc *api.Vpc, reports []*store.Report) error
+}
+
+// VPCState implement the state layer
+type VPCState interface {
+	SaveVpc(vpc *api.Vpc) (*store.Report, error)
+	DeleteVpc(id api.ID) (*store.Report, error)
 }

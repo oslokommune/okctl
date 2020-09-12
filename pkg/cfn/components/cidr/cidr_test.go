@@ -40,7 +40,7 @@ func TestNew(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name: "Valid range",
+			name: "Validate range",
 			cidr: "192.168.0.0/20",
 			expect: &cidr.Cidr{
 				Block: func() *net.IPNet {

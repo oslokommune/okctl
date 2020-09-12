@@ -9,15 +9,12 @@ import (
 	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/config/repository"
 	"github.com/spf13/afero"
 )
 
 type certificateStore struct {
-	paths     Paths
-	repoPaths Paths
-	repoState *repository.Data
-	fs        *afero.Afero
+	paths Paths
+	fs    *afero.Afero
 }
 
 // Certificate contains the data we store to the outputs
@@ -30,6 +27,32 @@ type Certificate struct {
 	StackName      string
 }
 
+func (s *certificateStore) GetCertificate(domain string) (*api.Certificate, error) {
+	cert := &Certificate{}
+
+	var template []byte
+
+	_, err := store.NewFileSystem(path.Join(s.paths.BaseDir, domain), s.fs).
+		GetStruct(s.paths.OutputFile, cert, store.FromJSON()).
+		GetBytes(s.paths.CloudFormationFile, func(_ string, data []byte) {
+			template = data
+		}).
+		Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.Certificate{
+		ID:                     cert.ID,
+		FQDN:                   cert.FQDN,
+		Domain:                 cert.Domain,
+		HostedZoneID:           cert.HostedZoneID,
+		CertificateARN:         cert.CertificateARN,
+		StackName:              cert.StackName,
+		CloudFormationTemplate: template,
+	}, nil
+}
+
 func (s *certificateStore) SaveCertificate(c *api.Certificate) (*store.Report, error) {
 	cert := Certificate{
 		ID:             c.ID,
@@ -40,22 +63,9 @@ func (s *certificateStore) SaveCertificate(c *api.Certificate) (*store.Report, e
 		StackName:      c.CertificateARN,
 	}
 
-	cluster, ok := s.repoState.Clusters[c.ID.Environment]
-	if !ok {
-		return nil, fmt.Errorf("found no cluster for environment: %s", c.ID.Environment)
-	}
-
-	if cluster.Certificates == nil {
-		cluster.Certificates = map[string]string{}
-	}
-
-	cluster.Certificates[c.Domain] = c.CertificateARN
-
 	report, err := store.NewFileSystem(path.Join(s.paths.BaseDir, c.Domain), s.fs).
 		StoreStruct(s.paths.OutputFile, &cert, store.ToJSON()).
 		StoreBytes(s.paths.CloudFormationFile, c.CloudFormationTemplate).
-		AlterStore(store.SetBaseDir(s.repoPaths.BaseDir)).
-		StoreStruct(s.repoPaths.ConfigFile, s.repoState, store.ToYAML()).
 		Do()
 	if err != nil {
 		return nil, fmt.Errorf("failed to store certificate: %w", err)
@@ -65,11 +75,9 @@ func (s *certificateStore) SaveCertificate(c *api.Certificate) (*store.Report, e
 }
 
 // NewCertificateStore returns an initialised certificate store
-func NewCertificateStore(repoState *repository.Data, paths, repoPaths Paths, fs *afero.Afero) client.CertificateStore {
+func NewCertificateStore(paths Paths, fs *afero.Afero) client.CertificateStore {
 	return &certificateStore{
-		paths:     paths,
-		repoPaths: repoPaths,
-		repoState: repoState,
-		fs:        fs,
+		paths: paths,
+		fs:    fs,
 	}
 }

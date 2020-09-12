@@ -14,9 +14,16 @@ type clusterReport struct {
 	console *Console
 }
 
-func (r *clusterReport) ReportCreateCluster(cluster *api.Cluster, report *store.Report) error {
-	description := aurora.Green(cluster.Config.Metadata).String()
-	return r.console.Report(report.Actions, "cluster", description)
+func (r *clusterReport) ReportCreateCluster(cluster *api.Cluster, reports []*store.Report) error {
+	var actions []store.Action // nolint: prealloc
+
+	for _, report := range reports {
+		actions = append(actions, report.Actions...)
+	}
+
+	description := aurora.Green(cluster.Config.Metadata.Name).String()
+
+	return r.console.Report(actions, "cluster", description)
 }
 
 // NewClusterReport returns an initialised cluster reporter

@@ -41,9 +41,9 @@ We have a basic cluster up and running, and we are currently working on getting 
 
 - [x] [ExternalSecrets](https://github.com/godaddy/kubernetes-external-secrets/) for storing secrets securely
 - [x] [AWS ALB Ingress Controller](https://github.com/kubernetes-sigs/aws-alb-ingress-controller) creates load balancers for incoming traffic
-- [ ] [ExternalDNS](https://github.com/kubernetes-sigs/external-dns) ensures humane DNS hostnames 
+- [x] [ExternalDNS](https://github.com/kubernetes-sigs/external-dns) ensures humane DNS hostnames 
 - [ ] [Autoscaler](https://github.com/kubernetes/autoscaler/) for adjusting the size of pods and nodes
-- [ ] [Argo CD](https://github.com/argoproj/argo-cd) gives us continuous delivery
+- [x] [Argo CD](https://github.com/argoproj/argo-cd) gives us continuous delivery
 - [ ] [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator) for monitoring
 - [ ] [Amazon Elastic Block Store (EBS) CSI driver](https://github.com/kubernetes-sigs/aws-ebs-csi-driver/) for block storage
 - [ ] [Loki](https://github.com/grafana/loki) for consuming logs

@@ -20,13 +20,13 @@ const (
 // Repository stores the configured state of a repository
 // as used by okctl
 type Repository struct {
-	Metadata *Metadata
-	Clusters map[string]*Cluster
+	Metadata Metadata
+	Clusters map[string]Cluster
 }
 
 // Validate the repository
-func (r *Repository) Validate() error {
-	return validation.ValidateStruct(r,
+func (r Repository) Validate() error {
+	return validation.ValidateStruct(&r,
 		validation.Field(r.Metadata),
 		validation.Field(r.Clusters),
 	)
@@ -40,8 +40,8 @@ type Metadata struct {
 }
 
 // Validate the metadata
-func (m *Metadata) Validate() error {
-	return validation.ValidateStruct(m,
+func (m Metadata) Validate() error {
+	return validation.ValidateStruct(&m,
 		validation.Field(&m.Name,
 			validation.Required,
 		),
@@ -67,11 +67,11 @@ type Cluster struct {
 	Name         string
 	Environment  string
 	AWSAccountID string
-	HostedZone   map[string]*HostedZone
-	VPC          *VPC
-	Certificates map[string]*Certificate
-	Github       *Github
-	ArgoCD       *ArgoCD
+	HostedZone   map[string]HostedZone
+	VPC          VPC
+	Certificates map[string]Certificate
+	Github       Github
+	ArgoCD       ArgoCD
 }
 
 const (
@@ -80,7 +80,7 @@ const (
 )
 
 // Validate the cluster data
-func (c *Cluster) Validate() error {
+func (c Cluster) Validate() error {
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.Name, validation.Required),
 		validation.Field(&c.Environment,
@@ -99,11 +99,19 @@ type Certificate struct {
 	ARN    string
 }
 
+// Validate the data
+func (c Certificate) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.Domain, validation.Required),
+		validation.Field(&c.ARN, validation.Required),
+	)
+}
+
 // VPC contains state about the VPC
 type VPC struct {
 	VpcID   string
 	CIDR    string
-	Subnets map[string][]*VPCSubnet
+	Subnets map[string][]VPCSubnet
 }
 
 // VPCSubnet is a vpc subnet
@@ -117,7 +125,7 @@ type VPCSubnet struct {
 type ArgoCD struct {
 	SiteURL   string
 	Domain    string
-	SecretKey *SecretKeySecret
+	SecretKey SecretKeySecret
 }
 
 // SecretKeySecret contains state about
@@ -132,8 +140,8 @@ type SecretKeySecret struct {
 // clusters configuration towards github
 type Github struct {
 	Organisation string
-	OauthApp     map[string]*GithubOauthApp
-	Repositories map[string]*GithubRepository
+	OauthApp     map[string]GithubOauthApp
+	Repositories map[string]GithubRepository
 }
 
 // GithubRepository contains github repository data
@@ -142,7 +150,17 @@ type GithubRepository struct {
 	FullName  string
 	Types     []string
 	GitURL    string
-	DeployKey *DeployKey
+	DeployKey DeployKey
+}
+
+// Validate the data
+func (r GithubRepository) Validate() error {
+	return validation.ValidateStruct(&r,
+		validation.Field(&r.Name, validation.Required),
+		validation.Field(&r.FullName, validation.Required),
+		validation.Field(&r.Types, validation.Required),
+		validation.Field(&r.GitURL, validation.Required),
+	)
 }
 
 // GithubOauthApp contains github oauth application data
@@ -152,7 +170,19 @@ type GithubOauthApp struct {
 	SiteURL      string
 	CallbackURL  string
 	ClientID     string
-	ClientSecret *ClientSecret
+	ClientSecret ClientSecret
+}
+
+// Validate the data
+func (a GithubOauthApp) Validate() error {
+	return validation.ValidateStruct(&a,
+		validation.Field(&a.Team, validation.Required),
+		validation.Field(&a.Name, validation.Required),
+		validation.Field(&a.SiteURL, validation.Required),
+		validation.Field(&a.CallbackURL, validation.Required),
+		validation.Field(&a.ClientSecret, validation.Required),
+		validation.Field(&a.ClientID, validation.Required),
+	)
 }
 
 // ClientSecret contains state about
@@ -163,12 +193,31 @@ type ClientSecret struct {
 	Version int64
 }
 
+// Validate the data
+func (s ClientSecret) Validate() error {
+	return validation.ValidateStruct(&s,
+		validation.Field(&s.Name, validation.Required),
+		validation.Field(&s.Path, validation.Required),
+		validation.Field(&s.Version, validation.Required),
+	)
+}
+
 // DeployKey contains github deploy key data
 type DeployKey struct {
 	Title            string
 	ID               int64
 	PublicKey        string
-	PrivateKeySecret *PrivateKeySecret
+	PrivateKeySecret PrivateKeySecret
+}
+
+// Validate the data
+func (k DeployKey) Validate() error {
+	return validation.ValidateStruct(&k,
+		validation.Field(&k.Title, validation.Required),
+		validation.Field(&k.ID, validation.Required),
+		validation.Field(&k.PublicKey, validation.Required),
+		validation.Field(&k.PrivateKeySecret, validation.Required),
+	)
 }
 
 // PrivateKeySecret contains information
@@ -177,6 +226,14 @@ type PrivateKeySecret struct {
 	Name    string
 	Path    string
 	Version int64
+}
+
+// Validate the data
+func (s PrivateKeySecret) Validate() error {
+	return validation.ValidateStruct(&s,
+		validation.Field(&s.Name, validation.Required),
+		validation.Field(&s.Path, validation.Required),
+	)
 }
 
 // HostedZone contains information about the
@@ -190,8 +247,8 @@ type HostedZone struct {
 }
 
 // Validate the hostedzone
-func (h *HostedZone) Validate() error {
-	return validation.ValidateStruct(h,
+func (h HostedZone) Validate() error {
+	return validation.ValidateStruct(&h,
 		validation.Field(&h.Domain, validation.Required),
 		validation.Field(&h.FQDN, validation.Required),
 		validation.Field(h.NameServers, validation.Each(validation.Required)),
@@ -201,10 +258,10 @@ func (h *HostedZone) Validate() error {
 // NewRepository returns repository data with defaults set
 func NewRepository() *Repository {
 	return &Repository{
-		Metadata: &Metadata{
+		Metadata: Metadata{
 			Region:    v1alpha1.RegionEuWest1,
 			OutputDir: "infrastructure",
 		},
-		Clusters: map[string]*Cluster{},
+		Clusters: map[string]Cluster{},
 	}
 }

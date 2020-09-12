@@ -4,8 +4,6 @@ package binaries
 import (
 	"io"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
 	"github.com/oslokommune/okctl/pkg/binaries/run"
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
@@ -24,7 +22,6 @@ type Provider interface {
 
 type provider struct {
 	progress io.Writer
-	logger   *logrus.Logger
 	auth     aws.Authenticator
 	fetcher  fetch.Provider
 
@@ -80,7 +77,7 @@ func (p *provider) Eksctl(version string) (*eksctl.Eksctl, error) {
 			return nil, err
 		}
 
-		p.eksctl[version] = eksctl.New(store, p.progress, binaryPath, p.auth, run.Cmd()).WithLogger(p.logger)
+		p.eksctl[version] = eksctl.New(store, p.progress, binaryPath, p.auth, run.Cmd())
 	}
 
 	return p.eksctl[version], nil
@@ -88,9 +85,8 @@ func (p *provider) Eksctl(version string) (*eksctl.Eksctl, error) {
 
 // New returns a provider that knows how to fetch binaries and make
 // them available for other commands
-func New(logger *logrus.Logger, progress io.Writer, auth aws.Authenticator, fetcher fetch.Provider) Provider {
+func New(progress io.Writer, auth aws.Authenticator, fetcher fetch.Provider) Provider {
 	return &provider{
-		logger:              logger,
 		progress:            progress,
 		auth:                auth,
 		fetcher:             fetcher,

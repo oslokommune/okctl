@@ -4,12 +4,9 @@ package eksctl
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/sirupsen/logrus"
 
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 
@@ -38,20 +35,12 @@ type Eksctl struct {
 	CmdPath    []string
 	CmdEnv     []string
 	DoDebug    bool
-
-	// This allows us to create an
-	// io.MultiWriter later on,
-	// if we override the logger
-	progress io.Writer
 }
 
 // New returns a new wrapper around the eksctl cli
 func New(store storage.StoreCleaner, progress io.Writer, binaryPath string, auth aws.Authenticator, fn run.CmdFn) *Eksctl {
-	logger := logrus.StandardLogger()
-	logger.Out = ioutil.Discard
-
 	return &Eksctl{
-		Progress:   io.MultiWriter(logger.Out, progress),
+		Progress:   progress,
 		BinaryPath: binaryPath,
 		Store:      store,
 		Auth:       auth,
@@ -143,12 +132,6 @@ func (e *Eksctl) runWithConfig(args []string, cfg *v1alpha1.ClusterConfig) ([]by
 	}
 
 	return runner.Run(e.Progress, append(args, "--config-file", e.Store.Abs(defaultClusterConfig)))
-}
-
-// WithLogger provides a logger to eksctl
-func (e *Eksctl) WithLogger(logger *logrus.Logger) *Eksctl {
-	e.Progress = io.MultiWriter(logger.Out, e.progress)
-	return e
 }
 
 // AddToPath strips the base of the binary and adds it to the PATH

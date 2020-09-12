@@ -38,7 +38,7 @@ type RotateFileConfig struct {
 	MaxSize    int
 	MaxBackups int
 	MaxAge     int
-	Level      logrus.Level
+	Levels     []logrus.Level
 	Formatter  logrus.Formatter
 }
 
@@ -66,7 +66,7 @@ func NewRotateFileHook(config RotateFileConfig) (logrus.Hook, error) {
 
 // Levels returns the loglevels
 func (hook *RotateFileHook) Levels() []logrus.Level {
-	return logrus.AllLevels[:hook.Config.Level+1]
+	return hook.Config.Levels
 }
 
 // Fire writes to the file

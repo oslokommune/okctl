@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -12,15 +13,35 @@ type githubService struct {
 	state  client.GithubState
 }
 
+// nolint: funlen
 func (s *githubService) ReadyGithubInfrastructureRepository(_ context.Context, opts client.ReadyGithubInfrastructureRepositoryOpts) (*client.GithubRepository, error) {
 	err := opts.Validate()
 	if err != nil {
 		return nil, err
 	}
 
-	repository := s.state.GetGithubInfrastructureRepository(opts.ID)
-	if repository != nil && repository.Validate() == nil {
-		return repository, nil
+	r := s.state.GetGithubInfrastructureRepository(opts.ID)
+	if r.Validate() == nil {
+		return &client.GithubRepository{
+			ID:           opts.ID,
+			Organisation: opts.Organisation,
+			Repository:   r.Name,
+			FullName:     r.FullName,
+			GitURL:       r.GitURL,
+			DeployKey: &client.GithubDeployKey{
+				ID:           opts.ID,
+				Organisation: opts.Organisation,
+				Repository:   r.Name,
+				Identifier:   r.DeployKey.ID,
+				Title:        r.DeployKey.Title,
+				PublicKey:    r.DeployKey.PublicKey,
+				PrivateKeySecret: &client.GithubSecret{
+					Name:    r.DeployKey.PrivateKeySecret.Name,
+					Path:    r.DeployKey.PrivateKeySecret.Path,
+					Version: r.DeployKey.PrivateKeySecret.Version,
+				},
+			},
+		}, nil
 	}
 
 	selected, err := s.api.SelectGithubInfrastructureRepository(client.SelectGithubInfrastructureRepositoryOpts(opts))
@@ -32,12 +53,13 @@ func (s *githubService) ReadyGithubInfrastructureRepository(_ context.Context, o
 		ID:           opts.ID,
 		Organisation: opts.Organisation,
 		Repository:   selected.Repository,
+		Title:        fmt.Sprintf("okctl-iac-%s", opts.ID.ClusterName),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	repository = &client.GithubRepository{
+	repo := &client.GithubRepository{
 		ID:           selected.ID,
 		Organisation: selected.Organisation,
 		Repository:   selected.Repository,
@@ -46,17 +68,17 @@ func (s *githubService) ReadyGithubInfrastructureRepository(_ context.Context, o
 		DeployKey:    key,
 	}
 
-	report, err := s.state.SaveGithubInfrastructureRepository(repository)
+	report, err := s.state.SaveGithubInfrastructureRepository(repo)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.report.ReadyGithubInfrastructureRepository(repository, report)
+	err = s.report.ReadyGithubInfrastructureRepository(repo, report)
 	if err != nil {
 		return nil, err
 	}
 
-	return repository, nil
+	return repo, nil
 }
 
 func (s *githubService) CreateGithubOauthApp(_ context.Context, opts client.CreateGithubOauthAppOpts) (*client.GithubOauthApp, error) {
@@ -66,8 +88,25 @@ func (s *githubService) CreateGithubOauthApp(_ context.Context, opts client.Crea
 	}
 
 	app := s.state.GetGithubOauthApp(opts.Name, opts.ID)
-	if app != nil && app.Validate() == nil {
-		return app, nil
+	if app.Validate() == nil {
+		return &client.GithubOauthApp{
+			ID:           opts.ID,
+			Organisation: opts.Organisation,
+			Name:         app.Name,
+			SiteURL:      app.SiteURL,
+			CallbackURL:  app.CallbackURL,
+			ClientID:     app.ClientID,
+			ClientSecret: &client.GithubSecret{
+				Name:    app.ClientSecret.Name,
+				Path:    app.ClientSecret.Path,
+				Version: app.ClientSecret.Version,
+			},
+			Team: &client.GithubTeam{
+				ID:           opts.ID,
+				Organisation: opts.Organisation,
+				Name:         app.Team,
+			},
+		}, nil
 	}
 
 	team, err := s.api.SelectGithubTeam(client.SelectGithubTeam{
@@ -78,7 +117,7 @@ func (s *githubService) CreateGithubOauthApp(_ context.Context, opts client.Crea
 		return nil, err
 	}
 
-	app, err = s.api.CreateGithubOauthApp(client.CreateGithubOauthAppOpts{
+	a, err := s.api.CreateGithubOauthApp(client.CreateGithubOauthAppOpts{
 		ID:           opts.ID,
 		Organisation: opts.Organisation,
 		Team:         team,
@@ -90,17 +129,17 @@ func (s *githubService) CreateGithubOauthApp(_ context.Context, opts client.Crea
 		return nil, err
 	}
 
-	report, err := s.state.SaveGithubOauthApp(app)
+	report, err := s.state.SaveGithubOauthApp(a)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.report.CreateGithubOauthApp(app, report)
+	err = s.report.CreateGithubOauthApp(a, report)
 	if err != nil {
 		return nil, err
 	}
 
-	return app, nil
+	return a, nil
 }
 
 // NewGithubService returns an initialised service

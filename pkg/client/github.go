@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/config/state"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 
 	"github.com/oslokommune/okctl/pkg/client/store"
@@ -21,8 +23,8 @@ type GithubRepository struct {
 }
 
 // Validate the github repository
-func (r *GithubRepository) Validate() error {
-	return validation.ValidateStruct(r,
+func (r GithubRepository) Validate() error {
+	return validation.ValidateStruct(&r,
 		validation.Field(&r.DeployKey, validation.Required),
 		validation.Field(&r.Organisation, validation.Required),
 		validation.Field(&r.FullName, validation.Required),
@@ -70,8 +72,8 @@ type GithubSecret struct {
 }
 
 // Validate the data
-func (s *GithubSecret) Validate() error {
-	return validation.ValidateStruct(s,
+func (s GithubSecret) Validate() error {
+	return validation.ValidateStruct(&s,
 		validation.Field(&s.Name, validation.Required),
 		validation.Field(&s.Path, validation.Required),
 	)
@@ -90,8 +92,8 @@ type GithubOauthApp struct {
 }
 
 // Validate the data
-func (a *GithubOauthApp) Validate() error {
-	return validation.ValidateStruct(a,
+func (a GithubOauthApp) Validate() error {
+	return validation.ValidateStruct(&a,
 		validation.Field(&a.Organisation, validation.Required),
 		validation.Field(&a.Name, validation.Required),
 		validation.Field(&a.SiteURL, validation.Required),
@@ -131,8 +133,8 @@ type GithubTeam struct {
 }
 
 // Validate the data
-func (t *GithubTeam) Validate() error {
-	return validation.ValidateStruct(t,
+func (t GithubTeam) Validate() error {
+	return validation.ValidateStruct(&t,
 		validation.Field(&t.Name, validation.Required),
 	)
 }
@@ -155,8 +157,8 @@ type GithubDeployKey struct {
 }
 
 // Validate the data
-func (k *GithubDeployKey) Validate() error {
-	return validation.ValidateStruct(k,
+func (k GithubDeployKey) Validate() error {
+	return validation.ValidateStruct(&k,
 		validation.Field(&k.Organisation, validation.Required),
 		validation.Field(&k.Repository, validation.Required),
 		validation.Field(&k.Identifier, validation.Required),
@@ -197,7 +199,7 @@ type GithubReport interface {
 // GithubState is the state layer
 type GithubState interface {
 	SaveGithubInfrastructureRepository(repository *GithubRepository) (*store.Report, error)
-	GetGithubInfrastructureRepository(id api.ID) *GithubRepository
+	GetGithubInfrastructureRepository(id api.ID) state.GithubRepository
 	SaveGithubOauthApp(app *GithubOauthApp) (*store.Report, error)
-	GetGithubOauthApp(appName string, id api.ID) *GithubOauthApp
+	GetGithubOauthApp(appName string, id api.ID) state.GithubOauthApp
 }

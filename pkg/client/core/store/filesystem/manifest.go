@@ -24,18 +24,23 @@ type ExternalSecret struct {
 
 func (s *manifestStore) SaveExternalSecret(e *client.ExternalSecret) (*store.Report, error) {
 	o := &ExternalSecret{
-		ID: e.ID,
+		ID:        e.ID,
+		Manifests: make([]string, len(e.Manifests)),
 	}
 
 	manifests := make([]store.AddStoreBytes, len(e.Manifests))
 
+	i := 0
+
 	for name, data := range e.Manifests {
-		manifests = append(manifests, store.AddStoreBytes{
+		manifests[i] = store.AddStoreBytes{
 			Name: name,
 			Data: data,
-		})
+		}
 
-		o.Manifests = append(o.Manifests, name)
+		o.Manifests[i] = name
+
+		i++
 	}
 
 	report, err := store.NewFileSystem(s.externalSecret.BaseDir, s.fs).

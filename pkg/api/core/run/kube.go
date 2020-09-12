@@ -35,7 +35,7 @@ func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*ap
 			data[d.Name] = d.Key
 		}
 
-		fn := externalsecret.New(manifest.Name, manifest.Namespace, data)
+		fn := externalsecret.New(manifest.Name, manifest.Namespace, manifest.Annotations, manifest.Labels, data)
 
 		raw, err := yaml.Marshal(fn.SecretManifest())
 		if err != nil {
@@ -50,7 +50,7 @@ func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*ap
 
 	for ns := range namespaces {
 		newNS := namespace.New(ns)
-		fns = append(fns, newNS.CreateNamespace)
+		fns = append([]kube.ApplyFn{newNS.CreateNamespace}, fns...)
 
 		data, err := yaml.Marshal(newNS.NamespaceManifest())
 		if err != nil {
@@ -116,6 +116,7 @@ func (k *kubeRun) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKube
 	}
 
 	return &api.ExternalDNSKube{
+		ID:           opts.ID,
 		HostedZoneID: opts.HostedZoneID,
 		DomainFilter: opts.DomainFilter,
 		Manifests: map[string][]byte{

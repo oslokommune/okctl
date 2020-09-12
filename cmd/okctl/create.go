@@ -141,7 +141,6 @@ the UI at this URL by logging in with Github:
 
 %s
 
-Happy, controlling!
 `
 
 const errMsg = `
@@ -374,6 +373,7 @@ and database subnets.`,
 				HostedZone:   hostedZone.HostedZone,
 				GithubRepo:   githubRepo,
 				Organisation: opts.Organisation,
+				Github:       ghClient,
 			})
 			if err != nil {
 				return prettyErr(err)

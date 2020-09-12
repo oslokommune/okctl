@@ -41,17 +41,25 @@ func (s *externalDNSStore) SaveExternalDNS(d *client.ExternalDNS) (*store.Report
 		ID:           d.Kube.ID,
 		HostedZoneID: d.Kube.HostedZoneID,
 		DomainFilter: d.Kube.DomainFilter,
+		Manifests:    make([]string, len(d.Kube.Manifests)),
 	}
 
 	manifests := make([]store.AddStoreBytes, len(d.Kube.Manifests))
 
+	i := 0
+
 	for name, data := range d.Kube.Manifests {
-		manifests = append(manifests, store.AddStoreBytes{
+		name := name
+		data := data
+
+		manifests[i] = store.AddStoreBytes{
 			Name: name,
 			Data: data,
-		})
+		}
 
-		kube.Manifests = append(kube.Manifests, name)
+		kube.Manifests[i] = name
+
+		i++
 	}
 
 	report, err := store.NewFileSystem(s.policy.BaseDir, s.fs).

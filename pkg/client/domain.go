@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/config/state"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client/store"
 )
@@ -40,7 +42,7 @@ type DomainStore interface {
 // DomainState implements the in-memory state handling
 type DomainState interface {
 	SaveHostedZone(zone *HostedZone) (*store.Report, error)
-	GetHostedZones() []*HostedZone
+	GetHostedZones() []state.HostedZone
 }
 
 // DomainReport implements the report layer

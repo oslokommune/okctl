@@ -21,7 +21,7 @@ func (r *clusterReport) ReportCreateCluster(cluster *api.Cluster, reports []*sto
 		actions = append(actions, report.Actions...)
 	}
 
-	description := aurora.Green(cluster.Config.Metadata).String()
+	description := aurora.Green(cluster.Config.Metadata.Name).String()
 
 	return r.console.Report(actions, "cluster", description)
 }

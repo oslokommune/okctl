@@ -11,15 +11,15 @@ type argoCDState struct {
 }
 
 func (s *argoCDState) SaveArgoCD(cd *client.ArgoCD) (*store.Report, error) {
-	report, err := s.state.SaveArgoCD(&state.ArgoCD{
-		SiteURL: cd.ArgoURL,
-		Domain:  cd.ArgoDomain,
-		SecretKey: &state.SecretKeySecret{
-			Name:    cd.SecretKey.Name,
-			Path:    cd.SecretKey.Path,
-			Version: cd.SecretKey.Version,
-		},
-	})
+	argo := s.state.GetArgoCD()
+
+	argo.SiteURL = cd.ArgoURL
+	argo.Domain = cd.ArgoDomain
+	argo.SecretKey.Version = cd.SecretKey.Version
+	argo.SecretKey.Path = cd.SecretKey.Path
+	argo.SecretKey.Name = cd.SecretKey.Name
+
+	report, err := s.state.SaveArgoCD(argo)
 	if err != nil {
 		return nil, err
 	}

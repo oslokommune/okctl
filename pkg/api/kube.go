@@ -52,9 +52,11 @@ func (o CreateExternalSecretsOpts) Validate() error {
 
 // Manifest represents a single external secret
 type Manifest struct {
-	Name      string
-	Namespace string
-	Data      []Data
+	Name        string
+	Namespace   string
+	Annotations map[string]string
+	Labels      map[string]string
+	Data        []Data
 }
 
 // Validate manifest

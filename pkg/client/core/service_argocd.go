@@ -41,7 +41,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		Organisation: opts.GithubOrganisation,
 		Name:         fmt.Sprintf("okctl-argocd-%s", opts.ID.ClusterName),
 		SiteURL:      fmt.Sprintf("https://%s", cert.Domain),
-		CallbackURL:  fmt.Sprintf("https://%s/api/dex/calback", cert.Domain),
+		CallbackURL:  fmt.Sprintf("https://%s/api/dex/callback", cert.Domain),
 	})
 	if err != nil {
 		return nil, err
@@ -65,6 +65,13 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 			{
 				Name:      privateKeyName,
 				Namespace: "argocd",
+				Annotations: map[string]string{
+					"meta.helm.sh/release-name":      "argocd",
+					"meta.helm.sh/release-namespace": "argocd",
+				},
+				Labels: map[string]string{
+					"app.kubernetes.io/managed-by": "Helm",
+				},
 				Data: []api.Data{
 					{
 						Name: privateKeyDataName,
@@ -75,6 +82,13 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 			{
 				Name:      "argocd-secret",
 				Namespace: "argocd",
+				Annotations: map[string]string{
+					"meta.helm.sh/release-name":      "argocd",
+					"meta.helm.sh/release-namespace": "argocd",
+				},
+				Labels: map[string]string{
+					"app.kubernetes.io/managed-by": "Helm",
+				},
 				Data: []api.Data{
 					{
 						Name: "dex.github.clientSecret",

@@ -18,7 +18,7 @@ type certificateService struct {
 
 func (s *certificateService) CreateCertificate(_ context.Context, opts api.CreateCertificateOpts) (*api.Certificate, error) {
 	c := s.state.GetCertificate(opts.Domain)
-	if len(c.CertificateARN) > 0 {
+	if c.Validate() == nil {
 		return s.store.GetCertificate(opts.Domain)
 	}
 

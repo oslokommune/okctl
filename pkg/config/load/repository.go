@@ -2,6 +2,9 @@ package load
 
 import (
 	"fmt"
+	"path"
+
+	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/ask"
 
@@ -54,7 +57,7 @@ func CreateOnRepoDataNotFound() DataNotFoundFn {
 			return err
 		}
 
-		data.Metadata = &state.Metadata{
+		data.Metadata = state.Metadata{
 			Name:      cfg.Name,
 			Region:    cfg.Region,
 			OutputDir: cfg.BaseDir,
@@ -80,7 +83,7 @@ func RepoDataFromConfigFile(_ *cobra.Command, notFoundFn DataNotFoundFn) config.
 	return buildRepoDataLoader(notFoundFn, nil)
 }
 
-func buildRepoDataLoader(notFoundFn DataNotFoundFn, viperCfg func(v *viper.Viper)) config.DataLoaderFn {
+func buildRepoDataLoader(notFoundFn DataNotFoundFn, _ func(v *viper.Viper)) config.DataLoaderFn {
 	return func(cfg *config.Config) error {
 		baseDir, err := cfg.GetRepoDir()
 		if err != nil {
@@ -89,30 +92,21 @@ func buildRepoDataLoader(notFoundFn DataNotFoundFn, viperCfg func(v *viper.Viper
 
 		cfg.RepoState = &state.Repository{}
 
-		v := viper.New()
-		v.SetFs(cfg.FileSystem.Fs)
-		v.SetConfigName(config.DefaultRepositoryConfigName)
-		v.SetConfigType(config.DefaultRepositoryConfigType)
-		v.AddConfigPath(baseDir)
-
-		err = v.ReadInConfig()
+		exists, err := cfg.FileSystem.Exists(path.Join(baseDir, config.DefaultRepositoryConfig))
 		if err != nil {
-			switch err.(type) {
-			case viper.ConfigFileNotFoundError:
-				err = notFoundFn(cfg)
-				if err != nil {
-					return err
-				}
-			default:
+			return err
+		}
+
+		if !exists {
+			err = notFoundFn(cfg)
+			if err != nil {
 				return err
 			}
 		}
 
-		if viperCfg != nil {
-			viperCfg(v)
-		}
-
-		err = v.Unmarshal(cfg.RepoState)
+		_, err = store.NewFileSystem(baseDir, cfg.FileSystem).
+			GetStruct(config.DefaultRepositoryConfig, cfg.RepoState, store.FromYAML()).
+			Do()
 		if err != nil {
 			return err
 		}

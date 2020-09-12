@@ -186,7 +186,15 @@ func (c *Config) EnableFileLog() error {
 		MaxSize:    DefaultLogSizeInMb,
 		MaxBackups: DefaultLogBackups,
 		MaxAge:     DefaultLogDays,
-		Level:      logrus.DebugLevel,
+		Levels: []logrus.Level{
+			logrus.PanicLevel,
+			logrus.FatalLevel,
+			logrus.ErrorLevel,
+			logrus.WarnLevel,
+			logrus.InfoLevel,
+			logrus.DebugLevel,
+			logrus.TraceLevel,
+		},
 		Formatter: &logrus.JSONFormatter{
 			TimestampFormat: time.RFC822,
 		},

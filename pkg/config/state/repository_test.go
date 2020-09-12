@@ -21,17 +21,17 @@ func TestData(t *testing.T) {
 		{
 			name: "Should work",
 			data: &state.Repository{
-				Metadata: &state.Metadata{
+				Metadata: state.Metadata{
 					Name:      "okctl",
 					Region:    "eu-west-1",
 					OutputDir: "infrastructure",
 				},
-				Clusters: map[string]*state.Cluster{
+				Clusters: map[string]state.Cluster{
 					"pro": {
 						Name:         "okctl-pro",
 						Environment:  "pro",
 						AWSAccountID: "123456789012",
-						HostedZone: map[string]*state.HostedZone{
+						HostedZone: map[string]state.HostedZone{
 							"test.oslo.systems": {
 								IsDelegated: true,
 								Domain:      "test.oslo.systems",
@@ -42,8 +42,8 @@ func TestData(t *testing.T) {
 								},
 							},
 						},
-						VPC: &state.VPC{
-							Subnets: map[string][]*state.VPCSubnet{
+						VPC: state.VPC{
+							Subnets: map[string][]state.VPCSubnet{
 								state.SubnetTypePublic: {
 									{
 										CIDR:             "192.168.0.0/24",
@@ -60,37 +60,37 @@ func TestData(t *testing.T) {
 							VpcID: "3456ygfghj",
 							CIDR:  "192.168.0.0/20",
 						},
-						Certificates: map[string]*state.Certificate{
+						Certificates: map[string]state.Certificate{
 							"argocd.test.oslo.systems": {
 
 								Domain: "argocd.test.oslo.systems",
 								ARN:    "arn:::cert/something",
 							},
 						},
-						Github: &state.Github{
+						Github: state.Github{
 							Organisation: "oslokommune",
-							OauthApp: map[string]*state.GithubOauthApp{
+							OauthApp: map[string]state.GithubOauthApp{
 								"okctl-kjøremlijø-pro": {
 									Team:     "kjøremiljø",
 									Name:     "okctl-kjøremiljø-pro",
 									ClientID: "asdfg123456",
-									ClientSecret: &state.ClientSecret{
+									ClientSecret: state.ClientSecret{
 										Name:    "argocd-client-secret",
 										Path:    "/something/argocd",
 										Version: 1,
 									},
 								},
 							},
-							Repositories: map[string]*state.GithubRepository{
+							Repositories: map[string]state.GithubRepository{
 								"oslokommune/okctl-iac": {
 									Name:   "okctl-iac",
 									Types:  []string{"infrastructure"},
 									GitURL: "git@github.com/oslokommune/okctl-iac",
-									DeployKey: &state.DeployKey{
+									DeployKey: state.DeployKey{
 										Title:     "okctl-kjøremlijø-pro",
 										ID:        23456865,
 										PublicKey: "ssh-rsa 098f09ujf9rewjvjlejf3jf933",
-										PrivateKeySecret: &state.PrivateKeySecret{
+										PrivateKeySecret: state.PrivateKeySecret{
 											Name:    "okctl-kjøremiljø-pro",
 											Path:    "/something/privatekey",
 											Version: 1,
@@ -99,10 +99,10 @@ func TestData(t *testing.T) {
 								},
 							},
 						},
-						ArgoCD: &state.ArgoCD{
+						ArgoCD: state.ArgoCD{
 							SiteURL: "https://argocd.oslo.systems",
 							Domain:  "argocd.oslo.systems",
-							SecretKey: &state.SecretKeySecret{
+							SecretKey: state.SecretKeySecret{
 								Name:    "something",
 								Path:    "/some/path",
 								Version: 1,

@@ -5,6 +5,12 @@ metadata:
   name: external-dns
 rules:
 - apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
   - ""
   resources:
   - get

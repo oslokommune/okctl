@@ -56,7 +56,7 @@ func (o *Okctl) InitialiseWithOnlyEnv(env string) error {
 // been set yet
 func (o *Okctl) InitialiseWithEnvAndAWSAccountID(env, awsAccountID string) error {
 	if o.RepoState.Clusters == nil {
-		o.RepoState.Clusters = map[string]*state.Cluster{
+		o.RepoState.Clusters = map[string]state.Cluster{
 			env: {
 				Name:         o.RepoState.Metadata.Name,
 				Environment:  env,
@@ -82,7 +82,7 @@ func (o *Okctl) initialise(env string) error {
 		o.FileSystem,
 	))
 
-	err = o.EnableFileLog()
+	_, err = o.RepoStateWithEnv.Save()
 	if err != nil {
 		return err
 	}
@@ -299,7 +299,12 @@ func (o *Okctl) newBinariesProvider() error {
 		return errors.E(err, "failed to create binaries fetcher", errors.Internal)
 	}
 
-	o.BinariesProvider = binaries.New(o.Logger, ioutil.Discard, o.CredentialsProvider.Aws(), fetcher)
+	out := ioutil.Discard
+	if o.Debug {
+		out = o.Err
+	}
+
+	o.BinariesProvider = binaries.New(out, o.CredentialsProvider.Aws(), fetcher)
 
 	return nil
 }

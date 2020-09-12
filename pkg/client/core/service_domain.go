@@ -23,16 +23,10 @@ type domainService struct {
 }
 
 func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.CreatePrimaryHostedZoneOpts) (*client.HostedZone, error) {
-	var zone *client.HostedZone
-
 	for _, z := range s.state.GetHostedZones() {
 		if z.Primary {
-			zone = z
+			return s.store.GetHostedZone(z.Domain)
 		}
-	}
-
-	if zone != nil {
-		return s.store.GetHostedZone(zone.HostedZone.Domain)
 	}
 
 	// Shouldn't be doing this in here I think
@@ -44,7 +38,7 @@ func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.C
 	opts.Domain = d.Domain
 	opts.FQDN = d.FQDN
 
-	zone, err = s.api.CreatePrimaryHostedZone(opts)
+	zone, err := s.api.CreatePrimaryHostedZone(opts)
 	if err != nil {
 		return nil, err
 	}

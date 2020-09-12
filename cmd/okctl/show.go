@@ -6,6 +6,10 @@ import (
 	"path"
 	"strings"
 
+	"github.com/logrusorgru/aurora/v3"
+	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
+	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
+
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/kubeconfig"
@@ -54,6 +58,32 @@ func (o *ShowCredentialsOpts) Validate() error {
 		validation.Field(&o.ClusterName, validation.Required),
 	)
 }
+
+const showMsg = `
+Now you can use %s to list nodes, pods, etc. Try out some commands:
+
+$ %s get pods --all-namespaces
+$ %s get nodes
+
+This also requires %s, which you can add to your PATH from here:
+
+%s
+
+Optionally, install kubectl and aws-iam-authenticator to your
+system from:
+
+- https://kubernetes.io/docs/tasks/tools/install-kubectl/
+- https://docs.aws.amazon.com/eks/latest/userguide/install-aws-iam-authenticator.html
+
+The installed version of kubectl needs to be within 2 versions of the
+kubernetes cluster version, which is: %s.
+
+We have also setup %s for continuous deployment, you can access
+the UI at this URL by logging in with Github:
+
+%s
+
+`
 
 // nolint: funlen gocognit
 func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
@@ -123,16 +153,36 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				}
 			}
 
-			_, err = io.Copy(
-				o.Out,
-				strings.NewReader(
-					fmt.Sprintf(
-						"export AWS_CONFIG_FILE=%s\nexport AWS_SHARED_CREDENTIALS_FILE=%s\nexport AWS_PROFILE=default\nexport KUBECONFIG=%s\n",
-						awsConfig,
-						awsCredentials,
-						kubeConfig,
-					),
-				),
+			_, err = fmt.Fprintf(o.Out,
+				"export AWS_CONFIG_FILE=%s\nexport AWS_SHARED_CREDENTIALS_FILE=%s\nexport AWS_PROFILE=default\nexport KUBECONFIG=%s\n",
+				awsConfig,
+				awsCredentials,
+				kubeConfig,
+			)
+			if err != nil {
+				return err
+			}
+
+			k, err := o.BinariesProvider.Kubectl(kubectl.Version)
+			if err != nil {
+				return err
+			}
+
+			a, err := o.BinariesProvider.AwsIamAuthenticator(awsiamauthenticator.Version)
+			if err != nil {
+				return err
+			}
+
+			_, err = fmt.Fprintf(o.Err,
+				showMsg,
+				aurora.Green("kubectl"),
+				k.BinaryPath,
+				k.BinaryPath,
+				aurora.Green("aws-iam-authenticator"),
+				a.BinaryPath,
+				aurora.Green("1.17"),
+				aurora.Green("ArgoCD"),
+				o.RepoStateWithEnv.GetArgoCD().SiteURL,
 			)
 			if err != nil {
 				return err
@@ -160,7 +210,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			err = o.FileSystem.WriteFile(path.Join(outputDir, config.DefaultClusterBaseDir), data, 0o644)
+			err = o.FileSystem.WriteFile(kubeConfig, data, 0o644)
 			if err != nil {
 				return err
 			}

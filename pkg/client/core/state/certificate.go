@@ -13,20 +13,17 @@ type certificateState struct {
 	state state.Certificater
 }
 
-func (s *certificateState) GetCertificate(domain string) *api.Certificate {
-	cert := s.state.GetCertificate(domain)
-
-	return &api.Certificate{
-		Domain:         cert.Domain,
-		CertificateARN: cert.ARN,
-	}
+func (s *certificateState) GetCertificate(domain string) state.Certificate {
+	return s.state.GetCertificate(domain)
 }
 
 func (s *certificateState) SaveCertificate(c *api.Certificate) (*store.Report, error) {
-	report, err := s.state.SaveCertificate(&state.Certificate{
-		Domain: c.Domain,
-		ARN:    c.CertificateARN,
-	})
+	cert := s.state.GetCertificate(c.Domain)
+
+	cert.Domain = c.Domain
+	cert.ARN = c.CertificateARN
+
+	report, err := s.state.SaveCertificate(cert)
 	if err != nil {
 		return nil, err
 	}

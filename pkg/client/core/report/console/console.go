@@ -30,7 +30,9 @@ func New(out io.Writer, exit chan struct{}, spinner *yacspin.Spinner) *Console {
 // Report writes the content to the provided io.Writer
 // nolint: funlen gocognit
 func (c *Console) Report(actions []store.Action, component, description string) error {
-	close(c.exit)
+	if c.exit != nil {
+		close(c.exit)
+	}
 
 	if c.exit == nil {
 		err := c.spinner.Pause()

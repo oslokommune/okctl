@@ -80,3 +80,37 @@ func TestValidate(t *testing.T) {
 		})
 	}
 }
+
+func TestHasNameServers(t *testing.T) {
+	testCases := []struct {
+		name      string
+		domain    string
+		expect    interface{}
+		expectErr bool
+	}{
+		{
+			name:   "Should work",
+			domain: "test.oslo.systems",
+		},
+		{
+			name:      "Should fail",
+			domain:    "test-does-not-exist.oslo.systems",
+			expect:    "unable to get NS records for domain 'test-does-not-exist.oslo.systems', does not appear to be delegated yet",
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			err := domain.ShouldHaveNameServers(tc.domain)
+			if tc.expectErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expect, err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}

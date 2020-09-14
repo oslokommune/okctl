@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"path"
 
+	"github.com/oslokommune/okctl/pkg/domain"
+
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	stateSaver "github.com/oslokommune/okctl/pkg/client/core/state"
@@ -141,6 +143,7 @@ the UI at this URL by logging in with Github:
 
 %s
 
+It might take 5-10 minutes for the ArgoCD ALB to come up.
 `
 
 const errMsg = `
@@ -171,6 +174,26 @@ go to our slack channel and ask for help:
 	- %s
 
 Have the command you ran, logs, etc., ready.
+`
+
+const nsMsg = `
+We could not detect any nameservers for your domain:
+
+%s
+
+We cannot continue with setting up the rest of the
+cluster at this point, until we have delegated
+the subdomain from the root account to your hosted
+zone.
+
+Ask in the %s slack channel for an update.
+
+Once the hosted zone has been delegated you can
+continue creating your cluster by rerunning the
+same command:
+
+$ okctl create cluster %s %s
+
 `
 
 // nolint: funlen gocyclo
@@ -306,6 +329,13 @@ and database subnets.`,
 				return err
 			}
 
+			hostedZone, err := createPrimaryHostedZone(&hostedZone{
+				common: common,
+			})
+			if err != nil {
+				return prettyErr(err)
+			}
+
 			vpc, err := createVPC(&vpc{
 				common: common,
 				CIDR:   opts.Cidr,
@@ -338,13 +368,6 @@ and database subnets.`,
 				return prettyErr(err)
 			}
 
-			hostedZone, err := createPrimaryHostedZone(&hostedZone{
-				common: common,
-			})
-			if err != nil {
-				return prettyErr(err)
-			}
-
 			_, err = createExternalDNS(&externalDNS{
 				common:     common,
 				HostedZone: hostedZone.HostedZone,
@@ -366,6 +389,21 @@ and database subnets.`,
 			_, err = o.RepoStateWithEnv.SaveGithub(gh)
 			if err != nil {
 				return prettyErr(err)
+			}
+
+			err = domain.ShouldHaveNameServers(hostedZone.HostedZone.Domain)
+			if err != nil {
+				_, err := fmt.Fprintf(o.Err, nsMsg,
+					aurora.Blue(hostedZone.HostedZone.Domain),
+					aurora.Blue("#kjøremiljø-support"),
+					opts.Environment,
+					opts.AWSAccountID,
+				)
+				if err != nil {
+					return err
+				}
+
+				return err
 			}
 
 			argoCD, err := createArgoCD(&argocdSetup{

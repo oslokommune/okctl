@@ -103,3 +103,64 @@ func NotTaken(domain string) error {
 
 	return nil
 }
+
+// ShouldHaveNameServers returns if there are name servers
+func ShouldHaveNameServers(domain string) error {
+	client := &http.Client{
+		Timeout: 5 * time.Second, // nolint: gomnd
+	}
+
+	// Use DNS over HTTPS service provided by google:
+	// - https://developers.google.com/speed/public-dns/docs/doh/json
+	req, err := http.NewRequest(http.MethodGet, "https://dns.google/resolve", nil)
+	if err != nil {
+		return err
+	}
+
+	q := req.URL.Query()
+	q.Add("name", domain)
+	q.Add("type", fmt.Sprintf("%d", dns.TypeNS))
+	q.Add("ct", "application/x-javascript")
+
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	switch resp.StatusCode {
+	case http.StatusBadRequest:
+		return fmt.Errorf("invalid domain: %s", domain)
+	case http.StatusInternalServerError:
+		return fmt.Errorf("holy crap")
+	}
+
+	dnsResponse := &DNSResponse{}
+
+	err = json.NewDecoder(resp.Body).Decode(dnsResponse)
+	if err != nil {
+		return err
+	}
+
+	switch dnsResponse.Status {
+	case dns.RcodeSuccess:
+		break
+	case dns.RcodeNameError:
+		return fmt.Errorf("unable to get NS records for domain '%s', does not appear to be delegated yet", domain)
+	default:
+		return fmt.Errorf("don't know how to handle DNS response code: %d", dnsResponse.Status)
+	}
+
+	for _, a := range dnsResponse.Answer {
+		if a.Type == dns.TypeNS {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unable to get NS records for domain '%s', does not appear to be delegated yet", domain)
+}

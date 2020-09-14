@@ -220,8 +220,6 @@ func (c *Config) Format() core.EncodeResponseType {
 
 // LoadRepoData will attempt to load repository data
 func (c *Config) LoadRepoData() error {
-	c.RepoState = nil
-
 	if c.RepoDataLoader == nil {
 		c.RepoDataLoader = NoopDataLoader
 	}
@@ -231,8 +229,6 @@ func (c *Config) LoadRepoData() error {
 
 // LoadUserData will attempt to load okctl application data
 func (c *Config) LoadUserData() error {
-	c.UserState = nil
-
 	if c.UserDataLoader == nil {
 		c.UserDataLoader = NoopDataLoader
 	}

@@ -12,6 +12,29 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestManual(t *testing.T) {
+	testCases := []struct {
+		name    string
+		command run.CmdFn
+	}{
+		{
+			name:    "Should work",
+			command: run.Cmd(),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Skip("skipping manual test, used for playing with implementation")
+			r := run.New(nil, ".", "/usr/bin/env", nil, tc.command)
+			_, err := r.Run(ioutil.Discard, nil)
+			assert.NoError(t, err)
+		})
+	}
+}
+
 func TestAnonymizeEnv(t *testing.T) {
 	testCases := []struct {
 		name    string
@@ -52,7 +75,7 @@ func TestRun(t *testing.T) {
 		{
 			name: "Should work",
 			run: func() *run.Run {
-				r := run.New("working_dir", "binary_path", []string{"env_var"}, run.Cmd())
+				r := run.New(nil, "working_dir", "binary_path", []string{"env_var"}, run.Cmd())
 				r.CmdFn = fakeExecCommandSuccess()
 				return r
 			}(),

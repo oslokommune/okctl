@@ -29,8 +29,8 @@ func New(name, namespace string, annotations, labels, data map[string]string) *E
 	return &ExternalSecret{
 		Namespace:   namespace,
 		Name:        name,
-		Labels:      annotations,
-		Annotations: labels,
+		Labels:      labels,
+		Annotations: annotations,
 		Data:        data,
 		Ctx:         context.Background(),
 	}

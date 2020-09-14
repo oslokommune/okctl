@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/binaries/run"
@@ -27,6 +29,7 @@ const (
 // Eksctl stores state for working with the eksctl cli
 type Eksctl struct {
 	Progress   io.Writer
+	Logger     *logrus.Logger
 	BinaryPath string
 	WorkingDir string
 	Store      storage.StoreCleaner
@@ -38,9 +41,10 @@ type Eksctl struct {
 }
 
 // New returns a new wrapper around the eksctl cli
-func New(store storage.StoreCleaner, progress io.Writer, binaryPath string, auth aws.Authenticator, fn run.CmdFn) *Eksctl {
+func New(logger *logrus.Logger, store storage.StoreCleaner, progress io.Writer, binaryPath string, auth aws.Authenticator, fn run.CmdFn) *Eksctl {
 	return &Eksctl{
 		Progress:   progress,
+		Logger:     logger,
 		BinaryPath: binaryPath,
 		Store:      store,
 		Auth:       auth,
@@ -62,7 +66,7 @@ func (e *Eksctl) runner() (run.Runner, error) {
 		envs = append(envs, e.CmdEnv...)
 	}
 
-	return run.New(e.Store.Path(), e.BinaryPath, envs, e.CmdFn), nil
+	return run.New(e.Logger, e.Store.Path(), e.BinaryPath, envs, e.CmdFn), nil
 }
 
 func (e *Eksctl) writeClusterConfig(cfg *v1alpha1.ClusterConfig) error {
@@ -224,12 +228,7 @@ func (e *Eksctl) CreateCluster(cfg *v1alpha1.ClusterConfig) ([]byte, error) {
 // cluster config as input and returns an error if the cluster
 // does not exist.
 func (e *Eksctl) HasCluster(cfg *v1alpha1.ClusterConfig) (bool, error) {
-	pattern := fmt.Sprintf("ResourceNotFoundException: No cluster found for name: %s", cfg.Metadata.Name)
-
-	re, err := regexp.Compile(pattern)
-	if err != nil {
-		return false, fmt.Errorf("failed to compile has cluster regex: %w", err)
-	}
+	re := regexp.MustCompile(`(.*)ResourceNotFoundException: No cluster found for name(.*)`)
 
 	args := []string{
 		"get",
@@ -242,7 +241,7 @@ func (e *Eksctl) HasCluster(cfg *v1alpha1.ClusterConfig) (bool, error) {
 
 	out, err := e.run(args)
 	if err != nil {
-		if re.Match(out) {
+		if re.Match(out) && strings.Contains(string(out), cfg.Metadata.Name) {
 			return false, nil
 		}
 

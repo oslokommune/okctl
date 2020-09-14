@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/oslokommune/okctl/pkg/config/state"
 
 	"github.com/jarcoal/httpmock"
@@ -76,6 +78,9 @@ func readBytesFromFile(t *testing.T, file string) []byte {
 
 //nolint: funlen
 func TestProcessor(t *testing.T) {
+	logger := logrus.StandardLogger()
+	logger.Out = ioutil.Discard
+
 	host := state.Host{
 		Os:   "darwin",
 		Arch: "amd64",
@@ -115,7 +120,7 @@ func TestProcessor(t *testing.T) {
 		{
 			name: "Should work",
 			processor: func() *fetch.Processor {
-				p, err := fetch.New(false, host, binaries, storage.NewEphemeralStorage())
+				p, err := fetch.New(ioutil.Discard, logger, false, host, binaries, storage.NewEphemeralStorage())
 				assert.NoError(t, err)
 				return p
 			}(),

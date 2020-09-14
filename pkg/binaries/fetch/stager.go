@@ -7,6 +7,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/oslokommune/okctl/pkg/config/state"
 
 	"github.com/dustin/go-humanize"
@@ -99,16 +101,20 @@ type Processor struct {
 	Preload        bool
 	Binaries       []state.Binary
 	LoadedBinaries map[string]*Stager
+	Logger         *logrus.Logger
+	Progress       io.Writer
 }
 
 // New returns a provider that knows how to fetch binaries via https
-func New(preload bool, host state.Host, binaries []state.Binary, store storage.Storer) (*Processor, error) {
+func New(progress io.Writer, logger *logrus.Logger, preload bool, host state.Host, binaries []state.Binary, store storage.Storer) (*Processor, error) {
 	p := &Processor{
 		Host:           host,
 		Store:          store,
 		Preload:        preload,
 		Binaries:       binaries,
 		LoadedBinaries: map[string]*Stager{},
+		Logger:         logger,
+		Progress:       progress,
 	}
 
 	return p.prepareAndLoad()
@@ -163,6 +169,8 @@ func (s *Processor) prepareAndLoad() (*Processor, error) {
 		}
 
 		if exists {
+			s.Logger.Debugf("binary already exists: %s (%s)", binary.Name, binary.Version)
+
 			s.LoadedBinaries[binaryIndex(binary.Name, binary.Version)] = &Stager{
 				BinaryPath: s.Store.Abs(binaryPath),
 			}
@@ -181,6 +189,15 @@ func (s *Processor) prepareAndLoad() (*Processor, error) {
 		}
 
 		if s.Preload {
+			msg := fmt.Sprintf("preloading missing binary: %s (%s)", binary.Name, binary.Version)
+
+			_, err := fmt.Fprintln(s.Progress, msg)
+			if err != nil {
+				return nil, err
+			}
+
+			s.Logger.Debugln(msg)
+
 			err = errors.E(stager.Fetch(), "failed to preload binaries", errors.IO)
 			if err != nil {
 				return nil, err

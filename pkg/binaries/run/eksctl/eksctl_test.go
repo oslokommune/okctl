@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/sebdah/goldie/v2"
+
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/binaries/run"
@@ -23,7 +25,7 @@ func TestEksctlDeleteCluster(t *testing.T) {
 		name        string
 		eksctl      *eksctl.Eksctl
 		clusterName string
-		expect      interface{}
+		golden      string
 		expectError bool
 	}{
 		{
@@ -37,8 +39,7 @@ func TestEksctlDeleteCluster(t *testing.T) {
 				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
 				fakeExecCommandSuccess(),
 			),
-			// nolint: lll
-			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,cluster,--name=myCluster,--verbose=3",
+			golden: "delete-cluster-works",
 		},
 		{
 			name:        "Should fail",
@@ -51,8 +52,7 @@ func TestEksctlDeleteCluster(t *testing.T) {
 				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
 				fakeExecCommandFailure(),
 			),
-			// nolint: lll
-			expect:      "failed to delete: , because: executing command: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,cluster,--name=myCluster,--verbose=3, got: exit status 1",
+			golden:      "delete-cluster-fails",
 			expectError: true,
 		},
 	}
@@ -60,13 +60,15 @@ func TestEksctlDeleteCluster(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			g := goldie.New(t)
 			got, err := tc.eksctl.DeleteCluster(tc.clusterName)
+
 			if tc.expectError {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expect, err.Error())
+				g.Assert(t, tc.golden, []byte(err.Error()))
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tc.expect, string(got))
+				g.Assert(t, tc.golden, got)
 			}
 		})
 	}
@@ -78,13 +80,11 @@ func TestEksctlCreateCluster(t *testing.T) {
 		eksctl      *eksctl.Eksctl
 		kubePath    string
 		cfg         *v1alpha1.ClusterConfig
-		expect      interface{}
+		golden      string
 		expectError bool
 	}{
 		{
-			name:     "Should work",
-			cfg:      &v1alpha1.ClusterConfig{},
-			kubePath: "/some/path",
+			name: "Should work",
 			eksctl: eksctl.New(
 				nil,
 				storage.NewEphemeralStorage(),
@@ -93,8 +93,9 @@ func TestEksctlCreateCluster(t *testing.T) {
 				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
 				fakeExecCommandSuccess(),
 			),
-			// nolint: lll
-			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,cluster,--verbose=3,--config-file,/cluster-config.yml",
+			kubePath: "/some/path",
+			cfg:      &v1alpha1.ClusterConfig{},
+			golden:   "create-cluster-works",
 		},
 		{
 			name:     "Should fail",
@@ -108,8 +109,7 @@ func TestEksctlCreateCluster(t *testing.T) {
 				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
 				fakeExecCommandFailure(),
 			),
-			// nolint: lll
-			expect:      "failed to create: , because: executing command: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,cluster,--verbose=3,--config-file,/cluster-config.yml, got: exit status 1",
+			golden:      "create-cluster-fails",
 			expectError: true,
 		},
 	}
@@ -117,13 +117,15 @@ func TestEksctlCreateCluster(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			g := goldie.New(t)
 			got, err := tc.eksctl.CreateCluster(tc.cfg)
+
 			if tc.expectError {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expect, err.Error())
+				g.Assert(t, tc.golden, []byte(err.Error()))
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tc.expect, string(got))
+				g.Assert(t, tc.golden, got)
 			}
 		})
 	}
@@ -135,6 +137,7 @@ func TestEksctlHasCluster(t *testing.T) {
 		eksctl      *eksctl.Eksctl
 		kubePath    string
 		cfg         *v1alpha1.ClusterConfig
+		golden      string
 		expect      interface{}
 		expectError bool
 	}{
@@ -168,8 +171,7 @@ func TestEksctlHasCluster(t *testing.T) {
 				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
 				fakeExecCommandFailure(),
 			),
-			// nolint: lll
-			expect:      "failed to get cluster information: : executing command: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=get,cluster,--name,test,--region,,--verbose=3, got: exit status 1",
+			golden:      "has-cluster-fails",
 			expectError: true,
 		},
 	}
@@ -177,10 +179,12 @@ func TestEksctlHasCluster(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			g := goldie.New(t)
 			got, err := tc.eksctl.HasCluster(tc.cfg)
+
 			if tc.expectError {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expect, err.Error())
+				g.Assert(t, tc.golden, []byte(err.Error()))
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.expect, got)
@@ -195,7 +199,7 @@ func TestEksctlCreateServiceAccount(t *testing.T) {
 		eksctl      *eksctl.Eksctl
 		kubePath    string
 		cfg         *v1alpha1.ClusterConfig
-		expect      interface{}
+		golden      string
 		expectError bool
 	}{
 		{
@@ -210,8 +214,7 @@ func TestEksctlCreateServiceAccount(t *testing.T) {
 				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
 				fakeExecCommandSuccess(),
 			),
-			// nolint: lll
-			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,iamserviceaccount,--override-existing-serviceaccounts,--approve,--verbose=3,--config-file,/cluster-config.yml",
+			golden: "create-service-account-works",
 		},
 		{
 			name:     "Should fail",
@@ -225,8 +228,7 @@ func TestEksctlCreateServiceAccount(t *testing.T) {
 				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
 				fakeExecCommandFailure(),
 			),
-			// nolint: lll
-			expect:      "failed to create service account: , because: executing command: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=create,iamserviceaccount,--override-existing-serviceaccounts,--approve,--verbose=3,--config-file,/cluster-config.yml, got: exit status 1",
+			golden:      "create-service-account-fails",
 			expectError: true,
 		},
 	}
@@ -234,13 +236,15 @@ func TestEksctlCreateServiceAccount(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			g := goldie.New(t)
 			got, err := tc.eksctl.CreateServiceAccount(tc.cfg)
+
 			if tc.expectError {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expect, err.Error())
+				g.Assert(t, tc.golden, []byte(err.Error()))
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tc.expect, string(got))
+				g.Assert(t, tc.golden, got)
 			}
 		})
 	}
@@ -252,7 +256,7 @@ func TestEksctlDeleteServiceAccount(t *testing.T) {
 		eksctl      *eksctl.Eksctl
 		kubePath    string
 		cfg         *v1alpha1.ClusterConfig
-		expect      interface{}
+		golden      string
 		expectError bool
 	}{
 		{
@@ -267,8 +271,7 @@ func TestEksctlDeleteServiceAccount(t *testing.T) {
 				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
 				fakeExecCommandSuccess(),
 			),
-			// nolint: lll
-			expect: "wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,iamserviceaccount,--approve,--verbose=3,--config-file,/cluster-config.yml",
+			golden: "delete-service-account-works",
 		},
 		{
 			name:     "Should fail",
@@ -282,8 +285,7 @@ func TestEksctlDeleteServiceAccount(t *testing.T) {
 				aws.New(aws.NewInMemoryStorage(), aws.NewAuthStatic(mock.DefaultValidCredentials())),
 				fakeExecCommandFailure(),
 			),
-			// nolint: lll
-			expect:      "failed to delete service account: , because: executing command: wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,iamserviceaccount,--approve,--verbose=3,--config-file,/cluster-config.yml, got: exit status 1",
+			golden:      "delete-service-account-fails",
 			expectError: true,
 		},
 	}
@@ -291,13 +293,15 @@ func TestEksctlDeleteServiceAccount(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			g := goldie.New(t)
 			got, err := tc.eksctl.DeleteServiceAccount(tc.cfg)
+
 			if tc.expectError {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expect, err.Error())
+				g.Assert(t, tc.golden, []byte(err.Error()))
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tc.expect, string(got))
+				g.Assert(t, tc.golden, got)
 			}
 		})
 	}

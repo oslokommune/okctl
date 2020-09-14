@@ -60,7 +60,7 @@ func (o *Okctl) InitialiseWithOnlyEnv(env string) error {
 		o.FileSystem,
 	))
 
-	return o.initialise(env)
+	return o.initialise()
 }
 
 // InitialiseWithEnvAndAWSAccountID initialises okctl when aws account id hasn't
@@ -87,12 +87,12 @@ func (o *Okctl) InitialiseWithEnvAndAWSAccountID(env, awsAccountID string) error
 		return err
 	}
 
-	return o.initialise(env)
+	return o.initialise()
 }
 
 // Initialise okctl for receiving requests
 // nolint: funlen
-func (o *Okctl) initialise(env string) error {
+func (o *Okctl) initialise() error {
 	err := o.EnableFileLog()
 	if err != nil {
 		return err

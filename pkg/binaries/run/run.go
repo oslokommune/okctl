@@ -85,7 +85,6 @@ func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 
 	multi := io.MultiReader(stdoutIn, stderrIn)
 	out := io.MultiWriter(progress, &buff)
-	logger := logrus.StandardLogger()
 	scanner := bufio.NewScanner(multi)
 
 	err = cmd.Start()
@@ -101,14 +100,14 @@ func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 			return nil, err
 		}
 
-		if logger != nil {
-			logger.Info(s)
+		if r.Logger != nil {
+			r.Logger.Info(s)
 		}
 	}
 
 	err = cmd.Wait()
 	if err != nil {
-		return nil, fmt.Errorf("executing command: %s, got: %w", buff.Bytes(), err)
+		return buff.Bytes(), fmt.Errorf("executing command: %s, got: %w", buff.Bytes(), err)
 	}
 
 	return buff.Bytes(), nil

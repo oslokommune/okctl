@@ -1,0 +1,1 @@
+wd=/, path=eksctl, env=AWS_ACCESS_KEY_ID=ASIAV3ZUEFP6EXAMPLE,AWS_SECRET_ACCESS_KEY=XXXXXXX,AWS_SESSION_TOKEN=XXXXXXX,AWS_DEFAULT_REGION=eu-west-1, args=delete,cluster,--name=myCluster,--verbose=3

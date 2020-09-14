@@ -1,0 +1,40 @@
+site_name: okctl
+site_description: 'The official production tool for Oslo kommune'
+site_author: 'okctl authors'
+repo_name: 'oslokommune/okctl'
+repo_url: 'https://github.com/oslokommune/okctl'
+copyright: 'Copyright &copy; 2020 Oslo kommune'
+docs_dir: src
+edit_uri: ""
+
+nav:
+  - Introduction: introduction.md
+  - Usage:
+      - usage/okctl.md
+
+theme:
+  name: 'material'
+  custom_dir: 'theme'
+  favicon: 'assets/images/favicon.png'
+  logo: 'assets/images/logo.png'
+  font:
+    text: 'Montserrat'
+    code: 'Roboto Mono'
+  palette:
+    primary: 'white'
+    accent: 'light blue'
+    scheme: preference
+  highlightjs: true
+  hljs_languages:
+    - yaml
+    - json
+    - bash
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - admonition
+  - codehilite:
+      linenums: true
+  - pymdownx.superfences
+  - pymdownx.tasklist

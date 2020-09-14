@@ -1,0 +1,12 @@
+.PHONY: install-site-deps
+install-site-deps: ## Install dependencies for user docs
+	pip3 install -r userdocs/requirements.txt
+
+.PHONY: serve-pages
+serve-pages: ## Serve the site locally
+	cd userdocs/ && mkdocs serve
+
+.PHONY: build-pages
+build-pages:
+	cd userdocs/ && mkdocs build
+

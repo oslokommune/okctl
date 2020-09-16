@@ -26,7 +26,7 @@ theme:
   name: 'material'
   custom_dir: 'theme'
   favicon: 'assets/images/favicon.png'
-  logo: 'assets/images/Oslo-logo-sort-RGB.svg'
+  logo: 'assets/images/ok-logo-black.png'
   font:
     text: 'Montserrat'
     code: 'Roboto Mono'

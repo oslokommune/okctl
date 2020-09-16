@@ -12,6 +12,8 @@ nav:
       - components/cloud.md
       - components/github.md
       - components/kubernetes.md
+  - Deployment:
+      - deployment/argocd.md
 
 plugins:
   - git-revision-date

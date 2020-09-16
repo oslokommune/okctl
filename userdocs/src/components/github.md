@@ -2,7 +2,7 @@
 
 ## Github components
 
-[Github](https://github.com/) is at its core a [Version Control System](https://en.wikipedia.org/wiki/Version_control) (VCS). Since its inception Github has grown to provide a wide array of functionality to interact with a product's source code. In Oslo kommune, we have decided to use Github as our primary source control system. It is therefore natural to make use of the functionality Github has on offer for implementing [Continuous Integration](https://en.wikipedia.org/wiki/Continuous_integration) (CI), [Continuous Deployment](https://en.wikipedia.org/wiki/Continuous_deployment), Authentication and Authorisation, within a product.
+[Github](https://github.com/) is at its core a [Version Control System](https://en.wikipedia.org/wiki/Version_control) (VCS). Since its inception Github has grown to provide a wide array of functionality to interact with a product's source code. In Oslo kommune, we have decided to use Github as our primary source control system. It is therefore natural to make use of the functionality Github has on offer for implementing [Continuous Integration](https://en.wikipedia.org/wiki/Continuous_integration) (CI), [Continuous Deployment](https://en.wikipedia.org/wiki/Continuous_deployment) (CD), Authentication and Authorisation, within a product.
 
 - [Actions](#github-actions-gha) for CI/CD
 - [Organisations and Teams](#github-organisations-and-teams) for authorisation

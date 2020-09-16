@@ -1,0 +1,59 @@
+site_name: okctl
+site_description: 'The official production tool for Oslo kommune'
+site_author: 'okctl authors'
+repo_name: 'oslokommune/okctl'
+repo_url: 'https://github.com/oslokommune/okctl'
+copyright: 'Copyright &copy; 2020 Oslo kommune'
+docs_dir: src
+edit_uri: ""
+
+nav:
+  - Core components:
+      - components/cloud.md
+      - components/github.md
+      - components/kubernetes.md
+  - Deployment:
+      - deployment/argocd.md
+
+plugins:
+  - git-revision-date
+  - search
+
+extra_css:
+  - assets/stylesheets/fonts.css
+
+theme:
+  name: 'material'
+  custom_dir: 'theme'
+  favicon: 'assets/images/favicon.png'
+  logo: 'assets/images/ok-logo-black.png'
+  font:
+    text: 'Montserrat'
+    code: 'Roboto Mono'
+  palette:
+    primary: 'white'
+    accent: 'light blue'
+    scheme: default
+  features:
+    - header.hide
+    - search.highlight
+  highlightjs: true
+  icon:
+    repo: fontawesome/brands/github
+  hljs_languages:
+    - yaml
+    - json
+    - bash
+
+markdown_extensions:
+  - attr_list
+  - toc:
+      permalink: true
+  - admonition
+  - codehilite:
+      linenums: true
+  - pymdownx.superfences
+  - pymdownx.tasklist
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg

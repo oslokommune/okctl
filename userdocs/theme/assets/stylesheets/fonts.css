@@ -1,0 +1,28 @@
+body, input {
+    font-family: "OsloSans", -apple-system, Helvetica, Arial, sans-serif;
+}
+
+pre, code, kbd {
+    font-family: Menlo, SFMono-Regular, Consolas, monospace;
+}
+
+@font-face {
+    font-family: "OsloSans";
+    src: url("../fonts/OsloSans-Light.woff") format("woff");
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "OsloSans";
+    src: url("../fonts/OsloSans-Regular.woff") format("woff");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "OsloSans";
+    src: url("../fonts/OsloSans-Medium.woff") format("woff");
+    font-weight: 500;
+    font-style: normal;
+}

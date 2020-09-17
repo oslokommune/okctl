@@ -20,20 +20,20 @@ type serviceAccountRun struct {
 	debug              bool
 }
 
-func (r *serviceAccountRun) CreateServiceAccount(config *v1alpha1.ClusterConfig) error {
+func (r *serviceAccountRun) getCli() (*eksctl.Eksctl, error) {
 	a, err := r.provider.AwsIamAuthenticator(awsiamauthenticator.Version)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	k, err := r.provider.Kubectl(kubectl.Version)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cli, err := r.provider.Eksctl(eksctl.Version)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cli.Debug(r.debug)
@@ -43,6 +43,29 @@ func (r *serviceAccountRun) CreateServiceAccount(config *v1alpha1.ClusterConfig)
 		fmt.Sprintf("AWS_SHARED_CREDENTIALS_FILE=%s", r.awsCredentialsPath),
 		"AWS_PROFILE=default",
 	)
+
+	return cli, nil
+}
+
+func (r *serviceAccountRun) DeleteServiceAccount(config *v1alpha1.ClusterConfig) error {
+	cli, err := r.getCli()
+	if err != nil {
+		return err
+	}
+
+	_, err = cli.DeleteServiceAccount(config)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *serviceAccountRun) CreateServiceAccount(config *v1alpha1.ClusterConfig) error {
+	cli, err := r.getCli()
+	if err != nil {
+		return err
+	}
 
 	_, err = cli.CreateServiceAccount(config)
 	if err != nil {

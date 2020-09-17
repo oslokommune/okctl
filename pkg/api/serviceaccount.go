@@ -65,21 +65,15 @@ func (o CreateExternalDNSServiceAccountOpts) Validate() error {
 // ServiceAccountService provides the interface for all service account operations
 type ServiceAccountService interface {
 	CreateExternalSecretsServiceAccount(context.Context, CreateExternalSecretsServiceAccountOpts) (*ServiceAccount, error)
+	DeleteExternalSecretsServiceAccount(context.Context, ID) error
 	CreateAlbIngressControllerServiceAccount(context.Context, CreateAlbIngressControllerServiceAccountOpts) (*ServiceAccount, error)
+	DeleteAlbIngressControllerServiceAccount(context.Context, ID) error
 	CreateExternalDNSServiceAccount(context.Context, CreateExternalDNSServiceAccountOpts) (*ServiceAccount, error)
+	DeleteExternalDNSServiceAccount(context.Context, ID) error
 }
 
 // ServiceAccountRun provides the interface for running operations
 type ServiceAccountRun interface {
 	CreateServiceAccount(*v1alpha1.ClusterConfig) error
-}
-
-// ServiceAccountStore provides the storage operations
-type ServiceAccountStore interface {
-	SaveExternalSecretsServiceAccount(*ServiceAccount) error
-	GetExternalSecretsServiceAccount() (*ServiceAccount, error)
-	SaveAlbIngressControllerServiceAccount(*ServiceAccount) error
-	GetAlbIngressControllerServiceAccount() (*ServiceAccount, error)
-	SaveExternalDNSServiceAccount(*ServiceAccount) error
-	GetExternalDNSServiceAccount() (*ServiceAccount, error)
+	DeleteServiceAccount(*v1alpha1.ClusterConfig) error
 }

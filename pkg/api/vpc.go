@@ -27,8 +27,9 @@ type VpcSubnet struct {
 
 // CreateVpcOpts defines the inputs to create a vpc
 type CreateVpcOpts struct {
-	ID   ID
-	Cidr string
+	ID      ID
+	Cidr    string
+	Minimal bool
 }
 
 // DeleteVpcOpts defines the inputs to delete a vpc

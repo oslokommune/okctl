@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/route53"
+
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/domain"
@@ -525,4 +527,52 @@ func (a *Ask) RepositoryConfig() (*RepositoryConfig, error) {
 		Region:  answers.Region,
 		BaseDir: answers.Basedir,
 	}, nil
+}
+
+const zoneHelp = `
+The hosted zone you select will be associated
+with the cluster, but its lifecycle will not
+be managed by it, e.g., we will not remove it.
+`
+
+// SelectHostedZone queries the user to select a team for authorisation towards argo cd
+func (a *Ask) SelectHostedZone(zones []*route53.HostedZone) (*route53.HostedZone, error) {
+	keys := make([]string, len(zones))
+	mappedZones := make(map[string]*route53.HostedZone, len(zones))
+
+	for i, z := range zones {
+		mappedZones[z.Domain] = z
+		keys[i] = z.Domain
+	}
+
+	repo := ""
+
+	prompt := &survey.Select{
+		Message: "Select hosted zone that you want to use with your cluster: ",
+		Options: keys,
+		Help:    zoneHelp,
+	}
+
+	if a.spinner != nil {
+		err := a.spinner.Pause()
+		if err != nil {
+			return nil, fmt.Errorf("stopping spinner: %w", err)
+		}
+
+		defer func() {
+			_ = a.spinner.Unpause()
+		}()
+	}
+
+	err := survey.AskOne(
+		prompt,
+		&repo,
+		survey.WithValidator(survey.Required),
+		survey.WithStdio(a.In, a.Out, a.Err),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed while asking user to select team: %w", err)
+	}
+
+	return mappedZones[repo], nil
 }

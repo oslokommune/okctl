@@ -24,6 +24,7 @@ spec:
         - --provider=aws
         - --aws-zone-type=public
         - --log-level=debug
+        - --policy=upsert-only
         - --events
         - --registry=txt
         - --txt-owner-id=ABC123456

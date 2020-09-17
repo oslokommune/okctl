@@ -45,15 +45,29 @@ func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, er
 		return nil, fmt.Errorf("retrieving eksctl binary: %w", err)
 	}
 
-	cfg, err := clusterconfig.New(&clusterconfig.Args{
-		ClusterName:            opts.ID.ClusterName,
-		PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
-		PrivateSubnets:         opts.VpcPrivateSubnets,
-		PublicSubnets:          opts.VpcPublicSubnets,
-		Region:                 opts.ID.Region,
-		VpcCidr:                opts.Cidr,
-		VpcID:                  opts.VpcID,
-	})
+	var cfg *v1alpha1.ClusterConfig
+	if opts.Minimal {
+		cfg, err = clusterconfig.NewMinimal(&clusterconfig.MinimalArgs{
+			ClusterName:            opts.ID.ClusterName,
+			PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
+			PrivateSubnets:         opts.VpcPrivateSubnets,
+			PublicSubnets:          opts.VpcPublicSubnets,
+			Region:                 opts.ID.Region,
+			VpcCidr:                opts.Cidr,
+			VpcID:                  opts.VpcID,
+		})
+	} else {
+		cfg, err = clusterconfig.New(&clusterconfig.Args{
+			ClusterName:            opts.ID.ClusterName,
+			PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
+			PrivateSubnets:         opts.VpcPrivateSubnets,
+			PublicSubnets:          opts.VpcPublicSubnets,
+			Region:                 opts.ID.Region,
+			VpcCidr:                opts.Cidr,
+			VpcID:                  opts.VpcID,
+		})
+	}
+
 	if err != nil {
 		return nil, errors.E(err, "creating cluster config", errors.Internal)
 	}

@@ -237,3 +237,53 @@ func TestNewExternalDNSServiceAccount(t *testing.T) {
 		})
 	}
 }
+
+func TestNewMinimal(t *testing.T) {
+	testCases := []struct {
+		name      string
+		args      *clusterconfig.MinimalArgs
+		golden    string
+		expectErr bool
+		err       string
+	}{
+		{
+			name: "Validate cluster config",
+			args: &clusterconfig.MinimalArgs{
+				ClusterName:            "test",
+				PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(mock.DefaultAWSAccountID),
+				PrivateSubnets:         mock.DefaultVpcPrivateSubnets(),
+				PublicSubnets:          mock.DefaultVpcPublicSubnets(),
+				Region:                 mock.DefaultRegion,
+				VpcCidr:                mock.DefaultCidr,
+				VpcID:                  mock.DefaultVpcID,
+			},
+			golden: "minimal-cluster-config",
+		},
+		{
+			name:      "Invalid cluster config",
+			args:      &clusterconfig.MinimalArgs{},
+			expectErr: true,
+			err:       "ClusterName: cannot be blank; PermissionsBoundaryARN: cannot be blank; PrivateSubnets: cannot be blank; PublicSubnets: cannot be blank; Region: cannot be blank; VpcCidr: cannot be blank; VpcID: cannot be blank.", // nolint: lll
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := clusterconfig.NewMinimal(tc.args)
+			if tc.expectErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.err, err.Error())
+			} else {
+				assert.NoError(t, err)
+
+				d, err := got.YAML()
+				assert.NoError(t, err)
+
+				g := goldie.New(t)
+				g.Assert(t, tc.golden, d)
+			}
+		})
+	}
+}

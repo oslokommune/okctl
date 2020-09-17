@@ -1,0 +1,43 @@
+apiVersion: eksctl.io/v1alpha5
+fargateProfiles:
+- name: fp-default
+  selectors:
+  - namespace: default
+  - namespace: kube-system
+iam:
+  fargatePodExecutionRolePermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
+  serviceRolePermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
+  withOIDC: true
+kind: ClusterConfig
+metadata:
+  name: test
+  region: eu-west-1
+nodeGroups:
+- desiredCapacity: 2
+  iam:
+    instanceRolePermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
+  instanceType: t2.medium
+  labels:
+    pool: ng-generic
+  maxSize: 10
+  minSize: 1
+  name: ng-generic
+  privateNetworking: true
+  tags:
+    k8s.io/cluster-autoscaler/enabled: "true"
+    k8s.io/cluster-autoscaler/test: owned
+vpc:
+  cidr: 192.168.0.0/20
+  clusterEndpoints:
+    privateAccess: true
+    publicAccess: true
+  id: vpc-0e9801d129EXAMPLE
+  subnets:
+    private:
+      eu-west-1a:
+        cidr: 192.168.2.0/24
+        id: subnet-8EXAMPLE
+    public:
+      eu-west-1a:
+        cidr: 192.168.1.0/24
+        id: subnet-0bb1c79de3EXAMPLE

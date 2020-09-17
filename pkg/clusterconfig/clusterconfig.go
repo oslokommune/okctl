@@ -237,3 +237,113 @@ func NewExternalDNSServiceAccount(clusterName, region, policyArn, permissionsBou
 		Region:                 region,
 	})
 }
+
+// MinimalArgs contains the input arguments for creating a valid
+// cluster configuration
+type MinimalArgs struct {
+	ClusterName            string
+	PermissionsBoundaryARN string
+	PrivateSubnets         []api.VpcSubnet
+	PublicSubnets          []api.VpcSubnet
+	Region                 string
+	VpcCidr                string
+	VpcID                  string
+}
+
+// NewMinimal initialises the creation of a new cluster config
+func NewMinimal(a *MinimalArgs) (*v1alpha1.ClusterConfig, error) {
+	err := a.validate()
+	if err != nil {
+		return nil, err
+	}
+
+	return a.build(), nil
+}
+
+func (a *MinimalArgs) validate() error {
+	return validation.ValidateStruct(a,
+		validation.Field(&a.ClusterName, validation.Required),
+		validation.Field(&a.PermissionsBoundaryARN, validation.Required),
+		validation.Field(&a.PrivateSubnets, validation.Required),
+		validation.Field(&a.PublicSubnets, validation.Required),
+		validation.Field(&a.Region, validation.Required),
+		validation.Field(&a.VpcCidr, validation.Required),
+		validation.Field(&a.VpcID, validation.Required),
+	)
+}
+
+// New creates a cluster config
+// nolint: funlen
+func (a *MinimalArgs) build() *v1alpha1.ClusterConfig {
+	cfg := &v1alpha1.ClusterConfig{
+		TypeMeta: TypeMeta(),
+		Metadata: v1alpha1.ClusterMeta{
+			Name:   a.ClusterName,
+			Region: a.Region,
+		},
+		IAM: v1alpha1.ClusterIAM{
+			ServiceRolePermissionsBoundary:             a.PermissionsBoundaryARN,
+			FargatePodExecutionRolePermissionsBoundary: a.PermissionsBoundaryARN,
+			WithOIDC: true,
+		},
+		FargateProfiles: []v1alpha1.FargateProfile{
+			{
+				Name: "fp-default",
+				Selectors: []v1alpha1.FargateProfileSelector{
+					{Namespace: "default"},
+					{Namespace: "kube-system"},
+				},
+			},
+		},
+		NodeGroups: []v1alpha1.NodeGroup{
+			{
+				Name:         "ng-generic",
+				InstanceType: "t2.medium",
+				ScalingConfig: v1alpha1.ScalingConfig{
+					DesiredCapacity: 2, //nolint: gomnd
+					MinSize:         1,
+					MaxSize:         10, //nolint: gomnd
+				},
+				Labels: map[string]string{
+					"pool": "ng-generic",
+				},
+				Tags: map[string]string{
+					"k8s.io/cluster-autoscaler/enabled":                        "true",
+					fmt.Sprintf("k8s.io/cluster-autoscaler/%s", a.ClusterName): "owned",
+				},
+				PrivateNetworking: true,
+				IAM: v1alpha1.NodeGroupIAM{
+					InstanceRolePermissionsBoundary: a.PermissionsBoundaryARN,
+				},
+			},
+		},
+		VPC: &v1alpha1.ClusterVPC{
+			ID:   a.VpcID,
+			CIDR: a.VpcCidr,
+			ClusterEndpoints: v1alpha1.ClusterEndpoints{
+				PrivateAccess: true,
+				PublicAccess:  true,
+			},
+			Subnets: v1alpha1.ClusterSubnets{
+				Private: map[string]v1alpha1.ClusterNetwork{},
+				Public:  map[string]v1alpha1.ClusterNetwork{},
+			},
+		},
+	}
+
+	for _, p := range a.PublicSubnets {
+		cfg.VPC.Subnets.Public[p.AvailabilityZone] = v1alpha1.ClusterNetwork{
+			ID:   p.ID,
+			CIDR: p.Cidr,
+		}
+	}
+
+	for _, p := range a.PrivateSubnets {
+		cfg.VPC.Subnets.Private[p.AvailabilityZone] = v1alpha1.ClusterNetwork{
+			ID:   p.ID,
+			CIDR: p.Cidr,
+		}
+	}
+
+	return cfg
+}

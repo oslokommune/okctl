@@ -37,6 +37,10 @@ type Endpoints struct {
 	DeleteExternalSecretsPolicy              endpoint.Endpoint
 	DeleteAlbIngressControllerPolicy         endpoint.Endpoint
 	DeleteExternalDNSPolicy                  endpoint.Endpoint
+	DeleteHostedZone                         endpoint.Endpoint
+	DeleteExternalSecretsServiceAccount      endpoint.Endpoint
+	DeleteAlbIngressControllerServiceAccount endpoint.Endpoint
+	DeleteExternalDNSServiceAccount          endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -64,6 +68,10 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteExternalSecretsPolicy:              makeDeleteExternalSecretsPolicyEndpoint(s.ManagedPolicy),
 		DeleteAlbIngressControllerPolicy:         makeDeleteAlbIngressControllerPolicyEndpoint(s.ManagedPolicy),
 		DeleteExternalDNSPolicy:                  makeDeleteExternalDNSPolicyEndpoint(s.ManagedPolicy),
+		DeleteHostedZone:                         makeDeleteHostedZoneEndpoint(s.Domain),
+		DeleteExternalSecretsServiceAccount:      makeDeleteExternalSecretsServiceAccountEndpoint(s.ServiceAccount),
+		DeleteAlbIngressControllerServiceAccount: makeDeleteAlbIngressControllerServiceAccountEndpoint(s.ServiceAccount),
+		DeleteExternalDNSServiceAccount:          makeDeleteExternalDNSServiceAccountEndpoint(s.ServiceAccount),
 	}
 }
 
@@ -90,6 +98,10 @@ type Handlers struct {
 	DeleteExternalSecretsPolicy              http.Handler
 	DeleteAlbIngressControllerPolicy         http.Handler
 	DeleteExternalDNSPolicy                  http.Handler
+	DeleteHostedZone                         http.Handler
+	DeleteExternalSecretsServiceAccount      http.Handler
+	DeleteAlbIngressControllerServiceAccount http.Handler
+	DeleteExternalDNSServiceAccount          http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -143,6 +155,10 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteExternalSecretsPolicy:              newServer(endpoints.DeleteExternalSecretsPolicy, decodeIDRequest),
 		DeleteAlbIngressControllerPolicy:         newServer(endpoints.DeleteAlbIngressControllerPolicy, decodeIDRequest),
 		DeleteExternalDNSPolicy:                  newServer(endpoints.DeleteExternalDNSPolicy, decodeIDRequest),
+		DeleteHostedZone:                         newServer(endpoints.DeleteHostedZone, decodeDeleteHostedZone),
+		DeleteExternalSecretsServiceAccount:      newServer(endpoints.DeleteExternalSecretsServiceAccount, decodeIDRequest),
+		DeleteAlbIngressControllerServiceAccount: newServer(endpoints.DeleteAlbIngressControllerServiceAccount, decodeIDRequest),
+		DeleteExternalDNSServiceAccount:          newServer(endpoints.DeleteExternalDNSServiceAccount, decodeIDRequest),
 	}
 }
 
@@ -177,12 +193,15 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/serviceaccounts", func(r chi.Router) {
 			r.Route("/externalsecrets", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalSecretsServiceAccount)
+				r.Method(http.MethodDelete, "/", handlers.DeleteExternalSecretsServiceAccount)
 			})
 			r.Route("/albingresscontroller", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAlbIngressControllerServiceAccount)
+				r.Method(http.MethodDelete, "/", handlers.DeleteAlbIngressControllerServiceAccount)
 			})
 			r.Route("/externaldns", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalDNSServiceAccount)
+				r.Method(http.MethodDelete, "/", handlers.DeleteExternalDNSServiceAccount)
 			})
 		})
 		r.Route("/helm", func(r chi.Router) {
@@ -207,6 +226,7 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/domains", func(r chi.Router) {
 			r.Route("/hostedzones", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateHostedZone)
+				r.Method(http.MethodDelete, "/", handlers.DeleteHostedZone)
 			})
 		})
 		r.Route("/certificates", func(r chi.Router) {
@@ -283,6 +303,10 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteExternalSecretsPolicy:              logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, externalSecretsTag}, "/"), "delete")(endpoints.DeleteExternalSecretsPolicy),
 			DeleteAlbIngressControllerPolicy:         logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, albIngressControllerTag}, "/"), "delete")(endpoints.DeleteAlbIngressControllerPolicy),
 			DeleteExternalDNSPolicy:                  logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, externalDNSTag}, "/"), "delete")(endpoints.DeleteExternalDNSPolicy),
+			DeleteHostedZone:                         logmd.Logging(logger, strings.Join([]string{domainTag, hostedZoneTag}, "/"), "delete")(endpoints.DeleteHostedZone),
+			DeleteExternalSecretsServiceAccount:      logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, externalSecretsTag}, "/"), "delete")(endpoints.DeleteExternalSecretsServiceAccount),
+			DeleteAlbIngressControllerServiceAccount: logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, albIngressControllerTag}, "/"), "delete")(endpoints.DeleteAlbIngressControllerServiceAccount),
+			DeleteExternalDNSServiceAccount:          logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, externalDNSTag}, "/"), "delete")(endpoints.DeleteExternalDNSServiceAccount),
 		}
 	}
 }

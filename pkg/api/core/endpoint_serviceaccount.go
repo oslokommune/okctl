@@ -24,3 +24,21 @@ func makeCreateExternalDNSServiceAccountEndpoint(s api.ServiceAccountService) en
 		return s.CreateExternalDNSServiceAccount(ctx, request.(api.CreateExternalDNSServiceAccountOpts))
 	}
 }
+
+func makeDeleteExternalSecretsServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return &Empty{}, s.DeleteExternalSecretsServiceAccount(ctx, request.(api.ID))
+	}
+}
+
+func makeDeleteAlbIngressControllerServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return &Empty{}, s.DeleteAlbIngressControllerServiceAccount(ctx, request.(api.ID))
+	}
+}
+
+func makeDeleteExternalDNSServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return &Empty{}, s.DeleteExternalDNSServiceAccount(ctx, request.(api.ID))
+	}
+}

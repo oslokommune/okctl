@@ -9,32 +9,39 @@ import (
 
 type domainService struct {
 	cloudProvider api.DomainCloudProvider
-	store         api.DomainStore
+}
+
+func (d *domainService) DeleteHostedZone(ctx context.Context, opts api.DeleteHostedZoneOpts) error {
+	err := opts.Validate()
+	if err != nil {
+		return errors.E(err, "failed to validate inputs")
+	}
+
+	err = d.cloudProvider.DeleteHostedZone(opts)
+	if err != nil {
+		return errors.E(err, "failed to delete hosted zone")
+	}
+
+	return nil
 }
 
 func (d *domainService) CreateHostedZone(_ context.Context, opts api.CreateHostedZoneOpts) (*api.HostedZone, error) {
 	err := opts.Validate()
 	if err != nil {
-		return nil, errors.E(err, "failed to validate domain inputs")
+		return nil, errors.E(err, "failed to validate hosted zone inputs")
 	}
 
 	domain, err := d.cloudProvider.CreateHostedZone(opts)
 	if err != nil {
-		return nil, errors.E(err, "failed to create domain")
-	}
-
-	err = d.store.SaveHostedZone(domain)
-	if err != nil {
-		return nil, errors.E(err, "failed to store domain")
+		return nil, errors.E(err, "failed to create hosted zone")
 	}
 
 	return domain, nil
 }
 
 // NewDomainService returns an initialised domain service
-func NewDomainService(cloudProvider api.DomainCloudProvider, store api.DomainStore) api.DomainService {
+func NewDomainService(cloudProvider api.DomainCloudProvider) api.DomainService {
 	return &domainService{
 		cloudProvider: cloudProvider,
-		store:         store,
 	}
 }

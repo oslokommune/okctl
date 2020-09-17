@@ -18,3 +18,14 @@ func decodeCreateHostedZone(_ context.Context, r *http.Request) (interface{}, er
 
 	return opts, nil
 }
+
+func decodeDeleteHostedZone(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.DeleteHostedZoneOpts
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}

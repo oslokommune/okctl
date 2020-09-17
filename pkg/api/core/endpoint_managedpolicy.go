@@ -27,18 +27,18 @@ func makeCreateExternalDNSPolicyEndpoint(s api.ManagedPolicyService) endpoint.En
 
 func makeDeleteExternalSecretsPolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return Empty{}, s.DeleteExternalSecretsPolicy(ctx, request.(api.ID))
+		return &Empty{}, s.DeleteExternalSecretsPolicy(ctx, request.(api.ID))
 	}
 }
 
 func makeDeleteAlbIngressControllerPolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return Empty{}, s.DeleteAlbIngressControllerPolicy(ctx, request.(api.ID))
+		return &Empty{}, s.DeleteAlbIngressControllerPolicy(ctx, request.(api.ID))
 	}
 }
 
 func makeDeleteExternalDNSPolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return Empty{}, s.DeleteExternalDNSPolicy(ctx, request.(api.ID))
+		return &Empty{}, s.DeleteExternalDNSPolicy(ctx, request.(api.ID))
 	}
 }

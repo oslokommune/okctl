@@ -34,17 +34,28 @@ func (o CreateHostedZoneOpts) Validate() error {
 	)
 }
 
+// DeleteHostedZoneOpts contains required inputs
+type DeleteHostedZoneOpts struct {
+	ID     ID
+	Domain string
+}
+
+// Validate the inputs
+func (o DeleteHostedZoneOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.Domain, validation.Required),
+	)
+}
+
 // DomainService provides the service layer
 type DomainService interface {
 	CreateHostedZone(ctx context.Context, opts CreateHostedZoneOpts) (*HostedZone, error)
+	DeleteHostedZone(ctx context.Context, opts DeleteHostedZoneOpts) error
 }
 
 // DomainCloudProvider provides the cloud provider layer
 type DomainCloudProvider interface {
 	CreateHostedZone(opts CreateHostedZoneOpts) (*HostedZone, error)
-}
-
-// DomainStore provides the storage layer
-type DomainStore interface {
-	SaveHostedZone(*HostedZone) error
+	DeleteHostedZone(opts DeleteHostedZoneOpts) error
 }

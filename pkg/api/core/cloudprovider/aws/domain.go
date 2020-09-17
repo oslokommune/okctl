@@ -14,6 +14,10 @@ type domain struct {
 	provider v1alpha1.CloudProvider
 }
 
+func (d *domain) DeleteHostedZone(opts api.DeleteHostedZoneOpts) error {
+	return cfn.NewRunner(d.provider).Delete(cfn.NewStackNamer().Domain(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Domain)))
+}
+
 func (d *domain) CreateHostedZone(opts api.CreateHostedZoneOpts) (*api.HostedZone, error) {
 	b := cfn.New(components.NewHostedZoneComposer(opts.FQDN, "A public hosted zone for creating ingresses with"))
 
@@ -41,8 +45,6 @@ func (d *domain) CreateHostedZone(opts api.CreateHostedZoneOpts) (*api.HostedZon
 		Managed:                true,
 		FQDN:                   opts.FQDN,
 		Domain:                 opts.Domain,
-		HostedZoneID:           "",
-		NameServers:            nil,
 		StackName:              stackName,
 		CloudFormationTemplate: template,
 	}

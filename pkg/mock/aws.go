@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/aws/aws-sdk-go/service/route53/route53iface"
+
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/aws/aws-sdk-go/service/eks/eksiface"
 	"github.com/oslokommune/okctl/pkg/api/mock"
@@ -165,6 +168,18 @@ func (a *CFAPI) DescribeStacks(stack *cloudformation.DescribeStacksInput) (*clou
 	return a.DescribeStacksFn[i](stack)
 }
 
+// R53API mocks the Route53 API
+type R53API struct {
+	route53iface.Route53API
+
+	ListHostedZonesFn func(*route53.ListHostedZonesInput) (*route53.ListHostedZonesOutput, error)
+}
+
+// ListHostedZones invokes a mocked response
+func (a *R53API) ListHostedZones(input *route53.ListHostedZonesInput) (*route53.ListHostedZonesOutput, error) {
+	return a.ListHostedZonesFn(input)
+}
+
 // DeleteStackSuccess sets a success response on the mocked DeleteStack function
 func (p *CloudProvider) DeleteStackSuccess() *CloudProvider {
 	p.CFAPI.DeleteStackFn = func(input *cloudformation.DeleteStackInput) (*cloudformation.DeleteStackOutput, error) {
@@ -216,6 +231,7 @@ type CloudProvider struct {
 	EC2API *EC2API
 	CFAPI  *CFAPI
 	EKSAPI *EKSAPI
+	R53API *R53API
 }
 
 // CloudFormation returns the mocked CF API
@@ -233,6 +249,11 @@ func (p *CloudProvider) EKS() eksiface.EKSAPI {
 	return p.EKSAPI
 }
 
+// Route53 returns the mocked Route53 API
+func (p *CloudProvider) Route53() route53iface.Route53API {
+	return p.R53API
+}
+
 // PrincipalARN mocks the principal arn
 func (p *CloudProvider) PrincipalARN() string {
 	return "arn:::::/someuser"
@@ -244,6 +265,7 @@ func NewCloudProvider() *CloudProvider {
 		EC2API: &EC2API{},
 		CFAPI:  &CFAPI{},
 		EKSAPI: &EKSAPI{},
+		R53API: &R53API{},
 	}
 }
 
@@ -268,6 +290,21 @@ func NewGoodCloudProvider() *CloudProvider {
 						Endpoint: aws.String("https://something"),
 						Name:     aws.String(mock.DefaultClusterName),
 						Status:   aws.String(eks.ClusterStatusActive),
+					},
+				}, nil
+			},
+		},
+		R53API: &R53API{
+			ListHostedZonesFn: func(*route53.ListHostedZonesInput) (*route53.ListHostedZonesOutput, error) {
+				return &route53.ListHostedZonesOutput{
+					HostedZones: []*route53.HostedZone{
+						{
+							Config: &route53.HostedZoneConfig{
+								PrivateZone: aws.Bool(false),
+							},
+							Id:   aws.String("/hostedzone/AABBCCDD"),
+							Name: aws.String("test.oslo.systems."),
+						},
 					},
 				}, nil
 			},

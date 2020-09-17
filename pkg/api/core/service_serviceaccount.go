@@ -11,8 +11,11 @@ import (
 )
 
 type serviceAccount struct {
-	run   api.ServiceAccountRun
-	store api.ServiceAccountStore
+	run api.ServiceAccountRun
+}
+
+var errDeleteServiceAccount = func(err error) error {
+	return errors.E(err, "failed to delete service account", errors.Internal)
 }
 
 var errCreateServiceAccount = func(err error) error {
@@ -27,8 +30,76 @@ var errBuildServiceAccount = func(err error) error {
 	return errors.E(err, "failed to build service account config", errors.Internal)
 }
 
-var errStoreServiceAccount = func(err error) error {
-	return errors.E(err, "failed to store service account", errors.Internal)
+func (c *serviceAccount) DeleteExternalSecretsServiceAccount(_ context.Context, id api.ID) error {
+	err := id.Validate()
+	if err != nil {
+		return errInvalidInputs(err)
+	}
+
+	config, err := clusterconfig.NewExternalSecretsServiceAccount(
+		id.ClusterName,
+		id.Region,
+		"",
+		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
+	)
+	if err != nil {
+		return errBuildServiceAccount(err)
+	}
+
+	err = c.run.DeleteServiceAccount(config)
+	if err != nil {
+		return errDeleteServiceAccount(err)
+	}
+
+	return nil
+}
+
+func (c *serviceAccount) DeleteAlbIngressControllerServiceAccount(_ context.Context, id api.ID) error {
+	err := id.Validate()
+	if err != nil {
+		return errInvalidInputs(err)
+	}
+
+	config, err := clusterconfig.NewAlbIngressControllerServiceAccount(
+		id.ClusterName,
+		id.Region,
+		"",
+		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
+	)
+	if err != nil {
+		return errBuildServiceAccount(err)
+	}
+
+	err = c.run.DeleteServiceAccount(config)
+	if err != nil {
+		return errDeleteServiceAccount(err)
+	}
+
+	return nil
+}
+
+func (c *serviceAccount) DeleteExternalDNSServiceAccount(_ context.Context, id api.ID) error {
+	err := id.Validate()
+	if err != nil {
+		return errInvalidInputs(err)
+	}
+
+	config, err := clusterconfig.NewExternalDNSServiceAccount(
+		id.ClusterName,
+		id.Region,
+		"",
+		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
+	)
+	if err != nil {
+		return errBuildServiceAccount(err)
+	}
+
+	err = c.run.DeleteServiceAccount(config)
+	if err != nil {
+		return errDeleteServiceAccount(err)
+	}
+
+	return nil
 }
 
 func (c *serviceAccount) CreateExternalDNSServiceAccount(_ context.Context, opts api.CreateExternalDNSServiceAccountOpts) (*api.ServiceAccount, error) {
@@ -50,11 +121,6 @@ func (c *serviceAccount) CreateExternalDNSServiceAccount(_ context.Context, opts
 	account, err := c.createServiceAccount(opts.CreateServiceAccountOpts, config)
 	if err != nil {
 		return nil, errCreateServiceAccount(err)
-	}
-
-	err = c.store.SaveExternalDNSServiceAccount(account)
-	if err != nil {
-		return nil, errStoreServiceAccount(err)
 	}
 
 	return account, nil
@@ -81,11 +147,6 @@ func (c *serviceAccount) CreateAlbIngressControllerServiceAccount(_ context.Cont
 		return nil, errCreateServiceAccount(err)
 	}
 
-	err = c.store.SaveAlbIngressControllerServiceAccount(account)
-	if err != nil {
-		return nil, errStoreServiceAccount(err)
-	}
-
 	return account, nil
 }
 
@@ -110,11 +171,6 @@ func (c *serviceAccount) CreateExternalSecretsServiceAccount(_ context.Context, 
 		return nil, errCreateServiceAccount(err)
 	}
 
-	err = c.store.SaveExternalSecretsServiceAccount(account)
-	if err != nil {
-		return nil, errStoreServiceAccount(err)
-	}
-
 	return account, nil
 }
 
@@ -134,9 +190,8 @@ func (c *serviceAccount) createServiceAccount(opts api.CreateServiceAccountOpts,
 }
 
 // NewServiceAccountService returns a service operator for the service account operations
-func NewServiceAccountService(store api.ServiceAccountStore, run api.ServiceAccountRun) api.ServiceAccountService {
+func NewServiceAccountService(run api.ServiceAccountRun) api.ServiceAccountService {
 	return &serviceAccount{
-		run:   run,
-		store: store,
+		run: run,
 	}
 }

@@ -14,6 +14,8 @@ nav:
       - components/kubernetes.md
   - Deployment:
       - deployment/argocd.md
+  - Usage:
+      - usage/testcluster.md
 
 plugins:
   - git-revision-date

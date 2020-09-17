@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	logger2 "github.com/oslokommune/okctl/pkg/middleware/logger"
+	logmd "github.com/oslokommune/okctl/pkg/middleware/logger"
 
 	"github.com/go-chi/chi"
 	"github.com/go-kit/kit/endpoint"
@@ -34,6 +34,9 @@ type Endpoints struct {
 	CreateSecret                             endpoint.Endpoint
 	CreateArgoCD                             endpoint.Endpoint
 	CreateExternalSecrets                    endpoint.Endpoint
+	DeleteExternalSecretsPolicy              endpoint.Endpoint
+	DeleteAlbIngressControllerPolicy         endpoint.Endpoint
+	DeleteExternalDNSPolicy                  endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -58,6 +61,9 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateSecret:                             makeCreateSecret(s.Parameter),
 		CreateArgoCD:                             makeCreateArgoCD(s.Helm),
 		CreateExternalSecrets:                    makeCreateExternalSecretsEndpoint(s.Kube),
+		DeleteExternalSecretsPolicy:              makeDeleteExternalSecretsPolicyEndpoint(s.ManagedPolicy),
+		DeleteAlbIngressControllerPolicy:         makeDeleteAlbIngressControllerPolicyEndpoint(s.ManagedPolicy),
+		DeleteExternalDNSPolicy:                  makeDeleteExternalDNSPolicyEndpoint(s.ManagedPolicy),
 	}
 }
 
@@ -81,6 +87,9 @@ type Handlers struct {
 	CreateSecret                             http.Handler
 	CreateArgoCD                             http.Handler
 	CreateExternalSecrets                    http.Handler
+	DeleteExternalSecretsPolicy              http.Handler
+	DeleteAlbIngressControllerPolicy         http.Handler
+	DeleteExternalDNSPolicy                  http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -131,6 +140,9 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateSecret:                             newServer(endpoints.CreateSecret, decodeCreateSecret),
 		CreateArgoCD:                             newServer(endpoints.CreateArgoCD, decodeCreateArgoCD),
 		CreateExternalSecrets:                    newServer(endpoints.CreateExternalSecrets, decodeCreateExternalSecrets),
+		DeleteExternalSecretsPolicy:              newServer(endpoints.DeleteExternalSecretsPolicy, decodeIDRequest),
+		DeleteAlbIngressControllerPolicy:         newServer(endpoints.DeleteAlbIngressControllerPolicy, decodeIDRequest),
+		DeleteExternalDNSPolicy:                  newServer(endpoints.DeleteExternalDNSPolicy, decodeIDRequest),
 	}
 }
 
@@ -151,12 +163,15 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/managedpolicies", func(r chi.Router) {
 			r.Route("/externalsecrets", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalSecretsPolicy)
+				r.Method(http.MethodDelete, "/", handlers.DeleteExternalSecretsPolicy)
 			})
 			r.Route("/albingresscontroller", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAlbIngressControllerPolicy)
+				r.Method(http.MethodDelete, "/", handlers.DeleteAlbIngressControllerPolicy)
 			})
 			r.Route("/externaldns", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalDNSPolicy)
+				r.Method(http.MethodDelete, "/", handlers.DeleteExternalDNSPolicy)
 			})
 		})
 		r.Route("/serviceaccounts", func(r chi.Router) {
@@ -247,24 +262,27 @@ const (
 func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 	return func(endpoints Endpoints) Endpoints {
 		return Endpoints{
-			CreateCluster:                            logger2.Logging(logger, clusterTag, "create")(endpoints.CreateCluster),
-			DeleteCluster:                            logger2.Logging(logger, clusterTag, "delete")(endpoints.DeleteCluster),
-			CreateVpc:                                logger2.Logging(logger, vpcTag, "create")(endpoints.CreateVpc),
-			DeleteVpc:                                logger2.Logging(logger, vpcTag, "delete")(endpoints.DeleteVpc),
-			CreateExternalSecretsPolicy:              logger2.Logging(logger, strings.Join([]string{managedPoliciesTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsPolicy),
-			CreateExternalSecretsServiceAccount:      logger2.Logging(logger, strings.Join([]string{serviceAccountsTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsServiceAccount),
-			CreateExternalSecretsHelmChart:           logger2.Logging(logger, strings.Join([]string{helmTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsHelmChart),
-			CreateAlbIngressControllerServiceAccount: logger2.Logging(logger, strings.Join([]string{serviceAccountsTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerServiceAccount),
-			CreateAlbIngressControllerPolicy:         logger2.Logging(logger, strings.Join([]string{managedPoliciesTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerPolicy),
-			CreateAlbIngressControllerHelmChart:      logger2.Logging(logger, strings.Join([]string{helmTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerHelmChart),
-			CreateExternalDNSPolicy:                  logger2.Logging(logger, strings.Join([]string{managedPoliciesTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDNSPolicy),
-			CreateExternalDNSServiceAccount:          logger2.Logging(logger, strings.Join([]string{serviceAccountsTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDNSServiceAccount),
-			CreateExternalDNSKubeDeployment:          logger2.Logging(logger, strings.Join([]string{kubeTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDNSKubeDeployment),
-			CreateHostedZone:                         logger2.Logging(logger, strings.Join([]string{domainTag, hostedZoneTag}, "/"), "create")(endpoints.CreateHostedZone),
-			CreateCertificate:                        logger2.Logging(logger, certificateTag, "create")(endpoints.CreateCertificate),
-			CreateSecret:                             logger2.Logging(logger, strings.Join([]string{parameterTag, secretTag}, "/"), "create")(endpoints.CreateSecret),
-			CreateArgoCD:                             logger2.Logging(logger, strings.Join([]string{helmTag, argocdTag}, "/"), "create")(endpoints.CreateArgoCD),
-			CreateExternalSecrets:                    logger2.Logging(logger, strings.Join([]string{kubeTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecrets),
+			CreateCluster:                            logmd.Logging(logger, clusterTag, "create")(endpoints.CreateCluster),
+			DeleteCluster:                            logmd.Logging(logger, clusterTag, "delete")(endpoints.DeleteCluster),
+			CreateVpc:                                logmd.Logging(logger, vpcTag, "create")(endpoints.CreateVpc),
+			DeleteVpc:                                logmd.Logging(logger, vpcTag, "delete")(endpoints.DeleteVpc),
+			CreateExternalSecretsPolicy:              logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsPolicy),
+			CreateExternalSecretsServiceAccount:      logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsServiceAccount),
+			CreateExternalSecretsHelmChart:           logmd.Logging(logger, strings.Join([]string{helmTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsHelmChart),
+			CreateAlbIngressControllerServiceAccount: logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerServiceAccount),
+			CreateAlbIngressControllerPolicy:         logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerPolicy),
+			CreateAlbIngressControllerHelmChart:      logmd.Logging(logger, strings.Join([]string{helmTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerHelmChart),
+			CreateExternalDNSPolicy:                  logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDNSPolicy),
+			CreateExternalDNSServiceAccount:          logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDNSServiceAccount),
+			CreateExternalDNSKubeDeployment:          logmd.Logging(logger, strings.Join([]string{kubeTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDNSKubeDeployment),
+			CreateHostedZone:                         logmd.Logging(logger, strings.Join([]string{domainTag, hostedZoneTag}, "/"), "create")(endpoints.CreateHostedZone),
+			CreateCertificate:                        logmd.Logging(logger, certificateTag, "create")(endpoints.CreateCertificate),
+			CreateSecret:                             logmd.Logging(logger, strings.Join([]string{parameterTag, secretTag}, "/"), "create")(endpoints.CreateSecret),
+			CreateArgoCD:                             logmd.Logging(logger, strings.Join([]string{helmTag, argocdTag}, "/"), "create")(endpoints.CreateArgoCD),
+			CreateExternalSecrets:                    logmd.Logging(logger, strings.Join([]string{kubeTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecrets),
+			DeleteExternalSecretsPolicy:              logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, externalSecretsTag}, "/"), "delete")(endpoints.DeleteExternalSecretsPolicy),
+			DeleteAlbIngressControllerPolicy:         logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, albIngressControllerTag}, "/"), "delete")(endpoints.DeleteAlbIngressControllerPolicy),
+			DeleteExternalDNSPolicy:                  logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, externalDNSTag}, "/"), "delete")(endpoints.DeleteExternalDNSPolicy),
 		}
 	}
 }

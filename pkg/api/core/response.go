@@ -33,3 +33,11 @@ func Ok() Created {
 		},
 	}
 }
+
+// Empty wraps a response that has no content
+type Empty struct{}
+
+// StatusCode returns the http status code
+func (e Empty) StatusCode() int {
+	return http.StatusNoContent
+}

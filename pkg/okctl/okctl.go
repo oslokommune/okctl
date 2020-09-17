@@ -123,7 +123,6 @@ func (o *Okctl) initialise() error {
 
 	vpcStore := noop.NewVpcStore()
 	clusterStore := noop.NewClusterStore()
-	managedPolicyStore := noop.NewManagedPolicyStore()
 	serviceAccountStore := noop.NewServiceAccountStore()
 	helmStore := noop.NewHelmStore()
 	kubeStore := noop.NewKubeStore()
@@ -148,10 +147,7 @@ func (o *Okctl) initialise() error {
 		),
 	)
 
-	managedPolicyService := core.NewManagedPolicyService(
-		awsProvider.NewManagedPolicyCloudProvider(o.CloudProvider),
-		managedPolicyStore,
-	)
+	managedPolicyService := core.NewManagedPolicyService(awsProvider.NewManagedPolicyCloudProvider(o.CloudProvider))
 
 	serviceAccountService := core.NewServiceAccountService(
 		serviceAccountStore,

@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"fmt"
+
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
@@ -10,6 +12,29 @@ import (
 
 type managedPolicy struct {
 	provider v1alpha1.CloudProvider
+}
+
+func (m *managedPolicy) DeleteExternalSecretsPolicy(id api.ID) error {
+	return m.deletePolicy(cfn.NewStackNamer().ExternalSecretsPolicy(id.Repository, id.Environment))
+}
+
+func (m *managedPolicy) DeleteAlbIngressControllerPolicy(id api.ID) error {
+	return m.deletePolicy(cfn.NewStackNamer().AlbIngressControllerPolicy(id.Repository, id.Environment))
+}
+
+func (m *managedPolicy) DeleteExternalDNSPolicy(id api.ID) error {
+	return m.deletePolicy(cfn.NewStackNamer().ExternalDNSPolicy(id.Repository, id.Environment))
+}
+
+func (m *managedPolicy) deletePolicy(stackName string) error {
+	r := cfn.NewRunner(m.provider)
+
+	err := r.Delete(stackName)
+	if err != nil {
+		return fmt.Errorf("deleting policy: %w", err)
+	}
+
+	return nil
 }
 
 func (m *managedPolicy) CreateExternalDNSPolicy(opts api.CreateExternalDNSPolicyOpts) (*api.ManagedPolicy, error) {

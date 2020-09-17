@@ -24,7 +24,8 @@ func TestRoute53PublicHostedZones(t *testing.T) {
 			expect: []*route53.HostedZone{
 				{
 					ID:     "/hostedzone/AABBCCDD",
-					Domain: "test.oslo.systems.",
+					Domain: "test.oslo.systems",
+					FQDN:   "test.oslo.systems.",
 					Public: true,
 				},
 			},

@@ -25,6 +25,7 @@ func (s *domainState) SaveHostedZone(zone *client.HostedZone) (*store.Report, er
 
 	hz.IsDelegated = zone.IsDelegated
 	hz.Primary = zone.Primary
+	hz.Managed = zone.HostedZone.Managed
 	hz.Domain = zone.HostedZone.Domain
 	hz.FQDN = zone.HostedZone.FQDN
 	hz.NameServers = zone.HostedZone.NameServers

@@ -119,6 +119,103 @@ func (v *VPCComposer) Compose() (*cfn.Composition, error) {
 // Ensure that VPCComposer implements the Composer interface
 var _ cfn.Composer = &VPCComposer{}
 
+// MinimalVPCComposer contains the required state for building
+// a VPC using cloud formation components
+type MinimalVPCComposer struct {
+	Name        string
+	Environment string
+	CidrBlock   string
+	Region      string
+}
+
+// NewMinimalVPCComposer returns an initialised VPC composer
+func NewMinimalVPCComposer(name, env, cidrBlock, region string) *VPCComposer {
+	return &VPCComposer{
+		Name:        name,
+		Environment: env,
+		CidrBlock:   cidrBlock,
+		Region:      region,
+	}
+}
+
+// Compose constructs the required cloud formation components
+// nolint: funlen
+func (v *MinimalVPCComposer) Compose() (*cfn.Composition, error) {
+	composition := &cfn.Composition{}
+
+	cluster := clusterPkg.New(v.Name, v.Environment)
+
+	cidr, err := cidrPkg.NewDefault(v.CidrBlock)
+	if err != nil {
+		return nil, err
+	}
+
+	vpc := vpcPkg.New(cluster, cidr.Block)
+	igw := internetgateway.New()
+	gwa := vpcgatewayattachment.New(vpc, igw)
+	composition.Resources = append(composition.Resources, vpc, igw, gwa)
+	composition.Outputs = append(composition.Outputs, vpc)
+
+	subnets, err := subnet.NewDefault(cidr.Block, v.Region, vpc, cluster)
+	if err != nil {
+		return nil, err
+	}
+
+	var nat *natgateway.NatGateway
+
+	// Public subnets
+	prt := routetable.NewPublic(vpc)
+	pr := route.NewPublic(gwa, prt, igw)
+	composition.Resources = append(composition.Resources, prt, pr)
+
+	for i, sub := range subnets.Public {
+		// Create only one NAT gateway
+		if nat == nil {
+			e := eip.New(i, gwa)
+			ngw := natgateway.New(i, gwa, e, sub)
+			nat = ngw
+
+			composition.Resources = append(composition.Resources, ngw, e)
+		}
+
+		// Associate the public subnet with the public route table
+		assoc := routetableassociation.NewPublic(i, sub, prt)
+
+		composition.Resources = append(composition.Resources, sub, assoc)
+	}
+
+	// Private subnets
+	for i, sub := range subnets.Private {
+		// Create a route table for each private subnet and associate
+		// it with the subnet. Also add a route to the NAT gateway
+		// so the instances can reach the internet
+		rt := routetable.NewPrivate(i, vpc)
+		r := route.NewPrivate(i, gwa, rt, nat) // Route all egress traffic through one NAT
+		assoc := routetableassociation.NewPrivate(i, sub, rt)
+
+		composition.Resources = append(composition.Resources, sub, rt, r, assoc)
+	}
+
+	composition.Outputs = append(composition.Outputs, subnets)
+
+	dbSubnets := make([]cfn.Referencer, len(subnets.Database))
+
+	for i, sub := range subnets.Database {
+		dbSubnets[i] = sub
+
+		composition.Resources = append(composition.Resources, sub)
+	}
+
+	dsg := dbsubnetgroup.New(dbSubnets)
+
+	composition.Resources = append(composition.Resources, dsg)
+
+	return composition, nil
+}
+
+// Ensure that MinimalVPCComposer implements the Composer interface
+var _ cfn.Composer = &MinimalVPCComposer{}
+
 // ExternalSecretsPolicyComposer contains state for building
 // a managed iam policy compatible with external-secrets
 type ExternalSecretsPolicyComposer struct {

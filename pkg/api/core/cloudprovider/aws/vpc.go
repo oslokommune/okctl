@@ -19,7 +19,12 @@ type vpcCloudProvider struct {
 
 // CreateCluster will use the cloud provider to create a cluster in the cloud
 func (c *vpcCloudProvider) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
-	b := cfn.New(components.NewVPCComposer(opts.ID.Repository, opts.ID.Environment, opts.Cidr, opts.ID.Region))
+	var b *cfn.Builder
+	if opts.Minimal {
+		b = cfn.New(components.NewMinimalVPCComposer(opts.ID.Repository, opts.ID.Environment, opts.Cidr, opts.ID.Region))
+	} else {
+		b = cfn.New(components.NewVPCComposer(opts.ID.Repository, opts.ID.Environment, opts.Cidr, opts.ID.Region))
+	}
 
 	template, err := b.Build()
 	if err != nil {

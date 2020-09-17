@@ -21,6 +21,11 @@ func TestBuilderAndComposers(t *testing.T) {
 			composer: components.NewVPCComposer("test", "test", "192.168.0.0/20", "eu-west-1"),
 		},
 		{
+			name:     "Builder with Minimal VPC composer",
+			golden:   "vpc-minimal-cf.yaml",
+			composer: components.NewMinimalVPCComposer("test", "test", "192.168.0.0/20", "eu-west-1"),
+		},
+		{
 			name:     "Builder with ExternalSecretsPolicy composer",
 			golden:   "esp-cloudformation.yaml",
 			composer: components.NewExternalSecretsPolicyComposer("repo", "test"),

@@ -241,6 +241,7 @@ func (s PrivateKeySecret) Validate() error {
 type HostedZone struct {
 	IsDelegated bool
 	Primary     bool
+	Managed     bool
 	Domain      string
 	FQDN        string
 	NameServers []string

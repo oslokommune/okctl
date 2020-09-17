@@ -9,6 +9,7 @@ import (
 // HostedZone contains the state for a hosted zone
 type HostedZone struct {
 	ID                     ID
+	Managed                bool
 	FQDN                   string
 	Domain                 string
 	HostedZoneID           string

@@ -1,6 +1,8 @@
 package route53
 
 import (
+	"strings"
+
 	route "github.com/aws/aws-sdk-go/service/route53"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 )
@@ -14,6 +16,7 @@ type Route53er interface {
 type HostedZone struct {
 	ID     string
 	Domain string
+	FQDN   string
 	Public bool
 }
 
@@ -44,7 +47,8 @@ func (r *Route53) PublicHostedZones() ([]*HostedZone, error) {
 			if !*hz.Config.PrivateZone {
 				zones = append(zones, &HostedZone{
 					ID:     *hz.Id,
-					Domain: *hz.Name,
+					Domain: strings.TrimSuffix(*hz.Name, "."),
+					FQDN:   *hz.Name,
 					Public: true,
 				})
 			}

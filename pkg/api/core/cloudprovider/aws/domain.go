@@ -38,8 +38,11 @@ func (d *domain) CreateHostedZone(opts api.CreateHostedZoneOpts) (*api.HostedZon
 
 	p := &api.HostedZone{
 		ID:                     opts.ID,
+		Managed:                true,
 		FQDN:                   opts.FQDN,
 		Domain:                 opts.Domain,
+		HostedZoneID:           "",
+		NameServers:            nil,
 		StackName:              stackName,
 		CloudFormationTemplate: template,
 	}

@@ -101,6 +101,7 @@ func (e *ExternalDNS) DeploymentManifest() *appsv1.Deployment {
 								"--provider=aws",
 								"--aws-zone-type=public",
 								"--log-level=debug",
+								"--policy=upsert-only",
 								"--events",
 								"--registry=txt",
 								fmt.Sprintf("--txt-owner-id=%s", e.OwnerID),

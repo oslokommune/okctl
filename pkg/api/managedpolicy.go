@@ -54,15 +54,21 @@ func (o CreateExternalDNSPolicyOpts) Validate() error {
 // ManagedPolicyService defines the service layer for managed policies
 type ManagedPolicyService interface {
 	CreateExternalSecretsPolicy(ctx context.Context, opts CreateExternalSecretsPolicyOpts) (*ManagedPolicy, error)
+	DeleteExternalSecretsPolicy(ctx context.Context, id ID) error
 	CreateAlbIngressControllerPolicy(ctx context.Context, opts CreateAlbIngressControllerPolicyOpts) (*ManagedPolicy, error)
+	DeleteAlbIngressControllerPolicy(ctx context.Context, id ID) error
 	CreateExternalDNSPolicy(ctx context.Context, opts CreateExternalDNSPolicyOpts) (*ManagedPolicy, error)
+	DeleteExternalDNSPolicy(ctx context.Context, id ID) error
 }
 
 // ManagedPolicyCloudProvider defines the cloud provider layer for managed policies
 type ManagedPolicyCloudProvider interface {
 	CreateExternalSecretsPolicy(opts CreateExternalSecretsPolicyOpts) (*ManagedPolicy, error)
+	DeleteExternalSecretsPolicy(id ID) error
 	CreateAlbIngressControllerPolicy(opts CreateAlbIngressControllerPolicyOpts) (*ManagedPolicy, error)
+	DeleteAlbIngressControllerPolicy(id ID) error
 	CreateExternalDNSPolicy(opts CreateExternalDNSPolicyOpts) (*ManagedPolicy, error)
+	DeleteExternalDNSPolicy(id ID) error
 }
 
 // ManagedPolicyStore defines the storage layer for managed policies

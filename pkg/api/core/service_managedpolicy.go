@@ -9,7 +9,48 @@ import (
 
 type managedPolicyService struct {
 	provider api.ManagedPolicyCloudProvider
-	store    api.ManagedPolicyStore
+}
+
+func (m *managedPolicyService) DeleteExternalSecretsPolicy(_ context.Context, id api.ID) error {
+	err := id.Validate()
+	if err != nil {
+		return errors.E(err, "failed to validate id", errors.Invalid)
+	}
+
+	err = m.provider.DeleteExternalSecretsPolicy(id)
+	if err != nil {
+		return errors.E(err, "failed to delete external secrets policy", errors.Internal)
+	}
+
+	return nil
+}
+
+func (m *managedPolicyService) DeleteAlbIngressControllerPolicy(_ context.Context, id api.ID) error {
+	err := id.Validate()
+	if err != nil {
+		return errors.E(err, "failed to validate id", errors.Invalid)
+	}
+
+	err = m.provider.DeleteAlbIngressControllerPolicy(id)
+	if err != nil {
+		return errors.E(err, "failed to delete alb ingress controller policy", errors.Internal)
+	}
+
+	return nil
+}
+
+func (m *managedPolicyService) DeleteExternalDNSPolicy(_ context.Context, id api.ID) error {
+	err := id.Validate()
+	if err != nil {
+		return errors.E(err, "failed to validate id", errors.Invalid)
+	}
+
+	err = m.provider.DeleteExternalDNSPolicy(id)
+	if err != nil {
+		return errors.E(err, "failed to delete external dns policy", errors.Internal)
+	}
+
+	return nil
 }
 
 func (m *managedPolicyService) CreateExternalDNSPolicy(_ context.Context, opts api.CreateExternalDNSPolicyOpts) (*api.ManagedPolicy, error) {
@@ -21,11 +62,6 @@ func (m *managedPolicyService) CreateExternalDNSPolicy(_ context.Context, opts a
 	got, err := m.provider.CreateExternalDNSPolicy(opts)
 	if err != nil {
 		return nil, errors.E(err, "failed to create external dns policy")
-	}
-
-	err = m.store.SaveExternalDNSPolicy(got)
-	if err != nil {
-		return nil, errors.E(err, "failed to save external dns policy")
 	}
 
 	return got, nil
@@ -42,11 +78,6 @@ func (m *managedPolicyService) CreateAlbIngressControllerPolicy(_ context.Contex
 		return nil, errors.E(err, "failed to create alb ingress controller policy")
 	}
 
-	err = m.store.SaveAlbIngressControllerPolicy(got)
-	if err != nil {
-		return nil, errors.E(err, "failed to save alb ingress controller policy")
-	}
-
 	return got, nil
 }
 
@@ -61,18 +92,12 @@ func (m *managedPolicyService) CreateExternalSecretsPolicy(_ context.Context, op
 		return nil, errors.E(err, "failed to create external secrets policy")
 	}
 
-	err = m.store.SaveExternalSecretsPolicy(got)
-	if err != nil {
-		return nil, errors.E(err, "failed to save external secrets policy")
-	}
-
 	return got, nil
 }
 
 // NewManagedPolicyService returns an initialised managed policy service
-func NewManagedPolicyService(provider api.ManagedPolicyCloudProvider, store api.ManagedPolicyStore) api.ManagedPolicyService {
+func NewManagedPolicyService(provider api.ManagedPolicyCloudProvider) api.ManagedPolicyService {
 	return &managedPolicyService{
 		provider: provider,
-		store:    store,
 	}
 }

@@ -278,13 +278,25 @@ and database subnets.`,
 				return err
 			}
 
+			doCreate := false
+
+			prompt = &survey.Confirm{
+				Message: "Do you want to create a new hosted zone (domain, e.g., {team/product}.oslo.systems)? If you answer no, we will first try to find a reusable one.",
+				Help:    "If you reuse an existing one, you won't have to wait for the zone to be delegated, and we will not remove it afterwards.",
+			}
+
+			err = survey.AskOne(prompt, &doCreate)
+			if err != nil {
+				return formatErr(err)
+			}
+
 			zones, err := route53.New(o.CloudProvider).PublicHostedZones()
 			if err != nil {
 				return formatErr(err)
 			}
 
 			var hostedZone *client.HostedZone
-			if len(zones) > 0 {
+			if len(zones) > 0 && !doCreate {
 				zone, err := ask.New().SelectHostedZone(zones)
 				if err != nil {
 					return formatErr(err)

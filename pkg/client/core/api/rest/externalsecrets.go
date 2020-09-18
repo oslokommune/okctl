@@ -18,6 +18,14 @@ type externalSecretsAPI struct {
 	client *HTTPClient
 }
 
+func (a *externalSecretsAPI) DeleteExternalSecretsPolicy(id api.ID) error {
+	return a.client.DoDelete(TargetExternalSecretsPolicy, &id)
+}
+
+func (a *externalSecretsAPI) DeleteExternalSecretsServiceAccount(id api.ID) error {
+	return a.client.DoDelete(TargetExternalSecretsServiceAccount, &id)
+}
+
 func (a *externalSecretsAPI) CreateExternalSecretsPolicy(opts api.CreateExternalSecretsPolicyOpts) (*api.ManagedPolicy, error) {
 	into := &api.ManagedPolicy{}
 	return into, a.client.DoPost(TargetExternalSecretsPolicy, &opts, into)

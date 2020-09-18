@@ -14,6 +14,10 @@ type externalSecretsReport struct {
 	console *Console
 }
 
+func (r *externalSecretsReport) ReportDeleteExternalSecrets(report *store.Report) error {
+	return r.console.Report(report.Actions, "external-secrets", aurora.Green("deleting").String())
+}
+
 func (r *externalSecretsReport) ReportCreateExternalSecrets(secret *client.ExternalSecrets, report *store.Report) error {
 	description := fmt.Sprintf("%s (policy), %s (service account), %s (chart)",
 		aurora.Green(secret.Policy.StackName),

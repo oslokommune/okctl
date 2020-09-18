@@ -354,7 +354,10 @@ and database subnets.`,
 				return formatErr(err)
 			}
 
-			err = services.ALBIngressController.DeleteALBIngressController(o.Ctx, id)
+			_, err = services.ALBIngressController.CreateALBIngressController(o.Ctx, client.CreateALBIngressControllerOpts{
+				ID:    id,
+				VPCID: vpc.VpcID,
+			})
 			if err != nil {
 				return formatErr(err)
 			}

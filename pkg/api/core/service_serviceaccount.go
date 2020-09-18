@@ -39,7 +39,7 @@ func (c *serviceAccount) DeleteExternalSecretsServiceAccount(_ context.Context, 
 	config, err := clusterconfig.NewExternalSecretsServiceAccount(
 		id.ClusterName,
 		id.Region,
-		"",
+		"n/a",
 		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
 	)
 	if err != nil {
@@ -63,7 +63,7 @@ func (c *serviceAccount) DeleteAlbIngressControllerServiceAccount(_ context.Cont
 	config, err := clusterconfig.NewAlbIngressControllerServiceAccount(
 		id.ClusterName,
 		id.Region,
-		"",
+		"n/a",
 		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
 	)
 	if err != nil {
@@ -87,7 +87,7 @@ func (c *serviceAccount) DeleteExternalDNSServiceAccount(_ context.Context, id a
 	config, err := clusterconfig.NewExternalDNSServiceAccount(
 		id.ClusterName,
 		id.Region,
-		"",
+		"n/a",
 		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
 	)
 	if err != nil {

@@ -26,12 +26,12 @@ func (s *albIngressControllerService) DeleteALBIngressController(_ context.Conte
 		err = s.spinner.Stop()
 	}()
 
-	err = s.api.DeleteAlbIngressControllerPolicy(id)
+	err = s.api.DeleteAlbIngressControllerServiceAccount(id)
 	if err != nil {
 		return err
 	}
 
-	err = s.api.DeleteAlbIngressControllerServiceAccount(id)
+	err = s.api.DeleteAlbIngressControllerPolicy(id)
 	if err != nil {
 		return err
 	}

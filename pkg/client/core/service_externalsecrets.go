@@ -27,12 +27,12 @@ func (s *externalSecretsService) DeleteExternalSecrets(_ context.Context, id api
 		err = s.spinner.Stop()
 	}()
 
-	err = s.api.DeleteExternalSecretsPolicy(id)
+	err = s.api.DeleteExternalSecretsServiceAccount(id)
 	if err != nil {
 		return err
 	}
 
-	err = s.api.DeleteExternalSecretsServiceAccount(id)
+	err = s.api.DeleteExternalSecretsPolicy(id)
 	if err != nil {
 		return err
 	}

@@ -3,6 +3,8 @@ package filesystem
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/api"
+
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/spf13/afero"
@@ -13,6 +15,25 @@ type albIngressControllerStore struct {
 	serviceAccount Paths
 	chart          Paths
 	fs             *afero.Afero
+}
+
+func (s *albIngressControllerStore) RemoveALBIngressController(_ api.ID) (*store.Report, error) {
+	report, err := store.NewFileSystem(s.policy.BaseDir, s.fs).
+		Remove(s.policy.OutputFile).
+		Remove(s.policy.CloudFormationFile).
+		AlterStore(store.SetBaseDir(s.serviceAccount.BaseDir)).
+		Remove(s.serviceAccount.OutputFile).
+		Remove(s.serviceAccount.ConfigFile).
+		AlterStore(store.SetBaseDir(s.chart.BaseDir)).
+		Remove(s.chart.OutputFile).
+		Remove(s.chart.ReleaseFile).
+		Remove(s.chart.ChartFile).
+		Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return report, nil
 }
 
 func (s *albIngressControllerStore) SaveALBIngressController(c *client.ALBIngressController) (*store.Report, error) {

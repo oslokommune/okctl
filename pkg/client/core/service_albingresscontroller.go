@@ -13,6 +13,30 @@ type albIngressControllerService struct {
 	report client.ALBIngressControllerReport
 }
 
+func (s *albIngressControllerService) DeleteALBIngressController(_ context.Context, id api.ID) error {
+	err := s.api.DeleteAlbIngressControllerPolicy(id)
+	if err != nil {
+		return err
+	}
+
+	err = s.api.DeleteAlbIngressControllerServiceAccount(id)
+	if err != nil {
+		return err
+	}
+
+	report, err := s.store.RemoveALBIngressController(id)
+	if err != nil {
+		return err
+	}
+
+	err = s.report.ReportDeleteALBIngressController(report)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *albIngressControllerService) CreateALBIngressController(_ context.Context, opts client.CreateALBIngressControllerOpts) (*client.ALBIngressController, error) {
 	policy, err := s.api.CreateAlbIngressControllerPolicy(api.CreateAlbIngressControllerPolicyOpts{
 		ID: opts.ID,

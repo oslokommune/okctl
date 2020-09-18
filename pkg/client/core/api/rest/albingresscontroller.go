@@ -18,6 +18,14 @@ type albIngressControllerAPI struct {
 	client *HTTPClient
 }
 
+func (a *albIngressControllerAPI) DeleteAlbIngressControllerPolicy(id api.ID) error {
+	return a.client.DoDelete(TargetAlbIngressControllerPolicy, &id)
+}
+
+func (a *albIngressControllerAPI) DeleteAlbIngressControllerServiceAccount(id api.ID) error {
+	return a.client.DoDelete(TargetAlbIngressControllerServiceAccount, &id)
+}
+
 func (a *albIngressControllerAPI) CreateAlbIngressControllerPolicy(opts api.CreateAlbIngressControllerPolicyOpts) (*api.ManagedPolicy, error) {
 	into := &api.ManagedPolicy{}
 	return into, a.client.DoPost(TargetAlbIngressControllerPolicy, &opts, into)

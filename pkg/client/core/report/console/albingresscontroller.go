@@ -14,6 +14,10 @@ type albIngressControllerReport struct {
 	console *Console
 }
 
+func (r *albIngressControllerReport) ReportDeleteALBIngressController(report *store.Report) error {
+	return r.console.Report(report.Actions, "alb-ingress-controller", aurora.Green("deleting").String())
+}
+
 func (r *albIngressControllerReport) ReportCreateALBIngressController(controller *client.ALBIngressController, report *store.Report) error {
 	description := fmt.Sprintf("%s (policy), %s (service account), %s (chart)",
 		aurora.Green(controller.Policy.StackName),

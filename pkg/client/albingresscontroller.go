@@ -24,21 +24,26 @@ type CreateALBIngressControllerOpts struct {
 // ALBIngressControllerService defines the service layer
 type ALBIngressControllerService interface {
 	CreateALBIngressController(ctx context.Context, opts CreateALBIngressControllerOpts) (*ALBIngressController, error)
+	DeleteALBIngressController(ctx context.Context, id api.ID) error
 }
 
 // ALBIngressControllerAPI defines the API layer
 type ALBIngressControllerAPI interface {
 	CreateAlbIngressControllerPolicy(opts api.CreateAlbIngressControllerPolicyOpts) (*api.ManagedPolicy, error)
+	DeleteAlbIngressControllerPolicy(id api.ID) error
 	CreateAlbIngressControllerServiceAccount(opts api.CreateAlbIngressControllerServiceAccountOpts) (*api.ServiceAccount, error)
+	DeleteAlbIngressControllerServiceAccount(id api.ID) error
 	CreateAlbIngressControllerHelmChart(opts api.CreateAlbIngressControllerHelmChartOpts) (*api.Helm, error)
 }
 
 // ALBIngressControllerStore defines the storage layer
 type ALBIngressControllerStore interface {
 	SaveALBIngressController(controller *ALBIngressController) (*store.Report, error)
+	RemoveALBIngressController(id api.ID) (*store.Report, error)
 }
 
 // ALBIngressControllerReport defines the report layer
 type ALBIngressControllerReport interface {
 	ReportCreateALBIngressController(controller *ALBIngressController, report *store.Report) error
+	ReportDeleteALBIngressController(report *store.Report) error
 }

@@ -16,7 +16,7 @@ type externalDNSReport struct {
 }
 
 func (r *externalDNSReport) ReportDeleteExternalDNS(report *store.Report) error {
-	return r.console.Report(report.Actions, "external-dns", aurora.Blue("deleting").String())
+	return r.console.Report(report.Actions, "external-dns", aurora.Green("deleting").String())
 }
 
 func (r *externalDNSReport) ReportCreateExternalDNS(secret *client.ExternalDNS, report *store.Report) error {

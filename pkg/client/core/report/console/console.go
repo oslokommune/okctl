@@ -57,7 +57,7 @@ func (c *Console) Report(actions []store.Action, component, description string) 
 			}
 
 			if len(a.Name) > 0 {
-				_, err := fmt.Fprintf(c.out, ": %s", aurora.Blue(a.Name))
+				_, err := fmt.Fprintf(c.out, ": %s", aurora.Green(a.Name))
 				if err != nil {
 					return err
 				}

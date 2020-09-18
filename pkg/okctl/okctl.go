@@ -639,7 +639,14 @@ func (o *Okctl) newCredentialsProvider() error {
 
 	defaultRing, err := keyring.DefaultKeyring()
 	if err != nil {
-		return err
+		return fmt.Errorf(`unable to create a keyring. It is possible no valid backends were found 
+on your system, take a look at this site for valid options:
+https://github.com/99designs/keyring#keyring
+
+On linux pass works well, for instance:
+https://www.passwordstore.org/
+
+%w`, err)
 	}
 
 	k, err := keyring.New(defaultRing)

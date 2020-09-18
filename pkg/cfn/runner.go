@@ -3,6 +3,7 @@ package cfn
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -237,13 +238,71 @@ func (r *Runner) watchCreate(stackName string) error {
 		case cfPkg.StackStatusCreateComplete:
 			return nil
 		case cfPkg.StackStatusCreateFailed:
-			return fmt.Errorf("failed to create stack: %s", *stack.Stacks[0].StackStatusReason)
+			events, err := r.failedEvents(*stack.Stacks[0].StackId)
+			if err != nil {
+				return fmt.Errorf("getting failed events: %w", err)
+			}
+
+			var failures []string
+			for _, e := range events {
+				failures = append(failures, e.String())
+			}
+
+			return fmt.Errorf("creating stack: %s, failed events: %s",
+				*stack.Stacks[0].StackStatusReason,
+				strings.Join(failures, "\n"),
+			)
 		case cfPkg.StackStatusCreateInProgress:
 			time.Sleep(sleepTime)
 		default:
 			return fmt.Errorf("wtf")
 		}
 	}
+}
+
+// StackEvent state
+type StackEvent struct {
+	Status string
+	Reason string
+	Type   string
+}
+
+// String returns a string representation
+func (e StackEvent) String() string {
+	return fmt.Sprintf("%s: %s", e.Type, e.Reason)
+}
+
+func (r *Runner) failedEvents(stackName string) ([]StackEvent, error) {
+	opts := &cfPkg.DescribeStackEventsInput{
+		StackName: &stackName,
+	}
+
+	var failedEvents []StackEvent
+
+	for {
+		output, err := r.Provider.CloudFormation().DescribeStackEvents(opts)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, event := range output.StackEvents {
+			if *event.ResourceStatus == cfPkg.ResourceStatusCreateFailed {
+				failedEvents = append(failedEvents, StackEvent{
+					Status: *event.ResourceStatus,
+					Reason: *event.ResourceStatusReason,
+					Type:   *event.ResourceType,
+				})
+			}
+		}
+
+		if opts.NextToken == nil {
+			break
+		}
+
+		opts.NextToken = output.NextToken
+	}
+
+	return failedEvents, nil
 }
 
 // This is verbatim stolen from: https://github.com/weaveworks/eksctl/blob/master/pkg/cfn/manager/api.go

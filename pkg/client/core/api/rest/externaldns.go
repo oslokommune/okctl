@@ -18,6 +18,14 @@ type externalDNSAPI struct {
 	client *HTTPClient
 }
 
+func (a *externalDNSAPI) DeleteExternalDNSPolicy(id api.ID) error {
+	return a.client.DoDelete(TargetExternalDNSPolicy, &id)
+}
+
+func (a *externalDNSAPI) DeleteExternalDNSServiceAccount(id api.ID) error {
+	return a.client.DoDelete(TargetExternalDNSServiceAccount, &id)
+}
+
 func (a *externalDNSAPI) CreateExternalDNSPolicy(opts api.CreateExternalDNSPolicyOpts) (*api.ManagedPolicy, error) {
 	into := &api.ManagedPolicy{}
 	return into, a.client.DoPost(TargetExternalDNSPolicy, &opts, into)

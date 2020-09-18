@@ -24,21 +24,26 @@ type CreateExternalDNSOpts struct {
 // ExternalDNSService is a business logic implementation
 type ExternalDNSService interface {
 	CreateExternalDNS(ctx context.Context, opts CreateExternalDNSOpts) (*ExternalDNS, error)
+	DeleteExternalDNS(ctx context.Context, id api.ID) error
 }
 
 // ExternalDNSAPI implements the API invocation
 type ExternalDNSAPI interface {
 	CreateExternalDNSPolicy(opts api.CreateExternalDNSPolicyOpts) (*api.ManagedPolicy, error)
+	DeleteExternalDNSPolicy(id api.ID) error
 	CreateExternalDNSServiceAccount(opts api.CreateExternalDNSServiceAccountOpts) (*api.ServiceAccount, error)
+	DeleteExternalDNSServiceAccount(id api.ID) error
 	CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKubeDeploymentOpts) (*api.ExternalDNSKube, error)
 }
 
 // ExternalDNSStore implements the storage layer
 type ExternalDNSStore interface {
 	SaveExternalDNS(dns *ExternalDNS) (*store.Report, error)
+	RemoveExternalDNS(id api.ID) (*store.Report, error)
 }
 
 // ExternalDNSReport implements the report layer
 type ExternalDNSReport interface {
 	ReportCreateExternalDNS(dns *ExternalDNS, report *store.Report) error
+	ReportDeleteExternalDNS(report *store.Report) error
 }

@@ -147,7 +147,12 @@ type TemporaryStorage struct {
 // Clean removes everything at the path the filesystem was
 // created from
 func (s *TemporaryStorage) Clean() error {
-	return os.RemoveAll(s.BasePath)
+	err := os.RemoveAll(s.BasePath)
+	if err != nil {
+		return err
+	}
+
+	return os.MkdirAll(s.BasePath, 0o744)
 }
 
 // NewTemporaryStorage creates a new temporary storage

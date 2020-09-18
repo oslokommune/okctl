@@ -9,10 +9,28 @@ import (
 	"github.com/theckman/yacspin"
 )
 
+const updateFrequency = 100 * time.Millisecond
+
+// Spinner defines the available operations
+type Spinner interface {
+	Start(component string) error
+	Stop() error
+	Pause() error
+	Unpause() error
+	SubSpinner() Spinner
+}
+
+// spinner contains state for the spinner
+type spinner struct {
+	spinner *yacspin.Spinner
+	parent  *spinner
+	exit    chan struct{}
+}
+
 // New creates a new spinner
-func New(suffix string, out io.Writer) (*yacspin.Spinner, error) {
+func New(suffix string, out io.Writer) (Spinner, error) {
 	cfg := yacspin.Config{
-		Frequency:       100 * time.Millisecond, // nolint: gomnd
+		Frequency:       updateFrequency,
 		CharSet:         yacspin.CharSets[59],
 		Suffix:          " " + suffix,
 		SuffixAutoColon: true,
@@ -21,16 +39,60 @@ func New(suffix string, out io.Writer) (*yacspin.Spinner, error) {
 		Writer:          out,
 	}
 
-	spinner, err := yacspin.New(cfg)
+	s, err := yacspin.New(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create spinner")
+		return nil, fmt.Errorf("creating spinner: %w", err)
 	}
 
-	return spinner, nil
+	return &spinner{
+		spinner: s,
+	}, nil
 }
 
-// Timer creates and associated a timer with the spinner
-func Timer(component string, spinner *yacspin.Spinner) chan struct{} {
+func (s *spinner) isChild() bool {
+	return s.parent != nil
+}
+
+// SubSpinner returns a sub spinner
+func (s *spinner) SubSpinner() Spinner {
+	return &spinner{
+		spinner: s.spinner,
+		parent:  s,
+	}
+}
+
+func (s *spinner) Start(component string) error {
+	if s.isChild() {
+		return nil
+	}
+
+	s.timer(component)
+
+	return s.spinner.Start()
+}
+
+func (s *spinner) Stop() error {
+	if s.isChild() {
+		return nil
+	}
+
+	if s.exit != nil {
+		close(s.exit)
+	}
+
+	return s.spinner.Stop()
+}
+
+func (s *spinner) Pause() error {
+	return s.spinner.Pause()
+}
+
+func (s *spinner) Unpause() error {
+	return s.spinner.Unpause()
+}
+
+// Timer creates and associates a timer with the spinner
+func (s *spinner) timer(component string) {
 	exit := make(chan struct{})
 
 	go func(ch chan struct{}, start time.Time) {
@@ -42,10 +104,10 @@ func Timer(component string, spinner *yacspin.Spinner) chan struct{} {
 			case <-ch:
 				return
 			case <-ticker.C:
-				spinner.Message(component + " (elapsed: " + durafmt.Parse(time.Since(start)).LimitFirstN(2).String() + ")") // nolint: gomnd
+				s.spinner.Message(component + " (elapsed: " + durafmt.Parse(time.Since(start)).LimitFirstN(2).String() + ")") // nolint: gomnd
 			}
 		}
 	}(exit, time.Now())
 
-	return exit
+	s.exit = exit
 }

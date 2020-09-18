@@ -3,19 +3,31 @@ package core
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/oslokommune/okctl/pkg/api"
 
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type externalSecretsService struct {
-	api    client.ExternalSecretsAPI
-	store  client.ExternalSecretsStore
-	report client.ExternalSecretsReport
+	spinner spinner.Spinner
+	api     client.ExternalSecretsAPI
+	store   client.ExternalSecretsStore
+	report  client.ExternalSecretsReport
 }
 
 func (s *externalSecretsService) DeleteExternalSecrets(_ context.Context, id api.ID) error {
-	err := s.api.DeleteExternalSecretsPolicy(id)
+	err := s.spinner.Start("external-secrets")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	err = s.api.DeleteExternalSecretsPolicy(id)
 	if err != nil {
 		return err
 	}
@@ -39,6 +51,15 @@ func (s *externalSecretsService) DeleteExternalSecrets(_ context.Context, id api
 }
 
 func (s *externalSecretsService) CreateExternalSecrets(_ context.Context, opts client.CreateExternalSecretsOpts) (*client.ExternalSecrets, error) {
+	err := s.spinner.Start("external-secrets")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
 	policy, err := s.api.CreateExternalSecretsPolicy(api.CreateExternalSecretsPolicyOpts{
 		ID: opts.ID,
 	})
@@ -83,10 +104,16 @@ func (s *externalSecretsService) CreateExternalSecrets(_ context.Context, opts c
 }
 
 // NewExternalSecretsService returns an initialised service
-func NewExternalSecretsService(api client.ExternalSecretsAPI, store client.ExternalSecretsStore, report client.ExternalSecretsReport) client.ExternalSecretsService {
+func NewExternalSecretsService(
+	spinner spinner.Spinner,
+	api client.ExternalSecretsAPI,
+	store client.ExternalSecretsStore,
+	report client.ExternalSecretsReport,
+) client.ExternalSecretsService {
 	return &externalSecretsService{
-		api:    api,
-		store:  store,
-		report: report,
+		spinner: spinner,
+		api:     api,
+		store:   store,
+		report:  report,
 	}
 }

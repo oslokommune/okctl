@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/logrusorgru/aurora"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
-	"github.com/theckman/yacspin"
 )
 
 type parameterReport struct {
@@ -26,8 +27,8 @@ func (p *parameterReport) SaveSecret(parameter *api.SecretParameter, report *sto
 }
 
 // NewParameterReport returns an initialised reporter
-func NewParameterReport(out io.Writer, exit chan struct{}, spinner *yacspin.Spinner) client.ParameterReport {
+func NewParameterReport(out io.Writer, spinner spinner.Spinner) client.ParameterReport {
 	return &parameterReport{
-		console: New(out, exit, spinner),
+		console: New(out, spinner),
 	}
 }

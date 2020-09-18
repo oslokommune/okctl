@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/logrusorgru/aurora"
 
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
-	"github.com/theckman/yacspin"
 )
 
 type githubReport struct {
@@ -26,8 +27,8 @@ func (r *githubReport) CreateGithubOauthApp(app *client.GithubOauthApp, report *
 }
 
 // NewGithubReport returns an initialised reporter
-func NewGithubReport(out io.Writer, exit chan struct{}, spinner *yacspin.Spinner) client.GithubReport {
+func NewGithubReport(out io.Writer, spinner spinner.Spinner) client.GithubReport {
 	return &githubReport{
-		console: New(out, exit, spinner),
+		console: New(out, spinner),
 	}
 }

@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/logrusorgru/aurora"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
-	"github.com/theckman/yacspin"
 )
 
 type externalSecretsReport struct {
@@ -29,8 +30,8 @@ func (r *externalSecretsReport) ReportCreateExternalSecrets(secret *client.Exter
 }
 
 // NewExternalSecretsReport returns an initialised reporter
-func NewExternalSecretsReport(out io.Writer, exit chan struct{}, spinner *yacspin.Spinner) client.ExternalSecretsReport {
+func NewExternalSecretsReport(out io.Writer, spinner spinner.Spinner) client.ExternalSecretsReport {
 	return &externalSecretsReport{
-		console: New(out, exit, spinner),
+		console: New(out, spinner),
 	}
 }

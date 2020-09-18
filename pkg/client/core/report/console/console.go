@@ -5,24 +5,22 @@ import (
 	"io"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/logrusorgru/aurora/v3"
 	"github.com/oslokommune/okctl/pkg/client/store"
-
-	"github.com/theckman/yacspin"
 )
 
 // Console stores the state for writing and closing the progress
 type Console struct {
 	out     io.Writer
-	exit    chan struct{}
-	spinner *yacspin.Spinner
+	spinner spinner.Spinner
 }
 
 // New returns an initialised console writer
-func New(out io.Writer, exit chan struct{}, spinner *yacspin.Spinner) *Console {
+func New(out io.Writer, spinner spinner.Spinner) *Console {
 	return &Console{
 		out:     out,
-		exit:    exit,
 		spinner: spinner,
 	}
 }
@@ -30,29 +28,18 @@ func New(out io.Writer, exit chan struct{}, spinner *yacspin.Spinner) *Console {
 // Report writes the content to the provided io.Writer
 // nolint: funlen gocognit
 func (c *Console) Report(actions []store.Action, component, description string) error {
-	if c.exit != nil {
-		close(c.exit)
+	err := c.spinner.Pause()
+	if err != nil {
+		return err
 	}
 
-	if c.exit == nil {
-		err := c.spinner.Pause()
-		if err != nil {
-			return err
-		}
-
-		defer func() {
-			err = c.spinner.Unpause()
-		}()
-	} else {
-		err := c.spinner.Stop()
-		if err != nil {
-			return err
-		}
-	}
+	defer func() {
+		err = c.spinner.Unpause()
+	}()
 
 	time.Sleep(100 * time.Millisecond) // nolint: gomnd
 
-	_, err := fmt.Fprintf(c.out, "created %s: %s\n", component, description)
+	_, err = fmt.Fprintf(c.out, "created %s: %s\n", component, description)
 	if err != nil {
 		return err
 	}

@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/logrusorgru/aurora"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
-	"github.com/theckman/yacspin"
 )
 
 type externalDNSReport struct {
@@ -29,8 +30,8 @@ func (r *externalDNSReport) ReportCreateExternalDNS(secret *client.ExternalDNS, 
 }
 
 // NewExternalDNSReport returns an initialised reporter
-func NewExternalDNSReport(out io.Writer, exit chan struct{}, spinner *yacspin.Spinner) client.ExternalDNSReport {
+func NewExternalDNSReport(out io.Writer, spinner spinner.Spinner) client.ExternalDNSReport {
 	return &externalDNSReport{
-		console: New(out, exit, spinner),
+		console: New(out, spinner),
 	}
 }

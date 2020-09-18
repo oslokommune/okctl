@@ -12,6 +12,20 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/logrusorgru/aurora/v3"
+
+	clientFilesystem "github.com/oslokommune/okctl/pkg/client/core/store/filesystem"
+
+	"github.com/oslokommune/okctl/pkg/ask"
+	"github.com/oslokommune/okctl/pkg/client"
+	"github.com/oslokommune/okctl/pkg/client/core/api/rest"
+	"github.com/oslokommune/okctl/pkg/client/core/report/console"
+	stateSaver "github.com/oslokommune/okctl/pkg/client/core/state"
+	githubClient "github.com/oslokommune/okctl/pkg/github"
+	"github.com/oslokommune/okctl/pkg/spinner"
+
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
+
 	"github.com/oslokommune/okctl/pkg/config/state"
 
 	"github.com/oslokommune/okctl/pkg/api/core/store/noop"
@@ -44,6 +58,9 @@ type Okctl struct {
 	CloudProvider       v1alpha1.CloudProvider
 	BinariesProvider    binaries.Provider
 	CredentialsProvider credentials.Provider
+
+	activeEnv  string
+	restClient *rest.HTTPClient
 }
 
 // InitialiseWithOnlyEnv initialises okctl when the aws account is has been
@@ -59,6 +76,8 @@ func (o *Okctl) InitialiseWithOnlyEnv(env string) error {
 		repoDir,
 		o.FileSystem,
 	))
+
+	o.activeEnv = env
 
 	return o.initialise()
 }
@@ -87,7 +106,301 @@ func (o *Okctl) InitialiseWithEnvAndAWSAccountID(env, awsAccountID string) error
 		return err
 	}
 
+	o.activeEnv = env
+
 	return o.initialise()
+}
+
+// New returns a new okctl instance
+func New() *Okctl {
+	return &Okctl{
+		Config: config.New(),
+	}
+}
+
+// Binaries returns the application binaries
+func (o *Okctl) Binaries() []state.Binary {
+	return o.UserState.Binaries
+}
+
+// Host returns the host information
+func (o *Okctl) Host() state.Host {
+	return o.UserState.Host
+}
+
+// Username returns the username of the active user
+func (o *Okctl) Username() string {
+	return o.UserState.User.Username
+}
+
+// ErrorFormatter helps add more information to the error message
+func (o *Okctl) ErrorFormatter(command, userDir string) func(err error) error {
+	const errMsg = `
+# Enable debug output
+$ OKCTL_DEBUG=true okctl %s
+# Inspect the logs
+$ cat %s
+# Ask for help on slack: %s
+
+%s`
+
+	return func(err error) error {
+		return fmt.Errorf(errMsg,
+			command,
+			path.Join(userDir, config.DefaultLogDir, config.DefaultLogName),
+			aurora.Bold("#kjøremiljø-support"),
+			err,
+		)
+	}
+}
+
+// ClientServices returns the initialised client-side services
+func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, error) {
+	outputDir, err := o.GetRepoOutputDir(o.activeEnv)
+	if err != nil {
+		return nil, err
+	}
+
+	ghClient, err := githubClient.New(o.Ctx, o.CredentialsProvider.Github())
+	if err != nil {
+		return nil, err
+	}
+
+	return &clientCore.Services{
+		ALBIngressController: o.albIngressService(outputDir, spin),
+		ArgoCD:               o.argocdService(ghClient, outputDir, spin),
+		Certificate:          o.certService(outputDir, spin),
+		Cluster:              o.clusterService(outputDir, spin),
+		Domain:               o.domainService(outputDir, spin),
+		ExternalDNS:          o.externalDNSService(outputDir, spin),
+		ExternalSecrets:      o.externalSecretsService(outputDir, spin),
+		Github:               o.githubService(ghClient, spin),
+		Manifest:             o.manifestService(outputDir, spin),
+		Parameter:            o.paramService(outputDir, spin),
+		Vpc:                  o.vpcService(outputDir, spin),
+	}, nil
+}
+
+func (o *Okctl) argocdService(ghClient githubClient.Githuber, outputDir string, spin spinner.Spinner) client.ArgoCDService {
+	argoBaseDir := path.Join(outputDir, config.DefaultArgoCDBaseDir)
+
+	argoService := clientCore.NewArgoCDService(
+		spin,
+		o.githubService(ghClient, spin.SubSpinner()),
+		o.certService(argoBaseDir, spin.SubSpinner()),
+		o.manifestService(argoBaseDir, spin.SubSpinner()),
+		o.paramService(argoBaseDir, spin.SubSpinner()),
+		rest.NewArgoCDAPI(o.restClient),
+		clientFilesystem.NewArgoCDStore(
+			clientFilesystem.Paths{
+				OutputFile:  config.DefaultHelmOutputsFile,
+				ReleaseFile: config.DefaultHelmReleaseFile,
+				ChartFile:   config.DefaultHelmChartFile,
+				BaseDir:     path.Join(outputDir, config.DefaultHelmBaseDir),
+			},
+			clientFilesystem.Paths{
+				OutputFile: config.DefaultArgoOutputsFile,
+				BaseDir:    argoBaseDir,
+			},
+			o.FileSystem,
+		),
+		console.NewArgoCDReport(o.Err, spin),
+		stateSaver.NewArgoCDState(o.RepoStateWithEnv),
+	)
+
+	return argoService
+}
+
+func (o *Okctl) paramService(outputDir string, spin spinner.Spinner) client.ParameterService {
+	return clientCore.NewParameterService(
+		spin,
+		rest.NewParameterAPI(o.restClient),
+		clientFilesystem.NewParameterStore(
+			clientFilesystem.Paths{
+				OutputFile: config.DefaultParameterOutputsFile,
+				BaseDir:    path.Join(outputDir, config.DefaultParameterBaseDir),
+			},
+			o.FileSystem,
+		),
+		console.NewParameterReport(o.Err, spin),
+	)
+}
+
+func (o *Okctl) manifestService(outputDir string, spin spinner.Spinner) client.ManifestService {
+	return clientCore.NewManifestService(
+		spin,
+		rest.NewManifestAPI(o.restClient),
+		clientFilesystem.NewManifestStore(
+			clientFilesystem.Paths{
+				OutputFile: config.DefaultKubeOutputsFile,
+				BaseDir:    path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+			},
+			o.FileSystem,
+		),
+		console.NewManifestReport(o.Err, spin),
+	)
+}
+
+func (o *Okctl) certService(outputDir string, spin spinner.Spinner) client.CertificateService {
+	return clientCore.NewCertificateService(
+		spin,
+		rest.NewCertificateAPI(o.restClient),
+		clientFilesystem.NewCertificateStore(
+			clientFilesystem.Paths{
+				OutputFile:         config.DefaultCertificateOutputsFile,
+				CloudFormationFile: config.DefaultCertificateCloudFormationTemplate,
+				BaseDir:            path.Join(outputDir, config.DefaultCertificateBaseDir),
+			},
+			o.FileSystem,
+		),
+		stateSaver.NewCertificateState(o.RepoStateWithEnv),
+		console.NewCertificateReport(o.Err, spin),
+	)
+}
+
+func (o *Okctl) githubService(ghClient githubClient.Githuber, spin spinner.Spinner) client.GithubService {
+	return clientCore.NewGithubService(
+		spin,
+		rest.NewGithubAPI(
+			o.Err,
+			ask.New().WithSpinner(spin),
+			rest.NewParameterAPI(o.restClient),
+			ghClient,
+		),
+		console.NewGithubReport(o.Err, spin),
+		stateSaver.NewGithubState(o.RepoStateWithEnv),
+	)
+}
+
+func (o *Okctl) vpcService(outputDir string, spin spinner.Spinner) client.VPCService {
+	return clientCore.NewVPCService(
+		spin,
+		rest.NewVPCAPI(o.restClient),
+		clientFilesystem.NewVpcStore(
+			clientFilesystem.Paths{
+				OutputFile:         config.DefaultVpcOutputs,
+				CloudFormationFile: config.DefaultVpcCloudFormationTemplate,
+				BaseDir:            path.Join(outputDir, config.DefaultVpcBaseDir),
+			},
+			o.FileSystem,
+		),
+		console.NewVPCReport(o.Err, spin),
+		stateSaver.NewVpcState(o.RepoStateWithEnv),
+	)
+}
+
+func (o *Okctl) clusterService(outputDir string, spin spinner.Spinner) client.ClusterService {
+	return clientCore.NewClusterService(
+		spin,
+		rest.NewClusterAPI(o.restClient),
+		clientFilesystem.NewClusterStore(
+			clientFilesystem.Paths{
+				ConfigFile: config.DefaultClusterConfig,
+				BaseDir:    path.Join(outputDir, config.DefaultClusterBaseDir),
+			},
+			o.FileSystem,
+		),
+		console.NewClusterReport(o.Err, spin),
+		stateSaver.NewClusterState(o.RepoStateWithEnv),
+	)
+}
+
+func (o *Okctl) externalSecretsService(outputDir string, spin spinner.Spinner) client.ExternalSecretsService {
+	return clientCore.NewExternalSecretsService(
+		spin,
+		rest.NewExternalSecretsAPI(o.restClient),
+		clientFilesystem.NewExternalSecretsStore(
+			clientFilesystem.Paths{
+				OutputFile:         config.DefaultPolicyOutputFile,
+				CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
+				BaseDir:            path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+			},
+			clientFilesystem.Paths{
+				OutputFile: config.DefaultServiceAccountOutputsFile,
+				ConfigFile: config.DefaultServiceAccountConfigFile,
+				BaseDir:    path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+			},
+			clientFilesystem.Paths{
+				OutputFile:  config.DefaultHelmOutputsFile,
+				ReleaseFile: config.DefaultHelmReleaseFile,
+				ChartFile:   config.DefaultHelmChartFile,
+				BaseDir:     path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+			},
+			o.FileSystem,
+		),
+		console.NewExternalSecretsReport(o.Err, spin),
+	)
+}
+
+func (o *Okctl) albIngressService(outputDir string, spin spinner.Spinner) client.ALBIngressControllerService {
+	return clientCore.NewALBIngressControllerService(
+		spin,
+		rest.NewALBIngressControllerAPI(o.restClient),
+		clientFilesystem.NewALBIngressControllerStore(
+			clientFilesystem.Paths{
+				OutputFile:         config.DefaultPolicyOutputFile,
+				CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
+				BaseDir:            path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
+			},
+			clientFilesystem.Paths{
+				OutputFile: config.DefaultServiceAccountOutputsFile,
+				ConfigFile: config.DefaultServiceAccountConfigFile,
+				BaseDir:    path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
+			},
+			clientFilesystem.Paths{
+				OutputFile:  config.DefaultHelmOutputsFile,
+				ReleaseFile: config.DefaultHelmReleaseFile,
+				ChartFile:   config.DefaultHelmChartFile,
+				BaseDir:     path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
+			},
+			o.FileSystem,
+		),
+		console.NewAlbIngressControllerReport(o.Err, spin),
+	)
+}
+
+func (o *Okctl) domainService(outputDir string, spin spinner.Spinner) client.DomainService {
+	return clientCore.NewDomainService(
+		spin,
+		o.Err,
+		ask.New().WithSpinner(spin),
+		rest.NewDomainAPI(o.restClient),
+		clientFilesystem.NewDomainStore(
+			clientFilesystem.Paths{
+				OutputFile:         config.DefaultDomainOutputsFile,
+				CloudFormationFile: config.DefaultDomainCloudFormationTemplate,
+				BaseDir:            path.Join(outputDir, config.DefaultDomainBaseDir),
+			},
+			o.FileSystem,
+		),
+		console.NewDomainReport(o.Err, spin),
+		stateSaver.NewDomainState(o.RepoStateWithEnv),
+	)
+}
+
+func (o *Okctl) externalDNSService(outputDir string, spin spinner.Spinner) client.ExternalDNSService {
+	return clientCore.NewExternalDNSService(
+		spin,
+		rest.NewExternalDNSAPI(o.restClient),
+		clientFilesystem.NewExternalDNSStore(
+			clientFilesystem.Paths{
+				OutputFile:         config.DefaultPolicyOutputFile,
+				CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
+				BaseDir:            path.Join(outputDir, config.DefaultExternalDNSBaseDir),
+			},
+			clientFilesystem.Paths{
+				OutputFile: config.DefaultServiceAccountOutputsFile,
+				ConfigFile: config.DefaultServiceAccountConfigFile,
+				BaseDir:    path.Join(outputDir, config.DefaultExternalDNSBaseDir),
+			},
+			clientFilesystem.Paths{
+				OutputFile: config.DefaultKubeOutputsFile,
+				BaseDir:    path.Join(outputDir, config.DefaultExternalDNSBaseDir),
+			},
+			o.FileSystem,
+		),
+		console.NewExternalDNSReport(o.Err, spin),
+	)
 }
 
 // Initialise okctl for receiving requests
@@ -102,6 +415,8 @@ func (o *Okctl) initialise() error {
 	if err != nil {
 		return err
 	}
+
+	o.restClient = rest.New(o.Debug, ioutil.Discard, o.ServerURL)
 
 	homeDir, err := o.GetHomeDir()
 	if err != nil {
@@ -125,7 +440,6 @@ func (o *Okctl) initialise() error {
 	clusterStore := noop.NewClusterStore()
 	helmStore := noop.NewHelmStore()
 	kubeStore := noop.NewKubeStore()
-	domainStore := noop.NewDomainStore()
 	certificateStore := noop.NewCertificateStore()
 	parameterStore := noop.NewParameterStore()
 
@@ -192,7 +506,6 @@ func (o *Okctl) initialise() error {
 
 	domainService := core.NewDomainService(
 		awsProvider.NewDomainCloudProvider(o.CloudProvider),
-		domainStore,
 	)
 
 	certificateService := core.NewCertificateService(
@@ -243,28 +556,6 @@ func (o *Okctl) initialise() error {
 	}()
 
 	return nil
-}
-
-// New returns a new okctl instance
-func New() *Okctl {
-	return &Okctl{
-		Config: config.New(),
-	}
-}
-
-// Binaries returns the application binaries
-func (o *Okctl) Binaries() []state.Binary {
-	return o.UserState.Binaries
-}
-
-// Host returns the host information
-func (o *Okctl) Host() state.Host {
-	return o.UserState.Host
-}
-
-// Username returns the username of the active user
-func (o *Okctl) Username() string {
-	return o.UserState.User.Username
 }
 
 // initialiseProviders knows how to create all required providers

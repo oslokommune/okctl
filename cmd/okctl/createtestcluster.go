@@ -4,91 +4,38 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/oslokommune/okctl/pkg/git"
+	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
+	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
 
-	"github.com/oslokommune/okctl/pkg/ask"
 	stateSaver "github.com/oslokommune/okctl/pkg/client/core/state"
-	"github.com/oslokommune/okctl/pkg/route53"
 
 	"github.com/oslokommune/okctl/pkg/client"
 
-	"github.com/oslokommune/okctl/pkg/domain"
+	"github.com/oslokommune/okctl/pkg/ask"
 
-	"github.com/oslokommune/okctl/pkg/spinner"
-
-	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
-
-	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
+	"github.com/oslokommune/okctl/pkg/route53"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/logrusorgru/aurora"
-
-	"github.com/oslokommune/okctl/pkg/config"
-
-	"github.com/oslokommune/okctl/pkg/github"
-
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/logrusorgru/aurora/v3"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/okctl"
+	"github.com/oslokommune/okctl/pkg/spinner"
 	"github.com/spf13/cobra"
 )
 
 const (
-	createClusterArgs = 2
-	defaultCidr       = "192.168.0.0/20"
+	createTestClusterArgs = 2
 )
 
-func buildCreateCommand(o *okctl.Okctl) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "create",
-		Short: "Create commands",
-	}
-
-	cmd.AddCommand(buildCreateClusterCommand(o))
-	cmd.AddCommand(buildCreateTestClusterCommand(o))
-
-	return cmd
-}
-
-// CreateClusterOpts contains all the required inputs
-type CreateClusterOpts struct {
-	Environment    string
-	AWSAccountID   string
-	RepositoryName string
-	Region         string
-	ClusterName    string
-	Cidr           string
-	Organisation   string
-}
-
-// Validate the inputs
-func (o *CreateClusterOpts) Validate() error {
-	return validation.ValidateStruct(o,
-		validation.Field(&o.Environment, validation.Required),
-		validation.Field(&o.AWSAccountID, validation.Required),
-		validation.Field(&o.Cidr, validation.Required),
-		validation.Field(&o.RepositoryName, validation.Required),
-		validation.Field(&o.Region, validation.Required),
-		validation.Field(&o.ClusterName, validation.Required),
-		validation.Field(&o.Organisation, validation.Required),
-	)
-}
-
-const startMsg = `We will now start to create your cluster, remember:
+const testStartMsg = `We will now start to create your cluster, remember:
 
 	- This can take upwards of %s to complete
 	- Requires %s during the process
 
-Requirements:
-
-	- Be a member of the %s github organisation
-	- Know the name of your %s on github
-	- Have setup an %s on github
-	- The infrastructure as code repository must be %s
-
-If you are uncertain about any of these things, please
-go to our slack channel and ask for help:
+You can always ask for help in our slack channel:
 
 	- %s
 
@@ -98,7 +45,7 @@ $ tail -f %s
 
 `
 
-const endMsg = `Congratulations, your %s is now up and running.
+const testEndMsg = `Congratulations, your %s is now up and running.
 To get started with some basic interactions, you can paste the
 following exports into a terminal:
 
@@ -126,49 +73,45 @@ system from:
 
 The installed version of kubectl needs to be within 2 versions of the
 kubernetes cluster version, which is: %s.
-
-We have also setup %s for continuous deployment, you can access
-the UI at this URL by logging in with Github:
-
-%s
-
-It might take 5-10 minutes for the ArgoCD ALB to come up.
 `
 
-const nsMsg = `
-We could not detect any nameservers for your domain:
+// CreateTestClusterOpts contains all the required inputs
+type CreateTestClusterOpts struct {
+	Environment    string
+	AWSAccountID   string
+	RepositoryName string
+	Region         string
+	ClusterName    string
+	Cidr           string
+}
 
-%s
+// Validate the inputs
+func (o *CreateTestClusterOpts) Validate() error {
+	return validation.ValidateStruct(o,
+		validation.Field(&o.Environment, validation.Required),
+		validation.Field(&o.AWSAccountID, validation.Required),
+		validation.Field(&o.Cidr, validation.Required),
+		validation.Field(&o.RepositoryName, validation.Required),
+		validation.Field(&o.Region, validation.Required),
+		validation.Field(&o.ClusterName, validation.Required),
+	)
+}
 
-We cannot continue with setting up the rest of the
-cluster at this point, until we have delegated
-the subdomain from the root account to your hosted
-zone.
-
-Ask in the %s slack channel for an update.
-
-Once the hosted zone has been delegated you can
-continue creating your cluster by rerunning the
-same command:
-
-$ okctl create cluster %s %s
-
-`
-
-// nolint: funlen gocyclo
-func buildCreateClusterCommand(o *okctl.Okctl) *cobra.Command {
-	opts := &CreateClusterOpts{}
+// nolint: funlen gocognit
+func buildCreateTestClusterCommand(o *okctl.Okctl) *cobra.Command {
+	opts := &CreateTestClusterOpts{}
 
 	cmd := &cobra.Command{
-		Use:   "cluster ENV AWS_ACCOUNT_ID",
-		Short: "Create a cluster",
-		Long: `Fetch all tasks required to get an EKS cluster up and running on AWS.
-This includes creating an EKS compatible VPC with private, public
-and database subnets.`,
-		Args: cobra.ExactArgs(createClusterArgs),
+		Use:   "testcluster ENV AWS_ACCOUNT_ID",
+		Short: "Create a lightweight cluster for testing and experimentation",
+		Long: `This will create a lightweight cluster for testing and experimentation
+that consumes a lot less resources, and it will not be tightly integrated
+with Github or other production services.
+`,
+		Args: cobra.ExactArgs(createTestClusterArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			if o.NoInput {
-				return fmt.Errorf("we currently don't support no user input")
+				return fmt.Errorf("we only support cluster creation with user input")
 			}
 
 			environment := args[0]
@@ -201,12 +144,7 @@ and database subnets.`,
 				return err
 			}
 
-			formatErr := o.ErrorFormatter(fmt.Sprintf("create cluster %s %s", opts.Environment, opts.AWSAccountID), userDir)
-
-			repoDir, err := o.GetRepoDir()
-			if err != nil {
-				return formatErr(err)
-			}
+			formatErr := o.ErrorFormatter(fmt.Sprintf("create testcluster %s %s", opts.Environment, opts.AWSAccountID), userDir)
 
 			id := api.ID{
 				Region:       opts.Region,
@@ -216,13 +154,9 @@ and database subnets.`,
 				ClusterName:  opts.ClusterName,
 			}
 
-			_, err = fmt.Fprintf(o.Err, startMsg,
+			_, err = fmt.Fprintf(o.Err, testStartMsg,
 				aurora.Green("45 minutes"),
 				aurora.Green("user input"),
-				aurora.Blue(opts.Organisation),
-				aurora.Blue("team"),
-				aurora.Blue("infrastructure as code repository"),
-				aurora.Blue("private"),
 				aurora.Bold("#kjøremiljø-support"),
 				path.Join(userDir, config.DefaultLogDir, config.DefaultLogName),
 			)
@@ -298,8 +232,9 @@ and database subnets.`,
 			}
 
 			vpc, err := services.Vpc.CreateVpc(o.Ctx, api.CreateVpcOpts{
-				ID:   id,
-				Cidr: opts.Cidr,
+				ID:      id,
+				Cidr:    opts.Cidr,
+				Minimal: true,
 			})
 			if err != nil {
 				return formatErr(err)
@@ -311,6 +246,7 @@ and database subnets.`,
 				VpcID:             vpc.VpcID,
 				VpcPrivateSubnets: vpc.PrivateSubnets,
 				VpcPublicSubnets:  vpc.PublicSubnets,
+				Minimal:           true,
 			})
 			if err != nil {
 				return formatErr(err)
@@ -323,7 +259,10 @@ and database subnets.`,
 				return formatErr(err)
 			}
 
-			err = services.ALBIngressController.DeleteALBIngressController(o.Ctx, id)
+			_, err = services.ALBIngressController.CreateALBIngressController(o.Ctx, client.CreateALBIngressControllerOpts{
+				ID:    id,
+				VPCID: vpc.VpcID,
+			})
 			if err != nil {
 				return formatErr(err)
 			}
@@ -332,55 +271,6 @@ and database subnets.`,
 				ID:           id,
 				HostedZoneID: hostedZone.HostedZone.HostedZoneID,
 				Domain:       hostedZone.HostedZone.Domain,
-			})
-			if err != nil {
-				return formatErr(err)
-			}
-
-			repo, err := git.GithubRepoFullName(opts.Organisation, repoDir)
-			if err != nil {
-				return err
-			}
-
-			githubRepo, err := services.Github.ReadyGithubInfrastructureRepository(o.Ctx, client.ReadyGithubInfrastructureRepositoryOpts{
-				ID:           id,
-				Organisation: opts.Organisation,
-				Repository:   repo,
-			})
-			if err != nil {
-				return err
-			}
-
-			gh := o.RepoStateWithEnv.GetGithub()
-			gh.Organisation = opts.Organisation
-
-			_, err = o.RepoStateWithEnv.SaveGithub(gh)
-			if err != nil {
-				return formatErr(err)
-			}
-
-			err = domain.ShouldHaveNameServers(hostedZone.HostedZone.Domain)
-			if err != nil {
-				_, err := fmt.Fprintf(o.Err, nsMsg,
-					aurora.Blue(hostedZone.HostedZone.Domain),
-					aurora.Blue("#kjøremiljø-support"),
-					opts.Environment,
-					opts.AWSAccountID,
-				)
-				if err != nil {
-					return err
-				}
-
-				return err
-			}
-
-			argoCD, err := services.ArgoCD.CreateArgoCD(o.Ctx, client.CreateArgoCDOpts{
-				ID:                 id,
-				Domain:             hostedZone.HostedZone.Domain,
-				FQDN:               hostedZone.HostedZone.FQDN,
-				HostedZoneID:       hostedZone.HostedZone.HostedZoneID,
-				GithubOrganisation: opts.Organisation,
-				Repository:         githubRepo,
 			})
 			if err != nil {
 				return formatErr(err)
@@ -407,7 +297,7 @@ and database subnets.`,
 				return formatErr(err)
 			}
 
-			_, err = fmt.Fprintf(o.Err, endMsg,
+			_, err = fmt.Fprintf(o.Err, testEndMsg,
 				aurora.Green("kubernetes cluster"),
 				exports,
 				opts.Environment,
@@ -417,9 +307,8 @@ and database subnets.`,
 				aurora.Green("aws-iam-authenticator"),
 				a.BinaryPath,
 				aurora.Green("1.17"),
-				aurora.Green("ArgoCD"),
-				argoCD.ArgoURL,
 			)
+
 			if err != nil {
 				return formatErr(err)
 			}
@@ -431,8 +320,6 @@ and database subnets.`,
 	f := cmd.Flags()
 	f.StringVarP(&opts.Cidr, "cidr", "c", defaultCidr,
 		"CIDR block the AWS VPC and subnets are created within")
-	f.StringVarP(&opts.Organisation, "github-organisation", "o", github.DefaultOrg,
-		"The Github organisation where we will look for your team and repository")
 
 	return cmd
 }

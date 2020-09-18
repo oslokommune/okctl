@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/theckman/yacspin"
+	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/logrusorgru/aurora/v3"
 
@@ -31,8 +31,8 @@ func (r *vpcReport) ReportCreateVPC(vpc *api.Vpc, reports []*store.Report) error
 }
 
 // NewVPCReport returns an initialised VPC reporter
-func NewVPCReport(out io.Writer, spinner *yacspin.Spinner, exit chan struct{}) client.VPCReport {
+func NewVPCReport(out io.Writer, spinner spinner.Spinner) client.VPCReport {
 	return &vpcReport{
-		console: New(out, exit, spinner),
+		console: New(out, spinner),
 	}
 }

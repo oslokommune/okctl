@@ -3,10 +3,11 @@ package console
 import (
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/logrusorgru/aurora"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
-	"github.com/theckman/yacspin"
 )
 
 type manifestReport struct {
@@ -19,8 +20,8 @@ func (m *manifestReport) SaveExternalSecret(_ *client.ExternalSecret, report *st
 }
 
 // NewManifestReport returns an initialised manifest reporter
-func NewManifestReport(out io.Writer, exit chan struct{}, spinner *yacspin.Spinner) client.ManifestReport {
+func NewManifestReport(out io.Writer, spinner spinner.Spinner) client.ManifestReport {
 	return &manifestReport{
-		console: New(out, exit, spinner),
+		console: New(out, spinner),
 	}
 }

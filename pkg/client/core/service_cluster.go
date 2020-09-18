@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -10,29 +12,39 @@ import (
 )
 
 type clusterService struct {
-	api    client.ClusterAPI
-	store  client.ClusterStore
-	report client.ClusterReport
-	state  client.ClusterState
+	spinner spinner.Spinner
+	api     client.ClusterAPI
+	store   client.ClusterStore
+	report  client.ClusterReport
+	state   client.ClusterState
 }
 
-func (c *clusterService) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error) {
-	cluster, err := c.api.CreateCluster(opts)
+func (s *clusterService) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error) {
+	err := s.spinner.Start("cluster")
 	if err != nil {
 		return nil, err
 	}
 
-	r1, err := c.store.SaveCluster(cluster)
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	cluster, err := s.api.CreateCluster(opts)
 	if err != nil {
 		return nil, err
 	}
 
-	r2, err := c.state.SaveCluster(cluster)
+	r1, err := s.store.SaveCluster(cluster)
 	if err != nil {
 		return nil, err
 	}
 
-	err = c.report.ReportCreateCluster(cluster, []*store.Report{r1, r2})
+	r2, err := s.state.SaveCluster(cluster)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.ReportCreateCluster(cluster, []*store.Report{r1, r2})
 	if err != nil {
 		return nil, err
 	}
@@ -40,18 +52,27 @@ func (c *clusterService) CreateCluster(_ context.Context, opts api.ClusterCreate
 	return cluster, nil
 }
 
-func (c *clusterService) DeleteCluster(_ context.Context, opts api.ClusterDeleteOpts) error {
-	err := c.api.DeleteCluster(opts)
+func (s *clusterService) DeleteCluster(_ context.Context, opts api.ClusterDeleteOpts) error {
+	err := s.spinner.Start("cluster")
 	if err != nil {
 		return err
 	}
 
-	_, err = c.store.DeleteCluster(opts.ID)
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	err = s.api.DeleteCluster(opts)
 	if err != nil {
 		return err
 	}
 
-	_, err = c.state.DeleteCluster(opts.ID)
+	_, err = s.store.DeleteCluster(opts.ID)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.state.DeleteCluster(opts.ID)
 	if err != nil {
 		return err
 	}
@@ -60,11 +81,18 @@ func (c *clusterService) DeleteCluster(_ context.Context, opts api.ClusterDelete
 }
 
 // NewClusterService returns an initialised cluster service
-func NewClusterService(api client.ClusterAPI, store client.ClusterStore, report client.ClusterReport, state client.ClusterState) client.ClusterService {
+func NewClusterService(
+	spinner spinner.Spinner,
+	api client.ClusterAPI,
+	store client.ClusterStore,
+	report client.ClusterReport,
+	state client.ClusterState,
+) client.ClusterService {
 	return &clusterService{
-		api:    api,
-		store:  store,
-		report: report,
-		state:  state,
+		spinner: spinner,
+		api:     api,
+		store:   store,
+		report:  report,
+		state:   state,
 	}
 }

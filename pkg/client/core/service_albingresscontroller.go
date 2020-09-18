@@ -3,18 +3,30 @@ package core
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type albIngressControllerService struct {
-	api    client.ALBIngressControllerAPI
-	store  client.ALBIngressControllerStore
-	report client.ALBIngressControllerReport
+	spinner spinner.Spinner
+	api     client.ALBIngressControllerAPI
+	store   client.ALBIngressControllerStore
+	report  client.ALBIngressControllerReport
 }
 
 func (s *albIngressControllerService) DeleteALBIngressController(_ context.Context, id api.ID) error {
-	err := s.api.DeleteAlbIngressControllerPolicy(id)
+	err := s.spinner.Start("alb-ingress-controller")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	err = s.api.DeleteAlbIngressControllerPolicy(id)
 	if err != nil {
 		return err
 	}
@@ -38,6 +50,15 @@ func (s *albIngressControllerService) DeleteALBIngressController(_ context.Conte
 }
 
 func (s *albIngressControllerService) CreateALBIngressController(_ context.Context, opts client.CreateALBIngressControllerOpts) (*client.ALBIngressController, error) {
+	err := s.spinner.Start("alb-ingress-controller")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
 	policy, err := s.api.CreateAlbIngressControllerPolicy(api.CreateAlbIngressControllerPolicyOpts{
 		ID: opts.ID,
 	})
@@ -84,13 +105,15 @@ func (s *albIngressControllerService) CreateALBIngressController(_ context.Conte
 
 // NewALBIngressControllerService returns an initialised service
 func NewALBIngressControllerService(
+	spinner spinner.Spinner,
 	api client.ALBIngressControllerAPI,
 	store client.ALBIngressControllerStore,
 	report client.ALBIngressControllerReport,
 ) client.ALBIngressControllerService {
 	return &albIngressControllerService{
-		api:    api,
-		store:  store,
-		report: report,
+		spinner: spinner,
+		api:     api,
+		store:   store,
+		report:  report,
 	}
 }

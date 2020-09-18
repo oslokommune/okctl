@@ -3,17 +3,29 @@ package core
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type parameterService struct {
-	api    client.ParameterAPI
-	store  client.ParameterStore
-	report client.ParameterReport
+	spinner spinner.Spinner
+	api     client.ParameterAPI
+	store   client.ParameterStore
+	report  client.ParameterReport
 }
 
 func (s *parameterService) CreateSecret(_ context.Context, opts api.CreateSecretOpts) (*api.SecretParameter, error) {
+	err := s.spinner.Start("parameter")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
 	secret, err := s.api.CreateSecret(opts)
 	if err != nil {
 		return nil, err
@@ -33,10 +45,11 @@ func (s *parameterService) CreateSecret(_ context.Context, opts api.CreateSecret
 }
 
 // NewParameterService returns an initialised service
-func NewParameterService(api client.ParameterAPI, store client.ParameterStore, report client.ParameterReport) client.ParameterService {
+func NewParameterService(spinner spinner.Spinner, api client.ParameterAPI, store client.ParameterStore, report client.ParameterReport) client.ParameterService {
 	return &parameterService{
-		api:    api,
-		store:  store,
-		report: report,
+		spinner: spinner,
+		api:     api,
+		store:   store,
+		report:  report,
 	}
 }

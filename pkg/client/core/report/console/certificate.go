@@ -25,7 +25,7 @@ func (r *certificateReport) SaveCertificate(certificate *api.Certificate, report
 	}
 
 	description := fmt.Sprintf("%s (arn: %s)",
-		aurora.Blue(certificate.Domain),
+		aurora.Green(certificate.Domain),
 		certificate.CertificateARN,
 	)
 

@@ -18,7 +18,7 @@ type parameterReport struct {
 
 func (p *parameterReport) SaveSecret(parameter *api.SecretParameter, report *store.Report) error {
 	description := fmt.Sprintf("%s (path: %s, version: %d)",
-		aurora.Blue(parameter.Name),
+		aurora.Green(parameter.Name),
 		parameter.Path,
 		parameter.Version,
 	)

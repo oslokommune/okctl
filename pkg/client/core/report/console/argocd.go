@@ -23,7 +23,7 @@ func (r *argoCDReport) CreateArgoCD(cd *client.ArgoCD, reports []*store.Report) 
 	}
 
 	description := fmt.Sprintf("%s (url: %s, org: %s, team: %s)",
-		aurora.Blue("argocd"),
+		aurora.Green("argocd"),
 		cd.ArgoURL,
 		cd.GithubOauthApp.Organisation,
 		cd.GithubOauthApp.Team.Name,

@@ -150,6 +150,11 @@ $ kubectl get service --all-namespaces
 				return formatErr(err)
 			}
 
+			err = services.ExternalSecrets.DeleteExternalSecrets(o.Ctx, id)
+			if err != nil {
+				return formatErr(err)
+			}
+
 			err = services.Cluster.DeleteCluster(o.Ctx, api.ClusterDeleteOpts{
 				ID: id,
 			})

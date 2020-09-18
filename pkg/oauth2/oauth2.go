@@ -31,6 +31,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -178,6 +179,11 @@ func WaitForDeviceAuthorization(client HTTPClient, config *Config, code *DeviceC
 			return nil, ErrAccessDenied
 		default:
 			return nil, fmt.Errorf("authorization failed: %v", token.Error)
+		}
+
+		_, err = fmt.Fprint(os.Stderr, ".")
+		if err != nil {
+			return nil, err
 		}
 
 		time.Sleep(time.Duration(code.Interval) * time.Second)

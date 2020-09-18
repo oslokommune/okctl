@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -10,13 +12,23 @@ import (
 )
 
 type certificateService struct {
-	api    client.CertificateAPI
-	store  client.CertificateStore
-	state  client.CertificateState
-	report client.CertificateReport
+	spinner spinner.Spinner
+	api     client.CertificateAPI
+	store   client.CertificateStore
+	state   client.CertificateState
+	report  client.CertificateReport
 }
 
 func (s *certificateService) CreateCertificate(_ context.Context, opts api.CreateCertificateOpts) (*api.Certificate, error) {
+	err := s.spinner.Start("certificate")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
 	c := s.state.GetCertificate(opts.Domain)
 	if c.Validate() == nil {
 		return s.store.GetCertificate(opts.Domain)
@@ -47,15 +59,17 @@ func (s *certificateService) CreateCertificate(_ context.Context, opts api.Creat
 
 // NewCertificateService returns an initialised service
 func NewCertificateService(
+	spinner spinner.Spinner,
 	api client.CertificateAPI,
 	store client.CertificateStore,
 	state client.CertificateState,
 	report client.CertificateReport,
 ) client.CertificateService {
 	return &certificateService{
-		api:    api,
-		store:  store,
-		state:  state,
-		report: report,
+		spinner: spinner,
+		api:     api,
+		store:   store,
+		state:   state,
+		report:  report,
 	}
 }

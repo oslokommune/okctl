@@ -3,16 +3,28 @@ package core
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type manifestService struct {
-	api    client.ManifestAPI
-	store  client.ManifestStore
-	report client.ManifestReport
+	spinner spinner.Spinner
+	api     client.ManifestAPI
+	store   client.ManifestStore
+	report  client.ManifestReport
 }
 
 func (s *manifestService) CreateExternalSecret(_ context.Context, opts client.CreateExternalSecretOpts) (*client.ExternalSecret, error) {
+	err := s.spinner.Start("parameter")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
 	m, err := s.api.CreateExternalSecret(opts)
 	if err != nil {
 		return nil, err
@@ -37,10 +49,11 @@ func (s *manifestService) CreateExternalSecret(_ context.Context, opts client.Cr
 }
 
 // NewManifestService returns an initialised service
-func NewManifestService(api client.ManifestAPI, store client.ManifestStore, report client.ManifestReport) client.ManifestService {
+func NewManifestService(spinner spinner.Spinner, api client.ManifestAPI, store client.ManifestStore, report client.ManifestReport) client.ManifestService {
 	return &manifestService{
-		api:    api,
-		store:  store,
-		report: report,
+		spinner: spinner,
+		api:     api,
+		store:   store,
+		report:  report,
 	}
 }

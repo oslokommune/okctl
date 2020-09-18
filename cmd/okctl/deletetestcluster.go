@@ -5,32 +5,23 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/client"
 
+	"github.com/AlecAivazis/survey/v2"
+
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
 
 const (
-	deleteClusterArgs = 1
+	deleteTestClusterArgs = 1
 )
 
-func buildDeleteCommand(o *okctl.Okctl) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "delete",
-		Short: "Delete commands",
-	}
-
-	cmd.AddCommand(buildDeleteClusterCommand(o))
-	cmd.AddCommand(buildDeleteTestClusterCommand(o))
-
-	return cmd
-}
-
-// DeleteClusterOpts contains the required inputs
-type DeleteClusterOpts struct {
+// DeleteTestClusterOpts contains the required inputs
+type DeleteTestClusterOpts struct {
 	Region       string
 	AWSAccountID string
 	Environment  string
@@ -39,7 +30,7 @@ type DeleteClusterOpts struct {
 }
 
 // Validate the inputs
-func (o *DeleteClusterOpts) Validate() error {
+func (o *DeleteTestClusterOpts) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.Environment, validation.Required),
 		validation.Field(&o.AWSAccountID, validation.Required),
@@ -49,15 +40,15 @@ func (o *DeleteClusterOpts) Validate() error {
 }
 
 // nolint: funlen
-func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
-	opts := &DeleteClusterOpts{}
+func buildDeleteTestClusterCommand(o *okctl.Okctl) *cobra.Command {
+	opts := &DeleteTestClusterOpts{}
 
 	cmd := &cobra.Command{
 		Use:   "cluster [env]",
-		Short: "Delete a cluster",
-		Long: `Delete all resources related to an EKS cluster,
+		Short: "Delete a test cluster",
+		Long: `Delete all resources related to an EKS test cluster,
 including VPC, this is a highly destructive operation.`,
-		Args: cobra.ExactArgs(deleteClusterArgs),
+		Args: cobra.ExactArgs(deleteTestClusterArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			environment := args[0]
 
@@ -77,7 +68,7 @@ including VPC, this is a highly destructive operation.`,
 
 			err = opts.Validate()
 			if err != nil {
-				return err
+				return errors.E(err, "failed to validate delete testcluster options")
 			}
 
 			return nil
@@ -91,9 +82,43 @@ including VPC, this is a highly destructive operation.`,
 				ClusterName:  opts.ClusterName,
 			}
 
+			_, err := fmt.Fprintf(o.Err, `
+We will now delete your cluster, but first you need
+to verify that you have:
+
+Deleted all ingress and service resources that
+have created ALBs, you can check what resources
+that are running with:
+
+$ kubectl get ingress --all-namespaces
+$ kubectl get service --all-namespaces
+`)
+			if err != nil {
+				return err
+			}
+
 			userDir, err := o.GetUserDataDir()
 			if err != nil {
 				return err
+			}
+
+			ready := false
+			prompt := &survey.Confirm{
+				Message: "I confirm that I have removed all ingress and service resources that might create ALBs.",
+			}
+
+			err = survey.AskOne(prompt, &ready)
+			if err != nil {
+				return err
+			}
+
+			if !ready {
+				_, err = fmt.Fprintf(o.Err, "user wasn't ready to continue, aborting.")
+				if err != nil {
+					return err
+				}
+
+				return nil
 			}
 
 			spin, err := spinner.New("deleting", o.Err)
@@ -111,11 +136,6 @@ including VPC, this is a highly destructive operation.`,
 			err = services.Domain.DeletePrimaryHostedZone(o.Ctx, client.DeletePrimaryHostedZoneOpts{
 				ID: id,
 			})
-			if err != nil {
-				return formatErr(err)
-			}
-
-			err = services.ExternalSecrets.DeleteExternalSecrets(o.Ctx, id)
 			if err != nil {
 				return formatErr(err)
 			}

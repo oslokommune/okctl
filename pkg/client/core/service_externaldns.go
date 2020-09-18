@@ -3,17 +3,62 @@ package core
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type externalDNSService struct {
-	api    client.ExternalDNSAPI
-	store  client.ExternalDNSStore
-	report client.ExternalDNSReport
+	spinner spinner.Spinner
+	api     client.ExternalDNSAPI
+	store   client.ExternalDNSStore
+	report  client.ExternalDNSReport
+}
+
+func (s *externalDNSService) DeleteExternalDNS(_ context.Context, id api.ID) error {
+	err := s.spinner.Start("external-dns")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	err = s.api.DeleteExternalDNSPolicy(id)
+	if err != nil {
+		return err
+	}
+
+	err = s.api.DeleteExternalDNSServiceAccount(id)
+	if err != nil {
+		return err
+	}
+
+	report, err := s.store.RemoveExternalDNS(id)
+	if err != nil {
+		return err
+	}
+
+	err = s.report.ReportDeleteExternalDNS(report)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *externalDNSService) CreateExternalDNS(_ context.Context, opts client.CreateExternalDNSOpts) (*client.ExternalDNS, error) {
+	err := s.spinner.Start("external-dns")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
 	policy, err := s.api.CreateExternalDNSPolicy(api.CreateExternalDNSPolicyOpts{
 		ID: opts.ID,
 	})
@@ -60,10 +105,11 @@ func (s *externalDNSService) CreateExternalDNS(_ context.Context, opts client.Cr
 }
 
 // NewExternalDNSService returns an initialised service
-func NewExternalDNSService(api client.ExternalDNSAPI, store client.ExternalDNSStore, report client.ExternalDNSReport) client.ExternalDNSService {
+func NewExternalDNSService(spinner spinner.Spinner, api client.ExternalDNSAPI, store client.ExternalDNSStore, report client.ExternalDNSReport) client.ExternalDNSService {
 	return &externalDNSService{
-		api:    api,
-		store:  store,
-		report: report,
+		spinner: spinner,
+		api:     api,
+		store:   store,
+		report:  report,
 	}
 }

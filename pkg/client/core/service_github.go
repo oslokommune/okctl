@@ -4,18 +4,30 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type githubService struct {
-	api    client.GithubAPI
-	report client.GithubReport
-	state  client.GithubState
+	spinner spinner.Spinner
+	api     client.GithubAPI
+	report  client.GithubReport
+	state   client.GithubState
 }
 
 // nolint: funlen
 func (s *githubService) ReadyGithubInfrastructureRepository(_ context.Context, opts client.ReadyGithubInfrastructureRepositoryOpts) (*client.GithubRepository, error) {
-	err := opts.Validate()
+	err := s.spinner.Start("github")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	err = opts.Validate()
 	if err != nil {
 		return nil, err
 	}
@@ -81,8 +93,18 @@ func (s *githubService) ReadyGithubInfrastructureRepository(_ context.Context, o
 	return repo, nil
 }
 
+// nolint: funlen
 func (s *githubService) CreateGithubOauthApp(_ context.Context, opts client.CreateGithubOauthAppOpts) (*client.GithubOauthApp, error) {
-	err := opts.Validate()
+	err := s.spinner.Start("github")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	err = opts.Validate()
 	if err != nil {
 		return nil, err
 	}
@@ -143,10 +165,11 @@ func (s *githubService) CreateGithubOauthApp(_ context.Context, opts client.Crea
 }
 
 // NewGithubService returns an initialised service
-func NewGithubService(api client.GithubAPI, report client.GithubReport, state client.GithubState) client.GithubService {
+func NewGithubService(spinner spinner.Spinner, api client.GithubAPI, report client.GithubReport, state client.GithubState) client.GithubService {
 	return &githubService{
-		api:    api,
-		report: report,
-		state:  state,
+		spinner: spinner,
+		api:     api,
+		report:  report,
+		state:   state,
 	}
 }

@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/google/uuid"
@@ -13,6 +15,8 @@ import (
 )
 
 type argoCDService struct {
+	spinner spinner.Spinner
+
 	api    client.ArgoCDAPI
 	store  client.ArgoCDStore
 	report client.ArgoCDReport
@@ -26,6 +30,15 @@ type argoCDService struct {
 
 // nolint: funlen
 func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgoCDOpts) (*client.ArgoCD, error) {
+	err := s.spinner.Start("argocd")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
 	cert, err := s.cert.CreateCertificate(ctx, api.CreateCertificateOpts{
 		ID:           opts.ID,
 		FQDN:         fmt.Sprintf("argocd.%s", opts.FQDN),
@@ -155,6 +168,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 
 // NewArgoCDService returns an initialised service
 func NewArgoCDService(
+	spinner spinner.Spinner,
 	gh client.GithubService,
 	cert client.CertificateService,
 	manifest client.ManifestService,
@@ -165,6 +179,7 @@ func NewArgoCDService(
 	state client.ArgoCDState,
 ) client.ArgoCDService {
 	return &argoCDService{
+		spinner:  spinner,
 		api:      api,
 		store:    store,
 		report:   report,

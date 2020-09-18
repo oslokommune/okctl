@@ -1,5 +1,7 @@
 package filesystem
 
+// nolint: dupl
+
 import (
 	"fmt"
 

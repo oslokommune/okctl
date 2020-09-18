@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/logrusorgru/aurora/v3"
 
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
-	"github.com/theckman/yacspin"
 )
 
 type domainReport struct {
@@ -38,8 +39,8 @@ func (r *domainReport) ReportCreatePrimaryHostedZone(zone *client.HostedZone, re
 }
 
 // NewDomainReport returns an initialised domain reporter
-func NewDomainReport(out io.Writer, exit chan struct{}, spinner *yacspin.Spinner) client.DomainReport {
+func NewDomainReport(out io.Writer, spinner spinner.Spinner) client.DomainReport {
 	return &domainReport{
-		console: New(out, exit, spinner),
+		console: New(out, spinner),
 	}
 }

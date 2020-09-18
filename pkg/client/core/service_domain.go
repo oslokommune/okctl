@@ -4,6 +4,8 @@ import (
 	"context"
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/oslokommune/okctl/pkg/config/state"
 
 	"github.com/oslokommune/okctl/pkg/domain"
@@ -16,20 +18,33 @@ import (
 )
 
 type domainService struct {
-	out    io.Writer
-	ask    *ask.Ask
-	api    client.DomainAPI
-	store  client.DomainStore
-	state  client.DomainState
-	report client.DomainReport
+	spinner spinner.Spinner
+	out     io.Writer
+	ask     *ask.Ask
+	api     client.DomainAPI
+	store   client.DomainStore
+	state   client.DomainState
+	report  client.DomainReport
 }
 
 func (s *domainService) DeletePrimaryHostedZone(_ context.Context, opts client.DeletePrimaryHostedZoneOpts) error {
+	err := s.spinner.Start("domain")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
 	var hz *state.HostedZone
 
 	for _, z := range s.state.GetHostedZones() {
+		z := z
+
 		if z.Primary {
 			hz = &z
+			break
 		}
 	}
 
@@ -70,6 +85,15 @@ func (s *domainService) DeletePrimaryHostedZone(_ context.Context, opts client.D
 }
 
 func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.CreatePrimaryHostedZoneOpts) (*client.HostedZone, error) {
+	err := s.spinner.Start("domain")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
 	for _, z := range s.state.GetHostedZones() {
 		if z.Primary {
 			return s.store.GetHostedZone(z.Domain)
@@ -117,6 +141,7 @@ func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.C
 
 // NewDomainService returns an initialised service
 func NewDomainService(
+	spinner spinner.Spinner,
 	out io.Writer,
 	ask *ask.Ask,
 	api client.DomainAPI,
@@ -125,11 +150,12 @@ func NewDomainService(
 	state client.DomainState,
 ) client.DomainService {
 	return &domainService{
-		api:    api,
-		out:    out,
-		store:  store,
-		report: report,
-		ask:    ask,
-		state:  state,
+		spinner: spinner,
+		api:     api,
+		out:     out,
+		store:   store,
+		report:  report,
+		ask:     ask,
+		state:   state,
 	}
 }

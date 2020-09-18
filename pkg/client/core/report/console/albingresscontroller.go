@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/logrusorgru/aurora"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
-	"github.com/theckman/yacspin"
 )
 
 type albIngressControllerReport struct {
@@ -29,8 +30,8 @@ func (r *albIngressControllerReport) ReportCreateALBIngressController(controller
 }
 
 // NewAlbIngressControllerReport returns an initialised reporter
-func NewAlbIngressControllerReport(out io.Writer, exit chan struct{}, spinner *yacspin.Spinner) client.ALBIngressControllerReport {
+func NewAlbIngressControllerReport(out io.Writer, spinner spinner.Spinner) client.ALBIngressControllerReport {
 	return &albIngressControllerReport{
-		console: New(out, exit, spinner),
+		console: New(out, spinner),
 	}
 }

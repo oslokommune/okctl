@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/oslokommune/okctl/pkg/route53"
 
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
@@ -14,8 +16,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/domain"
 
 	"github.com/miekg/dns"
-
-	"github.com/theckman/yacspin"
 
 	"github.com/pkg/browser"
 
@@ -30,7 +30,7 @@ type Ask struct {
 	In      terminal.FileReader
 	Out     terminal.FileWriter
 	Err     io.Writer
-	spinner *yacspin.Spinner
+	spinner spinner.Spinner
 }
 
 // New returns an initialised ask
@@ -44,7 +44,7 @@ func New() *Ask {
 
 // WithSpinner will allow the package to pause and unpause
 // the spinner
-func (a *Ask) WithSpinner(spinner *yacspin.Spinner) *Ask {
+func (a *Ask) WithSpinner(spinner spinner.Spinner) *Ask {
 	a.spinner = spinner
 	return a
 }

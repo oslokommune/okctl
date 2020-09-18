@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -10,13 +12,23 @@ import (
 )
 
 type vpcService struct {
-	api    client.VPCAPI
-	store  client.VPCStore
-	report client.VPCReport
-	state  client.VPCState
+	spinner spinner.Spinner
+	api     client.VPCAPI
+	store   client.VPCStore
+	report  client.VPCReport
+	state   client.VPCState
 }
 
 func (s *vpcService) CreateVpc(_ context.Context, opts api.CreateVpcOpts) (*api.Vpc, error) {
+	err := s.spinner.Start("vpc")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
 	vpc, err := s.api.CreateVpc(opts)
 	if err != nil {
 		return nil, err
@@ -41,7 +53,16 @@ func (s *vpcService) CreateVpc(_ context.Context, opts api.CreateVpcOpts) (*api.
 }
 
 func (s *vpcService) DeleteVpc(_ context.Context, opts api.DeleteVpcOpts) error {
-	err := s.api.DeleteVpc(opts)
+	err := s.spinner.Start("vpc")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	err = s.api.DeleteVpc(opts)
 	if err != nil {
 		return err
 	}
@@ -60,11 +81,12 @@ func (s *vpcService) DeleteVpc(_ context.Context, opts api.DeleteVpcOpts) error 
 }
 
 // NewVPCService returns an initialised VPC service
-func NewVPCService(api client.VPCAPI, store client.VPCStore, report client.VPCReport, state client.VPCState) client.VPCService {
+func NewVPCService(spinner spinner.Spinner, api client.VPCAPI, store client.VPCStore, report client.VPCReport, state client.VPCState) client.VPCService {
 	return &vpcService{
-		api:    api,
-		store:  store,
-		report: report,
-		state:  state,
+		spinner: spinner,
+		api:     api,
+		store:   store,
+		report:  report,
+		state:   state,
 	}
 }

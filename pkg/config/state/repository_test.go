@@ -34,6 +34,8 @@ func TestData(t *testing.T) {
 						HostedZone: map[string]state.HostedZone{
 							"test.oslo.systems": {
 								IsDelegated: true,
+								Primary:     false,
+								Managed:     true,
 								Domain:      "test.oslo.systems",
 								FQDN:        "test.oslo.systems",
 								NameServers: []string{

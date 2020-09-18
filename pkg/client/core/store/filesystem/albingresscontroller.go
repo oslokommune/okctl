@@ -1,5 +1,7 @@
 package filesystem
 
+// nolint: dupl
+
 import (
 	"fmt"
 
@@ -34,6 +36,16 @@ func (s *albIngressControllerStore) RemoveALBIngressController(_ api.ID) (*store
 	}
 
 	return report, nil
+}
+
+// NewALBIngressControllerStore returns an initialised store
+func NewALBIngressControllerStore(policy, serviceAccount, chart Paths, fs *afero.Afero) client.ALBIngressControllerStore {
+	return &albIngressControllerStore{
+		policy:         policy,
+		serviceAccount: serviceAccount,
+		chart:          chart,
+		fs:             fs,
+	}
 }
 
 func (s *albIngressControllerStore) SaveALBIngressController(c *client.ALBIngressController) (*store.Report, error) {
@@ -71,14 +83,4 @@ func (s *albIngressControllerStore) SaveALBIngressController(c *client.ALBIngres
 	}
 
 	return report, nil
-}
-
-// NewALBIngressControllerStore returns an initialised store
-func NewALBIngressControllerStore(policy, serviceAccount, chart Paths, fs *afero.Afero) client.ALBIngressControllerStore {
-	return &albIngressControllerStore{
-		policy:         policy,
-		serviceAccount: serviceAccount,
-		chart:          chart,
-		fs:             fs,
-	}
 }

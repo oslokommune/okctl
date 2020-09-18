@@ -11,6 +11,7 @@ clusters:
             test.oslo.systems:
                 isdelegated: true
                 primary: false
+                managed: true
                 domain: test.oslo.systems
                 fqdn: test.oslo.systems
                 nameservers:

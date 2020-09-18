@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/logrusorgru/aurora"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
-	"github.com/theckman/yacspin"
 )
 
 type argoCDReport struct {
@@ -32,8 +33,8 @@ func (r *argoCDReport) CreateArgoCD(cd *client.ArgoCD, reports []*store.Report) 
 }
 
 // NewArgoCDReport returns an initialised reporter
-func NewArgoCDReport(out io.Writer, exit chan struct{}, spinner *yacspin.Spinner) client.ArgoCDReport {
+func NewArgoCDReport(out io.Writer, spinner spinner.Spinner) client.ArgoCDReport {
 	return &argoCDReport{
-		console: New(out, exit, spinner),
+		console: New(out, spinner),
 	}
 }

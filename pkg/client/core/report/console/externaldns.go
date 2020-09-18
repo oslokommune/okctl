@@ -14,6 +14,10 @@ type externalDNSReport struct {
 	console *Console
 }
 
+func (r *externalDNSReport) ReportDeleteExternalDNS(report *store.Report) error {
+	return r.console.Report(report.Actions, "external-dns", aurora.Blue("deleting").String())
+}
+
 func (r *externalDNSReport) ReportCreateExternalDNS(secret *client.ExternalDNS, report *store.Report) error {
 	description := fmt.Sprintf("%s (policy), %s (service account), %s (kubernetes)",
 		aurora.Green(secret.Policy.StackName),

@@ -44,7 +44,7 @@ func buildDeleteTestClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &DeleteTestClusterOpts{}
 
 	cmd := &cobra.Command{
-		Use:   "cluster [env]",
+		Use:   "testcluster [env]",
 		Short: "Delete a test cluster",
 		Long: `Delete all resources related to an EKS test cluster,
 including VPC, this is a highly destructive operation.`,

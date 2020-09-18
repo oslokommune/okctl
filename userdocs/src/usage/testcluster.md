@@ -114,5 +114,5 @@ $ kubectl delete -f experiments/2048/2048-game.yml
 And delete the cluster, if you feel done:
 
 ```bash
-$ okctl delete cluster {env}
+$ okctl delete testcluster {env}
 ```

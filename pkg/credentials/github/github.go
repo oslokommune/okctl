@@ -315,17 +315,17 @@ func (a *AuthDeviceFlow) Survey(verificationURI, userCode string) error {
 
 	_ = browser.OpenURL(verificationURI)
 
-	_, err = fmt.Fprintf(os.Stderr, "If a browser did not open, enter the following url in a new browser window: %s", verificationURI)
+	_, err = fmt.Fprintf(os.Stderr, "If a browser did not open, enter the following url in a new browser window: %s\n", verificationURI)
 	if err != nil {
 		return err
 	}
 
-	_, err = fmt.Fprintf(os.Stderr, "Then enter the following code: %s", userCode)
+	_, err = fmt.Fprintf(os.Stderr, "Then enter the following code: %s\n", userCode)
 	if err != nil {
 		return err
 	}
 
-	_, err = fmt.Fprintf(os.Stderr, "We are waiting for a response from github.com, which we will receive once you have entered the code above into the form.")
+	_, err = fmt.Fprintf(os.Stderr, "We are waiting for a response from github.com, which we will receive once you have entered the code above into the form.\n")
 	if err != nil {
 		return err
 	}

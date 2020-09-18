@@ -25,6 +25,18 @@ func TestCreate(t *testing.T) {
 					DescribeStacksResponse(cloudformation.StackStatusCreateComplete),
 			),
 		},
+		{
+			name: "Should fail",
+			runner: cfn.NewRunner(
+				mock.NewCloudProvider().
+					DescribeStacksEmpty().
+					CreateStackSuccess().
+					DescribeStacksResponse(cloudformation.StackStatusCreateFailed).
+					DescribeStackEventsSuccess(),
+			),
+			expect:      "creating stack: something, failed events: ec2: something went wrong",
+			expectError: true,
+		},
 	}
 
 	for _, tc := range testCases {

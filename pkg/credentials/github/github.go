@@ -303,6 +303,7 @@ func (a *AuthDeviceFlow) Survey(verificationURI, userCode string) error {
 
 	prompt := &survey.Confirm{
 		Message: "We will now start a Github device authentication flow, this requires entering a code in a browser window. Ready?",
+		// nolint: lll
 		Help:    "This process will create a github authentication token for your device, we use this token to prepare your github repository and fetch a list of teams from the organisation",
 		Default: true,
 	}

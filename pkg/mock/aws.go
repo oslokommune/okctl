@@ -146,8 +146,14 @@ type CFAPI struct {
 	DescribeStacksFn   []func(*cloudformation.DescribeStacksInput) (*cloudformation.DescribeStacksOutput, error)
 	nextDescribeStacks int
 
-	CreateStackFn func(*cloudformation.CreateStackInput) (*cloudformation.CreateStackOutput, error)
-	DeleteStackFn func(*cloudformation.DeleteStackInput) (*cloudformation.DeleteStackOutput, error)
+	CreateStackFn         func(*cloudformation.CreateStackInput) (*cloudformation.CreateStackOutput, error)
+	DeleteStackFn         func(*cloudformation.DeleteStackInput) (*cloudformation.DeleteStackOutput, error)
+	DescribeStackEventsFn func(*cloudformation.DescribeStackEventsInput) (*cloudformation.DescribeStackEventsOutput, error)
+}
+
+// DescribeStackEvents invokes a mocked response
+func (a *CFAPI) DescribeStackEvents(input *cloudformation.DescribeStackEventsInput) (*cloudformation.DescribeStackEventsOutput, error) {
+	return a.DescribeStackEventsFn(input)
 }
 
 // DeleteStack invokes a mocked a response
@@ -178,6 +184,23 @@ type R53API struct {
 // ListHostedZones invokes a mocked response
 func (a *R53API) ListHostedZones(input *route53.ListHostedZonesInput) (*route53.ListHostedZonesOutput, error) {
 	return a.ListHostedZonesFn(input)
+}
+
+// DescribeStackEventsSuccess sets a success response on the describe event
+func (p *CloudProvider) DescribeStackEventsSuccess() *CloudProvider {
+	p.CFAPI.DescribeStackEventsFn = func(input *cloudformation.DescribeStackEventsInput) (*cloudformation.DescribeStackEventsOutput, error) {
+		return &cloudformation.DescribeStackEventsOutput{
+			StackEvents: []*cloudformation.StackEvent{
+				{
+					ResourceStatus:       aws.String(cloudformation.ResourceStatusCreateFailed),
+					ResourceStatusReason: aws.String("something went wrong"),
+					ResourceType:         aws.String("ec2"),
+				},
+			},
+		}, nil
+	}
+
+	return p
 }
 
 // DeleteStackSuccess sets a success response on the mocked DeleteStack function
@@ -338,9 +361,10 @@ func Subnets() []*ec2.Subnet {
 func Stacks(status string) []*cloudformation.Stack {
 	return []*cloudformation.Stack{
 		{
-			StackId:     aws.String(DefaultStackName),
-			StackName:   aws.String(DefaultStackName),
-			StackStatus: aws.String(status),
+			StackId:           aws.String(DefaultStackName),
+			StackName:         aws.String(DefaultStackName),
+			StackStatus:       aws.String(status),
+			StackStatusReason: aws.String("something"),
 		},
 	}
 }

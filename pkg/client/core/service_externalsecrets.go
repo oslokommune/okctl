@@ -14,6 +14,30 @@ type externalSecretsService struct {
 	report client.ExternalSecretsReport
 }
 
+func (s *externalSecretsService) DeleteExternalSecrets(_ context.Context, id api.ID) error {
+	err := s.api.DeleteExternalSecretsPolicy(id)
+	if err != nil {
+		return err
+	}
+
+	err = s.api.DeleteExternalSecretsServiceAccount(id)
+	if err != nil {
+		return err
+	}
+
+	report, err := s.store.RemoveExternalSecrets(id)
+	if err != nil {
+		return err
+	}
+
+	err = s.report.ReportDeleteExternalSecrets(report)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *externalSecretsService) CreateExternalSecrets(_ context.Context, opts client.CreateExternalSecretsOpts) (*client.ExternalSecrets, error) {
 	policy, err := s.api.CreateExternalSecretsPolicy(api.CreateExternalSecretsPolicyOpts{
 		ID: opts.ID,

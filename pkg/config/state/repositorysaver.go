@@ -11,6 +11,7 @@ import (
 type HostedZoner interface {
 	SaveHostedZone(domain string, zone HostedZone) (*store.Report, error)
 	GetHostedZone(domain string) HostedZone
+	DeleteHostedZone(domain string) (*store.Report, error)
 	GetHostedZones() map[string]HostedZone
 }
 
@@ -232,6 +233,19 @@ func (r *repository) SaveHostedZone(domain string, zone HostedZone) (*store.Repo
 
 	cluster.HostedZone[domain] = zone
 	r.state.Clusters[r.env] = cluster
+
+	return r.save()
+}
+
+// DeleteHostedZone removes the hosted zone from the state
+func (r *repository) DeleteHostedZone(domain string) (*store.Report, error) {
+	cluster := r.GetCluster()
+
+	if cluster.HostedZone == nil {
+		return &store.Report{}, nil
+	}
+
+	delete(cluster.HostedZone, domain)
 
 	return r.save()
 }

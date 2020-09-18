@@ -29,6 +29,18 @@ type HostedZone struct {
 	Primary      bool
 }
 
+func (s *domainStore) RemoveHostedZone(domain string) (*store.Report, error) {
+	report, err := store.NewFileSystem(path.Join(s.paths.BaseDir, domain), s.fs).
+		Remove(s.paths.OutputFile).
+		Remove(s.paths.CloudFormationFile).
+		Do()
+	if err != nil {
+		return nil, fmt.Errorf("failed to remove hosted zone: %s", err)
+	}
+
+	return report, nil
+}
+
 func (s *domainStore) SaveHostedZone(d *client.HostedZone) (*store.Report, error) {
 	p := HostedZone{
 		ID:           d.HostedZone.ID,

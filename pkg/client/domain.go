@@ -23,29 +23,39 @@ type CreatePrimaryHostedZoneOpts struct {
 	FQDN   string
 }
 
+// DeletePrimaryHostedZoneOpts is the require inputs
+type DeletePrimaryHostedZoneOpts struct {
+	ID api.ID
+}
+
 // DomainService orchestrates the creation of a hosted zone
 type DomainService interface {
 	CreatePrimaryHostedZone(ctx context.Context, opts CreatePrimaryHostedZoneOpts) (*HostedZone, error)
+	DeletePrimaryHostedZone(ctx context.Context, opts DeletePrimaryHostedZoneOpts) error
 }
 
 // DomainAPI invokes the API
 type DomainAPI interface {
 	CreatePrimaryHostedZone(opts CreatePrimaryHostedZoneOpts) (*HostedZone, error)
+	DeletePrimaryHostedZone(domain string, opts DeletePrimaryHostedZoneOpts) error
 }
 
 // DomainStore stores the data
 type DomainStore interface {
 	SaveHostedZone(*HostedZone) (*store.Report, error)
 	GetHostedZone(domain string) (*HostedZone, error)
+	RemoveHostedZone(domain string) (*store.Report, error)
 }
 
 // DomainState implements the in-memory state handling
 type DomainState interface {
 	SaveHostedZone(zone *HostedZone) (*store.Report, error)
 	GetHostedZones() []state.HostedZone
+	RemoveHostedZone(domain string) (*store.Report, error)
 }
 
 // DomainReport implements the report layer
 type DomainReport interface {
 	ReportCreatePrimaryHostedZone(zone *HostedZone, reports []*store.Report) error
+	ReportDeletePrimaryHostedZone(reports []*store.Report) error
 }

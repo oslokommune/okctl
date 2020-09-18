@@ -4,6 +4,8 @@ import (
 	"context"
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/config/state"
+
 	"github.com/oslokommune/okctl/pkg/domain"
 
 	"github.com/oslokommune/okctl/pkg/client/store"
@@ -20,6 +22,51 @@ type domainService struct {
 	store  client.DomainStore
 	state  client.DomainState
 	report client.DomainReport
+}
+
+func (s *domainService) DeletePrimaryHostedZone(_ context.Context, opts client.DeletePrimaryHostedZoneOpts) error {
+	var hz *state.HostedZone
+
+	for _, z := range s.state.GetHostedZones() {
+		if z.Primary {
+			hz = &z
+		}
+	}
+
+	if hz == nil {
+		// Couldn't find a primary hosted zone, which means it has
+		// already been removed
+		return nil
+	}
+
+	var reports []*store.Report
+
+	if hz.Managed {
+		// HostedZone is managed by us, so delete it
+		err := s.api.DeletePrimaryHostedZone(hz.Domain, opts)
+		if err != nil {
+			return err
+		}
+
+		report, err := s.store.RemoveHostedZone(hz.Domain)
+		if err != nil {
+			return err
+		}
+
+		reports = append(reports, report)
+	}
+
+	report, err := s.state.RemoveHostedZone(hz.Domain)
+	if err != nil {
+		return err
+	}
+
+	err = s.report.ReportDeletePrimaryHostedZone(append([]*store.Report{report}, reports...))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.CreatePrimaryHostedZoneOpts) (*client.HostedZone, error) {

@@ -108,6 +108,13 @@ func NewFileSystem(baseDir string, fs *afero.Afero, options ...FileSystemOption)
 	return f
 }
 
+// WithWriteIfNotExists will write the data if the file doesn't exist
+func WithWriteIfNotExists(data []byte) OperationOption {
+	return func() interface{} {
+		return data
+	}
+}
+
 // WithFilePermissionsMode will set the permissions of the file
 func WithFilePermissionsMode(mode os.FileMode) OperationOption {
 	return func() interface{} {
@@ -234,12 +241,31 @@ func (f *fileSystem) GetBytes(name string, callback GetBytesCallback, options ..
 	return f
 }
 
-func (f *fileSystem) getBytes(name string, callback GetBytesCallback, _ ...OperationOption) *fileSystemWork {
+func (f *fileSystem) getBytes(name string, callback GetBytesCallback, options ...OperationOption) *fileSystemWork {
 	work := &fileSystemWork{
 		ReadType: readTypeBytes,
 	}
 
 	work.Fn = func() error {
+		for _, option := range options {
+			switch o := option().(type) {
+			case []byte:
+				exists, err := f.fs.Exists(path.Join(f.BaseDir, name))
+				if err != nil {
+					return fmt.Errorf("file exists: %w", err)
+				}
+
+				if !exists {
+					err = f.storeBytes(name, o).Fn()
+					if err != nil {
+						return err
+					}
+				}
+			default:
+				return fmt.Errorf("unknown option: %s", o)
+			}
+		}
+
 		data, err := f.fs.ReadFile(path.Join(f.BaseDir, name))
 		if err != nil {
 			return fmt.Errorf("failed to read file: %w", err)

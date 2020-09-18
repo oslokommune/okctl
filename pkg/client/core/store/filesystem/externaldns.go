@@ -35,7 +35,7 @@ func (s *externalDNSStore) RemoveExternalDNS(_ api.ID) (*store.Report, error) {
 		Remove(s.serviceAccount.OutputFile).
 		Remove(s.serviceAccount.ConfigFile).
 		AlterStore(store.SetBaseDir(s.kube.BaseDir)).
-		GetStruct(s.kube.OutputFile, kube, store.FromJSON()).
+		GetStruct(s.kube.OutputFile, kube, store.FromJSON(), store.WithWriteIfNotExists([]byte("{}"))).
 		ProcessGetStruct(s.kube.OutputFile, func(_ interface{}, operations store.Operations) error {
 			for _, name := range kube.Manifests {
 				operations.Remove(name)

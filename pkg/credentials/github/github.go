@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
-	"github.com/oslokommune/okctl/pkg/keyring"
-
 	"github.com/pkg/browser"
+
+	"github.com/oslokommune/okctl/pkg/keyring"
 
 	"github.com/AlecAivazis/survey/v2"
 
@@ -298,23 +299,34 @@ func (a *AuthDeviceFlow) Retrieve() (*Credentials, error) {
 
 // Survey queries the user to open the URL for entering the device code
 func (a *AuthDeviceFlow) Survey(verificationURI, userCode string) error {
-	open := false
+	ready := false
 
 	prompt := &survey.Confirm{
-		Message: fmt.Sprintf("To complete the github device authentication flow, visit: %v and enter: %v. Attempt to open browser for you?", verificationURI, userCode),
+		Message: "We will now start a Github device authentication flow, this requires entering a code in a browser window. Ready?",
+		Help:    "This process will create a github authentication token for your device, we use this token to prepare your github repository and fetch a list of teams from the organisation",
 		Default: true,
 	}
 
-	err := survey.AskOne(prompt, &open)
+	err := survey.AskOne(prompt, &ready)
 	if err != nil {
-		return fmt.Errorf("failed to ask user for input: %w", err)
+		return fmt.Errorf("user was not ready to continue: %w", err)
 	}
 
-	if open {
-		err = browser.OpenURL(verificationURI)
-		if err != nil {
-			return fmt.Errorf("failed to open user's browser: %w", err)
-		}
+	_ = browser.OpenURL(verificationURI)
+
+	_, err = fmt.Fprintf(os.Stderr, "If a browser did not open, enter the following url in a new browser window: %s", verificationURI)
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintf(os.Stderr, "Then enter the following code: %s", userCode)
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintf(os.Stderr, "We are waiting for a response from github.com, which we will receive once you have entered the code above into the form.")
+	if err != nil {
+		return err
 	}
 
 	return nil

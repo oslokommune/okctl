@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/oslokommune/okctl/pkg/client"
 
@@ -61,7 +62,16 @@ including VPC, this is a highly destructive operation.`,
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			environment := args[0]
 
-			err := o.InitialiseWithOnlyEnv(environment)
+			err := validation.Validate(
+				&environment,
+				validation.Required,
+				validation.Match(regexp.MustCompile("^[a-zA-Z]{3,64}$")).Error("the environment must consist of 3-64 characters (a-z, A-Z)"),
+			)
+			if err != nil {
+				return err
+			}
+
+			err = o.InitialiseWithOnlyEnv(environment)
 			if err != nil {
 				return err
 			}

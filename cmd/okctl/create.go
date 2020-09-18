@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"path"
+	"regexp"
 
 	"github.com/oslokommune/okctl/pkg/git"
 
@@ -65,8 +66,8 @@ type CreateClusterOpts struct {
 // Validate the inputs
 func (o *CreateClusterOpts) Validate() error {
 	return validation.ValidateStruct(o,
-		validation.Field(&o.Environment, validation.Required),
-		validation.Field(&o.AWSAccountID, validation.Required),
+		validation.Field(&o.Environment, validation.Required, validation.Match(regexp.MustCompile("^[a-zA-Z]{3,64}$")).Error("must consist of 3-64 characters (a-z, A-Z)")),
+		validation.Field(&o.AWSAccountID, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{12}$")).Error("must consist of 12 digits")),
 		validation.Field(&o.Cidr, validation.Required),
 		validation.Field(&o.RepositoryName, validation.Required),
 		validation.Field(&o.Region, validation.Required),
@@ -174,7 +175,25 @@ and database subnets.`,
 			environment := args[0]
 			awsAccountID := args[1]
 
-			err := o.InitialiseWithEnvAndAWSAccountID(environment, awsAccountID)
+			err := validation.Validate(
+				&environment,
+				validation.Required,
+				validation.Match(regexp.MustCompile("^[a-zA-Z]{3,64}$")).Error("the environment must consist of 3-64 characters (a-z, A-Z)"),
+			)
+			if err != nil {
+				return err
+			}
+
+			err = validation.Validate(
+				&awsAccountID,
+				validation.Required,
+				validation.Match(regexp.MustCompile("^[0-9]{12}$")).Error("the AWS Account ID must consist of 12 digits"),
+			)
+			if err != nil {
+				return err
+			}
+
+			err = o.InitialiseWithEnvAndAWSAccountID(environment, awsAccountID)
 			if err != nil {
 				return err
 			}

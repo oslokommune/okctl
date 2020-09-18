@@ -12,6 +12,18 @@ type domainAPI struct {
 	client *HTTPClient
 }
 
+func (a *domainAPI) DeletePrimaryHostedZone(domain string, opts client.DeletePrimaryHostedZoneOpts) error {
+	err := a.client.DoDelete(TargetHostedZone, &api.DeleteHostedZoneOpts{
+		ID:     opts.ID,
+		Domain: domain,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (a *domainAPI) CreatePrimaryHostedZone(opts client.CreatePrimaryHostedZoneOpts) (*client.HostedZone, error) {
 	into := &api.HostedZone{}
 

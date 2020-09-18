@@ -15,6 +15,16 @@ type domainReport struct {
 	console *Console
 }
 
+func (r *domainReport) ReportDeletePrimaryHostedZone(reports []*store.Report) error {
+	var actions []store.Action // nolint: prealloc
+
+	for _, report := range reports {
+		actions = append(actions, report.Actions...)
+	}
+
+	return r.console.Report(actions, "primary-hosted-zone", aurora.Green("removing").String())
+}
+
 func (r *domainReport) ReportCreatePrimaryHostedZone(zone *client.HostedZone, reports []*store.Report) error {
 	var actions []store.Action // nolint: prealloc
 

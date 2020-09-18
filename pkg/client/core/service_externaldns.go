@@ -26,12 +26,12 @@ func (s *externalDNSService) DeleteExternalDNS(_ context.Context, id api.ID) err
 		err = s.spinner.Stop()
 	}()
 
-	err = s.api.DeleteExternalDNSPolicy(id)
+	err = s.api.DeleteExternalDNSServiceAccount(id)
 	if err != nil {
 		return err
 	}
 
-	err = s.api.DeleteExternalDNSServiceAccount(id)
+	err = s.api.DeleteExternalDNSPolicy(id)
 	if err != nil {
 		return err
 	}

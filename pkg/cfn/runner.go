@@ -253,9 +253,9 @@ func (r *Runner) detailedErr(stack *Stack) error {
 		return fmt.Errorf("getting failed events: %w", err)
 	}
 
-	var failures []string
-	for _, e := range events {
-		failures = append(failures, e.String())
+	failures := make([]string, len(events))
+	for i, e := range events {
+		failures[i] = e.String()
 	}
 
 	reason := "unknown"

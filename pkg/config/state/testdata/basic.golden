@@ -12,6 +12,7 @@ clusters:
                 isdelegated: true
                 primary: false
                 managed: true
+                id: HADS787FFFAKE
                 domain: test.oslo.systems
                 fqdn: test.oslo.systems
                 nameservers:

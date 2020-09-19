@@ -46,6 +46,7 @@ func (s *domainState) SaveHostedZone(zone *client.HostedZone) (*store.Report, er
 	hz.Domain = zone.HostedZone.Domain
 	hz.FQDN = zone.HostedZone.FQDN
 	hz.NameServers = zone.HostedZone.NameServers
+	hz.ID = zone.HostedZone.HostedZoneID
 
 	report, err := s.state.SaveHostedZone(zone.HostedZone.Domain, hz)
 	if err != nil {

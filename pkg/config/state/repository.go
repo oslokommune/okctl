@@ -242,6 +242,7 @@ type HostedZone struct {
 	IsDelegated bool
 	Primary     bool
 	Managed     bool
+	ID          string
 	Domain      string
 	FQDN        string
 	NameServers []string

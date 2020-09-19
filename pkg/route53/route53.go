@@ -46,7 +46,7 @@ func (r *Route53) PublicHostedZones() ([]*HostedZone, error) {
 		if !*hz.Config.PrivateZone {
 			if !*hz.Config.PrivateZone {
 				zones = append(zones, &HostedZone{
-					ID:     *hz.Id,
+					ID:     strings.TrimPrefix(*hz.Id, "/hostedzone/"),
 					Domain: strings.TrimSuffix(*hz.Name, "."),
 					FQDN:   *hz.Name,
 					Public: true,

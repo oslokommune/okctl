@@ -207,11 +207,11 @@ func (r *Runner) watchDelete(stackName string) error {
 		case cfPkg.StackStatusDeleteComplete:
 			return nil
 		case cfPkg.StackStatusDeleteFailed:
-			return fmt.Errorf("failed to delete stack: %s", *stack.Stacks[0].StackStatusReason)
+			return r.detailedErr(stack.Stacks[0])
 		case cfPkg.StackStatusDeleteInProgress:
 			time.Sleep(sleepTime)
 		default:
-			return fmt.Errorf("wtf")
+			return r.detailedErr(stack.Stacks[0])
 		}
 	}
 }
@@ -238,26 +238,35 @@ func (r *Runner) watchCreate(stackName string) error {
 		case cfPkg.StackStatusCreateComplete:
 			return nil
 		case cfPkg.StackStatusCreateFailed:
-			events, err := r.failedEvents(*stack.Stacks[0].StackId)
-			if err != nil {
-				return fmt.Errorf("getting failed events: %w", err)
-			}
-
-			var failures []string
-			for _, e := range events {
-				failures = append(failures, e.String())
-			}
-
-			return fmt.Errorf("creating stack: %s, failed events: %s",
-				*stack.Stacks[0].StackStatusReason,
-				strings.Join(failures, "\n"),
-			)
+			return r.detailedErr(stack.Stacks[0])
 		case cfPkg.StackStatusCreateInProgress:
 			time.Sleep(sleepTime)
 		default:
-			return fmt.Errorf("wtf")
+			return r.detailedErr(stack.Stacks[0])
 		}
 	}
+}
+
+func (r *Runner) detailedErr(stack *Stack) error {
+	events, err := r.failedEvents(*stack.StackId)
+	if err != nil {
+		return fmt.Errorf("getting failed events: %w", err)
+	}
+
+	var failures []string
+	for _, e := range events {
+		failures = append(failures, e.String())
+	}
+
+	reason := "unknown"
+	if stack.StackStatusReason != nil {
+		reason = *stack.StackStatusReason
+	}
+
+	return fmt.Errorf("stack: %s, failed events: %s",
+		reason,
+		strings.Join(failures, "\n"),
+	)
 }
 
 // StackEvent state

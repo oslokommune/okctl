@@ -33,6 +33,7 @@ func TestData(t *testing.T) {
 						AWSAccountID: "123456789012",
 						HostedZone: map[string]state.HostedZone{
 							"test.oslo.systems": {
+								ID:          "HADS787FFFAKE",
 								IsDelegated: true,
 								Primary:     false,
 								Managed:     true,

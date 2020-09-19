@@ -23,7 +23,7 @@ func TestRoute53PublicHostedZones(t *testing.T) {
 			provider: mock.NewGoodCloudProvider(),
 			expect: []*route53.HostedZone{
 				{
-					ID:     "/hostedzone/AABBCCDD",
+					ID:     "AABBCCDD",
 					Domain: "test.oslo.systems",
 					FQDN:   "test.oslo.systems.",
 					Public: true,

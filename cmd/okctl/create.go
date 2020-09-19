@@ -5,10 +5,11 @@ import (
 	"path"
 	"regexp"
 
-	"github.com/oslokommune/okctl/pkg/git"
-
 	"github.com/oslokommune/okctl/pkg/ask"
 	stateSaver "github.com/oslokommune/okctl/pkg/client/core/state"
+
+	"github.com/oslokommune/okctl/pkg/git"
+
 	"github.com/oslokommune/okctl/pkg/route53"
 
 	"github.com/oslokommune/okctl/pkg/client"
@@ -278,53 +279,75 @@ and database subnets.`,
 				return err
 			}
 
-			doCreate := false
-
-			prompt = &survey.Confirm{
-				Message: "Do you want to create a new hosted zone (domain, e.g., {team/product}.oslo.systems)? If you answer no, we will first try to find a reusable one.",
-				Help:    "If you reuse an existing one, you won't have to wait for the zone to be delegated, and we will not remove it afterwards.",
-			}
-
-			err = survey.AskOne(prompt, &doCreate)
-			if err != nil {
-				return formatErr(err)
-			}
-
-			zones, err := route53.New(o.CloudProvider).PublicHostedZones()
-			if err != nil {
-				return formatErr(err)
-			}
-
 			var hostedZone *client.HostedZone
-			if len(zones) > 0 && !doCreate {
-				zone, err := ask.New().SelectHostedZone(zones)
+
+			hostedZone, err = services.Domain.GetPrimaryHostedZone(o.Ctx, id)
+			if err != nil {
+				return formatErr(err)
+			}
+
+			// Move this somewhere else
+			if hostedZone == nil {
+				zones, err := route53.New(o.CloudProvider).PublicHostedZones()
 				if err != nil {
 					return formatErr(err)
 				}
 
-				hostedZone = &client.HostedZone{
-					IsDelegated: true,
-					Primary:     true,
-					HostedZone: &api.HostedZone{
-						ID:           id,
-						Managed:      false,
-						FQDN:         zone.FQDN,
-						Domain:       zone.Domain,
-						HostedZoneID: zone.ID,
-					},
+				reuseHostedZone := func() error {
+					zone, err := ask.New().SelectHostedZone(zones)
+					if err != nil {
+						return formatErr(err)
+					}
+
+					hostedZone = &client.HostedZone{
+						IsDelegated: true,
+						Primary:     true,
+						HostedZone: &api.HostedZone{
+							ID:           id,
+							Managed:      false,
+							FQDN:         zone.FQDN,
+							Domain:       zone.Domain,
+							HostedZoneID: zone.ID,
+						},
+					}
+
+					state := stateSaver.NewDomainState(o.RepoStateWithEnv)
+					_, err = state.SaveHostedZone(hostedZone)
+					if err != nil {
+						return formatErr(err)
+					}
+
+					return nil
 				}
 
-				state := stateSaver.NewDomainState(o.RepoStateWithEnv)
-				_, err = state.SaveHostedZone(hostedZone)
-				if err != nil {
-					return formatErr(err)
+				doReuse := false
+
+				if len(zones) > 0 {
+					prompt = &survey.Confirm{
+						Message: "We found existing hosted zones, do you want to reuse one?",
+						Help:    "If you reuse an existing one, you won't have to wait for the zone to be delegated, and we will not remove it afterwards.",
+					}
+
+					err = survey.AskOne(prompt, &doReuse)
+					if err != nil {
+						return formatErr(err)
+					}
+
+					if doReuse {
+						err = reuseHostedZone()
+						if err != nil {
+							return err
+						}
+					}
 				}
-			} else {
-				hostedZone, err = services.Domain.CreatePrimaryHostedZone(o.Ctx, client.CreatePrimaryHostedZoneOpts{
-					ID: id,
-				})
-				if err != nil {
-					return formatErr(err)
+
+				if !doReuse {
+					hostedZone, err = services.Domain.CreatePrimaryHostedZone(o.Ctx, client.CreatePrimaryHostedZoneOpts{
+						ID: id,
+					})
+					if err != nil {
+						return formatErr(err)
+					}
 				}
 			}
 

@@ -13,6 +13,7 @@ type HostedZoner interface {
 	GetHostedZone(domain string) HostedZone
 	DeleteHostedZone(domain string) (*store.Report, error)
 	GetHostedZones() map[string]HostedZone
+	GetPrimaryHostedZone() *HostedZone
 }
 
 // Clusterer defines the allowed actions on a cluster
@@ -274,6 +275,19 @@ func (r *repository) GetHostedZones() map[string]HostedZone {
 	r.state.Clusters[r.env] = c
 
 	return c.HostedZone
+}
+
+// GetPrimaryHostedZone returns the primary hosted zone if one exists
+func (r *repository) GetPrimaryHostedZone() *HostedZone {
+	for _, z := range r.GetHostedZones() {
+		z := z
+
+		if z.Primary && len(z.Domain) > 0 {
+			return &z
+		}
+	}
+
+	return nil
 }
 
 // GetCluster retrieves the cluster

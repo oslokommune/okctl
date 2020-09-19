@@ -4,6 +4,8 @@ import (
 	"context"
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/api"
+
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/oslokommune/okctl/pkg/config/state"
@@ -25,6 +27,31 @@ type domainService struct {
 	store   client.DomainStore
 	state   client.DomainState
 	report  client.DomainReport
+}
+
+func (s *domainService) GetPrimaryHostedZone(_ context.Context, id api.ID) (*client.HostedZone, error) {
+	for _, z := range s.state.GetHostedZones() {
+		if z.Primary && z.Managed {
+			return s.store.GetHostedZone(z.Domain)
+		}
+
+		if z.Primary {
+			return &client.HostedZone{
+				IsDelegated: z.IsDelegated,
+				Primary:     z.Primary,
+				HostedZone: &api.HostedZone{
+					ID:           id,
+					Managed:      z.Managed,
+					FQDN:         z.FQDN,
+					Domain:       z.Domain,
+					HostedZoneID: z.ID,
+					NameServers:  z.NameServers,
+				},
+			}, nil
+		}
+	}
+
+	return nil, nil
 }
 
 func (s *domainService) DeletePrimaryHostedZone(_ context.Context, opts client.DeletePrimaryHostedZoneOpts) error {

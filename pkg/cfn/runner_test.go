@@ -34,7 +34,7 @@ func TestCreate(t *testing.T) {
 					DescribeStacksResponse(cloudformation.StackStatusCreateFailed).
 					DescribeStackEventsSuccess(),
 			),
-			expect:      "creating stack: something, failed events: ec2: something went wrong",
+			expect:      "stack: something, failed events: ec2: something went wrong",
 			expectError: true,
 		},
 	}

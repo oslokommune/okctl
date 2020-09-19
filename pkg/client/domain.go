@@ -31,6 +31,7 @@ type DeletePrimaryHostedZoneOpts struct {
 // DomainService orchestrates the creation of a hosted zone
 type DomainService interface {
 	CreatePrimaryHostedZone(ctx context.Context, opts CreatePrimaryHostedZoneOpts) (*HostedZone, error)
+	GetPrimaryHostedZone(ctx context.Context, id api.ID) (*HostedZone, error)
 	DeletePrimaryHostedZone(ctx context.Context, opts DeletePrimaryHostedZoneOpts) error
 }
 

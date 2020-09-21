@@ -129,8 +129,8 @@ type MinimalVPCComposer struct {
 }
 
 // NewMinimalVPCComposer returns an initialised VPC composer
-func NewMinimalVPCComposer(name, env, cidrBlock, region string) *VPCComposer {
-	return &VPCComposer{
+func NewMinimalVPCComposer(name, env, cidrBlock, region string) *MinimalVPCComposer {
+	return &MinimalVPCComposer{
 		Name:        name,
 		Environment: env,
 		CidrBlock:   cidrBlock,

@@ -63,45 +63,7 @@ Resources:
       SubnetId:
         Ref: PublicSubnet00
     Type: AWS::EC2::NatGateway
-  NatGateway01:
-    DependsOn:
-    - NatGatewayEIP01
-    - PublicSubnet01
-    - VPCGatewayAttachment
-    Properties:
-      AllocationId:
-        Fn::GetAtt:
-        - NatGatewayEIP01
-        - AllocationId
-      SubnetId:
-        Ref: PublicSubnet01
-    Type: AWS::EC2::NatGateway
-  NatGateway02:
-    DependsOn:
-    - NatGatewayEIP02
-    - PublicSubnet02
-    - VPCGatewayAttachment
-    Properties:
-      AllocationId:
-        Fn::GetAtt:
-        - NatGatewayEIP02
-        - AllocationId
-      SubnetId:
-        Ref: PublicSubnet02
-    Type: AWS::EC2::NatGateway
   NatGatewayEIP00:
-    DependsOn:
-    - VPCGatewayAttachment
-    Properties:
-      Domain: vpc
-    Type: AWS::EC2::EIP
-  NatGatewayEIP01:
-    DependsOn:
-    - VPCGatewayAttachment
-    Properties:
-      Domain: vpc
-    Type: AWS::EC2::EIP
-  NatGatewayEIP02:
     DependsOn:
     - VPCGatewayAttachment
     Properties:
@@ -121,22 +83,22 @@ Resources:
   PrivateRoute01:
     DependsOn:
     - VPCGatewayAttachment
-    - NatGateway01
+    - NatGateway00
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId:
-        Ref: NatGateway01
+        Ref: NatGateway00
       RouteTableId:
         Ref: PrivateRouteTable01
     Type: AWS::EC2::Route
   PrivateRoute02:
     DependsOn:
     - VPCGatewayAttachment
-    - NatGateway02
+    - NatGateway00
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId:
-        Ref: NatGateway02
+        Ref: NatGateway00
       RouteTableId:
         Ref: PrivateRouteTable02
     Type: AWS::EC2::Route

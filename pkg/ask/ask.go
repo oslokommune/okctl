@@ -156,7 +156,7 @@ func (a *Ask) SelectInfrastructureRepository(defaultRepo string, repos []*github
 			return fmt.Errorf("not an option answer")
 		}
 
-		private := *mappedRepos[s.Value].Private
+		private := mappedRepos[s.Value].GetPrivate()
 		if !private {
 			return fmt.Errorf("repository must be private")
 		}

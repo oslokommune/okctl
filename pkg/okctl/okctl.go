@@ -178,7 +178,36 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		Manifest:             o.manifestService(outputDir, spin),
 		Parameter:            o.paramService(outputDir, spin),
 		Vpc:                  o.vpcService(outputDir, spin),
+		IdentityManager:      o.identityManagerService(outputDir, spin),
 	}, nil
+}
+
+func (o *Okctl) identityManagerService(outputDir string, spin spinner.Spinner) client.IdentityManagerService {
+	identityPoolBaseDir := path.Join(outputDir, config.DefaultIdentityPoolBaseDir)
+
+	identityManagerService := clientCore.NewIdentityManagerService(
+		rest.NewIdentityManagerAPI(o.restClient),
+		clientFilesystem.NewIdentityManagerStore(
+			clientFilesystem.Paths{
+				OutputFile:         config.DefaultIdentityPoolOutputsFile,
+				CloudFormationFile: config.DefaultIdentityPoolCloudFormationTemplate,
+				BaseDir:            identityPoolBaseDir,
+			},
+			clientFilesystem.Paths{
+				CloudFormationFile: config.DefaultCertificateCloudFormationTemplate,
+				BaseDir:            path.Join(identityPoolBaseDir, config.DefaultCertificateBaseDir),
+			},
+			clientFilesystem.Paths{
+				CloudFormationFile: config.DefaultAliasCloudFormationTemplate,
+				BaseDir:            path.Join(identityPoolBaseDir, config.DefaultAliasBaseDir),
+			},
+			o.FileSystem,
+		),
+		stateSaver.NewIdentityManagerState(o.RepoStateWithEnv),
+		console.NewIdentityManagerReport(o.Err, spin),
+	)
+
+	return identityManagerService
 }
 
 func (o *Okctl) argocdService(ghClient githubClient.Githuber, outputDir string, spin spinner.Spinner) client.ArgoCDService {

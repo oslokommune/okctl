@@ -28,6 +28,21 @@ func TestData(t *testing.T) {
 				},
 				Clusters: map[string]state.Cluster{
 					"pro": {
+						IdentityPool: state.IdentityPool{
+							UserPoolID: "GHJWF879FAKE",
+							AuthDomain: "auth.oslo.systems",
+							Alias: state.RecordSetAlias{
+								AliasDomain:     "cloudfront-us-east-1-something.aws.com",
+								AliasHostedZone: "GHU767FAKE",
+							},
+							Clients: map[string]state.IdentityPoolClient{
+								"argocd": {
+									Purpose:     "argocd",
+									CallbackURL: "https://argocd.oslo.systems/api/dex/callback",
+									ClientID:    "gfhoewfjie83933fake",
+								},
+							},
+						},
 						Name:         "okctl-pro",
 						Environment:  "pro",
 						AWSAccountID: "123456789012",

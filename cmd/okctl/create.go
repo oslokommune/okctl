@@ -445,6 +445,22 @@ and database subnets.`,
 				return err
 			}
 
+			_, err = services.IdentityManager.CreateIdentityPool(o.Ctx, api.CreateIdentityPoolOpts{
+				ID:           id,
+				AuthDomain:   fmt.Sprintf("auth.%s", hostedZone.HostedZone.Domain),
+				AuthFQDN:     fmt.Sprintf("auth.%s", hostedZone.HostedZone.FQDN),
+				HostedZoneID: hostedZone.HostedZone.HostedZoneID,
+				Clients: []api.IdentityPoolClientOpts{
+					{
+						Purpose:     "argocd",
+						CallbackURL: fmt.Sprintf("https://argocd.%s/api/dex/callback", hostedZone.HostedZone.Domain),
+					},
+				},
+			})
+			if err != nil {
+				return formatErr(err)
+			}
+
 			argoCD, err := services.ArgoCD.CreateArgoCD(o.Ctx, client.CreateArgoCDOpts{
 				ID:                 id,
 				Domain:             hostedZone.HostedZone.Domain,

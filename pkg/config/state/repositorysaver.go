@@ -57,6 +57,12 @@ type Metadataer interface {
 	GetMetadata() Metadata
 }
 
+// IdentityPooler defines the allowed actions on the identitypool state
+type IdentityPooler interface {
+	SaveIdentityPool(pool IdentityPool) (*store.Report, error)
+	GetIdentityPool() IdentityPool
+}
+
 // RepositoryStateWithEnv provides actions for interacting with
 // the state of a repository
 type RepositoryStateWithEnv interface {
@@ -67,6 +73,7 @@ type RepositoryStateWithEnv interface {
 	Argocder
 	Certificater
 	Metadataer
+	IdentityPooler
 	GetClusterName() string
 	Save() (*store.Report, error)
 }
@@ -96,6 +103,21 @@ func NewRepositoryStateWithEnv(env string, r *Repository, fn SaverFn) Repository
 		env:     env,
 		saverFn: fn,
 	}
+}
+
+// SaveIdentityPool saves the identity pool and stores the state
+func (r *repository) SaveIdentityPool(pool IdentityPool) (*store.Report, error) {
+	cluster := r.GetCluster()
+	cluster.IdentityPool = pool
+
+	r.state.Clusters[r.env] = cluster
+
+	return r.save()
+}
+
+func (r *repository) GetIdentityPool() IdentityPool {
+	_ = r.GetCluster()
+	return r.state.Clusters[r.env].IdentityPool
 }
 
 // SaveCertificate updates the state with the provided certificate

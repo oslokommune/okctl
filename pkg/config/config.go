@@ -106,7 +106,10 @@ const (
 	DefaultParameterOutputsFile = "parameter-outputs.json"
 	// DefaultArgoOutputsFile is the default output file name
 	DefaultArgoOutputsFile = "argocd-outputs.json"
-
+	// DefaultIdentityPoolOutputsFile is the default output file
+	DefaultIdentityPoolOutputsFile = "identitypool-outputs.json"
+	// DefaultIdentityPoolCloudFormationTemplate is the default cf template
+	DefaultIdentityPoolCloudFormationTemplate = "identitypool-cf.yaml"
 	// DefaultExternalSecretsBaseDir is the default directory of the external secrets resources
 	DefaultExternalSecretsBaseDir = "external-secrets"
 	// DefaultAlbIngressControllerBaseDir is the default directory of the external secrets resources
@@ -121,6 +124,12 @@ const (
 	DefaultParameterBaseDir = "parameters"
 	// DefaultArgoCDBaseDir is the default directory for argo cd
 	DefaultArgoCDBaseDir = "argocd"
+	// DefaultIdentityPoolBaseDir is the default directory for the identity manager
+	DefaultIdentityPoolBaseDir = "identitypool"
+	// DefaultAliasBaseDir is the default base dir
+	DefaultAliasBaseDir = "alias"
+	// DefaultAliasCloudFormationTemplate is the default cf template
+	DefaultAliasCloudFormationTemplate = "alias-cf.yaml"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"

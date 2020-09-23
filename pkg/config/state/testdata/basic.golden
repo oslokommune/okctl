@@ -67,3 +67,18 @@ clusters:
                 name: something
                 path: /some/path
                 version: 1
+        identitypool:
+            userpoolid: GHJWF879FAKE
+            authdomain: auth.oslo.systems
+            alias:
+                aliasdomain: cloudfront-us-east-1-something.aws.com
+                aliashostedzone: GHU767FAKE
+            clients:
+                argocd:
+                    purpose: argocd
+                    callbackurl: https://argocd.oslo.systems/api/dex/callback
+                    clientid: gfhoewfjie83933fake
+                    clientsecret:
+                        name: ""
+                        path: ""
+                        version: 0

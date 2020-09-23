@@ -4,6 +4,13 @@ package cloud
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
+
+	"github.com/aws/aws-sdk-go/service/cloudfront"
+
+	"github.com/aws/aws-sdk-go/service/cloudfront/cloudfrontiface"
+
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53/route53iface"
 	"github.com/aws/aws-sdk-go/service/servicequotas"
@@ -59,6 +66,8 @@ func NewFromSession(region, principalARN string, sess *session.Session) (*Provid
 	services.ssm = ssm.New(sess)
 	services.sq = servicequotas.New(sess)
 	services.r53 = route53.New(sess)
+	services.cip = cognitoidentityprovider.New(sess)
+	services.cf = cloudfront.New(sess)
 
 	return p, nil
 }
@@ -96,9 +105,21 @@ type Services struct {
 	ssm ssmiface.SSMAPI
 	sq  servicequotasiface.ServiceQuotasAPI
 	r53 route53iface.Route53API
+	cip cognitoidentityprovideriface.CognitoIdentityProviderAPI
+	cf  cloudfrontiface.CloudFrontAPI
 
 	region       string
 	principalARN string
+}
+
+// CloudFront returns an interface to the AWS CloudFront API
+func (s *Services) CloudFront() cloudfrontiface.CloudFrontAPI {
+	return s.cf
+}
+
+// Cognito returns an interface to the AWS Cognito API
+func (s *Services) CognitoIdentityProvider() cognitoidentityprovideriface.CognitoIdentityProviderAPI {
+	return s.cip
 }
 
 // ServiceQuotas returns an interface to AWS ServiceQuota API

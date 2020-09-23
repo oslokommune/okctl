@@ -6,6 +6,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
+
+	"github.com/aws/aws-sdk-go/service/cloudfront/cloudfrontiface"
+
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53/route53iface"
 
@@ -42,6 +48,8 @@ const (
 	DefaultRegion = "eu-west-1"
 	// DefaultStackName is a mocked default stack name
 	DefaultStackName = "myStack"
+	// DefaultCloudFrontDistributionARN is a mocked default
+	DefaultCloudFrontDistributionARN = "arn:::::/distribution/FHH78FAKE"
 )
 
 // DefaultCredentials returns a mocked set of aws credentials
@@ -186,6 +194,30 @@ func (a *R53API) ListHostedZones(input *route53.ListHostedZonesInput) (*route53.
 	return a.ListHostedZonesFn(input)
 }
 
+// CFRONTAPI mocks the CloudFront API
+type CFRONTAPI struct {
+	cloudfrontiface.CloudFrontAPI
+
+	GetDistributionFn func(*cloudfront.GetDistributionInput) (*cloudfront.GetDistributionOutput, error)
+}
+
+// GetDistribution invokes a mocked response
+func (a *CFRONTAPI) GetDistribution(input *cloudfront.GetDistributionInput) (*cloudfront.GetDistributionOutput, error) {
+	return a.GetDistributionFn(input)
+}
+
+// CIPAPI mocks the CognitoIdentityProvider API
+type CIPAPI struct {
+	cognitoidentityprovideriface.CognitoIdentityProviderAPI
+
+	DescribeUserPoolDomainFn func(*cognitoidentityprovider.DescribeUserPoolDomainInput) (*cognitoidentityprovider.DescribeUserPoolDomainOutput, error)
+}
+
+// DescribeUserPoolDomain invokes a mocked response
+func (a *CIPAPI) DescribeUserPoolDomain(input *cognitoidentityprovider.DescribeUserPoolDomainInput) (*cognitoidentityprovider.DescribeUserPoolDomainOutput, error) {
+	return a.DescribeUserPoolDomainFn(input)
+}
+
 // DescribeStackEventsSuccess sets a success response on the describe event
 func (p *CloudProvider) DescribeStackEventsSuccess() *CloudProvider {
 	p.CFAPI.DescribeStackEventsFn = func(input *cloudformation.DescribeStackEventsInput) (*cloudformation.DescribeStackEventsOutput, error) {
@@ -251,10 +283,12 @@ func (p *CloudProvider) DescribeStacksResponse(status string) *CloudProvider {
 type CloudProvider struct {
 	v1alpha1.CloudProvider
 
-	EC2API *EC2API
-	CFAPI  *CFAPI
-	EKSAPI *EKSAPI
-	R53API *R53API
+	EC2API    *EC2API
+	CFAPI     *CFAPI
+	EKSAPI    *EKSAPI
+	R53API    *R53API
+	CFRONTAPI *CFRONTAPI
+	CIPAPI    *CIPAPI
 }
 
 // CloudFormation returns the mocked CF API
@@ -277,6 +311,16 @@ func (p *CloudProvider) Route53() route53iface.Route53API {
 	return p.R53API
 }
 
+// CognitoIdentityProvider returns the mocked CognitoIdentityProvider API
+func (p *CloudProvider) CognitoIdentityProvider() cognitoidentityprovideriface.CognitoIdentityProviderAPI {
+	return p.CIPAPI
+}
+
+// CloudFront returns the mocked CloudFront API
+func (p *CloudProvider) CloudFront() cloudfrontiface.CloudFrontAPI {
+	return p.CFRONTAPI
+}
+
 // PrincipalARN mocks the principal arn
 func (p *CloudProvider) PrincipalARN() string {
 	return "arn:::::/someuser"
@@ -285,10 +329,12 @@ func (p *CloudProvider) PrincipalARN() string {
 // NewCloudProvider returns a mocked cloud provider with no mocks sets
 func NewCloudProvider() *CloudProvider {
 	return &CloudProvider{
-		EC2API: &EC2API{},
-		CFAPI:  &CFAPI{},
-		EKSAPI: &EKSAPI{},
-		R53API: &R53API{},
+		EC2API:    &EC2API{},
+		CFAPI:     &CFAPI{},
+		EKSAPI:    &EKSAPI{},
+		R53API:    &R53API{},
+		CFRONTAPI: &CFRONTAPI{},
+		CIPAPI:    &CIPAPI{},
 	}
 }
 
@@ -328,6 +374,26 @@ func NewGoodCloudProvider() *CloudProvider {
 							Id:   aws.String("/hostedzone/AABBCCDD"),
 							Name: aws.String("test.oslo.systems."),
 						},
+					},
+				}, nil
+			},
+		},
+		CFRONTAPI: &CFRONTAPI{
+			GetDistributionFn: func(*cloudfront.GetDistributionInput) (*cloudfront.GetDistributionOutput, error) {
+				return &cloudfront.GetDistributionOutput{
+					Distribution: &cloudfront.Distribution{
+						ARN:        aws.String(DefaultCloudFrontDistributionARN),
+						DomainName: aws.String("cloudfront-us-east-1.something.aws.com"),
+					},
+				}, nil
+			},
+		},
+		CIPAPI: &CIPAPI{
+			DescribeUserPoolDomainFn: func(*cognitoidentityprovider.DescribeUserPoolDomainInput) (*cognitoidentityprovider.DescribeUserPoolDomainOutput, error) {
+				return &cognitoidentityprovider.DescribeUserPoolDomainOutput{
+					DomainDescription: &cognitoidentityprovider.DomainDescriptionType{
+						CloudFrontDistribution: aws.String(DefaultCloudFrontDistributionARN),
+						Domain:                 aws.String("auth.oslo.systems"),
 					},
 				}, nil
 			},

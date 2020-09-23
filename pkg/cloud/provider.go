@@ -117,7 +117,7 @@ func (s *Services) CloudFront() cloudfrontiface.CloudFrontAPI {
 	return s.cf
 }
 
-// Cognito returns an interface to the AWS Cognito API
+// CognitoIdentityProvider returns an interface to the AWS Cognito API
 func (s *Services) CognitoIdentityProvider() cognitoidentityprovideriface.CognitoIdentityProviderAPI {
 	return s.cip
 }

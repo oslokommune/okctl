@@ -22,6 +22,10 @@ const (
 	DefaultStackNameDomainID = "domain"
 	// DefaultStackNameCertificateID defines an identifier for a certificate stack
 	DefaultStackNameCertificateID = "certificate"
+	// DefaultStackNameIdentityPool defines an identifier for an identity pool
+	DefaultStackNameIdentityPool = "identitypool"
+	// DefaultStackNameAliasRecordSet defines an identifier for an alias record set
+	DefaultStackNameAliasRecordSet = "aliasrecordset"
 )
 
 // StackNamer knows how to name cloud formation stacks
@@ -88,6 +92,27 @@ func (n *StackNamer) Certificate(repository, env, subdomain string) string {
 	return fmt.Sprintf("%s-%s-%s-%s-%s",
 		DefaultStackNamePrefix,
 		DefaultStackNameCertificateID,
+		repository,
+		env,
+		subdomain,
+	)
+}
+
+// IdentityPool returns the stack name of the identity pool
+func (n *StackNamer) IdentityPool(repository, env string) string {
+	return fmt.Sprintf("%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameIdentityPool,
+		repository,
+		env,
+	)
+}
+
+// AliasRecordSet returns the stack name of the alias record set
+func (n *StackNamer) AliasRecordSet(repository, env, subdomain string) string {
+	return fmt.Sprintf("%s-%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameAliasRecordSet,
 		repository,
 		env,
 		subdomain,

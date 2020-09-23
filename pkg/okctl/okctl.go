@@ -518,16 +518,29 @@ func (o *Okctl) initialise() error {
 		parameterStore,
 	)
 
+	// When creating a certificate for a CloudFront distribution, we
+	// need to create the certificate in us-east-1
+	provider, err := o.newCloudProviderWithRegion("us-east-1")
+	if err != nil {
+		return err
+	}
+
+	identityManagerService := core.NewIdentityManagerService(
+		awsProvider.NewIdentityManagerCloudProvider(o.CloudProvider),
+		awsProvider.NewCertificateCloudProvider(provider),
+	)
+
 	services := core.Services{
-		Cluster:        clusterService,
-		Vpc:            vpcService,
-		ManagedPolicy:  managedPolicyService,
-		ServiceAccount: serviceAccountService,
-		Helm:           helmService,
-		Kube:           kubeService,
-		Domain:         domainService,
-		Certificate:    certificateService,
-		Parameter:      parameterService,
+		Cluster:         clusterService,
+		Vpc:             vpcService,
+		ManagedPolicy:   managedPolicyService,
+		ServiceAccount:  serviceAccountService,
+		Helm:            helmService,
+		Kube:            kubeService,
+		Domain:          domainService,
+		Certificate:     certificateService,
+		Parameter:       parameterService,
+		IdentityManager: identityManagerService,
 	}
 
 	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))
@@ -605,6 +618,15 @@ func (o *Okctl) newBinariesProvider() error {
 	o.BinariesProvider = binaries.New(o.Logger, out, o.CredentialsProvider.Aws(), fetcher)
 
 	return nil
+}
+
+func (o *Okctl) newCloudProviderWithRegion(region string) (v1alpha1.CloudProvider, error) {
+	c, err := cloud.New(region, o.CredentialsProvider.Aws())
+	if err != nil {
+		return nil, err
+	}
+
+	return c.Provider, nil
 }
 
 // newCloudProvider creates a provider for running cloud operations

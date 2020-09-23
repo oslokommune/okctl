@@ -27,6 +27,7 @@ Resources:
       DomainName: auth.oslo.systems
       DomainValidationOptions:
       - DomainName: auth.oslo.systems
+        HostedZoneId: AHOFJE78FAKE
       ValidationMethod: DNS
     Type: AWS::CertificateManager::Certificate
   UserPool:

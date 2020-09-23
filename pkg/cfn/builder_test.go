@@ -62,6 +62,18 @@ func TestBuilderAndComposers(t *testing.T) {
 				},
 			),
 		},
+		{
+			name:   "Builder with AliasRecordSet composer",
+			golden: "alias-recordset.yaml",
+			composer: components.NewAliasRecordSet(
+
+				"DomainPoolAuth",
+				"cloudfront-us-east-1.aws.com",
+				"HJOJF678FAKE",
+				"auth.oslo.systems",
+				"GHFJE78FAKE",
+			),
+		},
 	}
 
 	for _, tc := range testCases {

@@ -5,6 +5,8 @@ package components
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/cfn/components/aliasrecordset"
+
 	"github.com/oslokommune/okctl/pkg/cfn/components/userpooldomain"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/userpoolclient"
@@ -610,7 +612,7 @@ func (u *UserPoolWithClients) Compose() (*cfn.Composition, error) {
 	composition := &cfn.Composition{}
 
 	userPool := userpool.New(u.Environment, u.Repository)
-	upDomainCert := certificate.New(u.Domain, u.HostedZoneID)
+	upDomainCert := certificate.New(u.Domain, u.HostedZoneID) // FIXME: This will not work, we need to create this separatley and receive the cert
 	upDomain := userpooldomain.New(u.Domain, userPool, upDomainCert)
 
 	composition.Resources = append(composition.Resources, userPool, upDomainCert, upDomain)
@@ -630,9 +632,46 @@ func (u *UserPoolWithClients) Compose() (*cfn.Composition, error) {
 // for creating a cognito user pool with clients
 func NewUserPoolWithClients(environment, repository, domain, hostedZoneID string, clients []UserPoolClient) *UserPoolWithClients {
 	return &UserPoolWithClients{
-		Environment: environment,
-		Repository:  repository,
-		Clients:     clients,
-		Domain:      domain,
+		Environment:  environment,
+		Repository:   repository,
+		Clients:      clients,
+		Domain:       domain,
+		HostedZoneID: hostedZoneID,
+	}
+}
+
+// AliasRecordSet contains the state required for
+// building an alias record set
+type AliasRecordSet struct {
+	Name              string
+	AliasDNS          string
+	AliasHostedZoneID string
+	Domain            string
+	HostedZoneID      string
+}
+
+// Compose returns the cloud formation outputs and resources
+func (s *AliasRecordSet) Compose() (*cfn.Composition, error) {
+	composition := &cfn.Composition{}
+
+	composition.Resources = append(composition.Resources, aliasrecordset.New(
+		"Auth",
+		s.AliasDNS,
+		s.AliasHostedZoneID,
+		s.Domain,
+		s.HostedZoneID,
+	))
+
+	return composition, nil
+}
+
+// NewAliasRecordSet returns an initialised composer
+func NewAliasRecordSet(name, aliasDNS, aliasHostedZoneID, domain, hostedZoneID string) *AliasRecordSet {
+	return &AliasRecordSet{
+		Name:              name,
+		AliasDNS:          aliasDNS,
+		AliasHostedZoneID: aliasHostedZoneID,
+		Domain:            domain,
+		HostedZoneID:      hostedZoneID,
 	}
 }

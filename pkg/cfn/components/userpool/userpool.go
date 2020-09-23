@@ -26,7 +26,12 @@ type UserPool struct {
 
 // NamedOutputs returns the named outputs
 func (p *UserPool) NamedOutputs() map[string]map[string]interface{} {
-	return map[string]map[string]interface{}{}
+	return map[string]map[string]interface{}{
+		p.Name():       {"Value": p.Ref()},
+		"Arn":          {"Value": cloudformation.GetAtt(p.Name(), "Arn")},
+		"ProviderName": {"Value": cloudformation.GetAtt(p.Name(), "ProviderName")},
+		"ProviderURL":  {"Value": cloudformation.GetAtt(p.Name(), "ProviderURL")},
+	}
 }
 
 // Resource returns the cloud formation resource for a

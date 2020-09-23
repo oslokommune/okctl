@@ -5,6 +5,12 @@ package components
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/cfn/components/userpooldomain"
+
+	"github.com/oslokommune/okctl/pkg/cfn/components/userpoolclient"
+
+	"github.com/oslokommune/okctl/pkg/cfn/components/userpool"
+
 	"github.com/oslokommune/okctl/pkg/cfn/components/certificate"
 
 	"github.com/awslabs/goformation/v4/cloudformation"
@@ -572,7 +578,7 @@ func NewPublicCertificateComposer(fqdn, hostedZoneID string) *PublicCertificateC
 	}
 }
 
-// Compose returns the resources and outputts for creating a certificate
+// Compose returns the resources and outputs for creating a certificate
 func (c *PublicCertificateComposer) Compose() (*cfn.Composition, error) {
 	cert := certificate.New(c.FQDN, c.HostedZoneID)
 
@@ -580,4 +586,53 @@ func (c *PublicCertificateComposer) Compose() (*cfn.Composition, error) {
 		Outputs:   []cfn.StackOutputer{cert},
 		Resources: []cfn.ResourceNamer{cert},
 	}, nil
+}
+
+// UserPoolWithClients contains all state for building
+// a cognito user pool cloud formation template
+type UserPoolWithClients struct {
+	Environment  string
+	Repository   string
+	Domain       string
+	HostedZoneID string
+	Clients      []UserPoolClient
+}
+
+// UserPoolClient contains state for building a
+// a cognito user pool client cloud formation template
+type UserPoolClient struct {
+	Purpose     string
+	CallbackURL string
+}
+
+// Compose returns the resources and outputs
+func (u *UserPoolWithClients) Compose() (*cfn.Composition, error) {
+	composition := &cfn.Composition{}
+
+	userPool := userpool.New(u.Environment, u.Repository)
+	upDomainCert := certificate.New(u.Domain, u.HostedZoneID)
+	upDomain := userpooldomain.New(u.Domain, userPool, upDomainCert)
+
+	composition.Resources = append(composition.Resources, userPool, upDomainCert, upDomain)
+	composition.Outputs = append(composition.Outputs, userPool)
+
+	for _, client := range u.Clients {
+		upc := userpoolclient.New(client.Purpose, u.Environment, u.Repository, client.CallbackURL, userPool)
+
+		composition.Resources = append(composition.Resources, upc)
+		composition.Outputs = append(composition.Outputs, upc)
+	}
+
+	return composition, nil
+}
+
+// NewUserPoolWithClients returns an initialised composer
+// for creating a cognito user pool with clients
+func NewUserPoolWithClients(environment, repository, domain, hostedZoneID string, clients []UserPoolClient) *UserPoolWithClients {
+	return &UserPoolWithClients{
+		Environment: environment,
+		Repository:  repository,
+		Clients:     clients,
+		Domain:      domain,
+	}
 }

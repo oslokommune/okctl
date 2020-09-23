@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// nolint: funlen
 func TestBuilderAndComposers(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -44,6 +45,22 @@ func TestBuilderAndComposers(t *testing.T) {
 			name:     "Builder with PublicCertificate composer",
 			golden:   "public-certificate-cf.yaml",
 			composer: components.NewPublicCertificateComposer("test.oslo.systems.", "AZ12345"),
+		},
+		{
+			name:   "Builder with UserPoolWithClients composer",
+			golden: "userpool-with-client.yaml",
+			composer: components.NewUserPoolWithClients(
+				"env",
+				"repo",
+				"auth.oslo.systems",
+				"AHOFJE78FAKE",
+				[]components.UserPoolClient{
+					{
+						Purpose:     "argocd",
+						CallbackURL: "https://argocd/callback",
+					},
+				},
+			),
 		},
 	}
 

@@ -14,6 +14,8 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/client"
 
+	"github.com/oslokommune/okctl/pkg/servicequota"
+
 	"github.com/oslokommune/okctl/pkg/domain"
 
 	"github.com/oslokommune/okctl/pkg/spinner"
@@ -253,6 +255,11 @@ and database subnets.`,
 			ready := false
 			prompt := &survey.Confirm{
 				Message: "Are you ready to start?",
+			}
+
+			err = servicequota.CheckQuotas(o.CloudProvider)
+			if err != nil {
+				return err
 			}
 
 			err = survey.AskOne(prompt, &ready)

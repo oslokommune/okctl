@@ -18,7 +18,7 @@ type igwusage struct {
 func (i igwusage) Count() (int, error) {
 	igws, err := i.CloudProvider.EC2().DescribeInternetGateways(nil)
 	if err != nil {
-		return -1, fmt.Errorf("failed to get igw count: %w", err)
+		return 0, fmt.Errorf("failed to get igw count: %w", err)
 	}
 
 	return getLengthOf(getStringMapOf(igws.String()), "InternetGateways")
@@ -30,7 +30,7 @@ func (i igwusage) Quota() (int, error) {
 		ServiceCode: aws.String("vpc"),
 	})
 	if err != nil {
-		return -1, fmt.Errorf("failed to get igw quota: %w", err)
+		return 0, fmt.Errorf("failed to get igw quota: %w", err)
 	}
 
 	return getQuotaNumericValue(quotas)

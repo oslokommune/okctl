@@ -18,7 +18,7 @@ type vpcusage struct {
 func (v vpcusage) Count() (int, error) {
 	vpcs, err := v.CloudProvider.EC2().DescribeVpcs(nil)
 	if err != nil {
-		return -1, fmt.Errorf("failed to get vpc count: %w", err)
+		return 0, fmt.Errorf("failed to get vpc count: %w", err)
 	}
 
 	return getLengthOf(getStringMapOf(vpcs.String()), "Vpcs")
@@ -30,7 +30,7 @@ func (v vpcusage) Quota() (int, error) {
 		ServiceCode: aws.String("vpc"),
 	})
 	if err != nil {
-		return -1, fmt.Errorf("failed to get vpc quota: %w", err)
+		return 0, fmt.Errorf("failed to get vpc quota: %w", err)
 	}
 
 	return getQuotaNumericValue(quotas)

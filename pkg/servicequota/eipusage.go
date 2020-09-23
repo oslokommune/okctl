@@ -18,7 +18,7 @@ type eipusage struct {
 func (e eipusage) Count() (int, error) {
 	eips, err := e.CloudProvider.EC2().DescribeAddresses(nil)
 	if err != nil {
-		return -1, fmt.Errorf("failed to get eip count: %w", err)
+		return 0, fmt.Errorf("failed to get eip count: %w", err)
 	}
 
 	return getLengthOf(getStringMapOf(eips.String()), "Addresses")
@@ -30,7 +30,7 @@ func (e eipusage) Quota() (int, error) {
 		ServiceCode: aws.String("ec2"),
 	})
 	if err != nil {
-		return -1, fmt.Errorf("failed to get eip quota: %w", err)
+		return 0, fmt.Errorf("failed to get eip quota: %w", err)
 	}
 
 	return getQuotaNumericValue(quotas)

@@ -53,7 +53,7 @@ func TestBuilderAndComposers(t *testing.T) {
 				"env",
 				"repo",
 				"auth.oslo.systems",
-				"AHOFJE78FAKE",
+				"arn://certificate/ihfieh9e9FAKE",
 				[]components.UserPoolClient{
 					{
 						Purpose:     "argocd",

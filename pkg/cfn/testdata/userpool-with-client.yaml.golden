@@ -22,14 +22,6 @@ Outputs:
     Value:
       Ref: UserPoolClientargocd
 Resources:
-  PublicCertificate:
-    Properties:
-      DomainName: auth.oslo.systems
-      DomainValidationOptions:
-      - DomainName: auth.oslo.systems
-        HostedZoneId: AHOFJE78FAKE
-      ValidationMethod: DNS
-    Type: AWS::CertificateManager::Certificate
   UserPool:
     Properties:
       AccountRecoverySetting:
@@ -107,8 +99,7 @@ Resources:
     - UserPool
     Properties:
       CustomDomainConfig:
-        CertificateArn:
-          Ref: PublicCertificate
+        CertificateArn: arn://certificate/ihfieh9e9FAKE
       Domain: auth.oslo.systems
       UserPoolId:
         Ref: UserPool

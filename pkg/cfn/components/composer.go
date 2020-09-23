@@ -593,11 +593,11 @@ func (c *PublicCertificateComposer) Compose() (*cfn.Composition, error) {
 // UserPoolWithClients contains all state for building
 // a cognito user pool cloud formation template
 type UserPoolWithClients struct {
-	Environment  string
-	Repository   string
-	Domain       string
-	HostedZoneID string
-	Clients      []UserPoolClient
+	Environment    string
+	Repository     string
+	CertificateARN string
+	Domain         string
+	Clients        []UserPoolClient
 }
 
 // UserPoolClient contains state for building a
@@ -612,10 +612,9 @@ func (u *UserPoolWithClients) Compose() (*cfn.Composition, error) {
 	composition := &cfn.Composition{}
 
 	userPool := userpool.New(u.Environment, u.Repository)
-	upDomainCert := certificate.New(u.Domain, u.HostedZoneID) // FIXME: This will not work, we need to create this separatley and receive the cert
-	upDomain := userpooldomain.New(u.Domain, userPool, upDomainCert)
+	upDomain := userpooldomain.New(u.Domain, u.CertificateARN, userPool)
 
-	composition.Resources = append(composition.Resources, userPool, upDomainCert, upDomain)
+	composition.Resources = append(composition.Resources, userPool, upDomain)
 	composition.Outputs = append(composition.Outputs, userPool)
 
 	for _, client := range u.Clients {
@@ -630,13 +629,13 @@ func (u *UserPoolWithClients) Compose() (*cfn.Composition, error) {
 
 // NewUserPoolWithClients returns an initialised composer
 // for creating a cognito user pool with clients
-func NewUserPoolWithClients(environment, repository, domain, hostedZoneID string, clients []UserPoolClient) *UserPoolWithClients {
+func NewUserPoolWithClients(environment, repository, domain, certificateARN string, clients []UserPoolClient) *UserPoolWithClients {
 	return &UserPoolWithClients{
-		Environment:  environment,
-		Repository:   repository,
-		Clients:      clients,
-		Domain:       domain,
-		HostedZoneID: hostedZoneID,
+		Environment:    environment,
+		Repository:     repository,
+		Clients:        clients,
+		Domain:         domain,
+		CertificateARN: certificateARN,
 	}
 }
 

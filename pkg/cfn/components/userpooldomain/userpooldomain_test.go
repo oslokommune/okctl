@@ -5,7 +5,6 @@ import (
 
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/cognito"
-	"github.com/oslokommune/okctl/pkg/cfn/components/certificate"
 	"github.com/oslokommune/okctl/pkg/cfn/components/userpool"
 	"github.com/oslokommune/okctl/pkg/cfn/components/userpooldomain"
 	"github.com/sebdah/goldie/v2"
@@ -14,7 +13,6 @@ import (
 
 func TestNew(t *testing.T) {
 	up := userpool.New("test", "test")
-	cert := certificate.New("auth.oslo.systems", "GHFINE2445FAKE")
 
 	testCases := []struct {
 		name     string
@@ -24,7 +22,7 @@ func TestNew(t *testing.T) {
 		{
 			name:     "Validate output",
 			golden:   "user-pool.json",
-			resource: userpooldomain.New("auth.oslo.systems", up, cert).Resource(),
+			resource: userpooldomain.New("auth.oslo.systems", "arn://certificate/HAF93FAKE", up).Resource(),
 		},
 	}
 

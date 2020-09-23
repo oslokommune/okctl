@@ -12,10 +12,10 @@ import (
 // UserPoolDomain stores the state for a cloud formation
 // cognito user pool domain
 type UserPoolDomain struct {
-	StoredName  string
-	Domain      string
-	UserPool    cfn.NameReferencer
-	Certificate cfn.NameReferencer
+	StoredName     string
+	Domain         string
+	UserPool       cfn.NameReferencer
+	CertificateARN string
 }
 
 // Resource returns the cloud formation resource for a
@@ -23,10 +23,7 @@ type UserPoolDomain struct {
 func (d *UserPoolDomain) Resource() cloudformation.Resource {
 	return &cognito.UserPoolDomain{
 		CustomDomainConfig: &cognito.UserPoolDomain_CustomDomainConfigType{
-			CertificateArn: d.Certificate.Ref(),
-			AWSCloudFormationDependsOn: []string{
-				d.Certificate.Name(),
-			},
+			CertificateArn: d.CertificateARN,
 		},
 		Domain:     d.Domain,
 		UserPoolId: d.UserPool.Ref(),
@@ -42,11 +39,11 @@ func (d *UserPoolDomain) Name() string {
 }
 
 // New returns an initialised cognito user pool domain
-func New(domain string, userPool, certificate cfn.NameReferencer) *UserPoolDomain {
+func New(domain, certificateARN string, userPool cfn.NameReferencer) *UserPoolDomain {
 	return &UserPoolDomain{
-		StoredName:  "UserPoolDomain",
-		Domain:      domain,
-		UserPool:    userPool,
-		Certificate: certificate,
+		StoredName:     "UserPoolDomain",
+		Domain:         domain,
+		UserPool:       userPool,
+		CertificateARN: certificateARN,
 	}
 }

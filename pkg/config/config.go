@@ -129,6 +129,13 @@ const (
 
 	// DefaultKeyringServiceName is the name of the keyring or encrypted file used to store client secrets
 	DefaultKeyringServiceName = "okctlService"
+
+	// DefaultRequiredEpis number of elastic ips required for cluster creation
+	DefaultRequiredEpis = 3
+	// DefaultRequiredVpcs number of vpc(s) required for cluster creation
+	DefaultRequiredVpcs = 1
+	// DefaultRequiredIgws number of internet gateways required for cluster creation
+	DefaultRequiredIgws = 1
 )
 
 // DataLoaderFn is the type for loading configuration data

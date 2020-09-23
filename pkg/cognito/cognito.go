@@ -11,13 +11,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 )
 
-const (
-	// DefaultCloudFrontHostedZoneID is the default hosted zone id for all cloud front distributions
-	DefaultCloudFrontHostedZoneID = "Z2FDTNDATAQYW2"
-	// DefaultCloudFrontACMRegion is the default region for ACM certificates used with a cloud front distribution
-	DefaultCloudFrontACMRegion = "us-east-1"
-)
-
 // Cognito contains all required state for interacting
 // with the Cognito API
 type Cognito struct {
@@ -51,6 +44,19 @@ func (c *Cognito) UserPoolDomainInfo(domain string) (*UserPoolDomainInfo, error)
 		UserPoolDomain:       *pd.DomainDescription.Domain,
 		CloudFrontDomainName: *dist.Distribution.DomainName,
 	}, nil
+}
+
+// UserPoolClientSecret returns the client secret for a user pool client
+func (c *Cognito) UserPoolClientSecret(clientID, userPoolID string) (string, error) {
+	out, err := c.provider.CognitoIdentityProvider().DescribeUserPoolClient(&cognitoidentityprovider.DescribeUserPoolClientInput{
+		ClientId:   aws.String(clientID),
+		UserPoolId: aws.String(userPoolID),
+	})
+	if err != nil {
+		return "", fmt.Errorf("describing user pool client: %w", err)
+	}
+
+	return *out.UserPoolClient.ClientSecret, nil
 }
 
 // New returns an initialised cognito interaction

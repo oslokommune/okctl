@@ -136,6 +136,12 @@ const (
 	DefaultRequiredVpcs = 1
 	// DefaultRequiredIgws number of internet gateways required for cluster creation
 	DefaultRequiredIgws = 1
+	// DefaultRequiredEpisTestCluster number of elastic ips required for testcluster creation
+	DefaultRequiredEpisTestCluster = 1
+	// DefaultRequiredVpcsTestCluster number of vpc(s) required for testcluster creation
+	DefaultRequiredVpcsTestCluster = 1
+	// DefaultRequiredIgwsTestCluster number of internet gateways required for testcluster creation
+	DefaultRequiredIgwsTestCluster = 1
 )
 
 // DataLoaderFn is the type for loading configuration data

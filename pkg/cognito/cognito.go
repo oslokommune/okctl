@@ -59,6 +59,22 @@ func (c *Cognito) UserPoolClientSecret(clientID, userPoolID string) (string, err
 	return *out.UserPoolClient.ClientSecret, nil
 }
 
+// EnableMFA for a user pool
+func (c *Cognito) EnableMFA(userPoolID string) error {
+	_, err := c.provider.CognitoIdentityProvider().SetUserPoolMfaConfig(&cognitoidentityprovider.SetUserPoolMfaConfigInput{
+		MfaConfiguration: aws.String("ON"),
+		SoftwareTokenMfaConfiguration: &cognitoidentityprovider.SoftwareTokenMfaConfigType{
+			Enabled: aws.Bool(true),
+		},
+		UserPoolId: aws.String(userPoolID),
+	})
+	if err != nil {
+		return fmt.Errorf("enabling totp mfa: %w", err)
+	}
+
+	return nil
+}
+
 // New returns an initialised cognito interaction
 func New(provider v1alpha1.CloudProvider) *Cognito {
 	return &Cognito{

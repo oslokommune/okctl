@@ -3,7 +3,6 @@ package userpoolclient_test
 import (
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/cfn/components/userpool"
 	"github.com/oslokommune/okctl/pkg/cfn/components/userpoolclient"
 
 	"github.com/awslabs/goformation/v4/cloudformation/cognito"
@@ -14,8 +13,6 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	up := userpool.New("test", "test")
-
 	testCases := []struct {
 		name     string
 		golden   string
@@ -29,7 +26,7 @@ func TestNew(t *testing.T) {
 				"test",
 				"test",
 				"https://argocd/callback",
-				up,
+				"GHFJE78FAKE",
 			).Resource(),
 		},
 	}

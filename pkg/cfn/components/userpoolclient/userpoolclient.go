@@ -24,7 +24,7 @@ type UserPoolClient struct {
 	Environment string
 	Repository  string
 	Purpose     string
-	UserPool    cfn.NameReferencer
+	UserPoolID  string
 }
 
 // NamedOutputs returns the named outputs
@@ -60,10 +60,7 @@ func (c *UserPoolClient) Resource() cloudformation.Resource {
 		},
 		RefreshTokenValidity:       refreshTokenValidityDays,
 		SupportedIdentityProviders: nil,
-		UserPoolId:                 c.UserPool.Ref(),
-		AWSCloudFormationDependsOn: []string{
-			c.UserPool.Name(),
-		},
+		UserPoolId:                 c.UserPoolID,
 	}
 }
 
@@ -79,14 +76,14 @@ func (c *UserPoolClient) Name() string {
 
 // New returns an initialised cloud formation creator for
 // a cognito user pool client
-func New(purpose, environment, repository, callBackURL string, userPool cfn.NameReferencer) *UserPoolClient {
+func New(purpose, environment, repository, callBackURL, userPoolID string) *UserPoolClient {
 	return &UserPoolClient{
 		StoredName:  fmt.Sprintf("UserPoolClient%s", purpose),
 		CallBackURL: callBackURL,
 		Environment: environment,
 		Repository:  repository,
 		ClientName:  fmt.Sprintf("okctl-%s-%s-%s", environment, repository, purpose),
-		UserPool:    userPool,
+		UserPoolID:  userPoolID,
 		Purpose:     purpose,
 	}
 }

@@ -7,7 +7,7 @@ type Checker interface {
 }
 
 // CheckQuotas will run through the checks and return an error if quotas are too small
-func CheckQuotas(checkers []Checker) error {
+func CheckQuotas(checkers ...Checker) error {
 	for i := range checkers {
 		checker := checkers[i]
 

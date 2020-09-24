@@ -29,6 +29,7 @@ type ValuesOpts struct {
 	URL                  string
 	HostName             string
 	CertificateARN       string
+	Region               string
 	ClientID             string
 	Organisation         string
 	AuthDomain           string
@@ -259,7 +260,7 @@ func NewDefaultValues(opts ValuesOpts) *Values {
 				UsersAnonymousEnabled: "false",
 				DexConfig: fmt.Sprintf(
 					dexConfig,
-					fmt.Sprintf("https://%s/%s", opts.AuthDomain, opts.UserPoolID),
+					fmt.Sprintf("https://cognito-idp.%s.amazonaws.com/%s", opts.Region, opts.UserPoolID),
 					opts.ClientID,
 					fmt.Sprintf("%s/api/dex/callback", opts.URL),
 				),
@@ -267,8 +268,8 @@ func NewDefaultValues(opts ValuesOpts) *Values {
 				AdminEnabled: "false",
 			},
 			RBACConfig: rbacConfig{
-				PolicyDefault: "role:admin", // Might want to change this
-				Scopes:        `[email]`,
+				PolicyCSV: fmt.Sprintf(policyCSV, "admins"),
+				Scopes:    `[email, group]`,
 			},
 			ClusterAdminAccess: clusterAdminAccess{
 				Enabled: true,
@@ -346,6 +347,9 @@ const repositoriesConfig = `- url: %s
     key: %s
 `
 
+const policyCSV = `g, %s, role:admin
+`
+
 const dexConfig = `connectors:
 - type: oidc
   id: cognito
@@ -359,6 +363,9 @@ const dexConfig = `connectors:
     - openid
     - email
     - profile
+    claimMapping:
+      groups: "cognito:groups"
+      name: "cognito:username"
 `
 
 // Values contains the parameters we map up
@@ -425,8 +432,8 @@ type serverConfig struct {
 }
 
 type rbacConfig struct {
-	PolicyDefault string `yaml:"policy.default"`
-	Scopes        string `yaml:"scopes"`
+	PolicyCSV string `yaml:"policy.csv"`
+	Scopes    string `yaml:"scopes"`
 }
 
 type serverService struct {

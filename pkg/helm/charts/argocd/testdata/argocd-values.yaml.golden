@@ -175,7 +175,7 @@ server:
               id: cognito
               name: AWS Cognito
               config:
-                issuer: https://auth.oslo.systems/VBNJ6723FAKE
+                issuer: https://cognito-idp..amazonaws.com/VBNJ6723FAKE
                 clientID: client12345
                 clientSecret: $dex.cognito.clientSecret
                 redirectURI: https://argocd.test.oslo.systems/api/dex/callback

@@ -140,6 +140,7 @@ func TestHelm(t *testing.T) {
 			),
 			chart: argocd.New(argocd.NewDefaultValues(argocd.ValuesOpts{
 				URL:                  "https://argocd.test.oslo.systems",
+				Region:               "eu-west-1",
 				HostName:             "argocd.test.oslo.systems",
 				CertificateARN:       "arn:aws:acm:eu-west-1:123456789012/certificate/12345abc",
 				ClientID:             "client12345",

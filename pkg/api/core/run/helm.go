@@ -20,6 +20,7 @@ func (r *helmRun) CreateArgoCD(opts api.CreateArgoCDOpts) (*api.Helm, error) {
 	chart := argocd.New(argocd.NewDefaultValues(argocd.ValuesOpts{
 		URL:                  fmt.Sprintf("https://%s", opts.ArgoDomain),
 		HostName:             opts.ArgoDomain,
+		Region:               opts.ID.Region,
 		CertificateARN:       opts.ArgoCertificateARN,
 		ClientID:             opts.ClientID,
 		Organisation:         opts.GithubOrganisation,

@@ -10,7 +10,6 @@ import (
 )
 
 const (
-	unusedAccountValidityDays     = 7
 	temporaryPasswordValidityDays = 7
 	minPasswordLength             = 8
 )
@@ -43,7 +42,8 @@ func (p *UserPool) Resource() cloudformation.Resource {
 			// Only allow an administrator to reset access
 			RecoveryMechanisms: []cognito.UserPool_RecoveryOption{
 				{
-					Name: "admin_only",
+					Name:     "admin_only",
+					Priority: 1,
 				},
 			},
 		},
@@ -53,10 +53,6 @@ func (p *UserPool) Resource() cloudformation.Resource {
 				EmailMessage: "Your username is {username} and temporary password is {####}.",
 				EmailSubject: fmt.Sprintf("Your temporary password for %s (%s)", p.Repository, p.Environment),
 			},
-			UnusedAccountValidityDays: unusedAccountValidityDays,
-		},
-		AliasAttributes: []string{
-			"email",
 		},
 		AutoVerifiedAttributes: []string{
 			"email",
@@ -71,12 +67,8 @@ func (p *UserPool) Resource() cloudformation.Resource {
 		EmailConfiguration: &cognito.UserPool_EmailConfiguration{
 			EmailSendingAccount: "COGNITO_DEFAULT",
 		},
-		EmailVerificationMessage: fmt.Sprintf("Your verification code for %s (%s)", p.Repository, p.Environment),
-		EmailVerificationSubject: "Your verification code is {####}.",
-		EnabledMfas: []string{
-			"SOFTWARE_TOKEN_MFA",
-		},
-		MfaConfiguration: "ON",
+		EmailVerificationSubject: fmt.Sprintf("Your verification code for %s (%s)", p.Repository, p.Environment),
+		EmailVerificationMessage: "Your verification code is {####}.",
 		Policies: &cognito.UserPool_Policies{
 			PasswordPolicy: &cognito.UserPool_PasswordPolicy{
 				MinimumLength:                 minPasswordLength,
@@ -89,11 +81,9 @@ func (p *UserPool) Resource() cloudformation.Resource {
 		},
 		Schema: []cognito.UserPool_SchemaAttribute{
 			{
-				AttributeDataType:      "String",
-				DeveloperOnlyAttribute: true,
-				Mutable:                false,
-				Name:                   "email",
-				Required:               true,
+				Mutable:  false,
+				Name:     "email",
+				Required: true,
 			},
 		},
 		UserPoolAddOns: &cognito.UserPool_UserPoolAddOns{
@@ -102,9 +92,6 @@ func (p *UserPool) Resource() cloudformation.Resource {
 		UserPoolName: p.PoolName,
 		UsernameAttributes: []string{
 			"email",
-		},
-		UsernameConfiguration: &cognito.UserPool_UsernameConfiguration{
-			CaseSensitive: false,
 		},
 		VerificationMessageTemplate: &cognito.UserPool_VerificationMessageTemplate{
 			DefaultEmailOption: "CONFIRM_WITH_LINK",

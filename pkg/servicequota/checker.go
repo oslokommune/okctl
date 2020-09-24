@@ -5,3 +5,17 @@ package servicequota
 type Checker interface {
 	CheckAvailability() error
 }
+
+// CheckQuotas will run through the checks and return an error if quotas are too small
+func CheckQuotas(checkers []Checker) error {
+	for i := range checkers {
+		checker := checkers[i]
+
+		err := checker.CheckAvailability()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

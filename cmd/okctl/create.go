@@ -252,19 +252,12 @@ and database subnets.`,
 				return formatErr(err)
 			}
 
-			checkers := []servicequota.Checker{}
+			var checkers []servicequota.Checker
 			checkers = append(checkers,
 				servicequota.NewVpcCheck(o.Err, o.CloudProvider, config.DefaultRequiredVpcs),
 				servicequota.NewEipCheck(o.Err, o.CloudProvider, config.DefaultRequiredEpis),
 				servicequota.NewIgwCheck(o.Err, o.CloudProvider, config.DefaultRequiredIgws))
-
-			for i := range checkers {
-				checker := checkers[i]
-				err := checker.CheckAvailability()
-				if err != nil {
-					return err
-				}
-			}
+			servicequota.CheckQuotas(checkers)
 
 			ready := false
 			prompt := &survey.Confirm{

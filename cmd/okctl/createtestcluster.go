@@ -5,6 +5,8 @@ import (
 	"path"
 	"regexp"
 
+	"github.com/oslokommune/okctl/pkg/servicequota"
+
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
 
@@ -181,6 +183,20 @@ with Github or other production services.
 			)
 			if err != nil {
 				return formatErr(err)
+			}
+
+			checkers := []servicequota.Checker{}
+			checkers = append(checkers,
+				servicequota.NewVpcCheck(o.Err, o.CloudProvider, config.DefaultRequiredVpcsTestCluster),
+				servicequota.NewEipCheck(o.Err, o.CloudProvider, config.DefaultRequiredEpisTestCluster),
+				servicequota.NewIgwCheck(o.Err, o.CloudProvider, config.DefaultRequiredIgwsTestCluster))
+
+			for i := range checkers {
+				checker := checkers[i]
+				err := checker.CheckAvailability()
+				if err != nil {
+					return err
+				}
 			}
 
 			ready := false

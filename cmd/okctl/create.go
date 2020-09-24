@@ -5,6 +5,8 @@ import (
 	"path"
 	"regexp"
 
+	"github.com/oslokommune/okctl/pkg/servicequota"
+
 	"github.com/oslokommune/okctl/pkg/ask"
 	stateSaver "github.com/oslokommune/okctl/pkg/client/core/state"
 
@@ -13,8 +15,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/route53"
 
 	"github.com/oslokommune/okctl/pkg/client"
-
-	"github.com/oslokommune/okctl/pkg/servicequota"
 
 	"github.com/oslokommune/okctl/pkg/domain"
 
@@ -252,14 +252,23 @@ and database subnets.`,
 				return formatErr(err)
 			}
 
+			checkers := []servicequota.Checker{}
+			checkers = append(checkers,
+				servicequota.NewVpcCheck(o.Err, o.CloudProvider, config.DefaultRequiredVpcs),
+				servicequota.NewEipCheck(o.Err, o.CloudProvider, config.DefaultRequiredEpis),
+				servicequota.NewIgwCheck(o.Err, o.CloudProvider, config.DefaultRequiredIgws))
+
+			for i := range checkers {
+				checker := checkers[i]
+				err := checker.CheckAvailability()
+				if err != nil {
+					return err
+				}
+			}
+
 			ready := false
 			prompt := &survey.Confirm{
 				Message: "Are you ready to start?",
-			}
-
-			err = servicequota.CheckQuotas(o.CloudProvider)
-			if err != nil {
-				return err
 			}
 
 			err = survey.AskOne(prompt, &ready)

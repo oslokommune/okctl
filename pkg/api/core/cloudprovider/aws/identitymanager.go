@@ -23,19 +23,62 @@ type identityManagerCloudProvider struct {
 	provider v1alpha1.CloudProvider
 }
 
-// nolint: funlen
-func (s *identityManagerCloudProvider) CreateIdentityPool(certificateARN string, opts api.CreateIdentityPoolOpts) (*api.IdentityPool, error) {
-	clients := make([]components.UserPoolClient, len(opts.Clients))
+func (s *identityManagerCloudProvider) CreateIdentityPoolClient(opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
+	b := cfn.New(components.NewUserPoolClient(
+		opts.Purpose,
+		opts.CallbackURL,
+		opts.UserPoolID,
+	))
 
-	for i, c := range opts.Clients {
-		clients[i] = components.UserPoolClient{
-			Purpose:     c.Purpose,
-			CallbackURL: c.CallbackURL,
-		}
+	stackName := cfn.NewStackNamer().IdentityPoolClient(opts.ID.Repository, opts.ID.Environment, opts.Purpose)
+
+	template, err := b.Build()
+	if err != nil {
+		return nil, fmt.Errorf("building identity pool client template: %w", err)
 	}
 
-	b := cfn.New(components.NewUserPoolWithClients(
-		opts.ID.Environment, opts.ID.Repository, opts.AuthDomain, certificateARN, clients),
+	r := cfn.NewRunner(s.provider)
+
+	err = r.CreateIfNotExists(stackName, template, nil, defaultTimeOut)
+	if err != nil {
+		return nil, fmt.Errorf("creating identity pool client cloud formation stack: %w", err)
+	}
+
+	c := &api.IdentityPoolClient{
+		ID:                      opts.ID,
+		UserPoolID:              opts.UserPoolID,
+		Purpose:                 opts.Purpose,
+		CallbackURL:             opts.CallbackURL,
+		StackName:               stackName,
+		CloudFormationTemplates: template,
+	}
+
+	err = r.Outputs(stackName, map[string]cfn.ProcessOutputFn{
+		fmt.Sprintf("%sClientID", opts.Purpose): cfn.String(&c.ClientID),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("retrieving identity pool client outputs: %w", err)
+	}
+
+	secret, err := cognito.New(s.provider).UserPoolClientSecret(c.ClientID, opts.UserPoolID)
+	if err != nil {
+		return nil, fmt.Errorf("retrieving client secret: %w", err)
+	}
+
+	c.ClientSecret = secret
+
+	return c, nil
+}
+
+// nolint: funlen
+func (s *identityManagerCloudProvider) CreateIdentityPool(certificateARN string, opts api.CreateIdentityPoolOpts) (*api.IdentityPool, error) {
+	b := cfn.New(components.NewUserPool(
+		opts.ID.Environment,
+		opts.ID.Repository,
+		opts.AuthDomain,
+		opts.HostedZoneID,
+		certificateARN,
+	),
 	)
 
 	stackName := cfn.NewStackNamer().IdentityPool(opts.ID.Repository, opts.ID.Environment)
@@ -77,8 +120,6 @@ func (s *identityManagerCloudProvider) CreateIdentityPool(certificateARN string,
 		HostedZoneID:            opts.HostedZoneID,
 		StackName:               stackName,
 		CloudFormationTemplates: template,
-		Clients:                 nil,
-		Certificate:             nil,
 		RecordSetAlias: &api.RecordSetAlias{
 			AliasDomain:            d.CloudFrontDomainName,
 			AliasHostedZones:       DefaultCloudFrontHostedZoneID,
@@ -87,35 +128,17 @@ func (s *identityManagerCloudProvider) CreateIdentityPool(certificateARN string,
 		},
 	}
 
-	outputs := make(map[string]cfn.ProcessOutputFn, len(clients))
-	apiClients := make([]*api.IdentityClient, len(clients))
-
-	for i, c := range opts.Clients {
-		apiClients[i] = &api.IdentityClient{
-			Purpose:     c.Purpose,
-			CallbackURL: c.CallbackURL,
-		}
-
-		outputs[fmt.Sprintf("%sClientID", c.Purpose)] = cfn.String(&apiClients[i].ClientID)
-	}
-
-	outputs["UserPool"] = cfn.String(&pool.UserPoolID)
-
-	err = r.Outputs(stackName, outputs)
+	err = r.Outputs(stackName, map[string]cfn.ProcessOutputFn{
+		"UserPool": cfn.String(&pool.UserPoolID),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("retrieving identity pool outputs: %w", err)
 	}
 
-	for _, c := range apiClients {
-		secret, err := cognito.New(s.provider).UserPoolClientSecret(c.ClientID, pool.UserPoolID)
-		if err != nil {
-			return nil, fmt.Errorf("retrieving client secret: %w", err)
-		}
-
-		c.ClientSecret = secret
+	err = cognito.New(s.provider).EnableMFA(pool.UserPoolID)
+	if err != nil {
+		return nil, fmt.Errorf("enabling mfa on the user pool: %w", err)
 	}
-
-	pool.Clients = apiClients
 
 	return pool, nil
 }

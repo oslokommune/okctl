@@ -14,6 +14,18 @@ type identityManagerReport struct {
 	console *Console
 }
 
+func (r *identityManagerReport) ReportIdentityPoolClient(client *api.IdentityPoolClient, reports []*store.Report) error {
+	var actions []store.Action // nolint: prealloc
+
+	for _, report := range reports {
+		actions = append(actions, report.Actions...)
+	}
+
+	description := aurora.Green("identity-pool-client").String()
+
+	return r.console.Report(actions, "identity-manager", description)
+}
+
 func (r *identityManagerReport) ReportIdentityPool(pool *api.IdentityPool, reports []*store.Report) error {
 	var actions []store.Action // nolint: prealloc
 

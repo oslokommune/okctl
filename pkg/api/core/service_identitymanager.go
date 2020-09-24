@@ -13,6 +13,15 @@ type identityManagerService struct {
 	cert     api.CertificateCloudProvider
 }
 
+func (s *identityManagerService) CreateIdentityPoolClient(_ context.Context, opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
+	client, err := s.provider.CreateIdentityPoolClient(opts)
+	if err != nil {
+		return nil, errors.E(err, "creating an identity pool client: %w", errors.Internal)
+	}
+
+	return client, nil
+}
+
 func (s *identityManagerService) CreateIdentityPool(_ context.Context, opts api.CreateIdentityPoolOpts) (*api.IdentityPool, error) {
 	certificate, err := s.cert.CreateCertificate(api.CreateCertificateOpts{
 		ID:           opts.ID,

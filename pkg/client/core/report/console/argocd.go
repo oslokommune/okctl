@@ -22,11 +22,9 @@ func (r *argoCDReport) CreateArgoCD(cd *client.ArgoCD, reports []*store.Report) 
 		actions = append(actions, report.Actions...)
 	}
 
-	description := fmt.Sprintf("%s (url: %s, org: %s, team: %s)",
+	description := fmt.Sprintf("%s (url: %s)",
 		aurora.Green("argocd"),
 		cd.ArgoURL,
-		cd.GithubOauthApp.Organisation,
-		cd.GithubOauthApp.Team.Name,
 	)
 
 	return r.console.Report(actions, "argocd", description)

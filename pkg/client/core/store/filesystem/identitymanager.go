@@ -13,10 +13,11 @@ import (
 )
 
 type identityManagerStore struct {
-	poolPaths  Paths
-	certPaths  Paths
-	aliasPaths Paths
-	fs         *afero.Afero
+	poolPaths   Paths
+	certPaths   Paths
+	aliasPaths  Paths
+	clientPaths Paths
+	fs          *afero.Afero
 }
 
 // IdentityPool contains the output state
@@ -26,16 +27,8 @@ type IdentityPool struct {
 	AuthDomain     string
 	HostedZoneID   string
 	StackName      string
-	Clients        []IdentityClient
 	Certificate    Certificate
 	RecordSetAlias RecordSetAlias
-}
-
-// IdentityClient contains the output state
-type IdentityClient struct {
-	Purpose     string
-	CallbackURL string
-	ClientID    string
 }
 
 // RecordSetAlias contains the output state
@@ -45,6 +38,37 @@ type RecordSetAlias struct {
 	StackName        string
 }
 
+// IdentityPoolClient contains the output state
+type IdentityPoolClient struct {
+	ID          api.ID
+	UserPoolID  string
+	Purpose     string
+	CallbackURL string
+	ClientID    string
+	StackName   string
+}
+
+func (s *identityManagerStore) SaveIdentityPoolClient(client *api.IdentityPoolClient) (*store.Report, error) {
+	c := &IdentityPoolClient{
+		ID:          client.ID,
+		UserPoolID:  client.UserPoolID,
+		Purpose:     client.Purpose,
+		CallbackURL: client.CallbackURL,
+		ClientID:    client.ClientID,
+		StackName:   client.StackName,
+	}
+
+	report, err := store.NewFileSystem(path.Join(s.clientPaths.BaseDir, client.Purpose), s.fs).
+		StoreStruct(s.clientPaths.OutputFile, c, store.ToJSON()).
+		StoreBytes(s.clientPaths.CloudFormationFile, client.CloudFormationTemplates).
+		Do()
+	if err != nil {
+		return nil, fmt.Errorf("storing the identity client: %w", err)
+	}
+
+	return report, nil
+}
+
 func (s *identityManagerStore) SaveIdentityPool(pool *api.IdentityPool) (*store.Report, error) {
 	p := &IdentityPool{
 		ID:           pool.ID,
@@ -52,7 +76,6 @@ func (s *identityManagerStore) SaveIdentityPool(pool *api.IdentityPool) (*store.
 		AuthDomain:   pool.AuthDomain,
 		HostedZoneID: pool.HostedZoneID,
 		StackName:    pool.StackName,
-		Clients:      nil,
 		Certificate: Certificate{
 			ID:             pool.ID,
 			FQDN:           pool.Certificate.FQDN,
@@ -66,14 +89,6 @@ func (s *identityManagerStore) SaveIdentityPool(pool *api.IdentityPool) (*store.
 			AliasHostedZones: pool.RecordSetAlias.AliasHostedZones,
 			StackName:        pool.RecordSetAlias.StackName,
 		},
-	}
-
-	for _, c := range pool.Clients {
-		p.Clients = append(p.Clients, IdentityClient{
-			Purpose:     c.Purpose,
-			CallbackURL: c.CallbackURL,
-			ClientID:    c.ClientID,
-		})
 	}
 
 	report, err := store.NewFileSystem(s.poolPaths.BaseDir, s.fs).
@@ -92,11 +107,12 @@ func (s *identityManagerStore) SaveIdentityPool(pool *api.IdentityPool) (*store.
 }
 
 // NewIdentityManagerStore returns an initialised store
-func NewIdentityManagerStore(poolPaths, certPaths, aliasPaths Paths, fs *afero.Afero) client.IdentityManagerStore {
+func NewIdentityManagerStore(poolPaths, certPaths, aliasPaths, clientPaths Paths, fs *afero.Afero) client.IdentityManagerStore {
 	return &identityManagerStore{
-		poolPaths:  poolPaths,
-		certPaths:  certPaths,
-		aliasPaths: aliasPaths,
-		fs:         fs,
+		clientPaths: clientPaths,
+		poolPaths:   poolPaths,
+		certPaths:   certPaths,
+		aliasPaths:  aliasPaths,
+		fs:          fs,
 	}
 }

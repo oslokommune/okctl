@@ -42,6 +42,7 @@ type Endpoints struct {
 	DeleteAlbIngressControllerServiceAccount endpoint.Endpoint
 	DeleteExternalDNSServiceAccount          endpoint.Endpoint
 	CreateIdentityPool                       endpoint.Endpoint
+	CreateIdentityPoolClient                 endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -74,6 +75,7 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteAlbIngressControllerServiceAccount: makeDeleteAlbIngressControllerServiceAccountEndpoint(s.ServiceAccount),
 		DeleteExternalDNSServiceAccount:          makeDeleteExternalDNSServiceAccountEndpoint(s.ServiceAccount),
 		CreateIdentityPool:                       makeCreateIdentityPoolEndpoint(s.IdentityManager),
+		CreateIdentityPoolClient:                 makeCreateIdentityPoolClient(s.IdentityManager),
 	}
 }
 
@@ -105,6 +107,7 @@ type Handlers struct {
 	DeleteAlbIngressControllerServiceAccount http.Handler
 	DeleteExternalDNSServiceAccount          http.Handler
 	CreateIdentityPool                       http.Handler
+	CreateIdentityPoolClient                 http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -163,6 +166,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteAlbIngressControllerServiceAccount: newServer(endpoints.DeleteAlbIngressControllerServiceAccount, decodeIDRequest),
 		DeleteExternalDNSServiceAccount:          newServer(endpoints.DeleteExternalDNSServiceAccount, decodeIDRequest),
 		CreateIdentityPool:                       newServer(endpoints.CreateIdentityPool, decodeCreateIdentityPool),
+		CreateIdentityPoolClient:                 newServer(endpoints.CreateIdentityPoolClient, decodeCreateIdentityPoolClient),
 	}
 }
 
@@ -242,7 +246,13 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			})
 		})
 		r.Route("/identitymanagers", func(r chi.Router) {
-			r.Method(http.MethodPost, "/", handlers.CreateIdentityPool)
+			r.Route("/pools", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateIdentityPool)
+
+				r.Route("/clients", func(r chi.Router) {
+					r.Method(http.MethodPost, "/", handlers.CreateIdentityPoolClient)
+				})
+			})
 		})
 	})
 
@@ -284,6 +294,8 @@ const (
 	secretTag               = "secret"
 	argocdTag               = "argocd"
 	identityManagerTag      = "identitymanager"
+	identityPoolTag         = "identitypool"
+	identityPoolClientTag   = "identitypoolclient"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -316,7 +328,8 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteExternalSecretsServiceAccount:      logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, externalSecretsTag}, "/"), "delete")(endpoints.DeleteExternalSecretsServiceAccount),
 			DeleteAlbIngressControllerServiceAccount: logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, albIngressControllerTag}, "/"), "delete")(endpoints.DeleteAlbIngressControllerServiceAccount),
 			DeleteExternalDNSServiceAccount:          logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, externalDNSTag}, "/"), "delete")(endpoints.DeleteExternalDNSServiceAccount),
-			CreateIdentityPool:                       logmd.Logging(logger, identityManagerTag, "create")(endpoints.CreateIdentityPool),
+			CreateIdentityPool:                       logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag}, "/"), "create")(endpoints.CreateIdentityPool),
+			CreateIdentityPoolClient:                 logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag, identityPoolClientTag}, "/"), "create")(endpoints.CreateIdentityPoolClient),
 		}
 	}
 }

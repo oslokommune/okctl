@@ -13,6 +13,29 @@ type identityManagerState struct {
 	state state.IdentityPooler
 }
 
+func (s *identityManagerState) SaveIdentityPoolClient(client *api.IdentityPoolClient) (*store.Report, error) {
+	c := s.state.GetIdentityPoolClient(client.Purpose)
+
+	c.Purpose = client.Purpose
+	c.CallbackURL = client.CallbackURL
+	c.ClientID = client.ClientID
+
+	report, err := s.state.SaveIdentityPoolClient(c)
+	if err != nil {
+		return nil, fmt.Errorf("saving state: %w", err)
+	}
+
+	report.Actions = append([]store.Action{
+		{
+			Name: "IdentityPoolClient",
+			Path: fmt.Sprintf("purpose=%s, client_id=%s", c.Purpose, c.ClientID),
+			Type: "StateUpdate[add]",
+		},
+	}, report.Actions...)
+
+	return report, nil
+}
+
 func (s *identityManagerState) SaveIdentityPool(p *api.IdentityPool) (*store.Report, error) {
 	pool := s.state.GetIdentityPool()
 
@@ -21,18 +44,6 @@ func (s *identityManagerState) SaveIdentityPool(p *api.IdentityPool) (*store.Rep
 	pool.Alias = state.RecordSetAlias{
 		AliasDomain:     p.RecordSetAlias.AliasDomain,
 		AliasHostedZone: p.RecordSetAlias.AliasHostedZones,
-	}
-
-	if pool.Clients == nil {
-		pool.Clients = map[string]state.IdentityPoolClient{}
-	}
-
-	for _, c := range p.Clients {
-		pool.Clients[c.Purpose] = state.IdentityPoolClient{
-			Purpose:     c.Purpose,
-			CallbackURL: c.CallbackURL,
-			ClientID:    c.ClientID,
-		}
 	}
 
 	report, err := s.state.SaveIdentityPool(pool)

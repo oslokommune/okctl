@@ -20,8 +20,7 @@ func (i igwusage) Count() (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("failed to get igw count: %w", err)
 	}
-
-	return getLengthOf(getStringMapOf(igws.String()), "InternetGateways")
+	return len(igws.InternetGateways), nil
 }
 
 func (i igwusage) Quota() (int, error) {

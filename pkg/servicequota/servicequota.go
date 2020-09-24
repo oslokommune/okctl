@@ -2,13 +2,8 @@
 package servicequota
 
 import (
-	"encoding/json"
-	"strconv"
-
-	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/hjson/hjson-go"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
-	"github.com/tidwall/gjson"
 )
 
 // Usage defines what we need to know about a service quota
@@ -49,22 +44,6 @@ func CheckQuotas(provider v1alpha1.CloudProvider) error {
 	return nil
 }
 
-func getValueFromHjson(humanjson string, path string) string {
-	var result map[string]interface{}
-
-	err := hjson.Unmarshal([]byte(humanjson), &result)
-	if err != nil {
-		return ""
-	}
-
-	marshalled, err := json.Marshal(result)
-	if err != nil {
-		return ""
-	}
-
-	return gjson.Get(string(marshalled), path).String()
-}
-
 func getStringMapOf(humanJSON string) map[string]interface{} {
 	var result map[string]interface{}
 
@@ -82,8 +61,4 @@ func getLengthOf(result map[string]interface{}, path string) (int, error) {
 	}
 
 	return len(result[path].([]interface{})), nil
-}
-
-func getQuotaNumericValue(quota *servicequotas.GetServiceQuotaOutput) (int, error) {
-	return strconv.Atoi(getValueFromHjson(quota.String(), "Quota.Value"))
 }

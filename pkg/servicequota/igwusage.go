@@ -33,7 +33,7 @@ func (i igwusage) Quota() (int, error) {
 		return 0, fmt.Errorf("failed to get igw quota: %w", err)
 	}
 
-	return getQuotaNumericValue(quotas)
+	return int(*quotas.Quota.Value), nil
 }
 
 func (igwusage) Required() int {

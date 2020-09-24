@@ -185,12 +185,11 @@ with Github or other production services.
 				return formatErr(err)
 			}
 
-			var checkers []servicequota.Checker
-			checkers = append(checkers,
+			servicequota.CheckQuotas(
 				servicequota.NewVpcCheck(o.Err, o.CloudProvider, config.DefaultRequiredVpcsTestCluster),
 				servicequota.NewEipCheck(o.Err, o.CloudProvider, config.DefaultRequiredEpisTestCluster),
-				servicequota.NewIgwCheck(o.Err, o.CloudProvider, config.DefaultRequiredIgwsTestCluster))
-			servicequota.CheckQuotas(checkers)
+				servicequota.NewIgwCheck(o.Err, o.CloudProvider, config.DefaultRequiredIgwsTestCluster),
+			)
 
 			ready := false
 			prompt := &survey.Confirm{

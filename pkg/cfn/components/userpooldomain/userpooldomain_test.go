@@ -3,6 +3,8 @@ package userpooldomain_test
 import (
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/cfn/components/recordset"
+
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/cognito"
 	"github.com/oslokommune/okctl/pkg/cfn/components/userpool"
@@ -13,6 +15,7 @@ import (
 
 func TestNew(t *testing.T) {
 	up := userpool.New("test", "test")
+	ph := recordset.New("placeholder", "1.1.1.1", "auth.test.com", "GHFJE378FAKE")
 
 	testCases := []struct {
 		name     string
@@ -22,7 +25,7 @@ func TestNew(t *testing.T) {
 		{
 			name:     "Validate output",
 			golden:   "user-pool.json",
-			resource: userpooldomain.New("auth.oslo.systems", "arn://certificate/HAF93FAKE", up).Resource(),
+			resource: userpooldomain.New("auth.oslo.systems", "arn://certificate/HAF93FAKE", up, ph).Resource(),
 		},
 	}
 

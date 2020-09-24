@@ -25,6 +25,7 @@ func (s *RecordSet) Resource() cloudformation.Resource {
 		ResourceRecords: []string{
 			s.IP,
 		},
+		TTL:  "60",
 		Name: s.Domain,
 		Type: "A",
 	}

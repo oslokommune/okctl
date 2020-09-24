@@ -43,6 +43,7 @@ func (c *UserPoolClient) Resource() cloudformation.Resource {
 		AllowedOAuthFlowsUserPoolClient: true,
 		AllowedOAuthScopes: []string{
 			"email",
+			"profile",
 			"openid",
 		},
 		CallbackURLs: []string{
@@ -54,13 +55,11 @@ func (c *UserPoolClient) Resource() cloudformation.Resource {
 		ExplicitAuthFlows:          nil, // ?
 		GenerateSecret:             true,
 		PreventUserExistenceErrors: "ENABLED",
-		ReadAttributes: []string{
-			"email",
-			"openid",
-		},
 		RefreshTokenValidity:       refreshTokenValidityDays,
-		SupportedIdentityProviders: nil,
-		UserPoolId:                 c.UserPoolID,
+		SupportedIdentityProviders: []string{
+			"COGNITO",
+		},
+		UserPoolId: c.UserPoolID,
 	}
 }
 

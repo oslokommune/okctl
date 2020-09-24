@@ -96,7 +96,7 @@ func (s *identityManagerStore) SaveIdentityPool(pool *api.IdentityPool) (*store.
 		StoreBytes(s.poolPaths.CloudFormationFile, pool.CloudFormationTemplates).
 		AlterStore(store.SetBaseDir(path.Join(s.certPaths.BaseDir, slug.Make(p.Certificate.Domain)))).
 		StoreBytes(s.certPaths.CloudFormationFile, pool.Certificate.CloudFormationTemplate).
-		AlterStore(store.SetBaseDir(path.Join(s.aliasPaths.CloudFormationFile, slug.Make(p.AuthDomain)))).
+		AlterStore(store.SetBaseDir(path.Join(s.aliasPaths.BaseDir, slug.Make(p.AuthDomain)))).
 		StoreBytes(s.aliasPaths.CloudFormationFile, pool.RecordSetAlias.CloudFormationTemplate).
 		Do()
 	if err != nil {

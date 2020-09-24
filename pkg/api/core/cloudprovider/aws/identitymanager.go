@@ -26,6 +26,8 @@ type identityManagerCloudProvider struct {
 func (s *identityManagerCloudProvider) CreateIdentityPoolClient(opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
 	b := cfn.New(components.NewUserPoolClient(
 		opts.Purpose,
+		opts.ID.Environment,
+		opts.ID.Repository,
 		opts.CallbackURL,
 		opts.UserPoolID,
 	))

@@ -25,6 +25,7 @@ Resources:
       Name: oslo.systems
       ResourceRecords:
       - 1.1.1.1
+      TTL: "60"
       Type: A
     Type: AWS::Route53::RecordSet
   UserPool:

@@ -392,7 +392,7 @@ func NewGoodCloudProvider() *CloudProvider {
 			DescribeUserPoolDomainFn: func(*cognitoidentityprovider.DescribeUserPoolDomainInput) (*cognitoidentityprovider.DescribeUserPoolDomainOutput, error) {
 				return &cognitoidentityprovider.DescribeUserPoolDomainOutput{
 					DomainDescription: &cognitoidentityprovider.DomainDescriptionType{
-						CloudFrontDistribution: aws.String(DefaultCloudFrontDistributionARN),
+						CloudFrontDistribution: aws.String("cloudfront-us-east-1.something.aws.com"),
 						Domain:                 aws.String("auth.oslo.systems"),
 					},
 				}, nil

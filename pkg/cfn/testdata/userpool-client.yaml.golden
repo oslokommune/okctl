@@ -11,16 +11,16 @@ Resources:
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthScopes:
       - email
+      - profile
       - openid
       CallbackURLs:
       - https://argocd/callback
-      ClientName: okctl---argocd
+      ClientName: okctl-test-test-argocd
       DefaultRedirectURI: https://argocd/callback
       GenerateSecret: true
       PreventUserExistenceErrors: ENABLED
-      ReadAttributes:
-      - email
-      - openid
       RefreshTokenValidity: 30
+      SupportedIdentityProviders:
+      - COGNITO
       UserPoolId: GHFE723FAKE
     Type: AWS::Cognito::UserPoolClient

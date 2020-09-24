@@ -47,7 +47,7 @@ func TestBuilderAndComposers(t *testing.T) {
 			composer: components.NewPublicCertificateComposer("test.oslo.systems.", "AZ12345"),
 		},
 		{
-			name:   "Builder with UserPoolWithClients composer",
+			name:   "Builder with UserPool composer",
 			golden: "userpool.yaml",
 			composer: components.NewUserPool(
 				"env",
@@ -60,7 +60,7 @@ func TestBuilderAndComposers(t *testing.T) {
 		{
 			name:     "Builder with UserPoolClient",
 			golden:   "userpool-client.yaml",
-			composer: components.NewUserPoolClient("argocd", "https://argocd/callback", "GHFE723FAKE"),
+			composer: components.NewUserPoolClient("argocd", "test", "test", "https://argocd/callback", "GHFE723FAKE"),
 		},
 		{
 			name:   "Builder with AliasRecordSet composer",

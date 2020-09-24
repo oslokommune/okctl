@@ -669,8 +669,10 @@ func (c *UserPoolClient) Compose() (*cfn.Composition, error) {
 
 // NewUserPoolClient returns an initialised composer for
 // creating a cognito user pool client
-func NewUserPoolClient(purpose, callbackURL, userPoolID string) *UserPoolClient {
+func NewUserPoolClient(purpose, environment, repository, callbackURL, userPoolID string) *UserPoolClient {
 	return &UserPoolClient{
+		Environment: environment,
+		Repository:  repository,
 		Purpose:     purpose,
 		CallbackURL: callbackURL,
 		UserPoolID:  userPoolID,

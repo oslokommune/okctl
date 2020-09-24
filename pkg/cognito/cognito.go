@@ -2,9 +2,6 @@ package cognito
 
 import (
 	"fmt"
-	"path"
-
-	"github.com/aws/aws-sdk-go/service/cloudfront"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -33,16 +30,9 @@ func (c *Cognito) UserPoolDomainInfo(domain string) (*UserPoolDomainInfo, error)
 		return nil, fmt.Errorf("describing user pool domain: %w", err)
 	}
 
-	dist, err := c.provider.CloudFront().GetDistribution(&cloudfront.GetDistributionInput{
-		Id: aws.String(path.Base(*pd.DomainDescription.CloudFrontDistribution)),
-	})
-	if err != nil {
-		return nil, err
-	}
-
 	return &UserPoolDomainInfo{
 		UserPoolDomain:       *pd.DomainDescription.Domain,
-		CloudFrontDomainName: *dist.Distribution.DomainName,
+		CloudFrontDomainName: *pd.DomainDescription.CloudFrontDistribution,
 	}, nil
 }
 

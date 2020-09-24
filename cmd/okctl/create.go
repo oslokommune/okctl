@@ -142,7 +142,8 @@ the UI at this URL by logging in with Github:
 
 %s
 
-It might take 5-10 minutes for the ArgoCD ALB to come up.
+It might take 5-10 minutes for the ArgoCD ALB to come up, and
+about 15 minutes for the auth to come up.
 `
 
 const nsMsg = `

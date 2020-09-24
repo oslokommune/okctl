@@ -33,7 +33,7 @@ func (v vpcusage) Quota() (int, error) {
 		return 0, fmt.Errorf("failed to get vpc quota: %w", err)
 	}
 
-	return getQuotaNumericValue(quotas)
+	return int(*quotas.Quota.Value), nil
 }
 
 func (vpcusage) Required() int {

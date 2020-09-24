@@ -33,7 +33,7 @@ func (e eipusage) Quota() (int, error) {
 		return 0, fmt.Errorf("failed to get eip quota: %w", err)
 	}
 
-	return getQuotaNumericValue(quotas)
+	return int(*quotas.Quota.Value), nil
 }
 
 func (eipusage) Required() int {

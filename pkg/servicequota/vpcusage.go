@@ -12,6 +12,7 @@ import (
 )
 
 type vpcusage struct {
+	// TODO don't need to export cloudprovider?
 	CloudProvider v1alpha1.CloudProvider
 }
 
@@ -20,8 +21,7 @@ func (v vpcusage) Count() (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("failed to get vpc count: %w", err)
 	}
-
-	return getLengthOf(getStringMapOf(vpcs.String()), "Vpcs")
+	return len(vpcs.Vpcs), nil
 }
 
 func (v vpcusage) Quota() (int, error) {

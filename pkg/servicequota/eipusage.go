@@ -20,8 +20,7 @@ func (e eipusage) Count() (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("failed to get eip count: %w", err)
 	}
-
-	return getLengthOf(getStringMapOf(eips.String()), "Addresses")
+	return len(eips.Addresses), nil
 }
 
 func (e eipusage) Quota() (int, error) {

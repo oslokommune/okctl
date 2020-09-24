@@ -2,12 +2,11 @@
 package servicequota
 
 import (
-	"github.com/hjson/hjson-go"
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 )
 
-// Usage defines what we need to know about a service quota
-type Usage interface {
+// Checker defines what we need to know about a service quota
+type Checker interface {
 	Count() (int, error)
 	Quota() (int, error)
 	Required() int
@@ -42,23 +41,4 @@ func CheckQuotas(provider v1alpha1.CloudProvider) error {
 	}
 
 	return nil
-}
-
-func getStringMapOf(humanJSON string) map[string]interface{} {
-	var result map[string]interface{}
-
-	err := hjson.Unmarshal([]byte(humanJSON), &result)
-	if err != nil {
-		return nil
-	}
-
-	return result
-}
-
-func getLengthOf(result map[string]interface{}, path string) (int, error) {
-	if result[path] == nil {
-		return 0, nil
-	}
-
-	return len(result[path].([]interface{})), nil
 }

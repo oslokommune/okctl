@@ -4,6 +4,9 @@ package components
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/oslokommune/okctl/pkg/cfn/components/recordset"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/aliasrecordset"
 
@@ -590,52 +593,87 @@ func (c *PublicCertificateComposer) Compose() (*cfn.Composition, error) {
 	}, nil
 }
 
-// UserPoolWithClients contains all state for building
+// UserPool contains all state for building
 // a cognito user pool cloud formation template
-type UserPoolWithClients struct {
+type UserPool struct {
 	Environment    string
 	Repository     string
 	CertificateARN string
 	Domain         string
-	Clients        []UserPoolClient
+	HostedZoneID   string
+}
+
+// Compose returns the resources and outputs
+func (u *UserPool) Compose() (*cfn.Composition, error) {
+	composition := &cfn.Composition{}
+
+	userPool := userpool.New(u.Environment, u.Repository)
+	// Cognito User Pool Domain requires an A record on the base domain, for some or another
+	// reason. Frequently we don't have this, so we create a placeholder record.
+	placeholder := recordset.New("PlaceHolder", "1.1.1.1", RootDomain(u.Domain), u.HostedZoneID)
+	upDomain := userpooldomain.New(u.Domain, u.CertificateARN, userPool, placeholder)
+
+	composition.Resources = append(composition.Resources, userPool, upDomain, placeholder)
+	composition.Outputs = append(composition.Outputs, userPool)
+
+	return composition, nil
+}
+
+// RootDomain extract the root domain
+func RootDomain(domain string) string {
+	if len(domain) == 0 || !strings.Contains(domain, ".") {
+		return domain
+	}
+
+	parts := strings.Split(domain, ".")
+	if len(parts) == 2 { // nolint: gomnd
+		return domain
+	}
+
+	return strings.Join(parts[1:], ".")
+}
+
+// NewUserPool returns an initialised composer
+// for creating a cognito user pool with clients
+func NewUserPool(environment, repository, domain, hostedZoneID, certificateARN string) *UserPool {
+	return &UserPool{
+		Environment:    environment,
+		Repository:     repository,
+		Domain:         domain,
+		CertificateARN: certificateARN,
+		HostedZoneID:   hostedZoneID,
+	}
 }
 
 // UserPoolClient contains state for building a
 // a cognito user pool client cloud formation template
 type UserPoolClient struct {
+	Environment string
+	Repository  string
 	Purpose     string
 	CallbackURL string
+	UserPoolID  string
 }
 
-// Compose returns the resources and outputs
-func (u *UserPoolWithClients) Compose() (*cfn.Composition, error) {
+// Compose returns outputs and resources for a cloud formation stack
+func (c *UserPoolClient) Compose() (*cfn.Composition, error) {
 	composition := &cfn.Composition{}
 
-	userPool := userpool.New(u.Environment, u.Repository)
-	upDomain := userpooldomain.New(u.Domain, u.CertificateARN, userPool)
+	upc := userpoolclient.New(c.Purpose, c.Environment, c.Repository, c.CallbackURL, c.UserPoolID)
 
-	composition.Resources = append(composition.Resources, userPool, upDomain)
-	composition.Outputs = append(composition.Outputs, userPool)
-
-	for _, client := range u.Clients {
-		upc := userpoolclient.New(client.Purpose, u.Environment, u.Repository, client.CallbackURL, userPool)
-
-		composition.Resources = append(composition.Resources, upc)
-		composition.Outputs = append(composition.Outputs, upc)
-	}
+	composition.Resources = append(composition.Resources, upc)
+	composition.Outputs = append(composition.Outputs, upc)
 
 	return composition, nil
 }
 
-// NewUserPoolWithClients returns an initialised composer
-// for creating a cognito user pool with clients
-func NewUserPoolWithClients(environment, repository, domain, certificateARN string, clients []UserPoolClient) *UserPoolWithClients {
-	return &UserPoolWithClients{
-		Environment:    environment,
-		Repository:     repository,
-		Clients:        clients,
-		Domain:         domain,
-		CertificateARN: certificateARN,
+// NewUserPoolClient returns an initialised composer for
+// creating a cognito user pool client
+func NewUserPoolClient(purpose, callbackURL, userPoolID string) *UserPoolClient {
+	return &UserPoolClient{
+		Purpose:     purpose,
+		CallbackURL: callbackURL,
+		UserPoolID:  userPoolID,
 	}
 }
 

@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  argocdClientID:
+    Value:
+      Ref: UserPoolClientargocd
+Resources:
+  UserPoolClientargocd:
+    Properties:
+      AllowedOAuthFlows:
+      - code
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthScopes:
+      - email
+      - openid
+      CallbackURLs:
+      - https://argocd/callback
+      ClientName: okctl---argocd
+      DefaultRedirectURI: https://argocd/callback
+      GenerateSecret: true
+      PreventUserExistenceErrors: ENABLED
+      ReadAttributes:
+      - email
+      - openid
+      RefreshTokenValidity: 30
+      UserPoolId: GHFE723FAKE
+    Type: AWS::Cognito::UserPoolClient

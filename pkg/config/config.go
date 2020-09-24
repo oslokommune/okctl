@@ -20,6 +20,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// nolint: golint
 const (
 	// DefaultDir is the default location directory for the okctl application config
 	DefaultDir = ".okctl"
@@ -42,94 +43,55 @@ const (
 	// DefaultCredentialsDirName sets the name of the directory for creds
 	DefaultCredentialsDirName = "credentials"
 
-	// DefaultRepositoryConfig is the default filename of the okctl repository config
-	DefaultRepositoryConfig = ".okctl.yml"
-	// DefaultRepositoryConfigName is the default name of the okctl repository config
+	DefaultRepositoryConfig     = ".okctl.yml"
 	DefaultRepositoryConfigName = ".okctl"
-	// DefaultRepositoryConfigType is the default type of the okctl repository config
 	DefaultRepositoryConfigType = "yml"
 
-	// DefaultClusterConfig is the default filename of the eksctl cluster config
-	DefaultClusterConfig = "cluster.yml"
-	// DefaultClusterKubeConfig is the default filename of the kubectl kubeconfig
-	DefaultClusterKubeConfig = "kubeconfig"
-	// DefaultClusterAwsConfig is the default filename of the aws config
-	DefaultClusterAwsConfig = "aws-config"
-	// DefaultClusterAwsCredentials is the default filename of the aws credentials
+	DefaultClusterConfig         = "cluster.yml"
+	DefaultClusterKubeConfig     = "kubeconfig"
+	DefaultClusterAwsConfig      = "aws-config"
 	DefaultClusterAwsCredentials = "aws-credentials"
-	// DefaultClusterBaseDir is the default directory name of the eksctl cluster config
-	DefaultClusterBaseDir = "cluster"
+	DefaultClusterBaseDir        = "cluster"
 
-	// DefaultHelmBaseDir is the default directory for storing helm related stuff
-	DefaultHelmBaseDir = "helm"
-	// DefaultHelmRegistryConfig is the name of the registry config file
-	DefaultHelmRegistryConfig = "registry.json"
-	// DefaultHelmRepositoryConfig is the name of the repositories file
+	DefaultHelmBaseDir          = "helm"
+	DefaultHelmRegistryConfig   = "registry.json"
 	DefaultHelmRepositoryConfig = "repositories.yaml"
-	// DefaultHelmRepositoryCache is the name of the repository cache directory
-	DefaultHelmRepositoryCache = "repository"
-	// DefaultHelmPluginsDirectory is the name of the plugins directory
+	DefaultHelmRepositoryCache  = "repository"
 	DefaultHelmPluginsDirectory = "plugins"
 
-	// DefaultVpcOutputs is the default filename of the vpc outputs information
-	DefaultVpcOutputs = "vpc-outputs.json"
-	// DefaultVpcCloudFormationTemplate is the default filename of the vpc cloud formation template
+	DefaultVpcOutputs                = "vpc-outputs.json"
 	DefaultVpcCloudFormationTemplate = "vpc-cf.yml"
-	// DefaultVpcBaseDir is the default directory of the vpc resources
-	DefaultVpcBaseDir = "vpc"
+	DefaultVpcBaseDir                = "vpc"
 
-	// DefaultPolicyCloudFormationTemplateFile is the default filename of the cloud formation template
-	DefaultPolicyCloudFormationTemplateFile = "policy-cf.yml"
-	// DefaultPolicyOutputFile is the default filename of the outputs
-	DefaultPolicyOutputFile = "policy-outputs.json"
-	// DefaultServiceAccountOutputsFile is the default file name of the service account outputs
-	DefaultServiceAccountOutputsFile = "service-account-outputs.json"
-	// DefaultServiceAccountConfigFile is the default file name of the service account config
-	DefaultServiceAccountConfigFile = "service-account-config.yml"
-	// DefaultHelmOutputsFile is the default file name of the helm output
-	DefaultHelmOutputsFile = "helm-outputs.json"
-	// DefaultHelmReleaseFile is the default file name of the helm release
-	DefaultHelmReleaseFile = "helm-release.json"
-	// DefaultHelmChartFile is the default file name of the chart
-	DefaultHelmChartFile = "helm-chart.json"
-	// DefaultKubeOutputsFile is the default file name of the kube output
-	DefaultKubeOutputsFile = "kube-outputs.json"
-	// DefaultDomainOutputsFile is the default file name of the domain output
-	DefaultDomainOutputsFile = "domains-outputs.json"
-	// DefaultDomainCloudFormationTemplate is the default file name of the cloud formation template
-	DefaultDomainCloudFormationTemplate = "domains-cf.yml"
-	// DefaultCertificateOutputsFile is the default file name of the domain output
-	DefaultCertificateOutputsFile = "certificate-outputs.json"
-	// DefaultCertificateCloudFormationTemplate is the default file name of the cloud formation template
-	DefaultCertificateCloudFormationTemplate = "certificate-cf.yml"
-	// DefaultParameterOutputsFile is the default file name of the outputs
-	DefaultParameterOutputsFile = "parameter-outputs.json"
-	// DefaultArgoOutputsFile is the default output file name
-	DefaultArgoOutputsFile = "argocd-outputs.json"
-	// DefaultIdentityPoolOutputsFile is the default output file
-	DefaultIdentityPoolOutputsFile = "identitypool-outputs.json"
-	// DefaultIdentityPoolCloudFormationTemplate is the default cf template
-	DefaultIdentityPoolCloudFormationTemplate = "identitypool-cf.yaml"
-	// DefaultExternalSecretsBaseDir is the default directory of the external secrets resources
-	DefaultExternalSecretsBaseDir = "external-secrets"
-	// DefaultAlbIngressControllerBaseDir is the default directory of the external secrets resources
-	DefaultAlbIngressControllerBaseDir = "alb-ingress-controller"
-	// DefaultExternalDNSBaseDir is the default directory of the external dns resources
-	DefaultExternalDNSBaseDir = "external-dns"
-	// DefaultDomainBaseDir is the default directory for domains
-	DefaultDomainBaseDir = "domains"
-	// DefaultCertificateBaseDir is the default directory for certificates
-	DefaultCertificateBaseDir = "certificates"
-	// DefaultParameterBaseDir is the default directory for parameters
-	DefaultParameterBaseDir = "parameters"
-	// DefaultArgoCDBaseDir is the default directory for argo cd
-	DefaultArgoCDBaseDir = "argocd"
-	// DefaultIdentityPoolBaseDir is the default directory for the identity manager
-	DefaultIdentityPoolBaseDir = "identitypool"
-	// DefaultAliasBaseDir is the default base dir
-	DefaultAliasBaseDir = "alias"
-	// DefaultAliasCloudFormationTemplate is the default cf template
-	DefaultAliasCloudFormationTemplate = "alias-cf.yaml"
+	DefaultAlbIngressControllerBaseDir              = "alb-ingress-controller"
+	DefaultAliasBaseDir                             = "alias"
+	DefaultAliasCloudFormationTemplate              = "alias-cf.yaml"
+	DefaultArgoCDBaseDir                            = "argocd"
+	DefaultArgoOutputsFile                          = "argocd-outputs.json"
+	DefaultCertificateBaseDir                       = "certificates"
+	DefaultCertificateCloudFormationTemplate        = "certificate-cf.yml"
+	DefaultCertificateOutputsFile                   = "certificate-outputs.json"
+	DefaultDomainBaseDir                            = "domains"
+	DefaultDomainCloudFormationTemplate             = "domains-cf.yml"
+	DefaultDomainOutputsFile                        = "domains-outputs.json"
+	DefaultExternalDNSBaseDir                       = "external-dns"
+	DefaultExternalSecretsBaseDir                   = "external-secrets"
+	DefaultHelmChartFile                            = "helm-chart.json"
+	DefaultHelmOutputsFile                          = "helm-outputs.json"
+	DefaultHelmReleaseFile                          = "helm-release.json"
+	DefaultIdentityPoolBaseDir                      = "identitypool"
+	DefaultIdentityPoolCloudFormationTemplate       = "identitypool-cf.yaml"
+	DefaultIdentityPoolOutputsFile                  = "identitypool-outputs.json"
+	DefaultIdentityPoolClientsBaseDir               = "clients"
+	DefaultIdentityPoolClientCloudFormationTemplate = "ipc-cf.yaml"
+	DefaultIdentityPoolClientOutputsFile            = "ipc-outputs.json"
+	DefaultKubeOutputsFile                          = "kube-outputs.json"
+	DefaultParameterBaseDir                         = "parameters"
+	DefaultParameterOutputsFile                     = "parameter-outputs.json"
+	DefaultPolicyCloudFormationTemplateFile         = "policy-cf.yml"
+	DefaultPolicyOutputFile                         = "policy-outputs.json"
+	DefaultServiceAccountConfigFile                 = "service-account-config.yml"
+	DefaultServiceAccountOutputsFile                = "service-account-outputs.json"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"

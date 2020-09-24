@@ -11,7 +11,6 @@ type IdentityPool struct {
 	HostedZoneID            string
 	StackName               string
 	CloudFormationTemplates []byte
-	Clients                 []*IdentityClient
 	Certificate             *Certificate
 	RecordSetAlias          *RecordSetAlias
 }
@@ -25,25 +24,30 @@ type RecordSetAlias struct {
 	CloudFormationTemplate []byte
 }
 
-// IdentityClient contains the state about a client
-type IdentityClient struct {
-	Purpose      string
-	CallbackURL  string
-	ClientID     string
-	ClientSecret string
-}
-
 // CreateIdentityPoolOpts contains the required inputs
 type CreateIdentityPoolOpts struct {
 	ID           ID
 	AuthDomain   string
 	AuthFQDN     string
 	HostedZoneID string
-	Clients      []IdentityPoolClientOpts
 }
 
-// IdentityPoolClientOpts contains the required inputs
-type IdentityPoolClientOpts struct {
+// IdentityPoolClient contains the state about a client
+type IdentityPoolClient struct {
+	ID                      ID
+	UserPoolID              string
+	Purpose                 string
+	CallbackURL             string
+	ClientID                string
+	ClientSecret            string
+	StackName               string
+	CloudFormationTemplates []byte
+}
+
+// CreateIdentityPoolClientOpts contains the required inputs
+type CreateIdentityPoolClientOpts struct {
+	ID          ID
+	UserPoolID  string
 	Purpose     string
 	CallbackURL string
 }
@@ -51,9 +55,11 @@ type IdentityPoolClientOpts struct {
 // IdentityManagerService implements the service layer
 type IdentityManagerService interface {
 	CreateIdentityPool(ctx context.Context, opts CreateIdentityPoolOpts) (*IdentityPool, error)
+	CreateIdentityPoolClient(ctx context.Context, opts CreateIdentityPoolClientOpts) (*IdentityPoolClient, error)
 }
 
 // IdentityManagerCloudProvider implements the cloud layer
 type IdentityManagerCloudProvider interface {
 	CreateIdentityPool(certificateARN string, opts CreateIdentityPoolOpts) (*IdentityPool, error)
+	CreateIdentityPoolClient(opts CreateIdentityPoolClientOpts) (*IdentityPoolClient, error)
 }

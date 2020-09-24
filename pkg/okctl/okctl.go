@@ -168,7 +168,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 
 	return &clientCore.Services{
 		ALBIngressController: o.albIngressService(outputDir, spin),
-		ArgoCD:               o.argocdService(ghClient, outputDir, spin),
+		ArgoCD:               o.argocdService(outputDir, spin),
 		Certificate:          o.certService(outputDir, spin),
 		Cluster:              o.clusterService(outputDir, spin),
 		Domain:               o.domainService(outputDir, spin),
@@ -186,6 +186,7 @@ func (o *Okctl) identityManagerService(outputDir string, spin spinner.Spinner) c
 	identityPoolBaseDir := path.Join(outputDir, config.DefaultIdentityPoolBaseDir)
 
 	identityManagerService := clientCore.NewIdentityManagerService(
+		spin,
 		rest.NewIdentityManagerAPI(o.restClient),
 		clientFilesystem.NewIdentityManagerStore(
 			clientFilesystem.Paths{
@@ -201,6 +202,11 @@ func (o *Okctl) identityManagerService(outputDir string, spin spinner.Spinner) c
 				CloudFormationFile: config.DefaultAliasCloudFormationTemplate,
 				BaseDir:            path.Join(identityPoolBaseDir, config.DefaultAliasBaseDir),
 			},
+			clientFilesystem.Paths{
+				OutputFile:         config.DefaultIdentityPoolClientOutputsFile,
+				CloudFormationFile: config.DefaultIdentityPoolClientCloudFormationTemplate,
+				BaseDir:            path.Join(identityPoolBaseDir, config.DefaultIdentityPoolClientsBaseDir),
+			},
 			o.FileSystem,
 		),
 		stateSaver.NewIdentityManagerState(o.RepoStateWithEnv),
@@ -210,12 +216,12 @@ func (o *Okctl) identityManagerService(outputDir string, spin spinner.Spinner) c
 	return identityManagerService
 }
 
-func (o *Okctl) argocdService(ghClient githubClient.Githuber, outputDir string, spin spinner.Spinner) client.ArgoCDService {
+func (o *Okctl) argocdService(outputDir string, spin spinner.Spinner) client.ArgoCDService {
 	argoBaseDir := path.Join(outputDir, config.DefaultArgoCDBaseDir)
 
 	argoService := clientCore.NewArgoCDService(
 		spin,
-		o.githubService(ghClient, spin.SubSpinner()),
+		o.identityManagerService(argoBaseDir, spin.SubSpinner()),
 		o.certService(argoBaseDir, spin.SubSpinner()),
 		o.manifestService(argoBaseDir, spin.SubSpinner()),
 		o.paramService(argoBaseDir, spin.SubSpinner()),

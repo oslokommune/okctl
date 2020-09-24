@@ -171,16 +171,18 @@ server:
         users.anonymous.enabled: "false"
         dex.config: |
             connectors:
-            - type: github
-              id: github
-              name: Github
+            - type: oidc
+              id: cognito
+              name: AWS Cognito
               config:
+                issuer: https://auth.oslo.systems/VBNJ6723FAKE
                 clientID: client12345
-                clientSecret: $dex.github.clientSecret
-                orgs:
-                - name: oslokommune
-                  teams:
-                  - test
+                clientSecret: $dex.cognito.clientSecret
+                redirectURI: https://argocd.test.oslo.systems/api/dex/callback
+                scopes:
+                - openid
+            	- email
+            	- profile
         repositories: |
             - url: git@github.com:oslokommune/test.git
               type: git
@@ -190,9 +192,8 @@ server:
                 key: ssh-private-key
         admin.enabled: "false"
     rbacConfig:
-        policy.csv: |
-            g, oslokommune:test, role:admin
-        scopes: '[groups, email]'
+        policy.default: role:admin
+        scopes: '[email]'
     clusterAdminAccess:
         enabled: true
 repoServer:

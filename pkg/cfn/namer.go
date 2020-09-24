@@ -6,26 +6,18 @@ import (
 
 // Not sure about this approach, will need to read up.
 
+// nolint: golint
 const (
-	// DefaultStackNamePrefix defines a prefix added to all cloud
-	// formation stacks
-	DefaultStackNamePrefix = "okctl"
-	// DefaultStackNameVpcID defines an identifier for a vpc
-	DefaultStackNameVpcID = "vpc"
-	// DefaultStackNameExternalSecretsPolicyID defines an identifier for an external secrets policy
-	DefaultStackNameExternalSecretsPolicyID = "externalsecretspolicy"
-	// DefaultStackNameAlbIngressControllerPolicyID defines an identifier for alb ingress controller policy
+	DefaultStackNamePrefix                       = "okctl"
+	DefaultStackNameVpcID                        = "vpc"
+	DefaultStackNameExternalSecretsPolicyID      = "externalsecretspolicy"
 	DefaultStackNameAlbIngressControllerPolicyID = "albingresscontrollerpolicy"
-	// DefaultStackNameExternalDNSPolicyID defines an identifier for external dns policy
-	DefaultStackNameExternalDNSPolicyID = "externaldns"
-	// DefaultStackNameDomainID defines an identifier for a domain stack
-	DefaultStackNameDomainID = "domain"
-	// DefaultStackNameCertificateID defines an identifier for a certificate stack
-	DefaultStackNameCertificateID = "certificate"
-	// DefaultStackNameIdentityPool defines an identifier for an identity pool
-	DefaultStackNameIdentityPool = "identitypool"
-	// DefaultStackNameAliasRecordSet defines an identifier for an alias record set
-	DefaultStackNameAliasRecordSet = "aliasrecordset"
+	DefaultStackNameExternalDNSPolicyID          = "externaldns"
+	DefaultStackNameDomainID                     = "domain"
+	DefaultStackNameCertificateID                = "certificate"
+	DefaultStackNameIdentityPool                 = "identitypool"
+	DefaultStackNameIdentityPoolClient           = "identitypoolclient"
+	DefaultStackNameAliasRecordSet               = "aliasrecordset"
 )
 
 // StackNamer knows how to name cloud formation stacks
@@ -105,6 +97,17 @@ func (n *StackNamer) IdentityPool(repository, env string) string {
 		DefaultStackNameIdentityPool,
 		repository,
 		env,
+	)
+}
+
+// IdentityPoolClient returns the stack name of the identity pool client
+func (n *StackNamer) IdentityPoolClient(repository, env, purpose string) string {
+	return fmt.Sprintf("%s-%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameIdentityPoolClient,
+		repository,
+		env,
+		purpose,
 	)
 }
 

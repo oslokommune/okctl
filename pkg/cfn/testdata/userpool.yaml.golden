@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  Arn:
+    Value:
+      Fn::GetAtt:
+      - UserPool
+      - Arn
+  ProviderName:
+    Value:
+      Fn::GetAtt:
+      - UserPool
+      - ProviderName
+  ProviderURL:
+    Value:
+      Fn::GetAtt:
+      - UserPool
+      - ProviderURL
+  UserPool:
+    Value:
+      Ref: UserPool
+Resources:
+  RecordSetPlaceHolder:
+    Properties:
+      HostedZoneId: HFJE38983FAKE
+      Name: oslo.systems
+      ResourceRecords:
+      - 1.1.1.1
+      Type: A
+    Type: AWS::Route53::RecordSet
+  UserPool:
+    Properties:
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+        - Name: admin_only
+          Priority: 1
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+        InviteMessageTemplate:
+          EmailMessage: Your username is {username} and temporary password is {####}.
+          EmailSubject: Your temporary password for repo (env)
+      AutoVerifiedAttributes:
+      - email
+      DeviceConfiguration:
+        ChallengeRequiredOnNewDevice: true
+        DeviceOnlyRememberedOnUserPrompt: true
+      EmailConfiguration:
+        EmailSendingAccount: COGNITO_DEFAULT
+      EmailVerificationMessage: Your verification code is {####}.
+      EmailVerificationSubject: Your verification code for repo (env)
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+          TemporaryPasswordValidityDays: 7
+      Schema:
+      - Name: email
+        Required: true
+      UserPoolAddOns:
+        AdvancedSecurityMode: AUDIT
+      UserPoolName: okctl-env-repo-userpool
+      UsernameAttributes:
+      - email
+      VerificationMessageTemplate:
+        DefaultEmailOption: CONFIRM_WITH_LINK
+        EmailMessage: Your verification code is {####}.
+        EmailSubject: Your verification code for repo (env)
+    Type: AWS::Cognito::UserPool
+  UserPoolDomain:
+    DependsOn:
+    - UserPool
+    - RecordSetPlaceHolder
+    Properties:
+      CustomDomainConfig:
+        CertificateArn: arn://certificate/ihfieh9e9FAKE
+      Domain: auth.oslo.systems
+      UserPoolId:
+        Ref: UserPool
+    Type: AWS::Cognito::UserPoolDomain

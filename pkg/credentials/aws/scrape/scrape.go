@@ -116,7 +116,7 @@ func (s *Scrape) doTotp(resp *http.Response, mfatoken string) (*http.Response, e
 	}
 
 	resp, err = s.c.PostForm(formAction.URL, url.Values{
-		"totp": {mfatoken},
+		"otp": {mfatoken},
 	})
 	if err != nil {
 		return nil, err

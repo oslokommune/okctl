@@ -85,6 +85,12 @@ func (p *UserPool) Resource() cloudformation.Resource {
 				Name:     "email",
 				Required: true,
 			},
+			{
+				AttributeDataType: "String",
+				Mutable:           true,
+				Name:              "name",
+				Required:          true,
+			},
 		},
 		UserPoolAddOns: &cognito.UserPool_UserPoolAddOns{
 			AdvancedSecurityMode: "AUDIT",

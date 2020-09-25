@@ -90,6 +90,7 @@ being captured. Together with slack and slick.`,
 
 	cmd.AddCommand(buildCreateCommand(o))
 	cmd.AddCommand(buildDeleteCommand(o))
+	cmd.AddCommand(buildApplyCommand(o))
 	cmd.AddCommand(buildShowCommand(o))
 	cmd.AddCommand(buildVersionCommand(o))
 

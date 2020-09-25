@@ -51,6 +51,7 @@ func buildCreateCommand(o *okctl.Okctl) *cobra.Command {
 
 	cmd.AddCommand(buildCreateClusterCommand(o))
 	cmd.AddCommand(buildCreateTestClusterCommand(o))
+	cmd.AddCommand(buildCreateApplicationCommand(o))
 
 	return cmd
 }

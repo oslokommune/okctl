@@ -7,7 +7,7 @@ replace github.com/docker/distribution => github.com/docker/distribution v2.7.1-
 replace golang.org/x/sys => golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6
 
 require (
-	github.com/99designs/keyring v1.1.5
+	github.com/99designs/keyring v1.1.6
 	github.com/AlecAivazis/survey/v2 v2.1.1
 	github.com/Microsoft/hcsshim/test v0.0.0-20200826032352-301c83a30e7c // indirect
 	github.com/Netflix/go-expect v0.0.0-20180615182759-c93bf25de8e8

@@ -9,7 +9,7 @@ import (
  * Should be removed when https://github.com/argoproj/argo-cd/issues/4055 has been fixed
  */
 
- /* wget'd from https://github.com/argoproj/argo-cd/blob/6b106768a5133dbbb9dae76282013bdbc7216f09/LICENSE
+/* wget'd from https://github.com/argoproj/argo-cd/blob/6b106768a5133dbbb9dae76282013bdbc7216f09/LICENSE
 
                                  Apache License
                            Version 2.0, January 2004
@@ -258,6 +258,5 @@ type ApplicationSpec struct {
 type Application struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata" protobuf:"bytes,1,opt,name=metadata"`
-	Spec              ApplicationSpec   `json:"spec" protobuf:"bytes,2,opt,name=spec"`
+	Spec              ApplicationSpec `json:"spec" protobuf:"bytes,2,opt,name=spec"`
 }
-

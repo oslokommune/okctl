@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var fullExample bool
-
 func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
+	var fullExample bool
+
 	cmd := &cobra.Command{
 		Use:   "application",
 		Short: "Create an application template",

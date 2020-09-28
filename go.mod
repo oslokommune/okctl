@@ -73,7 +73,7 @@ require (
 	github.com/sebdah/goldie/v2 v2.5.1
 	github.com/sirupsen/logrus v1.6.0
 	github.com/smartystreets/assertions v1.0.0 // indirect
-	github.com/spf13/afero v1.3.4
+	github.com/spf13/afero v1.4.0
 	github.com/spf13/cobra v1.0.1-0.20200629195214-2c5a0d300f8b
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5

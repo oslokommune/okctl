@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/argoapp"
 	"io/ioutil"
 	"os"
 	"path"
@@ -34,35 +35,41 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 		RunE: func(_ *cobra.Command, _ []string) error {
 			err := opts.Validate()
 			if err != nil {
-				err = fmt.Errorf("failed validating options: %w", err)
-
-				fmt.Fprint(o.Err, err)
-
-				return nil
+				return fmt.Errorf("failed validating options: %w", err)
 			}
 
 			rawApplication, err := acquireRawApplication(opts.File)
 			app, err := api.ParseApplication(rawApplication)
 			if err != nil {
-				err = fmt.Errorf("unable to parse application.yaml: %w", err)
-
-				fmt.Fprint(o.Err, err)
-
-				return nil
+				return fmt.Errorf("unable to parse application.yaml: %w", err)
 			}
 
 			var kubernetesResourcesBuffer bytes.Buffer
+			var argoAppBuffer bytes.Buffer
 
 			err = api.Expand(&kubernetesResourcesBuffer, app, false)
+			if err != nil {
+				return fmt.Errorf("error expanding application %w", err)
+			}
+
+			argoApp, err := argoapp.CreateArgoApp(app, "git@github.com:<organization>/<repository>")
+			if err != nil {
+				return fmt.Errorf("error creating ArgoApp from application.yaml: %w", err)
+			}
+			err = api.WriteResource(&argoAppBuffer, argoApp)
+			if err != nil {
+				return fmt.Errorf("error writing ArgoApp to buffer", err)
+			}
 
 			switch opts.Output {
-			case "stdout":
-				fmt.Fprintf(o.Out, "%s", &kubernetesResourcesBuffer)
-			case "files":
-				err := writeResourcesToFile(o, app, kubernetesResourcesBuffer)
-				if err != nil {
-					fmt.Fprintf(o.Err, "%w", err)
-				}
+				case "stdout":
+					fmt.Fprint(o.Out, &kubernetesResourcesBuffer)
+					fmt.Fprint(o.Out, &argoAppBuffer)
+				case "files":
+					err := writeResourcesToFile(o, app, kubernetesResourcesBuffer, argoAppBuffer)
+					if err != nil {
+									  return fmt.Errorf("error writing deployment resources: %w", err)
+									  }
 			}
 
 			return nil
@@ -83,36 +90,36 @@ func acquireRawApplication(path string) (string, error) {
 	if path == "-" {
 		result, err := ioutil.ReadAll(os.Stdin)
 		if err != nil {
-			fmt.Errorf("failed to read stdin: %w", err)
-
-			return "", err
+			return "", fmt.Errorf("failed to read stdin: %w", err)
 		}
 
 		return string(result), nil
-	} else {
-		result, err := ioutil.ReadFile(path)
-		if err != nil {
-			fmt.Errorf("failed to read file: %w", err)
-
-			return "", err
-		}
-
-		return string(result), err
 	}
+
+	result, err := ioutil.ReadFile(path)
+	if err != nil {
+			  return "", fmt.Errorf("failed to read file: %w", err)
+			  }
+
+	return string(result), err
 }
 
-func writeResourcesToFile(o *okctl.Okctl, app api.Application, kubernetesResources bytes.Buffer) error {
+func writeResourcesToFile(o *okctl.Okctl, app api.Application, kubernetesResources bytes.Buffer, argoAppBuffer bytes.Buffer) error {
 	rootPath := "./deployment"
 	kubernetesResourcesPath := path.Join(rootPath, fmt.Sprintf("%s.yaml", app.Name))
+	argoAppResourcePath := path.Join(rootPath, fmt.Sprintf("%s-application.yaml", app.Name))
 
 	err := ioutil.WriteFile(kubernetesResourcesPath, kubernetesResources.Bytes(), 0644)
 	if err != nil {
-		fmt.Errorf("unable to write kubernetes resources to file: %w", err)
-
-		return err
+		return fmt.Errorf("unable to write kubernetes resources to file: %w", err)
 	}
 
-	fmt.Fprintf(o.Out, "Kubernetes resources successfully saved to %s", kubernetesResourcesPath)
+	err = ioutil.WriteFile(argoAppResourcePath, argoAppBuffer.Bytes(), 0644)
+	if err != nil {
+		return fmt.Errorf("unable to write Argo Application to file: %w", err)
+	}
+
+	fmt.Fprintf(o.Out, "Kubernetes resources and Argo Application successfully saved to %s", rootPath)
 
 	return nil
 }

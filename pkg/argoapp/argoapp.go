@@ -2,12 +2,13 @@ package argoapp
 
 import (
 	"github.com/oslokommune/kaex/pkg/api"
+	argo "github.com/oslokommune/okctl/internal/third_party/argoproj/argo-cd/pkg/apis/application/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"path"
 )
 
-func generateDefaultArgoApp() *Application {
-	return &Application{
+func generateDefaultArgoApp() *argo.Application {
+	return &argo.Application{
 		TypeMeta:   metav1.TypeMeta{
 			Kind:       "Application",
 			APIVersion: "argoproj.io/v1alpha1",
@@ -15,17 +16,17 @@ func generateDefaultArgoApp() *Application {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:                       "",
 		},
-		Spec:       ApplicationSpec{
-			Source:               ApplicationSource{
+		Spec:       argo.ApplicationSpec{
+			Source:               argo.ApplicationSource{
 				RepoURL:        "",
 				TargetRevision: "HEAD",
 			},
-			Destination:          ApplicationDestination{
+			Destination:          argo.ApplicationDestination{
 				Server:    "https://kubernetes.default.svc",
 			},
 			Project:              "default",
-			SyncPolicy:           &SyncPolicy{
-				Automated:   &SyncPolicyAutomated{
+			SyncPolicy:           &argo.SyncPolicy{
+				Automated:   &argo.SyncPolicyAutomated{
 					Prune:    false,
 					SelfHeal: false,
 				},
@@ -34,7 +35,7 @@ func generateDefaultArgoApp() *Application {
 	}
 }
 
-func CreateArgoApp(app api.Application, repositoryURL string) (*Application, error) {
+func CreateArgoApp(app api.Application, repositoryURL string) (*argo.Application, error) {
 	argoApp := generateDefaultArgoApp()
 
 	argoApp.ObjectMeta.Name = app.Name

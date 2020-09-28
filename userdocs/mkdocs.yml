@@ -15,6 +15,7 @@ nav:
   - Deployment:
       - deployment/argocd.md
   - Usage:
+      - usage/applicationyaml.md
       - usage/testcluster.md
 
 plugins:

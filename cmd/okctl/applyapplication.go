@@ -51,6 +51,12 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("unable to parse application.yaml: %w", err)
 			}
 
+			if app.Ingress.Annotations == nil {
+				app.Ingress.Annotations = map[string]string{}
+			}
+			app.Ingress.Annotations["kubernetes.io/ingress.class"] = "alb"
+			app.Ingress.Annotations["alb.ingress.kubernetes.io/scheme"] = "internet-facing"
+
 			var kubernetesResourcesBuffer bytes.Buffer
 			var argoAppBuffer bytes.Buffer
 

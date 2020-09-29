@@ -30,6 +30,7 @@ func (o *ApplyApplicationOpts) Validate() error {
 	)
 }
 
+// nolint funlen
 func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &ApplyApplicationOpts{}
 

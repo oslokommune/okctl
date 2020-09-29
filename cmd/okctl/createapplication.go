@@ -1,32 +1,90 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"os"
+	"strings"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/oslokommune/okctl/pkg/config"
+	"github.com/oslokommune/okctl/pkg/config/state"
 
 	"github.com/oslokommune/kaex/pkg/api"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
 
+// CreateApplicationOpts contains all the possible options for "create application"
+type CreateApplicationOpts struct {
+	fullExample bool
+	env         string
+}
+
+// Validate the options for "create application"
+func (o *CreateApplicationOpts) Validate() error {
+	return validation.ValidateStruct(o,
+		validation.Field(&o.fullExample),
+		validation.Field(&o.env),
+	)
+}
+
+// nolint funlen
 func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
-	var fullExample bool
+	opts := &CreateApplicationOpts{}
 
 	cmd := &cobra.Command{
 		Use:   "application",
 		Short: "Create an application template",
 		Long:  "Scaffolds an application.yaml template which can be used to produce necessary Kubernetes and ArgoCD resources",
-		RunE: func(_ *cobra.Command, _ []string) error {
-			if fullExample {
-				err := api.FetchFullExample(o.Out)
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			var buffer bytes.Buffer
+
+			if opts.fullExample {
+				err := api.FetchFullExample(&buffer)
 				if err != nil {
 					return fmt.Errorf("failed fetching application.yaml example: %w", err)
 				}
 			} else {
-				err := api.FetchMinimalExample(o.Out)
+				err := api.FetchMinimalExample(&buffer)
 				if err != nil {
 					return fmt.Errorf("failed fetching application.yaml example: %w", err)
 				}
 			}
+
+			_, err := os.Stat(config.DefaultRepositoryConfig)
+			if os.IsNotExist(err) {
+				fmt.Fprint(o.Out, &buffer)
+
+				return nil
+			}
+
+			err = loadRepoData(o, cmd)
+			if err != nil {
+				fmt.Fprint(o.Out, &buffer)
+
+				return nil
+			}
+
+			var cluster state.Cluster
+			if opts.env == "" {
+				for item := range o.RepoState.Clusters {
+					cluster = o.RepoState.Clusters[item]
+
+					break
+				}
+			} else {
+				cluster = o.RepoState.Clusters[opts.env]
+			}
+
+			output := strings.Replace(
+				buffer.String(),
+				"my-domain.io",
+				fmt.Sprintf("<app-name>.%s-%s.oslo.systems", cluster.Name, cluster.Environment),
+				1,
+			)
+
+			fmt.Fprint(o.Out, output)
 
 			return nil
 		},
@@ -35,7 +93,9 @@ func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVarP(&fullExample, "full", "f", false, "Scaffold a full rather than a minimal example")
+	flags := cmd.Flags()
+	flags.BoolVarP(&opts.fullExample, "full", "f", false, "Scaffold a full rather than a minimal example")
+	flags.StringVarP(&opts.env, "environment", "e", "", "Use a certain environment as base for the scaffold")
 
 	return cmd
 }

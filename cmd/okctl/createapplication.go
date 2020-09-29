@@ -52,7 +52,7 @@ func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 			cluster := okctlapplication.GetCluster(o, cmd, opts.env)
 			if cluster == nil {
-				fmt.Fprint(o.Out, buffer)
+				fmt.Fprint(o.Out, buffer.String())
 
 				return nil
 			}

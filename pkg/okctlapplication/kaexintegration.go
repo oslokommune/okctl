@@ -57,7 +57,11 @@ type ArgoCDDeploymentResources struct {
 /*
 ConvertApplicationToResources turns an api.Application into a ArgoCDDeploymentResources containing buffers with relevant
 */
-func ConvertApplicationToResources(app api.Application) (*ArgoCDDeploymentResources, error) {
+func ConvertApplicationToResources(app api.Application, iacRepoURL string) (*ArgoCDDeploymentResources, error) {
+	if iacRepoURL == "" {
+		iacRepoURL = "git@github.com:<organization>/<repository>"
+	}
+
 	expandedApp := ArgoCDDeploymentResources{}
 
 	err := api.Expand(&expandedApp.KubernetesResourcesBuffer, app, false)
@@ -65,7 +69,7 @@ func ConvertApplicationToResources(app api.Application) (*ArgoCDDeploymentResour
 		return &expandedApp, fmt.Errorf("error expanding application %w", err)
 	}
 
-	argoApp, err := CreateArgoApp(app, "git@github.com:<organization>/<repository>")
+	argoApp, err := CreateArgoApp(app, iacRepoURL)
 	if err != nil {
 		return &expandedApp, fmt.Errorf("error creating ArgoApp from application.yaml: %w", err)
 	}

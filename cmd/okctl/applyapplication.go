@@ -15,8 +15,9 @@ import (
 
 // ApplyApplicationOpts contains all the possible options for "apply application"
 type ApplyApplicationOpts struct {
-	File   string
-	Output string
+	File        string
+	Output      string
+	Environment string
 }
 
 // Validate the options for "apply application"
@@ -34,7 +35,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "application",
 		Short: "Applies an application.yaml to the IAC repo",
-		RunE: func(_ *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			err := opts.Validate()
 			if err != nil {
 				return fmt.Errorf("failed validating options: %w", err)
@@ -45,7 +46,18 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("unable to parse application.yaml: %w", err)
 			}
 
-			resources, err := okctlapplication.ConvertApplicationToResources(app)
+			var iacRepoURL string
+
+			cluster := okctlapplication.GetCluster(o, cmd, opts.Environment)
+			if cluster != nil {
+				for item := range cluster.Github.Repositories {
+					iacRepoURL = cluster.Github.Repositories[item].GitURL
+
+					break
+				}
+			}
+
+			resources, err := okctlapplication.ConvertApplicationToResources(app, iacRepoURL)
 			if err != nil {
 				return fmt.Errorf("error expanding resources: %w", err)
 			}
@@ -63,6 +75,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	}
 
 	flags := cmd.Flags()
+	flags.StringVarP(&opts.Environment, "environment", "e", "", "Specify what environment to use")
 	flags.StringVarP(&opts.File, "file", "f", "", "Specify the file path. Use \"-\" for stdin")
 	flags.StringVarP(&opts.Output, "output", "o", "files", "Specify how the format of the result. Choices: files, stdout")
 

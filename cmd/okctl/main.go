@@ -74,7 +74,7 @@ being captured. Together with slack and slick.`,
 			if err != nil {
 				if errors.Is(err, git.ErrRepositoryNotExists) {
 					return fmt.Errorf("okctl needs to be run inside a Git repository (okctl outputs " +
-						"infrastructure-as-code that will be stored here)")
+						"various configuration files that will be stored here)")
 				}
 
 				return fmt.Errorf("failed to load repository data: %w", err)

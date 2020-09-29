@@ -1,5 +1,5 @@
-// Package argoapp knows how to create an Argo Application populated with sensible data
-package argoapp
+// Package okctlapplication knows how to create an Argo Application populated with sensible data
+package okctlapplication
 
 import (
 	"path"

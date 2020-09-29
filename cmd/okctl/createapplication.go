@@ -3,13 +3,11 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"strings"
 
-	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/oslokommune/okctl/pkg/config"
-	"github.com/oslokommune/okctl/pkg/config/state"
+	"github.com/oslokommune/okctl/pkg/okctlapplication"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/kaex/pkg/api"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
@@ -52,29 +50,11 @@ func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				}
 			}
 
-			_, err := os.Stat(config.DefaultRepositoryConfig)
-			if os.IsNotExist(err) {
-				fmt.Fprint(o.Out, &buffer)
+			cluster := okctlapplication.GetCluster(o, cmd, opts.env)
+			if cluster == nil {
+				fmt.Fprint(o.Out, buffer)
 
 				return nil
-			}
-
-			err = loadRepoData(o, cmd)
-			if err != nil {
-				fmt.Fprint(o.Out, &buffer)
-
-				return nil
-			}
-
-			var cluster state.Cluster
-			if opts.env == "" {
-				for item := range o.RepoState.Clusters {
-					cluster = o.RepoState.Clusters[item]
-
-					break
-				}
-			} else {
-				cluster = o.RepoState.Clusters[opts.env]
 			}
 
 			output := strings.Replace(

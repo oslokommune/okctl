@@ -5,6 +5,8 @@ import (
 	"path"
 	"regexp"
 
+	"github.com/oslokommune/okctl/pkg/servicequota"
+
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
 
@@ -182,6 +184,12 @@ with Github or other production services.
 			if err != nil {
 				return formatErr(err)
 			}
+
+			servicequota.CheckQuotas(
+				servicequota.NewVpcCheck(o.Err, o.CloudProvider, config.DefaultRequiredVpcsTestCluster),
+				servicequota.NewEipCheck(o.Err, o.CloudProvider, config.DefaultRequiredEpisTestCluster),
+				servicequota.NewIgwCheck(o.Err, o.CloudProvider, config.DefaultRequiredIgwsTestCluster),
+			)
 
 			ready := false
 			prompt := &survey.Confirm{

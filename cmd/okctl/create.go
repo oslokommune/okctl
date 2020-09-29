@@ -5,6 +5,8 @@ import (
 	"path"
 	"regexp"
 
+	"github.com/oslokommune/okctl/pkg/servicequota"
+
 	"github.com/oslokommune/okctl/pkg/ask"
 	stateSaver "github.com/oslokommune/okctl/pkg/client/core/state"
 
@@ -255,6 +257,12 @@ and database subnets.`,
 			if err != nil {
 				return formatErr(err)
 			}
+
+			servicequota.CheckQuotas(
+				servicequota.NewVpcCheck(o.Err, o.CloudProvider, config.DefaultRequiredVpcs),
+				servicequota.NewEipCheck(o.Err, o.CloudProvider, config.DefaultRequiredEpis),
+				servicequota.NewIgwCheck(o.Err, o.CloudProvider, config.DefaultRequiredIgws),
+			)
 
 			ready := false
 			prompt := &survey.Confirm{

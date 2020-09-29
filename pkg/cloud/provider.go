@@ -6,6 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53/route53iface"
+	"github.com/aws/aws-sdk-go/service/servicequotas"
+	"github.com/aws/aws-sdk-go/service/servicequotas/servicequotasiface"
 
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/aws/aws-sdk-go/service/eks/eksiface"
@@ -55,6 +57,7 @@ func NewFromSession(region, principalARN string, sess *session.Session) (*Provid
 	services.ec2 = ec2.New(sess)
 	services.eks = eks.New(sess)
 	services.ssm = ssm.New(sess)
+	services.sq = servicequotas.New(sess)
 	services.r53 = route53.New(sess)
 
 	return p, nil
@@ -91,10 +94,16 @@ type Services struct {
 	ec2 ec2iface.EC2API
 	eks eksiface.EKSAPI
 	ssm ssmiface.SSMAPI
+	sq  servicequotasiface.ServiceQuotasAPI
 	r53 route53iface.Route53API
 
 	region       string
 	principalARN string
+}
+
+// ServiceQuotas returns an interface to AWS ServiceQuota API
+func (s *Services) ServiceQuotas() servicequotasiface.ServiceQuotasAPI {
+	return s.sq
 }
 
 // Route53 returns an interface to the AWS Route53 API

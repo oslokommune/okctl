@@ -35,6 +35,8 @@ Basic usage
 $ okctl --help
 
 # Create a cluster
+$ git clone git@github.com:oslokommune/<your new infrastructure-as-code-repository>.git
+$ cd <your new infrastructure-as-code-repository>
 $ okctl create cluster pro 123456789012
 
 # Show credentials for cluster

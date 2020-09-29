@@ -6,6 +6,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/pkg/errors"
+
 	"github.com/oslokommune/okctl/pkg/api/core"
 	"github.com/oslokommune/okctl/pkg/config/load"
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -69,6 +72,11 @@ being captured. Together with slack and slick.`,
 
 			err = loadRepoData(o, cmd)
 			if err != nil {
+				if errors.Is(err, git.ErrRepositoryNotExists) {
+					return fmt.Errorf("okctl needs to be run inside a Git repository (okctl outputs " +
+						"infrastructure-as-code that will be stored here)")
+				}
+
 				return fmt.Errorf("failed to load repository data: %w", err)
 			}
 

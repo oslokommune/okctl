@@ -45,6 +45,12 @@ func buildCreateCommand(o *okctl.Okctl) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create commands",
+		Long: `Create various kinds of clusters.
+
+Pre-requisites:
+* okctl create infrastructure-as-code files, and assumes that it is
+running in a git repository. Initialize or clone a git repository
+before running any of these commands.`,
 	}
 
 	cmd.AddCommand(buildCreateClusterCommand(o))

@@ -102,8 +102,8 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 	helm.sh/helm/v3 v3.3.0
-	k8s.io/api v0.18.4
-	k8s.io/apimachinery v0.18.4
+	k8s.io/api v0.19.2
+	k8s.io/apimachinery v0.19.2
 	k8s.io/cli-runtime v0.18.4
 	k8s.io/client-go v0.18.4
 	k8s.io/utils v0.0.0-20200821003339-5e75c0163111 // indirect

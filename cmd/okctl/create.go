@@ -50,7 +50,7 @@ func buildCreateCommand(o *okctl.Okctl) *cobra.Command {
 		Long: `Create various kinds of resources.
 
 Pre-requisites:
-* okctl creates various configuration files, and assumes that it is
+okctl creates various configuration files, and assumes that it is
 running in a git repository. Initialize or clone a git repository
 before running any of these commands.`,
 	}

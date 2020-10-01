@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/oslokommune/okctl/pkg/okctlapplication"
 
@@ -77,9 +79,15 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVarP(&opts.Environment, "environment", "e", "", "Specify what environment to use")
 	flags.StringVarP(&opts.File, "file", "f", "", "Specify the file path. Use \"-\" for stdin")
-	flags.StringVarP(&opts.Output, "output", "o", "files", "Specify how the format of the result. Choices: files, stdout")
+	flags.StringVarP(&opts.Output, "output", "o", "files", "Specify the format of the result. Choices: files, stdout")
 
 	return cmd
+}
+
+func ensurePathExistence(path string) error {
+	err := os.MkdirAll(path, os.ModePerm)
+
+	return err
 }
 
 func handleOutput(o *okctl.Okctl, app api.Application, outputFormat string, expandedApp *okctlapplication.ArgoCDDeploymentResources) error {
@@ -88,11 +96,17 @@ func handleOutput(o *okctl.Okctl, app api.Application, outputFormat string, expa
 		fmt.Fprint(o.Out, &expandedApp.KubernetesResourcesBuffer)
 		fmt.Fprint(o.Out, &expandedApp.ArgoAppBuffer)
 	case "files":
-		rootPath := "./deployment"
+		rootPath := filepath.Join("./deployment", app.Name)
+
+		err := ensurePathExistence(rootPath)
+		if err != nil {
+			return fmt.Errorf("unable to create required folder structure: %w", err)
+		}
+
 		kubernetesResourcesPath := path.Join(rootPath, fmt.Sprintf("%s.yaml", app.Name))
 		argoAppResourcePath := path.Join(rootPath, fmt.Sprintf("%s-application.yaml", app.Name))
 
-		err := ioutil.WriteFile(kubernetesResourcesPath, expandedApp.KubernetesResourcesBuffer.Bytes(), 0o600)
+		err = ioutil.WriteFile(kubernetesResourcesPath, expandedApp.KubernetesResourcesBuffer.Bytes(), 0o600)
 		if err != nil {
 			return fmt.Errorf("unable to write kubernetes resources to file: %w", err)
 		}
@@ -102,7 +116,8 @@ func handleOutput(o *okctl.Okctl, app api.Application, outputFormat string, expa
 			return fmt.Errorf("unable to write Argo Application to file: %w", err)
 		}
 
-		fmt.Fprintf(o.Out, "Kubernetes resources and Argo Application successfully saved to %s", rootPath)
+		fmt.Fprintf(o.Out, "Kubernetes resources and Argo Application successfully saved to %s\n", rootPath)
+		fmt.Fprintf(o.Out, "Run kubectl apply -f %s/%s-application.yaml after pushing the changes to master to deploy the application.\n", rootPath, app.Name)
 	}
 
 	return nil

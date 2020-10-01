@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/config/state"
+
 	"github.com/oslokommune/okctl/pkg/okctlapplication"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -57,10 +59,20 @@ func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return nil
 			}
 
+			if len(cluster.HostedZone) == 0 {
+				fmt.Fprint(o.Out, buffer.String())
+			}
+
+			var zone state.HostedZone
+			for zoneName := range cluster.HostedZone {
+				zone = cluster.HostedZone[zoneName]
+				break
+			}
+
 			output := strings.Replace(
 				buffer.String(),
 				"my-domain.io",
-				fmt.Sprintf("<app-name>.%s-%s.oslo.systems", cluster.Name, cluster.Environment),
+				fmt.Sprintf("<app-name>.%s", zone.Domain),
 				1,
 			)
 

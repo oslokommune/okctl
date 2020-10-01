@@ -117,7 +117,8 @@ func handleOutput(o *okctl.Okctl, app api.Application, outputFormat string, expa
 		}
 
 		fmt.Fprintf(o.Out, "Kubernetes resources and Argo Application successfully saved to %s\n", rootPath)
-		fmt.Fprintf(o.Out, "Run kubectl apply -f %s/%s-application.yaml after pushing the changes to master to deploy the application.\n", rootPath, app.Name)
+		fmt.Fprint(o.Out, "To deploy, first:\n\t1. Commit and push the changes to master\n")
+		fmt.Fprintf(o.Out, "\t2. Run kubectl apply -f %s/%s-application.yaml\n", rootPath, app.Name)
 	}
 
 	return nil

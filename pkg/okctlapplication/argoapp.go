@@ -2,6 +2,7 @@
 package okctlapplication
 
 import (
+	"fmt"
 	"path"
 
 	"github.com/oslokommune/kaex/pkg/api"
@@ -16,15 +17,17 @@ func generateDefaultArgoApp() *argo.Application {
 			APIVersion: "argoproj.io/v1alpha1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "",
+			Name:      "",
+			Namespace: "argocd",
 		},
 		Spec: argo.ApplicationSpec{
 			Source: argo.ApplicationSource{
-				RepoURL:        "",
+				RepoURL:        "<iac repo url>",
 				TargetRevision: "HEAD",
 			},
 			Destination: argo.ApplicationDestination{
-				Server: "https://kubernetes.default.svc",
+				Server:    "https://kubernetes.default.svc",
+				Namespace: "<namespace your app should run in>",
 			},
 			Project: "default",
 			SyncPolicy: &argo.SyncPolicy{
@@ -43,8 +46,11 @@ func CreateArgoApp(app api.Application, repositoryURL string) (*argo.Application
 
 	argoApp.ObjectMeta.Name = app.Name
 
-	argoApp.Spec.Destination.Namespace = app.Name
-	argoApp.Spec.Source.Path = path.Join("deployment", app.Name)
+	if app.Namespace != "" {
+		argoApp.Spec.Destination.Namespace = app.Namespace
+	}
+
+	argoApp.Spec.Source.Path = fmt.Sprintf("%s/", path.Join("deployment", app.Name))
 	argoApp.Spec.Source.RepoURL = repositoryURL
 
 	return argoApp, nil

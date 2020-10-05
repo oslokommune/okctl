@@ -22,7 +22,7 @@ func generateDefaultArgoApp() *argo.Application {
 		},
 		Spec: argo.ApplicationSpec{
 			Source: argo.ApplicationSource{
-				RepoURL:        "<iac repo url>",
+				RepoURL:        "git@github.com:<organization>/<infrastructure as code repository URL>",
 				TargetRevision: "HEAD",
 			},
 			Destination: argo.ApplicationDestination{
@@ -51,7 +51,10 @@ func CreateArgoApp(app api.Application, repositoryURL string) (*argo.Application
 	}
 
 	argoApp.Spec.Source.Path = fmt.Sprintf("%s/", path.Join("deployment", app.Name))
-	argoApp.Spec.Source.RepoURL = repositoryURL
+
+	if repositoryURL != "" {
+		argoApp.Spec.Source.RepoURL = repositoryURL
+	}
 
 	return argoApp, nil
 }

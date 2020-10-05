@@ -7,7 +7,7 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/config/state"
 
-	"github.com/oslokommune/okctl/pkg/okctlapplication"
+	"github.com/oslokommune/okctl/pkg/scaffold"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/kaex/pkg/api"
@@ -52,7 +52,7 @@ func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				}
 			}
 
-			cluster := okctlapplication.GetCluster(o, cmd, opts.env)
+			cluster := scaffold.GetCluster(o, cmd, opts.env)
 			if cluster == nil {
 				fmt.Fprint(o.Out, buffer.String())
 

@@ -1,4 +1,4 @@
-package okctlapplication
+package scaffold
 
 import (
 	"os"

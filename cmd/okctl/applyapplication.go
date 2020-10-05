@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path"
 	"path/filepath"
 
-	"github.com/oslokommune/okctl/pkg/okctlapplication"
+	"github.com/oslokommune/okctl/pkg/storage"
+
+	"github.com/oslokommune/okctl/pkg/scaffold"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/kaex/pkg/api"
@@ -43,14 +42,14 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("failed validating options: %w", err)
 			}
 
-			app, err := okctlapplication.AcquireApplication(opts.File)
+			app, err := scaffold.ReadApplication(opts.File)
 			if err != nil {
 				return fmt.Errorf("unable to parse application.yaml: %w", err)
 			}
 
 			var iacRepoURL string
 
-			cluster := okctlapplication.GetCluster(o, cmd, opts.Environment)
+			cluster := scaffold.GetCluster(o, cmd, opts.Environment)
 			if cluster != nil {
 				for item := range cluster.Github.Repositories {
 					iacRepoURL = cluster.Github.Repositories[item].GitURL
@@ -59,12 +58,12 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				}
 			}
 
-			resources, err := okctlapplication.ConvertApplicationToResources(app, iacRepoURL)
+			deployment, err := scaffold.NewApplicationDeployment(app, iacRepoURL)
 			if err != nil {
-				return fmt.Errorf("error expanding resources: %w", err)
+				return fmt.Errorf("error creating a new application deployment: %w", err)
 			}
 
-			err = handleOutput(o, app, opts.Output, resources)
+			err = handleOutput(o, app, opts.Output, deployment)
 			if err != nil {
 				return fmt.Errorf("unable to generate output: %w", err)
 			}
@@ -84,41 +83,34 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	return cmd
 }
 
-func ensurePathExistence(path string) error {
-	err := os.MkdirAll(path, os.ModePerm)
-
-	return err
-}
-
-func handleOutput(o *okctl.Okctl, app api.Application, outputFormat string, expandedApp *okctlapplication.ArgoCDDeploymentResources) error {
+func handleOutput(o *okctl.Okctl, app api.Application, outputFormat string, deployment *scaffold.ApplicationDeployment) error {
 	switch outputFormat {
 	case "stdout":
-		fmt.Fprint(o.Out, &expandedApp.KubernetesResourcesBuffer)
-		fmt.Fprint(o.Out, &expandedApp.ArgoAppBuffer)
-	case "files":
-		rootPath := filepath.Join("./deployment", app.Name)
-
-		err := ensurePathExistence(rootPath)
+		err := deployment.Write(o.Out)
 		if err != nil {
-			return fmt.Errorf("unable to create required folder structure: %w", err)
+			return fmt.Errorf("error writing deployment resources: %w", err)
 		}
+	case "files":
+		basePath := filepath.Join("./deployment", app.Name)
+		resourceStorage := storage.NewFileSystemStorage(basePath)
 
-		kubernetesResourcesPath := path.Join(rootPath, fmt.Sprintf("%s.yaml", app.Name))
-		argoAppResourcePath := path.Join(rootPath, fmt.Sprintf("%s-application.yaml", app.Name))
+		kubernetesFile, _ := resourceStorage.Create(".", fmt.Sprintf("%s.yaml", app.Name), 0o600)
 
-		err = ioutil.WriteFile(kubernetesResourcesPath, expandedApp.KubernetesResourcesBuffer.Bytes(), 0o600)
+		err := deployment.WriteKubernetesResources(kubernetesFile)
 		if err != nil {
 			return fmt.Errorf("unable to write kubernetes resources to file: %w", err)
 		}
 
-		err = ioutil.WriteFile(argoAppResourcePath, expandedApp.ArgoAppBuffer.Bytes(), 0o600)
+		argoFile, _ := resourceStorage.Create(".", fmt.Sprintf("%s-application.yaml", app.Name), 0o600)
+
+		err = deployment.WriteArgoResources(argoFile)
 		if err != nil {
 			return fmt.Errorf("unable to write Argo Application to file: %w", err)
 		}
 
-		fmt.Fprintf(o.Out, "Kubernetes resources and Argo Application successfully saved to %s\n", rootPath)
+		fmt.Fprintf(o.Out, "Kubernetes resources and Argo Application successfully saved to %s\n", basePath)
 		fmt.Fprint(o.Out, "To deploy, first:\n\t1. Commit and push the changes to master\n")
-		fmt.Fprintf(o.Out, "\t2. Run kubectl apply -f %s/%s-application.yaml\n", rootPath, app.Name)
+		fmt.Fprintf(o.Out, "\t2. Run kubectl apply -f %s/%s-application.yaml\n", basePath, app.Name)
 	}
 
 	return nil

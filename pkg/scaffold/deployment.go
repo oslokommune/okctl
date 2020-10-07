@@ -2,11 +2,15 @@
 package scaffold
 
 import (
+	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/oslokommune/okctl/pkg/config/state"
+	"github.com/oslokommune/okctl/pkg/okctl"
+	"github.com/spf13/cobra"
 
 	"github.com/oslokommune/okctl/internal/third_party/argoproj/argo-cd/pkg/apis/application/v1alpha1"
 
@@ -19,6 +23,10 @@ import (
 
 // ApplicationDeployment contains necessary data for a deployment
 type ApplicationDeployment struct {
+	ApplicationName string
+	IACRepoURL      string
+	Cluster         state.Clusterer
+
 	ArgoApplication v1alpha1.Application
 	Deployment      appsv1.Deployment
 	Ingress         networkingv1.Ingress
@@ -82,8 +90,13 @@ func (deployment *ApplicationDeployment) WriteArgoResources(writer io.Writer) er
 }
 
 // NewApplicationDeployment converts a Kaex Application to an okctl deployment
-func NewApplicationDeployment(app api.Application, iacRepoURL string) (*ApplicationDeployment, error) {
+func NewApplicationDeployment(app api.Application, o *okctl.Okctl, cmd *cobra.Command, env string) (*ApplicationDeployment, error) {
 	applicationDeployment := ApplicationDeployment{}
+
+	relevantCluster := GetCluster(o, cmd, env)
+	if relevantCluster != nil {
+		applicationDeployment.IACRepoURL = GetIACRepoURL(relevantCluster)
+	}
 
 	for index := range app.Volumes {
 		applicationDeployment.Volumes = make([]v1.PersistentVolumeClaim, len(app.Volumes))
@@ -119,7 +132,7 @@ func NewApplicationDeployment(app api.Application, iacRepoURL string) (*Applicat
 		return nil, err
 	}
 
-	argoApp := createArgoApp(app, iacRepoURL)
+	argoApp := createArgoApp(app, applicationDeployment.IACRepoURL)
 
 	applicationDeployment.Deployment = deployment
 	applicationDeployment.ArgoApplication = *argoApp
@@ -130,25 +143,26 @@ func NewApplicationDeployment(app api.Application, iacRepoURL string) (*Applicat
 /*
 ReadApplication returns an okctl Application based on stdin or a file
 */
-func ReadApplication(path string) (api.Application, error) {
+func ReadApplication(o *okctl.Okctl, path string) (api.Application, error) {
 	var (
-		rawApplication []byte
-		err            error
+		buffer bytes.Buffer
+		reader io.Reader
+		err    error
 	)
 
 	if path == "-" {
-		rawApplication, err = ioutil.ReadAll(os.Stdin)
-		if err != nil {
-			return api.Application{}, fmt.Errorf("failed to read stdin: %w", err)
-		}
+		reader = o.In
 	} else {
-		rawApplication, err = ioutil.ReadFile(filepath.Clean(path))
-		if err != nil {
-			return api.Application{}, fmt.Errorf("failed to read file: %w", err)
-		}
+		reader, err = os.Open(filepath.Clean(path))
 	}
 
-	app, err := api.ParseApplication(string(rawApplication))
+	if err != nil {
+		return api.Application{}, fmt.Errorf("failed to read file: %w", err)
+	}
+
+	_, _ = io.Copy(&buffer, reader)
+
+	app, err := api.ParseApplication(buffer.String())
 	if err != nil {
 		return api.Application{}, fmt.Errorf("unable to parse application: %w", err)
 	}

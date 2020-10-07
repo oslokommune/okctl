@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"path/filepath"
 
 	"github.com/oslokommune/okctl/pkg/storage"
@@ -29,7 +30,6 @@ func (o *ApplyApplicationOpts) Validate() error {
 	)
 }
 
-// nolint funlen
 func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &ApplyApplicationOpts{}
 
@@ -42,28 +42,17 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("failed validating options: %w", err)
 			}
 
-			app, err := scaffold.ReadApplication(opts.File)
+			app, err := scaffold.ReadApplication(o, opts.File)
 			if err != nil {
 				return fmt.Errorf("unable to parse application.yaml: %w", err)
 			}
 
-			var iacRepoURL string
-
-			cluster := scaffold.GetCluster(o, cmd, opts.Environment)
-			if cluster != nil {
-				for item := range cluster.Github.Repositories {
-					iacRepoURL = cluster.Github.Repositories[item].GitURL
-
-					break
-				}
-			}
-
-			deployment, err := scaffold.NewApplicationDeployment(app, iacRepoURL)
+			deployment, err := scaffold.NewApplicationDeployment(app, o, cmd, opts.Environment)
 			if err != nil {
 				return fmt.Errorf("error creating a new application deployment: %w", err)
 			}
 
-			err = handleOutput(o, app, opts.Output, deployment)
+			err = handleOutput(o.Out, app, opts.Output, deployment)
 			if err != nil {
 				return fmt.Errorf("unable to generate output: %w", err)
 			}
@@ -83,10 +72,10 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	return cmd
 }
 
-func handleOutput(o *okctl.Okctl, app api.Application, outputFormat string, deployment *scaffold.ApplicationDeployment) error {
+func handleOutput(writer io.Writer, app api.Application, outputFormat string, deployment *scaffold.ApplicationDeployment) error {
 	switch outputFormat {
 	case "stdout":
-		err := deployment.Write(o.Out)
+		err := deployment.Write(writer)
 		if err != nil {
 			return fmt.Errorf("error writing deployment resources: %w", err)
 		}
@@ -108,9 +97,9 @@ func handleOutput(o *okctl.Okctl, app api.Application, outputFormat string, depl
 			return fmt.Errorf("unable to write Argo Application to file: %w", err)
 		}
 
-		fmt.Fprintf(o.Out, "Kubernetes resources and Argo Application successfully saved to %s\n", basePath)
-		fmt.Fprint(o.Out, "To deploy, first:\n\t1. Commit and push the changes to master\n")
-		fmt.Fprintf(o.Out, "\t2. Run kubectl apply -f %s/%s-application.yaml\n", basePath, app.Name)
+		fmt.Fprintf(writer, "Kubernetes resources and Argo Application successfully saved to %s\n", basePath)
+		fmt.Fprint(writer, "To deploy, first:\n\t1. Commit and push the changes to master\n")
+		fmt.Fprintf(writer, "\t2. Run kubectl apply -f %s/%s-application.yaml\n", basePath, app.Name)
 	}
 
 	return nil

@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/config/state"
+
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/oslokommune/okctl/pkg/route53"
@@ -187,6 +189,35 @@ func (a *Ask) SelectInfrastructureRepository(defaultRepo string, repos []*github
 	}
 
 	return mappedRepos[repo], nil
+}
+
+// SelectEnvironment queries the user to select an environment/a cluster to use
+func (a *Ask) SelectEnvironment(clusters []*state.Cluster) (*state.Cluster, error) {
+	keys := make([]string, len(clusters))
+	mappedEnvironments := make(map[string]*state.Cluster, len(clusters))
+
+	for index, cluster := range clusters {
+		mappedEnvironments[cluster.Name] = cluster
+		keys[index] = cluster.Name
+	}
+
+	selectedEnvironment := ""
+	prompt := &survey.Select{
+		Message: "okctl found multiple environments. Select environment to use as base for data",
+		Options: keys,
+		Help:    "Select the environment you wish to customize the deployment for",
+	}
+
+	err := survey.AskOne(
+		prompt,
+		&selectedEnvironment,
+		survey.WithStdio(a.In, a.Out, a.Err),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed while asking user to select environment: %w", err)
+	}
+
+	return mappedEnvironments[selectedEnvironment], nil
 }
 
 const teamHelp = `	The team you select will be the only one

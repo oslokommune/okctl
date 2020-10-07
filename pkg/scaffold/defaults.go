@@ -96,6 +96,10 @@ func createOkctlIngress(app api.Application) (networkingv1.Ingress, error) {
 		return networkingv1.Ingress{}, err
 	}
 
+	if ingress.Annotations == nil {
+		ingress.Annotations = map[string]string{}
+	}
+
 	ingress.Annotations["kubernetes.io/ingress.class"] = "alb"
 	ingress.Annotations["alb.ingress.kubernetes.io/scheme"] = "internet-facing"
 

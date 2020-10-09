@@ -96,3 +96,18 @@ func GetIACRepoURL(cluster *state.Cluster) string {
 
 	return url
 }
+
+// GetHostedZoneDomain returns the first hosted zone domain for a cluster
+func GetHostedZoneDomain(cluster *state.Cluster) string {
+	if cluster == nil {
+		return ""
+	}
+
+	var zone state.HostedZone
+	for zoneName := range cluster.HostedZone {
+		zone = cluster.HostedZone[zoneName]
+		break
+	}
+
+	return zone.Domain
+}

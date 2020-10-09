@@ -1,35 +1,27 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"strings"
-
-	"github.com/oslokommune/okctl/pkg/config/state"
 
 	"github.com/oslokommune/okctl/pkg/scaffold"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/oslokommune/kaex/pkg/api"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
 
 // CreateApplicationOpts contains all the possible options for "create application"
 type CreateApplicationOpts struct {
-	fullExample bool
-	env         string
+	Environment string
 }
 
 // Validate the options for "create application"
 func (o *CreateApplicationOpts) Validate() error {
 	return validation.ValidateStruct(o,
-		validation.Field(&o.fullExample),
-		validation.Field(&o.env),
+		validation.Field(&o.Environment),
 	)
 }
 
-// nolint funlen
 func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &CreateApplicationOpts{}
 
@@ -38,47 +30,19 @@ func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
 		Short: "Create an application template",
 		Long:  "Scaffolds an application.yaml template which can be used to produce necessary Kubernetes and ArgoCD resources",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			var buffer bytes.Buffer
-
-			if opts.fullExample {
-				err := api.FetchFullExample(&buffer)
-				if err != nil {
-					return fmt.Errorf("failed fetching application.yaml example: %w", err)
-				}
-			} else {
-				err := api.FetchMinimalExample(&buffer)
-				if err != nil {
-					return fmt.Errorf("failed fetching application.yaml example: %w", err)
-				}
+			example, err := scaffold.FetchExample(false)
+			if err != nil {
+				return fmt.Errorf("failed fetching application.yaml example: %w", err)
 			}
 
-			cluster := scaffold.GetCluster(o, cmd, opts.env)
-			if cluster == nil {
-				fmt.Fprint(o.Out, buffer.String())
-
-				return nil
+			result, err := scaffold.InterpolateTemplate(o, cmd, opts.Environment, example)
+			if err != nil {
+				return err
 			}
 
-			if len(cluster.HostedZone) == 0 {
-				fmt.Fprint(o.Out, buffer.String())
-			}
+			_, err = o.Out.Write(result)
 
-			var zone state.HostedZone
-			for zoneName := range cluster.HostedZone {
-				zone = cluster.HostedZone[zoneName]
-				break
-			}
-
-			output := strings.Replace(
-				buffer.String(),
-				"my-domain.io",
-				fmt.Sprintf("<app-name>.%s", zone.Domain),
-				1,
-			)
-
-			fmt.Fprint(o.Out, output)
-
-			return nil
+			return err
 		},
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			return nil
@@ -86,8 +50,7 @@ func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.BoolVarP(&opts.fullExample, "full", "f", false, "Scaffold a full rather than a minimal example")
-	flags.StringVarP(&opts.env, "environment", "e", "", "Use a certain environment as base for the scaffold")
+	flags.StringVarP(&opts.Environment, "environment", "e", "", "Use a certain environment as base for the scaffold")
 
 	return cmd
 }

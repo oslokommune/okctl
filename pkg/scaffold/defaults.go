@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/oslokommune/kaex/pkg/api"
+	kaex "github.com/oslokommune/kaex/pkg/api"
 	argo "github.com/oslokommune/okctl/internal/third_party/argoproj/argo-cd/pkg/apis/application/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	networkingv1 "k8s.io/api/networking/v1beta1"
@@ -43,7 +43,7 @@ func generateDefaultArgoApp() *argo.Application {
 	}
 }
 
-func createArgoApp(app api.Application, repositoryURL string) *argo.Application {
+func createArgoApp(app kaex.Application, repositoryURL string) *argo.Application {
 	argoApp := generateDefaultArgoApp()
 
 	argoApp.ObjectMeta.Name = app.Name
@@ -61,7 +61,7 @@ func createArgoApp(app api.Application, repositoryURL string) *argo.Application 
 	return argoApp
 }
 
-func createOkctlVolume(app api.Application, volume map[string]string) (corev1.PersistentVolumeClaim, error) {
+func createOkctlVolume(app kaex.Application, volume map[string]string) (corev1.PersistentVolumeClaim, error) {
 	var (
 		mountPath string
 		size      string
@@ -71,7 +71,7 @@ func createOkctlVolume(app api.Application, volume map[string]string) (corev1.Pe
 		break
 	}
 
-	pvc, err := api.CreatePersistentVolume(app, mountPath, size)
+	pvc, err := kaex.CreatePersistentVolume(app, mountPath, size)
 	if err != nil {
 		return corev1.PersistentVolumeClaim{}, fmt.Errorf("error creating pvc: %w", err)
 	}
@@ -79,8 +79,8 @@ func createOkctlVolume(app api.Application, volume map[string]string) (corev1.Pe
 	return pvc, nil
 }
 
-func createOkctlService(app api.Application) (corev1.Service, error) {
-	service, err := api.CreateService(app)
+func createOkctlService(app kaex.Application) (corev1.Service, error) {
+	service, err := kaex.CreateService(app)
 	if err != nil {
 		return corev1.Service{}, fmt.Errorf("error creating kaex service: %w", err)
 	}
@@ -90,8 +90,8 @@ func createOkctlService(app api.Application) (corev1.Service, error) {
 	return service, nil
 }
 
-func createOkctlIngress(app api.Application) (networkingv1.Ingress, error) {
-	ingress, err := api.CreateIngress(app)
+func createOkctlIngress(app kaex.Application) (networkingv1.Ingress, error) {
+	ingress, err := kaex.CreateIngress(app)
 	if err != nil {
 		return networkingv1.Ingress{}, err
 	}
@@ -106,8 +106,8 @@ func createOkctlIngress(app api.Application) (networkingv1.Ingress, error) {
 	return ingress, nil
 }
 
-func createOkctlDeployment(app api.Application) (appsv1.Deployment, error) {
-	deployment, err := api.CreateDeployment(app)
+func createOkctlDeployment(app kaex.Application) (appsv1.Deployment, error) {
+	deployment, err := kaex.CreateDeployment(app)
 	if err != nil {
 		return appsv1.Deployment{}, err
 	}

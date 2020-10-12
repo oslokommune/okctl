@@ -2,7 +2,6 @@
 package scaffold
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -18,7 +17,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1beta1"
 
-	"github.com/oslokommune/kaex/pkg/api"
+	kaex "github.com/oslokommune/kaex/pkg/api"
 )
 
 // ApplicationDeployment contains necessary data for a deployment
@@ -51,27 +50,27 @@ func (deployment *ApplicationDeployment) Write(writer io.Writer) error {
 // WriteKubernetesResources writes kubernetes resources to stream as yaml
 func (deployment *ApplicationDeployment) WriteKubernetesResources(writer io.Writer) error {
 	for index := range deployment.Volumes {
-		err := api.WriteResource(writer, deployment.Volumes[index])
+		err := kaex.WriteResource(writer, deployment.Volumes[index])
 		if err != nil {
 			return fmt.Errorf("error writing volume to buffer: %w", err)
 		}
 	}
 
 	if deployment.Service.Name != "" {
-		err := api.WriteResource(writer, deployment.Service)
+		err := kaex.WriteResource(writer, deployment.Service)
 		if err != nil {
 			return fmt.Errorf("error writing service to buffer: %w", err)
 		}
 	}
 
 	if deployment.Ingress.Name != "" {
-		err := api.WriteResource(writer, deployment.Ingress)
+		err := kaex.WriteResource(writer, deployment.Ingress)
 		if err != nil {
 			return fmt.Errorf("error writing ingress to buffer: %w", err)
 		}
 	}
 
-	err := api.WriteResource(writer, deployment.Deployment)
+	err := kaex.WriteResource(writer, deployment.Deployment)
 	if err != nil {
 		return fmt.Errorf("error writing deployment to buffer: %w", err)
 	}
@@ -81,7 +80,7 @@ func (deployment *ApplicationDeployment) WriteKubernetesResources(writer io.Writ
 
 // WriteArgoResources writes Argo-cd resources to stream as yaml
 func (deployment *ApplicationDeployment) WriteArgoResources(writer io.Writer) error {
-	err := api.WriteResource(writer, deployment.ArgoApplication)
+	err := kaex.WriteResource(writer, deployment.ArgoApplication)
 	if err != nil {
 		return fmt.Errorf("error writing ArgoApp to buffer: %w", err)
 	}
@@ -90,7 +89,7 @@ func (deployment *ApplicationDeployment) WriteArgoResources(writer io.Writer) er
 }
 
 // NewApplicationDeployment converts a Kaex Application to an okctl deployment
-func NewApplicationDeployment(app api.Application, o *okctl.Okctl, cmd *cobra.Command, env string) (*ApplicationDeployment, error) {
+func NewApplicationDeployment(app kaex.Application, o *okctl.Okctl, cmd *cobra.Command, env string) (*ApplicationDeployment, error) {
 	applicationDeployment := ApplicationDeployment{}
 
 	relevantCluster := GetCluster(o, cmd, env)
@@ -143,9 +142,8 @@ func NewApplicationDeployment(app api.Application, o *okctl.Okctl, cmd *cobra.Co
 /*
 ReadApplication returns an okctl Application based on stdin or a file
 */
-func ReadApplication(o *okctl.Okctl, path string) (api.Application, error) {
+func ReadApplication(o *okctl.Okctl, path string) (kaex.Application, error) {
 	var (
-		buffer bytes.Buffer
 		reader io.Reader
 		err    error
 	)
@@ -157,14 +155,12 @@ func ReadApplication(o *okctl.Okctl, path string) (api.Application, error) {
 	}
 
 	if err != nil {
-		return api.Application{}, fmt.Errorf("failed to read file: %w", err)
+		return kaex.Application{}, fmt.Errorf("failed to read file: %w", err)
 	}
 
-	_, _ = io.Copy(&buffer, reader)
-
-	app, err := api.ParseApplication(buffer.String())
+	app, err := kaex.ParseApplication(reader)
 	if err != nil {
-		return api.Application{}, fmt.Errorf("unable to parse application: %w", err)
+		return kaex.Application{}, fmt.Errorf("unable to parse application: %w", err)
 	}
 
 	return app, err

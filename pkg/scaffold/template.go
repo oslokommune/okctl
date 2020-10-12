@@ -4,26 +4,25 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/storage"
 
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 
-	"github.com/oslokommune/kaex/pkg/api"
+	kaex "github.com/oslokommune/kaex/pkg/api"
 )
 
-// FetchExample downloads an example file and writes it to a buffer
-func FetchExample(fullExample bool) ([]byte, error) {
+// FetchTemplate downloads an example file and writes it to a buffer
+func FetchTemplate(kx kaex.Kaex) ([]byte, error) {
 	var (
 		err    error
 		buffer bytes.Buffer
 	)
 
-	if fullExample {
-		err = api.FetchFullExample(&buffer)
-	} else {
-		err = api.FetchMinimalExample(&buffer)
-	}
+	err = kaex.FetchTemplate(kx, &buffer, "application")
 
 	if err != nil {
 		return nil, fmt.Errorf("unable to fetch example: %w", err)
@@ -52,4 +51,27 @@ func InterpolateTemplate(o *okctl.Okctl, cmd *cobra.Command, env string, templat
 	}
 
 	return outputBuffer.Bytes(), nil
+}
+
+// SaveTemplate saves a byte array as an application.yaml file in the current directory
+func SaveTemplate(template []byte) error {
+	cwd, _ := os.Getwd()
+	templateStorage := storage.NewFileSystemStorage(cwd)
+
+	applicationFile, err := templateStorage.Create("", "application.yaml", 0o644)
+	if err != nil {
+		return fmt.Errorf("error creating application.yaml: %w", err)
+	}
+
+	_, err = applicationFile.Write(template)
+	if err != nil {
+		return fmt.Errorf("error writing to application.yaml: %w", err)
+	}
+
+	err = applicationFile.Close()
+	if err != nil {
+		return fmt.Errorf("unable to close application.yaml after writing: %w", err)
+	}
+
+	return err
 }

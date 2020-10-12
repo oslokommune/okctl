@@ -45,7 +45,7 @@ require (
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
 	github.com/hako/durafmt v0.0.0-20200710122514-c0fb7b4da026
 	github.com/hinshun/vt10x v0.0.0-20180616224451-1954e6464174
-	github.com/hjson/hjson-go v3.1.0+incompatible
+	github.com/hjson/hjson-go v3.1.0+incompatible // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/jarcoal/httpmock v1.0.6
@@ -64,7 +64,7 @@ require (
 	github.com/onsi/ginkgo v1.13.0 // indirect
 	github.com/opencontainers/selinux v1.6.0 // indirect
 	github.com/ory/dockertest v3.3.5+incompatible
-	github.com/oslokommune/kaex v0.0.0-20200924180753-0a8bf9f597ef
+	github.com/oslokommune/kaex v0.1.3
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
@@ -82,7 +82,7 @@ require (
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.6.1
 	github.com/theckman/yacspin v0.8.0
-	github.com/tidwall/gjson v1.6.1
+	github.com/tidwall/gjson v1.6.1 // indirect
 	github.com/yvasiyarov/go-metrics v0.0.0-20150112132944-c25f46c4b940 // indirect
 	github.com/yvasiyarov/gorelic v0.0.7 // indirect
 	github.com/yvasiyarov/newrelic_platform_go v0.0.0-20160601141957-9c099fbc30e9 // indirect

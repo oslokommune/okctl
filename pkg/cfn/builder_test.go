@@ -46,17 +46,19 @@ func TestBuilderAndComposers(t *testing.T) {
 			golden:   "public-certificate-cf.yaml",
 			composer: components.NewPublicCertificateComposer("test.oslo.systems.", "AZ12345"),
 		},
-		{
-			name:   "Builder with UserPool composer",
-			golden: "userpool.yaml",
-			composer: components.NewUserPool(
-				"env",
-				"repo",
-				"auth.oslo.systems",
-				"HFJE38983FAKE",
-				"arn://certificate/ihfieh9e9FAKE",
-			),
-		},
+		/*
+			{
+				name:   "Builder with UserPool composer",
+				golden: "userpool.yaml",
+				composer: components.NewUserPool(
+					"env",
+					"repo",
+					"auth.oslo.systems",
+					"HFJE38983FAKE",
+					"arn://certificate/ihfieh9e9FAKE",
+				),
+			},
+		*/
 		{
 			name:     "Builder with UserPoolClient",
 			golden:   "userpool-client.yaml",

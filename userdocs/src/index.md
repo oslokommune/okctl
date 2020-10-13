@@ -34,9 +34,11 @@ Basic usage
 ```bash
 $ okctl --help
 
+# Create a new git repository for your new cluster (infrastructure-as-code will be stored here)
+$ git clone git@github.com:oslokommune/<a new repo>.git
+$ cd <a new repo>
+
 # Create a cluster
-$ git clone git@github.com:oslokommune/<your new infrastructure-as-code-repository>.git
-$ cd <your new infrastructure-as-code-repository>
 $ okctl create cluster pro 123456789012
 
 # Show credentials for cluster

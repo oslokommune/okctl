@@ -139,10 +139,10 @@ func (s *identityManagerCloudProvider) CreateIdentityPool(certificateARN string,
 
 	// Skipping this for now, since we need to support the flow differently
 	// than we are doing today.
-	//err = cognito.New(s.provider).EnableMFA(pool.UserPoolID)
-	//if err != nil {
-	//	return nil, fmt.Errorf("enabling mfa on the user pool: %w", err)
-	//}
+	// err = cognito.New(s.provider).EnableMFA(pool.UserPoolID)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("enabling mfa on the user pool: %w", err)
+	// }
 
 	return pool, nil
 }

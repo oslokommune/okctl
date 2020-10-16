@@ -101,6 +101,7 @@ type IdentityPool struct {
 	AuthDomain string
 	Alias      RecordSetAlias
 	Clients    map[string]IdentityPoolClient
+	Users	   map[string]IdentityPoolUser
 }
 
 // Validate the identity pool
@@ -110,8 +111,17 @@ func (p IdentityPool) Validate() error {
 		validation.Field(&p.AuthDomain, validation.Required),
 		validation.Field(&p.Alias, validation.Required),
 		validation.Field(&p.Clients, validation.Required),
+		validation.Field(&p.Users),
 	)
 }
+
+// TODO fixme, should do email validation ... ozo validation supports if its actualy an email, ok
+func (p IdentityPoolUser) Validate() error {
+	return validation.ValidateStruct(&p,
+		validation.Field(&p.Email, validation.Required),
+	)
+}
+
 
 // IdentityPoolClient contains the state about an
 // identity client
@@ -120,6 +130,10 @@ type IdentityPoolClient struct {
 	CallbackURL  string
 	ClientID     string
 	ClientSecret ClientSecret
+}
+
+type IdentityPoolUser struct {
+	Email string
 }
 
 // Validate the identity pool client

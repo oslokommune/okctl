@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-
 	"github.com/mishudark/errors"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -13,10 +12,19 @@ type identityManagerService struct {
 	cert     api.CertificateCloudProvider
 }
 
+func (s *identityManagerService) CreateIdentityPoolUser(ctx context.Context, opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {
+	user, err := s.provider.CreateIdentityPoolUser(opts)
+	if err != nil {
+		return nil, errors.E(err, "creating an identity pool user", errors.Internal)
+	}
+
+	return user, nil
+}
+
 func (s *identityManagerService) CreateIdentityPoolClient(_ context.Context, opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
 	client, err := s.provider.CreateIdentityPoolClient(opts)
 	if err != nil {
-		return nil, errors.E(err, "creating an identity pool client: %w", errors.Internal)
+		return nil, errors.E(err, "creating an identity pool client", errors.Internal)
 	}
 
 	return client, nil

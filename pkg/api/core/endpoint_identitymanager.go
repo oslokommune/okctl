@@ -18,3 +18,9 @@ func makeCreateIdentityPoolClient(s api.IdentityManagerService) endpoint.Endpoin
 		return s.CreateIdentityPoolClient(ctx, request.(api.CreateIdentityPoolClientOpts))
 	}
 }
+
+func makeCreateIdentityPoolUser(s api.IdentityManagerService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return s.CreateIdentityPoolUser(ctx, request.(api.CreateIdentityPoolUserOpts))
+	}
+}

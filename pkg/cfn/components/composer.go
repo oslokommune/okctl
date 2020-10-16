@@ -4,7 +4,11 @@ package components
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/cfn/components/userpooluser"
+	"github.com/oslokommune/okctl/pkg/cfn/components/userpoolusertogroupattachment"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/cfn/components/userpoolgroup"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/recordset"
 
@@ -612,11 +616,37 @@ func (u *UserPool) Compose() (*cfn.Composition, error) {
 	// reason. Frequently we don't have this, so we create a placeholder record.
 	placeholder := recordset.New("PlaceHolder", "1.1.1.1", RootDomain(u.Domain), u.HostedZoneID)
 	upDomain := userpooldomain.New(u.Domain, u.CertificateARN, userPool, placeholder)
+	group := userpoolgroup.New("admins", "Default admin group", userPool)
 
-	composition.Resources = append(composition.Resources, userPool, upDomain, placeholder)
+	composition.Resources = append(composition.Resources, userPool, upDomain, placeholder, group)
 	composition.Outputs = append(composition.Outputs, userPool)
 
 	return composition, nil
+}
+
+type UserPoolUser struct {
+	UserPoolId string
+	Email      string
+}
+
+func (u *UserPoolUser) Compose() (*cfn.Composition, error) {
+	composition := &cfn.Composition{}
+
+	userPoolUser := userpooluser.New(u.Email, "User pool user", u.UserPoolId)
+	attachment := userpoolusertogroupattachment.New(userPoolUser, u.Email, "admins", u.UserPoolId)
+
+	// FIXME - This fails?
+	composition.Resources = append(composition.Resources, userPoolUser, attachment)
+	composition.Outputs = append(composition.Outputs, userPoolUser)
+
+	return composition, nil
+}
+
+func NewUserPoolUser(email, userpoolid string) *UserPoolUser {
+	return &UserPoolUser{
+		Email:       email,
+		UserPoolId:  userpoolid,
+	}
 }
 
 // RootDomain extract the root domain

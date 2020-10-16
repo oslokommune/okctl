@@ -29,3 +29,14 @@ func decodeCreateIdentityPoolClient(_ context.Context, r *http.Request) (interfa
 
 	return opts, nil
 }
+
+func decodeCreateIdentityPoolUser(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.CreateIdentityPoolUserOpts
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}

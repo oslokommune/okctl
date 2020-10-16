@@ -18,6 +18,7 @@ const (
 	DefaultStackNameIdentityPool                 = "identitypool"
 	DefaultStackNameIdentityPoolClient           = "identitypoolclient"
 	DefaultStackNameAliasRecordSet               = "aliasrecordset"
+	DefaultStackNameIdentityPoolUser             = "identitypooluser"
 )
 
 // StackNamer knows how to name cloud formation stacks
@@ -108,6 +109,17 @@ func (n *StackNamer) IdentityPoolClient(repository, env, purpose string) string 
 		repository,
 		env,
 		purpose,
+	)
+}
+
+// IdentityPoolUser returns the stack name of the identity pool user
+func (n *StackNamer) IdentityPoolUser(repository, env, email string) string {
+	return fmt.Sprintf("%s-%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameIdentityPoolUser,
+		repository,
+		env,
+		email,
 	)
 }
 

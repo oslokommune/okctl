@@ -147,6 +147,37 @@ func (s *identityManagerCloudProvider) CreateIdentityPool(certificateARN string,
 	return pool, nil
 }
 
+func (s *identityManagerCloudProvider) CreateIdentityPoolUser(opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {
+	b := cfn.New(components.NewUserPoolUser(
+		opts.Email,
+		opts.UserPoolID,
+	),
+	)
+	stackName := cfn.NewStackNamer().IdentityPoolUser(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Email))
+
+	template, err := b.Build()
+	if err != nil {
+		return nil, fmt.Errorf("building identity pool user cloud formation template: %w", err)
+	}
+
+	r := cfn.NewRunner(s.provider)
+
+	err = r.CreateIfNotExists(stackName, template, nil, defaultTimeOut)
+	if err != nil {
+		return nil, fmt.Errorf("creating identity pool user cloud formation stack: %w", err)
+	}
+
+	user := &api.IdentityPoolUser{
+		ID:                     opts.ID,
+		Email:                  opts.Email,
+		UserPoolID:             opts.UserPoolID,
+		StackName:              stackName,
+		CloudFormationTemplate: template,
+	}
+
+	return user, nil
+}
+
 // NewIdentityManagerCloudProvider returns an initialised cloud layer
 func NewIdentityManagerCloudProvider(provider v1alpha1.CloudProvider) api.IdentityManagerCloudProvider {
 	return &identityManagerCloudProvider{

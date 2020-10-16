@@ -207,6 +207,11 @@ func (o *Okctl) identityManagerService(outputDir string, spin spinner.Spinner) c
 				CloudFormationFile: config.DefaultIdentityPoolClientCloudFormationTemplate,
 				BaseDir:            path.Join(identityPoolBaseDir, config.DefaultIdentityPoolClientsBaseDir),
 			},
+			clientFilesystem.Paths{
+				OutputFile:         config.DefaultIdentityPoolUserOutputsFile,
+				CloudFormationFile: config.DefaultIdentityPoolUserCloudFormationTemplate,
+				BaseDir:            path.Join(identityPoolBaseDir, config.DefaultIdentityPoolUsersBaseDir),
+			},
 			o.FileSystem,
 		),
 		stateSaver.NewIdentityManagerState(o.RepoStateWithEnv),

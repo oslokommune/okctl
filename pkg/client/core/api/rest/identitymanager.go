@@ -9,10 +9,16 @@ import (
 const (
 	TargetIdentityPool       = "identitymanagers/pools/"
 	TargetIdentityPoolClient = "identitymanagers/pools/clients/"
+	TargetIdentityPoolUsers  = "identitymanagers/pools/users/"
 )
 
 type identityManagerAPI struct {
 	client *HTTPClient
+}
+
+func (a *identityManagerAPI) CreateIdentityPoolUser(opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {
+	into := &api.IdentityPoolUser{}
+	return into, a.client.DoPost(TargetIdentityPoolUsers, &opts, into)
 }
 
 func (a *identityManagerAPI) CreateIdentityPoolClient(opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {

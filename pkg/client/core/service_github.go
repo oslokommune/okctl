@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/oslokommune/okctl/pkg/client"
@@ -162,6 +163,32 @@ func (s *githubService) CreateGithubOauthApp(_ context.Context, opts client.Crea
 	}
 
 	return a, nil
+}
+
+// GetTeam in organization
+func (s *githubService) GetTeam(id api.ID, organisation string) (*client.GithubTeam, error) {
+	team, err := s.api.SelectGithubTeam(client.SelectGithubTeam{
+		ID:           id,
+		Organisation: organisation,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return team, nil
+}
+
+// GetGithubTeamMembers returns members of a team on github
+func (s *githubService) GetGithubTeamMembers(team *client.GithubTeam, organisation string) (*[]client.GithubTeamMember, error) {
+	members, err := s.api.GetGithubTeamMembers(client.GetGithubTeamMembers{
+		Team:         team,
+		Organisation: organisation,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return members, nil
 }
 
 // NewGithubService returns an initialised service

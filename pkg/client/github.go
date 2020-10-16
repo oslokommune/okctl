@@ -130,11 +130,27 @@ type GithubTeam struct {
 	ID           api.ID
 	Organisation string
 	Name         string
+	TeamID       int64
 }
 
 // Validate the data
 func (t GithubTeam) Validate() error {
 	return validation.ValidateStruct(&t,
+		validation.Field(&t.Name, validation.Required),
+	)
+}
+
+// GithubTeamMember info about
+type GithubTeamMember struct {
+	Name  string
+	Email string
+	Login string
+}
+
+// Validate the github team memmber
+func (t GithubTeamMember) Validate() error {
+	return validation.ValidateStruct(&t,
+		validation.Field(&t.Login, validation.Required),
 		validation.Field(&t.Name, validation.Required),
 	)
 }
@@ -176,10 +192,19 @@ type CreateGithubDeployKey struct {
 	Title        string
 }
 
+// GetGithubTeamMembers options object to get github team members
+type GetGithubTeamMembers struct {
+	TeamID       string
+	Organisation string
+	Team         *GithubTeam
+}
+
 // GithubService is a business logic implementation
 type GithubService interface {
 	ReadyGithubInfrastructureRepository(ctx context.Context, opts ReadyGithubInfrastructureRepositoryOpts) (*GithubRepository, error)
 	CreateGithubOauthApp(ctx context.Context, opts CreateGithubOauthAppOpts) (*GithubOauthApp, error)
+	GetTeam(id api.ID, organization string) (*GithubTeam, error)
+	GetGithubTeamMembers(teamID *GithubTeam, organization string) (*[]GithubTeamMember, error)
 }
 
 // GithubAPI invokes the Github API
@@ -187,6 +212,7 @@ type GithubAPI interface {
 	SelectGithubInfrastructureRepository(opts SelectGithubInfrastructureRepositoryOpts) (*SelectedGithubRepository, error)
 	CreateGithubDeployKey(opts CreateGithubDeployKey) (*GithubDeployKey, error)
 	SelectGithubTeam(opts SelectGithubTeam) (*GithubTeam, error)
+	GetGithubTeamMembers(opts GetGithubTeamMembers) (*[]GithubTeamMember, error)
 	CreateGithubOauthApp(opts CreateGithubOauthAppOpts) (*GithubOauthApp, error)
 }
 

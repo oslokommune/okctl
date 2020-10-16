@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/client"
+
 	"github.com/google/go-github/v32/github"
 	githubAuth "github.com/oslokommune/okctl/pkg/credentials/github"
 	"golang.org/x/oauth2"
@@ -18,12 +20,49 @@ type Githuber interface {
 	Teams(org string) ([]*Team, error)
 	Repositories(org string) ([]*Repository, error)
 	CreateDeployKey(org, repository, title, publicKey string) (*Key, error)
+	ListTeamMembers(team client.GithubTeam) ([]client.GithubTeamMember, error)
 }
 
 // Github contains the state for interacting with the github API
 type Github struct {
 	Ctx    context.Context
 	Client *github.Client
+}
+
+// ListTeamMembers lists members of a github team
+func (g *Github) ListTeamMembers(team client.GithubTeam) ([]client.GithubTeamMember, error) {
+	ctx := g.Ctx
+	teamID := team.TeamID
+
+	org, _, err := g.Client.Organizations.Get(ctx, team.Organisation)
+	if err != nil {
+		return nil, err
+	}
+
+	users, _, err := g.Client.Teams.ListTeamMembersByID(ctx, *org.ID, teamID, nil)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	members := []client.GithubTeamMember{}
+
+	for _, u := range users {
+		// Yes we really do need to do a call for every user,
+		user, _, _ := g.Client.Users.Get(ctx, *u.Login)
+
+		email := ""
+		if user.Email != nil {
+			email = *user.Email
+		}
+
+		members = append(members, client.GithubTeamMember{
+			Login: *user.Login,
+			Name:  *user.Name,
+			Email: email,
+		})
+	}
+
+	return members, nil
 }
 
 // Ensure that Github implements Githuber

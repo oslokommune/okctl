@@ -20,6 +20,15 @@ type githubAPI struct {
 	out          io.Writer
 }
 
+func (a *githubAPI) GetGithubTeamMembers(opts client.GetGithubTeamMembers) (*[]client.GithubTeamMember, error) {
+	members, err := a.client.ListTeamMembers(*opts.Team)
+	if err != nil {
+		return nil, err
+	}
+
+	return &members, nil
+}
+
 func (a *githubAPI) SelectGithubInfrastructureRepository(opts client.SelectGithubInfrastructureRepositoryOpts) (*client.SelectedGithubRepository, error) {
 	repos, err := a.client.Repositories(opts.Organisation)
 	if err != nil {
@@ -90,6 +99,7 @@ func (a *githubAPI) SelectGithubTeam(opts client.SelectGithubTeam) (*client.Gith
 		ID:           opts.ID,
 		Organisation: opts.Organisation,
 		Name:         team.GetName(),
+		TeamId:       *team.ID,
 	}, nil
 }
 

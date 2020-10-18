@@ -13,6 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+
+// TODO add test
 func TestNew(t *testing.T) {
 	up := userpool.New("test", "test")
 	ph := recordset.New("placeholder", "1.1.1.1", "auth.test.com", "GHFJE378FAKE")

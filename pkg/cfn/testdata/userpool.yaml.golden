@@ -59,6 +59,10 @@ Resources:
       Schema:
       - Name: email
         Required: true
+      - AttributeDataType: String
+        Mutable: true
+        Name: name
+        Required: true
       UserPoolAddOns:
         AdvancedSecurityMode: AUDIT
       UserPoolName: okctl-env-repo-userpool
@@ -80,3 +84,12 @@ Resources:
       UserPoolId:
         Ref: UserPool
     Type: AWS::Cognito::UserPoolDomain
+  UserPoolGroup:
+    DependsOn:
+    - UserPool
+    Properties:
+      GroupName: admins
+      Precedence: 10
+      UserPoolId:
+        Ref: UserPool
+    Type: AWS::Cognito::UserPoolGroup

@@ -3,19 +3,17 @@ package userpoolgroup_test
 import (
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/cfn/components/recordset"
+	"github.com/oslokommune/okctl/pkg/cfn/components/userpoolgroup"
+	"github.com/sebdah/goldie/v2"
 
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/cognito"
 	"github.com/oslokommune/okctl/pkg/cfn/components/userpool"
-	"github.com/oslokommune/okctl/pkg/cfn/components/userpooldomain"
-	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {
 	up := userpool.New("test", "test")
-	ph := recordset.New("placeholder", "1.1.1.1", "auth.test.com", "GHFJE378FAKE")
 
 	testCases := []struct {
 		name     string
@@ -24,8 +22,8 @@ func TestNew(t *testing.T) {
 	}{
 		{
 			name:     "Validate output",
-			golden:   "user-pool.json",
-			resource: userpooldomain.New("auth.oslo.systems", "arn://certificate/HAF93FAKE", up, ph).Resource(),
+			golden:   "user-group.json",
+			resource: userpoolgroup.New("group", "description", up).Resource(),
 		},
 	}
 
@@ -33,7 +31,7 @@ func TestNew(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := tc.resource.(*cognito.UserPoolDomain).MarshalJSON()
+			got, err := tc.resource.(*cognito.UserPoolGroup).MarshalJSON()
 			assert.NoError(t, err)
 
 			g := goldie.New(t)

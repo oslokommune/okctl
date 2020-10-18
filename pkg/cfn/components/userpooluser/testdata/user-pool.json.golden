@@ -1,1 +1,0 @@
-{"Type":"AWS::Cognito::UserPoolDomain","Properties":{"CustomDomainConfig":{"CertificateArn":"arn://certificate/HAF93FAKE"},"Domain":"auth.oslo.systems","UserPoolId":"eyAiUmVmIjogIlVzZXJQb29sIiB9"},"DependsOn":["UserPool","RecordSetplaceholder"]}

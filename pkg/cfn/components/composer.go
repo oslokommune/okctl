@@ -4,9 +4,10 @@ package components
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/oslokommune/okctl/pkg/cfn/components/userpooluser"
 	"github.com/oslokommune/okctl/pkg/cfn/components/userpoolusertogroupattachment"
-	"strings"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/userpoolgroup"
 
@@ -624,28 +625,30 @@ func (u *UserPool) Compose() (*cfn.Composition, error) {
 	return composition, nil
 }
 
+// UserPoolUser output of command
 type UserPoolUser struct {
-	UserPoolId string
+	UserPoolID string
 	Email      string
 }
 
+// Compose userpool user and admin group attachment
 func (u *UserPoolUser) Compose() (*cfn.Composition, error) {
 	composition := &cfn.Composition{}
 
-	userPoolUser := userpooluser.New(u.Email, "User pool user", u.UserPoolId)
-	attachment := userpoolusertogroupattachment.New(userPoolUser, u.Email, "admins", u.UserPoolId)
+	userPoolUser := userpooluser.New(u.Email, "User pool user", u.UserPoolID)
+	attachment := userpoolusertogroupattachment.New(userPoolUser, u.Email, "admins", u.UserPoolID)
 
-	// FIXME - This fails?
 	composition.Resources = append(composition.Resources, userPoolUser, attachment)
 	composition.Outputs = append(composition.Outputs, userPoolUser)
 
 	return composition, nil
 }
 
+// NewUserPoolUser add a new user into a userpool
 func NewUserPoolUser(email, userpoolid string) *UserPoolUser {
 	return &UserPoolUser{
-		Email:       email,
-		UserPoolId:  userpoolid,
+		Email:      email,
+		UserPoolID: userpoolid,
 	}
 }
 

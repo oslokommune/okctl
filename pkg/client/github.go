@@ -130,7 +130,7 @@ type GithubTeam struct {
 	ID           api.ID
 	Organisation string
 	Name         string
-	TeamId		 int64
+	TeamID       int64
 }
 
 // Validate the data
@@ -140,12 +140,14 @@ func (t GithubTeam) Validate() error {
 	)
 }
 
+// GithubTeamMember info about
 type GithubTeamMember struct {
 	Name  string
 	Email string
 	Login string
 }
 
+// Validate the github team memmber
 func (t GithubTeamMember) Validate() error {
 	return validation.ValidateStruct(&t,
 		validation.Field(&t.Login, validation.Required),
@@ -190,8 +192,9 @@ type CreateGithubDeployKey struct {
 	Title        string
 }
 
+// GetGithubTeamMembers options object to get github team members
 type GetGithubTeamMembers struct {
-	TeamId       string
+	TeamID       string
 	Organisation string
 	Team         *GithubTeam
 }
@@ -201,7 +204,7 @@ type GithubService interface {
 	ReadyGithubInfrastructureRepository(ctx context.Context, opts ReadyGithubInfrastructureRepositoryOpts) (*GithubRepository, error)
 	CreateGithubOauthApp(ctx context.Context, opts CreateGithubOauthAppOpts) (*GithubOauthApp, error)
 	GetTeam(id api.ID, organization string) (*GithubTeam, error)
-	GetGithubTeamMembers(teamId *GithubTeam, organization string) (*[]GithubTeamMember, error)
+	GetGithubTeamMembers(teamID *GithubTeam, organization string) (*[]GithubTeamMember, error)
 }
 
 // GithubAPI invokes the Github API

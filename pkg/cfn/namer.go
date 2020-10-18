@@ -112,7 +112,6 @@ func (n *StackNamer) IdentityPoolClient(repository, env, purpose string) string 
 	)
 }
 
-
 // IdentityPoolUser returns the stack name of the identity pool user
 func (n *StackNamer) IdentityPoolUser(repository, env, email string) string {
 	return fmt.Sprintf("%s-%s-%s-%s-%s",

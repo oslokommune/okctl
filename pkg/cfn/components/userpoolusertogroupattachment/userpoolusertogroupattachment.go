@@ -1,52 +1,46 @@
-// Package userpooldomain provides functionality for setting
-// up a domain with a user pool
-// - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpooldomain.html
+// Package userpoolusertogroupattachment provides functionality for setting
+// up a user pool user to group attachment
 package userpoolusertogroupattachment
 
 import (
-	"fmt"
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/cognito"
 	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
-// UserPoolUser
+// UserPoolUserToGroupAttachment attaches a user pool user to a group
 type UserPoolUserToGroupAttachment struct {
 	StoredName string
 	GroupName  string
 	Username   string
-	UserPoolId string
+	UserPoolID string
 	UserNamer  cfn.Namer
 }
 
-// TODO fix hardcoded group name. HMMM - wha tis nil?
-// TODO make linter happy
-func (attachment *UserPoolUserToGroupAttachment) Resource() cloudformation.Resource {
-	fmt.Println("ATTACHMENT ***")
-	fmt.Println(attachment)
-	fmt.Println(attachment.UserNamer.Name())
+// Resource of type UserPoolUserToGroupAttachment
+func (a *UserPoolUserToGroupAttachment) Resource() cloudformation.Resource {
 	return &cognito.UserPoolUserToGroupAttachment{
-		GroupName:                            attachment.GroupName,
-		UserPoolId:                           attachment.UserPoolId,
-		Username:                             attachment.Username,
+		GroupName:  a.GroupName,
+		UserPoolId: a.UserPoolID,
+		Username:   a.Username,
 		AWSCloudFormationDependsOn: []string{
-			attachment.UserNamer.Name(),
+			a.UserNamer.Name(),
 		},
 	}
 }
 
-// TODO make linter happy
-func (d *UserPoolUserToGroupAttachment) Name() string {
-	return d.StoredName
+// Name returns the logical identifier
+func (a *UserPoolUserToGroupAttachment) Name() string {
+	return a.StoredName
 }
 
-// TODO make linter happy
+// New constructor
 func New(user cfn.Namer, username, groupname, userPoolid string) *UserPoolUserToGroupAttachment {
 	return &UserPoolUserToGroupAttachment{
 		StoredName: "UserPoolUserToGroupAttachment",
 		GroupName:  groupname,
 		Username:   username,
-		UserPoolId: userPoolid,
-		UserNamer: user,
+		UserPoolID: userPoolid,
+		UserNamer:  user,
 	}
 }

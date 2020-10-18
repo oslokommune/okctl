@@ -1,6 +1,5 @@
-// Package userpooldomain provides functionality for setting
-// up a domain with a user pool
-// - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpooldomain.html
+// Package userpoolgroup provides functionality for setting
+// up a user pool group
 package userpoolgroup
 
 import (
@@ -9,7 +8,12 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
-// UserPoolGroup
+const (
+	groupname  = "admins"
+	precedence = 10
+)
+
+// UserPoolGroup output
 type UserPoolGroup struct {
 	StoredName  string
 	Description string
@@ -18,14 +22,12 @@ type UserPoolGroup struct {
 	UserPool    cfn.NameReferencer
 }
 
-// Resource returns the cloud formation resource for a
-// cognito user pool domain
-// TODO fix hardcoded group name.
+// Resource returns the cloud formation resource for a cognito user pool domain
 func (d *UserPoolGroup) Resource() cloudformation.Resource {
 	return &cognito.UserPoolGroup{
 		Description: "",
-		GroupName:   "admins",
-		Precedence:  10,
+		GroupName:   groupname,
+		Precedence:  precedence,
 		UserPoolId:  d.UserPool.Ref(),
 		AWSCloudFormationDependsOn: []string{
 			d.UserPool.Name(),

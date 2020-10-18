@@ -29,13 +29,16 @@ type Github struct {
 	Client *github.Client
 }
 
+// ListTeamMembers lists members of a github team
 func (g *Github) ListTeamMembers(team client.GithubTeam) ([]client.GithubTeamMember, error) {
 	ctx := g.Ctx
-	teamID := team.TeamId
+	teamID := team.TeamID
+
 	org, _, err := g.Client.Organizations.Get(ctx, team.Organisation)
 	if err != nil {
 		return nil, err
 	}
+
 	users, _, err := g.Client.Teams.ListTeamMembersByID(ctx, *org.ID, teamID, nil)
 	if err != nil {
 		fmt.Println(err)
@@ -43,12 +46,8 @@ func (g *Github) ListTeamMembers(team client.GithubTeam) ([]client.GithubTeamMem
 
 	members := []client.GithubTeamMember{}
 
-	// TODO got to be a better way to write this
 	for _, u := range users {
-
 		// Yes we really do need to do a call for every user,
-		// Yes it is the only way to get the email, and,
-		// Yes it is very often not populated. Thank you.
 		user, _, _ := g.Client.Users.Get(ctx, *u.Login)
 
 		email := ""
@@ -61,7 +60,6 @@ func (g *Github) ListTeamMembers(team client.GithubTeam) ([]client.GithubTeamMem
 			Name:  *user.Name,
 			Email: email,
 		})
-
 	}
 
 	return members, nil

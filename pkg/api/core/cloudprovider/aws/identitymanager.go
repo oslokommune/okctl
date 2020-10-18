@@ -151,7 +151,7 @@ func (s *identityManagerCloudProvider) CreateIdentityPoolUser(opts api.CreateIde
 	b := cfn.New(components.NewUserPoolUser(
 		opts.Email,
 		opts.UserPoolID,
-		),
+	),
 	)
 	stackName := cfn.NewStackNamer().IdentityPoolUser(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Email))
 

@@ -99,7 +99,7 @@ func (a *githubAPI) SelectGithubTeam(opts client.SelectGithubTeam) (*client.Gith
 		ID:           opts.ID,
 		Organisation: opts.Organisation,
 		Name:         team.GetName(),
-		TeamId:       *team.ID,
+		TeamID:       *team.ID,
 	}, nil
 }
 

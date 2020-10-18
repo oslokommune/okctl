@@ -49,6 +49,7 @@ type IdentityPoolClient struct {
 	StackName   string
 }
 
+// IdentityPoolUser contains the output state
 type IdentityPoolUser struct {
 	ID         api.ID
 	Email      string
@@ -122,10 +123,9 @@ func (s *identityManagerStore) SaveIdentityPoolUser(user *api.IdentityPoolUser) 
 		StackName:  user.StackName,
 	}
 
-	report, err := store.NewFileSystem(path.Join(s.userPaths.BaseDir, slug.Make(u.Email)) , s.fs).
+	report, err := store.NewFileSystem(path.Join(s.userPaths.BaseDir, slug.Make(u.Email)), s.fs).
 		StoreStruct(s.userPaths.OutputFile, u, store.ToJSON()).
 		StoreBytes(s.userPaths.CloudFormationFile, user.CloudFormationTemplate).
-
 		Do()
 	if err != nil {
 		return nil, fmt.Errorf("writing identity user: %w", err)

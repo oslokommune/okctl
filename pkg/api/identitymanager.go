@@ -52,12 +52,14 @@ type CreateIdentityPoolClientOpts struct {
 	CallbackURL string
 }
 
+// CreateIdentityPoolUserOpts input
 type CreateIdentityPoolUserOpts struct {
 	ID         ID
 	Email      string
 	UserPoolID string
 }
 
+// IdentityPoolUser state of user
 type IdentityPoolUser struct {
 	ID                     ID
 	Email                  string

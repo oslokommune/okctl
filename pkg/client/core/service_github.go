@@ -174,6 +174,7 @@ func (s *githubService) GetTeam(id api.ID, organisation string) (*client.GithubT
 	if err != nil {
 		return nil, err
 	}
+
 	return team, nil
 }
 

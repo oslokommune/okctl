@@ -1,0 +1,1 @@
+{"Type":"AWS::Cognito::UserPoolUser","Properties":{"DesiredDeliveryMediums":["EMAIL"],"ForceAliasCreation":true,"UserAttributes":[{"Name":"email","Value":"testperson@origo.oslokommune.no"},{"Name":"name","Value":"testperson@origo.oslokommune.no"}],"UserPoolId":"ABCJE378FAKE","Username":"testperson@origo.oslokommune.no"}}

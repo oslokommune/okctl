@@ -3,20 +3,17 @@ package userpoolusertogroupattachment_test
 import (
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/cfn/components/recordset"
+	"github.com/oslokommune/okctl/pkg/cfn/components/userpooluser"
+	"github.com/oslokommune/okctl/pkg/cfn/components/userpoolusertogroupattachment"
 
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/cognito"
-	"github.com/oslokommune/okctl/pkg/cfn/components/userpool"
-	"github.com/oslokommune/okctl/pkg/cfn/components/userpooldomain"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 )
 
-// TODO add test
 func TestNew(t *testing.T) {
-	up := userpool.New("test", "test")
-	ph := recordset.New("placeholder", "1.1.1.1", "auth.test.com", "GHFJE378FAKE")
+	user := userpooluser.New("testperson@origo.oslo.kommune.no", "Testperson", "ABCJE378FAKE")
 
 	testCases := []struct {
 		name     string
@@ -25,8 +22,8 @@ func TestNew(t *testing.T) {
 	}{
 		{
 			name:     "Validate output",
-			golden:   "user-pool.json",
-			resource: userpooldomain.New("auth.oslo.systems", "arn://certificate/HAF93FAKE", up, ph).Resource(),
+			golden:   "user-pool-user-to-group-attachment.json",
+			resource: userpoolusertogroupattachment.New(user, "Username1337", "somegroup", "XXXXXXFAKE").Resource(),
 		},
 	}
 
@@ -34,7 +31,7 @@ func TestNew(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := tc.resource.(*cognito.UserPoolDomain).MarshalJSON()
+			got, err := tc.resource.(*cognito.UserPoolUserToGroupAttachment).MarshalJSON()
 			assert.NoError(t, err)
 
 			g := goldie.New(t)

@@ -16,6 +16,8 @@ nav:
       - deployment/argocd.md
   - Usage:
       - usage/testcluster.md
+  - Users:
+      - usage/adduser.md
 
 plugins:
   - git-revision-date

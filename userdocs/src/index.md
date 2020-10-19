@@ -7,7 +7,7 @@
 - **Modern**: base our decisions on best-practise methodologies for a modern development lifecycle
 - **Sensible**: provide a set of sensible default integrations
 
-<span style="display:block;text-align:center">![okctl](img/logo.png =500)</span>
+<span style="display:block;text-align:center">![okctl](img/logo.png)</span>
 
 ## Installation
 

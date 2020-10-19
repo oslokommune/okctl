@@ -45,7 +45,6 @@ require (
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
 	github.com/hako/durafmt v0.0.0-20200710122514-c0fb7b4da026
 	github.com/hinshun/vt10x v0.0.0-20180616224451-1954e6464174
-	github.com/hjson/hjson-go v3.1.0+incompatible
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/jarcoal/httpmock v1.0.6
@@ -56,7 +55,7 @@ require (
 	github.com/logrusorgru/aurora/v3 v3.0.0
 	github.com/magiconair/properties v1.8.2 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
-	github.com/miekg/dns v1.0.14
+	github.com/miekg/dns v1.1.34
 	github.com/mishudark/errors v0.0.0-20190221111348-b16f7e94bb58
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
@@ -81,7 +80,6 @@ require (
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.6.1
 	github.com/theckman/yacspin v0.8.0
-	github.com/tidwall/gjson v1.6.1
 	github.com/yvasiyarov/go-metrics v0.0.0-20150112132944-c25f46c4b940 // indirect
 	github.com/yvasiyarov/gorelic v0.0.7 // indirect
 	github.com/yvasiyarov/newrelic_platform_go v0.0.0-20160601141957-9c099fbc30e9 // indirect

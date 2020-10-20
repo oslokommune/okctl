@@ -39,6 +39,12 @@ const (
 	DefaultVpcStackName = "test-vpc-pro"
 	// DefaultVpcCloudFormationTemplate is a default cloud formation template
 	DefaultVpcCloudFormationTemplate = "something"
+	// DefaultUserDataDir is a default path for the user data directory
+	DefaultUserDataDir = "/home/johndoe/.okctl"
+	// DefaultKubectlBinaryDir is a default path to the directory containing the kubectl executable
+	DefaultKubectlBinaryDir = DefaultUserDataDir + "/binaries/kubectl/1.16.8/linux/amd64"
+	// DefaultAwsIamAuthenticatorDir  is a default path to the directory containing the aws-iam-authenticator executable
+	DefaultAwsIamAuthenticatorDir = DefaultUserDataDir + "/binaries/aws-iam-authenticator/0.5.1/linux/amd64"
 	// DefaultKubeConfigPath is the default path for the kubeconfig
 	DefaultKubeConfigPath = "/cluster/kubeconfig"
 	// DefaultKubeConfigContent is the default content of kubeconfig

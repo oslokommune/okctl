@@ -48,38 +48,41 @@ $ tail -f %s
 
 `
 
-const testEndMsg = `Congratulations, your %s is now up and running.
+const createTestClusterEndMsg = `Congratulations, your {{ .KubernetesCluster }} is now up and running.
 To get started with some basic interactions, you can paste the
 following exports into a terminal:
 
-%s
+{{ .Exports }}
 
 You can retrieve these credentials at any point by issuing the
 command below, from within this repository:
 
-$ okctl show credentials %s
+$ okctl show credentials {{ .Environment }}
 
-Now you can use %s to list nodes, pods, etc. Try out some commands:
+Tip: Run {{ .VenvCmd }} to run a shell with these environment variables set. Then you
+can avoid using full paths to executables and modifying your PATH.
 
-$ %s get pods --all-namespaces
-$ %s get nodes
+Now you can use {{ .KubectlCmd }} to list nodes, pods, etc. Try out some commands:
 
-This also requires %s, which you can add to your PATH from here:
+$ {{ .KubectlPath }} get pods --all-namespaces
+$ {{ .KubectlPath }} get nodes
 
-%s
+This also requires {{ .AwsIamAuthenticatorCmd }}, which you can add to your PATH from here:
 
-Optionally, install kubectl and aws-iam-authenticator to your 
+{{ .AwsIamAuthenticatorPath }}
+
+Optionally, install kubectl and aws-iam-authenticator to your
 system from:
 
 - https://kubernetes.io/docs/tasks/tools/install-kubectl/
 - https://docs.aws.amazon.com/eks/latest/userguide/install-aws-iam-authenticator.html
 
 The installed version of kubectl needs to be within 2 versions of the
-kubernetes cluster version, which is: %s.
+kubernetes cluster version, which is: {{ .K8sClusterVersion }}.
 `
 
-// CreateTestClusterOpts contains all the required inputs
-type CreateTestClusterOpts struct {
+// createTestClusterOpts contains all the required inputs
+type createTestClusterOpts struct {
 	Environment    string
 	AWSAccountID   string
 	RepositoryName string
@@ -89,7 +92,7 @@ type CreateTestClusterOpts struct {
 }
 
 // Validate the inputs
-func (o *CreateTestClusterOpts) Validate() error {
+func (o *createTestClusterOpts) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.Environment, validation.Required, validation.Match(regexp.MustCompile("^[a-zA-Z]{3,64}$")).Error("must consist of 3-64 characters (a-z, A-Z)")),
 		validation.Field(&o.AWSAccountID, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{12}$")).Error("must consist of 12 digits")),
@@ -102,7 +105,7 @@ func (o *CreateTestClusterOpts) Validate() error {
 
 // nolint: funlen gocognit
 func buildCreateTestClusterCommand(o *okctl.Okctl) *cobra.Command {
-	opts := &CreateTestClusterOpts{}
+	opts := &createTestClusterOpts{}
 
 	cmd := &cobra.Command{
 		Use:   "testcluster ENV AWS_ACCOUNT_ID",
@@ -358,18 +361,19 @@ with Github or other production services.
 				return formatErr(err)
 			}
 
-			_, err = fmt.Fprintf(o.Err, testEndMsg,
-				aurora.Green("kubernetes cluster"),
-				exports,
-				opts.Environment,
-				aurora.Green("kubectl"),
-				k.BinaryPath,
-				k.BinaryPath,
-				aurora.Green("aws-iam-authenticator"),
-				a.BinaryPath,
-				aurora.Green("1.17"),
-			)
-
+			msg := createClusterMsgOpts{
+				KubernetesCluster:       aurora.Green("kubernetes cluster").String(),
+				Exports:                 exports,
+				Environment:             opts.Environment,
+				VenvCmd:                 aurora.Green("okctl venv").String(),
+				KubectlCmd:              aurora.Green("kubectl").String(),
+				AwsIamAuthenticatorCmd:  aurora.Green("aws-iam-authenticator").String(),
+				KubectlPath:             k.BinaryPath,
+				AwsIamAuthenticatorPath: a.BinaryPath,
+				K8sClusterVersion:       aurora.Green("1.17").String(),
+			}
+			txt, err := goTemplateToString(createTestClusterEndMsg, msg)
+			_, err = fmt.Print(o.Err, txt)
 			if err != nil {
 				return formatErr(err)
 			}

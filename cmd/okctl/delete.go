@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/AlecAivazis/survey/v2"
+
 	"github.com/oslokommune/okctl/pkg/client"
 
 	"github.com/oslokommune/okctl/pkg/spinner"
@@ -101,6 +103,11 @@ including VPC, this is a highly destructive operation.`,
 				ClusterName:  opts.ClusterName,
 			}
 
+			ready, err := checkifReady(id.ClusterName, o)
+			if err != nil || !ready {
+				return err
+			}
+
 			userDir, err := o.GetUserDataDir()
 			if err != nil {
 				return err
@@ -159,4 +166,27 @@ including VPC, this is a highly destructive operation.`,
 	}
 
 	return cmd
+}
+
+func checkifReady(clusterName string, o *okctl.Okctl) (bool, error) {
+	ready := false
+	prompt := &survey.Confirm{
+		Message: fmt.Sprintf("This will delete %s and all assosicated resources, are you sure you want to continue?", clusterName),
+	}
+
+	err := survey.AskOne(prompt, &ready)
+	if err != nil {
+		return false, err
+	}
+
+	if !ready {
+		_, err = fmt.Fprintf(o.Err, "user wasn't ready to continue, aborting.")
+		if err != nil {
+			return false, err
+		}
+
+		return false, err
+	}
+
+	return true, nil
 }

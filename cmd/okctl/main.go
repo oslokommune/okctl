@@ -96,6 +96,7 @@ being captured. Together with slack and slick.`,
 		},
 	}
 
+	cmd.AddCommand(buildVenvCommand(o))
 	cmd.AddCommand(buildCreateCommand(o))
 	cmd.AddCommand(buildDeleteCommand(o))
 	cmd.AddCommand(buildShowCommand(o))

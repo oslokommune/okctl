@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"testing"
@@ -48,7 +48,7 @@ http://argocd
 
 func TestShowCredentialsMessage(t *testing.T) {
 	t.Run("Should get expected output", func(t *testing.T) {
-		data := showMessageOpts{
+		data := ShowMessageOpts{
 			VenvCmd:                 aurora.Green("okctl venv").String(),
 			KubectlCmd:              aurora.Green("kubectl").String(),
 			AwsIamAuthenticatorCmd:  aurora.Green("aws-iam-authenticator").String(),
@@ -59,7 +59,7 @@ func TestShowCredentialsMessage(t *testing.T) {
 			ArgoCDURL:               "http://argocd",
 		}
 
-		msg, err := goTemplateToString(showMsg, data)
+		msg, err := GoTemplateToString(ShowMsg, data)
 
 		assert.Equal(t, nil, err)
 		assert.Equal(t, expectedShowMsg, msg, diff.LineDiff(expectedShowMsg, msg))

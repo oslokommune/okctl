@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"testing"
@@ -50,7 +50,7 @@ func TestCreateTestClusterMessage(t *testing.T) {
 	t.Run("Should get expected output", func(t *testing.T) {
 		exports := `export HELM_CACHE_HOME=/home/johndoe/.okctl/helm
 export KUBECONFIG=/home/johndoe/.okctl/credentials/test/kubeconfig`
-		data := createClusterMsgOpts{
+		data := CreateClusterMsgOpts{
 			KubernetesCluster:       aurora.Green("kubernetes cluster").String(),
 			Exports:                 exports,
 			Environment:             "prod",
@@ -64,7 +64,7 @@ export KUBECONFIG=/home/johndoe/.okctl/credentials/test/kubeconfig`
 			ArgoCDURL:               "http://argocd",
 		}
 
-		msg, err := goTemplateToString(createTestClusterEndMsg, data)
+		msg, err := GoTemplateToString(CreateTestClusterEndMsg, data)
 
 		assert.Equal(t, nil, err)
 		assert.Equal(t, createTestClusterExpectedMsg, msg, diff.LineDiff(createTestClusterExpectedMsg, msg))

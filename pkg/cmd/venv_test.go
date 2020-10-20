@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"testing"
@@ -28,8 +28,8 @@ func returnFalse(key string) (string, bool) {
 
 func TestGetShell(t *testing.T) {
 	t.Run("Should return correct shell", func(t *testing.T) {
-		assert.Equal(t, "/bin/fish", getShell(returnEnvOkctlShell))
-		assert.Equal(t, "/bin/zsh", getShell(returnEnvShell))
-		assert.Equal(t, "/bin/sh", getShell(returnFalse))
+		assert.Equal(t, "/bin/fish", GetShell(returnEnvOkctlShell))
+		assert.Equal(t, "/bin/zsh", GetShell(returnEnvShell))
+		assert.Equal(t, "/bin/sh", GetShell(returnFalse))
 	})
 }

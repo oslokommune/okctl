@@ -14,8 +14,9 @@ type ArgoCD struct {
 	ArgoDomain     string
 	ArgoURL        string
 	Certificate    *api.Certificate
-	GithubOauthApp *GithubOauthApp
+	IdentityClient *api.IdentityPoolClient
 	ExternalSecret *api.ExternalSecretsKube
+	ClientSecret   *api.SecretParameter
 	SecretKey      *api.SecretParameter
 	Chart          *api.Helm
 }
@@ -28,6 +29,8 @@ type CreateArgoCDOpts struct {
 	FQDN               string
 	HostedZoneID       string
 	GithubOrganisation string
+	UserPoolID         string
+	AuthDomain         string
 	Repository         *GithubRepository
 }
 

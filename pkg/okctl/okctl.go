@@ -168,7 +168,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 
 	return &clientCore.Services{
 		ALBIngressController: o.albIngressService(outputDir, spin),
-		ArgoCD:               o.argocdService(ghClient, outputDir, spin),
+		ArgoCD:               o.argocdService(outputDir, spin),
 		Certificate:          o.certService(outputDir, spin),
 		Cluster:              o.clusterService(outputDir, spin),
 		Domain:               o.domainService(outputDir, spin),
@@ -178,15 +178,50 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		Manifest:             o.manifestService(outputDir, spin),
 		Parameter:            o.paramService(outputDir, spin),
 		Vpc:                  o.vpcService(outputDir, spin),
+		IdentityManager:      o.identityManagerService(outputDir, spin),
 	}, nil
 }
 
-func (o *Okctl) argocdService(ghClient githubClient.Githuber, outputDir string, spin spinner.Spinner) client.ArgoCDService {
+func (o *Okctl) identityManagerService(outputDir string, spin spinner.Spinner) client.IdentityManagerService {
+	identityPoolBaseDir := path.Join(outputDir, config.DefaultIdentityPoolBaseDir)
+
+	identityManagerService := clientCore.NewIdentityManagerService(
+		spin,
+		rest.NewIdentityManagerAPI(o.restClient),
+		clientFilesystem.NewIdentityManagerStore(
+			clientFilesystem.Paths{
+				OutputFile:         config.DefaultIdentityPoolOutputsFile,
+				CloudFormationFile: config.DefaultIdentityPoolCloudFormationTemplate,
+				BaseDir:            identityPoolBaseDir,
+			},
+			clientFilesystem.Paths{
+				CloudFormationFile: config.DefaultCertificateCloudFormationTemplate,
+				BaseDir:            path.Join(identityPoolBaseDir, config.DefaultCertificateBaseDir),
+			},
+			clientFilesystem.Paths{
+				CloudFormationFile: config.DefaultAliasCloudFormationTemplate,
+				BaseDir:            path.Join(identityPoolBaseDir, config.DefaultAliasBaseDir),
+			},
+			clientFilesystem.Paths{
+				OutputFile:         config.DefaultIdentityPoolClientOutputsFile,
+				CloudFormationFile: config.DefaultIdentityPoolClientCloudFormationTemplate,
+				BaseDir:            path.Join(identityPoolBaseDir, config.DefaultIdentityPoolClientsBaseDir),
+			},
+			o.FileSystem,
+		),
+		stateSaver.NewIdentityManagerState(o.RepoStateWithEnv),
+		console.NewIdentityManagerReport(o.Err, spin),
+	)
+
+	return identityManagerService
+}
+
+func (o *Okctl) argocdService(outputDir string, spin spinner.Spinner) client.ArgoCDService {
 	argoBaseDir := path.Join(outputDir, config.DefaultArgoCDBaseDir)
 
 	argoService := clientCore.NewArgoCDService(
 		spin,
-		o.githubService(ghClient, spin.SubSpinner()),
+		o.identityManagerService(argoBaseDir, spin.SubSpinner()),
 		o.certService(argoBaseDir, spin.SubSpinner()),
 		o.manifestService(argoBaseDir, spin.SubSpinner()),
 		o.paramService(argoBaseDir, spin.SubSpinner()),
@@ -518,16 +553,29 @@ func (o *Okctl) initialise() error {
 		parameterStore,
 	)
 
+	// When creating a certificate for a CloudFront distribution, we
+	// need to create the certificate in us-east-1
+	provider, err := o.newCloudProviderWithRegion("us-east-1")
+	if err != nil {
+		return err
+	}
+
+	identityManagerService := core.NewIdentityManagerService(
+		awsProvider.NewIdentityManagerCloudProvider(o.CloudProvider),
+		awsProvider.NewCertificateCloudProvider(provider),
+	)
+
 	services := core.Services{
-		Cluster:        clusterService,
-		Vpc:            vpcService,
-		ManagedPolicy:  managedPolicyService,
-		ServiceAccount: serviceAccountService,
-		Helm:           helmService,
-		Kube:           kubeService,
-		Domain:         domainService,
-		Certificate:    certificateService,
-		Parameter:      parameterService,
+		Cluster:         clusterService,
+		Vpc:             vpcService,
+		ManagedPolicy:   managedPolicyService,
+		ServiceAccount:  serviceAccountService,
+		Helm:            helmService,
+		Kube:            kubeService,
+		Domain:          domainService,
+		Certificate:     certificateService,
+		Parameter:       parameterService,
+		IdentityManager: identityManagerService,
 	}
 
 	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))
@@ -605,6 +653,15 @@ func (o *Okctl) newBinariesProvider() error {
 	o.BinariesProvider = binaries.New(o.Logger, out, o.CredentialsProvider.Aws(), fetcher)
 
 	return nil
+}
+
+func (o *Okctl) newCloudProviderWithRegion(region string) (v1alpha1.CloudProvider, error) {
+	c, err := cloud.New(region, o.CredentialsProvider.Aws())
+	if err != nil {
+		return nil, err
+	}
+
+	return c.Provider, nil
 }
 
 // newCloudProvider creates a provider for running cloud operations

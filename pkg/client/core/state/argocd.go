@@ -7,7 +7,7 @@ import (
 )
 
 type argoCDState struct {
-	state state.Argocder
+	state state.RepositoryStateWithEnv
 }
 
 func (s *argoCDState) SaveArgoCD(cd *client.ArgoCD) (*store.Report, error) {
@@ -24,10 +24,28 @@ func (s *argoCDState) SaveArgoCD(cd *client.ArgoCD) (*store.Report, error) {
 		return nil, err
 	}
 
+	c := s.state.GetIdentityPoolClient(cd.IdentityClient.Purpose)
+
+	c.ClientSecret.Name = cd.ClientSecret.Name
+	c.ClientSecret.Version = cd.ClientSecret.Version
+	c.ClientSecret.Path = cd.ClientSecret.Path
+
+	r2, err := s.state.SaveIdentityPoolClient(c)
+	if err != nil {
+		return nil, err
+	}
+
+	report.Actions = append(report.Actions, r2.Actions...)
+
 	report.Actions = append([]store.Action{
 		{
 			Name: "ArgoCD",
 			Path: "cluster=" + cd.ID.ClusterName,
+			Type: "StateUpdate[add]",
+		},
+		{
+			Name: "IdentityPoolClient",
+			Path: "purpose=" + c.Purpose,
 			Type: "StateUpdate[add]",
 		},
 	}, report.Actions...)
@@ -36,7 +54,7 @@ func (s *argoCDState) SaveArgoCD(cd *client.ArgoCD) (*store.Report, error) {
 }
 
 // NewArgoCDState returns an initialised state layer
-func NewArgoCDState(state state.Argocder) client.ArgoCDState {
+func NewArgoCDState(state state.RepositoryStateWithEnv) client.ArgoCDState {
 	return &argoCDState{
 		state: state,
 	}

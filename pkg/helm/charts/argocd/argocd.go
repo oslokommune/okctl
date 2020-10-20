@@ -29,9 +29,11 @@ type ValuesOpts struct {
 	URL                  string
 	HostName             string
 	CertificateARN       string
+	Region               string
 	ClientID             string
 	Organisation         string
-	Team                 string
+	AuthDomain           string
+	UserPoolID           string
 	RepoURL              string
 	RepoName             string
 	PrivateKeySecretName string
@@ -256,13 +258,18 @@ func NewDefaultValues(opts ValuesOpts) *Values {
 			Config: serverConfig{
 				URL:                   opts.URL,
 				UsersAnonymousEnabled: "false",
-				DexConfig:             fmt.Sprintf(dexConfig, opts.ClientID, opts.Organisation, opts.Team),
-				Repositories:          fmt.Sprintf(repositoriesConfig, opts.RepoURL, opts.RepoName, opts.PrivateKeySecretName, opts.PrivateKeySecretKey),
-				AdminEnabled:          "false",
+				DexConfig: fmt.Sprintf(
+					dexConfig,
+					fmt.Sprintf("https://cognito-idp.%s.amazonaws.com/%s", opts.Region, opts.UserPoolID),
+					opts.ClientID,
+					fmt.Sprintf("%s/api/dex/callback", opts.URL),
+				),
+				Repositories: fmt.Sprintf(repositoriesConfig, opts.RepoURL, opts.RepoName, opts.PrivateKeySecretName, opts.PrivateKeySecretKey),
+				AdminEnabled: "false",
 			},
 			RBACConfig: rbacConfig{
-				PolicyCSV: fmt.Sprintf(policyCSV, opts.Organisation, opts.Team),
-				Scopes:    `[groups, email]`,
+				PolicyCSV: fmt.Sprintf(policyCSV, "admins"),
+				Scopes:    `[email, group]`,
 			},
 			ClusterAdminAccess: clusterAdminAccess{
 				Enabled: true,
@@ -332,9 +339,6 @@ ssh.dev.azure.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7Hr1oTWqNqOlzGJOfGJ4Nak
 vs-ssh.visualstudio.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7Hr1oTWqNqOlzGJOfGJ4NakVyIzf1rXYd4d7wo6jBlkLvCA4odBlL0mDUyZ0/QUfTTqeu+tm22gOsv+VrVTMk6vwRU75gY/y9ut5Mb3bR5BV58dKXyq9A9UeB5Cakehn5Zgm6x1mKoVyf+FFn26iYqXJRgzIZZcZ5V6hrE0Qg39kZm4az48o0AUbf6Sp4SLdvnuMa2sVNwHBboS7EJkm57XQPVU3/QpyNLHbWDdzwtrlS+ez30S3AdYhLKEOxAG8weOnyrtLJAUen9mTkol8oII1edf7mWWbWVf0nBmly21+nZcmCTISQBtdcyPaEno7fFQMDD26/s0lfKob4Kw8H
 `
 
-const policyCSV = `g, %s:%s, role:admin
-`
-
 const repositoriesConfig = `- url: %s
   type: git
   name: %s
@@ -343,17 +347,25 @@ const repositoriesConfig = `- url: %s
     key: %s
 `
 
+const policyCSV = `g, %s, role:admin
+`
+
 const dexConfig = `connectors:
-- type: github
-  id: github
-  name: Github
+- type: oidc
+  id: cognito
+  name: AWS Cognito
   config:
+    issuer: %s
     clientID: %s
-    clientSecret: $dex.github.clientSecret
-    orgs:
-    - name: %s
-      teams:
-      - %s
+    clientSecret: $dex.cognito.clientSecret
+    redirectURI: %s
+    scopes:
+    - openid
+    - email
+    - profile
+    claimMapping:
+      groups: "cognito:groups"
+      name: "cognito:username"
 `
 
 // Values contains the parameters we map up

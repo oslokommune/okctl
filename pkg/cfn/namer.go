@@ -6,22 +6,18 @@ import (
 
 // Not sure about this approach, will need to read up.
 
+// nolint: golint
 const (
-	// DefaultStackNamePrefix defines a prefix added to all cloud
-	// formation stacks
-	DefaultStackNamePrefix = "okctl"
-	// DefaultStackNameVpcID defines an identifier for a vpc
-	DefaultStackNameVpcID = "vpc"
-	// DefaultStackNameExternalSecretsPolicyID defines an identifier for an external secrets policy
-	DefaultStackNameExternalSecretsPolicyID = "externalsecretspolicy"
-	// DefaultStackNameAlbIngressControllerPolicyID defines an identifier for alb ingress controller policy
+	DefaultStackNamePrefix                       = "okctl"
+	DefaultStackNameVpcID                        = "vpc"
+	DefaultStackNameExternalSecretsPolicyID      = "externalsecretspolicy"
 	DefaultStackNameAlbIngressControllerPolicyID = "albingresscontrollerpolicy"
-	// DefaultStackNameExternalDNSPolicyID defines an identifier for external dns policy
-	DefaultStackNameExternalDNSPolicyID = "externaldns"
-	// DefaultStackNameDomainID defines an identifier for a domain stack
-	DefaultStackNameDomainID = "domain"
-	// DefaultStackNameCertificateID defines an identifier for a certificate stack
-	DefaultStackNameCertificateID = "certificate"
+	DefaultStackNameExternalDNSPolicyID          = "externaldns"
+	DefaultStackNameDomainID                     = "domain"
+	DefaultStackNameCertificateID                = "certificate"
+	DefaultStackNameIdentityPool                 = "identitypool"
+	DefaultStackNameIdentityPoolClient           = "identitypoolclient"
+	DefaultStackNameAliasRecordSet               = "aliasrecordset"
 )
 
 // StackNamer knows how to name cloud formation stacks
@@ -88,6 +84,38 @@ func (n *StackNamer) Certificate(repository, env, subdomain string) string {
 	return fmt.Sprintf("%s-%s-%s-%s-%s",
 		DefaultStackNamePrefix,
 		DefaultStackNameCertificateID,
+		repository,
+		env,
+		subdomain,
+	)
+}
+
+// IdentityPool returns the stack name of the identity pool
+func (n *StackNamer) IdentityPool(repository, env string) string {
+	return fmt.Sprintf("%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameIdentityPool,
+		repository,
+		env,
+	)
+}
+
+// IdentityPoolClient returns the stack name of the identity pool client
+func (n *StackNamer) IdentityPoolClient(repository, env, purpose string) string {
+	return fmt.Sprintf("%s-%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameIdentityPoolClient,
+		repository,
+		env,
+		purpose,
+	)
+}
+
+// AliasRecordSet returns the stack name of the alias record set
+func (n *StackNamer) AliasRecordSet(repository, env, subdomain string) string {
+	return fmt.Sprintf("%s-%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameAliasRecordSet,
 		repository,
 		env,
 		subdomain,

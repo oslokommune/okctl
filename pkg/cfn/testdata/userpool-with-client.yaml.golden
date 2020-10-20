@@ -1,0 +1,106 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  Arn:
+    Value:
+      Fn::GetAtt:
+      - UserPool
+      - Arn
+  ProviderName:
+    Value:
+      Fn::GetAtt:
+      - UserPool
+      - ProviderName
+  ProviderURL:
+    Value:
+      Fn::GetAtt:
+      - UserPool
+      - ProviderURL
+  UserPool:
+    Value:
+      Ref: UserPool
+  argocdClientID:
+    Value:
+      Ref: UserPoolClientargocd
+Resources:
+  UserPool:
+    Properties:
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+        - Name: admin_only
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+        InviteMessageTemplate:
+          EmailMessage: Your username is {username} and temporary password is {####}.
+          EmailSubject: Your temporary password for repo (env)
+        UnusedAccountValidityDays: 7
+      AliasAttributes:
+      - email
+      AutoVerifiedAttributes:
+      - email
+      DeviceConfiguration:
+        ChallengeRequiredOnNewDevice: true
+        DeviceOnlyRememberedOnUserPrompt: true
+      EmailConfiguration:
+        EmailSendingAccount: COGNITO_DEFAULT
+      EmailVerificationMessage: Your verification code for repo (env)
+      EmailVerificationSubject: Your verification code is {####}.
+      EnabledMfas:
+      - SOFTWARE_TOKEN_MFA
+      MfaConfiguration: "ON"
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+          TemporaryPasswordValidityDays: 7
+      Schema:
+      - AttributeDataType: String
+        DeveloperOnlyAttribute: true
+        Name: email
+        Required: true
+      UserPoolAddOns:
+        AdvancedSecurityMode: AUDIT
+      UserPoolName: okctl-env-repo-userpool
+      UsernameAttributes:
+      - email
+      UsernameConfiguration: {}
+      VerificationMessageTemplate:
+        DefaultEmailOption: CONFIRM_WITH_LINK
+        EmailMessage: Your verification code is {####}.
+        EmailSubject: Your verification code for repo (env)
+    Type: AWS::Cognito::UserPool
+  UserPoolClientargocd:
+    DependsOn:
+    - UserPool
+    Properties:
+      AllowedOAuthFlows:
+      - code
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthScopes:
+      - email
+      - openid
+      CallbackURLs:
+      - https://argocd/callback
+      ClientName: okctl-env-repo-argocd
+      DefaultRedirectURI: https://argocd/callback
+      GenerateSecret: true
+      PreventUserExistenceErrors: ENABLED
+      ReadAttributes:
+      - email
+      - openid
+      RefreshTokenValidity: 30
+      UserPoolId:
+        Ref: UserPool
+    Type: AWS::Cognito::UserPoolClient
+  UserPoolDomain:
+    DependsOn:
+    - UserPool
+    Properties:
+      CustomDomainConfig:
+        CertificateArn: arn://certificate/ihfieh9e9FAKE
+      Domain: auth.oslo.systems
+      UserPoolId:
+        Ref: UserPool
+    Type: AWS::Cognito::UserPoolDomain

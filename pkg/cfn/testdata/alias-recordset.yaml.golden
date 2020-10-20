@@ -1,0 +1,11 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  AliasRecordSetAuth:
+    Properties:
+      AliasTarget:
+        DNSName: cloudfront-us-east-1.aws.com
+        HostedZoneId: HJOJF678FAKE
+      HostedZoneId: GHFJE78FAKE
+      Name: auth.oslo.systems
+      Type: A
+    Type: AWS::Route53::RecordSet

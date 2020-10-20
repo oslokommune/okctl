@@ -410,6 +410,16 @@ and database subnets.`,
 				return err
 			}
 
+			pool, err := services.IdentityManager.CreateIdentityPool(o.Ctx, api.CreateIdentityPoolOpts{
+				ID:           id,
+				AuthDomain:   fmt.Sprintf("auth.%s", hostedZone.HostedZone.Domain),
+				AuthFQDN:     fmt.Sprintf("auth.%s", hostedZone.HostedZone.FQDN),
+				HostedZoneID: hostedZone.HostedZone.HostedZoneID,
+			})
+			if err != nil {
+				return formatErr(err)
+			}
+
 			argoCD, err := services.ArgoCD.CreateArgoCD(o.Ctx, client.CreateArgoCDOpts{
 				ID:                 id,
 				Domain:             hostedZone.HostedZone.Domain,
@@ -417,6 +427,8 @@ and database subnets.`,
 				HostedZoneID:       hostedZone.HostedZone.HostedZoneID,
 				GithubOrganisation: opts.Organisation,
 				Repository:         githubRepo,
+				UserPoolID:         pool.UserPoolID,
+				AuthDomain:         pool.AuthDomain,
 			})
 			if err != nil {
 				return formatErr(err)

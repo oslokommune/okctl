@@ -25,6 +25,10 @@ brew install oslokommune/tap/okctl
 ```bash
 $ okctl --help
 
+# Create a new git repository for your new cluster (infrastructure-as-code will be stored here)
+$ git clone git@github.com:oslokommune/<a new repo>.git
+$ cd <a new repo>
+
 # Create a cluster
 $ okctl create cluster pro 123456789012
 

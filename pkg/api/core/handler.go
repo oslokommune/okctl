@@ -41,6 +41,8 @@ type Endpoints struct {
 	DeleteExternalSecretsServiceAccount      endpoint.Endpoint
 	DeleteAlbIngressControllerServiceAccount endpoint.Endpoint
 	DeleteExternalDNSServiceAccount          endpoint.Endpoint
+	CreateIdentityPool                       endpoint.Endpoint
+	CreateIdentityPoolClient                 endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -72,6 +74,8 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteExternalSecretsServiceAccount:      makeDeleteExternalSecretsServiceAccountEndpoint(s.ServiceAccount),
 		DeleteAlbIngressControllerServiceAccount: makeDeleteAlbIngressControllerServiceAccountEndpoint(s.ServiceAccount),
 		DeleteExternalDNSServiceAccount:          makeDeleteExternalDNSServiceAccountEndpoint(s.ServiceAccount),
+		CreateIdentityPool:                       makeCreateIdentityPoolEndpoint(s.IdentityManager),
+		CreateIdentityPoolClient:                 makeCreateIdentityPoolClient(s.IdentityManager),
 	}
 }
 
@@ -102,6 +106,8 @@ type Handlers struct {
 	DeleteExternalSecretsServiceAccount      http.Handler
 	DeleteAlbIngressControllerServiceAccount http.Handler
 	DeleteExternalDNSServiceAccount          http.Handler
+	CreateIdentityPool                       http.Handler
+	CreateIdentityPoolClient                 http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -159,6 +165,8 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteExternalSecretsServiceAccount:      newServer(endpoints.DeleteExternalSecretsServiceAccount, decodeIDRequest),
 		DeleteAlbIngressControllerServiceAccount: newServer(endpoints.DeleteAlbIngressControllerServiceAccount, decodeIDRequest),
 		DeleteExternalDNSServiceAccount:          newServer(endpoints.DeleteExternalDNSServiceAccount, decodeIDRequest),
+		CreateIdentityPool:                       newServer(endpoints.CreateIdentityPool, decodeCreateIdentityPool),
+		CreateIdentityPoolClient:                 newServer(endpoints.CreateIdentityPoolClient, decodeCreateIdentityPoolClient),
 	}
 }
 
@@ -237,6 +245,15 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 				r.Method(http.MethodPost, "/", handlers.CreateSecret)
 			})
 		})
+		r.Route("/identitymanagers", func(r chi.Router) {
+			r.Route("/pools", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateIdentityPool)
+
+				r.Route("/clients", func(r chi.Router) {
+					r.Method(http.MethodPost, "/", handlers.CreateIdentityPoolClient)
+				})
+			})
+		})
 	})
 
 	return r
@@ -244,15 +261,16 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 
 // Services defines all available services
 type Services struct {
-	Cluster        api.ClusterService
-	Vpc            api.VpcService
-	ManagedPolicy  api.ManagedPolicyService
-	ServiceAccount api.ServiceAccountService
-	Helm           api.HelmService
-	Kube           api.KubeService
-	Domain         api.DomainService
-	Certificate    api.CertificateService
-	Parameter      api.ParameterService
+	Cluster         api.ClusterService
+	Vpc             api.VpcService
+	ManagedPolicy   api.ManagedPolicyService
+	ServiceAccount  api.ServiceAccountService
+	Helm            api.HelmService
+	Kube            api.KubeService
+	Domain          api.DomainService
+	Certificate     api.CertificateService
+	Parameter       api.ParameterService
+	IdentityManager api.IdentityManagerService
 }
 
 // EndpointOption makes it easy to enable and disable the endpoint
@@ -275,6 +293,9 @@ const (
 	parameterTag            = "parameter"
 	secretTag               = "secret"
 	argocdTag               = "argocd"
+	identityManagerTag      = "identitymanager"
+	identityPoolTag         = "identitypool"
+	identityPoolClientTag   = "identitypoolclient"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -307,6 +328,8 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteExternalSecretsServiceAccount:      logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, externalSecretsTag}, "/"), "delete")(endpoints.DeleteExternalSecretsServiceAccount),
 			DeleteAlbIngressControllerServiceAccount: logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, albIngressControllerTag}, "/"), "delete")(endpoints.DeleteAlbIngressControllerServiceAccount),
 			DeleteExternalDNSServiceAccount:          logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, externalDNSTag}, "/"), "delete")(endpoints.DeleteExternalDNSServiceAccount),
+			CreateIdentityPool:                       logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag}, "/"), "create")(endpoints.CreateIdentityPool),
+			CreateIdentityPoolClient:                 logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag, identityPoolClientTag}, "/"), "create")(endpoints.CreateIdentityPoolClient),
 		}
 	}
 }

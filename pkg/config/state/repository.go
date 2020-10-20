@@ -72,6 +72,7 @@ type Cluster struct {
 	Certificates map[string]Certificate
 	Github       Github
 	ArgoCD       ArgoCD
+	IdentityPool IdentityPool
 }
 
 const (
@@ -90,6 +91,58 @@ func (c Cluster) Validate() error {
 		validation.Field(&c.HostedZone, validation.Required),
 		validation.Field(&c.VPC),
 		validation.Field(&c.Certificates),
+	)
+}
+
+// IdentityPool contains the state about an identity
+// user pool
+type IdentityPool struct {
+	UserPoolID string
+	AuthDomain string
+	Alias      RecordSetAlias
+	Clients    map[string]IdentityPoolClient
+}
+
+// Validate the identity pool
+func (p IdentityPool) Validate() error {
+	return validation.ValidateStruct(&p,
+		validation.Field(&p.UserPoolID, validation.Required),
+		validation.Field(&p.AuthDomain, validation.Required),
+		validation.Field(&p.Alias, validation.Required),
+		validation.Field(&p.Clients, validation.Required),
+	)
+}
+
+// IdentityPoolClient contains the state about an
+// identity client
+type IdentityPoolClient struct {
+	Purpose      string
+	CallbackURL  string
+	ClientID     string
+	ClientSecret ClientSecret
+}
+
+// Validate the identity pool client
+func (c IdentityPoolClient) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.Purpose, validation.Required),
+		validation.Field(&c.CallbackURL, validation.Required),
+		validation.Field(&c.ClientID, validation.Required),
+	)
+}
+
+// RecordSetAlias contains state about an alias
+// record set
+type RecordSetAlias struct {
+	AliasDomain     string
+	AliasHostedZone string
+}
+
+// Validate the record set alias
+func (a RecordSetAlias) Validate() error {
+	return validation.ValidateStruct(&a,
+		validation.Field(&a.AliasDomain, validation.Required),
+		validation.Field(&a.AliasHostedZone, validation.Required),
 	)
 }
 

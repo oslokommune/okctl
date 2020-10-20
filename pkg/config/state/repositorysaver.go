@@ -57,6 +57,14 @@ type Metadataer interface {
 	GetMetadata() Metadata
 }
 
+// IdentityPooler defines the allowed actions on the identitypool state
+type IdentityPooler interface {
+	SaveIdentityPool(pool IdentityPool) (*store.Report, error)
+	GetIdentityPool() IdentityPool
+	SaveIdentityPoolClient(client IdentityPoolClient) (*store.Report, error)
+	GetIdentityPoolClient(purpose string) IdentityPoolClient
+}
+
 // RepositoryStateWithEnv provides actions for interacting with
 // the state of a repository
 type RepositoryStateWithEnv interface {
@@ -67,6 +75,7 @@ type RepositoryStateWithEnv interface {
 	Argocder
 	Certificater
 	Metadataer
+	IdentityPooler
 	GetClusterName() string
 	Save() (*store.Report, error)
 }
@@ -96,6 +105,47 @@ func NewRepositoryStateWithEnv(env string, r *Repository, fn SaverFn) Repository
 		env:     env,
 		saverFn: fn,
 	}
+}
+
+// SaveIdentityPoolClient saves the identity pool client
+func (r *repository) SaveIdentityPoolClient(client IdentityPoolClient) (*store.Report, error) {
+	cluster := r.GetCluster()
+
+	if cluster.IdentityPool.Clients == nil {
+		cluster.IdentityPool.Clients = map[string]IdentityPoolClient{}
+	}
+
+	cluster.IdentityPool.Clients[client.Purpose] = client
+
+	r.state.Clusters[r.env] = cluster
+
+	return r.save()
+}
+
+// GetIdentityPoolClient returns the identity pool client
+func (r *repository) GetIdentityPoolClient(purpose string) IdentityPoolClient {
+	pool := r.GetIdentityPool()
+
+	if pool.Clients == nil {
+		return IdentityPoolClient{}
+	}
+
+	return pool.Clients[purpose]
+}
+
+// SaveIdentityPool saves the identity pool and stores the state
+func (r *repository) SaveIdentityPool(pool IdentityPool) (*store.Report, error) {
+	cluster := r.GetCluster()
+	cluster.IdentityPool = pool
+
+	r.state.Clusters[r.env] = cluster
+
+	return r.save()
+}
+
+func (r *repository) GetIdentityPool() IdentityPool {
+	_ = r.GetCluster()
+	return r.state.Clusters[r.env].IdentityPool
 }
 
 // SaveCertificate updates the state with the provided certificate

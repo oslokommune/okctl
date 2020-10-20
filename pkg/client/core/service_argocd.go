@@ -22,7 +22,7 @@ type argoCDService struct {
 	report client.ArgoCDReport
 	state  client.ArgoCDState
 
-	gh       client.GithubService
+	identity client.IdentityManagerService
 	cert     client.CertificateService
 	manifest client.ManifestService
 	param    client.ParameterService
@@ -49,12 +49,17 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		return nil, err
 	}
 
-	app, err := s.gh.CreateGithubOauthApp(ctx, client.CreateGithubOauthAppOpts{
-		ID:           opts.ID,
-		Organisation: opts.GithubOrganisation,
-		Name:         fmt.Sprintf("okctl-argocd-%s", opts.ID.ClusterName),
-		SiteURL:      fmt.Sprintf("https://%s", cert.Domain),
-		CallbackURL:  fmt.Sprintf("https://%s/api/dex/callback", cert.Domain),
+	identityClient, err := s.identity.CreateIdentityPoolClient(ctx, api.CreateIdentityPoolClientOpts{
+		ID:          opts.ID,
+		UserPoolID:  opts.UserPoolID,
+		Purpose:     "argocd",
+		CallbackURL: fmt.Sprintf("https://%s/api/dex/callback", cert.Domain),
+	})
+
+	clientSecret, err := s.param.CreateSecret(ctx, api.CreateSecretOpts{
+		ID:     opts.ID,
+		Name:   "argocd/client_secret",
+		Secret: identityClient.ClientSecret,
 	})
 	if err != nil {
 		return nil, err
@@ -104,8 +109,8 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 				},
 				Data: []api.Data{
 					{
-						Name: "dex.github.clientSecret",
-						Key:  app.ClientSecret.Path,
+						Name: "dex.cognito.clientSecret",
+						Key:  clientSecret.Path,
 					},
 					{
 						Name: "server.secretkey",
@@ -120,16 +125,17 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 	}
 
 	chartOpts := api.CreateArgoCDOpts{
-		ID:                  opts.ID,
-		ArgoDomain:          cert.Domain,
-		ArgoCertificateARN:  cert.CertificateARN,
-		GithubOrganisation:  opts.GithubOrganisation,
-		GithubTeam:          app.Team.Name,
-		GithubRepoURL:       opts.Repository.GitURL,
-		GithubRepoName:      opts.Repository.Repository,
-		GithubOauthClientID: app.ClientID,
-		PrivateKeyName:      privateKeyName,
-		PrivateKeyKey:       privateKeyDataName,
+		ID:                 opts.ID,
+		ArgoDomain:         cert.Domain,
+		ArgoCertificateARN: cert.CertificateARN,
+		GithubOrganisation: opts.GithubOrganisation,
+		GithubRepoURL:      opts.Repository.GitURL,
+		GithubRepoName:     opts.Repository.Repository,
+		ClientID:           identityClient.ClientID,
+		AuthDomain:         opts.AuthDomain,
+		UserPoolID:         opts.UserPoolID,
+		PrivateKeyName:     privateKeyName,
+		PrivateKeyKey:      privateKeyDataName,
 	}
 
 	argo, err := s.api.CreateArgoCD(chartOpts)
@@ -141,7 +147,8 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 	argo.ArgoDomain = cert.Domain
 	argo.ArgoURL = fmt.Sprintf("https://%s", cert.Domain)
 	argo.Certificate = cert
-	argo.GithubOauthApp = app
+	argo.IdentityClient = identityClient
+	argo.ClientSecret = clientSecret
 	argo.ExternalSecret = &api.ExternalSecretsKube{
 		ID:        manifest.ID,
 		Manifests: manifest.Manifests,
@@ -169,7 +176,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 // NewArgoCDService returns an initialised service
 func NewArgoCDService(
 	spinner spinner.Spinner,
-	gh client.GithubService,
+	identity client.IdentityManagerService,
 	cert client.CertificateService,
 	manifest client.ManifestService,
 	param client.ParameterService,
@@ -184,7 +191,7 @@ func NewArgoCDService(
 		store:    store,
 		report:   report,
 		state:    state,
-		gh:       gh,
+		identity: identity,
 		cert:     cert,
 		manifest: manifest,
 		param:    param,

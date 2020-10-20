@@ -2,6 +2,8 @@ package v1alpha1
 
 import (
 	"github.com/aws/aws-sdk-go/service/cloudformation/cloudformationiface"
+	"github.com/aws/aws-sdk-go/service/cloudfront/cloudfrontiface"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/aws/aws-sdk-go/service/eks/eksiface"
 	"github.com/aws/aws-sdk-go/service/route53/route53iface"
@@ -17,6 +19,8 @@ type CloudProvider interface {
 	EKS() eksiface.EKSAPI
 	ServiceQuotas() servicequotasiface.ServiceQuotasAPI
 	Route53() route53iface.Route53API
+	CloudFront() cloudfrontiface.CloudFrontAPI
+	CognitoIdentityProvider() cognitoidentityprovideriface.CognitoIdentityProviderAPI
 	CloudFormation() cloudformationiface.CloudFormationAPI
 	Region() string
 	PrincipalARN() string

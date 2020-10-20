@@ -4,6 +4,17 @@ package components
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/oslokommune/okctl/pkg/cfn/components/recordset"
+
+	"github.com/oslokommune/okctl/pkg/cfn/components/aliasrecordset"
+
+	"github.com/oslokommune/okctl/pkg/cfn/components/userpooldomain"
+
+	"github.com/oslokommune/okctl/pkg/cfn/components/userpoolclient"
+
+	"github.com/oslokommune/okctl/pkg/cfn/components/userpool"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/certificate"
 
@@ -572,7 +583,7 @@ func NewPublicCertificateComposer(fqdn, hostedZoneID string) *PublicCertificateC
 	}
 }
 
-// Compose returns the resources and outputts for creating a certificate
+// Compose returns the resources and outputs for creating a certificate
 func (c *PublicCertificateComposer) Compose() (*cfn.Composition, error) {
 	cert := certificate.New(c.FQDN, c.HostedZoneID)
 
@@ -580,4 +591,126 @@ func (c *PublicCertificateComposer) Compose() (*cfn.Composition, error) {
 		Outputs:   []cfn.StackOutputer{cert},
 		Resources: []cfn.ResourceNamer{cert},
 	}, nil
+}
+
+// UserPool contains all state for building
+// a cognito user pool cloud formation template
+type UserPool struct {
+	Environment    string
+	Repository     string
+	CertificateARN string
+	Domain         string
+	HostedZoneID   string
+}
+
+// Compose returns the resources and outputs
+func (u *UserPool) Compose() (*cfn.Composition, error) {
+	composition := &cfn.Composition{}
+
+	userPool := userpool.New(u.Environment, u.Repository)
+	// Cognito User Pool Domain requires an A record on the base domain, for some or another
+	// reason. Frequently we don't have this, so we create a placeholder record.
+	placeholder := recordset.New("PlaceHolder", "1.1.1.1", RootDomain(u.Domain), u.HostedZoneID)
+	upDomain := userpooldomain.New(u.Domain, u.CertificateARN, userPool, placeholder)
+
+	composition.Resources = append(composition.Resources, userPool, upDomain, placeholder)
+	composition.Outputs = append(composition.Outputs, userPool)
+
+	return composition, nil
+}
+
+// RootDomain extract the root domain
+func RootDomain(domain string) string {
+	if len(domain) == 0 || !strings.Contains(domain, ".") {
+		return domain
+	}
+
+	parts := strings.Split(domain, ".")
+	if len(parts) == 2 { // nolint: gomnd
+		return domain
+	}
+
+	return strings.Join(parts[1:], ".")
+}
+
+// NewUserPool returns an initialised composer
+// for creating a cognito user pool with clients
+func NewUserPool(environment, repository, domain, hostedZoneID, certificateARN string) *UserPool {
+	return &UserPool{
+		Environment:    environment,
+		Repository:     repository,
+		Domain:         domain,
+		CertificateARN: certificateARN,
+		HostedZoneID:   hostedZoneID,
+	}
+}
+
+// UserPoolClient contains state for building a
+// a cognito user pool client cloud formation template
+type UserPoolClient struct {
+	Environment string
+	Repository  string
+	Purpose     string
+	CallbackURL string
+	UserPoolID  string
+}
+
+// Compose returns outputs and resources for a cloud formation stack
+func (c *UserPoolClient) Compose() (*cfn.Composition, error) {
+	composition := &cfn.Composition{}
+
+	upc := userpoolclient.New(c.Purpose, c.Environment, c.Repository, c.CallbackURL, c.UserPoolID)
+
+	composition.Resources = append(composition.Resources, upc)
+	composition.Outputs = append(composition.Outputs, upc)
+
+	return composition, nil
+}
+
+// NewUserPoolClient returns an initialised composer for
+// creating a cognito user pool client
+func NewUserPoolClient(purpose, environment, repository, callbackURL, userPoolID string) *UserPoolClient {
+	return &UserPoolClient{
+		Environment: environment,
+		Repository:  repository,
+		Purpose:     purpose,
+		CallbackURL: callbackURL,
+		UserPoolID:  userPoolID,
+	}
+}
+
+// AliasRecordSet contains the state required for
+// building an alias record set
+type AliasRecordSet struct {
+	Name              string
+	AliasDNS          string
+	AliasHostedZoneID string
+	Domain            string
+	HostedZoneID      string
+}
+
+// Compose returns the cloud formation outputs and resources
+func (s *AliasRecordSet) Compose() (*cfn.Composition, error) {
+	composition := &cfn.Composition{}
+
+	composition.Resources = append(composition.Resources, aliasrecordset.New(
+		"Auth",
+		s.AliasDNS,
+		s.AliasHostedZoneID,
+		s.Domain,
+		s.HostedZoneID,
+	))
+
+	return composition, nil
+}
+
+// NewAliasRecordSet returns an initialised composer
+func NewAliasRecordSet(name, aliasDNS, aliasHostedZoneID, domain, hostedZoneID string) *AliasRecordSet {
+	return &AliasRecordSet{
+		Name:              name,
+		AliasDNS:          aliasDNS,
+		AliasHostedZoneID: aliasHostedZoneID,
+		Domain:            domain,
+		HostedZoneID:      hostedZoneID,
+	}
 }

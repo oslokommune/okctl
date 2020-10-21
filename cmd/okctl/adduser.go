@@ -45,8 +45,8 @@ func buildAddUserCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &AddUserOpts{}
 	cmd := &cobra.Command{
 		Use:   "adduser [env] [email]",
-		Short: "Add a user to identitypool",
-		Long:  `Add a user to the identitypool associated with the cluster, for login in ArgoCD and other applications`,
+		Short: "Add a user access to the cluster's services",
+		Long:  `Add a user to the AWS identitypool associated with the cluster, for login in ArgoCD and other applications`,
 		Args:  cobra.ExactArgs(addUserArgs),
 		RunE: func(_ *cobra.Command, args []string) error {
 			environment := args[0]

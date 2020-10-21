@@ -2,14 +2,20 @@ package main
 
 import (
 	"fmt"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"log"
 	"os"
 	"os/exec"
+	"regexp"
 
 	"github.com/oslokommune/okctl/pkg/cmd"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/virtualenv"
 	"github.com/spf13/cobra"
+)
+
+const (
+	venvArgs = 1
 )
 
 const venvLong = `Runs a sub shell with all needed environmental variables set.
@@ -20,20 +26,30 @@ environment variable that is set of the following: $OKCTL_SHELL, $SHELL. If none
 So to override, you can run for instance:
 
 export OKCTL_SHELL=/bin/bash
-okctl venv
+okctl venv myenv
 `
 
 func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 	opts := virtualenv.VirtualEnvironmentOpts{}
 
 	cmd := &cobra.Command{
-		Use:   "venv",
+		Use:   "venv ENV",
 		Short: "Runs a virtual environment",
 		Long:  venvLong,
+		Args:  cobra.ExactArgs(venvArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			environment := args[0]
 
-			err := o.InitialiseWithOnlyEnv(environment)
+			err := validation.Validate(
+				&environment,
+				validation.Required,
+				validation.Match(regexp.MustCompile("^[a-zA-Z]{3,64}$")).Error("the environment must consist of 3-64 characters (a-z, A-Z)"),
+			)
+			if err != nil {
+				return err
+			}
+
+			err = o.InitialiseWithOnlyEnv(environment)
 			if err != nil {
 				return err
 			}

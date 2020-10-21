@@ -63,6 +63,8 @@ type IdentityPooler interface {
 	GetIdentityPool() IdentityPool
 	SaveIdentityPoolClient(client IdentityPoolClient) (*store.Report, error)
 	GetIdentityPoolClient(purpose string) IdentityPoolClient
+	GetIdentityPoolUser(email string) IdentityPoolUser
+	SaveIdentityPoolUser(client IdentityPoolUser) (*store.Report, error)
 }
 
 // RepositoryStateWithEnv provides actions for interacting with
@@ -96,6 +98,30 @@ type repository struct {
 	state   *Repository
 	env     string
 	saverFn SaverFn
+}
+
+func (r *repository) GetIdentityPoolUser(email string) IdentityPoolUser {
+	pool := r.GetIdentityPool()
+
+	if pool.Users == nil {
+		return IdentityPoolUser{}
+	}
+
+	return pool.Users[email]
+}
+
+func (r *repository) SaveIdentityPoolUser(user IdentityPoolUser) (*store.Report, error) {
+	cluster := r.GetCluster()
+
+	if cluster.IdentityPool.Users == nil {
+		cluster.IdentityPool.Users = map[string]IdentityPoolUser{}
+	}
+
+	cluster.IdentityPool.Users[user.Email] = user
+
+	r.state.Clusters[r.env] = cluster
+
+	return r.save()
 }
 
 // NewRepositoryStateWithEnv returns an initialised setter for a given env

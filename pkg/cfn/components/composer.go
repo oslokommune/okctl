@@ -6,6 +6,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/cfn/components/userpooluser"
+	"github.com/oslokommune/okctl/pkg/cfn/components/userpoolusertogroupattachment"
+
+	"github.com/oslokommune/okctl/pkg/cfn/components/userpoolgroup"
+
 	"github.com/oslokommune/okctl/pkg/cfn/components/recordset"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/aliasrecordset"
@@ -612,11 +617,39 @@ func (u *UserPool) Compose() (*cfn.Composition, error) {
 	// reason. Frequently we don't have this, so we create a placeholder record.
 	placeholder := recordset.New("PlaceHolder", "1.1.1.1", RootDomain(u.Domain), u.HostedZoneID)
 	upDomain := userpooldomain.New(u.Domain, u.CertificateARN, userPool, placeholder)
+	group := userpoolgroup.New("admins", "Default admin group", userPool)
 
-	composition.Resources = append(composition.Resources, userPool, upDomain, placeholder)
+	composition.Resources = append(composition.Resources, userPool, upDomain, placeholder, group)
 	composition.Outputs = append(composition.Outputs, userPool)
 
 	return composition, nil
+}
+
+// UserPoolUser output of command
+type UserPoolUser struct {
+	UserPoolID string
+	Email      string
+}
+
+// Compose userpool user and admin group attachment
+func (u *UserPoolUser) Compose() (*cfn.Composition, error) {
+	composition := &cfn.Composition{}
+
+	userPoolUser := userpooluser.New(u.Email, "User pool user", u.UserPoolID)
+	attachment := userpoolusertogroupattachment.New(userPoolUser, u.Email, "admins", u.UserPoolID)
+
+	composition.Resources = append(composition.Resources, userPoolUser, attachment)
+	composition.Outputs = append(composition.Outputs, userPoolUser)
+
+	return composition, nil
+}
+
+// NewUserPoolUser add a new user into a userpool
+func NewUserPoolUser(email, userpoolid string) *UserPoolUser {
+	return &UserPoolUser{
+		Email:      email,
+		UserPoolID: userpoolid,
+	}
 }
 
 // RootDomain extract the root domain

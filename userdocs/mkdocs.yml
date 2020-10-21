@@ -17,6 +17,8 @@ nav:
   - Usage:
       - usage/testcluster.md
       - usage/venv.md
+  - Users:
+      - usage/adduser.md
 
 plugins:
   - git-revision-date

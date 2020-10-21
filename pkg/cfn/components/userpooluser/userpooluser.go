@@ -38,6 +38,10 @@ func (u *UserPoolUser) Resource() cloudformation.Resource {
 				Name:  "name",
 				Value: u.Email,
 			},
+			{
+				Name:  "email_verified",
+				Value: "True",
+			},
 		},
 		Username:                             u.Email,
 		UserPoolId:                           u.UserPoolID,

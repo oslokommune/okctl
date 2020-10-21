@@ -46,6 +46,7 @@ func loadUserData(o *okctl.Okctl, cmd *cobra.Command) error {
 	return o.LoadUserData()
 }
 
+// nolint: funlen
 func buildRootCommand() *cobra.Command {
 	var outputFormat string
 

@@ -11,28 +11,33 @@ import (
 type IdentityManagerService interface {
 	CreateIdentityPool(ctx context.Context, opts api.CreateIdentityPoolOpts) (*api.IdentityPool, error)
 	CreateIdentityPoolClient(ctx context.Context, opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error)
+	CreateIdentityPoolUser(ctx context.Context, opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error)
 }
 
 // IdentityManagerAPI invokes the API calls for creating an identity pool
 type IdentityManagerAPI interface {
 	CreateIdentityPool(opts api.CreateIdentityPoolOpts) (*api.IdentityPool, error)
 	CreateIdentityPoolClient(opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error)
+	CreateIdentityPoolUser(opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error)
 }
 
 // IdentityManagerStore stores the data
 type IdentityManagerStore interface {
 	SaveIdentityPool(pool *api.IdentityPool) (*store.Report, error)
 	SaveIdentityPoolClient(client *api.IdentityPoolClient) (*store.Report, error)
+	SaveIdentityPoolUser(client *api.IdentityPoolUser) (*store.Report, error)
 }
 
 // IdentityManagerState implements the state layer
 type IdentityManagerState interface {
 	SaveIdentityPool(pool *api.IdentityPool) (*store.Report, error)
 	SaveIdentityPoolClient(client *api.IdentityPoolClient) (*store.Report, error)
+	SaveIdentityPoolUser(client *api.IdentityPoolUser) (*store.Report, error)
 }
 
 // IdentityManagerReport provides output of the actions
 type IdentityManagerReport interface {
 	ReportIdentityPool(pool *api.IdentityPool, reports []*store.Report) error
 	ReportIdentityPoolClient(client *api.IdentityPoolClient, reports []*store.Report) error
+	ReportIdentityPoolUser(client *api.IdentityPoolUser, reports []*store.Report) error
 }

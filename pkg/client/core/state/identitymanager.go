@@ -13,6 +13,27 @@ type identityManagerState struct {
 	state state.IdentityPooler
 }
 
+func (s *identityManagerState) SaveIdentityPoolUser(user *api.IdentityPoolUser) (*store.Report, error) {
+	u := s.state.GetIdentityPoolUser(user.Email)
+
+	u.Email = user.Email
+
+	report, err := s.state.SaveIdentityPoolUser(u)
+	if err != nil {
+		return nil, fmt.Errorf("saving state: %w", err)
+	}
+
+	report.Actions = append([]store.Action{
+		{
+			Name: "IdentityPoolUser",
+			Path: fmt.Sprintf("email=%s", u.Email),
+			Type: "StateUpdate[add]",
+		},
+	}, report.Actions...)
+
+	return report, nil
+}
+
 func (s *identityManagerState) SaveIdentityPoolClient(client *api.IdentityPoolClient) (*store.Report, error) {
 	c := s.state.GetIdentityPoolClient(client.Purpose)
 

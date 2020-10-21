@@ -43,6 +43,7 @@ type Endpoints struct {
 	DeleteExternalDNSServiceAccount          endpoint.Endpoint
 	CreateIdentityPool                       endpoint.Endpoint
 	CreateIdentityPoolClient                 endpoint.Endpoint
+	CreateIdentityPoolUser                   endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -76,6 +77,7 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteExternalDNSServiceAccount:          makeDeleteExternalDNSServiceAccountEndpoint(s.ServiceAccount),
 		CreateIdentityPool:                       makeCreateIdentityPoolEndpoint(s.IdentityManager),
 		CreateIdentityPoolClient:                 makeCreateIdentityPoolClient(s.IdentityManager),
+		CreateIdentityPoolUser:                   makeCreateIdentityPoolUser(s.IdentityManager),
 	}
 }
 
@@ -108,6 +110,7 @@ type Handlers struct {
 	DeleteExternalDNSServiceAccount          http.Handler
 	CreateIdentityPool                       http.Handler
 	CreateIdentityPoolClient                 http.Handler
+	CreateIdentityPoolUser                   http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -167,6 +170,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteExternalDNSServiceAccount:          newServer(endpoints.DeleteExternalDNSServiceAccount, decodeIDRequest),
 		CreateIdentityPool:                       newServer(endpoints.CreateIdentityPool, decodeCreateIdentityPool),
 		CreateIdentityPoolClient:                 newServer(endpoints.CreateIdentityPoolClient, decodeCreateIdentityPoolClient),
+		CreateIdentityPoolUser:                   newServer(endpoints.CreateIdentityPoolUser, decodeCreateIdentityPoolUser),
 	}
 }
 
@@ -252,6 +256,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 				r.Route("/clients", func(r chi.Router) {
 					r.Method(http.MethodPost, "/", handlers.CreateIdentityPoolClient)
 				})
+				r.Route("/users", func(r chi.Router) {
+					r.Method(http.MethodPost, "/", handlers.CreateIdentityPoolUser)
+				})
 			})
 		})
 	})
@@ -296,6 +303,7 @@ const (
 	identityManagerTag      = "identitymanager"
 	identityPoolTag         = "identitypool"
 	identityPoolClientTag   = "identitypoolclient"
+	identityPoolUserTag     = "identitypooluser"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -330,6 +338,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteExternalDNSServiceAccount:          logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, externalDNSTag}, "/"), "delete")(endpoints.DeleteExternalDNSServiceAccount),
 			CreateIdentityPool:                       logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag}, "/"), "create")(endpoints.CreateIdentityPool),
 			CreateIdentityPoolClient:                 logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag, identityPoolClientTag}, "/"), "create")(endpoints.CreateIdentityPoolClient),
+			CreateIdentityPoolUser:                   logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag, identityPoolUserTag}, "/"), "create")(endpoints.CreateIdentityPoolUser),
 		}
 	}
 }

@@ -101,6 +101,7 @@ type IdentityPool struct {
 	AuthDomain string
 	Alias      RecordSetAlias
 	Clients    map[string]IdentityPoolClient
+	Users      map[string]IdentityPoolUser
 }
 
 // Validate the identity pool
@@ -110,6 +111,14 @@ func (p IdentityPool) Validate() error {
 		validation.Field(&p.AuthDomain, validation.Required),
 		validation.Field(&p.Alias, validation.Required),
 		validation.Field(&p.Clients, validation.Required),
+		validation.Field(&p.Users),
+	)
+}
+
+// Validate pool
+func (p IdentityPoolUser) Validate() error {
+	return validation.ValidateStruct(&p,
+		validation.Field(&p.Email, validation.Required),
 	)
 }
 
@@ -120,6 +129,11 @@ type IdentityPoolClient struct {
 	CallbackURL  string
 	ClientID     string
 	ClientSecret ClientSecret
+}
+
+// IdentityPoolUser output
+type IdentityPoolUser struct {
+	Email string
 }
 
 // Validate the identity pool client

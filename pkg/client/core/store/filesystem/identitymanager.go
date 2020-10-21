@@ -17,6 +17,7 @@ type identityManagerStore struct {
 	certPaths   Paths
 	aliasPaths  Paths
 	clientPaths Paths
+	userPaths   Paths
 	fs          *afero.Afero
 }
 
@@ -46,6 +47,14 @@ type IdentityPoolClient struct {
 	CallbackURL string
 	ClientID    string
 	StackName   string
+}
+
+// IdentityPoolUser contains the output state
+type IdentityPoolUser struct {
+	ID         api.ID
+	Email      string
+	UserPoolID string
+	StackName  string
 }
 
 func (s *identityManagerStore) SaveIdentityPoolClient(client *api.IdentityPoolClient) (*store.Report, error) {
@@ -106,13 +115,33 @@ func (s *identityManagerStore) SaveIdentityPool(pool *api.IdentityPool) (*store.
 	return report, nil
 }
 
+func (s *identityManagerStore) SaveIdentityPoolUser(user *api.IdentityPoolUser) (*store.Report, error) {
+	u := &IdentityPoolUser{
+		ID:         user.ID,
+		Email:      user.Email,
+		UserPoolID: user.UserPoolID,
+		StackName:  user.StackName,
+	}
+
+	report, err := store.NewFileSystem(path.Join(s.userPaths.BaseDir, slug.Make(u.Email)), s.fs).
+		StoreStruct(s.userPaths.OutputFile, u, store.ToJSON()).
+		StoreBytes(s.userPaths.CloudFormationFile, user.CloudFormationTemplate).
+		Do()
+	if err != nil {
+		return nil, fmt.Errorf("writing identity user: %w", err)
+	}
+
+	return report, nil
+}
+
 // NewIdentityManagerStore returns an initialised store
-func NewIdentityManagerStore(poolPaths, certPaths, aliasPaths, clientPaths Paths, fs *afero.Afero) client.IdentityManagerStore {
+func NewIdentityManagerStore(poolPaths, certPaths, aliasPaths, clientPaths, userPaths Paths, fs *afero.Afero) client.IdentityManagerStore {
 	return &identityManagerStore{
 		clientPaths: clientPaths,
 		poolPaths:   poolPaths,
 		certPaths:   certPaths,
 		aliasPaths:  aliasPaths,
+		userPaths:   userPaths,
 		fs:          fs,
 	}
 }

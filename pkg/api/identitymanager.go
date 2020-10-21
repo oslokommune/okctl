@@ -52,14 +52,32 @@ type CreateIdentityPoolClientOpts struct {
 	CallbackURL string
 }
 
+// CreateIdentityPoolUserOpts input
+type CreateIdentityPoolUserOpts struct {
+	ID         ID
+	Email      string
+	UserPoolID string
+}
+
+// IdentityPoolUser state of user
+type IdentityPoolUser struct {
+	ID                     ID
+	Email                  string
+	UserPoolID             string
+	StackName              string
+	CloudFormationTemplate []byte
+}
+
 // IdentityManagerService implements the service layer
 type IdentityManagerService interface {
 	CreateIdentityPool(ctx context.Context, opts CreateIdentityPoolOpts) (*IdentityPool, error)
 	CreateIdentityPoolClient(ctx context.Context, opts CreateIdentityPoolClientOpts) (*IdentityPoolClient, error)
+	CreateIdentityPoolUser(ctx context.Context, opts CreateIdentityPoolUserOpts) (*IdentityPoolUser, error)
 }
 
 // IdentityManagerCloudProvider implements the cloud layer
 type IdentityManagerCloudProvider interface {
 	CreateIdentityPool(certificateARN string, opts CreateIdentityPoolOpts) (*IdentityPool, error)
 	CreateIdentityPoolClient(opts CreateIdentityPoolClientOpts) (*IdentityPoolClient, error)
+	CreateIdentityPoolUser(opts CreateIdentityPoolUserOpts) (*IdentityPoolUser, error)
 }

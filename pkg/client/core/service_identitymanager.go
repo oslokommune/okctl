@@ -19,7 +19,40 @@ type identityManagerService struct {
 	report  client.IdentityManagerReport
 }
 
-func (s identityManagerService) CreateIdentityPoolClient(_ context.Context, opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
+func (s *identityManagerService) CreateIdentityPoolUser(ctx context.Context, opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {
+	err := s.spinner.Start("identity-pool-user")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	u, err := s.api.CreateIdentityPoolUser(opts)
+	if err != nil {
+		return nil, fmt.Errorf("creating identity pool user: %w", err)
+	}
+
+	r1, err := s.store.SaveIdentityPoolUser(u)
+	if err != nil {
+		return nil, fmt.Errorf("storing identity pool user: %w", err)
+	}
+
+	r2, err := s.state.SaveIdentityPoolUser(u)
+	if err != nil {
+		return nil, fmt.Errorf("updating identity pool user state: %w", err)
+	}
+
+	err = s.report.ReportIdentityPoolUser(u, []*store.Report{r1, r2})
+	if err != nil {
+		return nil, fmt.Errorf("reporting on identity pool user: %w", err)
+	}
+
+	return u, nil
+}
+
+func (s *identityManagerService) CreateIdentityPoolClient(_ context.Context, opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
 	err := s.spinner.Start("identity-pool-client")
 	if err != nil {
 		return nil, err
@@ -52,7 +85,7 @@ func (s identityManagerService) CreateIdentityPoolClient(_ context.Context, opts
 	return c, nil
 }
 
-func (s identityManagerService) CreateIdentityPool(_ context.Context, opts api.CreateIdentityPoolOpts) (*api.IdentityPool, error) {
+func (s *identityManagerService) CreateIdentityPool(_ context.Context, opts api.CreateIdentityPoolOpts) (*api.IdentityPool, error) {
 	err := s.spinner.Start("identity-pool")
 	if err != nil {
 		return nil, err

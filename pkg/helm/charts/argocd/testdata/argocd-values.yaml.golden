@@ -183,6 +183,9 @@ server:
                 - openid
                 - email
                 - profile
+                claimMapping:
+                  groups: "cognito:groups"
+                  name: "cognito:username"
         repositories: |
             - url: git@github.com:oslokommune/test.git
               type: git
@@ -192,8 +195,9 @@ server:
                 key: ssh-private-key
         admin.enabled: "false"
     rbacConfig:
-        policy.default: role:admin
-        scopes: '[email]'
+        policy.csv: |
+            g, admins, role:admin
+        scopes: '[email, group]'
     clusterAdminAccess:
         enabled: true
 repoServer:

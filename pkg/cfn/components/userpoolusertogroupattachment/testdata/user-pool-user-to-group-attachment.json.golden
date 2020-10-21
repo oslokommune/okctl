@@ -1,0 +1,1 @@
+{"Type":"AWS::Cognito::UserPoolUserToGroupAttachment","Properties":{"GroupName":"somegroup","UserPoolId":"XXXXXXFAKE","Username":"Username1337"},"DependsOn":["UserPoolUser"]}

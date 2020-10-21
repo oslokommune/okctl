@@ -46,6 +46,7 @@ func loadUserData(o *okctl.Okctl, cmd *cobra.Command) error {
 	return o.LoadUserData()
 }
 
+// nolint: funlen
 func buildRootCommand() *cobra.Command {
 	var outputFormat string
 
@@ -96,6 +97,7 @@ being captured. Together with slack and slick.`,
 		},
 	}
 
+	cmd.AddCommand(buildVenvCommand(o))
 	cmd.AddCommand(buildCreateCommand(o))
 	cmd.AddCommand(buildDeleteCommand(o))
 	cmd.AddCommand(buildShowCommand(o))

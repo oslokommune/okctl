@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"log"
 	"os"
 	"os/exec"
 	"regexp"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/virtualenv"
@@ -28,6 +29,7 @@ export OKCTL_SHELL=/bin/bash
 okctl venv myenv
 `
 
+// nolint: funlen
 func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 	opts := virtualenv.VirtualEnvironmentOpts{}
 

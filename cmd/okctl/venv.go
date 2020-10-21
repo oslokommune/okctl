@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"log"
 	"os"
 	"os/exec"
+	"regexp"
 
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/virtualenv"
@@ -37,7 +39,16 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			environment := args[0]
 
-			err := o.InitialiseWithOnlyEnv(environment)
+			err := validation.Validate(
+				&environment,
+				validation.Required,
+				validation.Match(regexp.MustCompile("^[a-zA-Z]{3,64}$")).Error("the environment must consist of 3-64 characters (a-z, A-Z)"),
+			)
+			if err != nil {
+				return err
+			}
+
+			err = o.InitialiseWithOnlyEnv(environment)
 			if err != nil {
 				return err
 			}

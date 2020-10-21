@@ -11,6 +11,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	venvArgs = 1
+)
+
 const venvLong = `Runs a sub shell with all needed environmental variables set.
 
 The variables are the same as shown in "okctl show credentials". The shell command to run is retrieved from the first
@@ -19,16 +23,17 @@ environment variable that is set of the following: $OKCTL_SHELL, $SHELL. If none
 So to override, you can run for instance:
 
 export OKCTL_SHELL=/bin/bash
-okctl venv
+okctl venv myenv
 `
 
 func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 	opts := virtualenv.VirtualEnvironmentOpts{}
 
 	cmd := &cobra.Command{
-		Use:   "venv",
+		Use:   "venv ENV",
 		Short: "Runs a virtual environment",
 		Long:  venvLong,
+		Args:  cobra.ExactArgs(venvArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			environment := args[0]
 

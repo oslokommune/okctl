@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"log"
 	"os"
 	"os/exec"
 	"regexp"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 
 	"github.com/oslokommune/okctl/pkg/cmd"
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -29,6 +30,7 @@ export OKCTL_SHELL=/bin/bash
 okctl venv myenv
 `
 
+// nolint: funlen
 func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 	opts := virtualenv.VirtualEnvironmentOpts{}
 
@@ -63,7 +65,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			shell := exec.Command(cmd.GetShell(os.LookupEnv)) //nolint:gosec
+			shell := exec.Command(getShell(os.LookupEnv)) //nolint:gosec
 
 			venv, err := virtualenv.GetVirtualEnvironment(&opts, os.Environ())
 			if err != nil {
@@ -93,6 +95,20 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 	}
 
 	return cmd
+}
+
+func getShell(osLookupEnv func(key string) (string, bool)) string {
+	shell, ok := osLookupEnv("OKCTL_SHELL")
+	if ok {
+		return shell
+	}
+
+	shell, ok = osLookupEnv("SHELL")
+	if ok {
+		return shell
+	}
+
+	return "/bin/sh"
 }
 
 func printExecutables(env []string) error {

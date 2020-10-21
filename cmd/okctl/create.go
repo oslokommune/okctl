@@ -16,6 +16,8 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/client"
 
+	"github.com/oslokommune/okctl/pkg/cmd"
+
 	"github.com/oslokommune/okctl/pkg/domain"
 
 	"github.com/oslokommune/okctl/pkg/spinner"
@@ -61,8 +63,8 @@ before running any of these commands.`,
 	return cmd
 }
 
-// CreateClusterOpts contains all the required inputs
-type CreateClusterOpts struct {
+// createClusterOpts contains all the required inputs
+type createClusterOpts struct {
 	Environment    string
 	AWSAccountID   string
 	RepositoryName string
@@ -73,7 +75,7 @@ type CreateClusterOpts struct {
 }
 
 // Validate the inputs
-func (o *CreateClusterOpts) Validate() error {
+func (o *createClusterOpts) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.Environment, validation.Required, validation.Match(regexp.MustCompile("^[a-zA-Z]{3,64}$")).Error("must consist of 3-64 characters (a-z, A-Z)")),
 		validation.Field(&o.AWSAccountID, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{12}$")).Error("must consist of 12 digits")),
@@ -108,44 +110,6 @@ $ tail -f %s
 
 `
 
-const endMsg = `Congratulations, your %s is now up and running.
-To get started with some basic interactions, you can paste the
-following exports into a terminal:
-
-%s
-
-You can retrieve these credentials at any point by issuing the
-command below, from within this repository:
-
-$ okctl show credentials %s
-
-Now you can use %s to list nodes, pods, etc. Try out some commands:
-
-$ %s get pods --all-namespaces
-$ %s get nodes
-
-This also requires %s, which you can add to your PATH from here:
-
-%s
-
-Optionally, install kubectl and aws-iam-authenticator to your 
-system from:
-
-- https://kubernetes.io/docs/tasks/tools/install-kubectl/
-- https://docs.aws.amazon.com/eks/latest/userguide/install-aws-iam-authenticator.html
-
-The installed version of kubectl needs to be within 2 versions of the
-kubernetes cluster version, which is: %s.
-
-We have also setup %s for continuous deployment, you can access
-the UI at this URL by logging in with Github:
-
-%s
-
-It might take 5-10 minutes for the ArgoCD ALB to come up, and
-about 15 minutes for the auth to come up.
-`
-
 const nsMsg = `
 We could not detect any nameservers for your domain:
 
@@ -168,7 +132,7 @@ $ okctl create cluster %s %s
 
 // nolint: funlen gocyclo
 func buildCreateClusterCommand(o *okctl.Okctl) *cobra.Command {
-	opts := &CreateClusterOpts{}
+	opts := &createClusterOpts{}
 
 	cmd := &cobra.Command{
 		Use:   "cluster ENV AWS_ACCOUNT_ID",
@@ -491,19 +455,21 @@ and database subnets.`,
 				return formatErr(err)
 			}
 
-			_, err = fmt.Fprintf(o.Err, endMsg,
-				aurora.Green("kubernetes cluster"),
-				exports,
-				opts.Environment,
-				aurora.Green("kubectl"),
-				k.BinaryPath,
-				k.BinaryPath,
-				aurora.Green("aws-iam-authenticator"),
-				a.BinaryPath,
-				aurora.Green("1.17"),
-				aurora.Green("ArgoCD"),
-				argoCD.ArgoURL,
-			)
+			msg := cmd.CreateClusterMsgOpts{
+				KubernetesCluster:       aurora.Green("kubernetes cluster").String(),
+				Exports:                 exports,
+				Environment:             opts.Environment,
+				VenvCmd:                 aurora.Green("okctl venv").String(),
+				KubectlCmd:              aurora.Green("kubectl").String(),
+				AwsIamAuthenticatorCmd:  aurora.Green("aws-iam-authenticator").String(),
+				KubectlPath:             k.BinaryPath,
+				AwsIamAuthenticatorPath: a.BinaryPath,
+				K8sClusterVersion:       aurora.Green("1.17").String(),
+				ArgoCD:                  aurora.Green("ArgoCD").String(),
+				ArgoCDURL:               aurora.Green(argoCD.ArgoURL).String(),
+			}
+			txt, err := cmd.GoTemplateToString(cmd.CreateClusterEndMsg, msg)
+			_, err = fmt.Print(o.Err, txt)
 			if err != nil {
 				return formatErr(err)
 			}

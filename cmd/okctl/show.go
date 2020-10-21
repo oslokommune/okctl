@@ -2,25 +2,21 @@ package main
 
 import (
 	"fmt"
-	"io"
+	"os"
 	"path"
-	"strings"
 
 	"github.com/logrusorgru/aurora/v3"
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
+	"github.com/oslokommune/okctl/pkg/virtualenv"
 
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/cmd"
 
 	"github.com/oslokommune/okctl/pkg/kubeconfig"
 	"sigs.k8s.io/yaml"
 
-	"github.com/mishudark/errors"
-
-	validation "github.com/go-ozzo/ozzo-validation/v4"
-
 	"github.com/oslokommune/okctl/pkg/config"
-	"github.com/oslokommune/okctl/pkg/helm"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
@@ -40,54 +36,9 @@ func buildShowCommand(o *okctl.Okctl) *cobra.Command {
 	return cmd
 }
 
-// ShowCredentialsOpts contains the required inputs
-type ShowCredentialsOpts struct {
-	Region       string
-	AWSAccountID string
-	Environment  string
-	Repository   string
-	ClusterName  string
-}
-
-// Validate the inputs
-func (o *ShowCredentialsOpts) Validate() error {
-	return validation.ValidateStruct(o,
-		validation.Field(&o.Environment, validation.Required),
-		validation.Field(&o.AWSAccountID, validation.Required),
-		validation.Field(&o.Region, validation.Required),
-		validation.Field(&o.ClusterName, validation.Required),
-	)
-}
-
-const showMsg = `
-Now you can use %s to list nodes, pods, etc. Try out some commands:
-
-$ %s get pods --all-namespaces
-$ %s get nodes
-
-This also requires %s, which you can add to your PATH from here:
-
-%s
-
-Optionally, install kubectl and aws-iam-authenticator to your
-system from:
-
-- https://kubernetes.io/docs/tasks/tools/install-kubectl/
-- https://docs.aws.amazon.com/eks/latest/userguide/install-aws-iam-authenticator.html
-
-The installed version of kubectl needs to be within 2 versions of the
-kubernetes cluster version, which is: %s.
-
-We have also setup %s for continuous deployment, you can access
-the UI at this URL by logging in with Github:
-
-%s
-
-`
-
 // nolint: funlen gocognit
 func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
-	opts := ShowCredentialsOpts{}
+	opts := virtualenv.VirtualEnvironmentOpts{}
 
 	cmd := &cobra.Command{
 		Use:   "credentials [env]",
@@ -102,23 +53,25 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			meta := o.RepoStateWithEnv.GetMetadata()
-			cluster := o.RepoStateWithEnv.GetCluster()
+			opts, err = virtualenv.GetVirtualEnvironmentOpts(o)
 
-			opts.Repository = meta.Name
-			opts.Region = meta.Region
-			opts.AWSAccountID = cluster.AWSAccountID
-			opts.Environment = cluster.Environment
-			opts.ClusterName = cluster.Name
-
-			err = opts.Validate()
 			if err != nil {
-				return errors.E(err, "failed to validate show credentials options")
+				return err
 			}
 
 			return nil
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
+			osEnv := []string{"PATH=" + os.Getenv("PATH")}
+			venv, err := virtualenv.GetVirtualEnvironment(&opts, osEnv)
+			if err != nil {
+				return err
+			}
+
+			for _, v := range venv {
+				fmt.Fprintf(o.Out, "export %s\n", v)
+			}
+
 			outputDir, err := o.GetRepoOutputDir(opts.Environment)
 			if err != nil {
 				return err
@@ -130,38 +83,6 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 			}
 
 			kubeConfig := path.Join(appDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterKubeConfig)
-			awsConfig := path.Join(appDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterAwsConfig)
-			awsCredentials := path.Join(appDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterAwsCredentials)
-
-			h := &helm.Config{
-				HelmPluginsDirectory: path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
-				HelmRegistryConfig:   path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
-				HelmRepositoryConfig: path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryConfig),
-				HelmRepositoryCache:  path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryCache),
-				HelmBaseDir:          path.Join(appDir, config.DefaultHelmBaseDir),
-				Debug:                o.Debug,
-			}
-
-			for k, v := range h.Envs() {
-				if k == "HOME" || k == "PATH" {
-					continue
-				}
-
-				_, err = io.Copy(o.Out, strings.NewReader(fmt.Sprintf("export %s=%s\n", k, v)))
-				if err != nil {
-					return err
-				}
-			}
-
-			_, err = fmt.Fprintf(o.Out,
-				"export AWS_CONFIG_FILE=%s\nexport AWS_SHARED_CREDENTIALS_FILE=%s\nexport AWS_PROFILE=default\nexport KUBECONFIG=%s\n",
-				awsConfig,
-				awsCredentials,
-				kubeConfig,
-			)
-			if err != nil {
-				return err
-			}
 
 			k, err := o.BinariesProvider.Kubectl(kubectl.Version)
 			if err != nil {
@@ -173,17 +94,22 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			_, err = fmt.Fprintf(o.Err,
-				showMsg,
-				aurora.Green("kubectl"),
-				k.BinaryPath,
-				k.BinaryPath,
-				aurora.Green("aws-iam-authenticator"),
-				a.BinaryPath,
-				aurora.Green("1.17"),
-				aurora.Green("ArgoCD"),
-				o.RepoStateWithEnv.GetArgoCD().SiteURL,
-			)
+			msg := cmd.ShowMessageOpts{
+				VenvCmd:                 aurora.Green("okctl venv").String(),
+				KubectlCmd:              aurora.Green("kubectl").String(),
+				AwsIamAuthenticatorCmd:  aurora.Green("aws-iam-authenticator").String(),
+				KubectlPath:             k.BinaryPath,
+				AwsIamAuthenticatorPath: a.BinaryPath,
+				K8sClusterVersion:       aurora.Green("1.17").String(),
+				ArgoCD:                  aurora.Green("ArgoCD").String(),
+				ArgoCDURL:               o.RepoStateWithEnv.GetArgoCD().SiteURL,
+			}
+			txt, err := cmd.GoTemplateToString(cmd.ShowMsg, msg)
+			if err != nil {
+				return err
+			}
+
+			_, err = fmt.Print(o.Err, txt)
 			if err != nil {
 				return err
 			}

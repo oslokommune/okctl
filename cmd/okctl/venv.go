@@ -9,6 +9,7 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 
+	cmd "github.com/oslokommune/okctl/pkg/cmd"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/virtualenv"
 	"github.com/spf13/cobra"
@@ -64,7 +65,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			shell := exec.Command(getShell(os.LookupEnv)) //nolint:gosec
+			shell := exec.Command(cmd.GetShell(os.LookupEnv)) //nolint:gosec
 
 			venv, err := virtualenv.GetVirtualEnvironment(&opts, os.Environ())
 			if err != nil {
@@ -94,20 +95,6 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 	}
 
 	return cmd
-}
-
-func getShell(osLookupEnv func(key string) (string, bool)) string {
-	shell, ok := osLookupEnv("OKCTL_SHELL")
-	if ok {
-		return shell
-	}
-
-	shell, ok = osLookupEnv("SHELL")
-	if ok {
-		return shell
-	}
-
-	return "/bin/sh"
 }
 
 func printExecutables(env []string) error {

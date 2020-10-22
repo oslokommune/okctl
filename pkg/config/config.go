@@ -127,6 +127,11 @@ const (
 	// EnvHome is the default env var parsed for determining the application home
 	EnvHome = "OKCTL_HOME"
 
+	// DefaultApplicationOverlayBaseDir is where the directory where overlay files reside
+	DefaultApplicationOverlayBaseDir = "base"
+	// DefaultApplicationDir is where the application overlay files reside
+	DefaultApplicationDir            = "applications"
+
 	// DefaultKeyringServiceName is the name of the keyring or encrypted file used to store client secrets
 	DefaultKeyringServiceName = "okctlService"
 
@@ -393,4 +398,15 @@ func (c *Config) GetRepoOutputDir(env string) (string, error) {
 	}
 
 	return path.Join(base, c.RepoState.Metadata.OutputDir, env), nil
+}
+
+// GetRepoApplicationBaseDir returns the directory where application
+// resources are stored
+func (c *Config) GetRepoApplicationBaseDir() (string, error) {
+	base, err := c.GetRepoDataDir()
+	if err != nil {
+		return "", err
+	}
+
+	return path.Join(base, c.RepoState.Metadata.OutputDir, DefaultApplicationOverlayBaseDir, DefaultApplicationDir), nil
 }

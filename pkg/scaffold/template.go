@@ -3,14 +3,10 @@ package scaffold
 import (
 	"bytes"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/storage"
 	"io"
 	"os"
 	"strings"
-
-	"github.com/oslokommune/okctl/pkg/storage"
-
-	"github.com/oslokommune/okctl/pkg/okctl"
-	"github.com/spf13/cobra"
 
 	kaex "github.com/oslokommune/kaex/pkg/api"
 )
@@ -31,17 +27,18 @@ func FetchTemplate(kx kaex.Kaex) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-// InterpolateTemplate replaces dummy data in the template with state dependant data
-func InterpolateTemplate(o *okctl.Okctl, cmd *cobra.Command, env string, template []byte) ([]byte, error) {
-	cluster := GetCluster(o, cmd, env)
-	domain := GetHostedZoneDomain(cluster)
+type InterpolationOpts struct {
+	Domain string
+}
 
+// InterpolateTemplate replaces dummy data in the template with state dependant data
+func InterpolateTemplate(template []byte, opts *InterpolationOpts) ([]byte, error) {
 	var outputBuffer bytes.Buffer
 
 	output := strings.Replace(
 		string(template),
 		"my-domain.io",
-		fmt.Sprintf("<app-name>.%s", domain),
+		fmt.Sprintf("<app-name>.%s", opts.Domain),
 		1,
 	)
 

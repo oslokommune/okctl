@@ -11,9 +11,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const requiredArgumentsForCreateApplicationCommand = 1
+
 // CreateApplicationOpts contains all the possible options for "create application"
 type CreateApplicationOpts struct {
 	Environment string
+	KaexOpts *kaex.Kaex
 }
 
 // Validate the options for "create application"
@@ -25,25 +28,45 @@ func (o *CreateApplicationOpts) Validate() error {
 
 func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &CreateApplicationOpts{}
+	interpolationOpts := &scaffold.InterpolationOpts{}
 
 	cmd := &cobra.Command{
 		Use:   "application",
 		Short: "Create an application template",
 		Long:  "Scaffolds an application.yaml template which can be used to produce necessary Kubernetes and ArgoCD resources",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			kx := kaex.Kaex{
+		Args: cobra.ExactArgs(requiredArgumentsForCreateApplicationCommand),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			opts.Environment = args[0]
+
+			err := o.InitialiseWithOnlyEnv(opts.Environment)
+			if err != nil {
+				return err
+			}
+
+			hostedZone := o.RepoStateWithEnv.GetPrimaryHostedZone()
+			interpolationOpts.Domain = hostedZone.Domain
+
+			opts.KaexOpts = &kaex.Kaex{
 				Err:             o.Err,
 				Out:             o.Out,
 				In:              o.In,
 				TemplatesDirURL: "https://raw.githubusercontent.com/oslokommune/kaex/master/templates",
 			}
 
-			template, err := scaffold.FetchTemplate(kx)
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := opts.Validate()
+			if err != nil {
+				return err
+			}
+
+			template, err := scaffold.FetchTemplate(*opts.KaexOpts)
 			if err != nil {
 				return fmt.Errorf("failed fetching application.yaml example: %w", err)
 			}
 
-			interpolatedResult, err := scaffold.InterpolateTemplate(o, cmd, opts.Environment, template)
+			interpolatedResult, err := scaffold.InterpolateTemplate(template, interpolationOpts)
 			if err != nil {
 				return err
 			}
@@ -54,17 +77,11 @@ func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			}
 
 			fmt.Fprintln(o.Out, "Scaffolding successful.")
-			fmt.Fprintln(o.Out, "Edit ./application.yaml to your liking and run okctl apply application -f application.yaml")
+			fmt.Fprintf(o.Out, "Edit ./application.yaml to your liking and run okctl apply application %s -f application.yaml\n", opts.Environment)
 
 			return err
 		},
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-			return nil
-		},
 	}
-
-	flags := cmd.Flags()
-	flags.StringVarP(&opts.Environment, "environment", "e", "", "Use a certain environment as base for the scaffold")
 
 	return cmd
 }

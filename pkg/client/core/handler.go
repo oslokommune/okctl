@@ -6,6 +6,7 @@ import "github.com/oslokommune/okctl/pkg/client"
 type Services struct {
 	ALBIngressController client.ALBIngressControllerService
 	ArgoCD               client.ArgoCDService
+	ApplicationService   client.ApplicationService
 	Certificate          client.CertificateService
 	Cluster              client.ClusterService
 	Domain               client.DomainService

@@ -59,6 +59,7 @@ before running any of these commands.`,
 
 	cmd.AddCommand(buildCreateClusterCommand(o))
 	cmd.AddCommand(buildCreateTestClusterCommand(o))
+	cmd.AddCommand(buildCreateApplicationCommand(o))
 
 	return cmd
 }

@@ -26,27 +26,27 @@ type ApplicationDeployment struct {
 // WriteKubernetesResources writes kubernetes resources to stream as yaml
 func (deployment *ApplicationDeployment) WriteKubernetesResources(writer io.Writer) error {
 	for index := range deployment.Volumes {
-		err := kaex.WriteResource(writer, deployment.Volumes[index])
+		err := kaex.WriteCleanResource(writer, deployment.Volumes[index])
 		if err != nil {
 			return fmt.Errorf("error writing volume to buffer: %w", err)
 		}
 	}
 
 	if deployment.Service != nil {
-		err := kaex.WriteResource(writer, deployment.Service)
+		err := kaex.WriteCleanResource(writer, deployment.Service)
 		if err != nil {
 			return fmt.Errorf("error writing service to buffer: %w", err)
 		}
 	}
 
 	if deployment.Ingress != nil {
-		err := kaex.WriteResource(writer, deployment.Ingress)
+		err := kaex.WriteCleanResource(writer, deployment.Ingress)
 		if err != nil {
 			return fmt.Errorf("error writing ingress to buffer: %w", err)
 		}
 	}
 
-	err := kaex.WriteResource(writer, deployment.Deployment)
+	err := kaex.WriteCleanResource(writer, deployment.Deployment)
 	if err != nil {
 		return fmt.Errorf("error writing deployment to buffer: %w", err)
 	}

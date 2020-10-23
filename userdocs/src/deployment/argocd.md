@@ -25,6 +25,17 @@ When you create a full cluster we configure Argo CD for you, this configuration 
 
 ### Using Argo CD
 
+#### With okctl
+1. `okctl create application > application.yaml`
+2. Configure the application.yaml to suit your needs
+3. While in the IAC repo root, run `okctl apply application -f application.yaml`
+4. Commit and push the changes in ./deployment
+5. `kubectl apply -f ./deployment/2048-application.yaml`
+
+For more information, see [here](https://okctl.io/usage/applicationyaml/).
+
+#### Manually
+
 This demonstrates how you can use Argo CD in conjunction with some of the other components we have installed in the base cluster. In your git repository, save the following definitions under a directory, e.g, `{git_root}/deployment/2048/`.
 
 **NB:** Remember to change the values in brackets `{...}` so they match your cluster setup.

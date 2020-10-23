@@ -115,7 +115,7 @@ func toMap(slice []string) map[string]string {
 	m := make(map[string]string)
 
 	for _, env := range slice {
-		split := strings.Split(env, "=")
+		split := strings.SplitN(env, "=", 2)
 		key := split[0]
 		val := split[1]
 		m[key] = val

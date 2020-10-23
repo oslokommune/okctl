@@ -30,6 +30,7 @@ func TestGetVirtualEnvironment(t *testing.T) {
 		osEnvVars := []string{
 			"SOME_VAR=A",
 			"PATH=" + userPath,
+			"LS_COLORS=rs=0:di=01;34:ln=01:*.tar=01;31",
 		}
 
 		venv, err := virtualenv.GetVirtualEnvironment(&opts, osEnvVars)
@@ -48,6 +49,7 @@ func TestGetVirtualEnvironment(t *testing.T) {
 			"HELM_REPOSITORY_CACHE=" + path.Join(opts.UserDataDir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryCache),
 			"HELM_REPOSITORY_CONFIG=" + path.Join(opts.UserDataDir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryConfig),
 			"KUBECONFIG=" + path.Join(opts.UserDataDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterKubeConfig),
+			"LS_COLORS=rs=0:di=01;34:ln=01:*.tar=01;31",
 			fmt.Sprintf("PATH=%s:%s:%s",
 				mock.DefaultKubectlBinaryDir,
 				mock.DefaultAwsIamAuthenticatorDir,

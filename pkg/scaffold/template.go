@@ -3,10 +3,11 @@ package scaffold
 import (
 	"bytes"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/storage"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/storage"
 
 	kaex "github.com/oslokommune/kaex/pkg/api"
 )
@@ -27,6 +28,7 @@ func FetchTemplate(kx kaex.Kaex) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
+// InterpolationOpts defines possible data to inject into the templates
 type InterpolationOpts struct {
 	Domain string
 }

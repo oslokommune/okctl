@@ -65,7 +65,7 @@ func (deployment *ApplicationDeployment) WriteArgoResources(writer io.Writer) er
 }
 
 // NewApplicationDeployment converts a Kaex Application to an okctl deployment
-func NewApplicationDeployment(app kaex.Application, certFn CertificateCreatorFn, IACRepoURL string, applicationOutputDir string) (*ApplicationDeployment, error) {
+func NewApplicationDeployment(app kaex.Application, certFn CertificateCreatorFn, iacRepoURL string, applicationOutputDir string) (*ApplicationDeployment, error) {
 	applicationDeployment := ApplicationDeployment{}
 
 	for index := range app.Volumes {
@@ -102,7 +102,7 @@ func NewApplicationDeployment(app kaex.Application, certFn CertificateCreatorFn,
 		return nil, err
 	}
 
-	argoApp := createArgoApp(app, IACRepoURL, applicationOutputDir)
+	argoApp := createArgoApp(app, iacRepoURL, applicationOutputDir)
 
 	applicationDeployment.Deployment = &deployment
 	applicationDeployment.ArgoApplication = argoApp

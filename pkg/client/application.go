@@ -11,13 +11,13 @@ import (
 
 // ScaffoldApplicationOpts contains information necessary to scaffold application resources
 type ScaffoldApplicationOpts struct {
-	In io.Reader
+	In  io.Reader
 	Out io.Writer
 
 	ApplicationFilePath string
-	RepoDir string
+	RepoDir             string
 
-	Id           *api.ID
+	ID           *api.ID
 	HostedZoneID string
 	IACRepoURL   string
 }
@@ -26,7 +26,7 @@ type ScaffoldApplicationOpts struct {
 func (o *ScaffoldApplicationOpts) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.ApplicationFilePath, validation.Required),
-		validation.Field(&o.Id, validation.Required),
+		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.HostedZoneID, validation.Required),
 		validation.Field(&o.IACRepoURL, validation.Required),
 	)

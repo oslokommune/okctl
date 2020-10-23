@@ -16,7 +16,7 @@ const requiredArgumentsForCreateApplicationCommand = 1
 // CreateApplicationOpts contains all the possible options for "create application"
 type CreateApplicationOpts struct {
 	Environment string
-	KaexOpts *kaex.Kaex
+	KaexOpts    *kaex.Kaex
 }
 
 // Validate the options for "create application"
@@ -34,7 +34,7 @@ func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
 		Use:   "application",
 		Short: "Create an application template",
 		Long:  "Scaffolds an application.yaml template which can be used to produce necessary Kubernetes and ArgoCD resources",
-		Args: cobra.ExactArgs(requiredArgumentsForCreateApplicationCommand),
+		Args:  cobra.ExactArgs(requiredArgumentsForCreateApplicationCommand),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			opts.Environment = args[0]
 

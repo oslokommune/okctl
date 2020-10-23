@@ -36,8 +36,9 @@ func createOkctlIngress(app kaex.Application, certificateCreatorFn CertificateCr
 		}
 
 		ingress.Annotations["alb.ingress.kubernetes.io/listen-ports"] = "[{\"HTTP\": 80}, {\"HTTPS\": 443}]"
-		ingress.Annotations["alb.ingress.kubernetes.io/actions.ssl-redirect"] = "{\"Type\": \"redirect\", \"RedirectConfig\": { \"Protocol\": \"HTTPS\", \"Port\": \"443\", \"StatusCode\": \"HTTP_301\"}}"
 		ingress.Annotations["alb.ingress.kubernetes.io/certificate-arn"] = certificateARN
+		ingress.Annotations["alb.ingress.kubernetes.io/actions.ssl-redirect"] = `
+{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}`
 
 		redirectPath := networkingv1.HTTPIngressPath{
 			Path: "/*",

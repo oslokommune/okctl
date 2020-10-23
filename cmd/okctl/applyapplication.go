@@ -16,7 +16,7 @@ const requiredApplyApplicationArguments = 1
 
 // applyApplicationOpts contains all the possible options for "apply application"
 type applyApplicationOpts struct {
-	File        string
+	File string
 }
 
 // Validate the options for "apply application"
@@ -26,6 +26,7 @@ func (o *applyApplicationOpts) Validate() error {
 	)
 }
 
+//nolint funlen
 func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	scaffoldOpts := &client.ScaffoldApplicationOpts{}
 	opts := &applyApplicationOpts{}
@@ -45,7 +46,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			cluster := o.RepoStateWithEnv.GetCluster()
 			metadata := o.RepoStateWithEnv.GetMetadata()
 
-			scaffoldOpts.Id = &api.ID{
+			scaffoldOpts.ID = &api.ID{
 				Region:       o.CloudProvider.Region(),
 				AWSAccountID: cluster.AWSAccountID,
 				Environment:  cluster.Environment,

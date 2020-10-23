@@ -15,7 +15,7 @@ type applicationReport struct {
 
 // ReportDeleteApplication produces relevant output upon application deletion
 func (r *applicationReport) ReportDeleteApplication(reports []*store.Report) error {
-	var actions []store.Action
+	var actions []store.Action // nolint: prealloc
 
 	for _, report := range reports {
 		actions = append(actions, report.Actions...)
@@ -26,7 +26,7 @@ func (r *applicationReport) ReportDeleteApplication(reports []*store.Report) err
 
 // ReportCreateApplication produces relevant output upon application creation
 func (r *applicationReport) ReportCreateApplication(application *client.ScaffoldedApplication, reports []*store.Report) error {
-	var actions []store.Action
+	var actions []store.Action // nolint: prealloc
 
 	for _, report := range reports {
 		actions = append(actions, report.Actions...)

@@ -130,7 +130,7 @@ const (
 	// DefaultApplicationOverlayBaseDir is where the directory where overlay files reside
 	DefaultApplicationOverlayBaseDir = "base"
 	// DefaultApplicationDir is where the application overlay files reside
-	DefaultApplicationDir            = "applications"
+	DefaultApplicationDir = "applications"
 
 	// DefaultKeyringServiceName is the name of the keyring or encrypted file used to store client secrets
 	DefaultKeyringServiceName = "okctlService"

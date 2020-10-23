@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/spinner"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/spinner"
 
 	kaex "github.com/oslokommune/kaex/pkg/api"
 	"github.com/oslokommune/okctl/pkg/api"
@@ -20,7 +21,7 @@ import (
 )
 
 type applicationService struct {
-	spin spinner.Spinner
+	spin   spinner.Spinner
 	paths  clientFilesystem.Paths
 	cert   client.CertificateService
 	store  client.ApplicationStore
@@ -58,6 +59,7 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 	}
 
 	err = s.spin.Start("Scaffolding application")
+
 	defer func() {
 		err = s.spin.Stop()
 	}()
@@ -68,8 +70,8 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 	}
 
 	applicationDir := path.Join(s.paths.BaseDir, app.Name)
-	applicationDir = strings.Replace(applicationDir, opts.RepoDir + "/", "", 1)
-	certFn := createCertificateFn(ctx, s.cert, opts.Id, opts.HostedZoneID)
+	applicationDir = strings.Replace(applicationDir, opts.RepoDir+"/", "", 1)
+	certFn := createCertificateFn(ctx, s.cert, opts.ID, opts.HostedZoneID)
 
 	deployment, err := scaffold.NewApplicationDeployment(*app, certFn, opts.IACRepoURL, applicationDir)
 	if err != nil {
@@ -110,9 +112,15 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 }
 
 // NewApplicationService initializes a new Scaffold application service
-func NewApplicationService(spin spinner.Spinner, paths clientFilesystem.Paths, cert client.CertificateService, store client.ApplicationStore, state client.ApplicationReport) client.ApplicationService {
+func NewApplicationService(
+	spin spinner.Spinner,
+	paths clientFilesystem.Paths,
+	cert client.CertificateService,
+	store client.ApplicationStore,
+	state client.ApplicationReport,
+) client.ApplicationService {
 	return &applicationService{
-		spin: spin,
+		spin:   spin,
 		paths:  paths,
 		cert:   cert,
 		store:  store,

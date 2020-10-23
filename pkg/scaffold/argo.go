@@ -36,7 +36,7 @@ func generateDefaultArgoApp() *argo.Application {
 	}
 }
 
-func createArgoApp(app kaex.Application, IACRepoURL string, outputDir string) *argo.Application {
+func createArgoApp(app kaex.Application, iacRepoURL string, outputDir string) *argo.Application {
 	argoApp := generateDefaultArgoApp()
 
 	argoApp.ObjectMeta.Name = app.Name
@@ -46,7 +46,7 @@ func createArgoApp(app kaex.Application, IACRepoURL string, outputDir string) *a
 	}
 
 	argoApp.Spec.Source.Path = outputDir
-	argoApp.Spec.Source.RepoURL = IACRepoURL
+	argoApp.Spec.Source.RepoURL = iacRepoURL
 
 	return argoApp
 }

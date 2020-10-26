@@ -33,8 +33,14 @@ type InterpolationOpts struct {
 	Domain string
 }
 
-// InterpolateTemplate replaces dummy data in the template with state dependant data
-func InterpolateTemplate(template []byte, opts *InterpolationOpts) ([]byte, error) {
+/*
+InterpolateTemplate replaces dummy data in the template with state dependant data
+
+Parameters:
+template []byte: the template in which we should do the interpolation
+opts *InterpolationOpts: What values to interpolate with what
+ */
+func InterpolateTemplate(template []byte, opts *InterpolationOpts) (interpolatedTemplate[]byte, err error) {
 	var outputBuffer bytes.Buffer
 
 	output := strings.Replace(
@@ -44,7 +50,7 @@ func InterpolateTemplate(template []byte, opts *InterpolationOpts) ([]byte, erro
 		1,
 	)
 
-	_, err := io.Copy(&outputBuffer, bytes.NewBufferString(output))
+	_, err = io.Copy(&outputBuffer, bytes.NewBufferString(output))
 	if err != nil {
 		return nil, fmt.Errorf("error writing to output buffer: %w", err)
 	}

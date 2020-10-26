@@ -9,8 +9,16 @@ import (
 	intstrutil "k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// CertificateCreatorFn handles generating a certificate for a certain host
-type CertificateCreatorFn func(fqdn string) (string, error)
+/*
+CertificateCreatorFn handles generating a certificate for a certain host
+
+Parameters:
+fdqn string: The fully qualified domain name for the application e.g. my-app.my-cluster.oslo.systems
+
+Returns:
+certificateARN string: The certificate identifier e.g. arn:aws:acm:eu-west-1:42141252131:certificate/183509ca-0664-43b0-bb36-10b70c837597
+ */
+type CertificateCreatorFn func(fqdn string) (certificateARN string, err error)
 
 func createOkctlIngress(app kaex.Application, certificateCreatorFn CertificateCreatorFn) (*networkingv1.Ingress, error) {
 	ingress, err := kaex.CreateIngress(app)

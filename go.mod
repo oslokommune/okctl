@@ -64,6 +64,7 @@ require (
 	github.com/onsi/ginkgo v1.13.0 // indirect
 	github.com/opencontainers/selinux v1.6.0 // indirect
 	github.com/ory/dockertest v3.3.5+incompatible
+	github.com/oslokommune/kaex v0.1.4
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1

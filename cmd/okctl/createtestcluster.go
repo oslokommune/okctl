@@ -23,7 +23,7 @@ import (
 	"github.com/logrusorgru/aurora/v3"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/cmd"
+	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/spinner"
@@ -329,7 +329,7 @@ with Github or other production services.
 				return formatErr(err)
 			}
 
-			msg := cmd.CreateClusterMsgOpts{
+			msg := commands.CreateClusterMsgOpts{
 				KubernetesCluster:       aurora.Green("kubernetes cluster").String(),
 				Exports:                 exports,
 				Environment:             opts.Environment,
@@ -340,7 +340,7 @@ with Github or other production services.
 				AwsIamAuthenticatorPath: a.BinaryPath,
 				K8sClusterVersion:       aurora.Green("1.17").String(),
 			}
-			txt, err := cmd.GoTemplateToString(cmd.CreateTestClusterEndMsg, msg)
+			txt, err := commands.GoTemplateToString(commands.CreateTestClusterEndMsg, msg)
 			_, err = fmt.Print(o.Err, txt)
 			if err != nil {
 				return formatErr(err)

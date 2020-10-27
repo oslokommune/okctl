@@ -1,4 +1,4 @@
-package cmd
+package commands
 
 import (
 	"testing"
@@ -8,22 +8,16 @@ import (
 	"github.com/logrusorgru/aurora"
 )
 
+const (
+	kubectlPath             = "/home/johndoe/.okctl/binaries/kubectl/1.16.8/linux/amd64/kubectl"
+	awsIamAuthenticatorPath = "/home/johndoe/.okctl/binaries/aws-iam-authenticator/0.5.1/linux/amd64/aws-iam-authenticator"
+)
+
 // The weird characters in this variable are color codes from the color library.
 // If you need to find out the actual content to put into the expected value, use
-// ioutil.WriteFile("/tmp/create_test.txt", []byte(createTestClusterExpectedMsg), 0644)
+// ioutil.WriteFile("/tmp/create_test.txt", []byte(expectedShowMsg), 0644)
 // nolint:stylecheck
-const createTestClusterExpectedMsg = `Congratulations, your [32mkubernetes cluster[0m is now up and running.
-To get started with some basic interactions, you can paste the
-following exports into a terminal:
-
-export HELM_CACHE_HOME=/home/johndoe/.okctl/helm
-export KUBECONFIG=/home/johndoe/.okctl/credentials/test/kubeconfig
-
-You can retrieve these credentials at any point by issuing the
-command below, from within this repository:
-
-$ okctl show credentials prod
-
+const expectedShowMsg = `
 Tip: Run [32mokctl venv[0m to run a shell with these environment variables set. Then you
 can avoid using full paths to executables and modifying your PATH.
 
@@ -44,16 +38,17 @@ system from:
 
 The installed version of kubectl needs to be within 2 versions of the
 kubernetes cluster version, which is: [32m1.17[0m.
+
+We have also setup [32mArgoCD[0m for continuous deployment, you can access
+the UI at this URL by logging in with Github:
+
+http://argocd
+
 `
 
-func TestCreateTestClusterMessage(t *testing.T) {
+func TestShowCredentialsMessage(t *testing.T) {
 	t.Run("Should get expected output", func(t *testing.T) {
-		exports := `export HELM_CACHE_HOME=/home/johndoe/.okctl/helm
-export KUBECONFIG=/home/johndoe/.okctl/credentials/test/kubeconfig`
-		data := CreateClusterMsgOpts{
-			KubernetesCluster:       aurora.Green("kubernetes cluster").String(),
-			Exports:                 exports,
-			Environment:             "prod",
+		data := ShowMessageOpts{
 			VenvCmd:                 aurora.Green("okctl venv").String(),
 			KubectlCmd:              aurora.Green("kubectl").String(),
 			AwsIamAuthenticatorCmd:  aurora.Green("aws-iam-authenticator").String(),
@@ -64,9 +59,9 @@ export KUBECONFIG=/home/johndoe/.okctl/credentials/test/kubeconfig`
 			ArgoCDURL:               "http://argocd",
 		}
 
-		msg, err := GoTemplateToString(CreateTestClusterEndMsg, data)
+		msg, err := GoTemplateToString(ShowMsg, data)
 
 		assert.Equal(t, nil, err)
-		assert.Equal(t, createTestClusterExpectedMsg, msg, diff.LineDiff(createTestClusterExpectedMsg, msg))
+		assert.Equal(t, expectedShowMsg, msg, diff.LineDiff(expectedShowMsg, msg))
 	})
 }

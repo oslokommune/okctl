@@ -9,7 +9,7 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 
-	cmd "github.com/oslokommune/okctl/pkg/cmd"
+	cmd "github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/virtualenv"
 	"github.com/spf13/cobra"

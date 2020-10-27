@@ -16,7 +16,7 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/client"
 
-	"github.com/oslokommune/okctl/pkg/cmd"
+	"github.com/oslokommune/okctl/pkg/commands"
 
 	"github.com/oslokommune/okctl/pkg/domain"
 
@@ -455,7 +455,7 @@ and database subnets.`,
 				return formatErr(err)
 			}
 
-			msg := cmd.CreateClusterMsgOpts{
+			msg := commands.CreateClusterMsgOpts{
 				KubernetesCluster:       aurora.Green("kubernetes cluster").String(),
 				Exports:                 exports,
 				Environment:             opts.Environment,
@@ -468,7 +468,7 @@ and database subnets.`,
 				ArgoCD:                  aurora.Green("ArgoCD").String(),
 				ArgoCDURL:               aurora.Green(argoCD.ArgoURL).String(),
 			}
-			txt, err := cmd.GoTemplateToString(cmd.CreateClusterEndMsg, msg)
+			txt, err := commands.GoTemplateToString(commands.CreateClusterEndMsg, msg)
 			_, err = fmt.Print(o.Err, txt)
 			if err != nil {
 				return formatErr(err)

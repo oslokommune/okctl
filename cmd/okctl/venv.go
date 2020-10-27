@@ -78,9 +78,9 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 			}
 
 			shell.Env = venv
-			shell.Stdout = os.Stdout
-			shell.Stdin = os.Stdin
-			shell.Stderr = os.Stderr
+			shell.Stdout = o.Out
+			shell.Stdin = o.In
+			shell.Stderr = o.Err
 
 			err = shell.Run()
 

@@ -1,7 +1,10 @@
-package cmd
+package commands
 
-// ShowMessageOpts contains the fields used by the Go template for the show credentials user message
-type ShowMessageOpts struct {
+// CreateClusterMsgOpts contains the fields used by the Go template for the create cluster end user message
+type CreateClusterMsgOpts struct {
+	KubernetesCluster       string
+	Exports                 string
+	Environment             string
 	VenvCmd                 string
 	KubectlCmd              string
 	KubectlPath             string
@@ -12,8 +15,18 @@ type ShowMessageOpts struct {
 	ArgoCDURL               string
 }
 
-// ShowMsg is the message shown to the user when using show credentials
-const ShowMsg = `
+// CreateClusterEndMsg is the message shown to the user after creating a cluster
+const CreateClusterEndMsg = `Congratulations, your {{ .KubernetesCluster }} is now up and running.
+To get started with some basic interactions, you can paste the
+following exports into a terminal:
+
+{{ .Exports }}
+
+You can retrieve these credentials at any point by issuing the
+command below, from within this repository:
+
+$ okctl show credentials {{ .Environment }}
+
 Tip: Run {{ .VenvCmd }} to run a shell with these environment variables set. Then you
 can avoid using full paths to executables and modifying your PATH.
 
@@ -40,4 +53,6 @@ the UI at this URL by logging in with Github:
 
 {{ .ArgoCDURL }}
 
+It might take 5-10 minutes for the ArgoCD ALB to come up, and
+about 15 minutes for the auth to come up.
 `

@@ -1,22 +1,7 @@
-package cmd
+package commands
 
-// CreateClusterMsgOpts contains the fields used by the Go template for the create cluster end user message
-type CreateClusterMsgOpts struct {
-	KubernetesCluster       string
-	Exports                 string
-	Environment             string
-	VenvCmd                 string
-	KubectlCmd              string
-	KubectlPath             string
-	AwsIamAuthenticatorCmd  string
-	AwsIamAuthenticatorPath string
-	K8sClusterVersion       string
-	ArgoCD                  string
-	ArgoCDURL               string
-}
-
-// CreateClusterEndMsg is the message shown to the user after creating a cluster
-const CreateClusterEndMsg = `Congratulations, your {{ .KubernetesCluster }} is now up and running.
+// CreateTestClusterEndMsg is the message shown to the user after creating a test cluster
+const CreateTestClusterEndMsg = `Congratulations, your {{ .KubernetesCluster }} is now up and running.
 To get started with some basic interactions, you can paste the
 following exports into a terminal:
 
@@ -47,12 +32,4 @@ system from:
 
 The installed version of kubectl needs to be within 2 versions of the
 kubernetes cluster version, which is: {{ .K8sClusterVersion }}.
-
-We have also setup {{ .ArgoCD }} for continuous deployment, you can access
-the UI at this URL by logging in with Github:
-
-{{ .ArgoCDURL }}
-
-It might take 5-10 minutes for the ArgoCD ALB to come up, and
-about 15 minutes for the auth to come up.
 `

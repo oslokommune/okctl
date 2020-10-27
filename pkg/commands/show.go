@@ -1,17 +1,19 @@
-package cmd
+package commands
 
-// CreateTestClusterEndMsg is the message shown to the user after creating a test cluster
-const CreateTestClusterEndMsg = `Congratulations, your {{ .KubernetesCluster }} is now up and running.
-To get started with some basic interactions, you can paste the
-following exports into a terminal:
+// ShowMessageOpts contains the fields used by the Go template for the show credentials user message
+type ShowMessageOpts struct {
+	VenvCmd                 string
+	KubectlCmd              string
+	KubectlPath             string
+	AwsIamAuthenticatorCmd  string
+	AwsIamAuthenticatorPath string
+	K8sClusterVersion       string
+	ArgoCD                  string
+	ArgoCDURL               string
+}
 
-{{ .Exports }}
-
-You can retrieve these credentials at any point by issuing the
-command below, from within this repository:
-
-$ okctl show credentials {{ .Environment }}
-
+// ShowMsg is the message shown to the user when using show credentials
+const ShowMsg = `
 Tip: Run {{ .VenvCmd }} to run a shell with these environment variables set. Then you
 can avoid using full paths to executables and modifying your PATH.
 
@@ -32,4 +34,10 @@ system from:
 
 The installed version of kubectl needs to be within 2 versions of the
 kubernetes cluster version, which is: {{ .K8sClusterVersion }}.
+
+We have also setup {{ .ArgoCD }} for continuous deployment, you can access
+the UI at this URL by logging in with Github:
+
+{{ .ArgoCDURL }}
+
 `

@@ -11,7 +11,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/virtualenv"
 
 	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
-	"github.com/oslokommune/okctl/pkg/cmd"
+	"github.com/oslokommune/okctl/pkg/commands"
 
 	"github.com/oslokommune/okctl/pkg/kubeconfig"
 	"sigs.k8s.io/yaml"
@@ -94,7 +94,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			msg := cmd.ShowMessageOpts{
+			msg := commands.ShowMessageOpts{
 				VenvCmd:                 aurora.Green("okctl venv").String(),
 				KubectlCmd:              aurora.Green("kubectl").String(),
 				AwsIamAuthenticatorCmd:  aurora.Green("aws-iam-authenticator").String(),
@@ -104,7 +104,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				ArgoCD:                  aurora.Green("ArgoCD").String(),
 				ArgoCDURL:               o.RepoStateWithEnv.GetArgoCD().SiteURL,
 			}
-			txt, err := cmd.GoTemplateToString(cmd.ShowMsg, msg)
+			txt, err := commands.GoTemplateToString(commands.ShowMsg, msg)
 			if err != nil {
 				return err
 			}

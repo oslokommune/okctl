@@ -42,17 +42,22 @@ type ScaffoldedApplication struct {
 
 // ApplicationService applies the scaffolding API and produces the requested resources
 type ApplicationService interface {
+	// ScaffoldApplication implements functionality for converting an Application.yaml to deployment resources
 	ScaffoldApplication(context.Context, *ScaffoldApplicationOpts) error
 }
 
 // ApplicationStore handles writing deployment resources to persistent storage
 type ApplicationStore interface {
+	// SaveApplication should implement functionality for storing the scaffolded application in som form of persistent storage
 	SaveApplication(*ScaffoldedApplication) (*store.Report, error)
+	// RemoveApplication should implement functionality for removing the scaffolded application from the persistent storage
 	RemoveApplication(string) (*store.Report, error)
 }
 
 // ApplicationReport handles writing output and progress
 type ApplicationReport interface {
+	// ReportCreateApplication should implement a way of reporting when a ScaffoldedApplication is saved in the ApplicationStore
 	ReportCreateApplication(*ScaffoldedApplication, []*store.Report) error
+	// ReportDeleteApplication should implement a way of reporting when a ScaffoldedApplication is removed in the ApplicationStore
 	ReportDeleteApplication([]*store.Report) error
 }

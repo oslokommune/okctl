@@ -45,7 +45,7 @@ type ApplicationService interface {
 	ScaffoldApplication(context.Context, *ScaffoldApplicationOpts) error
 }
 
-// ApplicationStore handles writing deployment resources persistent storage
+// ApplicationStore handles writing deployment resources to persistent storage
 type ApplicationStore interface {
 	SaveApplication(*ScaffoldedApplication) (*store.Report, error)
 	RemoveApplication(string) (*store.Report, error)

@@ -17,7 +17,7 @@ declaration to resources understood by Kubernetes and ArgoCD.
 
 To create an application.yaml template, run the following command:
 
-`okctl create application <env>`
+`okctl create application ENV`
 
 This creates an application declaration in ./application.yaml.
 
@@ -32,7 +32,7 @@ This command will create the following files in the ./infrastructure folder:
 2. ./infrastructure/<env>/certificates/<application.url>
     * The certificate declaration for the URL specified in the application.yaml.
 
-Both the files in 1. is needed by ArgoCD to deploy your application or service. Read more about ArgoCD 
+Both files in 1. is needed by ArgoCD to deploy your application or service. Read more about ArgoCD 
 [here](https://okctl.io/deployment/argocd/).
 
 After that, the following manual steps remain:
@@ -42,3 +42,7 @@ declaration is not pre-existing.
 2. Commit and push the changes done by `okctl apply` to your infrastructure as code repository remote accessible for
 ArgoCD.
 3. Apply the ArgoCD resource to the cluster: `kubectl apply -f ./infrastructure/base/applications/<app-name>/<app-name>-application.yaml`
+
+The application.yaml declaration can be neat to create resource files from for a while, but as soon as you find yourself
+adding configuration directly to the Kubernetes resource file or the ArgoCD resource file, there is no longer any point
+to keep it around. Feel free to delete it.  

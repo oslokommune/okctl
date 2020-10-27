@@ -169,6 +169,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 	return &clientCore.Services{
 		ALBIngressController: o.albIngressService(outputDir, spin),
 		ArgoCD:               o.argocdService(outputDir, spin),
+		ApplicationService:   o.applicationService(outputDir, spin),
 		Certificate:          o.certService(outputDir, spin),
 		Cluster:              o.clusterService(outputDir, spin),
 		Domain:               o.domainService(outputDir, spin),
@@ -396,6 +397,28 @@ func (o *Okctl) albIngressService(outputDir string, spin spinner.Spinner) client
 			o.FileSystem,
 		),
 		console.NewAlbIngressControllerReport(o.Err, spin),
+	)
+}
+
+func (o *Okctl) applicationService(outputDir string, spin spinner.Spinner) client.ApplicationService {
+	applicationsOverlayBaseDir, err := o.GetRepoApplicationBaseDir()
+	if err != nil {
+		return nil
+	}
+
+	return clientCore.NewApplicationService(
+		spin,
+		clientFilesystem.Paths{
+			BaseDir: applicationsOverlayBaseDir,
+		},
+		o.certService(path.Join(outputDir, config.DefaultCertificateBaseDir), spin.SubSpinner()),
+		clientFilesystem.NewApplicationStore(
+			clientFilesystem.Paths{
+				BaseDir: applicationsOverlayBaseDir,
+			},
+			o.FileSystem,
+		),
+		console.NewApplicationReport(o.Out, spin),
 	)
 }
 

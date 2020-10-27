@@ -26,11 +26,11 @@ When you create a full cluster we configure Argo CD for you, this configuration 
 ### Using Argo CD
 
 #### With okctl
-1. `okctl create application > application.yaml`
+1. `okctl create application prod`
 2. Configure the application.yaml to suit your needs
-3. While in the IAC repo root, run `okctl apply application -f application.yaml`
-4. Commit and push the changes in ./deployment
-5. `kubectl apply -f ./deployment/2048-application.yaml`
+3. While in the IAC repo root, run `okctl apply application prod -f application.yaml`
+4. Commit and push the changes in ./infrastructure
+5. `kubectl apply -f ./infrastructure/base/applications/2048/2048-application.yaml`
 
 For more information, see [here](https://okctl.io/usage/applicationyaml/).
 

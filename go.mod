@@ -72,7 +72,7 @@ require (
 	github.com/rogpeppe/go-internal v1.6.1 // indirect
 	github.com/sanity-io/litter v1.3.0
 	github.com/sebdah/goldie/v2 v2.5.1
-	github.com/sirupsen/logrus v1.6.0
+	github.com/sirupsen/logrus v1.7.0
 	github.com/smartystreets/assertions v1.0.0 // indirect
 	github.com/spf13/afero v1.3.4
 	github.com/spf13/cobra v1.0.1-0.20200629195214-2c5a0d300f8b
@@ -101,11 +101,11 @@ require (
 	gopkg.in/ini.v1 v1.60.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
-	helm.sh/helm/v3 v3.3.0
-	k8s.io/api v0.18.4
-	k8s.io/apimachinery v0.18.4
-	k8s.io/cli-runtime v0.18.4
-	k8s.io/client-go v0.18.4
+	helm.sh/helm/v3 v3.4.0
+	k8s.io/api v0.19.2
+	k8s.io/apimachinery v0.19.2
+	k8s.io/cli-runtime v0.19.2
+	k8s.io/client-go v0.19.2
 	k8s.io/utils v0.0.0-20200821003339-5e75c0163111 // indirect
 	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/yaml v1.2.0

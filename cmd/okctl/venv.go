@@ -6,10 +6,13 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strings"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-
+	"github.com/logrusorgru/aurora"
+	"github.com/oslokommune/okctl/pkg/commands"
 	cmd "github.com/oslokommune/okctl/pkg/commands"
+
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/virtualenv"
 	"github.com/spf13/cobra"
@@ -72,7 +75,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			err = printExecutables(venv)
+			err = printWelcomeMessage(o, venv, &opts)
 			if err != nil {
 				return err
 			}
@@ -83,7 +86,6 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 			shell.Stderr = o.Err
 
 			err = shell.Run()
-
 			if err != nil {
 				log.Fatalf("Command failed: %v", err)
 			}
@@ -97,7 +99,15 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 	return cmd
 }
 
-func printExecutables(env []string) error {
+type VenvWelcomeMessage struct {
+	Environment             string
+	KubectlPath             string
+	AwsIamAuthenticatorPath string
+	CommandPrompt           string
+	VenvCommand             string
+}
+
+func printWelcomeMessage(o *okctl.Okctl, env []string, opts *virtualenv.VirtualEnvironmentOpts) error {
 	whichKubectl, err := getWhich("kubectl", env)
 	if err != nil {
 		return err
@@ -108,16 +118,46 @@ func printExecutables(env []string) error {
 		return err
 	}
 
-	fmt.Printf("Using kubectl: %s", whichKubectl)
-	fmt.Printf("Using aws-iam-authenticator: %s", whichAwsIamAuthenticator)
-	fmt.Println()
+	params := VenvWelcomeMessage{
+		Environment:             opts.Environment,
+		KubectlPath:             whichKubectl,
+		AwsIamAuthenticatorPath: whichAwsIamAuthenticator,
+		CommandPrompt:           "<directory> <git branch> <okctl environment:kubernetes namespace>",
+		VenvCommand:             aurora.Green("okctl venv").String(),
+	}
+	template := `----------------- OKCTL -----------------
+Environment: {{ .Environment }}
+Using kubectl: {{ .KubectlPath }}
+Using aws-iam-authenticator: {{ .AwsIamAuthenticatorPath }}
+
+Your command prompt now shows
+{{ .CommandPrompt }}
+You can override the command prompt by setting the environment variable OKCTL_PS1 before running {{ .VenvCommand }}
+
+-----------------------------------------
+`
+
+	msg, err := commands.GoTemplateToString(template, params)
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprint(o.Out, msg)
 
 	return nil
 }
 
-func getWhich(cmd string, env []string) ([]byte, error) {
+func getWhich(cmd string, env []string) (string, error) {
 	c := exec.Command("which", cmd) //nolint:gosec
 	c.Env = env
 
-	return c.Output()
+	o, err := c.Output()
+	if err != nil {
+		return "", err
+	}
+
+	which := string(o)
+	which = strings.TrimSpace(which)
+
+	return which, nil
 }

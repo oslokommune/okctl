@@ -13,6 +13,7 @@ type VirtualEnvironmentOpts struct {
 	Debug                  bool
 	KubectlBinaryDir       string
 	AwsIamAuthenticatorDir string
+	Ps1Dir                 string
 }
 
 // Validate the inputs

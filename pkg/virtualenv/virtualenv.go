@@ -3,6 +3,7 @@ package virtualenv
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/storage"
 	"os"
 	"path"
 	"sort"
@@ -36,6 +37,13 @@ func GetVirtualEnvironmentOpts(o *okctl.Okctl) (VirtualEnvironmentOpts, error) {
 		return VirtualEnvironmentOpts{}, err
 	}
 
+	store := storage.NewFileSystemStorage(userDataDir)
+	ps1Dirname, err := CreatePs1ExecutableIfNotExists(store)
+	if err != nil {
+		return VirtualEnvironmentOpts{}, err
+	}
+
+	ps1Dir := path.Join(userDataDir, ps1Dirname)
 	opts := VirtualEnvironmentOpts{
 		Region:                 meta.Region,
 		AWSAccountID:           cluster.AWSAccountID,
@@ -46,6 +54,7 @@ func GetVirtualEnvironmentOpts(o *okctl.Okctl) (VirtualEnvironmentOpts, error) {
 		Debug:                  o.Debug,
 		KubectlBinaryDir:       path.Dir(k.BinaryPath),
 		AwsIamAuthenticatorDir: path.Dir(a.BinaryPath),
+		Ps1Dir:                 ps1Dir,
 	}
 
 	err = opts.validate()
@@ -56,13 +65,58 @@ func GetVirtualEnvironmentOpts(o *okctl.Okctl) (VirtualEnvironmentOpts, error) {
 	return opts, nil
 }
 
+// CreatePs1ExecutableIfNotExists creates a runnable file (if it doesn't exist) that returns input for the PS1
+// environment variable. This function returns the path to the directory containing the file.
+func CreatePs1ExecutableIfNotExists(store storage.Storer) (string, error) {
+	ps1Filename := "venv_ps1"
+	ps1Dir := "venv"
+
+	ps1FileExists, err := store.Exists(path.Join(ps1Dir, ps1Filename))
+	if err != nil {
+		return "", err
+	}
+
+	if !ps1FileExists {
+		ps1File, err := store.Create(ps1Dir, ps1Filename, 0o744)
+		if err != nil {
+			return "", err
+		}
+
+		_, err = ps1File.WriteString(`#!/usr/bin/env bash
+
+# TODO DETECT ZSH, KANSKJE FISH?
+ENV=$1
+ENV=${ENV:-NOENV}
+
+K8S_NAMESPACE="$(kubectl config view --minify --output 'jsonpath={..namespace}' 2>/dev/null)"
+K8S_NAMESPACE="${K8S_NAMESPACE:-default}"
+
+echo -e "$ENV:$K8S_NAMESPACE"
+`)
+		if err != nil {
+			return "", err
+		}
+
+		err = ps1File.Close()
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return ps1Dir, nil
+}
+
 // GetVirtualEnvironment merges the passed virtual environment with the OS environment variables, and returns them as
 // strings on the form "key=value".
 func GetVirtualEnvironment(opts *VirtualEnvironmentOpts, osEnvVars []string) ([]string, error) {
 	venv := getOkctlEnvVars(opts)
 	osEnv := toMap(osEnvVars)
 
-	osEnv["PATH"] = getPathWithOkctlBinaries(opts, osEnv)
+	path, err := getPathWithOkctlBinaries(opts, osEnv)
+	if err != nil {
+		return nil, err
+	}
+	osEnv["PATH"] = path
 
 	// TODO detect shell
 	ps1, overridePs1 := os.LookupEnv("OKCTL_PS1")
@@ -129,19 +183,14 @@ func toMap(slice []string) map[string]string {
 	return m
 }
 
-func getPathWithOkctlBinaries(opts *VirtualEnvironmentOpts, osEnv map[string]string) string {
-	venvPath := createPs1ExecutableIfNotExists()
-	okctlPath := fmt.Sprintf("%s:%s:%s", opts.KubectlBinaryDir, opts.AwsIamAuthenticatorDir, venvPath)
-	osPath, hasKey := osEnv["PATH"]
-	if hasKey {
-		return fmt.Sprintf("%s:%s", okctlPath, osPath)
+func getPathWithOkctlBinaries(opts *VirtualEnvironmentOpts, osEnv map[string]string) (string, error) {
+	okctlPath := fmt.Sprintf("%s:%s:%s", opts.KubectlBinaryDir, opts.AwsIamAuthenticatorDir, opts.Ps1Dir)
+	osPath, pathExists := osEnv["PATH"]
+	if pathExists {
+		return fmt.Sprintf("%s:%s", okctlPath, osPath), nil
 	} else {
-		return okctlPath
+		return okctlPath, nil
 	}
-}
-
-func createPs1ExecutableIfNotExists() string {
-	return "/home/yngvar/.okctl/binaries/venv"
 }
 
 func toEnvVarsSlice(venv *map[string]string) []string {

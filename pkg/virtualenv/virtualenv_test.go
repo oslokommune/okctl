@@ -2,6 +2,7 @@ package virtualenv_test
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/storage"
 	"path"
 	"strconv"
 	"testing"
@@ -59,5 +60,29 @@ func TestGetVirtualEnvironment(t *testing.T) {
 		}
 
 		assert.Equal(t, expectedVenv, venv)
+	})
+}
+
+func TestCreatePs1File(t *testing.T) {
+	t.Run("should return the directory of the PS1 file", func(t *testing.T) {
+		store := storage.NewEphemeralStorage()
+		ps1Dir, err := virtualenv.CreatePs1ExecutableIfNotExists(store)
+
+		assert.Nil(t, err)
+
+		assert.Equal(t, "venv", ps1Dir)
+	})
+
+	t.Run("should have created a file if it didn't exist", func(t *testing.T) {
+		store := storage.NewEphemeralStorage()
+		ps1Dir, err := virtualenv.CreatePs1ExecutableIfNotExists(store)
+
+		assert.Nil(t, err)
+
+		ps1Path := path.Join(ps1Dir, "venv_ps1")
+		exists, err := store.Exists(ps1Path)
+
+		assert.Nil(t, err)
+		assert.True(t, exists)
 	})
 }

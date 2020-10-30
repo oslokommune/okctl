@@ -72,7 +72,7 @@ func (o *Okctl) InitialiseWithOnlyEnv(env string) error {
 	}
 
 	o.RepoStateWithEnv = state.NewRepositoryStateWithEnv(env, o.RepoState, state.DefaultFileSystemSaver(
-		config.DefaultRepositoryConfig,
+		config.DefaultRepositoryStateFile,
 		repoDir,
 		o.FileSystem,
 	))
@@ -91,7 +91,7 @@ func (o *Okctl) InitialiseWithEnvAndAWSAccountID(env, awsAccountID string) error
 	}
 
 	o.RepoStateWithEnv = state.NewRepositoryStateWithEnv(env, o.RepoState, state.DefaultFileSystemSaver(
-		config.DefaultRepositoryConfig,
+		config.DefaultRepositoryStateFile,
 		repoDir,
 		o.FileSystem,
 	))

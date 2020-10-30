@@ -102,6 +102,12 @@ func CreateOnRepoDataNotFound() DataNotFoundFn {
 
 // RepoDataFromConfigFile defines the default behavior for loading configuration data
 func RepoDataFromConfigFile(_ *cobra.Command, notFoundFn DataNotFoundFn) config.DataLoaderFn {
+	// Here we should be loading all the definitions in the `.okctl/` directory together
+	// with the .okctl.state file. Once these are loaded we can validate the `.okctl/*.yml` files
+	// and start working on matching the declared state with the actual state.
+	//
+	// We probably need to get credentials for all the different AWS thingies before we get started?
+	// Perhaps the apply thingy should specify the cluster? So we don't operate on all declared states?
 	return buildRepoDataLoader(notFoundFn, nil)
 }
 

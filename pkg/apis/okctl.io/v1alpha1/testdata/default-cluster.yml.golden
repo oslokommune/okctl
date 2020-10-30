@@ -1,0 +1,24 @@
+apiVersion: okctl.io/v1alpha1
+dnsZones:
+- managedZone: false
+  parentDomain: okctl-stage.oslo.systems
+github:
+  organisation: oslokommune
+  outputPath: infrastructure
+  repository: okctl-iac
+  team: kjøremiljø
+integrations:
+  albIngressController: true
+  argoCD: true
+  cognito: true
+  externalDNS: true
+  externalSecrets: true
+kind: Cluster
+metadata:
+  accountID: 123456789012
+  environment: stage
+  name: okctl
+  region: eu-west-1
+vpc:
+  cidr: 192.168.0.0/20
+  highAvailability: true

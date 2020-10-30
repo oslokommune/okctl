@@ -4,7 +4,7 @@ package run
 import (
 	"fmt"
 
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/binaries"
@@ -47,7 +47,7 @@ func (r *serviceAccountRun) getCli() (*eksctl.Eksctl, error) {
 	return cli, nil
 }
 
-func (r *serviceAccountRun) DeleteServiceAccount(config *v1alpha1.ClusterConfig) error {
+func (r *serviceAccountRun) DeleteServiceAccount(config *v1alpha5.ClusterConfig) error {
 	cli, err := r.getCli()
 	if err != nil {
 		return err
@@ -61,7 +61,7 @@ func (r *serviceAccountRun) DeleteServiceAccount(config *v1alpha1.ClusterConfig)
 	return nil
 }
 
-func (r *serviceAccountRun) CreateServiceAccount(config *v1alpha1.ClusterConfig) error {
+func (r *serviceAccountRun) CreateServiceAccount(config *v1alpha5.ClusterConfig) error {
 	cli, err := r.getCli()
 	if err != nil {
 		return err

@@ -7,7 +7,7 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/mock"
 
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/route53"
 )
 

@@ -4,9 +4,11 @@ package core
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
+
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/clusterconfig"
 )
 
@@ -174,7 +176,7 @@ func (c *serviceAccount) CreateExternalSecretsServiceAccount(_ context.Context, 
 	return account, nil
 }
 
-func (c *serviceAccount) createServiceAccount(opts api.CreateServiceAccountOpts, config *v1alpha1.ClusterConfig) (*api.ServiceAccount, error) {
+func (c *serviceAccount) createServiceAccount(opts api.CreateServiceAccountOpts, config *v1alpha5.ClusterConfig) (*api.ServiceAccount, error) {
 	err := c.run.CreateServiceAccount(config)
 	if err != nil {
 		return nil, errors.E(err, "failed to create service account", errors.Internal)

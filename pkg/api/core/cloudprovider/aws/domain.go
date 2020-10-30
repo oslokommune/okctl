@@ -4,7 +4,7 @@ import (
 	"github.com/gosimple/slug"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn"
 	"github.com/oslokommune/okctl/pkg/cfn/components"
 	"github.com/oslokommune/okctl/pkg/cfn/components/hostedzone"

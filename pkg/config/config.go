@@ -43,9 +43,7 @@ const (
 	// DefaultCredentialsDirName sets the name of the directory for creds
 	DefaultCredentialsDirName = "credentials"
 
-	DefaultRepositoryConfig     = ".okctl.yml"
-	DefaultRepositoryConfigName = ".okctl"
-	DefaultRepositoryConfigType = "yml"
+	DefaultRepositoryStateFile = ".okctl.yml"
 
 	DefaultClusterConfig         = "cluster.yml"
 	DefaultClusterKubeConfig     = "kubeconfig"
@@ -272,30 +270,30 @@ func (c *Config) GetRepoDir() (string, error) {
 	return c.repoDir, nil
 }
 
-// GetRepoDataDir will return the directory where repo data should be read/written
-func (c *Config) GetRepoDataDir() (string, error) {
+// GetRepoStateDir will return the directory where repo data should be read/written
+func (c *Config) GetRepoStateDir() (string, error) {
 	return c.GetRepoDir()
 }
 
-// GetRepoDataPath will return the filename where repo data should be read/written
-func (c *Config) GetRepoDataPath() (string, error) {
-	base, err := c.GetRepoDataDir()
+// GetRepoStatePath will return the filename where repo data should be read/written
+func (c *Config) GetRepoStatePath() (string, error) {
+	base, err := c.GetRepoStateDir()
 	if err != nil {
 		return "", err
 	}
 
-	return filepath.Join(base, DefaultRepositoryConfig), nil
+	return filepath.Join(base, DefaultRepositoryStateFile), nil
 }
 
-// WriteCurrentRepoData will write current repo state to disk
-func (c *Config) WriteCurrentRepoData() error {
+// WriteCurrentRepoState will write current repo state to disk
+func (c *Config) WriteCurrentRepoState() error {
 	repoDir, err := c.GetRepoDir()
 	if err != nil {
 		return err
 	}
 
 	_, err = store.NewFileSystem(repoDir, c.FileSystem).
-		StoreStruct(DefaultRepositoryConfig, c.RepoState, store.ToYAML()).
+		StoreStruct(DefaultRepositoryStateFile, c.RepoState, store.ToYAML()).
 		Do()
 	if err != nil {
 		return err
@@ -366,7 +364,7 @@ func (c *Config) GetLogName() (string, error) {
 // GetRepoOutputDir return the repository output directory,
 // where cloud formation stacks, etc., should be written
 func (c *Config) GetRepoOutputDir(env string) (string, error) {
-	base, err := c.GetRepoDataDir()
+	base, err := c.GetRepoStateDir()
 	if err != nil {
 		return "", err
 	}
@@ -377,7 +375,7 @@ func (c *Config) GetRepoOutputDir(env string) (string, error) {
 // GetRepoApplicationBaseDir returns the directory where application
 // resources are stored
 func (c *Config) GetRepoApplicationBaseDir() (string, error) {
-	base, err := c.GetRepoDataDir()
+	base, err := c.GetRepoStateDir()
 	if err != nil {
 		return "", err
 	}

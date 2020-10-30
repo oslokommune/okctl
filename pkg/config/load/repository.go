@@ -19,7 +19,7 @@ import (
 // application data is found
 func ErrOnRepoDataNotFound() DataNotFoundFn {
 	return func(c *config.Config) error {
-		f, _ := c.GetRepoDataPath()
+		f, _ := c.GetRepoStatePath()
 
 		return &DataNotFoundErr{
 			err: fmt.Errorf("failed to load repo configuration from: %s", f),
@@ -50,7 +50,7 @@ func CreateOnRepoDataNotFound() DataNotFoundFn {
 			return err
 		}
 
-		repoDataPath, err := c.GetRepoDataPath()
+		repoDataPath, err := c.GetRepoStatePath()
 		if err != nil {
 			return err
 		}
@@ -86,7 +86,7 @@ func CreateOnRepoDataNotFound() DataNotFoundFn {
 		}
 
 		_, err = store.NewFileSystem(repoDir, c.FileSystem).
-			StoreStruct(config.DefaultRepositoryConfig, c.RepoState, store.ToYAML()).
+			StoreStruct(config.DefaultRepositoryStateFile, c.RepoState, store.ToYAML()).
 			Do()
 		if err != nil {
 			return err
@@ -114,7 +114,7 @@ func buildRepoDataLoader(notFoundFn DataNotFoundFn, _ func(v *viper.Viper)) conf
 
 		cfg.RepoState = &state.Repository{}
 
-		exists, err := cfg.FileSystem.Exists(path.Join(baseDir, config.DefaultRepositoryConfig))
+		exists, err := cfg.FileSystem.Exists(path.Join(baseDir, config.DefaultRepositoryStateFile))
 		if err != nil {
 			return err
 		}
@@ -127,7 +127,7 @@ func buildRepoDataLoader(notFoundFn DataNotFoundFn, _ func(v *viper.Viper)) conf
 		}
 
 		_, err = store.NewFileSystem(baseDir, cfg.FileSystem).
-			GetStruct(config.DefaultRepositoryConfig, cfg.RepoState, store.FromYAML()).
+			GetStruct(config.DefaultRepositoryStateFile, cfg.RepoState, store.FromYAML()).
 			Do()
 		if err != nil {
 			return err

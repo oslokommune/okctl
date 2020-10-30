@@ -29,6 +29,11 @@ func loadRepoData(o *okctl.Okctl, cmd *cobra.Command) error {
 		repoDataNotFound = load.ErrOnRepoDataNotFound()
 	}
 
+	// FIXME: We do not really need to pass cobra on here
+	// we do not want to use Viper at all, because we do
+	// not want the configuration to be overridden by env
+	// vars or similar.
+	// We can drop sending *cobra.Command on here.
 	o.RepoDataLoader = load.RepoDataFromConfigFile(cmd, repoDataNotFound)
 
 	return o.LoadRepoData()

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/oslokommune/okctl/pkg/api/mock"
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/clusterconfig"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"

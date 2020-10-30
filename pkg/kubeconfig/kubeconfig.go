@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
+
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/aws/aws-sdk-go/service/eks"
 
@@ -41,11 +43,11 @@ type Getter interface {
 
 type kubeConfig struct {
 	provider v1alpha1.CloudProvider
-	cfg      *v1alpha1.ClusterConfig
+	cfg      *v1alpha5.ClusterConfig
 }
 
 // New returns an initialised kubeconfig creator
-func New(clusterConfig *v1alpha1.ClusterConfig, provider v1alpha1.CloudProvider) Getter {
+func New(clusterConfig *v1alpha5.ClusterConfig, provider v1alpha1.CloudProvider) Getter {
 	return &kubeConfig{
 		provider: provider,
 		cfg:      clusterConfig,
@@ -78,7 +80,7 @@ func (a *kubeConfig) Get() (*Config, error) {
 		}
 	}
 
-	a.cfg.Status = &v1alpha1.ClusterStatus{
+	a.cfg.Status = &v1alpha5.ClusterStatus{
 		Endpoint:                 aws.StringValue(cluster.Endpoint),
 		CertificateAuthorityData: data,
 		ARN:                      aws.StringValue(cluster.Arn),
@@ -93,7 +95,7 @@ func (a *kubeConfig) Get() (*Config, error) {
 }
 
 // Create returns an initialised kubeconfig
-func Create(username string, cfg *v1alpha1.ClusterConfig) clientCmdApi.Config {
+func Create(username string, cfg *v1alpha5.ClusterConfig) clientCmdApi.Config {
 	contextName := fmt.Sprintf("%s@%s", username, cfg.Metadata.String())
 
 	return clientCmdApi.Config{

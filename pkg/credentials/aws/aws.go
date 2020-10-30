@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/mishudark/errors"
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/credentials/aws/scrape"
 	"github.com/spf13/afero"
 	"gopkg.in/ini.v1"

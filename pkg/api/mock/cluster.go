@@ -5,8 +5,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
+
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/clusterconfig"
 )
 
@@ -111,8 +113,8 @@ func DefaultClusterCreateOpts() api.ClusterCreateOpts {
 }
 
 // DefaultPublicSubnets returns a map of public subnets with defaults set
-func DefaultPublicSubnets() map[string]v1alpha1.ClusterNetwork {
-	return map[string]v1alpha1.ClusterNetwork{
+func DefaultPublicSubnets() map[string]v1alpha5.ClusterNetwork {
+	return map[string]v1alpha5.ClusterNetwork{
 		DefaultAvailabilityZone: {
 			ID:   DefaultPublicSubnetID,
 			CIDR: DefaultPublicSubnetCidr,
@@ -132,8 +134,8 @@ func DefaultVpcPublicSubnets() []api.VpcSubnet {
 }
 
 // DefaultPrivateSubnets returns a map of private subnets with defaults set
-func DefaultPrivateSubnets() map[string]v1alpha1.ClusterNetwork {
-	return map[string]v1alpha1.ClusterNetwork{
+func DefaultPrivateSubnets() map[string]v1alpha5.ClusterNetwork {
+	return map[string]v1alpha5.ClusterNetwork{
 		DefaultAvailabilityZone: {
 			ID:   DefaultPrivateSubnetID,
 			CIDR: DefaultPrivateSubnetCidr,
@@ -153,7 +155,7 @@ func DefaultVpcPrivateSubnets() []api.VpcSubnet {
 }
 
 // DefaultClusterConfig returns a cluster config with defaults set
-func DefaultClusterConfig() *v1alpha1.ClusterConfig {
+func DefaultClusterConfig() *v1alpha5.ClusterConfig {
 	c, _ := clusterconfig.New(&clusterconfig.Args{
 		ClusterName:            DefaultClusterName,
 		PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(DefaultAWSAccountID),
@@ -360,13 +362,13 @@ func NewBadClusterStore() *ClusterStore {
 
 // ClusterConfigStore provides a mock for the cluster config store
 type ClusterConfigStore struct {
-	SaveClusterConfigFn   func(*v1alpha1.ClusterConfig) error
+	SaveClusterConfigFn   func(*v1alpha5.ClusterConfig) error
 	DeleteClusterConfigFn func(env string) error
-	GetClusterConfigFn    func(env string) (*v1alpha1.ClusterConfig, error)
+	GetClusterConfigFn    func(env string) (*v1alpha5.ClusterConfig, error)
 }
 
 // SaveClusterConfig invokes the mocked save cluster config function
-func (c *ClusterConfigStore) SaveClusterConfig(config *v1alpha1.ClusterConfig) error {
+func (c *ClusterConfigStore) SaveClusterConfig(config *v1alpha5.ClusterConfig) error {
 	return c.SaveClusterConfigFn(config)
 }
 
@@ -376,20 +378,20 @@ func (c *ClusterConfigStore) DeleteClusterConfig(env string) error {
 }
 
 // GetClusterConfig invokes the mocked get cluster config function
-func (c *ClusterConfigStore) GetClusterConfig(env string) (*v1alpha1.ClusterConfig, error) {
+func (c *ClusterConfigStore) GetClusterConfig(env string) (*v1alpha5.ClusterConfig, error) {
 	return c.GetClusterConfigFn(env)
 }
 
 // NewGoodClusterConfigStore returns a cluster config store that will succeed
 func NewGoodClusterConfigStore() *ClusterConfigStore {
 	return &ClusterConfigStore{
-		SaveClusterConfigFn: func(config *v1alpha1.ClusterConfig) error {
+		SaveClusterConfigFn: func(config *v1alpha5.ClusterConfig) error {
 			return nil
 		},
 		DeleteClusterConfigFn: func(env string) error {
 			return nil
 		},
-		GetClusterConfigFn: func(env string) (*v1alpha1.ClusterConfig, error) {
+		GetClusterConfigFn: func(env string) (*v1alpha5.ClusterConfig, error) {
 			return DefaultClusterConfig(), nil
 		},
 	}

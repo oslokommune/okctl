@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
@@ -12,7 +12,7 @@ import (
 type ServiceAccount struct {
 	ID        ID
 	PolicyArn string
-	Config    *v1alpha1.ClusterConfig
+	Config    *v1alpha5.ClusterConfig
 }
 
 // CreateServiceAccountOpts contains opts shared state
@@ -74,6 +74,6 @@ type ServiceAccountService interface {
 
 // ServiceAccountRun provides the interface for running operations
 type ServiceAccountRun interface {
-	CreateServiceAccount(*v1alpha1.ClusterConfig) error
-	DeleteServiceAccount(*v1alpha1.ClusterConfig) error
+	CreateServiceAccount(*v1alpha5.ClusterConfig) error
+	DeleteServiceAccount(*v1alpha5.ClusterConfig) error
 }

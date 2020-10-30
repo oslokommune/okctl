@@ -4,19 +4,21 @@ import (
 	"encoding/base64"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
+
 	mock2 "github.com/oslokommune/okctl/pkg/mock"
 
 	"github.com/oslokommune/okctl/pkg/kubeconfig"
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/oslokommune/okctl/pkg/api/mock"
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/clusterconfig"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 )
 
-func testConfig(t *testing.T) *v1alpha1.ClusterConfig {
+func testConfig(t *testing.T) *v1alpha5.ClusterConfig {
 	conf, err := clusterconfig.New(&clusterconfig.Args{
 		ClusterName:            "okctl-pro",
 		PermissionsBoundaryARN: v1alpha1.PrincipalARN(mock.DefaultAWSAccountID),
@@ -28,7 +30,7 @@ func testConfig(t *testing.T) *v1alpha1.ClusterConfig {
 	})
 	assert.NoError(t, err)
 
-	conf.Status = &v1alpha1.ClusterStatus{
+	conf.Status = &v1alpha5.ClusterStatus{
 		Endpoint:                 "https://some-endpoint",
 		CertificateAuthorityData: []byte(base64.StdEncoding.EncodeToString([]byte("something"))),
 		ARN:                      "arn:///something",
@@ -41,7 +43,7 @@ func testConfig(t *testing.T) *v1alpha1.ClusterConfig {
 func TestCreate(t *testing.T) {
 	testCases := []struct {
 		name   string
-		cfg    *v1alpha1.ClusterConfig
+		cfg    *v1alpha5.ClusterConfig
 		golden string
 	}{
 		{
@@ -67,7 +69,7 @@ func TestCreate(t *testing.T) {
 func TestNew(t *testing.T) {
 	testCases := []struct {
 		name      string
-		cfg       *v1alpha1.ClusterConfig
+		cfg       *v1alpha5.ClusterConfig
 		provider  v1alpha1.CloudProvider
 		expect    interface{}
 		expectErr bool

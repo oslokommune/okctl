@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sebdah/goldie/v2"
+	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
 
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/sebdah/goldie/v2"
 
 	"github.com/oslokommune/okctl/pkg/binaries/run"
 	"github.com/oslokommune/okctl/pkg/binaries/run/eksctl"
@@ -79,7 +79,7 @@ func TestEksctlCreateCluster(t *testing.T) {
 		name        string
 		eksctl      *eksctl.Eksctl
 		kubePath    string
-		cfg         *v1alpha1.ClusterConfig
+		cfg         *v1alpha5.ClusterConfig
 		golden      string
 		expectError bool
 	}{
@@ -94,12 +94,12 @@ func TestEksctlCreateCluster(t *testing.T) {
 				fakeExecCommandSuccess(),
 			),
 			kubePath: "/some/path",
-			cfg:      &v1alpha1.ClusterConfig{},
+			cfg:      &v1alpha5.ClusterConfig{},
 			golden:   "create-cluster-works",
 		},
 		{
 			name:     "Should fail",
-			cfg:      &v1alpha1.ClusterConfig{},
+			cfg:      &v1alpha5.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
 				nil,
@@ -136,14 +136,14 @@ func TestEksctlHasCluster(t *testing.T) {
 		name        string
 		eksctl      *eksctl.Eksctl
 		kubePath    string
-		cfg         *v1alpha1.ClusterConfig
+		cfg         *v1alpha5.ClusterConfig
 		golden      string
 		expect      interface{}
 		expectError bool
 	}{
 		{
 			name:     "Should work",
-			cfg:      &v1alpha1.ClusterConfig{},
+			cfg:      &v1alpha5.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
 				nil,
@@ -157,8 +157,8 @@ func TestEksctlHasCluster(t *testing.T) {
 		},
 		{
 			name: "Should fail",
-			cfg: &v1alpha1.ClusterConfig{
-				Metadata: v1alpha1.ClusterMeta{
+			cfg: &v1alpha5.ClusterConfig{
+				Metadata: v1alpha5.ClusterMeta{
 					Name: "test",
 				},
 			},
@@ -198,13 +198,13 @@ func TestEksctlCreateServiceAccount(t *testing.T) {
 		name        string
 		eksctl      *eksctl.Eksctl
 		kubePath    string
-		cfg         *v1alpha1.ClusterConfig
+		cfg         *v1alpha5.ClusterConfig
 		golden      string
 		expectError bool
 	}{
 		{
 			name:     "Should work",
-			cfg:      &v1alpha1.ClusterConfig{},
+			cfg:      &v1alpha5.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
 				nil,
@@ -218,7 +218,7 @@ func TestEksctlCreateServiceAccount(t *testing.T) {
 		},
 		{
 			name:     "Should fail",
-			cfg:      &v1alpha1.ClusterConfig{},
+			cfg:      &v1alpha5.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
 				nil,
@@ -255,13 +255,13 @@ func TestEksctlDeleteServiceAccount(t *testing.T) {
 		name        string
 		eksctl      *eksctl.Eksctl
 		kubePath    string
-		cfg         *v1alpha1.ClusterConfig
+		cfg         *v1alpha5.ClusterConfig
 		golden      string
 		expectError bool
 	}{
 		{
 			name:     "Should work",
-			cfg:      &v1alpha1.ClusterConfig{},
+			cfg:      &v1alpha5.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
 				nil,
@@ -275,7 +275,7 @@ func TestEksctlDeleteServiceAccount(t *testing.T) {
 		},
 		{
 			name:     "Should fail",
-			cfg:      &v1alpha1.ClusterConfig{},
+			cfg:      &v1alpha5.ClusterConfig{},
 			kubePath: "/some/path",
 			eksctl: eksctl.New(
 				nil,

@@ -4,7 +4,7 @@ package clusterconfig
 import (
 	"fmt"
 
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
@@ -24,7 +24,7 @@ type Args struct {
 }
 
 // New initialises the creation of a new cluster config
-func New(a *Args) (*v1alpha1.ClusterConfig, error) {
+func New(a *Args) (*v1alpha5.ClusterConfig, error) {
 	err := a.validate()
 	if err != nil {
 		return nil, err
@@ -47,32 +47,32 @@ func (a *Args) validate() error {
 
 // New creates a cluster config
 // nolint: funlen
-func (a *Args) build() *v1alpha1.ClusterConfig {
-	cfg := &v1alpha1.ClusterConfig{
+func (a *Args) build() *v1alpha5.ClusterConfig {
+	cfg := &v1alpha5.ClusterConfig{
 		TypeMeta: TypeMeta(),
-		Metadata: v1alpha1.ClusterMeta{
+		Metadata: v1alpha5.ClusterMeta{
 			Name:   a.ClusterName,
 			Region: a.Region,
 		},
-		IAM: v1alpha1.ClusterIAM{
+		IAM: v1alpha5.ClusterIAM{
 			ServiceRolePermissionsBoundary:             a.PermissionsBoundaryARN,
 			FargatePodExecutionRolePermissionsBoundary: a.PermissionsBoundaryARN,
 			WithOIDC: true,
 		},
-		FargateProfiles: []v1alpha1.FargateProfile{
+		FargateProfiles: []v1alpha5.FargateProfile{
 			{
 				Name: "fp-default",
-				Selectors: []v1alpha1.FargateProfileSelector{
+				Selectors: []v1alpha5.FargateProfileSelector{
 					{Namespace: "default"},
 					{Namespace: "kube-system"},
 				},
 			},
 		},
-		NodeGroups: []v1alpha1.NodeGroup{
+		NodeGroups: []v1alpha5.NodeGroup{
 			{
 				Name:         "ng-generic",
 				InstanceType: "m5.large",
-				ScalingConfig: v1alpha1.ScalingConfig{
+				ScalingConfig: v1alpha5.ScalingConfig{
 					DesiredCapacity: 2, //nolint: gomnd
 					MinSize:         1,
 					MaxSize:         10, //nolint: gomnd
@@ -85,34 +85,34 @@ func (a *Args) build() *v1alpha1.ClusterConfig {
 					fmt.Sprintf("k8s.io/cluster-autoscaler/%s", a.ClusterName): "owned",
 				},
 				PrivateNetworking: true,
-				IAM: v1alpha1.NodeGroupIAM{
+				IAM: v1alpha5.NodeGroupIAM{
 					InstanceRolePermissionsBoundary: a.PermissionsBoundaryARN,
 				},
 			},
 		},
-		VPC: &v1alpha1.ClusterVPC{
+		VPC: &v1alpha5.ClusterVPC{
 			ID:   a.VpcID,
 			CIDR: a.VpcCidr,
-			ClusterEndpoints: v1alpha1.ClusterEndpoints{
+			ClusterEndpoints: v1alpha5.ClusterEndpoints{
 				PrivateAccess: true,
 				PublicAccess:  true,
 			},
-			Subnets: v1alpha1.ClusterSubnets{
-				Private: map[string]v1alpha1.ClusterNetwork{},
-				Public:  map[string]v1alpha1.ClusterNetwork{},
+			Subnets: v1alpha5.ClusterSubnets{
+				Private: map[string]v1alpha5.ClusterNetwork{},
+				Public:  map[string]v1alpha5.ClusterNetwork{},
 			},
 		},
 	}
 
 	for _, p := range a.PublicSubnets {
-		cfg.VPC.Subnets.Public[p.AvailabilityZone] = v1alpha1.ClusterNetwork{
+		cfg.VPC.Subnets.Public[p.AvailabilityZone] = v1alpha5.ClusterNetwork{
 			ID:   p.ID,
 			CIDR: p.Cidr,
 		}
 	}
 
 	for _, p := range a.PrivateSubnets {
-		cfg.VPC.Subnets.Private[p.AvailabilityZone] = v1alpha1.ClusterNetwork{
+		cfg.VPC.Subnets.Private[p.AvailabilityZone] = v1alpha5.ClusterNetwork{
 			ID:   p.ID,
 			CIDR: p.Cidr,
 		}
@@ -124,8 +124,8 @@ func (a *Args) build() *v1alpha1.ClusterConfig {
 // TypeMeta returns the defaults
 func TypeMeta() metav1.TypeMeta {
 	return metav1.TypeMeta{
-		Kind:       v1alpha1.ClusterConfigKind,
-		APIVersion: v1alpha1.ClusterConfigAPIVersion,
+		Kind:       v1alpha5.ClusterConfigKind,
+		APIVersion: v1alpha5.ClusterConfigAPIVersion,
 	}
 }
 
@@ -143,7 +143,7 @@ type ServiceAccountArgs struct {
 
 // NewServiceAccount returns an initialised cluster config for creating a service account
 // with an associated IAM managed policy
-func NewServiceAccount(a *ServiceAccountArgs) (*v1alpha1.ClusterConfig, error) {
+func NewServiceAccount(a *ServiceAccountArgs) (*v1alpha5.ClusterConfig, error) {
 	err := a.validate()
 	if err != nil {
 		return nil, err
@@ -164,18 +164,18 @@ func (a *ServiceAccountArgs) validate() error {
 	)
 }
 
-func (a *ServiceAccountArgs) build() *v1alpha1.ClusterConfig {
-	return &v1alpha1.ClusterConfig{
+func (a *ServiceAccountArgs) build() *v1alpha5.ClusterConfig {
+	return &v1alpha5.ClusterConfig{
 		TypeMeta: TypeMeta(),
-		Metadata: v1alpha1.ClusterMeta{
+		Metadata: v1alpha5.ClusterMeta{
 			Name:   a.ClusterName,
 			Region: a.Region,
 		},
-		IAM: v1alpha1.ClusterIAM{
+		IAM: v1alpha5.ClusterIAM{
 			WithOIDC: true,
-			ServiceAccounts: []*v1alpha1.ClusterIAMServiceAccount{
+			ServiceAccounts: []*v1alpha5.ClusterIAMServiceAccount{
 				{
-					ClusterIAMMeta: v1alpha1.ClusterIAMMeta{
+					ClusterIAMMeta: v1alpha5.ClusterIAMMeta{
 						Name:      a.Name,
 						Namespace: a.Namespace,
 						Labels:    a.Labels,
@@ -192,7 +192,7 @@ func (a *ServiceAccountArgs) build() *v1alpha1.ClusterConfig {
 
 // NewExternalSecretsServiceAccount returns an initialised configuration for
 // creating an external secrets service account
-func NewExternalSecretsServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha1.ClusterConfig, error) {
+func NewExternalSecretsServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha5.ClusterConfig, error) {
 	return NewServiceAccount(&ServiceAccountArgs{
 		ClusterName: clusterName,
 		Labels: map[string]string{
@@ -208,7 +208,7 @@ func NewExternalSecretsServiceAccount(clusterName, region, policyArn, permission
 
 // NewAlbIngressControllerServiceAccount returns an initialised configuration
 // for creating an aws-alb-ingress-controller service account
-func NewAlbIngressControllerServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha1.ClusterConfig, error) {
+func NewAlbIngressControllerServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha5.ClusterConfig, error) {
 	return NewServiceAccount(&ServiceAccountArgs{
 		ClusterName: clusterName,
 		Labels: map[string]string{
@@ -224,7 +224,7 @@ func NewAlbIngressControllerServiceAccount(clusterName, region, policyArn, permi
 
 // NewExternalDNSServiceAccount returns an initialised configuration
 // for creating an external-dns service account
-func NewExternalDNSServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha1.ClusterConfig, error) {
+func NewExternalDNSServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha5.ClusterConfig, error) {
 	return NewServiceAccount(&ServiceAccountArgs{
 		ClusterName: clusterName,
 		Labels: map[string]string{
@@ -251,7 +251,7 @@ type MinimalArgs struct {
 }
 
 // NewMinimal initialises the creation of a new cluster config
-func NewMinimal(a *MinimalArgs) (*v1alpha1.ClusterConfig, error) {
+func NewMinimal(a *MinimalArgs) (*v1alpha5.ClusterConfig, error) {
 	err := a.validate()
 	if err != nil {
 		return nil, err
@@ -274,32 +274,32 @@ func (a *MinimalArgs) validate() error {
 
 // New creates a cluster config
 // nolint: funlen
-func (a *MinimalArgs) build() *v1alpha1.ClusterConfig {
-	cfg := &v1alpha1.ClusterConfig{
+func (a *MinimalArgs) build() *v1alpha5.ClusterConfig {
+	cfg := &v1alpha5.ClusterConfig{
 		TypeMeta: TypeMeta(),
-		Metadata: v1alpha1.ClusterMeta{
+		Metadata: v1alpha5.ClusterMeta{
 			Name:   a.ClusterName,
 			Region: a.Region,
 		},
-		IAM: v1alpha1.ClusterIAM{
+		IAM: v1alpha5.ClusterIAM{
 			ServiceRolePermissionsBoundary:             a.PermissionsBoundaryARN,
 			FargatePodExecutionRolePermissionsBoundary: a.PermissionsBoundaryARN,
 			WithOIDC: true,
 		},
-		FargateProfiles: []v1alpha1.FargateProfile{
+		FargateProfiles: []v1alpha5.FargateProfile{
 			{
 				Name: "fp-default",
-				Selectors: []v1alpha1.FargateProfileSelector{
+				Selectors: []v1alpha5.FargateProfileSelector{
 					{Namespace: "default"},
 					{Namespace: "kube-system"},
 				},
 			},
 		},
-		NodeGroups: []v1alpha1.NodeGroup{
+		NodeGroups: []v1alpha5.NodeGroup{
 			{
 				Name:         "ng-generic",
 				InstanceType: "t2.medium",
-				ScalingConfig: v1alpha1.ScalingConfig{
+				ScalingConfig: v1alpha5.ScalingConfig{
 					DesiredCapacity: 2, //nolint: gomnd
 					MinSize:         1,
 					MaxSize:         10, //nolint: gomnd
@@ -312,34 +312,34 @@ func (a *MinimalArgs) build() *v1alpha1.ClusterConfig {
 					fmt.Sprintf("k8s.io/cluster-autoscaler/%s", a.ClusterName): "owned",
 				},
 				PrivateNetworking: true,
-				IAM: v1alpha1.NodeGroupIAM{
+				IAM: v1alpha5.NodeGroupIAM{
 					InstanceRolePermissionsBoundary: a.PermissionsBoundaryARN,
 				},
 			},
 		},
-		VPC: &v1alpha1.ClusterVPC{
+		VPC: &v1alpha5.ClusterVPC{
 			ID:   a.VpcID,
 			CIDR: a.VpcCidr,
-			ClusterEndpoints: v1alpha1.ClusterEndpoints{
+			ClusterEndpoints: v1alpha5.ClusterEndpoints{
 				PrivateAccess: true,
 				PublicAccess:  true,
 			},
-			Subnets: v1alpha1.ClusterSubnets{
-				Private: map[string]v1alpha1.ClusterNetwork{},
-				Public:  map[string]v1alpha1.ClusterNetwork{},
+			Subnets: v1alpha5.ClusterSubnets{
+				Private: map[string]v1alpha5.ClusterNetwork{},
+				Public:  map[string]v1alpha5.ClusterNetwork{},
 			},
 		},
 	}
 
 	for _, p := range a.PublicSubnets {
-		cfg.VPC.Subnets.Public[p.AvailabilityZone] = v1alpha1.ClusterNetwork{
+		cfg.VPC.Subnets.Public[p.AvailabilityZone] = v1alpha5.ClusterNetwork{
 			ID:   p.ID,
 			CIDR: p.Cidr,
 		}
 	}
 
 	for _, p := range a.PrivateSubnets {
-		cfg.VPC.Subnets.Private[p.AvailabilityZone] = v1alpha1.ClusterNetwork{
+		cfg.VPC.Subnets.Private[p.AvailabilityZone] = v1alpha5.ClusterNetwork{
 			ID:   p.ID,
 			CIDR: p.Cidr,
 		}

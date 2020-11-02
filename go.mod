@@ -33,7 +33,7 @@ require (
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-git/go-git/v5 v5.1.0
 	github.com/go-kit/kit v0.10.0
-	github.com/go-ozzo/ozzo-validation/v4 v4.2.2
+	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/gofrs/flock v0.8.0
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect

@@ -4,11 +4,13 @@ import (
 	"context"
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/config/state"
+
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/api"
 
 	"github.com/oslokommune/okctl/pkg/spinner"
-
-	"github.com/oslokommune/okctl/pkg/config/state"
 
 	"github.com/oslokommune/okctl/pkg/domain"
 
@@ -54,7 +56,8 @@ func (s *domainService) GetPrimaryHostedZone(_ context.Context, id api.ID) (*cli
 	return nil, nil
 }
 
-func (s *domainService) DeletePrimaryHostedZone(_ context.Context, opts client.DeletePrimaryHostedZoneOpts) error {
+// DeletePrimaryHostedZone and all associed records
+func (s *domainService) DeletePrimaryHostedZone(ctx context.Context, provider v1alpha1.CloudProvider, opts client.DeletePrimaryHostedZoneOpts) error {
 	err := s.spinner.Start("domain")
 	if err != nil {
 		return err
@@ -84,8 +87,13 @@ func (s *domainService) DeletePrimaryHostedZone(_ context.Context, opts client.D
 	var reports []*store.Report
 
 	if hz.Managed {
+		_, err := s.api.DeleteHostedZoneRecords(provider, hz.ID)
+		if err != nil {
+			return err
+		}
+
 		// HostedZone is managed by us, so delete it
-		err := s.api.DeletePrimaryHostedZone(hz.Domain, opts)
+		err = s.api.DeletePrimaryHostedZone(hz.Domain, opts)
 		if err != nil {
 			return err
 		}

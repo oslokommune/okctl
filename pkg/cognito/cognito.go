@@ -65,6 +65,31 @@ func (c *Cognito) EnableMFA(userPoolID string) error {
 	return nil
 }
 
+// DeleteAuthDomain dissociate auth domain with user pool, to allow pool deletion
+func (c *Cognito) DeleteAuthDomain(userPoolID, domain string) error {
+	_, err := c.provider.CognitoIdentityProvider().DeleteUserPoolDomain(&cognitoidentityprovider.DeleteUserPoolDomainInput{
+		Domain:     &domain,
+		UserPoolId: &userPoolID,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteUserPool removes the userpool
+func (c *Cognito) DeleteUserPool(userPoolID string) error {
+	_, err := c.provider.CognitoIdentityProvider().DeleteUserPool(&cognitoidentityprovider.DeleteUserPoolInput{
+		UserPoolId: &userPoolID,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // New returns an initialised cognito interaction
 func New(provider v1alpha1.CloudProvider) *Cognito {
 	return &Cognito{

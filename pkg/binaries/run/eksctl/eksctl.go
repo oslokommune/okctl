@@ -198,6 +198,7 @@ func (e *Eksctl) DeleteCluster(clusterName string) ([]byte, error) {
 		"delete",
 		"cluster",
 		fmt.Sprintf("--name=%s", clusterName),
+		"--wait",
 	}
 
 	b, err := e.run(args)

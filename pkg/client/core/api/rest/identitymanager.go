@@ -16,6 +16,10 @@ type identityManagerAPI struct {
 	client *HTTPClient
 }
 
+func (a *identityManagerAPI) DeleteIdentityPool(opts api.DeleteIdentityPoolOpts) error {
+	return a.client.DoDelete(TargetIdentityPool, &opts)
+}
+
 func (a *identityManagerAPI) CreateIdentityPoolUser(opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {
 	into := &api.IdentityPoolUser{}
 	return into, a.client.DoPost(TargetIdentityPoolUsers, &opts, into)

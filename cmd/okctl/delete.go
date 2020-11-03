@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/AlecAivazis/survey/v2"
-
 	"github.com/oslokommune/okctl/pkg/client"
 
 	"github.com/oslokommune/okctl/pkg/spinner"
@@ -125,9 +123,14 @@ including VPC, this is a highly destructive operation.`,
 
 			formatErr := o.ErrorFormatter(fmt.Sprintf("delete cluster %s", opts.Environment), userDir)
 
-			err = services.Domain.DeletePrimaryHostedZone(o.Ctx, client.DeletePrimaryHostedZoneOpts{
+			err = services.Domain.DeletePrimaryHostedZone(o.Ctx, o.CloudProvider, client.DeletePrimaryHostedZoneOpts{
 				ID: id,
 			})
+			if err != nil {
+				return formatErr(err)
+			}
+
+			err = services.IdentityManager.DeleteIdentityPool(o.Ctx, o.CloudProvider, id)
 			if err != nil {
 				return formatErr(err)
 			}

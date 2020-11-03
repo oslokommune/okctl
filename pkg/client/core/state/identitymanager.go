@@ -83,6 +83,10 @@ func (s *identityManagerState) SaveIdentityPool(p *api.IdentityPool) (*store.Rep
 	return report, nil
 }
 
+func (s *identityManagerState) GetIdentityPool() state.IdentityPool {
+	return s.state.GetIdentityPool()
+}
+
 // NewIdentityManagerState returns an initialised state manager
 func NewIdentityManagerState(state state.IdentityPooler) client.IdentityManagerState {
 	return &identityManagerState{

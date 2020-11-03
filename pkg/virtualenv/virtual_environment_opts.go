@@ -1,6 +1,8 @@
 package virtualenv
 
-import validation "github.com/go-ozzo/ozzo-validation/v4"
+import (
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+)
 
 // VirtualEnvironmentOpts contains the required inputs
 type VirtualEnvironmentOpts struct {

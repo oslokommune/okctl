@@ -2,10 +2,11 @@ package virtualenv_test
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/storage"
 	"path"
 	"strconv"
 	"testing"
+
+	"github.com/oslokommune/okctl/pkg/storage"
 
 	"github.com/oslokommune/okctl/pkg/api/mock"
 	"github.com/oslokommune/okctl/pkg/config"
@@ -73,7 +74,7 @@ func TestCreatePs1File(t *testing.T) {
 		assert.Equal(t, "venv", ps1Dir)
 	})
 
-	t.Run("should have created a file if it didn't exist", func(t *testing.T) {
+	t.Run("should create a file 'venv_ps1' if it doesn't exist", func(t *testing.T) {
 		store := storage.NewEphemeralStorage()
 		ps1Dir, err := virtualenv.CreatePs1ExecutableIfNotExists(store)
 

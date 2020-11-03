@@ -68,8 +68,11 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			for _, v := range venv {
-				fmt.Fprintf(o.Out, "export %s\n", v)
+			for _, v := range venv.Environ() {
+				_, err = fmt.Fprintf(o.Out, "export %s\n", v)
+				if err != nil {
+					return err
+				}
 			}
 
 			outputDir, err := o.GetRepoOutputDir(opts.Environment)

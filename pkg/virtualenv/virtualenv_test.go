@@ -60,7 +60,7 @@ func TestGetVirtualEnvironment(t *testing.T) {
 			"SOME_VAR=A",
 		}
 
-		assert.Equal(t, expectedVenv, venv)
+		assert.Equal(t, expectedVenv, venv.Environ())
 	})
 }
 

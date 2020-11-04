@@ -53,7 +53,7 @@ can do that [here](https://login.oslo.kommune.no/auth/realms/AD/account/totp).
 * AWS account ID: This identifies which account you want to use. You can see which accounts you have access to just
 after logging in to [AWS](https://login.oslo.kommune.no/auth/realms/AD/protocol/saml/clients/amazon-aws):
 
-<span style="display:block;text-align:center">![okctl](userdocs/src/img/aws-account-id.png)</span>
+![okctl](userdocs/src/img/aws-account-id.png)
 
 ```bash
 

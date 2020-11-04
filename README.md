@@ -46,6 +46,7 @@ $ cd <the new repository>
 A "cluster" is a Kubernetes cluster in an environment as described in [Compare and contrast](#compare-and-contrast).
 
 You will soon be running `okctl create cluster`, which will ask you for the following information:
+
 * Username and password: This is your Oslo Kommune AD organization username (oooXXXXX) and its password.
 * Multi factor token (MFA): The same one you use to login to
 [AWS](https://login.oslo.kommune.no/auth/realms/AD/protocol/saml/clients/amazon-aws). If you haven't set up MFA yet, you

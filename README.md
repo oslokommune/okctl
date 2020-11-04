@@ -27,7 +27,8 @@ The following is a guide for how to create an environment that contains the elem
 
 ### 1. Create a new github repository
 
-Go to github.com/oslokommune and create a new **private** git repository.
+Go to github.com/oslokommune and create a new private git repository. No credentials will be stored in this
+repository, but it's more a general safety measure.
 
 :information_source: This repository will be used by okctl to store infrastructure-as-code, which means files containing
 various configuration for your up-and-coming cluster.

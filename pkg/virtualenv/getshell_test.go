@@ -1,6 +1,7 @@
 package virtualenv
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/oslokommune/okctl/pkg/storage"
@@ -32,12 +33,14 @@ func TestGetShell(t *testing.T) {
 		passwdFile, err := store.Create("/", "passwd", 0o644)
 		assert.Nil(t, err)
 
-		_, err = passwdFile.WriteString(`root:x:0:0:root:/root:/bin/bash
+		zshCmd := "/bin/zsh"
+		_, err = passwdFile.WriteString(fmt.Sprintf(`root:x:0:0:root:/root:/bin/bash
 daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
 bin:x:2:2:bin:/bin:/usr/sbin/nologin
-johndoe:x:1000:1000:John Doe,,,:/home/yngvar:/bin/zsh
+johndoe:x:1000:1000:John Doe,,,:/home/yngvar:%s
 tcpdump:x:108:116::/nonexistent:/usr/sbin/nologin
-`)
+`, zshCmd))
+
 		assert.Nil(t, err)
 
 		err = passwdFile.Close()
@@ -46,6 +49,6 @@ tcpdump:x:108:116::/nonexistent:/usr/sbin/nologin
 		shellCmd, err := GetShellCmd(returnFalse, store)
 		assert.Nil(t, err)
 
-		assert.Equal(t, "/bin/zsh", shellCmd)
+		assert.Equal(t, zshCmd, shellCmd)
 	})
 }

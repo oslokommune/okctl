@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/cognito"
+
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -17,6 +20,34 @@ type identityManagerService struct {
 	store   client.IdentityManagerStore
 	state   client.IdentityManagerState
 	report  client.IdentityManagerReport
+}
+
+// DeleteIdentityPool and all users
+func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, provider v1alpha1.CloudProvider, opts api.ID) error {
+	err := s.spinner.Start("deleting identity-pool")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	pool := s.state.GetIdentityPool()
+
+	c := cognito.New(provider)
+
+	err = c.DeleteAuthDomain(pool.UserPoolID, pool.AuthDomain)
+	if err != nil {
+		return err
+	}
+
+	err = c.DeleteUserPool(pool.UserPoolID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *identityManagerService) CreateIdentityPoolUser(ctx context.Context, opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {

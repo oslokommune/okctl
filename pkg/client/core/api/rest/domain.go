@@ -1,8 +1,11 @@
 package rest
 
 import (
+	route "github.com/aws/aws-sdk-go/service/route53"
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/client"
+	"github.com/oslokommune/okctl/pkg/route53"
 )
 
 // TargetHostedZone matches the REST API route
@@ -10,6 +13,10 @@ const TargetHostedZone = "domains/hostedzones/"
 
 type domainAPI struct {
 	client *HTTPClient
+}
+
+func (a *domainAPI) DeleteHostedZoneRecords(provider v1alpha1.CloudProvider, hostedZoneID string) (*route.ChangeResourceRecordSetsOutput, error) {
+	return route53.New(provider).DeleteHostedZoneRecordSets(hostedZoneID)
 }
 
 func (a *domainAPI) DeletePrimaryHostedZone(domain string, opts client.DeletePrimaryHostedZoneOpts) error {

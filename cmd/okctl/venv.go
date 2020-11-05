@@ -204,6 +204,8 @@ Your command prompt now shows
 {{ .CommandPrompt }}
 
 You can override the command prompt by setting the environment variable OKCTL_PS1 before running {{ .VenvCommand }}.
+Or, if you do not want {{ .VenvCommand }} to modify your command prompt at all, set the environment variable
+OKCTL_NO_PS1=true
 -----------------------------------------
 `
 

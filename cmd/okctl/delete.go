@@ -50,7 +50,7 @@ func (o *DeleteClusterOpts) Validate() error {
 	)
 }
 
-// nolint: funlen
+// nolint: gocyclo, funlen
 func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &DeleteClusterOpts{}
 

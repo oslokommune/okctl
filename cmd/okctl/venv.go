@@ -90,23 +90,26 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			switch {
-			case virtualenv.ShellIsBash(shellCmd):
-				virtualenv.SetCmdPromptBash(&opts, venv)
-			case virtualenv.ShellIsZsh(shellCmd):
-				zshrcTmpWriteStorage, err := setCmdPromptZsh(&opts, venv)
-				if err != nil {
-					return err
-				}
-
-				defer func() {
-					err = zshrcTmpWriteStorage.Clean()
+			noPs1, noPs1Exists := os.LookupEnv("OKCTL_NO_PS1")
+			if !noPs1Exists || (noPs1Exists && strings.ToLower(strings.TrimSpace(noPs1)) != "true") {
+				switch {
+				case virtualenv.ShellIsBash(shellCmd):
+					virtualenv.SetCmdPromptBash(&opts, venv)
+				case virtualenv.ShellIsZsh(shellCmd):
+					zshrcTmpWriteStorage, err := setCmdPromptZsh(&opts, venv)
 					if err != nil {
-						fmt.Println(err)
+						return err
 					}
-				}()
-			default:
-				// We don't support any other shells for now.
+
+					defer func() {
+						err = zshrcTmpWriteStorage.Clean()
+						if err != nil {
+							fmt.Println(err)
+						}
+					}()
+				default:
+					// We don't support any other shells for now.
+				}
 			}
 
 			err = printWelcomeMessage(o.Out, venv.Environ(), &opts)

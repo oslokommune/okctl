@@ -100,7 +100,6 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 				}
 
 				defer func() {
-					// This leaves an empty directory /tmp/okctl538407010. We should clean this up.
 					err = zshrcTmpWriteStorage.Clean()
 					if err != nil {
 						fmt.Println(err)

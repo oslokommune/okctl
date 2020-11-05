@@ -35,7 +35,7 @@ export OKCTL_SHELL=/bin/bash
 okctl venv myenv
 `
 
-// nolint: funlen
+// nolint: gocyclo, funlen, gocognit
 func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 	opts := virtualenv.VirtualEnvironmentOpts{}
 

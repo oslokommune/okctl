@@ -138,19 +138,19 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 func setCmdPromptZsh(opts *virtualenv.VirtualEnvironmentOpts, venv *virtualenv.VirtualEnvironment) (*storage.TemporaryStorage, error) {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
-		return nil, fmt.Errorf("couldn't set command prompt: %w", err)
+		return nil, fmt.Errorf("could not get home directory: %w", err)
 	}
 
 	zshrcReadStorage := storage.NewFileSystemStorage(userHomeDir)
 
 	zshrcTmpWriteStorage, err := storage.NewTemporaryStorage()
 	if err != nil {
-		return nil, fmt.Errorf("couldn't set command prompt: %w", err)
+		return nil, fmt.Errorf("could not create temporary storage: %w", err)
 	}
 
 	err = virtualenv.SetCmdPromptZsh(opts, venv, zshrcReadStorage, zshrcTmpWriteStorage)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't set command prompt: %w", err)
+		return nil, fmt.Errorf("could not set command prompt for virtul environment: %w", err)
 	}
 
 	return zshrcTmpWriteStorage, nil

@@ -190,7 +190,7 @@ func printWelcomeMessage(stdout io.Writer, env []string, opts *virtualenv.Virtua
 		Environment:             opts.Environment,
 		KubectlPath:             whichKubectl,
 		AwsIamAuthenticatorPath: whichAwsIamAuthenticator,
-		CommandPrompt:           "<directory> <git branch> <okctl environment:kubernetes namespace>",
+		CommandPrompt:           "<directory> <okctl environment:kubernetes namespace>",
 		VenvCommand:             aurora.Green("okctl venv").String(),
 	}
 	template := `----------------- OKCTL -----------------
@@ -200,8 +200,8 @@ Using aws-iam-authenticator: {{ .AwsIamAuthenticatorPath }}
 
 Your command prompt now shows
 {{ .CommandPrompt }}
-You can override the command prompt by setting the environment variable OKCTL_PS1 before running {{ .VenvCommand }}
 
+You can override the command prompt by setting the environment variable OKCTL_PS1 before running {{ .VenvCommand }}.
 -----------------------------------------
 `
 

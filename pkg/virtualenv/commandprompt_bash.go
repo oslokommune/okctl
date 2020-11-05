@@ -17,6 +17,6 @@ func SetCmdPromptBash(opts *VirtualEnvironmentOpts, venv *VirtualEnvironment) {
 	if overridePs1 {
 		venv.env["PROMPT_COMMAND"] = fmt.Sprintf("PS1=%s", ps1)
 	} else {
-		venv.env["PROMPT_COMMAND"] = fmt.Sprintf(`PS1="\[\033[0;31m\]\w\[\033[0;34m\]\$(__git_ps1)\[\e[0m\] \[\033[0;32m\](\$(venv_ps1 %s)) \[\e[0m\]\$ "`, opts.Environment)
+		venv.env["PROMPT_COMMAND"] = fmt.Sprintf(`PS1="\[\033[0;31m\]\w \[\033[0;34m\](\$(venv_ps1 %s)) \[\e[0m\]\$ "`, opts.Environment)
 	}
 }

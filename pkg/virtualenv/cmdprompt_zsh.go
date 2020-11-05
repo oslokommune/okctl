@@ -75,7 +75,7 @@ prompt() {
 	if overridePs1 {
 		zshrcBuilder.WriteString(fmt.Sprintf("PS1=%s", ps1))
 	} else {
-		zshrcBuilder.WriteString(fmt.Sprint(`PS1="%F{red}%~ %f%F{blue}$(__git_ps1) %f%F{46}$(venv_ps1 ` + opts.Environment + `)%f $ "`))
+		zshrcBuilder.WriteString(fmt.Sprint(`PS1="%F{red}%~ %f%F{blue}($(venv_ps1 ` + opts.Environment + `)%f) $ "`))
 	}
 
 	zshrcBuilder.WriteString(`

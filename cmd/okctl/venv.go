@@ -36,7 +36,7 @@ export OKCTL_SHELL=/bin/bash
 okctl venv myenv
 `
 
-// nolint: funlen
+// nolint: gocyclo, funlen, gocognit
 func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 	opts := virtualenv.VirtualEnvironmentOpts{}
 
@@ -81,33 +81,26 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			//shellCmd, err := virtualenv.GetShellCmd(os.LookupEnv, storage.NewFileSystemStorage("/etc"))
-			//if err != nil {
-			//	return err
-			//}
-			//
-			//venv, err := virtualenv.GetVirtualEnvironment(&opts, os.Environ())
-			//if err != nil {
-			//	return err
-			//}
-			//
-			//switch {
-			//case virtualenv.ShellIsBash(shellCmd):
-			//	virtualenv.SetCmdPromptBash(&opts, venv)
-			//case virtualenv.ShellIsZsh(shellCmd):
-			//	zshrcTmpWriteStorage, err := setCmdPromptZsh(&opts, venv)
-			//	if err != nil {
-			//		return err
-			//	}
-			//
-			//	defer func() {
-			//		err = zshrcTmpWriteStorage.Clean()
+			//noPs1, noPs1Exists := os.LookupEnv("OKCTL_NO_PS1")
+			//if !noPs1Exists || (noPs1Exists && strings.ToLower(strings.TrimSpace(noPs1)) != "true") {
+			//	switch {
+			//	case virtualenv.ShellIsBash(shellCmd):
+			//		virtualenv.SetCmdPromptBash(&opts, venv)
+			//	case virtualenv.ShellIsZsh(shellCmd):
+			//		zshrcTmpWriteStorage, err := setCmdPromptZsh(&opts, venv)
 			//		if err != nil {
-			//			fmt.Println(err)
+			//			return err
 			//		}
-			//	}()
-			//default:
-			//	// We don't support any other shells for now.
+			//
+			//		defer func() {
+			//			err = zshrcTmpWriteStorage.Clean()
+			//			if err != nil {
+			//				fmt.Println(err)
+			//			}
+			//		}()
+			//	default:
+			//		// We don't support any other shells for now.
+			//	}
 			//}
 
 			currentUser, err := user.Current()
@@ -224,6 +217,8 @@ Your command prompt now shows
 {{ .CommandPrompt }}
 
 You can override the command prompt by setting the environment variable OKCTL_PS1 before running {{ .VenvCommand }}.
+Or, if you do not want {{ .VenvCommand }} to modify your command prompt at all, set the environment variable
+OKCTL_NO_PS1=true
 -----------------------------------------
 `
 

@@ -31,9 +31,9 @@ func (v *VirtualEnvironment) Getenv(key string) (string, bool) {
 
 // GetVirtualEnvironment merges the passed virtual environment with the OS environment variables, and returns them as
 // strings on the form "key=value".
-func GetVirtualEnvironment(opts *VirtualEnvironmentOpts, osEnvVars []string) (*VirtualEnvironment, error) {
+func GetVirtualEnvironment(opts VirtualEnvironmentOpts) (*VirtualEnvironment, error) {
+	osEnv := toMap(opts.OsEnvVars)
 	venv := getOkctlEnvVars(opts)
-	osEnv := toMap(osEnvVars)
 
 	addOkctlBinariesToPath(opts, osEnv)
 
@@ -49,7 +49,7 @@ func GetVirtualEnvironment(opts *VirtualEnvironmentOpts, osEnvVars []string) (*V
 
 // Returns a map with environmental variables, where the map's key is the environment variable's name and map's value is
 // the environment variable's value.
-func getOkctlEnvVars(opts *VirtualEnvironmentOpts) map[string]string {
+func getOkctlEnvVars(opts VirtualEnvironmentOpts) map[string]string {
 	appDir := opts.UserDataDir
 
 	kubeConfig := path.Join(appDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterKubeConfig)
@@ -85,7 +85,7 @@ func getOkctlEnvVars(opts *VirtualEnvironmentOpts) map[string]string {
 
 func toMap(slice []string) map[string]string {
 	m := make(map[string]string)
-
+77
 	for _, env := range slice {
 		split := strings.SplitN(env, "=", 2)
 		key := split[0]
@@ -96,7 +96,7 @@ func toMap(slice []string) map[string]string {
 	return m
 }
 
-func addOkctlBinariesToPath(opts *VirtualEnvironmentOpts, osEnv map[string]string) {
+func addOkctlBinariesToPath(opts VirtualEnvironmentOpts, osEnv map[string]string) {
 	okctlPath := calcOkctlPath(opts)
 
 	osPath, osPathExists := osEnv["PATH"]
@@ -108,7 +108,8 @@ func addOkctlBinariesToPath(opts *VirtualEnvironmentOpts, osEnv map[string]strin
 	}
 }
 
-func calcOkctlPath(opts *VirtualEnvironmentOpts) string {
+func calcOkctlPath(opts VirtualEnvironmentOpts) string {
+	// TODO don't add ps1 here, should be for later!
 	var okctlPath string
 	if opts.Ps1Dir == "" {
 		okctlPath = fmt.Sprintf("%s:%s", opts.KubectlBinaryDir, opts.AwsIamAuthenticatorDir)

@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/user"
 	"path"
 	"regexp"
 	"strings"
@@ -71,7 +72,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			opts, err = virtualenv.GetVirtualEnvironmentOptsWithPs1(o, ps1Dir)
+			opts, err = commands.GetVirtualEnvironmentOptsWithPs1(o, ps1Dir)
 
 			if err != nil {
 				return err
@@ -80,42 +81,64 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			shellCmd, err := virtualenv.GetShellCmd(os.LookupEnv, storage.NewFileSystemStorage("/etc"))
+			//shellCmd, err := virtualenv.GetShellCmd(os.LookupEnv, storage.NewFileSystemStorage("/etc"))
+			//if err != nil {
+			//	return err
+			//}
+			//
+			//venv, err := virtualenv.GetVirtualEnvironment(&opts, os.Environ())
+			//if err != nil {
+			//	return err
+			//}
+			//
+			//switch {
+			//case virtualenv.ShellIsBash(shellCmd):
+			//	virtualenv.SetCmdPromptBash(&opts, venv)
+			//case virtualenv.ShellIsZsh(shellCmd):
+			//	zshrcTmpWriteStorage, err := setCmdPromptZsh(&opts, venv)
+			//	if err != nil {
+			//		return err
+			//	}
+			//
+			//	defer func() {
+			//		err = zshrcTmpWriteStorage.Clean()
+			//		if err != nil {
+			//			fmt.Println(err)
+			//		}
+			//	}()
+			//default:
+			//	// We don't support any other shells for now.
+			//}
+
+			currentUser, err := user.Current()
+			if err != nil {
+			    return err
+			}
+
+			venv, err := virtualenv.New(os.LookupEnv, storage.NewFileSystemStorage("/etc"), currentUser.Username)
 			if err != nil {
 				return err
 			}
 
-			venv, err := virtualenv.GetVirtualEnvironment(&opts, os.Environ())
+			cmd, err := venv.Create(&opts)
 			if err != nil {
-				return err
+			    return err
 			}
 
-			switch {
-			case virtualenv.ShellIsBash(shellCmd):
-				virtualenv.SetCmdPromptBash(&opts, venv)
-			case virtualenv.ShellIsZsh(shellCmd):
-				zshrcTmpWriteStorage, err := setCmdPromptZsh(&opts, venv)
+			defer func() {
+				err = venv.Clean()
 				if err != nil {
-					return err
+				    fmt.Println(err)
 				}
+			}()
 
-				defer func() {
-					err = zshrcTmpWriteStorage.Clean()
-					if err != nil {
-						fmt.Println(err)
-					}
-				}()
-			default:
-				// We don't support any other shells for now.
-			}
-
-			err = printWelcomeMessage(o.Out, venv.Environ(), &opts)
+			err = printWelcomeMessage(o.Out, cmd.Env, &opts)
 			if err != nil {
 				return err
 			}
 
-			shell := exec.Command(shellCmd) //nolint:gosec
-			shell.Env = venv.Environ()
+			shell := exec.Command(cmd.ShellCommand) //nolint:gosec
+			shell.Env = cmd.Env
 			shell.Stdout = o.Out
 			shell.Stdin = o.In
 			shell.Stderr = o.Err

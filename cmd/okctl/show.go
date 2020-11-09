@@ -53,7 +53,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			opts, err = virtualenv.GetVirtualEnvironmentOpts(o)
+			opts, err = commands.GetVirtualEnvironmentOpts(o)
 
 			if err != nil {
 				return err

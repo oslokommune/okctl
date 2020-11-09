@@ -4,65 +4,8 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/mishudark/errors"
-	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
-	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
-	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/storage"
 )
-
-// GetVirtualEnvironmentOpts returns data needed to set up a virtual environment.
-func GetVirtualEnvironmentOpts(o *okctl.Okctl) (VirtualEnvironmentOpts, error) {
-	meta := o.RepoStateWithEnv.GetMetadata()
-	cluster := o.RepoStateWithEnv.GetCluster()
-
-	userDataDir, err := o.GetUserDataDir()
-	if err != nil {
-		return VirtualEnvironmentOpts{}, err
-	}
-
-	k, err := o.BinariesProvider.Kubectl(kubectl.Version)
-	if err != nil {
-		return VirtualEnvironmentOpts{}, err
-	}
-
-	a, err := o.BinariesProvider.AwsIamAuthenticator(awsiamauthenticator.Version)
-	if err != nil {
-		return VirtualEnvironmentOpts{}, err
-	}
-
-	opts := VirtualEnvironmentOpts{
-		Region:                 meta.Region,
-		AWSAccountID:           cluster.AWSAccountID,
-		Environment:            cluster.Environment,
-		Repository:             meta.Name,
-		ClusterName:            cluster.Name,
-		UserDataDir:            userDataDir,
-		Debug:                  o.Debug,
-		KubectlBinaryDir:       path.Dir(k.BinaryPath),
-		AwsIamAuthenticatorDir: path.Dir(a.BinaryPath),
-	}
-
-	err = opts.validate()
-	if err != nil {
-		return VirtualEnvironmentOpts{}, errors.E(err, "failed to validate show credentials options")
-	}
-
-	return opts, nil
-}
-
-// GetVirtualEnvironmentOptsWithPs1 returns data needed to set up a virtual environment. The ps1Dir must be a path,
-// as it will be added to the PATH later.
-func GetVirtualEnvironmentOptsWithPs1(o *okctl.Okctl, ps1Dir string) (VirtualEnvironmentOpts, error) {
-	opts, err := GetVirtualEnvironmentOpts(o)
-	if err != nil {
-		return VirtualEnvironmentOpts{}, err
-	}
-
-	opts.Ps1Dir = ps1Dir
-
-	return opts, nil
-}
 
 // CreatePs1ExecutableIfNotExists creates an executable file that returns "myenv:mynamespace", if it doesn't exist.
 // The file will be called in the PS1 environment variable.

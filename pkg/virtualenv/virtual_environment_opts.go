@@ -15,11 +15,12 @@ type VirtualEnvironmentOpts struct {
 	Debug                  bool
 	KubectlBinaryDir       string
 	AwsIamAuthenticatorDir string
+	OsEnvVars			   []string
 	Ps1Dir                 string
 }
 
 // Validate the inputs
-func (o *VirtualEnvironmentOpts) validate() error {
+func (o *VirtualEnvironmentOpts) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.Environment, validation.Required),
 		validation.Field(&o.AWSAccountID, validation.Required),

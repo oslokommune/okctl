@@ -1,4 +1,4 @@
-package virtualenv
+package commandlineprompter
 
 import (
 	"fmt"
@@ -24,7 +24,7 @@ func (e *CreateZshPromptWarning) Unwrap() error {
 
 // createPrompt makes zsh show a custom command prompt. It does so by creating a temporary .zshrc file.
 // The return value is this temporary file, which should be cleaned up after use.
-func (p *zshPrompter) createPrompt() (CommandLinePrompt, error) {
+func (p *zshPrompter) CreatePrompt() (CommandLinePrompt, error) {
 	if _, ok := p.osEnvVars["ZDOTDIR"]; ok {
 		// We're dependent on being able to set ZDOTDIR ourself to launch zsh to a temporary path with a custom .zshrc
 		// file. If the user has already set ZDOTDIR, we cannot do this. However, instead of returning an error, show

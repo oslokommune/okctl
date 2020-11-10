@@ -1,4 +1,4 @@
-package virtualenv
+package shellgetter
 
 import (
 	"bufio"
@@ -8,29 +8,29 @@ import (
 	"strings"
 )
 
-// shellType enumerates shells we recognize
-type shellType string
+// ShellType enumerates shells we recognize
+type ShellType string
 
 const (
 	// ShellTypeBash is a constant that identifies the Bash shell
-	ShellTypeBash shellType = "bash"
+	ShellTypeBash ShellType = "bash"
 
 	// ShellTypeBash is a constant that identifies the Zsh shell
-	ShellTypeZsh shellType = "zsh"
+	ShellTypeZsh ShellType = "zsh"
 
 	// ShellTypeBash is a constant that is identifies the case when an unknown shell is used
-	ShellTypeUnknown shellType = "unknown"
+	ShellTypeUnknown ShellType = "unknown"
 )
 
 type shell struct {
-	command   string
-	shellType shellType
+	Command   string
+	ShellType ShellType
 }
 
 // shellGetter provides an interface for detecting which shell the user uses
 type shellGetter interface {
 	// Get detects which shell is used
-	get() (shell, error)
+	Get() (shell, error)
 }
 
 type loginShellGetter struct {
@@ -39,7 +39,7 @@ type loginShellGetter struct {
 	currentUsername string
 }
 
-func newShellGetter(osEnvVars map[string]string, etcStorer storage.Storer, currentUsername string) *loginShellGetter {
+func NewShellGetter(osEnvVars map[string]string, etcStorer storage.Storer, currentUsername string) *loginShellGetter {
 	// TODO: Les OKCTL_SHELL. Hvis satt til noe fornuftig, lag en OkctlShellGetter. Hvis ikke, lag en loginShellGetter.
 	return &loginShellGetter{
 		envVars:         osEnvVars,
@@ -48,13 +48,13 @@ func newShellGetter(osEnvVars map[string]string, etcStorer storage.Storer, curre
 	}
 }
 
-func (sd *loginShellGetter) get() (shell, error) {
+func (sd *loginShellGetter) Get() (shell, error) {
 	cmd, err := sd.getShellCmd()
 	if err != nil {
 		return shell{}, fmt.Errorf("could not detect shell: %w", err)
 	}
 
-	var shellType shellType
+	var shellType ShellType
 	if sd.shellIsBash(cmd) {
 		shellType = ShellTypeBash
 	} else if sd.shellIsZsh(cmd) {
@@ -64,8 +64,8 @@ func (sd *loginShellGetter) get() (shell, error) {
 	}
 
 	return shell{
-		command:   cmd,
-		shellType: shellType,
+		Command:   cmd,
+		ShellType: shellType,
 	}, nil
 }
 

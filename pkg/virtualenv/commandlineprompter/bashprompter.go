@@ -1,4 +1,4 @@
-package virtualenv
+package commandlineprompter
 
 import "fmt"
 
@@ -7,7 +7,7 @@ type bashPrompter struct {
 	osEnvVars   map[string]string
 }
 
-func (p *bashPrompter) createPrompt() (CommandLinePrompt, error) {
+func (p *bashPrompter) CreatePrompt() (CommandLinePrompt, error) {
 	ps1, overridePs1 := p.osEnvVars["OKCTL_PS1"]
 	if overridePs1 {
 		p.osEnvVars["PROMPT_COMMAND"] = fmt.Sprintf("PS1=%s", ps1)

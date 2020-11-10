@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/virtualenv/commandlineprompter"
 	"io"
 	"os"
 	"os/exec"
@@ -109,7 +110,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 			okctlEnvVars := commands.GetOkctlEnvVars(credentialsOpts)
 			envVars := commands.MergeEnvVars(os.Environ(), okctlEnvVars)
 
-			venvOpts := virtualenv.VirtualEnvironmentOpts{
+			venvOpts := commandlineprompter.CommandLinePromptOpts{
 				OsEnvVars:       envVars,
 				EtcStorage:      storage.NewFileSystemStorage("/etc"),
 				UserDirStorage:  storage.NewFileSystemStorage(credentialsOpts.UserDataDir),

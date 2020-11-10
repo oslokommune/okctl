@@ -1,11 +1,11 @@
-package virtualenv
+package commandlineprompter
 
 import (
 	"github.com/oslokommune/okctl/pkg/storage"
 )
 
-// VirtualEnvironmentOpts contains the required inputs
-type VirtualEnvironmentOpts struct {
+// CommandLinePromptOpts contains the required inputs to create a command line prompt
+type CommandLinePromptOpts struct {
 	OsEnvVars       map[string]string
 	EtcStorage      storage.Storer
 	UserDirStorage  storage.Storer

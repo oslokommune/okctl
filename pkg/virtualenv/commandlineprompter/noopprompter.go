@@ -1,10 +1,10 @@
-package virtualenv
+package commandlineprompter
 
 type noopPrompter struct {
 	osEnvVars map[string]string
 }
 
-func (p *noopPrompter) createPrompt() (CommandLinePrompt, error) {
+func (p *noopPrompter) CreatePrompt() (CommandLinePrompt, error) {
 	return CommandLinePrompt{
 		Env: p.osEnvVars,
 	}, nil

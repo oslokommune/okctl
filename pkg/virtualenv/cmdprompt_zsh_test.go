@@ -1,13 +1,6 @@
 package virtualenv_test
 
-import (
-	"testing"
-
-	"github.com/bmizerany/assert"
-	"github.com/oslokommune/okctl/pkg/virtualenv"
-)
-
-func TestDetectZsh(t *testing.T) {
+/*func TestDetectZsh(t *testing.T) {
 	testCases := []struct {
 		name     string
 		shellCmd string
@@ -32,3 +25,4 @@ func TestDetectZsh(t *testing.T) {
 		})
 	}
 }
+*/

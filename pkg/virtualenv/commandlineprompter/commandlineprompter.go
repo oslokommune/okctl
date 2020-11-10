@@ -1,8 +1,9 @@
-package virtualenv
+package commandlineprompter
 
 import (
 	"fmt"
 	"github.com/oslokommune/okctl/pkg/storage"
+	"github.com/oslokommune/okctl/pkg/virtualenv/shellgetter"
 	"path"
 	"strings"
 )
@@ -15,10 +16,10 @@ type CommandLinePrompt struct {
 // commandLinePrompter provides an interface for configuring the command line prompt
 type commandLinePrompter interface {
 	// setPrompt returns a map of environment variables to be used in the shell that the prompt exists within
-	createPrompt() (CommandLinePrompt, error)
+	CreatePrompt() (CommandLinePrompt, error)
 }
 
-func newCommandLinePrompter(opts VirtualEnvironmentOpts, shellType shellType) (commandLinePrompter, error) {
+func NewCommandLinePrompter(opts CommandLinePromptOpts, shellType shellgetter.ShellType) (commandLinePrompter, error) {
 	osEnvVars := copyMap(opts.OsEnvVars)
 
 	noPs1, isSet := opts.OsEnvVars["OKCTL_NO_PS1"]
@@ -34,12 +35,12 @@ func newCommandLinePrompter(opts VirtualEnvironmentOpts, shellType shellType) (c
 	}
 
 	switch shellType {
-	case ShellTypeBash:
+	case shellgetter.ShellTypeBash:
 		return &bashPrompter{
 			environment: opts.Environment,
 			osEnvVars:   osEnvVars,
 		}, nil
-	case ShellTypeZsh:
+	case shellgetter.ShellTypeZsh:
 		return &zshPrompter{
 			userDirStorage: opts.UserDirStorage,
 			tmpStorer:      opts.TmpStorage,

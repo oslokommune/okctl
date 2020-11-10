@@ -1,22 +1,21 @@
 package virtualenv
 
-type BashPrompter struct {
+import "fmt"
 
+type bashPrompter struct {
+	environment string
+	osEnvVars   map[string]string
 }
 
-func (b BashPrompter) BuildPrompt(opts VirtualEnvironmentOpts) ([]byte, error) {
-	panic("implement me")
-}
+func (p *bashPrompter) createPrompt() (CommandLinePrompt, error) {
+	ps1, overridePs1 := p.osEnvVars["OKCTL_PS1"]
+	if overridePs1 {
+		p.osEnvVars["PROMPT_COMMAND"] = fmt.Sprintf("PS1=%s", ps1)
+	} else {
+		p.osEnvVars["PROMPT_COMMAND"] = fmt.Sprintf(`PS1="\[\e[0;31m\]\w \[\e[0;34m\](\$(venv_ps1 %s)) \[\e[0m\]\$ "`, p.environment)
+	}
 
-func (b BashPrompter) SetPrompt(bytes []byte) error {
-	panic("implement me")
+	return CommandLinePrompt{
+		Env: p.osEnvVars,
+	}, nil
 }
-
-func (b BashPrompter) Cleanup() error {
-	panic("implement me")
-}
-
-func newBashPrompter() *BashPrompter {
-	return &BashPrompter{}
-}
-

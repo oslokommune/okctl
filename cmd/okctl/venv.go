@@ -3,11 +3,9 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"os/user"
-	"path"
 	"regexp"
 	"strings"
 
@@ -38,7 +36,7 @@ okctl venv myenv
 
 // nolint: gocyclo, funlen, gocognit
 func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
-	opts := virtualenv.VirtualEnvironmentOpts{}
+	credentialsOpts := commands.CredentialsOpts{}
 
 	cmd := &cobra.Command{
 		Use:   "venv ENV",
@@ -62,17 +60,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			userDataDir, err := o.GetUserDataDir()
-			if err != nil {
-				return err
-			}
-
-			ps1Dir, err := createPs1ExecutableIfNotExists(userDataDir)
-			if err != nil {
-				return err
-			}
-
-			opts, err = commands.GetVirtualEnvironmentOptsWithPs1(o, ps1Dir)
+			credentialsOpts, err = commands.GetCredentialsOpts(o)
 
 			if err != nil {
 				return err
@@ -81,67 +69,94 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			//noPs1, noPs1Exists := os.LookupEnv("OKCTL_NO_PS1")
-			//if !noPs1Exists || (noPs1Exists && strings.ToLower(strings.TrimSpace(noPs1)) != "true") {
-			//	switch {
-			//	case virtualenv.ShellIsBash(shellCmd):
-			//		virtualenv.SetCmdPromptBash(&opts, venv)
-			//	case virtualenv.ShellIsZsh(shellCmd):
-			//		zshrcTmpWriteStorage, err := setCmdPromptZsh(&opts, venv)
-			//		if err != nil {
-			//			return err
-			//		}
-			//
-			//		defer func() {
-			//			err = zshrcTmpWriteStorage.Clean()
-			//			if err != nil {
-			//				fmt.Println(err)
-			//			}
-			//		}()
-			//	default:
-			//		// We don't support any other shells for now.
-			//	}
-			//}
-
 			currentUser, err := user.Current()
-			if err != nil {
-			    return err
-			}
-
-			venv, err := virtualenv.New(os.LookupEnv, storage.NewFileSystemStorage("/etc"), currentUser.Username)
 			if err != nil {
 				return err
 			}
 
-			cmd, err := venv.Create(&opts)
+			// 10 SHOW START
+			// OG: Samme issue videre for å avgjøre hvilken virtual environment som skal lages
+			// Sette PATH=$PATH:/path/kubectl:/path/awsIam
+			// 10 SHOW END
+
+			// AGH: bør kanskje lage shell getter her, fordi det er to mulige veier
+			// alt1: hente shell fra OKCTL_SHELL
+			// alt2: hente shell fra /etc/passwd
+
+			// Lese OKCTL_NO_PS1. Hvis ikke satt:
+			//
+			// Lag ~/.okctl/venv_ps1 fil hvis ikke finnes
+			// For begge: Sett PATH=$PATH:/path/to/venv_ps1_dir
+			//
+			// 1. for bash:
+			//   Sette PROMPT_COMMAND = OKCTL_PS1 eller default ps1
+			// 2. for zsh
+			//   Skrive /tmp/.zshrc temp fil
+			//	   Hvis ZDOTDIR finnes
+			//	     [NEI] write: source ZDOTDIR/.zshrc - funker ikke, for da kan vi ikke sette ZDOTDIR selv
+			//       VURDER: Skriv "WARNING: Could not set command prompt (PS1) because ZDOTDIR is already set.
+			//       Either start okctl venv with no ZDOTDIR set, or set environment variable OKCTL_NO_PS1=true to get
+			//       rid of this message.
+			//       og drit å gjør noe (dvs, ikke sett ZDOTDIR, og ikke skriv til /tmp/.zshrc heller)
+			//
+			//     Else if ~/.zshrc finnes
+			//       write: source ~/.zshrc
+			//     ++, se cmdprompt_zsh.go
+
+			//   Sette ZDOTDIR = OKCTL_PS1 eller default ps1
+			//
+
+			okctlEnvVars := commands.GetOkctlEnvVars(credentialsOpts)
+			envVars := commands.MergeEnvVars(os.Environ(), okctlEnvVars)
+
+			venvOpts := virtualenv.VirtualEnvironmentOpts{
+				OsEnvVars:       envVars,
+				EtcStorage:      storage.NewFileSystemStorage("/etc"),
+				UserDirStorage:  storage.NewFileSystemStorage(credentialsOpts.UserDataDir),
+				TmpStorage:      nil,
+				Environment:     credentialsOpts.Environment,
+				CurrentUsername: currentUser.Username,
+			}
+
+			tmpStorage, err := storage.NewTemporaryStorage()
 			if err != nil {
-			    return err
+				return err
+			}
+
+			venvOpts.TmpStorage = tmpStorage
+
+			venv, err := virtualenv.Create(venvOpts)
+			if err != nil {
+				return fmt.Errorf("could not create virtual environment: %w", err)
 			}
 
 			defer func() {
-				err = venv.Clean()
+				err = tmpStorage.Clean()
 				if err != nil {
-				    fmt.Println(err)
+					fmt.Println(err)
 				}
 			}()
 
-			err = printWelcomeMessage(o.Out, cmd.Env, &opts)
+			err = printWelcomeMessage(o.Out, venv, credentialsOpts)
 			if err != nil {
-				return err
+				return fmt.Errorf("could not print welcome message: %w", err)
 			}
 
-			shell := exec.Command(cmd.ShellCommand) //nolint:gosec
-			shell.Env = cmd.Env
+			shell := exec.Command(venv.ShellCommand) //nolint:gosec
+			shell.Env = venv.Environ()
 			shell.Stdout = o.Out
 			shell.Stdin = o.In
 			shell.Stderr = o.Err
 
 			err = shell.Run()
 			if err != nil {
-				log.Fatalf("Command failed: %v", err)
+				return fmt.Errorf("could not run shell: %w", err)
 			}
 
-			fmt.Println("Exiting okctl virtual environment")
+			_, err = fmt.Fprintln(o.Out, "Exiting okctl virtual environment")
+			if err != nil {
+				return fmt.Errorf("could not print message: %w", err)
+			}
 
 			return nil
 		},
@@ -150,55 +165,26 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 	return cmd
 }
 
-func setCmdPromptZsh(opts *virtualenv.VirtualEnvironmentOpts, venv *virtualenv.VirtualEnvironment) (*storage.TemporaryStorage, error) {
-	userHomeDir, err := os.UserHomeDir()
-	if err != nil {
-		return nil, fmt.Errorf("could not get home directory: %w", err)
-	}
-
-	zshrcReadStorage := storage.NewFileSystemStorage(userHomeDir)
-
-	zshrcTmpWriteStorage, err := storage.NewTemporaryStorage()
-	if err != nil {
-		return nil, fmt.Errorf("could not create temporary storage: %w", err)
-	}
-
-	err = virtualenv.SetCmdPromptZsh(opts, venv, zshrcReadStorage, zshrcTmpWriteStorage)
-	if err != nil {
-		return nil, fmt.Errorf("could not set command prompt for virtul environment: %w", err)
-	}
-
-	return zshrcTmpWriteStorage, nil
-}
-
-func createPs1ExecutableIfNotExists(userDataDir string) (string, error) {
-	store := storage.NewFileSystemStorage(userDataDir)
-
-	ps1Dirname, err := virtualenv.CreatePs1ExecutableIfNotExists(store)
-	if err != nil {
-		return "", err
-	}
-
-	return path.Join(userDataDir, ps1Dirname), nil
-}
-
 type venvWelcomeMessage struct {
 	Environment             string
 	KubectlPath             string
 	AwsIamAuthenticatorPath string
 	CommandPrompt           string
 	VenvCommand             string
+	Warning                 string
 }
 
-func printWelcomeMessage(stdout io.Writer, env []string, opts *virtualenv.VirtualEnvironmentOpts) error {
-	whichKubectl, err := getWhichWithEnv("kubectl", env)
+func printWelcomeMessage(stdout io.Writer, venv *virtualenv.VirtualEnvironment, opts commands.CredentialsOpts) error {
+	environ := venv.Environ()
+
+	whichKubectl, err := getWhichWithEnv("kubectl", environ)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not get executable 'kubectl': %w", err)
 	}
 
-	whichAwsIamAuthenticator, err := getWhichWithEnv("aws-iam-authenticator", env)
+	whichAwsIamAuthenticator, err := getWhichWithEnv("aws-iam-authenticator", environ)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not get executable 'aws-iam-authenticator': %w", err)
 	}
 
 	params := venvWelcomeMessage{
@@ -207,6 +193,7 @@ func printWelcomeMessage(stdout io.Writer, env []string, opts *virtualenv.Virtua
 		AwsIamAuthenticatorPath: whichAwsIamAuthenticator,
 		CommandPrompt:           "<directory> <okctl environment:kubernetes namespace>",
 		VenvCommand:             aurora.Green("okctl venv").String(),
+		Warning:                 venv.Warning,
 	}
 	template := `----------------- OKCTL -----------------
 Environment: {{ .Environment }}
@@ -219,8 +206,13 @@ Your command prompt now shows
 You can override the command prompt by setting the environment variable OKCTL_PS1 before running {{ .VenvCommand }}.
 Or, if you do not want {{ .VenvCommand }} to modify your command prompt at all, set the environment variable
 OKCTL_NO_PS1=true
------------------------------------------
 `
+
+	if len(venv.Warning) > 0 {
+		template += "\n{{ .Warning }}\n"
+	}
+
+	template += "-----------------------------------------\n"
 
 	msg, err := commands.GoTemplateToString(template, params)
 	if err != nil {

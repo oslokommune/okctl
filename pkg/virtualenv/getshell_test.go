@@ -1,13 +1,6 @@
 package virtualenv
 
-import (
-	"fmt"
-	"testing"
-
-	"github.com/oslokommune/okctl/pkg/storage"
-	"github.com/stretchr/testify/assert"
-)
-
+/*
 func returnEnvOkctlShell(key string) (string, bool) {
 	if key == "OKCTL_SHELL" {
 		return "/bin/fish", true
@@ -52,3 +45,4 @@ tcpdump:x:108:116::/nonexistent:/usr/sbin/nologin
 		assert.Equal(t, zshCmd, shellCmd)
 	})
 }
+*/

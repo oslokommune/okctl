@@ -39,7 +39,7 @@ type loginShellGetter struct {
 	currentUsername string
 }
 
-func NewShellGetter(osEnvVars map[string]string, etcStorer storage.Storer, currentUsername string) *loginShellGetter {
+func New(osEnvVars map[string]string, etcStorer storage.Storer, currentUsername string) *loginShellGetter {
 	// TODO: Les OKCTL_SHELL. Hvis satt til noe fornuftig, lag en OkctlShellGetter. Hvis ikke, lag en loginShellGetter.
 	return &loginShellGetter{
 		envVars:         osEnvVars,

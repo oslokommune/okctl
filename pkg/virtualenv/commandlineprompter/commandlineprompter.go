@@ -19,7 +19,7 @@ type commandLinePrompter interface {
 	CreatePrompt() (CommandLinePrompt, error)
 }
 
-func NewCommandLinePrompter(opts CommandLinePromptOpts, shellType shellgetter.ShellType) (commandLinePrompter, error) {
+func New(opts CommandLinePromptOpts, shellType shellgetter.ShellType) (commandLinePrompter, error) {
 	osEnvVars := copyMap(opts.OsEnvVars)
 
 	noPs1, isSet := opts.OsEnvVars["OKCTL_NO_PS1"]

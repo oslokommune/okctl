@@ -75,38 +75,6 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			// 10 SHOW START
-			// OG: Samme issue videre for å avgjøre hvilken virtual environment som skal lages
-			// Sette PATH=$PATH:/path/kubectl:/path/awsIam
-			// 10 SHOW END
-
-			// AGH: bør kanskje lage shell getter her, fordi det er to mulige veier
-			// alt1: hente shell fra OKCTL_SHELL
-			// alt2: hente shell fra /etc/passwd
-
-			// Lese OKCTL_NO_PS1. Hvis ikke satt:
-			//
-			// Lag ~/.okctl/venv_ps1 fil hvis ikke finnes
-			// For begge: Sett PATH=$PATH:/path/to/venv_ps1_dir
-			//
-			// 1. for bash:
-			//   Sette PROMPT_COMMAND = OKCTL_PS1 eller default ps1
-			// 2. for zsh
-			//   Skrive /tmp/.zshrc temp fil
-			//	   Hvis ZDOTDIR finnes
-			//	     [NEI] write: source ZDOTDIR/.zshrc - funker ikke, for da kan vi ikke sette ZDOTDIR selv
-			//       VURDER: Skriv "WARNING: Could not set command prompt (PS1) because ZDOTDIR is already set.
-			//       Either start okctl venv with no ZDOTDIR set, or set environment variable OKCTL_NO_PS1=true to get
-			//       rid of this message.
-			//       og drit å gjør noe (dvs, ikke sett ZDOTDIR, og ikke skriv til /tmp/.zshrc heller)
-			//
-			//     Else if ~/.zshrc finnes
-			//       write: source ~/.zshrc
-			//     ++, se cmdprompt_zsh.go
-
-			//   Sette ZDOTDIR = OKCTL_PS1 eller default ps1
-			//
-
 			okctlEnvVars := commands.GetOkctlEnvVars(credentialsOpts)
 			envVars := commands.MergeEnvVars(os.Environ(), okctlEnvVars)
 
@@ -126,7 +94,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 
 			venvOpts.TmpStorage = tmpStorage
 
-			venv, err := virtualenv.Create(venvOpts)
+			venv, err := virtualenv.CreateVirtualEnvironment(venvOpts)
 			if err != nil {
 				return fmt.Errorf("could not create virtual environment: %w", err)
 			}
@@ -178,12 +146,12 @@ type venvWelcomeMessage struct {
 func printWelcomeMessage(stdout io.Writer, venv *virtualenv.VirtualEnvironment, opts commands.CredentialsOpts) error {
 	environ := venv.Environ()
 
-	whichKubectl, err := getWhichWithEnv("kubectl", environ)
+	whichKubectl, err := getWhich("kubectl", environ)
 	if err != nil {
 		return fmt.Errorf("could not get executable 'kubectl': %w", err)
 	}
 
-	whichAwsIamAuthenticator, err := getWhichWithEnv("aws-iam-authenticator", environ)
+	whichAwsIamAuthenticator, err := getWhich("aws-iam-authenticator", environ)
 	if err != nil {
 		return fmt.Errorf("could not get executable 'aws-iam-authenticator': %w", err)
 	}
@@ -228,7 +196,7 @@ OKCTL_NO_PS1=true
 	return nil
 }
 
-func getWhichWithEnv(cmd string, env []string) (string, error) {
+func getWhich(cmd string, env []string) (string, error) {
 	c := exec.Command("which", cmd) //nolint:gosec
 	c.Env = env
 

@@ -31,21 +31,15 @@ func (v *VirtualEnvironment) Environ() []string {
 	return venvs
 }
 
-// Getenv returns the environment variable with the given key, and a bool indicating if the key was found or not.
-func (v *VirtualEnvironment) Getenv(key string) (string, bool) {
-	val, hasKey := v.env[key]
-	return val, hasKey
-}
-
 // New returns a new virtual environment
-func Create(opts commandlineprompter.CommandLinePromptOpts) (*VirtualEnvironment, error) {
-	lsg := shellgetter.NewShellGetter(opts.OsEnvVars, opts.EtcStorage, opts.CurrentUsername)
-	shell, err := lsg.Get()
+func CreateVirtualEnvironment(opts commandlineprompter.CommandLinePromptOpts) (*VirtualEnvironment, error) {
+	sg := shellgetter.New(opts.OsEnvVars, opts.EtcStorage, opts.CurrentUsername)
+	shell, err := sg.Get()
 	if err != nil {
 		return nil, fmt.Errorf("could not get shell command: %w", err)
 	}
 
-	prompter, err := commandlineprompter.NewCommandLinePrompter(opts, shell.ShellType)
+	prompter, err := commandlineprompter.New(opts, shell.ShellType)
 	if err != nil {
 		return nil, fmt.Errorf("could not create command line prompter: %w", err)
 	}

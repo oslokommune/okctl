@@ -7,10 +7,10 @@ import (
 )
 
 type zshPrompter struct {
-	userDirStorage storage.Storer
-	tmpStorer      storage.Storer
-	osEnvVars      map[string]string
-	environment    string
+	userHomeDirStorage storage.Storer
+	tmpStorer          storage.Storer
+	osEnvVars          map[string]string
+	environment        string
 }
 
 type CreateZshPromptWarning struct {
@@ -31,7 +31,7 @@ func (p *zshPrompter) CreatePrompt() (CommandLinePrompt, error) {
 		// this warning to the user.
 		msg := "WARNING: Could not set command prompt (PS1) because ZDOTDIR is already set. "
 		msg += "Either start okctl venv with no ZDOTDIR set, or set environment variable OKCTL_NO_PS1=true to get "
-		msg += "rid of this message"
+		msg += "rid of this message."
 
 		return CommandLinePrompt{
 			Warning: msg,
@@ -74,7 +74,7 @@ func (p *zshPrompter) writeZshrcFile() (string, error) {
 func (p *zshPrompter) createZshrcContents() (string, error) {
 	zshrcBuilder := strings.Builder{}
 
-	zshrcExists, err := p.userDirStorage.Exists(".zshrc")
+	zshrcExists, err := p.userHomeDirStorage.Exists(".zshrc")
 	if err != nil {
 		return "", err
 	}

@@ -6,10 +6,11 @@ import (
 
 // CommandLinePromptOpts contains the required inputs to create a command line prompt
 type CommandLinePromptOpts struct {
-	OsEnvVars       map[string]string
-	EtcStorage      storage.Storer
-	UserDirStorage  storage.Storer
-	TmpStorage      storage.Storer
-	Environment     string
-	CurrentUsername string
+	OsEnvVars          map[string]string
+	EtcStorage         storage.Storer
+	UserDirStorage     storage.Storer
+	UserHomeDirStorage storage.Storer
+	TmpStorage         storage.Storer
+	Environment        string
+	CurrentUsername    string
 }

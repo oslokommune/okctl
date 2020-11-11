@@ -42,10 +42,10 @@ func New(opts CommandLinePromptOpts, shellType shellgetter.ShellType) (commandLi
 		}, nil
 	case shellgetter.ShellTypeZsh:
 		return &zshPrompter{
-			userDirStorage: opts.UserDirStorage,
-			tmpStorer:      opts.TmpStorage,
-			osEnvVars:      osEnvVars,
-			environment:    opts.Environment,
+			userHomeDirStorage: opts.UserHomeDirStorage,
+			tmpStorer:          opts.TmpStorage,
+			osEnvVars:          osEnvVars,
+			environment:        opts.Environment,
 		}, nil
 	default:
 		return &noopPrompter{

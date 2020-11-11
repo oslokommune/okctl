@@ -72,19 +72,25 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 		RunE: func(_ *cobra.Command, args []string) error {
 			currentUser, err := user.Current()
 			if err != nil {
-				return err
+				return fmt.Errorf("could not get current user: %w", err)
 			}
 
 			okctlEnvVars := commands.GetOkctlEnvVars(credentialsOpts)
 			envVars := commands.MergeEnvVars(os.Environ(), okctlEnvVars)
 
+			homeDir, err := os.UserHomeDir()
+			if err != nil {
+				return fmt.Errorf("could not get user's home directory: %w", err)
+			}
+
 			venvOpts := commandlineprompter.CommandLinePromptOpts{
-				OsEnvVars:       envVars,
-				EtcStorage:      storage.NewFileSystemStorage("/etc"),
-				UserDirStorage:  storage.NewFileSystemStorage(credentialsOpts.UserDataDir),
-				TmpStorage:      nil,
-				Environment:     credentialsOpts.Environment,
-				CurrentUsername: currentUser.Username,
+				OsEnvVars:          envVars,
+				EtcStorage:         storage.NewFileSystemStorage("/etc"),
+				UserDirStorage:     storage.NewFileSystemStorage(credentialsOpts.UserDataDir),
+				UserHomeDirStorage: storage.NewFileSystemStorage(homeDir),
+				TmpStorage:         nil,
+				Environment:        credentialsOpts.Environment,
+				CurrentUsername:    currentUser.Username,
 			}
 
 			tmpStorage, err := storage.NewTemporaryStorage()

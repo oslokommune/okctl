@@ -35,6 +35,7 @@ func (v *VirtualEnvironment) Environ() []string {
 func CreateVirtualEnvironment(opts commandlineprompter.CommandLinePromptOpts) (*VirtualEnvironment, error) {
 	sg := shellgetter.New(opts.OsEnvVars, opts.EtcStorage, opts.CurrentUsername)
 	shell, err := sg.Get()
+
 	if err != nil {
 		return nil, fmt.Errorf("could not get shell command: %w", err)
 	}

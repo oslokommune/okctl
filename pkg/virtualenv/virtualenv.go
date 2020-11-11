@@ -37,7 +37,7 @@ func CreateVirtualEnvironment(opts commandlineprompter.CommandLinePromptOpts) (*
 	shell, err := sg.Get()
 
 	if err != nil {
-		return nil, fmt.Errorf("could not get shell command: %w", err)
+		return nil, fmt.Errorf("could not get shell: %w", err)
 	}
 
 	prompter, err := commandlineprompter.New(opts, shell.ShellType)

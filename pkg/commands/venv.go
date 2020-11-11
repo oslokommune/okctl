@@ -39,7 +39,7 @@ func (o *CredentialsOpts) Validate() error {
 	)
 }
 
-// GetCredentialsOpts returns data needed to set up a virtual environment.
+// GetCredentialsOpts returns data needed to connect to an okctl cluster
 func GetCredentialsOpts(o *okctl.Okctl) (CredentialsOpts, error) {
 	meta := o.RepoStateWithEnv.GetMetadata()
 	cluster := o.RepoStateWithEnv.GetCluster()

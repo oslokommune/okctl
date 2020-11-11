@@ -69,21 +69,23 @@ func setPs1(userDirStorage storage.Storer, osEnvVars map[string]string) error {
 	return nil
 }
 
+const (
+	Ps1Dir      = "venv"
+	Ps1Filename = "venv_ps1"
+)
+
 // createPs1ExecutableIfNotExists creates an executable file that returns "myenv:mynamespace", if it doesn't exist.
 // The file will be called in the PS1 environment variable.
 //
 // This function returns the path to the directory containing the file.
 func createPs1ExecutableIfNotExists(store storage.Storer) (string, error) {
-	ps1Filename := "venv_ps1"
-	ps1Dir := "venv"
-
-	ps1FileExists, err := store.Exists(path.Join(ps1Dir, ps1Filename))
+	ps1FileExists, err := store.Exists(path.Join(Ps1Dir, Ps1Filename))
 	if err != nil {
 		return "", fmt.Errorf("couldn't create PS1 helper executable: %w", err)
 	}
 
 	if !ps1FileExists {
-		ps1File, err := store.Create(ps1Dir, ps1Filename, 0o744)
+		ps1File, err := store.Create(Ps1Dir, Ps1Filename, 0o744)
 		if err != nil {
 			return "", err
 		}
@@ -107,7 +109,7 @@ echo -e "$ENV:$K8S_NAMESPACE"
 		}
 	}
 
-	return path.Join(store.Path(), ps1Dir), nil // TODO check if actually works
+	return path.Join(store.Path(), Ps1Dir), nil // TODO check if actually works
 }
 
 func copyMap(m map[string]string) map[string]string {

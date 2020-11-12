@@ -2,10 +2,11 @@ package commandlineprompter
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/storage"
-	"github.com/oslokommune/okctl/pkg/virtualenv/shellgetter"
 	"path"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/storage"
+	"github.com/oslokommune/okctl/pkg/virtualenv/shellgetter"
 )
 
 type CommandLinePrompt struct {

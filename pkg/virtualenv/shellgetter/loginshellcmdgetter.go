@@ -4,8 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/storage"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/storage"
 )
 
 type loginShellCmdGetter struct {

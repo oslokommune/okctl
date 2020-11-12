@@ -2,8 +2,9 @@ package commandlineprompter
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/storage"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/storage"
 )
 
 type zshPrompter struct {

@@ -2,8 +2,9 @@ package shellgetter
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/storage"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/storage"
 )
 
 // ShellType enumerates shells we recognize

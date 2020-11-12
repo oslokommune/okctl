@@ -2,6 +2,10 @@ package commands
 
 import (
 	"fmt"
+	"os"
+	"path"
+	"strings"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
@@ -9,9 +13,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/helm"
 	"github.com/oslokommune/okctl/pkg/okctl"
-	"os"
-	"path"
-	"strings"
 )
 
 type CredentialsOpts struct {

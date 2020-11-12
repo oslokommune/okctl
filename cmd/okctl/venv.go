@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/virtualenv/commandlineprompter"
 	"io"
 	"os"
 	"os/exec"
 	"os/user"
 	"regexp"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/virtualenv/commandlineprompter"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/logrusorgru/aurora"

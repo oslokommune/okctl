@@ -2,26 +2,32 @@ package virtualenv_test
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/storage"
-	"github.com/oslokommune/okctl/pkg/virtualenv/commandlineprompter"
-	"github.com/stretchr/testify/assert"
+	"path"
+	"sort"
 	"strings"
 	"testing"
+
+	"github.com/oslokommune/okctl/pkg/storage"
+	"github.com/oslokommune/okctl/pkg/virtualenv/commandlineprompter"
+	"github.com/sebdah/goldie/v2"
+	"github.com/stretchr/testify/assert"
 )
 
 type testHelper struct {
 	t               *testing.T
 	ps1Dir          string
 	currentUsername string
+	tmpBasedir      string
 }
 
 func NewTestHelper(t *testing.T) *testHelper {
-	currentUsername := "mickeymouse"
+	const currentUsername = "mickeymouse"
 
 	return &testHelper{
 		t:               t,
 		ps1Dir:          fmt.Sprintf("/home/%s/.okctl/%s", currentUsername, commandlineprompter.Ps1Dir),
 		currentUsername: currentUsername,
+		tmpBasedir:      "/tmp/okctl34796",
 	}
 }
 
@@ -46,7 +52,7 @@ type userDirStorage struct {
 	basePath string
 }
 
-func (h *testHelper) CreateUserDirStorage(basepath string) *userDirStorage {
+func (h *testHelper) createUserDirStorage(basepath string) *userDirStorage {
 	s := storage.NewEphemeralStorage()
 	s.BasePath = basepath
 
@@ -56,6 +62,31 @@ func (h *testHelper) CreateUserDirStorage(basepath string) *userDirStorage {
 	}
 }
 
+func (h *testHelper) createTmpStorage() *storage.EphemeralStorage {
+	s := storage.NewEphemeralStorage()
+	s.BasePath = h.tmpBasedir
+
+	return s
+}
+
+func (h *testHelper) createUserHomeDirStorage(createZshrcFile bool) (*storage.EphemeralStorage, error) {
+	s := storage.NewEphemeralStorage()
+
+	if createZshrcFile {
+		file, err := s.Create(".", ".zshrc", 0o644)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't create .zshrc file: %w", err)
+		}
+
+		err = file.Close()
+		if err != nil {
+			return nil, fmt.Errorf("couldn't close .zshrc file: %w", err)
+		}
+	}
+
+	return s, nil
+}
+
 func (h *testHelper) toSlice(m map[string]string) []string {
 	s := make([]string, 0)
 
@@ -63,6 +94,7 @@ func (h *testHelper) toSlice(m map[string]string) []string {
 		s = append(s, fmt.Sprintf("%s=%s", k, v))
 	}
 
+	sort.Strings(s)
 	return s
 }
 
@@ -77,4 +109,13 @@ func (h *testHelper) toMap(slice []string) map[string]string {
 	}
 
 	return m
+}
+
+func (h *testHelper) assertGoldenVenvPs1(t *testing.T, opts commandlineprompter.CommandLinePromptOpts) {
+	// Make sure executable venv_ps1 is a file that exists on the PATH
+	content, err := opts.UserDirStorage.ReadAll(path.Join(commandlineprompter.Ps1Dir, commandlineprompter.Ps1Filename))
+	assert.Nil(t, err)
+
+	g := goldie.New(t)
+	g.Assert(t, "venv_ps1", content)
 }

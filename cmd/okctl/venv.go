@@ -2,14 +2,20 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"io"
 	"os"
 	"os/exec"
+	"os/user"
 	"regexp"
+	"strings"
+
+	"github.com/oslokommune/okctl/pkg/virtualenv/commandlineprompter"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/logrusorgru/aurora"
+	"github.com/oslokommune/okctl/pkg/commands"
+	"github.com/oslokommune/okctl/pkg/storage"
 
-	cmd "github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/virtualenv"
 	"github.com/spf13/cobra"
@@ -30,9 +36,9 @@ export OKCTL_SHELL=/bin/bash
 okctl venv myenv
 `
 
-// nolint: funlen
+// nolint: gocyclo, funlen, gocognit
 func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
-	opts := virtualenv.VirtualEnvironmentOpts{}
+	okctlEnvironment := commands.OkctlEnvironment{}
 
 	cmd := &cobra.Command{
 		Use:   "venv ENV",
@@ -56,7 +62,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			opts, err = virtualenv.GetVirtualEnvironmentOpts(o)
+			okctlEnvironment, err = commands.GetOkctlEnvironment(o)
 
 			if err != nil {
 				return err
@@ -65,30 +71,68 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			shell := exec.Command(cmd.GetShell(os.LookupEnv)) //nolint:gosec
+			currentUser, err := user.Current()
+			if err != nil {
+				return fmt.Errorf("could not get current user: %w", err)
+			}
 
-			venv, err := virtualenv.GetVirtualEnvironment(&opts, os.Environ())
+			okctlEnvVars := commands.GetOkctlEnvVars(okctlEnvironment)
+			envVars := commands.MergeEnvVars(os.Environ(), okctlEnvVars)
+
+			homeDir, err := os.UserHomeDir()
+			if err != nil {
+				return fmt.Errorf("could not get user's home directory: %w", err)
+			}
+
+			venvOpts := commandlineprompter.CommandLinePromptOpts{
+				OsEnvVars:          envVars,
+				EtcStorage:         storage.NewFileSystemStorage("/etc"),
+				UserDirStorage:     storage.NewFileSystemStorage(okctlEnvironment.UserDataDir),
+				UserHomeDirStorage: storage.NewFileSystemStorage(homeDir),
+				TmpStorage:         nil,
+				Environment:        okctlEnvironment.Environment,
+				CurrentUsername:    currentUser.Username,
+			}
+
+			tmpStorage, err := storage.NewTemporaryStorage()
 			if err != nil {
 				return err
 			}
 
-			err = printExecutables(venv)
+			venvOpts.TmpStorage = tmpStorage
+
+			venv, err := virtualenv.CreateVirtualEnvironment(venvOpts)
 			if err != nil {
-				return err
+				return fmt.Errorf("could not create virtual environment: %w", err)
 			}
 
-			shell.Env = venv
+			defer func() {
+				err = tmpStorage.Clean()
+				if err != nil {
+					fmt.Println(err)
+				}
+			}()
+
+			err = printWelcomeMessage(o.Out, venv, okctlEnvironment)
+			if err != nil {
+				return fmt.Errorf("could not print welcome message: %w", err)
+			}
+
+			shell := exec.Command(venv.ShellCommand) //nolint:gosec
+			shell.Env = venv.Environ()
 			shell.Stdout = o.Out
 			shell.Stdin = o.In
 			shell.Stderr = o.Err
 
 			err = shell.Run()
-
 			if err != nil {
-				log.Fatalf("Command failed: %v", err)
+				return fmt.Errorf("could not run shell: %w", err)
 			}
 
-			fmt.Println("Exiting okctl virtual environment")
+			_, err = fmt.Fprintln(o.Out, "Exiting okctl virtual environment")
+			if err != nil {
+				return fmt.Errorf("could not print message: %w", err)
+			}
 
 			return nil
 		},
@@ -97,27 +141,79 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 	return cmd
 }
 
-func printExecutables(env []string) error {
-	whichKubectl, err := getWhich("kubectl", env)
+type venvWelcomeMessage struct {
+	Environment             string
+	KubectlPath             string
+	AwsIamAuthenticatorPath string
+	CommandPrompt           string
+	VenvCommand             string
+	Warning                 string
+}
+
+func printWelcomeMessage(stdout io.Writer, venv *virtualenv.VirtualEnvironment, opts commands.OkctlEnvironment) error {
+	environ := venv.Environ()
+
+	whichKubectl, err := getWhich("kubectl", environ)
+	if err != nil {
+		return fmt.Errorf("could not get executable 'kubectl': %w", err)
+	}
+
+	whichAwsIamAuthenticator, err := getWhich("aws-iam-authenticator", environ)
+	if err != nil {
+		return fmt.Errorf("could not get executable 'aws-iam-authenticator': %w", err)
+	}
+
+	params := venvWelcomeMessage{
+		Environment:             opts.Environment,
+		KubectlPath:             whichKubectl,
+		AwsIamAuthenticatorPath: whichAwsIamAuthenticator,
+		CommandPrompt:           "<directory> <okctl environment:kubernetes namespace>",
+		VenvCommand:             aurora.Green("okctl venv").String(),
+		Warning:                 venv.Warning,
+	}
+	template := `----------------- OKCTL -----------------
+Environment: {{ .Environment }}
+Using kubectl: {{ .KubectlPath }}
+Using aws-iam-authenticator: {{ .AwsIamAuthenticatorPath }}
+
+Your command prompt now shows
+{{ .CommandPrompt }}
+
+You can override the command prompt by setting the environment variable OKCTL_PS1 before running {{ .VenvCommand }}.
+Or, if you do not want {{ .VenvCommand }} to modify your command prompt at all, set the environment variable
+OKCTL_NO_PS1=true
+`
+
+	if len(venv.Warning) > 0 {
+		template += "\n{{ .Warning }}\n"
+	}
+
+	template += "-----------------------------------------\n"
+
+	msg, err := commands.GoTemplateToString(template, params)
 	if err != nil {
 		return err
 	}
 
-	whichAwsIamAuthenticator, err := getWhich("aws-iam-authenticator", env)
+	_, err = fmt.Fprint(stdout, msg)
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("Using kubectl: %s", whichKubectl)
-	fmt.Printf("Using aws-iam-authenticator: %s", whichAwsIamAuthenticator)
-	fmt.Println()
 
 	return nil
 }
 
-func getWhich(cmd string, env []string) ([]byte, error) {
+func getWhich(cmd string, env []string) (string, error) {
 	c := exec.Command("which", cmd) //nolint:gosec
 	c.Env = env
 
-	return c.Output()
+	o, err := c.Output()
+	if err != nil {
+		return "", err
+	}
+
+	which := string(o)
+	which = strings.TrimSpace(which)
+
+	return which, nil
 }

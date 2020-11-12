@@ -14,4 +14,27 @@ However, a simpler solution is to just run
 okctl venv myenv
 ```
 
-which will run a sub shell with the environment variables from `okctl show credentials` already set.
+which will
+* run a sub shell with the environment variables from `okctl show credentials` already set.
+* sets a command prompt like this (example):
+
+```bash
+~/somepath (myenv:mynamespace) $
+```
+
+where
+
+* `myenv` will be replaced with the name of your okctl environment
+* `mynamespace` will be replaced with the name of the Kubernetes namespace of your current kube context
+
+This command prompt can be turned off or configured, see below.
+
+## Configuration
+
+| Environment variable      | Default   | Description                                                            |
+| ------------------        | --------- | ---------------------------------------------------------------------- |
+| OKCTL_NO_PS1              | true      | If true, disables overriding the PS1. This will keep the existing PS1. |
+| OKCTL_PS1                 | *not set* | If set, `venv` will use this as the PS1 in the executed subshell.      |
+| OKCTL_SHELL               | true      | Override which shell to run. For instance `/bin/sh`.                   |
+
+

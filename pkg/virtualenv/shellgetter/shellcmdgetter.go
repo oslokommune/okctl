@@ -1,7 +1,7 @@
 package shellgetter
 
 type shellCmdGetter interface {
-	// GetCmd returns a shell command based on the user's environment
+	// Get returns a shell command based on the user's environment
 	Get() (string, error)
 }
 

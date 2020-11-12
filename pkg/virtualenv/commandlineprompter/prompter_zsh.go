@@ -14,17 +14,8 @@ type zshPrompter struct {
 	environment        string
 }
 
-type CreateZshPromptWarning struct {
-	Warning string
-	Err     error
-}
-
-func (e *CreateZshPromptWarning) Unwrap() error {
-	return e.Err
-}
-
-// createPrompt makes zsh show a custom command prompt. It does so by creating a temporary .zshrc file.
-// The return value is this temporary file, which should be cleaned up after use.
+// CreatePrompt returns environment variables that when set in zsh will show a command prompt.
+// The warning is set in case something prevented the prompt to be set the expected way.
 func (p *zshPrompter) CreatePrompt() (CommandLinePrompt, error) {
 	if _, ok := p.osEnvVars["ZDOTDIR"]; ok {
 		// We're dependent on being able to set ZDOTDIR ourself to launch zsh to a temporary path with a custom .zshrc

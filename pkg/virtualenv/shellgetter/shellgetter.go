@@ -1,3 +1,5 @@
+// Package shellgetter implements functionality for deciding which shell is the primary shell of the provided
+// environment.
 package shellgetter
 
 import (
@@ -14,19 +16,21 @@ const (
 	// ShellTypeBash is a constant that identifies the Bash shell
 	ShellTypeBash ShellType = "bash"
 
-	// ShellTypeBash is a constant that identifies the Zsh shell
+	// ShellTypeZsh is a constant that identifies the Zsh shell
 	ShellTypeZsh ShellType = "zsh"
 
-	// ShellTypeBash is a constant that is identifies the case when an unknown shell is used
+	// ShellTypeUnknown is a constant that is identifies the case when an unknown shell is used
 	ShellTypeUnknown ShellType = "unknown"
 )
 
+// ShellGetter is a provider for getting a shell executable based on some environment
 type ShellGetter struct {
 	osEnvVars       map[string]string
 	etcStorer       storage.Storer
 	currentUsername string
 }
 
+// Shell contains data about a shell executable (like bash)
 type Shell struct {
 	Command   string
 	ShellType ShellType
@@ -37,6 +41,7 @@ type shellCmdGetter interface {
 	Get() (string, error)
 }
 
+// New creates a new ShellGetter
 func New(osEnvVars map[string]string, etcStorer storage.Storer, currentUsername string) *ShellGetter {
 	return &ShellGetter{
 		osEnvVars:       osEnvVars,
@@ -45,6 +50,7 @@ func New(osEnvVars map[string]string, etcStorer storage.Storer, currentUsername 
 	}
 }
 
+// Get returns a new Shell
 func (g *ShellGetter) Get() (*Shell, error) {
 	shellCmdGetter := g.createShellCmdGetter()
 
@@ -54,11 +60,13 @@ func (g *ShellGetter) Get() (*Shell, error) {
 	}
 
 	var shellType ShellType
-	if g.shellIsBash(shellCmd) {
+
+	switch {
+	case g.shellIsBash(shellCmd):
 		shellType = ShellTypeBash
-	} else if g.shellIsZsh(shellCmd) {
+	case g.shellIsZsh(shellCmd):
 		shellType = ShellTypeZsh
-	} else {
+	default:
 		shellType = ShellTypeUnknown
 	}
 
@@ -75,12 +83,12 @@ func (g *ShellGetter) createShellCmdGetter() shellCmdGetter {
 		return &envShellCmdGetter{
 			shellCmd: shellCmd,
 		}
-	} else {
-		return &loginShellCmdGetter{
-			envVars:         g.osEnvVars,
-			etcStorer:       g.etcStorer,
-			currentUsername: g.currentUsername,
-		}
+	}
+
+	return &loginShellCmdGetter{
+		envVars:         g.osEnvVars,
+		etcStorer:       g.etcStorer,
+		currentUsername: g.currentUsername,
 	}
 }
 

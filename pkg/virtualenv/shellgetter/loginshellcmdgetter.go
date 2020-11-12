@@ -15,7 +15,7 @@ type loginShellCmdGetter struct {
 	currentUsername string
 }
 
-// GetShellCmd detects which shell to run by getting the user's default login shell from /etc/passwd.
+// Get detects which shell to run by getting the user's default login shell from /etc/passwd.
 func (g *loginShellCmdGetter) Get() (string, error) {
 	line, err := g.findUserLoginShell()
 	if err != nil {
@@ -27,8 +27,8 @@ func (g *loginShellCmdGetter) Get() (string, error) {
 	return shellCmd, nil
 }
 
-func (sd *loginShellCmdGetter) findUserLoginShell() (string, error) {
-	fileContents, err := sd.etcStorer.ReadAll("/passwd")
+func (g *loginShellCmdGetter) findUserLoginShell() (string, error) {
+	fileContents, err := g.etcStorer.ReadAll("/passwd")
 	if err != nil {
 		return "", fmt.Errorf("failed to open /etc/passwd when detecting user login shell: %w", err)
 	}
@@ -39,15 +39,15 @@ func (sd *loginShellCmdGetter) findUserLoginShell() (string, error) {
 	for scanner.Scan() {
 		loginShell = scanner.Text()
 
-		if strings.Contains(scanner.Text(), sd.currentUsername) {
+		if strings.Contains(scanner.Text(), g.currentUsername) {
 			return loginShell, nil
 		}
 	}
 
-	return "", fmt.Errorf("failed to find '%s' in /etc/passwd", sd.currentUsername)
+	return "", fmt.Errorf("failed to find '%s' in /etc/passwd", g.currentUsername)
 }
 
-func (sd *loginShellCmdGetter) parseShellCmd(line string) string {
+func (*loginShellCmdGetter) parseShellCmd(line string) string {
 	split := strings.Split(line, ":")
 	return split[len(split)-1]
 }

@@ -10,8 +10,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// nolint: funlen
 func TestCreateVirtualEnvironment(t *testing.T) {
-	testHelper := NewTestHelper(t)
+	testHelper := newTestHelper(t)
 
 	testCases := []struct {
 		name            string
@@ -139,10 +140,14 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			osEnvVars := tc.osEnvVars
+		tc := tc
 
-			etcStorage := testHelper.CreateEtcStorage(testHelper.currentUsername, tc.loginShellCmd)
+		t.Run(tc.name, func(t *testing.T) {
+			etcStorage, err := testHelper.CreateEtcStorage(testHelper.currentUsername, tc.loginShellCmd)
+			if err != nil {
+				assert.Fail(t, "could not create etc storage: %w", err)
+			}
+
 			userDirStorage := testHelper.createUserDirStorage(fmt.Sprintf("/home/%s/.okctl", testHelper.currentUsername))
 
 			userHomeDirStorage, err := testHelper.createUserHomeDirStorage(tc.createZshrcFile)
@@ -153,7 +158,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 			tmpStorage := testHelper.createTmpStorage()
 
 			opts := commandlineprompter.CommandLinePromptOpts{
-				OsEnvVars:          osEnvVars,
+				OsEnvVars:          tc.osEnvVars,
 				EtcStorage:         etcStorage,
 				UserDirStorage:     userDirStorage.storage,
 				UserHomeDirStorage: userHomeDirStorage,

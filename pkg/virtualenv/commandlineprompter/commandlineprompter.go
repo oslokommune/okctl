@@ -1,3 +1,4 @@
+// Package commandlineprompter implements functionality for setting the command prompt (PS1) for various shells
 package commandlineprompter
 
 import (
@@ -9,18 +10,20 @@ import (
 	"github.com/oslokommune/okctl/pkg/virtualenv/shellgetter"
 )
 
+// CommandLinePrompt contains environment variables needed by the command prompt, and possibly a warning about issues
+// with the returned command prompt.
 type CommandLinePrompt struct {
 	Warning string
 	Env     map[string]string
 }
 
-// commandLinePrompter provides an interface for configuring the command line prompt
-type commandLinePrompter interface {
-	// setPrompt returns a map of environment variables to be used in the shell that the prompt exists within
+// CommandLinePrompter defines functionality for creating a command line prompt
+type CommandLinePrompter interface {
 	CreatePrompt() (CommandLinePrompt, error)
 }
 
-func New(opts CommandLinePromptOpts, shellType shellgetter.ShellType) (commandLinePrompter, error) {
+// New creates a new command line prompter
+func New(opts CommandLinePromptOpts, shellType shellgetter.ShellType) (CommandLinePrompter, error) {
 	osEnvVars := copyMap(opts.OsEnvVars)
 
 	noPs1, isSet := opts.OsEnvVars["OKCTL_NO_PS1"]
@@ -71,7 +74,10 @@ func setPs1(userDirStorage storage.Storer, osEnvVars map[string]string) error {
 }
 
 const (
-	Ps1Dir      = "venv"
+	// Ps1Dir is the name of the directory where the PS1 executable will be stored
+	Ps1Dir = "venv"
+
+	// Ps1Filename is the file name of the PS1 executable that returns data to be put into the command prompt
 	Ps1Filename = "venv_ps1"
 )
 
@@ -110,7 +116,7 @@ echo -e "$ENV:$K8S_NAMESPACE"
 		}
 	}
 
-	return path.Join(store.Path(), Ps1Dir), nil // TODO check if actually works
+	return path.Join(store.Path(), Ps1Dir), nil
 }
 
 func copyMap(m map[string]string) map[string]string {
@@ -118,5 +124,6 @@ func copyMap(m map[string]string) map[string]string {
 	for k, v := range m {
 		res[k] = v
 	}
+
 	return res
 }

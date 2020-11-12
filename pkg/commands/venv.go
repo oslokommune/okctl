@@ -15,7 +15,8 @@ import (
 	"github.com/oslokommune/okctl/pkg/okctl"
 )
 
-type CredentialsOpts struct {
+// OkctlEnvironment contains data about the okctl environment
+type OkctlEnvironment struct {
 	Region                 string
 	AWSAccountID           string
 	Environment            string
@@ -28,7 +29,7 @@ type CredentialsOpts struct {
 }
 
 // Validate the inputs
-func (o *CredentialsOpts) Validate() error {
+func (o *OkctlEnvironment) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.Environment, validation.Required),
 		validation.Field(&o.AWSAccountID, validation.Required),
@@ -40,27 +41,27 @@ func (o *CredentialsOpts) Validate() error {
 	)
 }
 
-// GetCredentialsOpts returns data needed to connect to an okctl cluster
-func GetCredentialsOpts(o *okctl.Okctl) (CredentialsOpts, error) {
+// GetOkctlEnvironment returns data needed to connect to an okctl cluster
+func GetOkctlEnvironment(o *okctl.Okctl) (OkctlEnvironment, error) {
 	meta := o.RepoStateWithEnv.GetMetadata()
 	cluster := o.RepoStateWithEnv.GetCluster()
 
 	userDataDir, err := o.GetUserDataDir()
 	if err != nil {
-		return CredentialsOpts{}, err
+		return OkctlEnvironment{}, err
 	}
 
 	k, err := o.BinariesProvider.Kubectl(kubectl.Version)
 	if err != nil {
-		return CredentialsOpts{}, err
+		return OkctlEnvironment{}, err
 	}
 
 	a, err := o.BinariesProvider.AwsIamAuthenticator(awsiamauthenticator.Version)
 	if err != nil {
-		return CredentialsOpts{}, err
+		return OkctlEnvironment{}, err
 	}
 
-	opts := CredentialsOpts{
+	opts := OkctlEnvironment{
 		Region:                 meta.Region,
 		AWSAccountID:           cluster.AWSAccountID,
 		Environment:            cluster.Environment,
@@ -74,15 +75,14 @@ func GetCredentialsOpts(o *okctl.Okctl) (CredentialsOpts, error) {
 
 	err = opts.Validate()
 	if err != nil {
-		return CredentialsOpts{}, errors.E(err, "failed to validate show credentials options")
+		return OkctlEnvironment{}, errors.E(err, "failed to validate show credentials options")
 	}
 
 	return opts, nil
 }
 
-// Returns a map with environmental variables, where the map's key is the environment variable's name and map's value is
-// the environment variable's value.
-func GetOkctlEnvVars(opts CredentialsOpts) map[string]string {
+// GetOkctlEnvVars converts an okctl environment to a map with environmental variables
+func GetOkctlEnvVars(opts OkctlEnvironment) map[string]string {
 	appDir := opts.UserDataDir
 
 	kubeConfig := path.Join(appDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterKubeConfig)
@@ -117,17 +117,20 @@ func GetOkctlEnvVars(opts CredentialsOpts) map[string]string {
 	return envMap
 }
 
-func getPathWithOkctlBinaries(opts CredentialsOpts) string {
+func getPathWithOkctlBinaries(opts OkctlEnvironment) string {
 	okctlPath := fmt.Sprintf("%s:%s", opts.KubectlBinaryDir, opts.AwsIamAuthenticatorDir)
 	osPath, osPathExists := os.LookupEnv("PATH")
 
 	if osPathExists {
 		return fmt.Sprintf("%s:%s", okctlPath, osPath)
-	} else {
-		return okctlPath
 	}
+
+	return okctlPath
 }
 
+// MergeEnvVars first converts the given slice to a map. The provided slice must contain strings on the form "KEY=VALUE.
+// It then megres this map with the other provided map.
+// If both map contains a PATH key, they will be merged.
 func MergeEnvVars(osEnvs []string, venvMap map[string]string) map[string]string {
 	merged := make(map[string]string)
 
@@ -143,6 +146,7 @@ func MergeEnvVars(osEnvs []string, venvMap map[string]string) map[string]string 
 	// Merge PATHs
 	venvPath, venvHasPath := venvMap["PATH"]
 	osPath, osHasPath := osEnvMap["PATH"]
+
 	if osHasPath && venvHasPath {
 		merged["PATH"] = fmt.Sprintf("%s:%s", venvPath, osPath)
 	}

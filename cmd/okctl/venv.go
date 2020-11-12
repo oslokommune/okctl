@@ -38,7 +38,7 @@ okctl venv myenv
 
 // nolint: gocyclo, funlen, gocognit
 func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
-	credentialsOpts := commands.CredentialsOpts{}
+	okctlEnvironment := commands.OkctlEnvironment{}
 
 	cmd := &cobra.Command{
 		Use:   "venv ENV",
@@ -62,7 +62,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			credentialsOpts, err = commands.GetCredentialsOpts(o)
+			okctlEnvironment, err = commands.GetOkctlEnvironment(o)
 
 			if err != nil {
 				return err
@@ -76,7 +76,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("could not get current user: %w", err)
 			}
 
-			okctlEnvVars := commands.GetOkctlEnvVars(credentialsOpts)
+			okctlEnvVars := commands.GetOkctlEnvVars(okctlEnvironment)
 			envVars := commands.MergeEnvVars(os.Environ(), okctlEnvVars)
 
 			homeDir, err := os.UserHomeDir()
@@ -87,10 +87,10 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 			venvOpts := commandlineprompter.CommandLinePromptOpts{
 				OsEnvVars:          envVars,
 				EtcStorage:         storage.NewFileSystemStorage("/etc"),
-				UserDirStorage:     storage.NewFileSystemStorage(credentialsOpts.UserDataDir),
+				UserDirStorage:     storage.NewFileSystemStorage(okctlEnvironment.UserDataDir),
 				UserHomeDirStorage: storage.NewFileSystemStorage(homeDir),
 				TmpStorage:         nil,
-				Environment:        credentialsOpts.Environment,
+				Environment:        okctlEnvironment.Environment,
 				CurrentUsername:    currentUser.Username,
 			}
 
@@ -113,7 +113,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 				}
 			}()
 
-			err = printWelcomeMessage(o.Out, venv, credentialsOpts)
+			err = printWelcomeMessage(o.Out, venv, okctlEnvironment)
 			if err != nil {
 				return fmt.Errorf("could not print welcome message: %w", err)
 			}
@@ -150,7 +150,7 @@ type venvWelcomeMessage struct {
 	Warning                 string
 }
 
-func printWelcomeMessage(stdout io.Writer, venv *virtualenv.VirtualEnvironment, opts commands.CredentialsOpts) error {
+func printWelcomeMessage(stdout io.Writer, venv *virtualenv.VirtualEnvironment, opts commands.OkctlEnvironment) error {
 	environ := venv.Environ()
 
 	whichKubectl, err := getWhich("kubectl", environ)

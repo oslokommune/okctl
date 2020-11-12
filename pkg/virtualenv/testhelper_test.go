@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"path"
 	"sort"
-	"strings"
 	"testing"
 
 	"github.com/oslokommune/okctl/pkg/storage"
@@ -20,7 +19,7 @@ type testHelper struct {
 	tmpBasedir      string
 }
 
-func NewTestHelper(t *testing.T) *testHelper {
+func newTestHelper(t *testing.T) *testHelper {
 	const currentUsername = "mickeymouse"
 
 	return &testHelper{
@@ -31,7 +30,7 @@ func NewTestHelper(t *testing.T) *testHelper {
 	}
 }
 
-func (h *testHelper) CreateEtcStorage(username string, shellCmd string) storage.Storer {
+func (h *testHelper) CreateEtcStorage(username string, shellCmd string) (storage.Storer, error) {
 	s := storage.NewEphemeralStorage()
 
 	passwdFile, err := s.Create("/", "passwd", 0o644)
@@ -43,8 +42,11 @@ bin:x:2:2:bin:/bin:/usr/sbin/nologin
 johndoe:x:1000:1000:John Doe,,,:/home/%s:%s
 tcpdump:x:108:116::/nonexistent:/usr/sbin/nologin
 `, username, shellCmd))
+	if err != nil {
+		return nil, fmt.Errorf("could not write text to file: %w", err)
+	}
 
-	return s
+	return s, nil
 }
 
 type userDirStorage struct {
@@ -95,20 +97,8 @@ func (h *testHelper) toSlice(m map[string]string) []string {
 	}
 
 	sort.Strings(s)
+
 	return s
-}
-
-func (h *testHelper) toMap(slice []string) map[string]string {
-	m := make(map[string]string)
-
-	for _, env := range slice {
-		split := strings.SplitN(env, "=", 2)
-		key := split[0]
-		val := split[1]
-		m[key] = val
-	}
-
-	return m
 }
 
 func (h *testHelper) assertGoldenVenvPs1(t *testing.T, opts commandlineprompter.CommandLinePromptOpts) {

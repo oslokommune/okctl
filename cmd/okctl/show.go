@@ -35,7 +35,7 @@ func buildShowCommand(o *okctl.Okctl) *cobra.Command {
 
 // nolint: funlen gocognit
 func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
-	credentialsOpts := commands.CredentialsOpts{}
+	okctlEnvironment := commands.OkctlEnvironment{}
 
 	cmd := &cobra.Command{
 		Use:   "credentials [env]",
@@ -50,7 +50,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			credentialsOpts, err = commands.GetCredentialsOpts(o)
+			okctlEnvironment, err = commands.GetOkctlEnvironment(o)
 
 			if err != nil {
 				return err
@@ -59,7 +59,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			okctlEnvVars := commands.GetOkctlEnvVars(credentialsOpts)
+			okctlEnvVars := commands.GetOkctlEnvVars(okctlEnvironment)
 
 			for k, v := range okctlEnvVars {
 				_, err := fmt.Fprintf(o.Out, "export %s=%s\n", k, v)
@@ -68,7 +68,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				}
 			}
 
-			outputDir, err := o.GetRepoOutputDir(credentialsOpts.Environment)
+			outputDir, err := o.GetRepoOutputDir(okctlEnvironment.Environment)
 			if err != nil {
 				return err
 			}
@@ -78,7 +78,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			kubeConfig := path.Join(appDir, config.DefaultCredentialsDirName, credentialsOpts.ClusterName, config.DefaultClusterKubeConfig)
+			kubeConfig := path.Join(appDir, config.DefaultCredentialsDirName, okctlEnvironment.ClusterName, config.DefaultClusterKubeConfig)
 
 			k, err := o.BinariesProvider.Kubectl(kubectl.Version)
 			if err != nil {

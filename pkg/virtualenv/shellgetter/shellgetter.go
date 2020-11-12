@@ -36,11 +36,6 @@ type Shell struct {
 	ShellType ShellType
 }
 
-type shellCmdGetter interface {
-	// GetCmd returns a shell command based on the user's environment
-	Get() (string, error)
-}
-
 // New creates a new ShellGetter
 func New(osEnvVars map[string]string, etcStorer storage.Storer, currentUsername string) *ShellGetter {
 	return &ShellGetter{
@@ -74,22 +69,6 @@ func (g *ShellGetter) Get() (*Shell, error) {
 		Command:   shellCmd,
 		ShellType: shellType,
 	}, nil
-}
-
-func (g *ShellGetter) createShellCmdGetter() shellCmdGetter {
-	shellCmd, isSet := g.osEnvVars["OKCTL_SHELL"]
-
-	if isSet {
-		return &envShellCmdGetter{
-			shellCmd: shellCmd,
-		}
-	}
-
-	return &loginShellCmdGetter{
-		envVars:         g.osEnvVars,
-		etcStorer:       g.etcStorer,
-		currentUsername: g.currentUsername,
-	}
 }
 
 func (g *ShellGetter) shellIsBash(shellCmd string) bool {

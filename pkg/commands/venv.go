@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
 	"github.com/oslokommune/okctl/pkg/config"
@@ -75,7 +74,7 @@ func GetOkctlEnvironment(o *okctl.Okctl) (OkctlEnvironment, error) {
 
 	err = opts.Validate()
 	if err != nil {
-		return OkctlEnvironment{}, errors.E(err, "failed to validate show credentials options")
+	    return OkctlEnvironment{}, fmt.Errorf("failed to validate okctl environment: %w", err)
 	}
 
 	return opts, nil

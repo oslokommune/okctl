@@ -128,7 +128,7 @@ func getPathWithOkctlBinaries(opts OkctlEnvironment) string {
 }
 
 // MergeEnvVars first converts the given slice to a map. The provided slice must contain strings on the form "KEY=VALUE.
-// It then megres this map with the other provided map.
+// It then merges this map with the other provided map.
 // If both map contains a PATH key, they will be merged.
 func MergeEnvVars(osEnvs []string, venvMap map[string]string) map[string]string {
 	merged := make(map[string]string)

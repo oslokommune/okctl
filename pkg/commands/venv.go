@@ -74,7 +74,7 @@ func GetOkctlEnvironment(o *okctl.Okctl) (OkctlEnvironment, error) {
 
 	err = opts.Validate()
 	if err != nil {
-	    return OkctlEnvironment{}, fmt.Errorf("failed to validate okctl environment: %w", err)
+		return OkctlEnvironment{}, fmt.Errorf("failed to validate okctl environment: %w", err)
 	}
 
 	return opts, nil

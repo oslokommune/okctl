@@ -36,7 +36,6 @@ export OKCTL_SHELL=/bin/bash
 okctl venv myenv
 `
 
-// nolint: gocyclo, funlen, gocognit
 func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 	okctlEnvironment := commands.OkctlEnvironment{}
 
@@ -46,99 +45,122 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 		Long:  venvLong,
 		Args:  cobra.ExactArgs(venvArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			environment := args[0]
-
-			err := validation.Validate(
-				&environment,
-				validation.Required,
-				validation.Match(regexp.MustCompile("^[a-zA-Z]{3,64}$")).Error("the environment must consist of 3-64 characters (a-z, A-Z)"),
-			)
+			e, err := venvPreRunE(args, o)
 			if err != nil {
 				return err
 			}
 
-			err = o.InitialiseWithOnlyEnv(environment)
-			if err != nil {
-				return err
-			}
-
-			okctlEnvironment, err = commands.GetOkctlEnvironment(o)
-
-			if err != nil {
-				return err
-			}
+			okctlEnvironment = e
 
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			currentUser, err := user.Current()
-			if err != nil {
-				return fmt.Errorf("could not get current user: %w", err)
-			}
-
-			okctlEnvVars := commands.GetOkctlEnvVars(okctlEnvironment)
-			envVars := commands.MergeEnvVars(os.Environ(), okctlEnvVars)
-
-			homeDir, err := os.UserHomeDir()
-			if err != nil {
-				return fmt.Errorf("could not get user's home directory: %w", err)
-			}
-
-			venvOpts := commandlineprompter.CommandLinePromptOpts{
-				OsEnvVars:          envVars,
-				EtcStorage:         storage.NewFileSystemStorage("/etc"),
-				UserDirStorage:     storage.NewFileSystemStorage(okctlEnvironment.UserDataDir),
-				UserHomeDirStorage: storage.NewFileSystemStorage(homeDir),
-				TmpStorage:         nil,
-				Environment:        okctlEnvironment.Environment,
-				CurrentUsername:    currentUser.Username,
-			}
-
-			tmpStorage, err := storage.NewTemporaryStorage()
-			if err != nil {
-				return err
-			}
-
-			venvOpts.TmpStorage = tmpStorage
-
-			venv, err := virtualenv.CreateVirtualEnvironment(venvOpts)
-			if err != nil {
-				return fmt.Errorf("could not create virtual environment: %w", err)
-			}
-
-			defer func() {
-				err = tmpStorage.Clean()
-				if err != nil {
-					fmt.Println(err)
-				}
-			}()
-
-			err = printWelcomeMessage(o.Out, venv, okctlEnvironment)
-			if err != nil {
-				return fmt.Errorf("could not print welcome message: %w", err)
-			}
-
-			shell := exec.Command(venv.ShellCommand) //nolint:gosec
-			shell.Env = venv.Environ()
-			shell.Stdout = o.Out
-			shell.Stdin = o.In
-			shell.Stderr = o.Err
-
-			err = shell.Run()
-			if err != nil {
-				return fmt.Errorf("could not run shell: %w", err)
-			}
-
-			_, err = fmt.Fprintln(o.Out, "Exiting okctl virtual environment")
-			if err != nil {
-				return fmt.Errorf("could not print message: %w", err)
-			}
-
-			return nil
+			return venvRunE(o, okctlEnvironment)
 		},
 	}
 
 	return cmd
+}
+
+func venvPreRunE(args []string, o *okctl.Okctl) (commands.OkctlEnvironment, error) {
+	environment := args[0]
+
+	err := validation.Validate(
+		&environment,
+		validation.Required,
+		validation.Match(regexp.MustCompile("^[a-zA-Z]{3,64}$")).Error("the environment must consist of 3-64 characters (a-z, A-Z)"),
+	)
+	if err != nil {
+		return commands.OkctlEnvironment{}, err
+	}
+
+	err = o.InitialiseWithOnlyEnv(environment)
+	if err != nil {
+		return commands.OkctlEnvironment{}, err
+	}
+
+	okctlEnvironment, err := commands.GetOkctlEnvironment(o)
+	if err != nil {
+		return commands.OkctlEnvironment{}, err
+	}
+
+	return okctlEnvironment, nil
+}
+
+func venvRunE(o *okctl.Okctl, okctlEnvironment commands.OkctlEnvironment) error {
+	venvOpts, tmpStorage, err := createVenvOpts(okctlEnvironment)
+	if err != nil {
+		return err
+	}
+
+	venv, err := virtualenv.CreateVirtualEnvironment(venvOpts)
+	if err != nil {
+		return fmt.Errorf("could not create virtual environment: %w", err)
+	}
+
+	defer func() {
+		err = tmpStorage.Clean()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}()
+
+	err = printWelcomeMessage(o.Out, venv, okctlEnvironment)
+	if err != nil {
+		return fmt.Errorf("could not print welcome message: %w", err)
+	}
+
+	shell := exec.Command(venv.ShellCommand) //nolint:gosec
+	shell.Env = venv.Environ()
+	shell.Stdout = o.Out
+	shell.Stdin = o.In
+	shell.Stderr = o.Err
+
+	err = shell.Run()
+	if err != nil {
+		return fmt.Errorf("could not run shell: %w", err)
+	}
+
+	_, err = fmt.Fprintln(o.Out, "Exiting okctl virtual environment")
+	if err != nil {
+		return fmt.Errorf("could not print message: %w", err)
+	}
+
+	return nil
+}
+
+func createVenvOpts(okctlEnvironment commands.OkctlEnvironment) (commandlineprompter.CommandLinePromptOpts, *storage.TemporaryStorage, error) {
+	currentUser, err := user.Current()
+	if err != nil {
+		return commandlineprompter.CommandLinePromptOpts{}, nil, fmt.Errorf("could not get current user: %w", err)
+	}
+
+	okctlEnvVars := commands.GetOkctlEnvVars(okctlEnvironment)
+	envVars := commands.MergeEnvVars(os.Environ(), okctlEnvVars)
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return commandlineprompter.CommandLinePromptOpts{}, nil, fmt.Errorf("could not get user's home directory: %w", err)
+	}
+
+	venvOpts := commandlineprompter.CommandLinePromptOpts{
+		OsEnvVars:          envVars,
+		EtcStorage:         storage.NewFileSystemStorage("/etc"),
+		UserDirStorage:     storage.NewFileSystemStorage(okctlEnvironment.UserDataDir),
+		UserHomeDirStorage: storage.NewFileSystemStorage(homeDir),
+		TmpStorage:         nil,
+		Environment:        okctlEnvironment.Environment,
+		CurrentUsername:    currentUser.Username,
+	}
+
+	tmpStorage, err := storage.NewTemporaryStorage()
+	if err != nil {
+		return commandlineprompter.CommandLinePromptOpts{}, nil, err
+	}
+
+	venvOpts.TmpStorage = tmpStorage
+
+	return venvOpts, tmpStorage, nil
 }
 
 type venvWelcomeMessage struct {

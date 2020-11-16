@@ -35,6 +35,22 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 			},
 		},
 		{
+			name: "When using bash and OKCTL_PS1, COMMAND_PROMPT should contain contents of OKCTL_PS1",
+			osEnvVars: map[string]string{
+				"OKCTL_PS1": `"Dir: \w $"`,
+			},
+			loginShellCmd: "/bin/bash",
+			assertion: func(opts commandlineprompter.CommandLinePromptOpts, venv *virtualenv.VirtualEnvironment) {
+				expectedOsEnvVars := testHelper.toSlice(map[string]string{
+					"OKCTL_PS1":      `"Dir: \w $"`,
+					"PATH":           testHelper.ps1Dir,
+					"PROMPT_COMMAND": `PS1="Dir: \w $"`,
+				})
+				assert.Equal(t, expectedOsEnvVars, venv.Environ())
+				testHelper.assertGoldenVenvPs1(t, opts)
+			},
+		},
+		{
 			name: "When using bash, should set correct PATH and PROMPT_COMMAND, and create venv_ps1 executable",
 			osEnvVars: map[string]string{
 				"PATH": "/somepath:/somepath2",
@@ -110,6 +126,20 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 			},
 		},
 		{
+			name: "When using zsh and OKCTL_PS1 is set, temp .zshrc should contain the custom PS1",
+			osEnvVars: map[string]string{
+				"OKCTL_PS1": "\"Dir: %~ $\"",
+			},
+			loginShellCmd: "/bin/zsh",
+			assertion: func(opts commandlineprompter.CommandLinePromptOpts, venv *virtualenv.VirtualEnvironment) {
+				zshrc, err := opts.TmpStorage.ReadAll(".zshrc")
+				assert.Nil(t, err)
+
+				g := goldie.New(t)
+				g.Assert(t, "zshrc_custom_ps1", zshrc)
+			},
+		},
+		{
 			name: "When using zsh and ZDOTDIR is already set, a warning is returned",
 			osEnvVars: map[string]string{
 				"PATH":    "/somepath:/somepath2",
@@ -134,6 +164,17 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 					"PATH":         "/somepath:/somepath2",
 					"OKCTL_NO_PS1": "true",
 					"LS_COLORS":    "rs=0:di=01;34:ln=01:*.tar=01;31",
+				})
+				assert.Equal(t, expectedOsEnvVars, venv.Environ())
+			},
+		},
+		{
+			name:          "Should set PATH correctly when it does not exist already",
+			osEnvVars:     map[string]string{},
+			loginShellCmd: "/bin/fish",
+			assertion: func(opts commandlineprompter.CommandLinePromptOpts, venv *virtualenv.VirtualEnvironment) {
+				expectedOsEnvVars := testHelper.toSlice(map[string]string{
+					"PATH": testHelper.ps1Dir,
 				})
 				assert.Equal(t, expectedOsEnvVars, venv.Environ())
 			},

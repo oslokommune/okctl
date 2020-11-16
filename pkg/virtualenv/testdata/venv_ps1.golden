@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+ENV=$1
+ENV=${ENV:-NOENV}
+
+K8S_NAMESPACE="$(kubectl config view --minify --output 'jsonpath={..namespace}' 2>/dev/null)"
+K8S_NAMESPACE="${K8S_NAMESPACE:-default}"
+
+echo -e "$ENV:$K8S_NAMESPACE"

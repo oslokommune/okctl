@@ -128,7 +128,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 		{
 			name: "When using zsh and OKCTL_PS1 is set, temp .zshrc should contain the custom PS1",
 			osEnvVars: map[string]string{
-				"OKCTL_PS1": "\"Dir: %~ $\"",
+				"OKCTL_PS1": "Dir: %~ $",
 			},
 			loginShellCmd: "/bin/zsh",
 			assertion: func(opts commandlineprompter.CommandLinePromptOpts, venv *virtualenv.VirtualEnvironment) {

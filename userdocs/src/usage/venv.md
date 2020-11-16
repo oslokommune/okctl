@@ -16,7 +16,7 @@ okctl venv myenv
 
 which will
 * run a sub shell with the environment variables from `okctl show credentials` already set.
-* sets a command prompt like this (example):
+* set a command prompt like this (example):
 
 ```bash
 ~/somepath (myenv:mynamespace) $

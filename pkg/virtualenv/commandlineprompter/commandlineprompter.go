@@ -88,13 +88,13 @@ const (
 func createPs1ExecutableIfNotExists(store storage.Storer) (string, error) {
 	ps1FileExists, err := store.Exists(path.Join(Ps1Dir, Ps1Filename))
 	if err != nil {
-		return "", fmt.Errorf("couldn't create PS1 helper executable: %w", err)
+		return "", fmt.Errorf("could not check existence of PS1 helper executable: %w", err)
 	}
 
 	if !ps1FileExists {
 		ps1File, err := store.Create(Ps1Dir, Ps1Filename, 0o744)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("couldn't create PS1 file: %w", err)
 		}
 
 		_, err = ps1File.WriteString(`#!/usr/bin/env bash
@@ -107,12 +107,12 @@ K8S_NAMESPACE="${K8S_NAMESPACE:-default}"
 echo -e "$ENV:$K8S_NAMESPACE"
 `)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("could not write contents to ps1 file: %w", err)
 		}
 
 		err = ps1File.Close()
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("could not close ps1 file: %w", err)
 		}
 	}
 

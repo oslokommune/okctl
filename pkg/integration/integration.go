@@ -212,7 +212,7 @@ func (k *KubernetesCluster) Create(timeout time.Duration) error {
 		Name: RandStringBytes(10), //nolint: gomnd
 		Network: k3d.ClusterNetwork{
 			Name:     RandStringBytes(10), //nolint: gomnd
-			External: true,
+			External: false,
 		},
 		Nodes: []*k3d.Node{
 			serverNode,

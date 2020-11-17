@@ -142,8 +142,8 @@ test-verbose: ARGS=-v
 test-race:    ARGS=-race
 $(TEST_TARGETS): test
 check test tests: fmt lint $(RICHGO)
-	#$(GO) test -timeout $(TIMEOUT) $(ARGS) $(TESTPKGS)  | tee >(RICHGO_FORCE_COLOR=1 $(RICHGO) testfilter); \
-	#	test $${PIPESTATUS[0]} -eq 0
+	$(GO) test -timeout $(TIMEOUT) $(ARGS) $(TESTPKGS)  | tee >(RICHGO_FORCE_COLOR=1 $(RICHGO) testfilter); \
+		test $${PIPESTATUS[0]} -eq 0
 
 	$(GO) test ./pkg/kube/manifests/externaldns/externaldns_test.go -run "^\QTestExternalDNS\E|\QTestNew\E$$"
 	#$(GO) test -v ./pkg/kube/manifests/externaldns/externaldns_test.go -run "^\QTestExternalDNS\E|\QTestNew\E$" | tee >(RICHGO_FORCE_COLOR=1 $(RICHGO) testfilter); \

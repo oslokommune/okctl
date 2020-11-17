@@ -145,8 +145,9 @@ check test tests: fmt lint $(RICHGO)
 	#$(GO) test -timeout $(TIMEOUT) $(ARGS) $(TESTPKGS)  | tee >(RICHGO_FORCE_COLOR=1 $(RICHGO) testfilter); \
 	#	test $${PIPESTATUS[0]} -eq 0
 
-	$(GO) test -v ./pkg/kube/manifests/externaldns/externaldns_test.go -run TestExternalDNS -run TestNew | tee >(RICHGO_FORCE_COLOR=1 $(RICHGO) testfilter); \
-		test $${PIPESTATUS[0]} -eq 0
+	$(GO) test -v ./pkg/kube/manifests/externaldns/externaldns_test.go -run "^\QTestExternalDNS\E|\QTestNew\E$$"
+	#$(GO) test -v ./pkg/kube/manifests/externaldns/externaldns_test.go -run "^\QTestExternalDNS\E|\QTestNew\E$" | tee >(RICHGO_FORCE_COLOR=1 $(RICHGO) testfilter); \
+    #    		test $${PIPESTATUS[0]} -eq 0
 
 test-update:
 	$(GO) test ./... -update

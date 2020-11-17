@@ -598,7 +598,7 @@ func Mysql(values interface{}) *Chart {
 		Version:        "1.6.6",
 		Chart:          "mysql",
 		Namespace:      "test-helm",
-		Timeout:        6 * time.Minute, // nolint: gomnd
+		Timeout:        2 * time.Minute, // nolint: gomnd
 		Values:         values,
 	}
 }

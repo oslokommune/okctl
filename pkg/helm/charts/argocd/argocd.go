@@ -19,7 +19,7 @@ func New(values *Values) *helm.Chart {
 		Version:        "2.6.2",
 		Chart:          "argo-cd",
 		Namespace:      "argocd",
-		Timeout:        10 * time.Minute, // nolint: gomnd
+		Timeout:        5 * time.Minute, // nolint: gomnd
 		Values:         values,
 	}
 }

@@ -65,7 +65,7 @@ func TestEstablishEnv(t *testing.T) {
 // nolint: funlen
 func TestHelm(t *testing.T) {
 	if os.Getenv("CI") != "" {
-		t.Skip("Skipping testing in CI environment, as this test is flaky here.")
+		t.Skip("Skipping testing in CI environment, as this test is flaky here..")
 	}
 
 	if testing.Short() {

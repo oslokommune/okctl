@@ -28,7 +28,7 @@ jobs:
           tagRegex: v(.*)
           tagRegexGroup: 1
         env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS : true
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
       -
         name: Check if release notes exist
         uses: andstor/file-existence-action@v1

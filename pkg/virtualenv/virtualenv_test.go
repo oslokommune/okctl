@@ -37,12 +37,12 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 		{
 			name: "When using bash and OKCTL_PS1, COMMAND_PROMPT should contain contents of OKCTL_PS1",
 			osEnvVars: map[string]string{
-				"OKCTL_PS1": `"Dir: \w $"`,
+				"OKCTL_PS1": `Dir: \w $`,
 			},
 			loginShellCmd: "/bin/bash",
 			assertion: func(opts commandlineprompter.CommandLinePromptOpts, venv *virtualenv.VirtualEnvironment) {
 				expectedOsEnvVars := testHelper.toSlice(map[string]string{
-					"OKCTL_PS1":      `"Dir: \w $"`,
+					"OKCTL_PS1":      `Dir: \w $`,
 					"PATH":           testHelper.ps1Dir,
 					"PROMPT_COMMAND": `PS1="Dir: \w $"`,
 				})
@@ -128,7 +128,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 		{
 			name: "When using zsh and OKCTL_PS1 is set, temp .zshrc should contain the custom PS1",
 			osEnvVars: map[string]string{
-				"OKCTL_PS1": "\"Dir: %~ $\"",
+				"OKCTL_PS1": "Dir: %~ $",
 			},
 			loginShellCmd: "/bin/zsh",
 			assertion: func(opts commandlineprompter.CommandLinePromptOpts, venv *virtualenv.VirtualEnvironment) {

@@ -82,7 +82,7 @@ prompt() {
 
 	ps1, overridePs1 := p.osEnvVars["OKCTL_PS1"]
 	if overridePs1 {
-		zshrcBuilder.WriteString(fmt.Sprintf("PS1=%s", ps1))
+		zshrcBuilder.WriteString(fmt.Sprintf(`PS1="%s"`, ps1))
 	} else {
 		zshrcBuilder.WriteString(fmt.Sprint(`PS1="%F{red}%~ %f%F{blue}($(venv_ps1 ` + p.environment + `)%f) $ "`))
 	}

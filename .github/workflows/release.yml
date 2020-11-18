@@ -1,9 +1,12 @@
 name: goreleaser
 
 on:
-  push:
-    tags:
-      - '*'
+  - push
+  - pull_request
+
+#  push:
+#    tags:
+#      - '*'
 
 jobs:
   goreleaser:
@@ -19,27 +22,31 @@ jobs:
         name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.14
-      -
-        name: Get the tag name
-        uses: olegtarasov/get-tag@v2
+          go-version: 1.15.1
+
+      - name: Get the git tag
+        uses: little-core-labs/get-git-tag@v3.0.2
         id: tagName
         with:
-          tagRegex: v(.*)
-          tagRegexGroup: 1
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+          - tagRegex: v(.*)
+            tagRegexGroup: 1
+
       -
         name: Check if release notes exist
         uses: andstor/file-existence-action@v1
         with:
           files: docs/release_notes/${{ steps.tagName.outputs.tag }}
           allow_failure: false
-      -
-        name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
-        with:
-          version: latest
-          args: release --rm-dist --release-notes=docs/release_notes/${{ steps.tagName.outputs.tag }}.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}
+
+      - name: Check that things work, for debugging only
+        run: echo 'Git tag name is $GIT_TAG_NAME'
+        id: random-color-generator
+
+#      -
+#        name: Run GoReleaser
+#        uses: goreleaser/goreleaser-action@v2
+#        with:
+#          version: latest
+#          args: release --rm-dist --release-notes=docs/release_notes/${{ steps.tagName.outputs.tag }}.md
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}

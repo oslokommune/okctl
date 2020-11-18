@@ -10,9 +10,9 @@ Kubernetes is [highly configurable and extensible](https://kubernetes.io/docs/co
 
 ### Kubernetes External Secrets
 
-[Kubernetes External Secrets](https://github.com/godaddy/kubernetes-external-secrets/) allows you to use external secret management systems, like AWS Secrets Manager or HashiCorp Vault, to securely add secrets in Kubernetes.
+[Kubernetes External Secrets](https://github.com/external-secrets/kubernetes-external-secrets/) allows you to use external secret management systems, like AWS Secrets Manager or HashiCorp Vault, to securely add secrets in Kubernetes.
 
-We have installed external secrets and configured it to use [SSM Parameter store](#aws-systems-manager-amazon-ssm-parameter-store) as a backend. This means that we can [store secrets in SSM](https://github.com/godaddy/kubernetes-external-secrets/#add-a-secret) and eventually have them made available as a Kubernetes [secret](https://kubernetes.io/docs/concepts/configuration/secret/) resource that we can reference in our [deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) manifests.
+We have installed external secrets and configured it to use [SSM Parameter store](#aws-systems-manager-amazon-ssm-parameter-store) as a backend. This means that we can [store secrets in SSM](https://github.com/external-secrets/kubernetes-external-secrets/#add-a-secret) and eventually have them made available as a Kubernetes [secret](https://kubernetes.io/docs/concepts/configuration/secret/) resource that we can reference in our [deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) manifests.
 
 #### Example
 

@@ -1,5 +1,5 @@
 // Package externalsecrets provides a helm chart for installing external-secrets:
-// - https://github.com/godaddy/kubernetes-external-secrets
+// - https://external-secrets.github.io/kubernetes-external-secrets
 package externalsecrets
 
 import (
@@ -87,11 +87,11 @@ type ServiceMonitor struct {
 }
 
 // ExternalSecrets returns an initialised external secrets chart
-// - https://github.com/godaddy/kubernetes-external-secrets/blob/master/charts/kubernetes-external-secrets/README.md
+// - https://github.com/external-secrets/kubernetes-external-secrets/blob/master/charts/kubernetes-external-secrets/README.md
 func ExternalSecrets(values interface{}) *helm.Chart {
 	return &helm.Chart{
 		RepositoryName: "external-secrets",
-		RepositoryURL:  "https://godaddy.github.io/kubernetes-external-secrets/",
+		RepositoryURL:  "https://external-secrets.github.io/kubernetes-external-secrets/",
 		ReleaseName:    "external-secrets",
 		Version:        "5.2.0",
 		Chart:          "kubernetes-external-secrets",

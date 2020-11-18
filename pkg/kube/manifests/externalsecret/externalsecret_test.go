@@ -76,7 +76,7 @@ func TestExternalDNS(t *testing.T) {
 	}{
 		// This will not actually work unless we also add the CRD for
 		// external secrets:
-		// - https://github.com/godaddy/kubernetes-external-secrets/blob/master/charts/kubernetes-external-secrets/crds/kubernetes-client.io_externalsecrets_crd.yaml
+		// - https://github.com/external-secrets/kubernetes-external-secrets/blob/master/charts/kubernetes-external-secrets/crds/kubernetes-client.io_externalsecrets_crd.yaml
 		{
 			name: "Should work",
 			ext: externalsecret.New("name", "default", nil, nil, map[string]string{

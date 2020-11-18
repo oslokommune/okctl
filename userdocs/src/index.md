@@ -127,7 +127,7 @@ With `okctl` we are attempting to solve the production environment setup problem
 
 We have a basic cluster up and running, and we are currently working on getting the core components of the cluster deployed:
 
-- [x] [ExternalSecrets](https://github.com/godaddy/kubernetes-external-secrets/) for storing secrets securely
+- [x] [ExternalSecrets](https://github.com/external-secrets/kubernetes-external-secrets/) for storing secrets securely
 - [x] [AWS ALB Ingress Controller](https://github.com/kubernetes-sigs/aws-alb-ingress-controller) creates load balancers for incoming traffic
 - [x] [ExternalDNS](https://github.com/kubernetes-sigs/external-dns) ensures humane DNS hostnames 
 - [ ] [Autoscaler](https://github.com/kubernetes/autoscaler/) for adjusting the size of pods and nodes

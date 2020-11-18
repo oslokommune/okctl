@@ -240,7 +240,7 @@ type ExternalSecretsPolicyComposer struct {
 }
 
 // NewExternalSecretsPolicyComposer returns a managed IAM policy
-// that allows: https://github.com/godaddy/kubernetes-external-secrets
+// that allows: https://github.com/external-secrets/kubernetes-external-secrets
 // to read SSM parameters and make them available as Kubernetes Secrets
 func NewExternalSecretsPolicyComposer(repository, env string) *ExternalSecretsPolicyComposer {
 	return &ExternalSecretsPolicyComposer{

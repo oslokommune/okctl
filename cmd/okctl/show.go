@@ -105,7 +105,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			_, err = fmt.Print(o.Err, txt)
+			_, err = fmt.Fprint(o.Err, txt)
 			if err != nil {
 				return err
 			}

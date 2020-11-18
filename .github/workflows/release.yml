@@ -1,12 +1,11 @@
 name: goreleaser
 
 on:
-  - push
-  - pull_request
-
-#  push:
-#    tags:
-#      - '*'
+  push:
+    tags:
+      - '*'
+    branches:
+      - master
 
 jobs:
   goreleaser:
@@ -38,15 +37,11 @@ jobs:
           files: docs/release_notes/${{ steps.tagName.outputs.tag }}
           allow_failure: false
 
-      - name: Check that things work, for debugging only
-        run: echo "Git tag name is $GIT_TAG_NAME"
-        id: random-color-generator
-
-#      -
-#        name: Run GoReleaser
-#        uses: goreleaser/goreleaser-action@v2
-#        with:
-#          version: latest
-#          args: release --rm-dist --release-notes=docs/release_notes/${{ steps.tagName.outputs.tag }}.md
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}
+      -
+        name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: latest
+          args: release --rm-dist --release-notes=docs/release_notes/${{ steps.tagName.outputs.tag }}.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}

@@ -28,8 +28,8 @@ jobs:
         uses: little-core-labs/get-git-tag@v3.0.2
         id: tagName
         with:
-          - tagRegex: v(.*)
-            tagRegexGroup: 1
+          tagRegex: v(.*)
+          tagRegexGroup: 1
 
       -
         name: Check if release notes exist

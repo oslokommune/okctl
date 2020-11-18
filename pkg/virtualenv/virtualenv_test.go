@@ -179,6 +179,37 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 				assert.Equal(t, expectedOsEnvVars, venv.Environ())
 			},
 		},
+		{
+			name: "When using bash and OKCTL_PS1, replace %env with okctl environment",
+			osEnvVars: map[string]string{
+				"OKCTL_PS1": `Dir: \w | \$(venv_ps1 %env) \$`,
+			},
+			loginShellCmd: "/bin/bash",
+			assertion: func(opts commandlineprompter.CommandLinePromptOpts, venv *virtualenv.VirtualEnvironment) {
+				expectedOsEnvVars := testHelper.toSlice(map[string]string{
+					"OKCTL_PS1":      `Dir: \w | \$(venv_ps1 %env) \$`,
+					"PATH":           testHelper.ps1Dir,
+					"PROMPT_COMMAND": fmt.Sprintf(`PS1="Dir: \w | \$(venv_ps1 %s) \$"`, opts.Environment),
+				})
+				assert.Equal(t, expectedOsEnvVars, venv.Environ())
+				testHelper.assertGoldenVenvPs1(t, opts)
+			},
+		},
+		{
+			name: "When using zsh and OKCTL_PS1, replace %env with okctl environment",
+			osEnvVars: map[string]string{
+				"OKCTL_PS1": `Dir: %~ | \$(venv_ps1 %env) \$`,
+			},
+			loginShellCmd: "/bin/zsh",
+			assertion: func(opts commandlineprompter.CommandLinePromptOpts, venv *virtualenv.VirtualEnvironment) {
+				// Verify expeceted .zshrc
+				zshrc, err := opts.TmpStorage.ReadAll(".zshrc")
+				assert.Nil(t, err)
+
+				g := goldie.New(t)
+				g.Assert(t, "zshrc_custom_ps1_with_env", zshrc)
+			},
+		},
 	}
 	for _, tc := range testCases {
 		tc := tc

@@ -19,6 +19,10 @@ type vpcService struct {
 	state   client.VPCState
 }
 
+func (s *vpcService) GetVPC(ctx context.Context, id api.ID) (*api.Vpc, error) {
+	return s.store.GetVpc(id)
+}
+
 func (s *vpcService) CreateVpc(_ context.Context, opts api.CreateVpcOpts) (*api.Vpc, error) {
 	err := s.spinner.Start("vpc")
 	if err != nil {

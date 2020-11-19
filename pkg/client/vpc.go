@@ -14,6 +14,7 @@ import (
 type VPCService interface {
 	CreateVpc(ctx context.Context, opts api.CreateVpcOpts) (*api.Vpc, error)
 	DeleteVpc(ctx context.Context, opts api.DeleteVpcOpts) error
+	GetVPC(ctx context.Context, id api.ID) (*api.Vpc, error)
 }
 
 // VPCAPI invokes the API calls for creating a vpc

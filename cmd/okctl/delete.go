@@ -5,8 +5,6 @@ import (
 	"regexp"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/oslokommune/okctl/pkg/client"
-
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -124,12 +122,15 @@ including VPC, this is a highly destructive operation.`,
 
 			formatErr := o.ErrorFormatter(fmt.Sprintf("delete cluster %s", opts.Environment), userDir)
 
-			err = services.Domain.DeletePrimaryHostedZone(o.Ctx, o.CloudProvider, client.DeletePrimaryHostedZoneOpts{
-				ID: id,
-			})
-			if err != nil {
-				return formatErr(err)
-			}
+			// This is taken out, because of possible unintended consequences. The code is kept for now
+			/*
+				err = services.Domain.DeletePrimaryHostedZone(o.Ctx, o.CloudProvider, client.DeletePrimaryHostedZoneOpts{
+					ID: id,
+				})
+				if err != nil {
+					return formatErr(err)
+				}
+			*/
 
 			err = services.IdentityManager.DeleteIdentityPool(o.Ctx, o.CloudProvider, id)
 			if err != nil {

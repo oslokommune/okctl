@@ -49,3 +49,7 @@ func NewVpcService(cloud api.VpcCloudProvider, store api.VpcStore) api.VpcServic
 		store: store,
 	}
 }
+
+func (v *vpc) GetVpc(_ context.Context, id api.ID) (*api.Vpc, error) {
+	return v.store.GetVpc(id)
+}

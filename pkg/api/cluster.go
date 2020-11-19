@@ -38,7 +38,8 @@ func (o *ClusterCreateOpts) Validate() error {
 
 // ClusterDeleteOpts specifies the required inputs for deleting a cluster
 type ClusterDeleteOpts struct {
-	ID ID
+	ID                 ID
+	FargateProfileName string
 }
 
 // Validate the delete inputs

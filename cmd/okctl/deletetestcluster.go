@@ -168,6 +168,7 @@ $ kubectl get service --all-namespaces
 
 			err = services.Cluster.DeleteCluster(o.Ctx, api.ClusterDeleteOpts{
 				ID: id,
+				FargateProfileName: "fp-default",
 			})
 			if err != nil {
 				return formatErr(err)

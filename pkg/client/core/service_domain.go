@@ -2,11 +2,10 @@ package core
 
 import (
 	"context"
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"io"
 
 	"github.com/oslokommune/okctl/pkg/config/state"
-
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/api"
 
@@ -56,7 +55,15 @@ func (s *domainService) GetPrimaryHostedZone(_ context.Context, id api.ID) (*cli
 	return nil, nil
 }
 
-// DeletePrimaryHostedZone and all associed records
+// TODO Remove from store, ideentitypool - when deleted!
+
+/*
+Here bugs:
+deletes vcp from okctl.yaml even if the delete fails
+Hosted zone is not deleted from okctl.yaml even if delete succeeds
+*/
+
+// FIXME find out if it is bad to send the provdier down here? THIS NEEDS TO BE TAKEN OUT
 func (s *domainService) DeletePrimaryHostedZone(ctx context.Context, provider v1alpha1.CloudProvider, opts client.DeletePrimaryHostedZoneOpts) error {
 	err := s.spinner.Start("domain")
 	if err != nil {
@@ -85,7 +92,6 @@ func (s *domainService) DeletePrimaryHostedZone(ctx context.Context, provider v1
 	}
 
 	var reports []*store.Report
-
 	if hz.Managed {
 		_, err := s.api.DeleteHostedZoneRecords(provider, hz.ID)
 		if err != nil {

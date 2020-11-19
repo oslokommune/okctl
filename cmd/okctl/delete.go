@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/api/core/cleanup"
 	"regexp"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -122,6 +123,11 @@ including VPC, this is a highly destructive operation.`,
 
 			formatErr := o.ErrorFormatter(fmt.Sprintf("delete cluster %s", opts.Environment), userDir)
 
+			vpc, err := services.Vpc.GetVPC(o.Ctx, id)
+			if err != nil {
+				return formatErr(err)
+			}
+
 			// This is taken out, because of possible unintended consequences. The code is kept for now
 			/*
 				err = services.Domain.DeletePrimaryHostedZone(o.Ctx, o.CloudProvider, client.DeletePrimaryHostedZoneOpts{
@@ -137,6 +143,11 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
+			err = services.ALBIngressController.DeleteALBIngressController(o.Ctx, id)
+			if err != nil {
+				return formatErr(err)
+			}
+
 			err = services.ExternalSecrets.DeleteExternalSecrets(o.Ctx, id)
 			if err != nil {
 				return formatErr(err)
@@ -147,14 +158,19 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
-			err = services.ALBIngressController.DeleteALBIngressController(o.Ctx, id)
+			err = services.Cluster.DeleteCluster(o.Ctx, api.ClusterDeleteOpts{
+				ID: id,
+			})
 			if err != nil {
 				return formatErr(err)
 			}
 
-			err = services.Cluster.DeleteCluster(o.Ctx, api.ClusterDeleteOpts{
-				ID: id,
-			})
+			err = cleanup.DeleteDanglingALBs(o.CloudProvider, vpc.VpcID)
+			if err != nil {
+				return formatErr(err)
+			}
+
+			err = cleanup.DeleteDanglingSecurityGroups(o.CloudProvider, vpc.VpcID)
 			if err != nil {
 				return formatErr(err)
 			}

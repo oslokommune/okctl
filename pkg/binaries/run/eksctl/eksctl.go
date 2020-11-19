@@ -209,6 +209,24 @@ func (e *Eksctl) DeleteCluster(clusterName string) ([]byte, error) {
 	return b, nil
 }
 
+// DeleteFargateProfiles invokes eksctl delete fargate profile for cluster
+func (e *Eksctl) DeleteFargateProfiles(clusterName, fragetProfileName string) ([]byte, error) {
+	args := []string{
+		"delete",
+		"fargateprofile",
+		fmt.Sprintf("--cluster=%s", clusterName),
+		fmt.Sprintf("--name=%s", fragetProfileName),
+		"--wait",
+	}
+
+	b, err := e.run(args)
+	if err != nil {
+		return nil, fmt.Errorf("failed to delete: %s, because: %w", string(b), err)
+	}
+
+	return b, nil
+}
+
 // CreateCluster invokes eksctl create cluster using the provided
 // cluster configuration as input
 func (e *Eksctl) CreateCluster(cfg *v1alpha1.ClusterConfig) ([]byte, error) {

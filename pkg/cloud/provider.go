@@ -3,6 +3,8 @@ package cloud
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/aws/aws-sdk-go/service/elbv2/elbv2iface"
 
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
@@ -62,6 +64,7 @@ func NewFromSession(region, principalARN string, sess *session.Session) (*Provid
 
 	services.cfn = cloudformation.New(sess)
 	services.ec2 = ec2.New(sess)
+	services.elbv2 = elbv2.New(sess)
 	services.eks = eks.New(sess)
 	services.ssm = ssm.New(sess)
 	services.sq = servicequotas.New(sess)
@@ -101,6 +104,7 @@ func NewSession(region string, auth awsauth.Authenticator) (*session.Session, *a
 type Services struct {
 	cfn cloudformationiface.CloudFormationAPI
 	ec2 ec2iface.EC2API
+	elbv2 elbv2iface.ELBV2API
 	eks eksiface.EKSAPI
 	ssm ssmiface.SSMAPI
 	sq  servicequotasiface.ServiceQuotasAPI
@@ -145,6 +149,10 @@ func (s *Services) EC2() ec2iface.EC2API {
 // EKS returns an interface to the AWS EKS API
 func (s *Services) EKS() eksiface.EKSAPI {
 	return s.eks
+}
+
+func (s *Services) ELBV2() elbv2iface.ELBV2API {
+	return s.elbv2
 }
 
 // CloudFormation returns an interface to the AWS CloudFormation API

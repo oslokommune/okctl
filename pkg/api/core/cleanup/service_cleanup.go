@@ -1,7 +1,6 @@
 package cleanup
 
 import (
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -24,7 +23,6 @@ func DeleteDanglingALBs(provider v1alpha1.CloudProvider, vpcID string) error {
 		balancerVPC := *balancer.VpcId
 		if vpcID == balancerVPC {
 			arn := *balancer.LoadBalancerArn
-			fmt.Println(arn)
 			_, err := provider.ELBV2().DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
 				LoadBalancerArn: &arn,
 			})
@@ -53,7 +51,6 @@ func DeleteDanglingSecurityGroups(provider v1alpha1.CloudProvider, vpcID string)
 	}
 
 	for _, group := range groups.SecurityGroups {
-		fmt.Println(group.GroupId)
 		provider.EC2().DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
 			GroupId:   group.GroupId,
 		})

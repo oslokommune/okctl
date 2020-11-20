@@ -158,14 +158,14 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
-			err = services.Cluster.DeleteCluster(o.Ctx, api.ClusterDeleteOpts{
-				ID: id,
-			})
+			err = cleanup.DeleteDanglingALBs(o.CloudProvider, vpc.VpcID)
 			if err != nil {
 				return formatErr(err)
 			}
 
-			err = cleanup.DeleteDanglingALBs(o.CloudProvider, vpc.VpcID)
+			err = services.Cluster.DeleteCluster(o.Ctx, api.ClusterDeleteOpts{
+				ID: id,
+			})
 			if err != nil {
 				return formatErr(err)
 			}

@@ -1,3 +1,5 @@
+// Package cleanup provides functionality to clean up AWS resources not managed by us
+// For example when deleting VPC
 package cleanup
 
 import (
@@ -10,8 +12,8 @@ import (
 // DeleteDanglingALBs will delete any remaining ALBs in a vpc
 func DeleteDanglingALBs(provider v1alpha1.CloudProvider, vpcID string) error {
 	balancers, err := provider.ELBV2().DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
-		Marker:            nil,
-		PageSize:          nil,
+		Marker:   nil,
+		PageSize: nil,
 	})
 	if err != nil {
 		return err
@@ -23,6 +25,7 @@ func DeleteDanglingALBs(provider v1alpha1.CloudProvider, vpcID string) error {
 		balancerVPC := *balancer.VpcId
 		if vpcID == balancerVPC {
 			arn := *balancer.LoadBalancerArn
+
 			_, err := provider.ELBV2().DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
 				LoadBalancerArn: &arn,
 			})
@@ -31,7 +34,8 @@ func DeleteDanglingALBs(provider v1alpha1.CloudProvider, vpcID string) error {
 			}
 		}
 	}
-	return nil;
+
+	return nil
 }
 
 // DeleteDanglingSecurityGroups will remove any remaining security groups in a vpc
@@ -51,13 +55,12 @@ func DeleteDanglingSecurityGroups(provider v1alpha1.CloudProvider, vpcID string)
 	}
 
 	for _, group := range groups.SecurityGroups {
-		provider.EC2().DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
-			GroupId:   group.GroupId,
+		_, err = provider.EC2().DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
+			GroupId: group.GroupId,
 		})
-
-	}
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

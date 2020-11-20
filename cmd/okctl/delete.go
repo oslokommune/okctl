@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/api/core/cleanup"
 	"regexp"
+
+	"github.com/oslokommune/okctl/pkg/api/core/cleanup"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/oslokommune/okctl/pkg/spinner"
@@ -49,7 +50,7 @@ func (o *DeleteClusterOpts) Validate() error {
 	)
 }
 
-// nolint: gocyclo, funlen
+// nolint: gocyclo, funlen, gocognit
 func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &DeleteClusterOpts{}
 

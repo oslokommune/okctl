@@ -3,6 +3,7 @@ package cloud
 
 import (
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/elbv2/elbv2iface"
 
@@ -102,15 +103,15 @@ func NewSession(region string, auth awsauth.Authenticator) (*session.Session, *a
 
 // Services stores access to the various AWS APIs
 type Services struct {
-	cfn cloudformationiface.CloudFormationAPI
-	ec2 ec2iface.EC2API
+	cfn   cloudformationiface.CloudFormationAPI
+	ec2   ec2iface.EC2API
 	elbv2 elbv2iface.ELBV2API
-	eks eksiface.EKSAPI
-	ssm ssmiface.SSMAPI
-	sq  servicequotasiface.ServiceQuotasAPI
-	r53 route53iface.Route53API
-	cip cognitoidentityprovideriface.CognitoIdentityProviderAPI
-	cf  cloudfrontiface.CloudFrontAPI
+	eks   eksiface.EKSAPI
+	ssm   ssmiface.SSMAPI
+	sq    servicequotasiface.ServiceQuotasAPI
+	r53   route53iface.Route53API
+	cip   cognitoidentityprovideriface.CognitoIdentityProviderAPI
+	cf    cloudfrontiface.CloudFrontAPI
 
 	region       string
 	principalARN string
@@ -151,6 +152,7 @@ func (s *Services) EKS() eksiface.EKSAPI {
 	return s.eks
 }
 
+// ELBV2 returns an interface to the AWS ELBV2 API
 func (s *Services) ELBV2() elbv2iface.ELBV2API {
 	return s.elbv2
 }

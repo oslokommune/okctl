@@ -26,6 +26,7 @@ After configuring the application.yaml file, you turn it into Kubernetes and Arg
 `okctl apply application prod -f application.yaml`
 
 This command will create the following files in the ./infrastructure folder:
+
 1. ./infrastructure/base/applications/<app-name>
     * `<app-name>.yaml` containing all the Kubernetes resources.
     * `<app-name>-application.yaml` containing the ArgoCD Application declaration.

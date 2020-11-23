@@ -71,7 +71,7 @@ GOCOV          := $(GOBIN)/gocov
 RICHGO         := $(GOBIN)/richgo
 MAKEDOC        := $(GOBIN)/makedoc
 STATIK         := $(GOBIN)/statik
-GORELEASER     := bin/goreleaser/v.0.142.0/$(OS)/goreleaser
+GORELEASER     := bin/goreleaser/v.0.147.2/$(OS)/goreleaser
 GOFUMPT        := $(GOBIN)/gofumpt
 
 $(GOLANGCILINT):

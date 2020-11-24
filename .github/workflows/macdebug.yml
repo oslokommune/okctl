@@ -27,6 +27,10 @@ jobs:
             ${{ runner.os }}-go-build-
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: pwd
+        run: pwd
+      - name: Find new code
+        run: ls -lrt cmd/okctl
       - name: Run local release
         run: make release-local
       - name: Run macdebug

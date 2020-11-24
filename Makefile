@@ -75,6 +75,8 @@ GORELEASER     := bin/goreleaser/v.0.147.2/$(OS)/goreleaser
 GOFUMPT        := $(GOBIN)/gofumpt
 
 $(GOLANGCILINT):
+	# To bump, simply change the version at the end to the desired version. The git sha here points to the newest commit
+	# of the install script verified by our team located here: https://github.com/golangci/golangci-lint/blob/master/install.sh
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/b90551cdf9c6214075f2a40d1b5595c6b41ffff0/install.sh | sh -s -- -b ${GOBIN} v1.32.2
 
 $(GOIMPORTS):

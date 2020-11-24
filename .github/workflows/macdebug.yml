@@ -9,12 +9,6 @@ jobs:
   ci:
     runs-on: macos-10.15
     steps:
-      - name: apparmor
-        run: |
-          set -x
-          sudo apt-get remove mysql-server --purge
-          sudo apt-get install apparmor-profiles
-          sudo apparmor_parser -R /etc/apparmor.d/usr.sbin.mysqld
       - name: Install Go
         uses: actions/setup-go@v2
         with:

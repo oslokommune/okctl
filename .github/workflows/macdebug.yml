@@ -27,7 +27,7 @@ jobs:
             ${{ runner.os }}-go-build-
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Run golang checks
+      - name: Run local release
         run: make release-local
       - name: Run macdebug
         run: /Users/runner/work/okctl/okctl/dist/default_darwin_amd64/okctl macdebug

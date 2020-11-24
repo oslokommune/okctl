@@ -66,19 +66,21 @@ being captured. Together with slack and slick.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
-			err = loadUserData(o, cmd)
-			if err != nil {
-				return fmt.Errorf("failed to load application data: %w", err)
-			}
-
-			err = loadRepoData(o, cmd)
-			if err != nil {
-				if errors.Is(err, git.ErrRepositoryNotExists) {
-					return fmt.Errorf("okctl needs to be run inside a Git repository (okctl outputs " +
-						"various configuration files that will be stored here)")
+			if cmd.Use != "macdebug" {
+				err = loadUserData(o, cmd)
+				if err != nil {
+					return fmt.Errorf("failed to load application data: %w", err)
 				}
 
-				return fmt.Errorf("failed to load repository data: %w", err)
+				err = loadRepoData(o, cmd)
+				if err != nil {
+					if errors.Is(err, git.ErrRepositoryNotExists) {
+						return fmt.Errorf("okctl needs to be run inside a Git repository (okctl outputs " +
+							"various configuration files that will be stored here)")
+					}
+
+					return fmt.Errorf("failed to load repository data: %w", err)
+				}
 			}
 
 			o.Out = cmd.OutOrStdout()
@@ -104,6 +106,7 @@ being captured. Together with slack and slick.`,
 	cmd.AddCommand(buildShowCommand(o))
 	cmd.AddCommand(buildVersionCommand(o))
 	cmd.AddCommand(buildAddUserCommand(o))
+	cmd.AddCommand(buildMacDebugCommand(o))
 
 	f := cmd.Flags()
 	f.StringVarP(&outputFormat, "output", "o", "text",

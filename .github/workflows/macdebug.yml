@@ -2,44 +2,36 @@ name: macdebug
 
 on:
   - push
-  - pull_request
+#  - pull_request
 
 
 jobs:
-  goreleaser:
+  ci:
     runs-on: macos-10.15
     steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Unshallow
-        run: git fetch --prune --unshallow
-      -
-        name: Set up Go
+      - name: apparmor
+        run: |
+          set -x
+          sudo apt-get remove mysql-server --purge
+          sudo apt-get install apparmor-profiles
+          sudo apparmor_parser -R /etc/apparmor.d/usr.sbin.mysqld
+      - name: Install Go
         uses: actions/setup-go@v2
         with:
           go-version: 1.15.1
-
-      - name: Get the git tag
-        uses: little-core-labs/get-git-tag@v3.0.2
-        id: tagName
+      - uses: actions/cache@v2
         with:
-          tagRegex: v(.*)
-          tagRegexGroup: 1
-
-      -
-        name: Check if release notes exist
-        uses: andstor/file-existence-action@v1
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - uses: actions/cache@v2
         with:
-          files: docs/release_notes/${{ steps.tagName.outputs.tag }}
-          allow_failure: false
-
-      -
-        name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
-        with:
-          version: latest
-          args: release --rm-dist --release-notes=docs/release_notes/${{ steps.tagName.outputs.tag }}.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-go-build-${{ hashFiles('log.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-go-build-
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Run golang checks
+        run: make release-local

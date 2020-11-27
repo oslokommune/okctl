@@ -6,6 +6,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/virtualenv/shellgetter"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
@@ -25,6 +27,7 @@ type OkctlEnvironment struct {
 	Debug                  bool
 	KubectlBinaryDir       string
 	AwsIamAuthenticatorDir string
+	Os                     shellgetter.Os
 }
 
 // Validate the inputs
@@ -37,6 +40,7 @@ func (o *OkctlEnvironment) Validate() error {
 		validation.Field(&o.UserDataDir, validation.Required),
 		validation.Field(&o.KubectlBinaryDir, validation.Required),
 		validation.Field(&o.AwsIamAuthenticatorDir, validation.Required),
+		validation.Field(&o.Os, validation.Required),
 	)
 }
 

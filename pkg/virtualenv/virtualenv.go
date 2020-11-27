@@ -6,7 +6,6 @@ import (
 	"sort"
 
 	"github.com/oslokommune/okctl/pkg/virtualenv/commandlineprompter"
-	"github.com/oslokommune/okctl/pkg/virtualenv/shellgetter"
 )
 
 // VirtualEnvironment contains environment variables in a virtual environment.
@@ -34,9 +33,9 @@ func (v *VirtualEnvironment) Environ() []string {
 
 // CreateVirtualEnvironment returns an environment for running a shell
 func CreateVirtualEnvironment(opts commandlineprompter.CommandLinePromptOpts) (*VirtualEnvironment, error) {
-	sg := shellgetter.New(opts.OsEnvVars, opts.EtcStorage, opts.CurrentUsername)
+	shellGetter := commandlineprompter.NewShellGetter(opts)
 
-	shell, err := sg.Get()
+	shell, err := shellGetter.Get()
 	if err != nil {
 		return nil, fmt.Errorf("could not get shell: %w", err)
 	}

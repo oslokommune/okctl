@@ -6,8 +6,9 @@ import (
 	"path"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/virtualenv/shelltype"
+
 	"github.com/oslokommune/okctl/pkg/storage"
-	"github.com/oslokommune/okctl/pkg/virtualenv/shellgetter"
 )
 
 // CommandLinePrompt contains environment variables needed by the command prompt, and possibly a warning about issues
@@ -23,7 +24,7 @@ type CommandLinePrompter interface {
 }
 
 // New creates a new command line prompter
-func New(opts CommandLinePromptOpts, shellType shellgetter.ShellType) (CommandLinePrompter, error) {
+func New(opts CommandLinePromptOpts, shellType shelltype.ShellType) (CommandLinePrompter, error) {
 	osEnvVars := copyMap(opts.OsEnvVars)
 
 	noPs1, isSet := opts.OsEnvVars["OKCTL_NO_PS1"]
@@ -39,12 +40,12 @@ func New(opts CommandLinePromptOpts, shellType shellgetter.ShellType) (CommandLi
 	}
 
 	switch shellType {
-	case shellgetter.ShellTypeBash:
+	case shelltype.Bash:
 		return &bashPrompter{
 			environment: opts.Environment,
 			osEnvVars:   osEnvVars,
 		}, nil
-	case shellgetter.ShellTypeZsh:
+	case shelltype.Zsh:
 		return &zshPrompter{
 			userHomeDirStorage: opts.UserHomeDirStorage,
 			tmpStorer:          opts.TmpStorage,

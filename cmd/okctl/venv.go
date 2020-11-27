@@ -9,6 +9,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/config/state"
+	"github.com/oslokommune/okctl/pkg/virtualenv/shellgetter"
+
 	"github.com/oslokommune/okctl/pkg/virtualenv/commandlineprompter"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -88,7 +91,7 @@ func venvPreRunE(args []string, o *okctl.Okctl) (commands.OkctlEnvironment, erro
 }
 
 func venvRunE(o *okctl.Okctl, okctlEnvironment commands.OkctlEnvironment) error {
-	venvOpts, tmpStorage, err := createVenvOpts(okctlEnvironment)
+	venvOpts, tmpStorage, err := createVenvOpts(o.Host(), okctlEnvironment)
 	if err != nil {
 		return err
 	}
@@ -129,7 +132,7 @@ func venvRunE(o *okctl.Okctl, okctlEnvironment commands.OkctlEnvironment) error 
 	return nil
 }
 
-func createVenvOpts(okctlEnvironment commands.OkctlEnvironment) (commandlineprompter.CommandLinePromptOpts, *storage.TemporaryStorage, error) {
+func createVenvOpts(host state.Host, okctlEnvironment commands.OkctlEnvironment) (commandlineprompter.CommandLinePromptOpts, *storage.TemporaryStorage, error) {
 	currentUser, err := user.Current()
 	if err != nil {
 		return commandlineprompter.CommandLinePromptOpts{}, nil, fmt.Errorf("could not get current user: %w", err)
@@ -144,13 +147,15 @@ func createVenvOpts(okctlEnvironment commands.OkctlEnvironment) (commandlineprom
 	}
 
 	venvOpts := commandlineprompter.CommandLinePromptOpts{
-		OsEnvVars:          envVars,
-		EtcStorage:         storage.NewFileSystemStorage("/etc"),
-		UserDirStorage:     storage.NewFileSystemStorage(okctlEnvironment.UserDataDir),
-		UserHomeDirStorage: storage.NewFileSystemStorage(homeDir),
-		TmpStorage:         nil,
-		Environment:        okctlEnvironment.Environment,
-		CurrentUsername:    currentUser.Username,
+		Os:                   getOs(host),
+		MacOsUserShellGetter: shellgetter.NewMacOsCmdGetter(),
+		OsEnvVars:            envVars,
+		EtcStorage:           storage.NewFileSystemStorage("/etc"),
+		UserDirStorage:       storage.NewFileSystemStorage(okctlEnvironment.UserDataDir),
+		UserHomeDirStorage:   storage.NewFileSystemStorage(homeDir),
+		TmpStorage:           nil,
+		Environment:          okctlEnvironment.Environment,
+		CurrentUsername:      currentUser.Username,
 	}
 
 	tmpStorage, err := storage.NewTemporaryStorage()
@@ -161,6 +166,21 @@ func createVenvOpts(okctlEnvironment commands.OkctlEnvironment) (commandlineprom
 	venvOpts.TmpStorage = tmpStorage
 
 	return venvOpts, tmpStorage, nil
+}
+
+func getOs(host state.Host) shellgetter.Os {
+	var os shellgetter.Os
+
+	switch host.Os {
+	case state.OsLinux:
+		os = shellgetter.OsLinux
+	case state.OsDarwin:
+		os = shellgetter.OsDarwin
+	default:
+		os = shellgetter.OsUnknown
+	}
+
+	return os
 }
 
 type venvWelcomeMessage struct {

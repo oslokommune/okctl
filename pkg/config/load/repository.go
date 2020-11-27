@@ -2,6 +2,7 @@ package load
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"path"
 
 	"github.com/oslokommune/okctl/pkg/client/store"
@@ -11,7 +12,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
@@ -37,6 +37,50 @@ We will ask some questions about where and how this state
 will be stored, together with your AWS account details.
 
 `
+
+func CreateOnRepoDataNotFoundWithNoUserInput(declaration *v1alpha1.Cluster) DataNotFoundFn {
+	return func(c *config.Config) error {
+		var err error
+
+		repoDataPath, err := c.GetRepoStatePath()
+		if err != nil {
+			return err
+		}
+
+		_, err = fmt.Fprint(c.Err, repoMsg)
+		if err != nil {
+			return err
+		}
+
+		data := state.NewRepository()
+
+		data.Metadata = state.Metadata{
+			Name:      declaration.Metadata.Name,
+			Region:    declaration.Metadata.Region,
+			OutputDir: declaration.Github.OutputPath,
+		}
+
+		c.RepoState = data
+
+		repoDir, err := c.GetRepoDir()
+		if err != nil {
+			return err
+		}
+
+		_, err = store.NewFileSystem(repoDir, c.FileSystem).
+			StoreStruct(config.DefaultRepositoryStateFile, c.RepoState, store.ToYAML()).
+			Do()
+		if err != nil {
+			return err
+		}
+
+		c.Logger.WithFields(logrus.Fields{
+			"configuration_file": repoDataPath,
+		}).Info("repository configuration completed")
+
+		return nil
+	}
+}
 
 // CreateOnRepoDataNotFound will start an interactive survey
 // that allows the end user to configure okctl when a repository
@@ -101,7 +145,7 @@ func CreateOnRepoDataNotFound() DataNotFoundFn {
 }
 
 // RepoDataFromConfigFile defines the default behavior for loading configuration data
-func RepoDataFromConfigFile(_ *cobra.Command, notFoundFn DataNotFoundFn) config.DataLoaderFn {
+func RepoDataFromConfigFile(notFoundFn DataNotFoundFn) config.DataLoaderFn {
 	// Here we should be loading all the definitions in the `.okctl/` directory together
 	// with the .okctl.state file. Once these are loaded we can validate the `.okctl/*.yml` files
 	// and start working on matching the declared state with the actual state.

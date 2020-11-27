@@ -50,6 +50,37 @@ all the time, if you so choose.
 
 `
 
+func CreateOnUserDataNotFoundWithNoInput() DataNotFoundFn {
+	return func(c *config.Config) (err error) {
+		userDir, err := c.GetUserDataDir()
+		if err != nil {
+			return fmt.Errorf("getting user data dir: %w", err)
+		}
+
+		userDataPath, err := c.GetUserDataPath()
+		if err != nil {
+			return fmt.Errorf("getting user data path: %w", err)
+		}
+
+		data := state.NewUser()
+
+		data.User.Username = "ooo306134" // TODO: from env var?
+
+		c.UserState = data
+
+		_, err = store.NewFileSystem(userDir, c.FileSystem).
+			StoreStruct(config.DefaultConfig, c.UserState, store.ToYAML()).
+			Do()
+
+		c.Logger.WithFields(logrus.Fields{
+			"configuration_file": userDataPath,
+		}).Info("cli configuration completed")
+
+		return nil
+	}
+}
+
+
 // CreateOnUserDataNotFound will start an interactive survey
 // that allows the end user to configure okctl for their
 // use

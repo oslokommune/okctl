@@ -179,12 +179,14 @@ type CreateGithubDeployKey struct {
 // GithubService is a business logic implementation
 type GithubService interface {
 	ReadyGithubInfrastructureRepository(ctx context.Context, opts ReadyGithubInfrastructureRepositoryOpts) (*GithubRepository, error)
+	ReadyGithubInfrastructureRepositoryWithoutUserinput(ctx context.Context, opts ReadyGithubInfrastructureRepositoryOpts) (*GithubRepository, error)
 	CreateGithubOauthApp(ctx context.Context, opts CreateGithubOauthAppOpts) (*GithubOauthApp, error)
 }
 
 // GithubAPI invokes the Github API
 type GithubAPI interface {
 	SelectGithubInfrastructureRepository(opts SelectGithubInfrastructureRepositoryOpts) (*SelectedGithubRepository, error)
+	GetGithubInfrastructureRepository(opts SelectGithubInfrastructureRepositoryOpts) (*SelectedGithubRepository, error)
 	CreateGithubDeployKey(opts CreateGithubDeployKey) (*GithubDeployKey, error)
 	SelectGithubTeam(opts SelectGithubTeam) (*GithubTeam, error)
 	CreateGithubOauthApp(opts CreateGithubOauthAppOpts) (*GithubOauthApp, error)

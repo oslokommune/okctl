@@ -6,6 +6,8 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/virtualenv/shellgetter"
+
 	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/oslokommune/okctl/pkg/virtualenv/commandlineprompter"
 	"github.com/sebdah/goldie/v2"
@@ -30,7 +32,7 @@ func newTestHelper(t *testing.T) *testHelper {
 	}
 }
 
-func (h *testHelper) CreateEtcStorage(username string, shellCmd string) (storage.Storer, error) {
+func (h *testHelper) createEtcStorage(username string, shellCmd string) (storage.Storer, error) {
 	s := storage.NewEphemeralStorage()
 
 	passwdFile, err := s.Create("/", "passwd", 0o644)
@@ -108,4 +110,20 @@ func (h *testHelper) assertGoldenVenvPs1(t *testing.T, opts commandlineprompter.
 
 	g := goldie.New(t)
 	g.Assert(t, "venv_ps1", content)
+}
+
+// NewMacOsCmdGetter returns a MacOsUserShellGetter
+func (h *testHelper) NewTestMacOsLoginShellGetter() shellgetter.MacOsUserShellCmdGetter {
+	return &TestMacOsShellGetter{}
+}
+
+// DefaultMacOsShellGetter is the default implementation for getting the user's login shell on macOS
+type TestMacOsShellGetter struct {
+}
+
+const MacOsUserLoginShell string = "/bin/someMacShell"
+
+// FindUserLoginShell returns
+func (m *TestMacOsShellGetter) RunDsclUserShell() (string, error) {
+	return MacOsUserLoginShell, nil
 }

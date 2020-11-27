@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/virtualenv/shellgetter"
+
 	"github.com/oslokommune/okctl/pkg/virtualenv"
 	"github.com/oslokommune/okctl/pkg/virtualenv/commandlineprompter"
 	"github.com/sebdah/goldie/v2"
@@ -16,6 +18,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 
 	testCases := []struct {
 		name            string
+		os              shellgetter.Os
 		osEnvVars       map[string]string
 		loginShellCmd   string
 		createZshrcFile bool
@@ -23,6 +26,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 	}{
 		{
 			name: "Should get shell to execute from /etc/passwd",
+			os:   shellgetter.OsLinux,
 			osEnvVars: map[string]string{
 				"OKCTL_NO_PS1": "true", // Setting this disables PS1 functionality, making the test assertions simpler
 			},
@@ -36,6 +40,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 		},
 		{
 			name: "When using bash and OKCTL_PS1, COMMAND_PROMPT should contain contents of OKCTL_PS1",
+			os:   shellgetter.OsLinux,
 			osEnvVars: map[string]string{
 				"OKCTL_PS1": `Dir: \w $`,
 			},
@@ -52,6 +57,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 		},
 		{
 			name: "When using bash, should set correct PATH and PROMPT_COMMAND, and create venv_ps1 executable",
+			os:   shellgetter.OsLinux,
 			osEnvVars: map[string]string{
 				"PATH": "/somepath:/somepath2",
 			},
@@ -67,6 +73,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 		},
 		{
 			name: "When using zsh, should set correct PATH and ZDOTDIR, and create venv_ps1 executable",
+			os:   shellgetter.OsLinux,
 			osEnvVars: map[string]string{
 				"PATH": "/somepath:/somepath2",
 			},
@@ -82,6 +89,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 		},
 		{
 			name: "When using a custom shell, should set correct PATH and create venv_ps1 executable",
+			os:   shellgetter.OsLinux,
 			osEnvVars: map[string]string{
 				"PATH":        "/somepath:/somepath2",
 				"OKCTL_SHELL": "/bin/fish",
@@ -98,6 +106,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 		},
 		{
 			name: "When using zsh, a temporary .zshrc file should have been generated",
+			os:   shellgetter.OsLinux,
 			osEnvVars: map[string]string{
 				"PATH": "/somepath:/somepath2",
 			},
@@ -112,6 +121,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 		},
 		{
 			name: "When using zsh and .zshrc already exists, the tmp .zshrc should source original",
+			os:   shellgetter.OsLinux,
 			osEnvVars: map[string]string{
 				"PATH": "/somepath:/somepath2",
 			},
@@ -127,6 +137,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 		},
 		{
 			name: "When using zsh and OKCTL_PS1 is set, temp .zshrc should contain the custom PS1",
+			os:   shellgetter.OsLinux,
 			osEnvVars: map[string]string{
 				"OKCTL_PS1": "Dir: %~ $",
 			},
@@ -141,6 +152,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 		},
 		{
 			name: "When using zsh and ZDOTDIR is already set, a warning is returned",
+			os:   shellgetter.OsLinux,
 			osEnvVars: map[string]string{
 				"PATH":    "/somepath:/somepath2",
 				"ZDOTDIR": "/somewhere",
@@ -153,6 +165,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 		},
 		{
 			name: "Should support inheriting env variables with '=' in them",
+			os:   shellgetter.OsLinux,
 			osEnvVars: map[string]string{
 				"PATH":         "/somepath:/somepath2",
 				"OKCTL_NO_PS1": "true",
@@ -170,6 +183,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 		},
 		{
 			name:          "Should set PATH correctly when it does not exist already",
+			os:            shellgetter.OsLinux,
 			osEnvVars:     map[string]string{},
 			loginShellCmd: "/bin/fish",
 			assertion: func(opts commandlineprompter.CommandLinePromptOpts, venv *virtualenv.VirtualEnvironment) {
@@ -184,6 +198,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 			osEnvVars: map[string]string{
 				"OKCTL_PS1": `Dir: \w | \$(venv_ps1 %env) \$`,
 			},
+			os:            shellgetter.OsLinux,
 			loginShellCmd: "/bin/bash",
 			assertion: func(opts commandlineprompter.CommandLinePromptOpts, venv *virtualenv.VirtualEnvironment) {
 				expectedOsEnvVars := testHelper.toSlice(map[string]string{
@@ -197,6 +212,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 		},
 		{
 			name: "When using zsh and OKCTL_PS1, replace %env with okctl environment",
+			os:   shellgetter.OsLinux,
 			osEnvVars: map[string]string{
 				"OKCTL_PS1": `Dir: %~ | \$(venv_ps1 %env) \$`,
 			},
@@ -210,12 +226,19 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 				g.Assert(t, "zshrc_custom_ps1_with_env", zshrc)
 			},
 		},
+		{
+			name: "When using macOS, get login shell from running command dscl",
+			os:   shellgetter.OsDarwin,
+			assertion: func(opts commandlineprompter.CommandLinePromptOpts, venv *virtualenv.VirtualEnvironment) {
+				assert.Equal(t, MacOsUserLoginShell, venv.ShellCommand)
+			},
+		},
 	}
 	for _, tc := range testCases {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			etcStorage, err := testHelper.CreateEtcStorage(testHelper.currentUsername, tc.loginShellCmd)
+			etcStorage, err := testHelper.createEtcStorage(testHelper.currentUsername, tc.loginShellCmd)
 			if err != nil {
 				assert.Fail(t, "could not create etc storage: %w", err)
 			}
@@ -230,13 +253,15 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 			tmpStorage := testHelper.createTmpStorage()
 
 			opts := commandlineprompter.CommandLinePromptOpts{
-				OsEnvVars:          tc.osEnvVars,
-				EtcStorage:         etcStorage,
-				UserDirStorage:     userDirStorage.storage,
-				UserHomeDirStorage: userHomeDirStorage,
-				TmpStorage:         tmpStorage,
-				Environment:        "myenv",
-				CurrentUsername:    testHelper.currentUsername,
+				Os:                   tc.os,
+				MacOsUserShellGetter: testHelper.NewTestMacOsLoginShellGetter(),
+				OsEnvVars:            tc.osEnvVars,
+				EtcStorage:           etcStorage,
+				UserDirStorage:       userDirStorage.storage,
+				UserHomeDirStorage:   userHomeDirStorage,
+				TmpStorage:           tmpStorage,
+				Environment:          "myenv",
+				CurrentUsername:      testHelper.currentUsername,
 			}
 			venv, err := virtualenv.CreateVirtualEnvironment(opts)
 			assert.Nil(t, err)

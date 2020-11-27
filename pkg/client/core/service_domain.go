@@ -2,11 +2,12 @@ package core
 
 import (
 	"context"
+	"errors"
 	"io"
 
 	"github.com/oslokommune/okctl/pkg/config/state"
 
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/api"
 
@@ -155,6 +156,51 @@ func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.C
 	}
 
 	zone.IsDelegated = delegated
+
+	r1, err := s.store.SaveHostedZone(zone)
+	if err != nil {
+		return nil, err
+	}
+
+	r2, err := s.state.SaveHostedZone(zone)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.ReportCreatePrimaryHostedZone(zone, []*store.Report{r1, r2})
+	if err != nil {
+		return nil, err
+	}
+
+	return zone, nil
+}
+
+func (s *domainService) CreatePrimaryHostedZoneWithoutUserinput(_ context.Context, opts client.CreatePrimaryHostedZoneOpts) (*client.HostedZone, error) {
+	err := s.spinner.Start("domain")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	for _, z := range s.state.GetHostedZones() {
+		if z.Primary {
+			return s.store.GetHostedZone(z.Domain)
+		}
+	}
+
+	if opts.Domain == "" || opts.FQDN == "" {
+		return nil, errors.New("missing required primary hosted zone information domain and FQDN")
+	}
+
+	zone, err := s.api.CreatePrimaryHostedZone(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	zone.IsDelegated = true
 
 	r1, err := s.store.SaveHostedZone(zone)
 	if err != nil {

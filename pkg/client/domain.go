@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/route53"
 
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/config/state"
 
@@ -35,6 +35,7 @@ type DeletePrimaryHostedZoneOpts struct {
 // DomainService orchestrates the creation of a hosted zone
 type DomainService interface {
 	CreatePrimaryHostedZone(ctx context.Context, opts CreatePrimaryHostedZoneOpts) (*HostedZone, error)
+	CreatePrimaryHostedZoneWithoutUserinput(ctx context.Context, opts CreatePrimaryHostedZoneOpts) (*HostedZone, error)
 	GetPrimaryHostedZone(ctx context.Context, id api.ID) (*HostedZone, error)
 	DeletePrimaryHostedZone(ctx context.Context, provider v1alpha1.CloudProvider, opts DeletePrimaryHostedZoneOpts) error
 }

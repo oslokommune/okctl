@@ -50,6 +50,38 @@ all the time, if you so choose.
 
 `
 
+// CreateOnUserDataNotFoundWithNoInput initializes a user without user input
+func CreateOnUserDataNotFoundWithNoInput() DataNotFoundFn {
+	return func(c *config.Config) (err error) {
+		userDir, err := c.GetUserDataDir()
+		if err != nil {
+			return fmt.Errorf("getting user data dir: %w", err)
+		}
+
+		userDataPath, err := c.GetUserDataPath()
+		if err != nil {
+			return fmt.Errorf("getting user data path: %w", err)
+		}
+
+		data := state.NewUser()
+
+		c.UserState = data
+
+		_, err = store.NewFileSystem(userDir, c.FileSystem).
+			StoreStruct(config.DefaultConfig, c.UserState, store.ToYAML()).
+			Do()
+		if err != nil {
+			return err
+		}
+
+		c.Logger.WithFields(logrus.Fields{
+			"configuration_file": userDataPath,
+		}).Info("cli configuration completed")
+
+		return nil
+	}
+}
+
 // CreateOnUserDataNotFound will start an interactive survey
 // that allows the end user to configure okctl for their
 // use

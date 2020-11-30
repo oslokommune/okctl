@@ -746,12 +746,6 @@ https://www.passwordstore.org/
 		_ = k.Store(keyring.KeyTypeUserPassword, password)
 	}
 
-	//machineAuth := aws.NewAuthMachine( // TODO: make AuthMachine work and add it to 772:aws.New
-	//	o.RepoStateWithEnv.GetCluster().AWSAccountID,
-	//	o.RepoStateWithEnv.GetMetadata().Region,
-	//	aws.DefaultStsProvider,
-	//)
-	
 	saml := aws.NewAuthSAML(
 		o.RepoStateWithEnv.GetCluster().AWSAccountID,
 		o.RepoStateWithEnv.GetMetadata().Region,

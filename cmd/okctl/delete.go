@@ -165,7 +165,8 @@ including VPC, this is a highly destructive operation.`,
 			}
 
 			err = services.Cluster.DeleteCluster(o.Ctx, api.ClusterDeleteOpts{
-				ID: id,
+				ID:                 id,
+				FargateProfileName: "fp-default",
 			})
 			if err != nil {
 				return formatErr(err)

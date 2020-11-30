@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cognito"
 
+	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -46,6 +46,13 @@ func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, provide
 	if err != nil {
 		return err
 	}
+
+	report, err := s.store.RemoveIdentityPool(opts)
+	if err != nil {
+		return err
+	}
+
+	err = s.report.ReportDeleteIdentityPool(report)
 
 	return nil
 }

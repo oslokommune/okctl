@@ -57,7 +57,7 @@ type IdentityPoolUser struct {
 	StackName  string
 }
 
-// RemoveIdentityPool removes alias, cert, and indentitypool files from file store
+// RemoveIdentityPool removes alias, cert, and identitypool files from file store
 func (s *identityManagerStore) RemoveIdentityPool(id api.ID) (*store.Report, error) {
 	// nolint: godox
 	// TODO: send domain info in here somehow, or read the file system

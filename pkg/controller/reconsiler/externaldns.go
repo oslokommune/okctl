@@ -34,7 +34,7 @@ func (z *externalDNSReconsiler) Reconsile(node *resourcetree.ResourceNode) (*Rec
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err := z.client.CreateExternalDNS(z.commonMetadata.Ctx, client.CreateExternalDNSOpts{
-			ID:           z.commonMetadata.Id,
+			ID:           z.commonMetadata.ClusterId,
 			HostedZoneID: resourceState.HostedZoneID,
 			Domain:       resourceState.Domain,
 		})
@@ -42,7 +42,7 @@ func (z *externalDNSReconsiler) Reconsile(node *resourcetree.ResourceNode) (*Rec
 			return &ReconsilationResult{Requeue: true}, fmt.Errorf("error creating external DNS: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err := z.client.DeleteExternalDNS(z.commonMetadata.Ctx, z.commonMetadata.Id)
+		err := z.client.DeleteExternalDNS(z.commonMetadata.Ctx, z.commonMetadata.ClusterId)
 		if err != nil {
 			return &ReconsilationResult{Requeue: true}, fmt.Errorf("error deleting external DNS: %w", err)
 		}

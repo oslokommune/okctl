@@ -52,7 +52,7 @@ func (z *githubReconsiler) Reconsile(node *resourcetree.ResourceNode) (*Reconsil
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err := z.client.ReadyGithubInfrastructureRepositoryWithoutUserinput(z.commonMetadata.Ctx, client.ReadyGithubInfrastructureRepositoryOpts{
-			ID:           z.commonMetadata.Id,
+			ID:           z.commonMetadata.ClusterId,
 			Organisation: metadata.Organization,
 			Repository:   metadata.Repository,
 		})

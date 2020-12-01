@@ -44,7 +44,7 @@ func (z *identityManagerReconsiler) Reconsile(node *resourcetree.ResourceNode) (
 		authFQDN := dns.Fqdn(authDomain)
 		
 		_, err := z.client.CreateIdentityPool(z.commonMetadata.Ctx, api.CreateIdentityPoolOpts{
-			ID:           z.commonMetadata.Id,
+			ID:           z.commonMetadata.ClusterId,
 			AuthDomain:   authDomain,
 			AuthFQDN:     authFQDN,
 			HostedZoneID: resourceState.HostedZoneID,

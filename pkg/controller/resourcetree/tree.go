@@ -90,7 +90,7 @@ func (node *ResourceNode) SetStateRefresher(nodeType ResourceNodeType, refresher
 
 // Equals knows how to compare two ResourceNodes and determine equality
 func (node *ResourceNode) Equals(targetNode *ResourceNode) bool {
-	if node == nil {
+	if targetNode == nil {
 		return false
 	}
 

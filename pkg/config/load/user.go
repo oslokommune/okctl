@@ -64,8 +64,6 @@ func CreateOnUserDataNotFoundWithNoInput() DataNotFoundFn {
 
 		data := state.NewUser()
 
-		data.User.Username = "ooo306134" // TODO: from env var?
-
 		c.UserState = data
 
 		_, err = store.NewFileSystem(userDir, c.FileSystem).

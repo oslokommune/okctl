@@ -7,42 +7,41 @@ import (
 	"strings"
 
 	"github.com/oslokommune/okctl/pkg/storage"
-)
-
-// ShellType enumerates shells we recognize
-type ShellType string
-
-const (
-	// ShellTypeBash is a constant that identifies the Bash shell
-	ShellTypeBash ShellType = "bash"
-
-	// ShellTypeZsh is a constant that identifies the Zsh shell
-	ShellTypeZsh ShellType = "zsh"
-
-	// ShellTypeUnknown is a constant that is identifies the case when an unknown shell is used
-	ShellTypeUnknown ShellType = "unknown"
+	"github.com/oslokommune/okctl/pkg/virtualenv/shelltype"
 )
 
 // ShellGetter is a provider for getting a shell executable based on some environment
 type ShellGetter struct {
-	osEnvVars       map[string]string
-	etcStorer       storage.Storer
-	currentUsername string
+	Os                      Os
+	UserHomeDir             string
+	OsEnvVars               map[string]string
+	EtcStorage              storage.Storer
+	CurrentUsername         string
+	MacOsUserShellCmdGetter MacOsUserShellCmdGetter
+}
+
+// NewShellGetter returns a new ShellGetter
+func NewShellGetter(
+	os Os,
+	macOsUserShellGetter MacOsUserShellCmdGetter,
+	userHomeDir string,
+	osEnvVars map[string]string,
+	etcStorage storage.Storer,
+	currentUsername string) *ShellGetter {
+	return &ShellGetter{
+		Os:                      os,
+		UserHomeDir:             userHomeDir,
+		OsEnvVars:               osEnvVars,
+		EtcStorage:              etcStorage,
+		CurrentUsername:         currentUsername,
+		MacOsUserShellCmdGetter: macOsUserShellGetter,
+	}
 }
 
 // Shell contains data about a shell executable (like bash)
 type Shell struct {
 	Command   string
-	ShellType ShellType
-}
-
-// New creates a new ShellGetter
-func New(osEnvVars map[string]string, etcStorer storage.Storer, currentUsername string) *ShellGetter {
-	return &ShellGetter{
-		osEnvVars:       osEnvVars,
-		etcStorer:       etcStorer,
-		currentUsername: currentUsername,
-	}
+	ShellType shelltype.ShellType
 }
 
 // Get returns a new Shell
@@ -54,21 +53,37 @@ func (g *ShellGetter) Get() (*Shell, error) {
 		return &Shell{}, fmt.Errorf("could not get shell command: %w", err)
 	}
 
-	var shellType ShellType
+	var shellType shelltype.ShellType
 
 	switch {
 	case g.shellIsBash(shellCmd):
-		shellType = ShellTypeBash
+		shellType = shelltype.Bash
 	case g.shellIsZsh(shellCmd):
-		shellType = ShellTypeZsh
+		shellType = shelltype.Zsh
 	default:
-		shellType = ShellTypeUnknown
+		shellType = shelltype.Unknown
 	}
 
 	return &Shell{
 		Command:   shellCmd,
 		ShellType: shellType,
 	}, nil
+}
+
+func (g *ShellGetter) createShellCmdGetter() shellCmdGetter {
+	shellCmd, isSet := g.OsEnvVars["OKCTL_SHELL"]
+
+	if isSet {
+		return &envShellCmdGetter{
+			shellCmd: shellCmd,
+		}
+	}
+
+	if g.Os == OsDarwin {
+		return newMacOsLoginShellCmdGetter(g.MacOsUserShellCmdGetter)
+	}
+
+	return newLinuxLoginShellCmdGetter(g.EtcStorage, g.CurrentUsername)
 }
 
 func (g *ShellGetter) shellIsBash(shellCmd string) bool {

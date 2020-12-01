@@ -9,14 +9,20 @@ import (
 	"github.com/oslokommune/okctl/pkg/storage"
 )
 
-type loginShellCmdGetter struct {
-	envVars         map[string]string
+type linuxLoginShellCmdGetter struct {
 	etcStorer       storage.Storer
 	currentUsername string
 }
 
+func newLinuxLoginShellCmdGetter(s storage.Storer, u string) shellCmdGetter {
+	return &linuxLoginShellCmdGetter{
+		etcStorer:       s,
+		currentUsername: u,
+	}
+}
+
 // Get detects which shell to run by getting the user's default login shell from /etc/passwd.
-func (g *loginShellCmdGetter) Get() (string, error) {
+func (g *linuxLoginShellCmdGetter) Get() (string, error) {
 	line, err := g.findUserLoginShell()
 	if err != nil {
 		return "", fmt.Errorf("could not get current user's login shell: %w", err)
@@ -27,7 +33,7 @@ func (g *loginShellCmdGetter) Get() (string, error) {
 	return shellCmd, nil
 }
 
-func (g *loginShellCmdGetter) findUserLoginShell() (string, error) {
+func (g *linuxLoginShellCmdGetter) findUserLoginShell() (string, error) {
 	fileContents, err := g.etcStorer.ReadAll("/passwd")
 	if err != nil {
 		return "", fmt.Errorf("failed to open /etc/passwd when detecting user login shell: %w", err)
@@ -47,7 +53,7 @@ func (g *loginShellCmdGetter) findUserLoginShell() (string, error) {
 	return "", fmt.Errorf("failed to find '%s' in /etc/passwd", g.currentUsername)
 }
 
-func (*loginShellCmdGetter) parseShellCmd(line string) string {
+func (*linuxLoginShellCmdGetter) parseShellCmd(line string) string {
 	split := strings.Split(line, ":")
 	return split[len(split)-1]
 }

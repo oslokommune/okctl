@@ -59,11 +59,11 @@ func Synchronize(opts *SynchronizeOpts) error {
 
 	currentStateTree := CreateCurrentStateGraph(currentStateGraphOpts)
 
-	diffGraph := *opts.DesiredTree
+	diffTree := *opts.DesiredTree
 
-	diffGraph.ApplyFunction(applyCurrentState, currentStateTree)
+	diffTree.ApplyFunction(applyCurrentState, currentStateTree)
 
-	return handleNode(opts.ReconsiliationManager, &diffGraph)
+	return handleNode(opts.ReconsiliationManager, &diffTree)
 }
 
 // handleNode knows how to run Reconsile() on every node of a ResourceNode tree

@@ -188,6 +188,7 @@ type venvWelcomeMessage struct {
 	KubectlPath             string
 	AwsIamAuthenticatorPath string
 	CommandPrompt           string
+	VenvShellCmd            string
 	VenvCommand             string
 	Warning                 string
 }
@@ -210,6 +211,7 @@ func printWelcomeMessage(stdout io.Writer, venv *virtualenv.VirtualEnvironment, 
 		KubectlPath:             whichKubectl,
 		AwsIamAuthenticatorPath: whichAwsIamAuthenticator,
 		CommandPrompt:           "<directory> <okctl environment:kubernetes namespace>",
+		VenvShellCmd:            aurora.Green(venv.ShellCommand).String(),
 		VenvCommand:             aurora.Green("okctl venv").String(),
 		Warning:                 venv.Warning,
 	}
@@ -218,7 +220,7 @@ Environment: {{ .Environment }}
 Using kubectl: {{ .KubectlPath }}
 Using aws-iam-authenticator: {{ .AwsIamAuthenticatorPath }}
 
-Your command prompt now shows
+Your shell is {{ .VenvShellCmd }} and your command prompt now shows
 {{ .CommandPrompt }}
 
 You can override the command prompt by setting the environment variable OKCTL_PS1 before running {{ .VenvCommand }}.

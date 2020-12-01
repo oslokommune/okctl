@@ -55,9 +55,11 @@ func DeleteDanglingSecurityGroups(provider v1alpha1.CloudProvider, vpcID string)
 	}
 
 	for _, group := range groups.SecurityGroups {
-		_, err = provider.EC2().DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
-			GroupId: group.GroupId,
-		})
+		if *group.GroupName != "default" {
+			_, err = provider.EC2().DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
+				GroupId: group.GroupId,
+			})
+		}
 		if err != nil {
 			return err
 		}

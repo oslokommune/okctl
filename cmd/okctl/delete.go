@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/client"
 	"regexp"
 
 	"github.com/oslokommune/okctl/pkg/api/core/cleanup"
@@ -17,6 +18,7 @@ import (
 
 const (
 	deleteClusterArgs = 1
+	deleteHostedZoneFlag = "i-know-what-i-am-doing-delete-hosted-zone-and-records"
 )
 
 func buildDeleteCommand(o *okctl.Okctl) *cobra.Command {
@@ -25,8 +27,10 @@ func buildDeleteCommand(o *okctl.Okctl) *cobra.Command {
 		Short: "Delete commands",
 	}
 
-	cmd.AddCommand(buildDeleteClusterCommand(o))
+	deleteClusterCommand := buildDeleteClusterCommand(o)
+	cmd.AddCommand(deleteClusterCommand)
 	cmd.AddCommand(buildDeleteTestClusterCommand(o))
+	deleteClusterCommand.Flags().String(deleteHostedZoneFlag,"false", "Delete hosted zone")
 
 	return cmd
 }
@@ -93,7 +97,7 @@ including VPC, this is a highly destructive operation.`,
 
 			return nil
 		},
-		RunE: func(_ *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			id := api.ID{
 				Region:       opts.Region,
 				AWSAccountID: opts.AWSAccountID,
@@ -101,6 +105,8 @@ including VPC, this is a highly destructive operation.`,
 				Repository:   opts.Repository,
 				ClusterName:  opts.ClusterName,
 			}
+
+			delzones, _ := cmd.Flags().GetString(deleteHostedZoneFlag)
 
 			ready, err := checkifReady(id.ClusterName, o)
 			if err != nil || !ready {
@@ -129,15 +135,14 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
-			// This is taken out, because of possible unintended consequences. The code is kept for now
-			/*
+			if (delzones == "true") {
 				err = services.Domain.DeletePrimaryHostedZone(o.Ctx, o.CloudProvider, client.DeletePrimaryHostedZoneOpts{
 					ID: id,
 				})
 				if err != nil {
 					return formatErr(err)
 				}
-			*/
+			}
 
 			err = services.IdentityManager.DeleteIdentityPool(o.Ctx, o.CloudProvider, id)
 			if err != nil {

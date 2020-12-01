@@ -8,7 +8,9 @@ import (
  * Reconsiler
  */
 
+// ReconsilationResult contains information about the result of a Reconsile() call
 type ReconsilationResult struct {
+	// Requeue indicates if this Reconciliation must be run again
 	Requeue bool
 }
 

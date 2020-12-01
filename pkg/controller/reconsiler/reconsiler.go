@@ -27,10 +27,10 @@ type ReconsilerManager struct {
 }
 
 // AddReconsiler makes a Reconsiler available in the ReconsilerManager
-func (manager *ReconsilerManager) AddReconsiler(key resourcetree.ResourceNodeType, Reconsiler Reconsiler) {
-	Reconsiler.SetCommonMetadata(manager.commonMetadata)
+func (manager *ReconsilerManager) AddReconsiler(key resourcetree.ResourceNodeType, reconsiler Reconsiler) {
+	reconsiler.SetCommonMetadata(manager.commonMetadata)
 	
-	manager.Reconsilers[key] = Reconsiler
+	manager.Reconsilers[key] = reconsiler
 }
 
 // Reconsile chooses the correct reconsiler to use based on a nodes type

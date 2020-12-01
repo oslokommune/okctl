@@ -20,5 +20,11 @@ type CommandLinePromptOpts struct {
 
 // NewShellGetter creates a new ShellGetter
 func NewShellGetter(opts CommandLinePromptOpts) *shellgetter.ShellGetter {
-	return shellgetter.NewShellGetter(opts.Os, opts.MacOsUserShellGetter, opts.OsEnvVars, opts.EtcStorage, opts.CurrentUsername)
+	return shellgetter.NewShellGetter(
+		opts.Os,
+		opts.MacOsUserShellGetter,
+		opts.UserHomeDirStorage.Path(),
+		opts.OsEnvVars,
+		opts.EtcStorage,
+		opts.CurrentUsername)
 }

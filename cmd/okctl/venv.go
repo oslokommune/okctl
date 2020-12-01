@@ -148,7 +148,7 @@ func createVenvOpts(host state.Host, okctlEnvironment commands.OkctlEnvironment)
 
 	venvOpts := commandlineprompter.CommandLinePromptOpts{
 		Os:                   getOs(host),
-		MacOsUserShellGetter: shellgetter.NewMacOsCmdGetter(),
+		MacOsUserShellGetter: shellgetter.NewMacOsCmdGetter(homeDir),
 		OsEnvVars:            envVars,
 		EtcStorage:           storage.NewFileSystemStorage("/etc"),
 		UserDirStorage:       storage.NewFileSystemStorage(okctlEnvironment.UserDataDir),
@@ -220,7 +220,7 @@ Environment: {{ .Environment }}
 Using kubectl: {{ .KubectlPath }}
 Using aws-iam-authenticator: {{ .AwsIamAuthenticatorPath }}
 
-Your shell is {{ .VenvShellCmd }} and your command prompt now shows
+Your shell is {{ .VenvShellCmd }} (override by setting environment variable OKCTL_SHELL), and your command prompt now shows
 {{ .CommandPrompt }}
 
 You can override the command prompt by setting the environment variable OKCTL_PS1 before running {{ .VenvCommand }}.

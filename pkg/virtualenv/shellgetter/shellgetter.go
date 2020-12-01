@@ -13,25 +13,28 @@ import (
 // ShellGetter is a provider for getting a shell executable based on some environment
 type ShellGetter struct {
 	Os                      Os
-	macOsUserShellCmdGetter MacOsUserShellCmdGetter
+	UserHomeDir             string
 	OsEnvVars               map[string]string
 	EtcStorage              storage.Storer
 	CurrentUsername         string
+	MacOsUserShellCmdGetter MacOsUserShellCmdGetter
 }
 
 // NewShellGetter returns a new ShellGetter
 func NewShellGetter(
 	os Os,
 	macOsUserShellGetter MacOsUserShellCmdGetter,
+	userHomeDir string,
 	osEnvVars map[string]string,
 	etcStorage storage.Storer,
 	currentUsername string) *ShellGetter {
 	return &ShellGetter{
 		Os:                      os,
-		macOsUserShellCmdGetter: macOsUserShellGetter,
+		UserHomeDir:             userHomeDir,
 		OsEnvVars:               osEnvVars,
 		EtcStorage:              etcStorage,
 		CurrentUsername:         currentUsername,
+		MacOsUserShellCmdGetter: macOsUserShellGetter,
 	}
 }
 
@@ -77,7 +80,7 @@ func (g *ShellGetter) createShellCmdGetter() shellCmdGetter {
 	}
 
 	if g.Os == OsDarwin {
-		return newMacOsLoginShellCmdGetter(g.macOsUserShellCmdGetter)
+		return newMacOsLoginShellCmdGetter(g.MacOsUserShellCmdGetter)
 	}
 
 	return newLinuxLoginShellCmdGetter(g.EtcStorage, g.CurrentUsername)

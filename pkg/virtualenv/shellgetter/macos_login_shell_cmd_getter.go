@@ -3,6 +3,7 @@ package shellgetter
 import (
 	"fmt"
 	"os/exec"
+	"path"
 	"strings"
 )
 
@@ -42,27 +43,28 @@ type MacOsUserShellCmdGetter interface {
 }
 
 // NewMacOsCmdGetter returns a MacOsUserShellCmdGetter
-func NewMacOsCmdGetter() MacOsUserShellCmdGetter {
-	return &DefaultMacOsShellGetter{}
+func NewMacOsCmdGetter(userHomeDir string) MacOsUserShellCmdGetter {
+	return &DefaultMacOsShellGetter{
+		UserHomeDir: userHomeDir,
+	}
 }
 
 // DefaultMacOsShellGetter is the default implementation for getting the user's login shell on macOS
 type DefaultMacOsShellGetter struct {
+	UserHomeDir string
 }
 
 // RunDsclUserShell returns the user's login shell as returned by dscl.
 // Example: "UserShell: /bin/bash"
 func (m *DefaultMacOsShellGetter) RunDsclUserShell() (string, error) {
-	cmd := exec.Command("dscl", ".", "-read", "~/", "UserShell")
+	userHomeDir := path.Join(m.UserHomeDir) + "/"
+	//nolint: gosec
+	cmd := exec.Command("dscl", ".", "-read", userHomeDir, "UserShell")
 
 	out, err := cmd.Output()
 	if err != nil {
 		return "", fmt.Errorf("could not run 'dscl' to get login shell: %w", err)
 	}
-
-	fmt.Println("---RunDsclUserShell")
-	fmt.Println(string(out))
-	fmt.Println("---")
 
 	return string(out), nil
 }

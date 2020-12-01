@@ -35,6 +35,10 @@ func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, provide
 
 	pool := s.state.GetIdentityPool()
 
+	if pool.UserPoolID == "" {
+		return nil
+	}
+
 	c := cognito.New(provider)
 
 	err = c.DeleteAuthDomain(pool.UserPoolID, pool.AuthDomain)

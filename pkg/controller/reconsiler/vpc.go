@@ -25,7 +25,7 @@ func (z *vpcReconsiler) SetCommonMetadata(metadata *resourcetree.CommonMetadata)
 	z.commonMetadata = metadata
 }
 
-// Reconsile knows how to ensure the desired state is achieved
+// Reconsile knows how to do what is necessary to ensure the desired state is achieved
 func (z *vpcReconsiler) Reconsile(node *resourcetree.ResourceNode) (*ReconsilationResult, error) {
 	metadata, ok := node.Metadata.(VPCMetadata)
 	if !ok {

@@ -22,7 +22,7 @@ func (z *albIngressReconsiler) SetCommonMetadata(metadata *resourcetree.CommonMe
 	z.commonMetadata = metadata
 }
 
-// Reconsile knows how to ensure the desired state is achieved
+// Reconsile knows how to do what is necessary to ensure the desired state is achieved
 func (z *albIngressReconsiler) Reconsile(node *resourcetree.ResourceNode) (*ReconsilationResult, error) {
 	state, ok := node.ResourceState.(AlbIngressControllerResourceState)
 	if !ok {

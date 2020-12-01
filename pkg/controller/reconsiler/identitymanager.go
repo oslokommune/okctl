@@ -27,7 +27,7 @@ func (z *identityManagerReconsiler) SetCommonMetadata(metadata *resourcetree.Com
 }
 
 /*
-Reconsile knows how to ensure the desired state is achieved
+Reconsile knows how to do what is necessary to ensure the desired state is achieved
 Requires:
 - Hosted Zone
 - Nameservers setup

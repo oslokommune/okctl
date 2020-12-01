@@ -24,7 +24,7 @@ func (z *externalDNSReconsiler) SetCommonMetadata(metadata *resourcetree.CommonM
 	z.commonMetadata = metadata
 }
 
-// Reconsile knows how to ensure the desired state is achieved
+// Reconsile knows how to do what is necessary to ensure the desired state is achieved
 func (z *externalDNSReconsiler) Reconsile(node *resourcetree.ResourceNode) (*ReconsilationResult, error) {
 	resourceState, ok := node.ResourceState.(ExternalDNSResourceState)
 	if !ok {

@@ -24,7 +24,7 @@ func (z *clusterReconsiler) SetCommonMetadata(metadata *resourcetree.CommonMetad
 	z.commonMetadata = metadata
 }
 
-// Reconsile knows how to ensure the desired state is achieved
+// Reconsile knows how to do what is necessary to ensure the desired state is achieved
 func (z *clusterReconsiler) Reconsile(node *resourcetree.ResourceNode) (*ReconsilationResult, error) {
 	resourceState, ok := node.ResourceState.(ClusterResourceState)
 	if !ok {

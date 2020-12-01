@@ -17,7 +17,7 @@ func (z *externalSecretsReconsiler) SetCommonMetadata(metadata *resourcetree.Com
 	z.commonMetadata = metadata
 }
 
-// Reconsile knows how to ensure the desired state is achieved
+// Reconsile knows how to do what is necessary to ensure the desired state is achieved
 func (z *externalSecretsReconsiler) Reconsile(node *resourcetree.ResourceNode) (*ReconsilationResult, error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:

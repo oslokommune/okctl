@@ -34,7 +34,7 @@ func (z *argocdReconsiler) SetCommonMetadata(metadata *resourcetree.CommonMetada
 }
 
 /*
-Reconsile knows how to ensure the desired state is achieved.
+Reconsile knows how to do what is necessary to ensure the desired state is achieved
 Dependent on:
 - Github repo setup
 - Cognito user pool

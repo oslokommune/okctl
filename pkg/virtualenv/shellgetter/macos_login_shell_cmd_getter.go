@@ -60,5 +60,9 @@ func (m *DefaultMacOsShellGetter) RunDsclUserShell() (string, error) {
 		return "", fmt.Errorf("could not run 'dscl' to get login shell: %w", err)
 	}
 
+	fmt.Println("---RunDsclUserShell")
+	fmt.Println(string(out))
+	fmt.Println("---")
+
 	return string(out), nil
 }

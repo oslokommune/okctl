@@ -26,26 +26,16 @@ type existingServices struct {
 
 // NewCreateCurrentStateGraphOpts creates an initialized existingServices struct
 func NewCreateCurrentStateGraphOpts(fs *afero.Afero, outputDir string, githubGetter reconsiler.GithubGetter) (*existingServices, error) {
-	var err error
-
-	tester := func(target string) (exists bool) {
-		baseDir := path.Join(outputDir, target)
-		
-		exists, err = fs.DirExists(baseDir)
-		
-		return exists
-	}
-
 	return &existingServices{
 		hasGithubSetup: 		 githubTester(githubGetter()),
-		hasPrimaryHostedZone:    tester(config.DefaultDomainBaseDir),
-		hasVPC:                  tester(config.DefaultVpcBaseDir),
-		hasCluster:              tester(config.DefaultClusterBaseDir),
-		hasExternalSecrets:      tester(config.DefaultExternalSecretsBaseDir),
-		hasALBIngressController: tester(config.DefaultAlbIngressControllerBaseDir),
-		hasExternalDNS:          tester(config.DefaultExternalDNSBaseDir),
-		hasIdentityManager: 	 tester(config.DefaultIdentityPoolBaseDir),
-	}, err
+		hasPrimaryHostedZone:    directoryTester(fs, outputDir, config.DefaultDomainBaseDir),
+		hasVPC:                  directoryTester(fs, outputDir, config.DefaultVpcBaseDir),
+		hasCluster:              directoryTester(fs, outputDir, config.DefaultClusterBaseDir),
+		hasExternalSecrets:      directoryTester(fs, outputDir, config.DefaultExternalSecretsBaseDir),
+		hasALBIngressController: directoryTester(fs, outputDir, config.DefaultAlbIngressControllerBaseDir),
+		hasExternalDNS:          directoryTester(fs, outputDir, config.DefaultExternalDNSBaseDir),
+		hasIdentityManager: 	 directoryTester(fs, outputDir, config.DefaultIdentityPoolBaseDir),
+	}, nil
 }
 
 // CreateCurrentStateGraph knows how to generate a ResourceNode tree based on the current state
@@ -153,6 +143,14 @@ func createNode(parent *resourcetree.ResourceNode, nodeType resourcetree.Resourc
 	}
 
 	return child
+}
+
+func directoryTester(fs *afero.Afero, outputDir string, target string) bool {
+	baseDir := path.Join(outputDir, target)
+
+	exists, _ := fs.DirExists(baseDir)
+
+	return exists
 }
 
 func githubTester(github state.Github) bool {

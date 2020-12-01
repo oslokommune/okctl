@@ -57,6 +57,29 @@ type IdentityPoolUser struct {
 	StackName  string
 }
 
+// RemoveIdentityPool removes alias, cert, and identitypool files from file store
+func (s *identityManagerStore) RemoveIdentityPool(id api.ID) (*store.Report, error) {
+	// nolint: godox
+	// TODO: send domain info in here somehow, or read the file system
+	authDomain := "auth-" + id.ClusterName + "-oslo-systems/"
+
+	report, err := store.NewFileSystem(s.aliasPaths.BaseDir, s.fs).
+		Remove(authDomain + s.aliasPaths.CloudFormationFile).
+		Remove(authDomain + s.aliasPaths.OutputFile).
+		AlterStore(store.SetBaseDir(s.certPaths.BaseDir)).
+		Remove(authDomain + s.certPaths.CloudFormationFile).
+		Remove(authDomain + s.certPaths.OutputFile).
+		AlterStore(store.SetBaseDir(s.poolPaths.BaseDir)).
+		Remove(s.poolPaths.CloudFormationFile).
+		Remove(s.poolPaths.OutputFile).
+		Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return report, err
+}
+
 func (s *identityManagerStore) SaveIdentityPoolClient(client *api.IdentityPoolClient) (*store.Report, error) {
 	c := &IdentityPoolClient{
 		ID:          client.ID,

@@ -31,6 +31,7 @@ type IdentityManagerStore interface {
 	SaveIdentityPool(pool *api.IdentityPool) (*store.Report, error)
 	SaveIdentityPoolClient(client *api.IdentityPoolClient) (*store.Report, error)
 	SaveIdentityPoolUser(client *api.IdentityPoolUser) (*store.Report, error)
+	RemoveIdentityPool(id api.ID) (*store.Report, error)
 }
 
 // IdentityManagerState implements the state layer
@@ -46,4 +47,5 @@ type IdentityManagerReport interface {
 	ReportIdentityPool(pool *api.IdentityPool, reports []*store.Report) error
 	ReportIdentityPoolClient(client *api.IdentityPoolClient, reports []*store.Report) error
 	ReportIdentityPoolUser(client *api.IdentityPoolUser, reports []*store.Report) error
+	ReportDeleteIdentityPool(*store.Report) error
 }

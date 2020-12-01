@@ -57,7 +57,7 @@ type ResourceNode struct {
 	Type  ResourceNodeType
 	State ResourceNodeState
 
-	// Contains metadata regarding the resource supplied by the desired state definition
+	// Contains metadata regarding the resource known on instance creation
 	Metadata             interface{}
 
 	StateRefresher 		 StateRefreshFn

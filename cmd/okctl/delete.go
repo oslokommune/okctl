@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/client"
 	"regexp"
+
+	"github.com/oslokommune/okctl/pkg/client"
 
 	"github.com/oslokommune/okctl/pkg/api/core/cleanup"
 
@@ -17,7 +18,7 @@ import (
 )
 
 const (
-	deleteClusterArgs = 1
+	deleteClusterArgs    = 1
 	deleteHostedZoneFlag = "i-know-what-i-am-doing-delete-hosted-zone-and-records"
 )
 
@@ -30,7 +31,7 @@ func buildDeleteCommand(o *okctl.Okctl) *cobra.Command {
 	deleteClusterCommand := buildDeleteClusterCommand(o)
 	cmd.AddCommand(deleteClusterCommand)
 	cmd.AddCommand(buildDeleteTestClusterCommand(o))
-	deleteClusterCommand.Flags().String(deleteHostedZoneFlag,"false", "Delete hosted zone")
+	deleteClusterCommand.Flags().String(deleteHostedZoneFlag, "false", "Delete hosted zone")
 
 	return cmd
 }
@@ -135,7 +136,7 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
-			if (delzones == "true") {
+			if delzones == "true" {
 				err = services.Domain.DeletePrimaryHostedZone(o.Ctx, o.CloudProvider, client.DeletePrimaryHostedZoneOpts{
 					ID: id,
 				})

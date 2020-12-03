@@ -153,7 +153,7 @@ We stand on the shoulders of giants, we have begged, borrowed and stolen from th
 **Device authentication flow fails**
 
 If you are unable to complete device authentication against github, you need to install `pass`
-This is because github token is stored in a encrypted keyring on your device.
+This is because github token is stored in an encrypted keyring on your device.
 
 Linux
 `apt-get install pass`

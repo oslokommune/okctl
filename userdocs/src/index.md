@@ -150,6 +150,17 @@ We stand on the shoulders of giants, we have begged, borrowed and stolen from th
 
 ## Known issues, they are on our backlog :)
 
+**Device authentication flow fails**
+
+If you are unable to complete device authentication against github, you need to install `pass`
+This is because github token is stored in a encrypted keyring on your device.
+
+Linux
+`apt-get install pass`
+
+Mac
+`brew install pass`
+
 **On `okctl delete cluster`, some resources are not deleted (automatic deletion is coming in a later version)**
 
 Workaround: manually deleted the following resources:
@@ -158,6 +169,18 @@ Workaround: manually deleted the following resources:
 * Deploy key in IAC repo
 * Hosted zone and records (unless you specify "i-know-what-i-am-doing-delete-hosted-zone-and-records" flag to "true")
 * It is recommended to delete the infrastructure/<env> directory and .okctl.yaml file upon successful delete of cluster, as the last (temporary), manual step.
+
+**ArgoCD doesn't show my apps**
+
+This is due to an authorization bug.
+
+Workaround:
+kubectl edit configmap argocd-rbac-cm --namespace argocd
+
+Add a new line after `g, admins, role:admin`, so it becomes something like this:
+policy.csv: |
+  g, admins, role:admin
+  g, my.email@mail.com, role:admin
 
 **Reuse of hosted zone might fail if old NS servers for the same domain are cached in DNS**
 

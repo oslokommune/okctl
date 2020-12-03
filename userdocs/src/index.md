@@ -147,3 +147,26 @@ We stand on the shoulders of giants, we have begged, borrowed and stolen from th
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 - [go-kit](https://github.com/go-kit/kit)
 - [saml2aws](https://github.com/Versent/saml2aws/)
+
+## Known issues, they are on our backlog :)
+
+**On `okctl delete cluster`, some resources are not deleted (automatic deletion is coming in a later version)**
+
+Workaround: manually deleted the following resources:
+* SMM Parameter
+* ACM certificate (in your cluster-region, but also one in us-east-1 that was used in cloud formation and cognito)
+* Deploy key in IAC repo
+* Hosted zone and records (unless you specify "i-know-what-i-am-doing-delete-hosted-zone-and-records" flag to "true")
+* It is recommended to delete the infrastructure/<env> directory and .okctl.yaml file upon successful delete of cluster, as the last (temporary), manual step.
+
+**Reuse of hosted zone might fail if old NS servers for the same domain are cached in DNS**
+
+Workaround: wait 2 days for it to expire (default hosted zone NS record TTL)
+
+**ArgoCD fails first run**
+
+Workaround: re-run create command.
+
+**Service quota check will check even if cluster is already running**
+
+Workaround: If you already created a cluster, but need to re-run the command if for example ArgoCD failed. You will be warned that there are not enough resources. Continue anyway.

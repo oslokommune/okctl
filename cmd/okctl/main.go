@@ -22,7 +22,7 @@ func main() {
 	}
 }
 
-func loadRepoData(o *okctl.Okctl, cmd *cobra.Command) error {
+func loadRepoData(o *okctl.Okctl, _ *cobra.Command) error {
 	repoDataNotFound := load.CreateOnRepoDataNotFound()
 
 	if o.NoInput {
@@ -34,7 +34,7 @@ func loadRepoData(o *okctl.Okctl, cmd *cobra.Command) error {
 	// not want the configuration to be overridden by env
 	// vars or similar.
 	// We can drop sending *cobra.Command on here.
-	o.RepoDataLoader = load.RepoDataFromConfigFile(cmd, repoDataNotFound)
+	o.RepoDataLoader = load.RepoDataFromConfigFile(repoDataNotFound)
 
 	return o.LoadRepoData()
 }
@@ -102,13 +102,14 @@ being captured. Together with slack and slick.`,
 		},
 	}
 
-	cmd.AddCommand(buildVenvCommand(o))
+	cmd.AddCommand(buildAddUserCommand(o))
+	cmd.AddCommand(buildApplyCommand(o))
 	cmd.AddCommand(buildCreateCommand(o))
 	cmd.AddCommand(buildDeleteCommand(o))
-	cmd.AddCommand(buildApplyCommand(o))
+	cmd.AddCommand(buildScaffoldCommand(o))
 	cmd.AddCommand(buildShowCommand(o))
+	cmd.AddCommand(buildVenvCommand(o))
 	cmd.AddCommand(buildVersionCommand(o))
-	cmd.AddCommand(buildAddUserCommand(o))
 
 	f := cmd.Flags()
 	f.StringVarP(&outputFormat, "output", "o", "text",

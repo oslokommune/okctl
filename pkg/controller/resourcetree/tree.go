@@ -3,12 +3,14 @@ package resourcetree
 import (
 	"bytes"
 	"context"
-	"github.com/oslokommune/okctl/pkg/api"
 	"io"
+
+	"github.com/oslokommune/okctl/pkg/api"
 )
 
 // ResourceNodeType defines what type of resource a ResourceNode represents
 type ResourceNodeType int
+
 const (
 	// ResourceNodeTypeGroup represents a node that has no actions associated with it. For now, only the root node
 	ResourceNodeTypeGroup ResourceNodeType = iota
@@ -61,6 +63,7 @@ func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
 
 // ResourceNodeState defines what state the resource is in, used to infer what action to take
 type ResourceNodeState int
+
 const (
 	// ResourceNodeStateNoop represents a state where no action is needed. E.g.: if the desired state of the
 	// resource conforms with the actual state
@@ -87,12 +90,12 @@ type ResourceNode struct {
 	State ResourceNodeState
 
 	// Contains metadata regarding the resource known on instance creation
-	Metadata             interface{}
+	Metadata interface{}
 
-	StateRefresher 		 StateRefreshFn
+	StateRefresher StateRefreshFn
 	// ResourceState contains data that needs to be retrieved runtime. In other words, data that potentially only exist
 	// after an external resource has been created
-	ResourceState 		 interface{}
+	ResourceState interface{}
 
 	Children []*ResourceNode
 }
@@ -132,7 +135,7 @@ func (node *ResourceNode) GetNode(targetNode *ResourceNode) *ResourceNode {
 	if node.Equals(targetNode) {
 		return node
 	}
-	
+
 	for _, child := range node.Children {
 		result := child.GetNode(targetNode)
 
@@ -140,7 +143,7 @@ func (node *ResourceNode) GetNode(targetNode *ResourceNode) *ResourceNode {
 			return result
 		}
 	}
-	
+
 	return nil
 }
 
@@ -149,23 +152,23 @@ func (node *ResourceNode) treeViewGenerator(writer io.Writer, tabs int) {
 	for index := 0; index < tabs; index++ {
 		result += "\t"
 	}
-	
+
 	result += "- " + ResourceNodeTypeToString(node.Type) + "\n"
-	
+
 	if node.State == ResourceNodeStatePresent {
 		_, _ = writer.Write([]byte(result))
 	}
 
 	for _, child := range node.Children {
-		child.treeViewGenerator(writer, tabs + 1)
+		child.treeViewGenerator(writer, tabs+1)
 	}
 }
 
 func (node *ResourceNode) String() string {
 	var buf bytes.Buffer
-	
+
 	node.treeViewGenerator(&buf, 0)
-	
+
 	return buf.String()
 }
 
@@ -178,7 +181,7 @@ func (node *ResourceNode) ApplyFunction(fn ApplyFn, targetGraph *ResourceNode) {
 	for _, child := range node.Children {
 		child.ApplyFunction(fn, targetGraph)
 	}
-	
+
 	targetNode := targetGraph.GetNode(node)
 	fn(node, targetNode)
 }

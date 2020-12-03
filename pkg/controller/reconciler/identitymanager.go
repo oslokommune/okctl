@@ -1,7 +1,8 @@
-package reconsiler
+package reconciler
 
 import (
 	"fmt"
+
 	"github.com/miekg/dns"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
@@ -9,30 +10,30 @@ import (
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
 
-// IdentityManagerResourceState contains runtime data needed in Reconsile()
+// IdentityManagerResourceState contains runtime data needed in Reconcile()
 type IdentityManagerResourceState struct {
 	HostedZoneID string
-	Domain string
+	Domain       string
 }
 
-type identityManagerReconsiler struct {
+type identityManagerReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 
 	client client.IdentityManagerService
 }
 
-// SetCommonMetadata saves common metadata for use in Reconsile()
-func (z *identityManagerReconsiler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+// SetCommonMetadata saves common metadata for use in Reconcile()
+func (z *identityManagerReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 /*
-Reconsile knows how to do what is necessary to ensure the desired state is achieved
+Reconcile knows how to do what is necessary to ensure the desired state is achieved
 Requires:
 - Hosted Zone
 - Nameservers setup
- */
-func (z *identityManagerReconsiler) Reconsile(node *resourcetree.ResourceNode) (*ReconsilationResult, error) {
+*/
+func (z *identityManagerReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
 	resourceState, ok := node.ResourceState.(IdentityManagerResourceState)
 	if !ok {
 		return nil, errors.New("unable to cast identity manager resourceState")
@@ -42,7 +43,7 @@ func (z *identityManagerReconsiler) Reconsile(node *resourcetree.ResourceNode) (
 	case resourcetree.ResourceNodeStatePresent:
 		authDomain := fmt.Sprintf("auth.%s", resourceState.Domain)
 		authFQDN := dns.Fqdn(authDomain)
-		
+
 		_, err := z.client.CreateIdentityPool(z.commonMetadata.Ctx, api.CreateIdentityPoolOpts{
 			ID:           z.commonMetadata.ClusterId,
 			AuthDomain:   authDomain,
@@ -50,18 +51,18 @@ func (z *identityManagerReconsiler) Reconsile(node *resourcetree.ResourceNode) (
 			HostedZoneID: resourceState.HostedZoneID,
 		})
 		if err != nil {
-			return &ReconsilationResult{Requeue: true}, fmt.Errorf("error creating identity manager resource: %w", err)
+			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating identity manager resource: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
 		return nil, errors.New("deleting identity manager resource is not implemented")
 	}
 
-	return &ReconsilationResult{Requeue: false}, nil
+	return &ReconcilationResult{Requeue: false}, nil
 }
 
-// NewIdentityManagerReconsiler creates a new reconsiler for the Identity Manager resource
-func NewIdentityManagerReconsiler(client client.IdentityManagerService) *identityManagerReconsiler {
-	return &identityManagerReconsiler{
+// NewIdentityManagerReconciler creates a new reconciler for the Identity Manager resource
+func NewIdentityManagerReconciler(client client.IdentityManagerService) *identityManagerReconciler {
+	return &identityManagerReconciler{
 		client: client,
 	}
 }

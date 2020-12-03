@@ -2,8 +2,9 @@ package load
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"path"
+
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/client/store"
 

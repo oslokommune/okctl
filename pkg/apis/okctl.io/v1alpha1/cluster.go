@@ -3,9 +3,10 @@ package v1alpha1
 import (
 	"errors"
 	"fmt"
+	"regexp"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
-	"regexp"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -58,7 +59,7 @@ func (c Cluster) Validate() error {
 		validation.Field(&c.VPC),
 		validation.Field(&c.Integrations),
 	)
-	
+
 	return result
 }
 
@@ -200,7 +201,7 @@ func (c ClusterIntegrations) Validate() error {
 	if c.ArgoCD && !c.Cognito {
 		return errors.New("the identity provider cognito is required when using ArgoCD")
 	}
-	
+
 	return nil
 }
 

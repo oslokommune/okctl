@@ -2,9 +2,10 @@ package rest
 
 import (
 	"fmt"
-	"github.com/mishudark/errors"
 	"io"
 	"strings"
+
+	"github.com/mishudark/errors"
 
 	"github.com/oslokommune/okctl/pkg/ask"
 
@@ -46,10 +47,10 @@ func (a *githubAPI) GetGithubInfrastructureRepository(opts client.SelectGithubIn
 	if err != nil {
 		return nil, err
 	}
-	
+
 	repo, err := inferRepository(opts.Repository, repos)
 	if err != nil {
-	    return nil, err
+		return nil, err
 	}
 
 	return &client.SelectedGithubRepository{
@@ -153,12 +154,12 @@ func (a *githubAPI) CreateGithubOauthApp(opts client.CreateGithubOauthAppOpts) (
 func inferRepository(fullName string, repositories []*github.Repository) (*github.Repository, error) {
 	for _, repo := range repositories {
 		repo := *repo
-		
+
 		if fullName == *repo.FullName {
 			return &repo, nil
 		}
 	}
-	
+
 	return nil, errors.New("could not find relevant repository")
 }
 

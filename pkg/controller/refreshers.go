@@ -2,14 +2,15 @@ package controller
 
 import (
 	"fmt"
+	"path"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/config/state"
-	"github.com/oslokommune/okctl/pkg/controller/reconsiler"
+	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 	"github.com/spf13/afero"
-	"path"
 )
 
 func getVpcState(fs *afero.Afero, outputDir string) api.Vpc {
@@ -29,6 +30,7 @@ func getVpcState(fs *afero.Afero, outputDir string) api.Vpc {
 
 // StringFetcher defines a function which can be used to delay fetching of strings
 type StringFetcher func() string
+
 // HostedZoneFetcher defines a function which can be used to delay fetching of a hosted zone
 type HostedZoneFetcher func() *state.HostedZone
 
@@ -39,7 +41,7 @@ func CreateClusterStateRefresher(fs *afero.Afero, outputDir string, cidrFn Strin
 
 		vpc.Cidr = cidrFn()
 
-		node.ResourceState = reconsiler.ClusterResourceState{VPC: vpc}
+		node.ResourceState = reconciler.ClusterResourceState{VPC: vpc}
 	}
 }
 
@@ -49,7 +51,7 @@ func CreateALBIngressControllerRefresher(fs *afero.Afero, outputDir string) reso
 	return func(node *resourcetree.ResourceNode) {
 		vpc := getVpcState(fs, outputDir)
 
-		node.ResourceState = reconsiler.AlbIngressControllerResourceState{VpcID: vpc.VpcID}
+		node.ResourceState = reconciler.AlbIngressControllerResourceState{VpcID: vpc.VpcID}
 	}
 }
 
@@ -58,7 +60,7 @@ func CreateExternalDNSStateRefresher(primaryHostedZoneFetcher HostedZoneFetcher)
 	return func(node *resourcetree.ResourceNode) {
 		hostedZone := primaryHostedZoneFetcher()
 
-		node.ResourceState = reconsiler.ExternalDNSResourceState{
+		node.ResourceState = reconciler.ExternalDNSResourceState{
 			HostedZoneID: hostedZone.ID,
 			Domain:       hostedZone.Domain,
 		}
@@ -70,7 +72,7 @@ func CreateIdentityManagerRefresher(primaryHostedZoneFetcher HostedZoneFetcher) 
 	return func(node *resourcetree.ResourceNode) {
 		hostedZone := primaryHostedZoneFetcher()
 
-		node.ResourceState = reconsiler.IdentityManagerResourceState{
+		node.ResourceState = reconciler.IdentityManagerResourceState{
 			HostedZoneID: hostedZone.ID,
 			Domain:       hostedZone.Domain,
 		}
@@ -78,11 +80,11 @@ func CreateIdentityManagerRefresher(primaryHostedZoneFetcher HostedZoneFetcher) 
 }
 
 // CreateGithubStateRefresher creates a function that gathers required runtime data for a Github resource
-func CreateGithubStateRefresher(ghGetter reconsiler.GithubGetter, ghSetter reconsiler.GithubSetter) resourcetree.StateRefreshFn {
+func CreateGithubStateRefresher(ghGetter reconciler.GithubGetter, ghSetter reconciler.GithubSetter) resourcetree.StateRefreshFn {
 	return func(node *resourcetree.ResourceNode) {
-		node.ResourceState = reconsiler.GithubResourceState{
+		node.ResourceState = reconciler.GithubResourceState{
 			Getter: ghGetter,
-			Saver: ghSetter,
+			Saver:  ghSetter,
 		}
 	}
 }
@@ -90,7 +92,7 @@ func CreateGithubStateRefresher(ghGetter reconsiler.GithubGetter, ghSetter recon
 // CreateArgocdStateRefresher creates a function that gathers required runtime data for a ArgoCD resource
 func CreateArgocdStateRefresher(hostedZoneFetcher HostedZoneFetcher) resourcetree.StateRefreshFn {
 	return func(node *resourcetree.ResourceNode) {
-		node.ResourceState = reconsiler.ArgocdResourceState{
+		node.ResourceState = reconciler.ArgocdResourceState{
 			HostedZone: hostedZoneFetcher(),
 			Repository: nil,
 			UserPoolID: "",

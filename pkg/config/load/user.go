@@ -78,7 +78,6 @@ func CreateOnUserDataNotFoundWithNoInput() DataNotFoundFn {
 	}
 }
 
-
 // CreateOnUserDataNotFound will start an interactive survey
 // that allows the end user to configure okctl for their
 // use

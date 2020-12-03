@@ -1,7 +1,8 @@
-package reconsiler
+package reconciler
 
 import (
 	"fmt"
+
 	"github.com/miekg/dns"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -13,24 +14,24 @@ type HostedZoneMetadata struct {
 	Domain string
 }
 
-type zoneReconsiler struct {
+type zoneReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
-	
+
 	client client.DomainService
 }
 
-// SetCommonMetadata saves common metadata for use in Reconsile()
-func (z *zoneReconsiler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+// SetCommonMetadata saves common metadata for use in Reconcile()
+func (z *zoneReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
-// Reconsile knows how to do what is necessary to ensure the desired state is achieved
-func (z *zoneReconsiler) Reconsile(node *resourcetree.ResourceNode) (*ReconsilationResult, error) {
+// Reconcile knows how to do what is necessary to ensure the desired state is achieved
+func (z *zoneReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
 	metadata, ok := node.Metadata.(HostedZoneMetadata)
 	if !ok {
 		return nil, errors.New("error casting HostedZone metadata")
 	}
-	
+
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		fqdn := dns.Fqdn(metadata.Domain)
@@ -38,25 +39,24 @@ func (z *zoneReconsiler) Reconsile(node *resourcetree.ResourceNode) (*Reconsilat
 		_, err := z.client.CreatePrimaryHostedZoneWithoutUserinput(z.commonMetadata.Ctx, client.CreatePrimaryHostedZoneOpts{
 			ID:     z.commonMetadata.ClusterId,
 			Domain: metadata.Domain,
-			FQDN: fqdn,
+			FQDN:   fqdn,
 		})
 		if err != nil {
-			return &ReconsilationResult{Requeue: true}, fmt.Errorf("error creating hosted zone: %w", err)
+			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating hosted zone: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
 		err := z.client.DeletePrimaryHostedZone(z.commonMetadata.Ctx, client.DeletePrimaryHostedZoneOpts{ID: z.commonMetadata.ClusterId})
 		if err != nil {
-		    return &ReconsilationResult{Requeue: true}, fmt.Errorf("error deleting hosted zone: %w", err)
+			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error deleting hosted zone: %w", err)
 		}
 	}
 
-	return &ReconsilationResult{Requeue: false}, nil
+	return &ReconcilationResult{Requeue: false}, nil
 }
 
-// NewZoneReconsiler creates a new reconsiler for the Hosted Zone resource
-func NewZoneReconsiler(client client.DomainService) *zoneReconsiler {
-	return &zoneReconsiler{
+// NewZoneReconciler creates a new reconciler for the Hosted Zone resource
+func NewZoneReconciler(client client.DomainService) *zoneReconciler {
+	return &zoneReconciler{
 		client: client,
 	}
 }
-

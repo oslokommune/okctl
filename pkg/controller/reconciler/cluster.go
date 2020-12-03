@@ -1,31 +1,32 @@
-package reconsiler
+package reconciler
 
 import (
 	"errors"
 	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
 
-// ClusterResourceState contains runtime data needed in Reconsile()
+// ClusterResourceState contains runtime data needed in Reconcile()
 type ClusterResourceState struct {
 	VPC api.Vpc
 }
 
-type clusterReconsiler struct {
+type clusterReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 
 	client client.ClusterService
 }
 
-// SetCommonMetadata saves common metadata for use in Reconsile()
-func (z *clusterReconsiler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+// SetCommonMetadata saves common metadata for use in Reconcile()
+func (z *clusterReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
-// Reconsile knows how to do what is necessary to ensure the desired state is achieved
-func (z *clusterReconsiler) Reconsile(node *resourcetree.ResourceNode) (*ReconsilationResult, error) {
+// Reconcile knows how to do what is necessary to ensure the desired state is achieved
+func (z *clusterReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
 	resourceState, ok := node.ResourceState.(ClusterResourceState)
 	if !ok {
 		return nil, errors.New("error casting cluster resourceState")
@@ -41,22 +42,21 @@ func (z *clusterReconsiler) Reconsile(node *resourcetree.ResourceNode) (*Reconsi
 			VpcPublicSubnets:  resourceState.VPC.PublicSubnets,
 		})
 		if err != nil {
-			return &ReconsilationResult{Requeue: true}, fmt.Errorf("error creating cluster: %w", err)
+			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating cluster: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
 		err := z.client.DeleteCluster(z.commonMetadata.Ctx, api.ClusterDeleteOpts{ID: z.commonMetadata.ClusterId})
 		if err != nil {
-			return &ReconsilationResult{Requeue: true}, fmt.Errorf("error deleting cluster: %w", err)
+			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error deleting cluster: %w", err)
 		}
 	}
 
-	return &ReconsilationResult{Requeue: false}, nil
+	return &ReconcilationResult{Requeue: false}, nil
 }
 
-// NewClusterReconsiler creates a new reconsiler for the cluster resource
-func NewClusterReconsiler(client client.ClusterService) *clusterReconsiler {
-	return &clusterReconsiler{
+// NewClusterReconciler creates a new reconciler for the cluster resource
+func NewClusterReconciler(client client.ClusterService) *clusterReconciler {
+	return &clusterReconciler{
 		client: client,
 	}
 }
-

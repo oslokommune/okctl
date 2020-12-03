@@ -1,31 +1,32 @@
-package reconsiler
+package reconciler
 
 import (
 	"errors"
 	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
 
-// ExternalDNSResourceState contains runtime data needed in Reconsile()
+// ExternalDNSResourceState contains runtime data needed in Reconcile()
 type ExternalDNSResourceState struct {
 	HostedZoneID string
-	Domain string
+	Domain       string
 }
 
-type externalDNSReconsiler struct {
+type externalDNSReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
-	
+
 	client client.ExternalDNSService
 }
 
-// SetCommonMetadata saves common metadata for use in Reconsile()
-func (z *externalDNSReconsiler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+// SetCommonMetadata saves common metadata for use in Reconcile()
+func (z *externalDNSReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
-// Reconsile knows how to do what is necessary to ensure the desired state is achieved
-func (z *externalDNSReconsiler) Reconsile(node *resourcetree.ResourceNode) (*ReconsilationResult, error) {
+// Reconcile knows how to do what is necessary to ensure the desired state is achieved
+func (z *externalDNSReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
 	resourceState, ok := node.ResourceState.(ExternalDNSResourceState)
 	if !ok {
 		return nil, errors.New("error casting External DNS resourceState")
@@ -39,22 +40,21 @@ func (z *externalDNSReconsiler) Reconsile(node *resourcetree.ResourceNode) (*Rec
 			Domain:       resourceState.Domain,
 		})
 		if err != nil {
-			return &ReconsilationResult{Requeue: true}, fmt.Errorf("error creating external DNS: %w", err)
+			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating external DNS: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
 		err := z.client.DeleteExternalDNS(z.commonMetadata.Ctx, z.commonMetadata.ClusterId)
 		if err != nil {
-			return &ReconsilationResult{Requeue: true}, fmt.Errorf("error deleting external DNS: %w", err)
+			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error deleting external DNS: %w", err)
 		}
 	}
 
-
-	return &ReconsilationResult{Requeue: false}, nil
+	return &ReconcilationResult{Requeue: false}, nil
 }
 
-// NewExternalDNSReconsiler creates a new reconsiler for the ExternalDNS resource
-func NewExternalDNSReconsiler(client client.ExternalDNSService) *externalDNSReconsiler {
-	return &externalDNSReconsiler{
+// NewExternalDNSReconciler creates a new reconciler for the ExternalDNS resource
+func NewExternalDNSReconciler(client client.ExternalDNSService) *externalDNSReconciler {
+	return &externalDNSReconciler{
 		client: client,
 	}
 }

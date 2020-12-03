@@ -30,7 +30,7 @@ func TestCluster(t *testing.T) {
 				"oslokommune",
 				"okctl-iac",
 				"kjøremiljø",
-				123456789012,
+				"123456789012",
 			),
 			golden: "default-cluster.yml",
 		},

@@ -49,7 +49,7 @@ func (z *argocdReconsiler) Reconsile(node *resourcetree.ResourceNode) (*Reconsil
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err := z.client.CreateArgoCD(z.commonMetadata.Ctx, client.CreateArgoCDOpts{
-			ID:                 z.commonMetadata.Id,
+			ID:                 z.commonMetadata.ClusterId,
 			Domain:             resourceState.HostedZone.Domain,
 			FQDN:               resourceState.HostedZone.FQDN,
 			HostedZoneID:       resourceState.HostedZone.ID,

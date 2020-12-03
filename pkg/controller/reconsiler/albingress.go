@@ -32,14 +32,14 @@ func (z *albIngressReconsiler) Reconsile(node *resourcetree.ResourceNode) (*Reco
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err := z.client.CreateALBIngressController(z.commonMetadata.Ctx, client.CreateALBIngressControllerOpts{
-			ID:    z.commonMetadata.Id,
+			ID:    z.commonMetadata.ClusterId,
 			VPCID: state.VpcID,
 		})
 		if err != nil {
 			return &ReconsilationResult{Requeue: true}, fmt.Errorf("error creating ALB Ingress controller: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err := z.client.DeleteALBIngressController(z.commonMetadata.Ctx, z.commonMetadata.Id)
+		err := z.client.DeleteALBIngressController(z.commonMetadata.Ctx, z.commonMetadata.ClusterId)
 		if err != nil {
 			return &ReconsilationResult{Requeue: true}, fmt.Errorf("error deleting ALB Ingress controller: %w", err)
 		}

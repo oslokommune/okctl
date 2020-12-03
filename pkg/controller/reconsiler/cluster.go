@@ -34,7 +34,7 @@ func (z *clusterReconsiler) Reconsile(node *resourcetree.ResourceNode) (*Reconsi
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err := z.client.CreateCluster(z.commonMetadata.Ctx, api.ClusterCreateOpts{
-			ID:                z.commonMetadata.Id,
+			ID:                z.commonMetadata.ClusterId,
 			Cidr:              resourceState.VPC.Cidr,
 			VpcID:             resourceState.VPC.VpcID,
 			VpcPrivateSubnets: resourceState.VPC.PrivateSubnets,
@@ -44,7 +44,7 @@ func (z *clusterReconsiler) Reconsile(node *resourcetree.ResourceNode) (*Reconsi
 			return &ReconsilationResult{Requeue: true}, fmt.Errorf("error creating cluster: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err := z.client.DeleteCluster(z.commonMetadata.Ctx, api.ClusterDeleteOpts{ID: z.commonMetadata.Id})
+		err := z.client.DeleteCluster(z.commonMetadata.Ctx, api.ClusterDeleteOpts{ID: z.commonMetadata.ClusterId})
 		if err != nil {
 			return &ReconsilationResult{Requeue: true}, fmt.Errorf("error deleting cluster: %w", err)
 		}

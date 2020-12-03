@@ -36,7 +36,7 @@ func (z *zoneReconsiler) Reconsile(node *resourcetree.ResourceNode) (*Reconsilat
 		fqdn := dns.Fqdn(metadata.Domain)
 
 		_, err := z.client.CreatePrimaryHostedZoneWithoutUserinput(z.commonMetadata.Ctx, client.CreatePrimaryHostedZoneOpts{
-			ID:     z.commonMetadata.Id,
+			ID:     z.commonMetadata.ClusterId,
 			Domain: metadata.Domain,
 			FQDN: fqdn,
 		})
@@ -44,7 +44,7 @@ func (z *zoneReconsiler) Reconsile(node *resourcetree.ResourceNode) (*Reconsilat
 			return &ReconsilationResult{Requeue: true}, fmt.Errorf("error creating hosted zone: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err := z.client.DeletePrimaryHostedZone(z.commonMetadata.Ctx, client.DeletePrimaryHostedZoneOpts{ID: z.commonMetadata.Id})
+		err := z.client.DeletePrimaryHostedZone(z.commonMetadata.Ctx, client.DeletePrimaryHostedZoneOpts{ID: z.commonMetadata.ClusterId})
 		if err != nil {
 		    return &ReconsilationResult{Requeue: true}, fmt.Errorf("error deleting hosted zone: %w", err)
 		}

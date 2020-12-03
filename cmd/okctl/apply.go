@@ -12,6 +12,7 @@ func buildApplyCommand(o *okctl.Okctl) *cobra.Command {
 	}
 
 	cmd.AddCommand(buildApplyApplicationCommand(o))
+	cmd.AddCommand(buildApplyClusterCommand(o))
 
 	return cmd
 }

@@ -35,7 +35,7 @@ func (z *vpcReconsiler) Reconsile(node *resourcetree.ResourceNode) (*Reconsilati
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err := z.client.CreateVpc(z.commonMetadata.Ctx, api.CreateVpcOpts{
-			ID:      z.commonMetadata.Id,
+			ID:      z.commonMetadata.ClusterId,
 			Cidr:    metadata.Cidr,
 			Minimal: !metadata.HighAvailability,
 		})
@@ -43,7 +43,7 @@ func (z *vpcReconsiler) Reconsile(node *resourcetree.ResourceNode) (*Reconsilati
 			return &ReconsilationResult{Requeue: true}, fmt.Errorf("error creating vpc: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err := z.client.DeleteVpc(z.commonMetadata.Ctx, api.DeleteVpcOpts{ ID: z.commonMetadata.Id })
+		err := z.client.DeleteVpc(z.commonMetadata.Ctx, api.DeleteVpcOpts{ ID: z.commonMetadata.ClusterId})
 		if err != nil {
 			return &ReconsilationResult{Requeue: true}, fmt.Errorf("error deleting vpc: %w", err)
 		}

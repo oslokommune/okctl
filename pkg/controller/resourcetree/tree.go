@@ -1,8 +1,10 @@
 package resourcetree
 
 import (
+	"bytes"
 	"context"
 	"github.com/oslokommune/okctl/pkg/api"
+	"io"
 )
 
 // ResourceNodeType defines what type of resource a ResourceNode represents
@@ -29,6 +31,33 @@ const (
 	// ResourceNodeTypeArgoCD represents an ArgoCD resource
 	ResourceNodeTypeArgoCD
 )
+
+func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
+	switch nodeType {
+	case ResourceNodeTypeGroup:
+		return "Group"
+	case ResourceNodeTypeZone:
+		return "Hosted Zone"
+	case ResourceNodeTypeVPC:
+		return "VPC"
+	case ResourceNodeTypeCluster:
+		return "K8s Cluster"
+	case ResourceNodeTypeExternalSecrets:
+		return "External Secrets"
+	case ResourceNodeTypeALBIngress:
+		return "ALB Ingress Controller"
+	case ResourceNodeTypeExternalDNS:
+		return "External DNS"
+	case ResourceNodeTypeGithub:
+		return "Github Setup"
+	case ResourceNodeTypeIdentityManager:
+		return "Identity Manager"
+	case ResourceNodeTypeArgoCD:
+		return "ArgoCD controller"
+	default:
+		return ""
+	}
+}
 
 // ResourceNodeState defines what state the resource is in, used to infer what action to take
 type ResourceNodeState int
@@ -113,6 +142,31 @@ func (node *ResourceNode) GetNode(targetNode *ResourceNode) *ResourceNode {
 	}
 	
 	return nil
+}
+
+func (node *ResourceNode) treeViewGenerator(writer io.Writer, tabs int) {
+	result := ""
+	for index := 0; index < tabs; index++ {
+		result += "\t"
+	}
+	
+	result += "- " + ResourceNodeTypeToString(node.Type) + "\n"
+	
+	if node.State == ResourceNodeStatePresent {
+		_, _ = writer.Write([]byte(result))
+	}
+
+	for _, child := range node.Children {
+		child.treeViewGenerator(writer, tabs + 1)
+	}
+}
+
+func (node *ResourceNode) String() string {
+	var buf bytes.Buffer
+	
+	node.treeViewGenerator(&buf, 0)
+	
+	return buf.String()
 }
 
 // ApplyFn is a kind of function we can run on all the nodes in a ResourceNode tree with the ApplyFunction() function

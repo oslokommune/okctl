@@ -146,7 +146,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVarP(&opts.File, "file", "f", "", usageApplyClusterFile)
 
-	cmd.Hidden = true // TODO: remove when feature is complete
+	cmd.Hidden = true
 
 	return cmd
 }

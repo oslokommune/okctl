@@ -65,6 +65,7 @@ type IdentityPooler interface {
 	GetIdentityPoolClient(purpose string) IdentityPoolClient
 	GetIdentityPoolUser(email string) IdentityPoolUser
 	SaveIdentityPoolUser(client IdentityPoolUser) (*store.Report, error)
+	DeleteIdentityPool() (*store.Report, error)
 }
 
 // RepositoryStateWithEnv provides actions for interacting with
@@ -98,6 +99,14 @@ type repository struct {
 	state   *Repository
 	env     string
 	saverFn SaverFn
+}
+
+func (r *repository) DeleteIdentityPool() (*store.Report, error) {
+	cluster := r.GetCluster()
+	cluster.IdentityPool = IdentityPool{}
+	r.state.Clusters[r.env] = cluster
+
+	return r.save()
 }
 
 func (r *repository) GetIdentityPoolUser(email string) IdentityPoolUser {
@@ -271,6 +280,7 @@ func (r *repository) SaveVPC(vpc VPC) (*store.Report, error) {
 	return r.save()
 }
 
+// TODO yeh here it is ..
 // DeleteVPC removes the vpc
 func (r *repository) DeleteVPC() (*store.Report, error) {
 	cluster := r.GetCluster()

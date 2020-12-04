@@ -13,6 +13,10 @@ type identityManagerState struct {
 	state state.IdentityPooler
 }
 
+func (s *identityManagerState) RemoveIdentityPool(id api.ID) (*store.Report, error) {
+	return s.state.DeleteIdentityPool()
+}
+
 func (s *identityManagerState) SaveIdentityPoolUser(user *api.IdentityPoolUser) (*store.Report, error) {
 	u := s.state.GetIdentityPoolUser(user.Email)
 

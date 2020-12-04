@@ -41,8 +41,8 @@ Any occurence `%env` in `OKCTL_PS1` will be replaced by the okctl environment. T
 environment in your custom OKCTL_PS1. A use case for this can be when combining with the `venv_ps1` built-in:
 
 ```bash
-$ export OKCTL_PS1="\w \$(venv_ps1 %env) $"
-$ okctl venv myenv
+export OKCTL_PS1="\w \$(venv_ps1 %env) $"
+okctl venv myenv
 ```
 
 The command prompt will then be like this

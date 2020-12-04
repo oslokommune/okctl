@@ -44,8 +44,8 @@ Now, run:
 ```bash
 
 # Clone the repository you just made
-$ git clone git@github.com:oslokommune/<the new repository>.git
-$ cd <the new repository>
+git clone git@github.com:oslokommune/<the new repository>.git
+cd <the new repository>
 ```
 
 ### 2. Create a cluster
@@ -72,7 +72,7 @@ after logging in to [AWS](https://login.oslo.kommune.no/auth/realms/AD/protocol/
 # <AWS account ID>      is the account ID described in the above
 #
 # Example:
-$ okctl create cluster prod 123456789012
+okctl create cluster prod 123456789012
 ```
 
 Follow the instructions.
@@ -80,8 +80,8 @@ Follow the instructions.
 When done, verify that you have a working cluster by running
 
 ```bash
-$ okctl venv
-$ kubectl get service
+okctl venv
+kubectl get service
 
 ```
 
@@ -96,24 +96,24 @@ kubernetes   ClusterIP   10.100.0.1   <none>        443/TCP   1h
 
 ```bash
 # Get help for any command
-$ okctl --help
-$ okctl create cluster --help
+okctl --help
+okctl create cluster --help
 
 # Show credentials for cluster
-$ okctl show credentials prod
+okctl show credentials prod
 
 # Run a sub shell with environment variables from the above command and a custom command prompt (PS1)
-$ okctl venv
+okctl venv
 
 # Delete the cluster
-$ okctl delete cluster prod
+okctl delete cluster prod
 ```
 
 ## Compare and contrast
 
 With `okctl` we are attempting to solve the production environment setup problem. What we include within the definition of a production environment, we can see below.
 
-| Functionality | okctl | [eksctl](https://eksctl.io) | [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) | [serverless.tf](https://serverless.tf) | 
+| Functionality | okctl | [eksctl](https://eksctl.io) | [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) | [serverless.tf](https://serverless.tf) |
 |---|---|---|---|---|
 |Provide authentication and authorisation|✓||?||
 |Define a continuous integration pipeline|?||||
@@ -156,14 +156,19 @@ If you are unable to complete device authentication against github, you need to 
 This is because github token is stored in a encrypted keyring on your device.
 
 Linux
-`apt-get install pass`
+```bash
+apt-get install pass
+```
 
 Mac
-`brew install pass`
+```bash
+brew install pass
+```
 
 **On `okctl delete cluster`, some resources are not deleted (automatic deletion is coming in a later version)**
 
 Workaround: manually deleted the following resources:
+
 * SMM Parameter
 * ACM certificate (in your cluster-region, but also one in us-east-1 that was used in cloud formation and cognito)
 * Deploy key in IAC repo
@@ -175,13 +180,16 @@ Workaround: manually deleted the following resources:
 This is due to an authorization bug.
 
 Workaround:
+```bash
 kubectl edit configmap argocd-rbac-cm --namespace argocd
+```
 
 Add a new line after `g, admins, role:admin`, so it becomes something like this:
+```
 policy.csv: |
   g, admins, role:admin
   g, my.email@mail.com, role:admin
-
+```
 **Reuse of hosted zone might fail if old NS servers for the same domain are cached in DNS**
 
 Workaround: wait 2 days for it to expire (default hosted zone NS record TTL)

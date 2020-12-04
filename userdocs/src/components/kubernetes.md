@@ -19,7 +19,7 @@ We have installed external secrets and configured it to use [SSM Parameter store
 Create an SSM parameter:
 
 ```bash
-$ aws ssm put-parameter --name "/postgres/adminpass" --value "P@sSwW)rd" --type "SecureString"
+aws ssm put-parameter --name "/postgres/adminpass" --value "P@sSwW)rd" --type "SecureString"
 ```
 
 Kubernetes External Secrets adds a [Custom Resource Definition](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) (CRD). We use this CRD to make use of the correct backend; SSM (systemManager) in this case and the path to the SSM secret.
@@ -57,7 +57,7 @@ We have configured AWS ALB Ingress Controller to work with a cluster, which mean
 #### Example
 
 The following ingress resource will result in the creation of a public ALB. In this example, we only use a subset of the [available annotations](https://kubernetes-sigs.github.io/aws-alb-ingress-controller/guide/ingress/annotation/), but they demonstrate how you can:
- 
+
  1. Configure HTTP to HTTPS redirect
     ```
         alb.ingress.kubernetes.io/actions.ssl-redirect: \

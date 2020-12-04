@@ -5,7 +5,7 @@ Sometimes it can be useful to setup a minimal cluster for testing or experimenta
 To create a `testcluster` run the following command and follow the guide:
 
 ```bash
-$ okctl create testcluster exp 123456789012
+okctl create testcluster exp 123456789012
 ```
 
 ## Details
@@ -92,7 +92,7 @@ spec:
 Then you can fetch your credentials using `okctl`:
 
 ```bash
-$ okctl show credentials {env}
+okctl show credentials {env}
 ```
 
 This command will output a number of environment variables you can export. You need to use the ones for `AWS` and `KUBECONFIG` and export them in a shell.
@@ -100,7 +100,7 @@ This command will output a number of environment variables you can export. You n
 Then you can apply the manifest you saved earlier to the cluster:
 
 ```bash
-$ kubectl apply -f experiments/2048/2048-game.yml
+kubectl apply -f experiments/2048/2048-game.yml
 ```
 
 Give `AWS ALB Ingress Controller` and `ExternalDNS` some time to work their magic, and eventually you should be able to access and play your game at the URL: `2048-game.{hosted_zone}.oslo.systems`.
@@ -108,11 +108,11 @@ Give `AWS ALB Ingress Controller` and `ExternalDNS` some time to work their magi
 When you are done, simply delete the manifest:
 
 ```bash
-$ kubectl delete -f experiments/2048/2048-game.yml
+kubectl delete -f experiments/2048/2048-game.yml
 ```
 
 And delete the cluster, if you feel done:
 
 ```bash
-$ okctl delete testcluster {env}
+okctl delete testcluster {env}
 ```

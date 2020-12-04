@@ -3,7 +3,7 @@
 ## Cloud components
 
 Cloud providers offer a vast array of functionality for:
- 
+
  - Networking
  - Computation
  - DNS
@@ -11,14 +11,14 @@ Cloud providers offer a vast array of functionality for:
  - Databases
  - Block storage
  - Artificial intelligence
- 
+
  In `okctl` we use a subset of this functionality to provide a platform for running production workloads:
 
 - [Amazon Web Services](#amazon-web-services-aws) as the cloud provider
 - [Virtual Private Cloud](#virtual-private-cloud-vpc) for network isolation
 - [Elastic Kubernetes Service](#elastic-kubernetes-service-eks) for deploying and running applications
 - [Route53](#aws-route53-route53) for DNS
-- [Certificate Manager](#aws-certificate-manager-acm) for issuing SSL/TLS certificates for secure communication 
+- [Certificate Manager](#aws-certificate-manager-acm) for issuing SSL/TLS certificates for secure communication
 - [Systems Manager Parameter Store](#aws-systems-manager-amazon-ssm-parameter-store) for storing secrets
 
 ### Amazon Web Services (AWS)
@@ -41,7 +41,7 @@ K8s is an open-source system for automating deployment, scaling, and management 
 [AWS Route53](https://aws.amazon.com/route53/) (Route53) is a highly available and scalable [Domain Name System](https://en.wikipedia.org/wiki/Domain_Name_System) (DNS) web service. It is designed to give developers and businesses an extremely reliable and cost effective way to route end users to Internet applications by translating names like www.example.com into the numeric IP addresses like 192.0.2.1 that computers use to connect to each other.
 
 ```bash
-$ dig test.oslo.systems NS +short
+dig test.oslo.systems NS +short
 
 ns-327.awsdns-40.com.
 ns-612.awsdns-12.net.
@@ -54,7 +54,7 @@ ns-1322.awsdns-37.org.
 [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) (ACM) lets you easily provision, manage, and deploy public and private Secure Sockets Layer/Transport Layer Security (SSL/TLS) certificates for use with AWS services, and your internal connected resources. SSL/TLS certificates secure network communication and establish the identity of websites over the Internet as well as resources on private networks.
 
 ```bash
-$ curl -vvI https://argocd.veiviser.oslo.systems
+curl -vvI https://argocd.veiviser.oslo.systems
 
 <snip>
 * Server certificate:

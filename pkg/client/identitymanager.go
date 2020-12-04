@@ -40,6 +40,7 @@ type IdentityManagerState interface {
 	SaveIdentityPoolClient(client *api.IdentityPoolClient) (*store.Report, error)
 	SaveIdentityPoolUser(client *api.IdentityPoolUser) (*store.Report, error)
 	GetIdentityPool() state.IdentityPool
+	RemoveIdentityPool(id api.ID) (*store.Report, error)
 }
 
 // IdentityManagerReport provides output of the actions

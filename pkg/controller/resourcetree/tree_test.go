@@ -95,7 +95,7 @@ func TestResourceNode_ApplyFunction(t *testing.T) {
 
 			numberOfCalls := 0
 			desiredTree.ApplyFunction(func(receiver *resourcetree.ResourceNode, target *resourcetree.ResourceNode) {
-				numberOfCalls += 1
+				numberOfCalls++
 			}, currentStateTree)
 
 			assert.Equal(t, tc.expectedCalls, numberOfCalls)

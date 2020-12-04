@@ -93,6 +93,7 @@ func (s *githubService) ReadyGithubInfrastructureRepository(_ context.Context, o
 	return repo, nil
 }
 
+// nolint funlen
 func (s *githubService) ReadyGithubInfrastructureRepositoryWithoutUserinput(_ context.Context, opts client.ReadyGithubInfrastructureRepositoryOpts) (*client.GithubRepository, error) {
 	err := s.spinner.Start("github")
 	if err != nil {

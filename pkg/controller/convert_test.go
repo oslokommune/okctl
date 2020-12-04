@@ -12,7 +12,7 @@ func TestTreeCreators(t *testing.T) {
 		name string
 
 		declaration      func() *v1alpha1.Cluster
-		existingServices existingServices
+		existingServices ExistingServices
 	}{
 		{
 			name: "Should produce equal trees when all is enabled",
@@ -21,7 +21,7 @@ func TestTreeCreators(t *testing.T) {
 
 				return &declaration
 			},
-			existingServices: existingServices{
+			existingServices: ExistingServices{
 				hasALBIngressController: true,
 				hasCluster:              true,
 				hasExternalDNS:          true,
@@ -40,7 +40,7 @@ func TestTreeCreators(t *testing.T) {
 
 				return &declaration
 			},
-			existingServices: existingServices{
+			existingServices: ExistingServices{
 				hasALBIngressController: true,
 				hasCluster:              true,
 				hasExternalDNS:          false,

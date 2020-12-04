@@ -14,19 +14,20 @@ type ClusterResourceState struct {
 	VPC api.Vpc
 }
 
-type clusterReconciler struct {
+// ClusterReconciler contains service and metadata for the relevant resource
+type ClusterReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 
 	client client.ClusterService
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *clusterReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *ClusterReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *clusterReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *ClusterReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
 	resourceState, ok := node.ResourceState.(ClusterResourceState)
 	if !ok {
 		return nil, errors.New("error casting cluster resourceState")
@@ -35,7 +36,7 @@ func (z *clusterReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconci
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err := z.client.CreateCluster(z.commonMetadata.Ctx, api.ClusterCreateOpts{
-			ID:                z.commonMetadata.ClusterId,
+			ID:                z.commonMetadata.ClusterID,
 			Cidr:              resourceState.VPC.Cidr,
 			VpcID:             resourceState.VPC.VpcID,
 			VpcPrivateSubnets: resourceState.VPC.PrivateSubnets,
@@ -45,7 +46,7 @@ func (z *clusterReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconci
 			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating cluster: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err := z.client.DeleteCluster(z.commonMetadata.Ctx, api.ClusterDeleteOpts{ID: z.commonMetadata.ClusterId})
+		err := z.client.DeleteCluster(z.commonMetadata.Ctx, api.ClusterDeleteOpts{ID: z.commonMetadata.ClusterID})
 		if err != nil {
 			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error deleting cluster: %w", err)
 		}
@@ -55,8 +56,8 @@ func (z *clusterReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconci
 }
 
 // NewClusterReconciler creates a new reconciler for the cluster resource
-func NewClusterReconciler(client client.ClusterService) *clusterReconciler {
-	return &clusterReconciler{
+func NewClusterReconciler(client client.ClusterService) *ClusterReconciler {
+	return &ClusterReconciler{
 		client: client,
 	}
 }

@@ -39,6 +39,7 @@ will be stored, together with your AWS account details.
 
 `
 
+// CreateOnRepoDataNotFoundWithNoUserInput configures a repository using a cluster declaration
 func CreateOnRepoDataNotFoundWithNoUserInput(declaration *v1alpha1.Cluster) DataNotFoundFn {
 	return func(c *config.Config) error {
 		var err error

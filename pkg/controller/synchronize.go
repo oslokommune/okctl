@@ -1,3 +1,4 @@
+// Package controller knows how to ensure desired state and current state matches
 package controller
 
 import (
@@ -8,6 +9,7 @@ import (
 	"github.com/spf13/afero"
 )
 
+// SynchronizeOpts contains the necessary information that Synchronize() needs to do its work
 type SynchronizeOpts struct {
 	DesiredTree *resourcetree.ResourceNode
 

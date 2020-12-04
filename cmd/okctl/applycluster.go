@@ -35,6 +35,7 @@ func (o *applyClusterOpts) Validate() error {
 	)
 }
 
+// nolint funlen
 func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := applyClusterOpts{}
 
@@ -87,7 +88,8 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				ClusterName:  o.RepoStateWithEnv.GetClusterName(),
 			}
 
-			spin, err := spinner.New("synchronizing", o.Err)
+			spin, _ := spinner.New("synchronizing", o.Err)
+
 			services, err := o.ClientServices(spin)
 			if err != nil {
 				return fmt.Errorf("error getting services: %w", err)
@@ -109,7 +111,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			reconciliationManager := reconciler.NewReconcilerManager(&resourcetree.CommonMetadata{
 				Ctx:       o.Ctx,
-				ClusterId: id,
+				ClusterID: id,
 			})
 
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeZone, reconciler.NewZoneReconciler(services.Domain))

@@ -50,6 +50,8 @@ all the time, if you so choose.
 
 `
 
+// CreateOnUserDataNotFoundWithNoInput initializes a user, but does not
+// set it up
 func CreateOnUserDataNotFoundWithNoInput() DataNotFoundFn {
 	return func(c *config.Config) (err error) {
 		userDir, err := c.GetUserDataDir()
@@ -69,6 +71,9 @@ func CreateOnUserDataNotFoundWithNoInput() DataNotFoundFn {
 		_, err = store.NewFileSystem(userDir, c.FileSystem).
 			StoreStruct(config.DefaultConfig, c.UserState, store.ToYAML()).
 			Do()
+		if err != nil {
+			return err
+		}
 
 		c.Logger.WithFields(logrus.Fields{
 			"configuration_file": userDataPath,

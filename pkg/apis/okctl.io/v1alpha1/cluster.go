@@ -86,7 +86,9 @@ type ClusterMeta struct {
 func (receiver ClusterMeta) Validate() error {
 	return validation.ValidateStruct(&receiver,
 		validation.Field(&receiver.Name, validation.Required),
-		validation.Field(&receiver.Environment, validation.Required, validation.Match(regexp.MustCompile("^[a-zA-Z]{3,64}$")).Error("must consist of 3-64 characters (a-z, A-Z)")),
+		validation.Field(&receiver.Environment,
+			validation.Required,
+			validation.Match(regexp.MustCompile("^[a-zA-Z]{3,64}$")).Error("must consist of 3-64 characters (a-z, A-Z)")),
 		validation.Field(&receiver.Region, validation.Required, validation.In("eu-west-1").Error("for now, only \"eu-west-1\" is supported")),
 		validation.Field(&receiver.AccountID, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{12}$")).Error("must consist of 12 digits")),
 	)
@@ -95,7 +97,7 @@ func (receiver ClusterMeta) Validate() error {
 // String returns a unique identifier for a cluster
 // Not sure about this..
 func (receiver *ClusterMeta) String() string {
-	return fmt.Sprintf("%s-%s.%s.okctl.io/%d", receiver.Name, receiver.Environment, receiver.Region, receiver.AccountID)
+	return fmt.Sprintf("%s-%s.%s.okctl.io/%s", receiver.Name, receiver.Environment, receiver.Region, receiver.AccountID)
 }
 
 // ClusterVPC is a definition of the VPC we create for the EKS cluster
@@ -135,6 +137,7 @@ type ClusterDNSZone struct {
 	ReuseExisting bool `json:"managedZone"`
 }
 
+// Validate throws an error if the ClusterDNSZone is erroneous
 func (c ClusterDNSZone) Validate() error {
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.ParentDomain, validation.Required, is.Domain),
@@ -160,6 +163,7 @@ type ClusterGithub struct {
 	Team string `json:"team"`
 }
 
+// Validate ensures ClusterGithub contains required information
 func (c ClusterGithub) Validate() error {
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.Organisation, validation.Required),

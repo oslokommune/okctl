@@ -14,19 +14,20 @@ type ExternalDNSResourceState struct {
 	Domain       string
 }
 
-type externalDNSReconciler struct {
+// ExternalDNSReconciler contains service and metadata for the relevant resource
+type ExternalDNSReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 
 	client client.ExternalDNSService
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *externalDNSReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *ExternalDNSReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *externalDNSReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *ExternalDNSReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
 	resourceState, ok := node.ResourceState.(ExternalDNSResourceState)
 	if !ok {
 		return nil, errors.New("error casting External DNS resourceState")
@@ -35,7 +36,7 @@ func (z *externalDNSReconciler) Reconcile(node *resourcetree.ResourceNode) (*Rec
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err := z.client.CreateExternalDNS(z.commonMetadata.Ctx, client.CreateExternalDNSOpts{
-			ID:           z.commonMetadata.ClusterId,
+			ID:           z.commonMetadata.ClusterID,
 			HostedZoneID: resourceState.HostedZoneID,
 			Domain:       resourceState.Domain,
 		})
@@ -43,7 +44,7 @@ func (z *externalDNSReconciler) Reconcile(node *resourcetree.ResourceNode) (*Rec
 			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating external DNS: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err := z.client.DeleteExternalDNS(z.commonMetadata.Ctx, z.commonMetadata.ClusterId)
+		err := z.client.DeleteExternalDNS(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
 			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error deleting external DNS: %w", err)
 		}
@@ -53,8 +54,8 @@ func (z *externalDNSReconciler) Reconcile(node *resourcetree.ResourceNode) (*Rec
 }
 
 // NewExternalDNSReconciler creates a new reconciler for the ExternalDNS resource
-func NewExternalDNSReconciler(client client.ExternalDNSService) *externalDNSReconciler {
-	return &externalDNSReconciler{
+func NewExternalDNSReconciler(client client.ExternalDNSService) *ExternalDNSReconciler {
+	return &ExternalDNSReconciler{
 		client: client,
 	}
 }

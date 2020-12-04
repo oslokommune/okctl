@@ -14,19 +14,20 @@ type HostedZoneMetadata struct {
 	Domain string
 }
 
-type zoneReconciler struct {
+// ZoneReconciler contains service and metadata for the relevant resource
+type ZoneReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 
 	client client.DomainService
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *zoneReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *ZoneReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *zoneReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *ZoneReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
 	metadata, ok := node.Metadata.(HostedZoneMetadata)
 	if !ok {
 		return nil, errors.New("error casting HostedZone metadata")
@@ -37,7 +38,7 @@ func (z *zoneReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconcilat
 		fqdn := dns.Fqdn(metadata.Domain)
 
 		_, err := z.client.CreatePrimaryHostedZoneWithoutUserinput(z.commonMetadata.Ctx, client.CreatePrimaryHostedZoneOpts{
-			ID:     z.commonMetadata.ClusterId,
+			ID:     z.commonMetadata.ClusterID,
 			Domain: metadata.Domain,
 			FQDN:   fqdn,
 		})
@@ -45,7 +46,7 @@ func (z *zoneReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconcilat
 			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating hosted zone: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err := z.client.DeletePrimaryHostedZone(z.commonMetadata.Ctx, client.DeletePrimaryHostedZoneOpts{ID: z.commonMetadata.ClusterId})
+		err := z.client.DeletePrimaryHostedZone(z.commonMetadata.Ctx, client.DeletePrimaryHostedZoneOpts{ID: z.commonMetadata.ClusterID})
 		if err != nil {
 			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error deleting hosted zone: %w", err)
 		}
@@ -55,8 +56,8 @@ func (z *zoneReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconcilat
 }
 
 // NewZoneReconciler creates a new reconciler for the Hosted Zone resource
-func NewZoneReconciler(client client.DomainService) *zoneReconciler {
-	return &zoneReconciler{
+func NewZoneReconciler(client client.DomainService) *ZoneReconciler {
+	return &ZoneReconciler{
 		client: client,
 	}
 }

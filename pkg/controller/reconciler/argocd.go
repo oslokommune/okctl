@@ -23,14 +23,15 @@ type ArgocdResourceState struct {
 	AuthDomain string
 }
 
-type argocdReconciler struct {
+// ArgocdReconciler contains service and metadata for the relevant resource
+type ArgocdReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 
 	client client.ArgoCDService
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *argocdReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *ArgocdReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
@@ -41,7 +42,7 @@ Dependent on:
 - Cognito user pool
 - Primary hosted Zone
 */
-func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *ArgocdReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
 	resourceState, ok := node.ResourceState.(ArgocdResourceState)
 	if !ok {
 		return nil, errors.New("error casting argocd resource resourceState")
@@ -50,7 +51,7 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconcil
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err := z.client.CreateArgoCD(z.commonMetadata.Ctx, client.CreateArgoCDOpts{
-			ID:                 z.commonMetadata.ClusterId,
+			ID:                 z.commonMetadata.ClusterID,
 			Domain:             resourceState.HostedZone.Domain,
 			FQDN:               resourceState.HostedZone.FQDN,
 			HostedZoneID:       resourceState.HostedZone.ID,
@@ -70,8 +71,8 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconcil
 }
 
 // NewArgocdReconciler creates a new reconciler for the ArgoCD resource
-func NewArgocdReconciler(client client.ArgoCDService) *argocdReconciler {
-	return &argocdReconciler{
+func NewArgocdReconciler(client client.ArgoCDService) *ArgocdReconciler {
+	return &ArgocdReconciler{
 		client: client,
 	}
 }

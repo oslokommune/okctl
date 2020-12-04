@@ -14,7 +14,8 @@ import (
 	"github.com/spf13/afero"
 )
 
-type existingServices struct {
+// ExistingServices contains information about services' existence
+type ExistingServices struct {
 	hasALBIngressController bool
 	hasCluster              bool
 	hasExternalDNS          bool
@@ -25,9 +26,9 @@ type existingServices struct {
 	hasVPC                  bool
 }
 
-// NewCreateCurrentStateGraphOpts creates an initialized existingServices struct
-func NewCreateCurrentStateGraphOpts(fs *afero.Afero, outputDir string, githubGetter reconciler.GithubGetter) (*existingServices, error) {
-	return &existingServices{
+// NewCreateCurrentStateGraphOpts creates an initialized ExistingServices struct
+func NewCreateCurrentStateGraphOpts(fs *afero.Afero, outputDir string, githubGetter reconciler.GithubGetter) (*ExistingServices, error) {
+	return &ExistingServices{
 		hasGithubSetup:          githubTester(githubGetter()),
 		hasPrimaryHostedZone:    directoryTester(fs, outputDir, config.DefaultDomainBaseDir),
 		hasVPC:                  directoryTester(fs, outputDir, config.DefaultVpcBaseDir),
@@ -40,7 +41,7 @@ func NewCreateCurrentStateGraphOpts(fs *afero.Afero, outputDir string, githubGet
 }
 
 // CreateCurrentStateGraph knows how to generate a ResourceNode tree based on the current state
-func CreateCurrentStateGraph(opts *existingServices) (root *resourcetree.ResourceNode) {
+func CreateCurrentStateGraph(opts *ExistingServices) (root *resourcetree.ResourceNode) {
 	root = createNode(nil, resourcetree.ResourceNodeTypeGroup, true)
 
 	var vpcNode,

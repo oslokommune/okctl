@@ -1,3 +1,4 @@
+// Package reconciler contains different reconcilers for each of the necessary resources
 package reconciler
 
 import (

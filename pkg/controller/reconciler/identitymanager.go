@@ -16,14 +16,15 @@ type IdentityManagerResourceState struct {
 	Domain       string
 }
 
-type identityManagerReconciler struct {
+// IdentityManagerReconciler contains service and metadata for the relevant resource
+type IdentityManagerReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 
 	client client.IdentityManagerService
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *identityManagerReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *IdentityManagerReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
@@ -33,7 +34,7 @@ Requires:
 - Hosted Zone
 - Nameservers setup
 */
-func (z *identityManagerReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *IdentityManagerReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
 	resourceState, ok := node.ResourceState.(IdentityManagerResourceState)
 	if !ok {
 		return nil, errors.New("unable to cast identity manager resourceState")
@@ -45,7 +46,7 @@ func (z *identityManagerReconciler) Reconcile(node *resourcetree.ResourceNode) (
 		authFQDN := dns.Fqdn(authDomain)
 
 		_, err := z.client.CreateIdentityPool(z.commonMetadata.Ctx, api.CreateIdentityPoolOpts{
-			ID:           z.commonMetadata.ClusterId,
+			ID:           z.commonMetadata.ClusterID,
 			AuthDomain:   authDomain,
 			AuthFQDN:     authFQDN,
 			HostedZoneID: resourceState.HostedZoneID,
@@ -61,8 +62,8 @@ func (z *identityManagerReconciler) Reconcile(node *resourcetree.ResourceNode) (
 }
 
 // NewIdentityManagerReconciler creates a new reconciler for the Identity Manager resource
-func NewIdentityManagerReconciler(client client.IdentityManagerService) *identityManagerReconciler {
-	return &identityManagerReconciler{
+func NewIdentityManagerReconciler(client client.IdentityManagerService) *IdentityManagerReconciler {
+	return &IdentityManagerReconciler{
 		client: client,
 	}
 }

@@ -33,6 +33,9 @@ func (s *domainStore) RemoveHostedZone(domain string) (*store.Report, error) {
 	report, err := store.NewFileSystem(path.Join(s.paths.BaseDir, domain), s.fs).
 		Remove(s.paths.OutputFile).
 		Remove(s.paths.CloudFormationFile).
+		AlterStore(store.SetBaseDir(s.paths.BaseDir)).
+		Remove(domain).
+		Remove("").
 		Do()
 	if err != nil {
 		return nil, fmt.Errorf("failed to remove hosted zone: %s", err)

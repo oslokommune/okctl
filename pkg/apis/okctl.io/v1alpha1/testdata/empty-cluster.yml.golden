@@ -4,7 +4,10 @@ github:
   repository: ""
   team: ""
 metadata:
-  accountID: 0
+  accountID: ""
   environment: ""
   name: ""
   region: ""
+primaryDNSZone:
+  managedZone: false
+  parentDomain: ""

@@ -13,19 +13,19 @@ type AlbIngressControllerResourceState struct {
 	VpcID string
 }
 
-// ALBIngressReconciler contains service and metadata for the relevant resource
-type ALBIngressReconciler struct {
+// albIngressReconciler contains service and metadata for the relevant resource
+type albIngressReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 	client         client.ALBIngressControllerService
 }
 
 // SetCommonMetadata stores common metadata for later use
-func (z *ALBIngressReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *albIngressReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *ALBIngressReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *albIngressReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
 	state, ok := node.ResourceState.(AlbIngressControllerResourceState)
 	if !ok {
 		return nil, errors.New("error casting ALB Ingress Controller state")
@@ -51,8 +51,8 @@ func (z *ALBIngressReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reco
 }
 
 // NewALBIngressReconciler creates a new reconciler for the ALB Ingress controller resource
-func NewALBIngressReconciler(client client.ALBIngressControllerService) *ALBIngressReconciler {
-	return &ALBIngressReconciler{
+func NewALBIngressReconciler(client client.ALBIngressControllerService) Reconciler {
+	return &albIngressReconciler{
 		client: client,
 	}
 }

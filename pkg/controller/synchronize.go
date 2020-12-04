@@ -13,7 +13,7 @@ import (
 type SynchronizeOpts struct {
 	DesiredTree *resourcetree.ResourceNode
 
-	ReconciliationManager *reconciler.ReconcilerManager
+	ReconciliationManager *reconciler.Manager
 
 	Fs        *afero.Afero
 	OutputDir string
@@ -70,7 +70,7 @@ func Synchronize(opts *SynchronizeOpts) error {
 }
 
 // handleNode knows how to run Reconcile() on every node of a ResourceNode tree
-func handleNode(reconcilerManager *reconciler.ReconcilerManager, currentNode *resourcetree.ResourceNode) error {
+func handleNode(reconcilerManager *reconciler.Manager, currentNode *resourcetree.ResourceNode) error {
 	_, err := reconcilerManager.Reconcile(currentNode)
 	if err != nil {
 		return fmt.Errorf("error reconciling node: %w", err)

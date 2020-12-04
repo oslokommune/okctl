@@ -14,20 +14,20 @@ type ExternalDNSResourceState struct {
 	Domain       string
 }
 
-// ExternalDNSReconciler contains service and metadata for the relevant resource
-type ExternalDNSReconciler struct {
+// externalDNSReconciler contains service and metadata for the relevant resource
+type externalDNSReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 
 	client client.ExternalDNSService
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *ExternalDNSReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *externalDNSReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *ExternalDNSReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *externalDNSReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
 	resourceState, ok := node.ResourceState.(ExternalDNSResourceState)
 	if !ok {
 		return nil, errors.New("error casting External DNS resourceState")
@@ -54,8 +54,8 @@ func (z *ExternalDNSReconciler) Reconcile(node *resourcetree.ResourceNode) (*Rec
 }
 
 // NewExternalDNSReconciler creates a new reconciler for the ExternalDNS resource
-func NewExternalDNSReconciler(client client.ExternalDNSService) *ExternalDNSReconciler {
-	return &ExternalDNSReconciler{
+func NewExternalDNSReconciler(client client.ExternalDNSService) Reconciler {
+	return &externalDNSReconciler{
 		client: client,
 	}
 }

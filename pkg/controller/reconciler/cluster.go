@@ -14,20 +14,20 @@ type ClusterResourceState struct {
 	VPC api.Vpc
 }
 
-// ClusterReconciler contains service and metadata for the relevant resource
-type ClusterReconciler struct {
+// clusterReconciler contains service and metadata for the relevant resource
+type clusterReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 
 	client client.ClusterService
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *ClusterReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *clusterReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *ClusterReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *clusterReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
 	resourceState, ok := node.ResourceState.(ClusterResourceState)
 	if !ok {
 		return nil, errors.New("error casting cluster resourceState")
@@ -56,8 +56,8 @@ func (z *ClusterReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconci
 }
 
 // NewClusterReconciler creates a new reconciler for the cluster resource
-func NewClusterReconciler(client client.ClusterService) *ClusterReconciler {
-	return &ClusterReconciler{
+func NewClusterReconciler(client client.ClusterService) Reconciler {
+	return &clusterReconciler{
 		client: client,
 	}
 }

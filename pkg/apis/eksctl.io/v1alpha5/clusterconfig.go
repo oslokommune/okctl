@@ -1,3 +1,4 @@
+// nolint stylecheck
 package v1alpha5
 
 import (

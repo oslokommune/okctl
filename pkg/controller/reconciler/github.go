@@ -28,20 +28,20 @@ type GithubResourceState struct {
 	Saver  GithubSetter
 }
 
-// GithubReconciler contains service and metadata for the relevant resource
-type GithubReconciler struct {
+// githubReconciler contains service and metadata for the relevant resource
+type githubReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 
 	client client.GithubService
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *GithubReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *githubReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *GithubReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *githubReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
 	metadata, ok := node.Metadata.(GithubMetadata)
 	if !ok {
 		return nil, errors.New("unable to cast Github metadata")
@@ -78,8 +78,8 @@ func (z *GithubReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconcil
 }
 
 // NewGithubReconciler creates a new reconciler for the Github resource
-func NewGithubReconciler(client client.GithubService) *GithubReconciler {
-	return &GithubReconciler{
+func NewGithubReconciler(client client.GithubService) Reconciler {
+	return &githubReconciler{
 		client: client,
 	}
 }

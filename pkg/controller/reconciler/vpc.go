@@ -15,20 +15,20 @@ type VPCMetadata struct {
 	HighAvailability bool
 }
 
-// VpcReconciler contains service and metadata for the relevant resource
-type VpcReconciler struct {
+// vpcReconciler contains service and metadata for the relevant resource
+type vpcReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 
 	client client.VPCService
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *VpcReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *vpcReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *VpcReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *vpcReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
 	metadata, ok := node.Metadata.(VPCMetadata)
 	if !ok {
 		return nil, errors.New("unable to cast VPC metadata")
@@ -55,8 +55,8 @@ func (z *VpcReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconcilati
 }
 
 // NewVPCReconciler creates a new reconciler for the VPC resource
-func NewVPCReconciler(client client.VPCService) *VpcReconciler {
-	return &VpcReconciler{
+func NewVPCReconciler(client client.VPCService) Reconciler {
+	return &vpcReconciler{
 		client: client,
 	}
 }

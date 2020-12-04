@@ -14,20 +14,20 @@ type HostedZoneMetadata struct {
 	Domain string
 }
 
-// ZoneReconciler contains service and metadata for the relevant resource
-type ZoneReconciler struct {
+// zoneReconciler contains service and metadata for the relevant resource
+type zoneReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 
 	client client.DomainService
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *ZoneReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *zoneReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *ZoneReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *zoneReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
 	metadata, ok := node.Metadata.(HostedZoneMetadata)
 	if !ok {
 		return nil, errors.New("error casting HostedZone metadata")
@@ -56,8 +56,8 @@ func (z *ZoneReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconcilat
 }
 
 // NewZoneReconciler creates a new reconciler for the Hosted Zone resource
-func NewZoneReconciler(client client.DomainService) *ZoneReconciler {
-	return &ZoneReconciler{
+func NewZoneReconciler(client client.DomainService) Reconciler {
+	return &zoneReconciler{
 		client: client,
 	}
 }

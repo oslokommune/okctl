@@ -7,20 +7,20 @@ import (
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
 
-// ExternalSecretsReconciler contains service and metadata for the relevant resource
-type ExternalSecretsReconciler struct {
+// externalSecretsReconciler contains service and metadata for the relevant resource
+type externalSecretsReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 
 	client client.ExternalSecretsService
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *ExternalSecretsReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *externalSecretsReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *ExternalSecretsReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *externalSecretsReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err := z.client.CreateExternalSecrets(z.commonMetadata.Ctx, client.CreateExternalSecretsOpts{ID: z.commonMetadata.ClusterID})
@@ -38,8 +38,8 @@ func (z *ExternalSecretsReconciler) Reconcile(node *resourcetree.ResourceNode) (
 }
 
 // NewExternalSecretsReconciler creates a new reconciler for the ExternalSecrets resource
-func NewExternalSecretsReconciler(client client.ExternalSecretsService) *ExternalSecretsReconciler {
-	return &ExternalSecretsReconciler{
+func NewExternalSecretsReconciler(client client.ExternalSecretsService) Reconciler {
+	return &externalSecretsReconciler{
 		client: client,
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
 
+// nolint funlen
 func TestResourceNode_ApplyFunction(t *testing.T) {
 	testCases := []struct {
 		name                 string

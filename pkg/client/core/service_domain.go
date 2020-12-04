@@ -192,7 +192,6 @@ func (s *domainService) CreatePrimaryHostedZoneWithoutUserinput(_ context.Contex
 		return nil, err
 	}
 
-	// TODO: here we need to pass the nameservers to the okctl team, so they can add it to the oslo.systems domain
 	zone.IsDelegated = true
 
 	r1, err := s.store.SaveHostedZone(zone)

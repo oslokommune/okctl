@@ -30,6 +30,7 @@ func (s *clusterStore) SaveCluster(c *api.Cluster) (*store.Report, error) {
 func (s *clusterStore) DeleteCluster(_ api.ID) (*store.Report, error) {
 	report, err := store.NewFileSystem(s.paths.BaseDir, s.fs).
 		Remove(s.paths.ConfigFile).
+		Remove("").
 		Do()
 	if err != nil {
 		return nil, err

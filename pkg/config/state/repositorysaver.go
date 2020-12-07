@@ -306,8 +306,14 @@ func (r *repository) SaveCluster(cluster Cluster) (*store.Report, error) {
 
 // DeleteCluster removes the cluster state
 func (r *repository) DeleteCluster() (*store.Report, error) {
-	delete(r.state.Clusters, r.env)
-	return r.save()
+
+	cluster := r.GetCluster()
+	cluster.IdentityPool = IdentityPool{}
+	cluster.Certificates = map[string]Certificate{}
+	cluster.Github = Github{}
+	cluster.ArgoCD = ArgoCD{}
+
+	return r.SaveCluster(cluster)
 }
 
 // SaveHostedZone stores the hosted zone

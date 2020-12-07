@@ -30,6 +30,7 @@ func (s *externalSecretsStore) RemoveExternalSecrets(_ api.ID) (*store.Report, e
 		Remove(s.chart.OutputFile).
 		Remove(s.chart.ReleaseFile).
 		Remove(s.chart.ChartFile).
+		Remove("").
 		Do()
 	if err != nil {
 		return nil, err

@@ -30,6 +30,7 @@ func (s *albIngressControllerStore) RemoveALBIngressController(_ api.ID) (*store
 		Remove(s.chart.OutputFile).
 		Remove(s.chart.ReleaseFile).
 		Remove(s.chart.ChartFile).
+		Remove("").
 		Do()
 	if err != nil {
 		return nil, err

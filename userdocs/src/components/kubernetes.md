@@ -2,7 +2,7 @@
 
 ## Kubernetes components
 
-Kubernetes is [highly configurable and extensible](https://kubernetes.io/docs/concepts/extend-kubernetes/). We make use of this fact with `okctl` and bind our Kubernetes cluster setup tighter together with AWS. We do this by deploying a variety of applications into the cluster to manage various aspects of an application setup for us. 
+Kubernetes is [highly configurable and extensible](https://kubernetes.io/docs/concepts/extend-kubernetes/). We make use of this fact with `okctl` and bind our Kubernetes cluster setup tighter together with AWS. We do this by deploying a variety of applications into the cluster to manage various aspects of an application setup for us.
 
 - [Kubernetes External Secrets](#kubernetes-external-secrets)
 - [AWS ALB Ingress Controller](#aws-alb-ingress-controller)
@@ -36,7 +36,7 @@ spec:
       name: admin_password
 ```
 
-When this definition is applied to the cluster with `kubectl apply -f {secret.yaml}` it will result in a Kubernets secret being created.
+When this definition is applied to the cluster with `kubectl apply -f {secret.yaml}`, or if you deploy your pods to a namespace: `kubectl apply -f {secret-yaml} --namespace {your-namespace}`, it will result in a Kubernets secret being created.
 
 ```yaml
 apiVersion: v1
@@ -46,6 +46,31 @@ metadata:
 type: Opaque
 data:
   admin_password: ...
+```
+
+Inspect the secrets you just applied with:
+```bash
+kubectl get secrets
+kubectl describe secret postgres-config
+```
+or if you applied the secret to a namespace:
+```bash
+kubectl get secrets --namespace {your-namespace}
+kubectl describe secret postgres-config --namespace {your-namespace}
+```
+
+In your `Deployment` add the following `env` configuration to let your pods get the `POSTGRES_PASSWORD` environment variable set on startup:
+```yaml
+spec:
+  containers:
+  - image: your-docker-image:0.0.1
+    name: application-name
+    env:
+      - name: POSTGRES_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: postgres-config
+            key: admin_password
 ```
 
 ### AWS ALB Ingress Controller

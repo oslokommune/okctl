@@ -110,6 +110,7 @@ func (s *vpcStore) DeleteVpc(_ api.ID) (*store.Report, error) {
 	report, err := store.NewFileSystem(s.paths.BaseDir, s.fs).
 		Remove(s.paths.OutputFile).
 		Remove(s.paths.CloudFormationFile).
+		Remove("").
 		Do()
 	if err != nil {
 		return nil, err

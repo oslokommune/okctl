@@ -56,7 +56,10 @@ func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, provide
 		return err
 	}
 
-	s.state.RemoveIdentityPool(opts)
+	_, err = s.state.RemoveIdentityPool(opts)
+	if err != nil {
+		return err
+	}
 
 	err = s.report.ReportDeleteIdentityPool(report)
 

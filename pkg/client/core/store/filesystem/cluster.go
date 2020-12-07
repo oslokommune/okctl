@@ -2,8 +2,9 @@
 package filesystem
 
 import (
-	"github.com/oslokommune/okctl/pkg/client"
 	"path"
+
+	"github.com/oslokommune/okctl/pkg/client"
 
 	"github.com/oslokommune/okctl/pkg/client/store"
 
@@ -37,9 +38,8 @@ func (s *clusterStore) DeleteCluster(_ api.ID) (*store.Report, error) {
 		return nil, err
 	}
 
-
-	s.fs.RemoveAll(path.Join(s.paths.BaseDir, "../argocd"))
-	s.fs.RemoveAll(path.Join(s.paths.BaseDir, "../helm"))
+	_ = s.fs.RemoveAll(path.Join(s.paths.BaseDir, "../argocd"))
+	_ = s.fs.RemoveAll(path.Join(s.paths.BaseDir, "../helm"))
 
 	return report, nil
 }

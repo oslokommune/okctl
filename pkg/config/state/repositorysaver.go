@@ -280,7 +280,6 @@ func (r *repository) SaveVPC(vpc VPC) (*store.Report, error) {
 	return r.save()
 }
 
-// TODO yeh here it is ..
 // DeleteVPC removes the vpc
 func (r *repository) DeleteVPC() (*store.Report, error) {
 	cluster := r.GetCluster()
@@ -306,7 +305,6 @@ func (r *repository) SaveCluster(cluster Cluster) (*store.Report, error) {
 
 // DeleteCluster removes the cluster state
 func (r *repository) DeleteCluster() (*store.Report, error) {
-
 	cluster := r.GetCluster()
 	cluster.IdentityPool = IdentityPool{}
 	cluster.Certificates = map[string]Certificate{}

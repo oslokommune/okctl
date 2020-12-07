@@ -49,6 +49,15 @@ func (s *externalDNSStore) RemoveExternalDNS(_ api.ID) (*store.Report, error) {
 		return nil, err
 	}
 
+	// Delete base directroy, ignore error if directory is not empty
+	_, basedir := store.NewFileSystem(s.policy.BaseDir, s.fs).
+		Remove("").
+		Do()
+	if basedir != nil {
+		return report, err
+	}
+
+
 	return report, err
 }
 

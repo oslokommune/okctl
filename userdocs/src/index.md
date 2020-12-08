@@ -165,6 +165,10 @@ Mac
 brew install pass
 ```
 
+**okctl keeps trying to do the Github Device Authentication Flow while trying to do \<any action\>**
+
+This is known to happen if `pass init <gpg-key-id>` has not been run after installing `pass`. 
+
 **On `okctl delete cluster`, some resources are not deleted (automatic deletion is coming in a later version)**
 
 Workaround: manually deleted the following resources:

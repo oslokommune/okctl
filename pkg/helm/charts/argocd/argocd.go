@@ -108,7 +108,7 @@ func NewDefaultValues(opts ValuesOpts) *Values {
 			Name:    "dex-server",
 			Image: image{
 				Repository: "quay.io/dexidp/dex",
-				Tag:        "v2.22.0",
+				Tag:        "v2.26.0",
 				PullPolicy: "IfNotPresent",
 			},
 			ServiceAccount: serviceAccount{
@@ -350,6 +350,11 @@ const repositoriesConfig = `- url: %s
 const policyCSV = `g, %s, role:admin
 `
 
+// Configuration documentation: https://dexidp.io/docs/connectors/oidc/
+// As stated in the documentation, the default oidc connector (used here) doesn't allow for groups claim, as they can
+// be stale, and thus, insecure. However, we need the groups claim to be able to give the user permission to see
+// his/her application in ArgoCD. Removing a user takes will take hours to take effect, but we consider this secure
+// enough.
 const dexConfig = `connectors:
 - type: oidc
   id: cognito
@@ -363,6 +368,7 @@ const dexConfig = `connectors:
     - openid
     - email
     - profile
+    insecureEnableGroups: true
     claimMapping:
       groups: "cognito:groups"
       name: "cognito:username"

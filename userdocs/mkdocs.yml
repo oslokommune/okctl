@@ -20,6 +20,8 @@ nav:
       - usage/venv.md
   - Users:
       - usage/adduser.md
+  - About:
+      - about/about.md
 
 plugins:
   - git-revision-date

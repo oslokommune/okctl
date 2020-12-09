@@ -351,6 +351,27 @@ const policyCSV = `g, %s, role:admin
 `
 
 // Configuration documentation: https://dexidp.io/docs/connectors/oidc/
+// Documentation of how users are authorized to view and edit ArgoCD applications:
+//
+// ArgoCD outsources authentication to Dex (https://dexidp.io/), which runs as a separate pod in the same namespace as
+// ArgoCD. When the user clicks "Login via AWS Cognito" in the ArgoCD web login interface, the user is redirected to
+// Dex, which is configured (as seen in configuration below) to use Cognito as the OIDC provider. Dex in other words
+// sits in the middle, and supports many ways of authenticating (Google, Facebook, or as here, a generic OIDC-provider
+// like Cognito).
+
+// When the user authenticates successfully with Cognito, Cognito sends the user's browser back to Dex (redirect URL in
+// a Oauth2 authentication code flow), and Dex fetches a ID token from Cognito. Because the user in Cognito is part of
+// the "admins" group in Cognito (if Cognito is setup correctly), this token contains the "cognito:groups = [admins]"
+// claim. The configuration below staes how to map this claim to new claim, "groups", ArgoCD understands.
+//
+// See also "rbacConfig" in this file for related K8S RBAC configuration. This RBAC configuration tells Dex which
+// users and groups maps to which ArgoCD roles. In theory we could hard code users here, but we want to use Cognito as
+// a user "database", thus we only map from the groups claim to the admin role, instead of individual users.
+//
+// You can see the resulting configuration in a live cluster by doing
+// kubectl get --namespace=argocd configmap argocd-cm -o yaml
+// kubectl get --namespace=argocd configmap argocd-rbac-cm -o yaml
+//
 // As stated in the documentation, the default oidc connector (used here) doesn't allow for groups claim, as they can
 // be stale, and thus, insecure. However, we need the groups claim to be able to give the user permission to see
 // his/her application in ArgoCD. Removing a user takes will take hours to take effect, but we consider this secure

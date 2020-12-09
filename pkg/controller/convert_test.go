@@ -57,8 +57,8 @@ func TestTreeCreators(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			desiredTree := CreateDesiredStateGraph(tc.declaration())
-			currentStateTree := CreateCurrentStateGraph(&tc.existingServices)
+			desiredTree := CreateDesiredStateTree(tc.declaration())
+			currentStateTree := CreateCurrentStateTree(&tc.existingServices)
 
 			assert.Equal(t, desiredTree.String(), currentStateTree.String())
 		})

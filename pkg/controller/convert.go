@@ -26,8 +26,8 @@ type ExistingServices struct {
 	hasVPC                  bool
 }
 
-// NewCreateCurrentStateGraphOpts creates an initialized ExistingServices struct
-func NewCreateCurrentStateGraphOpts(fs *afero.Afero, outputDir string, githubGetter reconciler.GithubGetter) (*ExistingServices, error) {
+// NewCreateCurrentStateTreeOpts creates an initialized ExistingServices struct
+func NewCreateCurrentStateTreeOpts(fs *afero.Afero, outputDir string, githubGetter reconciler.GithubGetter) (*ExistingServices, error) {
 	return &ExistingServices{
 		hasGithubSetup:          githubTester(githubGetter()),
 		hasPrimaryHostedZone:    directoryTester(fs, outputDir, config.DefaultDomainBaseDir),
@@ -40,8 +40,8 @@ func NewCreateCurrentStateGraphOpts(fs *afero.Afero, outputDir string, githubGet
 	}, nil
 }
 
-// CreateCurrentStateGraph knows how to generate a ResourceNode tree based on the current state
-func CreateCurrentStateGraph(opts *ExistingServices) (root *resourcetree.ResourceNode) {
+// CreateCurrentStateTree knows how to generate a ResourceNode tree based on the current state
+func CreateCurrentStateTree(opts *ExistingServices) (root *resourcetree.ResourceNode) {
 	root = createNode(nil, resourcetree.ResourceNodeTypeGroup, true)
 
 	var vpcNode,
@@ -61,8 +61,8 @@ func CreateCurrentStateGraph(opts *ExistingServices) (root *resourcetree.Resourc
 	return root
 }
 
-// CreateDesiredStateGraph knows how to create a ResourceNode tree based on a cluster declaration
-func CreateDesiredStateGraph(cluster *v1alpha1.Cluster) (root *resourcetree.ResourceNode) {
+// CreateDesiredStateTree knows how to create a ResourceNode tree based on a cluster declaration
+func CreateDesiredStateTree(cluster *v1alpha1.Cluster) (root *resourcetree.ResourceNode) {
 	root = createNode(nil, resourcetree.ResourceNodeTypeGroup, true)
 
 	var vpcNode,
@@ -83,15 +83,15 @@ func CreateDesiredStateGraph(cluster *v1alpha1.Cluster) (root *resourcetree.Reso
 }
 
 // ApplyDesiredStateMetadata applies metadata from a cluster definition to the nodes
-func ApplyDesiredStateMetadata(graph *resourcetree.ResourceNode, cluster *v1alpha1.Cluster, repoDir string) error {
-	primaryHostedZoneNode := graph.GetNode(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeZone})
+func ApplyDesiredStateMetadata(tree *resourcetree.ResourceNode, cluster *v1alpha1.Cluster, repoDir string) error {
+	primaryHostedZoneNode := tree.GetNode(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeZone})
 	if primaryHostedZoneNode == nil {
 		return errors.New("expected primary hosted zone node was not found")
 	}
 
 	primaryHostedZoneNode.Metadata = reconciler.HostedZoneMetadata{Domain: cluster.PrimaryDNSZone.ParentDomain}
 
-	vpcNode := graph.GetNode(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeVPC})
+	vpcNode := tree.GetNode(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeVPC})
 	if vpcNode == nil {
 		return errors.New("expected vpc node was not found")
 	}
@@ -101,7 +101,7 @@ func ApplyDesiredStateMetadata(graph *resourcetree.ResourceNode, cluster *v1alph
 		HighAvailability: cluster.VPC.HighAvailability,
 	}
 
-	githubNode := graph.GetNode(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeGithub})
+	githubNode := tree.GetNode(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeGithub})
 	if githubNode == nil {
 		return errors.New("expected github node was not found")
 	}
@@ -116,7 +116,7 @@ func ApplyDesiredStateMetadata(graph *resourcetree.ResourceNode, cluster *v1alph
 		Repository:   repo,
 	}
 
-	argocdNode := graph.GetNode(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeArgoCD})
+	argocdNode := tree.GetNode(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeArgoCD})
 	if argocdNode != nil {
 		argocdNode.Metadata = reconciler.ArgocdMetadata{Organization: cluster.Github.Organisation}
 	}

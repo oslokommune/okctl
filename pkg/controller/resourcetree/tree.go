@@ -179,11 +179,11 @@ type ApplyFn func(receiver *ResourceNode, target *ResourceNode)
 
 // ApplyFunction will use the supplied ApplyFn on all the nodes in the receiver tree, with an equal node from the target
 // tree
-func (node *ResourceNode) ApplyFunction(fn ApplyFn, targetGraph *ResourceNode) {
+func (node *ResourceNode) ApplyFunction(fn ApplyFn, targetTree *ResourceNode) {
 	for _, child := range node.Children {
-		child.ApplyFunction(fn, targetGraph)
+		child.ApplyFunction(fn, targetTree)
 	}
 
-	targetNode := targetGraph.GetNode(node)
+	targetNode := targetTree.GetNode(node)
 	fn(node, targetNode)
 }

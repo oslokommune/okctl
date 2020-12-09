@@ -105,9 +105,9 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("could not get Repository dir: %w", err)
 			}
 
-			desiredGraph := controller.CreateDesiredStateGraph(opts.Declaration)
+			desiredTree := controller.CreateDesiredStateTree(opts.Declaration)
 
-			err = controller.ApplyDesiredStateMetadata(desiredGraph, opts.Declaration, repoDir)
+			err = controller.ApplyDesiredStateMetadata(desiredTree, opts.Declaration, repoDir)
 			if err != nil {
 				return fmt.Errorf("could not apply desired state metadata: %w", err)
 			}
@@ -126,7 +126,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeGithub, reconciler.NewGithubReconciler(services.Github))
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeIdentityManager, reconciler.NewIdentityManagerReconciler(services.IdentityManager))
 			synchronizeOpts := &controller.SynchronizeOpts{
-				DesiredTree:             desiredGraph,
+				DesiredTree:             desiredTree,
 				ReconciliationManager:   reconciliationManager,
 				Fs:                      o.FileSystem,
 				OutputDir:               outputDir,

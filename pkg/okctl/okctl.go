@@ -37,7 +37,7 @@ import (
 	awsProvider "github.com/oslokommune/okctl/pkg/api/core/cloudprovider/aws"
 	"github.com/oslokommune/okctl/pkg/api/core/run"
 	"github.com/oslokommune/okctl/pkg/api/core/store/filesystem"
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/binaries"
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
@@ -72,7 +72,7 @@ func (o *Okctl) InitialiseWithOnlyEnv(env string) error {
 	}
 
 	o.RepoStateWithEnv = state.NewRepositoryStateWithEnv(env, o.RepoState, state.DefaultFileSystemSaver(
-		config.DefaultRepositoryConfig,
+		config.DefaultRepositoryStateFile,
 		repoDir,
 		o.FileSystem,
 	))
@@ -91,7 +91,7 @@ func (o *Okctl) InitialiseWithEnvAndAWSAccountID(env, awsAccountID string) error
 	}
 
 	o.RepoStateWithEnv = state.NewRepositoryStateWithEnv(env, o.RepoState, state.DefaultFileSystemSaver(
-		config.DefaultRepositoryConfig,
+		config.DefaultRepositoryStateFile,
 		repoDir,
 		o.FileSystem,
 	))

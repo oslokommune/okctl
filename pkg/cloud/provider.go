@@ -32,7 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation/cloudformationiface"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	awsauth "github.com/oslokommune/okctl/pkg/credentials/aws"
 )
 

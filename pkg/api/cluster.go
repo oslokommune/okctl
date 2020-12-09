@@ -4,7 +4,7 @@ package api
 import (
 	"context"
 
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
@@ -12,7 +12,7 @@ import (
 // Cluster contains the core state for a cluster
 type Cluster struct {
 	ID     ID
-	Config *v1alpha1.ClusterConfig
+	Config *v1alpha5.ClusterConfig
 }
 
 // ClusterCreateOpts specifies the required inputs for creating a cluster

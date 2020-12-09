@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/logrusorgru/aurora"
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 )
 
 // IgwCheck is used to check if you have enough Internet Gatweays

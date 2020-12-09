@@ -5,6 +5,8 @@ import (
 	"io"
 	"strings"
 
+	"github.com/mishudark/errors"
+
 	"github.com/oslokommune/okctl/pkg/ask"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -27,6 +29,26 @@ func (a *githubAPI) SelectGithubInfrastructureRepository(opts client.SelectGithu
 	}
 
 	repo, err := a.ask.SelectInfrastructureRepository(opts.Repository, repos)
+	if err != nil {
+		return nil, err
+	}
+
+	return &client.SelectedGithubRepository{
+		ID:           opts.ID,
+		Organisation: opts.Organisation,
+		Repository:   repo.GetName(),
+		FullName:     repo.GetFullName(),
+		GitURL:       fmt.Sprintf("git@github.com:%s", strings.TrimPrefix(repo.GetGitURL(), "git://github.com/")),
+	}, nil
+}
+
+func (a *githubAPI) GetGithubInfrastructureRepository(opts client.SelectGithubInfrastructureRepositoryOpts) (*client.SelectedGithubRepository, error) {
+	repos, err := a.client.Repositories(opts.Organisation)
+	if err != nil {
+		return nil, err
+	}
+
+	repo, err := inferRepository(opts.Repository, repos)
 	if err != nil {
 		return nil, err
 	}
@@ -127,6 +149,18 @@ func (a *githubAPI) CreateGithubOauthApp(opts client.CreateGithubOauthAppOpts) (
 		},
 		Team: opts.Team,
 	}, nil
+}
+
+func inferRepository(fullName string, repositories []*github.Repository) (*github.Repository, error) {
+	for _, repo := range repositories {
+		repo := *repo
+
+		if fullName == *repo.FullName {
+			return &repo, nil
+		}
+	}
+
+	return nil, errors.New("could not find relevant repository")
 }
 
 // NewGithubAPI returns an instantiated github API client

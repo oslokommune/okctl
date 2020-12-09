@@ -4,9 +4,11 @@ package run
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
+
 	"github.com/oslokommune/okctl/pkg/kubeconfig"
 
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/clusterconfig"
 
 	"github.com/mishudark/errors"
@@ -45,7 +47,7 @@ func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, er
 		return nil, fmt.Errorf("retrieving eksctl binary: %w", err)
 	}
 
-	var cfg *v1alpha1.ClusterConfig
+	var cfg *v1alpha5.ClusterConfig
 	if opts.Minimal {
 		cfg, err = clusterconfig.NewMinimal(&clusterconfig.MinimalArgs{
 			ClusterName:            opts.ID.ClusterName,

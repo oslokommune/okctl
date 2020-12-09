@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 )
 
 // Joined stores state for creating an intrinsic join

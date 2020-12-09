@@ -68,6 +68,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rancher/k3d/v3 v3.2.0
 	github.com/rogpeppe/go-internal v1.6.1 // indirect
+	github.com/sanathkr/go-yaml v0.0.0-20170819195128-ed9d249f429b
 	github.com/sanity-io/litter v1.3.0
 	github.com/sebdah/goldie/v2 v2.5.1
 	github.com/sirupsen/logrus v1.7.0

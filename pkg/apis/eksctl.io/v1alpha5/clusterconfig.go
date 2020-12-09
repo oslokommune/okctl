@@ -1,4 +1,5 @@
-package v1alpha1
+// nolint stylecheck
+package v1alpha5
 
 import (
 	"fmt"

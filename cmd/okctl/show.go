@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
+
 	"github.com/logrusorgru/aurora/v3"
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
 	"github.com/oslokommune/okctl/pkg/commands"
@@ -115,7 +116,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			clusterConfig := &v1alpha1.ClusterConfig{}
+			clusterConfig := &v1alpha5.ClusterConfig{}
 
 			err = yaml.Unmarshal(data, clusterConfig)
 			if err != nil {

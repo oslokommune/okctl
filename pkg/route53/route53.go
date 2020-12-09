@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 
 	route "github.com/aws/aws-sdk-go/service/route53"
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 )
 
 // Route53er defines the available methods

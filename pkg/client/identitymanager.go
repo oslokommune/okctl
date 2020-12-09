@@ -3,7 +3,7 @@ package client
 import (
 	"context"
 
-	"github.com/oslokommune/okctl/pkg/api/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/config/state"
 
 	"github.com/oslokommune/okctl/pkg/api"

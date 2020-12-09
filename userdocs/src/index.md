@@ -194,7 +194,19 @@ policy.csv: |
   g, admins, role:admin
   g, my.email@mail.com, role:admin
 ```
-**Reuse of hosted zone might fail if old NS servers for the same domain are cached in DNS**
+
+
+**okctl create cluster: Reusing hosted zone fails with internal error**
+
+When running okctl create cluster, and selecting to reuse another hosted zone, you get the error
+
+```
+creating identity pool: request failed with Internal Server Error, because: {"type":"internal error","error":"creating an identity pool","code":7}
+```
+
+There is no workaround, reuse hosted zone doesn't work for now.
+
+**okctl create cluster: Reusing hosted zone might fail if old NS servers for the same domain are cached in DNS**
 
 Workaround: wait 2 days for it to expire (default hosted zone NS record TTL)
 

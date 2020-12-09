@@ -269,7 +269,7 @@ func NewDefaultValues(opts ValuesOpts) *Values {
 			},
 			RBACConfig: rbacConfig{
 				PolicyCSV: fmt.Sprintf(policyCSV, "admins"),
-				Scopes:    `[email, group]`,
+				Scopes:    `[email, groups]`,
 			},
 			ClusterAdminAccess: clusterAdminAccess{
 				Enabled: true,

@@ -197,7 +197,7 @@ server:
     rbacConfig:
         policy.csv: |
             g, admins, role:admin
-        scopes: '[email, group]'
+        scopes: '[email, groups]'
     clusterAdminAccess:
         enabled: true
 repoServer:

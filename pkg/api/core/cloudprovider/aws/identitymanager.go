@@ -62,7 +62,7 @@ func (s *identityManagerCloudProvider) CreateIdentityPoolClient(opts api.CreateI
 		return nil, fmt.Errorf("retrieving identity pool client outputs: %w", err)
 	}
 
-	secret, err := cognito.New(s.provider).UserPoolClientSecret(c.ClientID, opts.UserPoolID)
+	secret, err := cognito.New(s.provider, nil).UserPoolClientSecret(c.ClientID, opts.UserPoolID)
 	if err != nil {
 		return nil, fmt.Errorf("retrieving client secret: %w", err)
 	}
@@ -97,7 +97,7 @@ func (s *identityManagerCloudProvider) CreateIdentityPool(certificateARN string,
 		return nil, fmt.Errorf("creating identity pool cloud formation stack: %w", err)
 	}
 
-	d, err := cognito.New(s.provider).UserPoolDomainInfo(opts.AuthDomain)
+	d, err := cognito.New(s.provider, nil).UserPoolDomainInfo(opts.AuthDomain)
 	if err != nil {
 		return nil, fmt.Errorf("getting cloudfront auth domain info: %w", err)
 	}

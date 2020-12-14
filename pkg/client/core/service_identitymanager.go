@@ -23,7 +23,7 @@ type identityManagerService struct {
 }
 
 // DeleteIdentityPool and all users
-func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, provider v1alpha1.CloudProvider, opts api.ID) error {
+func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, provider v1alpha1.CloudProvider, usprovider v1alpha1.CloudProvider, opts api.ID) error {
 	err := s.spinner.Start("deleting identity-pool")
 	if err != nil {
 		return err
@@ -39,9 +39,14 @@ func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, provide
 		return nil
 	}
 
-	c := cognito.New(provider)
+	c := cognito.New(provider, usprovider)
 
 	err = c.DeleteAuthDomain(pool.UserPoolID, pool.AuthDomain)
+	if err != nil {
+		return err
+	}
+
+	err = c.DeleteAuthCert(pool.AuthDomain)
 	if err != nil {
 		return err
 	}

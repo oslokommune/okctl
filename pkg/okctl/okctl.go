@@ -583,7 +583,7 @@ func (o *Okctl) initialise() error {
 
 	// When creating a certificate for a CloudFront distribution, we
 	// need to create the certificate in us-east-1
-	provider, err := o.newCloudProviderWithRegion("us-east-1")
+	provider, err := o.NewCloudProviderWithRegion("us-east-1")
 	if err != nil {
 		return err
 	}
@@ -683,7 +683,8 @@ func (o *Okctl) newBinariesProvider() error {
 	return nil
 }
 
-func (o *Okctl) newCloudProviderWithRegion(region string) (v1alpha1.CloudProvider, error) {
+// NewCloudProviderWithRegion create a cloud provider with a spesific region
+func (o *Okctl) NewCloudProviderWithRegion(region string) (v1alpha1.CloudProvider, error) {
 	c, err := cloud.New(region, o.CredentialsProvider.Aws())
 	if err != nil {
 		return nil, err

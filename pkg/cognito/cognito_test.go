@@ -18,7 +18,7 @@ func TestUserPoolDomainInfo(t *testing.T) {
 	}{
 		{
 			name:    "Should work",
-			cognito: cognito.New(mock.NewGoodCloudProvider(), nil),
+			cognito: cognito.New(mock.NewGoodCloudProvider()),
 			expect: &cognito.UserPoolDomainInfo{
 				CloudFrontDomainName: "cloudfront-us-east-1.something.aws.com",
 				UserPoolDomain:       "auth.oslo.systems",

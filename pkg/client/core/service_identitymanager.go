@@ -39,14 +39,15 @@ func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, provide
 		return nil
 	}
 
-	c := cognito.New(provider, usprovider)
+	c := cognito.New(provider)
+	d := cognito.NewCertDeleter(usprovider)
 
 	err = c.DeleteAuthDomain(pool.UserPoolID, pool.AuthDomain)
 	if err != nil {
 		return err
 	}
 
-	err = c.DeleteAuthCert(pool.AuthDomain)
+	err = d.DeleteAuthCert(pool.AuthDomain)
 	if err != nil {
 		return err
 	}

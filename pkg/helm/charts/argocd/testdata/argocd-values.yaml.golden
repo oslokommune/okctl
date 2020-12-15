@@ -49,7 +49,7 @@ dex:
     name: dex-server
     image:
         repository: quay.io/dexidp/dex
-        tag: v2.22.0
+        tag: v2.26.0
         imagePullPolicy: IfNotPresent
     serviceAccount:
         create: true
@@ -183,6 +183,7 @@ server:
                 - openid
                 - email
                 - profile
+                insecureEnableGroups: true
                 claimMapping:
                   groups: "cognito:groups"
                   name: "cognito:username"
@@ -197,7 +198,7 @@ server:
     rbacConfig:
         policy.csv: |
             g, admins, role:admin
-        scopes: '[email, group]'
+        scopes: '[email, groups]'
     clusterAdminAccess:
         enabled: true
 repoServer:

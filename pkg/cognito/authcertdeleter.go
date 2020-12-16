@@ -7,7 +7,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 )
 
-// with the Cognito API
+// AuthCertDeleter is used just to delete the auth. cert in us-east-1
 type AuthCertDeleter struct {
 	usprovider v1alpha1.CloudProvider
 }
@@ -36,7 +36,7 @@ func (c *AuthCertDeleter) DeleteAuthCert(domain string) error {
 	return nil
 }
 
-// New returns an initialised  interaction
+// NewCertDeleter returns an initialised AuthCertDeleter
 func NewCertDeleter(usprovider v1alpha1.CloudProvider) *AuthCertDeleter {
 	return &AuthCertDeleter{
 		usprovider: usprovider,

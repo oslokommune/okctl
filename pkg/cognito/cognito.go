@@ -11,7 +11,7 @@ import (
 // Cognito contains all required state for interacting
 // with the Cognito API
 type Cognito struct {
-	provider   v1alpha1.CloudProvider
+	provider v1alpha1.CloudProvider
 }
 
 // UserPoolDomainInfo contains the retrieved state about

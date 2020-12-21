@@ -131,6 +131,39 @@ including VPC, this is a highly destructive operation.`,
 
 			formatErr := o.ErrorFormatter(fmt.Sprintf("delete cluster %s", opts.Environment), userDir)
 
+			// nolint: godox
+			// TODO Move SSM deletion to API and orchestrate in Client
+			cluster := o.RepoStateWithEnv.GetCluster()
+			clients := cluster.IdentityPool.Clients
+			repos := cluster.Github.Repositories
+
+			argoCdSecretPath := cluster.ArgoCD.SecretKey.Path
+			if argoCdSecretPath != "" {
+				err = services.Parameter.DeleteSecret(o.Ctx, o.CloudProvider, argoCdSecretPath)
+				if err != nil {
+					return formatErr(err)
+				}
+			}
+
+			for c := range clients {
+				clientSecretPath := clients[c].ClientSecret.Path
+				if clientSecretPath != "" {
+					err := services.Parameter.DeleteSecret(o.Ctx, o.CloudProvider, clientSecretPath)
+					if err != nil {
+						return formatErr(err)
+					}
+				}
+			}
+
+			for k := range repos {
+				repoSecretPath := repos[k].DeployKey.PrivateKeySecret.Path
+				if repoSecretPath != "" {
+					err := services.Parameter.DeleteSecret(o.Ctx, o.CloudProvider, repoSecretPath)
+					if err != nil {
+						return formatErr(err)
+					}
+				}
+			}
 			vpc, err := services.Vpc.GetVPC(o.Ctx, id)
 			if err != nil {
 				return formatErr(err)

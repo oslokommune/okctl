@@ -4,6 +4,7 @@ import (
 	"context"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 )
 
 // Parameter contains the state for a parameter
@@ -57,6 +58,7 @@ func (o CreateSecretOpts) Validate() error {
 // ParameterService defines the service layer operations
 type ParameterService interface {
 	CreateSecret(ctx context.Context, opts CreateSecretOpts) (*SecretParameter, error)
+	DeleteSecret(ctx context.Context, provider v1alpha1.CloudProvider, name string) error
 }
 
 // ParameterCloudProvider defines the cloud layer operations

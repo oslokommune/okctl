@@ -173,11 +173,9 @@ This is known to happen if `pass init <gpg-key-id>` has not been run after insta
 
 Workaround: manually deleted the following resources:
 
-* SMM Parameter
-* ACM certificate (in your cluster-region, but also one in us-east-1 that was used in cloud formation and cognito)
 * Deploy key in IAC repo
 * Hosted zone and records (unless you specify "i-know-what-i-am-doing-delete-hosted-zone-and-records" flag to "true")
-* It is recommended to delete the infrastructure/<env> directory and .okctl.yaml file upon successful delete of cluster, as the last (temporary), manual step.
+* It is recommended to delete the infrastructure/<env> directory and .okctl.yaml file upon successful delete of cluster, as the last manual step.
 
 **ArgoCD doesn't show my apps**
 

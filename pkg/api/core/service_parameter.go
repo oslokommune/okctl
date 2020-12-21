@@ -16,7 +16,7 @@ type parameter struct {
 // nolint: godox
 // TODO, implement this in proper client / api fashion.
 func (p *parameter) DeleteSecret(ctx context.Context, provider v1alpha1.CloudProvider, name string) error {
-	panic("Unused on the api side. Pay of this tech debt.")
+	panic("Unused on the api side. Pay off this tech debt.")
 }
 
 func (p *parameter) CreateSecret(ctx context.Context, opts api.CreateSecretOpts) (*api.SecretParameter, error) {

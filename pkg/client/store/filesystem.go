@@ -442,6 +442,16 @@ func (f *fileSystem) Remove(name string, options ...OperationOption) Operations 
 	return f
 }
 
+func (f *fileSystem) RemoveDir(name string, options ...OperationOption) Operations {
+	f.tasks.PushBack(&fileSystemTask{
+		Name: name,
+		Type: taskTypeRemove,
+		Work: f.removeDir(name, options...),
+	})
+
+	return f
+}
+
 func (f *fileSystem) remove(name string, _ ...OperationOption) *fileSystemWork {
 	work := &fileSystemWork{}
 
@@ -460,6 +470,44 @@ func (f *fileSystem) remove(name string, _ ...OperationOption) *fileSystemWork {
 		err = f.fs.Remove(path.Join(f.BaseDir, name))
 		if err != nil {
 			return fmt.Errorf("failed to remove file: %w", err)
+		}
+
+		return nil
+	}
+
+	return work
+}
+
+func (f *fileSystem) removeDir(name string, _ ...OperationOption) *fileSystemWork {
+	work := &fileSystemWork{}
+
+	work.Fn = func() error {
+		exists, err := f.fs.Exists(path.Join(f.BaseDir, name))
+		if err != nil {
+			return fmt.Errorf("failed to determine if directory exists: %w", err)
+		}
+
+		work.Path = path.Join(f.BaseDir, name)
+
+		if !exists {
+			return nil
+		}
+
+		isDir, err := f.fs.IsDir(work.Path)
+		if err != nil {
+			return err
+		}
+
+		isEmpty, err := f.fs.IsEmpty(work.Path)
+		if err != nil {
+			return err
+		}
+
+		if isDir && isEmpty {
+			err = f.fs.Remove(path.Join(f.BaseDir, name))
+			if err != nil {
+				return fmt.Errorf("failed to remove directory: %w", err)
+			}
 		}
 
 		return nil

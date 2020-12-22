@@ -32,17 +32,21 @@ func (s *clusterStore) SaveCluster(c *api.Cluster) (*store.Report, error) {
 func (s *clusterStore) DeleteCluster(_ api.ID) (*store.Report, error) {
 	report, err := store.NewFileSystem(s.paths.BaseDir, s.fs).
 		Remove(s.paths.ConfigFile).
+		RemoveDir("").
 		Do()
 	if err != nil {
 		return nil, err
 	}
 
-	_, _ = store.NewFileSystem(s.paths.BaseDir, s.fs).
-		Remove("").
-		Do()
+	err = s.fs.RemoveAll(path.Join(s.paths.BaseDir, "../argocd"))
+	if err != nil {
+		return nil, err
+	}
 
-	_ = s.fs.RemoveAll(path.Join(s.paths.BaseDir, "../argocd"))
-	_ = s.fs.RemoveAll(path.Join(s.paths.BaseDir, "../helm"))
+	err = s.fs.RemoveAll(path.Join(s.paths.BaseDir, "../helm"))
+	if err != nil {
+		return nil, err
+	}
 
 	return report, nil
 }

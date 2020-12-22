@@ -119,6 +119,11 @@ type Operations interface {
 	// This method is chainable, so multiple actions may be performed.
 	Remove(name string, options ...OperationOption) Operations
 
+	// RemoveDir will delete a directory under the given name, how this data is
+	// removed is given by the underlying implementation
+	// This method is chainable, so multiple actions may be performed.
+	RemoveDir(name string, options ...OperationOption) Operations
+
 	// GetStruct will read the stored data and process it using the
 	// provided post processor, the result will be stored in the report
 	// and can be accessed afterwards.

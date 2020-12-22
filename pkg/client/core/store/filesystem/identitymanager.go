@@ -66,29 +66,21 @@ func (s *identityManagerStore) RemoveIdentityPool(id api.ID) (*store.Report, err
 	report, err := store.NewFileSystem(s.aliasPaths.BaseDir, s.fs).
 		Remove(authDomain + s.aliasPaths.CloudFormationFile).
 		Remove(authDomain + s.aliasPaths.OutputFile).
+		RemoveDir("").
 		AlterStore(store.SetBaseDir(s.certPaths.BaseDir)).
 		Remove(authDomain + s.certPaths.CloudFormationFile).
 		Remove(authDomain + s.certPaths.OutputFile).
+		RemoveDir("").
 		AlterStore(store.SetBaseDir(s.poolPaths.BaseDir)).
 		Remove(s.poolPaths.CloudFormationFile).
 		Remove(s.poolPaths.OutputFile).
+		RemoveDir("").
+		AlterStore(store.SetBaseDir(s.poolPaths.BaseDir)).
+		RemoveDir("").
 		Do()
 	if err != nil {
 		return nil, err
 	}
-
-	_, _ = store.NewFileSystem(s.aliasPaths.BaseDir, s.fs).
-		Remove("").
-		Do()
-	_, _ = store.NewFileSystem(s.certPaths.BaseDir, s.fs).
-		Remove("").
-		Do()
-	_, _ = store.NewFileSystem(s.certPaths.BaseDir, s.fs).
-		Remove("").
-		Do()
-	_, _ = store.NewFileSystem(s.poolPaths.BaseDir, s.fs).
-		Remove("").
-		Do()
 
 	return report, err
 }

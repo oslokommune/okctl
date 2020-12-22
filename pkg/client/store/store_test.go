@@ -389,3 +389,43 @@ func TestWithFilePermissionsMode(t *testing.T) {
 		})
 	}
 }
+
+func TestRemoveDir(t *testing.T) {
+	const perm = 0o744
+
+	fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+	_ = fs.Mkdir("testing/sub1", perm)
+
+	fileSystem := store.NewFileSystem("testing", fs)
+
+	isEmpty, _ := fs.IsEmpty("testing/sub1")
+	isDirectory, _ := fs.IsDir("testing/sub1")
+
+	assert.True(t, isEmpty)
+	assert.True(t, isDirectory)
+
+	_, _ = fileSystem.RemoveDir("sub1").Do()
+
+	isDirectory, _ = fs.IsDir("testing/sub1")
+
+	assert.False(t, isDirectory)
+}
+
+func TestRemoveDirWithContent(t *testing.T) {
+	const perm = 0o744
+
+	fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+
+	_ = fs.Mkdir("testing/sub1", perm)
+	_ = fs.Mkdir("testing/sub1", perm)
+	_ = fs.WriteFile("testing/sub1/hellofile", []byte("hello"), perm)
+
+	fileSystem := store.NewFileSystem("testing", fs)
+	_, _ = fileSystem.RemoveDir("sub1").Do()
+
+	isDirectory, _ := fs.IsDir("testing/sub1")
+	isEmpty, _ := fs.IsEmpty("testing/sub1")
+
+	assert.True(t, isDirectory)
+	assert.False(t, isEmpty)
+}

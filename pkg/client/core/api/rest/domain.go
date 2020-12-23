@@ -21,8 +21,9 @@ func (a *domainAPI) DeleteHostedZoneRecords(provider v1alpha1.CloudProvider, hos
 
 func (a *domainAPI) DeletePrimaryHostedZone(domain string, opts client.DeletePrimaryHostedZoneOpts) error {
 	err := a.client.DoDelete(TargetHostedZone, &api.DeleteHostedZoneOpts{
-		ID:     opts.ID,
-		Domain: domain,
+		ID:           opts.ID,
+		Domain:       domain,
+		HostedZoneID: opts.HostedZoneID,
 	})
 	if err != nil {
 		return err

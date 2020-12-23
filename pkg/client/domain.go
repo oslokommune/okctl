@@ -29,7 +29,8 @@ type CreatePrimaryHostedZoneOpts struct {
 
 // DeletePrimaryHostedZoneOpts is the require inputs
 type DeletePrimaryHostedZoneOpts struct {
-	ID api.ID
+	ID           api.ID
+	HostedZoneID string
 }
 
 // DomainService orchestrates the creation of a hosted zone
@@ -37,7 +38,7 @@ type DomainService interface {
 	CreatePrimaryHostedZone(ctx context.Context, opts CreatePrimaryHostedZoneOpts) (*HostedZone, error)
 	CreatePrimaryHostedZoneWithoutUserinput(ctx context.Context, opts CreatePrimaryHostedZoneOpts) (*HostedZone, error)
 	GetPrimaryHostedZone(ctx context.Context, id api.ID) (*HostedZone, error)
-	DeletePrimaryHostedZone(ctx context.Context, provider v1alpha1.CloudProvider, opts DeletePrimaryHostedZoneOpts) error
+	DeletePrimaryHostedZone(ctx context.Context, opts DeletePrimaryHostedZoneOpts) error
 }
 
 // DomainAPI invokes the API

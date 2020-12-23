@@ -7,8 +7,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/config/state"
 
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
-
 	"github.com/oslokommune/okctl/pkg/api"
 
 	"github.com/oslokommune/okctl/pkg/spinner"
@@ -58,7 +56,7 @@ func (s *domainService) GetPrimaryHostedZone(_ context.Context, id api.ID) (*cli
 }
 
 // DeletePrimaryHostedZone and all associed records
-func (s *domainService) DeletePrimaryHostedZone(ctx context.Context, provider v1alpha1.CloudProvider, opts client.DeletePrimaryHostedZoneOpts) error {
+func (s *domainService) DeletePrimaryHostedZone(ctx context.Context, opts client.DeletePrimaryHostedZoneOpts) error {
 	err := s.spinner.Start("domain")
 	if err != nil {
 		return err
@@ -88,11 +86,6 @@ func (s *domainService) DeletePrimaryHostedZone(ctx context.Context, provider v1
 	var reports []*store.Report
 
 	if hz.Managed {
-		_, err := s.api.DeleteHostedZoneRecords(provider, hz.ID)
-		if err != nil {
-			return err
-		}
-
 		// HostedZone is managed by us, so delete it
 		err = s.api.DeletePrimaryHostedZone(hz.Domain, opts)
 		if err != nil {

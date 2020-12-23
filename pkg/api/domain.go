@@ -36,8 +36,9 @@ func (o CreateHostedZoneOpts) Validate() error {
 
 // DeleteHostedZoneOpts contains required inputs
 type DeleteHostedZoneOpts struct {
-	ID     ID
-	Domain string
+	ID           ID
+	HostedZoneID string
+	Domain       string
 }
 
 // Validate the inputs

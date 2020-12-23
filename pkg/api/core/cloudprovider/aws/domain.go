@@ -8,6 +8,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn"
 	"github.com/oslokommune/okctl/pkg/cfn/components"
 	"github.com/oslokommune/okctl/pkg/cfn/components/hostedzone"
+	"github.com/oslokommune/okctl/pkg/route53"
 )
 
 type domain struct {
@@ -15,7 +16,22 @@ type domain struct {
 }
 
 func (d *domain) DeleteHostedZone(opts api.DeleteHostedZoneOpts) error {
-	return cfn.NewRunner(d.provider).Delete(cfn.NewStackNamer().Domain(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Domain)))
+	err := cfn.NewRunner(d.provider).Delete(cfn.NewStackNamer().AliasRecordSet(opts.ID.Repository, opts.ID.Environment+"-auth", slug.Make(opts.Domain)))
+	if err != nil {
+		return err
+	}
+
+	_, err = route53.New(d.provider).DeleteHostedZoneRecordSets(opts.HostedZoneID)
+	if err != nil {
+		return err
+	}
+
+	err = cfn.NewRunner(d.provider).Delete(cfn.NewStackNamer().Domain(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Domain)))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (d *domain) CreateHostedZone(opts api.CreateHostedZoneOpts) (*api.HostedZone, error) {

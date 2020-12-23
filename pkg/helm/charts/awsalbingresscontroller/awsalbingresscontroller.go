@@ -13,7 +13,7 @@ import (
 func New(values *Values) *helm.Chart {
 	return &helm.Chart{
 		RepositoryName: "incubator",
-		RepositoryURL:  "https://kubernetes-charts-incubator.storage.googleapis.com",
+		RepositoryURL:  "https://charts.helm.sh/incubator",
 		ReleaseName:    "aws-alb-ingress-controller",
 		Version:        "1.0.2",
 		Chart:          "aws-alb-ingress-controller",

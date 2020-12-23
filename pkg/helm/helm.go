@@ -593,7 +593,7 @@ type MysqlPersistence struct {
 func Mysql(values interface{}) *Chart {
 	return &Chart{
 		RepositoryName: "stable",
-		RepositoryURL:  "https://kubernetes-charts.storage.googleapis.com",
+		RepositoryURL:  "https://charts.helm.sh/stable",
 		ReleaseName:    "mysql",
 		Version:        "1.6.6",
 		Chart:          "mysql",

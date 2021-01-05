@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/oslokommune/okctl/pkg/config/state"
-
 	"github.com/oslokommune/okctl/pkg/client"
 
 	"github.com/oslokommune/okctl/pkg/api/core/cleanup"
@@ -173,7 +171,7 @@ including VPC, this is a highly destructive operation.`,
 
 			if delzones == "true" {
 				err = services.Domain.DeletePrimaryHostedZone(o.Ctx, client.DeletePrimaryHostedZoneOpts{
-					ID:           id,
+					ID: id,
 				})
 				if err != nil {
 					return formatErr(err)

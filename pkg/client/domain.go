@@ -3,10 +3,6 @@ package client
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/service/route53"
-
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
-
 	"github.com/oslokommune/okctl/pkg/config/state"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -45,7 +41,6 @@ type DomainService interface {
 type DomainAPI interface {
 	CreatePrimaryHostedZone(opts CreatePrimaryHostedZoneOpts) (*HostedZone, error)
 	DeletePrimaryHostedZone(domain string, opts DeletePrimaryHostedZoneOpts) error
-	DeleteHostedZoneRecords(provider v1alpha1.CloudProvider, hostedZoneID string) (*route53.ChangeResourceRecordSetsOutput, error)
 }
 
 // DomainStore stores the data

@@ -172,10 +172,8 @@ including VPC, this is a highly destructive operation.`,
 			}
 
 			if delzones == "true" {
-				var hz *state.HostedZone
 				err = services.Domain.DeletePrimaryHostedZone(o.Ctx, client.DeletePrimaryHostedZoneOpts{
 					ID:           id,
-					HostedZoneID: hz.ID,
 				})
 				if err != nil {
 					return formatErr(err)

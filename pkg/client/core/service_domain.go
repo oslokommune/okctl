@@ -84,6 +84,7 @@ func (s *domainService) DeletePrimaryHostedZone(ctx context.Context, opts client
 	}
 
 	var reports []*store.Report
+
 	opts.HostedZoneID = hz.ID
 
 	if hz.Managed {

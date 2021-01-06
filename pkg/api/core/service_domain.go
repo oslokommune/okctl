@@ -31,12 +31,12 @@ func (d *domainService) CreateHostedZone(_ context.Context, opts api.CreateHoste
 		return nil, errors.E(err, "failed to validate hosted zone inputs")
 	}
 
-	domain, err := d.cloudProvider.CreateHostedZone(opts)
+	hostedZone, err := d.cloudProvider.CreateHostedZone(opts)
 	if err != nil {
 		return nil, errors.E(err, "failed to create hosted zone")
 	}
 
-	return domain, nil
+	return hostedZone, nil
 }
 
 // NewDomainService returns an initialised domain service

@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"fmt"
+
 	"github.com/gosimple/slug"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
@@ -35,6 +37,7 @@ func (d *domain) DeleteHostedZone(opts api.DeleteHostedZoneOpts) error {
 }
 
 func (d *domain) CreateHostedZone(opts api.CreateHostedZoneOpts) (*api.HostedZone, error) {
+	// Create hosted zone
 	b := cfn.New(components.NewHostedZoneComposer(opts.FQDN, "A public hosted zone for creating ingresses with"))
 
 	stackName := cfn.NewStackNamer().Domain(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Domain))
@@ -71,6 +74,12 @@ func (d *domain) CreateHostedZone(opts api.CreateHostedZoneOpts) (*api.HostedZon
 	})
 	if err != nil {
 		return nil, errors.E(err, "failed to process outputs")
+	}
+
+	// Adjust TTL of NS record, as it can't be set when created
+	err = route53.New(d.provider).SetNSRecordTTL(p.HostedZoneID, opts.NSTTL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set NS record TTL: %w", err)
 	}
 
 	return p, nil

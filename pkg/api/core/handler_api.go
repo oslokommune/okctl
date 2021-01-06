@@ -44,6 +44,7 @@ type Endpoints struct {
 	CreateIdentityPool                       endpoint.Endpoint
 	CreateIdentityPoolClient                 endpoint.Endpoint
 	CreateIdentityPoolUser                   endpoint.Endpoint
+	DeleteIdentityPool		                 endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -78,6 +79,7 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateIdentityPool:                       makeCreateIdentityPoolEndpoint(s.IdentityManager),
 		CreateIdentityPoolClient:                 makeCreateIdentityPoolClient(s.IdentityManager),
 		CreateIdentityPoolUser:                   makeCreateIdentityPoolUser(s.IdentityManager),
+		DeleteIdentityPool:                       makeDeleteIdentityPoolEndpoint(s.IdentityManager),
 	}
 }
 
@@ -111,6 +113,7 @@ type Handlers struct {
 	CreateIdentityPool                       http.Handler
 	CreateIdentityPoolClient                 http.Handler
 	CreateIdentityPoolUser                   http.Handler
+	DeleteIdentityPool						 http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -171,6 +174,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateIdentityPool:                       newServer(endpoints.CreateIdentityPool, decodeCreateIdentityPool),
 		CreateIdentityPoolClient:                 newServer(endpoints.CreateIdentityPoolClient, decodeCreateIdentityPoolClient),
 		CreateIdentityPoolUser:                   newServer(endpoints.CreateIdentityPoolUser, decodeCreateIdentityPoolUser),
+		DeleteIdentityPool:					      newServer(endpoints.DeleteIdentityPool, decodeDeleteIdentityPool),
 	}
 }
 
@@ -252,7 +256,7 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/identitymanagers", func(r chi.Router) {
 			r.Route("/pools", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateIdentityPool)
-
+				r.Method(http.MethodDelete, "/", handlers.DeleteIdentityPool)
 				r.Route("/clients", func(r chi.Router) {
 					r.Method(http.MethodPost, "/", handlers.CreateIdentityPoolClient)
 				})
@@ -339,6 +343,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateIdentityPool:                       logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag}, "/"), "create")(endpoints.CreateIdentityPool),
 			CreateIdentityPoolClient:                 logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag, identityPoolClientTag}, "/"), "create")(endpoints.CreateIdentityPoolClient),
 			CreateIdentityPoolUser:                   logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag, identityPoolUserTag}, "/"), "create")(endpoints.CreateIdentityPoolUser),
+			DeleteIdentityPool:                       logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag}, "/"), "delete")(endpoints.DeleteIdentityPool),
 		}
 	}
 }

@@ -21,6 +21,8 @@ type CreatePrimaryHostedZoneOpts struct {
 	ID     api.ID
 	Domain string
 	FQDN   string
+	// The hosted zone's NS record's TTL
+	NSTTL int64
 }
 
 // DeletePrimaryHostedZoneOpts is the require inputs

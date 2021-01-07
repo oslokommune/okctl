@@ -23,6 +23,7 @@ type CreateHostedZoneOpts struct {
 	ID     ID
 	Domain string
 	FQDN   string
+	NSTTL  int64
 }
 
 // Validate the inputs

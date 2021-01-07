@@ -39,6 +39,7 @@ func (a *domainAPI) CreatePrimaryHostedZone(opts client.CreatePrimaryHostedZoneO
 		ID:     opts.ID,
 		Domain: opts.Domain,
 		FQDN:   opts.FQDN,
+		NSTTL:  opts.NSTTL,
 	}, into)
 	if err != nil {
 		return nil, err

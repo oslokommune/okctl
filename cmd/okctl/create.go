@@ -5,26 +5,22 @@ import (
 	"path"
 	"regexp"
 
+	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
+	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
+	"github.com/oslokommune/okctl/pkg/commands"
+	"github.com/oslokommune/okctl/pkg/domain"
+	"github.com/oslokommune/okctl/pkg/git"
+
 	"github.com/oslokommune/okctl/pkg/servicequota"
 
 	"github.com/oslokommune/okctl/pkg/ask"
 	stateSaver "github.com/oslokommune/okctl/pkg/client/core/state"
 
-	"github.com/oslokommune/okctl/pkg/git"
-
 	"github.com/oslokommune/okctl/pkg/route53"
 
 	"github.com/oslokommune/okctl/pkg/client"
 
-	"github.com/oslokommune/okctl/pkg/commands"
-
-	"github.com/oslokommune/okctl/pkg/domain"
-
 	"github.com/oslokommune/okctl/pkg/spinner"
-
-	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
-
-	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/logrusorgru/aurora"

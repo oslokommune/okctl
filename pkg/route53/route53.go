@@ -3,6 +3,8 @@ package route53
 import (
 	"strings"
 
+	"github.com/pkg/errors"
+
 	"github.com/aws/aws-sdk-go/aws"
 
 	route "github.com/aws/aws-sdk-go/service/route53"
@@ -106,4 +108,62 @@ func (r *Route53) DeleteHostedZoneRecordSets(hostedZoneID string) (*route.Change
 	}
 
 	return resp, nil
+}
+
+// SetNSRecordTTL finds the NS record in a hosted zone, and sets the TTL for it. If there are zere or more than one
+// NS records, an error is thrown.
+func (r *Route53) SetNSRecordTTL(hostedZoneID string, nsTTLSecs int64) error {
+	ListResourceRecordSetsInput := route.ListResourceRecordSetsInput{
+		HostedZoneId: aws.String(hostedZoneID),
+	}
+
+	got, err := r.provider.Route53().ListResourceRecordSets(&ListResourceRecordSetsInput)
+	if err != nil {
+		return err
+	}
+
+	sets := got.ResourceRecordSets
+	nsCount := 0
+
+	var nsSet *route.ResourceRecordSet
+
+	for _, set := range sets {
+		if *set.Type == "NS" {
+			nsCount++
+
+			nsSet = set
+		}
+	}
+
+	if nsCount != 1 {
+		return errors.Errorf("expected 1 NS records in hosted zone, but found %d", nsCount)
+	}
+
+	var changes []*route.Change
+	changes = append(changes, &route.Change{
+		Action: aws.String("UPSERT"),
+		ResourceRecordSet: &route.ResourceRecordSet{
+			Name:            nsSet.Name,
+			ResourceRecords: nsSet.ResourceRecords,
+			TTL:             &nsTTLSecs,
+			Type:            nsSet.Type,
+		},
+	})
+
+	comment := "Update NS record TTL"
+
+	request := &route.ChangeResourceRecordSetsInput{
+		ChangeBatch: &route.ChangeBatch{
+			Changes: changes,
+			Comment: &comment,
+		},
+		HostedZoneId: aws.String(hostedZoneID),
+	}
+
+	_, err = r.provider.Route53().ChangeResourceRecordSets(request)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

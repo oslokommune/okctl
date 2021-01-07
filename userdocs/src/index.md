@@ -194,19 +194,21 @@ policy.csv: |
 ```
 
 
-**okctl create cluster: Reusing hosted zone fails with internal error**
+**okctl create cluster: Create identitypool fails / Re-create cluster within short timespan fails**
 
-When running okctl create cluster, and selecting to reuse another hosted zone, you get the error
+If you do the following:
 
-```
-creating identity pool: request failed with Internal Server Error, because: {"type":"internal error","error":"creating an identity pool","code":7}
-```
+* Create a cluster
+* Delete it
+* Create a new cluster with the same domain name (e.g. whatever.oslo.systems)
 
-There is no workaround, reuse hosted zone doesn't work for now.
+This might fail if you do these steps within 15 minutes. This is due to DNS resolvers caching NS server records.
+More details: https://github.com/oslokommune/okctl/pull/231
 
-**okctl create cluster: Reusing hosted zone might fail if old NS servers for the same domain are cached in DNS**
+Workaround: Wait for up to 15 minutes before creating cluster again.
 
-Workaround: wait 2 days for it to expire (default hosted zone NS record TTL)
+15 minutes is the TTL (Time to live, i.e. cache expiry) of the NS record. You can see this value in
+Route 53 -> Hosted zones -> Your domain -> NS record for your top domain -> Edit -> See TTL field.
 
 **ArgoCD fails first run**
 

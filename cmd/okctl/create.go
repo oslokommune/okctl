@@ -319,8 +319,7 @@ and database subnets.`,
 
 				if !doReuse {
 					hostedZone, err = services.Domain.CreatePrimaryHostedZone(o.Ctx, client.CreatePrimaryHostedZoneOpts{
-						ID:    id,
-						NSTTL: 900,
+						ID: id,
 					})
 					if err != nil {
 						return formatErr(err)

@@ -77,7 +77,12 @@ func (d *domain) CreateHostedZone(opts api.CreateHostedZoneOpts) (*api.HostedZon
 	}
 
 	// Adjust TTL of NS record, as it can't be set when created
-	err = route53.New(d.provider).SetNSRecordTTL(p.HostedZoneID, opts.NSTTL)
+	NSTTL := opts.NSTTL
+	if NSTTL == 0 {
+		NSTTL = 900
+	}
+
+	err = route53.New(d.provider).SetNSRecordTTL(p.HostedZoneID, NSTTL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to set NS record TTL: %w", err)
 	}

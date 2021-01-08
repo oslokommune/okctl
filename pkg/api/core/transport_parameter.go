@@ -18,3 +18,14 @@ func decodeCreateSecret(_ context.Context, r *http.Request) (interface{}, error)
 
 	return opts, nil
 }
+
+func decodeDeleteSecret(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.DeleteSecretOpts
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}

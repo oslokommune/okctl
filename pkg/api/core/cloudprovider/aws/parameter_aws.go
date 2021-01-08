@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
@@ -11,6 +12,21 @@ import (
 
 type parameter struct {
 	provider v1alpha1.CloudProvider
+}
+
+func (p *parameter) DeleteSecret(opts api.DeleteSecretOpts) error {
+	_, err := p.provider.SSM().DeleteParameter(&ssm.DeleteParameterInput{
+		Name: aws.String(opts.Name),
+	})
+	if err != nil {
+		if strings.Contains(err.Error(), "ParameterNotFound:") {
+			return nil
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func (p *parameter) CreateSecret(opts api.CreateSecretOpts) (*api.SecretParameter, error) {

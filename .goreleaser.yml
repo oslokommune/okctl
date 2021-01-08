@@ -40,7 +40,7 @@ checksum:
 
 brews:
   -
-    github:
+    tap:
       owner: oslokommune
       name: homebrew-tap
 

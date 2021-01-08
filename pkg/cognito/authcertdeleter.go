@@ -22,6 +22,10 @@ func (c *AuthCertDeleter) DeleteAuthCert(domain string) error {
 		return err
 	}
 
+	if domain == "" {
+		return nil
+	}
+
 	for _, stack := range stacklist.StackSummaries {
 		if strings.Contains(*stack.StackId, strings.ReplaceAll(domain, ".", "-")) {
 			_, err := c.usprovider.CloudFormation().DeleteStack(&cloudformation.DeleteStackInput{

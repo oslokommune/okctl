@@ -44,7 +44,7 @@ type Endpoints struct {
 	CreateIdentityPool                       endpoint.Endpoint
 	CreateIdentityPoolClient                 endpoint.Endpoint
 	CreateIdentityPoolUser                   endpoint.Endpoint
-	DeleteIdentityPool		                 endpoint.Endpoint
+	DeleteIdentityPool                       endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -113,7 +113,7 @@ type Handlers struct {
 	CreateIdentityPool                       http.Handler
 	CreateIdentityPoolClient                 http.Handler
 	CreateIdentityPoolUser                   http.Handler
-	DeleteIdentityPool						 http.Handler
+	DeleteIdentityPool                       http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -174,7 +174,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateIdentityPool:                       newServer(endpoints.CreateIdentityPool, decodeCreateIdentityPool),
 		CreateIdentityPoolClient:                 newServer(endpoints.CreateIdentityPoolClient, decodeCreateIdentityPoolClient),
 		CreateIdentityPoolUser:                   newServer(endpoints.CreateIdentityPoolUser, decodeCreateIdentityPoolUser),
-		DeleteIdentityPool:					      newServer(endpoints.DeleteIdentityPool, decodeDeleteIdentityPool),
+		DeleteIdentityPool:                       newServer(endpoints.DeleteIdentityPool, decodeDeleteIdentityPool),
 	}
 }
 

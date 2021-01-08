@@ -23,6 +23,22 @@ type identityManagerCloudProvider struct {
 	provider v1alpha1.CloudProvider
 }
 
+func (s *identityManagerCloudProvider) DeleteIdentityPool(opts api.DeleteIdentityPoolOpts) error {
+	c := cognito.New(s.provider)
+
+	err := c.DeleteAuthDomain(opts.UserPoolID, opts.Domain)
+	if err != nil {
+		return err
+	}
+
+	err = c.DeleteUserPool(opts.UserPoolID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *identityManagerCloudProvider) CreateIdentityPoolClient(opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
 	b := cfn.New(components.NewUserPoolClient(
 		opts.Purpose,

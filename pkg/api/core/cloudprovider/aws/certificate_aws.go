@@ -7,10 +7,22 @@ import (
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn"
 	"github.com/oslokommune/okctl/pkg/cfn/components"
+	"github.com/oslokommune/okctl/pkg/cognito"
 )
 
 type certificate struct {
 	provider v1alpha1.CloudProvider
+}
+
+func (c *certificate) DeleteCertificate(opts api.DeleteCertificateOpts) error {
+	d := cognito.NewCertDeleter(c.provider)
+
+	err := d.DeleteAuthCert(opts.Domain)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *certificate) CreateCertificate(opts api.CreateCertificateOpts) (*api.Certificate, error) {

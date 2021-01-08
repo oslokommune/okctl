@@ -4,9 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/oslokommune/okctl/pkg/cognito"
-
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -23,7 +20,7 @@ type identityManagerService struct {
 }
 
 // DeleteIdentityPool and all users
-func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, provider v1alpha1.CloudProvider, usprovider v1alpha1.CloudProvider, opts api.ID) error {
+func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, opts api.ID) error {
 	err := s.spinner.Start("deleting identity-pool")
 	if err != nil {
 		return err
@@ -39,20 +36,10 @@ func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, provide
 		return nil
 	}
 
-	c := cognito.New(provider)
-	d := cognito.NewCertDeleter(usprovider)
-
-	err = c.DeleteAuthDomain(pool.UserPoolID, pool.AuthDomain)
-	if err != nil {
-		return err
-	}
-
-	err = d.DeleteAuthCert(pool.AuthDomain)
-	if err != nil {
-		return err
-	}
-
-	err = c.DeleteUserPool(pool.UserPoolID)
+	err = s.api.DeleteIdentityPool(api.DeleteIdentityPoolOpts{
+		UserPoolID: pool.UserPoolID,
+		Domain:     pool.AuthDomain,
+	})
 	if err != nil {
 		return err
 	}

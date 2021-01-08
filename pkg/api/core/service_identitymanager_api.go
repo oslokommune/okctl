@@ -13,6 +13,22 @@ type identityManagerService struct {
 	cert     api.CertificateCloudProvider
 }
 
+func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, opts api.DeleteIdentityPoolOpts) error {
+	err := s.provider.DeleteIdentityPool(opts)
+	if err != nil {
+		return err
+	}
+
+	err = s.cert.DeleteCertificate(api.DeleteCertificateOpts{
+		Domain: opts.Domain,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *identityManagerService) CreateIdentityPoolUser(ctx context.Context, opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {
 	user, err := s.provider.CreateIdentityPoolUser(opts)
 	if err != nil {

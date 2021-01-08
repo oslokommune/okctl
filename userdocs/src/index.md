@@ -193,7 +193,6 @@ policy.csv: |
   g, my.email@mail.com, role:admin
 ```
 
-
 **okctl create cluster: Create identitypool fails / Re-create cluster within short timespan fails**
 
 If you do the following:
@@ -209,6 +208,27 @@ Workaround: Wait for up to 15 minutes before creating cluster again.
 
 15 minutes is the TTL (Time to live, i.e. cache expiry) of the NS record. You can see this value in
 Route 53 -> Hosted zones -> Your domain -> NS record for your top domain -> Edit -> See TTL field.
+
+**okctl create cluster: Failed to create external secrets helm chart**
+
+You get the following error (shortened):
+
+```
+..  creating: external-secrets (elapsed: 1 second 76 microseconds)WARN[0007] failed to process request, because: failed to create external secrets helm chart: failed to update repository: failed to fetch https://kubernetes-charts-incubator.storage.googleapis.com/index.yaml : 403 Forbidden  endpoint=create service=helm/externalSecrets
+✓   creating
+Error:
+....
+request failed with Internal Server Error, because: failed to create external secrets helm chart: failed to update repository: failed to fetch https://kubernetes-charts-incubator.storage.googleapis.com/index.yaml : 403 Forbidden
+```
+
+This happens because Helm
+[changed URLs](https://helm.sh/blog/new-location-stable-incubator-charts/#:~:text=The%20new%20location%20for%20the,use%20before%20November%2013%2C%202020.)
+to their repositories. Update your ~/.okctl/helm/repositories.yaml, and update URLs from
+
+| Name     | Old Location                                               | New Location                     |
+| -------- | ---------------------------------------------------------- | -------------------------------- |
+stable	   | https://kubernetes-charts.storage.googleapis.com           | https://charts.helm.sh/stable    |
+incubator  | https://kubernetes-charts-incubator.storage.googleapis.com | https://charts.helm.sh/incubator |
 
 **ArgoCD fails first run**
 

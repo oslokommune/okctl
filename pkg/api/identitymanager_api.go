@@ -79,6 +79,7 @@ type IdentityManagerService interface {
 	CreateIdentityPool(ctx context.Context, opts CreateIdentityPoolOpts) (*IdentityPool, error)
 	CreateIdentityPoolClient(ctx context.Context, opts CreateIdentityPoolClientOpts) (*IdentityPoolClient, error)
 	CreateIdentityPoolUser(ctx context.Context, opts CreateIdentityPoolUserOpts) (*IdentityPoolUser, error)
+	DeleteIdentityPool(ctx context.Context, opts DeleteIdentityPoolOpts) error
 }
 
 // IdentityManagerCloudProvider implements the cloud layer
@@ -86,4 +87,5 @@ type IdentityManagerCloudProvider interface {
 	CreateIdentityPool(certificateARN string, opts CreateIdentityPoolOpts) (*IdentityPool, error)
 	CreateIdentityPoolClient(opts CreateIdentityPoolClientOpts) (*IdentityPoolClient, error)
 	CreateIdentityPoolUser(opts CreateIdentityPoolUserOpts) (*IdentityPoolUser, error)
+	DeleteIdentityPool(opts DeleteIdentityPoolOpts) error
 }

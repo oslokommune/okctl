@@ -178,13 +178,7 @@ including VPC, this is a highly destructive operation.`,
 				}
 			}
 
-			// When creating a certificate for a CloudFront distribution, we
-			// need to create the certificate in us-east-1
-			usprovider, err := o.NewCloudProviderWithRegion("us-east-1")
-			if err != nil {
-				return err
-			}
-			err = services.IdentityManager.DeleteIdentityPool(o.Ctx, o.CloudProvider, usprovider, id)
+			err = services.IdentityManager.DeleteIdentityPool(o.Ctx, id)
 			if err != nil {
 				return formatErr(err)
 			}

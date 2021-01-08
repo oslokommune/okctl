@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/config/state"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -15,7 +14,7 @@ type IdentityManagerService interface {
 	CreateIdentityPool(ctx context.Context, opts api.CreateIdentityPoolOpts) (*api.IdentityPool, error)
 	CreateIdentityPoolClient(ctx context.Context, opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error)
 	CreateIdentityPoolUser(ctx context.Context, opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error)
-	DeleteIdentityPool(ctx context.Context, provider v1alpha1.CloudProvider, usprovider v1alpha1.CloudProvider, opts api.ID) error
+	DeleteIdentityPool(ctx context.Context, opts api.ID) error
 }
 
 // IdentityManagerAPI invokes the API calls for creating an identity pool

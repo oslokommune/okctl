@@ -12,6 +12,10 @@ type parameterAPI struct {
 	client *HTTPClient
 }
 
+func (a *parameterAPI) DeleteSecret(opts api.DeleteSecretOpts) error {
+	return a.client.DoDelete(TargetParameterSecret, &opts)
+}
+
 func (a *parameterAPI) CreateSecret(opts api.CreateSecretOpts) (*api.SecretParameter, error) {
 	into := &api.SecretParameter{}
 	return into, a.client.DoPost(TargetParameterSecret, &opts, into)

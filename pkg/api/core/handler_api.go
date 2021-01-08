@@ -32,6 +32,7 @@ type Endpoints struct {
 	CreateHostedZone                         endpoint.Endpoint
 	CreateCertificate                        endpoint.Endpoint
 	CreateSecret                             endpoint.Endpoint
+	DeleteSecret                             endpoint.Endpoint
 	CreateArgoCD                             endpoint.Endpoint
 	CreateExternalSecrets                    endpoint.Endpoint
 	DeleteExternalSecretsPolicy              endpoint.Endpoint
@@ -67,6 +68,7 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateHostedZone:                         makeCreateHostedZoneEndpoint(s.Domain),
 		CreateCertificate:                        makeCreateCertificateEndpoint(s.Certificate),
 		CreateSecret:                             makeCreateSecret(s.Parameter),
+		DeleteSecret:                             makeDeleteSecret(s.Parameter),
 		CreateArgoCD:                             makeCreateArgoCD(s.Helm),
 		CreateExternalSecrets:                    makeCreateExternalSecretsEndpoint(s.Kube),
 		DeleteExternalSecretsPolicy:              makeDeleteExternalSecretsPolicyEndpoint(s.ManagedPolicy),
@@ -101,6 +103,7 @@ type Handlers struct {
 	CreateHostedZone                         http.Handler
 	CreateCertificate                        http.Handler
 	CreateSecret                             http.Handler
+	DeleteSecret                             http.Handler
 	CreateArgoCD                             http.Handler
 	CreateExternalSecrets                    http.Handler
 	DeleteExternalSecretsPolicy              http.Handler
@@ -162,6 +165,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateHostedZone:                         newServer(endpoints.CreateHostedZone, decodeCreateHostedZone),
 		CreateCertificate:                        newServer(endpoints.CreateCertificate, decodeCreateCertificate),
 		CreateSecret:                             newServer(endpoints.CreateSecret, decodeCreateSecret),
+		DeleteSecret:                             newServer(endpoints.DeleteSecret, decodeDeleteSecret),
 		CreateArgoCD:                             newServer(endpoints.CreateArgoCD, decodeCreateArgoCD),
 		CreateExternalSecrets:                    newServer(endpoints.CreateExternalSecrets, decodeCreateExternalSecrets),
 		DeleteExternalSecretsPolicy:              newServer(endpoints.DeleteExternalSecretsPolicy, decodeIDRequest),
@@ -251,6 +255,7 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/parameters", func(r chi.Router) {
 			r.Route("/secret", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateSecret)
+				r.Method(http.MethodDelete, "/", handlers.DeleteSecret)
 			})
 		})
 		r.Route("/identitymanagers", func(r chi.Router) {
@@ -331,6 +336,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateHostedZone:                         logmd.Logging(logger, strings.Join([]string{domainTag, hostedZoneTag}, "/"), "create")(endpoints.CreateHostedZone),
 			CreateCertificate:                        logmd.Logging(logger, certificateTag, "create")(endpoints.CreateCertificate),
 			CreateSecret:                             logmd.Logging(logger, strings.Join([]string{parameterTag, secretTag}, "/"), "create")(endpoints.CreateSecret),
+			DeleteSecret:                             logmd.Logging(logger, strings.Join([]string{parameterTag, secretTag}, "/"), "delete")(endpoints.DeleteSecret),
 			CreateArgoCD:                             logmd.Logging(logger, strings.Join([]string{helmTag, argocdTag}, "/"), "create")(endpoints.CreateArgoCD),
 			CreateExternalSecrets:                    logmd.Logging(logger, strings.Join([]string{kubeTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecrets),
 			DeleteExternalSecretsPolicy:              logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, externalSecretsTag}, "/"), "delete")(endpoints.DeleteExternalSecretsPolicy),

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 )
 
 // Parameter contains the state for a parameter
@@ -37,6 +36,11 @@ type CreateSecretOpts struct {
 	Secret string
 }
 
+// DeleteSecretOpts contains the input required for deleting a secret parameter
+type DeleteSecretOpts struct {
+	Name string
+}
+
 // AnonymizeRequest removes sensitive data from the logs
 func (o CreateSecretOpts) AnonymizeRequest(request interface{}) interface{} {
 	r, _ := request.(CreateSecretOpts)
@@ -58,12 +62,13 @@ func (o CreateSecretOpts) Validate() error {
 // ParameterService defines the service layer operations
 type ParameterService interface {
 	CreateSecret(ctx context.Context, opts CreateSecretOpts) (*SecretParameter, error)
-	DeleteSecret(ctx context.Context, provider v1alpha1.CloudProvider, name string) error
+	DeleteSecret(ctx context.Context, opts DeleteSecretOpts) error
 }
 
 // ParameterCloudProvider defines the cloud layer operations
 type ParameterCloudProvider interface {
 	CreateSecret(opts CreateSecretOpts) (*SecretParameter, error)
+	DeleteSecret(opts DeleteSecretOpts) error
 }
 
 // ParameterStore defines the storage operations

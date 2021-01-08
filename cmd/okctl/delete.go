@@ -139,7 +139,9 @@ including VPC, this is a highly destructive operation.`,
 
 			argoCdSecretPath := cluster.ArgoCD.SecretKey.Path
 			if argoCdSecretPath != "" {
-				err = services.Parameter.DeleteSecret(o.Ctx, o.CloudProvider, argoCdSecretPath)
+				err = services.Parameter.DeleteSecret(o.Ctx, api.DeleteSecretOpts{
+					Name: argoCdSecretPath,
+				})
 				if err != nil {
 					return formatErr(err)
 				}
@@ -148,7 +150,9 @@ including VPC, this is a highly destructive operation.`,
 			for c := range clients {
 				clientSecretPath := clients[c].ClientSecret.Path
 				if clientSecretPath != "" {
-					err := services.Parameter.DeleteSecret(o.Ctx, o.CloudProvider, clientSecretPath)
+					err := services.Parameter.DeleteSecret(o.Ctx, api.DeleteSecretOpts{
+						Name: clientSecretPath,
+					})
 					if err != nil {
 						return formatErr(err)
 					}
@@ -158,7 +162,9 @@ including VPC, this is a highly destructive operation.`,
 			for k := range repos {
 				repoSecretPath := repos[k].DeployKey.PrivateKeySecret.Path
 				if repoSecretPath != "" {
-					err := services.Parameter.DeleteSecret(o.Ctx, o.CloudProvider, repoSecretPath)
+					err := services.Parameter.DeleteSecret(o.Ctx, api.DeleteSecretOpts{
+						Name: repoSecretPath,
+					})
 					if err != nil {
 						return formatErr(err)
 					}

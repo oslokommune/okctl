@@ -5,7 +5,6 @@ import (
 
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 )
 
 type parameter struct {
@@ -13,10 +12,15 @@ type parameter struct {
 	store         api.ParameterStore
 }
 
-// nolint: godox
-// TODO, implement this in proper client / api fashion.
-func (p *parameter) DeleteSecret(ctx context.Context, provider v1alpha1.CloudProvider, name string) error {
-	panic("Unused on the api side. Pay off this tech debt.")
+func (p *parameter) DeleteSecret(ctx context.Context, opts api.DeleteSecretOpts) error {
+	err := p.cloudProvider.DeleteSecret(api.DeleteSecretOpts{
+		Name: opts.Name,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (p *parameter) CreateSecret(ctx context.Context, opts api.CreateSecretOpts) (*api.SecretParameter, error) {

@@ -20,6 +20,9 @@ func buildVersionCommand(o *okctl.Okctl) *cobra.Command {
 		Use:   "version",
 		Short: "Prints version info",
 		Long:  `Prints version number and git-sha of okctl-build.`,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			return nil
+		},
 		RunE: func(_ *cobra.Command, args []string) error {
 			fmt.Fprintf(o.Out, "Version: %s\n", OkctlVersion)
 			fmt.Fprintf(o.Out, "Commit : %s\n", GitCommit)

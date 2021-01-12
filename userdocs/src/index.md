@@ -95,7 +95,7 @@ after logging in to [AWS](https://login.oslo.kommune.no/auth/realms/AD/protocol/
 okctl create cluster prod 123456789012
 ```
 
-Follow the instructions.
+Follow the instructions. If something fails, it's safe to just run the same command again (it's idempotent).
 
 When done, verify that you have a working cluster by running
 

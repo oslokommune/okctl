@@ -100,7 +100,7 @@ Follow the instructions. If something fails, it's safe to just run the same comm
 When done, verify that you have a working cluster by running
 
 ```bash
-okctl venv
+okctl venv prod
 kubectl get service
 
 ```
@@ -123,7 +123,7 @@ okctl create cluster --help
 okctl show credentials prod
 
 # Run a sub shell with environment variables from the above command and a custom command prompt (PS1)
-okctl venv
+okctl venv prod
 
 # Delete the cluster
 okctl delete cluster prod

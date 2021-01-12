@@ -14,7 +14,7 @@
 To download the latest release, make sure you have the required pre-requisites. Then run the command matching your
 operating system.
 
-### Pre-requisites
+### Prerequisites
 
 * Your own GPG key
   * List existing keys with `gpg --list-keys`
@@ -29,12 +29,15 @@ sudo mv /tmp/okctl /usr/local/bin
 
 ### macOS
 
-Pre-requisites
+#### Prerequisites
+
 * `pass`
   * If you do not have it, run `brew install pass`
 * `pass` must be initalized
   * Run `pass ls` to see if you have a password store. If it returns `Error: password store is empty. Try "pass init".`
   then run `pass init GPG_ID` where GPG_ID is the ID of your GPG key (could be e-mail or a long unique identifier).
+
+#### Installation
 
 ```bash
 brew tap oslokommune/tap
@@ -66,6 +69,8 @@ cd <the new repository>
 
 A "cluster" is a Kubernetes cluster in an environment as described in [Compare and contrast](#compare-and-contrast).
 
+#### Gather input data
+
 You will soon be running `okctl create cluster`, which will ask you for the following information:
 
 * Username and password: This is your Oslo Kommune AD organization username (oooXXXXX) and its password.
@@ -77,8 +82,9 @@ after logging in to [AWS](https://login.oslo.kommune.no/auth/realms/AD/protocol/
 
 <span style="display:block;text-align:center">![okctl](img/aws-account-id.png)</span>
 
-```bash
+#### Run create command
 
+```bash
 # Create a cluster. Format:
 # okctl create cluster <environment name> <AWS account ID>
 #

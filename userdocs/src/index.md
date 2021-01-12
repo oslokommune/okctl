@@ -11,7 +11,14 @@
 
 ## Installation
 
-To download the latest release, run the command matching your operating system:
+To download the latest release, make sure you have the required pre-requisites. Then run the command matching your
+operating system.
+
+### Prerequisites
+
+* Your own GPG key
+    * List existing keys with `gpg --list-keys`
+    * If you don't have any keys, create a new one with `gpg --gen-key`
 
 ### Linux
 
@@ -21,6 +28,17 @@ sudo mv /tmp/okctl /usr/local/bin
 ```
 
 ### macOS
+
+#### Prerequisites
+
+* `pass`
+    * If you do not have it, run `brew install pass`
+* `pass` must be initalized
+    * Run `pass ls` to see if you have a password store. If it returns `Error: password store is empty. Try "pass init".`
+      then run `pass init <GPG ID>` where GPG ID is the ID of your GPG key - use `gpg --list-keys` to see your keys (both
+      e-mail and the ID are valid values, but if you have several keys for the same e-mail, use the ID).
+
+#### Installation
 
 ```bash
 brew tap oslokommune/tap
@@ -52,6 +70,8 @@ cd <the new repository>
 
 A "cluster" is a Kubernetes cluster in an environment as described in [Compare and contrast](#compare-and-contrast).
 
+#### Gather input data
+
 You will soon be running `okctl create cluster`, which will ask you for the following information:
 
 * Username and password: This is your Oslo Kommune AD organization username (oooXXXXX) and its password.
@@ -63,8 +83,9 @@ after logging in to [AWS](https://login.oslo.kommune.no/auth/realms/AD/protocol/
 
 <span style="display:block;text-align:center">![okctl](img/aws-account-id.png)</span>
 
-```bash
+#### Run create command
 
+```bash
 # Create a cluster. Format:
 # okctl create cluster <environment name> <AWS account ID>
 #
@@ -75,12 +96,12 @@ after logging in to [AWS](https://login.oslo.kommune.no/auth/realms/AD/protocol/
 okctl create cluster prod 123456789012
 ```
 
-Follow the instructions.
+Follow the instructions. If something fails, it's safe to just run the same command again (it's idempotent).
 
 When done, verify that you have a working cluster by running
 
 ```bash
-okctl venv
+okctl venv prod
 kubectl get service
 
 ```
@@ -103,7 +124,7 @@ okctl create cluster --help
 okctl show credentials prod
 
 # Run a sub shell with environment variables from the above command and a custom command prompt (PS1)
-okctl venv
+okctl venv prod
 
 # Delete the cluster
 okctl delete cluster prod

@@ -302,7 +302,7 @@ func (a *AuthDeviceFlow) Survey(verificationURI, userCode string) error {
 	ready := false
 
 	prompt := &survey.Confirm{
-		Message: "We will now start a Github device authentication flow, this requires entering a code in a browser window. Ready?",
+		Message: "We will now start a Github device authentication flow, this requires entering a code in a browser window. Copy the following code and press enter: " + userCode,
 		// nolint: lll
 		Help:    "This process will create a github authentication token for your device, we use this token to prepare your github repository and fetch a list of teams from the organisation",
 		Default: true,
@@ -316,11 +316,6 @@ func (a *AuthDeviceFlow) Survey(verificationURI, userCode string) error {
 	_ = browser.OpenURL(verificationURI)
 
 	_, err = fmt.Fprintf(os.Stderr, "If a browser did not open, enter the following url in a new browser window: %s\n", verificationURI)
-	if err != nil {
-		return err
-	}
-
-	_, err = fmt.Fprintf(os.Stderr, "Then enter the following code: %s\n", userCode)
 	if err != nil {
 		return err
 	}

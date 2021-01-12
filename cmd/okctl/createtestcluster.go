@@ -354,5 +354,7 @@ with Github or other production services.
 	f.StringVarP(&opts.Cidr, "cidr", "c", defaultCidr,
 		"CIDR block the AWS VPC and subnets are created within")
 
+	cmd.Hidden = true
+
 	return cmd
 }

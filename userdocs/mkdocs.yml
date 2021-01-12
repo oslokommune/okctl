@@ -16,7 +16,6 @@ nav:
       - deployment/argocd.md
   - Usage:
       - usage/applicationyaml.md
-      - usage/testcluster.md
       - usage/venv.md
   - Users:
       - usage/adduser.md

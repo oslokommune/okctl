@@ -11,7 +11,14 @@
 
 ## Installation
 
-To download the latest release, run the command matching your operating system:
+To download the latest release, make sure you have the required pre-requisites. Then run the command matching your
+operating system.
+
+### Pre-requisites
+
+* Your own GPG key
+  * List existing keys with `gpg --list-keys`
+  * If you don't have any keys, create a new one with `gpg --gen-key`
 
 ### Linux
 
@@ -21,6 +28,13 @@ sudo mv /tmp/okctl /usr/local/bin
 ```
 
 ### macOS
+
+Pre-requisites
+* `pass`
+  * If you do not have it, run `brew install pass`
+* `pass` must be initalized
+  * Run `pass ls` to see if you have a password store. If it returns `Error: password store is empty. Try "pass init".`
+  then run `pass init GPG_ID` where GPG_ID is the ID of your GPG key (could be e-mail or a long unique identifier).
 
 ```bash
 brew tap oslokommune/tap

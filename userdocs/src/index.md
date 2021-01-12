@@ -35,7 +35,8 @@ sudo mv /tmp/okctl /usr/local/bin
   * If you do not have it, run `brew install pass`
 * `pass` must be initalized
   * Run `pass ls` to see if you have a password store. If it returns `Error: password store is empty. Try "pass init".`
-  then run `pass init GPG_ID` where GPG_ID is the ID of your GPG key (could be e-mail or a long unique identifier).
+  then run `pass init <GPG ID>` where GPG ID is the ID of your GPG key - use `gpg --list-keys` to see your keys (both
+  e-mail and the ID are valid values, but if you have several keys for the same e-mail, use the ID).
 
 #### Installation
 

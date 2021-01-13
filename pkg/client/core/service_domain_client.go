@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"errors"
 	"io"
 
 	"github.com/oslokommune/okctl/pkg/config/state"
@@ -184,11 +183,6 @@ func (s *domainService) CreatePrimaryHostedZoneWithoutUserinput(_ context.Contex
 		if z.Primary {
 			return s.store.GetHostedZone(z.Domain)
 		}
-	}
-
-	// Should be done in a Validate() and assumed correct here
-	if opts.Domain == "" || opts.FQDN == "" {
-		return nil, errors.New("missing required primary hosted zone information domain and FQDN")
 	}
 
 	zone, err := s.api.CreatePrimaryHostedZone(opts)

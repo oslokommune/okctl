@@ -1,8 +1,11 @@
 package client
 
 import (
+	"context"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client/store"
+	"github.com/oslokommune/okctl/pkg/config/state"
 )
 
 // We are shadowing some interfaces for now, but
@@ -11,6 +14,7 @@ import (
 // ParameterService implements the business logic
 type ParameterService interface {
 	api.ParameterService
+	DeleteAllsecrets(ctx context.Context, cluster state.Cluster) error
 }
 
 // ParameterAPI invokes REST API endpoints

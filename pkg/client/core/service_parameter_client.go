@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/config/state"
+
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -16,8 +18,58 @@ type parameterService struct {
 	report  client.ParameterReport
 }
 
+func (s *parameterService) DeleteAllsecrets(ctx context.Context, cluster state.Cluster) error {
+	err := s.spinner.Start("deleting secrets")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	clients := cluster.IdentityPool.Clients
+	repos := cluster.Github.Repositories
+
+	argoCdSecretPath := cluster.ArgoCD.SecretKey.Path
+	if argoCdSecretPath != "" {
+		err = s.DeleteSecret(ctx, api.DeleteSecretOpts{
+			Name: argoCdSecretPath,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	for c := range clients {
+		clientSecretPath := clients[c].ClientSecret.Path
+		if clientSecretPath != "" {
+			err := s.DeleteSecret(ctx, api.DeleteSecretOpts{
+				Name: clientSecretPath,
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	for k := range repos {
+		repoSecretPath := repos[k].DeployKey.PrivateKeySecret.Path
+		if repoSecretPath != "" {
+			err := s.DeleteSecret(ctx, api.DeleteSecretOpts{
+				Name: repoSecretPath,
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func (s *parameterService) DeleteSecret(ctx context.Context, opts api.DeleteSecretOpts) error {
-	err := s.spinner.Start("parameter")
+	err := s.spinner.Start("deleting paramater")
 	if err != nil {
 		return err
 	}

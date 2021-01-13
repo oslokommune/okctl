@@ -19,21 +19,21 @@ type parameterService struct {
 }
 
 func (s *parameterService) DeleteAllsecrets(ctx context.Context, cluster state.Cluster) error {
-	err := s.spinner.Start("deleting secrets")
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		err = s.spinner.Stop()
-	}()
+	//err := s.spinner.Start("parameters / secrets")
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//defer func() {
+	//	err = s.spinner.Stop()
+	//}()
 
 	clients := cluster.IdentityPool.Clients
 	repos := cluster.Github.Repositories
 
 	argoCdSecretPath := cluster.ArgoCD.SecretKey.Path
 	if argoCdSecretPath != "" {
-		err = s.DeleteSecret(ctx, api.DeleteSecretOpts{
+		err := s.DeleteSecret(ctx, api.DeleteSecretOpts{
 			Name: argoCdSecretPath,
 		})
 		if err != nil {
@@ -69,7 +69,7 @@ func (s *parameterService) DeleteAllsecrets(ctx context.Context, cluster state.C
 }
 
 func (s *parameterService) DeleteSecret(ctx context.Context, opts api.DeleteSecretOpts) error {
-	err := s.spinner.Start("deleting paramater")
+	err := s.spinner.Start("parameter")
 	if err != nil {
 		return err
 	}

@@ -16,6 +16,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/oslokommune/okctl/pkg/client"
+	okctlconfig "github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/github"
 )
 
@@ -267,7 +268,7 @@ func toHCL(record *client.NameserverRecord) []byte {
 		"\tzone_id = var.top_level_id # Leave this be",
 		fmt.Sprintf("\tname = \"%s\"", record.FQDN),
 		"\ttype = \"NS\"",
-		"\tttl = 300",
+		fmt.Sprintf("\tttl = %d", okctlconfig.DefaultNameserverRecordTTL),
 		"\trecords = [",
 	}
 

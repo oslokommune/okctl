@@ -1,0 +1,94 @@
+package reconciler
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/mishudark/errors"
+	"github.com/oslokommune/okctl/pkg/client"
+	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/domain"
+)
+
+const nsRecordValidationIntervalSeconds = 15
+
+// NameserverHandlerReconcilerResourceState contains data extracted from the desired state
+type NameserverHandlerReconcilerResourceState struct {
+	PrimaryHostedZoneFQDN string
+	Nameservers           []string
+}
+
+// nameserverDelegationReconciler contains service and metadata for the relevant resource
+type nameserverDelegationReconciler struct {
+	commonMetadata *resourcetree.CommonMetadata
+
+	client        client.NameserverRecordDelegationService
+	domainService client.DomainService
+}
+
+// SetCommonMetadata saves common metadata for use in Reconcile()
+func (z *nameserverDelegationReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+	z.commonMetadata = metadata
+}
+
+// Reconcile knows how to do what is necessary to ensure the desired state is achieved
+func (z *nameserverDelegationReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+	resourceState, ok := node.ResourceState.(NameserverHandlerReconcilerResourceState)
+	if !ok {
+		return nil, errors.New("error casting nameserverhandler state")
+	}
+
+	switch node.State {
+	case resourcetree.ResourceNodeStatePresent:
+		err := z.commonMetadata.Spin.Start("Nameserver delegation")
+		if err != nil {
+			return nil, err
+		}
+
+		defer func() {
+			err = z.commonMetadata.Spin.Stop()
+		}()
+
+		record, err := z.client.CreateNameserverRecordDelegationRequest(&client.CreateNameserverDelegationRequestOpts{
+			ClusterID:             z.commonMetadata.ClusterID,
+			PrimaryHostedZoneFQDN: resourceState.PrimaryHostedZoneFQDN,
+			Nameservers:           resourceState.Nameservers,
+		})
+		if err != nil {
+			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error handling nameservers: %w", err)
+		}
+
+		waitForNameserverDelegation(nsRecordValidationIntervalSeconds, resourceState.PrimaryHostedZoneFQDN)
+
+		err = z.domainService.SetHostedZoneDelegation(z.commonMetadata.Ctx, domain.EnsureNotFQDN(record.FQDN), true)
+		if err != nil {
+			return nil, fmt.Errorf("error setting hosted zone delegation status: %w", err)
+		}
+	case resourcetree.ResourceNodeStateAbsent:
+		return nil, errors.New("deletion of the hosted zone delegation is not implemented")
+	}
+
+	return &ReconcilationResult{Requeue: false}, nil
+}
+
+// NewNameserverDelegationReconciler creates a new reconciler for the nameserver record delegation resource
+func NewNameserverDelegationReconciler(client client.NameserverRecordDelegationService, domainService client.DomainService) Reconciler {
+	return &nameserverDelegationReconciler{
+		client:        client,
+		domainService: domainService,
+	}
+}
+
+func waitForNameserverDelegation(interval time.Duration, fqdn string) {
+	var err error
+
+	for {
+		err = domain.ShouldHaveNameServers(fqdn)
+
+		if err == nil {
+			break
+		}
+
+		time.Sleep(interval * time.Second)
+	}
+}

@@ -55,7 +55,11 @@ func Synchronize(opts *SynchronizeOpts) error {
 		opts.PrimaryHostedZoneGetter,
 	))
 
-	currentStateTreeOpts, err := NewCreateCurrentStateTreeOpts(opts.Fs, opts.OutputDir, opts.GithubGetter)
+	opts.DesiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeNameserverDelegator, CreateNameserverDelegationStateRefresher(
+		opts.PrimaryHostedZoneGetter,
+	))
+
+	currentStateTreeOpts, err := NewCreateCurrentStateTreeOpts(opts.Fs, opts.OutputDir, opts.GithubGetter, opts.PrimaryHostedZoneGetter)
 	if err != nil {
 		return fmt.Errorf("unable to get existing services: %w", err)
 	}

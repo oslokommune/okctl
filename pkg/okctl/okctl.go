@@ -177,6 +177,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		ExternalSecrets:      o.externalSecretsService(outputDir, spin),
 		Github:               o.githubService(ghClient, spin),
 		Manifest:             o.manifestService(outputDir, spin),
+		NameserverHandler:    o.nameserverHandlerService(ghClient, outputDir, spin),
 		Parameter:            o.paramService(outputDir, spin),
 		Vpc:                  o.vpcService(outputDir, spin),
 		IdentityManager:      o.identityManagerService(outputDir, spin),
@@ -279,6 +280,13 @@ func (o *Okctl) manifestService(outputDir string, spin spinner.Spinner) client.M
 			o.FileSystem,
 		),
 		console.NewManifestReport(o.Err, spin),
+	)
+}
+
+func (o *Okctl) nameserverHandlerService(ghClient githubClient.Githuber, _ string, spin spinner.Spinner) client.NameserverRecordDelegationService {
+	return clientCore.NewNameserverHandlerService(
+		ghClient,
+		spin,
 	)
 }
 

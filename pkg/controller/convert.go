@@ -16,27 +16,31 @@ import (
 
 // ExistingServices contains information about what services already exists in a cluster
 type ExistingServices struct {
-	hasALBIngressController bool
-	hasCluster              bool
-	hasExternalDNS          bool
-	hasExternalSecrets      bool
-	hasGithubSetup          bool
-	hasIdentityManager      bool
-	hasPrimaryHostedZone    bool
-	hasVPC                  bool
+	hasALBIngressController           bool
+	hasCluster                        bool
+	hasExternalDNS                    bool
+	hasExternalSecrets                bool
+	hasGithubSetup                    bool
+	hasIdentityManager                bool
+	hasPrimaryHostedZone              bool
+	hasVPC                            bool
+	hasDelegatedHostedZoneNameservers bool
 }
 
 // NewCreateCurrentStateTreeOpts creates an initialized ExistingServices struct
-func NewCreateCurrentStateTreeOpts(fs *afero.Afero, outputDir string, githubGetter reconciler.GithubGetter) (*ExistingServices, error) {
+func NewCreateCurrentStateTreeOpts(fs *afero.Afero, outputDir string, githubGetter reconciler.GithubGetter, hzFetcher HostedZoneFetcher) (*ExistingServices, error) {
+	hz := hzFetcher()
+
 	return &ExistingServices{
-		hasGithubSetup:          githubTester(githubGetter()),
-		hasPrimaryHostedZone:    directoryTester(fs, outputDir, config.DefaultDomainBaseDir),
-		hasVPC:                  directoryTester(fs, outputDir, config.DefaultVpcBaseDir),
-		hasCluster:              directoryTester(fs, outputDir, config.DefaultClusterBaseDir),
-		hasExternalSecrets:      directoryTester(fs, outputDir, config.DefaultExternalSecretsBaseDir),
-		hasALBIngressController: directoryTester(fs, outputDir, config.DefaultAlbIngressControllerBaseDir),
-		hasExternalDNS:          directoryTester(fs, outputDir, config.DefaultExternalDNSBaseDir),
-		hasIdentityManager:      directoryTester(fs, outputDir, config.DefaultIdentityPoolBaseDir),
+		hasGithubSetup:                    githubTester(githubGetter()),
+		hasPrimaryHostedZone:              hz != nil,
+		hasVPC:                            directoryTester(fs, outputDir, config.DefaultVpcBaseDir),
+		hasCluster:                        directoryTester(fs, outputDir, config.DefaultClusterBaseDir),
+		hasExternalSecrets:                directoryTester(fs, outputDir, config.DefaultExternalSecretsBaseDir),
+		hasALBIngressController:           directoryTester(fs, outputDir, config.DefaultAlbIngressControllerBaseDir),
+		hasExternalDNS:                    directoryTester(fs, outputDir, config.DefaultExternalDNSBaseDir),
+		hasIdentityManager:                directoryTester(fs, outputDir, config.DefaultIdentityPoolBaseDir),
+		hasDelegatedHostedZoneNameservers: hz != nil && hz.IsDelegated,
 	}, nil
 }
 
@@ -50,6 +54,11 @@ func CreateCurrentStateTree(opts *ExistingServices) (root *resourcetree.Resource
 	createNode(root, resourcetree.ResourceNodeTypeGithub, opts.hasGithubSetup)
 
 	primaryHostedZoneNode := createNode(root, resourcetree.ResourceNodeTypeZone, opts.hasPrimaryHostedZone)
+	createNode(primaryHostedZoneNode,
+		resourcetree.ResourceNodeTypeNameserverDelegator,
+		opts.hasDelegatedHostedZoneNameservers,
+	)
+
 	vpcNode = createNode(primaryHostedZoneNode, resourcetree.ResourceNodeTypeVPC, opts.hasVPC)
 
 	clusterNode = createNode(vpcNode, resourcetree.ResourceNodeTypeCluster, opts.hasCluster)
@@ -71,6 +80,8 @@ func CreateDesiredStateTree(cluster *v1alpha1.Cluster) (root *resourcetree.Resou
 	createNode(root, resourcetree.ResourceNodeTypeGithub, true)
 
 	primaryHostedZoneNode := createNode(root, resourcetree.ResourceNodeTypeZone, true)
+	createNode(primaryHostedZoneNode, resourcetree.ResourceNodeTypeNameserverDelegator, true)
+
 	vpcNode = createNode(primaryHostedZoneNode, resourcetree.ResourceNodeTypeVPC, true)
 
 	clusterNode = createNode(vpcNode, resourcetree.ResourceNodeTypeCluster, true)

@@ -100,3 +100,16 @@ func CreateArgocdStateRefresher(hostedZoneFetcher HostedZoneFetcher) resourcetre
 		}
 	}
 }
+
+// CreateNameserverDelegationStateRefresher creates a function that gathers required runtime data for a nameserver delegation
+// request
+func CreateNameserverDelegationStateRefresher(fetcher HostedZoneFetcher) resourcetree.StateRefreshFn {
+	return func(node *resourcetree.ResourceNode) {
+		zone := fetcher()
+
+		node.ResourceState = reconciler.NameserverHandlerReconcilerResourceState{
+			PrimaryHostedZoneFQDN: zone.FQDN,
+			Nameservers:           zone.NameServers,
+		}
+	}
+}

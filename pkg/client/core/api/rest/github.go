@@ -151,6 +151,16 @@ func (a *githubAPI) CreateGithubOauthApp(opts client.CreateGithubOauthAppOpts) (
 	}, nil
 }
 
+// CreateNSRecordPullRequest knows how to request a NS record pull request from the Github client
+func (a *githubAPI) CreateNSRecordPullRequest(sourceBranch string) (err error) {
+	err = a.client.CreateNSRecordPullRequest(sourceBranch)
+	if err != nil {
+		return fmt.Errorf("error creating NS record pull request: %w", err)
+	}
+
+	return nil
+}
+
 func inferRepository(fullName string, repositories []*github.Repository) (*github.Repository, error) {
 	for _, repo := range repositories {
 		repo := *repo

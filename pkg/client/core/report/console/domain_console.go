@@ -38,6 +38,18 @@ func (r *domainReport) ReportCreatePrimaryHostedZone(zone *client.HostedZone, re
 	return r.console.Report(actions, "primary-hosted-zone", description)
 }
 
+func (r *domainReport) ReportHostedZoneDelegation(zone *client.HostedZone, reports []*store.Report) error {
+	var actions []store.Action // nolint: prealloc
+
+	for _, report := range reports {
+		actions = append(actions, report.Actions...)
+	}
+
+	description := fmt.Sprintf("%s delegated status: %t", zone.HostedZone.Domain, zone.IsDelegated)
+
+	return r.console.Report(actions, "hosted-zone", description)
+}
+
 // NewDomainReport returns an initialised domain reporter
 func NewDomainReport(out io.Writer, spinner spinner.Spinner) client.DomainReport {
 	return &domainReport{

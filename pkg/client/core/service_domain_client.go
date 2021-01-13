@@ -186,6 +186,7 @@ func (s *domainService) CreatePrimaryHostedZoneWithoutUserinput(_ context.Contex
 		}
 	}
 
+	// Should be done in a Validate() and assumed correct here
 	if opts.Domain == "" || opts.FQDN == "" {
 		return nil, errors.New("missing required primary hosted zone information domain and FQDN")
 	}
@@ -195,7 +196,7 @@ func (s *domainService) CreatePrimaryHostedZoneWithoutUserinput(_ context.Contex
 		return nil, err
 	}
 
-	zone.IsDelegated = true
+	zone.IsDelegated = false
 
 	r1, err := s.store.SaveHostedZone(zone)
 	if err != nil {
@@ -213,6 +214,32 @@ func (s *domainService) CreatePrimaryHostedZoneWithoutUserinput(_ context.Contex
 	}
 
 	return zone, nil
+}
+
+func (s *domainService) SetHostedZoneDelegation(_ context.Context, domain string, isDelegated bool) (err error) {
+	relevantZone, err := s.store.GetHostedZone(domain)
+	if err != nil {
+		return err
+	}
+
+	relevantZone.IsDelegated = isDelegated
+
+	r1, err := s.store.SaveHostedZone(relevantZone)
+	if err != nil {
+		return err
+	}
+
+	r2, err := s.state.SaveHostedZone(relevantZone)
+	if err != nil {
+		return err
+	}
+
+	err = s.report.ReportHostedZoneDelegation(relevantZone, []*store.Report{r1, r2})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // NewDomainService returns an initialised service

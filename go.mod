@@ -29,6 +29,8 @@ require (
 	github.com/foolin/pagser v0.1.5
 	github.com/garyburd/redigo v1.6.2 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible
+	github.com/go-git/go-billy/v5 v5.0.0
+	github.com/go-git/go-git v4.7.0+incompatible
 	github.com/go-git/go-git/v5 v5.1.0
 	github.com/go-kit/kit v0.10.0
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
@@ -49,7 +51,6 @@ require (
 	github.com/jarcoal/httpmock v1.0.6
 	github.com/jmoiron/sqlx v1.2.1-0.20190826204134-d7d95172beb5 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
-	github.com/kr/pty v1.1.8 // indirect
 	github.com/logrusorgru/aurora v0.0.0-20181002194514-a7b3b318ed4e
 	github.com/logrusorgru/aurora/v3 v3.0.0
 	github.com/magiconair/properties v1.8.2 // indirect
@@ -93,6 +94,7 @@ require (
 	gopkg.in/h2non/gock.v1 v1.0.15
 	gopkg.in/ini.v1 v1.62.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
+	gopkg.in/src-d/go-git.v4 v4.13.1 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 	helm.sh/helm/v3 v3.4.0
 	k8s.io/api v0.19.2

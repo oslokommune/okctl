@@ -115,6 +115,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			reconciliationManager := reconciler.NewReconcilerManager(&resourcetree.CommonMetadata{
 				Ctx:       o.Ctx,
 				ClusterID: id,
+				Spin:      spin,
 			})
 
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeZone, reconciler.NewZoneReconciler(services.Domain))
@@ -125,6 +126,11 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeExternalDNS, reconciler.NewExternalDNSReconciler(services.ExternalDNS))
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeGithub, reconciler.NewGithubReconciler(services.Github))
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeIdentityManager, reconciler.NewIdentityManagerReconciler(services.IdentityManager))
+			reconciliationManager.AddReconciler(
+				resourcetree.ResourceNodeTypeNameserverDelegator,
+				reconciler.NewNameserverDelegationReconciler(services.NameserverHandler, services.Domain),
+			)
+
 			synchronizeOpts := &controller.SynchronizeOpts{
 				DesiredTree:             desiredTree,
 				ReconciliationManager:   reconciliationManager,

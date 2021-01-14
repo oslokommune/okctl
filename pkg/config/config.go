@@ -119,6 +119,8 @@ const (
 	DefaultRequiredVpcsTestCluster = 1
 	// DefaultRequiredIgwsTestCluster number of internet gateways required for testcluster creation
 	DefaultRequiredIgwsTestCluster = 1
+
+	DefaultNameserverRecordTTL = 300
 )
 
 // DataLoaderFn is the type for loading configuration data

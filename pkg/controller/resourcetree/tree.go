@@ -6,6 +6,8 @@ import (
 	"context"
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
@@ -33,6 +35,8 @@ const (
 	ResourceNodeTypeIdentityManager
 	// ResourceNodeTypeArgoCD represents an ArgoCD resource
 	ResourceNodeTypeArgoCD
+	// ResourceNodeTypeNameserverDelegator represents delegation of nameservers for a HostedZone
+	ResourceNodeTypeNameserverDelegator
 )
 
 // ResourceNodeTypeToString knows how to convert a Resource Node type to a human readable string
@@ -58,6 +62,8 @@ func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
 		return "Identity Manager"
 	case ResourceNodeTypeArgoCD:
 		return "ArgoCD controller"
+	case ResourceNodeTypeNameserverDelegator:
+		return "Nameserver Delegation"
 	default:
 		return ""
 	}
@@ -80,6 +86,7 @@ const (
 type CommonMetadata struct {
 	Ctx       context.Context
 	ClusterID api.ID
+	Spin      spinner.Spinner
 }
 
 // StateRefreshFn is a function that attempts to retrieve state potentially can only be retrieved at runtime. E.g.:

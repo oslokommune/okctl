@@ -37,6 +37,7 @@ type DomainService interface {
 	CreatePrimaryHostedZoneWithoutUserinput(ctx context.Context, opts CreatePrimaryHostedZoneOpts) (*HostedZone, error)
 	GetPrimaryHostedZone(ctx context.Context, id api.ID) (*HostedZone, error)
 	DeletePrimaryHostedZone(ctx context.Context, opts DeletePrimaryHostedZoneOpts) error
+	SetHostedZoneDelegation(ctx context.Context, domain string, delegated bool) error
 }
 
 // DomainAPI invokes the API
@@ -63,4 +64,5 @@ type DomainState interface {
 type DomainReport interface {
 	ReportCreatePrimaryHostedZone(zone *HostedZone, reports []*store.Report) error
 	ReportDeletePrimaryHostedZone(reports []*store.Report) error
+	ReportHostedZoneDelegation(zone *HostedZone, reports []*store.Report) error
 }

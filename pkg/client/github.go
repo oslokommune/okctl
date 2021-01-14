@@ -190,6 +190,7 @@ type GithubAPI interface {
 	CreateGithubDeployKey(opts CreateGithubDeployKey) (*GithubDeployKey, error)
 	SelectGithubTeam(opts SelectGithubTeam) (*GithubTeam, error)
 	CreateGithubOauthApp(opts CreateGithubOauthAppOpts) (*GithubOauthApp, error)
+	CreateNSRecordPullRequest(sourceBranch string) error
 }
 
 // GithubReport is the report layer

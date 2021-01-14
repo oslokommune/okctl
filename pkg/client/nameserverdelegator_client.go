@@ -28,8 +28,16 @@ type CreateNameserverDelegationRequestOpts struct {
 	Nameservers           []string
 }
 
-// NameserverRecordDelegationService defines required functionality for requesting a nameserver delegation
+/*
+	NameserverRecordDelegationService defines required functionality for requesting a nameserver delegation record in
+	the top level domain.
+
+	If a team wants 'team.oslo.systems', okctl will create that domain which will get its own nameservers assigned.
+	The top level domain 'oslo.systems' then needs to delegate DNS inquiries for 'team.oslo.systems' to the assigned
+	nameservers. This is the delegation this service should handle.
+*/
 type NameserverRecordDelegationService interface {
+	// CreateNameserverRecordDelegationRequest creates a request for a NS record in the top level domain
 	CreateNameserverRecordDelegationRequest(opts *CreateNameserverDelegationRequestOpts) (record *NameserverRecord, err error)
 }
 

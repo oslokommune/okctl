@@ -70,7 +70,12 @@ func NewNameserverDelegationRequest(gh github.Githuber, record *client.Nameserve
 	}
 }
 
-// NameserverDelegator handles functionality regarding delegation of NS records
+/*
+NameserverDelegator handles delegation of NS records. This involves the following:
+- Creating a terraform nameserver record definition for the requested FQDN in the top level domain
+- Committing the definition file to a branch in the top level IAC repository
+- Creating a pull request for the top level domain admins to review
+*/
 type NameserverDelegator struct {
 	githubAPI            github.Githuber
 	repositoryDetails    *repository

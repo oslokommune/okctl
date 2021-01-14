@@ -15,6 +15,7 @@ type nameserverRecordDelegationService struct {
 }
 
 // CreateNameserverRecordDelegationRequest knows how to request a NS record delegation
+// See nameserverdelegator_client.go for information regarding NS record delegation
 func (n *nameserverRecordDelegationService) CreateNameserverRecordDelegationRequest(
 	opts *client.CreateNameserverDelegationRequestOpts,
 ) (*client.NameserverRecord, error) {

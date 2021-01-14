@@ -123,7 +123,10 @@ func (c *clusterRun) DeleteCluster(opts api.ClusterDeleteOpts) error {
 
 	// We want to continue even if delete fargate profiles fails,
 	// delete cluster should succeed if fp-default is not found
-	_, _ = cli.DeleteFargateProfiles(opts.ID.ClusterName, opts.FargateProfileName)
+	_, err = cli.DeleteFargateProfiles(opts.ID.ClusterName, opts.FargateProfileName)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	_, err = cli.DeleteCluster(opts.ID.ClusterName)
 	if err != nil {

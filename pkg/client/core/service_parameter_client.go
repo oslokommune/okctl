@@ -19,15 +19,6 @@ type parameterService struct {
 }
 
 func (s *parameterService) DeleteAllsecrets(ctx context.Context, cluster state.Cluster) error {
-	//err := s.spinner.Start("parameters / secrets")
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//defer func() {
-	//	err = s.spinner.Stop()
-	//}()
-
 	clients := cluster.IdentityPool.Clients
 	repos := cluster.Github.Repositories
 

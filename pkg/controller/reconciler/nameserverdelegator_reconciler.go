@@ -18,7 +18,9 @@ type NameserverHandlerReconcilerResourceState struct {
 	Nameservers           []string
 }
 
-// nameserverDelegationReconciler contains service and metadata for the relevant resource
+// nameserverDelegationReconciler handles creation (later edit and deletion) of nameserver delegation resources.
+// A nameserver delegation consists of creating a request to add a NS record to the top level domain and verifying
+// that the delegation has happened.
 type nameserverDelegationReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 

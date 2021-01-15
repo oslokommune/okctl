@@ -32,7 +32,9 @@ type Keyring struct {
 var _ Keyringer = &Keyring{}
 
 // New creates a new keyring
-func New(keyring krPkg.Keyring) (*Keyring, error) {
+func New(keyring krPkg.Keyring, debug bool) (*Keyring, error) {
+	krPkg.Debug = debug
+
 	return &Keyring{
 		ring: keyring,
 	}, nil

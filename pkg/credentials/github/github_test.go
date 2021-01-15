@@ -145,7 +145,7 @@ func TestNewKeyringPersister(t *testing.T) {
 				Type:        github.CredentialsTypeDeviceFlow,
 			},
 			keyring: func() keyring.Keyringer {
-				k, err := keyring.New(keyring.NewInMemoryKeyring())
+				k, err := keyring.New(keyring.NewInMemoryKeyring(), false)
 				assert.NoError(t, err)
 
 				return k

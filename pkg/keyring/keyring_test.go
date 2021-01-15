@@ -34,7 +34,7 @@ func TestStore(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			ring, err := keyring.New(keyring.NewInMemoryKeyring())
+			ring, err := keyring.New(keyring.NewInMemoryKeyring(), false)
 			assert.NoError(t, err)
 
 			err = ring.Store(tc.keytype, tc.secret)
@@ -60,7 +60,7 @@ func TestFetch(t *testing.T) {
 		{
 			name: "Fetched password should work",
 			ring: func() keyring.Keyringer {
-				r, err := keyring.New(keyring.NewInMemoryKeyring())
+				r, err := keyring.New(keyring.NewInMemoryKeyring(), false)
 				assert.NoError(t, err)
 
 				return r
@@ -72,7 +72,7 @@ func TestFetch(t *testing.T) {
 		{
 			name: "Fetching non exisiting secret should return error",
 			ring: func() keyring.Keyringer {
-				r, err := keyring.New(keyring.NewInMemoryKeyring())
+				r, err := keyring.New(keyring.NewInMemoryKeyring(), false)
 				assert.NoError(t, err)
 
 				return r

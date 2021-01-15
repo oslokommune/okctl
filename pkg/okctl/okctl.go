@@ -743,7 +743,7 @@ https://www.passwordstore.org/
 %w`, err)
 	}
 
-	k, err := keyring.New(defaultRing)
+	k, err := keyring.New(defaultRing, o.Debug)
 	if err != nil {
 		return err
 	}

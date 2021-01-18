@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/logrusorgru/aurora"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -115,6 +117,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			reconciliationManager := reconciler.NewReconcilerManager(&resourcetree.CommonMetadata{
 				Ctx:       o.Ctx,
 				ClusterID: id,
+				Out:       o.Out,
 				Spin:      spin,
 			})
 
@@ -146,6 +149,15 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("error synchronizing declaration with state: %w", err)
 			}
+
+			fmt.Fprintln(o.Out, "\nYour cluster is up to date.")
+			fmt.Fprintln(o.Out,
+				fmt.Sprintf(
+					"\nTo access your cluster, run %s to activate the environment for your cluster",
+					aurora.Green(fmt.Sprintf("okctl venv %s", id.Environment)),
+				),
+			)
+			fmt.Fprintln(o.Out, fmt.Sprintf("Your cluster should then be available with %s", aurora.Green("kubectl")))
 
 			return nil
 		},

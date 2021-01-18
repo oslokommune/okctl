@@ -147,10 +147,10 @@ func (n *NameserverDelegator) hasExistingRequest(request *NameserverDelegationRe
 			break
 		}
 
-		parts := strings.Split(current.Name().String(), "/")
-		currentName := parts[len(parts)-1]
+		currentRef := current.Name().String()
+		desiredRef := fmt.Sprintf("refs/remotes/origin/%s", desiredName)
 
-		if currentName == desiredName {
+		if currentRef == desiredRef {
 			return true
 		}
 	}

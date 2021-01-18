@@ -86,6 +86,7 @@ const (
 type CommonMetadata struct {
 	Ctx       context.Context
 	ClusterID api.ID
+	Out       io.Writer
 	Spin      spinner.Spinner
 }
 

@@ -60,6 +60,8 @@ func (z *nameserverDelegationReconciler) Reconcile(node *resourcetree.ResourceNo
 			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error handling nameservers: %w", err)
 		}
 
+		fmt.Fprint(z.commonMetadata.Out, delegationRequestMessage)
+
 		waitForNameserverDelegation(nsRecordValidationIntervalSeconds, resourceState.PrimaryHostedZoneFQDN)
 
 		err = z.domainService.SetHostedZoneDelegation(z.commonMetadata.Ctx, domain.EnsureNotFQDN(record.FQDN), true)
@@ -94,3 +96,10 @@ func waitForNameserverDelegation(interval time.Duration, fqdn string) {
 		time.Sleep(interval * time.Second)
 	}
 }
+
+const delegationRequestMessage = `
+A nameserver delegation request has been submitted. We'll process this request as soon as possible.
+Let us know in #kjøremiljø-support if it takes too long
+
+
+`

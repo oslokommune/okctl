@@ -115,6 +115,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			reconciliationManager := reconciler.NewReconcilerManager(&resourcetree.CommonMetadata{
 				Ctx:       o.Ctx,
 				ClusterID: id,
+				Out:       o.Out,
 				Spin:      spin,
 			})
 

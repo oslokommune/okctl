@@ -65,7 +65,7 @@ func GetOkctlEnvironment(o *okctl.Okctl) (OkctlEnvironment, error) {
 		AWSAccountID:           cluster.AWSAccountID,
 		Environment:            cluster.Environment,
 		Repository:             meta.Name,
-		ClusterName:            cluster.Name,
+		ClusterName:            o.RepoStateWithEnv.GetClusterName(),
 		UserDataDir:            userDataDir,
 		Debug:                  o.Debug,
 		KubectlBinaryDir:       path.Dir(k.BinaryPath),

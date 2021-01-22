@@ -17,7 +17,9 @@ type certificate struct {
 func (c *certificate) DeleteCertificate(opts api.DeleteCertificateOpts) error {
 	d := cognito.NewCertDeleter(c.provider)
 
-	err := d.DeleteAuthCert(opts.Domain)
+	err := d.DeleteAuthCert(cognito.DeleteAuthCertOpts{
+		Domain: opts.Domain,
+	})
 	if err != nil {
 		return err
 	}

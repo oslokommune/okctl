@@ -1,7 +1,10 @@
 package cognito
 
 import (
+	"regexp"
 	"strings"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -12,8 +15,28 @@ type AuthCertDeleter struct {
 	usprovider v1alpha1.CloudProvider
 }
 
+// DeleteAuthCertOpts options needed to delete an auth certificate
+type DeleteAuthCertOpts struct {
+	Domain string
+}
+
+// Validate the inputs to delete an auth certificate
+func (o *DeleteAuthCertOpts) Validate() error {
+	return validation.ValidateStruct(o,
+		validation.Field(&o.Domain,
+			validation.Required,
+			validation.Match(regexp.MustCompile("^auth")).Error(
+				"Auth cert domain must start with 'auth'. It was "+o.Domain)),
+	)
+}
+
 // DeleteAuthCert delete the auth certificate that was made in us-east-1 for identitypool
-func (c *AuthCertDeleter) DeleteAuthCert(domain string) error {
+func (c *AuthCertDeleter) DeleteAuthCert(opts DeleteAuthCertOpts) error {
+	err := opts.Validate()
+	if err != nil {
+		return err
+	}
+
 	stacklist, err := c.usprovider.CloudFormation().ListStacks(&cloudformation.ListStacksInput{
 		NextToken:         nil,
 		StackStatusFilter: nil,
@@ -22,12 +45,8 @@ func (c *AuthCertDeleter) DeleteAuthCert(domain string) error {
 		return err
 	}
 
-	if domain == "" {
-		return nil
-	}
-
 	for _, stack := range stacklist.StackSummaries {
-		if strings.Contains(*stack.StackId, strings.ReplaceAll(domain, ".", "-")) {
+		if strings.Contains(*stack.StackId, strings.ReplaceAll(opts.Domain, ".", "-")) {
 			_, err := c.usprovider.CloudFormation().DeleteStack(&cloudformation.DeleteStackInput{
 				StackName: stack.StackId,
 			})

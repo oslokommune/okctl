@@ -144,3 +144,73 @@ func TestData(t *testing.T) {
 		})
 	}
 }
+
+func TestEnvironmentExists(t *testing.T) {
+	testCases := []struct {
+		name string
+
+		repo   state.Repository
+		target string
+
+		expectedResult bool
+	}{
+		{
+			name: "Should return true when specified environment exists",
+
+			repo: state.Repository{
+				Metadata: state.Metadata{
+					Name:      "okctl",
+					Region:    "eu-west-1",
+					OutputDir: "infrastructure",
+				},
+				Clusters: map[string]state.Cluster{
+					"production": {},
+					"test":       {},
+					"staging":    {},
+				},
+			},
+
+			target:         "test",
+			expectedResult: true,
+		},
+		{
+			name: "Should return false upon missing environment",
+
+			repo: state.Repository{
+				Metadata: state.Metadata{
+					Name:      "okctl",
+					Region:    "eu-west-1",
+					OutputDir: "infrastructure",
+				},
+				Clusters: map[string]state.Cluster{
+					"production": {},
+					"test":       {},
+					"staging":    {},
+				},
+			},
+
+			target:         "local",
+			expectedResult: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.repo.HasEnvironment(tc.target) != tc.expectedResult {
+				t.Errorf("expected that %s in %v would yield %v", tc.target, getEnvironments(tc.repo.Clusters), tc.expectedResult)
+			}
+		})
+	}
+}
+
+func getEnvironments(clusters map[string]state.Cluster) []string {
+	environments := make([]string, len(clusters))
+
+	for env := range clusters {
+		environments = append(environments, env)
+	}
+
+	return environments
+}

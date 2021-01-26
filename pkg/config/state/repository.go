@@ -24,6 +24,17 @@ type Repository struct {
 	Clusters map[string]Cluster
 }
 
+// HasEnvironment tests if the environment exists in this repository
+func (r Repository) HasEnvironment(environment string) (hasEnvironment bool) {
+	for cluster := range r.Clusters {
+		if cluster == environment {
+			return true
+		}
+	}
+
+	return hasEnvironment
+}
+
 // Validate the repository
 func (r Repository) Validate() error {
 	return validation.ValidateStruct(&r,

@@ -51,6 +51,9 @@ import (
 	"github.com/oslokommune/okctl/pkg/storage"
 )
 
+// ErrorEnvironmentNotFound indicates that the requested environment isn't available
+var ErrorEnvironmentNotFound = errors.New("environment not found")
+
 // Okctl stores all state required for invoking commands
 type Okctl struct {
 	*config.Config
@@ -66,6 +69,10 @@ type Okctl struct {
 // InitialiseWithOnlyEnv initialises okctl when the aws account is has been
 // set previously
 func (o *Okctl) InitialiseWithOnlyEnv(env string) error {
+	if !o.RepoState.HasEnvironment(env) {
+		return ErrorEnvironmentNotFound
+	}
+
 	repoDir, err := o.GetRepoDir()
 	if err != nil {
 		return err

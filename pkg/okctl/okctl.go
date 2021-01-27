@@ -70,7 +70,7 @@ type Okctl struct {
 // set previously
 func (o *Okctl) InitialiseWithOnlyEnv(env string) error {
 	if !o.RepoState.HasEnvironment(env) {
-		return ErrorEnvironmentNotFound
+		return fmt.Errorf("%w: %s", ErrorEnvironmentNotFound, env)
 	}
 
 	repoDir, err := o.GetRepoDir()

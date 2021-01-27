@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/pkg/errors"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -43,11 +42,14 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 			err := o.InitialiseWithOnlyEnv(environment)
 			if err != nil {
-				if errors.Is(err, okctl.ErrorEnvironmentNotFound) {
-					availableEnvironments := getEnvironments(o.RepoState.Clusters)
+				if errors.As(err, &okctl.ErrorEnvironmentNotFound{}) {
+					envError, ok := err.(okctl.ErrorEnvironmentNotFound)
+					if !ok {
+						return err
+					}
 
-					fmt.Fprintln(o.Err, "\nSeems you specified a non-existing environment")
-					fmt.Fprintln(o.Err, fmt.Sprintf("Available environments: %v\n", availableEnvironments))
+					fmt.Fprintln(o.Err, fmt.Sprintf("\nThe specified environment \"%s\" does not exist.", envError.TargetEnvironment))
+					fmt.Fprintln(o.Err, fmt.Sprintf("Available environments: %v\n", envError.AvailableEnvironments))
 				}
 
 				return err
@@ -102,14 +104,4 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	cmd.Flags().StringVarP(&opts.File, "file", "f", "", "Specify the file path. Use \"-\" for stdin")
 
 	return cmd
-}
-
-func getEnvironments(clusters map[string]state.Cluster) []string {
-	environments := make([]string, len(clusters))
-
-	for env := range clusters {
-		environments = append(environments, env)
-	}
-
-	return environments
 }

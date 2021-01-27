@@ -138,16 +138,16 @@ func WaitForDeviceAuthorization(client HTTPClient, config *Config, code *DeviceC
 		"grant_type":  {deviceGrantType},
 	}
 
-	r, err := http.NewRequest(http.MethodPost, config.Endpoint.TokenURL, strings.NewReader(form.Encode()))
-	if err != nil {
-		return nil, fmt.Errorf("failed to build access token request: %w", err)
-	}
-
-	r.Header.Add("Accept", "application/json")
-	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	r.Header.Add("Content-Length", strconv.Itoa(len(form.Encode())))
-
 	for {
+		r, err := http.NewRequest(http.MethodPost, config.Endpoint.TokenURL, strings.NewReader(form.Encode()))
+		if err != nil {
+			return nil, fmt.Errorf("failed to build access token request: %w", err)
+		}
+
+		r.Header.Add("Accept", "application/json")
+		r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+		r.Header.Add("Content-Length", strconv.Itoa(len(form.Encode())))
+
 		resp, err := client.Do(r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to poll for access token: %w", err)

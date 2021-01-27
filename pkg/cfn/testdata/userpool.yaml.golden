@@ -37,7 +37,7 @@ Resources:
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: true
         InviteMessageTemplate:
-          EmailMessage: Your username is {username} and temporary password is {####}.
+          EmailMessage: Your username is {username} and temporary password is {####}
           EmailSubject: Your temporary password for repo (env)
       AutoVerifiedAttributes:
       - email

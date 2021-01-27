@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/logrusorgru/aurora"
+
 	kaex "github.com/oslokommune/kaex/pkg/api"
 	"github.com/oslokommune/okctl/pkg/scaffold"
 
@@ -17,6 +19,7 @@ const requiredArgumentsForCreateApplicationCommand = 1
 type CreateApplicationOpts struct {
 	Environment string
 	KaexOpts    *kaex.Kaex
+	Outfile     string
 }
 
 // Validate the options for "create application"
@@ -26,6 +29,7 @@ func (o *CreateApplicationOpts) Validate() error {
 	)
 }
 
+// nolint: funlen
 func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &CreateApplicationOpts{}
 	interpolationOpts := &scaffold.InterpolationOpts{}
@@ -71,17 +75,24 @@ func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			err = scaffold.SaveTemplate(interpolatedResult)
+			err = scaffold.SaveTemplate(opts.Outfile, interpolatedResult)
 			if err != nil {
 				return err
 			}
 
 			fmt.Fprintln(o.Out, "Scaffolding successful.")
-			fmt.Fprintf(o.Out, "Edit ./application.yaml to your liking and run okctl apply application %s -f application.yaml\n", opts.Environment)
+			fmt.Fprintf(
+				o.Out,
+				"Edit %s to your liking and run %s\n",
+				opts.Outfile,
+				aurora.Green(fmt.Sprintf("okctl apply application %s -f %s\n", opts.Environment, opts.Outfile)),
+			)
 
 			return err
 		},
 	}
+
+	cmd.Flags().StringVarP(&opts.Outfile, "out", "o", "application.yaml", "specify where to output result")
 
 	return cmd
 }

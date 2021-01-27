@@ -50,7 +50,7 @@ func (p *UserPool) Resource() cloudformation.Resource {
 		AdminCreateUserConfig: &cognito.UserPool_AdminCreateUserConfig{
 			AllowAdminCreateUserOnly: true,
 			InviteMessageTemplate: &cognito.UserPool_InviteMessageTemplate{
-				EmailMessage: "Your username is {username} and temporary password is {####}.",
+				EmailMessage: "Your username is {username} and temporary password is {####}",
 				EmailSubject: fmt.Sprintf("Your temporary password for %s (%s)", p.Repository, p.Environment),
 			},
 		},

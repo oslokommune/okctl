@@ -59,11 +59,11 @@ func InterpolateTemplate(template []byte, opts *InterpolationOpts) (interpolated
 }
 
 // SaveTemplate saves a byte array as an application.yaml file in the current directory
-func SaveTemplate(template []byte) error {
+func SaveTemplate(path string, template []byte) error {
 	cwd, _ := os.Getwd()
 	templateStorage := storage.NewFileSystemStorage(cwd)
 
-	applicationFile, err := templateStorage.Create("", "application.yaml", 0o644)
+	applicationFile, err := templateStorage.Create("", path, 0o644)
 	if err != nil {
 		return fmt.Errorf("error creating application.yaml: %w", err)
 	}

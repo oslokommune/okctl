@@ -15,10 +15,10 @@ declaration to resources understood by Kubernetes and ArgoCD.
 
 ## Commands
 
-To create an application.yaml template, run the following command:
+To scaffold an application.yaml template, run the following command:
 
 ```bash
-okctl create application ENV
+okctl scaffold application ENV
 ```
 
 This creates an application declaration in ./application.yaml.
@@ -26,7 +26,7 @@ This creates an application declaration in ./application.yaml.
 After configuring the application.yaml file, you turn it into Kubernetes and ArgoCD resources by running:
 
 ```bash
-okctl apply application prod -f application.yaml
+okctl apply application ENV -f application.yaml
 ```
 
 This command will create the following files in the ./infrastructure folder:
@@ -34,7 +34,7 @@ This command will create the following files in the ./infrastructure folder:
 1. ./infrastructure/base/applications/<app-name>
     * `<app-name>.yaml` containing all the Kubernetes resources.
     * `<app-name>-application.yaml` containing the ArgoCD Application declaration.
-2. ./infrastructure/<env>/certificates/<application.url>
+2. ./infrastructure/<env>/certificates/<application.url> (if https is specified)
     * The certificate declaration for the URL specified in the application.yaml.
 
 Both files in 1. is needed by ArgoCD to deploy your application or service. Read more about ArgoCD
@@ -45,7 +45,7 @@ After that, the following manual steps remain:
 1. (optional) Create the namespace you specified in the application declaration(application.yaml), i.e.:
 `kubectl create namespace <name of namespace>`. This is only needed if the namespace you specified in the application
 declaration is not pre-existing.
-2. Commit and push the changes done by `okctl apply` to your infrastructure as code repository remote accessible for
+2. Commit and push the changes done by `okctl apply application` to your infrastructure as code repository remote accessible for
 ArgoCD.
 3. Apply the ArgoCD resource to the cluster: `kubectl apply -f ./infrastructure/base/applications/<app-name>/<app-name>-application.yaml`
 

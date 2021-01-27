@@ -66,6 +66,13 @@ type Okctl struct {
 // InitialiseWithOnlyEnv initialises okctl when the aws account is has been
 // set previously
 func (o *Okctl) InitialiseWithOnlyEnv(env string) error {
+	if !o.RepoState.HasEnvironment(env) {
+		return ErrorEnvironmentNotFound{
+			TargetEnvironment:     env,
+			AvailableEnvironments: getEnvironments(o.RepoState.Clusters),
+		}
+	}
+
 	repoDir, err := o.GetRepoDir()
 	if err != nil {
 		return err

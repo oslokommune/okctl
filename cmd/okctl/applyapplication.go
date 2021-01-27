@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -40,6 +42,16 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 			err := o.InitialiseWithOnlyEnv(environment)
 			if err != nil {
+				if errors.As(err, &okctl.ErrorEnvironmentNotFound{}) {
+					envError, ok := err.(okctl.ErrorEnvironmentNotFound)
+					if !ok {
+						return err
+					}
+
+					fmt.Fprintln(o.Err, fmt.Sprintf("\nThe specified environment \"%s\" does not exist.", envError.TargetEnvironment))
+					fmt.Fprintln(o.Err, fmt.Sprintf("Available environments: %v\n", envError.AvailableEnvironments))
+				}
+
 				return err
 			}
 

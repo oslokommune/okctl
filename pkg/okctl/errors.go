@@ -2,6 +2,7 @@ package okctl
 
 import (
 	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/config/state"
 )
 

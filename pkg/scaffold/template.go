@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
-	"github.com/oslokommune/okctl/pkg/storage"
+	"github.com/spf13/afero"
 
 	kaex "github.com/oslokommune/kaex/pkg/api"
 )
@@ -59,11 +58,8 @@ func InterpolateTemplate(template []byte, opts *InterpolationOpts) (interpolated
 }
 
 // SaveTemplate saves a byte array as an application.yaml file in the current directory
-func SaveTemplate(path string, template []byte) error {
-	cwd, _ := os.Getwd()
-	templateStorage := storage.NewFileSystemStorage(cwd)
-
-	applicationFile, err := templateStorage.Create("", path, 0o644)
+func SaveTemplate(fs *afero.Afero, path string, template []byte) error {
+	applicationFile, err := fs.Create(path)
 	if err != nil {
 		return fmt.Errorf("error creating application.yaml: %w", err)
 	}

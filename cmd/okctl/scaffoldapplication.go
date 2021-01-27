@@ -75,7 +75,7 @@ func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			err = scaffold.SaveTemplate(opts.Outfile, interpolatedResult)
+			err = scaffold.SaveTemplate(o.FileSystem, opts.Outfile, interpolatedResult)
 			if err != nil {
 				return err
 			}

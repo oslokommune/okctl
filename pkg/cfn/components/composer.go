@@ -263,7 +263,7 @@ func (e *ExternalSecretsPolicyComposer) Compose() (*cfn.Composition, error) {
 // ManagedPolicy returns a managed policy
 func (e *ExternalSecretsPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
 	policyName := fmt.Sprintf("okctl-%s-%s-ExternalSecretsServiceAccountPolicy", e.Repository, e.Environment)
-	policyDesc := "Service account policy for reading SSM parameters"
+	policyDesc := "Service account policy for reading SSM parameters and ASM secrets"
 
 	d := &policydocument.PolicyDocument{
 		Version: policydocument.Version,
@@ -271,9 +271,11 @@ func (e *ExternalSecretsPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPo
 			{
 				Effect: policydocument.EffectTypeAllow,
 				Action: []string{
+					"secretsmanager:GetSecretValue",
 					"ssm:GetParameter",
 				},
 				Resource: []string{
+					asmParameterARN("*"),
 					ssmParameterARN("*"),
 				},
 			},
@@ -289,6 +291,20 @@ func ssmParameterARN(resource string) string {
 	return cloudformation.Sub(
 		fmt.Sprintf(
 			"arn:aws:ssm:${%s}:${%s}:parameter/%s",
+			policydocument.PseudoParamRegion,
+			policydocument.PseudoParamAccountID,
+			resource,
+		),
+	)
+}
+
+// asmParameterARN returns a valid resource ASM
+// parameter ARN
+// arn:aws:secretsmanager:eu-west-1:932360772598:secret:*
+func asmParameterARN(resource string) string {
+	return cloudformation.Sub(
+		fmt.Sprintf(
+			"arn:aws:secretsmanager:${%s}:${%s}:secret:%s",
 			policydocument.PseudoParamRegion,
 			policydocument.PseudoParamAccountID,
 			resource,

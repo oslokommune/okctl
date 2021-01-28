@@ -6,14 +6,16 @@ Outputs:
 Resources:
   ExternalSecretsPolicy:
     Properties:
-      Description: Service account policy for reading SSM parameters
+      Description: Service account policy for reading SSM parameters and ASM secrets
       ManagedPolicyName: okctl-repo-test-ExternalSecretsServiceAccountPolicy
       PolicyDocument:
         Statement:
         - Action:
+          - secretsmanager:GetSecretValue
           - ssm:GetParameter
           Effect: Allow
           Resource:
+          - Fn::Sub: arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*
           - Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*
         Version: 2012-10-17
     Type: AWS::IAM::ManagedPolicy

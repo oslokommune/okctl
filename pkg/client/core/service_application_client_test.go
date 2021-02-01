@@ -5,7 +5,6 @@ import (
 	"context"
 	"io/ioutil"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
@@ -110,10 +109,8 @@ func TestNewApplicationService(t *testing.T) {
 	assert.NilError(t, err)
 
 	g := goldie.New(t)
-
-	// Stripping due to abnormalities in \n usage between local and CI
-	g.Assert(t, "my-app.yaml", strip(k8sResourcesAsBytes))
-	g.Assert(t, "my-app-application.yaml", strip(argocdResourcesAsBytes))
+	g.Assert(t, "my-app.yaml", k8sResourcesAsBytes)
+	g.Assert(t, "my-app-application.yaml", argocdResourcesAsBytes)
 }
 
 type mockCertService struct{}
@@ -132,12 +129,4 @@ func (m mockAppReporter) ReportCreateApplication(_ *client.ScaffoldedApplication
 
 func (m mockAppReporter) ReportDeleteApplication(_ []*store.Report) error {
 	return nil
-}
-
-func strip(item []byte) []byte {
-	asString := string(item)
-
-	strippedString := strings.ReplaceAll(asString, "\n", "")
-
-	return []byte(strippedString)
 }

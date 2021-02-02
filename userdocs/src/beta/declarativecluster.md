@@ -3,6 +3,7 @@ Some people enjoy a lengthy CLI wizard. Others prefer to declare their resources
 Introducing declarative cluster.
 
 To create a cluster using the declarative approach:
+
 1. Create a declaration and edit it to suit your needs
 2. Apply the declaration
 
@@ -37,8 +38,13 @@ apply it as many times as you need.
 
 ## Usage
 
-When running `okctl scaffold cluster utviklerportalen production > cluster.yaml` you'll end up with a file looking like
-this:
+When running 
+
+```bash
+okctl scaffold cluster utviklerportalen production > cluster.yaml
+``` 
+
+you'll end up with a file looking like this:
 
 ```yaml
 apiVersion: okctl.io/v1alpha1
@@ -104,3 +110,5 @@ okctl apply cluster -f cluster.yaml
 ```
 
 to have okctl generate a cluster based on the declaration.
+
+That's it. Sit back and enjoy or go do something else while `okctl` do its thing.

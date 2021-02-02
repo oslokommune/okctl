@@ -111,4 +111,4 @@ okctl apply cluster -f cluster.yaml
 
 to have okctl generate a cluster based on the declaration.
 
-That's it. Sit back and enjoy or go do something else while `okctl` do its thing.
+That's it. Sit back and enjoy or go do something else while `okctl` does its thing.

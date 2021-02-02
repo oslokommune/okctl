@@ -17,6 +17,8 @@ nav:
   - Usage:
       - usage/applicationyaml.md
       - usage/venv.md
+  - Beta:
+      - 'Declarative Cluster': beta/declarativecluster.md
   - Users:
       - usage/adduser.md
   - About:

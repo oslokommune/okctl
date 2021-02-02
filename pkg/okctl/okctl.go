@@ -721,6 +721,7 @@ func (o *Okctl) newCloudProvider() error {
 }
 
 // newCredentialsProvider knows how to load credentials
+// nolint: funlen
 func (o *Okctl) newCredentialsProvider() error {
 	if o.NoInput {
 		return errors.E(errors.Errorf("we only support retrieving credentials interactively for now"), errors.Invalid)
@@ -762,7 +763,9 @@ https://www.passwordstore.org/
 		_ = k.Store(keyring.KeyTypeUserPassword, password)
 	}
 
-	saml := aws.NewAuthSAML(
+	envRetriever := aws.NewAuthEnvironment(o.RepoStateWithEnv.GetMetadata().Region)
+
+	samlRetriever := aws.NewAuthSAML(
 		o.RepoStateWithEnv.GetCluster().AWSAccountID,
 		o.RepoStateWithEnv.GetMetadata().Region,
 		scrape.New(),
@@ -778,7 +781,7 @@ https://www.passwordstore.org/
 		github.NewAuthDeviceFlow(github.DefaultGithubOauthClientID, github.RequiredScopes()),
 	)
 
-	o.CredentialsProvider = credentials.New(aws.New(authStore, saml), gh)
+	o.CredentialsProvider = credentials.New(aws.New(authStore, envRetriever, samlRetriever), gh)
 
 	return nil
 }

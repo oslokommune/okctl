@@ -77,7 +77,7 @@ func TestNewApplicationService(t *testing.T) {
 		mockAppReporter{},
 	)
 
-	err := service.ScaffoldApplication(context.TODO(), &client.ScaffoldApplicationOpts{
+	err := service.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
 		In:                  testInputBuffer,
 		Out:                 testOutputBuffer,
 		ApplicationFilePath: "-",

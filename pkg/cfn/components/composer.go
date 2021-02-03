@@ -128,6 +128,7 @@ func (v *VPCComposer) Compose() (*cfn.Composition, error) {
 	dsg := dbsubnetgroup.New(dbSubnets)
 
 	composition.Resources = append(composition.Resources, dsg)
+	composition.Outputs = append(composition.Outputs, dsg)
 
 	return composition, nil
 }
@@ -225,6 +226,7 @@ func (v *MinimalVPCComposer) Compose() (*cfn.Composition, error) {
 	dsg := dbsubnetgroup.New(dbSubnets)
 
 	composition.Resources = append(composition.Resources, dsg)
+	composition.Outputs = append(composition.Outputs, dsg)
 
 	return composition, nil
 }

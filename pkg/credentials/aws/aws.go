@@ -4,7 +4,6 @@ package aws
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"path"
 	"regexp"
 	"strings"
@@ -202,38 +201,20 @@ func NewAuthStatic(creds *Credentials) *AuthStatic {
 	}
 }
 
-// AuthEnvironment returns credentials extracted from environment variables
-type AuthEnvironment struct {
-	Credentials *Credentials
-	IsValid     bool
-}
-
-// Invalidate the authenticator
-func (a *AuthEnvironment) Invalidate() {
-	a.IsValid = false
-}
-
-// Valid returns true if the authenticator is valid
-func (a *AuthEnvironment) Valid() bool {
-	return a.IsValid
-}
-
-// Retrieve returns the stored credentials
-func (a AuthEnvironment) Retrieve() (*Credentials, error) {
-	return a.Credentials, nil
-}
+// KeyGetter defines an interface for retrieving string values based on a key
+type KeyGetter func(key string) (value string)
 
 // NewAuthEnvironment creates a retriever that fetches credentials from
 // environment variables
-func NewAuthEnvironment(region string) Retriever {
+func NewAuthEnvironment(region string, getter KeyGetter) Retriever {
 	credentials := &Credentials{
-		AccessKeyID:     os.Getenv("AWS_ACCESS_KEY_ID"),
-		SecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		AccessKeyID:     getter("AWS_ACCESS_KEY_ID"),
+		SecretAccessKey: getter("AWS_SECRET_ACCESS_KEY"),
 		Region:          region,
 		Expires:         time.Now().Add(defaultServiceUserCredentialsDuration),
 	}
 
-	return &AuthEnvironment{
+	return &AuthStatic{
 		Credentials: credentials,
 		IsValid:     credentials.AccessKeyID != "" && credentials.SecretAccessKey != "",
 	}

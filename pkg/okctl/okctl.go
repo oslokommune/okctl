@@ -763,7 +763,7 @@ https://www.passwordstore.org/
 		_ = k.Store(keyring.KeyTypeUserPassword, password)
 	}
 
-	envRetriever := aws.NewAuthEnvironment(o.RepoStateWithEnv.GetMetadata().Region)
+	envRetriever := aws.NewAuthEnvironment(o.RepoStateWithEnv.GetMetadata().Region, os.Getenv)
 
 	samlRetriever := aws.NewAuthSAML(
 		o.RepoStateWithEnv.GetCluster().AWSAccountID,

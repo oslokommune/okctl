@@ -27,7 +27,8 @@ func (j *Joined) NamedOutputs() map[string]map[string]interface{} {
 // Outputs returns the outputs only
 func (j *Joined) Outputs() map[string]interface{} {
 	return map[string]interface{}{
-		"Value": cloudformation.Join(",", j.Values),
+		"Value":  cloudformation.Join(",", j.Values),
+		"Export": cloudformation.Sub(fmt.Sprintf("${AWS::StackName}-%s", j.Name())),
 	}
 }
 
@@ -72,7 +73,8 @@ func (v *Value) NamedOutputs() map[string]map[string]interface{} {
 // Outputs returns only the cloud formation outputs
 func (v *Value) Outputs() map[string]interface{} {
 	return map[string]interface{}{
-		"Value": v.Value,
+		"Value":  v.Value,
+		"Export": cloudformation.Sub(fmt.Sprintf("${AWS::StackName}-%s", v.Name())),
 	}
 }
 

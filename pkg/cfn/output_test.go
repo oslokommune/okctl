@@ -124,7 +124,8 @@ func TestOutput(t *testing.T) {
 			outputer: cfn.NewJoined("JoinedTest").Add("value"),
 			expect: map[string]map[string]interface{}{
 				"JoinedTest": {
-					"Value": base64.StdEncoding.EncodeToString([]byte("{ \"Fn::Join\": [ \",\", [ \"value\" ] ] }")),
+					"Value":  base64.StdEncoding.EncodeToString([]byte("{ \"Fn::Join\": [ \",\", [ \"value\" ] ] }")),
+					"Export": "eyAiRm46OlN1YiIgOiAiJHtBV1M6OlN0YWNrTmFtZX0tSm9pbmVkVGVzdCIgfQ==",
 				},
 			},
 		},
@@ -133,7 +134,8 @@ func TestOutput(t *testing.T) {
 			outputer: cfn.NewValue("ValueTest", "value"),
 			expect: map[string]map[string]interface{}{
 				"ValueTest": {
-					"Value": "value",
+					"Value":  "value",
+					"Export": "eyAiRm46OlN1YiIgOiAiJHtBV1M6OlN0YWNrTmFtZX0tVmFsdWVUZXN0IiB9",
 				},
 			},
 		},
@@ -142,10 +144,12 @@ func TestOutput(t *testing.T) {
 			outputer: cfn.NewValueMap().Add(cfn.NewValue("Something", "v1")).Add(cfn.NewValue("Else", "v2")),
 			expect: map[string]map[string]interface{}{
 				"Something": {
-					"Value": "v1",
+					"Value":  "v1",
+					"Export": "eyAiRm46OlN1YiIgOiAiJHtBV1M6OlN0YWNrTmFtZX0tU29tZXRoaW5nIiB9",
 				},
 				"Else": {
-					"Value": "v2",
+					"Value":  "v2",
+					"Export": "eyAiRm46OlN1YiIgOiAiJHtBV1M6OlN0YWNrTmFtZX0tRWxzZSIgfQ==",
 				},
 			},
 		},

@@ -37,7 +37,6 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/gofrs/flock v0.8.0
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
-	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/google/go-cmp v0.5.4
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/uuid v1.1.2
@@ -48,7 +47,7 @@ require (
 	github.com/hinshun/vt10x v0.0.0-20180616224451-1954e6464174
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
-	github.com/jarcoal/httpmock v1.0.6
+	github.com/jarcoal/httpmock v1.0.8
 	github.com/jmoiron/sqlx v1.2.1-0.20190826204134-d7d95172beb5 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 // indirect
@@ -57,7 +56,7 @@ require (
 	github.com/logrusorgru/aurora/v3 v3.0.0
 	github.com/magiconair/properties v1.8.2 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
-	github.com/miekg/dns v1.1.35
+	github.com/miekg/dns v1.1.38
 	github.com/mishudark/errors v0.0.0-20190221111348-b16f7e94bb58
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
@@ -99,7 +98,7 @@ require (
 	gotest.tools v2.2.0+incompatible
 	helm.sh/helm/v3 v3.4.0
 	k8s.io/api v0.19.2
-	k8s.io/apimachinery v0.19.2
+	k8s.io/apimachinery v0.20.2
 	k8s.io/cli-runtime v0.19.2
 	k8s.io/client-go v0.19.2
 	k8s.io/utils v0.0.0-20200821003339-5e75c0163111 // indirect

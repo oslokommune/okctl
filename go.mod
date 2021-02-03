@@ -14,7 +14,7 @@ require (
 	github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d // indirect
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
 	github.com/apparentlymart/go-cidr v1.1.0
-	github.com/aws/aws-sdk-go v1.34.10
+	github.com/aws/aws-sdk-go v1.37.2
 	github.com/awslabs/goformation/v4 v4.13.1
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
@@ -38,7 +38,6 @@ require (
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/google/go-cmp v0.5.2
 	github.com/google/go-github/v32 v32.1.0
-	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/handlers v1.4.2 // indirect
 	github.com/gosimple/slug v1.9.0
@@ -87,7 +86,6 @@ require (
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	gopkg.in/h2non/gock.v1 v1.0.15
 	gopkg.in/ini.v1 v1.62.0

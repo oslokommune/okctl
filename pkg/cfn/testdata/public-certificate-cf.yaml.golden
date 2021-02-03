@@ -1,6 +1,8 @@
 AWSTemplateFormatVersion: 2010-09-09
 Outputs:
   PublicCertificate:
+    Export:
+      Fn::Sub: ${AWS::StackName}-PublicCertificate
     Value:
       Ref: PublicCertificate
 Resources:

@@ -68,7 +68,7 @@ require (
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
-	github.com/rancher/k3d/v3 v3.2.0
+	github.com/rancher/k3d/v3 v3.4.0
 	github.com/rogpeppe/go-internal v1.6.1 // indirect
 	github.com/sanity-io/litter v1.4.0
 	github.com/sebdah/goldie/v2 v2.5.3

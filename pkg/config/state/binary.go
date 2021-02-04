@@ -14,7 +14,7 @@ func AWSIamAuthenticatorKnownBinaries() []Binary {
 	return []Binary{
 		{
 			Name:       "aws-iam-authenticator",
-			Version:    "0.5.1",
+			Version:    "0.5.2",
 			BufferSize: "100mb",
 			URLPattern: "https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v#{ver}/aws-iam-authenticator_#{ver}_#{os}_#{arch}",
 			Checksums: []Checksum{
@@ -22,13 +22,13 @@ func AWSIamAuthenticatorKnownBinaries() []Binary {
 					Os:     "darwin",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "e6050faee00732d1da88e4ba9910bcb03f0fc40eaf192e39dd55dfdf6cf6f681",
+					Digest: "f418c52d90947e56c9d9b01d3f32bbe52a0ba5ec02b65fc1ca9b85bff1652c2b",
 				},
 				{
 					Os:     "linux",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "afb16f35071c977554f1097cbb84ca4f38f9ce42142c8a0612716ae66bb9fdb9",
+					Digest: "5bbe44ad7f6dd87a02e0b463a2aed9611836eb2f40d7fbe8c517460a4385621b",
 				},
 			},
 		},
@@ -40,7 +40,7 @@ func EksctlKnownBinaries() []Binary {
 	return []Binary{
 		{
 			Name:       "eksctl",
-			Version:    "0.25.0",
+			Version:    "0.37.0",
 			BufferSize: "100mb",
 			URLPattern: "https://github.com/weaveworks/eksctl/releases/download/#{ver}/eksctl_#{os}_#{arch}.tar.gz",
 			Archive: Archive{
@@ -52,13 +52,13 @@ func EksctlKnownBinaries() []Binary {
 					Os:     "darwin",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "e232f48e4995f711620ea34c09f582b097e5b006f45fbe82a11fc8955636c9c4",
+					Digest: "e63349d961a5f9c7f13690b1915b8c6bd345d552673dae18b360d2a4b63cf5a8",
 				},
 				{
 					Os:     "linux",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "e94e4ec335c036d8f511ea214d5a55dfd097e2053747d7d04d6db49fff107531",
+					Digest: "4ef5775f237fd9c5ea3f3984e9a1bd9e7fe1b8106634665b27153eb58c245437",
 				},
 			},
 		},
@@ -70,21 +70,21 @@ func KubectlKnownBinaries() []Binary {
 	return []Binary{
 		{
 			Name:       "kubectl",
-			Version:    "1.16.8",
+			Version:    "1.18.9",
 			BufferSize: "100mb",
-			URLPattern: "https://amazon-eks.s3.us-west-2.amazonaws.com/#{ver}/2020-04-16/bin/#{os}/#{arch}/kubectl",
+			URLPattern: "https://amazon-eks.s3.us-west-2.amazonaws.com/#{ver}/2020-11-02/bin/#{os}/#{arch}/kubectl",
 			Checksums: []Checksum{
 				{
 					Os:     "darwin",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "6e8439099c5a7d8d2f8f550f2f04301f9b0bb229a5f7c56477743a2cd11de2aa",
+					Digest: "f3f3919bf94d7b7f2014e2e9b318f049f4de378aed62833d609d211cf416935b",
 				},
 				{
 					Os:     "linux",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "e29544e1334f68e81546b8c8774c2484cbf82e8e5723d2a7e654f8a8fd79a7b2",
+					Digest: "3dbe69e6deb35fbd6fec95b13d20ac1527544867ae56e3dae17e8c4d638b25b9",
 				},
 			},
 		},

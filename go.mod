@@ -4,12 +4,11 @@ go 1.14
 
 replace github.com/docker/distribution => github.com/docker/distribution v2.7.1-0.20190205005809-0d3efadf0154+incompatible // indirect
 
-replace golang.org/x/sys => golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6
-
 require (
 	github.com/99designs/keyring v1.1.6
 	github.com/AlecAivazis/survey/v2 v2.2.7
 	github.com/Microsoft/go-winio v0.4.16 // indirect
+	github.com/Microsoft/hcsshim v0.8.14 // indirect
 	github.com/Netflix/go-expect v0.0.0-20180615182759-c93bf25de8e8
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d // indirect
@@ -22,8 +21,15 @@ require (
 	github.com/bshuster-repo/logrus-logstash-hook v1.0.0 // indirect
 	github.com/bugsnag/bugsnag-go v1.5.3 // indirect
 	github.com/bugsnag/panicwrap v1.2.0 // indirect
+	github.com/containerd/cgroups v0.0.0-20210114181951-8a68de567b68 // indirect
 	github.com/containerd/containerd v1.4.3
+	github.com/containerd/continuity v0.0.0-20201208142359-180525291bb7 // indirect
+	github.com/containerd/fifo v0.0.0-20210129194248-f8e8fdba47ef // indirect
+	github.com/containerd/ttrpc v1.0.2 // indirect
+	github.com/containerd/typeurl v1.0.1 // indirect
+	github.com/docker/cli v20.10.3+incompatible // indirect
 	github.com/docker/distribution v2.7.1+incompatible
+	github.com/docker/docker v20.10.3+incompatible // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.9.0 // indirect
@@ -37,6 +43,7 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/gofrs/flock v0.8.0
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
+	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/google/go-cmp v0.5.4
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/uuid v1.2.0
@@ -60,13 +67,15 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
+	github.com/moby/sys/mount v0.2.0 // indirect
 	github.com/onsi/ginkgo v1.13.0 // indirect
+	github.com/opencontainers/selinux v1.8.0 // indirect
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/oslokommune/kaex v0.1.7
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
-	github.com/rancher/k3d/v3 v3.2.0
+	github.com/rancher/k3d/v3 v3.4.0
 	github.com/rogpeppe/go-internal v1.6.1 // indirect
 	github.com/sanity-io/litter v1.4.0
 	github.com/sebdah/goldie/v2 v2.5.3
@@ -79,16 +88,21 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.7.0
+	github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635 // indirect
 	github.com/theckman/yacspin v0.8.0
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	github.com/yvasiyarov/go-metrics v0.0.0-20150112132944-c25f46c4b940 // indirect
 	github.com/yvasiyarov/gorelic v0.0.7 // indirect
 	github.com/yvasiyarov/newrelic_platform_go v0.0.0-20160601141957-9c099fbc30e9 // indirect
-	go.opencensus.io v0.22.4 // indirect
+	go.opencensus.io v0.22.6 // indirect
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
-	google.golang.org/appengine v1.6.6 // indirect
+	golang.org/x/oauth2 v0.0.0-20210201163806-010130855d6c
+	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a // indirect
+	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
+	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
+	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/genproto v0.0.0-20210204154452-deb828366460 // indirect
+	google.golang.org/grpc v1.35.0 // indirect
 	gopkg.in/h2non/gock.v1 v1.0.16
 	gopkg.in/ini.v1 v1.62.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
@@ -96,9 +110,10 @@ require (
 	gotest.tools v2.2.0+incompatible
 	helm.sh/helm/v3 v3.5.1
 	k8s.io/api v0.20.1
-	k8s.io/apimachinery v0.20.1
+	k8s.io/apimachinery v0.20.2
 	k8s.io/cli-runtime v0.20.1
 	k8s.io/client-go v0.20.1
+	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009 // indirect
 	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/yaml v1.2.0
 )

@@ -218,7 +218,7 @@ func (k *KubernetesCluster) Create(timeout time.Duration) error {
 			serverNode,
 		},
 		InitNode:          serverNode,
-		ExternalDatastore: k3d.ExternalDatastore{},
+		ExternalDatastore: &k3d.ExternalDatastore{},
 		CreateClusterOpts: createClusterOpts,
 		ExposeAPI: k3d.ExposeAPI{
 			Host:   k3d.DefaultAPIHost,

@@ -29,3 +29,4 @@ users:
         value: eu-west-1
       - name: AWS_PROFILE
         value: default
+      provideClusterInfo: false

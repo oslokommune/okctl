@@ -2,7 +2,8 @@ AWSTemplateFormatVersion: 2010-09-09
 Outputs:
   ExternalSecretsPolicy:
     Export:
-      Fn::Sub: ${AWS::StackName}-ExternalSecretsPolicy
+      Name:
+        Fn::Sub: ${AWS::StackName}-ExternalSecretsPolicy
     Value:
       Ref: ExternalSecretsPolicy
 Resources:

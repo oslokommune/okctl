@@ -14,6 +14,11 @@ type DBSubnetGroup struct {
 	Subnets    []cfn.Referencer
 }
 
+// NamedOutputs returns the named outputs
+func (g *DBSubnetGroup) NamedOutputs() map[string]map[string]interface{} {
+	return cfn.NewValue("DatabaseSubnetGroupName", g.Ref()).NamedOutputs()
+}
+
 // Resource returns the cloud formation resource for a dbsubnetgroup
 func (g *DBSubnetGroup) Resource() cloudformation.Resource {
 	subnets := make([]string, len(g.Subnets))

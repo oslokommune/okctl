@@ -1,6 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 Outputs:
   AlbIngressControllerPolicy:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-AlbIngressControllerPolicy
     Value:
       Ref: AlbIngressControllerPolicy
 Resources:

@@ -1,6 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 Outputs:
   argocdClientID:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-argocdClientID
     Value:
       Ref: UserPoolClientargocd
 Resources:

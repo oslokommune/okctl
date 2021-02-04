@@ -1,6 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 Outputs:
   ExternalDNSPolicy:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-ExternalDNSPolicy
     Value:
       Ref: ExternalDNSPolicy
 Resources:

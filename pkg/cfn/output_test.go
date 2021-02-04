@@ -125,6 +125,9 @@ func TestOutput(t *testing.T) {
 			expect: map[string]map[string]interface{}{
 				"JoinedTest": {
 					"Value": base64.StdEncoding.EncodeToString([]byte("{ \"Fn::Join\": [ \",\", [ \"value\" ] ] }")),
+					"Export": map[string]string{
+						"Name": "eyAiRm46OlN1YiIgOiAiJHtBV1M6OlN0YWNrTmFtZX0tSm9pbmVkVGVzdCIgfQ==",
+					},
 				},
 			},
 		},
@@ -134,6 +137,9 @@ func TestOutput(t *testing.T) {
 			expect: map[string]map[string]interface{}{
 				"ValueTest": {
 					"Value": "value",
+					"Export": map[string]string{
+						"Name": "eyAiRm46OlN1YiIgOiAiJHtBV1M6OlN0YWNrTmFtZX0tVmFsdWVUZXN0IiB9",
+					},
 				},
 			},
 		},
@@ -143,9 +149,15 @@ func TestOutput(t *testing.T) {
 			expect: map[string]map[string]interface{}{
 				"Something": {
 					"Value": "v1",
+					"Export": map[string]string{
+						"Name": "eyAiRm46OlN1YiIgOiAiJHtBV1M6OlN0YWNrTmFtZX0tU29tZXRoaW5nIiB9",
+					},
 				},
 				"Else": {
 					"Value": "v2",
+					"Export": map[string]string{
+						"Name": "eyAiRm46OlN1YiIgOiAiJHtBV1M6OlN0YWNrTmFtZX0tRWxzZSIgfQ==",
+					},
 				},
 			},
 		},

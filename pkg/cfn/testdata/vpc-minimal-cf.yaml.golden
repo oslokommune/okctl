@@ -1,6 +1,15 @@
 AWSTemplateFormatVersion: 2010-09-09
 Outputs:
+  DatabaseSubnetGroupName:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DatabaseSubnetGroupName
+    Value:
+      Ref: DatabaseSubnetGroup
   PrivateSubnetIds:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-PrivateSubnetIds
     Value:
       Fn::Join:
       - ','
@@ -8,6 +17,9 @@ Outputs:
         - Ref: PrivateSubnet01
         - Ref: PrivateSubnet02
   PublicSubnetIds:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-PublicSubnetIds
     Value:
       Fn::Join:
       - ','
@@ -15,6 +27,9 @@ Outputs:
         - Ref: PublicSubnet01
         - Ref: PublicSubnet02
   Vpc:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-Vpc
     Value:
       Ref: Vpc
 Resources:

@@ -28,6 +28,9 @@ func (j *Joined) NamedOutputs() map[string]map[string]interface{} {
 func (j *Joined) Outputs() map[string]interface{} {
 	return map[string]interface{}{
 		"Value": cloudformation.Join(",", j.Values),
+		"Export": map[string]string{
+			"Name": cloudformation.Sub(fmt.Sprintf("${AWS::StackName}-%s", j.Name())),
+		},
 	}
 }
 
@@ -73,6 +76,9 @@ func (v *Value) NamedOutputs() map[string]map[string]interface{} {
 func (v *Value) Outputs() map[string]interface{} {
 	return map[string]interface{}{
 		"Value": v.Value,
+		"Export": map[string]string{
+			"Name": cloudformation.Sub(fmt.Sprintf("${AWS::StackName}-%s", v.Name())),
+		},
 	}
 }
 

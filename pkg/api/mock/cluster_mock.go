@@ -21,6 +21,8 @@ const (
 	DefaultCidr = "192.168.0.0/20"
 	// DefaultRegion is a default aws region used in mocks
 	DefaultRegion = "eu-west-1"
+	// DefaultVersion is the default EKS kubernetes version
+	DefaultVersion = "1.18"
 	// DefaultAvailabilityZone is a default aws availability zone used in mocks
 	DefaultAvailabilityZone = "eu-west-1a"
 	// DefaultRepositoryName is a default git repo name used in mocks
@@ -106,6 +108,7 @@ func DefaultClusterCreateOpts() api.ClusterCreateOpts {
 	return api.ClusterCreateOpts{
 		ID:                DefaultID(),
 		Cidr:              DefaultCidr,
+		Version:           DefaultVersion,
 		VpcID:             DefaultVpcID,
 		VpcPrivateSubnets: DefaultVpcPrivateSubnets(),
 		VpcPublicSubnets:  DefaultVpcPublicSubnets(),
@@ -162,6 +165,7 @@ func DefaultClusterConfig() *v1alpha5.ClusterConfig {
 		PrivateSubnets:         DefaultVpcPrivateSubnets(),
 		PublicSubnets:          DefaultVpcPublicSubnets(),
 		Region:                 DefaultRegion,
+		Version:                DefaultVersion,
 		VpcCidr:                DefaultCidr,
 		VpcID:                  DefaultVpcID,
 	})

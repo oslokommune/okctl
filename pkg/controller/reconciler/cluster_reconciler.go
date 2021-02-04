@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/config"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
@@ -38,6 +40,7 @@ func (z *clusterReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconci
 		_, err := z.client.CreateCluster(z.commonMetadata.Ctx, api.ClusterCreateOpts{
 			ID:                z.commonMetadata.ClusterID,
 			Cidr:              resourceState.VPC.Cidr,
+			Version:           config.DefaultEKSKubernetesVersion, // This needs to be fixed.
 			VpcID:             resourceState.VPC.VpcID,
 			VpcPrivateSubnets: resourceState.VPC.PrivateSubnets,
 			VpcPublicSubnets:  resourceState.VPC.PublicSubnets,

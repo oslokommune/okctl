@@ -347,9 +347,11 @@ and database subnets.`,
 			_, err = services.Cluster.CreateCluster(o.Ctx, api.ClusterCreateOpts{
 				ID:                id,
 				Cidr:              vpc.Cidr,
+				Version:           config.DefaultEKSKubernetesVersion,
 				VpcID:             vpc.VpcID,
 				VpcPrivateSubnets: vpc.PrivateSubnets,
 				VpcPublicSubnets:  vpc.PublicSubnets,
+				Minimal:           false,
 			})
 			if err != nil {
 				return formatErr(err)

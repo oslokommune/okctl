@@ -26,6 +26,7 @@ func TestNew(t *testing.T) {
 				PrivateSubnets:         mock.DefaultVpcPrivateSubnets(),
 				PublicSubnets:          mock.DefaultVpcPublicSubnets(),
 				Region:                 mock.DefaultRegion,
+				Version:                mock.DefaultVersion,
 				VpcCidr:                mock.DefaultCidr,
 				VpcID:                  mock.DefaultVpcID,
 			},
@@ -35,7 +36,7 @@ func TestNew(t *testing.T) {
 			name:      "Invalid cluster config",
 			args:      &clusterconfig.Args{},
 			expectErr: true,
-			err:       "ClusterName: cannot be blank; PermissionsBoundaryARN: cannot be blank; PrivateSubnets: cannot be blank; PublicSubnets: cannot be blank; Region: cannot be blank; VpcCidr: cannot be blank; VpcID: cannot be blank.", // nolint: lll
+			err:       "ClusterName: cannot be blank; PermissionsBoundaryARN: cannot be blank; PrivateSubnets: cannot be blank; PublicSubnets: cannot be blank; Region: cannot be blank; Version: cannot be blank; VpcCidr: cannot be blank; VpcID: cannot be blank.", // nolint: lll
 		},
 	}
 
@@ -254,6 +255,7 @@ func TestNewMinimal(t *testing.T) {
 				PrivateSubnets:         mock.DefaultVpcPrivateSubnets(),
 				PublicSubnets:          mock.DefaultVpcPublicSubnets(),
 				Region:                 mock.DefaultRegion,
+				Version:                mock.DefaultVersion,
 				VpcCidr:                mock.DefaultCidr,
 				VpcID:                  mock.DefaultVpcID,
 			},
@@ -263,7 +265,7 @@ func TestNewMinimal(t *testing.T) {
 			name:      "Invalid cluster config",
 			args:      &clusterconfig.MinimalArgs{},
 			expectErr: true,
-			err:       "ClusterName: cannot be blank; PermissionsBoundaryARN: cannot be blank; PrivateSubnets: cannot be blank; PublicSubnets: cannot be blank; Region: cannot be blank; VpcCidr: cannot be blank; VpcID: cannot be blank.", // nolint: lll
+			err:       "ClusterName: cannot be blank; PermissionsBoundaryARN: cannot be blank; PrivateSubnets: cannot be blank; PublicSubnets: cannot be blank; Region: cannot be blank; Version: cannot be blank; VpcCidr: cannot be blank; VpcID: cannot be blank.", // nolint: lll
 		},
 	}
 

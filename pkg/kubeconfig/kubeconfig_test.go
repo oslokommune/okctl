@@ -25,6 +25,7 @@ func testConfig(t *testing.T) *v1alpha5.ClusterConfig {
 		PrivateSubnets:         mock.DefaultVpcPrivateSubnets(),
 		PublicSubnets:          mock.DefaultVpcPublicSubnets(),
 		Region:                 "eu-west-1",
+		Version:                mock.DefaultVersion,
 		VpcCidr:                mock.DefaultCidr,
 		VpcID:                  mock.DefaultVpcID,
 	})

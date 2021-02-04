@@ -19,6 +19,7 @@ type Cluster struct {
 type ClusterCreateOpts struct {
 	ID                ID
 	Cidr              string
+	Version           string
 	VpcID             string
 	VpcPrivateSubnets []VpcSubnet
 	VpcPublicSubnets  []VpcSubnet
@@ -30,6 +31,7 @@ func (o *ClusterCreateOpts) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.Cidr, validation.Required),
+		validation.Field(&o.Version, validation.Required),
 		validation.Field(&o.VpcID, validation.Required),
 		validation.Field(&o.VpcPrivateSubnets, validation.Required),
 		validation.Field(&o.VpcPublicSubnets, validation.Required),

@@ -22,7 +22,7 @@ require (
 	github.com/bshuster-repo/logrus-logstash-hook v1.0.0 // indirect
 	github.com/bugsnag/bugsnag-go v1.5.3 // indirect
 	github.com/bugsnag/panicwrap v1.2.0 // indirect
-	github.com/containerd/containerd v1.4.1
+	github.com/containerd/containerd v1.4.3
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
@@ -70,7 +70,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rancher/k3d/v3 v3.2.0
 	github.com/rogpeppe/go-internal v1.6.1 // indirect
-	github.com/sanity-io/litter v1.3.0
+	github.com/sanity-io/litter v1.4.0
 	github.com/sebdah/goldie/v2 v2.5.3
 	github.com/sirupsen/logrus v1.7.0
 	github.com/smartystreets/assertions v1.0.0 // indirect

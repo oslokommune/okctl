@@ -57,7 +57,7 @@ kubectl describe secret postgres-config --namespace {your-namespace}
 ```
 
 If you have a postgres `Deployment`, add the following `env` configuration to let your pods get the `POSTGRES_PASSWORD`
-environment variable set on startup:
+environment variable set on startup (the deployment needs to be in the same namespace as the secret):
 
 ```yaml
 spec:

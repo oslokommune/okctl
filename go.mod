@@ -70,7 +70,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rancher/k3d/v3 v3.2.0
 	github.com/rogpeppe/go-internal v1.6.1 // indirect
-	github.com/sanity-io/litter v1.3.0
+	github.com/sanity-io/litter v1.4.0
 	github.com/sebdah/goldie/v2 v2.5.3
 	github.com/sirupsen/logrus v1.7.0
 	github.com/smartystreets/assertions v1.0.0 // indirect

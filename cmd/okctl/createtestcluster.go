@@ -275,6 +275,7 @@ with Github or other production services.
 			_, err = services.Cluster.CreateCluster(o.Ctx, api.ClusterCreateOpts{
 				ID:                id,
 				Cidr:              vpc.Cidr,
+				Version:           config.DefaultEKSKubernetesVersion,
 				VpcID:             vpc.VpcID,
 				VpcPrivateSubnets: vpc.PrivateSubnets,
 				VpcPublicSubnets:  vpc.PublicSubnets,

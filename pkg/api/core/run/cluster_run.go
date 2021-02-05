@@ -55,6 +55,7 @@ func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, er
 			PrivateSubnets:         opts.VpcPrivateSubnets,
 			PublicSubnets:          opts.VpcPublicSubnets,
 			Region:                 opts.ID.Region,
+			Version:                opts.Version,
 			VpcCidr:                opts.Cidr,
 			VpcID:                  opts.VpcID,
 		})
@@ -65,6 +66,7 @@ func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, er
 			PrivateSubnets:         opts.VpcPrivateSubnets,
 			PublicSubnets:          opts.VpcPublicSubnets,
 			Region:                 opts.ID.Region,
+			Version:                opts.Version,
 			VpcCidr:                opts.Cidr,
 			VpcID:                  opts.VpcID,
 		})

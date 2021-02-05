@@ -45,6 +45,8 @@ const (
 
 	DefaultRepositoryStateFile = ".okctl.yml"
 
+	DefaultEKSKubernetesVersion = "1.18"
+
 	DefaultClusterConfig         = "cluster.yml"
 	DefaultClusterKubeConfig     = "kubeconfig"
 	DefaultClusterAwsConfig      = "aws-config"

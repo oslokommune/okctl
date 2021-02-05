@@ -19,6 +19,7 @@ type Args struct {
 	PrivateSubnets         []api.VpcSubnet
 	PublicSubnets          []api.VpcSubnet
 	Region                 string
+	Version                string
 	VpcCidr                string
 	VpcID                  string
 }
@@ -40,6 +41,7 @@ func (a *Args) validate() error {
 		validation.Field(&a.PrivateSubnets, validation.Required),
 		validation.Field(&a.PublicSubnets, validation.Required),
 		validation.Field(&a.Region, validation.Required),
+		validation.Field(&a.Version, validation.Required),
 		validation.Field(&a.VpcCidr, validation.Required),
 		validation.Field(&a.VpcID, validation.Required),
 	)
@@ -51,8 +53,9 @@ func (a *Args) build() *v1alpha5.ClusterConfig {
 	cfg := &v1alpha5.ClusterConfig{
 		TypeMeta: TypeMeta(),
 		Metadata: v1alpha5.ClusterMeta{
-			Name:   a.ClusterName,
-			Region: a.Region,
+			Name:    a.ClusterName,
+			Region:  a.Region,
+			Version: a.Version,
 		},
 		IAM: v1alpha5.ClusterIAM{
 			ServiceRolePermissionsBoundary:             a.PermissionsBoundaryARN,
@@ -245,6 +248,7 @@ type MinimalArgs struct {
 	PermissionsBoundaryARN string
 	PrivateSubnets         []api.VpcSubnet
 	PublicSubnets          []api.VpcSubnet
+	Version                string
 	Region                 string
 	VpcCidr                string
 	VpcID                  string
@@ -267,6 +271,7 @@ func (a *MinimalArgs) validate() error {
 		validation.Field(&a.PrivateSubnets, validation.Required),
 		validation.Field(&a.PublicSubnets, validation.Required),
 		validation.Field(&a.Region, validation.Required),
+		validation.Field(&a.Version, validation.Required),
 		validation.Field(&a.VpcCidr, validation.Required),
 		validation.Field(&a.VpcID, validation.Required),
 	)
@@ -278,8 +283,9 @@ func (a *MinimalArgs) build() *v1alpha5.ClusterConfig {
 	cfg := &v1alpha5.ClusterConfig{
 		TypeMeta: TypeMeta(),
 		Metadata: v1alpha5.ClusterMeta{
-			Name:   a.ClusterName,
-			Region: a.Region,
+			Name:    a.ClusterName,
+			Region:  a.Region,
+			Version: a.Version,
 		},
 		IAM: v1alpha5.ClusterIAM{
 			ServiceRolePermissionsBoundary:             a.PermissionsBoundaryARN,

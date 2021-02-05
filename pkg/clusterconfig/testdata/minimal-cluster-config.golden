@@ -12,6 +12,7 @@ kind: ClusterConfig
 metadata:
   name: test
   region: eu-west-1
+  version: "1.18"
 nodeGroups:
 - desiredCapacity: 2
   iam:

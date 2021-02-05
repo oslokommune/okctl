@@ -50,6 +50,7 @@ type Endpoints struct {
 	DeleteAWSLoadBalancerControllerServiceAccount endpoint.Endpoint
 	CreateAWSLoadBalancerControllerPolicy         endpoint.Endpoint
 	DeleteAWSLoadBalancerControllerPolicy         endpoint.Endpoint
+	CreateAWSLoadBalancerControllerHelmChart      endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -90,6 +91,7 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteAWSLoadBalancerControllerServiceAccount: makeDeleteAWSLoadBalancerControllerServiceAccountEndpoint(s.ServiceAccount),
 		CreateAWSLoadBalancerControllerPolicy:         makeCreateAWSLoadBalancerControllerPolicyEndpoint(s.ManagedPolicy),
 		DeleteAWSLoadBalancerControllerPolicy:         makeDeleteAWSLoadBalancerControllerPolicyEndpoint(s.ManagedPolicy),
+		CreateAWSLoadBalancerControllerHelmChart:      makeCreateAWSLoadBalancerControllerHelmChartEndpoint(s.Helm),
 	}
 }
 
@@ -129,6 +131,7 @@ type Handlers struct {
 	DeleteAWSLoadBalancerControllerServiceAccount http.Handler
 	CreateAWSLoadBalancerControllerPolicy         http.Handler
 	DeleteAWSLoadBalancerControllerPolicy         http.Handler
+	CreateAWSLoadBalancerControllerHelmChart      http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -195,6 +198,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteAWSLoadBalancerControllerServiceAccount: newServer(endpoints.DeleteAWSLoadBalancerControllerServiceAccount, decodeIDRequest),
 		CreateAWSLoadBalancerControllerPolicy:         newServer(endpoints.CreateAWSLoadBalancerControllerPolicy, decodeCreateAWSLoadBalancerControllerPolicyRequest),
 		DeleteAWSLoadBalancerControllerPolicy:         newServer(endpoints.DeleteAWSLoadBalancerControllerPolicy, decodeIDRequest),
+		CreateAWSLoadBalancerControllerHelmChart:      newServer(endpoints.CreateAWSLoadBalancerControllerHelmChart, decodeCreateAWSLoadBalancerControllerHelmChart),
 	}
 }
 
@@ -254,6 +258,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			})
 			r.Route("/albingresscontroller", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAlbIngressControllerHelmChart)
+			})
+			r.Route("/awsloadbalancercontroller", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateAWSLoadBalancerControllerHelmChart)
 			})
 			r.Route("/argocd", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateArgoCD)
@@ -379,6 +386,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteAWSLoadBalancerControllerServiceAccount: logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, awsLoadBalancerControllerTag}, "/"), "delete")(endpoints.DeleteAWSLoadBalancerControllerServiceAccount),
 			CreateAWSLoadBalancerControllerPolicy:         logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, awsLoadBalancerControllerTag}, "/"), "create")(endpoints.CreateAWSLoadBalancerControllerPolicy),
 			DeleteAWSLoadBalancerControllerPolicy:         logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, awsLoadBalancerControllerTag}, "/"), "delete")(endpoints.DeleteAWSLoadBalancerControllerPolicy),
+			CreateAWSLoadBalancerControllerHelmChart:      logmd.Logging(logger, strings.Join([]string{helmTag, awsLoadBalancerControllerTag}, "/"), "create")(endpoints.CreateAWSLoadBalancerControllerHelmChart),
 		}
 	}
 }

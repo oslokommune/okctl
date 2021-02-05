@@ -15,6 +15,13 @@ const (
 	DefaultDebugEnv = "OKCTL_DEBUG"
 	// DefaultNoInputEnv if set will ensure that no interactive dialogs are started
 	DefaultNoInputEnv = "OKCTL_NO_INPUT"
+	// DefaultCredentialsType if set will ensure where okctl seeks authentication credentials
+	DefaultCredentialsType = "OKCTL_CREDENTIALS_TYPE"
+)
+
+const (
+	CredentialsTypeSAML      = "saml"
+	CredentialsTypeAccessKey = "access-key"
 )
 
 // Context provides access to ephemeral state
@@ -22,8 +29,9 @@ const (
 type Context struct {
 	FileSystem *afero.Afero
 
-	Debug   bool
-	NoInput bool
+	Debug           bool
+	NoInput         bool
+	CredentialsType string
 
 	In  io.Reader
 	Out io.Writer
@@ -39,6 +47,7 @@ type Context struct {
 func New() *Context {
 	_, debug := os.LookupEnv(DefaultDebugEnv)
 	_, noInput := os.LookupEnv(DefaultNoInputEnv)
+	credentialsType := os.Getenv(DefaultCredentialsType)
 
 	logger := logrus.New()
 
@@ -51,14 +60,15 @@ func New() *Context {
 	}
 
 	return &Context{
-		FileSystem: &afero.Afero{Fs: afero.NewOsFs()},
-		Debug:      debug,
-		NoInput:    noInput,
-		In:         os.Stdin,
-		Out:        os.Stdout,
-		Err:        os.Stderr,
-		Ctx:        context.Background(),
-		Logger:     logger,
-		LogLevel:   logger.Level,
+		FileSystem:      &afero.Afero{Fs: afero.NewOsFs()},
+		Debug:           debug,
+		NoInput:         noInput,
+		CredentialsType: credentialsType,
+		In:              os.Stdin,
+		Out:             os.Stdout,
+		Err:             os.Stderr,
+		Ctx:             context.Background(),
+		Logger:          logger,
+		LogLevel:        logger.Level,
 	}
 }

@@ -4,6 +4,7 @@ package okctl
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/context"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -763,15 +764,20 @@ https://www.passwordstore.org/
 		_ = k.Store(keyring.KeyTypeUserPassword, password)
 	}
 
-	envRetriever := aws.NewAuthEnvironment(o.RepoStateWithEnv.GetMetadata().Region, os.Getenv)
+	var credentialsRetriever aws.Retriever
 
-	samlRetriever := aws.NewAuthSAML(
-		o.RepoStateWithEnv.GetCluster().AWSAccountID,
-		o.RepoStateWithEnv.GetMetadata().Region,
-		scrape.New(),
-		aws.DefaultStsProvider,
-		aws.Interactive(o.Username(), storedPassword, fn),
-	)
+	switch o.CredentialsType {
+	case context.CredentialsTypeAccessKey:
+		credentialsRetriever = aws.NewAuthEnvironment(o.RepoStateWithEnv.GetMetadata().Region, os.Getenv)
+	default:
+		credentialsRetriever = aws.NewAuthSAML(
+			o.RepoStateWithEnv.GetCluster().AWSAccountID,
+			o.RepoStateWithEnv.GetMetadata().Region,
+			scrape.New(),
+			aws.DefaultStsProvider,
+			aws.Interactive(o.Username(), storedPassword, fn),
+		)
+	}
 
 	gh := github.New(
 		github.NewKeyringPersister(k),
@@ -781,7 +787,7 @@ https://www.passwordstore.org/
 		github.NewAuthDeviceFlow(github.DefaultGithubOauthClientID, github.RequiredScopes()),
 	)
 
-	o.CredentialsProvider = credentials.New(aws.New(authStore, envRetriever, samlRetriever), gh)
+	o.CredentialsProvider = credentials.New(aws.New(authStore, credentialsRetriever), gh)
 
 	return nil
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/context"
 	"io"
 	"os"
 	"path/filepath"
@@ -25,6 +26,8 @@ import (
 )
 
 type applyClusterOpts struct {
+	CredentialsType string
+
 	File string
 
 	Declaration *v1alpha1.Cluster
@@ -48,6 +51,8 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 		Long:    "ensures your cluster reflects the declaration of it",
 		Args:    cobra.ExactArgs(0),
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
+			o.CredentialsType = opts.CredentialsType
+
 			opts.Declaration, err = inferClusterFromStdinOrFile(o.In, opts.File)
 			if err != nil {
 				return fmt.Errorf("error inferring cluster: %w", err)
@@ -164,7 +169,15 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 	}
 
 	flags := cmd.Flags()
+
 	flags.StringVarP(&opts.File, "file", "f", "", usageApplyClusterFile)
+	flags.StringVarP(&opts.CredentialsType, "credentials-type", "a", context.CredentialsTypeSAML,
+		fmt.Sprintf(
+			"The form of authentication to use. Possible values: [%s,%s]",
+			context.CredentialsTypeSAML,
+			context.CredentialsTypeAccessKey,
+		),
+	)
 
 	cmd.Hidden = true
 

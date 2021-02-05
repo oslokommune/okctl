@@ -45,14 +45,14 @@ func (a *ExternalSecret) CreateSecret(_ kubernetes.Interface, config *rest.Confi
 
 	externalSecrets, err := clientSet.ExternalSecrets(a.Namespace).List(a.Ctx, metav1.ListOptions{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("listing external secrets in %s: %w", a.Namespace, err)
 	}
 
 	for _, es := range externalSecrets.Items {
 		if es.Name == a.Name {
 			got, err := clientSet.ExternalSecrets(a.Namespace).Get(a.Ctx, es.Name, metav1.GetOptions{})
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("getting external secret %s in %s: %w", es.Name, es.Namespace, err)
 			}
 
 			return got, nil

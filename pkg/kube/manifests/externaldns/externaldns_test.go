@@ -94,7 +94,7 @@ func TestExternalDNS(t *testing.T) {
 			assert.NoError(t, err)
 
 			// Need to add k.Watch to the output her, but that means bringing up localstack, I think?
-			_, err = k.Apply(tc.ext.CreateDeployment, tc.ext.CreateClusterRole, tc.ext.CreateClusterRoleBinding)
+			_, err = k.Apply(kube.Applier{Fn: tc.ext.CreateDeployment}, kube.Applier{Fn: tc.ext.CreateClusterRole}, kube.Applier{Fn: tc.ext.CreateClusterRoleBinding})
 			assert.NoError(t, err)
 
 			outputs, err := cluster.Debug("kube-system")

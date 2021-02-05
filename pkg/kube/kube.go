@@ -26,7 +26,7 @@ import (
 // Kuber provides the methods that are available
 // by a concrete implementation
 type Kuber interface {
-	Apply(fn ApplyFn, fns ...ApplyFn)
+	Apply(fn Applier, fns ...Applier)
 }
 
 // Kube contains state for communicating with
@@ -42,6 +42,13 @@ type Kube struct {
 // ApplyFn defines the signature of a function that applies
 // some operation to the kubernetes cluster
 type ApplyFn func(clientSet kubernetes.Interface, config *rest.Config) (interface{}, error)
+
+// Applier wraps the function to be applied with a
+// brief description
+type Applier struct {
+	Fn          ApplyFn
+	Description string
+}
 
 // New returns an initialised kubernetes client
 func New(kubeConfigPath string) (*Kube, error) {
@@ -75,13 +82,13 @@ func (k *Kube) WithLogger(log *logrus.Logger) *Kube {
 }
 
 // Apply all the functions to the cluster
-func (k *Kube) Apply(fns ...ApplyFn) ([]interface{}, error) {
+func (k *Kube) Apply(fns ...Applier) ([]interface{}, error) {
 	values := make([]interface{}, len(fns))
 
-	for i, fn := range fns {
-		v, err := fn(k.ClientSet, k.RestConfig)
+	for i, a := range fns {
+		v, err := a.Fn(k.ClientSet, k.RestConfig)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("apply %s: %w", a.Description, err)
 		}
 
 		values[i] = v
@@ -123,12 +130,16 @@ func (k *Kube) WatchDeployment(deployment *appsv1.Deployment, timeout time.Durat
 	return wait.Poll(2*time.Second, timeout, func() (bool, error) { // nolint: gomnd
 		currentDeployment, err := k.ClientSet.AppsV1().Deployments(deployment.Namespace).Get(context.Background(), deployment.Name, metav1.GetOptions{})
 		if err != nil {
-			return false, err
+			return false, fmt.Errorf("getting deployment %s in %s: %w", deployment.Name, deployment.Namespace, err)
 		}
 
 		newReplicaSet, err := deploymentUtil.GetNewReplicaSet(currentDeployment, k.ClientSet.AppsV1())
-		if err != nil || newReplicaSet == nil {
-			return false, err
+		if err != nil {
+			return false, fmt.Errorf("getting replicaset for %s in %s: %w", deployment.Name, deployment.Namespace, err)
+		}
+
+		if newReplicaSet == nil {
+			return false, nil
 		}
 
 		if !k.deploymentReady(newReplicaSet, currentDeployment) {

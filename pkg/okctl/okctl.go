@@ -176,20 +176,21 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 	}
 
 	return &clientCore.Services{
-		ALBIngressController: o.albIngressService(outputDir, spin),
-		ArgoCD:               o.argocdService(outputDir, spin),
-		ApplicationService:   o.applicationService(outputDir, spin),
-		Certificate:          o.certService(outputDir, spin),
-		Cluster:              o.clusterService(outputDir, spin),
-		Domain:               o.domainService(outputDir, spin),
-		ExternalDNS:          o.externalDNSService(outputDir, spin),
-		ExternalSecrets:      o.externalSecretsService(outputDir, spin),
-		Github:               o.githubService(ghClient, spin),
-		Manifest:             o.manifestService(outputDir, spin),
-		NameserverHandler:    o.nameserverHandlerService(ghClient, outputDir, spin),
-		Parameter:            o.paramService(outputDir, spin),
-		Vpc:                  o.vpcService(outputDir, spin),
-		IdentityManager:      o.identityManagerService(outputDir, spin),
+		ALBIngressController:             o.albIngressService(outputDir, spin),
+		AWSLoadBalancerControllerService: o.awsLoadBalancerControllerService(outputDir, spin),
+		ArgoCD:                           o.argocdService(outputDir, spin),
+		ApplicationService:               o.applicationService(outputDir, spin),
+		Certificate:                      o.certService(outputDir, spin),
+		Cluster:                          o.clusterService(outputDir, spin),
+		Domain:                           o.domainService(outputDir, spin),
+		ExternalDNS:                      o.externalDNSService(outputDir, spin),
+		ExternalSecrets:                  o.externalSecretsService(outputDir, spin),
+		Github:                           o.githubService(ghClient, spin),
+		Manifest:                         o.manifestService(outputDir, spin),
+		NameserverHandler:                o.nameserverHandlerService(ghClient, outputDir, spin),
+		Parameter:                        o.paramService(outputDir, spin),
+		Vpc:                              o.vpcService(outputDir, spin),
+		IdentityManager:                  o.identityManagerService(outputDir, spin),
 	}, nil
 }
 
@@ -414,6 +415,33 @@ func (o *Okctl) albIngressService(outputDir string, spin spinner.Spinner) client
 			o.FileSystem,
 		),
 		console.NewAlbIngressControllerReport(o.Err, spin),
+	)
+}
+
+func (o *Okctl) awsLoadBalancerControllerService(outputDir string, spin spinner.Spinner) client.AWSLoadBalancerControllerService {
+	return clientCore.NewAWSLoadBalancerControllerService(
+		spin,
+		rest.NewAWSLoadBalancerControllerAPI(o.restClient),
+		clientFilesystem.NewAWSLoadBalancerControllerStore(
+			clientFilesystem.Paths{
+				OutputFile:         config.DefaultPolicyOutputFile,
+				CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
+				BaseDir:            path.Join(outputDir, config.DefaultAWSLoadBalancerControllerBaseDir),
+			},
+			clientFilesystem.Paths{
+				OutputFile: config.DefaultServiceAccountOutputsFile,
+				ConfigFile: config.DefaultServiceAccountConfigFile,
+				BaseDir:    path.Join(outputDir, config.DefaultAWSLoadBalancerControllerBaseDir),
+			},
+			clientFilesystem.Paths{
+				OutputFile:  config.DefaultHelmOutputsFile,
+				ReleaseFile: config.DefaultHelmReleaseFile,
+				ChartFile:   config.DefaultHelmChartFile,
+				BaseDir:     path.Join(outputDir, config.DefaultAWSLoadBalancerControllerBaseDir),
+			},
+			o.FileSystem,
+		),
+		console.NewAWSLoadBalancerControllerReport(o.Err, spin),
 	)
 }
 

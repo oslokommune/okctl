@@ -247,7 +247,7 @@ func NewDefaultCluster(name, env, org, repo, team, accountID string) Cluster {
 			HighAvailability: true,
 		},
 		Integrations: &ClusterIntegrations{
-			ALBIngressController:      true,
+			ALBIngressController:      false,
 			AWSLoadBalancerController: true,
 			ExternalDNS:               true,
 			ExternalSecrets:           true,

@@ -5,8 +5,8 @@ github:
   repository: okctl-iac
   team: kjøremiljø
 integrations:
-  albIngressController: true
   argoCD: true
+  awsLoadBalancerController: true
   cognito: true
   externalDNS: true
   externalSecrets: true

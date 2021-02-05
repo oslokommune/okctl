@@ -30,6 +30,17 @@ func decodeCreateAlbIngressControllerServiceAccount(_ context.Context, r *http.R
 	return opts, nil
 }
 
+func decodeCreateAWSLoadBalancerControllerServiceAccount(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.CreateAWSLoadBalancerControllerServiceAccountOpts
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}
+
 func decodeCreateExternalDNSServiceAccount(_ context.Context, r *http.Request) (interface{}, error) {
 	var opts api.CreateExternalDNSServiceAccountOpts
 

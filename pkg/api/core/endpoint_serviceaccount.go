@@ -19,6 +19,12 @@ func makeCreateAlbIngressControllerServiceAccountEndpoint(s api.ServiceAccountSe
 	}
 }
 
+func makeCreateAWSLoadBalancerControllerServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return s.CreateAWSLoadBalancerControllerServiceAccount(ctx, request.(api.CreateAWSLoadBalancerControllerServiceAccountOpts))
+	}
+}
+
 func makeCreateExternalDNSServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return s.CreateExternalDNSServiceAccount(ctx, request.(api.CreateExternalDNSServiceAccountOpts))
@@ -34,6 +40,12 @@ func makeDeleteExternalSecretsServiceAccountEndpoint(s api.ServiceAccountService
 func makeDeleteAlbIngressControllerServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return &Empty{}, s.DeleteAlbIngressControllerServiceAccount(ctx, request.(api.ID))
+	}
+}
+
+func makeDeleteAWSLoadBalancerControllerServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return &Empty{}, s.DeleteAWSLoadBalancerControllerServiceAccount(ctx, request.(api.ID))
 	}
 }
 

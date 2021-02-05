@@ -51,6 +51,25 @@ func (s *helmService) CreateAlbIngressControllerHelmChart(_ context.Context, opt
 	return h, nil
 }
 
+func (s *helmService) CreateAWSLoadBalancerControllerHelmChart(_ context.Context, opts api.CreateAWSLoadBalancerControllerHelmChartOpts) (*api.Helm, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, errors.E(err, "failed to validate input options")
+	}
+
+	h, err := s.run.CreateAWSLoadBalancerControllerHelmChart(opts)
+	if err != nil {
+		return nil, errors.E(err, "failed to create alb ingress controller helm chart")
+	}
+
+	err = s.store.SaveAWSLoadBalancerControllerHelmChar(h)
+	if err != nil {
+		return nil, errors.E(err, "failed to store alb ingress controller helm chart")
+	}
+
+	return h, nil
+}
+
 func (s *helmService) CreateExternalSecretsHelmChart(_ context.Context, opts api.CreateExternalSecretsHelmChartOpts) (*api.Helm, error) {
 	err := opts.Validate()
 	if err != nil {

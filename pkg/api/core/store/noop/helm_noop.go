@@ -12,6 +12,10 @@ func (h *helmStore) SaveAlbIngressControllerHelmChar(helm *api.Helm) error {
 	return nil
 }
 
+func (h *helmStore) SaveAWSLoadBalancerControllerHelmChar(helm *api.Helm) error {
+	return nil
+}
+
 func (h *helmStore) SaveArgoCD(helm *api.Helm) error {
 	return nil
 }

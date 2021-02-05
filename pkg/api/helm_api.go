@@ -43,6 +43,21 @@ func (o CreateAlbIngressControllerHelmChartOpts) Validate() error {
 	)
 }
 
+// CreateAWSLoadBalancerControllerHelmChartOpts contains the data
+// required for creating a helm chart
+type CreateAWSLoadBalancerControllerHelmChartOpts struct {
+	ID    ID
+	VpcID string
+}
+
+// Validate the input options
+func (o CreateAWSLoadBalancerControllerHelmChartOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.VpcID, validation.Required),
+	)
+}
+
 // CreateArgoCDOpts contains the required inputs
 type CreateArgoCDOpts struct {
 	ID ID
@@ -81,6 +96,7 @@ func (o CreateArgoCDOpts) Validate() error {
 type HelmService interface {
 	CreateExternalSecretsHelmChart(ctx context.Context, opts CreateExternalSecretsHelmChartOpts) (*Helm, error)
 	CreateAlbIngressControllerHelmChart(ctx context.Context, opts CreateAlbIngressControllerHelmChartOpts) (*Helm, error)
+	CreateAWSLoadBalancerControllerHelmChart(ctx context.Context, opts CreateAWSLoadBalancerControllerHelmChartOpts) (*Helm, error)
 	CreateArgoCD(ctx context.Context, opts CreateArgoCDOpts) (*Helm, error)
 }
 
@@ -88,6 +104,7 @@ type HelmService interface {
 type HelmRun interface {
 	CreateExternalSecretsHelmChart(opts CreateExternalSecretsHelmChartOpts) (*Helm, error)
 	CreateAlbIngressControllerHelmChart(opts CreateAlbIngressControllerHelmChartOpts) (*Helm, error)
+	CreateAWSLoadBalancerControllerHelmChart(opts CreateAWSLoadBalancerControllerHelmChartOpts) (*Helm, error)
 	CreateArgoCD(opts CreateArgoCDOpts) (*Helm, error)
 }
 
@@ -95,5 +112,6 @@ type HelmRun interface {
 type HelmStore interface {
 	SaveExternalSecretsHelmChart(*Helm) error
 	SaveAlbIngressControllerHelmChar(*Helm) error
+	SaveAWSLoadBalancerControllerHelmChar(*Helm) error
 	SaveArgoCD(*Helm) error
 }

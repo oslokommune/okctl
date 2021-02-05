@@ -240,6 +240,22 @@ func NewAlbIngressControllerServiceAccount(clusterName, region, policyArn, permi
 	})
 }
 
+// NewAWSLoadBalancerControllerServiceAccount returns an initialised configuration
+// for creating an aws-load-balancer-controller service account
+func NewAWSLoadBalancerControllerServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha5.ClusterConfig, error) {
+	return NewServiceAccount(&ServiceAccountArgs{
+		ClusterName: clusterName,
+		Labels: map[string]string{
+			"aws-usage": "cluster-ops",
+		},
+		Name:                   "aws-load-balancer-controller",
+		Namespace:              "kube-system",
+		PermissionsBoundaryArn: permissionsBoundaryArn,
+		PolicyArn:              policyArn,
+		Region:                 region,
+	})
+}
+
 // NewExternalDNSServiceAccount returns an initialised configuration
 // for creating an external-dns service account
 func NewExternalDNSServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha5.ClusterConfig, error) {

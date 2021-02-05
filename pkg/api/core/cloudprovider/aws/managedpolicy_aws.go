@@ -22,6 +22,10 @@ func (m *managedPolicy) DeleteAlbIngressControllerPolicy(id api.ID) error {
 	return m.deletePolicy(cfn.NewStackNamer().AlbIngressControllerPolicy(id.Repository, id.Environment))
 }
 
+func (m *managedPolicy) DeleteAWSLoadBalancerControllerPolicy(id api.ID) error {
+	return m.deletePolicy(cfn.NewStackNamer().AWSLoadBalancerControllerPolicy(id.Repository, id.Environment))
+}
+
 func (m *managedPolicy) DeleteExternalDNSPolicy(id api.ID) error {
 	return m.deletePolicy(cfn.NewStackNamer().ExternalDNSPolicy(id.Repository, id.Environment))
 }
@@ -57,6 +61,17 @@ func (m *managedPolicy) CreateAlbIngressControllerPolicy(opts api.CreateAlbIngre
 		AlbIngressControllerPolicy(opts.ID.Repository, opts.ID.Environment)
 
 	return m.createPolicy(stackName, opts.ID, "AlbIngressControllerPolicy", b)
+}
+
+func (m *managedPolicy) CreateAWSLoadBalancerControllerPolicy(opts api.CreateAWSLoadBalancerControllerPolicyOpts) (*api.ManagedPolicy, error) {
+	b := cfn.New(
+		components.NewAWSLoadBalancerControllerComposer(opts.ID.Repository, opts.ID.Environment),
+	)
+
+	stackName := cfn.NewStackNamer().
+		AWSLoadBalancerControllerPolicy(opts.ID.Repository, opts.ID.Environment)
+
+	return m.createPolicy(stackName, opts.ID, "AWSLoadBalancerControllerPolicy", b)
 }
 
 // CreateExternalSecretsPolicy builds and applies a cloud formation template

@@ -197,6 +197,48 @@ func TestNewAlbIngressControllerServiceAccount(t *testing.T) {
 	}
 }
 
+func TestNewAWSLoadBalancerControllerServiceAccount(t *testing.T) {
+	testCases := []struct {
+		name                   string
+		clusterName            string
+		region                 string
+		policyArn              string
+		permissionsBoundaryArn string
+		golden                 string
+		expectErr              bool
+		err                    string
+	}{
+		{
+			name:                   "Validate service account",
+			clusterName:            "test",
+			region:                 mock.DefaultRegion,
+			policyArn:              mock.DefaultPolicyARN,
+			permissionsBoundaryArn: v1alpha1.PermissionsBoundaryARN(mock.DefaultAWSAccountID),
+			golden:                 "aws-load-balancer-controller",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := clusterconfig.NewAWSLoadBalancerControllerServiceAccount(tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
+			if tc.expectErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.err, err.Error())
+			} else {
+				assert.NoError(t, err)
+
+				d, err := got.YAML()
+				assert.NoError(t, err)
+
+				g := goldie.New(t)
+				g.Assert(t, tc.golden, d)
+			}
+		})
+	}
+}
+
 func TestNewExternalDNSServiceAccount(t *testing.T) {
 	testCases := []struct {
 		name                   string

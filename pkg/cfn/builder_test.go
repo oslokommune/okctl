@@ -37,6 +37,11 @@ func TestBuilderAndComposers(t *testing.T) {
 			composer: components.NewAlbIngressControllerPolicyComposer("repo", "env"),
 		},
 		{
+			name:     "Builder with AWSLoadBalancerControllerPolicy composer",
+			golden:   "aws-load-balancer-controller.yaml",
+			composer: components.NewAWSLoadBalancerControllerComposer("repo", "env"),
+		},
+		{
 			name:     "Builder with ExternalDNSPolicy composer",
 			golden:   "external-dns-cloudformation.yaml",
 			composer: components.NewExternalDNSPolicyComposer("repo", "env"),

@@ -17,6 +17,7 @@ import (
 // ExistingServices contains information about what services already exists in a cluster
 type ExistingServices struct {
 	hasALBIngressController           bool
+	hasAWSLoadBalancerController      bool
 	hasCluster                        bool
 	hasExternalDNS                    bool
 	hasExternalSecrets                bool
@@ -38,6 +39,7 @@ func NewCreateCurrentStateTreeOpts(fs *afero.Afero, outputDir string, githubGett
 		hasCluster:                        directoryTester(fs, outputDir, config.DefaultClusterBaseDir),
 		hasExternalSecrets:                directoryTester(fs, outputDir, config.DefaultExternalSecretsBaseDir),
 		hasALBIngressController:           directoryTester(fs, outputDir, config.DefaultAlbIngressControllerBaseDir),
+		hasAWSLoadBalancerController:      directoryTester(fs, outputDir, config.DefaultAWSLoadBalancerControllerBaseDir),
 		hasExternalDNS:                    directoryTester(fs, outputDir, config.DefaultExternalDNSBaseDir),
 		hasIdentityManager:                directoryTester(fs, outputDir, config.DefaultIdentityPoolBaseDir),
 		hasDelegatedHostedZoneNameservers: hz != nil && hz.IsDelegated,
@@ -65,6 +67,7 @@ func CreateCurrentStateTree(opts *ExistingServices) (root *resourcetree.Resource
 
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalSecrets, opts.hasExternalSecrets)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeALBIngress, opts.hasALBIngressController)
+	createNode(clusterNode, resourcetree.ResourceNodeTypeAWSLoadBalancerController, opts.hasAWSLoadBalancerController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalDNS, opts.hasExternalDNS)
 
 	return root
@@ -88,6 +91,7 @@ func CreateDesiredStateTree(cluster *v1alpha1.Cluster) (root *resourcetree.Resou
 
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalSecrets, cluster.Integrations.ExternalSecrets)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeALBIngress, cluster.Integrations.ALBIngressController)
+	createNode(clusterNode, resourcetree.ResourceNodeTypeAWSLoadBalancerController, cluster.Integrations.AWSLoadBalancerController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalDNS, cluster.Integrations.ExternalDNS)
 
 	return root

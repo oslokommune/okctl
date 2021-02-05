@@ -27,6 +27,8 @@ const (
 	ResourceNodeTypeExternalSecrets
 	// ResourceNodeTypeALBIngress represents an ALB Ingress resource
 	ResourceNodeTypeALBIngress
+	// ResourceNodeTypeAWSLoadBalancerController represents an AWS load balancer controller resource
+	ResourceNodeTypeAWSLoadBalancerController
 	// ResourceNodeTypeExternalDNS represents an External DNS resource
 	ResourceNodeTypeExternalDNS
 	// ResourceNodeTypeGithub represents a Github setup
@@ -54,6 +56,8 @@ func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
 		return "External Secrets"
 	case ResourceNodeTypeALBIngress:
 		return "ALB Ingress Controller"
+	case ResourceNodeTypeAWSLoadBalancerController:
+		return "AWS Load Balancer Controller"
 	case ResourceNodeTypeExternalDNS:
 		return "External DNS"
 	case ResourceNodeTypeGithub:

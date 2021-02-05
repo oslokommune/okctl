@@ -38,6 +38,11 @@ func Synchronize(opts *SynchronizeOpts) error {
 		opts.OutputDir,
 	))
 
+	opts.DesiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeAWSLoadBalancerController, CreateAWSLoadBalancerControllerRefresher(
+		opts.Fs,
+		opts.OutputDir,
+	))
+
 	opts.DesiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeExternalDNS, CreateExternalDNSStateRefresher(
 		opts.PrimaryHostedZoneGetter,
 	))

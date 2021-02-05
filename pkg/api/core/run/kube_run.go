@@ -18,13 +18,17 @@ type kubeRun struct {
 	kubeConfStore api.KubeConfigStore
 }
 
+// In all fairness, we should refactor this, probably by extending the functionality
+// on the kube side. First we collect all apply things, then we apply, or something like
+// this.
+// nolint: funlen
 func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*api.ExternalSecretsKube, error) {
 	kubeConfig, err := k.kubeConfStore.GetKubeConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve kubeconfig: %w", err)
 	}
 
-	fns := make([]kube.ApplyFn, len(opts.Manifests))
+	fns := make([]kube.Applier, len(opts.Manifests))
 	manifests := map[string][]byte{}
 	namespaces := map[string]struct{}{}
 
@@ -42,7 +46,10 @@ func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*ap
 			return nil, fmt.Errorf("failed to marshal manifest: %w", err)
 		}
 
-		fns[i] = fn.CreateSecret
+		fns[i] = kube.Applier{
+			Fn:          fn.CreateSecret,
+			Description: fmt.Sprintf("external secret %s in %s", manifest.Name, manifest.Namespace),
+		}
 
 		manifests[fmt.Sprintf("external-secret-%s.yml", manifest.Name)] = raw
 		namespaces[manifest.Namespace] = struct{}{}
@@ -50,7 +57,13 @@ func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*ap
 
 	for ns := range namespaces {
 		newNS := namespace.New(ns)
-		fns = append([]kube.ApplyFn{newNS.CreateNamespace}, fns...)
+
+		fns = append([]kube.Applier{
+			{
+				Fn:          newNS.CreateNamespace,
+				Description: fmt.Sprintf("namespace %s", ns),
+			},
+		}, fns...)
 
 		data, err := yaml.Marshal(newNS.NamespaceManifest())
 		if err != nil {
@@ -90,7 +103,11 @@ func (k *kubeRun) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKube
 		return nil, fmt.Errorf("failed to create kubernetes client: %w", err)
 	}
 
-	resources, err := client.Apply(ext.CreateDeployment, ext.CreateClusterRole, ext.CreateClusterRoleBinding)
+	resources, err := client.Apply(
+		kube.Applier{Fn: ext.CreateDeployment, Description: "external dns deployment"},
+		kube.Applier{Fn: ext.CreateClusterRole, Description: "external dns cluster role"},
+		kube.Applier{Fn: ext.CreateClusterRoleBinding, Description: "external dns cluster role binding"},
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to apply kubernets manifests: %w", err)
 	}

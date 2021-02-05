@@ -59,7 +59,7 @@ func TestEchoServer(t *testing.T) {
 
 			k.WithLogger(logrus.StandardLogger())
 
-			resources, err := k.Apply(tc.ext.CreateDeployment)
+			resources, err := k.Apply(kube.Applier{Fn: tc.ext.CreateDeployment})
 			assert.NoError(t, err)
 
 			err = k.Watch(resources, 2*time.Minute)

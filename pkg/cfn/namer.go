@@ -8,17 +8,18 @@ import (
 
 // nolint: golint
 const (
-	DefaultStackNamePrefix                       = "okctl"
-	DefaultStackNameVpcID                        = "vpc"
-	DefaultStackNameExternalSecretsPolicyID      = "externalsecretspolicy"
-	DefaultStackNameAlbIngressControllerPolicyID = "albingresscontrollerpolicy"
-	DefaultStackNameExternalDNSPolicyID          = "externaldns"
-	DefaultStackNameDomainID                     = "domain"
-	DefaultStackNameCertificateID                = "certificate"
-	DefaultStackNameIdentityPool                 = "identitypool"
-	DefaultStackNameIdentityPoolClient           = "identitypoolclient"
-	DefaultStackNameAliasRecordSet               = "aliasrecordset"
-	DefaultStackNameIdentityPoolUser             = "identitypooluser"
+	DefaultStackNamePrefix                            = "okctl"
+	DefaultStackNameVpcID                             = "vpc"
+	DefaultStackNameExternalSecretsPolicyID           = "externalsecretspolicy"
+	DefaultStackNameAlbIngressControllerPolicyID      = "albingresscontrollerpolicy"
+	DefaultStackNameAWSLoadBalancerControllerPolicyID = "awsloadbalancercontrollerpolicy"
+	DefaultStackNameExternalDNSPolicyID               = "externaldns"
+	DefaultStackNameDomainID                          = "domain"
+	DefaultStackNameCertificateID                     = "certificate"
+	DefaultStackNameIdentityPool                      = "identitypool"
+	DefaultStackNameIdentityPoolClient                = "identitypoolclient"
+	DefaultStackNameAliasRecordSet                    = "aliasrecordset"
+	DefaultStackNameIdentityPoolUser                  = "identitypooluser"
 )
 
 // StackNamer knows how to name cloud formation stacks
@@ -54,6 +55,16 @@ func (n *StackNamer) AlbIngressControllerPolicy(repository, env string) string {
 	return fmt.Sprintf("%s-%s-%s-%s",
 		DefaultStackNamePrefix,
 		DefaultStackNameAlbIngressControllerPolicyID,
+		repository,
+		env,
+	)
+}
+
+// AWSLoadBalancerControllerPolicy returns the stack name of the policy
+func (n *StackNamer) AWSLoadBalancerControllerPolicy(repository, env string) string {
+	return fmt.Sprintf("%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameAWSLoadBalancerControllerPolicyID,
 		repository,
 		env,
 	)

@@ -39,6 +39,18 @@ func (o CreateAlbIngressControllerPolicyOpts) Validate() error {
 	)
 }
 
+// CreateAWSLoadBalancerControllerPolicyOpts contains the input
+type CreateAWSLoadBalancerControllerPolicyOpts struct {
+	ID ID
+}
+
+// Validate the input
+func (o CreateAWSLoadBalancerControllerPolicyOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+	)
+}
+
 // CreateExternalDNSPolicyOpts contains the input
 type CreateExternalDNSPolicyOpts struct {
 	ID ID
@@ -57,6 +69,8 @@ type ManagedPolicyService interface {
 	DeleteExternalSecretsPolicy(ctx context.Context, id ID) error
 	CreateAlbIngressControllerPolicy(ctx context.Context, opts CreateAlbIngressControllerPolicyOpts) (*ManagedPolicy, error)
 	DeleteAlbIngressControllerPolicy(ctx context.Context, id ID) error
+	CreateAWSLoadBalancerControllerPolicy(ctx context.Context, opts CreateAWSLoadBalancerControllerPolicyOpts) (*ManagedPolicy, error)
+	DeleteAWSLoadBalancerControllerPolicy(ctx context.Context, id ID) error
 	CreateExternalDNSPolicy(ctx context.Context, opts CreateExternalDNSPolicyOpts) (*ManagedPolicy, error)
 	DeleteExternalDNSPolicy(ctx context.Context, id ID) error
 }
@@ -67,6 +81,8 @@ type ManagedPolicyCloudProvider interface {
 	DeleteExternalSecretsPolicy(id ID) error
 	CreateAlbIngressControllerPolicy(opts CreateAlbIngressControllerPolicyOpts) (*ManagedPolicy, error)
 	DeleteAlbIngressControllerPolicy(id ID) error
+	CreateAWSLoadBalancerControllerPolicy(opts CreateAWSLoadBalancerControllerPolicyOpts) (*ManagedPolicy, error)
+	DeleteAWSLoadBalancerControllerPolicy(id ID) error
 	CreateExternalDNSPolicy(opts CreateExternalDNSPolicyOpts) (*ManagedPolicy, error)
 	DeleteExternalDNSPolicy(id ID) error
 }
@@ -77,6 +93,8 @@ type ManagedPolicyStore interface {
 	GetExternalSecretsPolicy() (*ManagedPolicy, error)
 	SaveAlbIngressControllerPolicy(policy *ManagedPolicy) error
 	GetAlbIngressControllerPolicy() (*ManagedPolicy, error)
+	SaveAWSLoadBalancerControllerPolicy(policy *ManagedPolicy) error
+	GetAWSLoadBalancerControllerPolicy() (*ManagedPolicy, error)
 	SaveExternalDNSPolicy(policy *ManagedPolicy) error
 	GetExternalDNSPolicy() (*ManagedPolicy, error)
 }

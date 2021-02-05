@@ -48,6 +48,8 @@ type Endpoints struct {
 	DeleteIdentityPool                            endpoint.Endpoint
 	CreateAWSLoadBalancerControllerServiceAccount endpoint.Endpoint
 	DeleteAWSLoadBalancerControllerServiceAccount endpoint.Endpoint
+	CreateAWSLoadBalancerControllerPolicy         endpoint.Endpoint
+	DeleteAWSLoadBalancerControllerPolicy         endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -86,6 +88,8 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteIdentityPool:                            makeDeleteIdentityPoolEndpoint(s.IdentityManager),
 		CreateAWSLoadBalancerControllerServiceAccount: makeCreateAWSLoadBalancerControllerServiceAccountEndpoint(s.ServiceAccount),
 		DeleteAWSLoadBalancerControllerServiceAccount: makeDeleteAWSLoadBalancerControllerServiceAccountEndpoint(s.ServiceAccount),
+		CreateAWSLoadBalancerControllerPolicy:         makeCreateAWSLoadBalancerControllerPolicyEndpoint(s.ManagedPolicy),
+		DeleteAWSLoadBalancerControllerPolicy:         makeDeleteAWSLoadBalancerControllerPolicyEndpoint(s.ManagedPolicy),
 	}
 }
 
@@ -123,6 +127,8 @@ type Handlers struct {
 	DeleteIdentityPool                            http.Handler
 	CreateAWSLoadBalancerControllerServiceAccount http.Handler
 	DeleteAWSLoadBalancerControllerServiceAccount http.Handler
+	CreateAWSLoadBalancerControllerPolicy         http.Handler
+	DeleteAWSLoadBalancerControllerPolicy         http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -187,6 +193,8 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteIdentityPool:                            newServer(endpoints.DeleteIdentityPool, decodeDeleteIdentityPool),
 		CreateAWSLoadBalancerControllerServiceAccount: newServer(endpoints.CreateAWSLoadBalancerControllerServiceAccount, decodeCreateAWSLoadBalancerControllerServiceAccount),
 		DeleteAWSLoadBalancerControllerServiceAccount: newServer(endpoints.DeleteAWSLoadBalancerControllerServiceAccount, decodeIDRequest),
+		CreateAWSLoadBalancerControllerPolicy:         newServer(endpoints.CreateAWSLoadBalancerControllerPolicy, decodeCreateAWSLoadBalancerControllerPolicyRequest),
+		DeleteAWSLoadBalancerControllerPolicy:         newServer(endpoints.DeleteAWSLoadBalancerControllerPolicy, decodeIDRequest),
 	}
 }
 
@@ -212,6 +220,10 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			r.Route("/albingresscontroller", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAlbIngressControllerPolicy)
 				r.Method(http.MethodDelete, "/", handlers.DeleteAlbIngressControllerPolicy)
+			})
+			r.Route("/awsloadbalancercontroller", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateAWSLoadBalancerControllerPolicy)
+				r.Method(http.MethodDelete, "/", handlers.DeleteAWSLoadBalancerControllerPolicy)
 			})
 			r.Route("/externaldns", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalDNSPolicy)
@@ -365,6 +377,8 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteIdentityPool:                            logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag}, "/"), "delete")(endpoints.DeleteIdentityPool),
 			CreateAWSLoadBalancerControllerServiceAccount: logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, awsLoadBalancerControllerTag}, "/"), "create")(endpoints.CreateAWSLoadBalancerControllerServiceAccount),
 			DeleteAWSLoadBalancerControllerServiceAccount: logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, awsLoadBalancerControllerTag}, "/"), "delete")(endpoints.DeleteAWSLoadBalancerControllerServiceAccount),
+			CreateAWSLoadBalancerControllerPolicy:         logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, awsLoadBalancerControllerTag}, "/"), "create")(endpoints.CreateAWSLoadBalancerControllerPolicy),
+			DeleteAWSLoadBalancerControllerPolicy:         logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, awsLoadBalancerControllerTag}, "/"), "delete")(endpoints.DeleteAWSLoadBalancerControllerPolicy),
 		}
 	}
 }

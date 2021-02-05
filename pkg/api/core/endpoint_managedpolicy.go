@@ -19,6 +19,12 @@ func makeCreateAlbIngressControllerPolicyEndpoint(s api.ManagedPolicyService) en
 	}
 }
 
+func makeCreateAWSLoadBalancerControllerPolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return s.CreateAWSLoadBalancerControllerPolicy(ctx, request.(api.CreateAWSLoadBalancerControllerPolicyOpts))
+	}
+}
+
 func makeCreateExternalDNSPolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return s.CreateExternalDNSPolicy(ctx, request.(api.CreateExternalDNSPolicyOpts))
@@ -34,6 +40,12 @@ func makeDeleteExternalSecretsPolicyEndpoint(s api.ManagedPolicyService) endpoin
 func makeDeleteAlbIngressControllerPolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return &Empty{}, s.DeleteAlbIngressControllerPolicy(ctx, request.(api.ID))
+	}
+}
+
+func makeDeleteAWSLoadBalancerControllerPolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return &Empty{}, s.DeleteAWSLoadBalancerControllerPolicy(ctx, request.(api.ID))
 	}
 }
 

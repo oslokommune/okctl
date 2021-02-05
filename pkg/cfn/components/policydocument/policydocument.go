@@ -15,6 +15,10 @@ import (
 // - https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_effect.html
 type EffectType string
 
+// ConditionOperatorType enumerates valid condition operators:
+// - https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_condition_operators.html
+type ConditionOperatorType string
+
 const (
 	// Version is the current version of the policy language,
 	// and you should always include a Version element and set it to 2012-10-17:
@@ -25,6 +29,11 @@ const (
 	EffectTypeAllow EffectType = "Allow"
 	// EffectTypeDeny denies access to a resource
 	EffectTypeDeny EffectType = "Deny"
+
+	// ConditionOperatorTypeStringEquals checks if the string matches exactly
+	ConditionOperatorTypeStringEquals ConditionOperatorType = "StringEquals"
+	// ConditionOperatorTypeNull checks if the key value exists
+	ConditionOperatorTypeNull ConditionOperatorType = "Null"
 
 	// Pseudo parameters enumerates some of the available pseudo parameters:
 	// - https://docs.amazonaws.cn/en_us/AWSCloudFormation/latest/UserGuide/pseudo-parameter-reference.html
@@ -45,10 +54,11 @@ type PolicyDocument struct {
 
 // StatementEntry ...
 type StatementEntry struct {
-	Sid      string     `json:"Sid,omitempty"`
-	Effect   EffectType `json:"Effect"`
-	Action   []string   `json:"Action"`
-	Resource []string   `json:"Resource"`
+	Sid       string                                      `json:"Sid,omitempty"`
+	Effect    EffectType                                  `json:"Effect"`
+	Action    []string                                    `json:"Action"`
+	Resource  []string                                    `json:"Resource"`
+	Condition map[ConditionOperatorType]map[string]string `json:"Condition,omitempty"`
 }
 
 // JSON returns the json marshalled version of the policy document

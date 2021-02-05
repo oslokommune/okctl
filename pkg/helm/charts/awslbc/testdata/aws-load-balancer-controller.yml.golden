@@ -1,0 +1,43 @@
+replicaCount: 1
+image:
+    repository: 602401143452.dkr.ecr.us-west-2.amazonaws.com/amazon/aws-load-balancer-controller
+    tag: v2.2.1
+    pullPolicy: IfNotPresent
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+clusterName: my-cluster
+serviceAccount:
+    create: false
+    annotations: {}
+    name: aws-load-balancer-controller
+rbac:
+    create: true
+podSecurityContext:
+    fsGroup: 65534
+securityContext:
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+terminationGracePeriodSeconds: 10
+resources: {}
+priorityClassName: ""
+nodeSelector: {}
+tolerations: []
+affinity: {}
+podAnnotations: {}
+podLabels: {}
+enableCertManager: false
+ingressClass: ""
+region: eu-west-1
+vpcId: vpc-0e9801d129EXAMPLE
+livenessProbe:
+    failureThreshold: 2
+    httpGet:
+        path: /healthz
+        port: 61779
+        scheme: HTTP
+    initialDelaySeconds: 30
+    timeoutSeconds: 10
+defaultTags: {}
+podDisruptionBudget: {}

@@ -27,7 +27,7 @@ func New(values *Values) *helm.Chart {
 // values
 func NewDefaultValues(clusterName, vpcID, region string) *Values {
 	return &Values{
-		ReplicaCount:                  1,
+		ReplicaCount:                  1, // nolint: gomnd
 		ClusterName:                   clusterName,
 		Region:                        region,
 		VpcID:                         vpcID,
@@ -58,14 +58,14 @@ func NewDefaultValues(clusterName, vpcID, region string) *Values {
 		// ingresses without ingress class annotation and ingresses of type alb
 		IngressClass: "",
 		LivenessProbe: LivenessProbe{
-			FailureThreshold: 2,
+			FailureThreshold: 2, // nolint: gomnd
 			HTTPGet: HTTPGet{
 				Path:   "/healthz",
-				Port:   61779,
+				Port:   61779, // nolint: gomnd
 				Scheme: "HTTP",
 			},
-			InitialDelaySeconds: 30,
-			TimeoutSeconds:      10,
+			InitialDelaySeconds: 30, // nolint: gomnd
+			TimeoutSeconds:      10, // nolint: gomnd
 		},
 	}
 }

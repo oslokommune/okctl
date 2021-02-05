@@ -22,7 +22,7 @@ func TestTreeCreators(t *testing.T) {
 				return &declaration
 			},
 			existingServices: ExistingServices{
-				hasALBIngressController:           true,
+				hasALBIngressController:           false,
 				hasAWSLoadBalancerController:      true,
 				hasCluster:                        true,
 				hasExternalDNS:                    true,
@@ -43,7 +43,7 @@ func TestTreeCreators(t *testing.T) {
 				return &declaration
 			},
 			existingServices: ExistingServices{
-				hasALBIngressController:           true,
+				hasALBIngressController:           false,
 				hasAWSLoadBalancerController:      true,
 				hasCluster:                        true,
 				hasExternalDNS:                    false,

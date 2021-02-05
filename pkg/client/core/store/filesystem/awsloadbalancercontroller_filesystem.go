@@ -1,4 +1,4 @@
-package filesystem
+package filesystem // nolint: dupl
 
 // nolint: dupl
 

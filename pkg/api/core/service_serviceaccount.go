@@ -152,6 +152,7 @@ func (c *serviceAccount) CreateAlbIngressControllerServiceAccount(_ context.Cont
 	return account, nil
 }
 
+// nolint: lll
 func (c *serviceAccount) CreateAWSLoadBalancerControllerServiceAccount(_ context.Context, opts api.CreateAWSLoadBalancerControllerServiceAccountOpts) (*api.ServiceAccount, error) {
 	err := opts.Validate()
 	if err != nil {

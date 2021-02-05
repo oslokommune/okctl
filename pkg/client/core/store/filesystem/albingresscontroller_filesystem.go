@@ -1,6 +1,4 @@
-package filesystem
-
-// nolint: dupl
+package filesystem // nolint: dupl
 
 import (
 	"fmt"

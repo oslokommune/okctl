@@ -31,6 +31,7 @@ func (a *awsLoadBalancerControllerAPI) CreateAWSLoadBalancerControllerPolicy(opt
 	return into, a.client.DoPost(TargetAWSLoadBalancerControllerPolicy, &opts, into)
 }
 
+// nolint: lll
 func (a *awsLoadBalancerControllerAPI) CreateAWSLoadBalancerControllerServiceAccount(opts api.CreateAWSLoadBalancerControllerServiceAccountOpts) (*api.ServiceAccount, error) {
 	into := &api.ServiceAccount{}
 	return into, a.client.DoPost(TargetAWSLoadBalancerControllerServiceAccount, &opts, into)

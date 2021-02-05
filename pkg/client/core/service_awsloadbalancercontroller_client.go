@@ -1,4 +1,4 @@
-package core
+package core // nolint: dupl
 
 import (
 	"context"
@@ -49,6 +49,7 @@ func (s *awsLoadBalancerControllerService) DeleteAWSLoadBalancerController(_ con
 	return nil
 }
 
+// nolint: lll
 func (s *awsLoadBalancerControllerService) CreateAWSLoadBalancerController(_ context.Context, opts client.CreateAWSLoadBalancerControllerOpts) (*client.AWSLoadBalancerController, error) {
 	err := s.spinner.Start("aws-load-balancer-controller")
 	if err != nil {

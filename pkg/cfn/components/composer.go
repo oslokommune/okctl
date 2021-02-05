@@ -765,3 +765,253 @@ func NewAliasRecordSet(name, aliasDNS, aliasHostedZoneID, domain, hostedZoneID s
 		HostedZoneID:      hostedZoneID,
 	}
 }
+
+// AWSLoadBalancerControllerComposer contains state for building
+// a managed iam policy compatible with aws-load-balancer-controller
+type AWSLoadBalancerControllerComposer struct {
+	Repository  string
+	Environment string
+}
+
+// NewAWSLoadBalancerControllerComposer returns an initialised aws load balancer controller composer
+func NewAWSLoadBalancerControllerComposer(repository, env string) *AWSLoadBalancerControllerComposer {
+	return &AWSLoadBalancerControllerComposer{
+		Repository:  repository,
+		Environment: env,
+	}
+}
+
+// Compose builds the policy and returns the result
+func (a *AWSLoadBalancerControllerComposer) Compose() (*cfn.Composition, error) {
+	p := a.ManagedPolicy()
+
+	return &cfn.Composition{
+		Outputs:   []cfn.StackOutputer{p},
+		Resources: []cfn.ResourceNamer{p},
+	}, nil
+}
+
+// ManagedPolicy creates a managed policy
+// nolint: funlen
+func (a *AWSLoadBalancerControllerComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
+	policyName := fmt.Sprintf("okctl-%s-%s-AWSLoadBalancerControllerServiceAccountPolicy", a.Repository, a.Environment)
+	policyDesc := "Service account policy for creating AWS load balancers"
+
+	d := &policydocument.PolicyDocument{
+		Version: policydocument.Version,
+		Statement: []policydocument.StatementEntry{
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"iam:CreateServiceLinkedRole",
+					"ec2:DescribeAccountAttributes",
+					"ec2:DescribeAddresses",
+					"ec2:DescribeInternetGateways",
+					"ec2:DescribeVpcs",
+					"ec2:DescribeSubnets",
+					"ec2:DescribeSecurityGroups",
+					"ec2:DescribeInstances",
+					"ec2:DescribeNetworkInterfaces",
+					"ec2:DescribeTags",
+					"elasticloadbalancing:DescribeLoadBalancers",
+					"elasticloadbalancing:DescribeLoadBalancerAttributes",
+					"elasticloadbalancing:DescribeListeners",
+					"elasticloadbalancing:DescribeListenerCertificates",
+					"elasticloadbalancing:DescribeSSLPolicies",
+					"elasticloadbalancing:DescribeRules",
+					"elasticloadbalancing:DescribeTargetGroups",
+					"elasticloadbalancing:DescribeTargetGroupAttributes",
+					"elasticloadbalancing:DescribeTargetHealth",
+					"elasticloadbalancing:DescribeTags",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"cognito-idp:DescribeUserPoolClient",
+					"acm:ListCertificates",
+					"acm:DescribeCertificate",
+					"iam:ListServerCertificates",
+					"iam:GetServerCertificate",
+					"waf-regional:GetWebACL",
+					"waf-regional:GetWebACLForResource",
+					"waf-regional:AssociateWebACL",
+					"waf-regional:DisassociateWebACL",
+					"wafv2:GetWebACL",
+					"wafv2:GetWebACLForResource",
+					"wafv2:AssociateWebACL",
+					"wafv2:DisassociateWebACL",
+					"shield:GetSubscriptionState",
+					"shield:DescribeProtection",
+					"shield:CreateProtection",
+					"shield:DeleteProtection",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"ec2:AuthorizeSecurityGroupIngress",
+					"ec2:RevokeSecurityGroupIngress",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"ec2:CreateSecurityGroup",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"ec2:CreateTags",
+				},
+				Resource: []string{
+					"arn:aws:ec2:*:*:security-group/*",
+				},
+				Condition: map[policydocument.ConditionOperatorType]map[string]string{
+					policydocument.ConditionOperatorTypeStringEquals: {
+						"ec2:CreateAction": "CreateSecurityGroup",
+					},
+					policydocument.ConditionOperatorTypeNull: {
+						"aws:RequestTag/elbv2.k8s.aws/cluster": "false",
+					},
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"ec2:CreateTags",
+					"ec2:DeleteTags",
+				},
+				Resource: []string{
+					"arn:aws:ec2:*:*:security-group/*",
+				},
+				Condition: map[policydocument.ConditionOperatorType]map[string]string{
+					policydocument.ConditionOperatorTypeNull: {
+						"aws:RequestTag/elbv2.k8s.aws/cluster":  "true",
+						"aws:ResourceTag/elbv2.k8s.aws/cluster": "false",
+					},
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"ec2:AuthorizeSecurityGroupIngress",
+					"ec2:RevokeSecurityGroupIngress",
+					"ec2:DeleteSecurityGroup",
+				},
+				Resource: []string{
+					"*",
+				},
+				Condition: map[policydocument.ConditionOperatorType]map[string]string{
+					policydocument.ConditionOperatorTypeNull: {
+						"aws:ResourceTag/elbv2.k8s.aws/cluster": "false",
+					},
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"elasticloadbalancing:CreateLoadBalancer",
+					"elasticloadbalancing:CreateTargetGroup",
+				},
+				Resource: []string{
+					"*",
+				},
+				Condition: map[policydocument.ConditionOperatorType]map[string]string{
+					policydocument.ConditionOperatorTypeNull: {
+						"aws:RequestTag/elbv2.k8s.aws/cluster": "false",
+					},
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"elasticloadbalancing:CreateListener",
+					"elasticloadbalancing:DeleteListener",
+					"elasticloadbalancing:CreateRule",
+					"elasticloadbalancing:DeleteRule",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"elasticloadbalancing:AddTags",
+					"elasticloadbalancing:RemoveTags",
+				},
+				Resource: []string{
+					"arn:aws:elasticloadbalancing:*:*:targetgroup/*/*",
+					"arn:aws:elasticloadbalancing:*:*:loadbalancer/net/*/*",
+					"arn:aws:elasticloadbalancing:*:*:loadbalancer/app/*/*",
+				},
+				Condition: map[policydocument.ConditionOperatorType]map[string]string{
+					policydocument.ConditionOperatorTypeNull: {
+						"aws:RequestTag/elbv2.k8s.aws/cluster":  "true",
+						"aws:ResourceTag/elbv2.k8s.aws/cluster": "false",
+					},
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"elasticloadbalancing:ModifyLoadBalancerAttributes",
+					"elasticloadbalancing:SetIpAddressType",
+					"elasticloadbalancing:SetSecurityGroups",
+					"elasticloadbalancing:SetSubnets",
+					"elasticloadbalancing:DeleteLoadBalancer",
+					"elasticloadbalancing:ModifyTargetGroup",
+					"elasticloadbalancing:ModifyTargetGroupAttributes",
+					"elasticloadbalancing:DeleteTargetGroup",
+				},
+				Resource: []string{
+					"*",
+				},
+				Condition: map[policydocument.ConditionOperatorType]map[string]string{
+					policydocument.ConditionOperatorTypeNull: {
+						"aws:ResourceTag/elbv2.k8s.aws/cluster": "false",
+					},
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"elasticloadbalancing:RegisterTargets",
+					"elasticloadbalancing:DeregisterTargets",
+				},
+				Resource: []string{
+					"arn:aws:elasticloadbalancing:*:*:targetgroup/*/*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"elasticloadbalancing:SetWebAcl",
+					"elasticloadbalancing:ModifyListener",
+					"elasticloadbalancing:AddListenerCertificates",
+					"elasticloadbalancing:RemoveListenerCertificates",
+					"elasticloadbalancing:ModifyRule",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+		},
+	}
+
+	return managedpolicy.New("AWSLoadBalancerControllerPolicy", policyName, policyDesc, d)
+}

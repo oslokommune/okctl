@@ -156,7 +156,7 @@ $ kubectl get service --all-namespaces
 				return formatErr(err)
 			}
 
-			err = services.ALBIngressController.DeleteALBIngressController(o.Ctx, id)
+			err = services.AWSLoadBalancerControllerService.DeleteAWSLoadBalancerController(o.Ctx, id)
 			if err != nil {
 				return formatErr(err)
 			}

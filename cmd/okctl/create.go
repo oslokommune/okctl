@@ -364,7 +364,7 @@ and database subnets.`,
 				return formatErr(err)
 			}
 
-			_, err = services.ALBIngressController.CreateALBIngressController(o.Ctx, client.CreateALBIngressControllerOpts{
+			_, err = services.AWSLoadBalancerControllerService.CreateAWSLoadBalancerController(o.Ctx, client.CreateAWSLoadBalancerControllerOpts{
 				ID:    id,
 				VPCID: vpc.VpcID,
 			})

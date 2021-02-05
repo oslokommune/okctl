@@ -55,6 +55,18 @@ func CreateALBIngressControllerRefresher(fs *afero.Afero, outputDir string) reso
 	}
 }
 
+// CreateAWSLoadBalancerControllerRefresher creates a function that gathers required runtime data for AWS
+// load balancer controller
+func CreateAWSLoadBalancerControllerRefresher(fs *afero.Afero, outputDir string) resourcetree.StateRefreshFn {
+	return func(node *resourcetree.ResourceNode) {
+		vpc := getVpcState(fs, outputDir)
+
+		node.ResourceState = reconciler.AWSLoadBalancerControllerResourceState{
+			VpcID: vpc.VpcID,
+		}
+	}
+}
+
 // CreateExternalDNSStateRefresher creates a function that gathers required runtime data for a External DNS resource
 func CreateExternalDNSStateRefresher(primaryHostedZoneFetcher HostedZoneFetcher) resourcetree.StateRefreshFn {
 	return func(node *resourcetree.ResourceNode) {

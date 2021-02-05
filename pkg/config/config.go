@@ -63,6 +63,7 @@ const (
 	DefaultVpcCloudFormationTemplate = "vpc-cf.yml"
 	DefaultVpcBaseDir                = "vpc"
 
+	DefaultAWSLoadBalancerControllerBaseDir         = "aws-load-balancer-controller"
 	DefaultAlbIngressControllerBaseDir              = "alb-ingress-controller"
 	DefaultAliasBaseDir                             = "alias"
 	DefaultAliasCloudFormationTemplate              = "alias-cf.yaml"

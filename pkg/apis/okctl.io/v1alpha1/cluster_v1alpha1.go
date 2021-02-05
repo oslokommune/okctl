@@ -180,6 +180,10 @@ type ClusterIntegrations struct {
 	// +optional
 	ALBIngressController bool `json:"albIngressController,omitempty"`
 
+	// AWSLoadBalancerController if set to true will install the AWS load balancer controller
+	// +optional
+	AWSLoadBalancerController bool `json:"awsLoadBalancerController"`
+
 	// ExternalDNS if set to true will install the external-dns controller into the cluster
 	// +optional
 	ExternalDNS bool `json:"externalDNS,omitempty"`
@@ -243,11 +247,12 @@ func NewDefaultCluster(name, env, org, repo, team, accountID string) Cluster {
 			HighAvailability: true,
 		},
 		Integrations: &ClusterIntegrations{
-			ALBIngressController: true,
-			ExternalDNS:          true,
-			ExternalSecrets:      true,
-			Cognito:              true,
-			ArgoCD:               true,
+			ALBIngressController:      true,
+			AWSLoadBalancerController: true,
+			ExternalDNS:               true,
+			ExternalSecrets:           true,
+			Cognito:                   true,
+			ArgoCD:                    true,
 		},
 	}
 }

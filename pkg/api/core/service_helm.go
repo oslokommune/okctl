@@ -59,12 +59,12 @@ func (s *helmService) CreateAWSLoadBalancerControllerHelmChart(_ context.Context
 
 	h, err := s.run.CreateAWSLoadBalancerControllerHelmChart(opts)
 	if err != nil {
-		return nil, errors.E(err, "failed to create alb ingress controller helm chart")
+		return nil, errors.E(err, "creating aws load balancer controller helm chart")
 	}
 
 	err = s.store.SaveAWSLoadBalancerControllerHelmChar(h)
 	if err != nil {
-		return nil, errors.E(err, "failed to store alb ingress controller helm chart")
+		return nil, errors.E(err, "storing aws load balancer controller helm chart")
 	}
 
 	return h, nil

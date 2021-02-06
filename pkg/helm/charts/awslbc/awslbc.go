@@ -4,6 +4,7 @@
 package awslbc
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/oslokommune/okctl/pkg/helm"
@@ -41,7 +42,7 @@ func NewDefaultValues(clusterName, vpcID, region string) *Values {
 			Create: true,
 		},
 		Image: Image{
-			Repository: "602401143452.dkr.ecr.us-west-2.amazonaws.com/amazon/aws-load-balancer-controller",
+			Repository: fmt.Sprintf("602401143452.dkr.ecr.%s.amazonaws.com/amazon/aws-load-balancer-controller", region),
 			Tag:        "v2.2.1",
 			PullPolicy: "IfNotPresent",
 		},

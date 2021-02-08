@@ -43,7 +43,7 @@ func NewDefaultValues(clusterName, vpcID, region string) *Values {
 		},
 		Image: Image{
 			Repository: fmt.Sprintf("602401143452.dkr.ecr.%s.amazonaws.com/amazon/aws-load-balancer-controller", region),
-			Tag:        "v2.2.1",
+			Tag:        "v2.1.1",
 			PullPolicy: "IfNotPresent",
 		},
 		Resources: Resources{},

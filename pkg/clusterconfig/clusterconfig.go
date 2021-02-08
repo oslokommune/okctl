@@ -4,6 +4,9 @@ package clusterconfig
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/version"
+
 	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -50,12 +53,18 @@ func (a *Args) validate() error {
 // New creates a cluster config
 // nolint: funlen
 func (a *Args) build() *v1alpha5.ClusterConfig {
+	v := version.GetVersionInfo()
+
 	cfg := &v1alpha5.ClusterConfig{
 		TypeMeta: TypeMeta(),
 		Metadata: v1alpha5.ClusterMeta{
 			Name:    a.ClusterName,
 			Region:  a.Region,
 			Version: a.Version,
+			Tags: map[string]string{
+				v1alpha1.OkctlVersionTag: v.Version,
+				v1alpha1.OkctlCommitTag:  v.ShortCommit,
+			},
 		},
 		IAM: v1alpha5.ClusterIAM{
 			ServiceRolePermissionsBoundary:             a.PermissionsBoundaryARN,
@@ -168,11 +177,17 @@ func (a *ServiceAccountArgs) validate() error {
 }
 
 func (a *ServiceAccountArgs) build() *v1alpha5.ClusterConfig {
+	v := version.GetVersionInfo()
+
 	return &v1alpha5.ClusterConfig{
 		TypeMeta: TypeMeta(),
 		Metadata: v1alpha5.ClusterMeta{
 			Name:   a.ClusterName,
 			Region: a.Region,
+			Tags: map[string]string{
+				v1alpha1.OkctlVersionTag: v.Version,
+				v1alpha1.OkctlCommitTag:  v.ShortCommit,
+			},
 		},
 		IAM: v1alpha5.ClusterIAM{
 			WithOIDC: true,
@@ -280,12 +295,18 @@ func (a *MinimalArgs) validate() error {
 // New creates a cluster config
 // nolint: funlen
 func (a *MinimalArgs) build() *v1alpha5.ClusterConfig {
+	v := version.GetVersionInfo()
+
 	cfg := &v1alpha5.ClusterConfig{
 		TypeMeta: TypeMeta(),
 		Metadata: v1alpha5.ClusterMeta{
 			Name:    a.ClusterName,
 			Region:  a.Region,
 			Version: a.Version,
+			Tags: map[string]string{
+				v1alpha1.OkctlVersionTag: v.Version,
+				v1alpha1.OkctlCommitTag:  v.ShortCommit,
+			},
 		},
 		IAM: v1alpha5.ClusterIAM{
 			ServiceRolePermissionsBoundary:             a.PermissionsBoundaryARN,

@@ -4,7 +4,6 @@ package okctl
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/context"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -12,6 +11,8 @@ import (
 	"path"
 	"syscall"
 	"time"
+
+	"github.com/oslokommune/okctl/pkg/context"
 
 	"github.com/logrusorgru/aurora/v3"
 

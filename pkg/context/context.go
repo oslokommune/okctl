@@ -20,7 +20,9 @@ const (
 )
 
 const (
-	CredentialsTypeSAML      = "saml"
+	// CredentialsTypeSAML represents using SAML for AWS authentication
+	CredentialsTypeSAML = "saml"
+	// CredentialsTypeAccessKey represents using AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY for AWS authentication
 	CredentialsTypeAccessKey = "access-key"
 )
 

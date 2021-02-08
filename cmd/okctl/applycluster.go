@@ -3,10 +3,11 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/context"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/oslokommune/okctl/pkg/context"
 
 	"github.com/logrusorgru/aurora"
 

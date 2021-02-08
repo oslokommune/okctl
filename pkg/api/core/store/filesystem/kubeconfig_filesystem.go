@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/kubeconfig"
 
 	"github.com/oslokommune/okctl/pkg/client/store"
@@ -13,9 +16,13 @@ import (
 )
 
 type kubeConfig struct {
-	kubeConfigFileName string
-	baseDir            string
-	fs                 *afero.Afero
+	kubeConfigFileName    string
+	kubeConfigBaseDir     string
+	clusterConfigFileName string
+	clusterConfigBaseDir  string
+
+	fs       *afero.Afero
+	provider v1alpha1.CloudProvider
 }
 
 // This is not good, we need to rewrite this, together with
@@ -26,7 +33,7 @@ func (k *kubeConfig) SaveKubeConfig(config *kubeconfig.Config) error {
 		return fmt.Errorf("creating kubeconfig: %w", err)
 	}
 
-	_, err = store.NewFileSystem(k.baseDir, k.fs).
+	_, err = store.NewFileSystem(k.kubeConfigBaseDir, k.fs).
 		StoreBytes(k.kubeConfigFileName, cfg).
 		Do()
 	if err != nil {
@@ -37,24 +44,47 @@ func (k *kubeConfig) SaveKubeConfig(config *kubeconfig.Config) error {
 }
 
 func (k *kubeConfig) GetKubeConfig() (*api.KubeConfig, error) {
-	kube := &api.KubeConfig{
-		Path: path.Join(k.baseDir, k.kubeConfigFileName),
+	// We create the kubeconfig on new every time to avoid
+	// situations where we get a stale/old kubeconfig.
+	// This does feel a little bit awkward.
+	cfg, err := k.createKubeConfig()
+	if err != nil {
+		return nil, err
 	}
 
-	_, err := store.NewFileSystem(k.baseDir, k.fs).
-		GetBytes(k.kubeConfigFileName, func(_ string, data []byte) {
-			kube.Content = string(data)
-		}).
+	content, err := cfg.Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	c := &api.KubeConfig{
+		Path:    path.Join(k.kubeConfigBaseDir, k.kubeConfigFileName),
+		Content: string(content),
+	}
+
+	err = k.SaveKubeConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}
+
+func (k *kubeConfig) createKubeConfig() (*kubeconfig.Config, error) {
+	clusterConfig := &v1alpha5.ClusterConfig{}
+
+	_, err := store.NewFileSystem(k.clusterConfigBaseDir, k.fs).
+		GetStruct(k.clusterConfigFileName, &clusterConfig, store.FromYAML()).
 		Do()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get kubeconfig: %w", err)
+		return nil, err
 	}
 
-	return kube, nil
+	return kubeconfig.New(clusterConfig, k.provider).Get()
 }
 
 func (k *kubeConfig) DeleteKubeConfig() error {
-	_, err := store.NewFileSystem(k.baseDir, k.fs).
+	_, err := store.NewFileSystem(k.kubeConfigBaseDir, k.fs).
 		Remove(k.kubeConfigFileName).
 		Do()
 	if err != nil {
@@ -65,10 +95,17 @@ func (k *kubeConfig) DeleteKubeConfig() error {
 }
 
 // NewKubeConfigStore returns an initialised kubeconfig store
-func NewKubeConfigStore(kubeConfigFileName, baseDir string, fs *afero.Afero) api.KubeConfigStore {
+func NewKubeConfigStore(
+	provider v1alpha1.CloudProvider,
+	kubeConfigFileName, kubeConfigBaseDir, clusterConfigFileName, clusterConfigBaseDir string,
+	fs *afero.Afero,
+) api.KubeConfigStore {
 	return &kubeConfig{
-		kubeConfigFileName: kubeConfigFileName,
-		baseDir:            baseDir,
-		fs:                 fs,
+		kubeConfigFileName:    kubeConfigFileName,
+		kubeConfigBaseDir:     kubeConfigBaseDir,
+		clusterConfigFileName: clusterConfigFileName,
+		clusterConfigBaseDir:  clusterConfigBaseDir,
+		fs:                    fs,
+		provider:              provider,
 	}
 }

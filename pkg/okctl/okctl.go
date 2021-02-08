@@ -536,11 +536,19 @@ func (o *Okctl) initialise() error {
 		return err
 	}
 
+	outputDir, err := o.GetRepoOutputDir(o.activeEnv)
+	if err != nil {
+		return err
+	}
+
 	clusterName := o.RepoStateWithEnv.GetClusterName()
 
 	kubeConfigStore := filesystem.NewKubeConfigStore(
+		o.CloudProvider,
 		config.DefaultClusterKubeConfig,
 		path.Join(appDir, config.DefaultCredentialsDirName, clusterName),
+		config.DefaultClusterConfig,
+		path.Join(outputDir, config.DefaultClusterBaseDir),
 		o.FileSystem,
 	)
 

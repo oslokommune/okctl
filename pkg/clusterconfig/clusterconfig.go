@@ -77,6 +77,7 @@ func (a *Args) build() *v1alpha5.ClusterConfig {
 				Selectors: []v1alpha5.FargateProfileSelector{
 					{Namespace: "default"},
 					{Namespace: "kube-system"},
+					{Namespace: "argocd"},
 				},
 			},
 		},
@@ -335,6 +336,7 @@ func (a *MinimalArgs) build() *v1alpha5.ClusterConfig {
 				Selectors: []v1alpha5.FargateProfileSelector{
 					{Namespace: "default"},
 					{Namespace: "kube-system"},
+					{Namespace: "argocd"},
 				},
 			},
 		},

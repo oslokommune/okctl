@@ -23,9 +23,9 @@ import (
 )
 
 const (
-	awsAccountIDLength                    = 12
-	defaultSessionDuration                = 14400
-	defaultServiceUserCredentialsDuration = 24 * time.Hour
+	awsAccountIDLength                       = 12
+	defaultSessionDuration                   = 14400
+	defaultAWSServiceUserCredentialsDuration = 24 * time.Hour
 )
 
 // Credentials contains all data required for using AWS
@@ -211,7 +211,7 @@ func NewAuthEnvironment(region string, getter KeyGetter) Retriever {
 		AccessKeyID:     getter("AWS_ACCESS_KEY_ID"),
 		SecretAccessKey: getter("AWS_SECRET_ACCESS_KEY"),
 		Region:          region,
-		Expires:         time.Now().Add(defaultServiceUserCredentialsDuration),
+		Expires:         time.Now().Add(defaultAWSServiceUserCredentialsDuration),
 	}
 
 	return &AuthStatic{

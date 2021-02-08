@@ -15,8 +15,9 @@ builds:
     env:
       - CGO_ENABLED=0
     ldflags:
-      - -X main.GitCommit={{.Commit}}
-      - -X main.OkctlVersion={{.Version}}
+      - -X github.com/oslokommune/okctl/pkg/version.ShortCommit={{.ShortCommit}}
+      - -X github.com/oslokommune/okctl/pkg/version.Version={{.Version}}
+      - -X github.com/oslokommune/okctl/pkg/version.BuildDate={{.Date}}
     goos:
       - darwin
       - linux

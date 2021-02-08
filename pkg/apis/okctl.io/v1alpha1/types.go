@@ -17,6 +17,11 @@ const (
 	OkRoleARNPattern = "arn:aws:iam::%s:role/oslokommune/iamadmin-SAML"
 	// OkSamlURL is the starting point for authenticating via KeyCloak towards AWS
 	OkSamlURL = "https://login.oslo.kommune.no/auth/realms/AD/protocol/saml/clients/amazon-aws"
+
+	// OkctlVersionTag defines the version of okctl used to provision the given resources
+	OkctlVersionTag = "alpha.okctl.io/okctl-version"
+	// OkctlCommitTag defines the git commit hash used to provision the given resources
+	OkctlCommitTag = "alpha.okctl.io/okctl-commit"
 )
 
 // SupportedRegions returns the supported regions on AWS

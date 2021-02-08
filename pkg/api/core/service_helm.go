@@ -43,7 +43,7 @@ func (s *helmService) CreateAlbIngressControllerHelmChart(_ context.Context, opt
 		return nil, errors.E(err, "failed to create alb ingress controller helm chart")
 	}
 
-	err = s.store.SaveAlbIngressControllerHelmChar(h)
+	err = s.store.SaveAlbIngressControllerHelmChart(h)
 	if err != nil {
 		return nil, errors.E(err, "failed to store alb ingress controller helm chart")
 	}
@@ -62,7 +62,7 @@ func (s *helmService) CreateAWSLoadBalancerControllerHelmChart(_ context.Context
 		return nil, errors.E(err, "creating aws load balancer controller helm chart")
 	}
 
-	err = s.store.SaveAWSLoadBalancerControllerHelmChar(h)
+	err = s.store.SaveAWSLoadBalancerControllerHelmChart(h)
 	if err != nil {
 		return nil, errors.E(err, "storing aws load balancer controller helm chart")
 	}

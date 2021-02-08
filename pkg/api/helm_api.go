@@ -111,7 +111,7 @@ type HelmRun interface {
 // HelmStore defines the storage layer
 type HelmStore interface {
 	SaveExternalSecretsHelmChart(*Helm) error
-	SaveAlbIngressControllerHelmChar(*Helm) error
-	SaveAWSLoadBalancerControllerHelmChar(*Helm) error
+	SaveAlbIngressControllerHelmChart(*Helm) error
+	SaveAWSLoadBalancerControllerHelmChart(*Helm) error
 	SaveArgoCD(*Helm) error
 }

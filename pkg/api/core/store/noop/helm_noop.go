@@ -8,11 +8,11 @@ func (h *helmStore) SaveExternalSecretsHelmChart(helm *api.Helm) error {
 	return nil
 }
 
-func (h *helmStore) SaveAlbIngressControllerHelmChar(helm *api.Helm) error {
+func (h *helmStore) SaveAlbIngressControllerHelmChart(helm *api.Helm) error {
 	return nil
 }
 
-func (h *helmStore) SaveAWSLoadBalancerControllerHelmChar(helm *api.Helm) error {
+func (h *helmStore) SaveAWSLoadBalancerControllerHelmChart(helm *api.Helm) error {
 	return nil
 }
 

@@ -28,6 +28,37 @@ type argoCDService struct {
 	param    client.ParameterService
 }
 
+func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgoCDOpts) error {
+	err := s.spinner.Start("argocd")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	info := s.state.GetArgoCD(opts.ID)
+
+	err = s.cert.DeleteCertificate(ctx, api.DeleteCertificateOpts{
+		ID:     opts.ID,
+		Domain: info.ArgoDomain,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = s.identity.DeleteIdentityPoolClient(ctx, api.DeleteIdentityPoolClientOpts{
+		ID:      opts.ID,
+		Purpose: "argocd",
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // nolint: funlen
 func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgoCDOpts) (*client.ArgoCD, error) {
 	err := s.spinner.Start("argocd")

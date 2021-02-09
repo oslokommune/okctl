@@ -1,6 +1,7 @@
 package state
 
 import (
+	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/oslokommune/okctl/pkg/config/state"
@@ -8,6 +9,15 @@ import (
 
 type argoCDState struct {
 	state state.RepositoryStateWithEnv
+}
+
+func (s *argoCDState) GetArgoCD(id api.ID) client.ArgoCDStateInfo {
+	argo := s.state.GetArgoCD()
+
+	return client.ArgoCDStateInfo{
+		ID:         id,
+		ArgoDomain: argo.Domain,
+	}
 }
 
 func (s *argoCDState) SaveArgoCD(cd *client.ArgoCD) (*store.Report, error) {

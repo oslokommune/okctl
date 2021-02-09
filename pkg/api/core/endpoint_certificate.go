@@ -12,3 +12,9 @@ func makeCreateCertificateEndpoint(s api.CertificateService) endpoint.Endpoint {
 		return s.CreateCertificate(ctx, request.(api.CreateCertificateOpts))
 	}
 }
+
+func makeDeleteCertificateEndpoint(s api.CertificateService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return Empty{}, s.DeleteCertificate(ctx, request.(api.DeleteCertificateOpts))
+	}
+}

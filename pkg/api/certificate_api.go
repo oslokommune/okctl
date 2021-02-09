@@ -25,11 +25,6 @@ type CreateCertificateOpts struct {
 	HostedZoneID string
 }
 
-// DeleteCertificateOpts contains input required to delete a certificate
-type DeleteCertificateOpts struct {
-	Domain string
-}
-
 // Validate the input
 func (o CreateCertificateOpts) Validate() error {
 	return validation.ValidateStruct(&o,
@@ -40,9 +35,24 @@ func (o CreateCertificateOpts) Validate() error {
 	)
 }
 
+// DeleteCertificateOpts contains input required to delete a certificate
+type DeleteCertificateOpts struct {
+	ID     ID
+	Domain string
+}
+
+// Validate the deletion request inputs
+func (o DeleteCertificateOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.Domain, validation.Required),
+	)
+}
+
 // CertificateService defines the service layer operations
 type CertificateService interface {
 	CreateCertificate(ctx context.Context, opts CreateCertificateOpts) (*Certificate, error)
+	DeleteCertificate(ctx context.Context, opts DeleteCertificateOpts) error
 }
 
 // CertificateCloudProvider defines the cloud interaction

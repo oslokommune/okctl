@@ -12,20 +12,34 @@ type certificateService struct {
 	store         api.CertificateStore
 }
 
+func (c *certificateService) DeleteCertificate(_ context.Context, opts api.DeleteCertificateOpts) error {
+	err := opts.Validate()
+	if err != nil {
+		return errors.E(err, "validating certificate inputs", errors.Invalid)
+	}
+
+	err = c.cloudProvider.DeleteCertificate(opts)
+	if err != nil {
+		return errors.E(err, "deleting certificate", errors.Internal)
+	}
+
+	return nil
+}
+
 func (c *certificateService) CreateCertificate(ctx context.Context, opts api.CreateCertificateOpts) (*api.Certificate, error) {
 	err := opts.Validate()
 	if err != nil {
-		return nil, errors.E(err, "failed to validate certificate inputs", errors.Invalid)
+		return nil, errors.E(err, "validating certificate inputs", errors.Invalid)
 	}
 
 	cert, err := c.cloudProvider.CreateCertificate(opts)
 	if err != nil {
-		return nil, errors.E(err, "failed to create certificate", errors.Internal)
+		return nil, errors.E(err, "creating certificate", errors.Internal)
 	}
 
 	err = c.store.SaveCertificate(cert)
 	if err != nil {
-		return nil, errors.E(err, "failed to store certificate", errors.IO)
+		return nil, errors.E(err, "storing certificate", errors.IO)
 	}
 
 	return cert, nil

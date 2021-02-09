@@ -20,6 +20,7 @@ func (s *identityManagerService) DeleteIdentityPool(_ context.Context, opts api.
 	}
 
 	err = s.cert.DeleteCertificate(api.DeleteCertificateOpts{
+		ID:     opts.ID,
 		Domain: opts.Domain,
 	})
 	if err != nil {

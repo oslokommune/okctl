@@ -19,6 +19,39 @@ type identityManagerService struct {
 	report  client.IdentityManagerReport
 }
 
+func (s *identityManagerService) DeleteIdentityPoolClient(_ context.Context, opts api.DeleteIdentityPoolClientOpts) error {
+	err := s.spinner.Start("deleting identity-pool-client")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	err = s.api.DeleteIdentityPoolClient(opts)
+	if err != nil {
+		return err
+	}
+
+	r1, err := s.store.RemoveIdentityPoolClient(opts)
+	if err != nil {
+		return err
+	}
+
+	r2, err := s.state.RemoveIdentityPoolClient(opts)
+	if err != nil {
+		return err
+	}
+
+	err = s.report.ReportDeleteIdentityPoolClient([]*store.Report{r1, r2})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // DeleteIdentityPool and all users
 func (s *identityManagerService) DeleteIdentityPool(_ context.Context, id api.ID) error {
 	err := s.spinner.Start("deleting identity-pool")
@@ -45,17 +78,20 @@ func (s *identityManagerService) DeleteIdentityPool(_ context.Context, id api.ID
 		return err
 	}
 
-	report, err := s.store.RemoveIdentityPool(id)
+	r1, err := s.store.RemoveIdentityPool(id)
 	if err != nil {
 		return err
 	}
 
-	_, err = s.state.RemoveIdentityPool(id)
+	r2, err := s.state.RemoveIdentityPool(id)
 	if err != nil {
 		return err
 	}
 
-	err = s.report.ReportDeleteIdentityPool(report)
+	err = s.report.ReportDeleteIdentityPool([]*store.Report{r1, r2})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

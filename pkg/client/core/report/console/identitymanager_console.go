@@ -14,8 +14,16 @@ type identityManagerReport struct {
 	console *Console
 }
 
-func (r *identityManagerReport) ReportDeleteIdentityPool(report *store.Report) error {
-	return r.console.Report(report.Actions, "identitypool", aurora.Green("deleting").String())
+func (r *identityManagerReport) ReportDeleteIdentityPool(reports []*store.Report) error {
+	var actions []store.Action // nolint: prealloc
+
+	for _, report := range reports {
+		actions = append(actions, report.Actions...)
+	}
+
+	description := aurora.Green("identity-pool").String()
+
+	return r.console.Report(actions, "identity-manager", description)
 }
 
 func (r *identityManagerReport) ReportIdentityPoolUser(client *api.IdentityPoolUser, reports []*store.Report) error {
@@ -50,6 +58,18 @@ func (r *identityManagerReport) ReportIdentityPool(pool *api.IdentityPool, repor
 	}
 
 	description := aurora.Green("identity-pool").String()
+
+	return r.console.Report(actions, "identity-manager", description)
+}
+
+func (r *identityManagerReport) ReportDeleteIdentityPoolClient(reports []*store.Report) error {
+	var actions []store.Action // nolint: prealloc
+
+	for _, report := range reports {
+		actions = append(actions, report.Actions...)
+	}
+
+	description := aurora.Green("identity-pool-client").String()
 
 	return r.console.Report(actions, "identity-manager", description)
 }

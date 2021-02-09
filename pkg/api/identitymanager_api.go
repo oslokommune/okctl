@@ -61,6 +61,7 @@ type CreateIdentityPoolUserOpts struct {
 
 // DeleteIdentityPoolOpts input
 type DeleteIdentityPoolOpts struct {
+	ID         ID
 	UserPoolID string
 	Domain     string
 }

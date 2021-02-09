@@ -17,6 +17,18 @@ type certificateReport struct {
 	console *Console
 }
 
+func (r *certificateReport) RemoveCertificate(domain string, reports []*store.Report) error {
+	var actions []store.Action // nolint: prealloc
+
+	for _, report := range reports {
+		actions = append(actions, report.Actions...)
+	}
+
+	description := fmt.Sprintf("%s", aurora.Green(domain))
+
+	return r.console.Report(actions, "certificate", description)
+}
+
 func (r *certificateReport) SaveCertificate(certificate *api.Certificate, reports []*store.Report) error {
 	var actions []store.Action // nolint: prealloc
 

@@ -12,10 +12,8 @@ type certificateAPI struct {
 	client *HTTPClient
 }
 
-// nolint: godox
-// TODO - Consider making own endpoint to delete certificate in separate
 func (a *certificateAPI) DeleteCertificate(opts api.DeleteCertificateOpts) error {
-	panic("Not implemented, called directly inside api when running delete identitypool")
+	return a.client.DoDelete(TargetCertificate, &opts)
 }
 
 func (a *certificateAPI) CreateCertificate(opts api.CreateCertificateOpts) (*api.Certificate, error) {

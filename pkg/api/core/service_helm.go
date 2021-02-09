@@ -117,6 +117,25 @@ func (s *helmService) CreateExternalSecretsHelmChart(_ context.Context, opts api
 	return h, nil
 }
 
+func (s *helmService) CreateKubePrometheusStack(ctx context.Context, opts api.CreateKubePrometheusStackOpts) (*api.Helm, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate input options: %w", err)
+	}
+
+	h, err := s.run.CreateKubePrometheusStack(opts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create kube prometheus stack helm chart: %w", err)
+	}
+
+	err = s.store.SaveKubePrometheusStack(h)
+	if err != nil {
+		return nil, fmt.Errorf("failed to store kube prometheus stack helm chart: %w", err)
+	}
+
+	return h, nil
+}
+
 // NewHelmService returns an initialised helm service
 func NewHelmService(run api.HelmRun, store api.HelmStore) api.HelmService {
 	return &helmService{

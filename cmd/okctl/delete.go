@@ -147,6 +147,14 @@ including VPC, this is a highly destructive operation.`,
 				}
 			}
 
+			err = services.IdentityManager.DeleteIdentityPoolClient(o.Ctx, api.DeleteIdentityPoolClientOpts{
+				ID:      id,
+				Purpose: "argocd", // well, this is not very pretty is it
+			})
+			if err != nil {
+				return formatErr(err)
+			}
+
 			err = services.IdentityManager.DeleteIdentityPool(o.Ctx, id)
 			if err != nil {
 				return formatErr(err)

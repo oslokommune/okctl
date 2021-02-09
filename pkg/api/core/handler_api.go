@@ -52,6 +52,7 @@ type Endpoints struct {
 	CreateAWSLoadBalancerControllerPolicy         endpoint.Endpoint
 	DeleteAWSLoadBalancerControllerPolicy         endpoint.Endpoint
 	CreateAWSLoadBalancerControllerHelmChart      endpoint.Endpoint
+	DeleteCertificate                             endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -94,6 +95,7 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateAWSLoadBalancerControllerPolicy:         makeCreateAWSLoadBalancerControllerPolicyEndpoint(s.ManagedPolicy),
 		DeleteAWSLoadBalancerControllerPolicy:         makeDeleteAWSLoadBalancerControllerPolicyEndpoint(s.ManagedPolicy),
 		CreateAWSLoadBalancerControllerHelmChart:      makeCreateAWSLoadBalancerControllerHelmChartEndpoint(s.Helm),
+		DeleteCertificate:                             makeDeleteCertificateEndpoint(s.Certificate),
 	}
 }
 
@@ -135,6 +137,7 @@ type Handlers struct {
 	CreateAWSLoadBalancerControllerPolicy         http.Handler
 	DeleteAWSLoadBalancerControllerPolicy         http.Handler
 	CreateAWSLoadBalancerControllerHelmChart      http.Handler
+	DeleteCertificate                             http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -203,6 +206,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateAWSLoadBalancerControllerPolicy:         newServer(endpoints.CreateAWSLoadBalancerControllerPolicy, decodeCreateAWSLoadBalancerControllerPolicyRequest),
 		DeleteAWSLoadBalancerControllerPolicy:         newServer(endpoints.DeleteAWSLoadBalancerControllerPolicy, decodeIDRequest),
 		CreateAWSLoadBalancerControllerHelmChart:      newServer(endpoints.CreateAWSLoadBalancerControllerHelmChart, decodeCreateAWSLoadBalancerControllerHelmChart),
+		DeleteCertificate:                             newServer(endpoints.DeleteCertificate, decodeDeleteCertificate),
 	}
 }
 
@@ -286,6 +290,7 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		})
 		r.Route("/certificates", func(r chi.Router) {
 			r.Method(http.MethodPost, "/", handlers.CreateCertificate)
+			r.Method(http.MethodDelete, "/", handlers.DeleteCertificate)
 		})
 		r.Route("/parameters", func(r chi.Router) {
 			r.Route("/secret", func(r chi.Router) {
@@ -393,6 +398,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateAWSLoadBalancerControllerPolicy:         logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, awsLoadBalancerControllerTag}, "/"), "create")(endpoints.CreateAWSLoadBalancerControllerPolicy),
 			DeleteAWSLoadBalancerControllerPolicy:         logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, awsLoadBalancerControllerTag}, "/"), "delete")(endpoints.DeleteAWSLoadBalancerControllerPolicy),
 			CreateAWSLoadBalancerControllerHelmChart:      logmd.Logging(logger, strings.Join([]string{helmTag, awsLoadBalancerControllerTag}, "/"), "create")(endpoints.CreateAWSLoadBalancerControllerHelmChart),
+			DeleteCertificate:                             logmd.Logging(logger, certificateTag, "delete")(endpoints.DeleteCertificate),
 		}
 	}
 }

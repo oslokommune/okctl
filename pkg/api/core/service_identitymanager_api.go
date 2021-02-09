@@ -13,23 +13,32 @@ type identityManagerService struct {
 	cert     api.CertificateCloudProvider
 }
 
-func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, opts api.DeleteIdentityPoolOpts) error {
+func (s *identityManagerService) DeleteIdentityPool(_ context.Context, opts api.DeleteIdentityPoolOpts) error {
 	err := s.provider.DeleteIdentityPool(opts)
 	if err != nil {
-		return err
+		return errors.E(err, "deleting an identity pool", errors.Internal)
 	}
 
 	err = s.cert.DeleteCertificate(api.DeleteCertificateOpts{
 		Domain: opts.Domain,
 	})
 	if err != nil {
-		return err
+		return errors.E(err, "deleting an identity pool certificate", errors.Internal)
 	}
 
 	return nil
 }
 
-func (s *identityManagerService) CreateIdentityPoolUser(ctx context.Context, opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {
+func (s *identityManagerService) DeleteIdentityPoolClient(_ context.Context, opts api.DeleteIdentityPoolClientOpts) error {
+	err := s.provider.DeleteIdentityPoolClient(opts)
+	if err != nil {
+		return errors.E(err, "deleting identity pool client", errors.Internal)
+	}
+
+	return nil
+}
+
+func (s *identityManagerService) CreateIdentityPoolUser(_ context.Context, opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {
 	user, err := s.provider.CreateIdentityPoolUser(opts)
 	if err != nil {
 		return nil, errors.E(err, "creating an identity pool user", errors.Internal)

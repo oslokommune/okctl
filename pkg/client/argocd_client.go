@@ -21,6 +21,13 @@ type ArgoCD struct {
 	Chart          *api.Helm
 }
 
+// ArgoCDStateInfo represents a subset of the available
+// argocd state information
+type ArgoCDStateInfo struct {
+	ID         api.ID
+	ArgoDomain string
+}
+
 // CreateArgoCDOpts contains the required inputs
 // for setting up argo cd
 type CreateArgoCDOpts struct {
@@ -34,9 +41,16 @@ type CreateArgoCDOpts struct {
 	Repository         *GithubRepository
 }
 
+// DeleteArgoCDOpts contains the required inputs
+// for deleting an argocd installation
+type DeleteArgoCDOpts struct {
+	ID api.ID
+}
+
 // ArgoCDService is a business logic implementation
 type ArgoCDService interface {
 	CreateArgoCD(ctx context.Context, opts CreateArgoCDOpts) (*ArgoCD, error)
+	DeleteArgoCD(ctx context.Context, opts DeleteArgoCDOpts) error
 }
 
 // ArgoCDAPI invokes the APIs for creating resources
@@ -57,4 +71,5 @@ type ArgoCDReport interface {
 // ArgoCDState implements the state layer
 type ArgoCDState interface {
 	SaveArgoCD(cd *ArgoCD) (*store.Report, error)
+	GetArgoCD(id api.ID) ArgoCDStateInfo
 }

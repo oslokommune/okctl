@@ -138,6 +138,13 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
+			err = services.ArgoCD.DeleteArgoCD(o.Ctx, client.DeleteArgoCDOpts{
+				ID: id,
+			})
+			if err != nil {
+				return formatErr(err)
+			}
+
 			if delzones == "true" {
 				err = services.Domain.DeletePrimaryHostedZone(o.Ctx, client.DeletePrimaryHostedZoneOpts{
 					ID: id,
@@ -145,14 +152,6 @@ including VPC, this is a highly destructive operation.`,
 				if err != nil {
 					return formatErr(err)
 				}
-			}
-
-			err = services.IdentityManager.DeleteIdentityPoolClient(o.Ctx, api.DeleteIdentityPoolClientOpts{
-				ID:      id,
-				Purpose: "argocd", // well, this is not very pretty is it
-			})
-			if err != nil {
-				return formatErr(err)
 			}
 
 			err = services.IdentityManager.DeleteIdentityPool(o.Ctx, id)

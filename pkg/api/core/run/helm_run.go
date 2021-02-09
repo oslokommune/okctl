@@ -104,6 +104,12 @@ func (r *helmRun) createHelmChart(id api.ID, chart *helm.Chart) (*api.Helm, erro
 	}, nil
 }
 
+func (r *helmRun) CreateKubePrometheusStack(opts api.CreateKubePrometheusStackOpts) (*api.Helm, error) {
+	chart := externalsecrets.ExternalSecrets(externalsecrets.DefaultExternalSecretsValues())
+
+	return r.createHelmChart(opts.ID, chart)
+}
+
 // NewHelmRun returns an initialised helm runner
 func NewHelmRun(helm helm.Helmer, kubeConfigStore api.KubeConfigStore) api.HelmRun {
 	return &helmRun{

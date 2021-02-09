@@ -85,6 +85,13 @@ func (s *identityManagerStore) RemoveIdentityPool(id api.ID) (*store.Report, err
 	return report, err
 }
 
+func (s *identityManagerStore) RemoveIdentityPoolClient(opts api.DeleteIdentityPoolClientOpts) (*store.Report, error) {
+	return store.NewFileSystem(path.Join(s.clientPaths.BaseDir, opts.Purpose), s.fs).
+		Remove(s.clientPaths.OutputFile).
+		Remove(s.clientPaths.CloudFormationFile).
+		Do()
+}
+
 func (s *identityManagerStore) SaveIdentityPoolClient(client *api.IdentityPoolClient) (*store.Report, error) {
 	c := &IdentityPoolClient{
 		ID:          client.ID,

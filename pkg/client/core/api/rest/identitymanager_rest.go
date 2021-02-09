@@ -16,6 +16,10 @@ type identityManagerAPI struct {
 	client *HTTPClient
 }
 
+func (a *identityManagerAPI) DeleteIdentityPoolClient(opts api.DeleteIdentityPoolClientOpts) error {
+	return a.client.DoDelete(TargetIdentityPoolClient, &opts)
+}
+
 func (a *identityManagerAPI) DeleteIdentityPool(opts api.DeleteIdentityPoolOpts) error {
 	return a.client.DoDelete(TargetIdentityPool, &opts)
 }

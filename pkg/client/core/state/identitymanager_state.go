@@ -13,7 +13,7 @@ type identityManagerState struct {
 	state state.IdentityPooler
 }
 
-func (s *identityManagerState) RemoveIdentityPool(id api.ID) (*store.Report, error) {
+func (s *identityManagerState) RemoveIdentityPool(_ api.ID) (*store.Report, error) {
 	return s.state.DeleteIdentityPool()
 }
 
@@ -36,6 +36,10 @@ func (s *identityManagerState) SaveIdentityPoolUser(user *api.IdentityPoolUser) 
 	}, report.Actions...)
 
 	return report, nil
+}
+
+func (s *identityManagerState) RemoveIdentityPoolClient(opts api.DeleteIdentityPoolClientOpts) (*store.Report, error) {
+	return s.state.DeleteIdentityPoolClient(opts.Purpose)
 }
 
 func (s *identityManagerState) SaveIdentityPoolClient(client *api.IdentityPoolClient) (*store.Report, error) {

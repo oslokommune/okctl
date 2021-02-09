@@ -39,9 +39,10 @@ type ClusterStatus struct {
 
 // ClusterMeta comes from eksctl and maps up what we need
 type ClusterMeta struct {
-	Name    string `json:"name"`
-	Region  string `json:"region"`
-	Version string `json:"version,omitempty"`
+	Name    string            `json:"name"`
+	Region  string            `json:"region"`
+	Version string            `json:"version,omitempty"`
+	Tags    map[string]string `json:"tags,omitempty"`
 }
 
 func (c *ClusterMeta) String() string {

@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/version"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	cfPkg "github.com/aws/aws-sdk-go/service/cloudformation"
@@ -152,11 +154,23 @@ func (r *Runner) CreateIfNotExists(stackName string, template []byte, capabiliti
 		return nil
 	}
 
+	v := version.GetVersionInfo()
+
 	stackInput := &cfPkg.CreateStackInput{
 		OnFailure:        aws.String(cfPkg.OnFailureDelete),
 		StackName:        aws.String(stackName),
 		TemplateBody:     aws.String(string(template)),
 		TimeoutInMinutes: aws.Int64(timeout),
+		Tags: []*cfPkg.Tag{
+			{
+				Key:   aws.String(v1alpha1.OkctlVersionTag),
+				Value: aws.String(v.Version),
+			},
+			{
+				Key:   aws.String(v1alpha1.OkctlCommitTag),
+				Value: aws.String(v.ShortCommit),
+			},
+		},
 	}
 
 	for _, c := range capabilities {

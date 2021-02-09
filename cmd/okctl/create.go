@@ -462,7 +462,7 @@ and database subnets.`,
 				AwsIamAuthenticatorCmd:  aurora.Green("aws-iam-authenticator").String(),
 				KubectlPath:             k.BinaryPath,
 				AwsIamAuthenticatorPath: a.BinaryPath,
-				K8sClusterVersion:       aurora.Green("1.17").String(),
+				K8sClusterVersion:       aurora.Green(config.DefaultEKSKubernetesVersion).String(),
 				ArgoCD:                  aurora.Green("ArgoCD").String(),
 				ArgoCDURL:               aurora.Green(argoCD.ArgoURL).String(),
 			}

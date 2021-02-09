@@ -20,7 +20,7 @@ type identityManagerService struct {
 }
 
 // DeleteIdentityPool and all users
-func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, opts api.ID) error {
+func (s *identityManagerService) DeleteIdentityPool(_ context.Context, id api.ID) error {
 	err := s.spinner.Start("deleting identity-pool")
 	if err != nil {
 		return err
@@ -37,6 +37,7 @@ func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, opts ap
 	}
 
 	err = s.api.DeleteIdentityPool(api.DeleteIdentityPoolOpts{
+		ID:         id,
 		UserPoolID: pool.UserPoolID,
 		Domain:     pool.AuthDomain,
 	})
@@ -44,12 +45,12 @@ func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, opts ap
 		return err
 	}
 
-	report, err := s.store.RemoveIdentityPool(opts)
+	report, err := s.store.RemoveIdentityPool(id)
 	if err != nil {
 		return err
 	}
 
-	_, err = s.state.RemoveIdentityPool(opts)
+	_, err = s.state.RemoveIdentityPool(id)
 	if err != nil {
 		return err
 	}
@@ -59,7 +60,7 @@ func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, opts ap
 	return nil
 }
 
-func (s *identityManagerService) CreateIdentityPoolUser(ctx context.Context, opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {
+func (s *identityManagerService) CreateIdentityPoolUser(_ context.Context, opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {
 	err := s.spinner.Start("identity-pool-user")
 	if err != nil {
 		return nil, err

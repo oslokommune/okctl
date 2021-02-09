@@ -23,22 +23,6 @@ type identityManagerCloudProvider struct {
 	provider v1alpha1.CloudProvider
 }
 
-func (s *identityManagerCloudProvider) DeleteIdentityPool(opts api.DeleteIdentityPoolOpts) error {
-	c := cognito.New(s.provider)
-
-	err := c.DeleteAuthDomain(opts.UserPoolID, opts.Domain)
-	if err != nil {
-		return err
-	}
-
-	err = c.DeleteUserPool(opts.UserPoolID)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (s *identityManagerCloudProvider) CreateIdentityPoolClient(opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
 	b := cfn.New(components.NewUserPoolClient(
 		opts.Purpose,
@@ -86,6 +70,22 @@ func (s *identityManagerCloudProvider) CreateIdentityPoolClient(opts api.CreateI
 	c.ClientSecret = secret
 
 	return c, nil
+}
+
+func (s *identityManagerCloudProvider) DeleteIdentityPool(opts api.DeleteIdentityPoolOpts) error {
+	r := cfn.NewRunner(s.provider)
+
+	err := r.Delete(cfn.NewStackNamer().AliasRecordSet(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Domain)))
+	if err != nil {
+		return fmt.Errorf("deleting alias record set for identity pool: %w", err)
+	}
+
+	err = r.Delete(cfn.NewStackNamer().IdentityPool(opts.ID.Repository, opts.ID.Environment))
+	if err != nil {
+		return fmt.Errorf("deleting identity pool: %w", err)
+	}
+
+	return nil
 }
 
 // nolint: funlen

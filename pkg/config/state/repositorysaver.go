@@ -63,6 +63,7 @@ type IdentityPooler interface {
 	GetIdentityPool() IdentityPool
 	SaveIdentityPoolClient(client IdentityPoolClient) (*store.Report, error)
 	GetIdentityPoolClient(purpose string) IdentityPoolClient
+	DeleteIdentityPoolClient(purpose string) (*store.Report, error)
 	GetIdentityPoolUser(email string) IdentityPoolUser
 	SaveIdentityPoolUser(client IdentityPoolUser) (*store.Report, error)
 	DeleteIdentityPool() (*store.Report, error)
@@ -99,6 +100,13 @@ type repository struct {
 	state   *Repository
 	env     string
 	saverFn SaverFn
+}
+
+func (r *repository) DeleteIdentityPoolClient(purpose string) (*store.Report, error) {
+	pool := r.GetIdentityPool()
+	delete(pool.Clients, purpose)
+
+	return r.SaveIdentityPool(pool)
 }
 
 func (r *repository) DeleteIdentityPool() (*store.Report, error) {

@@ -49,6 +49,7 @@ type Certificater interface {
 	SaveCertificate(certificate Certificate) (*store.Report, error)
 	GetCertificate(domain string) Certificate
 	GetCertificates() map[string]Certificate
+	DeleteCertificate(domain string) (*store.Report, error)
 }
 
 // Metadataer defines the allowed action on the metadata state
@@ -197,6 +198,14 @@ func (r *repository) SaveCertificate(certificate Certificate) (*store.Report, er
 	r.state.Clusters[r.env].Certificates[certificate.Domain] = certificate
 
 	return r.save()
+}
+
+func (r *repository) DeleteCertificate(domain string) (*store.Report, error) {
+	cluster := r.GetCluster()
+
+	delete(cluster.Certificates, domain)
+
+	return r.SaveCluster(cluster)
 }
 
 // GetCertificate returns the certificate for the given domain

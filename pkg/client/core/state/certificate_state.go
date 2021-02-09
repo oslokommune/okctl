@@ -13,6 +13,10 @@ type certificateState struct {
 	state state.Certificater
 }
 
+func (s *certificateState) RemoveCertificate(domain string) (*store.Report, error) {
+	return s.state.DeleteCertificate(domain)
+}
+
 func (s *certificateState) GetCertificate(domain string) state.Certificate {
 	return s.state.GetCertificate(domain)
 }

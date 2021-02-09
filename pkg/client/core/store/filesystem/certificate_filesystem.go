@@ -17,6 +17,13 @@ type certificateStore struct {
 	fs    *afero.Afero
 }
 
+func (s *certificateStore) RemoveCertificate(domain string) (*store.Report, error) {
+	return store.NewFileSystem(path.Join(s.paths.BaseDir, domain), s.fs).
+		Remove(s.paths.OutputFile).
+		Remove(s.paths.CloudFormationFile).
+		Do()
+}
+
 // Certificate contains the data we store to the outputs
 type Certificate struct {
 	ID             api.ID

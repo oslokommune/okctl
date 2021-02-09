@@ -19,6 +19,39 @@ type certificateService struct {
 	report  client.CertificateReport
 }
 
+func (s *certificateService) DeleteCertificate(_ context.Context, opts api.DeleteCertificateOpts) error {
+	err := s.spinner.Start("delete certificate")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	err = s.api.DeleteCertificate(opts)
+	if err != nil {
+		return err
+	}
+
+	r1, err := s.store.RemoveCertificate(opts.Domain)
+	if err != nil {
+		return err
+	}
+
+	r2, err := s.state.RemoveCertificate(opts.Domain)
+	if err != nil {
+		return err
+	}
+
+	err = s.report.RemoveCertificate(opts.Domain, []*store.Report{r1, r2})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *certificateService) CreateCertificate(_ context.Context, opts api.CreateCertificateOpts) (*api.Certificate, error) {
 	err := s.spinner.Start("certificate")
 	if err != nil {

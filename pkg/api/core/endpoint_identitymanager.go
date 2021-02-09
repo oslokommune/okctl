@@ -30,3 +30,9 @@ func makeDeleteIdentityPoolEndpoint(s api.IdentityManagerService) endpoint.Endpo
 		return &Empty{}, s.DeleteIdentityPool(ctx, request.(api.DeleteIdentityPoolOpts))
 	}
 }
+
+func makeDeleteIdentityPoolClientEndpoint(s api.IdentityManagerService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return &Empty{}, s.DeleteIdentityPoolClient(ctx, request.(api.DeleteIdentityPoolClientOpts))
+	}
+}

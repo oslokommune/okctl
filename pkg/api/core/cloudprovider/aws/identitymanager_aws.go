@@ -23,6 +23,15 @@ type identityManagerCloudProvider struct {
 	provider v1alpha1.CloudProvider
 }
 
+func (s *identityManagerCloudProvider) DeleteIdentityPoolClient(opts api.DeleteIdentityPoolClientOpts) error {
+	err := cfn.NewRunner(s.provider).Delete(cfn.NewStackNamer().IdentityPoolClient(opts.ID.Repository, opts.ID.Environment, opts.Purpose))
+	if err != nil {
+		return fmt.Errorf("deleting identity pool client: %w", err)
+	}
+
+	return nil
+}
+
 func (s *identityManagerCloudProvider) CreateIdentityPoolClient(opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
 	b := cfn.New(components.NewUserPoolClient(
 		opts.Purpose,

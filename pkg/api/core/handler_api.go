@@ -46,6 +46,7 @@ type Endpoints struct {
 	CreateIdentityPoolClient                      endpoint.Endpoint
 	CreateIdentityPoolUser                        endpoint.Endpoint
 	DeleteIdentityPool                            endpoint.Endpoint
+	DeleteIdentityPoolClient                      endpoint.Endpoint
 	CreateAWSLoadBalancerControllerServiceAccount endpoint.Endpoint
 	DeleteAWSLoadBalancerControllerServiceAccount endpoint.Endpoint
 	CreateAWSLoadBalancerControllerPolicy         endpoint.Endpoint
@@ -87,6 +88,7 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateIdentityPoolClient:                      makeCreateIdentityPoolClient(s.IdentityManager),
 		CreateIdentityPoolUser:                        makeCreateIdentityPoolUser(s.IdentityManager),
 		DeleteIdentityPool:                            makeDeleteIdentityPoolEndpoint(s.IdentityManager),
+		DeleteIdentityPoolClient:                      makeDeleteIdentityPoolClientEndpoint(s.IdentityManager),
 		CreateAWSLoadBalancerControllerServiceAccount: makeCreateAWSLoadBalancerControllerServiceAccountEndpoint(s.ServiceAccount),
 		DeleteAWSLoadBalancerControllerServiceAccount: makeDeleteAWSLoadBalancerControllerServiceAccountEndpoint(s.ServiceAccount),
 		CreateAWSLoadBalancerControllerPolicy:         makeCreateAWSLoadBalancerControllerPolicyEndpoint(s.ManagedPolicy),
@@ -127,6 +129,7 @@ type Handlers struct {
 	CreateIdentityPoolClient                      http.Handler
 	CreateIdentityPoolUser                        http.Handler
 	DeleteIdentityPool                            http.Handler
+	DeleteIdentityPoolClient                      http.Handler
 	CreateAWSLoadBalancerControllerServiceAccount http.Handler
 	DeleteAWSLoadBalancerControllerServiceAccount http.Handler
 	CreateAWSLoadBalancerControllerPolicy         http.Handler
@@ -194,6 +197,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateIdentityPoolClient:                      newServer(endpoints.CreateIdentityPoolClient, decodeCreateIdentityPoolClient),
 		CreateIdentityPoolUser:                        newServer(endpoints.CreateIdentityPoolUser, decodeCreateIdentityPoolUser),
 		DeleteIdentityPool:                            newServer(endpoints.DeleteIdentityPool, decodeDeleteIdentityPool),
+		DeleteIdentityPoolClient:                      newServer(endpoints.DeleteIdentityPoolClient, decodeDeleteIdentityPoolClient),
 		CreateAWSLoadBalancerControllerServiceAccount: newServer(endpoints.CreateAWSLoadBalancerControllerServiceAccount, decodeCreateAWSLoadBalancerControllerServiceAccount),
 		DeleteAWSLoadBalancerControllerServiceAccount: newServer(endpoints.DeleteAWSLoadBalancerControllerServiceAccount, decodeIDRequest),
 		CreateAWSLoadBalancerControllerPolicy:         newServer(endpoints.CreateAWSLoadBalancerControllerPolicy, decodeCreateAWSLoadBalancerControllerPolicyRequest),
@@ -295,6 +299,7 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 				r.Method(http.MethodDelete, "/", handlers.DeleteIdentityPool)
 				r.Route("/clients", func(r chi.Router) {
 					r.Method(http.MethodPost, "/", handlers.CreateIdentityPoolClient)
+					r.Method(http.MethodDelete, "/", handlers.DeleteIdentityPoolClient)
 				})
 				r.Route("/users", func(r chi.Router) {
 					r.Method(http.MethodPost, "/", handlers.CreateIdentityPoolUser)
@@ -382,6 +387,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateIdentityPoolClient:                      logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag, identityPoolClientTag}, "/"), "create")(endpoints.CreateIdentityPoolClient),
 			CreateIdentityPoolUser:                        logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag, identityPoolUserTag}, "/"), "create")(endpoints.CreateIdentityPoolUser),
 			DeleteIdentityPool:                            logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag}, "/"), "delete")(endpoints.DeleteIdentityPool),
+			DeleteIdentityPoolClient:                      logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolClientTag}, "/"), "delete")(endpoints.DeleteIdentityPoolClient),
 			CreateAWSLoadBalancerControllerServiceAccount: logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, awsLoadBalancerControllerTag}, "/"), "create")(endpoints.CreateAWSLoadBalancerControllerServiceAccount),
 			DeleteAWSLoadBalancerControllerServiceAccount: logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, awsLoadBalancerControllerTag}, "/"), "delete")(endpoints.DeleteAWSLoadBalancerControllerServiceAccount),
 			CreateAWSLoadBalancerControllerPolicy:         logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, awsLoadBalancerControllerTag}, "/"), "create")(endpoints.CreateAWSLoadBalancerControllerPolicy),

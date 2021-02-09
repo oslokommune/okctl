@@ -66,6 +66,12 @@ type DeleteIdentityPoolOpts struct {
 	Domain     string
 }
 
+// DeleteIdentityPoolClientOpts contains the required inputs
+type DeleteIdentityPoolClientOpts struct {
+	ID      ID
+	Purpose string
+}
+
 // IdentityPoolUser state of user
 type IdentityPoolUser struct {
 	ID                     ID
@@ -81,6 +87,7 @@ type IdentityManagerService interface {
 	CreateIdentityPoolClient(ctx context.Context, opts CreateIdentityPoolClientOpts) (*IdentityPoolClient, error)
 	CreateIdentityPoolUser(ctx context.Context, opts CreateIdentityPoolUserOpts) (*IdentityPoolUser, error)
 	DeleteIdentityPool(ctx context.Context, opts DeleteIdentityPoolOpts) error
+	DeleteIdentityPoolClient(ctx context.Context, opts DeleteIdentityPoolClientOpts) error
 }
 
 // IdentityManagerCloudProvider implements the cloud layer
@@ -89,4 +96,5 @@ type IdentityManagerCloudProvider interface {
 	CreateIdentityPoolClient(opts CreateIdentityPoolClientOpts) (*IdentityPoolClient, error)
 	CreateIdentityPoolUser(opts CreateIdentityPoolUserOpts) (*IdentityPoolUser, error)
 	DeleteIdentityPool(opts DeleteIdentityPoolOpts) error
+	DeleteIdentityPoolClient(opts DeleteIdentityPoolClientOpts) error
 }

@@ -145,3 +145,63 @@ func TestPersister(t *testing.T) {
 		})
 	}
 }
+
+func TestAuthEnvironment(t *testing.T) {
+	testCases := []struct {
+		name string
+
+		withEnv map[string]string
+
+		expectValid bool
+	}{
+		{
+			name: "Should be valid when necessary values are available",
+
+			withEnv: map[string]string{
+				"AWS_ACCESS_KEY_ID":     "dummyid",
+				"AWS_SECRET_ACCESS_KEY": "dummy-secret",
+			},
+
+			expectValid: true,
+		},
+		{
+			name: "Should be invalid when missing secret",
+
+			withEnv: map[string]string{
+				"AWS_ACCESS_KEY_ID": "dummyid",
+			},
+
+			expectValid: false,
+		},
+		{
+			name: "Should be invalid when missing id",
+
+			withEnv: map[string]string{
+				"AWS_ACCESS_KEY_ID": "dummyid",
+			},
+
+			expectValid: false,
+		},
+		{
+			name: "Should be invalid when missing everything",
+
+			withEnv: map[string]string{},
+
+			expectValid: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			getter := func(key string) string {
+				return tc.withEnv[key]
+			}
+
+			auth := aws.NewAuthEnvironment("dummy-region", getter)
+
+			assert.Equal(t, tc.expectValid, auth.Valid())
+		})
+	}
+}

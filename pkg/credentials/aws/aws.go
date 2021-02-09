@@ -23,8 +23,9 @@ import (
 )
 
 const (
-	awsAccountIDLength     = 12
-	defaultSessionDuration = 14400
+	awsAccountIDLength                       = 12
+	defaultSessionDuration                   = 14400
+	defaultAWSServiceUserCredentialsDuration = 24 * time.Hour
 )
 
 // Credentials contains all data required for using AWS
@@ -197,6 +198,25 @@ func NewAuthStatic(creds *Credentials) *AuthStatic {
 	return &AuthStatic{
 		Credentials: creds,
 		IsValid:     true,
+	}
+}
+
+// KeyGetter defines an interface for retrieving string values based on a key
+type KeyGetter func(key string) (value string)
+
+// NewAuthEnvironment creates a retriever that fetches credentials from
+// environment variables
+func NewAuthEnvironment(region string, getter KeyGetter) Retriever {
+	credentials := &Credentials{
+		AccessKeyID:     getter("AWS_ACCESS_KEY_ID"),
+		SecretAccessKey: getter("AWS_SECRET_ACCESS_KEY"),
+		Region:          region,
+		Expires:         time.Now().Add(defaultAWSServiceUserCredentialsDuration),
+	}
+
+	return &AuthStatic{
+		Credentials: credentials,
+		IsValid:     credentials.AccessKeyID != "" && credentials.SecretAccessKey != "",
 	}
 }
 

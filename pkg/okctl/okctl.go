@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/context"
+
 	"github.com/logrusorgru/aurora/v3"
 
 	clientFilesystem "github.com/oslokommune/okctl/pkg/client/core/store/filesystem"
@@ -721,6 +723,7 @@ func (o *Okctl) newCloudProvider() error {
 }
 
 // newCredentialsProvider knows how to load credentials
+// nolint: funlen
 func (o *Okctl) newCredentialsProvider() error {
 	if o.NoInput {
 		return errors.E(errors.Errorf("we only support retrieving credentials interactively for now"), errors.Invalid)
@@ -762,13 +765,20 @@ https://www.passwordstore.org/
 		_ = k.Store(keyring.KeyTypeUserPassword, password)
 	}
 
-	saml := aws.NewAuthSAML(
-		o.RepoStateWithEnv.GetCluster().AWSAccountID,
-		o.RepoStateWithEnv.GetMetadata().Region,
-		scrape.New(),
-		aws.DefaultStsProvider,
-		aws.Interactive(o.Username(), storedPassword, fn),
-	)
+	var credentialsRetriever aws.Retriever
+
+	switch o.CredentialsType {
+	case context.CredentialsTypeAccessKey:
+		credentialsRetriever = aws.NewAuthEnvironment(o.RepoStateWithEnv.GetMetadata().Region, os.Getenv)
+	default:
+		credentialsRetriever = aws.NewAuthSAML(
+			o.RepoStateWithEnv.GetCluster().AWSAccountID,
+			o.RepoStateWithEnv.GetMetadata().Region,
+			scrape.New(),
+			aws.DefaultStsProvider,
+			aws.Interactive(o.Username(), storedPassword, fn),
+		)
+	}
 
 	gh := github.New(
 		github.NewKeyringPersister(k),
@@ -778,7 +788,7 @@ https://www.passwordstore.org/
 		github.NewAuthDeviceFlow(github.DefaultGithubOauthClientID, github.RequiredScopes()),
 	)
 
-	o.CredentialsProvider = credentials.New(aws.New(authStore, saml), gh)
+	o.CredentialsProvider = credentials.New(aws.New(authStore, credentialsRetriever), gh)
 
 	return nil
 }

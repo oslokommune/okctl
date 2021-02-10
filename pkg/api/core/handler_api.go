@@ -66,6 +66,7 @@ type Endpoints struct {
 	DeleteBlockstorageServiceAccount              endpoint.Endpoint
 	CreateBlockstorageHelmChart                   endpoint.Endpoint
 	CreateStorageClass                            endpoint.Endpoint
+	CreateKubePrometheusStackHelmChart            endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -122,6 +123,7 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteBlockstorageServiceAccount:              makeDeleteBlockstorageServiceAccountEndpoint(s.ServiceAccount),
 		CreateBlockstorageHelmChart:                   makeCreateBlockstorageHelmChartEndpoint(s.Helm),
 		CreateStorageClass:                            makeCreateStorageClass(s.Kube),
+		CreateKubePrometheusStackHelmChart:            makeCreateKubePrometheusStackHelmChartEndpoint(s.Helm),
 	}
 }
 
@@ -177,6 +179,7 @@ type Handlers struct {
 	DeleteBlockstorageServiceAccount              http.Handler
 	CreateBlockstorageHelmChart                   http.Handler
 	CreateStorageClass                            http.Handler
+	CreateKubePrometheusStackHelmChart            http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -260,6 +263,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteBlockstorageServiceAccount:              newServer(endpoints.DeleteBlockstorageServiceAccount, decodeIDRequest),
 		CreateBlockstorageHelmChart:                   newServer(endpoints.CreateBlockstorageHelmChart, decodeCreateBlockstorageHelmChart),
 		CreateStorageClass:                            newServer(endpoints.CreateStorageClass, decodeCreateStorageClass),
+		CreateKubePrometheusStackHelmChart:            newServer(endpoints.CreateKubePrometheusStackHelmChart, decodeCreateKubePrometheusStackHelmChart),
 	}
 }
 
@@ -332,6 +336,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/helm", func(r chi.Router) {
 			r.Route("/externalsecrets", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalSecretsHelmChart)
+			})
+			r.Route("/kubeprometheusstack", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateKubePrometheusStackHelmChart)
 			})
 			r.Route("/albingresscontroller", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAlbIngressControllerHelmChart)
@@ -444,6 +451,7 @@ const (
 	autoscalerTag                = "autoscaler"
 	blockstorageTag              = "blockstorage"
 	storageclassTag              = "storageclass"
+	kubePrometheusStackTag       = "kubeprometheusstack"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -501,6 +509,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteBlockstorageServiceAccount:              logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, blockstorageTag}, "/"), "delete")(endpoints.DeleteBlockstorageServiceAccount),
 			CreateBlockstorageHelmChart:                   logmd.Logging(logger, strings.Join([]string{helmTag, blockstorageTag}, "/"), "create")(endpoints.CreateBlockstorageHelmChart),
 			CreateStorageClass:                            logmd.Logging(logger, strings.Join([]string{kubeTag, storageclassTag}, "/"), "create")(endpoints.CreateStorageClass),
+			CreateKubePrometheusStackHelmChart:            logmd.Logging(logger, strings.Join([]string{helmTag, kubePrometheusStackTag}, "/"), "create")(endpoints.CreateKubePrometheusStackHelmChart),
 		}
 	}
 }

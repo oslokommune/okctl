@@ -24,18 +24,23 @@ func New(namespace string) *Namespace {
 	}
 }
 
+// DeleteNamespace deletes the namespace
+func (n *Namespace) DeleteNamespace(clientset kubernetes.Interface, _ *rest.Config) (interface{}, error) {
+	return nil, clientset.CoreV1().Namespaces().Delete(n.Ctx, n.Namespace, metav1.DeleteOptions{})
+}
+
 // CreateNamespace creates the namespace
 func (n *Namespace) CreateNamespace(clientset kubernetes.Interface, _ *rest.Config) (interface{}, error) {
-	nsClient := clientset.CoreV1().Namespaces()
+	client := clientset.CoreV1().Namespaces()
 
-	namespaces, err := nsClient.List(n.Ctx, metav1.ListOptions{})
+	namespaces, err := client.List(n.Ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	for _, ns := range namespaces.Items {
 		if ns.Name == n.Namespace {
-			r, err := nsClient.Get(n.Ctx, ns.Name, metav1.GetOptions{})
+			r, err := client.Get(n.Ctx, ns.Name, metav1.GetOptions{})
 			if err != nil {
 				return nil, err
 			}
@@ -44,7 +49,7 @@ func (n *Namespace) CreateNamespace(clientset kubernetes.Interface, _ *rest.Conf
 		}
 	}
 
-	return nsClient.Create(n.Ctx, n.NamespaceManifest(), metav1.CreateOptions{})
+	return client.Create(n.Ctx, n.NamespaceManifest(), metav1.CreateOptions{})
 }
 
 // NamespaceManifest returns the namespace manifest

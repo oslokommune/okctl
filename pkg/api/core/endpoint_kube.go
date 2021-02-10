@@ -18,3 +18,9 @@ func makeCreateExternalSecretsEndpoint(s api.KubeService) endpoint.Endpoint {
 		return s.CreateExternalSecrets(ctx, request.(api.CreateExternalSecretsOpts))
 	}
 }
+
+func makeDeleteNamespaceEndpoint(s api.KubeService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return Empty{}, s.DeleteNamespace(ctx, request.(api.DeleteNamespaceOpts))
+	}
+}

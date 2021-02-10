@@ -12,6 +12,20 @@ type kubeService struct {
 	store api.KubeStore
 }
 
+func (k *kubeService) DeleteNamespace(_ context.Context, opts api.DeleteNamespaceOpts) error {
+	err := opts.Validate()
+	if err != nil {
+		return errors.E(err, "validating inputs", errors.Internal)
+	}
+
+	err = k.run.DeleteNamespace(opts)
+	if err != nil {
+		return errors.E(err, "deleting namespace", errors.Internal)
+	}
+
+	return nil
+}
+
 func (k *kubeService) CreateExternalSecrets(_ context.Context, opts api.CreateExternalSecretsOpts) (*api.ExternalSecretsKube, error) {
 	err := opts.Validate()
 	if err != nil {

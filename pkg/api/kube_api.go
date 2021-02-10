@@ -88,6 +88,13 @@ type DeleteNamespaceOpts struct {
 	Namespace string
 }
 
+// Validate the inputs
+func (o DeleteNamespaceOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.Namespace, validation.Required),
+	)
+}
+
 // KubeService provides kube deployment service layer
 type KubeService interface {
 	CreateExternalDNSKubeDeployment(ctx context.Context, opts CreateExternalDNSKubeDeploymentOpts) (*ExternalDNSKube, error)

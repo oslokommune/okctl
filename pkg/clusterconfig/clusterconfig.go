@@ -70,6 +70,18 @@ func (a *Args) build() *v1alpha5.ClusterConfig {
 			ServiceRolePermissionsBoundary:             a.PermissionsBoundaryARN,
 			FargatePodExecutionRolePermissionsBoundary: a.PermissionsBoundaryARN,
 			WithOIDC: true,
+			ServiceAccounts: []*v1alpha5.ClusterIAMServiceAccount{
+				{
+					ClusterIAMMeta: v1alpha5.ClusterIAMMeta{
+						Name:      "aws-node",
+						Namespace: "kube-system",
+					},
+					AttachPolicyARNs: []string{
+						"arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
+					},
+					PermissionsBoundary: a.PermissionsBoundaryARN,
+				},
+			},
 		},
 		FargateProfiles: []v1alpha5.FargateProfile{
 			{

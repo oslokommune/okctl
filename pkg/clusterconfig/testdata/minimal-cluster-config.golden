@@ -4,6 +4,7 @@ fargateProfiles:
   selectors:
   - namespace: default
   - namespace: kube-system
+  - namespace: argocd
 iam:
   fargatePodExecutionRolePermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
   serviceRolePermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary

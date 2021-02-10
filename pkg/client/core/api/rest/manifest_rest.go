@@ -8,6 +8,9 @@ import (
 // TargetKubeExternalSecret is the API route for the manifest
 const TargetKubeExternalSecret = "kube/externalsecrets/"
 
+// TargetKubeNamespace is the api route for the namespace
+const TargetKubeNamespace = "kube/namespaces/"
+
 type manifestAPI struct {
 	client *HTTPClient
 }

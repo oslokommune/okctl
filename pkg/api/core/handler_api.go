@@ -53,6 +53,7 @@ type Endpoints struct {
 	DeleteAWSLoadBalancerControllerPolicy         endpoint.Endpoint
 	CreateAWSLoadBalancerControllerHelmChart      endpoint.Endpoint
 	DeleteCertificate                             endpoint.Endpoint
+	DeleteNamespace                               endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -96,6 +97,7 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteAWSLoadBalancerControllerPolicy:         makeDeleteAWSLoadBalancerControllerPolicyEndpoint(s.ManagedPolicy),
 		CreateAWSLoadBalancerControllerHelmChart:      makeCreateAWSLoadBalancerControllerHelmChartEndpoint(s.Helm),
 		DeleteCertificate:                             makeDeleteCertificateEndpoint(s.Certificate),
+		DeleteNamespace:                               makeDeleteNamespaceEndpoint(s.Kube),
 	}
 }
 
@@ -138,6 +140,7 @@ type Handlers struct {
 	DeleteAWSLoadBalancerControllerPolicy         http.Handler
 	CreateAWSLoadBalancerControllerHelmChart      http.Handler
 	DeleteCertificate                             http.Handler
+	DeleteNamespace                               http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -207,6 +210,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteAWSLoadBalancerControllerPolicy:         newServer(endpoints.DeleteAWSLoadBalancerControllerPolicy, decodeIDRequest),
 		CreateAWSLoadBalancerControllerHelmChart:      newServer(endpoints.CreateAWSLoadBalancerControllerHelmChart, decodeCreateAWSLoadBalancerControllerHelmChart),
 		DeleteCertificate:                             newServer(endpoints.DeleteCertificate, decodeDeleteCertificate),
+		DeleteNamespace:                               newServer(endpoints.DeleteNamespace, decodeDeleteNamespace),
 	}
 }
 
@@ -280,6 +284,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			})
 			r.Route("/externalsecrets", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalSecrets)
+			})
+			r.Route("/namespaces", func(r chi.Router) {
+				r.Method(http.MethodDelete, "/", handlers.DeleteNamespace)
 			})
 		})
 		r.Route("/domains", func(r chi.Router) {
@@ -355,6 +362,7 @@ const (
 	identityPoolTag              = "identitypool"
 	identityPoolClientTag        = "identitypoolclient"
 	identityPoolUserTag          = "identitypooluser"
+	namespaceTag                 = "namespace"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -399,6 +407,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteAWSLoadBalancerControllerPolicy:         logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, awsLoadBalancerControllerTag}, "/"), "delete")(endpoints.DeleteAWSLoadBalancerControllerPolicy),
 			CreateAWSLoadBalancerControllerHelmChart:      logmd.Logging(logger, strings.Join([]string{helmTag, awsLoadBalancerControllerTag}, "/"), "create")(endpoints.CreateAWSLoadBalancerControllerHelmChart),
 			DeleteCertificate:                             logmd.Logging(logger, certificateTag, "delete")(endpoints.DeleteCertificate),
+			DeleteNamespace:                               logmd.Logging(logger, strings.Join([]string{kubeTag, namespaceTag}, "/"), "delete")(endpoints.DeleteNamespace),
 		}
 	}
 }

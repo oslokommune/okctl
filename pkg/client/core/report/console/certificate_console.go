@@ -24,7 +24,7 @@ func (r *certificateReport) RemoveCertificate(domain string, reports []*store.Re
 		actions = append(actions, report.Actions...)
 	}
 
-	description := fmt.Sprintf("%s", aurora.Green(domain))
+	description := aurora.Green(domain).String()
 
 	return r.console.Report(actions, "certificate", description)
 }

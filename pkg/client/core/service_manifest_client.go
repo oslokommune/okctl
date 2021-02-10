@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/api"
+
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/oslokommune/okctl/pkg/client"
@@ -13,6 +15,19 @@ type manifestService struct {
 	api     client.ManifestAPI
 	store   client.ManifestStore
 	report  client.ManifestReport
+}
+
+func (s *manifestService) DeleteNamespace(_ context.Context, opts api.DeleteNamespaceOpts) error {
+	err := s.spinner.Start("manifest")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	return s.api.DeleteNamespace(opts)
 }
 
 func (s *manifestService) CreateExternalSecret(_ context.Context, opts client.CreateExternalSecretOpts) (*client.ExternalSecret, error) {

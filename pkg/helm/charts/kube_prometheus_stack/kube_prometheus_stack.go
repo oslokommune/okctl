@@ -109,11 +109,8 @@ func KubePrometheusStack(values interface{}) *helm.Chart {
 // DefaultKubePrometheusStackValues returns the default prometheus values
 // for the helm chart
 func DefaultKubePrometheusStackValues() (string, error) {
-	result, err := goTemplateToString(kubePrometheusStackTemplate, struct {
-		Test string
-	}{
-		Test: "",
-	})
+	result, err := goTemplateToString(kubePrometheusStackTemplate, struct {}{})
+
 	if err != nil {
 	    return "", fmt.Errorf("parsing KubePrometheusStackValues template: %w", err)
 	}

@@ -15,6 +15,10 @@ type manifestAPI struct {
 	client *HTTPClient
 }
 
+func (a *manifestAPI) DeleteNamespace(opts api.DeleteNamespaceOpts) error {
+	return a.client.DoDelete(TargetKubeNamespace, &opts)
+}
+
 func (a *manifestAPI) CreateExternalSecret(opts client.CreateExternalSecretOpts) (*api.ExternalSecretsKube, error) {
 	into := &api.ExternalSecretsKube{}
 	return into, a.client.DoPost(TargetKubeExternalSecret, &opts, into)

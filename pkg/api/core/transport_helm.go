@@ -73,3 +73,14 @@ func decodeCreateBlockstorageHelmChart(_ context.Context, r *http.Request) (inte
 
 	return opts, nil
 }
+
+func decodeCreateKubePrometheusStackHelmChart(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.CreateKubePrometheusStackOpts
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}

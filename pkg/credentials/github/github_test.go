@@ -175,3 +175,55 @@ func TestNewKeyringPersister(t *testing.T) {
 		})
 	}
 }
+
+func TestAuthEnvironment(t *testing.T) {
+	testCases := []struct {
+		name string
+
+		withEnv map[string]string
+
+		expectValid bool
+	}{
+		{
+			name: "Should be valid when necessary values are available",
+
+			withEnv: map[string]string{
+				"GITHUB_TOKEN": "dummytoken",
+			},
+
+			expectValid: true,
+		},
+		{
+			name: "Should be invalid when missing token",
+
+			withEnv: map[string]string{
+				"GTHB_TKN": "misspelled-token-key",
+			},
+
+			expectValid: false,
+		},
+		{
+			name: "Should be invalid when token is blank",
+
+			withEnv: map[string]string{
+				"GITHUB_TOKEN": "",
+			},
+
+			expectValid: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			getter := func(key string) string {
+				return tc.withEnv[key]
+			}
+
+			auth := github.NewAuthEnvironment(getter)
+
+			assert.Equal(t, tc.expectValid, auth.Valid())
+		})
+	}
+}

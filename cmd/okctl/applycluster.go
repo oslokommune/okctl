@@ -27,7 +27,8 @@ import (
 )
 
 type applyClusterOpts struct {
-	CredentialsType string
+	AWSCredentialsType    string
+	GithubCredentialsType string
 
 	File string
 
@@ -52,7 +53,8 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 		Long:    "ensures your cluster reflects the declaration of it",
 		Args:    cobra.ExactArgs(0),
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
-			o.CredentialsType = opts.CredentialsType
+			o.AWSCredentialsType = opts.AWSCredentialsType
+			o.GithubCredentialsType = opts.GithubCredentialsType
 
 			opts.Declaration, err = inferClusterFromStdinOrFile(o.In, opts.File)
 			if err != nil {
@@ -173,11 +175,22 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 	flags := cmd.Flags()
 
 	flags.StringVarP(&opts.File, "file", "f", "", usageApplyClusterFile)
-	flags.StringVarP(&opts.CredentialsType, "credentials-type", "a", context.CredentialsTypeSAML,
+	flags.StringVarP(&opts.AWSCredentialsType, "aws-credentials-type", "a", context.AWSCredentialsTypeSAML,
 		fmt.Sprintf(
-			"The form of authentication to use. Possible values: [%s,%s]",
-			context.CredentialsTypeSAML,
-			context.CredentialsTypeAccessKey,
+			"The form of authentication to use for AWS. Possible values: [%s,%s]",
+			context.AWSCredentialsTypeSAML,
+			context.AWSCredentialsTypeAccessKey,
+		),
+	)
+	flags.StringVarP(
+		&opts.GithubCredentialsType,
+		"github-credentials-type",
+		"g",
+		context.GithubCredentialsTypeDeviceAuthentication,
+		fmt.Sprintf(
+			"The form of authentication to use for Github. Possible values: [%s,%s]",
+			context.GithubCredentialsTypeDeviceAuthentication,
+			context.GithubCredentialsTypeToken,
 		),
 	)
 

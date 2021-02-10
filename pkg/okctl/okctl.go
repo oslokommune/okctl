@@ -53,6 +53,8 @@ import (
 	"github.com/oslokommune/okctl/pkg/storage"
 )
 
+const authenticatorTimeout = 5 * time.Second
+
 // Okctl stores all state required for invoking commands
 type Okctl struct {
 	*config.Config
@@ -758,28 +760,19 @@ func (o *Okctl) newCloudProvider() error {
 	return nil
 }
 
-// newCredentialsProvider knows how to load credentials
-// nolint: funlen
-func (o *Okctl) newCredentialsProvider() error {
-	if o.NoInput {
-		return errors.E(errors.Errorf("we only support retrieving credentials interactively for now"), errors.Invalid)
+func (o *Okctl) getAWSAuthenticator() (*aws.Auth, error) {
+	if o.AWSCredentialsType == context.AWSCredentialsTypeAccessKey {
+		return aws.New(aws.NewInMemoryStorage(), aws.NewAuthEnvironment(o.RepoStateWithEnv.GetMetadata().Region, os.Getenv)), nil
 	}
 
 	appDir, err := o.GetUserDataDir()
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	authStore := aws.NewIniPersister(aws.NewFileSystemIniStorer(
-		config.DefaultClusterAwsConfig,
-		config.DefaultClusterAwsCredentials,
-		path.Join(appDir, config.DefaultCredentialsDirName, o.RepoStateWithEnv.GetClusterName()),
-		o.FileSystem,
-	))
 
 	defaultRing, err := keyring.DefaultKeyring()
 	if err != nil {
-		return fmt.Errorf(`unable to create a keyring. It is possible no valid backends were found 
+		return nil, fmt.Errorf(`unable to create a keyring. It is possible no valid backends were found 
 on your system, take a look at this site for valid options:
 https://github.com/99designs/keyring#keyring
 
@@ -791,7 +784,7 @@ https://www.passwordstore.org/
 
 	k, err := keyring.New(defaultRing, o.Debug)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	storedPassword, _ := k.Fetch(keyring.KeyTypeUserPassword)
@@ -801,30 +794,72 @@ https://www.passwordstore.org/
 		_ = k.Store(keyring.KeyTypeUserPassword, password)
 	}
 
-	var credentialsRetriever aws.Retriever
+	authStore := aws.NewIniPersister(aws.NewFileSystemIniStorer(
+		config.DefaultClusterAwsConfig,
+		config.DefaultClusterAwsCredentials,
+		path.Join(appDir, config.DefaultCredentialsDirName, o.RepoStateWithEnv.GetClusterName()),
+		o.FileSystem,
+	))
 
-	switch o.CredentialsType {
-	case context.CredentialsTypeAccessKey:
-		credentialsRetriever = aws.NewAuthEnvironment(o.RepoStateWithEnv.GetMetadata().Region, os.Getenv)
-	default:
-		credentialsRetriever = aws.NewAuthSAML(
-			o.RepoStateWithEnv.GetCluster().AWSAccountID,
-			o.RepoStateWithEnv.GetMetadata().Region,
-			scrape.New(),
-			aws.DefaultStsProvider,
-			aws.Interactive(o.Username(), storedPassword, fn),
-		)
+	return aws.New(authStore, aws.NewAuthSAML(
+		o.RepoStateWithEnv.GetCluster().AWSAccountID,
+		o.RepoStateWithEnv.GetMetadata().Region,
+		scrape.New(),
+		aws.DefaultStsProvider,
+		aws.Interactive(o.Username(), storedPassword, fn),
+	)), nil
+}
+
+func (o *Okctl) getGithubAuthenticator() (*github.Auth, error) {
+	if o.GithubCredentialsType == context.GithubCredentialsTypeToken {
+		return github.New(
+			github.NewInMemoryPersister(),
+			&http.Client{Timeout: authenticatorTimeout},
+			github.NewAuthEnvironment(os.Getenv),
+		), nil
 	}
 
-	gh := github.New(
-		github.NewKeyringPersister(k),
-		&http.Client{
-			Timeout: 5 * time.Second, // nolint: gomnd
-		},
-		github.NewAuthDeviceFlow(github.DefaultGithubOauthClientID, github.RequiredScopes()),
-	)
+	defaultRing, err := keyring.DefaultKeyring()
+	if err != nil {
+		return nil, fmt.Errorf(`unable to create a keyring. It is possible no valid backends were found 
+on your system, take a look at this site for valid options:
+https://github.com/99designs/keyring#keyring
 
-	o.CredentialsProvider = credentials.New(aws.New(authStore, credentialsRetriever), gh)
+On linux pass works well, for instance:
+https://www.passwordstore.org/
+
+%w`, err)
+	}
+
+	k, err := keyring.New(defaultRing, o.Debug)
+	if err != nil {
+		return nil, err
+	}
+
+	return github.New(
+		github.NewKeyringPersister(k),
+		&http.Client{Timeout: authenticatorTimeout},
+		github.NewAuthDeviceFlow(github.DefaultGithubOauthClientID, github.RequiredScopes()),
+	), nil
+}
+
+// newCredentialsProvider knows how to load credentials
+func (o *Okctl) newCredentialsProvider() error {
+	if o.NoInput {
+		return errors.E(errors.Errorf("we only support retrieving credentials interactively for now"), errors.Invalid)
+	}
+
+	awsAuthenticator, err := o.getAWSAuthenticator()
+	if err != nil {
+		return fmt.Errorf("error acquiring AWS authenticator: %w", err)
+	}
+
+	githubAuthenticator, err := o.getGithubAuthenticator()
+	if err != nil {
+		return fmt.Errorf("error acquiring Github authenticator: %w", err)
+	}
+
+	o.CredentialsProvider = credentials.New(awsAuthenticator, githubAuthenticator)
 
 	return nil
 }

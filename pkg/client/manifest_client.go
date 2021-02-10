@@ -22,11 +22,16 @@ type CreateExternalSecretOpts struct {
 // ManifestService implements the business logic
 type ManifestService interface {
 	CreateExternalSecret(ctx context.Context, opts CreateExternalSecretOpts) (*ExternalSecret, error)
+	// I don't like this, but I think ManifestService is an equally big problem
+	// so I will leave it here for now. We should refactor this functionality
+	// somehow..
+	DeleteNamespace(ctx context.Context, opts api.DeleteNamespaceOpts) error
 }
 
 // ManifestAPI invokes the API
 type ManifestAPI interface {
 	CreateExternalSecret(opts CreateExternalSecretOpts) (*api.ExternalSecretsKube, error)
+	DeleteNamespace(opts api.DeleteNamespaceOpts) error
 }
 
 // ManifestStore defines the storage layer

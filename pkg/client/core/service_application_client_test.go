@@ -115,6 +115,10 @@ func TestNewApplicationService(t *testing.T) {
 
 type mockCertService struct{}
 
+func (m mockCertService) DeleteCertificate(_ context.Context, _ api.DeleteCertificateOpts) error {
+	return nil
+}
+
 func (m mockCertService) CreateCertificate(_ context.Context, _ api.CreateCertificateOpts) (*api.Certificate, error) {
 	return &api.Certificate{
 		CertificateARN: "arn:which:isnt:an:arn",

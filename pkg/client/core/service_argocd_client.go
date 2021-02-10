@@ -40,6 +40,14 @@ func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgo
 
 	info := s.state.GetArgoCD(opts.ID)
 
+	err = s.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
+		ID:        opts.ID,
+		Namespace: "argocd",
+	})
+	if err != nil {
+		return err
+	}
+
 	err = s.cert.DeleteCertificate(ctx, api.DeleteCertificateOpts{
 		ID:     opts.ID,
 		Domain: info.ArgoDomain,

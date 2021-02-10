@@ -82,16 +82,24 @@ func (d Data) Validate() error {
 	)
 }
 
+// DeleteNamespaceOpts provides the inputs
+type DeleteNamespaceOpts struct {
+	ID        ID
+	Namespace string
+}
+
 // KubeService provides kube deployment service layer
 type KubeService interface {
 	CreateExternalDNSKubeDeployment(ctx context.Context, opts CreateExternalDNSKubeDeploymentOpts) (*ExternalDNSKube, error)
 	CreateExternalSecrets(ctx context.Context, opts CreateExternalSecretsOpts) (*ExternalSecretsKube, error)
+	DeleteNamespace(ctx context.Context, opts DeleteNamespaceOpts) error
 }
 
 // KubeRun provides kube deployment run layer
 type KubeRun interface {
 	CreateExternalDNSKubeDeployment(opts CreateExternalDNSKubeDeploymentOpts) (*ExternalDNSKube, error)
 	CreateExternalSecrets(opts CreateExternalSecretsOpts) (*ExternalSecretsKube, error)
+	DeleteNamespace(opts DeleteNamespaceOpts) error
 }
 
 // KubeStore provides kube store layer

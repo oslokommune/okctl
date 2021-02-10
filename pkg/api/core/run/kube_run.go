@@ -18,6 +18,30 @@ type kubeRun struct {
 	kubeConfStore api.KubeConfigStore
 }
 
+func (k *kubeRun) DeleteNamespace(opts api.DeleteNamespaceOpts) error {
+	kubeConfig, err := k.kubeConfStore.GetKubeConfig()
+	if err != nil {
+		return fmt.Errorf("retrieving kubeconfig: %w", err)
+	}
+
+	ns := namespace.New(opts.Namespace)
+
+	client, err := kube.New(kubeConfig.Path)
+	if err != nil {
+		return fmt.Errorf("creating kubernetes client: %w", err)
+	}
+
+	_, err = client.Apply(kube.Applier{
+		Fn:          ns.DeleteNamespace,
+		Description: fmt.Sprintf("deleting namespace: %s", opts.Namespace),
+	})
+	if err != nil {
+		return fmt.Errorf("deleting namespace: %w", err)
+	}
+
+	return nil
+}
+
 // In all fairness, we should refactor this, probably by extending the functionality
 // on the kube side. First we collect all apply things, then we apply, or something like
 // this.

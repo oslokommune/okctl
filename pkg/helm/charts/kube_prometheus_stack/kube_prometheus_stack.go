@@ -3,6 +3,9 @@
 package kube_prometheus_stack
 
 import (
+	"bytes"
+	"fmt"
+	"text/template"
 	"time"
 
 	"github.com/oslokommune/okctl/pkg/helm"
@@ -90,7 +93,7 @@ type ServiceMonitor struct {
 
 // ExternalSecrets returns an initialised external secrets chart
 // - https://github.com/external-secrets/kubernetes-external-secrets/blob/master/charts/kubernetes-external-secrets/README.md
-func ExternalSecrets(values interface{}) *helm.Chart {
+func KubePrometheusStack(values interface{}) *helm.Chart {
 	return &helm.Chart{
 		RepositoryName: "external-secrets",
 		RepositoryURL:  "https://external-secrets.github.io/kubernetes-external-secrets/",
@@ -103,54 +106,33 @@ func ExternalSecrets(values interface{}) *helm.Chart {
 	}
 }
 
-// DefaultExternalSecretsValues returns the default secrets values
+// DefaultKubePrometheusStackValues returns the default prometheus values
 // for the helm chart
-func DefaultExternalSecretsValues() *Values {
-	return &Values{
-		CustomResourceManagerDisabled: true,
-		CRDs: CRDs{
-			Create: false,
-		},
-		Env: Env{
-			AwsRegion:                  "eu-west-1",
-			AwsDefaultRegion:           "eu-west-1",
-			PollerIntervalMilliseconds: 10000, // nolint: gomnd
-			LogLevel:                   "info",
-			LogMessageKey:              "msg",
-			MetricsPort:                3001, // nolint: gomnd
-			UseHumanReadableLogLevels:  true,
-		},
-		RBAC: RBAC{
-			Create: true,
-		},
-		ServiceAccount: ServiceAccount{
-			Create: false,
-			Name:   "external-secrets", // This is fragile, should make these consts somewhere
-		},
-		ReplicaCount: 1,
-		Image: Image{
-			Repository: "godaddy/kubernetes-external-secrets",
-			Tag:        "5.2.0",
-			PullPolicy: "IfNotPresent",
-		},
-		SecurityContext: SecurityContext{
-			RunAsNonRoot: true,
-			FsGroup:      65534, // nolint: gomnd
-		},
-		Resources: Resources{
-			Limits: ResourceEntry{
-				CPU:    "100m",
-				Memory: "128Mi",
-			},
-			Requests: ResourceEntry{
-				CPU:    "100m",
-				Memory: "128Mi",
-			},
-		},
-		ServiceMonitor: ServiceMonitor{
-			Enabled:   false,
-			Interval:  "30s",
-			Namespace: "",
-		},
+func DefaultKubePrometheusStackValues() (string, error) {
+	result, err := goTemplateToString(kubePrometheusStackTemplate, struct {
+		Test string
+	}{
+		Test: "",
+	})
+	if err != nil {
+	    return "", fmt.Errorf("parsing KubePrometheusStackValues template: %w", err)
 	}
+	
+	return result, nil
+}
+
+func goTemplateToString(templateString string, data interface{}) (string, error) {
+	tmpl, err := template.New("t").Parse(templateString)
+	if err != nil {
+		return "", err
+	}
+
+	tmplBuffer := new(bytes.Buffer)
+	err = tmpl.Execute(tmplBuffer, data)
+
+	if err != nil {
+		return "", err
+	}
+
+	return tmplBuffer.String(), nil
 }

@@ -106,7 +106,12 @@ func (r *helmRun) createHelmChart(id api.ID, chart *helm.Chart) (*api.Helm, erro
 }
 
 func (r *helmRun) CreateKubePrometheusStack(opts api.CreateKubePrometheusStackOpts) (*api.Helm, error) {
-	chart := kube_prometheus_stack.KubePrometheusStack(kube_prometheus_stack.DefaultKubePrometheusStackValues())
+	values, err := kube_prometheus_stack.DefaultKubePrometheusStackValues()
+	if err != nil {
+		return nil, fmt.Errorf("get Prometheus stack values: %w", err)
+	}
+
+	chart := kube_prometheus_stack.KubePrometheusStack(values)
 
 	return r.createHelmChart(opts.ID, chart)
 }

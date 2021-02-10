@@ -15,15 +15,23 @@ const (
 	DefaultDebugEnv = "OKCTL_DEBUG"
 	// DefaultNoInputEnv if set will ensure that no interactive dialogs are started
 	DefaultNoInputEnv = "OKCTL_NO_INPUT"
-	// DefaultCredentialsType if set will ensure where okctl seeks authentication credentials
-	DefaultCredentialsType = "OKCTL_CREDENTIALS_TYPE"
+	// DefaultAWSCredentialsType if set will ensure where okctl seeks AWS authentication credentials
+	DefaultAWSCredentialsType = "OKCTL_AWS_CREDENTIALS_TYPE"
+	// DefaultGithubCredentialsType if set will ensure where okctl seeks Github authentication credentials
+	DefaultGithubCredentialsType = "OKCTL_GITHUB_CREDENTIALS_TYPE"
 )
 
 const (
-	// CredentialsTypeSAML represents using SAML for AWS authentication
-	CredentialsTypeSAML = "saml"
-	// CredentialsTypeAccessKey represents using AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY for AWS authentication
-	CredentialsTypeAccessKey = "access-key"
+	// AWSCredentialsTypeSAML represents using SAML for AWS authentication
+	AWSCredentialsTypeSAML = "saml"
+	// AWSCredentialsTypeAccessKey represents using access key environment variables for AWS authentication
+	AWSCredentialsTypeAccessKey = "access-key"
+
+	// GithubCredentialsTypeDeviceAuthentication represents using the device authentication flow to authenticate with
+	// Github
+	GithubCredentialsTypeDeviceAuthentication = "device-authentication"
+	// GithubCredentialsTypeToken represents using a Github Token (GH Actions) or a PAT for authentication
+	GithubCredentialsTypeToken = "token"
 )
 
 // Context provides access to ephemeral state
@@ -31,9 +39,10 @@ const (
 type Context struct {
 	FileSystem *afero.Afero
 
-	Debug           bool
-	NoInput         bool
-	CredentialsType string
+	Debug                 bool
+	NoInput               bool
+	AWSCredentialsType    string
+	GithubCredentialsType string
 
 	In  io.Reader
 	Out io.Writer
@@ -49,7 +58,8 @@ type Context struct {
 func New() *Context {
 	_, debug := os.LookupEnv(DefaultDebugEnv)
 	_, noInput := os.LookupEnv(DefaultNoInputEnv)
-	credentialsType := os.Getenv(DefaultCredentialsType)
+	awsCredentialsType := os.Getenv(DefaultAWSCredentialsType)
+	githubCredentialsType := os.Getenv(DefaultGithubCredentialsType)
 
 	logger := logrus.New()
 
@@ -62,15 +72,16 @@ func New() *Context {
 	}
 
 	return &Context{
-		FileSystem:      &afero.Afero{Fs: afero.NewOsFs()},
-		Debug:           debug,
-		NoInput:         noInput,
-		CredentialsType: credentialsType,
-		In:              os.Stdin,
-		Out:             os.Stdout,
-		Err:             os.Stderr,
-		Ctx:             context.Background(),
-		Logger:          logger,
-		LogLevel:        logger.Level,
+		FileSystem:            &afero.Afero{Fs: afero.NewOsFs()},
+		Debug:                 debug,
+		NoInput:               noInput,
+		AWSCredentialsType:    awsCredentialsType,
+		GithubCredentialsType: githubCredentialsType,
+		In:                    os.Stdin,
+		Out:                   os.Stdout,
+		Err:                   os.Stderr,
+		Ctx:                   context.Background(),
+		Logger:                logger,
+		LogLevel:              logger.Level,
 	}
 }

@@ -112,3 +112,37 @@ okctl apply cluster -f cluster.yaml
 to have okctl generate a cluster based on the declaration.
 
 That's it. Sit back and enjoy or go do something else while `okctl` does its thing.
+
+## Authentication methods
+
+### AWS 
+
+In some cases it can be useful to use a service user for authentication. 
+
+By passing the flag `--aws-credentials-type access-key` to `okctl apply cluster`, `okctl` will look for the following
+environment variables to be used to authenticate.
+* `AWS_ACCESS_KEY_ID`
+* `AWS_SECRET_ACCESS_KEY`
+
+Example
+```shell
+export AWS_ACCESS_KEY_ID=myid
+export AWS_SECRET_ACCESS_KEY=mykey
+
+okctl apply cluster --aws-credentials-type access-key -f cluster.yaml
+```
+
+### Github
+
+In some cases it can be useful to use a service user for authentication.
+
+By passing the flag `--github-credentials-type token` to `okctl apply cluster`, `okctl` will look for the following
+environment variable to be used to authenticate.
+* `GITHUB_TOKEN`
+
+Example
+```shell
+export GITHUB_TOKEN=mytoken
+
+okctl apply cluster --github-credentials-type token -f cluster.yaml
+```

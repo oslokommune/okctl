@@ -249,6 +249,24 @@ func NewAuthStatic(creds *Credentials) *AuthStatic {
 	}
 }
 
+// KeyGetter defines an interface for retrieving string values based on a key
+type KeyGetter func(key string) (value string)
+
+// NewAuthEnvironment creates a retriever that fetches credentials from
+// environment variables
+func NewAuthEnvironment(getter KeyGetter) Retriever {
+	token := getter("GITHUB_TOKEN")
+
+	return &AuthStatic{
+		Credentials: &Credentials{
+			AccessToken: token,
+			ClientID:    DefaultGithubOauthClientID,
+			Type:        CredentialsTypePersonalAccessToken,
+		},
+		IsValid: token != "",
+	}
+}
+
 // AuthDeviceFlow contains the state required for performing
 // a device flow authentication towards github
 type AuthDeviceFlow struct {

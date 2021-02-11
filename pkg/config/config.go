@@ -47,6 +47,8 @@ const (
 
 	DefaultEKSKubernetesVersion = "1.17"
 
+	DefaultArgoCDNamespace = "argocd"
+
 	DefaultClusterConfig         = "cluster.yml"
 	DefaultClusterKubeConfig     = "kubeconfig"
 	DefaultClusterAwsConfig      = "aws-config"

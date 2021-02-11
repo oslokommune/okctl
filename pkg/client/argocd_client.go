@@ -27,7 +27,6 @@ type ArgoCD struct {
 type ArgoCDStateInfo struct {
 	ID         api.ID
 	ArgoDomain string
-	AuthDomain string
 }
 
 // CreateArgoCDOpts contains the required inputs

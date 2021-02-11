@@ -201,10 +201,9 @@ type VPCSubnet struct {
 // ArgoCD contains information about the
 // argocd setup
 type ArgoCD struct {
-	SiteURL    string
-	Domain     string
-	AuthDomain string
-	SecretKey  SecretKeySecret
+	SiteURL   string
+	Domain    string
+	SecretKey SecretKeySecret
 }
 
 // SecretKeySecret contains state about

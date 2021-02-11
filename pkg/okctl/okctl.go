@@ -845,10 +845,6 @@ https://www.passwordstore.org/
 
 // newCredentialsProvider knows how to load credentials
 func (o *Okctl) newCredentialsProvider() error {
-	if o.NoInput {
-		return errors.E(errors.Errorf("we only support retrieving credentials interactively for now"), errors.Invalid)
-	}
-
 	awsAuthenticator, err := o.getAWSAuthenticator()
 	if err != nil {
 		return fmt.Errorf("error acquiring AWS authenticator: %w", err)

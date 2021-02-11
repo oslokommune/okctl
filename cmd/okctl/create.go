@@ -138,10 +138,6 @@ This includes creating an EKS compatible VPC with private, public
 and database subnets.`,
 		Args: cobra.ExactArgs(createClusterArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			if o.NoInput {
-				return fmt.Errorf("we currently don't support no user input")
-			}
-
 			environment := args[0]
 			awsAccountID := args[1]
 
@@ -219,7 +215,7 @@ and database subnets.`,
 				return formatErr(err)
 			}
 
-			servicequota.CheckQuotas(
+			_ = servicequota.CheckQuotas(
 				servicequota.NewVpcCheck(o.Err, o.CloudProvider, config.DefaultRequiredVpcs),
 				servicequota.NewEipCheck(o.Err, o.CloudProvider, config.DefaultRequiredEpis),
 				servicequota.NewIgwCheck(o.Err, o.CloudProvider, config.DefaultRequiredIgws),

@@ -25,10 +25,6 @@ func main() {
 func loadRepoData(o *okctl.Okctl, _ *cobra.Command) error {
 	repoDataNotFound := load.CreateOnRepoDataNotFound()
 
-	if o.NoInput {
-		repoDataNotFound = load.ErrOnRepoDataNotFound()
-	}
-
 	o.RepoDataLoader = load.RepoDataFromConfigFile(repoDataNotFound)
 
 	return o.LoadRepoData()
@@ -36,10 +32,6 @@ func loadRepoData(o *okctl.Okctl, _ *cobra.Command) error {
 
 func loadUserData(o *okctl.Okctl, cmd *cobra.Command) error {
 	userDataNotFound := load.CreateOnUserDataNotFound()
-
-	if o.NoInput {
-		userDataNotFound = load.ErrOnUserDataNotFound()
-	}
 
 	o.UserDataLoader = load.UserDataFromFlagsEnvConfigDefaults(cmd, userDataNotFound)
 

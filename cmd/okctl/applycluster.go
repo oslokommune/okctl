@@ -240,10 +240,6 @@ func inferClusterFromStdinOrFile(stdin io.Reader, path string) (*v1alpha1.Cluste
 func loadNoUserInputUserData(o *okctl.Okctl, cmd *cobra.Command) error {
 	userDataNotFound := load.CreateOnUserDataNotFoundWithNoInput()
 
-	if o.NoInput {
-		userDataNotFound = load.ErrOnUserDataNotFound()
-	}
-
 	o.UserDataLoader = load.UserDataFromFlagsEnvConfigDefaults(cmd, userDataNotFound)
 
 	return o.LoadUserData()

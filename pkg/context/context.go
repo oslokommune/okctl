@@ -13,8 +13,6 @@ import (
 const (
 	// DefaultDebugEnv if set will ensure verbose debugging output
 	DefaultDebugEnv = "OKCTL_DEBUG"
-	// DefaultNoInputEnv if set will ensure that no interactive dialogs are started
-	DefaultNoInputEnv = "OKCTL_NO_INPUT"
 	// DefaultAWSCredentialsType if set will ensure where okctl seeks AWS authentication credentials
 	DefaultAWSCredentialsType = "OKCTL_AWS_CREDENTIALS_TYPE"
 	// DefaultGithubCredentialsType if set will ensure where okctl seeks Github authentication credentials
@@ -40,7 +38,6 @@ type Context struct {
 	FileSystem *afero.Afero
 
 	Debug                 bool
-	NoInput               bool
 	AWSCredentialsType    string
 	GithubCredentialsType string
 
@@ -57,7 +54,6 @@ type Context struct {
 // New returns a context with sensible defaults
 func New() *Context {
 	_, debug := os.LookupEnv(DefaultDebugEnv)
-	_, noInput := os.LookupEnv(DefaultNoInputEnv)
 	awsCredentialsType := os.Getenv(DefaultAWSCredentialsType)
 	githubCredentialsType := os.Getenv(DefaultGithubCredentialsType)
 
@@ -74,7 +70,6 @@ func New() *Context {
 	return &Context{
 		FileSystem:            &afero.Afero{Fs: afero.NewOsFs()},
 		Debug:                 debug,
-		NoInput:               noInput,
 		AWSCredentialsType:    awsCredentialsType,
 		GithubCredentialsType: githubCredentialsType,
 		In:                    os.Stdin,

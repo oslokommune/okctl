@@ -84,10 +84,6 @@ with Github or other production services.
 `,
 		Args: cobra.ExactArgs(createTestClusterArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			if o.NoInput {
-				return fmt.Errorf("we only support cluster creation with user input")
-			}
-
 			environment := args[0]
 			awsAccountID := args[1]
 
@@ -156,7 +152,7 @@ with Github or other production services.
 				return formatErr(err)
 			}
 
-			servicequota.CheckQuotas(
+			_ = servicequota.CheckQuotas(
 				servicequota.NewVpcCheck(o.Err, o.CloudProvider, config.DefaultRequiredVpcsTestCluster),
 				servicequota.NewEipCheck(o.Err, o.CloudProvider, config.DefaultRequiredEpisTestCluster),
 				servicequota.NewIgwCheck(o.Err, o.CloudProvider, config.DefaultRequiredIgwsTestCluster),

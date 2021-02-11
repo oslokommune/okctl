@@ -284,7 +284,7 @@ func (k *KubernetesCluster) Debug(namespace string) (map[string][]string, error)
 		return nil, err
 	}
 
-	ku, err := kube.New(kubeConfigPath)
+	ku, err := kube.New(kube.NewFromKubeConfig(kubeConfigPath))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create debug client")
 	}

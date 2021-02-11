@@ -402,7 +402,7 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 	r, err := client.Run(chart, values)
 	if err != nil {
 		if h.config.Debug {
-			k, debugErr := kube.New(kubeConfigPath)
+			k, debugErr := kube.New(kube.NewFromKubeConfig(kubeConfigPath))
 			if debugErr != nil {
 				_, _ = fmt.Fprintf(h.config.DebugOutput, "failed to create debug client: %s", err)
 				return nil, err

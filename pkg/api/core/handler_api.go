@@ -54,6 +54,7 @@ type Endpoints struct {
 	CreateAWSLoadBalancerControllerHelmChart      endpoint.Endpoint
 	DeleteCertificate                             endpoint.Endpoint
 	DeleteNamespace                               endpoint.Endpoint
+	DeleteCognitoCertificate                      endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -98,6 +99,7 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateAWSLoadBalancerControllerHelmChart:      makeCreateAWSLoadBalancerControllerHelmChartEndpoint(s.Helm),
 		DeleteCertificate:                             makeDeleteCertificateEndpoint(s.Certificate),
 		DeleteNamespace:                               makeDeleteNamespaceEndpoint(s.Kube),
+		DeleteCognitoCertificate:                      makeDeleteCognitoCertificateEndpoint(s.Certificate),
 	}
 }
 
@@ -141,6 +143,7 @@ type Handlers struct {
 	CreateAWSLoadBalancerControllerHelmChart      http.Handler
 	DeleteCertificate                             http.Handler
 	DeleteNamespace                               http.Handler
+	DeleteCognitoCertificate                      http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -211,6 +214,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateAWSLoadBalancerControllerHelmChart:      newServer(endpoints.CreateAWSLoadBalancerControllerHelmChart, decodeCreateAWSLoadBalancerControllerHelmChart),
 		DeleteCertificate:                             newServer(endpoints.DeleteCertificate, decodeDeleteCertificate),
 		DeleteNamespace:                               newServer(endpoints.DeleteNamespace, decodeDeleteNamespace),
+		DeleteCognitoCertificate:                      newServer(endpoints.DeleteCognitoCertificate, decodeDeleteCognitoCertificate),
 	}
 }
 
@@ -298,6 +302,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/certificates", func(r chi.Router) {
 			r.Method(http.MethodPost, "/", handlers.CreateCertificate)
 			r.Method(http.MethodDelete, "/", handlers.DeleteCertificate)
+			r.Route("/cognito", func(r chi.Router) {
+				r.Method(http.MethodDelete, "/", handlers.DeleteCognitoCertificate)
+			})
 		})
 		r.Route("/parameters", func(r chi.Router) {
 			r.Route("/secret", func(r chi.Router) {
@@ -363,6 +370,7 @@ const (
 	identityPoolClientTag        = "identitypoolclient"
 	identityPoolUserTag          = "identitypooluser"
 	namespaceTag                 = "namespace"
+	cognitoTag                   = "cognito"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -408,6 +416,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateAWSLoadBalancerControllerHelmChart:      logmd.Logging(logger, strings.Join([]string{helmTag, awsLoadBalancerControllerTag}, "/"), "create")(endpoints.CreateAWSLoadBalancerControllerHelmChart),
 			DeleteCertificate:                             logmd.Logging(logger, certificateTag, "delete")(endpoints.DeleteCertificate),
 			DeleteNamespace:                               logmd.Logging(logger, strings.Join([]string{kubeTag, namespaceTag}, "/"), "delete")(endpoints.DeleteNamespace),
+			DeleteCognitoCertificate:                      logmd.Logging(logger, strings.Join([]string{certificateTag, cognitoTag}, "/"), "delete")(endpoints.DeleteCognitoCertificate),
 		}
 	}
 }

@@ -48,9 +48,17 @@ func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgo
 		return err
 	}
 
-	err = s.cert.DeleteCertificate(ctx, api.DeleteCertificateOpts{
+	err = s.cert.DeleteCognitoCertificate(ctx, api.DeleteCognitoCertificateOpts{
 		ID:     opts.ID,
 		Domain: info.AuthDomain,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = s.cert.DeleteCertificate(ctx, api.DeleteCertificateOpts{
+		ID:     opts.ID,
+		Domain: info.ArgoDomain,
 	})
 	if err != nil {
 		return err

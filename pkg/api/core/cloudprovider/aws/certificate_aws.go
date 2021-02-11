@@ -14,7 +14,7 @@ type certificate struct {
 	provider v1alpha1.CloudProvider
 }
 
-func (c *certificate) DeleteCertificate(opts api.DeleteCertificateOpts) error {
+func (c *certificate) DeleteCognitoCertificate(opts api.DeleteCognitoCertificateOpts) error {
 	d := cognito.NewCertDeleter(c.provider)
 
 	err := d.DeleteAuthCert(cognito.DeleteAuthCertOpts{
@@ -25,6 +25,10 @@ func (c *certificate) DeleteCertificate(opts api.DeleteCertificateOpts) error {
 	}
 
 	return nil
+}
+
+func (c *certificate) DeleteCertificate(opts api.DeleteCertificateOpts) error {
+	return cfn.NewRunner(c.provider).Delete(cfn.NewStackNamer().Certificate(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Domain)))
 }
 
 func (c *certificate) CreateCertificate(opts api.CreateCertificateOpts) (*api.Certificate, error) {

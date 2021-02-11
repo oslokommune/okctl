@@ -19,6 +19,24 @@ type certificateService struct {
 	report  client.CertificateReport
 }
 
+func (s *certificateService) DeleteCognitoCertificate(_ context.Context, opts api.DeleteCognitoCertificateOpts) error {
+	err := s.spinner.Start("cognito certificate")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	err = s.api.DeleteCognitoCertificate(opts)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *certificateService) DeleteCertificate(_ context.Context, opts api.DeleteCertificateOpts) error {
 	err := s.spinner.Start("delete certificate")
 	if err != nil {

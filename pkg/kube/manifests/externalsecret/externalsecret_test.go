@@ -92,7 +92,7 @@ func TestExternalDNS(t *testing.T) {
 			// Skipping for now, since this won't work
 			t.Skip()
 
-			k, err := kube.New(kubeConfPath)
+			k, err := kube.New(kube.NewFromKubeConfig(kubeConfPath))
 			assert.NoError(t, err)
 
 			// Need to add k.Watch to the output her, but that means bringing up localstack, I think?

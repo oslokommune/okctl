@@ -5,13 +5,25 @@ package kube
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/cloud"
+
+	awsauth "github.com/oslokommune/okctl/pkg/credentials/aws"
+
+	"github.com/aws/aws-sdk-go/service/eks"
+
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
+	"sigs.k8s.io/aws-iam-authenticator/pkg/token"
+
 	"k8s.io/client-go/rest"
 
+	"github.com/aws/aws-sdk-go/aws"
 	deploymentUtil "github.com/oslokommune/okctl/internal/third_party/k8s.io/kubernetes/deployment/util"
 	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -32,11 +44,11 @@ type Kuber interface {
 // Kube contains state for communicating with
 // a kubernetes cluster
 type Kube struct {
-	KubeConfigPath string
-	ClientSet      *kubernetes.Clientset
-	RestConfig     *rest.Config
-	Ctx            context.Context
-	Log            *logrus.Logger
+	Provider   ClientSetProvider
+	ClientSet  *kubernetes.Clientset
+	RestConfig *rest.Config
+	Ctx        context.Context
+	Log        *logrus.Logger
 }
 
 // ApplyFn defines the signature of a function that applies
@@ -50,14 +62,14 @@ type Applier struct {
 	Description string
 }
 
-// New returns an initialised kubernetes client
-func New(kubeConfigPath string) (*Kube, error) {
-	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
-	if err != nil {
-		return nil, err
-	}
+// ClientSetProvider defines how a Kubernetes clientset may be retrieved
+type ClientSetProvider interface {
+	Get() (*kubernetes.Clientset, *rest.Config, error)
+}
 
-	clientSet, err := kubernetes.NewForConfig(config)
+// New returns an initialised kubernetes client
+func New(provider ClientSetProvider) (*Kube, error) {
+	clientset, config, err := provider.Get()
 	if err != nil {
 		return nil, err
 	}
@@ -66,12 +78,100 @@ func New(kubeConfigPath string) (*Kube, error) {
 	logger.Out = ioutil.Discard
 
 	return &Kube{
-		KubeConfigPath: kubeConfigPath,
-		RestConfig:     config,
-		ClientSet:      clientSet,
-		Ctx:            context.Background(),
-		Log:            logger,
+		Provider:   provider,
+		ClientSet:  clientset,
+		RestConfig: config,
+		Ctx:        context.Background(),
+		Log:        logger,
 	}, nil
+}
+
+// NewFromKubeConfig returns a client set provider that uses a
+// kubeconfig to build the client set
+func NewFromKubeConfig(kubeConfigPath string) ClientSetProvider {
+	return &fromKubeConfig{
+		kubeConfigPath: kubeConfigPath,
+	}
+}
+
+type fromKubeConfig struct {
+	kubeConfigPath string
+}
+
+// Get the clientset
+func (c *fromKubeConfig) Get() (*kubernetes.Clientset, *rest.Config, error) {
+	config, err := clientcmd.BuildConfigFromFlags("", c.kubeConfigPath)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+
+	return clientset, config, err
+}
+
+// NewFromEKSCluster returns a client set provider that uses a
+// EKS cluster description to build the client set
+func NewFromEKSCluster(clusterName, region string, provider v1alpha1.CloudProvider, auth awsauth.Authenticator) ClientSetProvider {
+	return &fromEKSCluster{
+		region:      region,
+		clusterName: clusterName,
+		provider:    provider,
+		auth:        auth,
+	}
+}
+
+type fromEKSCluster struct {
+	clusterName string
+	region      string
+	provider    v1alpha1.CloudProvider
+	auth        awsauth.Authenticator
+}
+
+// Get the clientset from EKS data
+func (c *fromEKSCluster) Get() (*kubernetes.Clientset, *rest.Config, error) {
+	cluster, err := c.provider.EKS().DescribeCluster(&eks.DescribeClusterInput{
+		Name: aws.String(c.clusterName),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	gen, err := token.NewGenerator(true, false)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	sess, _, err := cloud.NewSession(c.region, c.auth)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tok, err := gen.GetWithOptions(&token.GetTokenOptions{
+		Region:    c.region,
+		ClusterID: aws.StringValue(cluster.Cluster.Name),
+		Session:   sess,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ca, err := base64.StdEncoding.DecodeString(aws.StringValue(cluster.Cluster.CertificateAuthority.Data))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	config := &rest.Config{
+		Host:        aws.StringValue(cluster.Cluster.Endpoint),
+		BearerToken: tok.Token,
+		TLSClientConfig: rest.TLSClientConfig{
+			CAData: ca,
+		},
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+
+	return clientset, config, err
 }
 
 // WithLogger sets a logger

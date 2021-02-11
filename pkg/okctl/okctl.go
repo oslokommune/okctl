@@ -591,7 +591,7 @@ func (o *Okctl) initialise() error {
 
 	kubeService := core.NewKubeService(
 		kubeStore,
-		run.NewKubeRun(kubeConfigStore),
+		run.NewKubeRun(o.CloudProvider, o.CredentialsProvider.Aws()),
 	)
 
 	awsIamAuth, err := o.BinariesProvider.AwsIamAuthenticator(awsiamauthenticator.Version)

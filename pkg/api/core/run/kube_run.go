@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/credentials/aws"
+
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/kube/manifests/namespace"
 
 	"github.com/oslokommune/okctl/pkg/kube/manifests/externalsecret"
@@ -15,18 +19,14 @@ import (
 )
 
 type kubeRun struct {
-	kubeConfStore api.KubeConfigStore
+	provider v1alpha1.CloudProvider
+	auth     aws.Authenticator
 }
 
 func (k *kubeRun) DeleteNamespace(opts api.DeleteNamespaceOpts) error {
-	kubeConfig, err := k.kubeConfStore.GetKubeConfig()
-	if err != nil {
-		return fmt.Errorf("retrieving kubeconfig: %w", err)
-	}
-
 	ns := namespace.New(opts.Namespace)
 
-	client, err := kube.New(kubeConfig.Path)
+	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
 	if err != nil {
 		return fmt.Errorf("creating kubernetes client: %w", err)
 	}
@@ -47,11 +47,6 @@ func (k *kubeRun) DeleteNamespace(opts api.DeleteNamespaceOpts) error {
 // this.
 // nolint: funlen
 func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*api.ExternalSecretsKube, error) {
-	kubeConfig, err := k.kubeConfStore.GetKubeConfig()
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve kubeconfig: %w", err)
-	}
-
 	fns := make([]kube.Applier, len(opts.Manifests))
 	manifests := map[string][]byte{}
 	namespaces := map[string]struct{}{}
@@ -97,7 +92,7 @@ func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*ap
 		manifests[fmt.Sprintf("namespace-%s.yml", ns)] = data
 	}
 
-	client, err := kube.New(kubeConfig.Path)
+	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create kubernetes client: %w", err)
 	}
@@ -115,14 +110,9 @@ func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*ap
 }
 
 func (k *kubeRun) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKubeDeploymentOpts) (*api.ExternalDNSKube, error) {
-	kubeConfig, err := k.kubeConfStore.GetKubeConfig()
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve kubeconfig: %w", err)
-	}
-
 	ext := externaldns.New(opts.HostedZoneID, opts.DomainFilter)
 
-	client, err := kube.New(kubeConfig.Path)
+	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create kubernetes client: %w", err)
 	}
@@ -169,8 +159,9 @@ func (k *kubeRun) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKube
 }
 
 // NewKubeRun returns an initialised kube runner
-func NewKubeRun(kubeConfStore api.KubeConfigStore) api.KubeRun {
+func NewKubeRun(provider v1alpha1.CloudProvider, auth aws.Authenticator) api.KubeRun {
 	return &kubeRun{
-		kubeConfStore: kubeConfStore,
+		auth:     auth,
+		provider: provider,
 	}
 }

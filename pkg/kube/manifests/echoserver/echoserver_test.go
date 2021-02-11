@@ -54,7 +54,7 @@ func TestEchoServer(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			k, err := kube.New(kubeConfPath)
+			k, err := kube.New(kube.NewFromKubeConfig(kubeConfPath))
 			assert.NoError(t, err)
 
 			k.WithLogger(logrus.StandardLogger())

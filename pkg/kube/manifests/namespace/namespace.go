@@ -25,8 +25,10 @@ func New(namespace string) *Namespace {
 }
 
 // DeleteNamespace deletes the namespace
-func (n *Namespace) DeleteNamespace(clientset kubernetes.Interface, _ *rest.Config) (interface{}, error) {
-	return nil, clientset.CoreV1().Namespaces().Delete(n.Ctx, n.Namespace, metav1.DeleteOptions{})
+func (n *Namespace) DeleteNamespace(_ kubernetes.Interface, config *rest.Config) (interface{}, error) {
+	client := kubernetes.NewForConfigOrDie(config)
+
+	return nil, client.CoreV1().Namespaces().Delete(n.Ctx, n.Namespace, metav1.DeleteOptions{})
 }
 
 // CreateNamespace creates the namespace

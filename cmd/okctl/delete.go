@@ -2,7 +2,11 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
 	"regexp"
+
+	"github.com/oslokommune/okctl/pkg/context"
 
 	"github.com/oslokommune/okctl/pkg/client"
 
@@ -38,6 +42,11 @@ func buildDeleteCommand(o *okctl.Okctl) *cobra.Command {
 
 // DeleteClusterOpts contains the required inputs
 type DeleteClusterOpts struct {
+	AWSCredentialsType    string
+	GithubCredentialsType string
+
+	Quiet bool
+
 	Region       string
 	AWSAccountID string
 	Environment  string
@@ -66,6 +75,8 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 including VPC, this is a highly destructive operation.`,
 		Args: cobra.ExactArgs(deleteClusterArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
+			o.AWSCredentialsType = opts.AWSCredentialsType
+			o.GithubCredentialsType = opts.GithubCredentialsType
 			environment := args[0]
 
 			err := validation.Validate(
@@ -107,6 +118,13 @@ including VPC, this is a highly destructive operation.`,
 				ClusterName:  opts.ClusterName,
 			}
 
+			var spinnerWriter io.Writer
+			if opts.Quiet {
+				spinnerWriter = ioutil.Discard
+			} else {
+				spinnerWriter = o.Err
+			}
+
 			delzones, _ := cmd.Flags().GetString(deleteHostedZoneFlag)
 
 			ready, err := checkifReady(id.ClusterName, o)
@@ -119,7 +137,7 @@ including VPC, this is a highly destructive operation.`,
 				return err
 			}
 
-			spin, err := spinner.New("deleting", o.Err)
+			spin, err := spinner.New("deleting", spinnerWriter)
 			if err != nil {
 				return err
 			}
@@ -217,6 +235,28 @@ including VPC, this is a highly destructive operation.`,
 			return nil
 		},
 	}
+
+	flags := cmd.Flags()
+
+	flags.StringVarP(&opts.AWSCredentialsType, "aws-credentials-type", "a", context.AWSCredentialsTypeSAML,
+		fmt.Sprintf(
+			"The form of authentication to use for AWS. Possible values: [%s,%s]",
+			context.AWSCredentialsTypeSAML,
+			context.AWSCredentialsTypeAccessKey,
+		),
+	)
+	flags.StringVarP(
+		&opts.GithubCredentialsType,
+		"github-credentials-type",
+		"g",
+		context.GithubCredentialsTypeDeviceAuthentication,
+		fmt.Sprintf(
+			"The form of authentication to use for Github. Possible values: [%s,%s]",
+			context.GithubCredentialsTypeDeviceAuthentication,
+			context.GithubCredentialsTypeToken,
+		),
+	)
+	flags.BoolVarP(&opts.Quiet, "quiet", "q", false, "reduces output to screen")
 
 	return cmd
 }

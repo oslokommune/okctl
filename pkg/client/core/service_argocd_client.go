@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/config"
+
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/oslokommune/okctl/pkg/client/store"
@@ -42,15 +44,7 @@ func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgo
 
 	err = s.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
 		ID:        opts.ID,
-		Namespace: "argocd",
-	})
-	if err != nil {
-		return err
-	}
-
-	err = s.cert.DeleteCognitoCertificate(ctx, api.DeleteCognitoCertificateOpts{
-		ID:     opts.ID,
-		Domain: info.AuthDomain,
+		Namespace: config.DefaultArgoCDNamespace,
 	})
 	if err != nil {
 		return err
@@ -132,7 +126,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		Manifests: []api.Manifest{
 			{
 				Name:      privateKeyName,
-				Namespace: "argocd",
+				Namespace: config.DefaultArgoCDNamespace,
 				Annotations: map[string]string{
 					"meta.helm.sh/release-name":      "argocd",
 					"meta.helm.sh/release-namespace": "argocd",

@@ -228,6 +228,7 @@ func (o *Okctl) identityManagerService(outputDir string, spin spinner.Spinner) c
 		),
 		stateSaver.NewIdentityManagerState(o.RepoStateWithEnv),
 		console.NewIdentityManagerReport(o.Err, spin),
+		o.certService(outputDir, spin.SubSpinner()),
 	)
 
 	return identityManagerService

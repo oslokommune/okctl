@@ -94,6 +94,9 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		Purpose:     "argocd",
 		CallbackURL: fmt.Sprintf("https://%s/api/dex/callback", cert.Domain),
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	clientSecret, err := s.param.CreateSecret(ctx, api.CreateSecretOpts{
 		ID:     opts.ID,

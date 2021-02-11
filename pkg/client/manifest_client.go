@@ -20,11 +20,12 @@ type CreateExternalSecretOpts struct {
 }
 
 // ManifestService implements the business logic
+// There is nothing inherently wrong with this service, but I think there
+// exists opportunities to improve the way we interact with Kubernets and apply
+// and remove resources. That is basically what this service does, it handles
+// kubernetes resources from thte client side.
 type ManifestService interface {
 	CreateExternalSecret(ctx context.Context, opts CreateExternalSecretOpts) (*ExternalSecret, error)
-	// I don't like this, but I think ManifestService is an equally big problem
-	// so I will leave it here for now. We should refactor this functionality
-	// somehow..
 	DeleteNamespace(ctx context.Context, opts api.DeleteNamespaceOpts) error
 }
 

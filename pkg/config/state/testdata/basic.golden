@@ -63,7 +63,6 @@ clusters:
         argocd:
             siteurl: https://argocd.oslo.systems
             domain: argocd.oslo.systems
-            authdomain: ""
             secretkey:
                 name: something
                 path: /some/path

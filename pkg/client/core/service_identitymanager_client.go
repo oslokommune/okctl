@@ -17,6 +17,8 @@ type identityManagerService struct {
 	store   client.IdentityManagerStore
 	state   client.IdentityManagerState
 	report  client.IdentityManagerReport
+
+	cert client.CertificateService
 }
 
 func (s *identityManagerService) DeleteIdentityPoolClient(_ context.Context, opts api.DeleteIdentityPoolClientOpts) error {
@@ -53,7 +55,7 @@ func (s *identityManagerService) DeleteIdentityPoolClient(_ context.Context, opt
 }
 
 // DeleteIdentityPool and all users
-func (s *identityManagerService) DeleteIdentityPool(_ context.Context, id api.ID) error {
+func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, id api.ID) error {
 	err := s.spinner.Start("deleting identity-pool")
 	if err != nil {
 		return err
@@ -67,6 +69,14 @@ func (s *identityManagerService) DeleteIdentityPool(_ context.Context, id api.ID
 
 	if pool.UserPoolID == "" {
 		return nil
+	}
+
+	err = s.cert.DeleteCognitoCertificate(ctx, api.DeleteCognitoCertificateOpts{
+		ID:     id,
+		Domain: pool.AuthDomain,
+	})
+	if err != nil {
+		return err
 	}
 
 	err = s.api.DeleteIdentityPool(api.DeleteIdentityPoolOpts{
@@ -202,6 +212,7 @@ func NewIdentityManagerService(
 	store client.IdentityManagerStore,
 	state client.IdentityManagerState,
 	report client.IdentityManagerReport,
+	cert client.CertificateService,
 ) client.IdentityManagerService {
 	return &identityManagerService{
 		spinner: spinner,
@@ -209,5 +220,6 @@ func NewIdentityManagerService(
 		store:   store,
 		state:   state,
 		report:  report,
+		cert:    cert,
 	}
 }

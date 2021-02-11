@@ -17,7 +17,6 @@ func (s *argoCDState) GetArgoCD(id api.ID) client.ArgoCDStateInfo {
 	return client.ArgoCDStateInfo{
 		ID:         id,
 		ArgoDomain: argo.Domain,
-		AuthDomain: argo.AuthDomain,
 	}
 }
 
@@ -26,7 +25,6 @@ func (s *argoCDState) SaveArgoCD(cd *client.ArgoCD) (*store.Report, error) {
 
 	argo.SiteURL = cd.ArgoURL
 	argo.Domain = cd.ArgoDomain
-	argo.AuthDomain = cd.AuthDomain
 	argo.SecretKey.Version = cd.SecretKey.Version
 	argo.SecretKey.Path = cd.SecretKey.Path
 	argo.SecretKey.Name = cd.SecretKey.Name

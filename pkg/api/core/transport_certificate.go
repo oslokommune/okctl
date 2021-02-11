@@ -29,3 +29,14 @@ func decodeDeleteCertificate(_ context.Context, r *http.Request) (interface{}, e
 
 	return opts, nil
 }
+
+func decodeDeleteCognitoCertificate(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.DeleteCognitoCertificateOpts
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}

@@ -12,6 +12,20 @@ type certificateService struct {
 	store         api.CertificateStore
 }
 
+func (c *certificateService) DeleteCognitoCertificate(_ context.Context, opts api.DeleteCognitoCertificateOpts) error {
+	err := opts.Validate()
+	if err != nil {
+		return errors.E(err, "validating cognito inputs", errors.Invalid)
+	}
+
+	err = c.cloudProvider.DeleteCognitoCertificate(opts)
+	if err != nil {
+		return errors.E(err, "deleting cognito certificate", errors.Internal)
+	}
+
+	return nil
+}
+
 func (c *certificateService) DeleteCertificate(_ context.Context, opts api.DeleteCertificateOpts) error {
 	err := opts.Validate()
 	if err != nil {

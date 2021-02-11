@@ -119,6 +119,10 @@ func (m mockCertService) DeleteCertificate(_ context.Context, _ api.DeleteCertif
 	return nil
 }
 
+func (m mockCertService) DeleteCognitoCertificate(_ context.Context, _ api.DeleteCognitoCertificateOpts) error {
+	return nil
+}
+
 func (m mockCertService) CreateCertificate(_ context.Context, _ api.CreateCertificateOpts) (*api.Certificate, error) {
 	return &api.Certificate{
 		CertificateARN: "arn:which:isnt:an:arn",

@@ -34,6 +34,7 @@ func (n *Namespace) DeleteNamespace(_ kubernetes.Interface, config *rest.Config)
 	}
 
 	found := false
+
 	for _, item := range ns.Items {
 		if item.Name == n.Namespace {
 			found = true

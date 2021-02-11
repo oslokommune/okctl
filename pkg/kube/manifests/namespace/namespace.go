@@ -28,7 +28,27 @@ func New(namespace string) *Namespace {
 func (n *Namespace) DeleteNamespace(_ kubernetes.Interface, config *rest.Config) (interface{}, error) {
 	client := kubernetes.NewForConfigOrDie(config)
 
-	return nil, client.CoreV1().Namespaces().Delete(n.Ctx, n.Namespace, metav1.DeleteOptions{})
+	ns, err := client.CoreV1().Namespaces().List(n.Ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	found := false
+	for _, item := range ns.Items {
+		if item.Name == n.Namespace {
+			found = true
+		}
+	}
+
+	if !found {
+		return nil, nil
+	}
+
+	policy := metav1.DeletePropagationForeground
+
+	return nil, client.CoreV1().Namespaces().Delete(n.Ctx, n.Namespace, metav1.DeleteOptions{
+		PropagationPolicy: &policy,
+	})
 }
 
 // CreateNamespace creates the namespace

@@ -49,16 +49,32 @@ func (o DeleteCertificateOpts) Validate() error {
 	)
 }
 
+// DeleteCognitoCertificateOpts contains the inputs
+type DeleteCognitoCertificateOpts struct {
+	ID     ID
+	Domain string
+}
+
+// Validate the deletion request inputs
+func (o DeleteCognitoCertificateOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.Domain, validation.Required),
+	)
+}
+
 // CertificateService defines the service layer operations
 type CertificateService interface {
 	CreateCertificate(ctx context.Context, opts CreateCertificateOpts) (*Certificate, error)
 	DeleteCertificate(ctx context.Context, opts DeleteCertificateOpts) error
+	DeleteCognitoCertificate(ctx context.Context, opts DeleteCognitoCertificateOpts) error
 }
 
 // CertificateCloudProvider defines the cloud interaction
 type CertificateCloudProvider interface {
 	CreateCertificate(opts CreateCertificateOpts) (*Certificate, error)
 	DeleteCertificate(opts DeleteCertificateOpts) error
+	DeleteCognitoCertificate(opts DeleteCognitoCertificateOpts) error
 }
 
 // CertificateStore defines the storage operations

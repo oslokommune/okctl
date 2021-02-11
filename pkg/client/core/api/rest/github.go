@@ -170,7 +170,7 @@ func inferRepository(fullName string, repositories []*github.Repository) (*githu
 		}
 	}
 
-	return nil, errors.New("could not find relevant repository")
+	return nil, errors.New(fmt.Sprintf("could not find relevant repository %s", fullName))
 }
 
 // NewGithubAPI returns an instantiated github API client

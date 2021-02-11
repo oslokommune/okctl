@@ -1,0 +1,69 @@
+name: 'Nightly build'
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: 0 4 * * 1-5
+
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+
+      - name: Test
+        run: go test -v ./...
+
+      - name: Build
+        run: make release-local
+
+      - uses: webfactory/ssh-agent@v0.4.1
+        with:
+          ssh-private-key: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_SECRET_KEY }}
+
+      - name: Create cluster
+        run: |
+          cat <<EOF | dist/linux_linux_amd64/okctl apply cluster --github-credentials-type token --aws-credentials-type access-key --quiet --file -
+            kind: Cluster
+            apiVersion: okctl.io/v1alpha1
+            metadata:
+              accountID: "932360772598"
+              environment: test
+              name: nightly
+              region: eu-west-1
+            primaryDNSZone:
+              managedZone: false
+              parentDomain: nightly-test.oslo.systems
+            github:
+              organisation: oslokommune
+              outputPath: infrastructure
+              repository: okctl-iac
+              team: kjoremiljo
+            integrations:
+              argoCD: true
+              awsLoadBalancerController: true
+              cognito: true
+              externalDNS: true
+              externalSecrets: true
+            vpc:
+              cidr: 192.168.0.0/20
+              highAvailability: true
+          EOF
+        env:
+          OKCTL_DEBUG: true
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          GITHUB_TOKEN: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_PAT }}
+
+      - name: Delete cluster
+        run: dist/linux_linux_amd64/okctl delete cluster --github-credentials-type token --aws-credentials-type access-key --quiet --confirm test
+        env:
+          OKCTL_DEBUG: true
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          GITHUB_TOKEN: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_PAT }}

@@ -13,6 +13,7 @@ type ArgoCD struct {
 	ID             api.ID
 	ArgoDomain     string
 	ArgoURL        string
+	AuthDomain     string
 	Certificate    *api.Certificate
 	IdentityClient *api.IdentityPoolClient
 	ExternalSecret *api.ExternalSecretsKube
@@ -26,6 +27,7 @@ type ArgoCD struct {
 type ArgoCDStateInfo struct {
 	ID         api.ID
 	ArgoDomain string
+	AuthDomain string
 }
 
 // CreateArgoCDOpts contains the required inputs

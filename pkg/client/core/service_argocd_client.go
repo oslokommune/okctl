@@ -50,7 +50,7 @@ func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgo
 
 	err = s.cert.DeleteCertificate(ctx, api.DeleteCertificateOpts{
 		ID:     opts.ID,
-		Domain: info.ArgoDomain,
+		Domain: info.AuthDomain,
 	})
 	if err != nil {
 		return err
@@ -193,6 +193,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		Manifests: manifest.Manifests,
 	}
 	argo.SecretKey = secretKey
+	argo.AuthDomain = opts.AuthDomain
 
 	r1, err := s.store.SaveArgoCD(argo)
 	if err != nil {

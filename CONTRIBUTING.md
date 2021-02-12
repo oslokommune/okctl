@@ -123,6 +123,12 @@ prompts).
 Issue #57
 ```
 
+Or, in case of shorter messages:
+
+```text
+#57: Added AWS Profile Support
+```
+
 The format can be described more formally as follows:
 
 ```text

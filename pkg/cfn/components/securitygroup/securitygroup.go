@@ -15,7 +15,7 @@ type SecurityGroup struct {
 }
 
 // NamedOutputs returns the outputs commonly used by other stacks or components
-func (s *SecurityGroup) NamedOutputs() map[string]map[string]interface{} {
+func (s *SecurityGroup) NamedOutputs() map[string]cloudformation.Output {
 	return cfn.NewValue(s.Name(), s.Ref()).NamedOutputs()
 }
 

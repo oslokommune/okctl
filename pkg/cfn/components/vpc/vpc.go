@@ -19,7 +19,7 @@ type VPC struct {
 }
 
 // NamedOutputs returns the commonly used named outputs of a VPC
-func (v *VPC) NamedOutputs() map[string]map[string]interface{} {
+func (v *VPC) NamedOutputs() map[string]cloudformation.Output {
 	return cfn.NewValue(v.Name(), v.Ref()).NamedOutputs()
 }
 

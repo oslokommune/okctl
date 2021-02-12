@@ -15,7 +15,7 @@ type Certificate struct {
 }
 
 // NamedOutputs returns the named outputs
-func (c Certificate) NamedOutputs() map[string]map[string]interface{} {
+func (c Certificate) NamedOutputs() map[string]cloudformation.Output {
 	return cfn.NewValue(c.Name(), c.Ref()).NamedOutputs()
 }
 

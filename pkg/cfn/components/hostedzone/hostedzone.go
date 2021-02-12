@@ -16,7 +16,7 @@ type HostedZone struct {
 }
 
 // NamedOutputs returns the named outputs
-func (h *HostedZone) NamedOutputs() map[string]map[string]interface{} {
+func (h *HostedZone) NamedOutputs() map[string]cloudformation.Output {
 	return cfn.NewValueMap().
 		Add(cfn.NewValue(h.Name(), h.Ref())).
 		// This doesn't work, so we need to patch this after the fact, this

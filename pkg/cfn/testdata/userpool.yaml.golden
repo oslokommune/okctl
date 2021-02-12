@@ -1,21 +1,33 @@
 AWSTemplateFormatVersion: 2010-09-09
 Outputs:
   Arn:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-Arn
     Value:
       Fn::GetAtt:
       - UserPool
       - Arn
   ProviderName:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-ProvideName
     Value:
       Fn::GetAtt:
       - UserPool
       - ProviderName
   ProviderURL:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-ProviderURL
     Value:
       Fn::GetAtt:
       - UserPool
       - ProviderURL
   UserPool:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-UserPool
     Value:
       Ref: UserPool
 Resources:

@@ -15,7 +15,7 @@ type DBSubnetGroup struct {
 }
 
 // NamedOutputs returns the named outputs
-func (g *DBSubnetGroup) NamedOutputs() map[string]map[string]interface{} {
+func (g *DBSubnetGroup) NamedOutputs() map[string]cloudformation.Output {
 	return cfn.NewValue("DatabaseSubnetGroupName", g.Ref()).NamedOutputs()
 }
 

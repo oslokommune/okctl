@@ -55,7 +55,7 @@ Github issue number must be an issue or pull request (PR) identifier, so that an
 `https://github.com/oslokommune/okctl/issues/<Github issue number>`. (Github automatically forwards to PR if issue is a
 PR).
 
-Examples:
+Github examples:
 
 ```text
 #123: Add userdocs for okctl create cluster
@@ -71,8 +71,14 @@ feat(ux): Add userdocs for okctl create cluster
 #123
 ```
 
+Trello examples:
+
 ```text
 KM-160: Add userdocs for okctl create cluster
+```
+
+```text
+KM-160: feat(ux): Add userdocs for okctl create cluster
 ```
 
 ```text
@@ -101,4 +107,4 @@ merging and adding on the PR's issue number to the commit message not before the
 * We will get a git history that can be traced back to its background, giving more context.
 * When browsing commit history on github.com, github automatically creates links to the github issue, so you'll be able
 to click the "#123" part of the commit message to get directly to the issue.
-* To find a Trello card given your number, put the card number into the search box.
+* To find a Trello card given your number, put the card number into the search box in Trello

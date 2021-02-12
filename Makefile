@@ -112,8 +112,20 @@ PKGS  = $(or $(PKG),$(shell env GO111MODULE=on $(GO) list ./...))
 FILES = $(shell find . -name '.?*' -prune -o -name vendor -prune -o -name '*.go' -print)
 
 ## Release
-release-local: $(GORELEASER)
-	$(GORELEASER) release --config=.goreleaser-local.yml --snapshot --skip-publish --rm-dist
+release-local:
+	 docker run --rm --privileged \
+	  -v $$PWD:/go/src/github.com/oslokommune/okctl \
+	  -v /var/run/docker.sock:/var/run/docker.sock \
+	  -w /go/src/github.com/oslokommune/okctl \
+	  troian/golang-cross release --config=/go/src/github.com/oslokommune/okctl/.goreleaser-local.yml --snapshot --skip-publish --rm-dist
+
+release:
+	 docker run --rm --privileged \
+	  -v $$PWD:/go/src/github.com/oslokommune/okctl \
+	  -v /var/run/docker.sock:/var/run/docker.sock \
+	  -w /go/src/github.com/oslokommune/okctl \
+	  -e GITHUB_TOKEN \
+	  troian/golang-cross release --rm-dist --release-notes=$(RELEASE_NOTES) --config=/go/src/github.com/oslokommune/okctl/.goreleaser.yml
 
 ## Generate
 generate: $(STATIK)

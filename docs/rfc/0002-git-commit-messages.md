@@ -49,7 +49,7 @@ IntelliJ).
 -->
 
 Git commit messages found on the **master** branch should in **most cases** link to an issue, giving context to
-the commit. The issue can be a `#`followed by Github issue number or `KM-` followed by a Trello card number.
+the commit. The issue can be a `#`followed by Github issue number or `KM` followed by a Trello card number.
 
 Github issue number must be an issue or pull request (PR) identifier, so that anyone can put this message into the URL
 `https://github.com/oslokommune/okctl/issues/<Github issue number>`. (Github automatically forwards to PR if issue is a
@@ -74,17 +74,17 @@ feat(ux): Add userdocs for okctl create cluster
 Trello examples:
 
 ```text
-KM-160: Add userdocs for okctl create cluster
+KM160: Add userdocs for okctl create cluster
 ```
 
 ```text
-KM-160: feat(ux): Add userdocs for okctl create cluster
+KM160: feat(ux): Add userdocs for okctl create cluster
 ```
 
 ```text
 feat(ux): Add userdocs for okctl create cluster
 
-KM-160
+KM160
 ```
 
 By *most cases*, we mean that there might be valid exceptions. We value pragmatism over too-rigid rules. The change

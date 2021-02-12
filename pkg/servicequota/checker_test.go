@@ -10,6 +10,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/servicequota"
 )
 
+// nolint: funlen
 func TestCheckQuotas(t *testing.T) {
 	testCases := []struct {
 		name      string

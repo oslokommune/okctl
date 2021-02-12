@@ -100,6 +100,7 @@ func DefaultValidStsCredentials() *sts.Credentials {
 	return creds
 }
 
+// SQAPI mocks the service quotas interface
 type SQAPI struct {
 	servicequotasiface.ServiceQuotasAPI
 
@@ -377,6 +378,7 @@ func NewCloudProvider() *CloudProvider {
 }
 
 // NewGoodCloudProvider returns a mocked cloud provider with success set on all
+// nolint: funlen
 func NewGoodCloudProvider() *CloudProvider {
 	return &CloudProvider{
 		EC2API: &EC2API{
@@ -461,7 +463,7 @@ func NewGoodCloudProvider() *CloudProvider {
 			GetServiceQuotaFn: func(*servicequotas.GetServiceQuotaInput) (*servicequotas.GetServiceQuotaOutput, error) {
 				return &servicequotas.GetServiceQuotaOutput{
 					Quota: &servicequotas.ServiceQuota{
-						Value: aws.Float64(3),
+						Value: aws.Float64(3), // nolint: gomnd
 					},
 				}, nil
 			},

@@ -152,11 +152,16 @@ with Github or other production services.
 				return formatErr(err)
 			}
 
-			_ = servicequota.CheckQuotas(
-				servicequota.NewVpcCheck(o.Err, o.CloudProvider, config.DefaultRequiredVpcsTestCluster),
-				servicequota.NewEipCheck(o.Err, o.CloudProvider, config.DefaultRequiredEpisTestCluster),
-				servicequota.NewIgwCheck(o.Err, o.CloudProvider, config.DefaultRequiredIgwsTestCluster),
+			vpcProvisioned := len(o.RepoStateWithEnv.GetVPC().VpcID) > 0
+
+			err = servicequota.CheckQuotas(
+				servicequota.NewVpcCheck(vpcProvisioned, config.DefaultRequiredVpcsTestCluster, o.CloudProvider),
+				servicequota.NewEipCheck(vpcProvisioned, config.DefaultRequiredEpisTestCluster, o.CloudProvider),
+				servicequota.NewIgwCheck(vpcProvisioned, config.DefaultRequiredIgwsTestCluster, o.CloudProvider),
 			)
+			if err != nil {
+				return formatErr(err)
+			}
 
 			ready := false
 			prompt := &survey.Confirm{

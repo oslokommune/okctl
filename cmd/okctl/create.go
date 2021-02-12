@@ -215,11 +215,16 @@ and database subnets.`,
 				return formatErr(err)
 			}
 
-			_ = servicequota.CheckQuotas(
-				servicequota.NewVpcCheck(o.Err, o.CloudProvider, config.DefaultRequiredVpcs),
-				servicequota.NewEipCheck(o.Err, o.CloudProvider, config.DefaultRequiredEpis),
-				servicequota.NewIgwCheck(o.Err, o.CloudProvider, config.DefaultRequiredIgws),
+			vpcProvisioned := len(o.RepoStateWithEnv.GetVPC().VpcID) > 0
+
+			err = servicequota.CheckQuotas(
+				servicequota.NewVpcCheck(vpcProvisioned, config.DefaultRequiredVpcs, o.CloudProvider),
+				servicequota.NewEipCheck(vpcProvisioned, config.DefaultRequiredEpis, o.CloudProvider),
+				servicequota.NewIgwCheck(vpcProvisioned, config.DefaultRequiredIgws, o.CloudProvider),
 			)
+			if err != nil {
+				return formatErr(err)
+			}
 
 			ready := false
 			prompt := &survey.Confirm{

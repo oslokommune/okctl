@@ -28,7 +28,7 @@ type UserPoolClient struct {
 }
 
 // NamedOutputs returns the named outputs
-func (c *UserPoolClient) NamedOutputs() map[string]map[string]interface{} {
+func (c *UserPoolClient) NamedOutputs() map[string]cloudformation.Output {
 	return cfn.NewValue(fmt.Sprintf("%sClientID", c.Purpose), c.Ref()).NamedOutputs()
 }
 

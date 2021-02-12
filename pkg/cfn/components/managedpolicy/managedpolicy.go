@@ -20,7 +20,7 @@ type ManagedPolicy struct {
 // NamedOutputs returns a reference to the logical id of this resource, which
 // will contain the ARN of the managed policy:
 // - https://docs.amazonaws.cn/en_us/AWSCloudFormation/latest/UserGuide/aws-resource-iam-managedpolicy.html
-func (p *ManagedPolicy) NamedOutputs() map[string]map[string]interface{} {
+func (p *ManagedPolicy) NamedOutputs() map[string]cloudformation.Output {
 	return cfn.NewValue(p.Name(), p.Ref()).NamedOutputs()
 }
 

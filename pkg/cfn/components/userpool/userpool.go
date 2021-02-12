@@ -24,12 +24,32 @@ type UserPool struct {
 }
 
 // NamedOutputs returns the named outputs
-func (p *UserPool) NamedOutputs() map[string]map[string]interface{} {
-	return map[string]map[string]interface{}{
-		p.Name():       {"Value": p.Ref()},
-		"Arn":          {"Value": cloudformation.GetAtt(p.Name(), "Arn")},
-		"ProviderName": {"Value": cloudformation.GetAtt(p.Name(), "ProviderName")},
-		"ProviderURL":  {"Value": cloudformation.GetAtt(p.Name(), "ProviderURL")},
+func (p *UserPool) NamedOutputs() map[string]cloudformation.Output {
+	return map[string]cloudformation.Output{
+		p.Name(): {
+			Value: p.Ref(),
+			Export: &cloudformation.Export{
+				Name: cloudformation.Sub(fmt.Sprintf("${AWS::StackName}-%s", p.Name())),
+			},
+		},
+		"Arn": {
+			Value: cloudformation.GetAtt(p.Name(), "Arn"),
+			Export: &cloudformation.Export{
+				Name: cloudformation.Sub(fmt.Sprintf("${AWS::StackName}-%s", "Arn")),
+			},
+		},
+		"ProviderName": {
+			Value: cloudformation.GetAtt(p.Name(), "ProviderName"),
+			Export: &cloudformation.Export{
+				Name: cloudformation.Sub(fmt.Sprintf("${AWS::StackName}-%s", "ProvideName")),
+			},
+		},
+		"ProviderURL": {
+			Value: cloudformation.GetAtt(p.Name(), "ProviderURL"),
+			Export: &cloudformation.Export{
+				Name: cloudformation.Sub(fmt.Sprintf("${AWS::StackName}-%s", "ProviderURL")),
+			},
+		},
 	}
 }
 

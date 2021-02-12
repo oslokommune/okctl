@@ -19,7 +19,7 @@ type UserPoolUser struct {
 }
 
 // NamedOutputs stored names of users
-func (u *UserPoolUser) NamedOutputs() map[string]map[string]interface{} {
+func (u *UserPoolUser) NamedOutputs() map[string]cloudformation.Output {
 	return cfn.NewValue(fmt.Sprintf("%sID", u.StoredName), u.Ref()).NamedOutputs()
 }
 

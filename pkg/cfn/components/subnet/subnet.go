@@ -232,7 +232,7 @@ type Subnets struct {
 
 // NamedOutputs returns the cloud formation outputs commonly
 // required for the given subnets
-func (s *Subnets) NamedOutputs() map[string]map[string]interface{} {
+func (s *Subnets) NamedOutputs() map[string]cloudformation.Output {
 	private := cfn.NewJoined(DefaultPrivateSubnetsLogicalID)
 
 	for _, p := range s.Private {
@@ -245,7 +245,7 @@ func (s *Subnets) NamedOutputs() map[string]map[string]interface{} {
 		public.Add(p.Ref())
 	}
 
-	return map[string]map[string]interface{}{
+	return map[string]cloudformation.Output{
 		private.Name(): private.Outputs(),
 		public.Name():  public.Outputs(),
 	}

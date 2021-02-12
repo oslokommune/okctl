@@ -44,7 +44,7 @@ type Referencer interface {
 // after stack creation:
 // - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html
 type StackOutputer interface {
-	NamedOutputs() map[string]map[string]interface{}
+	NamedOutputs() map[string]cloudformation.Output
 }
 
 // StackBuilder knows how to create a cloud formation stack

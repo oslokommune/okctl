@@ -18,18 +18,18 @@ type Joined struct {
 }
 
 // NamedOutputs returns the named outputs
-func (j *Joined) NamedOutputs() map[string]map[string]interface{} {
-	return map[string]map[string]interface{}{
+func (j *Joined) NamedOutputs() map[string]cloudformation.Output {
+	return map[string]cloudformation.Output{
 		j.Name(): j.Outputs(),
 	}
 }
 
 // Outputs returns the outputs only
-func (j *Joined) Outputs() map[string]interface{} {
-	return map[string]interface{}{
-		"Value": cloudformation.Join(",", j.Values),
-		"Export": map[string]string{
-			"Name": cloudformation.Sub(fmt.Sprintf("${AWS::StackName}-%s", j.Name())),
+func (j *Joined) Outputs() cloudformation.Output {
+	return cloudformation.Output{
+		Value: cloudformation.Join(",", j.Values),
+		Export: &cloudformation.Export{
+			Name: cloudformation.Sub(fmt.Sprintf("${AWS::StackName}-%s", j.Name())),
 		},
 	}
 }
@@ -66,18 +66,18 @@ type Value struct {
 }
 
 // NamedOutputs returns the named cloud formation outputs
-func (v *Value) NamedOutputs() map[string]map[string]interface{} {
-	return map[string]map[string]interface{}{
+func (v *Value) NamedOutputs() map[string]cloudformation.Output {
+	return map[string]cloudformation.Output{
 		v.Name(): v.Outputs(),
 	}
 }
 
 // Outputs returns only the cloud formation outputs
-func (v *Value) Outputs() map[string]interface{} {
-	return map[string]interface{}{
-		"Value": v.Value,
-		"Export": map[string]string{
-			"Name": cloudformation.Sub(fmt.Sprintf("${AWS::StackName}-%s", v.Name())),
+func (v *Value) Outputs() cloudformation.Output {
+	return cloudformation.Output{
+		Value: v.Value,
+		Export: &cloudformation.Export{
+			Name: cloudformation.Sub(fmt.Sprintf("${AWS::StackName}-%s", v.Name())),
 		},
 	}
 }
@@ -98,11 +98,11 @@ func NewValue(name, v string) *Value {
 
 // ValueMap stores the state for creating multiple outputs
 type ValueMap struct {
-	Values map[string]map[string]interface{}
+	Values map[string]cloudformation.Output
 }
 
 // NamedOutputs returns the named outputs
-func (v *ValueMap) NamedOutputs() map[string]map[string]interface{} {
+func (v *ValueMap) NamedOutputs() map[string]cloudformation.Output {
 	return v.Values
 }
 
@@ -116,7 +116,7 @@ func (v *ValueMap) Add(val *Value) *ValueMap {
 // NewValueMap returns an initialised value map
 func NewValueMap() *ValueMap {
 	return &ValueMap{
-		Values: map[string]map[string]interface{}{},
+		Values: map[string]cloudformation.Output{},
 	}
 }
 

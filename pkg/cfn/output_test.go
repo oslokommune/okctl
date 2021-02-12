@@ -4,6 +4,8 @@ import (
 	"encoding/base64"
 	"testing"
 
+	"github.com/awslabs/goformation/v4/cloudformation"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn"
@@ -117,16 +119,16 @@ func TestOutput(t *testing.T) {
 	testCases := []struct {
 		name     string
 		outputer cfn.StackOutputer
-		expect   map[string]map[string]interface{}
+		expect   map[string]cloudformation.Output
 	}{
 		{
 			name:     "Joined",
 			outputer: cfn.NewJoined("JoinedTest").Add("value"),
-			expect: map[string]map[string]interface{}{
+			expect: map[string]cloudformation.Output{
 				"JoinedTest": {
-					"Value": base64.StdEncoding.EncodeToString([]byte("{ \"Fn::Join\": [ \",\", [ \"value\" ] ] }")),
-					"Export": map[string]string{
-						"Name": "eyAiRm46OlN1YiIgOiAiJHtBV1M6OlN0YWNrTmFtZX0tSm9pbmVkVGVzdCIgfQ==",
+					Value: base64.StdEncoding.EncodeToString([]byte("{ \"Fn::Join\": [ \",\", [ \"value\" ] ] }")),
+					Export: &cloudformation.Export{
+						Name: "eyAiRm46OlN1YiIgOiAiJHtBV1M6OlN0YWNrTmFtZX0tSm9pbmVkVGVzdCIgfQ==",
 					},
 				},
 			},
@@ -134,11 +136,11 @@ func TestOutput(t *testing.T) {
 		{
 			name:     "Value",
 			outputer: cfn.NewValue("ValueTest", "value"),
-			expect: map[string]map[string]interface{}{
+			expect: map[string]cloudformation.Output{
 				"ValueTest": {
-					"Value": "value",
-					"Export": map[string]string{
-						"Name": "eyAiRm46OlN1YiIgOiAiJHtBV1M6OlN0YWNrTmFtZX0tVmFsdWVUZXN0IiB9",
+					Value: "value",
+					Export: &cloudformation.Export{
+						Name: "eyAiRm46OlN1YiIgOiAiJHtBV1M6OlN0YWNrTmFtZX0tVmFsdWVUZXN0IiB9",
 					},
 				},
 			},
@@ -146,17 +148,17 @@ func TestOutput(t *testing.T) {
 		{
 			name:     "ValueMap",
 			outputer: cfn.NewValueMap().Add(cfn.NewValue("Something", "v1")).Add(cfn.NewValue("Else", "v2")),
-			expect: map[string]map[string]interface{}{
+			expect: map[string]cloudformation.Output{
 				"Something": {
-					"Value": "v1",
-					"Export": map[string]string{
-						"Name": "eyAiRm46OlN1YiIgOiAiJHtBV1M6OlN0YWNrTmFtZX0tU29tZXRoaW5nIiB9",
+					Value: "v1",
+					Export: &cloudformation.Export{
+						Name: "eyAiRm46OlN1YiIgOiAiJHtBV1M6OlN0YWNrTmFtZX0tU29tZXRoaW5nIiB9",
 					},
 				},
 				"Else": {
-					"Value": "v2",
-					"Export": map[string]string{
-						"Name": "eyAiRm46OlN1YiIgOiAiJHtBV1M6OlN0YWNrTmFtZX0tRWxzZSIgfQ==",
+					Value: "v2",
+					Export: &cloudformation.Export{
+						Name: "eyAiRm46OlN1YiIgOiAiJHtBV1M6OlN0YWNrTmFtZX0tRWxzZSIgfQ==",
 					},
 				},
 			},

@@ -45,7 +45,8 @@ type DeleteClusterOpts struct {
 	AWSCredentialsType    string
 	GithubCredentialsType string
 
-	Quiet bool
+	Quiet   bool
+	Confirm bool
 
 	Region       string
 	AWSAccountID string
@@ -127,7 +128,7 @@ including VPC, this is a highly destructive operation.`,
 
 			delzones, _ := cmd.Flags().GetString(deleteHostedZoneFlag)
 
-			ready, err := checkifReady(id.ClusterName, o)
+			ready, err := checkifReady(id.ClusterName, o, opts.Confirm)
 			if err != nil || !ready {
 				return err
 			}
@@ -256,12 +257,18 @@ including VPC, this is a highly destructive operation.`,
 			context.GithubCredentialsTypeToken,
 		),
 	)
+
 	flags.BoolVarP(&opts.Quiet, "quiet", "q", false, "reduces output to screen")
+	flags.BoolVarP(&opts.Confirm, "confirm", "y", false, "confirm all choices")
 
 	return cmd
 }
 
-func checkifReady(clusterName string, o *okctl.Okctl) (bool, error) {
+func checkifReady(clusterName string, o *okctl.Okctl, preconfirmed bool) (bool, error) {
+	if preconfirmed {
+		return true, nil
+	}
+
 	ready := false
 	prompt := &survey.Confirm{
 		Message: fmt.Sprintf("This will delete %s and all assosicated resources, are you sure you want to continue?", clusterName),

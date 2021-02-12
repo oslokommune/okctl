@@ -63,6 +63,10 @@ Examples:
 ```
 
 ```text
+#123: feat(ux): Add userdocs for okctl create cluster
+```
+
+```text
 feat(ux): Add userdocs for okctl create cluster
 
 #123

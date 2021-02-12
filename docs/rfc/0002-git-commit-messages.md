@@ -48,21 +48,30 @@ IntelliJ).
     We've decided to go for AlphaGov's system as explained [here](https://github.com/alphagov/govuk-aws/blob/24d1ea513e58ee938043d71d09815a51229067bf/docs/architecture/decisions/0001-record-architecture-decisions.md)
 -->
 
-Git commit messages found on the **master** branch should in **most cases** be on the form:
+Git commit messages found on the **master** branch should in **most cases** link to an issue, giving context to
+the commit. The issue can be a Github issue number or URL to Trello issue. Trello issue number is unfortunately not
+enough, as there is no known way to quickly find a Trello issue given the issue number only.
 
+Github issue number must be an issue or pull request (PR) identifier, so that anyone can put this message into the URL
+`https://github.com/oslokommune/okctl/issues/<Github issue number>`. (Github automatically forwards to PR if issue is a
+PR).
+
+Examples:
+
+```text
+#123: Add userdocs for okctl create cluster
 ```
-#<Github issue number>: <message>
+
+```text
+feat(ux): Add userdocs for okctl create cluster
+
+#123
 ```
 
-where `<github issue number>` is an issue or pull request (PR) identifier, so that anyone can put this message into the URL
-`https://github.com/oslokommune/okctl/issues/<Github issue number>`. (For your information, in case the number refers
-to a PR and not an issue, Github will detect this an forward you to the PR.)
+```text
+feat(ux): Add userdocs for okctl create cluster
 
-
-Example:
-
-```bash
-git commmit -m "#123: Add userdocs for okctl create cluster"
+https://trello.com/c/k8LyFJLX/94-allow-for-programmatic-creation-of-clusters
 ```
 
 By *most cases*, we mean that there might be valid exceptions. We value pragmatism over too-rigid rules. The change
@@ -82,4 +91,6 @@ merging and adding on the PR's issue number to the commit message not before the
     The decisions we deem relevant will be documented in this format here in this folder.
 -->
 
-We will get a git history that can be traced back to its background, giving more context.
+* We will get a git history that can be traced back to its background, giving more context.
+* When browsing commit history on github.com, github automatically creates links to the github issue, so you'll be able
+to click the "#123" part of the commit message to get directly to the issue.

@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/servicequotas"
+	"github.com/aws/aws-sdk-go/service/servicequotas/servicequotasiface"
+
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
@@ -97,6 +100,18 @@ func DefaultValidStsCredentials() *sts.Credentials {
 	return creds
 }
 
+// SQAPI mocks the service quotas interface
+type SQAPI struct {
+	servicequotasiface.ServiceQuotasAPI
+
+	GetServiceQuotaFn func(*servicequotas.GetServiceQuotaInput) (*servicequotas.GetServiceQuotaOutput, error)
+}
+
+// GetServiceQuota invokes the mocked response
+func (a *SQAPI) GetServiceQuota(input *servicequotas.GetServiceQuotaInput) (*servicequotas.GetServiceQuotaOutput, error) {
+	return a.GetServiceQuotaFn(input)
+}
+
 // STSAPI stores state for mocking out the STS API
 type STSAPI struct {
 	stsiface.STSAPI
@@ -139,12 +154,30 @@ func (a *EKSAPI) DescribeCluster(input *eks.DescribeClusterInput) (*eks.Describe
 type EC2API struct {
 	ec2iface.EC2API
 
-	DescribeSubnetsFn func(*ec2.DescribeSubnetsInput) (*ec2.DescribeSubnetsOutput, error)
+	DescribeSubnetsFn          func(*ec2.DescribeSubnetsInput) (*ec2.DescribeSubnetsOutput, error)
+	DescribeAddressesFn        func(*ec2.DescribeAddressesInput) (*ec2.DescribeAddressesOutput, error)
+	DescribeInternetGatewaysFn func(*ec2.DescribeInternetGatewaysInput) (*ec2.DescribeInternetGatewaysOutput, error)
+	DescribeVpcsFn             func(*ec2.DescribeVpcsInput) (*ec2.DescribeVpcsOutput, error)
 }
 
 // DescribeSubnets invokes the mocked response
 func (a *EC2API) DescribeSubnets(sub *ec2.DescribeSubnetsInput) (*ec2.DescribeSubnetsOutput, error) {
 	return a.DescribeSubnetsFn(sub)
+}
+
+// DescribeAddresses invokes the mocked response
+func (a *EC2API) DescribeAddresses(input *ec2.DescribeAddressesInput) (*ec2.DescribeAddressesOutput, error) {
+	return a.DescribeAddressesFn(input)
+}
+
+// DescribeInternetGateways invokes the mocked response
+func (a *EC2API) DescribeInternetGateways(input *ec2.DescribeInternetGatewaysInput) (*ec2.DescribeInternetGatewaysOutput, error) {
+	return a.DescribeInternetGatewaysFn(input)
+}
+
+// DescribeVpcs invokes the mocked response
+func (a *EC2API) DescribeVpcs(input *ec2.DescribeVpcsInput) (*ec2.DescribeVpcsOutput, error) {
+	return a.DescribeVpcsFn(input)
 }
 
 // CFAPI provides a mocked structure of the cf API
@@ -289,6 +322,12 @@ type CloudProvider struct {
 	R53API    *R53API
 	CFRONTAPI *CFRONTAPI
 	CIPAPI    *CIPAPI
+	SQAPI     *SQAPI
+}
+
+// ServiceQuotas returns the mocked SQ API
+func (p *CloudProvider) ServiceQuotas() servicequotasiface.ServiceQuotasAPI {
+	return p.SQAPI
 }
 
 // CloudFormation returns the mocked CF API
@@ -339,12 +378,34 @@ func NewCloudProvider() *CloudProvider {
 }
 
 // NewGoodCloudProvider returns a mocked cloud provider with success set on all
+// nolint: funlen
 func NewGoodCloudProvider() *CloudProvider {
 	return &CloudProvider{
 		EC2API: &EC2API{
 			DescribeSubnetsFn: func(*ec2.DescribeSubnetsInput) (*ec2.DescribeSubnetsOutput, error) {
 				return &ec2.DescribeSubnetsOutput{
 					Subnets: Subnets(),
+				}, nil
+			},
+			DescribeAddressesFn: func(*ec2.DescribeAddressesInput) (*ec2.DescribeAddressesOutput, error) {
+				return &ec2.DescribeAddressesOutput{
+					Addresses: []*ec2.Address{
+						{},
+					},
+				}, nil
+			},
+			DescribeInternetGatewaysFn: func(*ec2.DescribeInternetGatewaysInput) (*ec2.DescribeInternetGatewaysOutput, error) {
+				return &ec2.DescribeInternetGatewaysOutput{
+					InternetGateways: []*ec2.InternetGateway{
+						{},
+					},
+				}, nil
+			},
+			DescribeVpcsFn: func(*ec2.DescribeVpcsInput) (*ec2.DescribeVpcsOutput, error) {
+				return &ec2.DescribeVpcsOutput{
+					Vpcs: []*ec2.Vpc{
+						{},
+					},
 				}, nil
 			},
 		},
@@ -394,6 +455,15 @@ func NewGoodCloudProvider() *CloudProvider {
 					DomainDescription: &cognitoidentityprovider.DomainDescriptionType{
 						CloudFrontDistribution: aws.String("cloudfront-us-east-1.something.aws.com"),
 						Domain:                 aws.String("auth.oslo.systems"),
+					},
+				}, nil
+			},
+		},
+		SQAPI: &SQAPI{
+			GetServiceQuotaFn: func(*servicequotas.GetServiceQuotaInput) (*servicequotas.GetServiceQuotaOutput, error) {
+				return &servicequotas.GetServiceQuotaOutput{
+					Quota: &servicequotas.ServiceQuota{
+						Value: aws.Float64(3), // nolint: gomnd
 					},
 				}, nil
 			},

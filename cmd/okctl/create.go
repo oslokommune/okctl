@@ -215,6 +215,9 @@ and database subnets.`,
 				return formatErr(err)
 			}
 
+			// The cloud formation stack is created atomically, and the EIP and IGW
+			// are created as part of this stack, therefore this check is sufficient
+			// for all of these checks.
 			vpcProvisioned := len(o.RepoStateWithEnv.GetVPC().VpcID) > 0
 
 			err = servicequota.CheckQuotas(

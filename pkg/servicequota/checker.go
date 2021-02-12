@@ -12,10 +12,11 @@ type Checker interface {
 
 // Result contains the data from an availability check
 type Result struct {
-	Required    int
-	Available   int
-	HasCapacity bool
-	Description string
+	Required      int
+	Available     int
+	IsProvisioned bool
+	HasCapacity   bool
+	Description   string
 }
 
 // CheckQuotas will run through the checks and return an error if quotas are too small
@@ -24,6 +25,10 @@ func CheckQuotas(checks ...Checker) error {
 		r, err := check.CheckAvailability()
 		if err != nil {
 			return err
+		}
+
+		if r.IsProvisioned {
+			continue
 		}
 
 		if !r.HasCapacity {

@@ -45,6 +45,10 @@ brew tap oslokommune/tap
 brew install oslokommune/tap/okctl
 ```
 
+### Shell autocompletion
+
+To get autocompletion in your shell working run `okctl completion -h` and follow the steps for your preferred shell.
+
 ## Getting started
 
 The following is a guide for how to create an environment that contains the elements described in

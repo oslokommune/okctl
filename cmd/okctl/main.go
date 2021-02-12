@@ -56,6 +56,10 @@ We also use the prometheus-operator for ensuring metrics and logs are
 being captured. Together with slack and slick.`,
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if cmd.Name() == cobra.ShellCompRequestCmd {
+				return nil
+			}
+
 			var err error
 
 			err = loadUserData(o, cmd)
@@ -91,6 +95,7 @@ being captured. Together with slack and slick.`,
 
 	cmd.AddCommand(buildAddUserCommand(o))
 	cmd.AddCommand(buildApplyCommand(o))
+	cmd.AddCommand(buildCompletionCommand(o))
 	cmd.AddCommand(buildCreateCommand(o))
 	cmd.AddCommand(buildDeleteCommand(o))
 	cmd.AddCommand(buildScaffoldCommand(o))

@@ -23,6 +23,7 @@ nav:
       - usage/adduser.md
   - About:
       - about/about.md
+      - 'Resource Overview': about/resources.md
 
 plugins:
   - git-revision-date

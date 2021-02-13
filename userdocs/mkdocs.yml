@@ -15,7 +15,7 @@ nav:
   - Deployment:
       - deployment/argocd.md
   - Usage:
-      - usage/applicationyaml.md
+      - 'Deploy application': usage/applicationyaml.md
       - usage/venv.md
   - Beta:
       - 'Declarative Cluster': beta/declarativecluster.md

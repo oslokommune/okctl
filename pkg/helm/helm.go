@@ -559,11 +559,30 @@ type Chart struct {
 	Values interface{}
 }
 
+// RawMarshaller provides an interface for
+// returning raw YAML
+type RawMarshaller interface {
+	RawYAML() ([]byte, error)
+}
+
 // InstallConfig returns a valid install config
 func (c *Chart) InstallConfig() (*InstallConfig, error) {
-	values, err := yaml.Marshal(c.Values)
-	if err != nil {
-		return nil, fmt.Errorf("failed to serialise values: %w", err)
+	var values []byte
+
+	var err error
+
+	if raw, ok := c.Values.(RawMarshaller); ok {
+		values, err = raw.RawYAML()
+
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		values, err = yaml.Marshal(c.Values)
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to serialise values: %w", err)
+		}
 	}
 
 	return &InstallConfig{

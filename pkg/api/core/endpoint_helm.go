@@ -30,3 +30,9 @@ func makeCreateArgoCD(s api.HelmService) endpoint.Endpoint {
 		return s.CreateArgoCD(ctx, request.(api.CreateArgoCDOpts))
 	}
 }
+
+func makeCreateAutoscalerHelmtChartEndpoint(s api.HelmService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return s.CreateAutoscalerHelmChart(ctx, request.(api.CreateAutoscalerHelmChartOpts))
+	}
+}

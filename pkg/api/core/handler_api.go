@@ -55,6 +55,7 @@ type Endpoints struct {
 	DeleteCertificate                             endpoint.Endpoint
 	DeleteNamespace                               endpoint.Endpoint
 	DeleteCognitoCertificate                      endpoint.Endpoint
+	CreateAutoscalerHelmChart                     endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -100,6 +101,7 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteCertificate:                             makeDeleteCertificateEndpoint(s.Certificate),
 		DeleteNamespace:                               makeDeleteNamespaceEndpoint(s.Kube),
 		DeleteCognitoCertificate:                      makeDeleteCognitoCertificateEndpoint(s.Certificate),
+		CreateAutoscalerHelmChart:                     makeCreateAutoscalerHelmtChartEndpoint(s.Helm),
 	}
 }
 
@@ -144,6 +146,7 @@ type Handlers struct {
 	DeleteCertificate                             http.Handler
 	DeleteNamespace                               http.Handler
 	DeleteCognitoCertificate                      http.Handler
+	CreateAutoscalerHelmChart                     http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -215,6 +218,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteCertificate:                             newServer(endpoints.DeleteCertificate, decodeDeleteCertificate),
 		DeleteNamespace:                               newServer(endpoints.DeleteNamespace, decodeDeleteNamespace),
 		DeleteCognitoCertificate:                      newServer(endpoints.DeleteCognitoCertificate, decodeDeleteCognitoCertificate),
+		CreateAutoscalerHelmChart:                     newServer(endpoints.CreateAutoscalerHelmChart, decodeCreateAutoscalerHelmChart),
 	}
 }
 
@@ -280,6 +284,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			})
 			r.Route("/argocd", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateArgoCD)
+			})
+			r.Route("/autoscaler", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateAutoscalerHelmChart)
 			})
 		})
 		r.Route("/kube", func(r chi.Router) {
@@ -371,6 +378,7 @@ const (
 	identityPoolUserTag          = "identitypooluser"
 	namespaceTag                 = "namespace"
 	cognitoTag                   = "cognito"
+	autoscalerTag                = "autoscaler"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -417,6 +425,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteCertificate:                             logmd.Logging(logger, certificateTag, "delete")(endpoints.DeleteCertificate),
 			DeleteNamespace:                               logmd.Logging(logger, strings.Join([]string{kubeTag, namespaceTag}, "/"), "delete")(endpoints.DeleteNamespace),
 			DeleteCognitoCertificate:                      logmd.Logging(logger, strings.Join([]string{certificateTag, cognitoTag}, "/"), "delete")(endpoints.DeleteCognitoCertificate),
+			CreateAutoscalerHelmChart:                     logmd.Logging(logger, strings.Join([]string{helmTag, autoscalerTag}, "/"), "create")(endpoints.CreateAutoscalerHelmChart),
 		}
 	}
 }

@@ -14,7 +14,7 @@ require (
 	github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d // indirect
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
 	github.com/apparentlymart/go-cidr v1.1.0
-	github.com/aws/aws-sdk-go v1.37.9
+	github.com/aws/aws-sdk-go v1.37.10
 	github.com/awslabs/goformation/v4 v4.16.2
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
@@ -40,7 +40,6 @@ require (
 	github.com/go-git/go-git/v5 v5.2.0
 	github.com/go-kit/kit v0.10.0
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
-	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/gofrs/flock v0.8.0
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/gogo/googleapis v1.4.0 // indirect
@@ -77,7 +76,6 @@ require (
 	github.com/rancher/k3d/v3 v3.4.0
 	github.com/rogpeppe/go-internal v1.6.1 // indirect
 	github.com/sanity-io/litter v1.5.0
-	github.com/sclevine/agouti v3.0.0+incompatible // indirect
 	github.com/sebdah/goldie/v2 v2.5.3
 	github.com/sirupsen/logrus v1.7.0
 	github.com/smartystreets/assertions v1.0.0 // indirect

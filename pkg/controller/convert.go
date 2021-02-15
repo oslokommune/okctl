@@ -68,6 +68,7 @@ func CreateCurrentStateTree(opts *ExistingServices) (root *resourcetree.Resource
 	clusterNode = createNode(vpcNode, resourcetree.ResourceNodeTypeCluster, opts.hasCluster)
 
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalSecrets, opts.hasExternalSecrets)
+	createNode(clusterNode, resourcetree.ResourceNodeTypeAutoscaler, opts.hasAutoscaler)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeALBIngress, opts.hasALBIngressController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeAWSLoadBalancerController, opts.hasAWSLoadBalancerController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalDNS, opts.hasExternalDNS)

@@ -193,6 +193,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		Parameter:                        o.paramService(outputDir, spin),
 		Vpc:                              o.vpcService(outputDir, spin),
 		IdentityManager:                  o.identityManagerService(outputDir, spin),
+		Autoscaler:                       o.autoscalerService(outputDir, spin),
 	}, nil
 }
 
@@ -364,6 +365,33 @@ func (o *Okctl) clusterService(outputDir string, spin spinner.Spinner) client.Cl
 		),
 		console.NewClusterReport(o.Err, spin),
 		stateSaver.NewClusterState(o.RepoStateWithEnv),
+	)
+}
+
+func (o *Okctl) autoscalerService(outputDir string, spin spinner.Spinner) client.AutoscalerService {
+	return clientCore.NewAutoscalerService(
+		spin,
+		rest.NewAutoscalerAPI(o.restClient),
+		clientFilesystem.NewAutoscalerStore(
+			clientFilesystem.Paths{
+				OutputFile:         config.DefaultPolicyOutputFile,
+				CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
+				BaseDir:            path.Join(outputDir, config.DefaultAutoscalerBaseDir),
+			},
+			clientFilesystem.Paths{
+				OutputFile: config.DefaultServiceAccountOutputsFile,
+				ConfigFile: config.DefaultServiceAccountConfigFile,
+				BaseDir:    path.Join(outputDir, config.DefaultAutoscalerBaseDir),
+			},
+			clientFilesystem.Paths{
+				OutputFile:  config.DefaultHelmOutputsFile,
+				ReleaseFile: config.DefaultHelmReleaseFile,
+				ChartFile:   config.DefaultHelmChartFile,
+				BaseDir:     path.Join(outputDir, config.DefaultAutoscalerBaseDir),
+			},
+			o.FileSystem,
+		),
+		console.NewAutoscalerReport(o.Err, spin),
 	)
 }
 

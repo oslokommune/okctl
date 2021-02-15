@@ -79,6 +79,7 @@ const (
 	DefaultDomainOutputsFile                        = "domains-outputs.json"
 	DefaultExternalDNSBaseDir                       = "external-dns"
 	DefaultExternalSecretsBaseDir                   = "external-secrets"
+	DefaultAutoscalerBaseDir                        = "autoscaler"
 	DefaultHelmChartFile                            = "helm-chart.json"
 	DefaultHelmOutputsFile                          = "helm-outputs.json"
 	DefaultHelmReleaseFile                          = "helm-release.json"

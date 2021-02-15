@@ -19,4 +19,5 @@ type Services struct {
 	Parameter                        client.ParameterService
 	Vpc                              client.VPCService
 	IdentityManager                  client.IdentityManagerService
+	Autoscaler                       client.Autoscaler
 }

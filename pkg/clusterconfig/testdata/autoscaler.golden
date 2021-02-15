@@ -1,0 +1,19 @@
+apiVersion: eksctl.io/v1alpha5
+iam:
+  serviceAccounts:
+  - attachPolicyARNs:
+    - arn:aws:iam::123456789012:policy/somePolicy
+    metadata:
+      labels:
+        aws-usage: cluster-ops
+      name: autoscaler
+      namespace: kube-system
+    permissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
+  withOIDC: true
+kind: ClusterConfig
+metadata:
+  name: test
+  region: eu-west-1
+  tags:
+    alpha.okctl.io/okctl-commit: unknown
+    alpha.okctl.io/okctl-version: dev

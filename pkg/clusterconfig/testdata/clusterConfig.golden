@@ -25,7 +25,7 @@ metadata:
     alpha.okctl.io/okctl-version: dev
   version: "1.18"
 nodeGroups:
-- desiredCapacity: 2
+- desiredCapacity: 1
   iam:
     instanceRolePermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
   instanceType: m5.large

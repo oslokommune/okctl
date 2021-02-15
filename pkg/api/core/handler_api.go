@@ -56,6 +56,8 @@ type Endpoints struct {
 	DeleteNamespace                               endpoint.Endpoint
 	DeleteCognitoCertificate                      endpoint.Endpoint
 	CreateAutoscalerHelmChart                     endpoint.Endpoint
+	CreateAutoscalerServiceAccount                endpoint.Endpoint
+	DeleteAutoscalerServiceAccount                endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -102,6 +104,8 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteNamespace:                               makeDeleteNamespaceEndpoint(s.Kube),
 		DeleteCognitoCertificate:                      makeDeleteCognitoCertificateEndpoint(s.Certificate),
 		CreateAutoscalerHelmChart:                     makeCreateAutoscalerHelmtChartEndpoint(s.Helm),
+		CreateAutoscalerServiceAccount:                makeCreateAutoscalerServiceAccountEndpoint(s.ServiceAccount),
+		DeleteAutoscalerServiceAccount:                makeDeleteAutoscalerServiceAccountEndpoint(s.ServiceAccount),
 	}
 }
 
@@ -147,6 +151,8 @@ type Handlers struct {
 	DeleteNamespace                               http.Handler
 	DeleteCognitoCertificate                      http.Handler
 	CreateAutoscalerHelmChart                     http.Handler
+	CreateAutoscalerServiceAccount                http.Handler
+	DeleteAutoscalerServiceAccount                http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -219,6 +225,8 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteNamespace:                               newServer(endpoints.DeleteNamespace, decodeDeleteNamespace),
 		DeleteCognitoCertificate:                      newServer(endpoints.DeleteCognitoCertificate, decodeDeleteCognitoCertificate),
 		CreateAutoscalerHelmChart:                     newServer(endpoints.CreateAutoscalerHelmChart, decodeCreateAutoscalerHelmChart),
+		CreateAutoscalerServiceAccount:                newServer(endpoints.CreateAutoscalerServiceAccount, decodeCreateAutoscalerServiceAccount),
+		DeleteAutoscalerServiceAccount:                newServer(endpoints.DeleteAutoscalerServiceAccount, decodeIDRequest),
 	}
 }
 
@@ -270,6 +278,10 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			r.Route("/externaldns", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalDNSServiceAccount)
 				r.Method(http.MethodDelete, "/", handlers.DeleteExternalDNSServiceAccount)
+			})
+			r.Route("/autoscaler", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateAutoscalerServiceAccount)
+				r.Method(http.MethodDelete, "/", handlers.DeleteAutoscalerServiceAccount)
 			})
 		})
 		r.Route("/helm", func(r chi.Router) {
@@ -426,6 +438,8 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteNamespace:                               logmd.Logging(logger, strings.Join([]string{kubeTag, namespaceTag}, "/"), "delete")(endpoints.DeleteNamespace),
 			DeleteCognitoCertificate:                      logmd.Logging(logger, strings.Join([]string{certificateTag, cognitoTag}, "/"), "delete")(endpoints.DeleteCognitoCertificate),
 			CreateAutoscalerHelmChart:                     logmd.Logging(logger, strings.Join([]string{helmTag, autoscalerTag}, "/"), "create")(endpoints.CreateAutoscalerHelmChart),
+			CreateAutoscalerServiceAccount:                logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, autoscalerTag}, "/"), "create")(endpoints.CreateAutoscalerServiceAccount),
+			DeleteAutoscalerServiceAccount:                logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, autoscalerTag}, "/"), "delete")(endpoints.DeleteAutoscalerServiceAccount),
 		}
 	}
 }

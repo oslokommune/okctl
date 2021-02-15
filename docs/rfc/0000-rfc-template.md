@@ -1,4 +1,4 @@
-# 0. Request for comments
+# 0000. Request for comments
 
 <!-- 
     Date representing when the RFC was submittet for review 
@@ -7,18 +7,6 @@
     Date: 08.02.2021
 -->
 Date:
-
-## Status
-<!--
-    Uncomment relevant status
--->
-
-Pending
-
-<!--
-Accepted
-Rejected
--->
 
 ## Context
 

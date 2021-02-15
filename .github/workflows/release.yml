@@ -15,13 +15,9 @@ jobs:
       -
         name: Unshallow
         run: git fetch --prune --unshallow
+ 
       -
-        name: Set up Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.15.1
-
-      - name: Get the git tag
+        name: Get the git tag
         uses: little-core-labs/get-git-tag@v3.0.2
         id: tagName
         with:
@@ -37,9 +33,7 @@ jobs:
 
       -
         name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
-        with:
-          version: latest
-          args: release --rm-dist --release-notes=docs/release_notes/${{ steps.tagName.outputs.tag }}.md
+        run: make release
         env:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}
+          RELEASE_NOTES: docs/release_notes/${{ steps.tagName.outputs.tag }}.md

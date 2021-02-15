@@ -771,7 +771,7 @@ func (o *Okctl) getAWSAuthenticator() (*aws.Auth, error) {
 		return nil, err
 	}
 
-	defaultRing, err := keyring.DefaultKeyring()
+	defaultRing, err := keyring.DefaultKeyringForOS()
 	if err != nil {
 		return nil, fmt.Errorf(`unable to create a keyring. It is possible no valid backends were found 
 on your system, take a look at this site for valid options:
@@ -820,7 +820,7 @@ func (o *Okctl) getGithubAuthenticator() (*github.Auth, error) {
 		), nil
 	}
 
-	defaultRing, err := keyring.DefaultKeyring()
+	defaultRing, err := keyring.DefaultKeyringForOS()
 	if err != nil {
 		return nil, fmt.Errorf(`unable to create a keyring. It is possible no valid backends were found 
 on your system, take a look at this site for valid options:

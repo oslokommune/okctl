@@ -3,6 +3,13 @@ package keyring
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"path"
+	"path/filepath"
+	"runtime"
+
+	"github.com/mitchellh/go-homedir"
 
 	krPkg "github.com/99designs/keyring"
 	"github.com/oslokommune/okctl/pkg/config"
@@ -40,13 +47,57 @@ func New(keyring krPkg.Keyring, debug bool) (*Keyring, error) {
 	}, nil
 }
 
-// DefaultKeyring is the default keyring to store client secrets
-func DefaultKeyring() (krPkg.Keyring, error) {
-	ring, err := krPkg.Open(krPkg.Config{
+// DefaultKeyringForOS is the default keyring to store client secrets
+func DefaultKeyringForOS() (krPkg.Keyring, error) {
+	cfg := krPkg.Config{
 		ServiceName: config.DefaultKeyringServiceName,
-	})
+	}
 
-	return ring, err
+	switch runtime.GOOS {
+	case "darwin":
+		cfg.AllowedBackends = []krPkg.BackendType{krPkg.KeychainBackend}
+	case "linux":
+		cfg.AllowedBackends = []krPkg.BackendType{krPkg.PassBackend}
+
+		if err := VerifyPass(); err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("no supported keyring backends for your operating system: %s", runtime.GOOS)
+	}
+
+	return krPkg.Open(cfg)
+}
+
+// VerifyPass checks for the existence of pass on the commandline
+func VerifyPass() error {
+	passDir := ".password-store"
+
+	envPassDir := os.Getenv("PASSWORD_STORE_DIR")
+	if len(envPassDir) > 0 {
+		passDir = envPassDir
+	}
+
+	dir, err := homedir.Dir()
+	if err != nil {
+		return err
+	}
+
+	fullPassDir, err := filepath.Abs(path.Join(dir, passDir))
+	if err != nil {
+		return err
+	}
+
+	passBinary, err := exec.LookPath("pass")
+	if err != nil {
+		return err
+	}
+
+	if len(fullPassDir) > 0 || len(passBinary) > 0 {
+		return nil
+	}
+
+	return fmt.Errorf("you need to install pass (https://www.passwordstore.org), read the init section carefully")
 }
 
 // Store a value with given keytype and value in keyring

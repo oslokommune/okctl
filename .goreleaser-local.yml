@@ -3,21 +3,44 @@ before:
     - go mod download
 
 builds:
-  - id: default
+  - id: linux
     main: ./cmd/okctl
     binary: okctl
     flags:
       - -tags
-      - netgo
+      - netgo release
+      - -trimpath
     env:
-      - CGO_ENABLED=0
+      - CGO_ENABLED=1
     ldflags:
+      - -s
+      - -w
+      - -X github.com/oslokommune/okctl/pkg/version.ShortCommit={{.ShortCommit}}
+      - -X github.com/oslokommune/okctl/pkg/version.Version={{.Version}}
+      - -X github.com/oslokommune/okctl/pkg/version.BuildDate={{.Date}}
+    goos:
+      - linux
+    goarch:
+      - amd64
+  - id: darwin
+    main: ./cmd/okctl
+    binary: okctl
+    flags:
+      - -tags
+      - netgo release
+      - -trimpath
+    env:
+      - CGO_ENABLED=1
+      - CC=o64-clang
+      - CXX=o64-clang++
+    ldflags:
+      - -s
+      - -w
       - -X github.com/oslokommune/okctl/pkg/version.ShortCommit={{.ShortCommit}}
       - -X github.com/oslokommune/okctl/pkg/version.Version={{.Version}}
       - -X github.com/oslokommune/okctl/pkg/version.BuildDate={{.Date}}
     goos:
       - darwin
-      - linux
     goarch:
       - amd64
 
@@ -25,6 +48,9 @@ archives:
 - replacements:
     darwin: Darwin
     linux: Linux
+  builds:
+    - linux
+    - darwin
 
 checksum:
   name_template: 'okctl_checksums.txt'

@@ -57,6 +57,20 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 		Short:   "apply a cluster definition to the world",
 		Long:    "ensures your cluster reflects the declaration of it",
 		Args:    cobra.ExactArgs(0),
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			if !o.Debug {
+				return nil
+			}
+
+			result, err := yaml.Marshal(o.RepoStateWithEnv)
+			if err != nil {
+				return fmt.Errorf("marshalling repo state: %w", err)
+			}
+
+			_, _ = o.Out.Write(result)
+
+			return nil
+		},
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) (err error) {
 			return nil
 		},

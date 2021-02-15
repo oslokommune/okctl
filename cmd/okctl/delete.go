@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"regexp"
+	"sigs.k8s.io/yaml"
 
 	"github.com/oslokommune/okctl/pkg/context"
 
@@ -106,6 +107,15 @@ including VPC, this is a highly destructive operation.`,
 			err = opts.Validate()
 			if err != nil {
 				return err
+			}
+
+			if o.Debug {
+				result, err := yaml.Marshal(o.RepoStateWithEnv)
+				if err != nil {
+					return fmt.Errorf("marshalling repo state: %w", err)
+				}
+
+				_, _ = o.Out.Write(result)
 			}
 
 			return nil

@@ -11,6 +11,34 @@ type managedPolicyService struct {
 	provider api.ManagedPolicyCloudProvider
 }
 
+func (m *managedPolicyService) CreateAutoscalerPolicy(_ context.Context, opts api.CreateAutoscalerPolicy) (*api.ManagedPolicy, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, errors.E(err, "validating inputs", errors.Invalid)
+	}
+
+	got, err := m.provider.CreateAutoscalerPolicy(opts)
+	if err != nil {
+		return nil, errors.E(err, "creating autoscaler policy", errors.Internal)
+	}
+
+	return got, nil
+}
+
+func (m *managedPolicyService) DeleteAutoscalerPolicy(_ context.Context, id api.ID) error {
+	err := id.Validate()
+	if err != nil {
+		return errors.E(err, "validating inputs", errors.Invalid)
+	}
+
+	err = m.provider.DeleteAutoscalerPolicy(id)
+	if err != nil {
+		return errors.E(err, "deleting autoscaler policy", errors.Internal)
+	}
+
+	return nil
+}
+
 func (m *managedPolicyService) DeleteExternalSecretsPolicy(_ context.Context, id api.ID) error {
 	err := id.Validate()
 	if err != nil {

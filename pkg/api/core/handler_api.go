@@ -58,6 +58,8 @@ type Endpoints struct {
 	CreateAutoscalerHelmChart                     endpoint.Endpoint
 	CreateAutoscalerServiceAccount                endpoint.Endpoint
 	DeleteAutoscalerServiceAccount                endpoint.Endpoint
+	CreateAutoscalerPolicy                        endpoint.Endpoint
+	DeleteAutoscalerPolicy                        endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -106,6 +108,8 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateAutoscalerHelmChart:                     makeCreateAutoscalerHelmtChartEndpoint(s.Helm),
 		CreateAutoscalerServiceAccount:                makeCreateAutoscalerServiceAccountEndpoint(s.ServiceAccount),
 		DeleteAutoscalerServiceAccount:                makeDeleteAutoscalerServiceAccountEndpoint(s.ServiceAccount),
+		CreateAutoscalerPolicy:                        makeCreateAutoscalerPolicyEndpoint(s.ManagedPolicy),
+		DeleteAutoscalerPolicy:                        makeDeleteAutoscalerPolicyEndpoint(s.ManagedPolicy),
 	}
 }
 
@@ -153,6 +157,8 @@ type Handlers struct {
 	CreateAutoscalerHelmChart                     http.Handler
 	CreateAutoscalerServiceAccount                http.Handler
 	DeleteAutoscalerServiceAccount                http.Handler
+	CreateAutoscalerPolicy                        http.Handler
+	DeleteAutoscalerPolicy                        http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -227,6 +233,8 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateAutoscalerHelmChart:                     newServer(endpoints.CreateAutoscalerHelmChart, decodeCreateAutoscalerHelmChart),
 		CreateAutoscalerServiceAccount:                newServer(endpoints.CreateAutoscalerServiceAccount, decodeCreateAutoscalerServiceAccount),
 		DeleteAutoscalerServiceAccount:                newServer(endpoints.DeleteAutoscalerServiceAccount, decodeIDRequest),
+		CreateAutoscalerPolicy:                        newServer(endpoints.CreateAutoscalerPolicy, decodeCreateAutoscalerPolicy),
+		DeleteAutoscalerPolicy:                        newServer(endpoints.DeleteAutoscalerPolicy, decodeIDRequest),
 	}
 }
 
@@ -260,6 +268,10 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			r.Route("/externaldns", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalDNSPolicy)
 				r.Method(http.MethodDelete, "/", handlers.DeleteExternalDNSPolicy)
+			})
+			r.Route("/autoscaler", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateAutoscalerPolicy)
+				r.Method(http.MethodDelete, "/", handlers.DeleteAutoscalerPolicy)
 			})
 		})
 		r.Route("/serviceaccounts", func(r chi.Router) {
@@ -440,6 +452,8 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateAutoscalerHelmChart:                     logmd.Logging(logger, strings.Join([]string{helmTag, autoscalerTag}, "/"), "create")(endpoints.CreateAutoscalerHelmChart),
 			CreateAutoscalerServiceAccount:                logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, autoscalerTag}, "/"), "create")(endpoints.CreateAutoscalerServiceAccount),
 			DeleteAutoscalerServiceAccount:                logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, autoscalerTag}, "/"), "delete")(endpoints.DeleteAutoscalerServiceAccount),
+			CreateAutoscalerPolicy:                        logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, autoscalerTag}, "/"), "create")(endpoints.CreateAutoscalerPolicy),
+			DeleteAutoscalerPolicy:                        logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, autoscalerTag}, "/"), "delete")(endpoints.DeleteAutoscalerPolicy),
 		}
 	}
 }

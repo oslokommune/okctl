@@ -98,7 +98,7 @@ func (a *Args) build() *v1alpha5.ClusterConfig {
 				Name:         "ng-generic",
 				InstanceType: "m5.large",
 				ScalingConfig: v1alpha5.ScalingConfig{
-					DesiredCapacity: 2, //nolint: gomnd
+					DesiredCapacity: 1, //nolint: gomnd
 					MinSize:         1,
 					MaxSize:         10, //nolint: gomnd
 				},

@@ -47,6 +47,11 @@ func TestBuilderAndComposers(t *testing.T) {
 			composer: components.NewExternalDNSPolicyComposer("repo", "env"),
 		},
 		{
+			name:     "Builder with AutoscalerPolicy composer",
+			golden:   "autoscaler-cloudformation.yaml",
+			composer: components.NewAutoscalerPolicyComposer("repo", "env"),
+		},
+		{
 			name:     "Builder with PublicCertificate composer",
 			golden:   "public-certificate-cf.yaml",
 			composer: components.NewPublicCertificateComposer("test.oslo.systems.", "AZ12345"),

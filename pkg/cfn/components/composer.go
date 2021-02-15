@@ -1015,3 +1015,65 @@ func (a *AWSLoadBalancerControllerComposer) ManagedPolicy() *managedpolicy.Manag
 
 	return managedpolicy.New("AWSLoadBalancerControllerPolicy", policyName, policyDesc, d)
 }
+
+// AutoscalerPolicyComposer contains state for building
+// a managed iam policy compatible with cluster autoscaler
+type AutoscalerPolicyComposer struct {
+	Repository  string
+	Environment string
+}
+
+// NewAutoscalerPolicyComposer returns an initialised cluster autoscaler composer
+func NewAutoscalerPolicyComposer(repository, env string) *AutoscalerPolicyComposer {
+	return &AutoscalerPolicyComposer{
+		Repository:  repository,
+		Environment: env,
+	}
+}
+
+// Compose builds the policy and returns the result
+func (c *AutoscalerPolicyComposer) Compose() (*cfn.Composition, error) {
+	p := c.ManagedPolicy()
+
+	return &cfn.Composition{
+		Outputs:   []cfn.StackOutputer{p},
+		Resources: []cfn.ResourceNamer{p},
+	}, nil
+}
+
+// ManagedPolicy returns the policy
+func (c *AutoscalerPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
+	policyName := fmt.Sprintf("okctl-%s-%s-AutoscalerServiceAccountPolicy", c.Repository, c.Environment)
+	policyDesc := "Service account policy for automatically scaling the cluster nodegroup"
+
+	d := &policydocument.PolicyDocument{
+		Version: policydocument.Version,
+		Statement: []policydocument.StatementEntry{
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"autoscaling:DescribeAutoScalingGroups",
+					"autoscaling:DescribeAutoScalingInstances",
+					"autoscaling:DescribeLaunchConfigurations",
+					"autoscaling:SetDesiredCapacity",
+					"autoscaling:TerminateInstanceInAutoScalingGroup",
+					"autoscaling:DescribeTags",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"ec2:DescribeLaunchTemplateVersions",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+		},
+	}
+
+	return managedpolicy.New("AutoscalerPolicy", policyName, policyDesc, d)
+}

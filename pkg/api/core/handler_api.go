@@ -174,6 +174,7 @@ const (
 )
 
 // MakeHandlers returns all handlers initialised with encoders, decoders, etc
+// nolint: funlen
 func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handlers {
 	var encoderFn kit.EncodeResponseFunc
 

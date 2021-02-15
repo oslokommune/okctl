@@ -68,6 +68,7 @@ type CreateAutoscalerPolicy struct {
 	ID ID
 }
 
+// Validate the inputs
 func (o CreateAutoscalerPolicy) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.ID, validation.Required),

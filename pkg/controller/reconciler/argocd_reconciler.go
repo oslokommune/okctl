@@ -3,6 +3,8 @@ package reconciler
 import (
 	"fmt"
 
+	"github.com/miekg/dns"
+
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/config/state"
@@ -11,7 +13,8 @@ import (
 
 // ArgocdMetadata contains data known before anything has been done, which is needed in Reconcile()
 type ArgocdMetadata struct {
-	Organization string
+	Organization      string
+	PrimaryHostedZone string
 }
 
 // ArgocdResourceState contains runtime data needed in Reconcile()
@@ -43,19 +46,24 @@ Dependent on:
 - Primary hosted Zone
 */
 func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+	metadata, ok := node.Metadata.(ArgocdMetadata)
+	if !ok {
+		return nil, errors.New("casting ArgoCD metadata")
+	}
+
 	resourceState, ok := node.ResourceState.(ArgocdResourceState)
 	if !ok {
-		return nil, errors.New("error casting argocd resource resourceState")
+		return nil, errors.New("casting ArgoCD resource resourceState")
 	}
 
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err := z.client.CreateArgoCD(z.commonMetadata.Ctx, client.CreateArgoCDOpts{
 			ID:                 z.commonMetadata.ClusterID,
-			Domain:             resourceState.HostedZone.Domain,
-			FQDN:               resourceState.HostedZone.FQDN,
+			Domain:             metadata.PrimaryHostedZone,
+			FQDN:               dns.Fqdn(metadata.PrimaryHostedZone),
 			HostedZoneID:       resourceState.HostedZone.ID,
-			GithubOrganisation: resourceState.Repository.Organisation,
+			GithubOrganisation: metadata.Organization,
 			UserPoolID:         resourceState.UserPoolID,
 			AuthDomain:         resourceState.AuthDomain,
 			Repository:         resourceState.Repository,

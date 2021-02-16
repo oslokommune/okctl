@@ -24,6 +24,7 @@ type ExistingServices struct {
 	hasAutoscaler                     bool
 	hasGithubSetup                    bool
 	hasIdentityManager                bool
+	hasArgoCD                         bool
 	hasPrimaryHostedZone              bool
 	hasVPC                            bool
 	hasDelegatedHostedZoneNameservers bool
@@ -44,6 +45,7 @@ func NewCreateCurrentStateTreeOpts(fs *afero.Afero, outputDir string, githubGett
 		hasAWSLoadBalancerController:      directoryTester(fs, outputDir, config.DefaultAWSLoadBalancerControllerBaseDir),
 		hasExternalDNS:                    directoryTester(fs, outputDir, config.DefaultExternalDNSBaseDir),
 		hasIdentityManager:                directoryTester(fs, outputDir, config.DefaultIdentityPoolBaseDir),
+		hasArgoCD:                         directoryTester(fs, outputDir, config.DefaultArgoCDBaseDir),
 		hasDelegatedHostedZoneNameservers: hz != nil && hz.IsDelegated,
 	}, nil
 }
@@ -73,6 +75,9 @@ func CreateCurrentStateTree(opts *ExistingServices) (root *resourcetree.Resource
 	createNode(clusterNode, resourcetree.ResourceNodeTypeAWSLoadBalancerController, opts.hasAWSLoadBalancerController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalDNS, opts.hasExternalDNS)
 
+	identityProviderNode := createNode(clusterNode, resourcetree.ResourceNodeTypeIdentityManager, opts.hasIdentityManager)
+	createNode(identityProviderNode, resourcetree.ResourceNodeTypeArgoCD, opts.hasArgoCD)
+
 	return root
 }
 
@@ -97,6 +102,9 @@ func CreateDesiredStateTree(cluster *v1alpha1.Cluster) (root *resourcetree.Resou
 	createNode(clusterNode, resourcetree.ResourceNodeTypeALBIngress, cluster.Integrations.ALBIngressController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeAWSLoadBalancerController, cluster.Integrations.AWSLoadBalancerController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalDNS, cluster.Integrations.ExternalDNS)
+
+	identityProviderNode := createNode(clusterNode, resourcetree.ResourceNodeTypeIdentityManager, cluster.Integrations.Cognito)
+	createNode(identityProviderNode, resourcetree.ResourceNodeTypeArgoCD, cluster.Integrations.ArgoCD)
 
 	return root
 }
@@ -135,9 +143,17 @@ func ApplyDesiredStateMetadata(tree *resourcetree.ResourceNode, cluster *v1alpha
 		Repository:   repo,
 	}
 
+	identityManagerNode := tree.GetNode(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeIdentityManager})
+	if identityManagerNode != nil {
+		identityManagerNode.Metadata = reconciler.IdentityManagerMetadata{Domain: cluster.PrimaryDNSZone.ParentDomain}
+	}
+
 	argocdNode := tree.GetNode(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeArgoCD})
 	if argocdNode != nil {
-		argocdNode.Metadata = reconciler.ArgocdMetadata{Organization: cluster.Github.Organisation}
+		argocdNode.Metadata = reconciler.ArgocdMetadata{
+			Organization:      cluster.Github.Organisation,
+			PrimaryHostedZone: cluster.PrimaryDNSZone.ParentDomain,
+		}
 	}
 
 	return nil

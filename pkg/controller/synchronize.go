@@ -4,6 +4,9 @@ package controller
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 	"github.com/spf13/afero"
@@ -11,7 +14,10 @@ import (
 
 // SynchronizeOpts contains the necessary information that Synchronize() needs to do its work
 type SynchronizeOpts struct {
-	DesiredTree *resourcetree.ResourceNode
+	ClusterID api.ID
+
+	ClusterDeclaration v1alpha1.Cluster
+	DesiredTree        *resourcetree.ResourceNode
 
 	ReconciliationManager *reconciler.Manager
 
@@ -22,6 +28,7 @@ type SynchronizeOpts struct {
 	GithubSetter reconciler.GithubSetter
 
 	CIDRGetter              StringFetcher
+	IdentityPoolFetcher     IdentityPoolFetcher
 	PrimaryHostedZoneGetter HostedZoneFetcher
 }
 
@@ -56,9 +63,14 @@ func Synchronize(opts *SynchronizeOpts) error {
 		opts.GithubSetter,
 	))
 
-	opts.DesiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeArgoCD, CreateArgocdStateRefresher(
-		opts.PrimaryHostedZoneGetter,
-	))
+	opts.DesiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeArgoCD, CreateArgocdStateRefresher(argoCDRefresherOptions{
+		IACRepositoryName:         opts.ClusterDeclaration.Github.Repository,
+		IACRepositoryOrganization: opts.ClusterDeclaration.Github.Organisation,
+		ClusterID:                 opts.ClusterID,
+		hostedZoneFetcher:         opts.PrimaryHostedZoneGetter,
+		idpFetcher:                opts.IdentityPoolFetcher,
+		ghGetter:                  opts.GithubGetter,
+	}))
 
 	opts.DesiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeNameserverDelegator, CreateNameserverDelegationStateRefresher(
 		opts.PrimaryHostedZoneGetter,

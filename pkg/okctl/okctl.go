@@ -194,6 +194,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		Vpc:                              o.vpcService(outputDir, spin),
 		IdentityManager:                  o.identityManagerService(outputDir, spin),
 		Autoscaler:                       o.autoscalerService(outputDir, spin),
+		Blockstorage:                     o.blockstorageService(outputDir, spin),
 	}, nil
 }
 
@@ -392,6 +393,33 @@ func (o *Okctl) autoscalerService(outputDir string, spin spinner.Spinner) client
 			o.FileSystem,
 		),
 		console.NewAutoscalerReport(o.Err, spin),
+	)
+}
+
+func (o *Okctl) blockstorageService(outputDir string, spin spinner.Spinner) client.BlockstorageService {
+	return clientCore.NewBlockstorageService(
+		spin,
+		rest.NewBlockstorageAPI(o.restClient),
+		clientFilesystem.NewBlockstorageStore(
+			clientFilesystem.Paths{
+				OutputFile:         config.DefaultPolicyOutputFile,
+				CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
+				BaseDir:            path.Join(outputDir, config.DefaultBlockstorageBaseDir),
+			},
+			clientFilesystem.Paths{
+				OutputFile: config.DefaultServiceAccountOutputsFile,
+				ConfigFile: config.DefaultServiceAccountConfigFile,
+				BaseDir:    path.Join(outputDir, config.DefaultBlockstorageBaseDir),
+			},
+			clientFilesystem.Paths{
+				OutputFile:  config.DefaultHelmOutputsFile,
+				ReleaseFile: config.DefaultHelmReleaseFile,
+				ChartFile:   config.DefaultHelmChartFile,
+				BaseDir:     path.Join(outputDir, config.DefaultBlockstorageBaseDir),
+			},
+			o.FileSystem,
+		),
+		console.NewBlockstorageReport(o.Err, spin),
 	)
 }
 

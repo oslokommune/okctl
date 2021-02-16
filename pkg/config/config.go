@@ -80,6 +80,7 @@ const (
 	DefaultExternalDNSBaseDir                       = "external-dns"
 	DefaultExternalSecretsBaseDir                   = "external-secrets"
 	DefaultAutoscalerBaseDir                        = "autoscaler"
+	DefaultBlockstorageBaseDir                      = "blockstorage"
 	DefaultHelmChartFile                            = "helm-chart.json"
 	DefaultHelmOutputsFile                          = "helm-outputs.json"
 	DefaultHelmReleaseFile                          = "helm-release.json"

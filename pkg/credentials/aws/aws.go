@@ -9,13 +9,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/credentials/aws/saml"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/credentials/aws/scrape"
 	"github.com/spf13/afero"
@@ -294,7 +295,7 @@ func (a *AuthSAML) Validate() error {
 func (a *AuthSAML) Retrieve() (*Credentials, error) {
 	err := a.PopulateFn(a)
 	if err != nil {
-		return nil, errors.E(err, "failed to populate required fields")
+		return nil, fmt.Errorf("populating required fields")
 	}
 
 	samlAssertion, err := a.Scraper.Scrape(a.Username, a.Password, a.MFAToken)
@@ -303,14 +304,19 @@ func (a *AuthSAML) Retrieve() (*Credentials, error) {
 	}
 
 	if len(samlAssertion) == 0 {
-		return nil, errors.E(errors.Errorf("got empty SAML assertion"), errors.Unknown)
+		return nil, fmt.Errorf("empty SAML assertion")
+	}
+
+	err = saml.VerifyAssertion(v1alpha1.RoleARN(a.AwsAccountID), []byte(samlAssertion))
+	if err != nil {
+		return nil, fmt.Errorf("verifying saml: %w", err)
 	}
 
 	sess, err := session.NewSession(&aws.Config{
 		Region: &a.Region,
 	})
 	if err != nil {
-		return nil, errors.E(err, "failed to create aws sts session", errors.Unknown)
+		return nil, fmt.Errorf("creating AWS STS session: %w", err)
 	}
 
 	svc := a.ProviderFn(sess)
@@ -322,7 +328,7 @@ func (a *AuthSAML) Retrieve() (*Credentials, error) {
 		SAMLAssertion:   aws.String(samlAssertion),
 	})
 	if err != nil {
-		return nil, errors.E(err, "error retrieving STS credentials using SAML", errors.Unknown)
+		return nil, fmt.Errorf("retrieving STS credentials using SAML: %w", err)
 	}
 
 	return &Credentials{

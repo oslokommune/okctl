@@ -25,7 +25,7 @@ func TestNewAuthSAML(t *testing.T) {
 		{
 			name: "SAML retriever should work",
 			retriever: aws.NewAuthSAML(
-				mock.DefaultAWSAccountID,
+				"000000000000",
 				mock.DefaultRegion,
 				awsmock.NewGoodScraper(),
 				func(session *session.Session) stsiface.STSAPI {

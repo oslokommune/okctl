@@ -113,7 +113,7 @@ We have a basic cluster up and running, and we are currently working on getting 
 - [x] [Autoscaler](https://github.com/kubernetes/autoscaler/) for adjusting the size of pods and nodes
 - [x] [Argo CD](https://github.com/argoproj/argo-cd) gives us continuous delivery
 - [ ] [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator) for monitoring
-- [ ] [Amazon Elastic Block Store (EBS) CSI driver](https://github.com/kubernetes-sigs/aws-ebs-csi-driver/) for block storage
+- [x] [Amazon Elastic Block Store (EBS) CSI driver](https://github.com/kubernetes-sigs/aws-ebs-csi-driver/) for block storage
 - [ ] [Loki](https://github.com/grafana/loki) for consuming logs
 
 ## Compare and contrast

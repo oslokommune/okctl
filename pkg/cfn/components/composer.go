@@ -1077,3 +1077,65 @@ func (c *AutoscalerPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy 
 
 	return managedpolicy.New("AutoscalerPolicy", policyName, policyDesc, d)
 }
+
+// BlockstoragePolicyComposer contains state for building
+// a managed iam policy compatible with ebs csi blockstorage driver
+type BlockstoragePolicyComposer struct {
+	Repository  string
+	Environment string
+}
+
+// NewBlockstoragePolicyComposer returns an initialised ebs csi blockstorage driver composer
+func NewBlockstoragePolicyComposer(repository, env string) *BlockstoragePolicyComposer {
+	return &BlockstoragePolicyComposer{
+		Repository:  repository,
+		Environment: env,
+	}
+}
+
+// Compose builds the policy and returns the result
+func (c *BlockstoragePolicyComposer) Compose() (*cfn.Composition, error) {
+	p := c.ManagedPolicy()
+
+	return &cfn.Composition{
+		Outputs:   []cfn.StackOutputer{p},
+		Resources: []cfn.ResourceNamer{p},
+	}, nil
+}
+
+// ManagedPolicy returns the policy
+func (c *BlockstoragePolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
+	policyName := fmt.Sprintf("okctl-%s-%s-BlockstorageServiceAccountPolicy", c.Repository, c.Environment)
+	policyDesc := "Service account policy for provisioning persistent volume claims"
+
+	d := &policydocument.PolicyDocument{
+		Version: policydocument.Version,
+		Statement: []policydocument.StatementEntry{
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"ec2:AttachVolume",
+					"ec2:CreateSnapshot",
+					"ec2:CreateTags",
+					"ec2:CreateVolume",
+					"ec2:DeleteSnapshot",
+					"ec2:DeleteTags",
+					"ec2:DeleteVolume",
+					"ec2:DescribeAvailabilityZones",
+					"ec2:DescribeInstances",
+					"ec2:DescribeSnapshots",
+					"ec2:DescribeTags",
+					"ec2:DescribeVolumes",
+					"ec2:DescribeVolumesModifications",
+					"ec2:DetachVolume",
+					"ec2:ModifyVolume",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+		},
+	}
+
+	return managedpolicy.New("BlockstoragePolicy", policyName, policyDesc, d)
+}

@@ -52,6 +52,11 @@ func TestBuilderAndComposers(t *testing.T) {
 			composer: components.NewAutoscalerPolicyComposer("repo", "env"),
 		},
 		{
+			name:     "Builder with BlockstoragePolicy composer",
+			golden:   "blockstorage-cloudformation.yaml",
+			composer: components.NewBlockstoragePolicyComposer("repo", "env"),
+		},
+		{
 			name:     "Builder with PublicCertificate composer",
 			golden:   "public-certificate-cf.yaml",
 			composer: components.NewPublicCertificateComposer("test.oslo.systems.", "AZ12345"),

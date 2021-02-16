@@ -129,28 +129,31 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				Spin:      spin,
 			})
 
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeZone, reconciler.NewZoneReconciler(services.Domain))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeVPC, reconciler.NewVPCReconciler(services.Vpc))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeCluster, reconciler.NewClusterReconciler(services.Cluster))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeExternalSecrets, reconciler.NewExternalSecretsReconciler(services.ExternalSecrets))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeAutoscaler, reconciler.NewAutoscalerReconciler(services.Autoscaler))
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeALBIngress, reconciler.NewALBIngressReconciler(services.ALBIngressController))
+			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeArgoCD, reconciler.NewArgocdReconciler(services.ArgoCD))
+			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeAutoscaler, reconciler.NewAutoscalerReconciler(services.Autoscaler))
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeAWSLoadBalancerController, reconciler.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService))
+			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeCluster, reconciler.NewClusterReconciler(services.Cluster))
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeExternalDNS, reconciler.NewExternalDNSReconciler(services.ExternalDNS))
+			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeExternalSecrets, reconciler.NewExternalSecretsReconciler(services.ExternalSecrets))
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeGithub, reconciler.NewGithubReconciler(services.Github))
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeIdentityManager, reconciler.NewIdentityManagerReconciler(services.IdentityManager))
+			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeVPC, reconciler.NewVPCReconciler(services.Vpc))
+			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeZone, reconciler.NewZoneReconciler(services.Domain))
 			reconciliationManager.AddReconciler(
 				resourcetree.ResourceNodeTypeNameserverDelegator,
 				reconciler.NewNameserverDelegationReconciler(services.NameserverHandler, services.Domain),
 			)
 
 			synchronizeOpts := &controller.SynchronizeOpts{
+				ClusterID:               id,
 				DesiredTree:             desiredTree,
 				ReconciliationManager:   reconciliationManager,
 				Fs:                      o.FileSystem,
 				OutputDir:               outputDir,
 				GithubGetter:            o.RepoStateWithEnv.GetGithub,
 				GithubSetter:            o.RepoStateWithEnv.SaveGithub,
+				IdentityPoolFetcher:     func() state.IdentityPool { return o.RepoStateWithEnv.GetIdentityPool() },
 				CIDRGetter:              func() string { return o.RepoStateWithEnv.GetVPC().CIDR },
 				PrimaryHostedZoneGetter: func() *state.HostedZone { return o.RepoStateWithEnv.GetPrimaryHostedZone() },
 			}

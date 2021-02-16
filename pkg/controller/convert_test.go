@@ -23,6 +23,7 @@ func TestTreeCreators(t *testing.T) {
 				return &declaration
 			},
 			existingServices: ExistingServices{
+				hasArgoCD:                         true,
 				hasALBIngressController:           false,
 				hasAWSLoadBalancerController:      true,
 				hasCluster:                        true,
@@ -45,6 +46,7 @@ func TestTreeCreators(t *testing.T) {
 				return &declaration
 			},
 			existingServices: ExistingServices{
+				hasArgoCD:                         true,
 				hasALBIngressController:           false,
 				hasAWSLoadBalancerController:      true,
 				hasCluster:                        true,

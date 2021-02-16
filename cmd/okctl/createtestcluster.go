@@ -289,6 +289,13 @@ with Github or other production services.
 				return formatErr(err)
 			}
 
+			_, err = services.Blockstorage.CreateBlockstorage(o.Ctx, client.CreateBlockstorageOpts{
+				ID: id,
+			})
+			if err != nil {
+				return formatErr(err)
+			}
+
 			_, err = services.Autoscaler.CreateAutoscaler(o.Ctx, client.CreateAutoscalerOpts{
 				ID: id,
 			})

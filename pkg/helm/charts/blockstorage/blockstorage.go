@@ -13,7 +13,7 @@ import (
 // New returns an initialised Helm chart for installing aws-ebs-csi-driver
 func New(values *Values) *helm.Chart {
 	return &helm.Chart{
-		RepositoryName: "eks",
+		RepositoryName: "aws-ebs-csi-driver",
 		RepositoryURL:  "https://kubernetes-sigs.github.io/aws-ebs-csi-driver",
 		ReleaseName:    "aws-ebs-csi-driver",
 		Version:        "0.9.6",

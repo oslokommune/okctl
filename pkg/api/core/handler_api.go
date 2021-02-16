@@ -60,6 +60,8 @@ type Endpoints struct {
 	DeleteAutoscalerServiceAccount                endpoint.Endpoint
 	CreateAutoscalerPolicy                        endpoint.Endpoint
 	DeleteAutoscalerPolicy                        endpoint.Endpoint
+	CreateBlockstoragePolicy                      endpoint.Endpoint
+	DeleteBlockstoragePolicy                      endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -110,6 +112,8 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteAutoscalerServiceAccount:                makeDeleteAutoscalerServiceAccountEndpoint(s.ServiceAccount),
 		CreateAutoscalerPolicy:                        makeCreateAutoscalerPolicyEndpoint(s.ManagedPolicy),
 		DeleteAutoscalerPolicy:                        makeDeleteAutoscalerPolicyEndpoint(s.ManagedPolicy),
+		CreateBlockstoragePolicy:                      makeCreateBlockstoragePolicyEndpoint(s.ManagedPolicy),
+		DeleteBlockstoragePolicy:                      makeDeleteBlockstoragePolicyEndpoint(s.ManagedPolicy),
 	}
 }
 
@@ -159,6 +163,8 @@ type Handlers struct {
 	DeleteAutoscalerServiceAccount                http.Handler
 	CreateAutoscalerPolicy                        http.Handler
 	DeleteAutoscalerPolicy                        http.Handler
+	CreateBlockstoragePolicy                      http.Handler
+	DeleteBlockstoragePolicy                      http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -236,6 +242,8 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteAutoscalerServiceAccount:                newServer(endpoints.DeleteAutoscalerServiceAccount, decodeIDRequest),
 		CreateAutoscalerPolicy:                        newServer(endpoints.CreateAutoscalerPolicy, decodeCreateAutoscalerPolicy),
 		DeleteAutoscalerPolicy:                        newServer(endpoints.DeleteAutoscalerPolicy, decodeIDRequest),
+		CreateBlockstoragePolicy:                      newServer(endpoints.CreateBlockstoragePolicy, decodeCreateBlockstoragePolicy),
+		DeleteBlockstoragePolicy:                      newServer(endpoints.DeleteBlockstoragePolicy, decodeIDRequest),
 	}
 }
 
@@ -273,6 +281,10 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			r.Route("/autoscaler", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAutoscalerPolicy)
 				r.Method(http.MethodDelete, "/", handlers.DeleteAutoscalerPolicy)
+			})
+			r.Route("/blockstorage", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateBlockstoragePolicy)
+				r.Method(http.MethodDelete, "/", handlers.DeleteBlockstoragePolicy)
 			})
 		})
 		r.Route("/serviceaccounts", func(r chi.Router) {
@@ -404,6 +416,7 @@ const (
 	namespaceTag                 = "namespace"
 	cognitoTag                   = "cognito"
 	autoscalerTag                = "autoscaler"
+	blockstorageTag              = "blockstorage"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -455,6 +468,8 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteAutoscalerServiceAccount:                logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, autoscalerTag}, "/"), "delete")(endpoints.DeleteAutoscalerServiceAccount),
 			CreateAutoscalerPolicy:                        logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, autoscalerTag}, "/"), "create")(endpoints.CreateAutoscalerPolicy),
 			DeleteAutoscalerPolicy:                        logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, autoscalerTag}, "/"), "delete")(endpoints.DeleteAutoscalerPolicy),
+			CreateBlockstoragePolicy:                      logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, blockstorageTag}, "/"), "create")(endpoints.CreateBlockstoragePolicy),
+			DeleteBlockstoragePolicy:                      logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, blockstorageTag}, "/"), "delete")(endpoints.DeleteBlockstoragePolicy),
 		}
 	}
 }

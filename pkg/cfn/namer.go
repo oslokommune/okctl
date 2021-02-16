@@ -12,6 +12,7 @@ const (
 	DefaultStackNameVpcID                             = "vpc"
 	DefaultStackNameExternalSecretsPolicyID           = "externalsecretspolicy"
 	DefaultStackNameAutoscalerPolicyID                = "autoscalerpolicy"
+	DefaultStackNameBlockstoragePolicyID              = "blockstoragepolicy"
 	DefaultStackNameAlbIngressControllerPolicyID      = "albingresscontrollerpolicy"
 	DefaultStackNameAWSLoadBalancerControllerPolicyID = "awsloadbalancercontrollerpolicy"
 	DefaultStackNameExternalDNSPolicyID               = "externaldns"
@@ -56,6 +57,16 @@ func (n *StackNamer) AutoscalerPolicy(repository, env string) string {
 	return fmt.Sprintf("%s-%s-%s-%s",
 		DefaultStackNamePrefix,
 		DefaultStackNameAutoscalerPolicyID,
+		repository,
+		env,
+	)
+}
+
+// BlockstoragePolicy returns the stack name of an Blockstorage policy
+func (n *StackNamer) BlockstoragePolicy(repository, env string) string {
+	return fmt.Sprintf("%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameBlockstoragePolicyID,
 		repository,
 		env,
 	)

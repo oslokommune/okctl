@@ -139,6 +139,8 @@ Resources:
       Tags:
       - Key: kubernetes.io/cluster/test-test
         Value: shared
+      - Key: Name
+        Value: test-test-PrivateSubnet00
       - Key: kubernetes.io/role/internal-elb
         Value: "1"
       VpcId:
@@ -158,6 +160,8 @@ Resources:
       Tags:
       - Key: kubernetes.io/cluster/test-test
         Value: shared
+      - Key: Name
+        Value: test-test-PrivateSubnet01
       - Key: kubernetes.io/role/internal-elb
         Value: "1"
       VpcId:
@@ -177,6 +181,8 @@ Resources:
       Tags:
       - Key: kubernetes.io/cluster/test-test
         Value: shared
+      - Key: Name
+        Value: test-test-PrivateSubnet02
       - Key: kubernetes.io/role/internal-elb
         Value: "1"
       VpcId:
@@ -212,6 +218,8 @@ Resources:
       Tags:
       - Key: kubernetes.io/cluster/test-test
         Value: shared
+      - Key: Name
+        Value: test-test-PublicSubnet00
       - Key: kubernetes.io/role/elb
         Value: "1"
       VpcId:
@@ -232,6 +240,8 @@ Resources:
       Tags:
       - Key: kubernetes.io/cluster/test-test
         Value: shared
+      - Key: Name
+        Value: test-test-PublicSubnet01
       - Key: kubernetes.io/role/elb
         Value: "1"
       VpcId:
@@ -252,6 +262,8 @@ Resources:
       Tags:
       - Key: kubernetes.io/cluster/test-test
         Value: shared
+      - Key: Name
+        Value: test-test-PublicSubnet02
       - Key: kubernetes.io/role/elb
         Value: "1"
       VpcId:
@@ -279,4 +291,6 @@ Resources:
       Tags:
       - Key: kubernetes.io/cluster/test-test
         Value: shared
+      - Key: Name
+        Value: test-test
     Type: AWS::EC2::VPC

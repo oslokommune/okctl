@@ -76,6 +76,10 @@ func (s *Subnet) Resource() cloudformation.Resource {
 			Key:   fmt.Sprintf("kubernetes.io/cluster/%s", s.cluster.Name()),
 			Value: "shared",
 		},
+		{
+			Key:   "Name",
+			Value: fmt.Sprintf("%s-%s", s.cluster.Name(), s.Name()),
+		},
 	}
 
 	switch s.typ {

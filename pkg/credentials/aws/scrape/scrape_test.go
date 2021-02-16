@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/foolin/pagser"
+
 	"github.com/jarcoal/httpmock"
 	"github.com/oslokommune/okctl/pkg/credentials/aws/scrape"
 	"github.com/stretchr/testify/assert"
@@ -36,6 +38,16 @@ func TestScrape(t *testing.T) {
 			},
 			expect: "SomeNiceSAMLResponse",
 		},
+		{
+			name: "Should fail",
+			respondersFn: func() {
+				NewResponder(t, http.MethodGet, "testdata/login.html", scrape.DefaultURL, http.StatusOK)
+				NewResponder(t, http.MethodPost, "testdata/totp.html", "https://doLogin", http.StatusOK)
+				NewResponder(t, http.MethodPost, "testdata/invalid_totp.html", "https://doTotp", http.StatusOK)
+			},
+			expect:      "Invalid authenticator code.",
+			expectError: true,
+		},
 	}
 
 	httpmock.Activate()
@@ -56,6 +68,54 @@ func TestScrape(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.expect, got)
+			}
+		})
+	}
+}
+
+func TestHasError(t *testing.T) {
+	testCases := []struct {
+		name      string
+		data      string
+		expect    interface{}
+		expectErr bool
+	}{
+		{
+			name:      "html with no error message should return nil",
+			data:      "testdata/login.html",
+			expect:    nil,
+			expectErr: false,
+		},
+		{
+			name:      "html from invalid login should return error",
+			data:      "testdata/failed_login.html",
+			expect:    "Invalid username or password.",
+			expectErr: true,
+		},
+		{
+			name:      "html from invalid totp should return error",
+			data:      "testdata/invalid_totp.html",
+			expect:    "Invalid authenticator code.",
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			p := pagser.New()
+
+			data, err := ioutil.ReadFile(tc.data)
+			assert.NoError(t, err)
+
+			err = scrape.HasError(p, string(data))
+
+			if tc.expectErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expect, err.Error())
+			} else {
+				assert.NoError(t, err)
 			}
 		})
 	}

@@ -73,6 +73,16 @@ func (o CreateExternalDNSServiceAccountOpts) Validate() error {
 	return o.ValidateStruct()
 }
 
+// CreateAutoscalerServiceAccountOpts contains the required inputs
+type CreateAutoscalerServiceAccountOpts struct {
+	CreateServiceAccountOpts
+}
+
+// Validate the inputs
+func (o CreateAutoscalerServiceAccountOpts) Validate() error {
+	return o.ValidateStruct()
+}
+
 // ServiceAccountService provides the interface for all service account operations
 type ServiceAccountService interface {
 	CreateExternalSecretsServiceAccount(context.Context, CreateExternalSecretsServiceAccountOpts) (*ServiceAccount, error)
@@ -83,6 +93,8 @@ type ServiceAccountService interface {
 	DeleteAWSLoadBalancerControllerServiceAccount(context.Context, ID) error
 	CreateExternalDNSServiceAccount(context.Context, CreateExternalDNSServiceAccountOpts) (*ServiceAccount, error)
 	DeleteExternalDNSServiceAccount(context.Context, ID) error
+	CreateAutoscalerServiceAccount(context.Context, CreateAutoscalerServiceAccountOpts) (*ServiceAccount, error)
+	DeleteAutoscalerServiceAccount(context.Context, ID) error
 }
 
 // ServiceAccountRun provides the interface for running operations

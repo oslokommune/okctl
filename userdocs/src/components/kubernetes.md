@@ -7,6 +7,7 @@ Kubernetes is [highly configurable and extensible](https://kubernetes.io/docs/co
 - [Kubernetes External Secrets](#kubernetes-external-secrets)
 - [AWS ALB Ingress Controller](#aws-alb-ingress-controller)
 - [ExternalDNS](#externaldns)
+- [Cluster Autoscaler](#cluster-autoscaler)
 
 ### Kubernetes External Secrets
 
@@ -163,4 +164,7 @@ spec:
               serviceName: test-backend-service
               servicePort: 80
 ```
- 
+
+### Cluster Autoscaler 
+
+[Cluster Autoscaler](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/README.md) is a tool that automatically adjusts the size of the Kubernetes cluster. On AWS it does this by adjusting the size of the [Autoscaling Group](https://docs.aws.amazon.com/autoscaling/ec2/userguide/AutoScalingGroup.html) of the cluster's nodegroup. We have configured the cluster autoscaler to automatically adjust the default nodegroup that we add to a cluster. Starting at 1 node it can scale up and down to a maximum of 10 nodes.

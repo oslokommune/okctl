@@ -25,6 +25,8 @@ const (
 	ResourceNodeTypeCluster
 	// ResourceNodeTypeExternalSecrets represents an External Secrets resource
 	ResourceNodeTypeExternalSecrets
+	// ResourceNodeTypeAutoscaler represents an autoscaler resource
+	ResourceNodeTypeAutoscaler
 	// ResourceNodeTypeALBIngress represents an ALB Ingress resource
 	ResourceNodeTypeALBIngress
 	// ResourceNodeTypeAWSLoadBalancerController represents an AWS load balancer controller resource
@@ -54,6 +56,8 @@ func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
 		return "K8s Cluster"
 	case ResourceNodeTypeExternalSecrets:
 		return "External Secrets"
+	case ResourceNodeTypeAutoscaler:
+		return "Autoscaler"
 	case ResourceNodeTypeALBIngress:
 		return "ALB Ingress Controller"
 	case ResourceNodeTypeAWSLoadBalancerController:

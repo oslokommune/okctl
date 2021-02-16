@@ -7,6 +7,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 )
 
+// nolint: funlen
 func TestTreeCreators(t *testing.T) {
 	testCases := []struct {
 		name string
@@ -27,6 +28,7 @@ func TestTreeCreators(t *testing.T) {
 				hasCluster:                        true,
 				hasExternalDNS:                    true,
 				hasExternalSecrets:                true,
+				hasAutoscaler:                     true,
 				hasGithubSetup:                    true,
 				hasIdentityManager:                true,
 				hasPrimaryHostedZone:              true,
@@ -48,6 +50,7 @@ func TestTreeCreators(t *testing.T) {
 				hasCluster:                        true,
 				hasExternalDNS:                    false,
 				hasExternalSecrets:                true,
+				hasAutoscaler:                     true,
 				hasGithubSetup:                    true,
 				hasIdentityManager:                true,
 				hasPrimaryHostedZone:              true,

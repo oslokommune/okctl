@@ -10,14 +10,14 @@ import (
 	"github.com/spf13/afero"
 )
 
-type externalSecretsStore struct {
+type autoscalerStore struct {
 	policy         Paths
 	serviceAccount Paths
 	chart          Paths
 	fs             *afero.Afero
 }
 
-func (s *externalSecretsStore) RemoveExternalSecrets(_ api.ID) (*store.Report, error) {
+func (s *autoscalerStore) RemoveAutoscaler(_ api.ID) (*store.Report, error) {
 	report, err := store.NewFileSystem(s.policy.BaseDir, s.fs).
 		Remove(s.policy.OutputFile).
 		Remove(s.policy.CloudFormationFile).
@@ -37,7 +37,7 @@ func (s *externalSecretsStore) RemoveExternalSecrets(_ api.ID) (*store.Report, e
 	return report, nil
 }
 
-func (s *externalSecretsStore) SaveExternalSecrets(e *client.ExternalSecrets) (*store.Report, error) {
+func (s *autoscalerStore) SaveAutoscaler(e *client.Autoscaler) (*store.Report, error) {
 	policy := &ManagedPolicy{
 		ID:        e.Policy.ID,
 		StackName: e.Policy.StackName,
@@ -68,15 +68,15 @@ func (s *externalSecretsStore) SaveExternalSecrets(e *client.ExternalSecrets) (*
 		StoreStruct(s.chart.ChartFile, e.Chart.Chart, store.ToJSON()).
 		Do()
 	if err != nil {
-		return nil, fmt.Errorf("storing external secrets: %w", err)
+		return nil, fmt.Errorf("storing autoscaler: %w", err)
 	}
 
 	return report, nil
 }
 
-// NewExternalSecretsStore returns an initialised store
-func NewExternalSecretsStore(policy, serviceAccount, chart Paths, fs *afero.Afero) client.ExternalSecretsStore {
-	return &externalSecretsStore{
+// NewAutoscalerStore returns an initialised store
+func NewAutoscalerStore(policy, serviceAccount, chart Paths, fs *afero.Afero) client.AutoscalerStore {
+	return &autoscalerStore{
 		policy:         policy,
 		serviceAccount: serviceAccount,
 		chart:          chart,

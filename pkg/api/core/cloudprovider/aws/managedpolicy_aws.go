@@ -14,6 +14,10 @@ type managedPolicy struct {
 	provider v1alpha1.CloudProvider
 }
 
+func (m *managedPolicy) DeleteAutoscalerPolicy(id api.ID) error {
+	return m.deletePolicy(cfn.NewStackNamer().AutoscalerPolicy(id.Repository, id.Environment))
+}
+
 func (m *managedPolicy) DeleteExternalSecretsPolicy(id api.ID) error {
 	return m.deletePolicy(cfn.NewStackNamer().ExternalSecretsPolicy(id.Repository, id.Environment))
 }
@@ -39,6 +43,17 @@ func (m *managedPolicy) deletePolicy(stackName string) error {
 	}
 
 	return nil
+}
+
+func (m *managedPolicy) CreateAutoscalerPolicy(opts api.CreateAutoscalerPolicy) (*api.ManagedPolicy, error) {
+	b := cfn.New(
+		components.NewAutoscalerPolicyComposer(opts.ID.Repository, opts.ID.Environment),
+	)
+
+	stackName := cfn.NewStackNamer().
+		AutoscalerPolicy(opts.ID.Repository, opts.ID.Environment)
+
+	return m.createPolicy(stackName, opts.ID, "AutoscalerPolicy", b)
 }
 
 func (m *managedPolicy) CreateExternalDNSPolicy(opts api.CreateExternalDNSPolicyOpts) (*api.ManagedPolicy, error) {

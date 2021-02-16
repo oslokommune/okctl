@@ -361,6 +361,13 @@ and database subnets.`,
 				return formatErr(err)
 			}
 
+			_, err = services.Autoscaler.CreateAutoscaler(o.Ctx, client.CreateAutoscalerOpts{
+				ID: id,
+			})
+			if err != nil {
+				return formatErr(err)
+			}
+
 			_, err = services.ExternalSecrets.CreateExternalSecrets(o.Ctx, client.CreateExternalSecretsOpts{
 				ID: id,
 			})

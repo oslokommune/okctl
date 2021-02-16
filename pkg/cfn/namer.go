@@ -11,6 +11,7 @@ const (
 	DefaultStackNamePrefix                            = "okctl"
 	DefaultStackNameVpcID                             = "vpc"
 	DefaultStackNameExternalSecretsPolicyID           = "externalsecretspolicy"
+	DefaultStackNameAutoscalerPolicyID                = "autoscalerpolicy"
 	DefaultStackNameAlbIngressControllerPolicyID      = "albingresscontrollerpolicy"
 	DefaultStackNameAWSLoadBalancerControllerPolicyID = "awsloadbalancercontrollerpolicy"
 	DefaultStackNameExternalDNSPolicyID               = "externaldns"
@@ -45,6 +46,16 @@ func (n *StackNamer) ExternalSecretsPolicy(repository, env string) string {
 	return fmt.Sprintf("%s-%s-%s-%s",
 		DefaultStackNamePrefix,
 		DefaultStackNameExternalSecretsPolicyID,
+		repository,
+		env,
+	)
+}
+
+// AutoscalerPolicy returns the stack name of an autoscaler policy
+func (n *StackNamer) AutoscalerPolicy(repository, env string) string {
+	return fmt.Sprintf("%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameAutoscalerPolicyID,
 		repository,
 		env,
 	)

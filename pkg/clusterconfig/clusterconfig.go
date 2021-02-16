@@ -98,7 +98,7 @@ func (a *Args) build() *v1alpha5.ClusterConfig {
 				Name:         "ng-generic",
 				InstanceType: "m5.large",
 				ScalingConfig: v1alpha5.ScalingConfig{
-					DesiredCapacity: 2, //nolint: gomnd
+					DesiredCapacity: 1, //nolint: gomnd
 					MinSize:         1,
 					MaxSize:         10, //nolint: gomnd
 				},
@@ -278,6 +278,22 @@ func NewExternalDNSServiceAccount(clusterName, region, policyArn, permissionsBou
 			"aws-usage": "cluster-ops",
 		},
 		Name:                   "external-dns",
+		Namespace:              "kube-system",
+		PermissionsBoundaryArn: permissionsBoundaryArn,
+		PolicyArn:              policyArn,
+		Region:                 region,
+	})
+}
+
+// NewAutoscalerServiceAccount returns an initialised configuration
+// for creating a cluster autoscaler service account
+func NewAutoscalerServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha5.ClusterConfig, error) {
+	return NewServiceAccount(&ServiceAccountArgs{
+		ClusterName: clusterName,
+		Labels: map[string]string{
+			"aws-usage": "cluster-ops",
+		},
+		Name:                   "autoscaler",
 		Namespace:              "kube-system",
 		PermissionsBoundaryArn: permissionsBoundaryArn,
 		PolicyArn:              policyArn,

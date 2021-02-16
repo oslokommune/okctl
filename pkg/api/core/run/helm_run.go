@@ -3,6 +3,8 @@ package run
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/helm/charts/autoscaler"
+
 	"github.com/oslokommune/okctl/pkg/helm/charts/awslbc"
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/argocd"
@@ -16,6 +18,12 @@ import (
 type helmRun struct {
 	helm            helm.Helmer
 	kubeConfigStore api.KubeConfigStore
+}
+
+func (r *helmRun) CreateAutoscalerHelmChart(opts api.CreateAutoscalerHelmChartOpts) (*api.Helm, error) {
+	chart := autoscaler.New(autoscaler.NewDefaultValues(opts.ID.Region, opts.ID.ClusterName, "autoscaler"))
+
+	return r.createHelmChart(opts.ID, chart)
 }
 
 func (r *helmRun) CreateArgoCD(opts api.CreateArgoCDOpts) (*api.Helm, error) {

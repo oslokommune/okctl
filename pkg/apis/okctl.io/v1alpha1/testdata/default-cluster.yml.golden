@@ -6,6 +6,7 @@ github:
   team: kjøremiljø
 integrations:
   argoCD: true
+  autoscaler: true
   awsLoadBalancerController: true
   cognito: true
   externalDNS: true

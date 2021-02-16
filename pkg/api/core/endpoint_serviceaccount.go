@@ -1,4 +1,4 @@
-package core
+package core // nolint: dupl
 
 import (
 	"context"
@@ -52,5 +52,17 @@ func makeDeleteAWSLoadBalancerControllerServiceAccountEndpoint(s api.ServiceAcco
 func makeDeleteExternalDNSServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return &Empty{}, s.DeleteExternalDNSServiceAccount(ctx, request.(api.ID))
+	}
+}
+
+func makeCreateAutoscalerServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return s.CreateAutoscalerServiceAccount(ctx, request.(api.CreateAutoscalerServiceAccountOpts))
+	}
+}
+
+func makeDeleteAutoscalerServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return &Empty{}, s.DeleteAutoscalerServiceAccount(ctx, request.(api.ID))
 	}
 }

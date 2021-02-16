@@ -13,20 +13,34 @@ type helmService struct {
 	store api.HelmStore
 }
 
+func (s *helmService) CreateAutoscalerHelmChart(_ context.Context, opts api.CreateAutoscalerHelmChartOpts) (*api.Helm, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, errors.E(err, "validating input options")
+	}
+
+	h, err := s.run.CreateAutoscalerHelmChart(opts)
+	if err != nil {
+		return nil, errors.E(err, "creating autoscaler helm chart", errors.Internal)
+	}
+
+	return h, nil
+}
+
 func (s *helmService) CreateArgoCD(_ context.Context, opts api.CreateArgoCDOpts) (*api.Helm, error) {
 	err := opts.Validate()
 	if err != nil {
-		return nil, errors.E(err, "failed to validate input options")
+		return nil, errors.E(err, "validating input options")
 	}
 
 	h, err := s.run.CreateArgoCD(opts)
 	if err != nil {
-		return nil, errors.E(err, "failed to create argocd helm chart")
+		return nil, errors.E(err, "creating argocd helm chart")
 	}
 
 	err = s.store.SaveArgoCD(h)
 	if err != nil {
-		return nil, errors.E(err, "failed to store argocd helm chart")
+		return nil, errors.E(err, "storing argocd helm chart")
 	}
 
 	return h, nil

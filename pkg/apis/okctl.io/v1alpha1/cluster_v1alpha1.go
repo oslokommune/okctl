@@ -192,6 +192,10 @@ type ClusterIntegrations struct {
 	// +optional
 	ExternalSecrets bool `json:"externalSecrets,omitempty"`
 
+	// Autoscaler if set to true will install the cluster autoscaler into the cluster
+	// +optional
+	Autoscaler bool `json:"autoscaler,omitempty"`
+
 	// Cognito if set to true will install the Cognito user pool into the cluster.
 	// Might want to make this one more fine-grained, so that the teams can more easily
 	// give access to their admin APIs or whatever. Might not be required for now.
@@ -249,6 +253,7 @@ func NewDefaultCluster(name, env, org, repo, team, accountID string) Cluster {
 		Integrations: &ClusterIntegrations{
 			ALBIngressController:      false,
 			AWSLoadBalancerController: true,
+			Autoscaler:                true,
 			ExternalDNS:               true,
 			ExternalSecrets:           true,
 			Cognito:                   true,

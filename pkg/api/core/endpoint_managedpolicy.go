@@ -1,4 +1,4 @@
-package core
+package core // nolint: dupl
 
 import (
 	"context"
@@ -52,5 +52,17 @@ func makeDeleteAWSLoadBalancerControllerPolicyEndpoint(s api.ManagedPolicyServic
 func makeDeleteExternalDNSPolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return &Empty{}, s.DeleteExternalDNSPolicy(ctx, request.(api.ID))
+	}
+}
+
+func makeCreateAutoscalerPolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return s.CreateAutoscalerPolicy(ctx, request.(api.CreateAutoscalerPolicy))
+	}
+}
+
+func makeDeleteAutoscalerPolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return &Empty{}, s.DeleteAutoscalerPolicy(ctx, request.(api.ID))
 	}
 }

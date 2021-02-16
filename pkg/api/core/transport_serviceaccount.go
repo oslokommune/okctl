@@ -62,3 +62,14 @@ func decodeCreateAutoscalerServiceAccount(_ context.Context, r *http.Request) (i
 
 	return opts, nil
 }
+
+func decodeCreateBlockstorageServiceAccount(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.CreateBlockstorageServiceAccountOpts
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}

@@ -16,7 +16,7 @@ func New(values *Values) *helm.Chart {
 		RepositoryName: "autoscaler",
 		RepositoryURL:  "https://kubernetes.github.io/autoscaler",
 		ReleaseName:    "cluster-autoscaler",
-		Version:        "9.4.9",
+		Version:        "9.4.0",
 		Chart:          "cluster-autoscaler",
 		Namespace:      "kube-system",
 		Timeout:        5 * time.Minute, // nolint: gomnd

@@ -22,6 +22,7 @@ type ExistingServices struct {
 	hasExternalDNS                    bool
 	hasExternalSecrets                bool
 	hasAutoscaler                     bool
+	hasBlockstorage                   bool
 	hasGithubSetup                    bool
 	hasIdentityManager                bool
 	hasArgoCD                         bool
@@ -41,6 +42,7 @@ func NewCreateCurrentStateTreeOpts(fs *afero.Afero, outputDir string, githubGett
 		hasCluster:                        directoryTester(fs, outputDir, config.DefaultClusterBaseDir),
 		hasExternalSecrets:                directoryTester(fs, outputDir, config.DefaultExternalSecretsBaseDir),
 		hasAutoscaler:                     directoryTester(fs, outputDir, config.DefaultAutoscalerBaseDir),
+		hasBlockstorage:                   directoryTester(fs, outputDir, config.DefaultBlockstorageBaseDir),
 		hasALBIngressController:           directoryTester(fs, outputDir, config.DefaultAlbIngressControllerBaseDir),
 		hasAWSLoadBalancerController:      directoryTester(fs, outputDir, config.DefaultAWSLoadBalancerControllerBaseDir),
 		hasExternalDNS:                    directoryTester(fs, outputDir, config.DefaultExternalDNSBaseDir),
@@ -71,6 +73,7 @@ func CreateCurrentStateTree(opts *ExistingServices) (root *resourcetree.Resource
 
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalSecrets, opts.hasExternalSecrets)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeAutoscaler, opts.hasAutoscaler)
+	createNode(clusterNode, resourcetree.ResourceNodeTypeBlockstorage, opts.hasBlockstorage)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeALBIngress, opts.hasALBIngressController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeAWSLoadBalancerController, opts.hasAWSLoadBalancerController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalDNS, opts.hasExternalDNS)
@@ -99,6 +102,7 @@ func CreateDesiredStateTree(cluster *v1alpha1.Cluster) (root *resourcetree.Resou
 
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalSecrets, cluster.Integrations.ExternalSecrets)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeAutoscaler, cluster.Integrations.Autoscaler)
+	createNode(clusterNode, resourcetree.ResourceNodeTypeBlockstorage, cluster.Integrations.Blockstorage)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeALBIngress, cluster.Integrations.ALBIngressController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeAWSLoadBalancerController, cluster.Integrations.AWSLoadBalancerController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalDNS, cluster.Integrations.ExternalDNS)

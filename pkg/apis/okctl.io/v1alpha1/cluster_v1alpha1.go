@@ -196,6 +196,11 @@ type ClusterIntegrations struct {
 	// +optional
 	Autoscaler bool `json:"autoscaler,omitempty"`
 
+	// Blockstorage if set to true will install the EBS CSI block storage driver into the
+	// cluster, which makes it possible to create PersistentVolumeClaims in AWS
+	// +optional
+	Blockstorage bool `json:"blockstorage,omitempty"`
+
 	// Cognito if set to true will install the Cognito user pool into the cluster.
 	// Might want to make this one more fine-grained, so that the teams can more easily
 	// give access to their admin APIs or whatever. Might not be required for now.
@@ -253,11 +258,12 @@ func NewDefaultCluster(name, env, org, repo, team, accountID string) Cluster {
 		Integrations: &ClusterIntegrations{
 			ALBIngressController:      false,
 			AWSLoadBalancerController: true,
+			ArgoCD:                    true,
 			Autoscaler:                true,
+			Blockstorage:              true,
+			Cognito:                   true,
 			ExternalDNS:               true,
 			ExternalSecrets:           true,
-			Cognito:                   true,
-			ArgoCD:                    true,
 		},
 	}
 }

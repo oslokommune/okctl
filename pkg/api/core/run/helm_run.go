@@ -3,6 +3,8 @@ package run
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/helm/charts/blockstorage"
+
 	"github.com/oslokommune/okctl/pkg/helm/charts/autoscaler"
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/awslbc"
@@ -22,6 +24,12 @@ type helmRun struct {
 
 func (r *helmRun) CreateAutoscalerHelmChart(opts api.CreateAutoscalerHelmChartOpts) (*api.Helm, error) {
 	chart := autoscaler.New(autoscaler.NewDefaultValues(opts.ID.Region, opts.ID.ClusterName, "autoscaler"))
+
+	return r.createHelmChart(opts.ID, chart)
+}
+
+func (r *helmRun) CreateBlockstorageHelmChart(opts api.CreateBlockstorageHelmChartOpts) (*api.Helm, error) {
+	chart := blockstorage.New(blockstorage.NewDefaultValues(opts.ID.Region, opts.ID.ClusterName, "blockstorage"))
 
 	return r.createHelmChart(opts.ID, chart)
 }

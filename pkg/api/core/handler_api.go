@@ -64,6 +64,7 @@ type Endpoints struct {
 	DeleteBlockstoragePolicy                      endpoint.Endpoint
 	CreateBlockstorageServiceAccount              endpoint.Endpoint
 	DeleteBlockstorageServiceAccount              endpoint.Endpoint
+	CreateBlockstorageHelmChart                   endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -109,7 +110,7 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteCertificate:                             makeDeleteCertificateEndpoint(s.Certificate),
 		DeleteNamespace:                               makeDeleteNamespaceEndpoint(s.Kube),
 		DeleteCognitoCertificate:                      makeDeleteCognitoCertificateEndpoint(s.Certificate),
-		CreateAutoscalerHelmChart:                     makeCreateAutoscalerHelmtChartEndpoint(s.Helm),
+		CreateAutoscalerHelmChart:                     makeCreateAutoscalerHelmChartEndpoint(s.Helm),
 		CreateAutoscalerServiceAccount:                makeCreateAutoscalerServiceAccountEndpoint(s.ServiceAccount),
 		DeleteAutoscalerServiceAccount:                makeDeleteAutoscalerServiceAccountEndpoint(s.ServiceAccount),
 		CreateAutoscalerPolicy:                        makeCreateAutoscalerPolicyEndpoint(s.ManagedPolicy),
@@ -118,6 +119,7 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteBlockstoragePolicy:                      makeDeleteBlockstoragePolicyEndpoint(s.ManagedPolicy),
 		CreateBlockstorageServiceAccount:              makeCreateBlockstorageServiceAccountEndpoint(s.ServiceAccount),
 		DeleteBlockstorageServiceAccount:              makeDeleteBlockstorageServiceAccountEndpoint(s.ServiceAccount),
+		CreateBlockstorageHelmChart:                   makeCreateBlockstorageHelmChartEndpoint(s.Helm),
 	}
 }
 
@@ -171,6 +173,7 @@ type Handlers struct {
 	DeleteBlockstoragePolicy                      http.Handler
 	CreateBlockstorageServiceAccount              http.Handler
 	DeleteBlockstorageServiceAccount              http.Handler
+	CreateBlockstorageHelmChart                   http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -252,6 +255,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteBlockstoragePolicy:                      newServer(endpoints.DeleteBlockstoragePolicy, decodeIDRequest),
 		CreateBlockstorageServiceAccount:              newServer(endpoints.CreateBlockstorageServiceAccount, decodeCreateBlockstorageServiceAccount),
 		DeleteBlockstorageServiceAccount:              newServer(endpoints.DeleteBlockstorageServiceAccount, decodeIDRequest),
+		CreateBlockstorageHelmChart:                   newServer(endpoints.CreateBlockstorageHelmChart, decodeCreateBlockstorageHelmChart),
 	}
 }
 
@@ -336,6 +340,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			})
 			r.Route("/autoscaler", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAutoscalerHelmChart)
+			})
+			r.Route("/blockstorage", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateBlockstorageHelmChart)
 			})
 		})
 		r.Route("/kube", func(r chi.Router) {
@@ -484,6 +491,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteBlockstoragePolicy:                      logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, blockstorageTag}, "/"), "delete")(endpoints.DeleteBlockstoragePolicy),
 			CreateBlockstorageServiceAccount:              logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, blockstorageTag}, "/"), "create")(endpoints.CreateBlockstorageServiceAccount),
 			DeleteBlockstorageServiceAccount:              logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, blockstorageTag}, "/"), "delete")(endpoints.DeleteBlockstorageServiceAccount),
+			CreateBlockstorageHelmChart:                   logmd.Logging(logger, strings.Join([]string{helmTag, blockstorageTag}, "/"), "create")(endpoints.CreateBlockstorageHelmChart),
 		}
 	}
 }

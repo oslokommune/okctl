@@ -27,6 +27,18 @@ func (o CreateAutoscalerHelmChartOpts) Validate() error {
 	)
 }
 
+// CreateBlockstorageHelmChartOpts contains the required inputs
+type CreateBlockstorageHelmChartOpts struct {
+	ID ID
+}
+
+// Validate the inputs
+func (o CreateBlockstorageHelmChartOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+	)
+}
+
 // CreateExternalSecretsHelmChartOpts contains the data
 // required for creating a helm chart
 type CreateExternalSecretsHelmChartOpts struct {
@@ -111,6 +123,7 @@ type HelmService interface {
 	CreateAWSLoadBalancerControllerHelmChart(ctx context.Context, opts CreateAWSLoadBalancerControllerHelmChartOpts) (*Helm, error)
 	CreateArgoCD(ctx context.Context, opts CreateArgoCDOpts) (*Helm, error)
 	CreateAutoscalerHelmChart(ctx context.Context, opts CreateAutoscalerHelmChartOpts) (*Helm, error)
+	CreateBlockstorageHelmChart(ctx context.Context, opts CreateBlockstorageHelmChartOpts) (*Helm, error)
 }
 
 // HelmRun defines the runner layer
@@ -120,6 +133,7 @@ type HelmRun interface {
 	CreateAWSLoadBalancerControllerHelmChart(opts CreateAWSLoadBalancerControllerHelmChartOpts) (*Helm, error)
 	CreateArgoCD(opts CreateArgoCDOpts) (*Helm, error)
 	CreateAutoscalerHelmChart(opts CreateAutoscalerHelmChartOpts) (*Helm, error)
+	CreateBlockstorageHelmChart(opts CreateBlockstorageHelmChartOpts) (*Helm, error)
 }
 
 // HelmStore defines the storage layer

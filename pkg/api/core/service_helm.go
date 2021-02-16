@@ -13,6 +13,20 @@ type helmService struct {
 	store api.HelmStore
 }
 
+func (s *helmService) CreateBlockstorageHelmChart(_ context.Context, opts api.CreateBlockstorageHelmChartOpts) (*api.Helm, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, errors.E(err, "validating input options")
+	}
+
+	h, err := s.run.CreateBlockstorageHelmChart(opts)
+	if err != nil {
+		return nil, errors.E(err, "creating blockstorage helm chart", errors.Internal)
+	}
+
+	return h, nil
+}
+
 func (s *helmService) CreateAutoscalerHelmChart(_ context.Context, opts api.CreateAutoscalerHelmChartOpts) (*api.Helm, error) {
 	err := opts.Validate()
 	if err != nil {

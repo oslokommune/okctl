@@ -62,3 +62,14 @@ func decodeCreateAutoscalerHelmChart(_ context.Context, r *http.Request) (interf
 
 	return opts, nil
 }
+
+func decodeCreateBlockstorageHelmChart(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.CreateBlockstorageHelmChartOpts
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}

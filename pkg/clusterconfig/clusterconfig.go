@@ -301,6 +301,22 @@ func NewAutoscalerServiceAccount(clusterName, region, policyArn, permissionsBoun
 	})
 }
 
+// NewBlockstorageServiceAccount returns an initialised configuration
+// for creating a cluster Blockstorage service account
+func NewBlockstorageServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha5.ClusterConfig, error) {
+	return NewServiceAccount(&ServiceAccountArgs{
+		ClusterName: clusterName,
+		Labels: map[string]string{
+			"aws-usage": "cluster-ops",
+		},
+		Name:                   "blockstorage",
+		Namespace:              "kube-system",
+		PermissionsBoundaryArn: permissionsBoundaryArn,
+		PolicyArn:              policyArn,
+		Region:                 region,
+	})
+}
+
 // MinimalArgs contains the input arguments for creating a valid
 // cluster configuration
 type MinimalArgs struct {

@@ -30,6 +30,10 @@ func (v *VPC) Resource() cloudformation.Resource {
 			Key:   fmt.Sprintf("kubernetes.io/cluster/%s", v.cluster.Name()),
 			Value: "shared",
 		},
+		{
+			Key:   "Name",
+			Value: v.cluster.Name(),
+		},
 	}
 
 	return &ec2.VPC{

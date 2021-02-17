@@ -425,6 +425,7 @@ func (o *Okctl) blockstorageService(outputDir string, spin spinner.Spinner) clie
 			o.FileSystem,
 		),
 		console.NewBlockstorageReport(o.Err, spin),
+		o.manifestService(path.Join(outputDir, config.DefaultBlockstorageBaseDir), spin.SubSpinner()),
 	)
 }
 

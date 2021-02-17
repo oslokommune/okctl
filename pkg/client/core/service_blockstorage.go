@@ -2,6 +2,9 @@ package core
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/oslokommune/okctl/pkg/kube/manifests/storageclass"
 
 	"github.com/oslokommune/okctl/pkg/spinner"
 
@@ -15,6 +18,7 @@ type blockstorageService struct {
 	api     client.BlockstorageAPI
 	store   client.BlockstorageStore
 	report  client.BlockstorageReport
+	kube    client.ManifestService
 }
 
 func (s *blockstorageService) DeleteBlockstorage(_ context.Context, id api.ID) error {
@@ -50,7 +54,7 @@ func (s *blockstorageService) DeleteBlockstorage(_ context.Context, id api.ID) e
 	return nil
 }
 
-func (s *blockstorageService) CreateBlockstorage(_ context.Context, opts client.CreateBlockstorageOpts) (*client.Blockstorage, error) {
+func (s *blockstorageService) CreateBlockstorage(ctx context.Context, opts client.CreateBlockstorageOpts) (*client.Blockstorage, error) {
 	err := s.spinner.Start("blockstorage")
 	if err != nil {
 		return nil, err
@@ -90,6 +94,16 @@ func (s *blockstorageService) CreateBlockstorage(_ context.Context, opts client.
 		Chart:          chart,
 	}
 
+	_, err = s.kube.CreateStorageClass(ctx, api.CreateStorageClassOpts{
+		ID:          opts.ID,
+		Name:        "ebs-sc",
+		Parameters:  storageclass.NewEBSParameters(),
+		Annotations: storageclass.DefaultStorageClassAnnotation(),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("creating default storage class: %w", err)
+	}
+
 	report, err := s.store.SaveBlockstorage(a)
 	if err != nil {
 		return nil, err
@@ -109,11 +123,13 @@ func NewBlockstorageService(
 	api client.BlockstorageAPI,
 	store client.BlockstorageStore,
 	report client.BlockstorageReport,
+	kube client.ManifestService,
 ) client.BlockstorageService {
 	return &blockstorageService{
 		spinner: spinner,
 		api:     api,
 		store:   store,
 		report:  report,
+		kube:    kube,
 	}
 }

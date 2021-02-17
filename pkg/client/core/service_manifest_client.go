@@ -17,8 +17,42 @@ type manifestService struct {
 	report  client.ManifestReport
 }
 
+func (s *manifestService) CreateStorageClass(_ context.Context, opts api.CreateStorageClassOpts) (*client.StorageClass, error) {
+	err := s.spinner.Start("storageclass")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	sc, err := s.api.CreateStorageClass(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	storage := &client.StorageClass{
+		ID:       sc.ID,
+		Name:     sc.Name,
+		Manifest: sc.Manifest,
+	}
+
+	report, err := s.store.SaveStorageClass(storage)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.SaveStorageClass(storage, report)
+	if err != nil {
+		return nil, err
+	}
+
+	return storage, nil
+}
+
 func (s *manifestService) DeleteNamespace(_ context.Context, opts api.DeleteNamespaceOpts) error {
-	err := s.spinner.Start("manifest")
+	err := s.spinner.Start("namespace")
 	if err != nil {
 		return err
 	}

@@ -289,6 +289,11 @@ func (o *Okctl) manifestService(outputDir string, spin spinner.Spinner) client.M
 		rest.NewManifestAPI(o.restClient),
 		clientFilesystem.NewManifestStore(
 			clientFilesystem.Paths{
+				OutputFile: config.DefaultStorageClassOutputsFile,
+				ConfigFile: config.DefaultStorageClassConfigFile,
+				BaseDir:    path.Join(outputDir, config.DefaultStorageClassBaseDir),
+			},
+			clientFilesystem.Paths{
 				OutputFile: config.DefaultKubeOutputsFile,
 				BaseDir:    path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
 			},

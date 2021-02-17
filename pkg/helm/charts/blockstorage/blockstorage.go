@@ -171,12 +171,5 @@ serviceAccount:
     name: {{.ServiceAccount}}
     annotations: {}
 
-storageClasses:
-  - name: gp2
-    volumeBindingMode: WaitForFirstConsumer
-    reclaimPolicy: Delete
-    parameters:
-      type: gp2
-      fsType: ext4
-      encrypted: "true"
+storageClasses: []
 `

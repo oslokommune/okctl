@@ -9,11 +9,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
 
-// HostedZoneMetadata contains data extracted from the desired state
-type HostedZoneMetadata struct {
-	Domain string
-}
-
 // zoneReconciler contains service and metadata for the relevant resource
 type zoneReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
@@ -28,19 +23,12 @@ func (z *zoneReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
 func (z *zoneReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
-	metadata, ok := node.Metadata.(HostedZoneMetadata)
-	if !ok {
-		return nil, errors.New("error casting HostedZone metadata")
-	}
-
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		fqdn := dns.Fqdn(metadata.Domain)
-
 		_, err := z.client.CreatePrimaryHostedZoneWithoutUserinput(z.commonMetadata.Ctx, client.CreatePrimaryHostedZoneOpts{
 			ID:     z.commonMetadata.ClusterID,
-			Domain: metadata.Domain,
-			FQDN:   fqdn,
+			Domain: z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain,
+			FQDN:   dns.Fqdn(z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain),
 		})
 		if err != nil {
 			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating hosted zone: %w", err)

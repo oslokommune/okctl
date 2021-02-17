@@ -10,8 +10,7 @@ import (
 
 // ExternalDNSResourceState contains runtime data needed in Reconcile()
 type ExternalDNSResourceState struct {
-	HostedZoneID string
-	Domain       string
+	PrimaryHostedZoneID string
 }
 
 // externalDNSReconciler contains service and metadata for the relevant resource
@@ -37,8 +36,8 @@ func (z *externalDNSReconciler) Reconcile(node *resourcetree.ResourceNode) (*Rec
 	case resourcetree.ResourceNodeStatePresent:
 		_, err := z.client.CreateExternalDNS(z.commonMetadata.Ctx, client.CreateExternalDNSOpts{
 			ID:           z.commonMetadata.ClusterID,
-			HostedZoneID: resourceState.HostedZoneID,
-			Domain:       resourceState.Domain,
+			HostedZoneID: resourceState.PrimaryHostedZoneID,
+			Domain:       z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain,
 		})
 		if err != nil {
 			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating external DNS: %w", err)

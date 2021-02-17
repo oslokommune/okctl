@@ -39,7 +39,7 @@ func (z *clusterReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconci
 	case resourcetree.ResourceNodeStatePresent:
 		_, err := z.client.CreateCluster(z.commonMetadata.Ctx, api.ClusterCreateOpts{
 			ID:                z.commonMetadata.ClusterID,
-			Cidr:              resourceState.VPC.Cidr,
+			Cidr:              z.commonMetadata.Declaration.VPC.CIDR,
 			Version:           config.DefaultEKSKubernetesVersion,
 			VpcID:             resourceState.VPC.VpcID,
 			VpcPrivateSubnets: resourceState.VPC.PrivateSubnets,

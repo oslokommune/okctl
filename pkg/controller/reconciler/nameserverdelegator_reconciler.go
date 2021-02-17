@@ -2,6 +2,7 @@ package reconciler
 
 import (
 	"fmt"
+	"github.com/miekg/dns"
 	"time"
 
 	"github.com/mishudark/errors"
@@ -51,9 +52,10 @@ func (z *nameserverDelegationReconciler) Reconcile(node *resourcetree.ResourceNo
 			err = z.commonMetadata.Spin.Stop()
 		}()
 
+		primaryHostedZoneFQDN := dns.Fqdn(z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain)
 		record, err := z.client.CreateNameserverRecordDelegationRequest(&client.CreateNameserverDelegationRequestOpts{
 			ClusterID:             z.commonMetadata.ClusterID,
-			PrimaryHostedZoneFQDN: resourceState.PrimaryHostedZoneFQDN,
+			PrimaryHostedZoneFQDN: primaryHostedZoneFQDN,
 			Nameservers:           resourceState.Nameservers,
 		})
 		if err != nil {
@@ -62,7 +64,7 @@ func (z *nameserverDelegationReconciler) Reconcile(node *resourcetree.ResourceNo
 
 		fmt.Fprint(z.commonMetadata.Out, delegationRequestMessage)
 
-		waitForNameserverDelegation(nsRecordValidationIntervalSeconds, resourceState.PrimaryHostedZoneFQDN)
+		waitForNameserverDelegation(nsRecordValidationIntervalSeconds, primaryHostedZoneFQDN)
 
 		err = z.domainService.SetHostedZoneDelegation(z.commonMetadata.Ctx, domain.EnsureNotFQDN(record.FQDN), true)
 		if err != nil {

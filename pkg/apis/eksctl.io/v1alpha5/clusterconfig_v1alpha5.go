@@ -21,12 +21,43 @@ const (
 type ClusterConfig struct {
 	metav1.TypeMeta `json:",inline"`
 
-	Metadata        ClusterMeta      `json:"metadata"`
-	IAM             ClusterIAM       `json:"iam"`
-	VPC             *ClusterVPC      `json:"vpc,omitempty"`
-	FargateProfiles []FargateProfile `json:"fargateProfiles,omitempty"`
-	NodeGroups      []NodeGroup      `json:"nodeGroups,omitempty"`
-	Status          *ClusterStatus   `json:"status,omitempty"`
+	Metadata        ClusterMeta        `json:"metadata"`
+	IAM             ClusterIAM         `json:"iam"`
+	VPC             *ClusterVPC        `json:"vpc,omitempty"`
+	FargateProfiles []FargateProfile   `json:"fargateProfiles,omitempty"`
+	NodeGroups      []NodeGroup        `json:"nodeGroups,omitempty"`
+	Status          *ClusterStatus     `json:"status,omitempty"`
+	CloudWatch      *ClusterCloudWatch `json:"cloudWatch,omitempty"`
+}
+
+// ClusterCloudWatch maps up parts of the eksctl config that we require
+type ClusterCloudWatch struct {
+	ClusterLogging *ClusterCloudWatchLogging `json:"clusterLogging,omitempty"`
+}
+
+// ClusterCloudWatchLogging maps up parts of the eksctl config that we require
+type ClusterCloudWatchLogging struct {
+	EnableTypes []string `json:"enableTypes,omitempty"`
+}
+
+// nolint: golint
+const (
+	CloudWatchAPILogging               = "api"
+	CloudWatchAuditLogging             = "audit"
+	CloudWatchAuthenticatorLogging     = "authenticator"
+	CloudWatchControllerManagerLogging = "controllerManager"
+	CloudWatchSchedulerLogging         = "scheduler"
+)
+
+// AllCloudWatchLogging returns all the available cloud watch loggers
+func AllCloudWatchLogging() []string {
+	return []string{
+		CloudWatchAPILogging,
+		CloudWatchAuditLogging,
+		CloudWatchAuthenticatorLogging,
+		CloudWatchControllerManagerLogging,
+		CloudWatchSchedulerLogging,
+	}
 }
 
 // ClusterStatus hold read-only attributes of a cluster

@@ -83,6 +83,18 @@ func (a *Args) build() *v1alpha5.ClusterConfig {
 				},
 			},
 		},
+		VPC: &v1alpha5.ClusterVPC{
+			ID:   a.VpcID,
+			CIDR: a.VpcCidr,
+			ClusterEndpoints: v1alpha5.ClusterEndpoints{
+				PrivateAccess: true,
+				PublicAccess:  true,
+			},
+			Subnets: v1alpha5.ClusterSubnets{
+				Private: map[string]v1alpha5.ClusterNetwork{},
+				Public:  map[string]v1alpha5.ClusterNetwork{},
+			},
+		},
 		FargateProfiles: []v1alpha5.FargateProfile{
 			{
 				Name: "fp-default",
@@ -115,16 +127,9 @@ func (a *Args) build() *v1alpha5.ClusterConfig {
 				},
 			},
 		},
-		VPC: &v1alpha5.ClusterVPC{
-			ID:   a.VpcID,
-			CIDR: a.VpcCidr,
-			ClusterEndpoints: v1alpha5.ClusterEndpoints{
-				PrivateAccess: true,
-				PublicAccess:  true,
-			},
-			Subnets: v1alpha5.ClusterSubnets{
-				Private: map[string]v1alpha5.ClusterNetwork{},
-				Public:  map[string]v1alpha5.ClusterNetwork{},
+		CloudWatch: &v1alpha5.ClusterCloudWatch{
+			ClusterLogging: &v1alpha5.ClusterCloudWatchLogging{
+				EnableTypes: v1alpha5.AllCloudWatchLogging(),
 			},
 		},
 	}

@@ -1,4 +1,12 @@
 apiVersion: eksctl.io/v1alpha5
+cloudWatch:
+  clusterLogging:
+    enableTypes:
+    - api
+    - audit
+    - authenticator
+    - controllerManager
+    - scheduler
 fargateProfiles:
 - name: fp-default
   selectors:

@@ -13,7 +13,7 @@ type githubState struct {
 	state state.Githuber
 }
 
-func (s *githubState) GetGithubInfrastructureRepository(id api.ID) state.GithubRepository {
+func (s *githubState) GetGithubInfrastructureRepository(_ api.ID) state.GithubRepository {
 	github := s.state.GetGithub()
 
 	for _, repo := range github.Repositories {
@@ -27,7 +27,7 @@ func (s *githubState) GetGithubInfrastructureRepository(id api.ID) state.GithubR
 	return state.GithubRepository{}
 }
 
-func (s *githubState) GetGithubOauthApp(appName string, id api.ID) state.GithubOauthApp {
+func (s *githubState) GetGithubOauthApp(appName string, _ api.ID) state.GithubOauthApp {
 	github := s.state.GetGithub()
 
 	if app, ok := github.OauthApp[appName]; ok {
@@ -49,10 +49,11 @@ func (s *githubState) SaveGithubInfrastructureRepository(r *client.GithubReposit
 	}
 
 	local := state.GithubRepository{
-		Name:     r.Repository,
-		FullName: r.FullName,
-		Types:    []string{state.TypeInfrastructure},
-		GitURL:   r.GitURL,
+		Name:         r.Repository,
+		FullName:     r.FullName,
+		Organization: r.Organisation,
+		Types:        []string{state.TypeInfrastructure},
+		GitURL:       r.GitURL,
 		DeployKey: state.DeployKey{
 			ID:        r.DeployKey.Identifier,
 			Title:     r.DeployKey.Title,

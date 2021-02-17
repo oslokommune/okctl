@@ -116,14 +116,32 @@ func (o CreateArgoCDOpts) Validate() error {
 	)
 }
 
+// CreateKubePrometheusStackOpts defines the required inputs
 type CreateKubePrometheusStackOpts struct {
-	ID ID
+	ID                     ID
+	CertificateARN         string
+	Hostname               string
+	AuthHostname           string
+	ClientID               string
+	SecretsConfigName      string
+	SecretsCookieSecretKey string
+	SecretsClientSecretKey string
+	SecretsAdminUserKey    string
+	SecretsAdminPassKey    string
 }
 
-// Validate the helm create inputs
+// Validate the inputs
 func (o CreateKubePrometheusStackOpts) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.CertificateARN, validation.Required),
+		validation.Field(&o.Hostname, validation.Required),
+		validation.Field(&o.AuthHostname, validation.Required),
+		validation.Field(&o.ClientID, validation.Required),
+		validation.Field(&o.SecretsConfigName, validation.Required),
+		validation.Field(&o.SecretsCookieSecretKey, validation.Required),
+		validation.Field(&o.SecretsAdminUserKey, validation.Required),
+		validation.Field(&o.SecretsAdminPassKey, validation.Required),
 	)
 }
 
@@ -155,5 +173,4 @@ type HelmStore interface {
 	SaveAlbIngressControllerHelmChart(*Helm) error
 	SaveAWSLoadBalancerControllerHelmChart(*Helm) error
 	SaveArgoCD(*Helm) error
-	SaveKubePrometheusStack(*Helm) error
 }

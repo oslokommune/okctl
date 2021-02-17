@@ -3,6 +3,8 @@ package api
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/kube/manifests/storageclass"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
@@ -10,6 +12,13 @@ import (
 type ExternalSecretsKube struct {
 	ID        ID
 	Manifests map[string][]byte
+}
+
+// StorageClassKube is the state of a storage class manifest
+type StorageClassKube struct {
+	ID       ID
+	Name     string
+	Manifest []byte
 }
 
 // ExternalDNSKube is the state of an external dns deployment
@@ -95,11 +104,28 @@ func (o DeleteNamespaceOpts) Validate() error {
 	)
 }
 
+// CreateStorageClassOpts provides the inputs
+type CreateStorageClassOpts struct {
+	ID          ID
+	Name        string
+	Parameters  *storageclass.EBSParameters
+	Annotations map[string]string
+}
+
+// Validate the inputs options
+func (o CreateStorageClassOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.Name, validation.Required),
+		validation.Field(&o.Parameters, validation.Required),
+	)
+}
+
 // KubeService provides kube deployment service layer
 type KubeService interface {
 	CreateExternalDNSKubeDeployment(ctx context.Context, opts CreateExternalDNSKubeDeploymentOpts) (*ExternalDNSKube, error)
 	CreateExternalSecrets(ctx context.Context, opts CreateExternalSecretsOpts) (*ExternalSecretsKube, error)
 	DeleteNamespace(ctx context.Context, opts DeleteNamespaceOpts) error
+	CreateStorageClass(ctx context.Context, opts CreateStorageClassOpts) (*StorageClassKube, error)
 }
 
 // KubeRun provides kube deployment run layer
@@ -107,6 +133,7 @@ type KubeRun interface {
 	CreateExternalDNSKubeDeployment(opts CreateExternalDNSKubeDeploymentOpts) (*ExternalDNSKube, error)
 	CreateExternalSecrets(opts CreateExternalSecretsOpts) (*ExternalSecretsKube, error)
 	DeleteNamespace(opts DeleteNamespaceOpts) error
+	CreateStorageClass(opts CreateStorageClassOpts) (*StorageClassKube, error)
 }
 
 // KubeStore provides kube store layer

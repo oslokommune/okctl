@@ -12,6 +12,20 @@ type kubeService struct {
 	store api.KubeStore
 }
 
+func (k *kubeService) CreateStorageClass(_ context.Context, opts api.CreateStorageClassOpts) (*api.StorageClassKube, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, errors.E(err, "validating inputs", errors.Invalid)
+	}
+
+	sc, err := k.run.CreateStorageClass(opts)
+	if err != nil {
+		return nil, errors.E(err, "creating storage class", errors.Internal)
+	}
+
+	return sc, nil
+}
+
 func (k *kubeService) DeleteNamespace(_ context.Context, opts api.DeleteNamespaceOpts) error {
 	err := opts.Validate()
 	if err != nil {

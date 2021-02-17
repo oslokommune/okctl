@@ -65,6 +65,7 @@ type Endpoints struct {
 	CreateBlockstorageServiceAccount              endpoint.Endpoint
 	DeleteBlockstorageServiceAccount              endpoint.Endpoint
 	CreateBlockstorageHelmChart                   endpoint.Endpoint
+	CreateStorageClass                            endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -120,6 +121,7 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateBlockstorageServiceAccount:              makeCreateBlockstorageServiceAccountEndpoint(s.ServiceAccount),
 		DeleteBlockstorageServiceAccount:              makeDeleteBlockstorageServiceAccountEndpoint(s.ServiceAccount),
 		CreateBlockstorageHelmChart:                   makeCreateBlockstorageHelmChartEndpoint(s.Helm),
+		CreateStorageClass:                            makeCreateStorageClass(s.Kube),
 	}
 }
 
@@ -174,6 +176,7 @@ type Handlers struct {
 	CreateBlockstorageServiceAccount              http.Handler
 	DeleteBlockstorageServiceAccount              http.Handler
 	CreateBlockstorageHelmChart                   http.Handler
+	CreateStorageClass                            http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -256,6 +259,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateBlockstorageServiceAccount:              newServer(endpoints.CreateBlockstorageServiceAccount, decodeCreateBlockstorageServiceAccount),
 		DeleteBlockstorageServiceAccount:              newServer(endpoints.DeleteBlockstorageServiceAccount, decodeIDRequest),
 		CreateBlockstorageHelmChart:                   newServer(endpoints.CreateBlockstorageHelmChart, decodeCreateBlockstorageHelmChart),
+		CreateStorageClass:                            newServer(endpoints.CreateStorageClass, decodeCreateStorageClass),
 	}
 }
 
@@ -355,6 +359,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			r.Route("/namespaces", func(r chi.Router) {
 				r.Method(http.MethodDelete, "/", handlers.DeleteNamespace)
 			})
+			r.Route("/storageclasses", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateStorageClass)
+			})
 		})
 		r.Route("/domains", func(r chi.Router) {
 			r.Route("/hostedzones", func(r chi.Router) {
@@ -436,6 +443,7 @@ const (
 	cognitoTag                   = "cognito"
 	autoscalerTag                = "autoscaler"
 	blockstorageTag              = "blockstorage"
+	storageclassTag              = "storageclass"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -492,6 +500,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateBlockstorageServiceAccount:              logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, blockstorageTag}, "/"), "create")(endpoints.CreateBlockstorageServiceAccount),
 			DeleteBlockstorageServiceAccount:              logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, blockstorageTag}, "/"), "delete")(endpoints.DeleteBlockstorageServiceAccount),
 			CreateBlockstorageHelmChart:                   logmd.Logging(logger, strings.Join([]string{helmTag, blockstorageTag}, "/"), "create")(endpoints.CreateBlockstorageHelmChart),
+			CreateStorageClass:                            logmd.Logging(logger, strings.Join([]string{kubeTag, storageclassTag}, "/"), "create")(endpoints.CreateStorageClass),
 		}
 	}
 }

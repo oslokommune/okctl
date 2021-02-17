@@ -105,7 +105,7 @@ const (
 	DefaultServiceAccountConfigFile                 = "service-account-config.yml"
 	DefaultServiceAccountOutputsFile                = "service-account-outputs.json"
 
-	DefaultKubePrometheusStackValuesPath = ""
+	DefaultKubePrometheusStackValuesPath     = ""
 	DefaultKubePrometheusStackValuesTemplate = "values.yaml"
 
 	// EnvPrefix of environment variables that will be processed by okctl

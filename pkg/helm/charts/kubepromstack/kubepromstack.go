@@ -10,7 +10,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/helm"
 )
 
-// KubePrometheusStack returns an initialised helm chart:
+// New returns an initialised helm chart:
 // - https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
 func New(values interface{}) *helm.Chart {
 	return &helm.Chart{
@@ -55,6 +55,7 @@ func (v *Values) RawYAML() ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
+// nolint: lll
 const valuesTemplate = `
 # Default values for kube-prometheus-stack.
 # This is a YAML-formatted file.

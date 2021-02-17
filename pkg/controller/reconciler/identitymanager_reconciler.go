@@ -10,11 +10,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
 
-// IdentityManagerMetadata contains data extracted from the desired state
-type IdentityManagerMetadata struct {
-	Domain string
-}
-
 // IdentityManagerResourceState contains runtime data needed in Reconcile()
 type IdentityManagerResourceState struct {
 	HostedZoneID string
@@ -39,11 +34,6 @@ Requires:
 - Nameservers setup
 */
 func (z *identityManagerReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
-	metadata, ok := node.Metadata.(IdentityManagerMetadata)
-	if !ok {
-		return nil, errors.New("casting identity manager metadata")
-	}
-
 	resourceState, ok := node.ResourceState.(IdentityManagerResourceState)
 	if !ok {
 		return nil, errors.New("casting identity manager resourceState")
@@ -51,7 +41,7 @@ func (z *identityManagerReconciler) Reconcile(node *resourcetree.ResourceNode) (
 
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		authDomain := fmt.Sprintf("auth.%s", metadata.Domain)
+		authDomain := fmt.Sprintf("auth.%s", z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain)
 		authFQDN := dns.Fqdn(authDomain)
 
 		_, err := z.client.CreateIdentityPool(z.commonMetadata.Ctx, api.CreateIdentityPoolOpts{

@@ -115,23 +115,6 @@ func CreateDesiredStateTree(cluster *v1alpha1.Cluster) (root *resourcetree.Resou
 
 // ApplyDesiredStateMetadata applies metadata from a cluster definition to the nodes
 func ApplyDesiredStateMetadata(tree *resourcetree.ResourceNode, cluster *v1alpha1.Cluster, repoDir string) error {
-	primaryHostedZoneNode := tree.GetNode(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeZone})
-	if primaryHostedZoneNode == nil {
-		return errors.New("expected primary hosted zone node was not found")
-	}
-
-	primaryHostedZoneNode.Metadata = reconciler.HostedZoneMetadata{Domain: cluster.PrimaryDNSZone.ParentDomain}
-
-	vpcNode := tree.GetNode(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeVPC})
-	if vpcNode == nil {
-		return errors.New("expected vpc node was not found")
-	}
-
-	vpcNode.Metadata = reconciler.VPCMetadata{
-		Cidr:             cluster.VPC.CIDR,
-		HighAvailability: cluster.VPC.HighAvailability,
-	}
-
 	githubNode := tree.GetNode(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeGithub})
 	if githubNode == nil {
 		return errors.New("expected github node was not found")
@@ -145,19 +128,6 @@ func ApplyDesiredStateMetadata(tree *resourcetree.ResourceNode, cluster *v1alpha
 	githubNode.Metadata = reconciler.GithubMetadata{
 		Organization: cluster.Github.Organisation,
 		Repository:   repo,
-	}
-
-	identityManagerNode := tree.GetNode(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeIdentityManager})
-	if identityManagerNode != nil {
-		identityManagerNode.Metadata = reconciler.IdentityManagerMetadata{Domain: cluster.PrimaryDNSZone.ParentDomain}
-	}
-
-	argocdNode := tree.GetNode(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeArgoCD})
-	if argocdNode != nil {
-		argocdNode.Metadata = reconciler.ArgocdMetadata{
-			Organization:      cluster.Github.Organisation,
-			PrimaryHostedZone: cluster.PrimaryDNSZone.ParentDomain,
-		}
 	}
 
 	return nil

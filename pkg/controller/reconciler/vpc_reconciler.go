@@ -3,17 +3,10 @@ package reconciler
 import (
 	"fmt"
 
-	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
-
-// VPCMetadata contains data extracted from the desired state
-type VPCMetadata struct {
-	Cidr             string
-	HighAvailability bool
-}
 
 // vpcReconciler contains service and metadata for the relevant resource
 type vpcReconciler struct {
@@ -29,17 +22,12 @@ func (z *vpcReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata)
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
 func (z *vpcReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
-	metadata, ok := node.Metadata.(VPCMetadata)
-	if !ok {
-		return nil, errors.New("unable to cast VPC metadata")
-	}
-
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err := z.client.CreateVpc(z.commonMetadata.Ctx, api.CreateVpcOpts{
 			ID:      z.commonMetadata.ClusterID,
-			Cidr:    metadata.Cidr,
-			Minimal: !metadata.HighAvailability,
+			Cidr:    z.commonMetadata.Declaration.VPC.CIDR,
+			Minimal: !z.commonMetadata.Declaration.VPC.HighAvailability,
 		})
 		if err != nil {
 			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating vpc: %w", err)

@@ -1,6 +1,4 @@
-package kube_prometheus_stack
 
-const kubePrometheusStackTemplate = `
 # Default values for kube-prometheus-stack.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
@@ -183,24 +181,6 @@ alertmanager:
   ##      https://prometheus.io/docs/alerting/notification_examples/
   ##
   templateFiles: {}
-  #
-  ## An example template:
-  #   template_1.tmpl: |-
-  #       {{ define "cluster" }}{{ .ExternalURL | reReplaceAll ".*alertmanager\\.(.*)" "$1" }}{{ end }}
-  #
-  #       {{ define "slack.myorg.text" }}
-  #       {{- $root := . -}}
-  #       {{ range .Alerts }}
-  #         *Alert:* {{ .Annotations.summary }} - '{{ .Labels.severity }}'
-  #         *Cluster:*  {{ template "cluster" $root }}
-  #         *Description:* {{ .Annotations.description }}
-  #         *Graph:* <{{ .GeneratorURL }}|:chart_with_upwards_trend:>
-  #         *Runbook:* <{{ .Annotations.runbook }}|:spiral_note_pad:>
-  #         *Details:*
-  #           {{ range .Labels.SortedPairs }} • *{{ .Name }}:* '{{ .Value }}'
-  #           {{ end }}
-  #       {{ end }}
-  #       {{ end }}
 
   ingress:
     enabled: false
@@ -250,7 +230,6 @@ alertmanager:
     labels: {}
 
     ## Final form of the hostname for each per replica ingress is
-    ## {{ ingressPerReplica.hostPrefix }}-{{ $replicaNumber }}.{{ ingressPerReplica.hostDomain }}
     ##
     ## Prefix for the per replica ingress that will have '-$replicaNumber'
     ## appended to the end
@@ -272,7 +251,6 @@ alertmanager:
     tlsSecretPerReplica:
       enabled: false
       ## Final form of the secret for each per replica ingress is
-      ## {{ tlsSecretPerReplica.prefix }}-{{ $replicaNumber }}
       ##
       prefix: "alertmanager"
 
@@ -589,18 +567,53 @@ grafana:
   ##
   defaultDashboardsEnabled: true
 
-  adminPassword: prom-operator
+  env:
+    GF_SERVER_PROTOCOL: http
+    GF_SERVER_DOMAIN: grafana.okctl-test.oslo.systems
+    GF_SERVER_ROOT_URL: https://grafana.okctl-test.oslo.systems
+    GF_SERVER_ENABLE_GZIP: "true"
+    GF_USERS_AUTO_ASSIGN_ORG: "true"
+    GF_USERS_AUTO_ASSIGN_ORG_ID: "true"
+    GF_USERS_AUTO_ASSIGN_ORG_ROLE: "Admin"
+    GF_SECURITY_COOKIE_SECURE: "true"
+    GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
+    GF_AUTH_GENERIC_OAUTH_NAME: "Cognito"
+    GF_AUTH_GENERIC_OAUTH_CLIENT_ID: 12345dsfg456ty
+    GF_AUTH_GENERIC_OAUTH_SCOPES: openid profile email
+    GF_AUTH_GENERIC_OAUTH_AUTH_URL: https://auth.okctl-test.oslo.system/oauth2/authorize
+    GF_AUTH_GENERIC_OAUTH_API_URL: https://auth.okctl-test.oslo.system/oauth2/userInfo
+    GF_AUTH_GENERIC_OAUTH_TOKEN_URL: https://auth.okctl-test.oslo.system/oauth2/token
+    GF_AUTH_GENERIC_OAUTH_ALLOW_SIGNUP: "true"
+
+  envValueFrom:
+    GF_SECURITY_SECRET_KEY:
+      secretKeyRef:
+        name: grafana-secrets-cm
+        key: cookies-secret-key
+    GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET:
+      secretKeyRef:
+        name: grafana-secrets-cm
+        key: client-secret-key
+
+  admin:
+    existingSecret: grafana-secrets-cm
+    userKey: admin-user
+    passwordKey: admin-pass
 
   ingress:
     ## If true, Grafana Ingress will be created
     ##
-    enabled: false
+    enabled: true
 
     ## Annotations for Grafana Ingress
     ##
-    annotations: {}
-      # kubernetes.io/ingress.class: nginx
-      # kubernetes.io/tls-acme: "true"
+    annotations:
+      kubernetes.io/ingress.class: alb
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: instance
+      alb.ingress.kubernetes.io/healthcheck-path: /api/health
+      alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+      alb.ingress.kubernetes.io/certificate-arn: arn::1234567890/certificate/fake
 
     ## Labels to be added to the Ingress
     ##
@@ -611,10 +624,11 @@ grafana:
     ##
     # hosts:
     #   - grafana.domain.com
-    hosts: []
+    hosts:
+      - grafana.okctl-test.oslo.systems
 
     ## Path for grafana ingress
-    path: /
+    path:
 
     ## TLS configuration for grafana Ingress
     ## Secret must be manually created in the namespace
@@ -667,12 +681,13 @@ grafana:
   #       tlsSkipVerify: true
   #   orgId: 1
   #   type: prometheus
-  #   url: https://{{ printf "%s-prometheus.svc" .Release.Name }}:9090
+  #   url: https://:9090
   #   version: 1
 
   ## Passed to grafana subchart and used by servicemonitor below
   ##
   service:
+    type: NodePort
     portName: service
 
   ## If true, create a serviceMonitor for grafana
@@ -770,7 +785,7 @@ kubelet:
     ##
     resource: false
     # From kubernetes 1.18, /metrics/resource/v1alpha1 renamed to /metrics/resource
-    resourcePath: "/metrics/resource/v1alpha1"
+    resourcePath: "/metrics/resource/"
     ## Metric relabellings to apply to samples before ingestion
     ##
     cAdvisorMetricRelabelings: []
@@ -1652,7 +1667,6 @@ prometheus:
     labels: {}
 
     ## Final form of the hostname for each per replica ingress is
-    ## {{ ingressPerReplica.hostPrefix }}-{{ $replicaNumber }}.{{ ingressPerReplica.hostDomain }}
     ##
     ## Prefix for the per replica ingress that will have '-$replicaNumber'
     ## appended to the end
@@ -1674,7 +1688,6 @@ prometheus:
     tlsSecretPerReplica:
       enabled: false
       ## Final form of the secret for each per replica ingress is
-      ## {{ tlsSecretPerReplica.prefix }}-{{ $replicaNumber }}
       ##
       prefix: "prometheus"
 
@@ -1834,7 +1847,8 @@ prometheus:
     ## If nil, select own namespace. Namespaces to be selected for ServiceMonitor discovery.
     ## See https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#namespaceselector for usage
     ##
-    ruleNamespaceSelector: {}
+    ruleNamespaceSelector:
+      any: true
 
     ## If true, a nil or {} value for prometheus.prometheusSpec.ruleSelector will cause the
     ## prometheus resource to be created with selectors based on values in the helm deployment,
@@ -1878,7 +1892,8 @@ prometheus:
 
     ## Namespaces to be selected for ServiceMonitor discovery.
     ##
-    serviceMonitorNamespaceSelector: {}
+    serviceMonitorNamespaceSelector:
+      any: true
     ## Example which selects ServiceMonitors in namespaces with label "prometheus" set to "somelabel"
     # serviceMonitorNamespaceSelector:
     #   matchLabels:
@@ -1902,7 +1917,8 @@ prometheus:
     ## Namespaces to be selected for PodMonitor discovery.
     ## See https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#namespaceselector for usage
     ##
-    podMonitorNamespaceSelector: {}
+    podMonitorNamespaceSelector:
+      any: true
 
     ## If true, a nil or {} value for prometheus.prometheusSpec.probeSelector will cause the
     ## prometheus resource to be created with selectors based on values in the helm deployment,
@@ -2330,4 +2346,3 @@ prometheus:
     ## https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#podmetricsendpoint
     ##
     # podMetricsEndpoints: []
-`

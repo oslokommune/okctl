@@ -2,7 +2,8 @@ package run
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/helm/charts/kube_prometheus_stack"
+
+	"github.com/oslokommune/okctl/pkg/helm/charts/kubepromstack"
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/blockstorage"
 
@@ -106,12 +107,12 @@ func (r *helmRun) createHelmChart(id api.ID, chart *helm.Chart) (*api.Helm, erro
 }
 
 func (r *helmRun) CreateKubePrometheusStack(opts api.CreateKubePrometheusStackOpts) (*api.Helm, error) {
-	values, err := kube_prometheus_stack.DefaultKubePrometheusStackValues()
+	values, err := kubepromstack.DefaultKubePrometheusStackValues()
 	if err != nil {
 		return nil, fmt.Errorf("get Prometheus stack values: %w", err)
 	}
 
-	chart := kube_prometheus_stack.KubePrometheusStack(values)
+	chart := kubepromstack.KubePrometheusStack(values)
 
 	return r.createHelmChart(opts.ID, chart)
 }

@@ -107,12 +107,17 @@ func (r *helmRun) createHelmChart(id api.ID, chart *helm.Chart) (*api.Helm, erro
 }
 
 func (r *helmRun) CreateKubePrometheusStack(opts api.CreateKubePrometheusStackOpts) (*api.Helm, error) {
-	values, err := kubepromstack.DefaultKubePrometheusStackValues()
-	if err != nil {
-		return nil, fmt.Errorf("get Prometheus stack values: %w", err)
-	}
-
-	chart := kubepromstack.KubePrometheusStack(values)
+	chart := kubepromstack.New(kubepromstack.New(&kubepromstack.Values{
+		GrafanaCertificateARN:              opts.CertificateARN,
+		GrafanaHostname:                    opts.Hostname,
+		AuthHostname:                       opts.AuthHostname,
+		ClientID:                           opts.ClientID,
+		SecretsConfigName:                  opts.SecretsConfigName,
+		SecretsGrafanaCookieSecretKey:      opts.SecretsCookieSecretKey,
+		SecretsGrafanaOauthClientSecretKey: opts.SecretsClientSecretKey,
+		SecretsGrafanaAdminUserKey:         opts.SecretsAdminUserKey,
+		SecretsGrafanaAdminPassKey:         opts.SecretsAdminPassKey,
+	}))
 
 	return r.createHelmChart(opts.ID, chart)
 }

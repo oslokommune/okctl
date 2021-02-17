@@ -224,11 +224,12 @@ type Github struct {
 
 // GithubRepository contains github repository data
 type GithubRepository struct {
-	Name      string
-	FullName  string
-	Types     []string
-	GitURL    string
-	DeployKey DeployKey
+	Name         string
+	FullName     string
+	Organization string
+	Types        []string
+	GitURL       string
+	DeployKey    DeployKey
 }
 
 // Validate the data
@@ -238,6 +239,7 @@ func (r GithubRepository) Validate() error {
 		validation.Field(&r.FullName, validation.Required),
 		validation.Field(&r.Types, validation.Required),
 		validation.Field(&r.GitURL, validation.Required),
+		validation.Field(&r.Organization, validation.Required),
 	)
 }
 

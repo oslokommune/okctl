@@ -24,8 +24,7 @@ type SynchronizeOpts struct {
 	Fs        *afero.Afero
 	OutputDir string
 
-	GithubGetter reconciler.GithubGetter
-	GithubSetter reconciler.GithubSetter
+	GithubGetter GithubGetter
 
 	CIDRGetter              StringFetcher
 	IdentityPoolFetcher     IdentityPoolFetcher
@@ -58,19 +57,10 @@ func Synchronize(opts *SynchronizeOpts) error {
 		opts.PrimaryHostedZoneGetter,
 	))
 
-	opts.DesiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeGithub, CreateGithubStateRefresher(
-		opts.GithubGetter,
-		opts.GithubSetter,
+	opts.DesiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeArgoCD, CreateArgocdStateRefresher(
+		opts.IdentityPoolFetcher,
+		opts.PrimaryHostedZoneGetter,
 	))
-
-	opts.DesiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeArgoCD, CreateArgocdStateRefresher(argoCDRefresherOptions{
-		IACRepositoryName:         opts.ClusterDeclaration.Github.Repository,
-		IACRepositoryOrganization: opts.ClusterDeclaration.Github.Organisation,
-		ClusterID:                 opts.ClusterID,
-		hostedZoneFetcher:         opts.PrimaryHostedZoneGetter,
-		idpFetcher:                opts.IdentityPoolFetcher,
-		ghGetter:                  opts.GithubGetter,
-	}))
 
 	opts.DesiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeNameserverDelegator, CreateNameserverDelegationStateRefresher(
 		opts.PrimaryHostedZoneGetter,

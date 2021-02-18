@@ -46,29 +46,34 @@ func (o *applyClusterOpts) Validate() error {
 func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := applyClusterOpts{}
 
+	var clusterID api.ID
+
 	cmd := &cobra.Command{
 		Use:     "cluster -f declaration_file",
 		Example: "okctl apply cluster -f cluster.yaml",
 		Short:   "apply a cluster definition to the world",
 		Long:    "ensures your cluster reflects the declaration of it",
 		Args:    cobra.ExactArgs(0),
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) (err error) {
+			return nil
+		},
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
 			o.AWSCredentialsType = opts.AWSCredentialsType
 			o.GithubCredentialsType = opts.GithubCredentialsType
 
 			opts.Declaration, err = inferClusterFromStdinOrFile(o.In, opts.File)
 			if err != nil {
-				return fmt.Errorf("error inferring cluster: %w", err)
+				return fmt.Errorf("inferring cluster: %w", err)
 			}
 
 			err = loadNoUserInputUserData(o, cmd)
 			if err != nil {
-				return fmt.Errorf("failed to load application data: %w", err)
+				return fmt.Errorf("loading application data: %w", err)
 			}
 
 			err = loadNoUserInputRepoData(o, opts.Declaration)
 			if err != nil {
-				return fmt.Errorf("failed to load repo data: %w", err)
+				return fmt.Errorf("loading repository data: %w", err)
 			}
 
 			err = o.InitialiseWithEnvAndAWSAccountID(
@@ -76,21 +81,15 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				opts.Declaration.Metadata.AccountID,
 			)
 			if err != nil {
-				return fmt.Errorf("error initializing okctl: %w", err)
+				return fmt.Errorf("initializing okctl: %w", err)
 			}
 
-			return nil
-		},
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) (err error) {
-			return nil
-		},
-		RunE: func(cmd *cobra.Command, _ []string) (err error) {
 			err = opts.Declaration.Validate()
 			if err != nil {
-				return fmt.Errorf("error validating cluster declaration: %w", err)
+				return fmt.Errorf("validating cluster declaration: %w", err)
 			}
 
-			id := api.ID{
+			clusterID = api.ID{
 				Region:       opts.Declaration.Metadata.Region,
 				AWSAccountID: opts.Declaration.Metadata.AccountID,
 				Environment:  opts.Declaration.Metadata.Environment,
@@ -98,6 +97,9 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				ClusterName:  o.RepoStateWithEnv.GetClusterName(),
 			}
 
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, _ []string) (err error) {
 			spin, err := spinner.New("synchronizing", o.Err)
 			if err != nil {
 				return fmt.Errorf("error creating spinner: %w", err)
@@ -110,28 +112,19 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			outputDir, _ := o.GetRepoOutputDir(opts.Declaration.Metadata.Environment)
 
-			repoDir, err := o.GetRepoDir()
-			if err != nil {
-				return fmt.Errorf("could not get Repository dir: %w", err)
-			}
-
 			desiredTree := controller.CreateDesiredStateTree(opts.Declaration)
 
-			err = controller.ApplyDesiredStateMetadata(desiredTree, opts.Declaration, repoDir)
-			if err != nil {
-				return fmt.Errorf("could not apply desired state metadata: %w", err)
-			}
-
 			reconciliationManager := reconciler.NewReconcilerManager(&resourcetree.CommonMetadata{
-				Ctx:       o.Ctx,
-				ClusterID: id,
-				Out:       o.Out,
-				Spin:      spin,
+				Ctx:         o.Ctx,
+				Out:         o.Out,
+				Spin:        spin,
+				ClusterID:   clusterID,
+				Declaration: opts.Declaration,
 			})
 
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeALBIngress, reconciler.NewALBIngressReconciler(services.ALBIngressController))
+			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeArgoCD, reconciler.NewArgocdReconciler(services.ArgoCD, services.Github))
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeAWSLoadBalancerController, reconciler.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeArgoCD, reconciler.NewArgocdReconciler(services.ArgoCD))
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeAutoscaler, reconciler.NewAutoscalerReconciler(services.Autoscaler))
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeBlockstorage, reconciler.NewBlockstorageReconciler(services.Blockstorage))
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeCluster, reconciler.NewClusterReconciler(services.Cluster))
@@ -147,13 +140,12 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			)
 
 			synchronizeOpts := &controller.SynchronizeOpts{
-				ClusterID:               id,
+				ClusterID:               clusterID,
 				DesiredTree:             desiredTree,
 				ReconciliationManager:   reconciliationManager,
 				Fs:                      o.FileSystem,
 				OutputDir:               outputDir,
 				GithubGetter:            o.RepoStateWithEnv.GetGithub,
-				GithubSetter:            o.RepoStateWithEnv.SaveGithub,
 				IdentityPoolFetcher:     func() state.IdentityPool { return o.RepoStateWithEnv.GetIdentityPool() },
 				CIDRGetter:              func() string { return o.RepoStateWithEnv.GetVPC().CIDR },
 				PrimaryHostedZoneGetter: func() *state.HostedZone { return o.RepoStateWithEnv.GetPrimaryHostedZone() },
@@ -168,7 +160,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			fmt.Fprintln(o.Out,
 				fmt.Sprintf(
 					"\nTo access your cluster, run %s to activate the environment for your cluster",
-					aurora.Green(fmt.Sprintf("okctl venv %s", id.Environment)),
+					aurora.Green(fmt.Sprintf("okctl venv %s", clusterID.Environment)),
 				),
 			)
 			fmt.Fprintln(o.Out, fmt.Sprintf("Your cluster should then be available with %s", aurora.Green("kubectl")))
@@ -242,6 +234,7 @@ func inferClusterFromStdinOrFile(stdin io.Reader, path string) (*v1alpha1.Cluste
 	return &cluster, nil
 }
 
+// ~/.okctl.yaml
 func loadNoUserInputUserData(o *okctl.Okctl, cmd *cobra.Command) error {
 	userDataNotFound := load.CreateOnUserDataNotFoundWithNoInput()
 
@@ -250,6 +243,7 @@ func loadNoUserInputUserData(o *okctl.Okctl, cmd *cobra.Command) error {
 	return o.LoadUserData()
 }
 
+// .okctl.yaml
 func loadNoUserInputRepoData(o *okctl.Okctl, declaration *v1alpha1.Cluster) error {
 	repoDataNotFound := load.CreateOnRepoDataNotFoundWithNoUserInput(declaration)
 

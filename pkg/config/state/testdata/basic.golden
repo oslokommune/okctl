@@ -49,6 +49,7 @@ clusters:
                 oslokommune/okctl-iac:
                     name: okctl-iac
                     fullname: ""
+                    organization: ""
                     types:
                         - infrastructure
                     giturl: git@github.com/oslokommune/okctl-iac

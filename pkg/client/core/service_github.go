@@ -93,81 +93,50 @@ func (s *githubService) ReadyGithubInfrastructureRepository(_ context.Context, o
 	return repo, nil
 }
 
-// nolint funlen
-func (s *githubService) ReadyGithubInfrastructureRepositoryWithoutUserinput(_ context.Context, opts client.ReadyGithubInfrastructureRepositoryOpts) (*client.GithubRepository, error) {
-	err := s.spinner.Start("github")
-	if err != nil {
-		return nil, err
-	}
+// CreateDeployKey creates a new deploy key for a certain repository if it doesn't exist. If it exists, it returns the
+// existing key
+func (s *githubService) CreateDeployKey(_ context.Context, repository *client.GithubRepository) (key *client.GithubDeployKey, err error) {
+	existingRepository := s.state.GetGithubInfrastructureRepository(repository.ID)
 
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	err = opts.Validate()
-	if err != nil {
-		return nil, err
-	}
-
-	r := s.state.GetGithubInfrastructureRepository(opts.ID)
-	if r.Validate() == nil {
-		return &client.GithubRepository{
-			ID:           opts.ID,
-			Organisation: opts.Organisation,
-			Repository:   r.Name,
-			FullName:     r.FullName,
-			GitURL:       r.GitURL,
-			DeployKey: &client.GithubDeployKey{
-				ID:           opts.ID,
-				Organisation: opts.Organisation,
-				Repository:   r.Name,
-				Identifier:   r.DeployKey.ID,
-				Title:        r.DeployKey.Title,
-				PublicKey:    r.DeployKey.PublicKey,
-				PrivateKeySecret: &client.GithubSecret{
-					Name:    r.DeployKey.PrivateKeySecret.Name,
-					Path:    r.DeployKey.PrivateKeySecret.Path,
-					Version: r.DeployKey.PrivateKeySecret.Version,
-				},
+	if existingRepository.Validate() == nil && existingRepository.DeployKey.Validate() == nil {
+		return &client.GithubDeployKey{
+			ID:           repository.ID,
+			Organisation: repository.Organisation,
+			Repository:   repository.Repository,
+			Identifier:   repository.DeployKey.Identifier,
+			Title:        repository.DeployKey.Title,
+			PublicKey:    repository.DeployKey.PublicKey,
+			PrivateKeySecret: &client.GithubSecret{
+				Name:    repository.DeployKey.PrivateKeySecret.Name,
+				Path:    repository.DeployKey.PrivateKeySecret.Path,
+				Version: repository.DeployKey.PrivateKeySecret.Version,
 			},
 		}, nil
 	}
 
-	selected, err := s.api.GetGithubInfrastructureRepository(client.SelectGithubInfrastructureRepositoryOpts(opts))
-	if err != nil {
-		return nil, err
-	}
-
-	key, err := s.api.CreateGithubDeployKey(client.CreateGithubDeployKey{
-		ID:           opts.ID,
-		Organisation: opts.Organisation,
-		Repository:   selected.Repository,
-		Title:        fmt.Sprintf("okctl-iac-%s", opts.ID.ClusterName),
+	key, err = s.api.CreateGithubDeployKey(client.CreateGithubDeployKey{
+		ID:           repository.ID,
+		Organisation: repository.Organisation,
+		Repository:   repository.Repository,
+		Title:        fmt.Sprintf("okctl-iac-%s", repository.ID.ClusterName),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	repo := &client.GithubRepository{
-		ID:           selected.ID,
-		Organisation: selected.Organisation,
-		Repository:   selected.Repository,
-		GitURL:       selected.GitURL,
-		FullName:     selected.FullName,
-		DeployKey:    key,
+	repository.DeployKey = key
+
+	report, err := s.state.SaveGithubInfrastructureRepository(repository)
+	if err != nil {
+		return nil, fmt.Errorf("saving repository state: %w", err)
 	}
 
-	report, err := s.state.SaveGithubInfrastructureRepository(repo)
+	err = s.report.ReadyGithubInfrastructureRepository(repository, report)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.report.ReadyGithubInfrastructureRepository(repo, report)
-	if err != nil {
-		return nil, err
-	}
-
-	return repo, nil
+	return key, nil
 }
 
 // nolint: funlen

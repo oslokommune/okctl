@@ -6,6 +6,8 @@ import (
 	"context"
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -97,10 +99,13 @@ const (
 
 // CommonMetadata represents metadata required by most if not all operations on services
 type CommonMetadata struct {
-	Ctx       context.Context
-	ClusterID api.ID
-	Out       io.Writer
-	Spin      spinner.Spinner
+	Ctx context.Context
+
+	Out  io.Writer
+	Spin spinner.Spinner
+
+	ClusterID   api.ID
+	Declaration *v1alpha1.Cluster
 }
 
 // StateRefreshFn is a function that attempts to retrieve state potentially can only be retrieved at runtime. E.g.:

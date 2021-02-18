@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/oslokommune/okctl/pkg/config/state"
 
@@ -31,6 +32,20 @@ func (r GithubRepository) Validate() error {
 		validation.Field(&r.GitURL, validation.Required),
 		validation.Field(&r.Repository, validation.Required),
 	)
+}
+
+// NewGithubRepository initializes a new GithubRepository
+func NewGithubRepository(clusterID api.ID, host, organization, name string) *GithubRepository {
+	fullName := fmt.Sprintf("%s/%s", organization, name)
+
+	return &GithubRepository{
+		ID:           clusterID,
+		Organisation: organization,
+		Repository:   name,
+		FullName:     fullName,
+		GitURL:       fmt.Sprintf("%s:%s", host, fullName),
+		DeployKey:    nil,
+	}
 }
 
 // ReadyGithubInfrastructureRepositoryOpts contains required inputs
@@ -178,8 +193,8 @@ type CreateGithubDeployKey struct {
 
 // GithubService is a business logic implementation
 type GithubService interface {
+	CreateDeployKey(ctx context.Context, repository *GithubRepository) (key *GithubDeployKey, err error)
 	ReadyGithubInfrastructureRepository(ctx context.Context, opts ReadyGithubInfrastructureRepositoryOpts) (*GithubRepository, error)
-	ReadyGithubInfrastructureRepositoryWithoutUserinput(ctx context.Context, opts ReadyGithubInfrastructureRepositoryOpts) (*GithubRepository, error)
 	CreateGithubOauthApp(ctx context.Context, opts CreateGithubOauthAppOpts) (*GithubOauthApp, error)
 }
 

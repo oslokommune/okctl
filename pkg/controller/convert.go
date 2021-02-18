@@ -1,16 +1,12 @@
 package controller
 
 import (
-	"fmt"
 	"path"
 
-	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/config/state"
-	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
-	"github.com/oslokommune/okctl/pkg/git"
 	"github.com/spf13/afero"
 )
 
@@ -32,7 +28,7 @@ type ExistingServices struct {
 }
 
 // NewCreateCurrentStateTreeOpts creates an initialized ExistingServices struct
-func NewCreateCurrentStateTreeOpts(fs *afero.Afero, outputDir string, githubGetter reconciler.GithubGetter, hzFetcher HostedZoneFetcher) (*ExistingServices, error) {
+func NewCreateCurrentStateTreeOpts(fs *afero.Afero, outputDir string, githubGetter GithubGetter, hzFetcher HostedZoneFetcher) (*ExistingServices, error) {
 	hz := hzFetcher()
 
 	return &ExistingServices{
@@ -113,26 +109,6 @@ func CreateDesiredStateTree(cluster *v1alpha1.Cluster) (root *resourcetree.Resou
 	return root
 }
 
-// ApplyDesiredStateMetadata applies metadata from a cluster definition to the nodes
-func ApplyDesiredStateMetadata(tree *resourcetree.ResourceNode, cluster *v1alpha1.Cluster, repoDir string) error {
-	githubNode := tree.GetNode(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeGithub})
-	if githubNode == nil {
-		return errors.New("expected github node was not found")
-	}
-
-	repo, err := git.GithubRepoFullName(cluster.Github.Organisation, repoDir)
-	if err != nil {
-		return fmt.Errorf("error fetching full git repo name: %w", err)
-	}
-
-	githubNode.Metadata = reconciler.GithubMetadata{
-		Organization: cluster.Github.Organisation,
-		Repository:   repo,
-	}
-
-	return nil
-}
-
 func createNode(parent *resourcetree.ResourceNode, nodeType resourcetree.ResourceNodeType, present bool) (child *resourcetree.ResourceNode) {
 	child = &resourcetree.ResourceNode{
 		Type:     nodeType,
@@ -176,3 +152,6 @@ func githubTester(github state.Github) bool {
 
 	return true
 }
+
+// GithubGetter knows how to get the current state Github
+type GithubGetter func() state.Github

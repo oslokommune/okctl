@@ -2,8 +2,9 @@ package reconciler
 
 import (
 	"fmt"
-	"github.com/miekg/dns"
 	"time"
+
+	"github.com/miekg/dns"
 
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -53,6 +54,7 @@ func (z *nameserverDelegationReconciler) Reconcile(node *resourcetree.ResourceNo
 		}()
 
 		primaryHostedZoneFQDN := dns.Fqdn(z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain)
+
 		record, err := z.client.CreateNameserverRecordDelegationRequest(&client.CreateNameserverDelegationRequestOpts{
 			ClusterID:             z.commonMetadata.ClusterID,
 			PrimaryHostedZoneFQDN: primaryHostedZoneFQDN,

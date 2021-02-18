@@ -3,6 +3,8 @@ package reconciler
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/config"
+
 	"github.com/miekg/dns"
 
 	"github.com/mishudark/errors"
@@ -14,7 +16,6 @@ import (
 // ArgocdResourceState contains runtime data needed in Reconcile()
 type ArgocdResourceState struct {
 	HostedZone *state.HostedZone
-	Repository *client.GithubRepository
 
 	UserPoolID string
 	AuthDomain string
@@ -24,7 +25,8 @@ type ArgocdResourceState struct {
 type argocdReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 
-	client client.ArgoCDService
+	argocdClient client.ArgoCDService
+	githubClient client.GithubService
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
@@ -47,7 +49,30 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconcil
 
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err := z.client.CreateArgoCD(z.commonMetadata.Ctx, client.CreateArgoCDOpts{
+		err := z.commonMetadata.Spin.Start("Github")
+		if err != nil {
+			return nil, err
+		}
+
+		defer func() {
+			err = z.commonMetadata.Spin.Stop()
+		}()
+
+		repository := client.NewGithubRepository(
+			z.commonMetadata.ClusterID,
+			config.DefaultGithubHost,
+			z.commonMetadata.Declaration.Github.Organisation,
+			z.commonMetadata.Declaration.Github.Repository,
+		)
+
+		key, err := z.githubClient.CreateDeployKey(z.commonMetadata.Ctx, repository)
+		if err != nil {
+			return nil, fmt.Errorf("fetching deploy key: %w", err)
+		}
+
+		repository.DeployKey = key
+
+		_, err = z.argocdClient.CreateArgoCD(z.commonMetadata.Ctx, client.CreateArgoCDOpts{
 			ID:                 z.commonMetadata.ClusterID,
 			Domain:             z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain,
 			FQDN:               dns.Fqdn(z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain),
@@ -55,7 +80,7 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconcil
 			GithubOrganisation: z.commonMetadata.Declaration.Github.Organisation,
 			UserPoolID:         resourceState.UserPoolID,
 			AuthDomain:         resourceState.AuthDomain,
-			Repository:         resourceState.Repository,
+			Repository:         repository,
 		})
 		if err != nil {
 			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating argocd: %w", err)
@@ -68,8 +93,9 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconcil
 }
 
 // NewArgocdReconciler creates a new reconciler for the ArgoCD resource
-func NewArgocdReconciler(client client.ArgoCDService) Reconciler {
+func NewArgocdReconciler(argocdClient client.ArgoCDService, githubClient client.GithubService) Reconciler {
 	return &argocdReconciler{
-		client: client,
+		argocdClient: argocdClient,
+		githubClient: githubClient,
 	}
 }

@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/github"
-
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/oslokommune/okctl/pkg/config"
@@ -79,8 +76,7 @@ func CreateExternalDNSStateRefresher(primaryHostedZoneFetcher HostedZoneFetcher)
 		hostedZone := primaryHostedZoneFetcher()
 
 		node.ResourceState = reconciler.ExternalDNSResourceState{
-			HostedZoneID: hostedZone.ID,
-			Domain:       hostedZone.Domain,
+			PrimaryHostedZoneID: hostedZone.ID,
 		}
 	}
 }
@@ -94,35 +90,13 @@ func CreateIdentityManagerRefresher(primaryHostedZoneFetcher HostedZoneFetcher) 
 	}
 }
 
-// CreateGithubStateRefresher creates a function that gathers required runtime data for a Github resource
-func CreateGithubStateRefresher(ghGetter reconciler.GithubGetter, ghSetter reconciler.GithubSetter) resourcetree.StateRefreshFn {
-	return func(node *resourcetree.ResourceNode) {
-		node.ResourceState = reconciler.GithubResourceState{
-			Getter: ghGetter,
-			Saver:  ghSetter,
-		}
-	}
-}
-
-type argoCDRefresherOptions struct {
-	IACRepositoryName         string
-	IACRepositoryOrganization string
-	ClusterID                 api.ID
-	hostedZoneFetcher         HostedZoneFetcher
-	idpFetcher                IdentityPoolFetcher
-	ghGetter                  reconciler.GithubGetter
-}
-
 // CreateArgocdStateRefresher creates a function that gathers required runtime data for a ArgoCD resource
-func CreateArgocdStateRefresher(options argoCDRefresherOptions) resourcetree.StateRefreshFn {
+func CreateArgocdStateRefresher(idpFetcher IdentityPoolFetcher, hzFetcher HostedZoneFetcher) resourcetree.StateRefreshFn {
 	return func(node *resourcetree.ResourceNode) {
-		idp := options.idpFetcher()
-
-		originalRepo := options.ghGetter().Repositories[fmt.Sprintf("%s/%s", options.IACRepositoryOrganization, options.IACRepositoryName)]
+		idp := idpFetcher()
 
 		node.ResourceState = reconciler.ArgocdResourceState{
-			HostedZone: options.hostedZoneFetcher(),
-			Repository: stateToClientRepo(originalRepo, options.ClusterID),
+			HostedZone: hzFetcher(),
 			UserPoolID: idp.UserPoolID,
 			AuthDomain: idp.AuthDomain,
 		}
@@ -139,34 +113,5 @@ func CreateNameserverDelegationStateRefresher(fetcher HostedZoneFetcher) resourc
 			PrimaryHostedZoneFQDN: zone.FQDN,
 			Nameservers:           zone.NameServers,
 		}
-	}
-}
-
-func stateToClientRepo(original state.GithubRepository, id api.ID) *client.GithubRepository {
-	deployKey := stateToClientDeployKey(original.DeployKey, id, github.DefaultOrg, original.Name)
-
-	return &client.GithubRepository{
-		ID:           id,
-		Organisation: github.DefaultOrg,
-		Repository:   original.Name,
-		FullName:     original.FullName,
-		GitURL:       original.GitURL,
-		DeployKey:    &deployKey,
-	}
-}
-
-func stateToClientDeployKey(original state.DeployKey, id api.ID, organization, repository string) client.GithubDeployKey {
-	return client.GithubDeployKey{
-		ID:           id,
-		Organisation: organization,
-		Repository:   repository,
-		Identifier:   original.ID,
-		Title:        original.Title,
-		PublicKey:    original.PublicKey,
-		PrivateKeySecret: &client.GithubSecret{
-			Name:    original.PrivateKeySecret.Name,
-			Path:    original.PrivateKeySecret.Path,
-			Version: original.PrivateKeySecret.Version,
-		},
 	}
 }

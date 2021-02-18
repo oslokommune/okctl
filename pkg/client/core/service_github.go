@@ -103,13 +103,13 @@ func (s *githubService) CreateDeployKey(_ context.Context, repository *client.Gi
 			ID:           repository.ID,
 			Organisation: repository.Organisation,
 			Repository:   repository.Repository,
-			Identifier:   repository.DeployKey.Identifier,
-			Title:        repository.DeployKey.Title,
-			PublicKey:    repository.DeployKey.PublicKey,
+			Identifier:   existingRepository.DeployKey.ID,
+			Title:        existingRepository.DeployKey.Title,
+			PublicKey:    existingRepository.DeployKey.PublicKey,
 			PrivateKeySecret: &client.GithubSecret{
-				Name:    repository.DeployKey.PrivateKeySecret.Name,
-				Path:    repository.DeployKey.PrivateKeySecret.Path,
-				Version: repository.DeployKey.PrivateKeySecret.Version,
+				Name:    existingRepository.DeployKey.PrivateKeySecret.Name,
+				Path:    existingRepository.DeployKey.PrivateKeySecret.Path,
+				Version: existingRepository.DeployKey.PrivateKeySecret.Version,
 			},
 		}, nil
 	}

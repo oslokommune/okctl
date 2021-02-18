@@ -450,6 +450,19 @@ and database subnets.`,
 				return formatErr(err)
 			}
 
+			monit, err := services.KubePromStack.CreateKubePromStack(o.Ctx, client.CreateKubePromStackOpts{
+				ID:           id,
+				Domain:       hostedZone.HostedZone.Domain,
+				HostedZoneID: hostedZone.HostedZone.HostedZoneID,
+				AuthDomain:   pool.AuthDomain,
+				UserPoolID:   pool.UserPoolID,
+			})
+			if err != nil {
+				return formatErr(err)
+			}
+
+			fmt.Println("monitoring host: ", monit.Hostname)
+
 			kubeConfig := path.Join(userDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterKubeConfig)
 			awsConfig := path.Join(userDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterAwsConfig)
 			awsCredentials := path.Join(userDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterAwsCredentials)

@@ -17,7 +17,7 @@ require (
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/aws/aws-sdk-go v1.37.12
-	github.com/awslabs/goformation/v4 v4.16.2
+	github.com/awslabs/goformation/v4 v4.16.3
 	github.com/beevik/etree v1.1.0
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
@@ -62,6 +62,7 @@ require (
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/logrusorgru/aurora v0.0.0-20181002194514-a7b3b318ed4e
 	github.com/logrusorgru/aurora/v3 v3.0.0
+	github.com/magefile/mage v1.11.0 // indirect
 	github.com/magiconair/properties v1.8.2 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/miekg/dns v1.1.38
@@ -80,7 +81,7 @@ require (
 	github.com/rogpeppe/go-internal v1.6.1 // indirect
 	github.com/sanity-io/litter v1.5.0
 	github.com/sebdah/goldie/v2 v2.5.3
-	github.com/sirupsen/logrus v1.7.1
+	github.com/sirupsen/logrus v1.8.0
 	github.com/smartystreets/assertions v1.0.0 // indirect
 	github.com/spf13/afero v1.5.1
 	github.com/spf13/cobra v1.1.3
@@ -99,6 +100,7 @@ require (
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	golang.org/x/oauth2 v0.0.0-20210201163806-010130855d6c
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a // indirect
+	golang.org/x/sys v0.0.0-20210218085108-9555bcde0c6a // indirect
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
@@ -110,10 +112,10 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 	gotest.tools v2.2.0+incompatible
 	helm.sh/helm/v3 v3.5.1
-	k8s.io/api v0.20.1
-	k8s.io/apimachinery v0.20.2
-	k8s.io/cli-runtime v0.20.1
-	k8s.io/client-go v0.20.1
+	k8s.io/api v0.20.3
+	k8s.io/apimachinery v0.20.3
+	k8s.io/cli-runtime v0.20.3
+	k8s.io/client-go v0.20.3
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009 // indirect
 	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/aws-iam-authenticator v0.5.2

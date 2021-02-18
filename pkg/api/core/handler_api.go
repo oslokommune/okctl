@@ -337,9 +337,6 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			r.Route("/externalsecrets", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalSecretsHelmChart)
 			})
-			r.Route("/kubeprometheusstack", func(r chi.Router) {
-				r.Method(http.MethodPost, "/", handlers.CreateKubePrometheusStackHelmChart)
-			})
 			r.Route("/albingresscontroller", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAlbIngressControllerHelmChart)
 			})

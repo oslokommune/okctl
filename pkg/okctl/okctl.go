@@ -195,7 +195,36 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		IdentityManager:                  o.identityManagerService(outputDir, spin),
 		Autoscaler:                       o.autoscalerService(outputDir, spin),
 		Blockstorage:                     o.blockstorageService(outputDir, spin),
+		KubePromStack:                    o.kubePromStackService(outputDir, spin),
 	}, nil
+}
+
+func (o *Okctl) kubePromStackService(outputDir string, spin spinner.Spinner) client.KubePromStackService {
+	kubePromStackBaseDir := path.Join(outputDir, config.DefaultKubePromStackBaseDir)
+
+	return clientCore.NewKubePrometheusStackService(
+		spin,
+		rest.NewKubePromStackAPI(o.restClient),
+		clientFilesystem.NewKubePromStackStore(
+			clientFilesystem.Paths{
+				OutputFile:  config.DefaultHelmOutputsFile,
+				ReleaseFile: config.DefaultHelmReleaseFile,
+				ChartFile:   config.DefaultHelmChartFile,
+				BaseDir:     kubePromStackBaseDir,
+			},
+			clientFilesystem.Paths{
+				OutputFile: config.DefaultKubePromStackOutputsFile,
+				BaseDir:    kubePromStackBaseDir,
+			},
+			o.FileSystem,
+		),
+		stateSaver.NewKubePromStackState(o.RepoStateWithEnv),
+		console.NewKubePromStackReport(o.Err, spin),
+		o.certService(kubePromStackBaseDir, spin.SubSpinner()),
+		o.identityManagerService(kubePromStackBaseDir, spin.SubSpinner()),
+		o.manifestService(kubePromStackBaseDir, spin.SubSpinner()),
+		o.paramService(kubePromStackBaseDir, spin.SubSpinner()),
+	)
 }
 
 func (o *Okctl) identityManagerService(outputDir string, spin spinner.Spinner) client.IdentityManagerService {

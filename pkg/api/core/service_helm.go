@@ -123,7 +123,7 @@ func (s *helmService) CreateKubePrometheusStack(_ context.Context, opts api.Crea
 		return nil, fmt.Errorf("validating input options: %w", err)
 	}
 
-	h, err := s.run.CreateKubePrometheusStack(opts)
+	h, err := s.run.CreateKubePromStack(opts)
 	if err != nil {
 		return nil, fmt.Errorf("creating kube prometheus stack helm chart: %w", err)
 	}

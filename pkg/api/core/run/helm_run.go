@@ -106,7 +106,7 @@ func (r *helmRun) createHelmChart(id api.ID, chart *helm.Chart) (*api.Helm, erro
 	}, nil
 }
 
-func (r *helmRun) CreateKubePrometheusStack(opts api.CreateKubePrometheusStackOpts) (*api.Helm, error) {
+func (r *helmRun) CreateKubePromStack(opts api.CreateKubePrometheusStackOpts) (*api.Helm, error) {
 	chart := kubepromstack.New(kubepromstack.New(&kubepromstack.Values{
 		GrafanaCertificateARN:              opts.CertificateARN,
 		GrafanaHostname:                    opts.Hostname,

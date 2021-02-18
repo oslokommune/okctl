@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/client/store"
+
 	"github.com/google/uuid"
 
 	"github.com/oslokommune/okctl/pkg/spinner"
@@ -15,9 +17,10 @@ import (
 
 type kubePrometheusStackService struct {
 	spinner spinner.Spinner
-	api     client.KubePrometheusStackAPI
-	store   client.KubePrometheusStackStore
-	report  client.KubePrometheusStackReport
+	api     client.KubePromStackAPI
+	store   client.KubePromStackStore
+	state   client.KubePromStackState
+	report  client.KubePromStackReport
 
 	cert     client.CertificateService
 	ident    client.IdentityManagerService
@@ -26,7 +29,7 @@ type kubePrometheusStackService struct {
 }
 
 // nolint: funlen
-func (s *kubePrometheusStackService) CreateKubePrometheusStack(ctx context.Context, opts client.CreateKubePrometheusStackOpts) (*client.KubePrometheusStack, error) {
+func (s *kubePrometheusStackService) CreateKubePromStack(ctx context.Context, opts client.CreateKubePromStackOpts) (*client.KubePromStack, error) {
 	err := s.spinner.Start("kubepromstack")
 	if err != nil {
 		return nil, err
@@ -120,7 +123,7 @@ func (s *kubePrometheusStackService) CreateKubePrometheusStack(ctx context.Conte
 		},
 	})
 
-	chart, err := s.api.CreateKubePrometheusStackHelmChart(api.CreateKubePrometheusStackOpts{
+	chart, err := s.api.CreateKubePromStack(api.CreateKubePrometheusStackOpts{
 		ID:                     opts.ID,
 		CertificateARN:         cert.CertificateARN,
 		Hostname:               cert.Domain,
@@ -130,13 +133,14 @@ func (s *kubePrometheusStackService) CreateKubePrometheusStack(ctx context.Conte
 		SecretsCookieSecretKey: cookieSecret.Name,
 		SecretsClientSecretKey: clientSecret.Name,
 		SecretsAdminUserKey:    adminUser.Name,
-		SecretsAdminPassKey:    "admin-pass-key",
+		SecretsAdminPassKey:    adminPass.Name,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	stack := &client.KubePrometheusStack{
+	stack := &client.KubePromStack{
+		ID:                     opts.ID,
 		CertificateARN:         cert.CertificateARN,
 		Hostname:               cert.Domain,
 		AuthHostname:           opts.AuthDomain,
@@ -152,12 +156,17 @@ func (s *kubePrometheusStackService) CreateKubePrometheusStack(ctx context.Conte
 		ExternalSecret:         manifest,
 	}
 
-	report, err := s.store.SaveKubePrometheusStack(stack)
+	r1, err := s.store.SaveKubePromStack(stack)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.report.ReportCreateKubePrometheusStack(stack, report)
+	r2, err := s.state.SaveKubePromStack(stack)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.ReportKubePromStack(stack, []*store.Report{r1, r2})
 	if err != nil {
 		return nil, err
 	}
@@ -168,18 +177,20 @@ func (s *kubePrometheusStackService) CreateKubePrometheusStack(ctx context.Conte
 // NewKubePrometheusStackService returns an initialised service
 func NewKubePrometheusStackService(
 	spinner spinner.Spinner,
-	api client.KubePrometheusStackAPI,
-	store client.KubePrometheusStackStore,
-	report client.KubePrometheusStackReport,
+	api client.KubePromStackAPI,
+	store client.KubePromStackStore,
+	state client.KubePromStackState,
+	report client.KubePromStackReport,
 	cert client.CertificateService,
 	ident client.IdentityManagerService,
 	manifest client.ManifestService,
 	param client.ParameterService,
-) client.KubePrometheusStackService {
+) client.KubePromStackService {
 	return &kubePrometheusStackService{
 		spinner:  spinner,
 		api:      api,
 		store:    store,
+		state:    state,
 		report:   report,
 		cert:     cert,
 		ident:    ident,

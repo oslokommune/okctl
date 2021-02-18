@@ -70,6 +70,12 @@ type IdentityPooler interface {
 	DeleteIdentityPool() (*store.Report, error)
 }
 
+// Monitorer defines the allowed actions on the monitoring state
+type Monitorer interface {
+	GetMonitoring() Monitoring
+	SaveMonitoring(monitoring Monitoring) (*store.Report, error)
+}
+
 // RepositoryStateWithEnv provides actions for interacting with
 // the state of a repository
 type RepositoryStateWithEnv interface {
@@ -81,6 +87,7 @@ type RepositoryStateWithEnv interface {
 	Certificater
 	Metadataer
 	IdentityPooler
+	Monitorer
 	GetClusterName() string
 	Save() (*store.Report, error)
 }
@@ -101,6 +108,19 @@ type repository struct {
 	state   *Repository
 	env     string
 	saverFn SaverFn
+}
+
+// GetMonitoring returns the monitoring state
+func (r *repository) GetMonitoring() Monitoring {
+	return r.GetCluster().Monitoring
+}
+
+// SaveMonitoring stores the monitoring state
+func (r *repository) SaveMonitoring(monitoring Monitoring) (*store.Report, error) {
+	c := r.GetCluster()
+	c.Monitoring = monitoring
+
+	return r.SaveCluster(c)
 }
 
 func (r *repository) DeleteIdentityPoolClient(purpose string) (*store.Report, error) {

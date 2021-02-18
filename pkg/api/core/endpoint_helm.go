@@ -13,12 +13,6 @@ func makeCreateExternalSecretsHelmChartEndpoint(s api.HelmService) endpoint.Endp
 	}
 }
 
-func makeCreateKubePrometheusStackHelmChartEndpoint(s api.HelmService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateKubePrometheusStack(ctx, request.(api.CreateKubePrometheusStackOpts))
-	}
-}
-
 func makeCreateAlbIngressControllerHelmChartEndpoint(s api.HelmService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return s.CreateAlbIngressControllerHelmChart(ctx, request.(api.CreateAlbIngressControllerHelmChartOpts))

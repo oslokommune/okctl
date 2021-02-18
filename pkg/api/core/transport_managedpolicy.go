@@ -62,3 +62,14 @@ func decodeCreateAutoscalerPolicy(_ context.Context, r *http.Request) (interface
 
 	return opts, nil
 }
+
+func decodeCreateBlockstoragePolicy(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.CreateBlockstoragePolicy
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}

@@ -66,3 +66,15 @@ func makeDeleteAutoscalerPolicyEndpoint(s api.ManagedPolicyService) endpoint.End
 		return &Empty{}, s.DeleteAutoscalerPolicy(ctx, request.(api.ID))
 	}
 }
+
+func makeCreateBlockstoragePolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return s.CreateBlockstoragePolicy(ctx, request.(api.CreateBlockstoragePolicy))
+	}
+}
+
+func makeDeleteBlockstoragePolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return &Empty{}, s.DeleteBlockstoragePolicy(ctx, request.(api.ID))
+	}
+}

@@ -179,6 +179,11 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
+			err = services.Blockstorage.DeleteBlockstorage(o.Ctx, id)
+			if err != nil {
+				return formatErr(err)
+			}
+
 			err = cleanup.DeleteDanglingALBs(o.CloudProvider, vpc.VpcID)
 			if err != nil {
 				return formatErr(err)

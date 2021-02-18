@@ -168,3 +168,7 @@ spec:
 ### Cluster Autoscaler 
 
 [Cluster Autoscaler](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/README.md) is a tool that automatically adjusts the size of the Kubernetes cluster. On AWS it does this by adjusting the size of the [Autoscaling Group](https://docs.aws.amazon.com/autoscaling/ec2/userguide/AutoScalingGroup.html) of the cluster's nodegroup. We have configured the cluster autoscaler to automatically adjust the default nodegroup that we add to a cluster. Starting at 1 node it can scale up and down to a maximum of 10 nodes.
+
+### Amazon Elastic Block Store (EBS) CSI driver
+
+[Amazon Elastic Block Store (EBS) CSI driver](https://github.com/kubernetes-sigs/aws-ebs-csi-driver) provides a CSI interface used by Container Orchestrators to manage the lifecycle of Amazon EBS volumes. This makes it possible to create `PersistentVolumeClaims` in the Kubernetes cluster.

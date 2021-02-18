@@ -24,3 +24,9 @@ func makeDeleteNamespaceEndpoint(s api.KubeService) endpoint.Endpoint {
 		return Empty{}, s.DeleteNamespace(ctx, request.(api.DeleteNamespaceOpts))
 	}
 }
+
+func makeCreateStorageClass(s api.KubeService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return s.CreateStorageClass(ctx, request.(api.CreateStorageClassOpts))
+	}
+}

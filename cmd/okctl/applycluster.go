@@ -130,9 +130,10 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			})
 
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeALBIngress, reconciler.NewALBIngressReconciler(services.ALBIngressController))
+			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeAWSLoadBalancerController, reconciler.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService))
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeArgoCD, reconciler.NewArgocdReconciler(services.ArgoCD))
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeAutoscaler, reconciler.NewAutoscalerReconciler(services.Autoscaler))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeAWSLoadBalancerController, reconciler.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService))
+			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeBlockstorage, reconciler.NewBlockstorageReconciler(services.Blockstorage))
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeCluster, reconciler.NewClusterReconciler(services.Cluster))
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeExternalDNS, reconciler.NewExternalDNSReconciler(services.ExternalDNS))
 			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeExternalSecrets, reconciler.NewExternalSecretsReconciler(services.ExternalSecrets))

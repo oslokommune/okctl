@@ -32,6 +32,54 @@ var errBuildServiceAccount = func(err error) error {
 	return errors.E(err, "failed to build service account config", errors.Internal)
 }
 
+func (c *serviceAccount) CreateBlockstorageServiceAccount(_ context.Context, opts api.CreateBlockstorageServiceAccountOpts) (*api.ServiceAccount, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, errInvalidInputs(err)
+	}
+
+	config, err := clusterconfig.NewBlockstorageServiceAccount(
+		opts.ID.ClusterName,
+		opts.ID.Region,
+		opts.PolicyArn,
+		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
+	)
+	if err != nil {
+		return nil, errBuildServiceAccount(err)
+	}
+
+	account, err := c.createServiceAccount(opts.CreateServiceAccountOpts, config)
+	if err != nil {
+		return nil, errCreateServiceAccount(err)
+	}
+
+	return account, nil
+}
+
+func (c *serviceAccount) DeleteBlockstorageServiceAccount(_ context.Context, id api.ID) error {
+	err := id.Validate()
+	if err != nil {
+		return errInvalidInputs(err)
+	}
+
+	config, err := clusterconfig.NewBlockstorageServiceAccount(
+		id.ClusterName,
+		id.Region,
+		"n/a",
+		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
+	)
+	if err != nil {
+		return errBuildServiceAccount(err)
+	}
+
+	err = c.run.DeleteServiceAccount(config)
+	if err != nil {
+		return errDeleteServiceAccount(err)
+	}
+
+	return nil
+}
+
 func (c *serviceAccount) CreateAutoscalerServiceAccount(_ context.Context, opts api.CreateAutoscalerServiceAccountOpts) (*api.ServiceAccount, error) {
 	err := opts.Validate()
 	if err != nil {

@@ -83,6 +83,16 @@ func (o CreateAutoscalerServiceAccountOpts) Validate() error {
 	return o.ValidateStruct()
 }
 
+// CreateBlockstorageServiceAccountOpts contains the required inputs
+type CreateBlockstorageServiceAccountOpts struct {
+	CreateServiceAccountOpts
+}
+
+// Validate the inputs
+func (o CreateBlockstorageServiceAccountOpts) Validate() error {
+	return o.ValidateStruct()
+}
+
 // ServiceAccountService provides the interface for all service account operations
 type ServiceAccountService interface {
 	CreateExternalSecretsServiceAccount(context.Context, CreateExternalSecretsServiceAccountOpts) (*ServiceAccount, error)
@@ -95,6 +105,8 @@ type ServiceAccountService interface {
 	DeleteExternalDNSServiceAccount(context.Context, ID) error
 	CreateAutoscalerServiceAccount(context.Context, CreateAutoscalerServiceAccountOpts) (*ServiceAccount, error)
 	DeleteAutoscalerServiceAccount(context.Context, ID) error
+	CreateBlockstorageServiceAccount(context.Context, CreateBlockstorageServiceAccountOpts) (*ServiceAccount, error)
+	DeleteBlockstorageServiceAccount(context.Context, ID) error
 }
 
 // ServiceAccountRun provides the interface for running operations

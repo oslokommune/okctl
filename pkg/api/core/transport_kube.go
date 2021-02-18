@@ -40,3 +40,14 @@ func decodeDeleteNamespace(_ context.Context, r *http.Request) (interface{}, err
 
 	return opts, nil
 }
+
+func decodeCreateStorageClass(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.CreateStorageClassOpts
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}

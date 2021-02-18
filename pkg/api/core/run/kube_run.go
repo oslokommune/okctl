@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/kube/manifests/storageclass"
+
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -21,6 +23,37 @@ import (
 type kubeRun struct {
 	provider v1alpha1.CloudProvider
 	auth     aws.Authenticator
+}
+
+func (k *kubeRun) CreateStorageClass(opts api.CreateStorageClassOpts) (*api.StorageClassKube, error) {
+	sc, err := storageclass.New(opts.Name, opts.Parameters, opts.Annotations)
+	if err != nil {
+		return nil, fmt.Errorf("creating manifest: %w", err)
+	}
+
+	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
+	if err != nil {
+		return nil, fmt.Errorf("creating kubernetes client: %w", err)
+	}
+
+	_, err = client.Apply(kube.Applier{
+		Fn:          sc.CreateStorageClass,
+		Description: fmt.Sprintf("storageclass: %s", opts.Name),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("creating storageclass: %w", err)
+	}
+
+	manifest, err := sc.StorageClassManifest().Marshal()
+	if err != nil {
+		return nil, fmt.Errorf("marshalling manifest: %w", err)
+	}
+
+	return &api.StorageClassKube{
+		ID:       opts.ID,
+		Name:     opts.Name,
+		Manifest: manifest,
+	}, nil
 }
 
 func (k *kubeRun) DeleteNamespace(opts api.DeleteNamespaceOpts) error {

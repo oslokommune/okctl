@@ -83,6 +83,18 @@ func (a *Args) build() *v1alpha5.ClusterConfig {
 				},
 			},
 		},
+		VPC: &v1alpha5.ClusterVPC{
+			ID:   a.VpcID,
+			CIDR: a.VpcCidr,
+			ClusterEndpoints: v1alpha5.ClusterEndpoints{
+				PrivateAccess: true,
+				PublicAccess:  true,
+			},
+			Subnets: v1alpha5.ClusterSubnets{
+				Private: map[string]v1alpha5.ClusterNetwork{},
+				Public:  map[string]v1alpha5.ClusterNetwork{},
+			},
+		},
 		FargateProfiles: []v1alpha5.FargateProfile{
 			{
 				Name: "fp-default",
@@ -115,16 +127,9 @@ func (a *Args) build() *v1alpha5.ClusterConfig {
 				},
 			},
 		},
-		VPC: &v1alpha5.ClusterVPC{
-			ID:   a.VpcID,
-			CIDR: a.VpcCidr,
-			ClusterEndpoints: v1alpha5.ClusterEndpoints{
-				PrivateAccess: true,
-				PublicAccess:  true,
-			},
-			Subnets: v1alpha5.ClusterSubnets{
-				Private: map[string]v1alpha5.ClusterNetwork{},
-				Public:  map[string]v1alpha5.ClusterNetwork{},
+		CloudWatch: &v1alpha5.ClusterCloudWatch{
+			ClusterLogging: &v1alpha5.ClusterCloudWatchLogging{
+				EnableTypes: v1alpha5.AllCloudWatchLogging(),
 			},
 		},
 	}
@@ -294,6 +299,22 @@ func NewAutoscalerServiceAccount(clusterName, region, policyArn, permissionsBoun
 			"aws-usage": "cluster-ops",
 		},
 		Name:                   "autoscaler",
+		Namespace:              "kube-system",
+		PermissionsBoundaryArn: permissionsBoundaryArn,
+		PolicyArn:              policyArn,
+		Region:                 region,
+	})
+}
+
+// NewBlockstorageServiceAccount returns an initialised configuration
+// for creating a cluster Blockstorage service account
+func NewBlockstorageServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha5.ClusterConfig, error) {
+	return NewServiceAccount(&ServiceAccountArgs{
+		ClusterName: clusterName,
+		Labels: map[string]string{
+			"aws-usage": "cluster-ops",
+		},
+		Name:                   "blockstorage",
 		Namespace:              "kube-system",
 		PermissionsBoundaryArn: permissionsBoundaryArn,
 		PolicyArn:              policyArn,

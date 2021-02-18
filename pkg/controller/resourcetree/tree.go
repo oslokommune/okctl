@@ -27,6 +27,8 @@ const (
 	ResourceNodeTypeExternalSecrets
 	// ResourceNodeTypeAutoscaler represents an autoscaler resource
 	ResourceNodeTypeAutoscaler
+	// ResourceNodeTypeBlockstorage represents a blockstorage resource
+	ResourceNodeTypeBlockstorage
 	// ResourceNodeTypeALBIngress represents an ALB Ingress resource
 	ResourceNodeTypeALBIngress
 	// ResourceNodeTypeAWSLoadBalancerController represents an AWS load balancer controller resource
@@ -44,6 +46,7 @@ const (
 )
 
 // ResourceNodeTypeToString knows how to convert a Resource Node type to a human readable string
+// nolint: gocyclo
 func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
 	switch nodeType {
 	case ResourceNodeTypeGroup:
@@ -58,6 +61,8 @@ func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
 		return "External Secrets"
 	case ResourceNodeTypeAutoscaler:
 		return "Autoscaler"
+	case ResourceNodeTypeBlockstorage:
+		return "Blockstorage"
 	case ResourceNodeTypeALBIngress:
 		return "ALB Ingress Controller"
 	case ResourceNodeTypeAWSLoadBalancerController:

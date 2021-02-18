@@ -11,8 +11,16 @@ const TargetKubeExternalSecret = "kube/externalsecrets/"
 // TargetKubeNamespace is the api route for the namespace
 const TargetKubeNamespace = "kube/namespaces/"
 
+// TargetKubeStorageClasses is the API route for the storage classes
+const TargetKubeStorageClasses = "kube/storageclasses/"
+
 type manifestAPI struct {
 	client *HTTPClient
+}
+
+func (a *manifestAPI) CreateStorageClass(opts api.CreateStorageClassOpts) (*api.StorageClassKube, error) {
+	into := &api.StorageClassKube{}
+	return into, a.client.DoPost(TargetKubeStorageClasses, &opts, into)
 }
 
 func (a *manifestAPI) DeleteNamespace(opts api.DeleteNamespaceOpts) error {

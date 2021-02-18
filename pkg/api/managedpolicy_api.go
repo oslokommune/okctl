@@ -75,6 +75,18 @@ func (o CreateAutoscalerPolicy) Validate() error {
 	)
 }
 
+// CreateBlockstoragePolicy contains all required inputs
+type CreateBlockstoragePolicy struct {
+	ID ID
+}
+
+// Validate the inputs
+func (o CreateBlockstoragePolicy) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+	)
+}
+
 // ManagedPolicyService defines the service layer for managed policies
 type ManagedPolicyService interface {
 	CreateExternalSecretsPolicy(ctx context.Context, opts CreateExternalSecretsPolicyOpts) (*ManagedPolicy, error)
@@ -87,6 +99,8 @@ type ManagedPolicyService interface {
 	DeleteExternalDNSPolicy(ctx context.Context, id ID) error
 	CreateAutoscalerPolicy(ctx context.Context, opts CreateAutoscalerPolicy) (*ManagedPolicy, error)
 	DeleteAutoscalerPolicy(ctx context.Context, id ID) error
+	CreateBlockstoragePolicy(ctx context.Context, opts CreateBlockstoragePolicy) (*ManagedPolicy, error)
+	DeleteBlockstoragePolicy(ctx context.Context, id ID) error
 }
 
 // ManagedPolicyCloudProvider defines the cloud provider layer for managed policies
@@ -101,6 +115,8 @@ type ManagedPolicyCloudProvider interface {
 	DeleteExternalDNSPolicy(id ID) error
 	CreateAutoscalerPolicy(opts CreateAutoscalerPolicy) (*ManagedPolicy, error)
 	DeleteAutoscalerPolicy(id ID) error
+	CreateBlockstoragePolicy(opts CreateBlockstoragePolicy) (*ManagedPolicy, error)
+	DeleteBlockstoragePolicy(id ID) error
 }
 
 // ManagedPolicyStore defines the storage layer for managed policies

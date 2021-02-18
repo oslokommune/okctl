@@ -20,4 +20,5 @@ type Services struct {
 	Vpc                              client.VPCService
 	IdentityManager                  client.IdentityManagerService
 	Autoscaler                       client.AutoscalerService
+	Blockstorage                     client.BlockstorageService
 }

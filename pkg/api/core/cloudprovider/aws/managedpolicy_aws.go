@@ -14,6 +14,10 @@ type managedPolicy struct {
 	provider v1alpha1.CloudProvider
 }
 
+func (m *managedPolicy) DeleteBlockstoragePolicy(id api.ID) error {
+	return m.deletePolicy(cfn.NewStackNamer().BlockstoragePolicy(id.Repository, id.Environment))
+}
+
 func (m *managedPolicy) DeleteAutoscalerPolicy(id api.ID) error {
 	return m.deletePolicy(cfn.NewStackNamer().AutoscalerPolicy(id.Repository, id.Environment))
 }
@@ -43,6 +47,17 @@ func (m *managedPolicy) deletePolicy(stackName string) error {
 	}
 
 	return nil
+}
+
+func (m *managedPolicy) CreateBlockstoragePolicy(opts api.CreateBlockstoragePolicy) (*api.ManagedPolicy, error) {
+	b := cfn.New(
+		components.NewBlockstoragePolicyComposer(opts.ID.Repository, opts.ID.Environment),
+	)
+
+	stackName := cfn.NewStackNamer().
+		BlockstoragePolicy(opts.ID.Repository, opts.ID.Environment)
+
+	return m.createPolicy(stackName, opts.ID, "BlockstoragePolicy", b)
 }
 
 func (m *managedPolicy) CreateAutoscalerPolicy(opts api.CreateAutoscalerPolicy) (*api.ManagedPolicy, error) {

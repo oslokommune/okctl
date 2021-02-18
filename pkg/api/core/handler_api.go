@@ -60,6 +60,12 @@ type Endpoints struct {
 	DeleteAutoscalerServiceAccount                endpoint.Endpoint
 	CreateAutoscalerPolicy                        endpoint.Endpoint
 	DeleteAutoscalerPolicy                        endpoint.Endpoint
+	CreateBlockstoragePolicy                      endpoint.Endpoint
+	DeleteBlockstoragePolicy                      endpoint.Endpoint
+	CreateBlockstorageServiceAccount              endpoint.Endpoint
+	DeleteBlockstorageServiceAccount              endpoint.Endpoint
+	CreateBlockstorageHelmChart                   endpoint.Endpoint
+	CreateStorageClass                            endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -105,11 +111,17 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteCertificate:                             makeDeleteCertificateEndpoint(s.Certificate),
 		DeleteNamespace:                               makeDeleteNamespaceEndpoint(s.Kube),
 		DeleteCognitoCertificate:                      makeDeleteCognitoCertificateEndpoint(s.Certificate),
-		CreateAutoscalerHelmChart:                     makeCreateAutoscalerHelmtChartEndpoint(s.Helm),
+		CreateAutoscalerHelmChart:                     makeCreateAutoscalerHelmChartEndpoint(s.Helm),
 		CreateAutoscalerServiceAccount:                makeCreateAutoscalerServiceAccountEndpoint(s.ServiceAccount),
 		DeleteAutoscalerServiceAccount:                makeDeleteAutoscalerServiceAccountEndpoint(s.ServiceAccount),
 		CreateAutoscalerPolicy:                        makeCreateAutoscalerPolicyEndpoint(s.ManagedPolicy),
 		DeleteAutoscalerPolicy:                        makeDeleteAutoscalerPolicyEndpoint(s.ManagedPolicy),
+		CreateBlockstoragePolicy:                      makeCreateBlockstoragePolicyEndpoint(s.ManagedPolicy),
+		DeleteBlockstoragePolicy:                      makeDeleteBlockstoragePolicyEndpoint(s.ManagedPolicy),
+		CreateBlockstorageServiceAccount:              makeCreateBlockstorageServiceAccountEndpoint(s.ServiceAccount),
+		DeleteBlockstorageServiceAccount:              makeDeleteBlockstorageServiceAccountEndpoint(s.ServiceAccount),
+		CreateBlockstorageHelmChart:                   makeCreateBlockstorageHelmChartEndpoint(s.Helm),
+		CreateStorageClass:                            makeCreateStorageClass(s.Kube),
 	}
 }
 
@@ -159,6 +171,12 @@ type Handlers struct {
 	DeleteAutoscalerServiceAccount                http.Handler
 	CreateAutoscalerPolicy                        http.Handler
 	DeleteAutoscalerPolicy                        http.Handler
+	CreateBlockstoragePolicy                      http.Handler
+	DeleteBlockstoragePolicy                      http.Handler
+	CreateBlockstorageServiceAccount              http.Handler
+	DeleteBlockstorageServiceAccount              http.Handler
+	CreateBlockstorageHelmChart                   http.Handler
+	CreateStorageClass                            http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -236,6 +254,12 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteAutoscalerServiceAccount:                newServer(endpoints.DeleteAutoscalerServiceAccount, decodeIDRequest),
 		CreateAutoscalerPolicy:                        newServer(endpoints.CreateAutoscalerPolicy, decodeCreateAutoscalerPolicy),
 		DeleteAutoscalerPolicy:                        newServer(endpoints.DeleteAutoscalerPolicy, decodeIDRequest),
+		CreateBlockstoragePolicy:                      newServer(endpoints.CreateBlockstoragePolicy, decodeCreateBlockstoragePolicy),
+		DeleteBlockstoragePolicy:                      newServer(endpoints.DeleteBlockstoragePolicy, decodeIDRequest),
+		CreateBlockstorageServiceAccount:              newServer(endpoints.CreateBlockstorageServiceAccount, decodeCreateBlockstorageServiceAccount),
+		DeleteBlockstorageServiceAccount:              newServer(endpoints.DeleteBlockstorageServiceAccount, decodeIDRequest),
+		CreateBlockstorageHelmChart:                   newServer(endpoints.CreateBlockstorageHelmChart, decodeCreateBlockstorageHelmChart),
+		CreateStorageClass:                            newServer(endpoints.CreateStorageClass, decodeCreateStorageClass),
 	}
 }
 
@@ -274,6 +298,10 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 				r.Method(http.MethodPost, "/", handlers.CreateAutoscalerPolicy)
 				r.Method(http.MethodDelete, "/", handlers.DeleteAutoscalerPolicy)
 			})
+			r.Route("/blockstorage", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateBlockstoragePolicy)
+				r.Method(http.MethodDelete, "/", handlers.DeleteBlockstoragePolicy)
+			})
 		})
 		r.Route("/serviceaccounts", func(r chi.Router) {
 			r.Route("/externalsecrets", func(r chi.Router) {
@@ -296,6 +324,10 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 				r.Method(http.MethodPost, "/", handlers.CreateAutoscalerServiceAccount)
 				r.Method(http.MethodDelete, "/", handlers.DeleteAutoscalerServiceAccount)
 			})
+			r.Route("/blockstorage", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateBlockstorageServiceAccount)
+				r.Method(http.MethodDelete, "/", handlers.DeleteBlockstorageServiceAccount)
+			})
 		})
 		r.Route("/helm", func(r chi.Router) {
 			r.Route("/externalsecrets", func(r chi.Router) {
@@ -313,6 +345,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			r.Route("/autoscaler", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAutoscalerHelmChart)
 			})
+			r.Route("/blockstorage", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateBlockstorageHelmChart)
+			})
 		})
 		r.Route("/kube", func(r chi.Router) {
 			r.Route("/externaldns", func(r chi.Router) {
@@ -323,6 +358,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			})
 			r.Route("/namespaces", func(r chi.Router) {
 				r.Method(http.MethodDelete, "/", handlers.DeleteNamespace)
+			})
+			r.Route("/storageclasses", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateStorageClass)
 			})
 		})
 		r.Route("/domains", func(r chi.Router) {
@@ -404,6 +442,8 @@ const (
 	namespaceTag                 = "namespace"
 	cognitoTag                   = "cognito"
 	autoscalerTag                = "autoscaler"
+	blockstorageTag              = "blockstorage"
+	storageclassTag              = "storageclass"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -455,6 +495,12 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteAutoscalerServiceAccount:                logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, autoscalerTag}, "/"), "delete")(endpoints.DeleteAutoscalerServiceAccount),
 			CreateAutoscalerPolicy:                        logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, autoscalerTag}, "/"), "create")(endpoints.CreateAutoscalerPolicy),
 			DeleteAutoscalerPolicy:                        logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, autoscalerTag}, "/"), "delete")(endpoints.DeleteAutoscalerPolicy),
+			CreateBlockstoragePolicy:                      logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, blockstorageTag}, "/"), "create")(endpoints.CreateBlockstoragePolicy),
+			DeleteBlockstoragePolicy:                      logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, blockstorageTag}, "/"), "delete")(endpoints.DeleteBlockstoragePolicy),
+			CreateBlockstorageServiceAccount:              logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, blockstorageTag}, "/"), "create")(endpoints.CreateBlockstorageServiceAccount),
+			DeleteBlockstorageServiceAccount:              logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, blockstorageTag}, "/"), "delete")(endpoints.DeleteBlockstorageServiceAccount),
+			CreateBlockstorageHelmChart:                   logmd.Logging(logger, strings.Join([]string{helmTag, blockstorageTag}, "/"), "create")(endpoints.CreateBlockstorageHelmChart),
+			CreateStorageClass:                            logmd.Logging(logger, strings.Join([]string{kubeTag, storageclassTag}, "/"), "create")(endpoints.CreateStorageClass),
 		}
 	}
 }

@@ -85,6 +85,8 @@ const (
 	DefaultStorageClassOutputsFile                  = "sc-outputs.json"
 	DefaultAutoscalerBaseDir                        = "autoscaler"
 	DefaultBlockstorageBaseDir                      = "blockstorage"
+	DefaultKubePromStackBaseDir                     = "kubepromstack"
+	DefaultKubePromStackOutputsFile                 = "kubepromstack-outputs.json"
 	DefaultHelmChartFile                            = "helm-chart.json"
 	DefaultHelmOutputsFile                          = "helm-outputs.json"
 	DefaultHelmReleaseFile                          = "helm-release.json"

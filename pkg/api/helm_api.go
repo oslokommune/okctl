@@ -164,7 +164,7 @@ type HelmRun interface {
 	CreateArgoCD(opts CreateArgoCDOpts) (*Helm, error)
 	CreateAutoscalerHelmChart(opts CreateAutoscalerHelmChartOpts) (*Helm, error)
 	CreateBlockstorageHelmChart(opts CreateBlockstorageHelmChartOpts) (*Helm, error)
-	CreateKubePrometheusStack(opts CreateKubePrometheusStackOpts) (*Helm, error)
+	CreateKubePromStack(opts CreateKubePrometheusStackOpts) (*Helm, error)
 }
 
 // HelmStore defines the storage layer

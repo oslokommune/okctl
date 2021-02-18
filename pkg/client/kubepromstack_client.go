@@ -8,8 +8,9 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
-// KubePrometheusStack is the content of a kubernetes prometheus stack deployment
-type KubePrometheusStack struct {
+// KubePromStack is the content of a kubernetes prometheus stack deployment
+type KubePromStack struct {
+	ID                     api.ID
 	CertificateARN         string
 	Hostname               string
 	AuthHostname           string
@@ -25,8 +26,8 @@ type KubePrometheusStack struct {
 	ExternalSecret         *ExternalSecret
 }
 
-// CreateKubePrometheusStackOpts are the required inputs
-type CreateKubePrometheusStackOpts struct {
+// CreateKubePromStackOpts are the required inputs
+type CreateKubePromStackOpts struct {
 	ID           api.ID
 	Domain       string
 	HostedZoneID string
@@ -34,22 +35,27 @@ type CreateKubePrometheusStackOpts struct {
 	UserPoolID   string
 }
 
-// KubePrometheusStackService is an implementation of the business logic
-type KubePrometheusStackService interface {
-	CreateKubePrometheusStack(ctx context.Context, opts CreateKubePrometheusStackOpts) (*KubePrometheusStack, error)
+// KubePromStackService is an implementation of the business logic
+type KubePromStackService interface {
+	CreateKubePromStack(ctx context.Context, opts CreateKubePromStackOpts) (*KubePromStack, error)
 }
 
-// KubePrometheusStackAPI invokes REST API endpoints
-type KubePrometheusStackAPI interface {
-	CreateKubePrometheusStackHelmChart(opts api.CreateKubePrometheusStackOpts) (*api.Helm, error)
+// KubePromStackAPI invokes REST API endpoints
+type KubePromStackAPI interface {
+	CreateKubePromStack(opts api.CreateKubePrometheusStackOpts) (*api.Helm, error)
 }
 
-// KubePrometheusStackStore is a storage layer implementation
-type KubePrometheusStackStore interface {
-	SaveKubePrometheusStack(stack *KubePrometheusStack) (*store.Report, error)
+// KubePromStackStore is a storage layer implementation
+type KubePromStackStore interface {
+	SaveKubePromStack(stack *KubePromStack) (*store.Report, error)
 }
 
-// KubePrometheusStackReport is a report layer
-type KubePrometheusStackReport interface {
-	ReportCreateKubePrometheusStack(stack *KubePrometheusStack, report *store.Report) error
+// KubePromStackState is a state layer implementation
+type KubePromStackState interface {
+	SaveKubePromStack(stack *KubePromStack) (*store.Report, error)
+}
+
+// KubePromStackReport is a report layer
+type KubePromStackReport interface {
+	ReportKubePromStack(stack *KubePromStack, reports []*store.Report) error
 }

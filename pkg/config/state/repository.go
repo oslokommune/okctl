@@ -84,6 +84,7 @@ type Cluster struct {
 	Github       Github
 	ArgoCD       ArgoCD
 	IdentityPool IdentityPool
+	Monitoring   Monitoring
 }
 
 const (
@@ -102,6 +103,19 @@ func (c Cluster) Validate() error {
 		validation.Field(&c.HostedZone, validation.Required),
 		validation.Field(&c.VPC),
 		validation.Field(&c.Certificates),
+	)
+}
+
+// Monitoring contains state information about
+// the monitoring setup
+type Monitoring struct {
+	DashboardURL string
+}
+
+// Validate the monitoring struct
+func (m Monitoring) Validate() error {
+	return validation.ValidateStruct(&m,
+		validation.Field(&m.DashboardURL, validation.Required),
 	)
 }
 

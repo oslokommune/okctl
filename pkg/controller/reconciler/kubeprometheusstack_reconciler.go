@@ -10,7 +10,7 @@ import (
 type kubePrometheusStackReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 
-	client client.KubePrometheusStackService
+	client client.KubePromStackService
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
@@ -22,19 +22,19 @@ func (z *kubePrometheusStackReconciler) SetCommonMetadata(metadata *resourcetree
 func (z *kubePrometheusStackReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err := z.client.CreateKubePrometheusStack(z.commonMetadata.Ctx, client.CreateKubePrometheusStackOpts{ID: z.commonMetadata.ClusterID})
+		_, err := z.client.CreateKubePromStack(z.commonMetadata.Ctx, client.CreateKubePromStackOpts{ID: z.commonMetadata.ClusterID})
 		if err != nil {
-			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating KubePrometheusStack: %w", err)
+			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating KubePromStack: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		return nil, fmt.Errorf("deletion of KubePrometheusStack not implemented")
+		return nil, fmt.Errorf("deletion of KubePromStack not implemented")
 	}
 
 	return &ReconcilationResult{Requeue: false}, nil
 }
 
-// NewKubePrometheusStackReconciler creates a new reconciler for the KubePrometheusStack resource
-func NewKubePrometheusStackReconciler(client client.KubePrometheusStackService) Reconciler {
+// NewKubePrometheusStackReconciler creates a new reconciler for the KubePromStack resource
+func NewKubePrometheusStackReconciler(client client.KubePromStackService) Reconciler {
 	return &kubePrometheusStackReconciler{
 		client: client,
 	}

@@ -111,3 +111,30 @@ func (s *spinner) timer(component string) {
 
 	s.exit = exit
 }
+
+type noopSpinner struct{}
+
+func (n noopSpinner) Start(_ string) error {
+	return nil
+}
+
+func (n noopSpinner) Stop() error {
+	return nil
+}
+
+func (n noopSpinner) Pause() error {
+	return nil
+}
+
+func (n noopSpinner) Unpause() error {
+	return nil
+}
+
+func (n noopSpinner) SubSpinner() Spinner {
+	return n
+}
+
+// NewNoopSpinner returns a noop spinner (a spinner that doesn't do anything)
+func NewNoopSpinner() Spinner {
+	return &noopSpinner{}
+}

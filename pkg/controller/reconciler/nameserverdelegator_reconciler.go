@@ -44,15 +44,6 @@ func (z *nameserverDelegationReconciler) Reconcile(node *resourcetree.ResourceNo
 
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		err := z.commonMetadata.Spin.Start("Nameserver delegation")
-		if err != nil {
-			return nil, err
-		}
-
-		defer func() {
-			err = z.commonMetadata.Spin.Stop()
-		}()
-
 		primaryHostedZoneFQDN := dns.Fqdn(z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain)
 
 		record, err := z.client.CreateNameserverRecordDelegationRequest(&client.CreateNameserverDelegationRequestOpts{

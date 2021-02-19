@@ -2,6 +2,8 @@
 package reconciler
 
 import (
+	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
 
@@ -33,7 +35,18 @@ func (manager *Manager) AddReconciler(key resourcetree.ResourceNodeType, reconci
 }
 
 // Reconcile chooses the correct reconciler to use based on a nodes type
-func (manager *Manager) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (manager *Manager) Reconcile(node *resourcetree.ResourceNode) (result *ReconcilationResult, err error) {
+	spinner := manager.commonMetadata.Spin.SubSpinner()
+
+	err = spinner.Start(resourcetree.ResourceNodeTypeToString(node.Type))
+	if err != nil {
+		return nil, fmt.Errorf("starting subspinner: %w", err)
+	}
+
+	defer func() {
+		_ = spinner.Stop()
+	}()
+
 	node.RefreshState()
 
 	return manager.Reconcilers[node.Type].Reconcile(node)

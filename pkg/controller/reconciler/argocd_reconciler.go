@@ -49,15 +49,6 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconcil
 
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		err := z.commonMetadata.Spin.Start("Github")
-		if err != nil {
-			return nil, err
-		}
-
-		defer func() {
-			err = z.commonMetadata.Spin.Stop()
-		}()
-
 		repository := client.NewGithubRepository(
 			z.commonMetadata.ClusterID,
 			config.DefaultGithubHost,

@@ -126,8 +126,7 @@ type Image struct {
 }
 
 // Annotations ...
-type Annotations struct {
-}
+type Annotations struct{}
 
 // ServiceAccount ...
 type ServiceAccount struct {
@@ -154,24 +153,19 @@ type SecurityContext struct {
 }
 
 // Resources ...
-type Resources struct {
-}
+type Resources struct{}
 
 // NodeSelector ...
-type NodeSelector struct {
-}
+type NodeSelector struct{}
 
 // Affinity ...
-type Affinity struct {
-}
+type Affinity struct{}
 
 // PodAnnotations ...
-type PodAnnotations struct {
-}
+type PodAnnotations struct{}
 
 // PodLabels ...
-type PodLabels struct {
-}
+type PodLabels struct{}
 
 // HTTPGet ...
 type HTTPGet struct {
@@ -189,9 +183,7 @@ type LivenessProbe struct {
 }
 
 // DefaultTags ...
-type DefaultTags struct {
-}
+type DefaultTags struct{}
 
 // PodDisruptionBudget ...
-type PodDisruptionBudget struct {
-}
+type PodDisruptionBudget struct{}

@@ -35,27 +35,40 @@ type CreateKubePromStackOpts struct {
 	UserPoolID   string
 }
 
+// DeleteKubePromStackOpts are the required inputs
+type DeleteKubePromStackOpts struct {
+	ID     api.ID
+	Domain string
+}
+
 // KubePromStackService is an implementation of the business logic
 type KubePromStackService interface {
 	CreateKubePromStack(ctx context.Context, opts CreateKubePromStackOpts) (*KubePromStack, error)
+	DeleteKubePromStack(ctx context.Context, opts DeleteKubePromStackOpts) error
 }
 
 // KubePromStackAPI invokes REST API endpoints
 type KubePromStackAPI interface {
 	CreateKubePromStack(opts api.CreateKubePrometheusStackOpts) (*api.Helm, error)
+	// For now we remove the monitoring namespace altogether, but
+	// we need to introduce this together with Loki.
+	// DeleteKubePromStack(opts DeleteKubePromStackOpts) error
 }
 
 // KubePromStackStore is a storage layer implementation
 type KubePromStackStore interface {
 	SaveKubePromStack(stack *KubePromStack) (*store.Report, error)
+	RemoveKubePromStack(id api.ID) (*store.Report, error)
 }
 
 // KubePromStackState is a state layer implementation
 type KubePromStackState interface {
 	SaveKubePromStack(stack *KubePromStack) (*store.Report, error)
+	RemoveKubePromStack(id api.ID) (*store.Report, error)
 }
 
 // KubePromStackReport is a report layer
 type KubePromStackReport interface {
-	ReportKubePromStack(stack *KubePromStack, reports []*store.Report) error
+	ReportSaveKubePromStack(stack *KubePromStack, reports []*store.Report) error
+	ReportRemoveKubePromStack(reports []*store.Report) error
 }

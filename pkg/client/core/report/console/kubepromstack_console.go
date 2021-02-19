@@ -15,7 +15,19 @@ type kubePromStackReport struct {
 	console *Console
 }
 
-func (r *kubePromStackReport) ReportKubePromStack(cd *client.KubePromStack, reports []*store.Report) error {
+func (r *kubePromStackReport) ReportRemoveKubePromStack(reports []*store.Report) error {
+	var actions []store.Action // nolint
+
+	for _, report := range reports {
+		actions = append(actions, report.Actions...)
+	}
+
+	description := aurora.Green("kube-prometheus-stack").String()
+
+	return r.console.Report(actions, "KubePromStack", description)
+}
+
+func (r *kubePromStackReport) ReportSaveKubePromStack(cd *client.KubePromStack, reports []*store.Report) error {
 	var actions []store.Action // nolint
 
 	for _, report := range reports {

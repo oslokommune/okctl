@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/config"
+
 	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/google/uuid"
@@ -15,7 +17,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
-type kubePrometheusStackService struct {
+type kubePromStackService struct {
 	spinner spinner.Spinner
 	api     client.KubePromStackAPI
 	store   client.KubePromStackStore
@@ -28,8 +30,75 @@ type kubePrometheusStackService struct {
 	manifest client.ManifestService
 }
 
+const (
+	grafanaSubDomain = "grafana"
+	grafanaPurpose   = "grafana"
+	clientSecretName = "client-secret"
+	secretKeyName    = "secret-key"
+	adminUserName    = "admin-user"
+	adminPassName    = "admin-pass"
+	secretsCfgName   = "grafana-secrets-cm"
+)
+
+func grafanaDomain(baseDomain string) string {
+	return fmt.Sprintf("%s.%s", grafanaSubDomain, baseDomain)
+}
+
+func (s *kubePromStackService) DeleteKubePromStack(ctx context.Context, opts client.DeleteKubePromStackOpts) error {
+	err := s.spinner.Start("kubepromstack")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	err = s.cert.DeleteCertificate(ctx, api.DeleteCertificateOpts{
+		ID:     opts.ID,
+		Domain: grafanaDomain(opts.Domain),
+	})
+	if err != nil {
+		return err
+	}
+
+	err = s.ident.DeleteIdentityPoolClient(ctx, api.DeleteIdentityPoolClientOpts{
+		ID:      opts.ID,
+		Purpose: grafanaPurpose,
+	})
+
+	for _, secretName := range []string{clientSecretName, secretKeyName, adminUserName, adminPassName} {
+		if err = s.param.DeleteSecret(ctx, api.DeleteSecretOpts{Name: secretName}); err != nil {
+			return err
+		}
+	}
+
+	// This is too heavy handed, we should only remove the chart
+	// and the secrets manifest. We can, however, wait until Loki
+	// with doing this.
+	err = s.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
+		ID:        opts.ID,
+		Namespace: config.DefaultMonitoringNamespace,
+	})
+	if err != nil {
+		return err
+	}
+
+	r1, err := s.store.RemoveKubePromStack(opts.ID)
+	if err != nil {
+		return err
+	}
+
+	r2, err := s.state.RemoveKubePromStack(opts.ID)
+	if err != nil {
+		return err
+	}
+
+	return s.report.ReportRemoveKubePromStack([]*store.Report{r1, r2})
+}
+
 // nolint: funlen
-func (s *kubePrometheusStackService) CreateKubePromStack(ctx context.Context, opts client.CreateKubePromStackOpts) (*client.KubePromStack, error) {
+func (s *kubePromStackService) CreateKubePromStack(ctx context.Context, opts client.CreateKubePromStackOpts) (*client.KubePromStack, error) {
 	err := s.spinner.Start("kubepromstack")
 	if err != nil {
 		return nil, err
@@ -41,8 +110,8 @@ func (s *kubePrometheusStackService) CreateKubePromStack(ctx context.Context, op
 
 	cert, err := s.cert.CreateCertificate(ctx, api.CreateCertificateOpts{
 		ID:           opts.ID,
-		FQDN:         fmt.Sprintf("grafana.%s.", opts.Domain),
-		Domain:       fmt.Sprintf("grafana.%s", opts.Domain),
+		FQDN:         fmt.Sprintf("%s.", grafanaDomain(opts.Domain)),
+		Domain:       grafanaDomain(opts.Domain),
 		HostedZoneID: opts.HostedZoneID,
 	})
 	if err != nil {
@@ -52,7 +121,7 @@ func (s *kubePrometheusStackService) CreateKubePromStack(ctx context.Context, op
 	poolClient, err := s.ident.CreateIdentityPoolClient(ctx, api.CreateIdentityPoolClientOpts{
 		ID:          opts.ID,
 		UserPoolID:  opts.UserPoolID,
-		Purpose:     "grafana",
+		Purpose:     grafanaPurpose,
 		CallbackURL: fmt.Sprintf("https://%s/login/generic_oauth", cert.Domain),
 	})
 	if err != nil {
@@ -61,7 +130,7 @@ func (s *kubePrometheusStackService) CreateKubePromStack(ctx context.Context, op
 
 	clientSecret, err := s.param.CreateSecret(ctx, api.CreateSecretOpts{
 		ID:     opts.ID,
-		Name:   "client-secret",
+		Name:   clientSecretName,
 		Secret: poolClient.ClientSecret,
 	})
 	if err != nil {
@@ -70,7 +139,7 @@ func (s *kubePrometheusStackService) CreateKubePromStack(ctx context.Context, op
 
 	cookieSecret, err := s.param.CreateSecret(ctx, api.CreateSecretOpts{
 		ID:     opts.ID,
-		Name:   "secret-key",
+		Name:   secretKeyName,
 		Secret: uuid.NewString(),
 	})
 	if err != nil {
@@ -79,7 +148,7 @@ func (s *kubePrometheusStackService) CreateKubePromStack(ctx context.Context, op
 
 	adminUser, err := s.param.CreateSecret(ctx, api.CreateSecretOpts{
 		ID:     opts.ID,
-		Name:   "admin-user",
+		Name:   adminUserName,
 		Secret: uuid.NewString(),
 	})
 	if err != nil {
@@ -88,7 +157,7 @@ func (s *kubePrometheusStackService) CreateKubePromStack(ctx context.Context, op
 
 	adminPass, err := s.param.CreateSecret(ctx, api.CreateSecretOpts{
 		ID:     opts.ID,
-		Name:   "admin-pass",
+		Name:   adminPassName,
 		Secret: uuid.NewString(),
 	})
 	if err != nil {
@@ -99,8 +168,8 @@ func (s *kubePrometheusStackService) CreateKubePromStack(ctx context.Context, op
 		ID: opts.ID,
 		Manifests: []api.Manifest{
 			{
-				Name:      "grafana-secrets-cm",
-				Namespace: "monitoring",
+				Name:      secretsCfgName,
+				Namespace: config.DefaultMonitoringNamespace,
 				Data: []api.Data{
 					{
 						Key:  clientSecret.Path,
@@ -129,7 +198,7 @@ func (s *kubePrometheusStackService) CreateKubePromStack(ctx context.Context, op
 		Hostname:               cert.Domain,
 		AuthHostname:           opts.AuthDomain,
 		ClientID:               poolClient.ClientID,
-		SecretsConfigName:      "grafana-secrets-cm",
+		SecretsConfigName:      secretsCfgName,
 		SecretsCookieSecretKey: cookieSecret.Name,
 		SecretsClientSecretKey: clientSecret.Name,
 		SecretsAdminUserKey:    adminUser.Name,
@@ -145,7 +214,7 @@ func (s *kubePrometheusStackService) CreateKubePromStack(ctx context.Context, op
 		Hostname:               cert.Domain,
 		AuthHostname:           opts.AuthDomain,
 		ClientID:               poolClient.ClientID,
-		SecretsConfigName:      "grafana-secrets-cm",
+		SecretsConfigName:      secretsCfgName,
 		SecretsCookieSecretKey: cookieSecret.Name,
 		SecretsClientSecretKey: clientSecret.Name,
 		SecretsAdminUserKey:    adminUser.Name,
@@ -166,7 +235,7 @@ func (s *kubePrometheusStackService) CreateKubePromStack(ctx context.Context, op
 		return nil, err
 	}
 
-	err = s.report.ReportKubePromStack(stack, []*store.Report{r1, r2})
+	err = s.report.ReportSaveKubePromStack(stack, []*store.Report{r1, r2})
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +255,7 @@ func NewKubePrometheusStackService(
 	manifest client.ManifestService,
 	param client.ParameterService,
 ) client.KubePromStackService {
-	return &kubePrometheusStackService{
+	return &kubePromStackService{
 		spinner:  spinner,
 		api:      api,
 		store:    store,

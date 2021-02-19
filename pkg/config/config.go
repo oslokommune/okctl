@@ -47,8 +47,9 @@ const (
 
 	DefaultEKSKubernetesVersion = "1.17"
 
-	DefaultGithubHost      = "git@github.com"
-	DefaultArgoCDNamespace = "argocd"
+	DefaultGithubHost          = "git@github.com"
+	DefaultArgoCDNamespace     = "argocd"
+	DefaultMonitoringNamespace = "monitoring"
 
 	DefaultClusterConfig         = "cluster.yml"
 	DefaultClusterKubeConfig     = "kubeconfig"

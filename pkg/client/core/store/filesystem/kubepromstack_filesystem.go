@@ -27,6 +27,12 @@ type kubePromStackStore struct {
 	fs        *afero.Afero
 }
 
+func (s *kubePromStackStore) RemoveKubePromStack(_ api.ID) (*store.Report, error) {
+	return store.NewFileSystem(s.helmPaths.BaseDir, s.fs).
+		RemoveDir("").
+		Do()
+}
+
 func (s *kubePromStackStore) SaveKubePromStack(stack *client.KubePromStack) (*store.Report, error) {
 	argo := &KubePromStack{
 		ID:                     stack.ID,

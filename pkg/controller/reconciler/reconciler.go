@@ -36,7 +36,7 @@ func (manager *Manager) AddReconciler(key resourcetree.ResourceNodeType, reconci
 
 // Reconcile chooses the correct reconciler to use based on a nodes type
 func (manager *Manager) Reconcile(node *resourcetree.ResourceNode) (result *ReconcilationResult, err error) {
-	spinner := manager.commonMetadata.Spin.SubSpinner()
+	spinner := manager.commonMetadata.Spin
 
 	err = spinner.Start(resourcetree.ResourceNodeTypeToString(node.Type))
 	if err != nil {

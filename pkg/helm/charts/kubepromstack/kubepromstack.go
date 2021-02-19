@@ -12,7 +12,7 @@ import (
 
 // New returns an initialised helm chart:
 // - https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
-func New(values interface{}) *helm.Chart {
+func New(values *Values) *helm.Chart {
 	return &helm.Chart{
 		RepositoryName: "prometheus-community",
 		RepositoryURL:  "https://prometheus-community.github.io/helm-charts",

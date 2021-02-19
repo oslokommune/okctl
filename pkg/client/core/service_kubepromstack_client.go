@@ -54,9 +54,12 @@ func (s *kubePromStackService) DeleteKubePromStack(ctx context.Context, opts cli
 		err = s.spinner.Stop()
 	}()
 
-	err = s.cert.DeleteCertificate(ctx, api.DeleteCertificateOpts{
-		ID:     opts.ID,
-		Domain: grafanaDomain(opts.Domain),
+	// This is too heavy handed, we should only remove the chart
+	// and the secrets manifest. We can, however, wait until Loki
+	// with doing this.
+	err = s.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
+		ID:        opts.ID,
+		Namespace: config.DefaultMonitoringNamespace,
 	})
 	if err != nil {
 		return err
@@ -73,12 +76,9 @@ func (s *kubePromStackService) DeleteKubePromStack(ctx context.Context, opts cli
 		}
 	}
 
-	// This is too heavy handed, we should only remove the chart
-	// and the secrets manifest. We can, however, wait until Loki
-	// with doing this.
-	err = s.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
-		ID:        opts.ID,
-		Namespace: config.DefaultMonitoringNamespace,
+	err = s.cert.DeleteCertificate(ctx, api.DeleteCertificateOpts{
+		ID:     opts.ID,
+		Domain: grafanaDomain(opts.Domain),
 	})
 	if err != nil {
 		return err

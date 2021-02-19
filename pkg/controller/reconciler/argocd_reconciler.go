@@ -21,6 +21,11 @@ type ArgocdResourceState struct {
 	AuthDomain string
 }
 
+// NodeType returns the relevant ResourceNodeType for this reconciler
+func (z *argocdReconciler) NodeType() resourcetree.ResourceNodeType {
+	return resourcetree.ResourceNodeTypeArgoCD
+}
+
 // argocdReconciler contains service and metadata for the relevant resource
 type argocdReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
@@ -49,15 +54,6 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconcil
 
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		err := z.commonMetadata.Spin.Start("Github")
-		if err != nil {
-			return nil, err
-		}
-
-		defer func() {
-			err = z.commonMetadata.Spin.Stop()
-		}()
-
 		repository := client.NewGithubRepository(
 			z.commonMetadata.ClusterID,
 			config.DefaultGithubHost,

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -30,6 +31,8 @@ type applyClusterOpts struct {
 	AWSCredentialsType    string
 	GithubCredentialsType string
 
+	DisableSpinner bool
+
 	File string
 
 	Declaration *v1alpha1.Cluster
@@ -54,6 +57,20 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 		Short:   "apply a cluster definition to the world",
 		Long:    "ensures your cluster reflects the declaration of it",
 		Args:    cobra.ExactArgs(0),
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			if !o.Debug {
+				return nil
+			}
+
+			result, err := yaml.Marshal(o.RepoStateWithEnv)
+			if err != nil {
+				return fmt.Errorf("marshalling repo state: %w", err)
+			}
+
+			_, _ = o.Out.Write(result)
+
+			return nil
+		},
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) (err error) {
 			return nil
 		},
@@ -100,12 +117,19 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, _ []string) (err error) {
-			spin, err := spinner.New("synchronizing", o.Err)
+			var spinnerWriter io.Writer
+			if opts.DisableSpinner {
+				spinnerWriter = ioutil.Discard
+			} else {
+				spinnerWriter = o.Err
+			}
+
+			spin, err := spinner.New("synchronizing", spinnerWriter)
 			if err != nil {
 				return fmt.Errorf("error creating spinner: %w", err)
 			}
 
-			services, err := o.ClientServices(spin)
+			services, err := o.ClientServices(spinner.NewNoopSpinner())
 			if err != nil {
 				return fmt.Errorf("error getting services: %w", err)
 			}
@@ -114,30 +138,28 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			desiredTree := controller.CreateDesiredStateTree(opts.Declaration)
 
-			reconciliationManager := reconciler.NewReconcilerManager(&resourcetree.CommonMetadata{
+			reconciliationManager := reconciler.NewCompositeReconciler(spin,
+				reconciler.NewALBIngressReconciler(services.ALBIngressController),
+				reconciler.NewArgocdReconciler(services.ArgoCD, services.Github),
+				reconciler.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService),
+				reconciler.NewAutoscalerReconciler(services.Autoscaler),
+				reconciler.NewBlockstorageReconciler(services.Blockstorage),
+				reconciler.NewClusterReconciler(services.Cluster),
+				reconciler.NewExternalDNSReconciler(services.ExternalDNS),
+				reconciler.NewExternalSecretsReconciler(services.ExternalSecrets),
+				reconciler.NewGithubReconciler(services.Github),
+				reconciler.NewIdentityManagerReconciler(services.IdentityManager),
+				reconciler.NewVPCReconciler(services.Vpc),
+				reconciler.NewZoneReconciler(services.Domain),
+				reconciler.NewNameserverDelegationReconciler(services.NameserverHandler, services.Domain),
+			)
+
+			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{
 				Ctx:         o.Ctx,
 				Out:         o.Out,
-				Spin:        spin,
 				ClusterID:   clusterID,
 				Declaration: opts.Declaration,
 			})
-
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeALBIngress, reconciler.NewALBIngressReconciler(services.ALBIngressController))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeArgoCD, reconciler.NewArgocdReconciler(services.ArgoCD, services.Github))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeAWSLoadBalancerController, reconciler.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeAutoscaler, reconciler.NewAutoscalerReconciler(services.Autoscaler))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeBlockstorage, reconciler.NewBlockstorageReconciler(services.Blockstorage))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeCluster, reconciler.NewClusterReconciler(services.Cluster))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeExternalDNS, reconciler.NewExternalDNSReconciler(services.ExternalDNS))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeExternalSecrets, reconciler.NewExternalSecretsReconciler(services.ExternalSecrets))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeGithub, reconciler.NewGithubReconciler(services.Github))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeIdentityManager, reconciler.NewIdentityManagerReconciler(services.IdentityManager))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeVPC, reconciler.NewVPCReconciler(services.Vpc))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeZone, reconciler.NewZoneReconciler(services.Domain))
-			reconciliationManager.AddReconciler(
-				resourcetree.ResourceNodeTypeNameserverDelegator,
-				reconciler.NewNameserverDelegationReconciler(services.NameserverHandler, services.Domain),
-			)
 
 			synchronizeOpts := &controller.SynchronizeOpts{
 				ClusterID:               clusterID,
@@ -171,16 +193,23 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 	flags := cmd.Flags()
 
-	flags.StringVarP(&opts.File, "file", "f", "", usageApplyClusterFile)
-	flags.StringVarP(&opts.AWSCredentialsType, "aws-credentials-type", "a", context.AWSCredentialsTypeSAML,
+	flags.StringVarP(&opts.AWSCredentialsType,
+		"aws-credentials-type",
+		"a",
+		context.AWSCredentialsTypeSAML,
 		fmt.Sprintf(
 			"The form of authentication to use for AWS. Possible values: [%s,%s]",
 			context.AWSCredentialsTypeSAML,
 			context.AWSCredentialsTypeAccessKey,
 		),
 	)
-	flags.StringVarP(
-		&opts.GithubCredentialsType,
+	flags.StringVarP(&opts.File,
+		"file",
+		"f",
+		"",
+		usageApplyClusterFile,
+	)
+	flags.StringVarP(&opts.GithubCredentialsType,
 		"github-credentials-type",
 		"g",
 		context.GithubCredentialsTypeDeviceAuthentication,
@@ -189,6 +218,11 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			context.GithubCredentialsTypeDeviceAuthentication,
 			context.GithubCredentialsTypeToken,
 		),
+	)
+	flags.BoolVar(&opts.DisableSpinner,
+		"no-spinner",
+		false,
+		"disables progress spinner",
 	)
 
 	cmd.Hidden = true

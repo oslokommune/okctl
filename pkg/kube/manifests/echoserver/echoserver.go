@@ -82,11 +82,11 @@ func (e *EchoServer) DeploymentManifest() *appsv1.Deployment {
 	}
 }
 
-//apiVersion: v1
-//kind: Service
-//metadata:
+// apiVersion: v1
+// kind: Service
+// metadata:
 //  name: echoserver
-//spec:
+// spec:
 //  ports:
 //  - port: 80
 //    targetPort: 8080
@@ -94,13 +94,13 @@ func (e *EchoServer) DeploymentManifest() *appsv1.Deployment {
 //  selector:
 //    app: echoserver
 
-//apiVersion: extensions/v1beta1
-//kind: Ingress
-//metadata:
+// apiVersion: extensions/v1beta1
+// kind: Ingress
+// metadata:
 //  name: echoserver
 //  annotations:
 //    kubernetes.io/ingress.class: "nginx"
-//spec:
+// spec:
 //  rules:
 //  - host: echo.example.com
 //    http:

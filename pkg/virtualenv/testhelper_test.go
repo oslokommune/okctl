@@ -118,8 +118,7 @@ func (h *testHelper) NewTestMacOsLoginShellGetter() shellgetter.MacOsUserShellCm
 }
 
 // DefaultMacOsShellGetter is the default implementation for getting the user's login shell on macOS
-type TestMacOsShellGetter struct {
-}
+type TestMacOsShellGetter struct{}
 
 const MacOsUserLoginShell string = "/bin/someMacShell"
 

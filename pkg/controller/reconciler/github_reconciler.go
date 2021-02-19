@@ -17,24 +17,20 @@ type githubReconciler struct {
 	client client.GithubService
 }
 
+// NodeType returns the relevant ResourceNodeType for this reconciler
+func (z *githubReconciler) NodeType() resourcetree.ResourceNodeType {
+	return resourcetree.ResourceNodeTypeGithub
+}
+
 // SetCommonMetadata saves common metadata for use in Reconcile()
 func (z *githubReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *githubReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *githubReconciler) Reconcile(node *resourcetree.ResourceNode) (result *ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		err := z.commonMetadata.Spin.Start("Github")
-		if err != nil {
-			return nil, err
-		}
-
-		defer func() {
-			err = z.commonMetadata.Spin.Stop()
-		}()
-
 		_, err = z.client.CreateDeployKey(z.commonMetadata.Ctx, client.NewGithubRepository(
 			z.commonMetadata.ClusterID,
 			config.DefaultGithubHost,

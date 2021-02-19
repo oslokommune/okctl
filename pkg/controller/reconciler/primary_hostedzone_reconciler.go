@@ -16,6 +16,11 @@ type zoneReconciler struct {
 	client client.DomainService
 }
 
+// NodeType returns the relevant ResourceNodeType for this reconciler
+func (z *zoneReconciler) NodeType() resourcetree.ResourceNodeType {
+	return resourcetree.ResourceNodeTypeZone
+}
+
 // SetCommonMetadata saves common metadata for use in Reconcile()
 func (z *zoneReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata

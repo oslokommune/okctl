@@ -30,6 +30,11 @@ type nameserverDelegationReconciler struct {
 	domainService client.DomainService
 }
 
+// NodeType returns the relevant ResourceNodeType for this reconciler
+func (z *nameserverDelegationReconciler) NodeType() resourcetree.ResourceNodeType {
+	return resourcetree.ResourceNodeTypeNameserverDelegator
+}
+
 // SetCommonMetadata saves common metadata for use in Reconcile()
 func (z *nameserverDelegationReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
@@ -44,15 +49,6 @@ func (z *nameserverDelegationReconciler) Reconcile(node *resourcetree.ResourceNo
 
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		err := z.commonMetadata.Spin.Start("Nameserver delegation")
-		if err != nil {
-			return nil, err
-		}
-
-		defer func() {
-			err = z.commonMetadata.Spin.Stop()
-		}()
-
 		primaryHostedZoneFQDN := dns.Fqdn(z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain)
 
 		record, err := z.client.CreateNameserverRecordDelegationRequest(&client.CreateNameserverDelegationRequestOpts{

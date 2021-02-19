@@ -2,7 +2,13 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
 	"regexp"
+
+	"sigs.k8s.io/yaml"
+
+	"github.com/oslokommune/okctl/pkg/context"
 
 	"github.com/oslokommune/okctl/pkg/client"
 
@@ -38,6 +44,12 @@ func buildDeleteCommand(o *okctl.Okctl) *cobra.Command {
 
 // DeleteClusterOpts contains the required inputs
 type DeleteClusterOpts struct {
+	AWSCredentialsType    string
+	GithubCredentialsType string
+
+	DisableSpinner bool
+	Confirm        bool
+
 	Region       string
 	AWSAccountID string
 	Environment  string
@@ -66,6 +78,8 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 including VPC, this is a highly destructive operation.`,
 		Args: cobra.ExactArgs(deleteClusterArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
+			o.AWSCredentialsType = opts.AWSCredentialsType
+			o.GithubCredentialsType = opts.GithubCredentialsType
 			environment := args[0]
 
 			err := validation.Validate(
@@ -96,6 +110,15 @@ including VPC, this is a highly destructive operation.`,
 				return err
 			}
 
+			if o.Debug {
+				result, err := yaml.Marshal(o.RepoStateWithEnv)
+				if err != nil {
+					return fmt.Errorf("marshalling repo state: %w", err)
+				}
+
+				_, _ = o.Out.Write(result)
+			}
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -107,9 +130,16 @@ including VPC, this is a highly destructive operation.`,
 				ClusterName:  opts.ClusterName,
 			}
 
+			var spinnerWriter io.Writer
+			if opts.DisableSpinner {
+				spinnerWriter = ioutil.Discard
+			} else {
+				spinnerWriter = o.Err
+			}
+
 			delzones, _ := cmd.Flags().GetString(deleteHostedZoneFlag)
 
-			ready, err := checkifReady(id.ClusterName, o)
+			ready, err := checkifReady(id.ClusterName, o, opts.Confirm)
 			if err != nil || !ready {
 				return err
 			}
@@ -119,7 +149,7 @@ including VPC, this is a highly destructive operation.`,
 				return err
 			}
 
-			spin, err := spinner.New("deleting", o.Err)
+			spin, err := spinner.New("deleting", spinnerWriter)
 			if err != nil {
 				return err
 			}
@@ -218,10 +248,41 @@ including VPC, this is a highly destructive operation.`,
 		},
 	}
 
+	flags := cmd.Flags()
+
+	flags.StringVarP(&opts.AWSCredentialsType,
+		"aws-credentials-type",
+		"a",
+		context.AWSCredentialsTypeSAML,
+		fmt.Sprintf(
+			"The form of authentication to use for AWS. Possible values: [%s,%s]",
+			context.AWSCredentialsTypeSAML,
+			context.AWSCredentialsTypeAccessKey,
+		),
+	)
+	flags.StringVarP(
+		&opts.GithubCredentialsType,
+		"github-credentials-type",
+		"g",
+		context.GithubCredentialsTypeDeviceAuthentication,
+		fmt.Sprintf(
+			"The form of authentication to use for Github. Possible values: [%s,%s]",
+			context.GithubCredentialsTypeDeviceAuthentication,
+			context.GithubCredentialsTypeToken,
+		),
+	)
+
+	flags.BoolVar(&opts.DisableSpinner, "no-spinner", false, "disables progress spinner")
+	flags.BoolVarP(&opts.Confirm, "confirm", "y", false, "confirm all choices")
+
 	return cmd
 }
 
-func checkifReady(clusterName string, o *okctl.Okctl) (bool, error) {
+func checkifReady(clusterName string, o *okctl.Okctl, preconfirmed bool) (bool, error) {
+	if preconfirmed {
+		return true, nil
+	}
+
 	ready := false
 	prompt := &survey.Confirm{
 		Message: fmt.Sprintf("This will delete %s and all assosicated resources, are you sure you want to continue?", clusterName),

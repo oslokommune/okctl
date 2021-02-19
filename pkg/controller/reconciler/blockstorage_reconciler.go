@@ -14,6 +14,11 @@ type blockstorageReconciler struct {
 	client client.BlockstorageService
 }
 
+// NodeType returns the relevant ResourceNodeType for this reconciler
+func (z *blockstorageReconciler) NodeType() resourcetree.ResourceNodeType {
+	return resourcetree.ResourceNodeTypeBlockstorage
+}
+
 // SetCommonMetadata saves common metadata for use in Reconcile()
 func (z *blockstorageReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata

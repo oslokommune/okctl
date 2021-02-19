@@ -21,6 +21,11 @@ type ArgocdResourceState struct {
 	AuthDomain string
 }
 
+// NodeType returns the relevant ResourceNodeType for this reconciler
+func (z *argocdReconciler) NodeType() resourcetree.ResourceNodeType {
+	return resourcetree.ResourceNodeTypeArgoCD
+}
+
 // argocdReconciler contains service and metadata for the relevant resource
 type argocdReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata

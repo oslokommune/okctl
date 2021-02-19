@@ -14,6 +14,11 @@ type externalSecretsReconciler struct {
 	client client.ExternalSecretsService
 }
 
+// NodeType returns the relevant ResourceNodeType for this reconciler
+func (z *externalSecretsReconciler) NodeType() resourcetree.ResourceNodeType {
+	return resourcetree.ResourceNodeTypeExternalSecrets
+}
+
 // SetCommonMetadata saves common metadata for use in Reconcile()
 func (z *externalSecretsReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata

@@ -17,6 +17,11 @@ type githubReconciler struct {
 	client client.GithubService
 }
 
+// NodeType returns the relevant ResourceNodeType for this reconciler
+func (z *githubReconciler) NodeType() resourcetree.ResourceNodeType {
+	return resourcetree.ResourceNodeTypeGithub
+}
+
 // SetCommonMetadata saves common metadata for use in Reconcile()
 func (z *githubReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata

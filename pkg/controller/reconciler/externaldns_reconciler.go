@@ -20,6 +20,11 @@ type externalDNSReconciler struct {
 	client client.ExternalDNSService
 }
 
+// NodeType returns the relevant ResourceNodeType for this reconciler
+func (z *externalDNSReconciler) NodeType() resourcetree.ResourceNodeType {
+	return resourcetree.ResourceNodeTypeExternalDNS
+}
+
 // SetCommonMetadata saves common metadata for use in Reconcile()
 func (z *externalDNSReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata

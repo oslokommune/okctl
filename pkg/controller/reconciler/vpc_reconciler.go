@@ -15,6 +15,11 @@ type vpcReconciler struct {
 	client client.VPCService
 }
 
+// NodeType returns the relevant ResourceNodeType for this reconciler
+func (z *vpcReconciler) NodeType() resourcetree.ResourceNodeType {
+	return resourcetree.ResourceNodeTypeVPC
+}
+
 // SetCommonMetadata saves common metadata for use in Reconcile()
 func (z *vpcReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata

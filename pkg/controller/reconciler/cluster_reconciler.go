@@ -23,6 +23,11 @@ type clusterReconciler struct {
 	client client.ClusterService
 }
 
+// NodeType returns the relevant ResourceNodeType for this reconciler
+func (z *clusterReconciler) NodeType() resourcetree.ResourceNodeType {
+	return resourcetree.ResourceNodeTypeCluster
+}
+
 // SetCommonMetadata saves common metadata for use in Reconcile()
 func (z *clusterReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata

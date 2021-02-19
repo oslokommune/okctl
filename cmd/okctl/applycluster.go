@@ -143,6 +143,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				reconciler.NewArgocdReconciler(services.ArgoCD, services.Github),
 				reconciler.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService),
 				reconciler.NewAutoscalerReconciler(services.Autoscaler),
+				reconciler.NewKubePrometheusStackReconciler(services.KubePromStack),
 				reconciler.NewBlockstorageReconciler(services.Blockstorage),
 				reconciler.NewClusterReconciler(services.Cluster),
 				reconciler.NewExternalDNSReconciler(services.ExternalDNS),

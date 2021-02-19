@@ -138,30 +138,28 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			desiredTree := controller.CreateDesiredStateTree(opts.Declaration)
 
-			reconciliationManager := reconciler.NewReconcilerManager(&resourcetree.CommonMetadata{
+			reconciliationManager := reconciler.NewCompositeReconciler(spin,
+				reconciler.NewALBIngressReconciler(services.ALBIngressController),
+				reconciler.NewArgocdReconciler(services.ArgoCD, services.Github),
+				reconciler.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService),
+				reconciler.NewAutoscalerReconciler(services.Autoscaler),
+				reconciler.NewBlockstorageReconciler(services.Blockstorage),
+				reconciler.NewClusterReconciler(services.Cluster),
+				reconciler.NewExternalDNSReconciler(services.ExternalDNS),
+				reconciler.NewExternalSecretsReconciler(services.ExternalSecrets),
+				reconciler.NewGithubReconciler(services.Github),
+				reconciler.NewIdentityManagerReconciler(services.IdentityManager),
+				reconciler.NewVPCReconciler(services.Vpc),
+				reconciler.NewZoneReconciler(services.Domain),
+				reconciler.NewNameserverDelegationReconciler(services.NameserverHandler, services.Domain),
+			)
+
+			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{
 				Ctx:         o.Ctx,
 				Out:         o.Out,
-				Spin:        spin,
 				ClusterID:   clusterID,
 				Declaration: opts.Declaration,
 			})
-
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeALBIngress, reconciler.NewALBIngressReconciler(services.ALBIngressController))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeArgoCD, reconciler.NewArgocdReconciler(services.ArgoCD, services.Github))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeAWSLoadBalancerController, reconciler.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeAutoscaler, reconciler.NewAutoscalerReconciler(services.Autoscaler))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeBlockstorage, reconciler.NewBlockstorageReconciler(services.Blockstorage))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeCluster, reconciler.NewClusterReconciler(services.Cluster))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeExternalDNS, reconciler.NewExternalDNSReconciler(services.ExternalDNS))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeExternalSecrets, reconciler.NewExternalSecretsReconciler(services.ExternalSecrets))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeGithub, reconciler.NewGithubReconciler(services.Github))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeIdentityManager, reconciler.NewIdentityManagerReconciler(services.IdentityManager))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeVPC, reconciler.NewVPCReconciler(services.Vpc))
-			reconciliationManager.AddReconciler(resourcetree.ResourceNodeTypeZone, reconciler.NewZoneReconciler(services.Domain))
-			reconciliationManager.AddReconciler(
-				resourcetree.ResourceNodeTypeNameserverDelegator,
-				reconciler.NewNameserverDelegationReconciler(services.NameserverHandler, services.Domain),
-			)
 
 			synchronizeOpts := &controller.SynchronizeOpts{
 				ClusterID:               clusterID,

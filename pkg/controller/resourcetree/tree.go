@@ -8,8 +8,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
-	"github.com/oslokommune/okctl/pkg/spinner"
-
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
@@ -101,8 +99,7 @@ const (
 type CommonMetadata struct {
 	Ctx context.Context
 
-	Out  io.Writer
-	Spin spinner.Spinner
+	Out io.Writer
 
 	ClusterID   api.ID
 	Declaration *v1alpha1.Cluster

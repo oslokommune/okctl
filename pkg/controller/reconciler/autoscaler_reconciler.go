@@ -14,6 +14,11 @@ type autoscalerReconciler struct {
 	client client.AutoscalerService
 }
 
+// NodeType returns the relevant ResourceNodeType for this reconciler
+func (z *autoscalerReconciler) NodeType() resourcetree.ResourceNodeType {
+	return resourcetree.ResourceNodeTypeAutoscaler
+}
+
 // SetCommonMetadata saves common metadata for use in Reconcile()
 func (z *autoscalerReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata

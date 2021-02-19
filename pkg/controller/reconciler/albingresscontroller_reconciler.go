@@ -19,6 +19,11 @@ type albIngressReconciler struct {
 	client         client.ALBIngressControllerService
 }
 
+// NodeType returns the relevant ResourceNodeType for this reconciler
+func (z *albIngressReconciler) NodeType() resourcetree.ResourceNodeType {
+	return resourcetree.ResourceNodeTypeALBIngress
+}
+
 // SetCommonMetadata stores common metadata for later use
 func (z *albIngressReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata

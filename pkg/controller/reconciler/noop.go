@@ -8,6 +8,11 @@ import (
 // reconcilers
 type NoopReconciler struct{}
 
+// NodeType returns the relevant ResourceNodeType for this reconciler
+func (receiver *NoopReconciler) NodeType() resourcetree.ResourceNodeType {
+	return resourcetree.ResourceNodeTypeGroup
+}
+
 // SetCommonMetadata knows how to store common metadata on the reconciler. This should do nothing if common metadata is
 // not needed
 func (receiver *NoopReconciler) SetCommonMetadata(_ *resourcetree.CommonMetadata) {

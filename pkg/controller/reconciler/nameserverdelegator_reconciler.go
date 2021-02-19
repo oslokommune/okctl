@@ -30,6 +30,11 @@ type nameserverDelegationReconciler struct {
 	domainService client.DomainService
 }
 
+// NodeType returns the relevant ResourceNodeType for this reconciler
+func (z *nameserverDelegationReconciler) NodeType() resourcetree.ResourceNodeType {
+	return resourcetree.ResourceNodeTypeNameserverDelegator
+}
+
 // SetCommonMetadata saves common metadata for use in Reconcile()
 func (z *nameserverDelegationReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata

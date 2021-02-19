@@ -13,6 +13,11 @@ type AWSLoadBalancerControllerResourceState struct {
 	VpcID string
 }
 
+// NodeType returns the relevant ResourceNodeType for this reconciler
+func (z *awsLoadBalancerControllerReconciler) NodeType() resourcetree.ResourceNodeType {
+	return resourcetree.ResourceNodeTypeAWSLoadBalancerController
+}
+
 // albIngressReconciler contains service and metadata for the relevant resource
 type awsLoadBalancerControllerReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata

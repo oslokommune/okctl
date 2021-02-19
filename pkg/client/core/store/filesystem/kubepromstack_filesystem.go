@@ -9,8 +9,16 @@ import (
 
 // KubePromStack contains the state written to the outputs
 type KubePromStack struct {
-	ID       api.ID
-	Hostname string
+	ID                     api.ID
+	CertificateARN         string
+	Hostname               string
+	AuthHostname           string
+	ClientID               string
+	SecretsConfigName      string
+	SecretsCookieSecretKey string
+	SecretsClientSecretKey string
+	SecretsAdminUserKey    string
+	SecretsAdminPassKey    string
 }
 
 type kubePromStackStore struct {
@@ -21,8 +29,16 @@ type kubePromStackStore struct {
 
 func (s *kubePromStackStore) SaveKubePromStack(stack *client.KubePromStack) (*store.Report, error) {
 	argo := &KubePromStack{
-		ID:       stack.ID,
-		Hostname: stack.Hostname,
+		ID:                     stack.ID,
+		CertificateARN:         stack.CertificateARN,
+		Hostname:               stack.Hostname,
+		AuthHostname:           stack.AuthHostname,
+		ClientID:               stack.ClientID,
+		SecretsConfigName:      stack.SecretsConfigName,
+		SecretsCookieSecretKey: stack.SecretsCookieSecretKey,
+		SecretsClientSecretKey: stack.SecretsClientSecretKey,
+		SecretsAdminUserKey:    stack.SecretsAdminUserKey,
+		SecretsAdminPassKey:    stack.SecretsAdminPassKey,
 	}
 
 	chart := &Helm{

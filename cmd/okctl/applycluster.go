@@ -31,7 +31,7 @@ type applyClusterOpts struct {
 	AWSCredentialsType    string
 	GithubCredentialsType string
 
-	Quiet bool
+	DisableSpinner bool
 
 	File string
 
@@ -118,7 +118,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, _ []string) (err error) {
 			var spinnerWriter io.Writer
-			if opts.Quiet {
+			if opts.DisableSpinner {
 				spinnerWriter = ioutil.Discard
 			} else {
 				spinnerWriter = o.Err
@@ -193,16 +193,23 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 	flags := cmd.Flags()
 
-	flags.StringVarP(&opts.File, "file", "f", "", usageApplyClusterFile)
-	flags.StringVarP(&opts.AWSCredentialsType, "aws-credentials-type", "a", context.AWSCredentialsTypeSAML,
+	flags.StringVarP(&opts.AWSCredentialsType,
+		"aws-credentials-type",
+		"a",
+		context.AWSCredentialsTypeSAML,
 		fmt.Sprintf(
 			"The form of authentication to use for AWS. Possible values: [%s,%s]",
 			context.AWSCredentialsTypeSAML,
 			context.AWSCredentialsTypeAccessKey,
 		),
 	)
-	flags.StringVarP(
-		&opts.GithubCredentialsType,
+	flags.StringVarP(&opts.File,
+		"file",
+		"f",
+		"",
+		usageApplyClusterFile,
+	)
+	flags.StringVarP(&opts.GithubCredentialsType,
 		"github-credentials-type",
 		"g",
 		context.GithubCredentialsTypeDeviceAuthentication,
@@ -212,7 +219,11 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			context.GithubCredentialsTypeToken,
 		),
 	)
-	flags.BoolVarP(&opts.Quiet, "quiet", "q", false, "reduces output to screen")
+	flags.BoolVar(&opts.DisableSpinner,
+		"no-spinner",
+		false,
+		"disables progress spinner",
+	)
 
 	cmd.Hidden = true
 

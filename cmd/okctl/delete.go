@@ -47,8 +47,8 @@ type DeleteClusterOpts struct {
 	AWSCredentialsType    string
 	GithubCredentialsType string
 
-	Quiet   bool
-	Confirm bool
+	DisableSpinner bool
+	Confirm        bool
 
 	Region       string
 	AWSAccountID string
@@ -131,7 +131,7 @@ including VPC, this is a highly destructive operation.`,
 			}
 
 			var spinnerWriter io.Writer
-			if opts.Quiet {
+			if opts.DisableSpinner {
 				spinnerWriter = ioutil.Discard
 			} else {
 				spinnerWriter = o.Err
@@ -250,7 +250,10 @@ including VPC, this is a highly destructive operation.`,
 
 	flags := cmd.Flags()
 
-	flags.StringVarP(&opts.AWSCredentialsType, "aws-credentials-type", "a", context.AWSCredentialsTypeSAML,
+	flags.StringVarP(&opts.AWSCredentialsType,
+		"aws-credentials-type",
+		"a",
+		context.AWSCredentialsTypeSAML,
 		fmt.Sprintf(
 			"The form of authentication to use for AWS. Possible values: [%s,%s]",
 			context.AWSCredentialsTypeSAML,
@@ -269,7 +272,7 @@ including VPC, this is a highly destructive operation.`,
 		),
 	)
 
-	flags.BoolVarP(&opts.Quiet, "quiet", "q", false, "reduces output to screen")
+	flags.BoolVar(&opts.DisableSpinner, "no-spinner", false, "disables progress spinner")
 	flags.BoolVarP(&opts.Confirm, "confirm", "y", false, "confirm all choices")
 
 	return cmd

@@ -8,6 +8,7 @@ Kubernetes is [highly configurable and extensible](https://kubernetes.io/docs/co
 - [AWS ALB Ingress Controller](#aws-alb-ingress-controller)
 - [ExternalDNS](#externaldns)
 - [Cluster Autoscaler](#cluster-autoscaler)
+- [Kubernetes Prometheus](#kubernetes-prometheus)
 
 ### Kubernetes External Secrets
 
@@ -172,3 +173,7 @@ spec:
 ### Amazon Elastic Block Store (EBS) CSI driver
 
 [Amazon Elastic Block Store (EBS) CSI driver](https://github.com/kubernetes-sigs/aws-ebs-csi-driver) provides a CSI interface used by Container Orchestrators to manage the lifecycle of Amazon EBS volumes. This makes it possible to create `PersistentVolumeClaims` in the Kubernetes cluster.
+
+### Kubernetes Prometheus
+
+[Kubernetes Prometheus](https://github.com/prometheus-operator/kube-prometheus) is a stack meant for cluster monitoring, so it is pre-configured to collect metrics from all Kubernetes components. In addition to that it delivers a default set of dashboards and alerting rules. For a better idea of what possibilities this stack offers take a look at some [examples](https://github.com/prometheus-operator/kube-prometheus/tree/master/examples).

@@ -12,10 +12,13 @@ import (
 	"strings"
 	"time"
 
+	"helm.sh/helm/v3/pkg/downloader"
+
 	"gopkg.in/yaml.v3"
 
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	"github.com/oslokommune/okctl/pkg/kube"
+	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 	"helm.sh/helm/v3/pkg/release"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -25,7 +28,6 @@ import (
 	chartPkg "helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
-	valuesPkg "helm.sh/helm/v3/pkg/cli/values"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/repo"
 )
@@ -251,10 +253,22 @@ type InstallConfig struct {
 	Repo string
 	// Namespace is the namespace the chart will be installed in
 	Namespace string
-	// Values is a yaml encoded byte array of the values.yaml file
+	// ValuesBody is a yaml encoded byte array of the values.yaml file
 	ValuesBody []byte
 	// Timeout determines how long we will wait for the deployment to succeed
 	Timeout time.Duration
+}
+
+// ValuesMap returns the values
+func (c *InstallConfig) ValuesMap() (map[string]interface{}, error) {
+	var values map[string]interface{}
+
+	err := yaml.Unmarshal(c.ValuesBody, &values)
+	if err != nil {
+		return nil, err
+	}
+
+	return values, nil
 }
 
 // RepoChart returns the [repo]/[chart] string
@@ -354,9 +368,9 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 	client.Namespace = settings.Namespace()
 	client.CreateNamespace = true
 	client.Wait = true
-	// This should be configurable
-	client.Timeout = 250 * time.Second // nolint: gomnd
+	client.Timeout = cfg.Timeout
 	client.Atomic = true
+	client.DependencyUpdate = true
 
 	// Keep the chart running when we are debugging
 	if h.config.Debug {
@@ -368,33 +382,46 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 		return nil, err
 	}
 
-	valuesFile, err := StageValuesYaml(cfg.ValuesBody, h.fs)
-
-	defer func() {
-		_ = h.fs.Remove(valuesFile)
-	}()
-
-	if err != nil {
-		return nil, err
-	}
-
-	valueOpts := &valuesPkg.Options{
-		ValueFiles: []string{
-			valuesFile,
-		},
-	}
-
-	values, err := valueOpts.MergeValues(h.providers)
-	if err != nil {
-		return nil, err
-	}
-
 	chart, err := loader.Load(cp)
 	if err != nil {
 		return nil, err
 	}
 
 	err = IsChartInstallable(chart)
+	if err != nil {
+		return nil, err
+	}
+
+	if req := chart.Metadata.Dependencies; req != nil {
+		// If CheckDependencies returns an error, we have unfulfilled dependencies.
+		// As of Helm 2.4.0, this is treated as a stopping condition:
+		// https://github.com/helm/helm/issues/2209
+		if err := action.CheckDependencies(chart, req); err != nil {
+			if client.DependencyUpdate {
+				man := &downloader.Manager{
+					Out:              h.config.DebugOutput,
+					ChartPath:        cp,
+					Keyring:          client.ChartPathOptions.Keyring,
+					SkipUpdate:       false,
+					Getters:          h.providers,
+					RepositoryConfig: settings.RepositoryConfig,
+					RepositoryCache:  settings.RepositoryCache,
+					Debug:            h.config.Debug,
+				}
+				if err := man.Update(); err != nil {
+					return nil, err
+				}
+				// Reload the chart with the updated Chart.lock file.
+				if chart, err = loader.Load(cp); err != nil {
+					return nil, errors.Wrap(err, "failed reloading chart after repo update")
+				}
+			} else {
+				return nil, err
+			}
+		}
+	}
+
+	values, err := cfg.ValuesMap()
 	if err != nil {
 		return nil, err
 	}
@@ -457,27 +484,6 @@ func Lock(file string) (UnlockFn, error) {
 	}
 
 	return nil, fmt.Errorf("failed to create lock: %s", lockFile)
-}
-
-// StageValuesYaml returns the path to the values.yaml
-// temporary file we have created
-func StageValuesYaml(body []byte, fs *afero.Afero) (string, error) {
-	f, err := fs.TempFile("", "values")
-	if err != nil {
-		return "", fmt.Errorf("failed to create temporary file for values.yaml: %w", err)
-	}
-
-	_, err = f.Write(body)
-	if err != nil {
-		return "", fmt.Errorf("failed to write content to values.yaml: %w", err)
-	}
-
-	err = f.Close()
-	if err != nil {
-		return "", fmt.Errorf("failed to close values.yaml: %w", err)
-	}
-
-	return f.Name(), nil
 }
 
 // RestoreEnvFn can be deferred in the calling function
@@ -581,7 +587,7 @@ func (c *Chart) InstallConfig() (*InstallConfig, error) {
 		values, err = yaml.Marshal(c.Values)
 
 		if err != nil {
-			return nil, fmt.Errorf("failed to serialise values: %w", err)
+			return nil, fmt.Errorf("marshalling values struct to yaml: %w", err)
 		}
 	}
 

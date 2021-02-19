@@ -168,6 +168,19 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
+			domain, err := services.Domain.GetPrimaryHostedZone(o.Ctx, id)
+			if err != nil {
+				return formatErr(err)
+			}
+
+			err = services.KubePromStack.DeleteKubePromStack(o.Ctx, client.DeleteKubePromStackOpts{
+				ID:     id,
+				Domain: domain.HostedZone.Domain,
+			})
+			if err != nil {
+				return formatErr(err)
+			}
+
 			err = services.ArgoCD.DeleteArgoCD(o.Ctx, client.DeleteArgoCDOpts{
 				ID: id,
 			})

@@ -628,7 +628,17 @@ grafana:
       - grafana.okctl-test.oslo.systems
 
     ## Path for grafana ingress
-    path:
+    path: /
+
+    extraPaths:
+     - path: /*
+       backend:
+         serviceName: ssl-redirect
+         servicePort: use-annotation
+     - path: /*
+       backend:
+         serviceName: kube-prometheus-stack-grafana
+         servicePort: 80
 
     ## TLS configuration for grafana Ingress
     ## Secret must be manually created in the namespace
@@ -1237,9 +1247,16 @@ nodeExporter:
 ##
 prometheus-node-exporter:
   namespaceOverride: ""
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: "eks.amazonaws.com/compute-type"
+                operator: NotIn
+                values:
+                  - fargate
   podLabels:
-    ## Add the 'node-exporter' label to be used by serviceMonitor to match standard common usage in rules and grafana dashboards
-    ##
     jobLabel: node-exporter
   extraArgs:
     - --collector.filesystem.ignored-mount-points=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
@@ -1848,13 +1865,15 @@ prometheus:
     ## See https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#namespaceselector for usage
     ##
     ruleNamespaceSelector:
-      any: true
+      matchExpressions:
+        - key: "non-existent-label"
+          operator: "DoesNotExist"
 
     ## If true, a nil or {} value for prometheus.prometheusSpec.ruleSelector will cause the
     ## prometheus resource to be created with selectors based on values in the helm deployment,
     ## which will also match the PrometheusRule resources created
     ##
-    ruleSelectorNilUsesHelmValues: true
+    ruleSelectorNilUsesHelmValues: false
 
     ## PrometheusRules to be selected for target discovery.
     ## If {}, select all ServiceMonitors
@@ -1879,7 +1898,7 @@ prometheus:
     ## prometheus resource to be created with selectors based on values in the helm deployment,
     ## which will also match the servicemonitors created
     ##
-    serviceMonitorSelectorNilUsesHelmValues: true
+    serviceMonitorSelectorNilUsesHelmValues: false
 
     ## ServiceMonitors to be selected for target discovery.
     ## If {}, select all ServiceMonitors
@@ -1893,7 +1912,9 @@ prometheus:
     ## Namespaces to be selected for ServiceMonitor discovery.
     ##
     serviceMonitorNamespaceSelector:
-      any: true
+      matchExpressions:
+        - key: "non-existent-label"
+          operator: "DoesNotExist"
     ## Example which selects ServiceMonitors in namespaces with label "prometheus" set to "somelabel"
     # serviceMonitorNamespaceSelector:
     #   matchLabels:
@@ -1903,7 +1924,7 @@ prometheus:
     ## prometheus resource to be created with selectors based on values in the helm deployment,
     ## which will also match the podmonitors created
     ##
-    podMonitorSelectorNilUsesHelmValues: true
+    podMonitorSelectorNilUsesHelmValues: false
 
     ## PodMonitors to be selected for target discovery.
     ## If {}, select all PodMonitors
@@ -1918,7 +1939,9 @@ prometheus:
     ## See https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#namespaceselector for usage
     ##
     podMonitorNamespaceSelector:
-      any: true
+      matchExpressions:
+        - key: "non-existent-label"
+          operator: "DoesNotExist"
 
     ## If true, a nil or {} value for prometheus.prometheusSpec.probeSelector will cause the
     ## prometheus resource to be created with selectors based on values in the helm deployment,

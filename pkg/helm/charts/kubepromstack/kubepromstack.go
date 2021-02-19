@@ -38,16 +38,16 @@ type Values struct {
 	SecretsGrafanaAdminPassKey         string
 }
 
-// RawYAML returns the generated YAML
+// RawYAML implements the raw marshaller interface in the Helm package
 func (v *Values) RawYAML() ([]byte, error) {
 	tmpl, err := template.New("values").Parse(valuesTemplate)
 	if err != nil {
 		return nil, err
 	}
 
-	buff := new(bytes.Buffer)
+	var buff bytes.Buffer
 
-	err = tmpl.Execute(buff, *v)
+	err = tmpl.Execute(&buff, *v)
 	if err != nil {
 		return nil, err
 	}
@@ -686,7 +686,17 @@ grafana:
       - {{ .GrafanaHostname }}
 
     ## Path for grafana ingress
-    path:
+    path: /
+
+    extraPaths:
+     - path: /*
+       backend:
+         serviceName: ssl-redirect
+         servicePort: use-annotation
+     - path: /*
+       backend:
+         serviceName: kube-prometheus-stack-grafana
+         servicePort: 80
 
     ## TLS configuration for grafana Ingress
     ## Secret must be manually created in the namespace
@@ -1913,13 +1923,15 @@ prometheus:
     ## See https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#namespaceselector for usage
     ##
     ruleNamespaceSelector:
-      any: true
+      matchExpressions:
+        - key: "non-existent-label"
+          operator: "DoesNotExist"
 
     ## If true, a nil or {} value for prometheus.prometheusSpec.ruleSelector will cause the
     ## prometheus resource to be created with selectors based on values in the helm deployment,
     ## which will also match the PrometheusRule resources created
     ##
-    ruleSelectorNilUsesHelmValues: true
+    ruleSelectorNilUsesHelmValues: false
 
     ## PrometheusRules to be selected for target discovery.
     ## If {}, select all ServiceMonitors
@@ -1944,7 +1956,7 @@ prometheus:
     ## prometheus resource to be created with selectors based on values in the helm deployment,
     ## which will also match the servicemonitors created
     ##
-    serviceMonitorSelectorNilUsesHelmValues: true
+    serviceMonitorSelectorNilUsesHelmValues: false
 
     ## ServiceMonitors to be selected for target discovery.
     ## If {}, select all ServiceMonitors
@@ -1958,7 +1970,9 @@ prometheus:
     ## Namespaces to be selected for ServiceMonitor discovery.
     ##
     serviceMonitorNamespaceSelector:
-      any: true
+      matchExpressions:
+        - key: "non-existent-label"
+          operator: "DoesNotExist"
     ## Example which selects ServiceMonitors in namespaces with label "prometheus" set to "somelabel"
     # serviceMonitorNamespaceSelector:
     #   matchLabels:
@@ -1968,7 +1982,7 @@ prometheus:
     ## prometheus resource to be created with selectors based on values in the helm deployment,
     ## which will also match the podmonitors created
     ##
-    podMonitorSelectorNilUsesHelmValues: true
+    podMonitorSelectorNilUsesHelmValues: false
 
     ## PodMonitors to be selected for target discovery.
     ## If {}, select all PodMonitors
@@ -1983,7 +1997,9 @@ prometheus:
     ## See https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#namespaceselector for usage
     ##
     podMonitorNamespaceSelector:
-      any: true
+      matchExpressions:
+        - key: "non-existent-label"
+          operator: "DoesNotExist"
 
     ## If true, a nil or {} value for prometheus.prometheusSpec.probeSelector will cause the
     ## prometheus resource to be created with selectors based on values in the helm deployment,

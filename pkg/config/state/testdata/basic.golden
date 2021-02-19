@@ -84,3 +84,5 @@ clusters:
                         path: ""
                         version: 0
             users: {}
+        monitoring:
+            dashboardurl: ""

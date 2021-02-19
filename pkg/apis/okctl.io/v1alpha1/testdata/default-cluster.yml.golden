@@ -12,6 +12,7 @@ integrations:
   cognito: true
   externalDNS: true
   externalSecrets: true
+  kubePromStack: true
 kind: Cluster
 metadata:
   accountID: "123456789012"

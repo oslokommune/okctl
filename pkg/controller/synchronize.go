@@ -62,6 +62,11 @@ func Synchronize(opts *SynchronizeOpts) error {
 		opts.PrimaryHostedZoneGetter,
 	))
 
+	opts.DesiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeKubePromStack, CreateKubePromStackRefresher(
+		opts.IdentityPoolFetcher,
+		opts.PrimaryHostedZoneGetter,
+	))
+
 	opts.DesiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeNameserverDelegator, CreateNameserverDelegationStateRefresher(
 		opts.PrimaryHostedZoneGetter,
 	))

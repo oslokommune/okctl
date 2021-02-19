@@ -29,6 +29,8 @@ const (
 	ResourceNodeTypeAutoscaler
 	// ResourceNodeTypeBlockstorage represents a blockstorage resource
 	ResourceNodeTypeBlockstorage
+	// ResourceNodeTypeKubePromStack represents a kubernetes-prometheus-stack resource
+	ResourceNodeTypeKubePromStack
 	// ResourceNodeTypeALBIngress represents an ALB Ingress resource
 	ResourceNodeTypeALBIngress
 	// ResourceNodeTypeAWSLoadBalancerController represents an AWS load balancer controller resource
@@ -61,6 +63,8 @@ func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
 		return "External Secrets"
 	case ResourceNodeTypeAutoscaler:
 		return "Autoscaler"
+	case ResourceNodeTypeKubePromStack:
+		return "KubePromStack"
 	case ResourceNodeTypeBlockstorage:
 		return "Blockstorage"
 	case ResourceNodeTypeALBIngress:

@@ -47,6 +47,8 @@ const (
 
 	DefaultEKSKubernetesVersion = "1.17"
 
+	DefaultChartApplyTimeout = 5 * time.Minute
+
 	DefaultGithubHost          = "git@github.com"
 	DefaultArgoCDNamespace     = "argocd"
 	DefaultMonitoringNamespace = "monitoring"
@@ -107,9 +109,6 @@ const (
 	DefaultPolicyOutputFile                         = "policy-outputs.json"
 	DefaultServiceAccountConfigFile                 = "service-account-config.yml"
 	DefaultServiceAccountOutputsFile                = "service-account-outputs.json"
-
-	DefaultKubePrometheusStackValuesPath     = ""
-	DefaultKubePrometheusStackValuesTemplate = "values.yaml"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"

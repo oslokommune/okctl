@@ -12,7 +12,7 @@ import (
 
 // New returns an initialised helm chart:
 // - https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
-func New(values *Values) *helm.Chart {
+func New(timeout time.Duration, values *Values) *helm.Chart {
 	return &helm.Chart{
 		RepositoryName: "prometheus-community",
 		RepositoryURL:  "https://prometheus-community.github.io/helm-charts",
@@ -20,7 +20,7 @@ func New(values *Values) *helm.Chart {
 		Version:        "13.9.1",
 		Chart:          "kube-prometheus-stack",
 		Namespace:      "monitoring",
-		Timeout:        5 * time.Minute, // nolint: gomnd
+		Timeout:        timeout,
 		Values:         values,
 	}
 }

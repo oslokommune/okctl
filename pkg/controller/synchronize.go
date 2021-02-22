@@ -3,6 +3,10 @@ package controller
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/mishudark/errors"
+	"github.com/oslokommune/okctl/pkg/config"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -86,16 +90,26 @@ func Synchronize(opts *SynchronizeOpts) error {
 }
 
 // handleNode knows how to run Reconcile() on every node of a ResourceNode tree
-func handleNode(reconcilerManager reconciler.Reconciler, currentNode *resourcetree.ResourceNode) error {
-	_, err := reconcilerManager.Reconcile(currentNode)
-	if err != nil {
-		return fmt.Errorf("error reconciling node: %w", err)
+func handleNode(reconcilerManager reconciler.Reconciler, currentNode *resourcetree.ResourceNode) (err error) {
+	reconciliationResult := reconciler.ReconcilationResult{Requeue: true, RequeueAfter: 0 * time.Second}
+
+	for requeues := 0; reconciliationResult.Requeue; requeues++ {
+		if requeues == config.DefaultMaxReconciliationRequeues {
+			return errors.New("maximum allowed reconciliation requeues reached")
+		}
+
+		time.Sleep(reconciliationResult.RequeueAfter)
+
+		reconciliationResult, err = reconcilerManager.Reconcile(currentNode)
+		if err != nil {
+			return fmt.Errorf("reconciling node: %w", err)
+		}
 	}
 
 	for _, node := range currentNode.Children {
 		err = handleNode(reconcilerManager, node)
 		if err != nil {
-			return fmt.Errorf("error handling node: %w", err)
+			return fmt.Errorf("handling node: %w", err)
 		}
 	}
 

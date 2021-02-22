@@ -26,7 +26,7 @@ func (z *vpcReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata)
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *vpcReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *vpcReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err := z.client.CreateVpc(z.commonMetadata.Ctx, api.CreateVpcOpts{
@@ -35,16 +35,16 @@ func (z *vpcReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconcilati
 			Minimal: !z.commonMetadata.Declaration.VPC.HighAvailability,
 		})
 		if err != nil {
-			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating vpc: %w", err)
+			return result, fmt.Errorf("error creating vpc: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
 		err := z.client.DeleteVpc(z.commonMetadata.Ctx, api.DeleteVpcOpts{ID: z.commonMetadata.ClusterID})
 		if err != nil {
-			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error deleting vpc: %w", err)
+			return result, fmt.Errorf("error deleting vpc: %w", err)
 		}
 	}
 
-	return &ReconcilationResult{Requeue: false}, nil
+	return result, nil
 }
 
 // NewVPCReconciler creates a new reconciler for the VPC resource

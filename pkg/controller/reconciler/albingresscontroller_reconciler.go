@@ -30,29 +30,29 @@ func (z *albIngressReconciler) SetCommonMetadata(metadata *resourcetree.CommonMe
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *albIngressReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *albIngressReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	state, ok := node.ResourceState.(AlbIngressControllerResourceState)
 	if !ok {
-		return nil, errors.New("error casting ALB Ingress Controller state")
+		return result, errors.New("casting ALB Ingress Controller state")
 	}
 
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err := z.client.CreateALBIngressController(z.commonMetadata.Ctx, client.CreateALBIngressControllerOpts{
+		_, err = z.client.CreateALBIngressController(z.commonMetadata.Ctx, client.CreateALBIngressControllerOpts{
 			ID:    z.commonMetadata.ClusterID,
 			VPCID: state.VpcID,
 		})
 		if err != nil {
-			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating ALB Ingress controller: %w", err)
+			return result, fmt.Errorf("creating ALB Ingress controller: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err := z.client.DeleteALBIngressController(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
+		err = z.client.DeleteALBIngressController(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
-			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error deleting ALB Ingress controller: %w", err)
+			return result, fmt.Errorf("deleting ALB Ingress controller: %w", err)
 		}
 	}
 
-	return &ReconcilationResult{Requeue: false}, nil
+	return result, nil
 }
 
 // NewALBIngressReconciler creates a new reconciler for the ALB Ingress controller resource

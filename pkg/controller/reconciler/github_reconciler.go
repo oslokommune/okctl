@@ -28,7 +28,7 @@ func (z *githubReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetada
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *githubReconciler) Reconcile(node *resourcetree.ResourceNode) (result *ReconcilationResult, err error) {
+func (z *githubReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err = z.client.CreateDeployKey(z.commonMetadata.Ctx, client.NewGithubRepository(
@@ -38,13 +38,13 @@ func (z *githubReconciler) Reconcile(node *resourcetree.ResourceNode) (result *R
 			z.commonMetadata.Declaration.Github.Repository,
 		))
 		if err != nil {
-			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating Github deploy key: %w", err)
+			return result, fmt.Errorf("error creating Github deploy key: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		return nil, errors.New("deleting Github resource is not implemented")
+		return result, errors.New("deleting Github resource is not implemented")
 	}
 
-	return &ReconcilationResult{Requeue: false}, nil
+	return result, nil
 }
 
 // NewGithubReconciler creates a new reconciler for the Github resource

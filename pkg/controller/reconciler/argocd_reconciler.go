@@ -2,10 +2,10 @@ package reconciler
 
 import (
 	"fmt"
-
-	"github.com/oslokommune/okctl/pkg/config"
+	"strings"
 
 	"github.com/miekg/dns"
+	"github.com/oslokommune/okctl/pkg/config"
 
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -46,10 +46,10 @@ Dependent on:
 - Cognito user pool
 - Primary hosted Zone
 */
-func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	resourceState, ok := node.ResourceState.(ArgocdResourceState)
 	if !ok {
-		return nil, errors.New("casting ArgoCD resource resourceState")
+		return result, errors.New("casting ArgoCD resource resourceState")
 	}
 
 	switch node.State {
@@ -63,7 +63,7 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconcil
 
 		key, err := z.githubClient.CreateDeployKey(z.commonMetadata.Ctx, repository)
 		if err != nil {
-			return nil, fmt.Errorf("fetching deploy key: %w", err)
+			return result, fmt.Errorf("fetching deploy key: %w", err)
 		}
 
 		repository.DeployKey = key
@@ -79,13 +79,24 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconcil
 			Repository:         repository,
 		})
 		if err != nil {
-			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating argocd: %w", err)
+			// nolint: godox
+			// TODO: Need to identify the correct error
+			if strings.Contains(strings.ToLower(err.Error()), "timeout") {
+				fmt.Println(z.commonMetadata.Out, fmt.Errorf("got ArgoCD timeout: %w", err).Error())
+
+				return ReconcilationResult{
+					Requeue:      true,
+					RequeueAfter: 0,
+				}, nil
+			}
+
+			return result, fmt.Errorf("creating argocd: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		return nil, errors.New("deletion of the argocd resource is not implemented")
+		return result, errors.New("deletion of the argocd resource is not implemented")
 	}
 
-	return &ReconcilationResult{Requeue: false}, nil
+	return result, nil
 }
 
 // NewArgocdReconciler creates a new reconciler for the ArgoCD resource

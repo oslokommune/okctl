@@ -20,6 +20,6 @@ func (receiver *NoopReconciler) SetCommonMetadata(_ *resourcetree.CommonMetadata
 }
 
 // Reconcile knows how to create, update and delete the relevant resource
-func (receiver *NoopReconciler) Reconcile(_ *resourcetree.ResourceNode) (*ReconcilationResult, error) {
-	return &ReconcilationResult{Requeue: false}, nil
+func (receiver *NoopReconciler) Reconcile(_ *resourcetree.ResourceNode) (ReconcilationResult, error) {
+	return ReconcilationResult{Requeue: false}, nil
 }

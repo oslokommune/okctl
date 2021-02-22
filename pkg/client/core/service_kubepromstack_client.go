@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/miekg/dns"
+
 	"github.com/oslokommune/okctl/pkg/config"
 
 	"github.com/oslokommune/okctl/pkg/client/store"
@@ -110,7 +112,7 @@ func (s *kubePromStackService) CreateKubePromStack(ctx context.Context, opts cli
 
 	cert, err := s.cert.CreateCertificate(ctx, api.CreateCertificateOpts{
 		ID:           opts.ID,
-		FQDN:         fmt.Sprintf("%s.", grafanaDomain(opts.Domain)),
+		FQDN:         dns.Fqdn(grafanaDomain(opts.Domain)),
 		Domain:       grafanaDomain(opts.Domain),
 		HostedZoneID: opts.HostedZoneID,
 	})

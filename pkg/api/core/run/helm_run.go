@@ -3,6 +3,8 @@ package run
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/config"
+
 	"github.com/oslokommune/okctl/pkg/helm/charts/kubepromstack"
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/blockstorage"
@@ -107,7 +109,7 @@ func (r *helmRun) createHelmChart(id api.ID, chart *helm.Chart) (*api.Helm, erro
 }
 
 func (r *helmRun) CreateKubePromStack(opts api.CreateKubePrometheusStackOpts) (*api.Helm, error) {
-	chart := kubepromstack.New(&kubepromstack.Values{
+	chart := kubepromstack.New(config.DefaultChartApplyTimeout, &kubepromstack.Values{
 		GrafanaCertificateARN:              opts.CertificateARN,
 		GrafanaHostname:                    opts.Hostname,
 		AuthHostname:                       opts.AuthHostname,

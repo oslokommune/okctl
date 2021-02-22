@@ -17,7 +17,7 @@ require (
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/aws/aws-sdk-go v1.37.15
-	github.com/awslabs/goformation/v4 v4.16.3
+	github.com/awslabs/goformation/v4 v4.16.4
 	github.com/beevik/etree v1.1.0
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869

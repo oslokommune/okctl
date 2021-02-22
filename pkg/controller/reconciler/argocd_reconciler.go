@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/miekg/dns"
 	"github.com/oslokommune/okctl/pkg/config"
 
+	"github.com/miekg/dns"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/config/state"
@@ -78,6 +78,7 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (result Re
 			AuthDomain:         resourceState.AuthDomain,
 			Repository:         repository,
 		})
+
 		if err != nil {
 			// nolint: godox
 			// TODO: Need to identify the correct error

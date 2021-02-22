@@ -34,10 +34,10 @@ func (z *clusterReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetad
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *clusterReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *clusterReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	resourceState, ok := node.ResourceState.(ClusterResourceState)
 	if !ok {
-		return nil, errors.New("error casting cluster resourceState")
+		return result, errors.New("error casting cluster resourceState")
 	}
 
 	switch node.State {
@@ -51,16 +51,16 @@ func (z *clusterReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconci
 			VpcPublicSubnets:  resourceState.VPC.PublicSubnets,
 		})
 		if err != nil {
-			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating cluster: %w", err)
+			return result, fmt.Errorf("error creating cluster: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
 		err := z.client.DeleteCluster(z.commonMetadata.Ctx, api.ClusterDeleteOpts{ID: z.commonMetadata.ClusterID})
 		if err != nil {
-			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error deleting cluster: %w", err)
+			return result, fmt.Errorf("error deleting cluster: %w", err)
 		}
 	}
 
-	return &ReconcilationResult{Requeue: false}, nil
+	return result, nil
 }
 
 // NewClusterReconciler creates a new reconciler for the cluster resource

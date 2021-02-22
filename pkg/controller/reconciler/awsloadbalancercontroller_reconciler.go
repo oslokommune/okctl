@@ -30,10 +30,10 @@ func (z *awsLoadBalancerControllerReconciler) SetCommonMetadata(metadata *resour
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *awsLoadBalancerControllerReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *awsLoadBalancerControllerReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	state, ok := node.ResourceState.(AWSLoadBalancerControllerResourceState)
 	if !ok {
-		return nil, errors.New("casting aws load balancer controller state")
+		return result, errors.New("casting aws load balancer controller state")
 	}
 
 	switch node.State {
@@ -43,16 +43,16 @@ func (z *awsLoadBalancerControllerReconciler) Reconcile(node *resourcetree.Resou
 			VPCID: state.VpcID,
 		})
 		if err != nil {
-			return &ReconcilationResult{Requeue: true}, fmt.Errorf("creating aws load balancer controller: %w", err)
+			return result, fmt.Errorf("creating aws load balancer controller: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
 		err := z.client.DeleteAWSLoadBalancerController(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
-			return &ReconcilationResult{Requeue: true}, fmt.Errorf("deleting aws load balancer controller: %w", err)
+			return result, fmt.Errorf("deleting aws load balancer controller: %w", err)
 		}
 	}
 
-	return &ReconcilationResult{Requeue: false}, nil
+	return result, nil
 }
 
 // NewAWSLoadBalancerControllerReconciler creates a new reconciler for the aws load balancer controller resource

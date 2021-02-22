@@ -27,7 +27,7 @@ func (z *zoneReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *zoneReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *zoneReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err := z.client.CreatePrimaryHostedZoneWithoutUserinput(z.commonMetadata.Ctx, client.CreatePrimaryHostedZoneOpts{
@@ -36,13 +36,13 @@ func (z *zoneReconciler) Reconcile(node *resourcetree.ResourceNode) (*Reconcilat
 			FQDN:   dns.Fqdn(z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain),
 		})
 		if err != nil {
-			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating hosted zone: %w", err)
+			return result, fmt.Errorf("error creating hosted zone: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		return nil, errors.New("deletion of the hosted zone resource is not implemented")
+		return result, errors.New("deletion of the hosted zone resource is not implemented")
 	}
 
-	return &ReconcilationResult{Requeue: false}, nil
+	return result, nil
 }
 
 // NewZoneReconciler creates a new reconciler for the Hosted Zone resource

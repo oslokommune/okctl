@@ -20,10 +20,10 @@ func (c *compositeReconciler) NodeType() resourcetree.ResourceNodeType {
 }
 
 // Reconcile knows what reconciler to use for the provided ResourceNode
-func (c *compositeReconciler) Reconcile(node *resourcetree.ResourceNode) (result *ReconcilationResult, err error) {
+func (c *compositeReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	err = c.spinner.Start(resourcetree.ResourceNodeTypeToString(node.Type))
 	if err != nil {
-		return nil, fmt.Errorf("starting subspinner: %w", err)
+		return result, fmt.Errorf("starting subspinner: %w", err)
 	}
 
 	defer func() {

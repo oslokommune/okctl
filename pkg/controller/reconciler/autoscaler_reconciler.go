@@ -25,21 +25,21 @@ func (z *autoscalerReconciler) SetCommonMetadata(metadata *resourcetree.CommonMe
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *autoscalerReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *autoscalerReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err := z.client.CreateAutoscaler(z.commonMetadata.Ctx, client.CreateAutoscalerOpts{ID: z.commonMetadata.ClusterID})
+		_, err = z.client.CreateAutoscaler(z.commonMetadata.Ctx, client.CreateAutoscalerOpts{ID: z.commonMetadata.ClusterID})
 		if err != nil {
-			return &ReconcilationResult{Requeue: true}, fmt.Errorf("creating autoscaler: %w", err)
+			return result, fmt.Errorf("creating autoscaler: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err := z.client.DeleteAutoscaler(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
+		err = z.client.DeleteAutoscaler(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
-			return &ReconcilationResult{Requeue: true}, fmt.Errorf("deleting autoscaler: %w", err)
+			return result, fmt.Errorf("deleting autoscaler: %w", err)
 		}
 	}
 
-	return &ReconcilationResult{Requeue: false}, nil
+	return result, nil
 }
 
 // NewAutoscalerReconciler creates a new reconciler for the autoscaler resource

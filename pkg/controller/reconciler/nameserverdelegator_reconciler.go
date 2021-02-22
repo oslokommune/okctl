@@ -41,10 +41,10 @@ func (z *nameserverDelegationReconciler) SetCommonMetadata(metadata *resourcetre
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *nameserverDelegationReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *nameserverDelegationReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	resourceState, ok := node.ResourceState.(NameserverHandlerReconcilerResourceState)
 	if !ok {
-		return nil, errors.New("error casting nameserverhandler state")
+		return result, errors.New("error casting nameserverhandler state")
 	}
 
 	switch node.State {
@@ -57,7 +57,7 @@ func (z *nameserverDelegationReconciler) Reconcile(node *resourcetree.ResourceNo
 			Nameservers:           resourceState.Nameservers,
 		})
 		if err != nil {
-			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error handling nameservers: %w", err)
+			return result, fmt.Errorf("error handling nameservers: %w", err)
 		}
 
 		fmt.Fprint(z.commonMetadata.Out, delegationRequestMessage)
@@ -66,13 +66,13 @@ func (z *nameserverDelegationReconciler) Reconcile(node *resourcetree.ResourceNo
 
 		err = z.domainService.SetHostedZoneDelegation(z.commonMetadata.Ctx, domain.EnsureNotFQDN(record.FQDN), true)
 		if err != nil {
-			return nil, fmt.Errorf("error setting hosted zone delegation status: %w", err)
+			return result, fmt.Errorf("error setting hosted zone delegation status: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		return nil, errors.New("deletion of the hosted zone delegation is not implemented")
+		return result, errors.New("deletion of the hosted zone delegation is not implemented")
 	}
 
-	return &ReconcilationResult{Requeue: false}, nil
+	return result, nil
 }
 
 // NewNameserverDelegationReconciler creates a new reconciler for the nameserver record delegation resource

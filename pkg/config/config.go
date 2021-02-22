@@ -137,6 +137,11 @@ const (
 	DefaultRequiredIgwsTestCluster = 1
 
 	DefaultNameserverRecordTTL = 300
+
+	// DefaultMaxReconciliationRequeues defines the maximum allowed times a reconciliation can be requeued
+	DefaultMaxReconciliationRequeues = 3
+	// DefaultReconciliationRequeueDelay defines the default amount of time between each reconciliation
+	DefaultReconciliationRequeueDelay = 5 * time.Second
 )
 
 // DataLoaderFn is the type for loading configuration data

@@ -25,21 +25,21 @@ func (z *externalSecretsReconciler) SetCommonMetadata(metadata *resourcetree.Com
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *externalSecretsReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *externalSecretsReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err := z.client.CreateExternalSecrets(z.commonMetadata.Ctx, client.CreateExternalSecretsOpts{ID: z.commonMetadata.ClusterID})
 		if err != nil {
-			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating external secrets: %w", err)
+			return result, fmt.Errorf("error creating external secrets: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
 		err := z.client.DeleteExternalSecrets(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
-			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error deleting external secrets: %w", err)
+			return result, fmt.Errorf("error deleting external secrets: %w", err)
 		}
 	}
 
-	return &ReconcilationResult{Requeue: false}, nil
+	return result, nil
 }
 
 // NewExternalSecretsReconciler creates a new reconciler for the ExternalSecrets resource

@@ -38,10 +38,10 @@ Requires:
 - Hosted Zone
 - Nameservers setup
 */
-func (z *identityManagerReconciler) Reconcile(node *resourcetree.ResourceNode) (*ReconcilationResult, error) {
+func (z *identityManagerReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	resourceState, ok := node.ResourceState.(IdentityManagerResourceState)
 	if !ok {
-		return nil, errors.New("casting identity manager resourceState")
+		return result, errors.New("casting identity manager resourceState")
 	}
 
 	switch node.State {
@@ -56,13 +56,13 @@ func (z *identityManagerReconciler) Reconcile(node *resourcetree.ResourceNode) (
 			HostedZoneID: resourceState.HostedZoneID,
 		})
 		if err != nil {
-			return &ReconcilationResult{Requeue: true}, fmt.Errorf("error creating identity manager resource: %w", err)
+			return result, fmt.Errorf("error creating identity manager resource: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		return nil, errors.New("deleting identity manager resource is not implemented")
+		return result, errors.New("deleting identity manager resource is not implemented")
 	}
 
-	return &ReconcilationResult{Requeue: false}, nil
+	return result, nil
 }
 
 // NewIdentityManagerReconciler creates a new reconciler for the Identity Manager resource

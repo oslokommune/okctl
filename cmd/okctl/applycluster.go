@@ -136,8 +136,6 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			outputDir, _ := o.GetRepoOutputDir(opts.Declaration.Metadata.Environment)
 
-			desiredTree := controller.CreateDesiredStateTree(opts.Declaration)
-
 			reconciliationManager := reconciler.NewCompositeReconciler(spin,
 				reconciler.NewALBIngressReconciler(services.ALBIngressController),
 				reconciler.NewArgocdReconciler(services.ArgoCD, services.Github),
@@ -163,8 +161,10 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			})
 
 			synchronizeOpts := &controller.SynchronizeOpts{
+				Debug:                   o.Debug,
+				Out:                     o.Out,
 				ClusterID:               clusterID,
-				DesiredTree:             desiredTree,
+				ClusterDeclaration:      opts.Declaration,
 				ReconciliationManager:   reconciliationManager,
 				Fs:                      o.FileSystem,
 				OutputDir:               outputDir,
@@ -176,7 +176,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			err = controller.Synchronize(synchronizeOpts)
 			if err != nil {
-				return fmt.Errorf("error synchronizing declaration with state: %w", err)
+				return fmt.Errorf("synchronizing declaration with state: %w", err)
 			}
 
 			fmt.Fprintln(o.Out, "\nYour cluster is up to date.")

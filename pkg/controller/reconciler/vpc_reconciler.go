@@ -29,18 +29,18 @@ func (z *vpcReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata)
 func (z *vpcReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err := z.client.CreateVpc(z.commonMetadata.Ctx, api.CreateVpcOpts{
+		_, err = z.client.CreateVpc(z.commonMetadata.Ctx, api.CreateVpcOpts{
 			ID:      z.commonMetadata.ClusterID,
 			Cidr:    z.commonMetadata.Declaration.VPC.CIDR,
 			Minimal: !z.commonMetadata.Declaration.VPC.HighAvailability,
 		})
 		if err != nil {
-			return result, fmt.Errorf("error creating vpc: %w", err)
+			return result, fmt.Errorf("creating vpc: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err := z.client.DeleteVpc(z.commonMetadata.Ctx, api.DeleteVpcOpts{ID: z.commonMetadata.ClusterID})
+		err = z.client.DeleteVpc(z.commonMetadata.Ctx, api.DeleteVpcOpts{ID: z.commonMetadata.ClusterID})
 		if err != nil {
-			return result, fmt.Errorf("error deleting vpc: %w", err)
+			return result, fmt.Errorf("deleting vpc: %w", err)
 		}
 	}
 

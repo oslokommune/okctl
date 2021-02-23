@@ -34,23 +34,23 @@ func (z *externalDNSReconciler) SetCommonMetadata(metadata *resourcetree.CommonM
 func (z *externalDNSReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	resourceState, ok := node.ResourceState.(ExternalDNSResourceState)
 	if !ok {
-		return result, errors.New("error casting External DNS resourceState")
+		return result, errors.New("casting External DNS resourceState")
 	}
 
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err := z.client.CreateExternalDNS(z.commonMetadata.Ctx, client.CreateExternalDNSOpts{
+		_, err = z.client.CreateExternalDNS(z.commonMetadata.Ctx, client.CreateExternalDNSOpts{
 			ID:           z.commonMetadata.ClusterID,
 			HostedZoneID: resourceState.PrimaryHostedZoneID,
 			Domain:       z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain,
 		})
 		if err != nil {
-			return result, fmt.Errorf("error creating external DNS: %w", err)
+			return result, fmt.Errorf("creating external DNS: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err := z.client.DeleteExternalDNS(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
+		err = z.client.DeleteExternalDNS(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
-			return result, fmt.Errorf("error deleting external DNS: %w", err)
+			return result, fmt.Errorf("deleting external DNS: %w", err)
 		}
 	}
 

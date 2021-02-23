@@ -37,12 +37,12 @@ func (z *clusterReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetad
 func (z *clusterReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	resourceState, ok := node.ResourceState.(ClusterResourceState)
 	if !ok {
-		return result, errors.New("error casting cluster resourceState")
+		return result, errors.New("casting cluster resourceState")
 	}
 
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err := z.client.CreateCluster(z.commonMetadata.Ctx, api.ClusterCreateOpts{
+		_, err = z.client.CreateCluster(z.commonMetadata.Ctx, api.ClusterCreateOpts{
 			ID:                z.commonMetadata.ClusterID,
 			Cidr:              z.commonMetadata.Declaration.VPC.CIDR,
 			Version:           config.DefaultEKSKubernetesVersion,
@@ -51,12 +51,12 @@ func (z *clusterReconciler) Reconcile(node *resourcetree.ResourceNode) (result R
 			VpcPublicSubnets:  resourceState.VPC.PublicSubnets,
 		})
 		if err != nil {
-			return result, fmt.Errorf("error creating cluster: %w", err)
+			return result, fmt.Errorf("creating cluster: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err := z.client.DeleteCluster(z.commonMetadata.Ctx, api.ClusterDeleteOpts{ID: z.commonMetadata.ClusterID})
+		err = z.client.DeleteCluster(z.commonMetadata.Ctx, api.ClusterDeleteOpts{ID: z.commonMetadata.ClusterID})
 		if err != nil {
-			return result, fmt.Errorf("error deleting cluster: %w", err)
+			return result, fmt.Errorf("deleting cluster: %w", err)
 		}
 	}
 

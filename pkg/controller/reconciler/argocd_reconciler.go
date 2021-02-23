@@ -61,7 +61,9 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (result Re
 			z.commonMetadata.Declaration.Github.Repository,
 		)
 
-		key, err := z.githubClient.CreateDeployKey(z.commonMetadata.Ctx, repository)
+		var key *client.GithubDeployKey
+
+		key, err = z.githubClient.CreateDeployKey(z.commonMetadata.Ctx, repository)
 		if err != nil {
 			return result, fmt.Errorf("fetching deploy key: %w", err)
 		}

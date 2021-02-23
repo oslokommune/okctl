@@ -28,14 +28,14 @@ func (z *externalSecretsReconciler) SetCommonMetadata(metadata *resourcetree.Com
 func (z *externalSecretsReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err := z.client.CreateExternalSecrets(z.commonMetadata.Ctx, client.CreateExternalSecretsOpts{ID: z.commonMetadata.ClusterID})
+		_, err = z.client.CreateExternalSecrets(z.commonMetadata.Ctx, client.CreateExternalSecretsOpts{ID: z.commonMetadata.ClusterID})
 		if err != nil {
-			return result, fmt.Errorf("error creating external secrets: %w", err)
+			return result, fmt.Errorf("creating external secrets: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err := z.client.DeleteExternalSecrets(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
+		err = z.client.DeleteExternalSecrets(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
-			return result, fmt.Errorf("error deleting external secrets: %w", err)
+			return result, fmt.Errorf("deleting external secrets: %w", err)
 		}
 	}
 

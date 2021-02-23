@@ -38,7 +38,7 @@ func (z *awsLoadBalancerControllerReconciler) Reconcile(node *resourcetree.Resou
 
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err := z.client.CreateAWSLoadBalancerController(z.commonMetadata.Ctx, client.CreateAWSLoadBalancerControllerOpts{
+		_, err = z.client.CreateAWSLoadBalancerController(z.commonMetadata.Ctx, client.CreateAWSLoadBalancerControllerOpts{
 			ID:    z.commonMetadata.ClusterID,
 			VPCID: state.VpcID,
 		})
@@ -46,7 +46,7 @@ func (z *awsLoadBalancerControllerReconciler) Reconcile(node *resourcetree.Resou
 			return result, fmt.Errorf("creating aws load balancer controller: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err := z.client.DeleteAWSLoadBalancerController(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
+		err = z.client.DeleteAWSLoadBalancerController(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
 			return result, fmt.Errorf("deleting aws load balancer controller: %w", err)
 		}

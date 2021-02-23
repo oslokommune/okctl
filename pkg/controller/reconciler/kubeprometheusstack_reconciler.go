@@ -34,7 +34,7 @@ func (z *kubePrometheusStackReconciler) SetCommonMetadata(metadata *resourcetree
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *kubePrometheusStackReconciler) Reconcile(node *resourcetree.ResourceNode) (ReconcilationResult, error) {
+func (z *kubePrometheusStackReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	resourceState, ok := node.ResourceState.(KubePromStackState)
 	if !ok {
 		return ReconcilationResult{}, fmt.Errorf("casting KubePromStackState resource resourceState")
@@ -42,7 +42,7 @@ func (z *kubePrometheusStackReconciler) Reconcile(node *resourcetree.ResourceNod
 
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err := z.client.CreateKubePromStack(z.commonMetadata.Ctx, client.CreateKubePromStackOpts{
+		_, err = z.client.CreateKubePromStack(z.commonMetadata.Ctx, client.CreateKubePromStackOpts{
 			ID:           z.commonMetadata.ClusterID,
 			Domain:       z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain,
 			HostedZoneID: resourceState.HostedZone.ID,
@@ -50,13 +50,13 @@ func (z *kubePrometheusStackReconciler) Reconcile(node *resourcetree.ResourceNod
 			UserPoolID:   resourceState.UserPoolID,
 		})
 		if err != nil {
-			return ReconcilationResult{Requeue: true}, fmt.Errorf("error creating kubepromstack: %w", err)
+			return result, fmt.Errorf("creating kubepromstack: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
 		return ReconcilationResult{}, fmt.Errorf("deletion of KubePromStack not implemented")
 	}
 
-	return ReconcilationResult{Requeue: false}, nil
+	return result, nil
 }
 
 // NewKubePrometheusStackReconciler creates a new reconciler for the KubePromStack resource

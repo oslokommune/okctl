@@ -71,13 +71,13 @@ func CreateCurrentStateTree(opts *ExistingServices) (root *resourcetree.Resource
 
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalSecrets, opts.hasExternalSecrets)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeAutoscaler, opts.hasAutoscaler)
-	createNode(clusterNode, resourcetree.ResourceNodeTypeKubePromStack, opts.hasKubePromStack)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeBlockstorage, opts.hasBlockstorage)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeALBIngress, opts.hasALBIngressController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeAWSLoadBalancerController, opts.hasAWSLoadBalancerController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalDNS, opts.hasExternalDNS)
 
 	identityProviderNode := createNode(clusterNode, resourcetree.ResourceNodeTypeIdentityManager, opts.hasIdentityManager)
+	createNode(identityProviderNode, resourcetree.ResourceNodeTypeKubePromStack, opts.hasKubePromStack)
 	createNode(identityProviderNode, resourcetree.ResourceNodeTypeArgoCD, opts.hasArgoCD)
 
 	return root
@@ -101,13 +101,13 @@ func CreateDesiredStateTree(cluster *v1alpha1.Cluster) (root *resourcetree.Resou
 
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalSecrets, cluster.Integrations.ExternalSecrets)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeAutoscaler, cluster.Integrations.Autoscaler)
-	createNode(clusterNode, resourcetree.ResourceNodeTypeKubePromStack, cluster.Integrations.KubePromStack)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeBlockstorage, cluster.Integrations.Blockstorage)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeALBIngress, cluster.Integrations.ALBIngressController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeAWSLoadBalancerController, cluster.Integrations.AWSLoadBalancerController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalDNS, cluster.Integrations.ExternalDNS)
 
 	identityProviderNode := createNode(clusterNode, resourcetree.ResourceNodeTypeIdentityManager, cluster.Integrations.Cognito)
+	createNode(identityProviderNode, resourcetree.ResourceNodeTypeKubePromStack, cluster.Integrations.KubePromStack)
 	createNode(identityProviderNode, resourcetree.ResourceNodeTypeArgoCD, cluster.Integrations.ArgoCD)
 
 	return root

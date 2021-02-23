@@ -74,6 +74,7 @@ spec:
             key: admin_password
 ```
 
+// TODO is this still what we use?  -
 ### AWS ALB Ingress Controller
 
 [AWS ALB Ingress Controller](https://github.com/kubernetes-sigs/aws-alb-ingress-controller) satisfies the Kubernetes [ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) resources by provisioning [Application Load Balancers](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html) (ALB). An ALB  functions at the application layer, the seventh layer of the Open Systems Interconnection (OSI) model. After the load balancer receives a request, it evaluates the listener rules in priority order to determine which rule to apply, and then selects a target from the target group for the rule action. We use ALBs, among other things, to route traffic from the internet into a [pod](https://kubernetes.io/docs/concepts/workloads/pods/) (container).

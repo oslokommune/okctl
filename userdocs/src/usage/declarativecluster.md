@@ -1,7 +1,3 @@
-Some people enjoy a lengthy CLI wizard. Others prefer to declare their resources and let the CLI tool do its thing.
-
-Introducing declarative cluster.
-
 To create a cluster using the declarative approach:
 
 1. Create a declaration and edit it to suit your needs
@@ -104,6 +100,23 @@ integrations:
 ```
 
 Modify the declaration to suit your situation and needs, then use
+
+**AccountID**
+
+Go to https://login.oslo.kommune.no/auth/realms/AD/protocol/saml/clients/amazon-aws
+Log in as you usually do - find account id as shown here:
+<span style="display:block;text-align:center">![okctl](../img/aws-account-id.png)</span>
+
+**Team**
+
+* Go to: https://github.com/orgs/oslokommune/teams
+* Search for your team name, for example search for "kjøremiljø"
+* Copy the text after @oslokommune/<team>. This is your team name (in this case kjoremiljo)
+
+<span style="display:block;text-align:center">![okctl](../img/team.png)</span>
+
+
+
 
 ```bash
 okctl apply cluster -f cluster.yaml

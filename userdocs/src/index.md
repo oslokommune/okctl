@@ -76,7 +76,7 @@ A "cluster" is a Kubernetes cluster in an environment as described in [Compare a
 
 #### Gather input data
 
-You will soon be running `okctl create cluster`, which will ask you for the following information:
+You will soon be creating a cluster, which will ask you for the following information:
 
 * Username and password: This is your Oslo Kommune AD organization username (oooXXXXX) and its password.
 * Multi factor token (MFA): The same one you use to login to
@@ -85,24 +85,19 @@ can do that [here](https://login.oslo.kommune.no/auth/realms/AD/account/totp).
 * AWS account ID: This identifies which account you want to use. You can see which accounts you have access to just
 after logging in to [AWS](https://login.oslo.kommune.no/auth/realms/AD/protocol/saml/clients/amazon-aws):
 
-<span style="display:block;text-align:center">![okctl](img/aws-account-id.png)</span>
 
-#### Run create command
+// WIP link to declarative cluster here? In usage, better than having it on the index ...
+// Get rid of beta , and get declarative cluster front and center
 
+
+//WIP where does this go?
 ```bash
-# Create a cluster. Format:
-# okctl create cluster <environment name> <AWS account ID>
-#
-# <environment name>    can be for instance "prod" or "test".
-# <AWS account ID>      is the account ID described in the above
-#
-# Example:
-okctl create cluster prod 123456789012
+eval `ssh-agent`
+ssh-add ~/.ssh/id_rsa
 ```
 
-Follow the instructions. If something fails, it's safe to just run the same command again (it's idempotent).
 
-When done, verify that you have a working cluster by running
+<span style="display:block;text-align:center">![okctl](img/aws-account-id.png)</span>
 
 ```bash
 okctl venv prod

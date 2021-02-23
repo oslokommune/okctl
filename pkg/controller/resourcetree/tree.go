@@ -118,9 +118,6 @@ type ResourceNode struct {
 	Type  ResourceNodeType
 	State ResourceNodeState
 
-	// Contains metadata regarding the resource known on instance creation
-	Metadata interface{}
-
 	StateRefresher StateRefreshFn
 	// ResourceState contains data that needs to be retrieved runtime. In other words, data that potentially only exist
 	// after an external resource has been created

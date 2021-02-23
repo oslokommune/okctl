@@ -28,12 +28,12 @@ func (z *blockstorageReconciler) SetCommonMetadata(metadata *resourcetree.Common
 func (z *blockstorageReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err := z.client.CreateBlockstorage(z.commonMetadata.Ctx, client.CreateBlockstorageOpts{ID: z.commonMetadata.ClusterID})
+		_, err = z.client.CreateBlockstorage(z.commonMetadata.Ctx, client.CreateBlockstorageOpts{ID: z.commonMetadata.ClusterID})
 		if err != nil {
 			return result, fmt.Errorf("creating blockstorage: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err := z.client.DeleteBlockstorage(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
+		err = z.client.DeleteBlockstorage(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
 			return result, fmt.Errorf("deleting blockstorage: %w", err)
 		}

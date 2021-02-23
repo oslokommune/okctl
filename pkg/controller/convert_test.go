@@ -15,7 +15,7 @@ func TestTreeCreators(t *testing.T) {
 		name string
 
 		declaration      func() *v1alpha1.Cluster
-		existingServices ExistingServices
+		existingServices ExistingResources
 	}{
 		{
 			name: "Should produce equal trees when all is enabled",
@@ -24,7 +24,7 @@ func TestTreeCreators(t *testing.T) {
 
 				return &declaration
 			},
-			existingServices: ExistingServices{
+			existingServices: ExistingResources{
 				hasArgoCD:                         true,
 				hasALBIngressController:           false,
 				hasAWSLoadBalancerController:      true,
@@ -49,7 +49,7 @@ func TestTreeCreators(t *testing.T) {
 
 				return &declaration
 			},
-			existingServices: ExistingServices{
+			existingServices: ExistingResources{
 				hasArgoCD:                         true,
 				hasALBIngressController:           false,
 				hasAWSLoadBalancerController:      true,
@@ -72,8 +72,11 @@ func TestTreeCreators(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			desiredTree := CreateDesiredStateTree(tc.declaration())
-			currentStateTree := CreateCurrentStateTree(&tc.existingServices)
+			desiredTree := CreateResourceDependencyTree()
+			desiredTree.ApplyFunction(applyDeclaration(tc.declaration()), &resourcetree.ResourceNode{})
+
+			currentStateTree := CreateResourceDependencyTree()
+			currentStateTree.ApplyFunction(applyExistingState(tc.existingServices), &resourcetree.ResourceNode{})
 
 			assert.Equal(t, desiredTree.String(), currentStateTree.String())
 		})
@@ -123,7 +126,7 @@ func TestEnsureRelations(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			tree := CreateCurrentStateTree(&ExistingServices{})
+			tree := CreateResourceDependencyTree()
 
 			for _, dependency := range tc.expectDependencies {
 				if tc.expectFail {

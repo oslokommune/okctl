@@ -30,13 +30,13 @@ func (z *zoneReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata
 func (z *zoneReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err := z.client.CreatePrimaryHostedZoneWithoutUserinput(z.commonMetadata.Ctx, client.CreatePrimaryHostedZoneOpts{
+		_, err = z.client.CreatePrimaryHostedZoneWithoutUserinput(z.commonMetadata.Ctx, client.CreatePrimaryHostedZoneOpts{
 			ID:     z.commonMetadata.ClusterID,
 			Domain: z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain,
 			FQDN:   dns.Fqdn(z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain),
 		})
 		if err != nil {
-			return result, fmt.Errorf("error creating hosted zone: %w", err)
+			return result, fmt.Errorf("creating hosted zone: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
 		return result, errors.New("deletion of the hosted zone resource is not implemented")

@@ -3,15 +3,14 @@ package controller
 import (
 	"path"
 
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 	"github.com/spf13/afero"
 )
 
-// ExistingServices contains information about what services already exists in a cluster
-type ExistingServices struct {
+// ExistingResources contains information about what services already exists in a cluster
+type ExistingResources struct {
 	hasALBIngressController           bool
 	hasAWSLoadBalancerController      bool
 	hasCluster                        bool
@@ -28,11 +27,11 @@ type ExistingServices struct {
 	hasDelegatedHostedZoneNameservers bool
 }
 
-// NewCreateCurrentStateTreeOpts creates an initialized ExistingServices struct
-func NewCreateCurrentStateTreeOpts(fs *afero.Afero, outputDir string, githubGetter GithubGetter, hzFetcher HostedZoneFetcher) (*ExistingServices, error) {
+// IdentifyResourcePresence creates an initialized ExistingResources struct
+func IdentifyResourcePresence(fs *afero.Afero, outputDir string, githubGetter GithubGetter, hzFetcher HostedZoneFetcher) (ExistingResources, error) {
 	hz := hzFetcher()
 
-	return &ExistingServices{
+	return ExistingResources{
 		hasGithubSetup:                    githubTester(githubGetter()),
 		hasPrimaryHostedZone:              hz != nil,
 		hasVPC:                            directoryTester(fs, outputDir, config.DefaultVpcBaseDir),
@@ -50,80 +49,43 @@ func NewCreateCurrentStateTreeOpts(fs *afero.Afero, outputDir string, githubGett
 	}, nil
 }
 
-// CreateCurrentStateTree knows how to generate a ResourceNode tree based on the current state
-func CreateCurrentStateTree(opts *ExistingServices) (root *resourcetree.ResourceNode) {
-	root = createNode(nil, resourcetree.ResourceNodeTypeGroup, true)
+// CreateResourceDependencyTree creates a tree
+func CreateResourceDependencyTree() (root *resourcetree.ResourceNode) {
+	root = createNode(nil, resourcetree.ResourceNodeTypeGroup)
 
 	var vpcNode,
-		clusterNode *resourcetree.ResourceNode
+		clusterNode,
+		primaryHostedZoneNode *resourcetree.ResourceNode
 
-	createNode(root, resourcetree.ResourceNodeTypeGithub, opts.hasGithubSetup)
+	createNode(root, resourcetree.ResourceNodeTypeGithub)
 
-	primaryHostedZoneNode := createNode(root, resourcetree.ResourceNodeTypeZone, opts.hasPrimaryHostedZone)
-	createNode(primaryHostedZoneNode,
-		resourcetree.ResourceNodeTypeNameserverDelegator,
-		opts.hasDelegatedHostedZoneNameservers,
-	)
+	primaryHostedZoneNode = createNode(root, resourcetree.ResourceNodeTypeZone)
+	createNode(primaryHostedZoneNode, resourcetree.ResourceNodeTypeNameserverDelegator)
 
-	vpcNode = createNode(primaryHostedZoneNode, resourcetree.ResourceNodeTypeVPC, opts.hasVPC)
+	vpcNode = createNode(primaryHostedZoneNode, resourcetree.ResourceNodeTypeVPC)
 
-	clusterNode = createNode(vpcNode, resourcetree.ResourceNodeTypeCluster, opts.hasCluster)
+	clusterNode = createNode(vpcNode, resourcetree.ResourceNodeTypeCluster)
+	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalSecrets)
+	createNode(clusterNode, resourcetree.ResourceNodeTypeAutoscaler)
+	createNode(clusterNode, resourcetree.ResourceNodeTypeBlockstorage)
+	createNode(clusterNode, resourcetree.ResourceNodeTypeALBIngress)
+	createNode(clusterNode, resourcetree.ResourceNodeTypeAWSLoadBalancerController)
+	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalDNS)
 
-	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalSecrets, opts.hasExternalSecrets)
-	createNode(clusterNode, resourcetree.ResourceNodeTypeAutoscaler, opts.hasAutoscaler)
-	createNode(clusterNode, resourcetree.ResourceNodeTypeBlockstorage, opts.hasBlockstorage)
-	createNode(clusterNode, resourcetree.ResourceNodeTypeALBIngress, opts.hasALBIngressController)
-	createNode(clusterNode, resourcetree.ResourceNodeTypeAWSLoadBalancerController, opts.hasAWSLoadBalancerController)
-	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalDNS, opts.hasExternalDNS)
-
-	identityProviderNode := createNode(clusterNode, resourcetree.ResourceNodeTypeIdentityManager, opts.hasIdentityManager)
-	createNode(identityProviderNode, resourcetree.ResourceNodeTypeKubePromStack, opts.hasKubePromStack)
-	createNode(identityProviderNode, resourcetree.ResourceNodeTypeArgoCD, opts.hasArgoCD)
+	identityProviderNode := createNode(clusterNode, resourcetree.ResourceNodeTypeIdentityManager)
+	createNode(identityProviderNode, resourcetree.ResourceNodeTypeKubePromStack)
+	createNode(identityProviderNode, resourcetree.ResourceNodeTypeArgoCD)
 
 	return root
 }
 
-// CreateDesiredStateTree knows how to create a ResourceNode tree based on a cluster declaration
-func CreateDesiredStateTree(cluster *v1alpha1.Cluster) (root *resourcetree.ResourceNode) {
-	root = createNode(nil, resourcetree.ResourceNodeTypeGroup, true)
-
-	var vpcNode,
-		clusterNode *resourcetree.ResourceNode
-
-	createNode(root, resourcetree.ResourceNodeTypeGithub, true)
-
-	primaryHostedZoneNode := createNode(root, resourcetree.ResourceNodeTypeZone, true)
-	createNode(primaryHostedZoneNode, resourcetree.ResourceNodeTypeNameserverDelegator, true)
-
-	vpcNode = createNode(primaryHostedZoneNode, resourcetree.ResourceNodeTypeVPC, true)
-
-	clusterNode = createNode(vpcNode, resourcetree.ResourceNodeTypeCluster, true)
-
-	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalSecrets, cluster.Integrations.ExternalSecrets)
-	createNode(clusterNode, resourcetree.ResourceNodeTypeAutoscaler, cluster.Integrations.Autoscaler)
-	createNode(clusterNode, resourcetree.ResourceNodeTypeBlockstorage, cluster.Integrations.Blockstorage)
-	createNode(clusterNode, resourcetree.ResourceNodeTypeALBIngress, cluster.Integrations.ALBIngressController)
-	createNode(clusterNode, resourcetree.ResourceNodeTypeAWSLoadBalancerController, cluster.Integrations.AWSLoadBalancerController)
-	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalDNS, cluster.Integrations.ExternalDNS)
-
-	identityProviderNode := createNode(clusterNode, resourcetree.ResourceNodeTypeIdentityManager, cluster.Integrations.Cognito)
-	createNode(identityProviderNode, resourcetree.ResourceNodeTypeKubePromStack, cluster.Integrations.KubePromStack)
-	createNode(identityProviderNode, resourcetree.ResourceNodeTypeArgoCD, cluster.Integrations.ArgoCD)
-
-	return root
-}
-
-func createNode(parent *resourcetree.ResourceNode, nodeType resourcetree.ResourceNodeType, present bool) (child *resourcetree.ResourceNode) {
+func createNode(parent *resourcetree.ResourceNode, nodeType resourcetree.ResourceNodeType) (child *resourcetree.ResourceNode) {
 	child = &resourcetree.ResourceNode{
 		Type:     nodeType,
 		Children: make([]*resourcetree.ResourceNode, 0),
 	}
 
-	if present {
-		child.State = resourcetree.ResourceNodeStatePresent
-	} else {
-		child.State = resourcetree.ResourceNodeStateAbsent
-	}
+	child.State = resourcetree.ResourceNodeStatePresent
 
 	if parent != nil {
 		parent.Children = append(parent.Children, child)

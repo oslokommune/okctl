@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/logrusorgru/aurora"
+
 	"github.com/miekg/dns"
 
 	"github.com/mishudark/errors"
@@ -44,29 +46,36 @@ func (z *nameserverDelegationReconciler) SetCommonMetadata(metadata *resourcetre
 func (z *nameserverDelegationReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	resourceState, ok := node.ResourceState.(NameserverHandlerReconcilerResourceState)
 	if !ok {
-		return result, errors.New("error casting nameserverhandler state")
+		return result, errors.New("casting nameserverhandler state")
 	}
 
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
+		var record *client.NameserverRecord
+
 		primaryHostedZoneFQDN := dns.Fqdn(z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain)
 
-		record, err := z.client.CreateNameserverRecordDelegationRequest(&client.CreateNameserverDelegationRequestOpts{
+		record, err = z.client.CreateNameserverRecordDelegationRequest(&client.CreateNameserverDelegationRequestOpts{
 			ClusterID:             z.commonMetadata.ClusterID,
 			PrimaryHostedZoneFQDN: primaryHostedZoneFQDN,
 			Nameservers:           resourceState.Nameservers,
 		})
 		if err != nil {
-			return result, fmt.Errorf("error handling nameservers: %w", err)
+			return result, fmt.Errorf("handling nameservers: %w", err)
 		}
 
-		fmt.Fprint(z.commonMetadata.Out, delegationRequestMessage)
+		fmt.Fprintf(
+			z.commonMetadata.Out,
+			delegationRequestMessage,
+			aurora.Green("nameserver delegation request"),
+			aurora.Bold("#kjøremiljø-support"),
+		)
 
 		waitForNameserverDelegation(nsRecordValidationIntervalSeconds, primaryHostedZoneFQDN)
 
 		err = z.domainService.SetHostedZoneDelegation(z.commonMetadata.Ctx, domain.EnsureNotFQDN(record.FQDN), true)
 		if err != nil {
-			return result, fmt.Errorf("error setting hosted zone delegation status: %w", err)
+			return result, fmt.Errorf("setting hosted zone delegation status: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
 		return result, errors.New("deletion of the hosted zone delegation is not implemented")
@@ -98,8 +107,10 @@ func waitForNameserverDelegation(interval time.Duration, fqdn string) {
 }
 
 const delegationRequestMessage = `
-A nameserver delegation request has been submitted. We'll process this request as soon as possible.
-Let us know in #kjøremiljø-support if it takes too long
+
+
+A %s has been submitted. We'll process this request as soon as possible.
+Let us know in %s if it takes too long
 
 
 `

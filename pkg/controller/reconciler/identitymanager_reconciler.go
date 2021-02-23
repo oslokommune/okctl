@@ -49,14 +49,14 @@ func (z *identityManagerReconciler) Reconcile(node *resourcetree.ResourceNode) (
 		authDomain := fmt.Sprintf("auth.%s", z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain)
 		authFQDN := dns.Fqdn(authDomain)
 
-		_, err := z.client.CreateIdentityPool(z.commonMetadata.Ctx, api.CreateIdentityPoolOpts{
+		_, err = z.client.CreateIdentityPool(z.commonMetadata.Ctx, api.CreateIdentityPoolOpts{
 			ID:           z.commonMetadata.ClusterID,
 			AuthDomain:   authDomain,
 			AuthFQDN:     authFQDN,
 			HostedZoneID: resourceState.HostedZoneID,
 		})
 		if err != nil {
-			return result, fmt.Errorf("error creating identity manager resource: %w", err)
+			return result, fmt.Errorf("creating identity manager resource: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
 		return result, errors.New("deleting identity manager resource is not implemented")

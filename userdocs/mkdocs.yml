@@ -8,20 +8,18 @@ docs_dir: src
 edit_uri: ""
 
 nav:
-  - Core components:
-      - components/cloud.md
-      - components/github.md
-      - components/kubernetes.md
-  - Deployment:
-      - deployment/argocd.md
+  - Usage:
       - 'Create cluster': usage/declarativecluster.md
       - 'Create application': usage/applicationyaml.md
       - 'Run virtual environment': usage/venv.md
       - 'Add user': usage/adduser.md
-  - Users:
-      - usage/adduser.md
+  - Building blocks:
+    - components/cloud.md
+    - components/github.md
+    - components/kubernetes.md
+    - deployment/argocd.md
   - About:
-      - about/about.md
+      - 'About': about/about.md
       - 'Resource Overview': about/resources.md
 
 plugins:

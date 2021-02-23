@@ -8,16 +8,17 @@ docs_dir: src
 edit_uri: ""
 
 nav:
+  - 'Installation': installation.md
   - Usage:
       - 'Create cluster': usage/declarativecluster.md
       - 'Create application': usage/applicationyaml.md
       - 'Run virtual environment': usage/venv.md
       - 'Add user': usage/adduser.md
   - Building blocks:
-    - components/cloud.md
-    - components/github.md
-    - components/kubernetes.md
-    - deployment/argocd.md
+    - buildingblocks/cloud.md
+    - buildingblocks/github.md
+    - buildingblocks/kubernetes.md
+    - buildingblocks/argocd.md
   - About:
       - 'About': about/about.md
       - 'Resource Overview': about/resources.md

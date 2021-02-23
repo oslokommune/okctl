@@ -8,20 +8,22 @@ docs_dir: src
 edit_uri: ""
 
 nav:
-  - 'okctl': index.md
-  - Installation:
-      - 'Installation': installation/installation.md
-      - 'Getting started': installation/getting-started.md
+  - okctl: index.md
+  - Getting started:
+      - Installation:  getting-started/installation.md
+      - Prerequisites: getting-started/prerequisites.md
   - Usage:
-      - 'Create cluster': usage/declarativecluster.md
-      - 'Create application': usage/applicationyaml.md
-      - 'Run virtual environment': usage/venv.md
-      - 'Add user': usage/adduser.md
+      - Create cluster: usage/declarativecluster.md
+      - Create application: usage/applicationyaml.md
+      - Run virtual environment: usage/venv.md
+      - Add user: usage/adduser.md
   - Building blocks:
     - buildingblocks/cloud.md
     - buildingblocks/github.md
     - buildingblocks/kubernetes.md
     - buildingblocks/argocd.md
+  - FAQ:
+    - about/about.md
   - About:
       - 'About': about/about.md
       - 'Resource Overview': about/resources.md

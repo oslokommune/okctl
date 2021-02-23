@@ -1,27 +1,38 @@
 .okctl-button {
-    border: none;
-    color: black;
     padding: 15px 32px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
+
+    border: none;
+
     font-size: 16px;
+    text-decoration: none;
+    text-align: center;
+
+    display: inline-block;
+}
+
+.okctl-button:visited {
+    color: black !important;
 }
 
 .okctl-button.primary {
     background-color: #f9c66b;
+    color: black !important;
+}
+
+.okctl-button.primary:hover {
+    background: black;
+    color: white !important;
 }
 
 .okctl-button.secondary {
     background-color: white;
     border: 2px solid #f9c66b;
     border-radius: 4px;
-}
 
-.okctl-button:visited {
-    color: black;
-}
-
-.okctl-button:hover {
     color: black !important;
 }
+
+.okctl-button.secondary:hover {
+    color: #f9c66b !important;
+}
+

@@ -18,8 +18,6 @@ nav:
       - 'Create application': usage/applicationyaml.md
       - 'Run virtual environment': usage/venv.md
       - 'Add user': usage/adduser.md
-  - Beta:
-      - 'Declarative Cluster': beta/declarativecluster.md
   - Users:
       - usage/adduser.md
   - About:

@@ -8,7 +8,10 @@ docs_dir: src
 edit_uri: ""
 
 nav:
-  - 'Installation': installation.md
+  - 'okctl': index.md
+  - Installation:
+      - 'Installation': installation/installation.md
+      - 'Getting started': installation/getting-started.md
   - Usage:
       - 'Create cluster': usage/declarativecluster.md
       - 'Create application': usage/applicationyaml.md
@@ -29,6 +32,9 @@ plugins:
 
 extra_css:
   - assets/stylesheets/fonts.css
+  - assets/stylesheets/theme.css
+  - assets/stylesheets/button.css
+  - assets/stylesheets/center-container.css
 
 theme:
   name: 'material'

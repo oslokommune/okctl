@@ -1,0 +1,27 @@
+.okctl-button {
+    border: none;
+    color: black;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+}
+
+.okctl-button.primary {
+    background-color: #f9c66b;
+}
+
+.okctl-button.secondary {
+    background-color: white;
+    border: 2px solid #f9c66b;
+    border-radius: 4px;
+}
+
+.okctl-button:visited {
+    color: black;
+}
+
+.okctl-button:hover {
+    color: black !important;
+}

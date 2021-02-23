@@ -37,8 +37,6 @@ const (
 	ResourceNodeTypeAWSLoadBalancerController
 	// ResourceNodeTypeExternalDNS represents an External DNS resource
 	ResourceNodeTypeExternalDNS
-	// ResourceNodeTypeGithub represents a Github setup
-	ResourceNodeTypeGithub
 	// ResourceNodeTypeIdentityManager represents a Identity Manager resource
 	ResourceNodeTypeIdentityManager
 	// ResourceNodeTypeArgoCD represents an ArgoCD resource
@@ -73,8 +71,6 @@ func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
 		return "AWS Load Balancer Controller"
 	case ResourceNodeTypeExternalDNS:
 		return "External DNS"
-	case ResourceNodeTypeGithub:
-		return "Github Setup"
 	case ResourceNodeTypeIdentityManager:
 		return "Identity Manager"
 	case ResourceNodeTypeArgoCD:

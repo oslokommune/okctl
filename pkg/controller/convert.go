@@ -19,7 +19,6 @@ type ExistingResources struct {
 	hasAutoscaler                     bool
 	hasBlockstorage                   bool
 	hasKubePromStack                  bool
-	hasGithubSetup                    bool
 	hasIdentityManager                bool
 	hasArgoCD                         bool
 	hasPrimaryHostedZone              bool
@@ -28,11 +27,10 @@ type ExistingResources struct {
 }
 
 // IdentifyResourcePresence creates an initialized ExistingResources struct
-func IdentifyResourcePresence(fs *afero.Afero, outputDir string, githubGetter GithubGetter, hzFetcher HostedZoneFetcher) (ExistingResources, error) {
+func IdentifyResourcePresence(fs *afero.Afero, outputDir string, hzFetcher HostedZoneFetcher) (ExistingResources, error) {
 	hz := hzFetcher()
 
 	return ExistingResources{
-		hasGithubSetup:                    githubTester(githubGetter()),
 		hasPrimaryHostedZone:              hz != nil,
 		hasVPC:                            directoryTester(fs, outputDir, config.DefaultVpcBaseDir),
 		hasCluster:                        directoryTester(fs, outputDir, config.DefaultClusterBaseDir),
@@ -56,8 +54,6 @@ func CreateResourceDependencyTree() (root *resourcetree.ResourceNode) {
 	var vpcNode,
 		clusterNode,
 		primaryHostedZoneNode *resourcetree.ResourceNode
-
-	createNode(root, resourcetree.ResourceNodeTypeGithub)
 
 	primaryHostedZoneNode = createNode(root, resourcetree.ResourceNodeTypeZone)
 	createNode(primaryHostedZoneNode, resourcetree.ResourceNodeTypeNameserverDelegator)
@@ -100,23 +96,6 @@ func directoryTester(fs *afero.Afero, outputDir string, target string) bool {
 	exists, _ := fs.DirExists(baseDir)
 
 	return exists
-}
-
-func githubTester(github state.Github) bool {
-	if len(github.Repositories) == 0 {
-		return false
-	}
-
-	for _, repo := range github.Repositories {
-		err := repo.Validate()
-		if err != nil {
-			return false
-		}
-
-		break
-	}
-
-	return true
 }
 
 // GithubGetter knows how to get the current state Github

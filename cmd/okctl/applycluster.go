@@ -226,8 +226,6 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 		"disables progress spinner",
 	)
 
-	cmd.Hidden = true
-
 	return cmd
 }
 

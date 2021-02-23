@@ -31,8 +31,6 @@ type SynchronizeOpts struct {
 	Fs        *afero.Afero
 	OutputDir string
 
-	GithubGetter GithubGetter
-
 	CIDRGetter              StringFetcher
 	IdentityPoolFetcher     IdentityPoolFetcher
 	PrimaryHostedZoneGetter HostedZoneFetcher
@@ -45,7 +43,7 @@ func Synchronize(opts *SynchronizeOpts) error {
 
 	setRefreshers(desiredTree, opts)
 
-	existingResources, err := IdentifyResourcePresence(opts.Fs, opts.OutputDir, opts.GithubGetter, opts.PrimaryHostedZoneGetter)
+	existingResources, err := IdentifyResourcePresence(opts.Fs, opts.OutputDir, opts.PrimaryHostedZoneGetter)
 	if err != nil {
 		return fmt.Errorf("getting existing integrations: %w", err)
 	}
@@ -97,8 +95,6 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 	return func(desiredTreeNode *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
 		switch desiredTreeNode.Type {
 		// Mandatory
-		case resourcetree.ResourceNodeTypeGithub:
-			receiver.State = resourcetree.ResourceNodeStatePresent
 		case resourcetree.ResourceNodeTypeZone:
 			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
 		case resourcetree.ResourceNodeTypeNameserverDelegator:
@@ -134,8 +130,6 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 	return func(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
 		switch receiver.Type {
 		// Mandatory
-		case resourcetree.ResourceNodeTypeGithub:
-			receiver.State = boolToState(existingResources.hasGithubSetup)
 		case resourcetree.ResourceNodeTypeZone:
 			receiver.State = boolToState(existingResources.hasPrimaryHostedZone)
 		case resourcetree.ResourceNodeTypeNameserverDelegator:

@@ -14,10 +14,10 @@ nav:
       - components/kubernetes.md
   - Deployment:
       - deployment/argocd.md
-  - Usage:
       - 'Create cluster': usage/declarativecluster.md
-      - 'Deploy application': usage/applicationyaml.md
-      - usage/venv.md
+      - 'Create application': usage/applicationyaml.md
+      - 'Run virtual environment': usage/venv.md
+      - 'Add user': usage/adduser.md
   - Beta:
       - 'Declarative Cluster': beta/declarativecluster.md
   - Users:

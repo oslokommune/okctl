@@ -37,8 +37,7 @@ import (
 )
 
 const (
-	createClusterArgs = 2
-	defaultCidr       = "192.168.0.0/20"
+	defaultCidr = "192.168.0.0/20"
 )
 
 func buildCreateCommand(o *okctl.Okctl) *cobra.Command {
@@ -136,7 +135,28 @@ func buildCreateClusterCommand(o *okctl.Okctl) *cobra.Command {
 		Long: `Fetch all tasks required to get an EKS cluster up and running on AWS.
 This includes creating an EKS compatible VPC with private, public
 and database subnets.`,
-		Args: cobra.ExactArgs(createClusterArgs),
+		// Args: cobra.ExactArgs(createClusterArgs),
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			message := `We have made changes to the create cluster process and renamed the command.
+
+To create a cluster, use %s instead.
+
+For usage information, run %s
+or see documentation on %s
+
+`
+
+			_, err := fmt.Fprintf(o.Err, message,
+				aurora.Green("okctl apply cluster"),
+				aurora.Green("okctl apply cluster --help"),
+				aurora.Bold("https://okctl.io/usage/declarativecluster"),
+			)
+			if err != nil {
+				return err
+			}
+
+			return errors.New("command removed")
+		},
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			environment := args[0]
 			awsAccountID := args[1]

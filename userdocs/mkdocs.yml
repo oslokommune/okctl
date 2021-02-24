@@ -9,13 +9,14 @@ edit_uri: ""
 
 nav:
   - Getting started:
-      - 1. Install:  getting-started/installation.md
+      - 1. Install:  getting-started/install.md
+      - 1. Install:  getting-started/install.md
       - 2. Prerequisites: getting-started/prerequisites.md
-      - 3. Create cluster: getting-started/declarativecluster.md
-      - 4. Run virtual environment: getting-started/venv.md
+      - 3. Create cluster: getting-started/create-cluster.md
+      - 4. Run virtual environment: getting-started/run-virtual-environment.md
       - 5. Create application: getting-started/create-application.md
-      - 6. View bundled applications: getting-started/bundledapps.md
-      - 7. Clean up: getting-started/deleteresources.md
+      - 6. View bundled applications: getting-started/view-bundled-applications.md
+      - 7. Clean up: getting-started/clean-up.md
   - Building blocks:
     - buildingblocks/cloud.md
     - buildingblocks/github.md
@@ -24,7 +25,9 @@ nav:
   - About:
       - 'About': about/about.md
       - 'Resource Overview': about/resources.md
-  - FAQ: faq/faq.md
+  - Help:
+    - FAQ: help/faq.md
+    - Common issues: help/common-issues.md
 
 plugins:
   - git-revision-date

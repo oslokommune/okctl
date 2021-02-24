@@ -1,39 +1,23 @@
-**Device authentication flow fails (Linux only)**
+##Device authentication flow fails (Linux only)
 
 If you are unable to complete device authentication against github, you need to install `pass`
 This is because github token is stored in an encrypted keyring on your device.
 
 Install pass as described in the [Prerequisites](../../getting-started/prerequisites/#pass-linux-only).
 
-**okctl keeps trying to do the Github Device Authentication Flow while trying to do \<any action\>**
+##okctl keeps trying to do the Github Device Authentication Flow while trying to do \<any action\>
 
 This is known to happen if `pass init <gpg-key-id>` has not been run after installing `pass`.
 
 Initialize `pass` as described in [Prerequisites](../../getting-started/prerequisites/#initialize-pass).
 
-**On `okctl delete cluster`, some resources are not deleted (automatic deletion is coming in a later version)**
+##On `okctl delete cluster`, some resources are not deleted (automatic deletion is coming in a later version)
 
 Workaround: manually delete the following resources:
 
 * It is recommended to delete the infrastructure/<env> directory and .okctl.yaml file upon successful delete of cluster, as the last manual step.
 
-**ArgoCD doesn't show my apps**
-
-This is due to an authorization bug.
-
-Workaround:
-```bash
-kubectl edit configmap argocd-rbac-cm --namespace argocd
-```
-
-Add a new line after `g, admins, role:admin`, so it becomes something like this:
-```
-policy.csv: |
-  g, admins, role:admin
-  g, my.email@mail.com, role:admin
-```
-
-**okctl create cluster: Create identitypool fails / Re-create cluster within short timespan fails**
+##okctl create cluster: Create identitypool fails / Re-create cluster within short timespan fails
 
 If you do the following:
 
@@ -49,7 +33,7 @@ Workaround: Wait for up to 15 minutes before creating cluster again.
 15 minutes is the TTL (Time to live, i.e. cache expiry) of the NS record. You can see this value in
 Route 53 -> Hosted zones -> Your domain -> NS record for your top domain -> Edit -> See TTL field.
 
-**okctl create cluster: Failed to create external secrets helm chart**
+##okctl create cluster: Failed to create external secrets helm chart
 
 You get the following error (shortened):
 
@@ -70,10 +54,3 @@ to their repositories. Update your ~/.okctl/helm/repositories.yaml, and update U
 stable	   | https://kubernetes-charts.storage.googleapis.com           | https://charts.helm.sh/stable    |
 incubator  | https://kubernetes-charts-incubator.storage.googleapis.com | https://charts.helm.sh/incubator |
 
-**ArgoCD fails first run**
-
-Workaround: re-run create command.
-
-**Service quota check will check even if cluster is already running**
-
-Workaround: If you already created a cluster, but need to re-run the command if for example ArgoCD failed. You will be warned that there are not enough resources. Continue anyway.

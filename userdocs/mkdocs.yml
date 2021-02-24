@@ -27,6 +27,7 @@ nav:
   - Help:
     - FAQ: help/faq.md
     - Common issues: help/common-issues.md
+    - Outdated common issues: help/outdated-common-issues.md
 
 plugins:
   - git-revision-date

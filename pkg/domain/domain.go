@@ -164,14 +164,3 @@ func ShouldHaveNameServers(domain string) error {
 
 	return fmt.Errorf("unable to get NS records for domain '%s', does not appear to be delegated yet", domain)
 }
-
-// EnsureNotFQDN returns a string without the trailing dot
-func EnsureNotFQDN(potentialFQDN string) string {
-	lastCharIndex := len(potentialFQDN) - 1
-
-	if potentialFQDN[lastCharIndex] == '.' {
-		return potentialFQDN[:lastCharIndex]
-	}
-
-	return potentialFQDN
-}

@@ -43,6 +43,8 @@ const (
 	ResourceNodeTypeArgoCD
 	// ResourceNodeTypeNameserverDelegator represents delegation of nameservers for a HostedZone
 	ResourceNodeTypeNameserverDelegator
+	// ResourceNodeTypeNameserversDelegatedTest represents testing if nameservers has been successfully delegated
+	ResourceNodeTypeNameserversDelegatedTest
 )
 
 // ResourceNodeTypeToString knows how to convert a Resource Node type to a human readable string
@@ -77,8 +79,10 @@ func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
 		return "ArgoCD controller"
 	case ResourceNodeTypeNameserverDelegator:
 		return "Nameserver Delegation"
+	case ResourceNodeTypeNameserversDelegatedTest:
+		return "Nameservers Delegated Test"
 	default:
-		return ""
+		return "N/A"
 	}
 }
 

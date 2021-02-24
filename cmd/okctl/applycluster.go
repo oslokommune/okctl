@@ -149,7 +149,8 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				reconciler.NewIdentityManagerReconciler(services.IdentityManager),
 				reconciler.NewVPCReconciler(services.Vpc),
 				reconciler.NewZoneReconciler(services.Domain),
-				reconciler.NewNameserverDelegationReconciler(services.NameserverHandler, services.Domain),
+				reconciler.NewNameserverDelegationReconciler(services.NameserverHandler),
+				reconciler.NewNameserverDelegatedTestReconciler(services.Domain),
 			)
 
 			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{

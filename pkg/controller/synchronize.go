@@ -40,6 +40,7 @@ type SynchronizeOpts struct {
 func Synchronize(opts *SynchronizeOpts) error {
 	desiredTree := CreateResourceDependencyTree()
 	currentStateTree := CreateResourceDependencyTree()
+	diffTree := CreateResourceDependencyTree()
 
 	setRefreshers(desiredTree, opts)
 
@@ -51,8 +52,7 @@ func Synchronize(opts *SynchronizeOpts) error {
 	desiredTree.ApplyFunction(applyDeclaration(opts.ClusterDeclaration), &resourcetree.ResourceNode{})
 	currentStateTree.ApplyFunction(applyExistingState(existingResources), &resourcetree.ResourceNode{})
 
-	diffTree := *desiredTree
-
+	diffTree.ApplyFunction(applyDeclaration(opts.ClusterDeclaration), &resourcetree.ResourceNode{})
 	diffTree.ApplyFunction(applyCurrentState, currentStateTree)
 
 	if opts.Debug {
@@ -61,7 +61,7 @@ func Synchronize(opts *SynchronizeOpts) error {
 		fmt.Fprintf(opts.Out, "Present resources in difference tree (what should be generated): \n%s\n\n", diffTree.String())
 	}
 
-	return handleNode(opts.ReconciliationManager, &diffTree)
+	return handleNode(opts.ReconciliationManager, diffTree)
 }
 
 // handleNode knows how to run Reconcile() on every node of a ResourceNode tree

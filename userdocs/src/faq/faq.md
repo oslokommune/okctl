@@ -21,8 +21,10 @@ Your team member should now be able to use `kubectl` commands
 
 ## Which sub-domain names are set up?
 
-We reserve some of the subdomain of the primary hosted zone, e.g., "argocd.<primary>" and "grafana.<primary>"
+Run this to find out:
 
-## How can I use the ESB CSI driver?
+```bash
+kubectl get ingress --all-namespaces
+```
 
 ## How can I create service monitors and dashboards in prometheus?

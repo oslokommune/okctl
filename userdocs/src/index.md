@@ -14,7 +14,7 @@
 - **Sensible**: provide a set of sensible default integrations
 
 <div class="center-content-container default-spacing">
-    <a class="okctl-button primary" href="getting-started/installation">Getting started</a>
+    <a class="okctl-button primary" href="getting-started/declarativecluster">Getting started</a>
     <a class="okctl-button secondary" href="getting-started/installation">Install okctl</a>
 </div>
 

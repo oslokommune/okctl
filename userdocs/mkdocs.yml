@@ -8,22 +8,19 @@ docs_dir: src
 edit_uri: ""
 
 nav:
-  - okctl: index.md
   - Getting started:
-      - Installation:  getting-started/installation.md
-      - Prerequisites: getting-started/prerequisites.md
-  - Usage:
-      - Create cluster: usage/declarativecluster.md
-      - Create application: usage/applicationyaml.md
-      - Run virtual environment: usage/venv.md
-      - Add user: usage/adduser.md
+      - 1. Install:  getting-started/installation.md
+      - 2. Prerequisites: getting-started/prerequisites.md
+      - 3. Create cluster: getting-started/declarativecluster.md
+      - 4. Run virtual environment: getting-started/venv.md
+      - 5. Create application: getting-started/applicationyaml.md
+      - 6. View bundled applications: getting-started/bundledapps.md
+      - 7. Clean up: getting-started/deleteresources.md
   - Building blocks:
     - buildingblocks/cloud.md
     - buildingblocks/github.md
     - buildingblocks/kubernetes.md
     - buildingblocks/argocd.md
-  - FAQ:
-    - about/about.md
   - About:
       - 'About': about/about.md
       - 'Resource Overview': about/resources.md

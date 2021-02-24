@@ -18,7 +18,7 @@ okctl delete cluster test
 If you want to remove your cluster's primary hosted zone, use
 
 ```bash
-okctl delete cluster --i-know-what-i-am-doing-delete-hosted-zone-and-records <environment name>
+okctl delete cluster <environment name> --i-know-what-i-am-doing-delete-hosted-zone-and-records true 
 ```
 
 Note: When deleting the hosted zone, you are deleting your NS record. The NS record contains a

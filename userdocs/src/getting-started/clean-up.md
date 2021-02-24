@@ -76,12 +76,15 @@ secrets.
 
 Log in to Github, open your IAC repository, choose `Settings > Deploy keys`. Delete any unused keys here.
 
-### Remove IAC repository
+### Clean up infrastructure-as-code(IAC) repository
 
-TODO: remember if user has 3 existing clusters, and only want to delete 1 one of them.
-He cant simply delete infra folder an .okctl.
+The following paths reside in the top level directory of your infrastructure-as-code repository:
 
-It is recommended to delete the infrastructure/ directory and .okctl.yaml file upon successful delete of cluster, as the last manual step.
+1. Delete the entry for the cluster in `.okctl.yml`.
+1. Delete the directory `infrastructure/<environment name>`.
+
+If the cluster you are deleting is the last one in this IAC repository, you can delete both the `.okctl.yml` file and
+the `infrastructure` directory.
 
 ### List all AWS resources created by `okctl`
 

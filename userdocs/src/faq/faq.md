@@ -16,3 +16,13 @@ Your team member can now
 1. Run `okctl venv <environment name>`
 
 Your team member should now be able to use `kubectl` commands
+
+## How do i store my docker-images in aws or github?
+
+## Which sub-domain names are set up?
+
+We reserve some of the subdomain of the primary hosted zone, e.g., "argocd.<primary>" and "grafana.<primary>"
+
+## How can I use the ESB CSI driver?
+
+## How can I create service monitors and dashboards in prometheus?

@@ -54,7 +54,6 @@ func Synchronize(opts *SynchronizeOpts) error {
 	diffTree.ApplyFunction(applyCurrentState, currentStateTree)
 	setRefreshers(diffTree, opts)
 
-
 	if opts.Debug {
 		fmt.Fprintf(opts.Out, "Present resources in desired tree (what is desired): \n%s\n\n", desiredTree.String())
 		fmt.Fprintf(opts.Out, "Present resources in current state tree (what is currently): \n%s\n\n", currentStateTree.String())

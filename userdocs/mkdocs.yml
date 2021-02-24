@@ -13,7 +13,7 @@ nav:
       - 2. Prerequisites: getting-started/prerequisites.md
       - 3. Create cluster: getting-started/declarativecluster.md
       - 4. Run virtual environment: getting-started/venv.md
-      - 5. Create application: getting-started/applicationyaml.md
+      - 5. Create application: getting-started/create-application.md
       - 6. View bundled applications: getting-started/bundledapps.md
       - 7. Clean up: getting-started/deleteresources.md
   - Building blocks:

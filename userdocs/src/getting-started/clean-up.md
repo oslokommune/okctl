@@ -1,12 +1,3 @@
-TODOD
-* Deploy key in IAC repo
-
-
-
-
-
-
-
 During testing, or maybe when a project has come to an end - there might be a necessity to delete a cluster created with
 `okctl`
 
@@ -21,6 +12,19 @@ During testing, or maybe when a project has come to an end - there might be a ne
 # Example:
 okctl delete cluster test
 ```
+
+### Delete hosted zone
+
+If you want to remove your cluster's primary hosted zone, use
+
+```bash
+okctl delete cluster --i-know-what-i-am-doing-delete-hosted-zone-and-records <environment name>
+```
+
+Note: When deleting the hosted zone, you are deleting your NS record. The NS record contains a
+a TTL setting which determines how long cache resolvers cache your NS record. If the TTL is 15
+minutes, you should wait 15 minutes before creating a new cluster - if you're using the same
+domain name.
 
 ## Delete a cluster manually
 
@@ -68,6 +72,16 @@ first, etc. Once you have resolved the problem, go back and try to delete the cl
 Log in to the AWS console for your account, then go to `Systems Manager > Parameter store`. Here you might find leftover
 secrets. 
 
+### Remove deploy key(s) in IAC repository
+
+Log in to Github, open your IAC repository, choose `Settings > Deploy keys`. Delete any unused keys here.
+
+### Remove IAC repository
+
+TODO: remember if user has 3 existing clusters, and only want to delete 1 one of them.
+He cant simply delete infra folder an .okctl.
+
+It is recommended to delete the infrastructure/ directory and .okctl.yaml file upon successful delete of cluster, as the last manual step.
 
 ### List all AWS resources created by `okctl`
 
@@ -78,3 +92,4 @@ aws resourcegroupstaggingapi get-resources \
 > --tag-filters Key=alpha.okctl.io/okctl-version,Values=dev \
 > --tags-per-page 100
 ```
+

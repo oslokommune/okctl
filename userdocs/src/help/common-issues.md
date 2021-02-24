@@ -15,7 +15,6 @@ Initialize `pass` as described in [Prerequisites](../../getting-started/prerequi
 
 Workaround: manually delete the following resources:
 
-* Hosted zone and records (unless you specify "i-know-what-i-am-doing-delete-hosted-zone-and-records" flag to "true")
 * It is recommended to delete the infrastructure/<env> directory and .okctl.yaml file upon successful delete of cluster, as the last manual step.
 
 **ArgoCD doesn't show my apps**

@@ -10,7 +10,6 @@ edit_uri: ""
 nav:
   - Getting started:
       - 1. Install:  getting-started/install.md
-      - 1. Install:  getting-started/install.md
       - 2. Prerequisites: getting-started/prerequisites.md
       - 3. Create cluster: getting-started/create-cluster.md
       - 4. Run virtual environment: getting-started/run-virtual-environment.md

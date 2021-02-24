@@ -32,7 +32,7 @@ With `okctl` we are attempting to solve the production environment setup problem
 |Provide integrations with version control system|✓||||
 |Setup monitoring with metrics, logs and traces|✓||||
 
-## Roadmap
+## Roadmap 
 
 We have a basic cluster up and running, and we are currently working on getting the core components of the cluster deployed:
 

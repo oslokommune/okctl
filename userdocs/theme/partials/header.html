@@ -13,9 +13,9 @@
             </div>
             {% else %}
             <div class="md-header-nav__ellipsis">
-          <span class="md-header-nav__topic md-ellipsis">
-            {{ config.site_name }}
-          </span>
+                  <a href="{{ config.site_url | default(nav.homepage.url, true) | url }}"  class="md-header-nav__topic md-ellipsis">
+                  {{ config.site_name }}
+                  </a>
                 <span class="md-header-nav__topic md-ellipsis">
             {% if page and page.meta and page.meta.title %}
               {{ page.meta.title }}

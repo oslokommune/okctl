@@ -24,6 +24,7 @@ nav:
   - About:
       - 'About': about/about.md
       - 'Resource Overview': about/resources.md
+  - FAQ: faq/faq.md
 
 plugins:
   - git-revision-date

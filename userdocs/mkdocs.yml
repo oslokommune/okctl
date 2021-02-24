@@ -26,6 +26,7 @@ nav:
       - 'Resource Overview': about/resources.md
   - Help:
     - FAQ: help/faq.md
+    - Running a Docker image in your cluster: help/docker-registry.md
     - Common issues: help/common-issues.md
     - Outdated common issues: help/outdated-common-issues.md
 

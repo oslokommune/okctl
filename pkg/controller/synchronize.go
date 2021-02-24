@@ -42,8 +42,6 @@ func Synchronize(opts *SynchronizeOpts) error {
 	currentStateTree := CreateResourceDependencyTree()
 	diffTree := CreateResourceDependencyTree()
 
-	setRefreshers(desiredTree, opts)
-
 	existingResources, err := IdentifyResourcePresence(opts.Fs, opts.OutputDir, opts.PrimaryHostedZoneGetter)
 	if err != nil {
 		return fmt.Errorf("getting existing integrations: %w", err)
@@ -54,6 +52,8 @@ func Synchronize(opts *SynchronizeOpts) error {
 
 	diffTree.ApplyFunction(applyDeclaration(opts.ClusterDeclaration), &resourcetree.ResourceNode{})
 	diffTree.ApplyFunction(applyCurrentState, currentStateTree)
+	setRefreshers(diffTree, opts)
+
 
 	if opts.Debug {
 		fmt.Fprintf(opts.Out, "Present resources in desired tree (what is desired): \n%s\n\n", desiredTree.String())

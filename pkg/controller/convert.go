@@ -70,6 +70,7 @@ func CreateResourceDependencyTree() (root *resourcetree.ResourceNode) {
 	createNode(clusterNode, resourcetree.ResourceNodeTypeAWSLoadBalancerController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalDNS)
 
+	// All resources that requires SSL / a certificate needs the delegatedNameserversConfirmedNode as a dependency
 	delegatedNameserversConfirmedNode := createNode(clusterNode, resourcetree.ResourceNodeTypeNameserversDelegatedTest)
 
 	identityProviderNode := createNode(delegatedNameserversConfirmedNode, resourcetree.ResourceNodeTypeIdentityManager)

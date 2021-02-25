@@ -22,19 +22,43 @@ type KubePromStack struct {
 }
 
 type monitoringStore struct {
-	paths     Paths
-	helmPaths Paths
-	fs        *afero.Afero
+	lokiPaths         Paths
+	kubePromPaths     Paths
+	kubePromHelmPaths Paths
+	fs                *afero.Afero
+}
+
+func (s *monitoringStore) SaveLoki(loki *client.Loki) (*store.Report, error) {
+	chart := &Helm{
+		ID: loki.ID,
+	}
+
+	report, err := store.NewFileSystem(s.lokiPaths.BaseDir, s.fs).
+		StoreStruct(s.lokiPaths.OutputFile, chart, store.ToJSON()).
+		StoreStruct(s.lokiPaths.ReleaseFile, loki.Chart.Release, store.ToJSON()).
+		StoreStruct(s.lokiPaths.ChartFile, loki.Chart.Chart, store.ToJSON()).
+		Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return report, nil
+}
+
+func (s *monitoringStore) RemoveLoki(_ api.ID) (*store.Report, error) {
+	return store.NewFileSystem(s.lokiPaths.BaseDir, s.fs).
+		RemoveDir("").
+		Do()
 }
 
 func (s *monitoringStore) RemoveKubePromStack(_ api.ID) (*store.Report, error) {
-	return store.NewFileSystem(s.helmPaths.BaseDir, s.fs).
+	return store.NewFileSystem(s.kubePromHelmPaths.BaseDir, s.fs).
 		RemoveDir("").
 		Do()
 }
 
 func (s *monitoringStore) SaveKubePromStack(stack *client.KubePromStack) (*store.Report, error) {
-	argo := &KubePromStack{
+	kubeProm := &KubePromStack{
 		ID:                     stack.ID,
 		CertificateARN:         stack.CertificateARN,
 		Hostname:               stack.Hostname,
@@ -51,14 +75,14 @@ func (s *monitoringStore) SaveKubePromStack(stack *client.KubePromStack) (*store
 		ID: stack.ID,
 	}
 
-	report, err := store.NewFileSystem(s.paths.BaseDir, s.fs).
+	report, err := store.NewFileSystem(s.kubePromPaths.BaseDir, s.fs).
 		// Outputs
-		StoreStruct(s.paths.OutputFile, argo, store.ToJSON()).
+		StoreStruct(s.kubePromPaths.OutputFile, kubeProm, store.ToJSON()).
 		// Chart
-		AlterStore(store.SetBaseDir(s.helmPaths.BaseDir)).
-		StoreStruct(s.helmPaths.OutputFile, chart, store.ToJSON()).
-		StoreStruct(s.helmPaths.ReleaseFile, stack.Chart.Release, store.ToJSON()).
-		StoreStruct(s.helmPaths.ChartFile, stack.Chart.Chart, store.ToJSON()).
+		AlterStore(store.SetBaseDir(s.kubePromHelmPaths.BaseDir)).
+		StoreStruct(s.kubePromHelmPaths.OutputFile, chart, store.ToJSON()).
+		StoreStruct(s.kubePromHelmPaths.ReleaseFile, stack.Chart.Release, store.ToJSON()).
+		StoreStruct(s.kubePromHelmPaths.ChartFile, stack.Chart.Chart, store.ToJSON()).
 		Do()
 	if err != nil {
 		return nil, err
@@ -69,12 +93,13 @@ func (s *monitoringStore) SaveKubePromStack(stack *client.KubePromStack) (*store
 
 // NewMonitoringStore returns an initialised store
 func NewMonitoringStore(
-	helmPaths, paths Paths,
+	lokiPaths, kubePromHelmPaths, kubePromPaths Paths,
 	fs *afero.Afero,
 ) client.MonitoringStore {
 	return &monitoringStore{
-		paths:     paths,
-		helmPaths: helmPaths,
-		fs:        fs,
+		lokiPaths:         lokiPaths,
+		kubePromPaths:     kubePromPaths,
+		kubePromHelmPaths: kubePromHelmPaths,
+		fs:                fs,
 	}
 }

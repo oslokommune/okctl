@@ -46,6 +46,39 @@ func grafanaDomain(baseDomain string) string {
 	return fmt.Sprintf("%s.%s", grafanaSubDomain, baseDomain)
 }
 
+func (s *monitoringService) CreateLoki(_ context.Context, opts client.CreateLokiOpts) (*client.Loki, error) {
+	err := s.spinner.Start("loki")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	chart, err := s.api.CreateLoki(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	l := &client.Loki{
+		ID:    opts.ID,
+		Chart: chart,
+	}
+
+	report, err := s.store.SaveLoki(l)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.ReportSaveLoki(l, report)
+	if err != nil {
+		return nil, err
+	}
+
+	return l, nil
+}
+
 func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client.DeleteKubePromStackOpts) error {
 	err := s.spinner.Start("kubepromstack")
 	if err != nil {

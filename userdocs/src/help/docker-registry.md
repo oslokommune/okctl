@@ -87,6 +87,9 @@ Before you start, you need an ECR repository. It can be created in the [AWS Cons
 
 #### Log in
 
+For `ecr` to be able to acquire a login password, you need to first authenticate with AWS using either [saml2aws](https://github.com/Versent/saml2aws) or 
+a [service user](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys).
+
 ```shell
 # Usage
 # aws ecr get-login-password --region region | docker login --username AWS --password-stdin aws_account_id.dkr.ecr.region.amazonaws.com

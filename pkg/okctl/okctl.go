@@ -195,12 +195,12 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		IdentityManager:                  o.identityManagerService(outputDir, spin),
 		Autoscaler:                       o.autoscalerService(outputDir, spin),
 		Blockstorage:                     o.blockstorageService(outputDir, spin),
-		Monitoring:                       o.kubePromStackService(outputDir, spin),
+		Monitoring:                       o.monitoringService(outputDir, spin),
 	}, nil
 }
 
-func (o *Okctl) kubePromStackService(outputDir string, spin spinner.Spinner) client.MonitoringService {
-	kubePromStackBaseDir := path.Join(outputDir, config.DefaultKubePromStackBaseDir)
+func (o *Okctl) monitoringService(outputDir string, spin spinner.Spinner) client.MonitoringService {
+	monitoringDir := path.Join(outputDir, config.DefaultMonitoringBaseDir)
 
 	return clientCore.NewMonitoringService(
 		spin,
@@ -210,20 +210,26 @@ func (o *Okctl) kubePromStackService(outputDir string, spin spinner.Spinner) cli
 				OutputFile:  config.DefaultHelmOutputsFile,
 				ReleaseFile: config.DefaultHelmReleaseFile,
 				ChartFile:   config.DefaultHelmChartFile,
-				BaseDir:     kubePromStackBaseDir,
+				BaseDir:     path.Join(monitoringDir, config.DefaultLokiBaseDir),
+			},
+			clientFilesystem.Paths{
+				OutputFile:  config.DefaultHelmOutputsFile,
+				ReleaseFile: config.DefaultHelmReleaseFile,
+				ChartFile:   config.DefaultHelmChartFile,
+				BaseDir:     path.Join(monitoringDir, config.DefaultKubePromStackBaseDir),
 			},
 			clientFilesystem.Paths{
 				OutputFile: config.DefaultKubePromStackOutputsFile,
-				BaseDir:    kubePromStackBaseDir,
+				BaseDir:    path.Join(monitoringDir, config.DefaultKubePromStackBaseDir),
 			},
 			o.FileSystem,
 		),
 		stateSaver.NewMonitoringState(o.RepoStateWithEnv),
 		console.NewMonitoringReport(o.Err, spin),
-		o.certService(kubePromStackBaseDir, spin.SubSpinner()),
-		o.identityManagerService(kubePromStackBaseDir, spin.SubSpinner()),
-		o.manifestService(kubePromStackBaseDir, spin.SubSpinner()),
-		o.paramService(kubePromStackBaseDir, spin.SubSpinner()),
+		o.certService(monitoringDir, spin.SubSpinner()),
+		o.identityManagerService(monitoringDir, spin.SubSpinner()),
+		o.manifestService(monitoringDir, spin.SubSpinner()),
+		o.paramService(monitoringDir, spin.SubSpinner()),
 	)
 }
 

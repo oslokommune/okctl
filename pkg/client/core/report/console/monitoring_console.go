@@ -15,6 +15,22 @@ type monitoringReport struct {
 	console *Console
 }
 
+func (r *monitoringReport) ReportSaveLoki(loki *client.Loki, report *store.Report) error {
+	return r.console.Report(
+		report.Actions,
+		"loki",
+		aurora.Green("loki").String(),
+	)
+}
+
+func (r *monitoringReport) ReportRemoveLoki(report *store.Report) error {
+	return r.console.Report(
+		report.Actions,
+		"loki",
+		aurora.Green("loki").String(),
+	)
+}
+
 func (r *monitoringReport) ReportRemoveKubePromStack(reports []*store.Report) error {
 	var actions []store.Action // nolint
 
@@ -22,9 +38,11 @@ func (r *monitoringReport) ReportRemoveKubePromStack(reports []*store.Report) er
 		actions = append(actions, report.Actions...)
 	}
 
-	description := aurora.Green("kube-prometheus-stack").String()
-
-	return r.console.Report(actions, "KubePromStack", description)
+	return r.console.Report(
+		actions,
+		"kube-prometheus-stack",
+		aurora.Green("kube-prometheus-stack").String(),
+	)
 }
 
 func (r *monitoringReport) ReportSaveKubePromStack(cd *client.KubePromStack, reports []*store.Report) error {
@@ -39,7 +57,7 @@ func (r *monitoringReport) ReportSaveKubePromStack(cd *client.KubePromStack, rep
 		cd.Hostname,
 	)
 
-	return r.console.Report(actions, "KubePromStack", description)
+	return r.console.Report(actions, "kube-prometheus-stack", description)
 }
 
 // NewMonitoringReport returns an initialised reporter

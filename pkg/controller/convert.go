@@ -19,6 +19,7 @@ type ExistingResources struct {
 	hasAutoscaler                         bool
 	hasBlockstorage                       bool
 	hasKubePromStack                      bool
+	hasLoki                               bool
 	hasIdentityManager                    bool
 	hasArgoCD                             bool
 	hasPrimaryHostedZone                  bool
@@ -37,7 +38,8 @@ func IdentifyResourcePresence(fs *afero.Afero, outputDir string, hzFetcher Hoste
 		hasCluster:                            directoryTester(fs, outputDir, config.DefaultClusterBaseDir),
 		hasExternalSecrets:                    directoryTester(fs, outputDir, config.DefaultExternalSecretsBaseDir),
 		hasAutoscaler:                         directoryTester(fs, outputDir, config.DefaultAutoscalerBaseDir),
-		hasKubePromStack:                      directoryTester(fs, outputDir, config.DefaultKubePromStackBaseDir),
+		hasKubePromStack:                      directoryTester(fs, outputDir, path.Join(config.DefaultMonitoringBaseDir, config.DefaultKubePromStackBaseDir)),
+		hasLoki:                               directoryTester(fs, outputDir, path.Join(config.DefaultMonitoringBaseDir, config.DefaultLokiBaseDir)),
 		hasBlockstorage:                       directoryTester(fs, outputDir, config.DefaultBlockstorageBaseDir),
 		hasALBIngressController:               directoryTester(fs, outputDir, config.DefaultAlbIngressControllerBaseDir),
 		hasAWSLoadBalancerController:          directoryTester(fs, outputDir, config.DefaultAWSLoadBalancerControllerBaseDir),
@@ -74,8 +76,11 @@ func CreateResourceDependencyTree() (root *resourcetree.ResourceNode) {
 	delegatedNameserversConfirmedNode := createNode(clusterNode, resourcetree.ResourceNodeTypeNameserversDelegatedTest)
 
 	identityProviderNode := createNode(delegatedNameserversConfirmedNode, resourcetree.ResourceNodeTypeIdentityManager)
-	createNode(identityProviderNode, resourcetree.ResourceNodeTypeKubePromStack)
+	kubePromStack := createNode(identityProviderNode, resourcetree.ResourceNodeTypeKubePromStack)
 	createNode(identityProviderNode, resourcetree.ResourceNodeTypeArgoCD)
+	// This is not strictly required, but to a large extent it doesn't make much sense to setup Loki before
+	// we have setup grafana.
+	createNode(kubePromStack, resourcetree.ResourceNodeTypeLoki)
 
 	return root
 }

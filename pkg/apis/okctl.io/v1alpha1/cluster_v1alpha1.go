@@ -196,11 +196,15 @@ type ClusterIntegrations struct {
 	// +optional
 	Autoscaler bool `json:"autoscaler,omitempty"`
 
-	// KubePromStack if set to true will install the kubernetes-prometheus-stack into the clusterr
+	// KubePromStack if set to true will install the kubernetes-prometheus-stack into the cluster
 	// We should probably give this a better name, something more related to monitoring, but
 	// we can think about that down the road.
 	// +optional
 	KubePromStack bool `json:"kubePromStack,omitempty"`
+
+	// Loki if set to true will install the Loki log collector and data source for grafana into
+	// the cluster.
+	Loki bool `json:"loki,omitempty"`
 
 	// Blockstorage if set to true will install the EBS CSI block storage driver into the
 	// cluster, which makes it possible to create PersistentVolumeClaims in AWS

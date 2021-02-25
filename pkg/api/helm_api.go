@@ -157,6 +157,25 @@ func (o CreateKubePrometheusStackOpts) Validate() error {
 	)
 }
 
+// DeleteHelmReleaseOpts contains the required inputs for
+// removing a Helm release from the Kubernetes cluster
+// Experimenting a little bit with a more generic/general
+// interface, starting with Delete operation
+type DeleteHelmReleaseOpts struct {
+	ID          ID
+	ReleaseName string
+	Namespace   string
+}
+
+// Validate the provided inputs
+func (o DeleteHelmReleaseOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.ReleaseName, validation.Required),
+		validation.Field(&o.Namespace, validation.Required),
+	)
+}
+
 // HelmService defines the service layer interface
 type HelmService interface {
 	CreateExternalSecretsHelmChart(ctx context.Context, opts CreateExternalSecretsHelmChartOpts) (*Helm, error)
@@ -167,6 +186,7 @@ type HelmService interface {
 	CreateBlockstorageHelmChart(ctx context.Context, opts CreateBlockstorageHelmChartOpts) (*Helm, error)
 	CreateKubePrometheusStack(ctx context.Context, opts CreateKubePrometheusStackOpts) (*Helm, error)
 	CreateLokiHelmChart(ctx context.Context, opts CreateLokiHelmChartOpts) (*Helm, error)
+	DeleteHelmRelease(ctx context.Context, opts DeleteHelmReleaseOpts) error
 }
 
 // HelmRun defines the runner layer
@@ -179,6 +199,7 @@ type HelmRun interface {
 	CreateBlockstorageHelmChart(opts CreateBlockstorageHelmChartOpts) (*Helm, error)
 	CreateKubePromStack(opts CreateKubePrometheusStackOpts) (*Helm, error)
 	CreateLokiHelmChart(opts CreateLokiHelmChartOpts) (*Helm, error)
+	DeleteHelmRelease(opts DeleteHelmReleaseOpts) error
 }
 
 // HelmStore defines the storage layer

@@ -13,10 +13,24 @@ type helmService struct {
 	store api.HelmStore
 }
 
+func (s *helmService) DeleteHelmRelease(_ context.Context, opts api.DeleteHelmReleaseOpts) error {
+	err := opts.Validate()
+	if err != nil {
+		return errors.E(err, "validating input options", errors.Invalid)
+	}
+
+	err = s.run.DeleteHelmRelease(opts)
+	if err != nil {
+		return errors.E(err, "removing helm release", errors.Internal)
+	}
+
+	return nil
+}
+
 func (s *helmService) CreateLokiHelmChart(_ context.Context, opts api.CreateLokiHelmChartOpts) (*api.Helm, error) {
 	err := opts.Validate()
 	if err != nil {
-		return nil, errors.E(err, "validating input options")
+		return nil, errors.E(err, "validating input options", errors.Invalid)
 	}
 
 	h, err := s.run.CreateLokiHelmChart(opts)

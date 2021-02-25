@@ -3,6 +3,11 @@ package core
 import (
 	"context"
 	"fmt"
+	"time"
+
+	"github.com/oslokommune/okctl/pkg/helm/charts/loki"
+
+	"github.com/oslokommune/okctl/pkg/helm/charts/kubepromstack"
 
 	"github.com/miekg/dns"
 
@@ -44,6 +49,35 @@ const (
 
 func grafanaDomain(baseDomain string) string {
 	return fmt.Sprintf("%s.%s", grafanaSubDomain, baseDomain)
+}
+
+func (s *monitoringService) DeleteLoki(_ context.Context, opts client.DeleteLokiOpts) error {
+	err := s.spinner.Start("loki")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	chart := loki.New(nil)
+
+	err = s.api.DeleteLoki(api.DeleteHelmReleaseOpts{
+		ID:          opts.ID,
+		ReleaseName: chart.ReleaseName,
+		Namespace:   chart.Namespace,
+	})
+	if err != nil {
+		return err
+	}
+
+	report, err := s.store.RemoveLoki(opts.ID)
+	if err != nil {
+		return err
+	}
+
+	return s.report.ReportRemoveLoki(report)
 }
 
 func (s *monitoringService) CreateLoki(_ context.Context, opts client.CreateLokiOpts) (*client.Loki, error) {
@@ -89,21 +123,27 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 		err = s.spinner.Stop()
 	}()
 
-	// This is too heavy handed, we should only remove the chart
-	// and the secrets manifest. We can, however, wait until Loki
-	// with doing this.
-	err = s.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
-		ID:        opts.ID,
-		Namespace: config.DefaultMonitoringNamespace,
+	// Do we like this? Probably not.
+	chart := kubepromstack.New(0*time.Second, nil)
+
+	err = s.api.DeleteKubePromStack(api.DeleteHelmReleaseOpts{
+		ID:          opts.ID,
+		ReleaseName: chart.ReleaseName,
+		Namespace:   chart.Namespace,
 	})
 	if err != nil {
 		return err
 	}
 
+	// We need to delete the secret manifest here..
+
 	err = s.ident.DeleteIdentityPoolClient(ctx, api.DeleteIdentityPoolClientOpts{
 		ID:      opts.ID,
 		Purpose: grafanaPurpose,
 	})
+	if err != nil {
+		return err
+	}
 
 	for _, secretName := range []string{clientSecretName, secretKeyName, adminUserName, adminPassName} {
 		if err = s.param.DeleteSecret(ctx, api.DeleteSecretOpts{Name: secretName}); err != nil {

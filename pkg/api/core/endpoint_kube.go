@@ -30,3 +30,9 @@ func makeCreateStorageClass(s api.KubeService) endpoint.Endpoint {
 		return s.CreateStorageClass(ctx, request.(api.CreateStorageClassOpts))
 	}
 }
+
+func makeDeleteExternalSecrets(s api.KubeService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return Empty{}, s.DeleteExternalSecrets(ctx, request.(api.DeleteExternalSecretsOpts))
+	}
+}

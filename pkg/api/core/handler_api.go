@@ -69,6 +69,7 @@ type Endpoints struct {
 	CreateKubePrometheusStack                     endpoint.Endpoint
 	CreateLokiHelmChart                           endpoint.Endpoint
 	DeleteHelmRelease                             endpoint.Endpoint
+	DeleteExternalSecrets                         endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -128,6 +129,7 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateKubePrometheusStack:                     makeCreateKubePrometheusStack(s.Helm),
 		CreateLokiHelmChart:                           makeCreateLokiHelmChartEndpoint(s.Helm),
 		DeleteHelmRelease:                             makeDeleteHelmRelease(s.Helm),
+		DeleteExternalSecrets:                         makeDeleteExternalSecrets(s.Kube),
 	}
 }
 
@@ -186,6 +188,7 @@ type Handlers struct {
 	CreateKubePrometheusStack                     http.Handler
 	CreateLokiHelmChart                           http.Handler
 	DeleteHelmRelease                             http.Handler
+	DeleteExternalSecrets                         http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -272,6 +275,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateKubePrometheusStack:                     newServer(endpoints.CreateKubePrometheusStack, decodeCreateKubePrometheusStackHelmChart),
 		CreateLokiHelmChart:                           newServer(endpoints.CreateLokiHelmChart, decodeCreateLokiHelmChart),
 		DeleteHelmRelease:                             newServer(endpoints.DeleteHelmRelease, decodeDeleteHelmRelease),
+		DeleteExternalSecrets:                         newServer(endpoints.DeleteExternalSecrets, decodeDeleteExternalSecrets),
 	}
 }
 
@@ -376,6 +380,7 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			})
 			r.Route("/externalsecrets", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalSecrets)
+				r.Method(http.MethodDelete, "/", handlers.DeleteExternalSecrets)
 			})
 			r.Route("/namespaces", func(r chi.Router) {
 				r.Method(http.MethodDelete, "/", handlers.DeleteNamespace)
@@ -528,6 +533,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateKubePrometheusStack:                     logmd.Logging(logger, strings.Join([]string{helmTag, kubePrometheusStackTag}, "/"), "create")(endpoints.CreateKubePrometheusStack),
 			CreateLokiHelmChart:                           logmd.Logging(logger, strings.Join([]string{helmTag, lokiTag}, "/"), "create")(endpoints.CreateLokiHelmChart),
 			DeleteHelmRelease:                             logmd.Logging(logger, strings.Join([]string{helmTag, releasesTag}, "/"), "delete")(endpoints.DeleteHelmRelease),
+			DeleteExternalSecrets:                         logmd.Logging(logger, strings.Join([]string{kubeTag, externalSecretsTag}, ""), "delete")(endpoints.DeleteExternalSecrets),
 		}
 	}
 }

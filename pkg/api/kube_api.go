@@ -45,6 +45,20 @@ func (o CreateExternalDNSKubeDeploymentOpts) Validate() error {
 	)
 }
 
+// DeleteExternalSecretsOpts contains the required inputs
+type DeleteExternalSecretsOpts struct {
+	ID        ID
+	Manifests map[string]string
+}
+
+// Validate the provided inputs
+func (o DeleteExternalSecretsOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.Manifests, validation.Required),
+	)
+}
+
 // CreateExternalSecretsOpts contains the required inputs
 type CreateExternalSecretsOpts struct {
 	ID        ID
@@ -126,6 +140,7 @@ type KubeService interface {
 	CreateExternalSecrets(ctx context.Context, opts CreateExternalSecretsOpts) (*ExternalSecretsKube, error)
 	DeleteNamespace(ctx context.Context, opts DeleteNamespaceOpts) error
 	CreateStorageClass(ctx context.Context, opts CreateStorageClassOpts) (*StorageClassKube, error)
+	DeleteExternalSecrets(ctx context.Context, opts DeleteExternalSecretsOpts) error
 }
 
 // KubeRun provides kube deployment run layer
@@ -134,6 +149,7 @@ type KubeRun interface {
 	CreateExternalSecrets(opts CreateExternalSecretsOpts) (*ExternalSecretsKube, error)
 	DeleteNamespace(opts DeleteNamespaceOpts) error
 	CreateStorageClass(opts CreateStorageClassOpts) (*StorageClassKube, error)
+	DeleteExternalSecrets(opts DeleteExternalSecretsOpts) error
 }
 
 // KubeStore provides kube store layer

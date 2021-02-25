@@ -51,3 +51,14 @@ func decodeCreateStorageClass(_ context.Context, r *http.Request) (interface{}, 
 
 	return opts, nil
 }
+
+func decodeDeleteExternalSecrets(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.DeleteExternalSecretsOpts
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}

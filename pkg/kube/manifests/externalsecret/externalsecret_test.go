@@ -23,9 +23,9 @@ func TestNew(t *testing.T) {
 	}{
 		{
 			name: "Should work",
-			ext: externalsecret.New("name", "default", nil, nil, map[string]string{
+			ext: externalsecret.New("name", "default", externalsecret.SecretManifest("name", "default", nil, nil, map[string]string{
 				"from": "/path",
-			}),
+			})),
 		},
 	}
 
@@ -35,7 +35,7 @@ func TestNew(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			g := goldie.New(t)
 
-			dm := tc.ext.SecretManifest()
+			dm := tc.ext.Manifest
 			db, err := yaml.Marshal(dm)
 			assert.NoError(t, err)
 			g.Assert(t, "secret.yaml", db)
@@ -79,9 +79,9 @@ func TestExternalDNS(t *testing.T) {
 		// - https://github.com/external-secrets/kubernetes-external-secrets/blob/master/charts/kubernetes-external-secrets/crds/kubernetes-client.io_externalsecrets_crd.yaml
 		{
 			name: "Should work",
-			ext: externalsecret.New("name", "default", nil, nil, map[string]string{
+			ext: externalsecret.New("name", "default", externalsecret.SecretManifest("name", "default", nil, nil, map[string]string{
 				"from": "/path",
-			}),
+			})),
 		},
 	}
 

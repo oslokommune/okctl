@@ -53,7 +53,13 @@ func (z *kubePrometheusStackReconciler) Reconcile(node *resourcetree.ResourceNod
 			return result, fmt.Errorf("creating kubepromstack: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		return ReconcilationResult{}, fmt.Errorf("deletion of KubePromStack not implemented")
+		err = z.client.DeleteKubePromStack(z.commonMetadata.Ctx, client.DeleteKubePromStackOpts{
+			ID:     z.commonMetadata.ClusterID,
+			Domain: z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain,
+		})
+		if err != nil {
+			return result, fmt.Errorf("deleting kubepromstack: %w", err)
+		}
 	}
 
 	return result, nil

@@ -173,6 +173,13 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
+			err = services.Monitoring.DeleteLoki(o.Ctx, client.DeleteLokiOpts{
+				ID: id,
+			})
+			if err != nil {
+				return formatErr(err)
+			}
+
 			err = services.Monitoring.DeleteKubePromStack(o.Ctx, client.DeleteKubePromStackOpts{
 				ID:     id,
 				Domain: domain.HostedZone.Domain,

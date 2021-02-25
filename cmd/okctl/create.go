@@ -470,7 +470,7 @@ or see documentation on %s
 				return formatErr(err)
 			}
 
-			monit, err := services.KubePromStack.CreateKubePromStack(o.Ctx, client.CreateKubePromStackOpts{
+			monit, err := services.Monitoring.CreateKubePromStack(o.Ctx, client.CreateKubePromStackOpts{
 				ID:           id,
 				Domain:       hostedZone.HostedZone.Domain,
 				HostedZoneID: hostedZone.HostedZone.HostedZoneID,

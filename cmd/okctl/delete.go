@@ -173,7 +173,7 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
-			err = services.KubePromStack.DeleteKubePromStack(o.Ctx, client.DeleteKubePromStackOpts{
+			err = services.Monitoring.DeleteKubePromStack(o.Ctx, client.DeleteKubePromStackOpts{
 				ID:     id,
 				Domain: domain.HostedZone.Domain,
 			})

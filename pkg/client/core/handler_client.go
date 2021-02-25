@@ -21,5 +21,5 @@ type Services struct {
 	IdentityManager                  client.IdentityManagerService
 	Autoscaler                       client.AutoscalerService
 	Blockstorage                     client.BlockstorageService
-	KubePromStack                    client.KubePromStackService
+	Monitoring                       client.MonitoringService
 }

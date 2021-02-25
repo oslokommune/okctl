@@ -20,7 +20,7 @@ type KubePromStackState struct {
 type kubePrometheusStackReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 
-	client client.KubePromStackService
+	client client.MonitoringService
 }
 
 // NodeType returns the resource node type
@@ -60,7 +60,7 @@ func (z *kubePrometheusStackReconciler) Reconcile(node *resourcetree.ResourceNod
 }
 
 // NewKubePrometheusStackReconciler creates a new reconciler for the KubePromStack resource
-func NewKubePrometheusStackReconciler(client client.KubePromStackService) Reconciler {
+func NewKubePrometheusStackReconciler(client client.MonitoringService) Reconciler {
 	return &kubePrometheusStackReconciler{
 		client: client,
 	}

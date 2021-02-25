@@ -71,6 +71,7 @@ const (
 	DefaultVpcBaseDir                = "vpc"
 
 	DefaultMonitoringBaseDir                        = "monitoring"
+	DefaultPromtailBaseDir                          = "promtail"
 	DefaultLokiBaseDir                              = "loki"
 	DefaultAWSLoadBalancerControllerBaseDir         = "aws-load-balancer-controller"
 	DefaultAlbIngressControllerBaseDir              = "alb-ingress-controller"

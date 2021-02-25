@@ -206,6 +206,9 @@ type ClusterIntegrations struct {
 	// the cluster.
 	Loki bool `json:"loki,omitempty"`
 
+	// Promtail if set to true will install the Promtail log scraper
+	Promtail bool `json:"promtail,omitempty"`
+
 	// Blockstorage if set to true will install the EBS CSI block storage driver into the
 	// cluster, which makes it possible to create PersistentVolumeClaims in AWS
 	// +optional
@@ -268,13 +271,15 @@ func NewDefaultCluster(name, env, org, repo, team, accountID string) Cluster {
 		Integrations: &ClusterIntegrations{
 			ALBIngressController:      false,
 			AWSLoadBalancerController: true,
-			ArgoCD:                    true,
-			Autoscaler:                true,
-			KubePromStack:             true,
-			Blockstorage:              true,
-			Cognito:                   true,
 			ExternalDNS:               true,
 			ExternalSecrets:           true,
+			Autoscaler:                true,
+			KubePromStack:             true,
+			Loki:                      true,
+			Promtail:                  true,
+			Blockstorage:              true,
+			Cognito:                   true,
+			ArgoCD:                    true,
 		},
 	}
 }

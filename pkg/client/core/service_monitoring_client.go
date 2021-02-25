@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/helm/charts/promtail"
+
 	"github.com/oslokommune/okctl/pkg/helm/charts/loki"
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/kubepromstack"
@@ -49,6 +51,68 @@ const (
 
 func grafanaDomain(baseDomain string) string {
 	return fmt.Sprintf("%s.%s", grafanaSubDomain, baseDomain)
+}
+
+func (s *monitoringService) DeletePromtail(_ context.Context, opts client.DeletePromtailOpts) error {
+	err := s.spinner.Start("promtail")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	chart := promtail.New(nil)
+
+	err = s.api.DeletePromtail(api.DeleteHelmReleaseOpts{
+		ID:          opts.ID,
+		ReleaseName: chart.ReleaseName,
+		Namespace:   chart.Namespace,
+	})
+	if err != nil {
+		return err
+	}
+
+	report, err := s.store.RemovePromtail(opts.ID)
+	if err != nil {
+		return err
+	}
+
+	return s.report.ReportRemovePromtail(report)
+}
+
+func (s *monitoringService) CreatePromtail(_ context.Context, opts client.CreatePromtailOpts) (*client.Promtail, error) {
+	err := s.spinner.Start("promtail")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	chart, err := s.api.CreatePromtail(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	l := &client.Promtail{
+		ID:    opts.ID,
+		Chart: chart,
+	}
+
+	report, err := s.store.SavePromtail(l)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.ReportSavePromtail(l, report)
+	if err != nil {
+		return nil, err
+	}
+
+	return l, nil
 }
 
 func (s *monitoringService) DeleteLoki(_ context.Context, opts client.DeleteLokiOpts) error {

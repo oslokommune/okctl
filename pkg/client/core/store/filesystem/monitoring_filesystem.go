@@ -22,10 +22,34 @@ type KubePromStack struct {
 }
 
 type monitoringStore struct {
+	promtailPaths     Paths
 	lokiPaths         Paths
 	kubePromPaths     Paths
 	kubePromHelmPaths Paths
 	fs                *afero.Afero
+}
+
+func (s *monitoringStore) SavePromtail(pt *client.Promtail) (*store.Report, error) {
+	chart := &Helm{
+		ID: pt.ID,
+	}
+
+	report, err := store.NewFileSystem(s.promtailPaths.BaseDir, s.fs).
+		StoreStruct(s.promtailPaths.OutputFile, chart, store.ToJSON()).
+		StoreStruct(s.promtailPaths.ReleaseFile, pt.Chart.Release, store.ToJSON()).
+		StoreStruct(s.promtailPaths.ChartFile, pt.Chart.Chart, store.ToJSON()).
+		Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return report, nil
+}
+
+func (s *monitoringStore) RemovePromtail(_ api.ID) (*store.Report, error) {
+	return store.NewFileSystem(s.promtailPaths.BaseDir, s.fs).
+		RemoveDir("").
+		Do()
 }
 
 func (s *monitoringStore) SaveLoki(loki *client.Loki) (*store.Report, error) {
@@ -93,10 +117,11 @@ func (s *monitoringStore) SaveKubePromStack(stack *client.KubePromStack) (*store
 
 // NewMonitoringStore returns an initialised store
 func NewMonitoringStore(
-	lokiPaths, kubePromHelmPaths, kubePromPaths Paths,
+	promtailPaths, lokiPaths, kubePromHelmPaths, kubePromPaths Paths,
 	fs *afero.Afero,
 ) client.MonitoringStore {
 	return &monitoringStore{
+		promtailPaths:     promtailPaths,
 		lokiPaths:         lokiPaths,
 		kubePromPaths:     kubePromPaths,
 		kubePromHelmPaths: kubePromHelmPaths,

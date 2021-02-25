@@ -14,8 +14,20 @@ const TargetHelmLoki = "helm/loki/"
 // TargetHelmReleases matches the REST API route
 const TargetHelmReleases = "helm/releases/"
 
+// TargetHelmPromtail matches the REST API route
+const TargetHelmPromtail = "helm/promtail/"
+
 type monitoringAPI struct {
 	client *HTTPClient
+}
+
+func (a *monitoringAPI) DeletePromtail(opts api.DeleteHelmReleaseOpts) error {
+	return a.client.DoDelete(TargetHelmReleases, &opts)
+}
+
+func (a *monitoringAPI) CreatePromtail(opts client.CreatePromtailOpts) (*api.Helm, error) {
+	into := &api.Helm{}
+	return into, a.client.DoPost(TargetHelmPromtail, &opts, into)
 }
 
 func (a *monitoringAPI) DeleteKubePromStack(opts api.DeleteHelmReleaseOpts) error {

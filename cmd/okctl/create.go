@@ -470,7 +470,7 @@ or see documentation on %s
 				return formatErr(err)
 			}
 
-			monit, err := services.Monitoring.CreateKubePromStack(o.Ctx, client.CreateKubePromStackOpts{
+			_, err = services.Monitoring.CreateKubePromStack(o.Ctx, client.CreateKubePromStackOpts{
 				ID:           id,
 				Domain:       hostedZone.HostedZone.Domain,
 				HostedZoneID: hostedZone.HostedZone.HostedZoneID,
@@ -481,7 +481,12 @@ or see documentation on %s
 				return formatErr(err)
 			}
 
-			fmt.Println("monitoring host: ", monit.Hostname)
+			_, err = services.Monitoring.CreateLoki(o.Ctx, client.CreateLokiOpts{
+				ID: id,
+			})
+			if err != nil {
+				return formatErr(err)
+			}
 
 			kubeConfig := path.Join(userDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterKubeConfig)
 			awsConfig := path.Join(userDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterAwsConfig)

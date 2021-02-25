@@ -119,6 +119,8 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 			desiredTreeNode.State = boolToState(declaration.Integrations.Cognito)
 		case resourcetree.ResourceNodeTypeKubePromStack:
 			desiredTreeNode.State = boolToState(declaration.Integrations.KubePromStack)
+		case resourcetree.ResourceNodeTypeLoki:
+			desiredTreeNode.State = boolToState(declaration.Integrations.Loki)
 		case resourcetree.ResourceNodeTypeArgoCD:
 			desiredTreeNode.State = boolToState(declaration.Integrations.ArgoCD)
 		}
@@ -154,6 +156,8 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 			receiver.State = boolToState(existingResources.hasIdentityManager)
 		case resourcetree.ResourceNodeTypeKubePromStack:
 			receiver.State = boolToState(existingResources.hasKubePromStack)
+		case resourcetree.ResourceNodeTypeLoki:
+			receiver.State = boolToState(existingResources.hasLoki)
 		case resourcetree.ResourceNodeTypeArgoCD:
 			receiver.State = boolToState(existingResources.hasArgoCD)
 		}

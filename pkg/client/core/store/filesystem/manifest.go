@@ -54,7 +54,7 @@ func (s *manifestStore) RemoveExternalSecret(_ map[string]string) (*store.Report
 	// since we will rarely create secrets without setting a directory, this is not
 	// very pretty or intuitive..
 	return store.NewFileSystem(s.externalSecret.BaseDir, s.fs).
-		Remove("").
+		RemoveDir("").
 		Do()
 }
 

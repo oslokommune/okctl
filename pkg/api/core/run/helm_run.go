@@ -3,6 +3,8 @@ package run
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/helm/charts/loki"
+
 	"github.com/oslokommune/okctl/pkg/config"
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/kubepromstack"
@@ -24,6 +26,12 @@ import (
 type helmRun struct {
 	helm            helm.Helmer
 	kubeConfigStore api.KubeConfigStore
+}
+
+func (r *helmRun) CreateLokiHelmChart(opts api.CreateLokiHelmChartOpts) (*api.Helm, error) {
+	chart := loki.New(loki.NewDefaultValues())
+
+	return r.createHelmChart(opts.ID, chart)
 }
 
 func (r *helmRun) CreateAutoscalerHelmChart(opts api.CreateAutoscalerHelmChartOpts) (*api.Helm, error) {

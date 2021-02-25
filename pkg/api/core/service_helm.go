@@ -13,6 +13,20 @@ type helmService struct {
 	store api.HelmStore
 }
 
+func (s *helmService) CreateLokiHelmChart(_ context.Context, opts api.CreateLokiHelmChartOpts) (*api.Helm, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, errors.E(err, "validating input options")
+	}
+
+	h, err := s.run.CreateLokiHelmChart(opts)
+	if err != nil {
+		return nil, errors.E(err, "creating loki helm chart", errors.Internal)
+	}
+
+	return h, nil
+}
+
 func (s *helmService) CreateBlockstorageHelmChart(_ context.Context, opts api.CreateBlockstorageHelmChartOpts) (*api.Helm, error) {
 	err := opts.Validate()
 	if err != nil {

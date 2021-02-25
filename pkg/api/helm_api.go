@@ -15,6 +15,18 @@ type Helm struct {
 	Chart   *helm.Chart
 }
 
+// CreateLokiHelmChartOpts contains the required inputs
+type CreateLokiHelmChartOpts struct {
+	ID ID
+}
+
+// Validate the inputs
+func (o CreateLokiHelmChartOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+	)
+}
+
 // CreateAutoscalerHelmChartOpts contains the required inputs
 type CreateAutoscalerHelmChartOpts struct {
 	ID ID
@@ -154,6 +166,7 @@ type HelmService interface {
 	CreateAutoscalerHelmChart(ctx context.Context, opts CreateAutoscalerHelmChartOpts) (*Helm, error)
 	CreateBlockstorageHelmChart(ctx context.Context, opts CreateBlockstorageHelmChartOpts) (*Helm, error)
 	CreateKubePrometheusStack(ctx context.Context, opts CreateKubePrometheusStackOpts) (*Helm, error)
+	CreateLokiHelmChart(ctx context.Context, opts CreateLokiHelmChartOpts) (*Helm, error)
 }
 
 // HelmRun defines the runner layer
@@ -165,6 +178,7 @@ type HelmRun interface {
 	CreateAutoscalerHelmChart(opts CreateAutoscalerHelmChartOpts) (*Helm, error)
 	CreateBlockstorageHelmChart(opts CreateBlockstorageHelmChartOpts) (*Helm, error)
 	CreateKubePromStack(opts CreateKubePrometheusStackOpts) (*Helm, error)
+	CreateLokiHelmChart(opts CreateLokiHelmChartOpts) (*Helm, error)
 }
 
 // HelmStore defines the storage layer

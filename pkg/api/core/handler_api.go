@@ -67,6 +67,7 @@ type Endpoints struct {
 	CreateBlockstorageHelmChart                   endpoint.Endpoint
 	CreateStorageClass                            endpoint.Endpoint
 	CreateKubePrometheusStack                     endpoint.Endpoint
+	CreateLokiHelmChart                           endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -124,6 +125,7 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateBlockstorageHelmChart:                   makeCreateBlockstorageHelmChartEndpoint(s.Helm),
 		CreateStorageClass:                            makeCreateStorageClass(s.Kube),
 		CreateKubePrometheusStack:                     makeCreateKubePrometheusStack(s.Helm),
+		CreateLokiHelmChart:                           makeCreateLokiHelmChartEndpoint(s.Helm),
 	}
 }
 
@@ -180,6 +182,7 @@ type Handlers struct {
 	CreateBlockstorageHelmChart                   http.Handler
 	CreateStorageClass                            http.Handler
 	CreateKubePrometheusStack                     http.Handler
+	CreateLokiHelmChart                           http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -264,6 +267,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateBlockstorageHelmChart:                   newServer(endpoints.CreateBlockstorageHelmChart, decodeCreateBlockstorageHelmChart),
 		CreateStorageClass:                            newServer(endpoints.CreateStorageClass, decodeCreateStorageClass),
 		CreateKubePrometheusStack:                     newServer(endpoints.CreateKubePrometheusStack, decodeCreateKubePrometheusStackHelmChart),
+		CreateLokiHelmChart:                           newServer(endpoints.CreateLokiHelmChart, decodeCreateLokiHelmChart),
 	}
 }
 
@@ -354,6 +358,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			})
 			r.Route("/kubepromstack", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateKubePrometheusStack)
+			})
+			r.Route("/loki", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateLokiHelmChart)
 			})
 		})
 		r.Route("/kube", func(r chi.Router) {
@@ -452,6 +459,7 @@ const (
 	blockstorageTag              = "blockstorage"
 	storageclassTag              = "storageclass"
 	kubePrometheusStackTag       = "kubeprometheusstack"
+	lokiTag                      = "loki"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -510,6 +518,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateBlockstorageHelmChart:                   logmd.Logging(logger, strings.Join([]string{helmTag, blockstorageTag}, "/"), "create")(endpoints.CreateBlockstorageHelmChart),
 			CreateStorageClass:                            logmd.Logging(logger, strings.Join([]string{kubeTag, storageclassTag}, "/"), "create")(endpoints.CreateStorageClass),
 			CreateKubePrometheusStack:                     logmd.Logging(logger, strings.Join([]string{helmTag, kubePrometheusStackTag}, "/"), "create")(endpoints.CreateKubePrometheusStack),
+			CreateLokiHelmChart:                           logmd.Logging(logger, strings.Join([]string{helmTag, lokiTag}, "/"), "create")(endpoints.CreateLokiHelmChart),
 		}
 	}
 }

@@ -57,11 +57,17 @@ type Installer interface {
 	Install(kubeConfigPath string, cfg *InstallConfig) (*release.Release, error)
 }
 
+// Deleter defines the interface for removing a released helm chart
+type Deleter interface {
+	Delete(kubeConfigPath string, cfg *DeleteConfig) error
+}
+
 // Helmer defines all available helm operations
 type Helmer interface {
 	RepoAdder
 	RepoUpdater
 	Installer
+	Deleter
 }
 
 // Helm stores all state required for running helm tasks
@@ -239,6 +245,16 @@ func (h *Helm) RepoUpdate() error {
 	}
 
 	return nil
+}
+
+// DeleteConfig defines the variables that must be set to remove a chart
+type DeleteConfig struct {
+	// ReleaseName is the name given to the release in Kubernetes
+	ReleaseName string
+	// Namespace is the namespace the release will be removed from
+	Namespace string
+	// Timeout determines how long we will wait for the delete to succeed
+	Timeout time.Duration
 }
 
 // InstallConfig defines the variables that must be set to install a chart
@@ -452,6 +468,72 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 	return r, nil
 }
 
+// Delete a released Helm chart, functionality is comparable to:
+// - https://helm.sh/docs/helm/helm_uninstall/
+func (h *Helm) Delete(kubeConfigPath string, cfg *DeleteConfig) error {
+	envs := h.config.Envs()
+	envs["HELM_NAMESPACE"] = cfg.Namespace
+	envs["KUBECONFIG"] = kubeConfigPath
+
+	awsEnvs, err := h.auth.AsEnv()
+	if err != nil {
+		return err
+	}
+
+	for k, v := range SplitEnv(awsEnvs) {
+		envs[k] = v
+	}
+
+	restoreFn, err := EstablishEnv(envs)
+
+	defer func() {
+		err = restoreFn()
+	}()
+
+	if err != nil {
+		return err
+	}
+
+	settings := cli.New()
+
+	actionConfig := new(action.Configuration)
+
+	debug := func(format string, v ...interface{}) {
+		if h.config.Debug {
+			_, _ = fmt.Fprintf(h.config.DebugOutput, format, v...)
+		}
+	}
+
+	restClient := &genericclioptions.ConfigFlags{
+		KubeConfig: &kubeConfigPath,
+		Namespace:  &cfg.Namespace,
+	}
+
+	err = actionConfig.Init(restClient, settings.Namespace(), DefaultHelmDriver, debug)
+	if err != nil {
+		return err
+	}
+
+	rel, err := h.findRelease(cfg.ReleaseName, actionConfig)
+	if err != nil {
+		return err
+	}
+
+	// The release has already been removed..
+	if rel == nil {
+		return nil
+	}
+
+	client := action.NewUninstall(actionConfig)
+
+	client.KeepHistory = false
+	client.Timeout = cfg.Timeout
+
+	_, err = client.Run(cfg.ReleaseName)
+
+	return err
+}
+
 // IsChartInstallable determines if a chart can be installed or not
 func IsChartInstallable(ch *chartPkg.Chart) error {
 	switch ch.Metadata.Type {
@@ -600,6 +682,15 @@ func (c *Chart) InstallConfig() (*InstallConfig, error) {
 		Timeout:     c.Timeout,
 		ValuesBody:  values,
 	}, nil
+}
+
+// DeleteConfig returns a valid delete config
+func (c *Chart) DeleteConfig() *DeleteConfig {
+	return &DeleteConfig{
+		ReleaseName: c.ReleaseName,
+		Namespace:   c.Namespace,
+		Timeout:     c.Timeout,
+	}
 }
 
 // MysqlValues demonstrates how the values can be set

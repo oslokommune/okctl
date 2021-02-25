@@ -28,6 +28,24 @@ type helmRun struct {
 	kubeConfigStore api.KubeConfigStore
 }
 
+func (r *helmRun) DeleteHelmRelease(opts api.DeleteHelmReleaseOpts) error {
+	kubeConf, err := r.kubeConfigStore.GetKubeConfig()
+	if err != nil {
+		return fmt.Errorf("getting kubeconfig: %w", err)
+	}
+
+	err = r.helm.Delete(kubeConf.Path, &helm.DeleteConfig{
+		ReleaseName: opts.ReleaseName,
+		Namespace:   opts.Namespace,
+		Timeout:     config.DefaultChartRemoveTimeout,
+	})
+	if err != nil {
+		return fmt.Errorf("removing chart: %w", err)
+	}
+
+	return nil
+}
+
 func (r *helmRun) CreateLokiHelmChart(opts api.CreateLokiHelmChartOpts) (*api.Helm, error) {
 	chart := loki.New(loki.NewDefaultValues())
 
@@ -86,27 +104,27 @@ func (r *helmRun) CreateExternalSecretsHelmChart(opts api.CreateExternalSecretsH
 func (r *helmRun) createHelmChart(id api.ID, chart *helm.Chart) (*api.Helm, error) {
 	err := r.helm.RepoAdd(chart.RepositoryName, chart.RepositoryURL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to add repository: %w", err)
+		return nil, fmt.Errorf("adding repository: %w", err)
 	}
 
 	err = r.helm.RepoUpdate()
 	if err != nil {
-		return nil, fmt.Errorf("failed to update repository: %w", err)
+		return nil, fmt.Errorf("updating repository: %w", err)
 	}
 
 	cfg, err := chart.InstallConfig()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create install config: %w", err)
+		return nil, fmt.Errorf("creating install config: %w", err)
 	}
 
 	kubeConf, err := r.kubeConfigStore.GetKubeConfig()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get kubeconfig: %w", err)
+		return nil, fmt.Errorf("getting kubeconfig: %w", err)
 	}
 
 	release, err := r.helm.Install(kubeConf.Path, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to install chart: %w", err)
+		return nil, fmt.Errorf("nstalling chart: %w", err)
 	}
 
 	return &api.Helm{

@@ -470,6 +470,7 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 
 // Delete a released Helm chart, functionality is comparable to:
 // - https://helm.sh/docs/helm/helm_uninstall/
+// nolint: funlen
 func (h *Helm) Delete(kubeConfigPath string, cfg *DeleteConfig) error {
 	envs := h.config.Envs()
 	envs["HELM_NAMESPACE"] = cfg.Namespace

@@ -54,3 +54,9 @@ func makeCreateLokiHelmChartEndpoint(s api.HelmService) endpoint.Endpoint {
 		return s.CreateLokiHelmChart(ctx, request.(api.CreateLokiHelmChartOpts))
 	}
 }
+
+func makeDeleteHelmRelease(s api.HelmService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return Empty{}, s.DeleteHelmRelease(ctx, request.(api.DeleteHelmReleaseOpts))
+	}
+}

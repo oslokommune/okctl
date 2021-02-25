@@ -47,7 +47,8 @@ const (
 
 	DefaultEKSKubernetesVersion = "1.17"
 
-	DefaultChartApplyTimeout = 5 * time.Minute
+	DefaultChartApplyTimeout  = 5 * time.Minute
+	DefaultChartRemoveTimeout = 5 * time.Minute
 
 	DefaultGithubHost          = "git@github.com"
 	DefaultArgoCDNamespace     = "argocd"

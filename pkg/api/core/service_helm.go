@@ -27,6 +27,20 @@ func (s *helmService) DeleteHelmRelease(_ context.Context, opts api.DeleteHelmRe
 	return nil
 }
 
+func (s *helmService) CreatePromtailHelmChart(_ context.Context, opts api.CreatePromtailHelmChartOpts) (*api.Helm, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, errors.E(err, "validating input options", errors.Invalid)
+	}
+
+	h, err := s.run.CreatePromtailHelmChart(opts)
+	if err != nil {
+		return nil, errors.E(err, "creating promtail helm chart", errors.Internal)
+	}
+
+	return h, nil
+}
+
 func (s *helmService) CreateLokiHelmChart(_ context.Context, opts api.CreateLokiHelmChartOpts) (*api.Helm, error) {
 	err := opts.Validate()
 	if err != nil {

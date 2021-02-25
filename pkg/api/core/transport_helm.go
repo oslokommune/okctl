@@ -106,3 +106,14 @@ func decodeDeleteHelmRelease(_ context.Context, r *http.Request) (interface{}, e
 
 	return opts, nil
 }
+
+func decodeCreatePromtailHelmChart(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.CreatePromtailHelmChartOpts
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}

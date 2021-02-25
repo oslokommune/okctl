@@ -11,19 +11,20 @@ import (
 
 // ExistingResources contains information about what services already exists in a cluster
 type ExistingResources struct {
-	hasALBIngressController           bool
-	hasAWSLoadBalancerController      bool
-	hasCluster                        bool
-	hasExternalDNS                    bool
-	hasExternalSecrets                bool
-	hasAutoscaler                     bool
-	hasBlockstorage                   bool
-	hasKubePromStack                  bool
-	hasIdentityManager                bool
-	hasArgoCD                         bool
-	hasPrimaryHostedZone              bool
-	hasVPC                            bool
-	hasDelegatedHostedZoneNameservers bool
+	hasALBIngressController               bool
+	hasAWSLoadBalancerController          bool
+	hasCluster                            bool
+	hasExternalDNS                        bool
+	hasExternalSecrets                    bool
+	hasAutoscaler                         bool
+	hasBlockstorage                       bool
+	hasKubePromStack                      bool
+	hasIdentityManager                    bool
+	hasArgoCD                             bool
+	hasPrimaryHostedZone                  bool
+	hasVPC                                bool
+	hasDelegatedHostedZoneNameservers     bool
+	hasDelegatedHostedZoneNameserversTest bool
 }
 
 // IdentifyResourcePresence creates an initialized ExistingResources struct
@@ -31,19 +32,20 @@ func IdentifyResourcePresence(fs *afero.Afero, outputDir string, hzFetcher Hoste
 	hz := hzFetcher()
 
 	return ExistingResources{
-		hasPrimaryHostedZone:              hz != nil,
-		hasVPC:                            directoryTester(fs, outputDir, config.DefaultVpcBaseDir),
-		hasCluster:                        directoryTester(fs, outputDir, config.DefaultClusterBaseDir),
-		hasExternalSecrets:                directoryTester(fs, outputDir, config.DefaultExternalSecretsBaseDir),
-		hasAutoscaler:                     directoryTester(fs, outputDir, config.DefaultAutoscalerBaseDir),
-		hasKubePromStack:                  directoryTester(fs, outputDir, config.DefaultKubePromStackBaseDir),
-		hasBlockstorage:                   directoryTester(fs, outputDir, config.DefaultBlockstorageBaseDir),
-		hasALBIngressController:           directoryTester(fs, outputDir, config.DefaultAlbIngressControllerBaseDir),
-		hasAWSLoadBalancerController:      directoryTester(fs, outputDir, config.DefaultAWSLoadBalancerControllerBaseDir),
-		hasExternalDNS:                    directoryTester(fs, outputDir, config.DefaultExternalDNSBaseDir),
-		hasIdentityManager:                directoryTester(fs, outputDir, config.DefaultIdentityPoolBaseDir),
-		hasArgoCD:                         directoryTester(fs, outputDir, config.DefaultArgoCDBaseDir),
-		hasDelegatedHostedZoneNameservers: hz != nil && hz.IsDelegated,
+		hasPrimaryHostedZone:                  hz != nil,
+		hasVPC:                                directoryTester(fs, outputDir, config.DefaultVpcBaseDir),
+		hasCluster:                            directoryTester(fs, outputDir, config.DefaultClusterBaseDir),
+		hasExternalSecrets:                    directoryTester(fs, outputDir, config.DefaultExternalSecretsBaseDir),
+		hasAutoscaler:                         directoryTester(fs, outputDir, config.DefaultAutoscalerBaseDir),
+		hasKubePromStack:                      directoryTester(fs, outputDir, config.DefaultKubePromStackBaseDir),
+		hasBlockstorage:                       directoryTester(fs, outputDir, config.DefaultBlockstorageBaseDir),
+		hasALBIngressController:               directoryTester(fs, outputDir, config.DefaultAlbIngressControllerBaseDir),
+		hasAWSLoadBalancerController:          directoryTester(fs, outputDir, config.DefaultAWSLoadBalancerControllerBaseDir),
+		hasExternalDNS:                        directoryTester(fs, outputDir, config.DefaultExternalDNSBaseDir),
+		hasIdentityManager:                    directoryTester(fs, outputDir, config.DefaultIdentityPoolBaseDir),
+		hasArgoCD:                             directoryTester(fs, outputDir, config.DefaultArgoCDBaseDir),
+		hasDelegatedHostedZoneNameservers:     hz != nil && hz.IsDelegated,
+		hasDelegatedHostedZoneNameserversTest: false,
 	}, nil
 }
 
@@ -68,7 +70,10 @@ func CreateResourceDependencyTree() (root *resourcetree.ResourceNode) {
 	createNode(clusterNode, resourcetree.ResourceNodeTypeAWSLoadBalancerController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalDNS)
 
-	identityProviderNode := createNode(clusterNode, resourcetree.ResourceNodeTypeIdentityManager)
+	// All resources that requires SSL / a certificate needs the delegatedNameserversConfirmedNode as a dependency
+	delegatedNameserversConfirmedNode := createNode(clusterNode, resourcetree.ResourceNodeTypeNameserversDelegatedTest)
+
+	identityProviderNode := createNode(delegatedNameserversConfirmedNode, resourcetree.ResourceNodeTypeIdentityManager)
 	createNode(identityProviderNode, resourcetree.ResourceNodeTypeKubePromStack)
 	createNode(identityProviderNode, resourcetree.ResourceNodeTypeArgoCD)
 

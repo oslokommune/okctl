@@ -8,7 +8,7 @@ replace github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.
 
 require (
 	github.com/99designs/keyring v1.1.6
-	github.com/AlecAivazis/survey/v2 v2.2.7
+	github.com/AlecAivazis/survey/v2 v2.2.8
 	github.com/Microsoft/go-winio v0.4.16 // indirect
 	github.com/Microsoft/hcsshim v0.8.14 // indirect
 	github.com/Netflix/go-expect v0.0.0-20180615182759-c93bf25de8e8
@@ -65,7 +65,7 @@ require (
 	github.com/magefile/mage v1.11.0 // indirect
 	github.com/magiconair/properties v1.8.2 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
-	github.com/miekg/dns v1.1.39
+	github.com/miekg/dns v1.1.40
 	github.com/mishudark/errors v0.0.0-20190221111348-b16f7e94bb58
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect

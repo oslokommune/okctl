@@ -18,6 +18,10 @@ type manifestAPI struct {
 	client *HTTPClient
 }
 
+func (a *manifestAPI) DeleteExternalSecret(opts api.DeleteExternalSecretsOpts) error {
+	return a.client.DoDelete(TargetKubeExternalSecret, &opts)
+}
+
 func (a *manifestAPI) CreateStorageClass(opts api.CreateStorageClassOpts) (*api.StorageClassKube, error) {
 	into := &api.StorageClassKube{}
 	return into, a.client.DoPost(TargetKubeStorageClasses, &opts, into)

@@ -17,6 +17,32 @@ type manifestService struct {
 	report  client.ManifestReport
 }
 
+func (s *manifestService) DeleteExternalSecret(_ context.Context, opts client.DeleteExternalSecretOpts) error {
+	err := s.spinner.Start("storageclass")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	err = s.api.DeleteExternalSecret(api.DeleteExternalSecretsOpts{
+		ID:        opts.ID,
+		Manifests: opts.Secrets,
+	})
+	if err != nil {
+		return err
+	}
+
+	report, err := s.store.RemoveExternalSecret(opts.Secrets)
+	if err != nil {
+		return err
+	}
+
+	return s.report.RemoveExternalSecret(report)
+}
+
 func (s *manifestService) CreateStorageClass(_ context.Context, opts api.CreateStorageClassOpts) (*client.StorageClass, error) {
 	err := s.spinner.Start("storageclass")
 	if err != nil {

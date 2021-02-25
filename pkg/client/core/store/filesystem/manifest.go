@@ -49,6 +49,15 @@ type ExternalSecret struct {
 	Manifests []string
 }
 
+func (s *manifestStore) RemoveExternalSecret(_ map[string]string) (*store.Report, error) {
+	// There is something fishy going on here, though I believe this will mostly be correct
+	// since we will rarely create secrets without setting a directory, this is not
+	// very pretty or intuitive..
+	return store.NewFileSystem(s.externalSecret.BaseDir, s.fs).
+		Remove("").
+		Do()
+}
+
 func (s *manifestStore) SaveExternalSecret(e *client.ExternalSecret) (*store.Report, error) {
 	o := &ExternalSecret{
 		ID:        e.ID,

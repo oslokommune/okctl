@@ -19,6 +19,12 @@ type CreateExternalSecretOpts struct {
 	Manifests []api.Manifest
 }
 
+// DeleteExternalSecretOpts contains the required inputs
+type DeleteExternalSecretOpts struct {
+	ID      api.ID
+	Secrets map[string]string
+}
+
 // StorageClass is the content of a kubernetes storage class
 type StorageClass struct {
 	ID       api.ID
@@ -35,6 +41,7 @@ type ManifestService interface {
 	CreateExternalSecret(ctx context.Context, opts CreateExternalSecretOpts) (*ExternalSecret, error)
 	DeleteNamespace(ctx context.Context, opts api.DeleteNamespaceOpts) error
 	CreateStorageClass(ctx context.Context, opts api.CreateStorageClassOpts) (*StorageClass, error)
+	DeleteExternalSecret(ctx context.Context, opts DeleteExternalSecretOpts) error
 }
 
 // ManifestAPI invokes the API
@@ -42,16 +49,19 @@ type ManifestAPI interface {
 	CreateExternalSecret(opts CreateExternalSecretOpts) (*api.ExternalSecretsKube, error)
 	DeleteNamespace(opts api.DeleteNamespaceOpts) error
 	CreateStorageClass(opts api.CreateStorageClassOpts) (*api.StorageClassKube, error)
+	DeleteExternalSecret(opts api.DeleteExternalSecretsOpts) error
 }
 
 // ManifestStore defines the storage layer
 type ManifestStore interface {
 	SaveExternalSecret(externalSecret *ExternalSecret) (*store.Report, error)
 	SaveStorageClass(sc *StorageClass) (*store.Report, error)
+	RemoveExternalSecret(secrets map[string]string) (*store.Report, error)
 }
 
 // ManifestReport defines the report layer
 type ManifestReport interface {
 	SaveExternalSecret(secret *ExternalSecret, report *store.Report) error
 	SaveStorageClass(sc *StorageClass, report *store.Report) error
+	RemoveExternalSecret(report *store.Report) error
 }

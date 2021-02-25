@@ -113,6 +113,7 @@ func (s *monitoringService) CreateLoki(_ context.Context, opts client.CreateLoki
 	return l, nil
 }
 
+// nolint: funlen
 func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client.DeleteKubePromStackOpts) error {
 	err := s.spinner.Start("kubepromstack")
 	if err != nil {
@@ -135,7 +136,15 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 		return err
 	}
 
-	// We need to delete the secret manifest here..
+	err = s.manifest.DeleteExternalSecret(ctx, client.DeleteExternalSecretOpts{
+		ID: opts.ID,
+		Secrets: map[string]string{
+			secretsCfgName: config.DefaultMonitoringNamespace,
+		},
+	})
+	if err != nil {
+		return err
+	}
 
 	err = s.ident.DeleteIdentityPoolClient(ctx, api.DeleteIdentityPoolClientOpts{
 		ID:      opts.ID,

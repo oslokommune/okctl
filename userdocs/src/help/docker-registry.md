@@ -3,18 +3,18 @@
 
 Running a Docker image in your cluster depends on where you store it. Two common places to store Docker images are
 
-1. Github Container Registry (GHCR)
-1. Elastic Container Registry (ECR)
+1. Github Container Registry (GHCR) ([official documentation](https://docs.github.com/en/packages/guides/pushing-and-pulling-docker-images))
+1. Elastic Container Registry (ECR) ([official documentation](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html))
 
-## Access Github Container Registry (GHCR) images
+## Access container registries
 
-For Kubernetes to be able to download Docker images from GHCR, it needs to have the necessary credentials. This
-credential is called a pull secret. 
+### Access Github Container Registry (GHCR) images
 
-To create a Kubernetes pull secret, first go to your Github account's settings and open the developer tab. Here you can
-choose the Personal Access Token tab, which will let you create a token Kubernetes can use to access GHCR.
+For Kubernetes to be able to download Docker images from GHCR, it needs to have the necessary credentials. This credential is called a pull secret.
 
-This token needs the `read:packages` scope.
+To create a Kubernetes pull secret, first go to your [github account settings](https://github.com/settings/profile) and select `Developer settings > Personal access tokens`. Here you can create a token Kubernetes can use to access GHCR.
+
+For Kubernetes to be able to read packages (docker images), it needs the `read:packages` scope. For us to be able to push to GHCR, it needs the `write:packages` scope.
 
 Copy this token and run 
 
@@ -26,20 +26,20 @@ kubectl create secret docker-registry regcred \
   --docker-email=<your-email>
 ```
 
-## Access Elastic Container Registry (ECR)
+### Access Elastic Container Registry (ECR)
 
 Hopefully nothing is needed to be done.
 
-If you are suffering from imagePullBackoff, A detailed article about applying the correct policy can be found [here](https://docs.aws.amazon.com/AmazonECR/latest/userguide/ECR_on_EKS.html)
+If you are suffering from imagePullBackoff, A detailed article about applying the correct policy can be found [here](https://docs.aws.amazon.com/AmazonECR/latest/userguide/ECR_on_EKS.html).
 
 
 ## Push a Docker image to the registry of choice
 
-To push a Docker image to a Docker registry, you need to do the following:
+To push a Docker image to a Docker registry, you need to do the following (these steps are described in detail below):
 
-1. Log in to your registry of choice with `docker login`.
-1. Tag the image you are going to push with `docker tag`. The tag needs to be prefixed with the host of the registry.
-1. Run `docker push <image tag>`.
+1. Log in to your registry of choice
+1. Tag the image you are going to push. The tag needs to be prefixed with the host of the registry.
+1. Push image
 
 ### Push a Docker image to the Github Container Registry (GHCR)
 
@@ -64,24 +64,26 @@ To login in to GHCR, you need a Github personal access token (PAT). Instructions
 # VERSION         The version of the dockerized application
 # 
 # Example
-docker tag faea735f5ca00d0c84cbe72ac6d17522cce1e37ac9fe49ba5e3db149d55e193b ghcr.io/oslokommune/gatekeeper:1.0.41
+docker tag 9df7297819f7 ghcr.io/oslokommune/gatekeeper:1.0.41
 ```
 
-More information can be found [here](https://docs.github.com/en/packages/guides/pushing-and-pulling-docker-images)
+More information can be found [here](https://docs.github.com/en/packages/guides/pushing-and-pulling-docker-images).
 
 #### Push image
 
 ```shell
 # Usage
-# docker push IMAGE
+# docker push TAG
 #
-# IMAGE     the full tag the image was tagged with in the previous step
+# TAG     the full tag the image was tagged with in the previous step
 #
 # Example
 docker push ghcr.io/oslokommune/gatekeeper:1.0.41
 ```
 
 ### Push a Docker image to the Amazon Elastic Container Registry (ECR)
+
+Before you start, you need an ECR repository. It can be created in the [AWS Console](https://eu-west-1.console.aws.amazon.com/ecr/create-repository?region=eu-west-1) ([official documentation](https://docs.aws.amazon.com/AmazonECR/latest/userguide/repository-create.html)).
 
 #### Log in
 
@@ -99,9 +101,25 @@ More information can be found [here](https://docs.aws.amazon.com/AmazonECR/lates
 
 ```shell
 # Usage
-# docker tag SOURCE_IMAGE AWS_ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/IMAGE
+# docker tag SOURCE_IMAGE AWS_ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/IMAGE:VERSION
 #
 # SOURCE_IMAGE    The tag of a previously built or downloaded image. Can also be the image SHA.
 # AWS_ACCOUNT_ID  The AWS account ID representing the account that owns the ECR
 # REGION          The region where the ECR
+# VERSION         The image version
+#
+# Example
+docker tag 9df7297819f7 123456789012.dkr.ecr.eu-west1.amazonaws.com/gatekeeper:1.0.41
+```
+
+#### Push image
+
+```shell
+# Usage
+# docker push TAG
+#
+# TAG     the full tag the image was tagged with in the previous step
+#
+# Example
+docker push 123456789012.dkr.ecr.eu-west1.amazonaws.com/gatekeeper:1.0.41
 ```

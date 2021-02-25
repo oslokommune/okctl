@@ -488,6 +488,13 @@ or see documentation on %s
 				return formatErr(err)
 			}
 
+			_, err = services.Monitoring.CreatePromtail(o.Ctx, client.CreatePromtailOpts{
+				ID: id,
+			})
+			if err != nil {
+				return formatErr(err)
+			}
+
 			kubeConfig := path.Join(userDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterKubeConfig)
 			awsConfig := path.Join(userDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterAwsConfig)
 			awsCredentials := path.Join(userDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterAwsCredentials)

@@ -20,6 +20,7 @@ type ExistingResources struct {
 	hasBlockstorage                       bool
 	hasKubePromStack                      bool
 	hasLoki                               bool
+	hasPromtail                           bool
 	hasIdentityManager                    bool
 	hasArgoCD                             bool
 	hasPrimaryHostedZone                  bool
@@ -40,6 +41,7 @@ func IdentifyResourcePresence(fs *afero.Afero, outputDir string, hzFetcher Hoste
 		hasAutoscaler:                         directoryTester(fs, outputDir, config.DefaultAutoscalerBaseDir),
 		hasKubePromStack:                      directoryTester(fs, outputDir, path.Join(config.DefaultMonitoringBaseDir, config.DefaultKubePromStackBaseDir)),
 		hasLoki:                               directoryTester(fs, outputDir, path.Join(config.DefaultMonitoringBaseDir, config.DefaultLokiBaseDir)),
+		hasPromtail:                           directoryTester(fs, outputDir, path.Join(config.DefaultMonitoringBaseDir, config.DefaultPromtailBaseDir)),
 		hasBlockstorage:                       directoryTester(fs, outputDir, config.DefaultBlockstorageBaseDir),
 		hasALBIngressController:               directoryTester(fs, outputDir, config.DefaultAlbIngressControllerBaseDir),
 		hasAWSLoadBalancerController:          directoryTester(fs, outputDir, config.DefaultAWSLoadBalancerControllerBaseDir),
@@ -80,7 +82,9 @@ func CreateResourceDependencyTree() (root *resourcetree.ResourceNode) {
 	createNode(identityProviderNode, resourcetree.ResourceNodeTypeArgoCD)
 	// This is not strictly required, but to a large extent it doesn't make much sense to setup Loki before
 	// we have setup grafana.
-	createNode(kubePromStack, resourcetree.ResourceNodeTypeLoki)
+	loki := createNode(kubePromStack, resourcetree.ResourceNodeTypeLoki)
+	// Similarly, it doesn't make sense to install promtail without loki
+	createNode(loki, resourcetree.ResourceNodeTypePromtail)
 
 	return root
 }

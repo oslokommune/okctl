@@ -15,7 +15,23 @@ type monitoringReport struct {
 	console *Console
 }
 
-func (r *monitoringReport) ReportSaveLoki(loki *client.Loki, report *store.Report) error {
+func (r *monitoringReport) ReportSavePromtail(_ *client.Promtail, report *store.Report) error {
+	return r.console.Report(
+		report.Actions,
+		"promtail",
+		aurora.Green("promtail").String(),
+	)
+}
+
+func (r *monitoringReport) ReportRemovePromtail(report *store.Report) error {
+	return r.console.Report(
+		report.Actions,
+		"promtail",
+		aurora.Green("promtail").String(),
+	)
+}
+
+func (r *monitoringReport) ReportSaveLoki(_ *client.Loki, report *store.Report) error {
 	return r.console.Report(
 		report.Actions,
 		"loki",

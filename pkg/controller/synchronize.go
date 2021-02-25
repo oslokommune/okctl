@@ -90,6 +90,7 @@ func handleNode(reconcilerManager reconciler.Reconciler, currentNode *resourcetr
 	return nil
 }
 
+// nolint: gocyclo
 func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 	return func(desiredTreeNode *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
 		switch desiredTreeNode.Type {
@@ -121,12 +122,15 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 			desiredTreeNode.State = boolToState(declaration.Integrations.KubePromStack)
 		case resourcetree.ResourceNodeTypeLoki:
 			desiredTreeNode.State = boolToState(declaration.Integrations.Loki)
+		case resourcetree.ResourceNodeTypePromtail:
+			desiredTreeNode.State = boolToState(declaration.Integrations.Promtail)
 		case resourcetree.ResourceNodeTypeArgoCD:
 			desiredTreeNode.State = boolToState(declaration.Integrations.ArgoCD)
 		}
 	}
 }
 
+// nolint: gocyclo
 func applyExistingState(existingResources ExistingResources) resourcetree.ApplyFn {
 	return func(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
 		switch receiver.Type {
@@ -158,6 +162,8 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 			receiver.State = boolToState(existingResources.hasKubePromStack)
 		case resourcetree.ResourceNodeTypeLoki:
 			receiver.State = boolToState(existingResources.hasLoki)
+		case resourcetree.ResourceNodeTypePromtail:
+			receiver.State = boolToState(existingResources.hasPromtail)
 		case resourcetree.ResourceNodeTypeArgoCD:
 			receiver.State = boolToState(existingResources.hasArgoCD)
 		}

@@ -173,6 +173,13 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
+			err = services.Monitoring.DeletePromtail(o.Ctx, client.DeletePromtailOpts{
+				ID: id,
+			})
+			if err != nil {
+				return formatErr(err)
+			}
+
 			err = services.Monitoring.DeleteLoki(o.Ctx, client.DeleteLokiOpts{
 				ID: id,
 			})

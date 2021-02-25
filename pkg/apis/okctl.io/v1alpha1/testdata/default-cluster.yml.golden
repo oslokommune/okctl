@@ -13,6 +13,8 @@ integrations:
   externalDNS: true
   externalSecrets: true
   kubePromStack: true
+  loki: true
+  promtail: true
 kind: Cluster
 metadata:
   accountID: "123456789012"

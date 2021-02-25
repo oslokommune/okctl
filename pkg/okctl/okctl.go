@@ -210,6 +210,12 @@ func (o *Okctl) monitoringService(outputDir string, spin spinner.Spinner) client
 				OutputFile:  config.DefaultHelmOutputsFile,
 				ReleaseFile: config.DefaultHelmReleaseFile,
 				ChartFile:   config.DefaultHelmChartFile,
+				BaseDir:     path.Join(monitoringDir, config.DefaultPromtailBaseDir),
+			},
+			clientFilesystem.Paths{
+				OutputFile:  config.DefaultHelmOutputsFile,
+				ReleaseFile: config.DefaultHelmReleaseFile,
+				ChartFile:   config.DefaultHelmChartFile,
 				BaseDir:     path.Join(monitoringDir, config.DefaultLokiBaseDir),
 			},
 			clientFilesystem.Paths{

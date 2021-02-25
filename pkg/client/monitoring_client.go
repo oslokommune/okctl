@@ -52,20 +52,25 @@ type CreateLokiOpts struct {
 	ID api.ID
 }
 
+// DeleteLokiOpts are the required inputs
+type DeleteLokiOpts struct {
+	ID api.ID
+}
+
 // MonitoringService is an implementation of the business logic
 type MonitoringService interface {
 	CreateKubePromStack(ctx context.Context, opts CreateKubePromStackOpts) (*KubePromStack, error)
 	DeleteKubePromStack(ctx context.Context, opts DeleteKubePromStackOpts) error
 	CreateLoki(ctx context.Context, opts CreateLokiOpts) (*Loki, error)
+	DeleteLoki(ctx context.Context, opts DeleteLokiOpts) error
 }
 
 // MonitoringAPI invokes REST API endpoints
 type MonitoringAPI interface {
 	CreateKubePromStack(opts api.CreateKubePrometheusStackOpts) (*api.Helm, error)
-	// For now we remove the monitoring namespace altogether, but
-	// we need to introduce this together with Loki.
-	// DeleteKubePromStack(opts DeleteKubePromStackOpts) error
+	DeleteKubePromStack(opts api.DeleteHelmReleaseOpts) error
 	CreateLoki(opts CreateLokiOpts) (*api.Helm, error)
+	DeleteLoki(opts api.DeleteHelmReleaseOpts) error
 }
 
 // MonitoringStore is a storage layer implementation

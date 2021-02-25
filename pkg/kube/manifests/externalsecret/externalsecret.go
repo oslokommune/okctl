@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	v13 "github.com/oslokommune/okctl/pkg/kube/externalsecret/api/types/v1"
+	typesv1 "github.com/oslokommune/okctl/pkg/kube/externalsecret/api/types/v1"
 
-	v12 "github.com/oslokommune/okctl/pkg/kube/externalsecret/clientset/v1"
+	clientv1 "github.com/oslokommune/okctl/pkg/kube/externalsecret/clientset/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -16,31 +16,27 @@ import (
 
 // ExternalSecret contains the state for building and applying the manifest
 type ExternalSecret struct {
-	Namespace   string
-	Name        string
-	Labels      map[string]string
-	Annotations map[string]string
-	Data        map[string]string
-	Ctx         context.Context
+	Namespace string
+	Name      string
+	Manifest  *typesv1.ExternalSecret
+	Ctx       context.Context
 }
 
 // New returns an initialised runner
-func New(name, namespace string, annotations, labels, data map[string]string) *ExternalSecret {
+func New(name, namespace string, manifest *typesv1.ExternalSecret) *ExternalSecret {
 	return &ExternalSecret{
-		Namespace:   namespace,
-		Name:        name,
-		Labels:      labels,
-		Annotations: annotations,
-		Data:        data,
-		Ctx:         context.Background(),
+		Namespace: namespace,
+		Name:      name,
+		Manifest:  manifest,
+		Ctx:       context.Background(),
 	}
 }
 
 // CreateSecret invokes the client and creates the secret
 func (a *ExternalSecret) CreateSecret(_ kubernetes.Interface, config *rest.Config) (interface{}, error) {
-	clientSet, err := v12.NewForConfig(config)
+	clientSet, err := clientv1.NewForConfig(config)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create external secrets client set: %w", err)
+		return nil, fmt.Errorf("creating external secrets client set: %w", err)
 	}
 
 	externalSecrets, err := clientSet.ExternalSecrets(a.Namespace).List(a.Ctx, metav1.ListOptions{})
@@ -59,37 +55,62 @@ func (a *ExternalSecret) CreateSecret(_ kubernetes.Interface, config *rest.Confi
 		}
 	}
 
-	return clientSet.ExternalSecrets(a.Namespace).Create(a.Ctx, a.SecretManifest())
+	return clientSet.ExternalSecrets(a.Namespace).Create(a.Ctx, a.Manifest)
+}
+
+// DeleteSecret invokes the client and deletes the secret
+func (a *ExternalSecret) DeleteSecret(_ kubernetes.Interface, config *rest.Config) (interface{}, error) {
+	clientSet, err := clientv1.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("creating external secrets client set: %w", err)
+	}
+
+	externalSecrets, err := clientSet.ExternalSecrets(a.Namespace).List(a.Ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("listing external secrets in %s: %w", a.Namespace, err)
+	}
+
+	deletePolicy := metav1.DeletePropagationForeground
+
+	for _, es := range externalSecrets.Items {
+		if es.Name == a.Name {
+			return nil, clientSet.ExternalSecrets(a.Namespace).Delete(a.Ctx, a.Name, metav1.DeleteOptions{
+				PropagationPolicy: &deletePolicy,
+			})
+		}
+	}
+
+	return nil, nil
 }
 
 // SecretManifest returns the manifest
-func (a *ExternalSecret) SecretManifest() *v13.ExternalSecret {
-	e := &v13.ExternalSecret{
+func SecretManifest(name, namespace string, annotations, labels, data map[string]string) *typesv1.ExternalSecret {
+	e := &typesv1.ExternalSecret{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ExternalSecret",
 			APIVersion: "kubernetes-client.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      a.Name,
-			Namespace: a.Namespace,
+			Name:      name,
+			Namespace: namespace,
 		},
-		Spec: v13.ExternalSecretSpec{
+		Spec: typesv1.ExternalSecretSpec{
 			BackendType: "systemManager",
-			Data:        []v13.ExternalSecretData{},
+			Data:        []typesv1.ExternalSecretData{},
 		},
 	}
 
-	if a.Labels != nil || a.Annotations != nil {
-		e.Spec.Template = &v13.ExternalSecretTemplate{
-			Metadata: v13.ExternalSecretTemplateMetadata{
-				Annotations: a.Annotations,
-				Labels:      a.Labels,
+	if labels != nil || annotations != nil {
+		e.Spec.Template = &typesv1.ExternalSecretTemplate{
+			Metadata: typesv1.ExternalSecretTemplateMetadata{
+				Annotations: annotations,
+				Labels:      labels,
 			},
 		}
 	}
 
-	for name, key := range a.Data {
-		e.Spec.Data = append(e.Spec.Data, v13.ExternalSecretData{
+	for name, key := range data {
+		e.Spec.Data = append(e.Spec.Data, typesv1.ExternalSecretData{
 			Key:  key,
 			Name: name,
 		})

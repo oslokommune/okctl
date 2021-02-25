@@ -12,6 +12,20 @@ type kubeService struct {
 	store api.KubeStore
 }
 
+func (k *kubeService) DeleteExternalSecrets(_ context.Context, opts api.DeleteExternalSecretsOpts) error {
+	err := opts.Validate()
+	if err != nil {
+		return errors.E(err, "validating inputs", errors.Invalid)
+	}
+
+	err = k.run.DeleteExternalSecrets(opts)
+	if err != nil {
+		return errors.E(err, "removing external secrets", errors.Internal)
+	}
+
+	return nil
+}
+
 func (k *kubeService) CreateStorageClass(_ context.Context, opts api.CreateStorageClassOpts) (*api.StorageClassKube, error) {
 	err := opts.Validate()
 	if err != nil {

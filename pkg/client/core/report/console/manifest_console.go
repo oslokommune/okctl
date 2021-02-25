@@ -14,8 +14,16 @@ type manifestReport struct {
 	console *Console
 }
 
+func (r *manifestReport) RemoveExternalSecret(report *store.Report) error {
+	return r.console.Report(
+		report.Actions,
+		"manifest",
+		aurora.Green("external-secret").String(),
+	)
+}
+
 func (r *manifestReport) SaveStorageClass(_ *client.StorageClass, report *store.Report) error {
-	description := aurora.Green("storageclass").String()
+	description := aurora.Green("storage-class").String()
 	return r.console.Report(report.Actions, "manifest", description)
 }
 

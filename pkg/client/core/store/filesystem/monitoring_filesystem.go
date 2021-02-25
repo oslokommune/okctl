@@ -21,19 +21,19 @@ type KubePromStack struct {
 	SecretsAdminPassKey    string
 }
 
-type kubePromStackStore struct {
+type monitoringStore struct {
 	paths     Paths
 	helmPaths Paths
 	fs        *afero.Afero
 }
 
-func (s *kubePromStackStore) RemoveKubePromStack(_ api.ID) (*store.Report, error) {
+func (s *monitoringStore) RemoveKubePromStack(_ api.ID) (*store.Report, error) {
 	return store.NewFileSystem(s.helmPaths.BaseDir, s.fs).
 		RemoveDir("").
 		Do()
 }
 
-func (s *kubePromStackStore) SaveKubePromStack(stack *client.KubePromStack) (*store.Report, error) {
+func (s *monitoringStore) SaveKubePromStack(stack *client.KubePromStack) (*store.Report, error) {
 	argo := &KubePromStack{
 		ID:                     stack.ID,
 		CertificateARN:         stack.CertificateARN,
@@ -67,12 +67,12 @@ func (s *kubePromStackStore) SaveKubePromStack(stack *client.KubePromStack) (*st
 	return report, nil
 }
 
-// NewKubePromStackStore returns an initialised store
-func NewKubePromStackStore(
+// NewMonitoringStore returns an initialised store
+func NewMonitoringStore(
 	helmPaths, paths Paths,
 	fs *afero.Afero,
-) client.KubePromStackStore {
-	return &kubePromStackStore{
+) client.MonitoringStore {
+	return &monitoringStore{
 		paths:     paths,
 		helmPaths: helmPaths,
 		fs:        fs,

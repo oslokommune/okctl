@@ -10,27 +10,27 @@ import (
 	"github.com/oslokommune/okctl/pkg/config/state"
 )
 
-type kubePromStackState struct {
+type monitoringState struct {
 	state state.RepositoryStateWithEnv
 }
 
-func (s *kubePromStackState) RemoveKubePromStack(id api.ID) (*store.Report, error) {
+func (s *monitoringState) RemoveKubePromStack(_ api.ID) (*store.Report, error) {
 	m := s.state.GetMonitoring()
 	m.DashboardURL = ""
 
 	return s.state.SaveMonitoring(m)
 }
 
-func (s *kubePromStackState) SaveKubePromStack(kube *client.KubePromStack) (*store.Report, error) {
+func (s *monitoringState) SaveKubePromStack(kube *client.KubePromStack) (*store.Report, error) {
 	m := s.state.GetMonitoring()
 	m.DashboardURL = fmt.Sprintf("https://%s", kube.Hostname)
 
 	return s.state.SaveMonitoring(m)
 }
 
-// NewKubePromStackState returns an initialised state layer
-func NewKubePromStackState(state state.RepositoryStateWithEnv) client.KubePromStackState {
-	return &kubePromStackState{
+// NewMonitoringState returns an initialised state layer
+func NewMonitoringState(state state.RepositoryStateWithEnv) client.MonitoringState {
+	return &monitoringState{
 		state: state,
 	}
 }

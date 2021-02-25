@@ -11,11 +11,11 @@ import (
 	"github.com/oslokommune/okctl/pkg/client/store"
 )
 
-type kubePromStackReport struct {
+type monitoringReport struct {
 	console *Console
 }
 
-func (r *kubePromStackReport) ReportRemoveKubePromStack(reports []*store.Report) error {
+func (r *monitoringReport) ReportRemoveKubePromStack(reports []*store.Report) error {
 	var actions []store.Action // nolint
 
 	for _, report := range reports {
@@ -27,7 +27,7 @@ func (r *kubePromStackReport) ReportRemoveKubePromStack(reports []*store.Report)
 	return r.console.Report(actions, "KubePromStack", description)
 }
 
-func (r *kubePromStackReport) ReportSaveKubePromStack(cd *client.KubePromStack, reports []*store.Report) error {
+func (r *monitoringReport) ReportSaveKubePromStack(cd *client.KubePromStack, reports []*store.Report) error {
 	var actions []store.Action // nolint
 
 	for _, report := range reports {
@@ -42,9 +42,9 @@ func (r *kubePromStackReport) ReportSaveKubePromStack(cd *client.KubePromStack, 
 	return r.console.Report(actions, "KubePromStack", description)
 }
 
-// NewKubePromStackReport returns an initialised reporter
-func NewKubePromStackReport(out io.Writer, spinner spinner.Spinner) client.KubePromStackReport {
-	return &kubePromStackReport{
+// NewMonitoringReport returns an initialised reporter
+func NewMonitoringReport(out io.Writer, spinner spinner.Spinner) client.MonitoringReport {
+	return &monitoringReport{
 		console: New(out, spinner),
 	}
 }

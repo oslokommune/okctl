@@ -19,12 +19,12 @@ import (
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
-type kubePromStackService struct {
+type monitoringService struct {
 	spinner spinner.Spinner
-	api     client.KubePromStackAPI
-	store   client.KubePromStackStore
-	state   client.KubePromStackState
-	report  client.KubePromStackReport
+	api     client.MonitoringAPI
+	store   client.MonitoringStore
+	state   client.MonitoringState
+	report  client.MonitoringReport
 
 	cert     client.CertificateService
 	ident    client.IdentityManagerService
@@ -46,7 +46,7 @@ func grafanaDomain(baseDomain string) string {
 	return fmt.Sprintf("%s.%s", grafanaSubDomain, baseDomain)
 }
 
-func (s *kubePromStackService) DeleteKubePromStack(ctx context.Context, opts client.DeleteKubePromStackOpts) error {
+func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client.DeleteKubePromStackOpts) error {
 	err := s.spinner.Start("kubepromstack")
 	if err != nil {
 		return err
@@ -100,7 +100,7 @@ func (s *kubePromStackService) DeleteKubePromStack(ctx context.Context, opts cli
 }
 
 // nolint: funlen
-func (s *kubePromStackService) CreateKubePromStack(ctx context.Context, opts client.CreateKubePromStackOpts) (*client.KubePromStack, error) {
+func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client.CreateKubePromStackOpts) (*client.KubePromStack, error) {
 	err := s.spinner.Start("kubepromstack")
 	if err != nil {
 		return nil, err
@@ -245,19 +245,19 @@ func (s *kubePromStackService) CreateKubePromStack(ctx context.Context, opts cli
 	return stack, nil
 }
 
-// NewKubePrometheusStackService returns an initialised service
-func NewKubePrometheusStackService(
+// NewMonitoringService returns an initialised service
+func NewMonitoringService(
 	spinner spinner.Spinner,
-	api client.KubePromStackAPI,
-	store client.KubePromStackStore,
-	state client.KubePromStackState,
-	report client.KubePromStackReport,
+	api client.MonitoringAPI,
+	store client.MonitoringStore,
+	state client.MonitoringState,
+	report client.MonitoringReport,
 	cert client.CertificateService,
 	ident client.IdentityManagerService,
 	manifest client.ManifestService,
 	param client.ParameterService,
-) client.KubePromStackService {
-	return &kubePromStackService{
+) client.MonitoringService {
+	return &monitoringService{
 		spinner:  spinner,
 		api:      api,
 		store:    store,

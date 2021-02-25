@@ -32,11 +32,12 @@ func (z *lokiReconciler) Reconcile(node *resourcetree.ResourceNode) (result Reco
 			return result, fmt.Errorf("creating Loki: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		// err = z.client.DeleteLoki(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
-		// if err != nil {
-		// 	return result, fmt.Errorf("deleting Loki: %w", err)
-		// }
-		return result, fmt.Errorf("not implemented")
+		err = z.client.DeleteLoki(z.commonMetadata.Ctx, client.DeleteLokiOpts{
+			ID: z.commonMetadata.ClusterID,
+		})
+		if err != nil {
+			return result, fmt.Errorf("deleting Loki: %w", err)
+		}
 	}
 
 	return result, nil

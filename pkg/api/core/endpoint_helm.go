@@ -48,3 +48,9 @@ func makeCreateKubePrometheusStack(s api.HelmService) endpoint.Endpoint {
 		return s.CreateKubePrometheusStack(ctx, request.(api.CreateKubePrometheusStackOpts))
 	}
 }
+
+func makeCreateLokiHelmChartEndpoint(s api.HelmService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return s.CreateLokiHelmChart(ctx, request.(api.CreateLokiHelmChartOpts))
+	}
+}

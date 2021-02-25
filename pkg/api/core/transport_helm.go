@@ -84,3 +84,14 @@ func decodeCreateKubePrometheusStackHelmChart(_ context.Context, r *http.Request
 
 	return opts, nil
 }
+
+func decodeCreateLokiHelmChart(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.CreateLokiHelmChartOpts
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}

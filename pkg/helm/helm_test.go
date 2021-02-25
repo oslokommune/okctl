@@ -231,6 +231,18 @@ func TestHelm(t *testing.T) {
 					log.Println(strings.Join(item, "\n"))
 				}
 			}
+
+			err = tc.helm.Delete(kubeConfPath, tc.chart.DeleteConfig())
+			assert.NoError(t, err)
+
+			if err != nil {
+				items, err := cluster.Debug(tc.chart.Namespace)
+				assert.NoError(t, err)
+				for title, item := range items {
+					log.Printf("debug information for: %s\n", title)
+					log.Println(strings.Join(item, "\n"))
+				}
+			}
 		})
 	}
 }

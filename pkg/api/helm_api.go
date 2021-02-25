@@ -27,6 +27,18 @@ func (o CreateLokiHelmChartOpts) Validate() error {
 	)
 }
 
+// CreatePromtailHelmChartOpts contains the required inputs
+type CreatePromtailHelmChartOpts struct {
+	ID ID
+}
+
+// Validate the inputs
+func (o CreatePromtailHelmChartOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+	)
+}
+
 // CreateAutoscalerHelmChartOpts contains the required inputs
 type CreateAutoscalerHelmChartOpts struct {
 	ID ID
@@ -187,6 +199,7 @@ type HelmService interface {
 	CreateKubePrometheusStack(ctx context.Context, opts CreateKubePrometheusStackOpts) (*Helm, error)
 	CreateLokiHelmChart(ctx context.Context, opts CreateLokiHelmChartOpts) (*Helm, error)
 	DeleteHelmRelease(ctx context.Context, opts DeleteHelmReleaseOpts) error
+	CreatePromtailHelmChart(ctx context.Context, opts CreatePromtailHelmChartOpts) (*Helm, error)
 }
 
 // HelmRun defines the runner layer
@@ -200,6 +213,7 @@ type HelmRun interface {
 	CreateKubePromStack(opts CreateKubePrometheusStackOpts) (*Helm, error)
 	CreateLokiHelmChart(opts CreateLokiHelmChartOpts) (*Helm, error)
 	DeleteHelmRelease(opts DeleteHelmReleaseOpts) error
+	CreatePromtailHelmChart(opts CreatePromtailHelmChartOpts) (*Helm, error)
 }
 
 // HelmStore defines the storage layer

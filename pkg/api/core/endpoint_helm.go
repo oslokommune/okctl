@@ -60,3 +60,9 @@ func makeDeleteHelmRelease(s api.HelmService) endpoint.Endpoint {
 		return Empty{}, s.DeleteHelmRelease(ctx, request.(api.DeleteHelmReleaseOpts))
 	}
 }
+
+func makeCreatePromtailHelmChartEndpoint(s api.HelmService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return s.CreatePromtailHelmChart(ctx, request.(api.CreatePromtailHelmChartOpts))
+	}
+}

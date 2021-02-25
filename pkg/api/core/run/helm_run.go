@@ -3,6 +3,8 @@ package run
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/helm/charts/promtail"
+
 	"github.com/oslokommune/okctl/pkg/helm/charts/loki"
 
 	"github.com/oslokommune/okctl/pkg/config"
@@ -44,6 +46,12 @@ func (r *helmRun) DeleteHelmRelease(opts api.DeleteHelmReleaseOpts) error {
 	}
 
 	return nil
+}
+
+func (r *helmRun) CreatePromtailHelmChart(opts api.CreatePromtailHelmChartOpts) (*api.Helm, error) {
+	chart := promtail.New(promtail.NewDefaultValues())
+
+	return r.createHelmChart(opts.ID, chart)
 }
 
 func (r *helmRun) CreateLokiHelmChart(opts api.CreateLokiHelmChartOpts) (*api.Helm, error) {

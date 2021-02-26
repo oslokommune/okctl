@@ -403,5 +403,5 @@ func (c *Config) GetRepoApplicationBaseDir() (string, error) {
 		return "", err
 	}
 
-	return path.Join(base, c.RepoState.Metadata.OutputDir, DefaultApplicationOverlayBaseDir, DefaultApplicationDir), nil
+	return path.Join(base, c.RepoState.Metadata.OutputDir, DefaultApplicationDir), nil
 }

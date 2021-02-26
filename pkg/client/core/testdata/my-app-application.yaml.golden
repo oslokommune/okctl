@@ -10,7 +10,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: base/my-app
+    path: applications/my-app
     repoURL: git@dummy.com:test/repo.git
     targetRevision: HEAD
   syncPolicy:

@@ -67,7 +67,7 @@ func TestNewApplicationService(t *testing.T) {
 
 	spin, _ := spinner.New("", testOutputBuffer)
 	fs := afero.Afero{Fs: afero.NewMemMapFs()}
-	mockPaths := clientFilesystem.Paths{BaseDir: "infrastructure/base"}
+	mockPaths := clientFilesystem.Paths{BaseDir: "infrastructure/applications"}
 
 	service := core.NewApplicationService(
 		spin,
@@ -94,14 +94,14 @@ func TestNewApplicationService(t *testing.T) {
 	})
 	assert.NilError(t, err)
 
-	k8sResourcePath := filepath.Join(mockPaths.BaseDir, "my-app", "my-app.yaml")
+	k8sResourcePath := filepath.Join(mockPaths.BaseDir, "my-app", "base", "my-app.yaml")
 	k8sResources, err := fs.Open(k8sResourcePath)
 	assert.NilError(t, err)
 
 	k8sResourcesAsBytes, err := ioutil.ReadAll(k8sResources)
 	assert.NilError(t, err)
 
-	argocdResourcePath := filepath.Join(mockPaths.BaseDir, "my-app", "my-app-application.yaml")
+	argocdResourcePath := filepath.Join(mockPaths.BaseDir, "my-app", "base", "my-app-application.yaml")
 	argocdResources, err := fs.Open(argocdResourcePath)
 	assert.NilError(t, err)
 

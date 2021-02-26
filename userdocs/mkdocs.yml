@@ -8,23 +8,27 @@ docs_dir: src
 edit_uri: ""
 
 nav:
-  - Core components:
-      - components/cloud.md
-      - components/github.md
-      - components/kubernetes.md
-  - Deployment:
-      - deployment/argocd.md
-      - 'Create cluster': usage/declarativecluster.md
-      - 'Create application': usage/applicationyaml.md
-      - 'Run virtual environment': usage/venv.md
-      - 'Add user': usage/adduser.md
-  - Beta:
-      - 'Declarative Cluster': beta/declarativecluster.md
-  - Users:
-      - usage/adduser.md
+  - Getting started:
+      - 1. Install:  getting-started/install.md
+      - 2. Prerequisites: getting-started/prerequisites.md
+      - 3. Create cluster: getting-started/create-cluster.md
+      - 4. Run virtual environment: getting-started/run-virtual-environment.md
+      - 5. Create application: getting-started/create-application.md
+      - 6. View bundled applications: getting-started/view-bundled-applications.md
+      - 7. Delete cluster: getting-started/clean-up.md
+  - Building blocks:
+    - buildingblocks/cloud.md
+    - buildingblocks/github.md
+    - buildingblocks/kubernetes.md
+    - buildingblocks/argocd.md
   - About:
-      - about/about.md
+      - 'About': about/about.md
       - 'Resource Overview': about/resources.md
+  - Help:
+    - FAQ: help/faq.md
+    - Running a Docker image in your cluster: help/docker-registry.md
+    - Common issues: help/common-issues.md
+    - Outdated common issues: help/outdated-common-issues.md
 
 plugins:
   - git-revision-date
@@ -32,6 +36,9 @@ plugins:
 
 extra_css:
   - assets/stylesheets/fonts.css
+  - assets/stylesheets/theme.css
+  - assets/stylesheets/button.css
+  - assets/stylesheets/center-container.css
 
 theme:
   name: 'material'

@@ -1,7 +1,3 @@
-Some people enjoy a lengthy CLI wizard. Others prefer to declare their resources and let the CLI tool do its thing.
-
-Introducing declarative cluster.
-
 To create a cluster using the declarative approach:
 
 1. Create a declaration and edit it to suit your needs
@@ -76,7 +72,7 @@ github:
   organisation: oslokommune
   # The name of the repository
   repository: my_iac_repo_name
-  # The folder to place (and look for) application declarations
+  # The folder to place infrastructure declarations
   outputPath: infrastructure
   # The team defined in Github that should be allowed access to the created resources
   team: my_team
@@ -111,9 +107,29 @@ okctl apply cluster -f cluster.yaml
 
 to have okctl generate a cluster based on the declaration.
 
-That's it. Sit back and enjoy or go do something else while `okctl` does its thing.
+That's it. Sit back and enjoy or go do something else while `okctl` does its thing (can take up to an hour).
 
-## Authentication methods
+## Authentication
+
+### Device authentication flow
+
+For `okctl` to be able to interact with Github on your behalf, `okctl` needs do something called the
+`Device Authentication flow`. 
+
+In the beginning of the cluster creation process, `okctl` will ask you to enter a code in
+a browser window. The code will be presented. Copy it and press `Y` and `enter`. `okctl` will open a window in your 
+browser where you can enter the code. 
+
+Copy the code highlighted in red and press `Y` and then `enter`
+![device auth](/img/device-auth.png)
+
+Paste it into the newly opened tab in your browser
+![enter code](/img/enter-code.png)
+
+Press the green "Authorize oslokommune" button
+![authorize](/img/authorize.png)
+
+That's it! You are all set. Switch back to the console and enjoy `okctl` creating your cluster for you.
 
 ### AWS 
 
@@ -146,3 +162,41 @@ export GITHUB_TOKEN=mytoken
 
 okctl apply cluster --github-credentials-type token -f cluster.yaml
 ```
+
+## Where do I find this declaration attribute?
+
+### AccountID
+
+Go to https://login.oslo.kommune.no/auth/realms/AD/protocol/saml/clients/amazon-aws
+Log in as you usually do - find account id as shown here:
+<span style="display:block;text-align:center">![okctl](../img/aws-account-id.png)</span>
+
+### Environment
+
+The name of the environment depends on what the cluster will be used for. Examples being:
+* production
+* development
+* staging
+
+Basically anything you want.
+
+### Repository
+
+Go to your infrastructure as code (IAC) repository, and find the name of the repository in the top left corner. It
+should look something like this: `oslokommune/<repository name>`
+
+<span style="display:block;text-align:center">![okctl](../img/repository-name.png)</span>
+
+It will be the part after the `/`.
+
+### Team
+
+* Go to: https://github.com/orgs/oslokommune/teams
+* Search for your team name, for example search for "kjøremiljø"
+* Copy the text after @oslokommune/<team>. This is your team name (in this case kjoremiljo)
+
+<span style="display:block;text-align:center">![okctl](../img/team.png)</span>
+
+## Any other attribute
+
+If you don't know what it does, default is probably fine.

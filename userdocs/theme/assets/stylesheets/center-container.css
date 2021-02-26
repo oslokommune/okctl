@@ -1,0 +1,19 @@
+.center-content-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.center-content-container *:last-child {
+    margin-left: 30px;
+}
+
+.center-content-container * {
+    width: 250px;
+    height: 48px;
+    vertical-align: center;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

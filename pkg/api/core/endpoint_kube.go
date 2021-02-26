@@ -13,12 +13,6 @@ func makeCreateExternalDNSKubeDeploymentEndpoint(s api.KubeService) endpoint.End
 	}
 }
 
-func makeCreateExternalSecretsEndpoint(s api.KubeService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateExternalSecrets(ctx, request.(api.CreateExternalSecretsOpts))
-	}
-}
-
 func makeDeleteNamespaceEndpoint(s api.KubeService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return Empty{}, s.DeleteNamespace(ctx, request.(api.DeleteNamespaceOpts))
@@ -31,8 +25,26 @@ func makeCreateStorageClass(s api.KubeService) endpoint.Endpoint {
 	}
 }
 
+func makeCreateExternalSecretsEndpoint(s api.KubeService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return s.CreateExternalSecrets(ctx, request.(api.CreateExternalSecretsOpts))
+	}
+}
+
 func makeDeleteExternalSecrets(s api.KubeService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return Empty{}, s.DeleteExternalSecrets(ctx, request.(api.DeleteExternalSecretsOpts))
+	}
+}
+
+func makeCreateNativeSecretEndpoint(s api.KubeService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return s.CreateNativeSecret(ctx, request.(api.CreateNativeSecretOpts))
+	}
+}
+
+func makeDeleteNativeSecret(s api.KubeService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return Empty{}, s.DeleteNativeSecret(ctx, request.(api.DeleteNativeSecretOpts))
 	}
 }

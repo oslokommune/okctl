@@ -71,6 +71,8 @@ type Endpoints struct {
 	DeleteHelmRelease                             endpoint.Endpoint
 	DeleteExternalSecrets                         endpoint.Endpoint
 	CreatePromtailHelmChart                       endpoint.Endpoint
+	CreateNativeSecret                            endpoint.Endpoint
+	DeleteNativeSecret                            endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -132,6 +134,8 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteHelmRelease:                             makeDeleteHelmRelease(s.Helm),
 		DeleteExternalSecrets:                         makeDeleteExternalSecrets(s.Kube),
 		CreatePromtailHelmChart:                       makeCreatePromtailHelmChartEndpoint(s.Helm),
+		CreateNativeSecret:                            makeCreateNativeSecretEndpoint(s.Kube),
+		DeleteNativeSecret:                            makeDeleteNativeSecret(s.Kube),
 	}
 }
 
@@ -192,6 +196,8 @@ type Handlers struct {
 	DeleteHelmRelease                             http.Handler
 	DeleteExternalSecrets                         http.Handler
 	CreatePromtailHelmChart                       http.Handler
+	CreateNativeSecret                            http.Handler
+	DeleteNativeSecret                            http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -280,6 +286,8 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteHelmRelease:                             newServer(endpoints.DeleteHelmRelease, decodeDeleteHelmRelease),
 		DeleteExternalSecrets:                         newServer(endpoints.DeleteExternalSecrets, decodeDeleteExternalSecrets),
 		CreatePromtailHelmChart:                       newServer(endpoints.CreatePromtailHelmChart, decodeCreatePromtailHelmChart),
+		CreateNativeSecret:                            newServer(endpoints.CreateNativeSecret, decodeCreateNativeSecret),
+		DeleteNativeSecret:                            newServer(endpoints.DeleteNativeSecret, decodeDeleteNativeSecret),
 	}
 }
 
@@ -395,6 +403,10 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			r.Route("/storageclasses", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateStorageClass)
 			})
+			r.Route("/nativesecrets", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateNativeSecret)
+				r.Method(http.MethodDelete, "/", handlers.DeleteNativeSecret)
+			})
 		})
 		r.Route("/domains", func(r chi.Router) {
 			r.Route("/hostedzones", func(r chi.Router) {
@@ -481,10 +493,11 @@ const (
 	lokiTag                      = "loki"
 	releasesTag                  = "releases"
 	promtailTag                  = "promtail"
+	nativeSecretTag              = "nativesecret"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
-// nolint: lll
+// nolint: lll funlen
 func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 	return func(endpoints Endpoints) Endpoints {
 		return Endpoints{
@@ -543,6 +556,8 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteHelmRelease:                             logmd.Logging(logger, strings.Join([]string{helmTag, releasesTag}, "/"), "delete")(endpoints.DeleteHelmRelease),
 			DeleteExternalSecrets:                         logmd.Logging(logger, strings.Join([]string{kubeTag, externalSecretsTag}, "/"), "delete")(endpoints.DeleteExternalSecrets),
 			CreatePromtailHelmChart:                       logmd.Logging(logger, strings.Join([]string{helmTag, promtailTag}, "/"), "create")(endpoints.CreatePromtailHelmChart),
+			CreateNativeSecret:                            logmd.Logging(logger, strings.Join([]string{kubeTag, nativeSecretTag}, "/"), "create")(endpoints.CreateNativeSecret),
+			DeleteNativeSecret:                            logmd.Logging(logger, strings.Join([]string{kubeTag, nativeSecretTag}, "/"), "delete")(endpoints.DeleteNativeSecret),
 		}
 	}
 }

@@ -192,7 +192,6 @@ func (o ScaleDeploymentOpts) Validate() error {
 		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.Name, validation.Required),
 		validation.Field(&o.Namespace, validation.Required),
-		validation.Field(&o.Replicas, validation.Required),
 	)
 }
 

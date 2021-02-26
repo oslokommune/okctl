@@ -5,7 +5,7 @@ package loki
 // datasource consumable by Grafana
 func NewDatasourceTemplate() *Datasources {
 	return &Datasources{
-		APIVersion: "v1",
+		APIVersion: 1,
 		Datasources: []Datasource{
 			{
 				Name:      "Loki",
@@ -26,7 +26,7 @@ func NewDatasourceTemplate() *Datasources {
 
 // Datasources contains a set of datasources
 type Datasources struct {
-	APIVersion  string       `json:"apiVersion"`
+	APIVersion  int          `json:"apiVersion"`
 	Datasources []Datasource `json:"datasources"`
 }
 

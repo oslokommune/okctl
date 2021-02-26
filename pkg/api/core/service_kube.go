@@ -12,7 +12,7 @@ type kubeService struct {
 	store api.KubeStore
 }
 
-func (k *kubeService) CreateNativeSecret(_ context.Context, opts api.CreateNativeSecretOpts) (*api.NativeSecretKube, error) {
+func (k *kubeService) CreateNativeSecret(_ context.Context, opts api.CreateNativeSecretOpts) (*api.NativeSecret, error) {
 	err := opts.Validate()
 	if err != nil {
 		return nil, errors.E(err, "validating inputs", errors.Invalid)

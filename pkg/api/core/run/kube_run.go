@@ -27,7 +27,7 @@ type kubeRun struct {
 	auth     aws.Authenticator
 }
 
-func (k *kubeRun) CreateNativeSecret(opts api.CreateNativeSecretOpts) (*api.NativeSecretKube, error) {
+func (k *kubeRun) CreateNativeSecret(opts api.CreateNativeSecretOpts) (*api.NativeSecret, error) {
 	sec := secret.New(opts.Name, opts.Namespace, secret.NewManifest(
 		opts.Name,
 		opts.Namespace,
@@ -53,7 +53,7 @@ func (k *kubeRun) CreateNativeSecret(opts api.CreateNativeSecretOpts) (*api.Nati
 		return nil, fmt.Errorf("marshalling manifest: %w", err)
 	}
 
-	return &api.NativeSecretKube{
+	return &api.NativeSecret{
 		ID:        opts.ID,
 		Name:      opts.Name,
 		Namespace: opts.Namespace,

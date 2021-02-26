@@ -17,8 +17,73 @@ type manifestService struct {
 	report  client.ManifestReport
 }
 
+func (s *manifestService) CreateNativeSecret(_ context.Context, opts client.CreateNativeSecretOpts) (*client.NativeSecret, error) {
+	err := s.spinner.Start("native-secret")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	secret, err := s.api.CreateNativeSecret(api.CreateNativeSecretOpts{
+		ID:        opts.ID,
+		Name:      opts.Name,
+		Namespace: opts.Namespace,
+		Data:      opts.Data,
+		Labels:    opts.Labels,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	sec := &client.NativeSecret{
+		ID:        secret.ID,
+		Name:      secret.Name,
+		Namespace: secret.Namespace,
+		Manifest:  secret.Manifest,
+	}
+
+	report, err := s.store.SaveNativeSecret(sec)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.SaveNativeSecret(sec, report)
+	if err != nil {
+		return nil, err
+	}
+
+	return sec, nil
+}
+
+func (s *manifestService) DeleteNativeSecret(_ context.Context, opts client.DeleteNativeSecretOpts) error {
+	err := s.spinner.Start("native-secret")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	err = s.api.DeleteNativeSecret(api.DeleteNativeSecretOpts{
+		ID:        opts.ID,
+		Name:      opts.Name,
+		Namespace: opts.Namespace,
+	})
+
+	report, err := s.store.RemoveNativeSecret(opts.Name, opts.Namespace)
+	if err != nil {
+		return err
+	}
+
+	return s.report.RemoveNativeSecret(report)
+}
+
 func (s *manifestService) DeleteExternalSecret(_ context.Context, opts client.DeleteExternalSecretOpts) error {
-	err := s.spinner.Start("storageclass")
+	err := s.spinner.Start("storage-class")
 	if err != nil {
 		return err
 	}
@@ -44,7 +109,7 @@ func (s *manifestService) DeleteExternalSecret(_ context.Context, opts client.De
 }
 
 func (s *manifestService) CreateStorageClass(_ context.Context, opts api.CreateStorageClassOpts) (*client.StorageClass, error) {
-	err := s.spinner.Start("storageclass")
+	err := s.spinner.Start("storage-class")
 	if err != nil {
 		return nil, err
 	}

@@ -134,22 +134,70 @@ func (o CreateStorageClassOpts) Validate() error {
 	)
 }
 
+// DeleteNativeSecretOpts contains the required inputs
+type DeleteNativeSecretOpts struct {
+	ID        ID
+	Name      string
+	Namespace string
+}
+
+// Validate the provided inputs
+func (o DeleteNativeSecretOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.Name, validation.Required),
+		validation.Field(&o.Namespace, validation.Required),
+	)
+}
+
+// CreateNativeSecretOpts contains the required inputs
+type CreateNativeSecretOpts struct {
+	ID        ID
+	Name      string
+	Namespace string
+	Data      map[string]string
+	Labels    map[string]string
+}
+
+// Validate the inputs
+func (o CreateNativeSecretOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.Name, validation.Required),
+		validation.Field(&o.Namespace, validation.Required),
+		validation.Field(&o.Data, validation.Required),
+		validation.Field(&o.Labels, validation.Required),
+	)
+}
+
+// NativeSecretKube is the state of an external secrets deployment
+type NativeSecretKube struct {
+	ID        ID
+	Name      string
+	Namespace string
+	Manifest  []byte
+}
+
 // KubeService provides kube deployment service layer
 type KubeService interface {
 	CreateExternalDNSKubeDeployment(ctx context.Context, opts CreateExternalDNSKubeDeploymentOpts) (*ExternalDNSKube, error)
-	CreateExternalSecrets(ctx context.Context, opts CreateExternalSecretsOpts) (*ExternalSecretsKube, error)
 	DeleteNamespace(ctx context.Context, opts DeleteNamespaceOpts) error
 	CreateStorageClass(ctx context.Context, opts CreateStorageClassOpts) (*StorageClassKube, error)
+	CreateExternalSecrets(ctx context.Context, opts CreateExternalSecretsOpts) (*ExternalSecretsKube, error)
 	DeleteExternalSecrets(ctx context.Context, opts DeleteExternalSecretsOpts) error
+	CreateNativeSecret(ctx context.Context, opts CreateNativeSecretOpts) (*NativeSecretKube, error)
+	DeleteNativeSecret(ctx context.Context, opts DeleteNativeSecretOpts) error
 }
 
 // KubeRun provides kube deployment run layer
 type KubeRun interface {
 	CreateExternalDNSKubeDeployment(opts CreateExternalDNSKubeDeploymentOpts) (*ExternalDNSKube, error)
-	CreateExternalSecrets(opts CreateExternalSecretsOpts) (*ExternalSecretsKube, error)
 	DeleteNamespace(opts DeleteNamespaceOpts) error
 	CreateStorageClass(opts CreateStorageClassOpts) (*StorageClassKube, error)
+	CreateExternalSecrets(opts CreateExternalSecretsOpts) (*ExternalSecretsKube, error)
 	DeleteExternalSecrets(opts DeleteExternalSecretsOpts) error
+	CreateNativeSecret(opts CreateNativeSecretOpts) (*NativeSecretKube, error)
+	DeleteNativeSecret(opts DeleteNativeSecretOpts) error
 }
 
 // KubeStore provides kube store layer

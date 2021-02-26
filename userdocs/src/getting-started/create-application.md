@@ -15,6 +15,8 @@ declaration to resources understood by Kubernetes and ArgoCD.
 
 ## Commands
 
+:information_source: If you need information on how to make your Docker images available in the cluster, see [Running a Docker image in your cluster](/help/docker-registry)
+
 To scaffold an application.yaml template, run the following command:
 
 ```bash
@@ -38,7 +40,7 @@ This command will create the following files in the ./infrastructure folder:
     * The certificate declaration for the URL specified in the application.yaml.
 
 Both files in 1. is needed by ArgoCD to deploy your application or service. Read more about ArgoCD
-[here](https://okctl.io/deployment/argocd/).
+[here](/buildingblocks/argocd/).
 
 After that, the following manual steps remain:
 

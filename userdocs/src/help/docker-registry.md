@@ -16,15 +16,17 @@ To create a Kubernetes pull secret, first go to your [github account settings](h
 
 For Kubernetes to be able to read packages (docker images), it needs the `read:packages` scope. For us to be able to push to GHCR, it needs the `write:packages` scope.
 
-Copy this token and run 
+Copy this token and run:
 
 ```shell
 kubectl create secret docker-registry regcred \
   --docker-server=ghcr.io \
-  --docker-username=<your-name> \
+  --docker-username=<your-github-username> \
   --docker-password=<enter-token-here> \
-  --docker-email=<your-email>
+  --docker-email=<your-github-email>
 ```
+
+:information_source: The pull secret created here is only available for the current namespace.
 
 ### Access Elastic Container Registry (ECR)
 

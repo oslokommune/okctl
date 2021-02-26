@@ -26,8 +26,6 @@
 
 .okctl-button.secondary {
     background-color: white;
-    border: 2px solid #f9c66b;
-    border-radius: 4px;
 
     color: black !important;
 }

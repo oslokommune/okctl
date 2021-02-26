@@ -15,7 +15,7 @@ nav:
       - 4. Run virtual environment: getting-started/run-virtual-environment.md
       - 5. Create application: getting-started/create-application.md
       - 6. View bundled applications: getting-started/view-bundled-applications.md
-      - 7. Clean up: getting-started/clean-up.md
+      - 7. Delete cluster: getting-started/clean-up.md
   - Building blocks:
     - buildingblocks/cloud.md
     - buildingblocks/github.md

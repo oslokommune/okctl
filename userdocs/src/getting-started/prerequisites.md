@@ -1,5 +1,5 @@
 The following is a guide for how to create an environment that contains the elements described in
-[Compare and contrast](#compare-and-contrast).
+[Compare and contrast](/#compare-and-contrast).
 
 ## 1. Ensure the following requirements
 
@@ -8,18 +8,6 @@ The following is a guide for how to create an environment that contains the elem
 Make sure you have your own GPG key. To list existing keys, run `gpg --list-keys`
 
 If you don't have any keys, create a new one with `gpg --gen-key`
-
-### Pass (Linux only)
-
-#### Install `pass`
-
-Follow the instructions [here](https://www.passwordstore.org/#download) to install `pass`
-
-#### Initialize `pass`
-
-Run `pass ls` to see if you have a password store. If it returns `Error: password store is empty. Try "pass init".`
-then run `pass init <GPG ID>` where GPG ID is the ID of your GPG key - use `gpg --list-keys` to see your keys (both
-e-mail and the ID are valid values, but if you have several keys for the same e-mail, use the ID).
 
 ## 2. Create a new github repository
 
@@ -39,7 +27,7 @@ cd <the new repository>
 
 ## 3. Prepare information for cluster creation
 
-:information_source: A "cluster" is a Kubernetes cluster in an environment as described in [Compare and contrast](#compare-and-contrast).
+:information_source: A "cluster" is a Kubernetes cluster in an environment as described in [Compare and contrast](/#compare-and-contrast).
 
 You will soon be creating a cluster, which will ask you for the following information:
 

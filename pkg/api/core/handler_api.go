@@ -73,6 +73,7 @@ type Endpoints struct {
 	CreatePromtailHelmChart                       endpoint.Endpoint
 	CreateNativeSecret                            endpoint.Endpoint
 	DeleteNativeSecret                            endpoint.Endpoint
+	ScaleDeployment                               endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -136,6 +137,7 @@ func MakeEndpoints(s Services) Endpoints {
 		CreatePromtailHelmChart:                       makeCreatePromtailHelmChartEndpoint(s.Helm),
 		CreateNativeSecret:                            makeCreateNativeSecretEndpoint(s.Kube),
 		DeleteNativeSecret:                            makeDeleteNativeSecret(s.Kube),
+		ScaleDeployment:                               makeScaleDeployment(s.Kube),
 	}
 }
 
@@ -198,6 +200,7 @@ type Handlers struct {
 	CreatePromtailHelmChart                       http.Handler
 	CreateNativeSecret                            http.Handler
 	DeleteNativeSecret                            http.Handler
+	ScaleDeployment                               http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -288,6 +291,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreatePromtailHelmChart:                       newServer(endpoints.CreatePromtailHelmChart, decodeCreatePromtailHelmChart),
 		CreateNativeSecret:                            newServer(endpoints.CreateNativeSecret, decodeCreateNativeSecret),
 		DeleteNativeSecret:                            newServer(endpoints.DeleteNativeSecret, decodeDeleteNativeSecret),
+		ScaleDeployment:                               newServer(endpoints.ScaleDeployment, decodeScaleDeployment),
 	}
 }
 
@@ -407,6 +411,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 				r.Method(http.MethodPost, "/", handlers.CreateNativeSecret)
 				r.Method(http.MethodDelete, "/", handlers.DeleteNativeSecret)
 			})
+			r.Route("/scale", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.ScaleDeployment)
+			})
 		})
 		r.Route("/domains", func(r chi.Router) {
 			r.Route("/hostedzones", func(r chi.Router) {
@@ -494,6 +501,7 @@ const (
 	releasesTag                  = "releases"
 	promtailTag                  = "promtail"
 	nativeSecretTag              = "nativesecret"
+	scaleTag                     = "scale"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -558,6 +566,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreatePromtailHelmChart:                       logmd.Logging(logger, strings.Join([]string{helmTag, promtailTag}, "/"), "create")(endpoints.CreatePromtailHelmChart),
 			CreateNativeSecret:                            logmd.Logging(logger, strings.Join([]string{kubeTag, nativeSecretTag}, "/"), "create")(endpoints.CreateNativeSecret),
 			DeleteNativeSecret:                            logmd.Logging(logger, strings.Join([]string{kubeTag, nativeSecretTag}, "/"), "delete")(endpoints.DeleteNativeSecret),
+			ScaleDeployment:                               logmd.Logging(logger, strings.Join([]string{kubeTag, scaleTag}, "/"), "create")(endpoints.ScaleDeployment),
 		}
 	}
 }

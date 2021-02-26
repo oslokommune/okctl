@@ -84,3 +84,14 @@ func decodeDeleteNativeSecret(_ context.Context, r *http.Request) (interface{}, 
 
 	return opts, nil
 }
+
+func decodeScaleDeployment(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.ScaleDeploymentOpts
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}

@@ -12,6 +12,20 @@ type kubeService struct {
 	store api.KubeStore
 }
 
+func (k *kubeService) ScaleDeployment(_ context.Context, opts api.ScaleDeploymentOpts) error {
+	err := opts.Validate()
+	if err != nil {
+		return errors.E(err, "validating inputs", errors.Invalid)
+	}
+
+	err = k.run.ScaleDeployment(opts)
+	if err != nil {
+		return errors.E(err, "scaling deployment", errors.Internal)
+	}
+
+	return nil
+}
+
 func (k *kubeService) CreateNativeSecret(_ context.Context, opts api.CreateNativeSecretOpts) (*api.NativeSecret, error) {
 	err := opts.Validate()
 	if err != nil {

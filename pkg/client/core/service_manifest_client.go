@@ -17,6 +17,19 @@ type manifestService struct {
 	report  client.ManifestReport
 }
 
+func (s *manifestService) ScaleDeployment(_ context.Context, opts api.ScaleDeploymentOpts) error {
+	err := s.spinner.Start("scale-deployment")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	return s.api.ScaleDeployment(opts)
+}
+
 func (s *manifestService) CreateNativeSecret(_ context.Context, opts client.CreateNativeSecretOpts) (*client.NativeSecret, error) {
 	err := s.spinner.Start("native-secret")
 	if err != nil {

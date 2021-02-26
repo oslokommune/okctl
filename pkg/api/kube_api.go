@@ -178,6 +178,24 @@ type NativeSecret struct {
 	Manifest  []byte
 }
 
+// ScaleDeploymentOpts provides required inputs
+type ScaleDeploymentOpts struct {
+	ID        ID
+	Name      string
+	Namespace string
+	Replicas  int32
+}
+
+// Validate the provided inputs
+func (o ScaleDeploymentOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.Name, validation.Required),
+		validation.Field(&o.Namespace, validation.Required),
+		validation.Field(&o.Replicas, validation.Required),
+	)
+}
+
 // KubeService provides kube deployment service layer
 type KubeService interface {
 	CreateExternalDNSKubeDeployment(ctx context.Context, opts CreateExternalDNSKubeDeploymentOpts) (*ExternalDNSKube, error)
@@ -187,6 +205,7 @@ type KubeService interface {
 	DeleteExternalSecrets(ctx context.Context, opts DeleteExternalSecretsOpts) error
 	CreateNativeSecret(ctx context.Context, opts CreateNativeSecretOpts) (*NativeSecret, error)
 	DeleteNativeSecret(ctx context.Context, opts DeleteNativeSecretOpts) error
+	ScaleDeployment(ctx context.Context, opts ScaleDeploymentOpts) error
 }
 
 // KubeRun provides kube deployment run layer
@@ -198,6 +217,7 @@ type KubeRun interface {
 	DeleteExternalSecrets(opts DeleteExternalSecretsOpts) error
 	CreateNativeSecret(opts CreateNativeSecretOpts) (*NativeSecret, error)
 	DeleteNativeSecret(opts DeleteNativeSecretOpts) error
+	ScaleDeployment(opts ScaleDeploymentOpts) error
 }
 
 // KubeStore provides kube store layer

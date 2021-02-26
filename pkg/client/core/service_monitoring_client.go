@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	lokipkg "github.com/oslokommune/okctl/pkg/loki"
+	"sigs.k8s.io/yaml"
+
 	"github.com/oslokommune/okctl/pkg/helm/charts/promtail"
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/loki"
@@ -47,6 +50,8 @@ const (
 	adminUserName    = "admin-user"
 	adminPassName    = "admin-pass"
 	secretsCfgName   = "grafana-secrets-cm"
+
+	lokiDatasourceSecretName = "loki-datasource"
 )
 
 func grafanaDomain(baseDomain string) string {
@@ -115,7 +120,7 @@ func (s *monitoringService) CreatePromtail(_ context.Context, opts client.Create
 	return l, nil
 }
 
-func (s *monitoringService) DeleteLoki(_ context.Context, opts client.DeleteLokiOpts) error {
+func (s *monitoringService) DeleteLoki(ctx context.Context, opts client.DeleteLokiOpts) error {
 	err := s.spinner.Start("loki")
 	if err != nil {
 		return err
@@ -126,6 +131,12 @@ func (s *monitoringService) DeleteLoki(_ context.Context, opts client.DeleteLoki
 	}()
 
 	chart := loki.New(nil)
+
+	err = s.manifest.DeleteNativeSecret(ctx, client.DeleteNativeSecretOpts{
+		ID:        opts.ID,
+		Name:      lokiDatasourceSecretName,
+		Namespace: config.DefaultMonitoringNamespace,
+	})
 
 	err = s.api.DeleteLoki(api.DeleteHelmReleaseOpts{
 		ID:          opts.ID,
@@ -144,7 +155,7 @@ func (s *monitoringService) DeleteLoki(_ context.Context, opts client.DeleteLoki
 	return s.report.ReportRemoveLoki(report)
 }
 
-func (s *monitoringService) CreateLoki(_ context.Context, opts client.CreateLokiOpts) (*client.Loki, error) {
+func (s *monitoringService) CreateLoki(ctx context.Context, opts client.CreateLokiOpts) (*client.Loki, error) {
 	err := s.spinner.Start("loki")
 	if err != nil {
 		return nil, err
@@ -155,6 +166,26 @@ func (s *monitoringService) CreateLoki(_ context.Context, opts client.CreateLoki
 	}()
 
 	chart, err := s.api.CreateLoki(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := yaml.Marshal(lokipkg.NewDatasourceTemplate())
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.manifest.CreateNativeSecret(ctx, client.CreateNativeSecretOpts{
+		ID:        opts.ID,
+		Name:      lokiDatasourceSecretName,
+		Namespace: config.DefaultMonitoringNamespace,
+		Data: map[string]string{
+			"loki-datasource.yaml": string(data),
+		},
+		Labels: map[string]string{
+			"grafana_datasource": "1",
+		},
+	})
 	if err != nil {
 		return nil, err
 	}

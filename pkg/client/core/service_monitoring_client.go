@@ -190,6 +190,20 @@ func (s *monitoringService) CreateLoki(ctx context.Context, opts client.CreateLo
 		return nil, err
 	}
 
+	// The datasources are only loaded during grafana startup, so we need
+	// to cycle grafana to have it pick up the changes
+	for _, replicas := range []int32{0, 1} {
+		err = s.manifest.ScaleDeployment(ctx, api.ScaleDeploymentOpts{
+			ID:        opts.ID,
+			Name:      config.DefaultKubePrometheusStackGrafanaName,
+			Namespace: config.DefaultMonitoringNamespace,
+			Replicas:  replicas,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	l := &client.Loki{
 		ID:    opts.ID,
 		Chart: chart,

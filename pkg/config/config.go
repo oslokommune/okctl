@@ -50,9 +50,10 @@ const (
 	DefaultChartApplyTimeout  = 5 * time.Minute
 	DefaultChartRemoveTimeout = 5 * time.Minute
 
-	DefaultGithubHost          = "git@github.com"
-	DefaultArgoCDNamespace     = "argocd"
-	DefaultMonitoringNamespace = "monitoring"
+	DefaultGithubHost                     = "git@github.com"
+	DefaultArgoCDNamespace                = "argocd"
+	DefaultMonitoringNamespace            = "monitoring"
+	DefaultKubePrometheusStackGrafanaName = "kube-prometheus-stack-grafana"
 
 	DefaultClusterConfig         = "cluster.yml"
 	DefaultClusterKubeConfig     = "kubeconfig"

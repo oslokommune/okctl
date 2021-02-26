@@ -109,7 +109,27 @@ to have okctl generate a cluster based on the declaration.
 
 That's it. Sit back and enjoy or go do something else while `okctl` does its thing (can take up to an hour).
 
-## Authentication methods
+## Authentication
+
+### Device authentication flow
+
+For `okctl` to be able to interact with Github on your behalf, `okctl` needs do something called the
+`Device Authentication flow`. 
+
+In the beginning of the cluster creation process, `okctl` will ask you to enter a code in
+a browser window. The code will be presented. Copy it and press `Y` and `enter`. `okctl` will open a window in your 
+browser where you can enter the code. 
+
+Copy the code highlighted in red and press `Y` and then `enter`
+![device auth](/img/device-auth.png)
+
+Paste it into the newly opened tab in your browser
+![enter code](/img/enter-code.png)
+
+Press the green "Authorize oslokommune" button
+![authorize](/img/authorize.png)
+
+That's it! You are all set. Switch back to the console and enjoy `okctl` creating your cluster for you.
 
 ### AWS 
 

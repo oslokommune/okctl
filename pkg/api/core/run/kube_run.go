@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/kube/manifests/scale"
+
 	"github.com/oslokommune/okctl/pkg/kube/manifests/secret"
 
 	"github.com/oslokommune/okctl/pkg/kube/manifests/storageclass"
@@ -25,6 +27,25 @@ import (
 type kubeRun struct {
 	provider v1alpha1.CloudProvider
 	auth     aws.Authenticator
+}
+
+func (k *kubeRun) ScaleDeployment(opts api.ScaleDeploymentOpts) error {
+	s := scale.New(opts.Name, opts.Namespace, opts.Replicas)
+
+	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
+	if err != nil {
+		return fmt.Errorf("creating kubernetes client: %w", err)
+	}
+
+	_, err = client.Apply(kube.Applier{
+		Fn:          s.Scale,
+		Description: fmt.Sprintf("scaling deployment: %s, at: %s, to: %d", opts.Name, opts.Namespace, opts.Replicas),
+	})
+	if err != nil {
+		return fmt.Errorf("creating secret: %w", err)
+	}
+
+	return nil
 }
 
 func (k *kubeRun) CreateNativeSecret(opts api.CreateNativeSecretOpts) (*api.NativeSecret, error) {

@@ -48,3 +48,9 @@ func makeDeleteNativeSecret(s api.KubeService) endpoint.Endpoint {
 		return Empty{}, s.DeleteNativeSecret(ctx, request.(api.DeleteNativeSecretOpts))
 	}
 }
+
+func makeScaleDeployment(s api.KubeService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return Empty{}, s.ScaleDeployment(ctx, request.(api.ScaleDeploymentOpts))
+	}
+}

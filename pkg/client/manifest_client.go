@@ -68,6 +68,7 @@ type ManifestService interface {
 	DeleteExternalSecret(ctx context.Context, opts DeleteExternalSecretOpts) error
 	CreateNativeSecret(ctx context.Context, opts CreateNativeSecretOpts) (*NativeSecret, error)
 	DeleteNativeSecret(ctx context.Context, opts DeleteNativeSecretOpts) error
+	ScaleDeployment(ctx context.Context, opts api.ScaleDeploymentOpts) error
 }
 
 // ManifestAPI invokes the API
@@ -78,6 +79,7 @@ type ManifestAPI interface {
 	DeleteExternalSecret(opts api.DeleteExternalSecretsOpts) error
 	CreateNativeSecret(opts api.CreateNativeSecretOpts) (*api.NativeSecret, error)
 	DeleteNativeSecret(opts api.DeleteNativeSecretOpts) error
+	ScaleDeployment(opts api.ScaleDeploymentOpts) error
 }
 
 // ManifestStore defines the storage layer

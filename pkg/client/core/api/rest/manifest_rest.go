@@ -18,8 +18,15 @@ const TargetKubeStorageClasses = "kube/storageclasses/"
 // nolint: gosec
 const TargetKubeNativeSecret = "kube/nativesecrets/"
 
+// TargetKubeScaleDeployment is th API route for the scaling of a deployment
+const TargetKubeScaleDeployment = "kube/scale/"
+
 type manifestAPI struct {
 	client *HTTPClient
+}
+
+func (a *manifestAPI) ScaleDeployment(opts api.ScaleDeploymentOpts) error {
+	return a.client.DoPost(TargetKubeScaleDeployment, &opts, nil)
 }
 
 func (a *manifestAPI) CreateNativeSecret(opts api.CreateNativeSecretOpts) (*api.NativeSecret, error) {

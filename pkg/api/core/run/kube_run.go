@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/kube/manifests/secret"
+
 	"github.com/oslokommune/okctl/pkg/kube/manifests/storageclass"
 
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
@@ -23,6 +25,57 @@ import (
 type kubeRun struct {
 	provider v1alpha1.CloudProvider
 	auth     aws.Authenticator
+}
+
+func (k *kubeRun) CreateNativeSecret(opts api.CreateNativeSecretOpts) (*api.NativeSecretKube, error) {
+	sec := secret.New(opts.Name, opts.Namespace, secret.NewManifest(
+		opts.Name,
+		opts.Namespace,
+		opts.Data,
+		opts.Labels,
+	))
+
+	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
+	if err != nil {
+		return nil, fmt.Errorf("creating kubernetes client: %w", err)
+	}
+
+	_, err = client.Apply(kube.Applier{
+		Fn:          sec.CreateSecret,
+		Description: fmt.Sprintf("creating secret: %s, at: %s", opts.Name, opts.Namespace),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("creating secret: %w", err)
+	}
+
+	data, err := yaml.Marshal(sec.Manifest)
+	if err != nil {
+		return nil, fmt.Errorf("marshalling manifest: %w", err)
+	}
+
+	return &api.NativeSecretKube{
+		ID:        opts.ID,
+		Name:      opts.Name,
+		Namespace: opts.Namespace,
+		Manifest:  data,
+	}, nil
+}
+
+func (k *kubeRun) DeleteNativeSecret(opts api.DeleteNativeSecretOpts) error {
+	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
+	if err != nil {
+		return fmt.Errorf("creating kubernetes client: %w", err)
+	}
+
+	_, err = client.Apply(kube.Applier{
+		Fn:          secret.New(opts.Name, opts.Namespace, nil).DeleteSecret,
+		Description: fmt.Sprintf("deleting secret: %s, from: %s", opts.Name, opts.Namespace),
+	})
+	if err != nil {
+		return fmt.Errorf("deleting secret: %w", err)
+	}
+
+	return nil
 }
 
 func (k *kubeRun) CreateStorageClass(opts api.CreateStorageClassOpts) (*api.StorageClassKube, error) {

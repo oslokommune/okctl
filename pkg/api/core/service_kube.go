@@ -12,6 +12,34 @@ type kubeService struct {
 	store api.KubeStore
 }
 
+func (k *kubeService) CreateNativeSecret(_ context.Context, opts api.CreateNativeSecretOpts) (*api.NativeSecretKube, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, errors.E(err, "validating inputs", errors.Invalid)
+	}
+
+	s, err := k.run.CreateNativeSecret(opts)
+	if err != nil {
+		return nil, errors.E(err, "creating native secret", errors.Internal)
+	}
+
+	return s, nil
+}
+
+func (k *kubeService) DeleteNativeSecret(_ context.Context, opts api.DeleteNativeSecretOpts) error {
+	err := opts.Validate()
+	if err != nil {
+		return errors.E(err, "validating inputs", errors.Invalid)
+	}
+
+	err = k.run.DeleteNativeSecret(opts)
+	if err != nil {
+		return errors.E(err, "removing native secret", errors.Internal)
+	}
+
+	return nil
+}
+
 func (k *kubeService) DeleteExternalSecrets(_ context.Context, opts api.DeleteExternalSecretsOpts) error {
 	err := opts.Validate()
 	if err != nil {

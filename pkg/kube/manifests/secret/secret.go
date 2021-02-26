@@ -15,16 +15,16 @@ import (
 type Secret struct {
 	Name      string
 	Namespace string
-	Secret    *v1.Secret
+	Manifest  *v1.Secret
 	Ctx       context.Context
 }
 
 // New returns an initialised secret creator
-func New(name, namespace string, secret *v1.Secret) *Secret {
+func New(name, namespace string, manifest *v1.Secret) *Secret {
 	return &Secret{
 		Name:      name,
 		Namespace: namespace,
-		Secret:    secret,
+		Manifest:  manifest,
 		Ctx:       context.Background(),
 	}
 }
@@ -77,7 +77,7 @@ func (s *Secret) CreateSecret(clientset kubernetes.Interface, _ *rest.Config) (i
 		}
 	}
 
-	return client.Create(s.Ctx, s.Secret, metav1.CreateOptions{})
+	return client.Create(s.Ctx, s.Manifest, metav1.CreateOptions{})
 }
 
 // NewManifest returns the secret manifest

@@ -3,7 +3,6 @@ package scale
 import (
 	"context"
 
-	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	"k8s.io/client-go/rest"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,14 +28,17 @@ func New(name, namespace string, replicas int32) *Scale {
 func (d *Scale) Scale(_ kubernetes.Interface, config *rest.Config) (interface{}, error) {
 	client := kubernetes.NewForConfigOrDie(config)
 
-	_, err := client.AppsV1().Deployments(d.Namespace).UpdateScale(
+	scale, err := client.AppsV1().Deployments(d.Namespace).GetScale(d.Ctx, d.Name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	scale.Spec.Replicas = d.Replicas
+
+	_, err = client.AppsV1().Deployments(d.Namespace).UpdateScale(
 		d.Ctx,
 		d.Name,
-		&autoscalingv1.Scale{
-			Spec: autoscalingv1.ScaleSpec{
-				Replicas: d.Replicas,
-			},
-		},
+		scale,
 		metav1.UpdateOptions{},
 	)
 	if err != nil {

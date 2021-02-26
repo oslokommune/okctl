@@ -170,8 +170,8 @@ func (o CreateNativeSecretOpts) Validate() error {
 	)
 }
 
-// NativeSecretKube is the state of an external secrets deployment
-type NativeSecretKube struct {
+// NativeSecret is the state of an external secrets deployment
+type NativeSecret struct {
 	ID        ID
 	Name      string
 	Namespace string
@@ -185,7 +185,7 @@ type KubeService interface {
 	CreateStorageClass(ctx context.Context, opts CreateStorageClassOpts) (*StorageClassKube, error)
 	CreateExternalSecrets(ctx context.Context, opts CreateExternalSecretsOpts) (*ExternalSecretsKube, error)
 	DeleteExternalSecrets(ctx context.Context, opts DeleteExternalSecretsOpts) error
-	CreateNativeSecret(ctx context.Context, opts CreateNativeSecretOpts) (*NativeSecretKube, error)
+	CreateNativeSecret(ctx context.Context, opts CreateNativeSecretOpts) (*NativeSecret, error)
 	DeleteNativeSecret(ctx context.Context, opts DeleteNativeSecretOpts) error
 }
 
@@ -196,7 +196,7 @@ type KubeRun interface {
 	CreateStorageClass(opts CreateStorageClassOpts) (*StorageClassKube, error)
 	CreateExternalSecrets(opts CreateExternalSecretsOpts) (*ExternalSecretsKube, error)
 	DeleteExternalSecrets(opts DeleteExternalSecretsOpts) error
-	CreateNativeSecret(opts CreateNativeSecretOpts) (*NativeSecretKube, error)
+	CreateNativeSecret(opts CreateNativeSecretOpts) (*NativeSecret, error)
 	DeleteNativeSecret(opts DeleteNativeSecretOpts) error
 }
 

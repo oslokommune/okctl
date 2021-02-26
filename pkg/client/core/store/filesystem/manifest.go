@@ -15,9 +15,49 @@ import (
 )
 
 type manifestStore struct {
+	nativeSecret   Paths
 	externalSecret Paths
 	storageClass   Paths
 	fs             *afero.Afero
+}
+
+// NativeSecret is stored in the outputs file
+type NativeSecret struct {
+	ID        api.ID
+	Name      string
+	Namespace string
+}
+
+func (s *manifestStore) SaveNativeSecret(secret *client.NativeSecret) (*store.Report, error) {
+	o := &NativeSecret{
+		ID:        secret.ID,
+		Name:      secret.Name,
+		Namespace: secret.Namespace,
+	}
+
+	report, err := store.NewFileSystem(path.Join(
+		s.nativeSecret.BaseDir,
+		slug.Make(fmt.Sprintf("%s-%s", secret.Name, secret.Namespace)),
+	), s.fs).
+		StoreStruct(s.nativeSecret.OutputFile, o, store.ToJSON()).
+		StoreBytes(s.nativeSecret.ConfigFile, secret.Manifest).
+		Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return report, nil
+}
+
+func (s *manifestStore) RemoveNativeSecret(name, namespace string) (*store.Report, error) {
+	return store.NewFileSystem(path.Join(
+		s.nativeSecret.BaseDir,
+		slug.Make(fmt.Sprintf("%s-%s", name, namespace)),
+	), s.fs).
+		Remove(s.nativeSecret.OutputFile).
+		Remove(s.nativeSecret.ConfigFile).
+		RemoveDir("").
+		Do()
 }
 
 // StorageClass is stored in the outputs file
@@ -91,8 +131,9 @@ func (s *manifestStore) SaveExternalSecret(e *client.ExternalSecret) (*store.Rep
 }
 
 // NewManifestStore returns an initialised store
-func NewManifestStore(storageClass, externalSecret Paths, fs *afero.Afero) client.ManifestStore {
+func NewManifestStore(nativeSecret, storageClass, externalSecret Paths, fs *afero.Afero) client.ManifestStore {
 	return &manifestStore{
+		nativeSecret:   nativeSecret,
 		storageClass:   storageClass,
 		externalSecret: externalSecret,
 		fs:             fs,

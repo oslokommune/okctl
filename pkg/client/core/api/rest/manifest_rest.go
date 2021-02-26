@@ -14,8 +14,21 @@ const TargetKubeNamespace = "kube/namespaces/"
 // TargetKubeStorageClasses is the API route for the storage classes
 const TargetKubeStorageClasses = "kube/storageclasses/"
 
+// TargetKubeNativeSecret is the API route for the native secrets
+// nolint: gosec
+const TargetKubeNativeSecret = "kube/nativesecrets/"
+
 type manifestAPI struct {
 	client *HTTPClient
+}
+
+func (a *manifestAPI) CreateNativeSecret(opts api.CreateNativeSecretOpts) (*api.NativeSecret, error) {
+	into := &api.NativeSecret{}
+	return into, a.client.DoPost(TargetKubeNativeSecret, &opts, into)
+}
+
+func (a *manifestAPI) DeleteNativeSecret(opts api.DeleteNativeSecretOpts) error {
+	return a.client.DoDelete(TargetKubeNativeSecret, &opts)
 }
 
 func (a *manifestAPI) DeleteExternalSecret(opts api.DeleteExternalSecretsOpts) error {

@@ -1,3 +1,4 @@
+// Package scale knows how to scale a deployment in Kubernetes
 package scale
 
 import (
@@ -9,6 +10,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// Scale contains the required state for scaling a deployment
 type Scale struct {
 	Name      string
 	Namespace string
@@ -16,6 +18,7 @@ type Scale struct {
 	Ctx       context.Context
 }
 
+// New returns an initialised deployment scaler
 func New(name, namespace string, replicas int32) *Scale {
 	return &Scale{
 		Name:      name,
@@ -25,6 +28,7 @@ func New(name, namespace string, replicas int32) *Scale {
 	}
 }
 
+// Scale the deployment with the provided number of replicas
 func (d *Scale) Scale(_ kubernetes.Interface, config *rest.Config) (interface{}, error) {
 	client := kubernetes.NewForConfigOrDie(config)
 

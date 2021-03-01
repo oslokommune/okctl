@@ -5,8 +5,8 @@ package promtail
 import (
 	"bytes"
 	"text/template"
-	"time"
 
+	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/helm"
 )
 
@@ -19,7 +19,7 @@ func New(values *Values) *helm.Chart {
 		Version:        "3.1.0",
 		Chart:          "promtail",
 		Namespace:      "monitoring",
-		Timeout:        5 * time.Minute, // nolint: gomnd
+		Timeout:        config.DefaultChartApplyTimeout,
 		Values:         values,
 	}
 }

@@ -21,7 +21,7 @@ func New(values *Values) *helm.Chart {
 		Version:        "2.3.0",
 		Chart:          "loki",
 		Namespace:      "monitoring",
-		Timeout:        5 * time.Minute, // nolint: gomnd
+		Timeout:        config.DefaultChartApplyTimeout,
 		Values:         values,
 	}
 }

@@ -63,8 +63,8 @@ func decodeDeleteExternalSecrets(_ context.Context, r *http.Request) (interface{
 	return opts, nil
 }
 
-func decodeCreateNativeSecret(_ context.Context, r *http.Request) (interface{}, error) {
-	var opts api.CreateNativeSecretOpts
+func decodeCreateConfigMap(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.CreateConfigMapOpts
 
 	err := json.NewDecoder(r.Body).Decode(&opts)
 	if err != nil {
@@ -74,8 +74,8 @@ func decodeCreateNativeSecret(_ context.Context, r *http.Request) (interface{}, 
 	return opts, nil
 }
 
-func decodeDeleteNativeSecret(_ context.Context, r *http.Request) (interface{}, error) {
-	var opts api.DeleteNativeSecretOpts
+func decodeDeleteConfigMap(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.DeleteConfigMapOpts
 
 	err := json.NewDecoder(r.Body).Decode(&opts)
 	if err != nil {

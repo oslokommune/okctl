@@ -32,16 +32,16 @@ type StorageClass struct {
 	Manifest []byte
 }
 
-// NativeSecret is the content of a kubernetes secret
-type NativeSecret struct {
+// ConfigMap is the content of a kubernetes configmap
+type ConfigMap struct {
 	ID        api.ID
 	Name      string
 	Namespace string
 	Manifest  []byte
 }
 
-// CreateNativeSecretOpts contains the required inputs
-type CreateNativeSecretOpts struct {
+// CreateConfigMapOpts contains the required inputs
+type CreateConfigMapOpts struct {
 	ID        api.ID
 	Name      string
 	Namespace string
@@ -49,8 +49,8 @@ type CreateNativeSecretOpts struct {
 	Labels    map[string]string
 }
 
-// DeleteNativeSecretOpts contains the required inputs
-type DeleteNativeSecretOpts struct {
+// DeleteConfigMapOpts contains the required inputs
+type DeleteConfigMapOpts struct {
 	ID        api.ID
 	Name      string
 	Namespace string
@@ -66,8 +66,8 @@ type ManifestService interface {
 	CreateStorageClass(ctx context.Context, opts api.CreateStorageClassOpts) (*StorageClass, error)
 	CreateExternalSecret(ctx context.Context, opts CreateExternalSecretOpts) (*ExternalSecret, error)
 	DeleteExternalSecret(ctx context.Context, opts DeleteExternalSecretOpts) error
-	CreateNativeSecret(ctx context.Context, opts CreateNativeSecretOpts) (*NativeSecret, error)
-	DeleteNativeSecret(ctx context.Context, opts DeleteNativeSecretOpts) error
+	CreateConfigMap(ctx context.Context, opts CreateConfigMapOpts) (*ConfigMap, error)
+	DeleteConfigMap(ctx context.Context, opts DeleteConfigMapOpts) error
 	ScaleDeployment(ctx context.Context, opts api.ScaleDeploymentOpts) error
 }
 
@@ -77,8 +77,8 @@ type ManifestAPI interface {
 	CreateStorageClass(opts api.CreateStorageClassOpts) (*api.StorageClassKube, error)
 	CreateExternalSecret(opts CreateExternalSecretOpts) (*api.ExternalSecretsKube, error)
 	DeleteExternalSecret(opts api.DeleteExternalSecretsOpts) error
-	CreateNativeSecret(opts api.CreateNativeSecretOpts) (*api.NativeSecret, error)
-	DeleteNativeSecret(opts api.DeleteNativeSecretOpts) error
+	CreateConfigMap(opts api.CreateConfigMapOpts) (*api.ConfigMap, error)
+	DeleteConfigMap(opts api.DeleteConfigMapOpts) error
 	ScaleDeployment(opts api.ScaleDeploymentOpts) error
 }
 
@@ -87,8 +87,8 @@ type ManifestStore interface {
 	SaveStorageClass(sc *StorageClass) (*store.Report, error)
 	SaveExternalSecret(externalSecret *ExternalSecret) (*store.Report, error)
 	RemoveExternalSecret(secrets map[string]string) (*store.Report, error)
-	SaveNativeSecret(NativeSecret *NativeSecret) (*store.Report, error)
-	RemoveNativeSecret(name, namespace string) (*store.Report, error)
+	SaveConfigMap(ConfigMap *ConfigMap) (*store.Report, error)
+	RemoveConfigMap(name, namespace string) (*store.Report, error)
 }
 
 // ManifestReport defines the report layer
@@ -96,6 +96,6 @@ type ManifestReport interface {
 	SaveStorageClass(sc *StorageClass, report *store.Report) error
 	SaveExternalSecret(secret *ExternalSecret, report *store.Report) error
 	RemoveExternalSecret(report *store.Report) error
-	SaveNativeSecret(secret *NativeSecret, report *store.Report) error
-	RemoveNativeSecret(report *store.Report) error
+	SaveConfigMap(secret *ConfigMap, report *store.Report) error
+	RemoveConfigMap(report *store.Report) error
 }

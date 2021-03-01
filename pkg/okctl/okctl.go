@@ -330,9 +330,9 @@ func (o *Okctl) manifestService(outputDir string, spin spinner.Spinner) client.M
 		rest.NewManifestAPI(o.restClient),
 		clientFilesystem.NewManifestStore(
 			clientFilesystem.Paths{
-				OutputFile: config.DefaultNativeSecretOutputsFile,
-				ConfigFile: config.DefaultNativeSecretConfigFile,
-				BaseDir:    path.Join(outputDir, config.DefaultNativeSecretBaseDir),
+				OutputFile: config.DefaultConfigMapOutputsFile,
+				ConfigFile: config.DefaultConfigMapConfigFile,
+				BaseDir:    path.Join(outputDir, config.DefaultConfigMapBaseDir),
 			},
 			clientFilesystem.Paths{
 				OutputFile: config.DefaultStorageClassOutputsFile,

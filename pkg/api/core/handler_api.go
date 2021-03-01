@@ -71,8 +71,8 @@ type Endpoints struct {
 	DeleteHelmRelease                             endpoint.Endpoint
 	DeleteExternalSecrets                         endpoint.Endpoint
 	CreatePromtailHelmChart                       endpoint.Endpoint
-	CreateNativeSecret                            endpoint.Endpoint
-	DeleteNativeSecret                            endpoint.Endpoint
+	CreateConfigMap                               endpoint.Endpoint
+	DeleteConfigMap                               endpoint.Endpoint
 	ScaleDeployment                               endpoint.Endpoint
 }
 
@@ -135,8 +135,8 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteHelmRelease:                             makeDeleteHelmRelease(s.Helm),
 		DeleteExternalSecrets:                         makeDeleteExternalSecrets(s.Kube),
 		CreatePromtailHelmChart:                       makeCreatePromtailHelmChartEndpoint(s.Helm),
-		CreateNativeSecret:                            makeCreateNativeSecretEndpoint(s.Kube),
-		DeleteNativeSecret:                            makeDeleteNativeSecret(s.Kube),
+		CreateConfigMap:                               makeCreateConfigMapEndpoint(s.Kube),
+		DeleteConfigMap:                               makeDeleteConfigMap(s.Kube),
 		ScaleDeployment:                               makeScaleDeployment(s.Kube),
 	}
 }
@@ -198,8 +198,8 @@ type Handlers struct {
 	DeleteHelmRelease                             http.Handler
 	DeleteExternalSecrets                         http.Handler
 	CreatePromtailHelmChart                       http.Handler
-	CreateNativeSecret                            http.Handler
-	DeleteNativeSecret                            http.Handler
+	CreateConfigMap                               http.Handler
+	DeleteConfigMap                               http.Handler
 	ScaleDeployment                               http.Handler
 }
 
@@ -289,8 +289,8 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteHelmRelease:                             newServer(endpoints.DeleteHelmRelease, decodeDeleteHelmRelease),
 		DeleteExternalSecrets:                         newServer(endpoints.DeleteExternalSecrets, decodeDeleteExternalSecrets),
 		CreatePromtailHelmChart:                       newServer(endpoints.CreatePromtailHelmChart, decodeCreatePromtailHelmChart),
-		CreateNativeSecret:                            newServer(endpoints.CreateNativeSecret, decodeCreateNativeSecret),
-		DeleteNativeSecret:                            newServer(endpoints.DeleteNativeSecret, decodeDeleteNativeSecret),
+		CreateConfigMap:                               newServer(endpoints.CreateConfigMap, decodeCreateConfigMap),
+		DeleteConfigMap:                               newServer(endpoints.DeleteConfigMap, decodeDeleteConfigMap),
 		ScaleDeployment:                               newServer(endpoints.ScaleDeployment, decodeScaleDeployment),
 	}
 }
@@ -407,9 +407,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			r.Route("/storageclasses", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateStorageClass)
 			})
-			r.Route("/nativesecrets", func(r chi.Router) {
-				r.Method(http.MethodPost, "/", handlers.CreateNativeSecret)
-				r.Method(http.MethodDelete, "/", handlers.DeleteNativeSecret)
+			r.Route("/configmaps", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateConfigMap)
+				r.Method(http.MethodDelete, "/", handlers.DeleteConfigMap)
 			})
 			r.Route("/scale", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.ScaleDeployment)
@@ -500,7 +500,7 @@ const (
 	lokiTag                      = "loki"
 	releasesTag                  = "releases"
 	promtailTag                  = "promtail"
-	nativeSecretTag              = "nativesecret"
+	configMapTag                 = "configmap"
 	scaleTag                     = "scale"
 )
 
@@ -564,8 +564,8 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteHelmRelease:                             logmd.Logging(logger, strings.Join([]string{helmTag, releasesTag}, "/"), "delete")(endpoints.DeleteHelmRelease),
 			DeleteExternalSecrets:                         logmd.Logging(logger, strings.Join([]string{kubeTag, externalSecretsTag}, "/"), "delete")(endpoints.DeleteExternalSecrets),
 			CreatePromtailHelmChart:                       logmd.Logging(logger, strings.Join([]string{helmTag, promtailTag}, "/"), "create")(endpoints.CreatePromtailHelmChart),
-			CreateNativeSecret:                            logmd.Logging(logger, strings.Join([]string{kubeTag, nativeSecretTag}, "/"), "create")(endpoints.CreateNativeSecret),
-			DeleteNativeSecret:                            logmd.Logging(logger, strings.Join([]string{kubeTag, nativeSecretTag}, "/"), "delete")(endpoints.DeleteNativeSecret),
+			CreateConfigMap:                               logmd.Logging(logger, strings.Join([]string{kubeTag, configMapTag}, "/"), "create")(endpoints.CreateConfigMap),
+			DeleteConfigMap:                               logmd.Logging(logger, strings.Join([]string{kubeTag, configMapTag}, "/"), "delete")(endpoints.DeleteConfigMap),
 			ScaleDeployment:                               logmd.Logging(logger, strings.Join([]string{kubeTag, scaleTag}, "/"), "create")(endpoints.ScaleDeployment),
 		}
 	}

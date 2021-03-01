@@ -15,32 +15,32 @@ import (
 )
 
 type manifestStore struct {
-	nativeSecret   Paths
+	configMap      Paths
 	externalSecret Paths
 	storageClass   Paths
 	fs             *afero.Afero
 }
 
-// NativeSecret is stored in the outputs file
-type NativeSecret struct {
+// ConfigMap is stored in the outputs file
+type ConfigMap struct {
 	ID        api.ID
 	Name      string
 	Namespace string
 }
 
-func (s *manifestStore) SaveNativeSecret(secret *client.NativeSecret) (*store.Report, error) {
-	o := &NativeSecret{
+func (s *manifestStore) SaveConfigMap(secret *client.ConfigMap) (*store.Report, error) {
+	o := &ConfigMap{
 		ID:        secret.ID,
 		Name:      secret.Name,
 		Namespace: secret.Namespace,
 	}
 
 	report, err := store.NewFileSystem(path.Join(
-		s.nativeSecret.BaseDir,
+		s.configMap.BaseDir,
 		slug.Make(fmt.Sprintf("%s-%s", secret.Name, secret.Namespace)),
 	), s.fs).
-		StoreStruct(s.nativeSecret.OutputFile, o, store.ToJSON()).
-		StoreBytes(s.nativeSecret.ConfigFile, secret.Manifest).
+		StoreStruct(s.configMap.OutputFile, o, store.ToJSON()).
+		StoreBytes(s.configMap.ConfigFile, secret.Manifest).
 		Do()
 	if err != nil {
 		return nil, err
@@ -49,13 +49,13 @@ func (s *manifestStore) SaveNativeSecret(secret *client.NativeSecret) (*store.Re
 	return report, nil
 }
 
-func (s *manifestStore) RemoveNativeSecret(name, namespace string) (*store.Report, error) {
+func (s *manifestStore) RemoveConfigMap(name, namespace string) (*store.Report, error) {
 	return store.NewFileSystem(path.Join(
-		s.nativeSecret.BaseDir,
+		s.configMap.BaseDir,
 		slug.Make(fmt.Sprintf("%s-%s", name, namespace)),
 	), s.fs).
-		Remove(s.nativeSecret.OutputFile).
-		Remove(s.nativeSecret.ConfigFile).
+		Remove(s.configMap.OutputFile).
+		Remove(s.configMap.ConfigFile).
 		RemoveDir("").
 		Do()
 }
@@ -131,9 +131,9 @@ func (s *manifestStore) SaveExternalSecret(e *client.ExternalSecret) (*store.Rep
 }
 
 // NewManifestStore returns an initialised store
-func NewManifestStore(nativeSecret, storageClass, externalSecret Paths, fs *afero.Afero) client.ManifestStore {
+func NewManifestStore(configMap, storageClass, externalSecret Paths, fs *afero.Afero) client.ManifestStore {
 	return &manifestStore{
-		nativeSecret:   nativeSecret,
+		configMap:      configMap,
 		storageClass:   storageClass,
 		externalSecret: externalSecret,
 		fs:             fs,

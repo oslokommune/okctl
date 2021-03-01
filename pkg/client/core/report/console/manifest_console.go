@@ -15,19 +15,19 @@ type manifestReport struct {
 	console *Console
 }
 
-func (r *manifestReport) SaveNativeSecret(secret *client.NativeSecret, report *store.Report) error {
+func (r *manifestReport) SaveConfigMap(secret *client.ConfigMap, report *store.Report) error {
 	return r.console.Report(
 		report.Actions,
 		"manifest",
-		fmt.Sprintf("%s (%s)", aurora.Green("native-secret").String(), secret.Name),
+		fmt.Sprintf("%s (%s)", aurora.Green("config-map").String(), secret.Name),
 	)
 }
 
-func (r *manifestReport) RemoveNativeSecret(report *store.Report) error {
+func (r *manifestReport) RemoveConfigMap(report *store.Report) error {
 	return r.console.Report(
 		report.Actions,
 		"manifest",
-		aurora.Green("native-secret").String(),
+		aurora.Green("config-map").String(),
 	)
 }
 

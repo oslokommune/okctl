@@ -30,7 +30,7 @@ func (s *manifestService) ScaleDeployment(_ context.Context, opts api.ScaleDeplo
 	return s.api.ScaleDeployment(opts)
 }
 
-func (s *manifestService) CreateNativeSecret(_ context.Context, opts client.CreateNativeSecretOpts) (*client.NativeSecret, error) {
+func (s *manifestService) CreateConfigMap(_ context.Context, opts client.CreateConfigMapOpts) (*client.ConfigMap, error) {
 	err := s.spinner.Start("native-secret")
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (s *manifestService) CreateNativeSecret(_ context.Context, opts client.Crea
 		err = s.spinner.Stop()
 	}()
 
-	secret, err := s.api.CreateNativeSecret(api.CreateNativeSecretOpts{
+	secret, err := s.api.CreateConfigMap(api.CreateConfigMapOpts{
 		ID:        opts.ID,
 		Name:      opts.Name,
 		Namespace: opts.Namespace,
@@ -51,19 +51,19 @@ func (s *manifestService) CreateNativeSecret(_ context.Context, opts client.Crea
 		return nil, err
 	}
 
-	sec := &client.NativeSecret{
+	sec := &client.ConfigMap{
 		ID:        secret.ID,
 		Name:      secret.Name,
 		Namespace: secret.Namespace,
 		Manifest:  secret.Manifest,
 	}
 
-	report, err := s.store.SaveNativeSecret(sec)
+	report, err := s.store.SaveConfigMap(sec)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.report.SaveNativeSecret(sec, report)
+	err = s.report.SaveConfigMap(sec, report)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (s *manifestService) CreateNativeSecret(_ context.Context, opts client.Crea
 	return sec, nil
 }
 
-func (s *manifestService) DeleteNativeSecret(_ context.Context, opts client.DeleteNativeSecretOpts) error {
+func (s *manifestService) DeleteConfigMap(_ context.Context, opts client.DeleteConfigMapOpts) error {
 	err := s.spinner.Start("native-secret")
 	if err != nil {
 		return err
@@ -81,18 +81,18 @@ func (s *manifestService) DeleteNativeSecret(_ context.Context, opts client.Dele
 		err = s.spinner.Stop()
 	}()
 
-	err = s.api.DeleteNativeSecret(api.DeleteNativeSecretOpts{
+	err = s.api.DeleteConfigMap(api.DeleteConfigMapOpts{
 		ID:        opts.ID,
 		Name:      opts.Name,
 		Namespace: opts.Namespace,
 	})
 
-	report, err := s.store.RemoveNativeSecret(opts.Name, opts.Namespace)
+	report, err := s.store.RemoveConfigMap(opts.Name, opts.Namespace)
 	if err != nil {
 		return err
 	}
 
-	return s.report.RemoveNativeSecret(report)
+	return s.report.RemoveConfigMap(report)
 }
 
 func (s *manifestService) DeleteExternalSecret(_ context.Context, opts client.DeleteExternalSecretOpts) error {

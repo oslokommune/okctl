@@ -1,4 +1,4 @@
-package secret_test
+package configmap_test
 
 import (
 	"testing"
@@ -7,19 +7,19 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/oslokommune/okctl/pkg/kube/manifests/secret"
+	"github.com/oslokommune/okctl/pkg/kube/manifests/configmap"
 	"github.com/sebdah/goldie/v2"
 )
 
 func TestNew(t *testing.T) {
 	testCases := []struct {
-		name   string
-		secret *secret.Secret
+		name      string
+		configMap *configmap.ConfigMap
 	}{
 		{
 			name: "Should work",
-			secret: secret.New("name", "default",
-				secret.NewManifest(
+			configMap: configmap.New("name", "default",
+				configmap.NewManifest(
 					"name",
 					"default",
 					map[string]string{
@@ -37,10 +37,10 @@ func TestNew(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			g := goldie.New(t)
 
-			dm := tc.secret.Manifest
+			dm := tc.configMap.Manifest
 			db, err := yaml.Marshal(dm)
 			assert.NoError(t, err)
-			g.Assert(t, "secret.yaml", db)
+			g.Assert(t, "configMap.yaml", db)
 		})
 	}
 }

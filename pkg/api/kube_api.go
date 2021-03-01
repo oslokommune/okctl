@@ -134,15 +134,15 @@ func (o CreateStorageClassOpts) Validate() error {
 	)
 }
 
-// DeleteNativeSecretOpts contains the required inputs
-type DeleteNativeSecretOpts struct {
+// DeleteConfigMapOpts contains the required inputs
+type DeleteConfigMapOpts struct {
 	ID        ID
 	Name      string
 	Namespace string
 }
 
 // Validate the provided inputs
-func (o DeleteNativeSecretOpts) Validate() error {
+func (o DeleteConfigMapOpts) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.Name, validation.Required),
@@ -150,8 +150,8 @@ func (o DeleteNativeSecretOpts) Validate() error {
 	)
 }
 
-// CreateNativeSecretOpts contains the required inputs
-type CreateNativeSecretOpts struct {
+// CreateConfigMapOpts contains the required inputs
+type CreateConfigMapOpts struct {
 	ID        ID
 	Name      string
 	Namespace string
@@ -160,7 +160,7 @@ type CreateNativeSecretOpts struct {
 }
 
 // Validate the inputs
-func (o CreateNativeSecretOpts) Validate() error {
+func (o CreateConfigMapOpts) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.Name, validation.Required),
@@ -170,8 +170,8 @@ func (o CreateNativeSecretOpts) Validate() error {
 	)
 }
 
-// NativeSecret is the state of an external secrets deployment
-type NativeSecret struct {
+// ConfigMap is the state of a kubernetes configmap
+type ConfigMap struct {
 	ID        ID
 	Name      string
 	Namespace string
@@ -202,8 +202,8 @@ type KubeService interface {
 	CreateStorageClass(ctx context.Context, opts CreateStorageClassOpts) (*StorageClassKube, error)
 	CreateExternalSecrets(ctx context.Context, opts CreateExternalSecretsOpts) (*ExternalSecretsKube, error)
 	DeleteExternalSecrets(ctx context.Context, opts DeleteExternalSecretsOpts) error
-	CreateNativeSecret(ctx context.Context, opts CreateNativeSecretOpts) (*NativeSecret, error)
-	DeleteNativeSecret(ctx context.Context, opts DeleteNativeSecretOpts) error
+	CreateConfigMap(ctx context.Context, opts CreateConfigMapOpts) (*ConfigMap, error)
+	DeleteConfigMap(ctx context.Context, opts DeleteConfigMapOpts) error
 	ScaleDeployment(ctx context.Context, opts ScaleDeploymentOpts) error
 }
 
@@ -214,8 +214,8 @@ type KubeRun interface {
 	CreateStorageClass(opts CreateStorageClassOpts) (*StorageClassKube, error)
 	CreateExternalSecrets(opts CreateExternalSecretsOpts) (*ExternalSecretsKube, error)
 	DeleteExternalSecrets(opts DeleteExternalSecretsOpts) error
-	CreateNativeSecret(opts CreateNativeSecretOpts) (*NativeSecret, error)
-	DeleteNativeSecret(opts DeleteNativeSecretOpts) error
+	CreateConfigMap(opts CreateConfigMapOpts) (*ConfigMap, error)
+	DeleteConfigMap(opts DeleteConfigMapOpts) error
 	ScaleDeployment(opts ScaleDeploymentOpts) error
 }
 

@@ -14,9 +14,9 @@ const TargetKubeNamespace = "kube/namespaces/"
 // TargetKubeStorageClasses is the API route for the storage classes
 const TargetKubeStorageClasses = "kube/storageclasses/"
 
-// TargetKubeNativeSecret is the API route for the native secrets
+// TargetKubeConfigMap is the API route for the native secrets
 // nolint: gosec
-const TargetKubeNativeSecret = "kube/nativesecrets/"
+const TargetKubeConfigMap = "kube/configmaps/"
 
 // TargetKubeScaleDeployment is th API route for the scaling of a deployment
 const TargetKubeScaleDeployment = "kube/scale/"
@@ -29,13 +29,13 @@ func (a *manifestAPI) ScaleDeployment(opts api.ScaleDeploymentOpts) error {
 	return a.client.DoPost(TargetKubeScaleDeployment, &opts, nil)
 }
 
-func (a *manifestAPI) CreateNativeSecret(opts api.CreateNativeSecretOpts) (*api.NativeSecret, error) {
-	into := &api.NativeSecret{}
-	return into, a.client.DoPost(TargetKubeNativeSecret, &opts, into)
+func (a *manifestAPI) CreateConfigMap(opts api.CreateConfigMapOpts) (*api.ConfigMap, error) {
+	into := &api.ConfigMap{}
+	return into, a.client.DoPost(TargetKubeConfigMap, &opts, into)
 }
 
-func (a *manifestAPI) DeleteNativeSecret(opts api.DeleteNativeSecretOpts) error {
-	return a.client.DoDelete(TargetKubeNativeSecret, &opts)
+func (a *manifestAPI) DeleteConfigMap(opts api.DeleteConfigMapOpts) error {
+	return a.client.DoDelete(TargetKubeConfigMap, &opts)
 }
 
 func (a *manifestAPI) DeleteExternalSecret(opts api.DeleteExternalSecretsOpts) error {

@@ -1,9 +1,8 @@
 apiVersion: v1
-kind: Secret
+data:
+  hi: there
+kind: ConfigMap
 metadata:
   creationTimestamp: null
   name: name
   namespace: default
-stringData:
-  hi: there
-type: Opaque

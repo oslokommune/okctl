@@ -37,15 +37,15 @@ func makeDeleteExternalSecrets(s api.KubeService) endpoint.Endpoint {
 	}
 }
 
-func makeCreateNativeSecretEndpoint(s api.KubeService) endpoint.Endpoint {
+func makeCreateConfigMapEndpoint(s api.KubeService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateNativeSecret(ctx, request.(api.CreateNativeSecretOpts))
+		return s.CreateConfigMap(ctx, request.(api.CreateConfigMapOpts))
 	}
 }
 
-func makeDeleteNativeSecret(s api.KubeService) endpoint.Endpoint {
+func makeDeleteConfigMap(s api.KubeService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return Empty{}, s.DeleteNativeSecret(ctx, request.(api.DeleteNativeSecretOpts))
+		return Empty{}, s.DeleteConfigMap(ctx, request.(api.DeleteConfigMapOpts))
 	}
 }
 

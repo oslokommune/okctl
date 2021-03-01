@@ -6,7 +6,7 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/kube/manifests/scale"
 
-	"github.com/oslokommune/okctl/pkg/kube/manifests/secret"
+	"github.com/oslokommune/okctl/pkg/kube/manifests/configmap"
 
 	"github.com/oslokommune/okctl/pkg/kube/manifests/storageclass"
 
@@ -42,14 +42,14 @@ func (k *kubeRun) ScaleDeployment(opts api.ScaleDeploymentOpts) error {
 		Description: fmt.Sprintf("scaling deployment: %s, at: %s, to: %d", opts.Name, opts.Namespace, opts.Replicas),
 	})
 	if err != nil {
-		return fmt.Errorf("creating secret: %w", err)
+		return fmt.Errorf("scaling deployment: %w", err)
 	}
 
 	return nil
 }
 
-func (k *kubeRun) CreateNativeSecret(opts api.CreateNativeSecretOpts) (*api.NativeSecret, error) {
-	sec := secret.New(opts.Name, opts.Namespace, secret.NewManifest(
+func (k *kubeRun) CreateConfigMap(opts api.CreateConfigMapOpts) (*api.ConfigMap, error) {
+	sec := configmap.New(opts.Name, opts.Namespace, configmap.NewManifest(
 		opts.Name,
 		opts.Namespace,
 		opts.Data,
@@ -62,11 +62,11 @@ func (k *kubeRun) CreateNativeSecret(opts api.CreateNativeSecretOpts) (*api.Nati
 	}
 
 	_, err = client.Apply(kube.Applier{
-		Fn:          sec.CreateSecret,
-		Description: fmt.Sprintf("creating secret: %s, at: %s", opts.Name, opts.Namespace),
+		Fn:          sec.CreateConfigMap,
+		Description: fmt.Sprintf("creating configmap: %s, at: %s", opts.Name, opts.Namespace),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("creating secret: %w", err)
+		return nil, fmt.Errorf("creating configmap: %w", err)
 	}
 
 	data, err := yaml.Marshal(sec.Manifest)
@@ -74,7 +74,7 @@ func (k *kubeRun) CreateNativeSecret(opts api.CreateNativeSecretOpts) (*api.Nati
 		return nil, fmt.Errorf("marshalling manifest: %w", err)
 	}
 
-	return &api.NativeSecret{
+	return &api.ConfigMap{
 		ID:        opts.ID,
 		Name:      opts.Name,
 		Namespace: opts.Namespace,
@@ -82,18 +82,18 @@ func (k *kubeRun) CreateNativeSecret(opts api.CreateNativeSecretOpts) (*api.Nati
 	}, nil
 }
 
-func (k *kubeRun) DeleteNativeSecret(opts api.DeleteNativeSecretOpts) error {
+func (k *kubeRun) DeleteConfigMap(opts api.DeleteConfigMapOpts) error {
 	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
 	if err != nil {
 		return fmt.Errorf("creating kubernetes client: %w", err)
 	}
 
 	_, err = client.Apply(kube.Applier{
-		Fn:          secret.New(opts.Name, opts.Namespace, nil).DeleteSecret,
-		Description: fmt.Sprintf("deleting secret: %s, from: %s", opts.Name, opts.Namespace),
+		Fn:          configmap.New(opts.Name, opts.Namespace, nil).DeleteConfigMap,
+		Description: fmt.Sprintf("deleting configmap: %s, from: %s", opts.Name, opts.Namespace),
 	})
 	if err != nil {
-		return fmt.Errorf("deleting secret: %w", err)
+		return fmt.Errorf("deleting configmap: %w", err)
 	}
 
 	return nil

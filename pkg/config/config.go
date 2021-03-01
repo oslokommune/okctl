@@ -88,10 +88,10 @@ const (
 	DefaultDomainOutputsFile                 = "domains-outputs.json"
 	DefaultExternalDNSBaseDir                = "external-dns"
 	DefaultExternalSecretsBaseDir            = "external-secrets"
-	DefaultNativeSecretBaseDir               = "nativesecret"
-	DefaultNativeSecretConfigFile            = "nativesecret.yml"
+	DefaultConfigMapBaseDir                  = "configmap"
+	DefaultConfigMapConfigFile               = "configmap.yml"
 	// nolint: gosec
-	DefaultNativeSecretOutputsFile                  = "ns-outputs.json"
+	DefaultConfigMapOutputsFile                     = "ns-outputs.json"
 	DefaultStorageClassBaseDir                      = "storageclass"
 	DefaultStorageClassConfigFile                   = "storageclass.yml"
 	DefaultStorageClassOutputsFile                  = "sc-outputs.json"

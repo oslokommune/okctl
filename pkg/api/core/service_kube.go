@@ -26,29 +26,29 @@ func (k *kubeService) ScaleDeployment(_ context.Context, opts api.ScaleDeploymen
 	return nil
 }
 
-func (k *kubeService) CreateNativeSecret(_ context.Context, opts api.CreateNativeSecretOpts) (*api.NativeSecret, error) {
+func (k *kubeService) CreateConfigMap(_ context.Context, opts api.CreateConfigMapOpts) (*api.ConfigMap, error) {
 	err := opts.Validate()
 	if err != nil {
 		return nil, errors.E(err, "validating inputs", errors.Invalid)
 	}
 
-	s, err := k.run.CreateNativeSecret(opts)
+	s, err := k.run.CreateConfigMap(opts)
 	if err != nil {
-		return nil, errors.E(err, "creating native secret", errors.Internal)
+		return nil, errors.E(err, "creating configmap", errors.Internal)
 	}
 
 	return s, nil
 }
 
-func (k *kubeService) DeleteNativeSecret(_ context.Context, opts api.DeleteNativeSecretOpts) error {
+func (k *kubeService) DeleteConfigMap(_ context.Context, opts api.DeleteConfigMapOpts) error {
 	err := opts.Validate()
 	if err != nil {
 		return errors.E(err, "validating inputs", errors.Invalid)
 	}
 
-	err = k.run.DeleteNativeSecret(opts)
+	err = k.run.DeleteConfigMap(opts)
 	if err != nil {
-		return errors.E(err, "removing native secret", errors.Internal)
+		return errors.E(err, "removing configmap", errors.Internal)
 	}
 
 	return nil

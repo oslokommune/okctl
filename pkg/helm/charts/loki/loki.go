@@ -6,7 +6,8 @@ package loki
 import (
 	"bytes"
 	"text/template"
-	"time"
+
+	"github.com/oslokommune/okctl/pkg/config"
 
 	"github.com/oslokommune/okctl/pkg/helm"
 )

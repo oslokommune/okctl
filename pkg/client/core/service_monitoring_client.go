@@ -51,7 +51,7 @@ const (
 	adminPassName    = "admin-pass"
 	secretsCfgName   = "grafana-secrets-cm"
 
-	lokiDatasourceSecretName = "loki-datasource"
+	lokiDatasourceConfigMapName = "loki-datasource"
 )
 
 func grafanaDomain(baseDomain string) string {
@@ -132,9 +132,9 @@ func (s *monitoringService) DeleteLoki(ctx context.Context, opts client.DeleteLo
 
 	chart := loki.New(nil)
 
-	err = s.manifest.DeleteNativeSecret(ctx, client.DeleteNativeSecretOpts{
+	err = s.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
 		ID:        opts.ID,
-		Name:      lokiDatasourceSecretName,
+		Name:      lokiDatasourceConfigMapName,
 		Namespace: config.DefaultMonitoringNamespace,
 	})
 
@@ -155,6 +155,7 @@ func (s *monitoringService) DeleteLoki(ctx context.Context, opts client.DeleteLo
 	return s.report.ReportRemoveLoki(report)
 }
 
+// nolint: funlen
 func (s *monitoringService) CreateLoki(ctx context.Context, opts client.CreateLokiOpts) (*client.Loki, error) {
 	err := s.spinner.Start("loki")
 	if err != nil {
@@ -175,9 +176,9 @@ func (s *monitoringService) CreateLoki(ctx context.Context, opts client.CreateLo
 		return nil, err
 	}
 
-	_, err = s.manifest.CreateNativeSecret(ctx, client.CreateNativeSecretOpts{
+	_, err = s.manifest.CreateConfigMap(ctx, client.CreateConfigMapOpts{
 		ID:        opts.ID,
-		Name:      lokiDatasourceSecretName,
+		Name:      lokiDatasourceConfigMapName,
 		Namespace: config.DefaultMonitoringNamespace,
 		Data: map[string]string{
 			"loki-datasource.yaml": string(data),

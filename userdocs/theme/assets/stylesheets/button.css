@@ -28,9 +28,15 @@
     background-color: white;
 
     color: black !important;
+
+    border: 2px solid #f9c66b;
+    border-radius: 4px;
 }
 
 .okctl-button.secondary:hover {
     color: #2A2859 !important;
+
+    border: 2px solid #2A2859;
+    border-radius: 4px;
 }
 

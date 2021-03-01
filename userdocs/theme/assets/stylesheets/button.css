@@ -20,7 +20,7 @@
 }
 
 .okctl-button.primary:hover {
-    background: black;
+    background: #2A2859;
     color: white !important;
 }
 
@@ -31,6 +31,6 @@
 }
 
 .okctl-button.secondary:hover {
-    color: #f9c66b !important;
+    color: #2A2859 !important;
 }
 

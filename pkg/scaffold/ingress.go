@@ -2,6 +2,7 @@ package scaffold
 
 import (
 	"fmt"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/url"
 
 	kaex "github.com/oslokommune/kaex/pkg/api"
@@ -60,4 +61,20 @@ func createOkctlIngress(app kaex.Application, certificateCreatorFn CertificateCr
 	}
 
 	return &ingress, nil
+}
+
+func createOkctlIngressOverlay() (ingress *networkingv1.Ingress, err error) {
+	ingress = &networkingv1.Ingress{
+		TypeMeta:   createIngressTypeMeta(),
+		ObjectMeta: v1.ObjectMeta{},
+	}
+
+	return ingress, nil
+}
+
+func createIngressTypeMeta() (meta v1.TypeMeta) {
+	return v1.TypeMeta{
+		Kind:       "Ingress",
+		APIVersion: "networking.k8s.io/v1beta1",
+	}
 }

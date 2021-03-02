@@ -7,17 +7,17 @@ import (
 type OperationType int
 
 const (
-	//OperationTypeAdd represents an add operation
+	// OperationTypeAdd represents an add operation
 	OperationTypeAdd OperationType = iota
-	//OperationTypeRemove represents a remove operation
+	// OperationTypeRemove represents a remove operation
 	OperationTypeRemove
-	//OperationTypeReplace represents a replace operation
+	// OperationTypeReplace represents a replace operation
 	OperationTypeReplace
-	//OperationTypeMove represents a move operation
+	// OperationTypeMove represents a move operation
 	OperationTypeMove
-	//OperationTypeCopy represents a copy operation
+	// OperationTypeCopy represents a copy operation
 	OperationTypeCopy
-	//OperationTypeTest represents a test operation
+	// OperationTypeTest represents a test operation
 	OperationTypeTest
 )
 
@@ -50,7 +50,7 @@ type Patch struct {
 	Operations []Operation `json:",inline"`
 }
 
-//MarshalJSON knows how to turn a Patch into a kustomize patch.json
+// MarshalJSON knows how to turn a Patch into a kustomize patch.json
 func (p Patch) MarshalJSON() ([]byte, error) {
 	type serializedOperation struct {
 		Type  string      `json:"op"`

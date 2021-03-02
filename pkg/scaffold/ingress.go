@@ -2,6 +2,7 @@ package scaffold
 
 import (
 	"fmt"
+
 	kaex "github.com/oslokommune/kaex/pkg/api"
 	networkingv1 "k8s.io/api/networking/v1beta1"
 	intstrutil "k8s.io/apimachinery/pkg/util/intstr"

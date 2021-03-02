@@ -4,28 +4,25 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/spf13/afero"
+	"github.com/sebdah/goldie/v2"
 
 	"github.com/oslokommune/okctl/pkg/scaffold"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestInterpolateTemplate(t *testing.T) {
+func TestGenerateTemplate(t *testing.T) {
 	testCases := []struct {
 		name string
 
-		withTemplate []byte
-		withOpts     *scaffold.InterpolationOpts
+		withOpts *scaffold.InterpolationOpts
 
-		expect []byte
+		withGolden string
 	}{
 		{
-			name: "Should interpolate the specified field when specified",
-
-			withTemplate: []byte("name: a name\nurl: my-domain.io\nsomethingelse: yes\n"),
-			withOpts:     &scaffold.InterpolationOpts{Domain: "works.com"},
-
-			expect: []byte("name: a name\nurl: <app-name>.works.com\nsomethingelse: yes\n"),
+			name:       "Should scaffold okctl application",
+			withOpts:   &scaffold.InterpolationOpts{},
+			withGolden: "scaffoldOkctlApplication",
 		},
 	}
 
@@ -33,15 +30,59 @@ func TestInterpolateTemplate(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			result, err := scaffold.InterpolateTemplate(tc.withTemplate, tc.withOpts)
-			if err != nil {
-				t.Error(err)
-			}
+			// Generate template
+			interpolatedApp, err := scaffold.GenerateOkctlAppTemplate(tc.withOpts)
+			assert.Nil(t, err)
 
-			assert.Equal(t, tc.expect, result)
+			// Interpolate template
+			fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+			scaffoldPath := "scaffoldedApplication.yaml"
+
+			err = scaffold.SaveOkctlAppTemplate(fs, scaffoldPath, interpolatedApp)
+
+			// Then
+			assert.Nil(t, err)
+			scaffolded, err := fs.ReadFile(scaffoldPath)
+
+			g := goldie.New(t)
+			g.Assert(t, tc.withGolden, scaffolded)
 		})
 	}
 }
+
+//
+//func TestInterpolateTemplate(t *testing.T) {
+//	testCases := []struct {
+//		name string
+//
+//		withTemplate []byte
+//		withOpts     *scaffold.InterpolationOpts
+//
+//		expect []byte
+//	}{
+//		{
+//			name: "Should interpolate the specified field when specified",
+//
+//			withTemplate: []byte("name: a name\nurl: my-domain.io\nsomethingelse: yes\n"),
+//			withOpts:     &scaffold.InterpolationOpts{Domain: "works.com"},
+//
+//			expect: []byte("name: a name\nurl: <app-name>.works.com\nsomethingelse: yes\n"),
+//		},
+//	}
+//
+//	for _, tc := range testCases {
+//		tc := tc
+//
+//		t.Run(tc.name, func(t *testing.T) {
+//			result, err := scaffold.InterpolateTemplate(tc.withTemplate, tc.withOpts)
+//			if err != nil {
+//				t.Error(err)
+//			}
+//
+//			assert.Equal(t, tc.expect, result)
+//		})
+//	}
+//}
 
 func TestSaveTemplate(t *testing.T) {
 	testCases := []struct {
@@ -64,7 +105,7 @@ func TestSaveTemplate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			fs := &afero.Afero{Fs: afero.NewMemMapFs()}
 
-			err := scaffold.SaveTemplate(fs, tc.withPath, tc.withTemplate)
+			err := scaffold.SaveOkctlAppTemplate(fs, tc.withPath, tc.withTemplate)
 			if err != nil {
 				t.Fatal(err)
 			}

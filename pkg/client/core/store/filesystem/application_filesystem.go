@@ -24,7 +24,7 @@ func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplica
 	report, err := store.NewFileSystem(baseDir, s.fs).
 		StoreBytes(fmt.Sprintf("%s.yaml", application.ApplicationName), application.KubernetesResources).
 		StoreBytes(fmt.Sprintf("%s-application.yaml", application.ApplicationName), application.ArgoCDResource).
-		StoreBytes(path.Join(overlayDir, fmt.Sprintf("ingress-patch.json")), application.ArgoCDResource).
+		StoreBytes(path.Join(overlayDir, fmt.Sprintf("ingress-patch.json")), application.ArgoCDResource). // TODO: Get something from kaex app ingress. Overlay details. Kustomization.yaml, deployment-patch, other-patch
 		Do()
 	if err != nil {
 		return nil, fmt.Errorf("failed to store application resources: %w", err)

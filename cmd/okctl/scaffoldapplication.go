@@ -65,17 +65,12 @@ func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			template, err := scaffold.FetchTemplate(*opts.KaexOpts)
-			if err != nil {
-				return fmt.Errorf("failed fetching application.yaml example: %w", err)
-			}
-
-			interpolatedResult, err := scaffold.InterpolateTemplate(template, interpolationOpts)
+			okctlAppTemplate, err := scaffold.GenerateOkctlAppTemplate(interpolationOpts)
 			if err != nil {
 				return err
 			}
 
-			err = scaffold.SaveTemplate(o.FileSystem, opts.Outfile, interpolatedResult)
+			err = scaffold.SaveOkctlAppTemplate(o.FileSystem, opts.Outfile, okctlAppTemplate)
 			if err != nil {
 				return err
 			}

@@ -2,9 +2,6 @@ package scaffold
 
 import (
 	"fmt"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"net/url"
-
 	kaex "github.com/oslokommune/kaex/pkg/api"
 	networkingv1 "k8s.io/api/networking/v1beta1"
 	intstrutil "k8s.io/apimachinery/pkg/util/intstr"
@@ -21,7 +18,7 @@ certificateARN string: The certificate identifier e.g. arn:aws:acm:eu-west-1:421
 */
 type CertificateCreatorFn func(fqdn string) (certificateARN string, err error)
 
-func createOkctlIngress(app kaex.Application, certificateCreatorFn CertificateCreatorFn) (*networkingv1.Ingress, error) {
+func createOkctlIngress(app kaex.Application) (*networkingv1.Ingress, error) {
 	ingress, err := kaex.CreateIngress(app)
 	if err != nil {
 		return nil, err
@@ -37,15 +34,7 @@ func createOkctlIngress(app kaex.Application, certificateCreatorFn CertificateCr
 	ingress.Annotations["alb.ingress.kubernetes.io/scheme"] = "internet-facing"
 
 	if ingress.Spec.TLS != nil {
-		parsedURL, _ := url.Parse(app.Url)
-
-		certificateARN, err := certificateCreatorFn(parsedURL.Host)
-		if err != nil {
-			return nil, fmt.Errorf("error creating certificate: %w", err)
-		}
-
 		ingress.Annotations["alb.ingress.kubernetes.io/listen-ports"] = "[{\"HTTP\": 80}, {\"HTTPS\": 443}]"
-		ingress.Annotations["alb.ingress.kubernetes.io/certificate-arn"] = certificateARN
 		ingress.Annotations["alb.ingress.kubernetes.io/actions.ssl-redirect"] =
 			`{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}`
 
@@ -63,18 +52,26 @@ func createOkctlIngress(app kaex.Application, certificateCreatorFn CertificateCr
 	return &ingress, nil
 }
 
-func createOkctlIngressOverlay() (ingress *networkingv1.Ingress, err error) {
-	ingress = &networkingv1.Ingress{
-		TypeMeta:   createIngressTypeMeta(),
-		ObjectMeta: v1.ObjectMeta{},
+func createOkctlIngressOverlay(fn CertificateCreatorFn, host string) (patch Patch, err error) {
+	certArn, err := fn(host)
+	if err != nil {
+		return Patch{}, fmt.Errorf("creating certificate: %w", err)
 	}
 
-	return ingress, nil
-}
+	patch = Patch{Operations: []Operation{
+		{
+			Type: OperationTypeAdd,
+			Path: "/metadata/annotations",
+			Value: map[string]string{
+				"alb.ingress.kubernetes.io/certificate-arn": certArn,
+			},
+		},
+		{
+			Type:  OperationTypeReplace,
+			Path:  "/spec/rules/0/host",
+			Value: "", // TOOD: acquire env specific host
+		},
+	}}
 
-func createIngressTypeMeta() (meta v1.TypeMeta) {
-	return v1.TypeMeta{
-		Kind:       "Ingress",
-		APIVersion: "networking.k8s.io/v1beta1",
-	}
+	return patch, nil
 }

@@ -1,7 +1,6 @@
 package scaffold
 
 import (
-	"bytes"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -16,7 +15,7 @@ func TestMarshallPatch(t *testing.T) {
 		expectResult []byte
 	}{
 		{
-			name: "Should work",
+			name: "Should correctly serialize a replace operation",
 
 			withPatch: Patch{Operations: []Operation{
 				{
@@ -26,7 +25,22 @@ func TestMarshallPatch(t *testing.T) {
 				},
 			}},
 
-			expectResult: []byte(`[{"op": "replace", "path": "/spec/type", "value": "LoadBalancer"}]`),
+			expectResult: []byte(`[{"op":"replace","path":"/spec/type","value":"LoadBalancer"}]`),
+		},
+		{
+			name: "Should correctly serialize an add operation on an object",
+
+			withPatch: Patch{Operations: []Operation{
+				{
+					Type: OperationTypeAdd,
+					Path: "/metadata/annotations",
+					Value: map[string]string{
+						"something.arn": "arn:acc:regi:something",
+					},
+				},
+			}},
+
+			expectResult: []byte(`[{"op":"add","path":"/metadata/annotations","value":{"something.arn":"arn:acc:regi:something"}}]`),
 		},
 	}
 
@@ -34,11 +48,9 @@ func TestMarshallPatch(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			var buf bytes.Buffer
+			result, _ := json.Marshal(tc.withPatch)
 
-			_ = json.NewEncoder(&buf).Encode(tc.withPatch)
-
-			assert.Equal(t, tc.expectResult, buf.Bytes())
+			assert.Equal(t, tc.expectResult, result)
 		})
 	}
 }

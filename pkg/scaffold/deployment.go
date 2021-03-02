@@ -4,6 +4,7 @@ package scaffold
 import (
 	"fmt"
 	"io"
+	"path"
 
 	"github.com/oslokommune/okctl/internal/third_party/argoproj/argo-cd/pkg/apis/application/v1alpha1"
 
@@ -16,6 +17,7 @@ import (
 
 // ApplicationDeployment contains necessary data for a deployment
 type ApplicationDeployment struct {
+	Kustomization   *Kustomization
 	ArgoApplication *v1alpha1.Application
 	Deployment      *appsv1.Deployment
 	Ingress         *networkingv1.Ingress
@@ -66,7 +68,9 @@ func (deployment *ApplicationDeployment) WriteArgoResources(writer io.Writer) er
 
 // NewApplicationDeployment converts a Kaex Application to an okctl deployment
 func NewApplicationDeployment(app kaex.Application, certFn CertificateCreatorFn, iacRepoURL string, applicationOutputDir string) (*ApplicationDeployment, error) {
-	applicationDeployment := ApplicationDeployment{}
+	applicationDeployment := ApplicationDeployment{
+		Kustomization: NewKustomization(),
+	}
 
 	for index := range app.Volumes {
 		applicationDeployment.Volumes = make([]*v1.PersistentVolumeClaim, len(app.Volumes))
@@ -89,10 +93,20 @@ func NewApplicationDeployment(app kaex.Application, certFn CertificateCreatorFn,
 	}
 
 	if app.Url != "" && app.Port != 0 {
-		ingress, err := createOkctlIngress(app, certFn)
+		ingress, err := createOkctlIngress(app)
 		if err != nil {
 			return nil, err
 		}
+
+		//ingressOverlay, err := createOkctlIngressOverlay(certFn, app.Url)
+		//if err != nil {
+		//	return nil, err
+		//}
+
+		applicationDeployment.Kustomization.AddPatch(PatchReference{
+			Path:   path.Join(),
+			Target: PatchTarget{},
+		})
 
 		applicationDeployment.Ingress = ingress
 	}

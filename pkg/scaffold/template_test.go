@@ -24,6 +24,11 @@ func TestGenerateTemplate(t *testing.T) {
 			withOpts:   &scaffold.InterpolationOpts{},
 			withGolden: "scaffoldOkctlApplication",
 		},
+		{
+			name:       "Should scaffold an interpolated okctl application when given data",
+			withOpts:   &scaffold.InterpolationOpts{PrimaryHostedZone: "jagajazzist-production.oslo.systems"},
+			withGolden: "scaffoldWithOpts",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -49,40 +54,6 @@ func TestGenerateTemplate(t *testing.T) {
 		})
 	}
 }
-
-//
-//func TestInterpolateTemplate(t *testing.T) {
-//	testCases := []struct {
-//		name string
-//
-//		withTemplate []byte
-//		withOpts     *scaffold.InterpolationOpts
-//
-//		expect []byte
-//	}{
-//		{
-//			name: "Should interpolate the specified field when specified",
-//
-//			withTemplate: []byte("name: a name\nurl: my-domain.io\nsomethingelse: yes\n"),
-//			withOpts:     &scaffold.InterpolationOpts{Domain: "works.com"},
-//
-//			expect: []byte("name: a name\nurl: <app-name>.works.com\nsomethingelse: yes\n"),
-//		},
-//	}
-//
-//	for _, tc := range testCases {
-//		tc := tc
-//
-//		t.Run(tc.name, func(t *testing.T) {
-//			result, err := scaffold.InterpolateTemplate(tc.withTemplate, tc.withOpts)
-//			if err != nil {
-//				t.Error(err)
-//			}
-//
-//			assert.Equal(t, tc.expect, result)
-//		})
-//	}
-//}
 
 func TestSaveTemplate(t *testing.T) {
 	testCases := []struct {

@@ -10,7 +10,7 @@ import (
 
 // InterpolationOpts defines possible data to inject into the templates
 type InterpolationOpts struct {
-	Domain string
+	PrimaryHostedZone string
 }
 
 // GenerateOkctlAppTemplate generates an okctl appliction template
@@ -66,21 +66,26 @@ name: my-app
 image: docker.pkg.github.com/my-org/my-repo/my-package
 # The version of your app which is available as an image
 version: 0.0.1
+# The Kubernetes namespace where your app will live
+namespace: my-namespace
 
-# The URL your app should be available on
-# Change to something other than https to disable configuring TLS
-# Comment this out to avoid setting up an ingress
+# The subdomain of the URL your app should be available on
+# Example in a cluster with {{ .PrimaryHostedZone }} as root cluster URL (as defined by primary DNS zone in the
+# cluster declaration):
+#
+# subDomain: okctl
+# result: okctl.{{ .PrimaryHostedZone }}
+# Comment this out to avoid setting up an ingress, in other words - avoid exposing it on the internet
+#
 subDomain: my-app
 
 # The port your app listens on
 # Comment this out to avoid setting up a service (required if url is specified)
+#
 port: 3000
 
 # How many replicas of your application should we scaffold
 #replicas: 3 # 1 by default
-
-# A namespace where your app will live
-#namespace: my-namespace
 
 # A Docker repository secret for pulling your image
 #imagePullSecret: my-pull-secret-name

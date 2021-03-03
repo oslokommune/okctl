@@ -3,7 +3,7 @@ package core_test
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"github.com/oslokommune/okctl/pkg/config"
 	"path/filepath"
 	"testing"
 
@@ -26,11 +26,14 @@ name: my-app
 image: docker.pkg.github.com/my-org/my-repo/my-package
 # The version of your app which is available as an image
 version: 0.0.1
+# A namespace where your app will live
+namespace: okctl
+
 
 # The URL your app should be available on
 # Change to something other than https to disable configuring TLS
 # Comment this out to avoid setting up an ingress
-url: https://my-domain.io
+subDomain: okctl
 
 # The port your app listens on
 # Comment this out to avoid setting up a service (required if url is specified)
@@ -38,9 +41,6 @@ port: 3000
 
 # How many replicas of your application should we scaffold
 #replicas: 3 # 1 by default
-
-# A namespace where your app will live
-#namespace: my-namespace
 
 # A Docker repository secret for pulling your image
 #imagePullSecret: my-pull-secret-name
@@ -70,6 +70,7 @@ func TestNewApplicationService(t *testing.T) {
 	mockPaths := clientFilesystem.Paths{BaseDir: "infrastructure/applications"}
 
 	service := core.NewApplicationService(
+		&fs,
 		spin,
 		mockPaths,
 		mockCertService{},
@@ -89,28 +90,27 @@ func TestNewApplicationService(t *testing.T) {
 			Repository:   "not blank",
 			ClusterName:  "dummy-cluster",
 		},
-		HostedZoneID: "dummyID",
-		IACRepoURL:   "git@dummy.com:test/repo.git",
+		HostedZoneID:     "dummyID",
+		HostedZoneDomain: "kjoremiljo.oslo.systems",
+		IACRepoURL:       "git@dummy.com:test/repo.git",
 	})
 	assert.NilError(t, err)
 
-	k8sResourcePath := filepath.Join(mockPaths.BaseDir, "my-app", "base", "my-app.yaml")
-	k8sResources, err := fs.Open(k8sResourcePath)
-	assert.NilError(t, err)
+	k8sResourcesAsBytes := readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", "my-app.yaml"))
+	argocdResourcesAsBytes := readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", "my-app-application.yaml"))
 
-	k8sResourcesAsBytes, err := ioutil.ReadAll(k8sResources)
-	assert.NilError(t, err)
-
-	argocdResourcePath := filepath.Join(mockPaths.BaseDir, "my-app", "base", "my-app-application.yaml")
-	argocdResources, err := fs.Open(argocdResourcePath)
-	assert.NilError(t, err)
-
-	argocdResourcesAsBytes, err := ioutil.ReadAll(argocdResources)
-	assert.NilError(t, err)
+	_ = readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationOverlayDir, "ingress-patch.json"))
 
 	g := goldie.New(t)
 	g.Assert(t, "my-app.yaml", k8sResourcesAsBytes)
 	g.Assert(t, "my-app-application.yaml", argocdResourcesAsBytes)
+}
+
+func readFile(t *testing.T, fs *afero.Afero, path string) []byte {
+	result, err := fs.ReadFile(path)
+	assert.NilError(t, err)
+
+	return result
 }
 
 type mockCertService struct{}

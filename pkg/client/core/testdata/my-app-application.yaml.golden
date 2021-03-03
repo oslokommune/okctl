@@ -6,7 +6,7 @@ metadata:
   namespace: argocd
 spec:
   destination:
-    namespace: <namespace your app should run in>
+    namespace: okctl
     server: https://kubernetes.default.svc
   project: default
   source:

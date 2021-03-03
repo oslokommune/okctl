@@ -76,6 +76,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 			hostedZone := o.RepoStateWithEnv.GetPrimaryHostedZone()
 			scaffoldOpts.HostedZoneID = hostedZone.ID
+			scaffoldOpts.HostedZoneDomain = hostedZone.Domain
 
 			for _, repo := range cluster.Github.Repositories {
 				scaffoldOpts.IACRepoURL = repo.GitURL
@@ -89,7 +90,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("failed validating options: %w", err)
 			}
 
-			spin, _ := spinner.New("scaffolding", o.Out)
+			spin, _ := spinner.New("applying application", o.Out)
 			services, _ := o.ClientServices(spin)
 
 			err = services.ApplicationService.ScaffoldApplication(o.Ctx, scaffoldOpts)

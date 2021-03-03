@@ -3,10 +3,9 @@ package scaffold
 
 import (
 	"fmt"
-	"io"
-	"path"
-
 	"github.com/oslokommune/okctl/internal/third_party/argoproj/argo-cd/pkg/apis/application/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/client"
+	"io"
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -17,7 +16,6 @@ import (
 
 // ApplicationDeployment contains necessary data for a deployment
 type ApplicationDeployment struct {
-	Kustomization   *Kustomization
 	ArgoApplication *v1alpha1.Application
 	Deployment      *appsv1.Deployment
 	Ingress         *networkingv1.Ingress
@@ -68,9 +66,7 @@ func (deployment *ApplicationDeployment) WriteArgoResources(writer io.Writer) er
 
 // NewApplicationDeployment converts a Kaex Application to an okctl deployment
 func NewApplicationDeployment(app kaex.Application, certFn CertificateCreatorFn, iacRepoURL string, applicationOutputDir string) (*ApplicationDeployment, error) {
-	applicationDeployment := ApplicationDeployment{
-		Kustomization: NewKustomization(),
-	}
+	applicationDeployment := ApplicationDeployment{}
 
 	for index := range app.Volumes {
 		applicationDeployment.Volumes = make([]*v1.PersistentVolumeClaim, len(app.Volumes))
@@ -98,16 +94,6 @@ func NewApplicationDeployment(app kaex.Application, certFn CertificateCreatorFn,
 			return nil, err
 		}
 
-		//ingressOverlay, err := createOkctlIngressOverlay(certFn, app.Url)
-		//if err != nil {
-		//	return nil, err
-		//}
-
-		applicationDeployment.Kustomization.AddPatch(PatchReference{
-			Path:   path.Join(),
-			Target: PatchTarget{},
-		})
-
 		applicationDeployment.Ingress = ingress
 	}
 
@@ -122,4 +108,16 @@ func NewApplicationDeployment(app kaex.Application, certFn CertificateCreatorFn,
 	applicationDeployment.ArgoApplication = argoApp
 
 	return &applicationDeployment, nil
+}
+
+type ApplicationOverlay struct {
+	IngressPatch    []byte
+	ServicePatch    []byte
+	DeploymentPatch []byte
+}
+
+func NewApplicationOverlay(application client.OkctlApplication) ApplicationOverlay {
+	return ApplicationOverlay{
+		IngressPatch: []byte("not nil"),
+	}
 }

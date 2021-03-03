@@ -540,7 +540,7 @@ func (o *Okctl) awsLoadBalancerControllerService(outputDir string, spin spinner.
 }
 
 func (o *Okctl) applicationService(outputDir string, spin spinner.Spinner) client.ApplicationService {
-	applicationsOverlayBaseDir, err := o.GetRepoApplicationBaseDir()
+	applicationsBaseDir, err := o.GetRepoApplicationBaseDir()
 	if err != nil {
 		return nil
 	}
@@ -549,12 +549,12 @@ func (o *Okctl) applicationService(outputDir string, spin spinner.Spinner) clien
 		o.FileSystem,
 		spin,
 		clientFilesystem.Paths{
-			BaseDir: applicationsOverlayBaseDir,
+			BaseDir: applicationsBaseDir,
 		},
 		o.certService(path.Join(outputDir, config.DefaultCertificateBaseDir), spin.SubSpinner()),
 		clientFilesystem.NewApplicationStore(
 			clientFilesystem.Paths{
-				BaseDir: applicationsOverlayBaseDir,
+				BaseDir: applicationsBaseDir,
 			},
 			o.FileSystem,
 		),

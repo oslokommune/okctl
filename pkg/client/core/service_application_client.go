@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/spf13/afero"
+	"gopkg.in/yaml.v3"
 	"io"
 	"io/ioutil"
 	"path"
@@ -66,10 +68,13 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 		err = s.spin.Stop()
 	}()
 
-	app, err := inferApplicationFromStdinOrFile(opts.In, opts.ApplicationFilePath)
+	okctlApp, err := inferApplicationFromStdinOrFile(opts.In, s.fs, opts.ApplicationFilePath)
 	if err != nil {
 		return err
 	}
+
+	// See function comment
+	app := okctlApplicationToKaexApplication(okctlApp, opts.HostedZoneDomain)
 
 	applicationDir := path.Join(s.paths.BaseDir, app.Name)
 	applicationDir = strings.Replace(applicationDir, opts.RepoDir+"/", "", 1)
@@ -79,6 +84,8 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 	if err != nil {
 		return fmt.Errorf("error creating a new application deployment: %w", err)
 	}
+
+	overlay := scaffold.NewApplicationOverlay(okctlApp)
 
 	var kubernetesResources, argoCDResource bytes.Buffer
 
@@ -96,6 +103,9 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 		ApplicationName:     app.Name,
 		KubernetesResources: kubernetesResources.Bytes(),
 		ArgoCDResource:      argoCDResource.Bytes(),
+		IngressPatch:        overlay.IngressPatch,
+		ServicePatch:        overlay.ServicePatch,
+		DeploymentPatch:     overlay.DeploymentPatch,
 	}
 
 	report, err := s.store.SaveApplication(applicationScaffold)
@@ -145,10 +155,36 @@ func inferApplicationFromStdinOrFile(stdin io.Reader, fs *afero.Afero, path stri
 		}
 	}
 
-	app, err := kaex.ParseApplication(inputReader)
+	var buf []byte
+
+	buf, err = ioutil.ReadAll(inputReader)
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse application.yaml: %w", err)
+		return app, fmt.Errorf("reading application file: %w", err)
 	}
 
-	return &app, nil
+	err = yaml.Unmarshal(buf, &app)
+	if err != nil {
+		return app, fmt.Errorf("parsing application yaml: %w", err)
+	}
+
+	return app, nil
+}
+
+// I'm assuming we'll be making enough customizations down the line to have our own okctlApplication, but for now
+// mapping it to a Kaex application works fine
+func okctlApplicationToKaexApplication(okctlApp client.OkctlApplication, primaryHostedZoneDomain string) (kaexApp *kaex.Application) {
+	kaexApp = &kaex.Application{
+		Name:            okctlApp.Name,
+		Namespace:       okctlApp.Namespace,
+		Image:           okctlApp.Image,
+		Version:         okctlApp.Version,
+		ImagePullSecret: okctlApp.ImagePullSecret,
+		Url:             fmt.Sprintf("%s.%s", okctlApp.SubDomain, primaryHostedZoneDomain),
+		Port:            okctlApp.Port,
+		Replicas:        okctlApp.Replicas,
+		Environment:     okctlApp.Environment,
+		Volumes:         okctlApp.Volumes,
+	}
+
+	return kaexApp
 }

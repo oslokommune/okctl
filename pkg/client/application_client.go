@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"io"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -17,9 +18,10 @@ type ScaffoldApplicationOpts struct {
 	ApplicationFilePath string
 	RepoDir             string
 
-	ID           *api.ID
-	HostedZoneID string
-	IACRepoURL   string
+	ID               *api.ID
+	HostedZoneID     string
+	HostedZoneDomain string
+	IACRepoURL       string
 }
 
 // Validate ensures presented data is valid
@@ -32,12 +34,46 @@ func (o *ScaffoldApplicationOpts) Validate() error {
 	)
 }
 
+type OkctlApplication struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+
+	Image           string `json:"image"`
+	Version         string `json:"version"`
+	ImagePullSecret string `json:"imagePullSecret"`
+
+	SubDomain string `json:"subDomain"`
+	Port      int32  `json:"port"`
+
+	Replicas int32 `json:"replicas"`
+
+	Environment map[string]string   `json:"environment"`
+	Volumes     []map[string]string `json:"volumes"`
+}
+
+func (o OkctlApplication) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.Name, validation.Required, is.DNSName),
+		validation.Field(&o.Namespace, validation.Required, is.DNSName),
+		validation.Field(&o.Image, validation.Required, is.DNSName),
+		validation.Field(&o.Version, validation.Required),
+		validation.Field(&o.ImagePullSecret, validation.Required, is.DNSName),
+		validation.Field(&o.SubDomain, is.Subdomain),
+		validation.Field(&o.Port, is.Port),
+		validation.Field(&o.Replicas, validation.Min(0)),
+	)
+}
+
 // ScaffoldedApplication contains information required by ApplicationStore and ApplicationReport
 type ScaffoldedApplication struct {
 	ApplicationName string
 
 	KubernetesResources []byte
 	ArgoCDResource      []byte
+
+	IngressPatch    []byte
+	ServicePatch    []byte
+	DeploymentPatch []byte
 }
 
 // ApplicationService applies the scaffolding API and produces the requested resources

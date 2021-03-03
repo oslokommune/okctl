@@ -19,15 +19,30 @@ type applicationStore struct {
 // SaveApplication applies the application to the file system
 func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplication) (*store.Report, error) {
 	baseDir := path.Join(s.paths.BaseDir, application.ApplicationName)
-	overlayDir := path.Join(baseDir, config.DefaultApplicationOverlayDir)
+	overlayDir := config.DefaultApplicationOverlayDir
 
-	report, err := store.NewFileSystem(baseDir, s.fs).
+	operations := store.NewFileSystem(baseDir, s.fs).
 		StoreBytes(fmt.Sprintf("%s.yaml", application.ApplicationName), application.KubernetesResources).
 		StoreBytes(fmt.Sprintf("%s-application.yaml", application.ApplicationName), application.ArgoCDResource).
-		StoreBytes(path.Join(overlayDir, fmt.Sprintf("ingress-patch.json")), application.ArgoCDResource). // TODO: Get something from kaex app ingress. Overlay details. Kustomization.yaml, deployment-patch, other-patch
-		Do()
+		StoreBytes(path.Join(overlayDir, fmt.Sprintf("deployment-patch.json")), application.DeploymentPatch)
+
+	if len(application.IngressPatch) > 0 {
+		operations.StoreBytes(
+			path.Join(overlayDir, fmt.Sprintf("ingress-patch.json")),
+			application.IngressPatch,
+		)
+	}
+
+	if len(application.ServicePatch) > 0 {
+		operations.StoreBytes(
+			path.Join(overlayDir, fmt.Sprintf("service-patch.json")),
+			application.ServicePatch,
+		)
+	}
+
+	report, err := operations.Do()
 	if err != nil {
-		return nil, fmt.Errorf("failed to store application resources: %w", err)
+		return nil, fmt.Errorf("storing application resources: %w", err)
 	}
 
 	return report, nil
@@ -39,7 +54,7 @@ func (s *applicationStore) RemoveApplication(applicationName string) (*store.Rep
 		Remove("").
 		Do()
 	if err != nil {
-		return nil, fmt.Errorf("failed to remove application: %w", err)
+		return nil, fmt.Errorf("removing application: %w", err)
 	}
 
 	return report, err

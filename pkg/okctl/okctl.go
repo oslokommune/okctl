@@ -546,6 +546,7 @@ func (o *Okctl) applicationService(outputDir string, spin spinner.Spinner) clien
 	}
 
 	return clientCore.NewApplicationService(
+		o.FileSystem,
 		spin,
 		clientFilesystem.Paths{
 			BaseDir: applicationsOverlayBaseDir,

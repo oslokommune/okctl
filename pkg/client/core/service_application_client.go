@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
+	"io/ioutil"
 	"path"
 	"path/filepath"
 	"strings"
@@ -21,6 +21,7 @@ import (
 )
 
 type applicationService struct {
+	fs     *afero.Afero
 	spin   spinner.Spinner
 	paths  clientFilesystem.Paths
 	cert   client.CertificateService
@@ -114,6 +115,7 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 
 // NewApplicationService initializes a new Scaffold application service
 func NewApplicationService(
+	fs *afero.Afero,
 	spin spinner.Spinner,
 	paths clientFilesystem.Paths,
 	cert client.CertificateService,
@@ -121,6 +123,7 @@ func NewApplicationService(
 	state client.ApplicationReport,
 ) client.ApplicationService {
 	return &applicationService{
+		fs:     fs,
 		spin:   spin,
 		paths:  paths,
 		cert:   cert,
@@ -129,19 +132,16 @@ func NewApplicationService(
 	}
 }
 
-func inferApplicationFromStdinOrFile(stdin io.Reader, path string) (*kaex.Application, error) {
-	var (
-		inputReader io.Reader
-		err         error
-	)
+func inferApplicationFromStdinOrFile(stdin io.Reader, fs *afero.Afero, path string) (app client.OkctlApplication, err error) {
+	var inputReader io.Reader
 
 	switch path {
 	case "-":
 		inputReader = stdin
 	default:
-		inputReader, err = os.Open(filepath.Clean(path))
+		inputReader, err = fs.Open(filepath.Clean(path))
 		if err != nil {
-			return nil, fmt.Errorf("unable to read file: %w", err)
+			return app, fmt.Errorf("opening application file: %w", err)
 		}
 	}
 

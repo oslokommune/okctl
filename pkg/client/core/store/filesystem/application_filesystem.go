@@ -16,29 +16,31 @@ type applicationStore struct {
 	fs    *afero.Afero
 }
 
+func addOperationIfNotEmpty(operations store.Operations, path string, content []byte) {
+	if len(content) == 0 {
+		return
+	}
+
+	operations.StoreBytes(path, content)
+}
+
 // SaveApplication applies the application to the file system
 func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplication) (*store.Report, error) {
 	baseDir := path.Join(s.paths.BaseDir, application.ApplicationName)
 	overlayDir := config.DefaultApplicationOverlayDir
 
 	operations := store.NewFileSystem(baseDir, s.fs).
-		StoreBytes(fmt.Sprintf("%s.yaml", application.ApplicationName), application.KubernetesResources).
-		StoreBytes(fmt.Sprintf("%s-application.yaml", application.ApplicationName), application.ArgoCDResource).
-		StoreBytes(path.Join(overlayDir, fmt.Sprintf("deployment-patch.json")), application.DeploymentPatch)
+		StoreBytes("deployment.yaml", application.Deployment).
+		StoreBytes("argocd-application.yaml", application.ArgoCDResource)
 
-	if len(application.IngressPatch) > 0 {
-		operations.StoreBytes(
-			path.Join(overlayDir, fmt.Sprintf("ingress-patch.json")),
-			application.IngressPatch,
-		)
-	}
+	// TODO: clean up. Do we need patches? things? meaning of life?
+	addOperationIfNotEmpty(operations, "volumes.yaml", application.Volume)
 
-	if len(application.ServicePatch) > 0 {
-		operations.StoreBytes(
-			path.Join(overlayDir, fmt.Sprintf("service-patch.json")),
-			application.ServicePatch,
-		)
-	}
+	addOperationIfNotEmpty(operations, "ingress.yaml", application.Ingress)
+	addOperationIfNotEmpty(operations, path.Join(overlayDir, "ingress-patch.json"), application.IngressPatch)
+
+	addOperationIfNotEmpty(operations, "service.yaml", application.Service)
+	addOperationIfNotEmpty(operations, path.Join(overlayDir, "service-patch.json"), application.ServicePatch)
 
 	report, err := operations.Do()
 	if err != nil {

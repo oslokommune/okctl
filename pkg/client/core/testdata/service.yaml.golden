@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app
+  namespace: okctl
+spec:
+  ports:
+  - port: 80
+    targetPort: 3000
+  selector:
+    app: my-app
+  type: NodePort
+
+---
+

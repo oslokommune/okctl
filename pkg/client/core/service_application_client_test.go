@@ -50,9 +50,9 @@ port: 3000
 #  MY_VARIABLE: my-value
 
 # Volumes to mount
-#volumes:
+volumes:
+- /path/to/mount/volume: 24Gi
 #  - /path/to/mount/volume: # Requests 1Gi by default
-#  - /path/to/mount/volume: 24Gi
 
 # Annotations for your ingress
 #ingress:
@@ -96,14 +96,14 @@ func TestNewApplicationService(t *testing.T) {
 	})
 	assert.NilError(t, err)
 
-	k8sResourcesAsBytes := readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", "my-app.yaml"))
-	argocdResourcesAsBytes := readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", "my-app-application.yaml"))
-
-	_ = readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationOverlayDir, "ingress-patch.json"))
-
 	g := goldie.New(t)
-	g.Assert(t, "my-app.yaml", k8sResourcesAsBytes)
-	g.Assert(t, "my-app-application.yaml", argocdResourcesAsBytes)
+	g.Assert(t, "deployment.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", "deployment.yaml")))
+	g.Assert(t, "argocd-application.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", "argocd-application.yaml")))
+	g.Assert(t, "volumes.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", "volumes.yaml")))
+	g.Assert(t, "ingress.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", "ingress.yaml")))
+	g.Assert(t, "service.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", "service.yaml")))
+
+	g.Assert(t, "ingress-patch.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationOverlayDir, "ingress-patch.json")))
 }
 
 func readFile(t *testing.T, fs *afero.Afero, path string) []byte {

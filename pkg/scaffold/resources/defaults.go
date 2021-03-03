@@ -1,4 +1,4 @@
-package scaffold
+package resources
 
 import (
 	"fmt"
@@ -8,7 +8,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func createOkctlVolume(app kaex.Application, volume map[string]string) (corev1.PersistentVolumeClaim, error) {
+// CreateOkctlVolume creates persistent volume claims customized for okctl
+func CreateOkctlVolume(app kaex.Application, volume map[string]string) (corev1.PersistentVolumeClaim, error) {
 	var (
 		mountPath string
 		size      string
@@ -26,7 +27,8 @@ func createOkctlVolume(app kaex.Application, volume map[string]string) (corev1.P
 	return pvc, nil
 }
 
-func createOkctlService(app kaex.Application) (corev1.Service, error) {
+// CreateOkctlService creates a service customized for okctl
+func CreateOkctlService(app kaex.Application) (corev1.Service, error) {
 	service, err := kaex.CreateService(app)
 	if err != nil {
 		return corev1.Service{}, fmt.Errorf("error creating kaex service: %w", err)
@@ -37,7 +39,8 @@ func createOkctlService(app kaex.Application) (corev1.Service, error) {
 	return service, nil
 }
 
-func createOkctlDeployment(app kaex.Application) (appsv1.Deployment, error) {
+// CreateOkctlDeployment creates a deployment customized for okctl
+func CreateOkctlDeployment(app kaex.Application) (appsv1.Deployment, error) {
 	deployment, err := kaex.CreateDeployment(app)
 	if err != nil {
 		return appsv1.Deployment{}, err

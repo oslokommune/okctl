@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+  namespace: okctl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - image: docker.pkg.github.com/my-org/my-repo/my-package:0.0.1
+        name: my-app
+        volumeMounts:
+        - mountPath: /path/to/mount/volume
+          name: my-app-pathtomountvolume
+      volumes:
+      - name: my-app-pathtomountvolume
+        persistentVolumeClaim:
+          claimName: my-app-pathtomountvolume
+
+---
+

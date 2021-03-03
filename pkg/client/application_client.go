@@ -34,6 +34,7 @@ func (o *ScaffoldApplicationOpts) Validate() error {
 	)
 }
 
+// OkctlApplication represents the necessary information okctl needs to deploy an application
 type OkctlApplication struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
@@ -51,6 +52,17 @@ type OkctlApplication struct {
 	Volumes     []map[string]string `json:"volumes"`
 }
 
+// HasIngress returns true if the application requires an ingress
+func (o OkctlApplication) HasIngress() bool {
+	return o.SubDomain != ""
+}
+
+// HasService returns true if the application requires a service
+func (o OkctlApplication) HasService() bool {
+	return o.Port > 0
+}
+
+// Validate knows if the application is valid or not
 func (o OkctlApplication) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.Name, validation.Required, is.DNSName),
@@ -68,8 +80,11 @@ func (o OkctlApplication) Validate() error {
 type ScaffoldedApplication struct {
 	ApplicationName string
 
-	KubernetesResources []byte
-	ArgoCDResource      []byte
+	ArgoCDResource []byte
+	Volume         []byte
+	Ingress        []byte
+	Service        []byte
+	Deployment     []byte
 
 	IngressPatch    []byte
 	ServicePatch    []byte

@@ -1,15 +1,14 @@
 package core
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"github.com/spf13/afero"
-	"gopkg.in/yaml.v3"
 	"io"
 	"io/ioutil"
 	"path"
 	"path/filepath"
+	"sigs.k8s.io/yaml"
 	"strings"
 
 	"github.com/oslokommune/okctl/pkg/spinner"
@@ -45,25 +44,6 @@ func (s *applicationService) createCertificate(ctx context.Context, id *api.ID, 
 	return cert.CertificateARN, nil
 }
 
-//
-//type CreateCertFn func(domain string) (string, error)
-//
-//func createCertificateFn(ctx context.Context, certService client.CertificateService, id *api.ID, hostedZoneID string) CreateCertFn {
-//	return func(fqdn string) (string, error) {
-//		cert, certFnErr := certService.CreateCertificate(ctx, api.CreateCertificateOpts{
-//			ID:           *id,
-//			FQDN:         fqdn,
-//			Domain:       fqdn,
-//			HostedZoneID: hostedZoneID,
-//		})
-//		if certFnErr != nil {
-//			return "", certFnErr
-//		}
-//
-//		return cert.CertificateARN, nil
-//	}
-//}
-
 func writeSuccessMessage(writer io.Writer, applicationName string, argoCDResourcePath string) {
 	fmt.Fprintf(writer, "Successfully scaffolded %s\n", applicationName)
 	fmt.Fprintln(writer, "To deploy your application:")
@@ -96,40 +76,36 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 	applicationDir := path.Join(s.paths.BaseDir, app.Name)
 	applicationDir = strings.Replace(applicationDir, opts.RepoDir+"/", "", 1)
 
-	// TODO: Use createCertificate
-	createCertFn := createCertificateFn(ctx, s.cert, opts.ID, opts.HostedZoneID)
-
-	deployment, err := scaffold.NewApplicationDeployment(*app, opts.IACRepoURL, applicationDir)
+	base, err := scaffold.GenerateApplicationBase(*app, opts.IACRepoURL, applicationDir)
 	if err != nil {
 		return fmt.Errorf("error creating a new application deployment: %w", err)
 	}
 
-	certArn, err := createCertFn(fmt.Sprintf("%s.%s", okctlApp.SubDomain+opts.HostedZoneDomain))
+	certArn, err := s.createCertificate(
+		ctx,
+		opts.ID,
+		opts.HostedZoneID,
+		fmt.Sprintf("%s.%s", okctlApp.SubDomain, opts.HostedZoneDomain),
+	)
 	if err != nil {
 		return fmt.Errorf("create certificate: %w", err)
 	}
 
-	overlay := scaffold.NewApplicationOverlay(okctlApp, createCertFn, opts.HostedZoneDomain)
-
-	var kubernetesResources, argoCDResource bytes.Buffer
-
-	err = deployment.WriteKubernetesResources(&kubernetesResources)
+	overlay, err := scaffold.GenerateApplicationOverlay(okctlApp, opts.HostedZoneDomain, certArn)
 	if err != nil {
-		return err
-	}
-
-	err = deployment.WriteArgoResources(&argoCDResource)
-	if err != nil {
-		return err
+		return fmt.Errorf("generating application overlay: %w", err)
 	}
 
 	applicationScaffold := &client.ScaffoldedApplication{
-		ApplicationName:     app.Name,
-		KubernetesResources: kubernetesResources.Bytes(),
-		ArgoCDResource:      argoCDResource.Bytes(),
-		IngressPatch:        overlay.IngressPatch,
-		ServicePatch:        overlay.ServicePatch,
-		DeploymentPatch:     overlay.DeploymentPatch,
+		ApplicationName: app.Name,
+		Deployment:      base.Deployment,
+		Service:         base.Service,
+		Ingress:         base.Ingress,
+		Volume:          base.Volumes,
+		ArgoCDResource:  base.ArgoApplication,
+		IngressPatch:    overlay.IngressPatch,
+		ServicePatch:    overlay.ServicePatch,
+		DeploymentPatch: overlay.DeploymentPatch,
 	}
 
 	report, err := s.store.SaveApplication(applicationScaffold)
@@ -166,8 +142,12 @@ func NewApplicationService(
 	}
 }
 
-func inferApplicationFromStdinOrFile(stdin io.Reader, fs *afero.Afero, path string) (app client.OkctlApplication, err error) {
-	var inputReader io.Reader
+func inferApplicationFromStdinOrFile(stdin io.Reader, fs *afero.Afero, path string) (client.OkctlApplication, error) {
+	var (
+		err         error
+		app         client.OkctlApplication
+		inputReader io.Reader
+	)
 
 	switch path {
 	case "-":

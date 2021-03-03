@@ -50,6 +50,16 @@ type Patch struct {
 	Operations []Operation `json:",inline"`
 }
 
+func NewPatch() *Patch {
+	return &Patch{
+		Operations: []Operation{},
+	}
+}
+
+func (p *Patch) AddOperation(o Operation) {
+	p.Operations = append(p.Operations, o)
+}
+
 // MarshalJSON knows how to turn a Patch into a kustomize patch.json
 func (p Patch) MarshalJSON() ([]byte, error) {
 	type serializedOperation struct {

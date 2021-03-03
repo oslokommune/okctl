@@ -31,21 +31,38 @@ type applicationService struct {
 	report client.ApplicationReport
 }
 
-func createCertificateFn(ctx context.Context, certService client.CertificateService, id *api.ID, hostedZoneID string) func(domain string) (string, error) {
-	return func(fqdn string) (string, error) {
-		cert, certFnErr := certService.CreateCertificate(ctx, api.CreateCertificateOpts{
-			ID:           *id,
-			FQDN:         fqdn,
-			Domain:       fqdn,
-			HostedZoneID: hostedZoneID,
-		})
-		if certFnErr != nil {
-			return "", certFnErr
-		}
-
-		return cert.CertificateARN, nil
+func (s *applicationService) createCertificate(ctx context.Context, id *api.ID, hostedZoneID, fqdn string) (string, error) {
+	cert, certFnErr := s.cert.CreateCertificate(ctx, api.CreateCertificateOpts{
+		ID:           *id,
+		FQDN:         fqdn,
+		Domain:       fqdn,
+		HostedZoneID: hostedZoneID,
+	})
+	if certFnErr != nil {
+		return "", certFnErr
 	}
+
+	return cert.CertificateARN, nil
 }
+
+//
+//type CreateCertFn func(domain string) (string, error)
+//
+//func createCertificateFn(ctx context.Context, certService client.CertificateService, id *api.ID, hostedZoneID string) CreateCertFn {
+//	return func(fqdn string) (string, error) {
+//		cert, certFnErr := certService.CreateCertificate(ctx, api.CreateCertificateOpts{
+//			ID:           *id,
+//			FQDN:         fqdn,
+//			Domain:       fqdn,
+//			HostedZoneID: hostedZoneID,
+//		})
+//		if certFnErr != nil {
+//			return "", certFnErr
+//		}
+//
+//		return cert.CertificateARN, nil
+//	}
+//}
 
 func writeSuccessMessage(writer io.Writer, applicationName string, argoCDResourcePath string) {
 	fmt.Fprintf(writer, "Successfully scaffolded %s\n", applicationName)
@@ -78,14 +95,21 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 
 	applicationDir := path.Join(s.paths.BaseDir, app.Name)
 	applicationDir = strings.Replace(applicationDir, opts.RepoDir+"/", "", 1)
-	certFn := createCertificateFn(ctx, s.cert, opts.ID, opts.HostedZoneID)
 
-	deployment, err := scaffold.NewApplicationDeployment(*app, certFn, opts.IACRepoURL, applicationDir)
+	// TODO: Use createCertificate
+	createCertFn := createCertificateFn(ctx, s.cert, opts.ID, opts.HostedZoneID)
+
+	deployment, err := scaffold.NewApplicationDeployment(*app, opts.IACRepoURL, applicationDir)
 	if err != nil {
 		return fmt.Errorf("error creating a new application deployment: %w", err)
 	}
 
-	overlay := scaffold.NewApplicationOverlay(okctlApp)
+	certArn, err := createCertFn(fmt.Sprintf("%s.%s", okctlApp.SubDomain+opts.HostedZoneDomain))
+	if err != nil {
+		return fmt.Errorf("create certificate: %w", err)
+	}
+
+	overlay := scaffold.NewApplicationOverlay(okctlApp, createCertFn, opts.HostedZoneDomain)
 
 	var kubernetesResources, argoCDResource bytes.Buffer
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/oslokommune/okctl/internal/third_party/argoproj/argo-cd/pkg/apis/application/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/client"
+	"github.com/oslokommune/okctl/pkg/client/core"
 	"io"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -65,7 +66,7 @@ func (deployment *ApplicationDeployment) WriteArgoResources(writer io.Writer) er
 }
 
 // NewApplicationDeployment converts a Kaex Application to an okctl deployment
-func NewApplicationDeployment(app kaex.Application, certFn CertificateCreatorFn, iacRepoURL string, applicationOutputDir string) (*ApplicationDeployment, error) {
+func NewApplicationDeployment(app kaex.Application, iacRepoURL string, applicationOutputDir string) (*ApplicationDeployment, error) {
 	applicationDeployment := ApplicationDeployment{}
 
 	for index := range app.Volumes {
@@ -116,7 +117,25 @@ type ApplicationOverlay struct {
 	DeploymentPatch []byte
 }
 
-func NewApplicationOverlay(application client.OkctlApplication) ApplicationOverlay {
+func NewApplicationOverlay(application client.OkctlApplication, createCertFn core.CreateCertFn, hostedZoneDomain string) ApplicationOverlay {
+	ingressPatchBytes := []byte("")
+
+	if application.SubDomain != "" {
+		ingressPatch := NewPatch()
+
+		value := map[string]string{
+			"alb.ingress.kubernetes.io/certificate-arn": certArn,
+		}
+
+		ingressPatch.AddOperation(Operation{
+			Type:  OperationTypeAdd,
+			Path:  "/metadata/annotations",
+			Value: value,
+		})
+
+		//ingressPatch =  ...
+	}
+
 	return ApplicationOverlay{
 		IngressPatch: []byte("not nil"),
 	}

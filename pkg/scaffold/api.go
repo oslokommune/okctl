@@ -144,6 +144,16 @@ func GenerateApplicationOverlay(application client.OkctlApplication, hostedZoneD
 			},
 			Operation{
 				Type:  OperationTypeAdd,
+				Path:  "/spec/tls",
+				Value: []string{},
+			},
+			Operation{
+				Type:  OperationTypeAdd,
+				Path:  "/spec/tls/0",
+				Value: map[string]string{},
+			},
+			Operation{
+				Type:  OperationTypeAdd,
 				Path:  "/spec/tls/0/hosts",
 				Value: []string{host},
 			},

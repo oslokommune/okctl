@@ -98,6 +98,7 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 
 	applicationScaffold := &client.ScaffoldedApplication{
 		ApplicationName: app.Name,
+		Environment:     opts.ID.Environment,
 		Deployment:      base.Deployment,
 		Service:         base.Service,
 		Ingress:         base.Ingress,

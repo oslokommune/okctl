@@ -78,6 +78,7 @@ func TestNewApplicationService(t *testing.T) {
 		mockAppReporter{},
 	)
 
+	env := "test"
 	err := service.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
 		In:                  testInputBuffer,
 		Out:                 testOutputBuffer,
@@ -86,7 +87,7 @@ func TestNewApplicationService(t *testing.T) {
 		ID: &api.ID{
 			Region:       "eu-west-1",
 			AWSAccountID: "012345678912",
-			Environment:  "test",
+			Environment:  env,
 			Repository:   "not blank",
 			ClusterName:  "dummy-cluster",
 		},
@@ -103,7 +104,7 @@ func TestNewApplicationService(t *testing.T) {
 	g.Assert(t, "ingress.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "ingress.yaml")))
 	g.Assert(t, "service.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "service.yaml")))
 
-	g.Assert(t, "ingress-patch.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationOverlayDir, "ingress-patch.json")))
+	g.Assert(t, "ingress-patch.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationOverlayDir, env, "ingress-patch.json")))
 }
 
 func readFile(t *testing.T, fs *afero.Afero, path string) []byte {

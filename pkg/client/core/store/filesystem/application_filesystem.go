@@ -30,7 +30,7 @@ func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplica
 	// TODO: acquire env
 	appDir := path.Join(s.paths.BaseDir, application.ApplicationName)
 	baseDir := config.DefaultApplicationBaseDir
-	overlayDir := config.DefaultApplicationOverlayDir
+	overlayDir := path.Join(config.DefaultApplicationOverlayDir, application.Environment)
 
 	err := s.fs.MkdirAll(path.Join(appDir, baseDir), 0o744)
 	if err != nil {

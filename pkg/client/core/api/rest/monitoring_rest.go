@@ -21,6 +21,15 @@ type monitoringAPI struct {
 	client *HTTPClient
 }
 
+func (a *monitoringAPI) CreateTempo(opts api.CreateHelmReleaseOpts) (*api.Helm, error) {
+	into := &api.Helm{}
+	return into, a.client.DoPost(TargetHelmReleases, &opts, into)
+}
+
+func (a *monitoringAPI) DeleteTempo(opts api.DeleteHelmReleaseOpts) error {
+	return a.client.DoDelete(TargetHelmReleases, &opts)
+}
+
 func (a *monitoringAPI) DeletePromtail(opts api.DeleteHelmReleaseOpts) error {
 	return a.client.DoDelete(TargetHelmReleases, &opts)
 }

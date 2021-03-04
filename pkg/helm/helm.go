@@ -654,8 +654,9 @@ type RawMarshaller interface {
 	RawYAML() ([]byte, error)
 }
 
-// InstallConfig returns a valid install config
-func (c *Chart) InstallConfig() (*InstallConfig, error) {
+// ValuesYAML returns the values file serialised
+// to the yaml format
+func (c *Chart) ValuesYAML() ([]byte, error) {
 	var values []byte
 
 	var err error
@@ -675,6 +676,16 @@ func (c *Chart) InstallConfig() (*InstallConfig, error) {
 		if err != nil {
 			return nil, fmt.Errorf("marshalling values struct to yaml: %w", err)
 		}
+	}
+
+	return values, nil
+}
+
+// InstallConfig returns a valid install config
+func (c *Chart) InstallConfig() (*InstallConfig, error) {
+	values, err := c.ValuesYAML()
+	if err != nil {
+		return nil, err
 	}
 
 	return &InstallConfig{

@@ -8,18 +8,22 @@ import (
 	"github.com/oslokommune/okctl/pkg/scaffold/resources"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1beta1"
+	"sigs.k8s.io/yaml"
 )
 
 type ApplicationBase struct {
+	Kustomization   []byte
 	ArgoApplication []byte
-	Deployment      []byte
-	Ingress         []byte
-	Service         []byte
-	Volumes         []byte
+
+	Deployment []byte
+	Ingress    []byte
+	Service    []byte
+	Volumes    []byte
 }
 
 func NewApplicationBase() ApplicationBase {
 	return ApplicationBase{
+		Kustomization:   []byte(""),
 		ArgoApplication: []byte(""),
 		Deployment:      []byte(""),
 		Ingress:         []byte(""),
@@ -32,6 +36,7 @@ func NewApplicationBase() ApplicationBase {
 func GenerateApplicationBase(app kaex.Application, iacRepoURL string, applicationOutputDir string) (ApplicationBase, error) {
 	var err error
 	applicationBase := NewApplicationBase()
+	kustomization := NewKustomization()
 
 	volumes := make([]*v1.PersistentVolumeClaim, len(app.Volumes))
 	for index := range app.Volumes {
@@ -49,12 +54,18 @@ func GenerateApplicationBase(app kaex.Application, iacRepoURL string, applicatio
 		return applicationBase, err
 	}
 
+	if len(applicationBase.Volumes) > 0 {
+		kustomization.AddResource("volumes.yaml")
+	}
+
 	var service v1.Service
 	if app.Port != 0 {
 		service, err = resources.CreateOkctlService(app)
 		if err != nil {
 			return applicationBase, fmt.Errorf("creating service resource: %w", err)
 		}
+
+		kustomization.AddResource("service.yaml")
 	}
 
 	applicationBase.Service, err = resources.ResourceAsBytes(service)
@@ -68,8 +79,11 @@ func GenerateApplicationBase(app kaex.Application, iacRepoURL string, applicatio
 		if err != nil {
 			return applicationBase, err
 		}
+
+		kustomization.AddResource("ingress.yaml")
 	}
 
+	// TODO this needs to go into if above
 	applicationBase.Ingress, err = resources.ResourceAsBytes(ingress)
 	if err != nil {
 		return applicationBase, err
@@ -80,6 +94,8 @@ func GenerateApplicationBase(app kaex.Application, iacRepoURL string, applicatio
 		return applicationBase, err
 	}
 
+	kustomization.AddResource("deployment.yaml")
+
 	applicationBase.Deployment, err = resources.ResourceAsBytes(deployment)
 	if err != nil {
 		return applicationBase, err
@@ -88,6 +104,11 @@ func GenerateApplicationBase(app kaex.Application, iacRepoURL string, applicatio
 	argoApp := resources.CreateArgoApp(app, iacRepoURL, applicationOutputDir)
 
 	applicationBase.ArgoApplication, err = resources.ResourceAsBytes(argoApp)
+	if err != nil {
+		return applicationBase, err
+	}
+
+	applicationBase.Kustomization, err = yaml.Marshal(kustomization)
 	if err != nil {
 		return applicationBase, err
 	}

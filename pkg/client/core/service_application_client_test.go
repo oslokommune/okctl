@@ -98,6 +98,8 @@ func TestNewApplicationService(t *testing.T) {
 	assert.NilError(t, err)
 
 	g := goldie.New(t)
+	g.Assert(t, "kustomization.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "kustomization.yaml")))
+
 	g.Assert(t, "deployment.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "deployment.yaml")))
 	g.Assert(t, "argocd-application.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "argocd-application.yaml")))
 	g.Assert(t, "volumes.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "volumes.yaml")))

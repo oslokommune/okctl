@@ -11,7 +11,7 @@ type PatchReference struct {
 
 type Kustomization struct {
 	Resources []string         `json:"resources"`
-	Patches   []PatchReference `json:"patches"`
+	Patches   []PatchReference `json:"patches,omitempty"`
 }
 
 func (k *Kustomization) AddPatch(ref PatchReference) {

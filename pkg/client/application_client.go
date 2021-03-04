@@ -81,11 +81,12 @@ type ScaffoldedApplication struct {
 	ApplicationName string
 	Environment     string
 
-	ArgoCDResource []byte
-	Volume         []byte
-	Ingress        []byte
-	Service        []byte
+	BaseKustomization []byte
+	ArgoCDResource    []byte
+	Volume            []byte
+	Ingress           []byte
 
+	Service         []byte
 	Deployment      []byte
 	IngressPatch    []byte
 	ServicePatch    []byte

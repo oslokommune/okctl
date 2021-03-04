@@ -97,16 +97,17 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 	}
 
 	applicationScaffold := &client.ScaffoldedApplication{
-		ApplicationName: app.Name,
-		Environment:     opts.ID.Environment,
-		Deployment:      base.Deployment,
-		Service:         base.Service,
-		Ingress:         base.Ingress,
-		Volume:          base.Volumes,
-		ArgoCDResource:  base.ArgoApplication,
-		IngressPatch:    overlay.IngressPatch,
-		ServicePatch:    overlay.ServicePatch,
-		DeploymentPatch: overlay.DeploymentPatch,
+		ApplicationName:   app.Name,
+		Environment:       opts.ID.Environment,
+		BaseKustomization: base.Kustomization,
+		Deployment:        base.Deployment,
+		Service:           base.Service,
+		Ingress:           base.Ingress,
+		Volume:            base.Volumes,
+		ArgoCDResource:    base.ArgoApplication,
+		IngressPatch:      overlay.IngressPatch,
+		ServicePatch:      overlay.ServicePatch,
+		DeploymentPatch:   overlay.DeploymentPatch,
 	}
 
 	report, err := s.store.SaveApplication(applicationScaffold)

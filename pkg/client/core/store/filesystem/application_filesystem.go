@@ -27,7 +27,6 @@ func addOperationIfNotEmpty(operations store.Operations, root, filePath string, 
 
 // SaveApplication applies the application to the file system
 func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplication) (*store.Report, error) {
-	// TODO: acquire env
 	appDir := path.Join(s.paths.BaseDir, application.ApplicationName)
 	baseDir := config.DefaultApplicationBaseDir
 	overlayDir := path.Join(config.DefaultApplicationOverlayDir, application.Environment)
@@ -51,6 +50,7 @@ func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplica
 	addOperationIfNotEmpty(operations, baseDir, "volumes.yaml", application.Volume)
 	addOperationIfNotEmpty(operations, baseDir, "ingress.yaml", application.Ingress)
 	addOperationIfNotEmpty(operations, baseDir, "service.yaml", application.Service)
+	addOperationIfNotEmpty(operations, baseDir, "kustomization.yaml", application.BaseKustomization)
 
 	addOperationIfNotEmpty(operations, overlayDir, "ingress-patch.json", application.IngressPatch)
 	addOperationIfNotEmpty(operations, overlayDir, "service-patch.json", application.ServicePatch)

@@ -15,6 +15,22 @@ type monitoringReport struct {
 	console *Console
 }
 
+func (r *monitoringReport) ReportSaveTempo(_ *client.Tempo, report *store.Report) error {
+	return r.console.Report(
+		report.Actions,
+		"tempo",
+		aurora.Green("tempo").String(),
+	)
+}
+
+func (r *monitoringReport) ReportRemoveTempo(report *store.Report) error {
+	return r.console.Report(
+		report.Actions,
+		"tempo",
+		aurora.Green("tempo").String(),
+	)
+}
+
 func (r *monitoringReport) ReportSavePromtail(_ *client.Promtail, report *store.Report) error {
 	return r.console.Report(
 		report.Actions,

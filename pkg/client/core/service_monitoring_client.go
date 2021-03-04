@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/helm/charts/tempo"
+
 	lokipkg "github.com/oslokommune/okctl/pkg/loki"
 	"sigs.k8s.io/yaml"
 
@@ -56,6 +58,84 @@ const (
 
 func grafanaDomain(baseDomain string) string {
 	return fmt.Sprintf("%s.%s", grafanaSubDomain, baseDomain)
+}
+
+func (s *monitoringService) DeleteTempo(_ context.Context, opts client.DeleteTempoOpts) error {
+	err := s.spinner.Start("Tempo")
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	chart := tempo.New(nil)
+
+	err = s.api.DeleteTempo(api.DeleteHelmReleaseOpts{
+		ID:          opts.ID,
+		ReleaseName: chart.ReleaseName,
+		Namespace:   chart.Namespace,
+	})
+	if err != nil {
+		return err
+	}
+
+	report, err := s.store.RemoveTempo(opts.ID)
+	if err != nil {
+		return err
+	}
+
+	return s.report.ReportRemoveTempo(report)
+}
+
+func (s *monitoringService) CreateTempo(_ context.Context, opts client.CreateTempoOpts) (*client.Tempo, error) {
+	err := s.spinner.Start("Tempo")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = s.spinner.Stop()
+	}()
+
+	chart := tempo.New(tempo.NewDefaultValues())
+
+	values, err := chart.ValuesYAML()
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := s.api.CreateTempo(api.CreateHelmReleaseOpts{
+		ID:             opts.ID,
+		RepositoryName: chart.RepositoryName,
+		RepositoryURL:  chart.RepositoryURL,
+		ReleaseName:    chart.ReleaseName,
+		Version:        chart.Version,
+		Chart:          chart.Chart,
+		Namespace:      chart.Namespace,
+		Values:         values,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	l := &client.Tempo{
+		ID:    opts.ID,
+		Chart: c,
+	}
+
+	report, err := s.store.SaveTempo(l)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.ReportSaveTempo(l, report)
+	if err != nil {
+		return nil, err
+	}
+
+	return l, nil
 }
 
 func (s *monitoringService) DeletePromtail(_ context.Context, opts client.DeletePromtailOpts) error {

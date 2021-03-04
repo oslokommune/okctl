@@ -73,6 +73,22 @@ type DeletePromtailOpts struct {
 	ID api.ID
 }
 
+// Tempo is the content of a kubernetes tempo deployment
+type Tempo struct {
+	ID    api.ID
+	Chart *api.Helm
+}
+
+// CreateTempoOpts are the required inputs
+type CreateTempoOpts struct {
+	ID api.ID
+}
+
+// DeleteTempoOpts are the required inputs
+type DeleteTempoOpts struct {
+	ID api.ID
+}
+
 // MonitoringService is an implementation of the business logic
 type MonitoringService interface {
 	CreateKubePromStack(ctx context.Context, opts CreateKubePromStackOpts) (*KubePromStack, error)
@@ -81,6 +97,8 @@ type MonitoringService interface {
 	DeleteLoki(ctx context.Context, opts DeleteLokiOpts) error
 	CreatePromtail(ctx context.Context, opts CreatePromtailOpts) (*Promtail, error)
 	DeletePromtail(ctx context.Context, opts DeletePromtailOpts) error
+	CreateTempo(ctx context.Context, opts CreateTempoOpts) (*Tempo, error)
+	DeleteTempo(ctx context.Context, opts DeleteTempoOpts) error
 }
 
 // MonitoringAPI invokes REST API endpoints
@@ -91,6 +109,8 @@ type MonitoringAPI interface {
 	DeleteLoki(opts api.DeleteHelmReleaseOpts) error
 	CreatePromtail(opts CreatePromtailOpts) (*api.Helm, error)
 	DeletePromtail(opts api.DeleteHelmReleaseOpts) error
+	CreateTempo(opts api.CreateHelmReleaseOpts) (*api.Helm, error)
+	DeleteTempo(opts api.DeleteHelmReleaseOpts) error
 }
 
 // MonitoringStore is a storage layer implementation
@@ -101,6 +121,8 @@ type MonitoringStore interface {
 	RemoveLoki(id api.ID) (*store.Report, error)
 	SavePromtail(Promtail *Promtail) (*store.Report, error)
 	RemovePromtail(id api.ID) (*store.Report, error)
+	SaveTempo(Tempo *Tempo) (*store.Report, error)
+	RemoveTempo(id api.ID) (*store.Report, error)
 }
 
 // MonitoringState is a state layer implementation
@@ -117,4 +139,6 @@ type MonitoringReport interface {
 	ReportRemoveLoki(report *store.Report) error
 	ReportSavePromtail(Promtail *Promtail, report *store.Report) error
 	ReportRemovePromtail(report *store.Report) error
+	ReportSaveTempo(Tempo *Tempo, report *store.Report) error
+	ReportRemoveTempo(report *store.Report) error
 }

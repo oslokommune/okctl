@@ -68,12 +68,13 @@ type Endpoints struct {
 	CreateStorageClass                            endpoint.Endpoint
 	CreateKubePrometheusStack                     endpoint.Endpoint
 	CreateLokiHelmChart                           endpoint.Endpoint
-	DeleteHelmRelease                             endpoint.Endpoint
 	DeleteExternalSecrets                         endpoint.Endpoint
 	CreatePromtailHelmChart                       endpoint.Endpoint
 	CreateConfigMap                               endpoint.Endpoint
 	DeleteConfigMap                               endpoint.Endpoint
 	ScaleDeployment                               endpoint.Endpoint
+	CreateHelmRelease                             endpoint.Endpoint
+	DeleteHelmRelease                             endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -132,12 +133,13 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateStorageClass:                            makeCreateStorageClass(s.Kube),
 		CreateKubePrometheusStack:                     makeCreateKubePrometheusStack(s.Helm),
 		CreateLokiHelmChart:                           makeCreateLokiHelmChartEndpoint(s.Helm),
-		DeleteHelmRelease:                             makeDeleteHelmRelease(s.Helm),
 		DeleteExternalSecrets:                         makeDeleteExternalSecrets(s.Kube),
 		CreatePromtailHelmChart:                       makeCreatePromtailHelmChartEndpoint(s.Helm),
 		CreateConfigMap:                               makeCreateConfigMapEndpoint(s.Kube),
 		DeleteConfigMap:                               makeDeleteConfigMap(s.Kube),
 		ScaleDeployment:                               makeScaleDeployment(s.Kube),
+		CreateHelmRelease:                             makeCreateHelmRelease(s.Helm),
+		DeleteHelmRelease:                             makeDeleteHelmRelease(s.Helm),
 	}
 }
 
@@ -195,12 +197,13 @@ type Handlers struct {
 	CreateStorageClass                            http.Handler
 	CreateKubePrometheusStack                     http.Handler
 	CreateLokiHelmChart                           http.Handler
-	DeleteHelmRelease                             http.Handler
 	DeleteExternalSecrets                         http.Handler
 	CreatePromtailHelmChart                       http.Handler
 	CreateConfigMap                               http.Handler
 	DeleteConfigMap                               http.Handler
 	ScaleDeployment                               http.Handler
+	CreateHelmRelease                             http.Handler
+	DeleteHelmRelease                             http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -286,12 +289,13 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateStorageClass:                            newServer(endpoints.CreateStorageClass, decodeCreateStorageClass),
 		CreateKubePrometheusStack:                     newServer(endpoints.CreateKubePrometheusStack, decodeCreateKubePrometheusStackHelmChart),
 		CreateLokiHelmChart:                           newServer(endpoints.CreateLokiHelmChart, decodeCreateLokiHelmChart),
-		DeleteHelmRelease:                             newServer(endpoints.DeleteHelmRelease, decodeDeleteHelmRelease),
 		DeleteExternalSecrets:                         newServer(endpoints.DeleteExternalSecrets, decodeDeleteExternalSecrets),
 		CreatePromtailHelmChart:                       newServer(endpoints.CreatePromtailHelmChart, decodeCreatePromtailHelmChart),
 		CreateConfigMap:                               newServer(endpoints.CreateConfigMap, decodeCreateConfigMap),
 		DeleteConfigMap:                               newServer(endpoints.DeleteConfigMap, decodeDeleteConfigMap),
 		ScaleDeployment:                               newServer(endpoints.ScaleDeployment, decodeScaleDeployment),
+		CreateHelmRelease:                             newServer(endpoints.CreateHelmRelease, decodeCreateHelmRelease),
+		DeleteHelmRelease:                             newServer(endpoints.DeleteHelmRelease, decodeDeleteHelmRelease),
 	}
 }
 
@@ -387,6 +391,7 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 				r.Method(http.MethodPost, "/", handlers.CreateLokiHelmChart)
 			})
 			r.Route("/releases", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateHelmRelease)
 				r.Method(http.MethodDelete, "/", handlers.DeleteHelmRelease)
 			})
 			r.Route("/promtail", func(r chi.Router) {
@@ -561,12 +566,13 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateStorageClass:                            logmd.Logging(logger, strings.Join([]string{kubeTag, storageclassTag}, "/"), "create")(endpoints.CreateStorageClass),
 			CreateKubePrometheusStack:                     logmd.Logging(logger, strings.Join([]string{helmTag, kubePrometheusStackTag}, "/"), "create")(endpoints.CreateKubePrometheusStack),
 			CreateLokiHelmChart:                           logmd.Logging(logger, strings.Join([]string{helmTag, lokiTag}, "/"), "create")(endpoints.CreateLokiHelmChart),
-			DeleteHelmRelease:                             logmd.Logging(logger, strings.Join([]string{helmTag, releasesTag}, "/"), "delete")(endpoints.DeleteHelmRelease),
 			DeleteExternalSecrets:                         logmd.Logging(logger, strings.Join([]string{kubeTag, externalSecretsTag}, "/"), "delete")(endpoints.DeleteExternalSecrets),
 			CreatePromtailHelmChart:                       logmd.Logging(logger, strings.Join([]string{helmTag, promtailTag}, "/"), "create")(endpoints.CreatePromtailHelmChart),
 			CreateConfigMap:                               logmd.Logging(logger, strings.Join([]string{kubeTag, configMapTag}, "/"), "create")(endpoints.CreateConfigMap),
 			DeleteConfigMap:                               logmd.Logging(logger, strings.Join([]string{kubeTag, configMapTag}, "/"), "delete")(endpoints.DeleteConfigMap),
 			ScaleDeployment:                               logmd.Logging(logger, strings.Join([]string{kubeTag, scaleTag}, "/"), "create")(endpoints.ScaleDeployment),
+			CreateHelmRelease:                             logmd.Logging(logger, strings.Join([]string{kubeTag, scaleTag}, "/"), "create")(endpoints.CreateHelmRelease),
+			DeleteHelmRelease:                             logmd.Logging(logger, strings.Join([]string{helmTag, releasesTag}, "/"), "delete")(endpoints.DeleteHelmRelease),
 		}
 	}
 }

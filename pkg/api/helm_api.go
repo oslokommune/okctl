@@ -169,6 +169,33 @@ func (o CreateKubePrometheusStackOpts) Validate() error {
 	)
 }
 
+// CreateHelmReleaseOpts contains the required inputs for
+// installing a Helm release on the Kubernetes cluster
+type CreateHelmReleaseOpts struct {
+	ID             ID
+	RepositoryName string
+	RepositoryURL  string
+	ReleaseName    string
+	Version        string
+	Chart          string
+	Namespace      string
+	Values         []byte
+}
+
+// Validate the provided inputs
+func (o CreateHelmReleaseOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.RepositoryName, validation.Required),
+		validation.Field(&o.RepositoryURL, validation.Required),
+		validation.Field(&o.ReleaseName, validation.Required),
+		validation.Field(&o.Version, validation.Required),
+		validation.Field(&o.Chart, validation.Required),
+		validation.Field(&o.Namespace, validation.Required),
+		validation.Field(&o.Values, validation.Required),
+	)
+}
+
 // DeleteHelmReleaseOpts contains the required inputs for
 // removing a Helm release from the Kubernetes cluster
 // Experimenting a little bit with a more generic/general
@@ -198,8 +225,9 @@ type HelmService interface {
 	CreateBlockstorageHelmChart(ctx context.Context, opts CreateBlockstorageHelmChartOpts) (*Helm, error)
 	CreateKubePrometheusStack(ctx context.Context, opts CreateKubePrometheusStackOpts) (*Helm, error)
 	CreateLokiHelmChart(ctx context.Context, opts CreateLokiHelmChartOpts) (*Helm, error)
-	DeleteHelmRelease(ctx context.Context, opts DeleteHelmReleaseOpts) error
 	CreatePromtailHelmChart(ctx context.Context, opts CreatePromtailHelmChartOpts) (*Helm, error)
+	CreateHelmRelease(ctx context.Context, opts CreateHelmReleaseOpts) (*Helm, error)
+	DeleteHelmRelease(ctx context.Context, opts DeleteHelmReleaseOpts) error
 }
 
 // HelmRun defines the runner layer
@@ -212,8 +240,9 @@ type HelmRun interface {
 	CreateBlockstorageHelmChart(opts CreateBlockstorageHelmChartOpts) (*Helm, error)
 	CreateKubePromStack(opts CreateKubePrometheusStackOpts) (*Helm, error)
 	CreateLokiHelmChart(opts CreateLokiHelmChartOpts) (*Helm, error)
-	DeleteHelmRelease(opts DeleteHelmReleaseOpts) error
 	CreatePromtailHelmChart(opts CreatePromtailHelmChartOpts) (*Helm, error)
+	CreateHelmRelease(opts CreateHelmReleaseOpts) (*Helm, error)
+	DeleteHelmRelease(opts DeleteHelmReleaseOpts) error
 }
 
 // HelmStore defines the storage layer

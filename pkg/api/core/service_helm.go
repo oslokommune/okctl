@@ -13,6 +13,20 @@ type helmService struct {
 	store api.HelmStore
 }
 
+func (s *helmService) CreateHelmRelease(_ context.Context, opts api.CreateHelmReleaseOpts) (*api.Helm, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, errors.E(err, "validating input options", errors.Invalid)
+	}
+
+	h, err := s.run.CreateHelmRelease(opts)
+	if err != nil {
+		return nil, errors.E(err, "creating helm release", errors.Internal)
+	}
+
+	return h, nil
+}
+
 func (s *helmService) DeleteHelmRelease(_ context.Context, opts api.DeleteHelmReleaseOpts) error {
 	err := opts.Validate()
 	if err != nil {

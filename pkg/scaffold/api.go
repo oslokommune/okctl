@@ -102,13 +102,27 @@ func GenerateApplicationOverlay(application client.OkctlApplication, hostedZoneD
 	if application.HasIngress() {
 		ingressPatch := NewPatch()
 
-		ingressPatch.AddOperation(Operation{
-			Type: OperationTypeAdd,
-			Path: "/metadata/annotations",
-			Value: map[string]string{
-				"alb.ingress.kubernetes.io/certificate-arn": certARN,
+		host := fmt.Sprintf("%s.%s", application.SubDomain, hostedZoneDomain)
+
+		ingressPatch.AddOperations(
+			Operation{
+				Type: OperationTypeAdd,
+				Path: "/metadata/annotations",
+				Value: map[string]string{
+					"alb.ingress.kubernetes.io/certificate-arn": certARN,
+				},
 			},
-		})
+			Operation{
+				Type:  OperationTypeAdd,
+				Path:  "/spec/rules/0/host",
+				Value: host,
+			},
+			Operation{
+				Type:  OperationTypeAdd,
+				Path:  "/spec/tls/0/hosts",
+				Value: []string{host},
+			},
+		)
 
 		overlay.IngressPatch, err = json.Marshal(ingressPatch)
 		if err != nil {

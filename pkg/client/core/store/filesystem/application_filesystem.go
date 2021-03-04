@@ -17,37 +17,43 @@ type applicationStore struct {
 }
 
 // Helper for optional resources
-func addOperationIfNotEmpty(operations store.Operations, path string, content []byte) {
+func addOperationIfNotEmpty(operations store.Operations, root, filePath string, content []byte) {
 	if len(content) == 0 {
 		return
 	}
 
-	operations.StoreBytes(path, content)
+	operations.StoreBytes(path.Join(root, filePath), content)
 }
 
 // SaveApplication applies the application to the file system
 func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplication) (*store.Report, error) {
 	// TODO: acquire env
-	baseDir := path.Join(s.paths.BaseDir, application.ApplicationName)
+	appDir := path.Join(s.paths.BaseDir, application.ApplicationName)
+	baseDir := config.DefaultApplicationBaseDir
 	overlayDir := config.DefaultApplicationOverlayDir
 
-	operations := store.NewFileSystem(baseDir, s.fs).
-		StoreBytes("deployment.yaml", application.Deployment).
-		StoreBytes("argocd-application.yaml", application.ArgoCDResource)
-
-	err := s.fs.MkdirAll(path.Join(baseDir, overlayDir), 0o744)
+	err := s.fs.MkdirAll(path.Join(appDir, baseDir), 0o744)
 	if err != nil {
 		return nil, fmt.Errorf("creating overlay directory: %w", err)
 	}
 
+	err = s.fs.MkdirAll(path.Join(appDir, overlayDir), 0o744)
+	if err != nil {
+		return nil, fmt.Errorf("creating overlay directory: %w", err)
+	}
+
+	operations := store.NewFileSystem(appDir, s.fs)
+
 	// TODO: clean up. Do we need patches? things? meaning of life?
-	addOperationIfNotEmpty(operations, "volumes.yaml", application.Volume)
 
-	addOperationIfNotEmpty(operations, "ingress.yaml", application.Ingress)
-	addOperationIfNotEmpty(operations, path.Join(overlayDir, "ingress-patch.json"), application.IngressPatch)
+	addOperationIfNotEmpty(operations, baseDir, "deployment.yaml", application.Deployment)
+	addOperationIfNotEmpty(operations, baseDir, "argocd-application.yaml", application.ArgoCDResource)
+	addOperationIfNotEmpty(operations, baseDir, "volumes.yaml", application.Volume)
+	addOperationIfNotEmpty(operations, baseDir, "ingress.yaml", application.Ingress)
+	addOperationIfNotEmpty(operations, baseDir, "service.yaml", application.Service)
 
-	addOperationIfNotEmpty(operations, "service.yaml", application.Service)
-	addOperationIfNotEmpty(operations, path.Join(overlayDir, "service-patch.json"), application.ServicePatch)
+	addOperationIfNotEmpty(operations, overlayDir, "ingress-patch.json", application.IngressPatch)
+	addOperationIfNotEmpty(operations, overlayDir, "service-patch.json", application.ServicePatch)
 
 	report, err := operations.Do()
 	if err != nil {

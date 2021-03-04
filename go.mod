@@ -46,7 +46,7 @@ require (
 	github.com/gofrs/flock v0.8.0
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/gogo/googleapis v1.4.0 // indirect
-	github.com/google/go-cmp v0.5.4
+	github.com/google/go-cmp v0.5.5
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/handlers v1.4.2 // indirect

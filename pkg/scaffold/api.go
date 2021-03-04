@@ -5,6 +5,7 @@ import (
 	"fmt"
 	kaex "github.com/oslokommune/kaex/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
+	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/scaffold/resources"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1beta1"
@@ -154,7 +155,7 @@ func GenerateApplicationOverlay(application client.OkctlApplication, hostedZoneD
 		}
 
 		kustomization.AddPatch(PatchReference{
-			Path:   "ingress-patch.json",
+			Path:   config.DefaultIngressPatchFilename,
 			Target: PatchTarget{Kind: "Ingress"},
 		})
 	}

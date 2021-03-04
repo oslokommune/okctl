@@ -54,7 +54,7 @@ func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplica
 
 	// TODO: figure out path problem
 	addOperationIfNotEmpty(operations, overlayDir, "kustomization.yaml", application.OverlayKustomization)
-	addOperationIfNotEmpty(operations, overlayDir, "ingress-patch.json", application.IngressPatch)
+	addOperationIfNotEmpty(operations, overlayDir, config.DefaultIngressPatchFilename, application.IngressPatch)
 	addOperationIfNotEmpty(operations, overlayDir, "service-patch.json", application.ServicePatch)
 
 	report, err := operations.Do()

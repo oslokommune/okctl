@@ -121,6 +121,8 @@ const (
 	DefaultApplicationBaseDir = "base"
 	// DefaultApplicationOverlayDir is where the directory where application overlay files reside
 	DefaultApplicationOverlayDir = "overlays"
+	// DefaultIngressPatchFilename defines the filename of the ingress patch
+	DefaultIngressPatchFilename = "ingress-patch.json"
 
 	// DefaultKeyringServiceName is the name of the keyring or encrypted file used to store client secrets
 	DefaultKeyringServiceName = "okctlService"

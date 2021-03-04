@@ -16,6 +16,7 @@ type applicationStore struct {
 	fs    *afero.Afero
 }
 
+// Helper for optional resources
 func addOperationIfNotEmpty(operations store.Operations, path string, content []byte) {
 	if len(content) == 0 {
 		return
@@ -26,12 +27,18 @@ func addOperationIfNotEmpty(operations store.Operations, path string, content []
 
 // SaveApplication applies the application to the file system
 func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplication) (*store.Report, error) {
+	// TODO: acquire env
 	baseDir := path.Join(s.paths.BaseDir, application.ApplicationName)
 	overlayDir := config.DefaultApplicationOverlayDir
 
 	operations := store.NewFileSystem(baseDir, s.fs).
 		StoreBytes("deployment.yaml", application.Deployment).
 		StoreBytes("argocd-application.yaml", application.ArgoCDResource)
+
+	err := s.fs.MkdirAll(path.Join(baseDir, overlayDir), 0o744)
+	if err != nil {
+		return nil, fmt.Errorf("creating overlay directory: %w", err)
+	}
 
 	// TODO: clean up. Do we need patches? things? meaning of life?
 	addOperationIfNotEmpty(operations, "volumes.yaml", application.Volume)

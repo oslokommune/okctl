@@ -30,6 +30,19 @@ type helmRun struct {
 	kubeConfigStore api.KubeConfigStore
 }
 
+func (r *helmRun) CreateHelmRelease(opts api.CreateHelmReleaseOpts) (*api.Helm, error) {
+	return r.createHelmChart(opts.ID, &helm.Chart{
+		RepositoryName: opts.RepositoryName,
+		RepositoryURL:  opts.RepositoryURL,
+		ReleaseName:    opts.ReleaseName,
+		Version:        opts.Version,
+		Chart:          opts.Chart,
+		Namespace:      opts.Namespace,
+		Timeout:        config.DefaultChartApplyTimeout,
+		Values:         opts.Values,
+	})
+}
+
 func (r *helmRun) DeleteHelmRelease(opts api.DeleteHelmReleaseOpts) error {
 	kubeConf, err := r.kubeConfigStore.GetKubeConfig()
 	if err != nil {

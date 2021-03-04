@@ -660,13 +660,16 @@ func (c *Chart) InstallConfig() (*InstallConfig, error) {
 
 	var err error
 
-	if raw, ok := c.Values.(RawMarshaller); ok {
-		values, err = raw.RawYAML()
+	switch v := c.Values.(type) {
+	case RawMarshaller:
+		values, err = v.RawYAML()
 
 		if err != nil {
 			return nil, err
 		}
-	} else {
+	case []byte:
+		values = v
+	default:
 		values, err = yaml.Marshal(c.Values)
 
 		if err != nil {

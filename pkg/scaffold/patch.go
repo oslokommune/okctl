@@ -56,8 +56,8 @@ func NewPatch() *Patch {
 	}
 }
 
-func (p *Patch) AddOperation(o Operation) {
-	p.Operations = append(p.Operations, o)
+func (p *Patch) AddOperations(o ...Operation) {
+	p.Operations = append(p.Operations, o...)
 }
 
 // MarshalJSON knows how to turn a Patch into a kustomize patch.json

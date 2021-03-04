@@ -98,7 +98,7 @@ func TestNewApplicationService(t *testing.T) {
 	assert.NilError(t, err)
 
 	g := goldie.New(t)
-	g.Assert(t, "kustomization.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "kustomization.yaml")))
+	g.Assert(t, "kustomization-base.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "kustomization.yaml")))
 
 	g.Assert(t, "deployment.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "deployment.yaml")))
 	g.Assert(t, "argocd-application.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "argocd-application.yaml")))
@@ -106,6 +106,7 @@ func TestNewApplicationService(t *testing.T) {
 	g.Assert(t, "ingress.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "ingress.yaml")))
 	g.Assert(t, "service.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "service.yaml")))
 
+	g.Assert(t, "kustomization-overlay.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationOverlayDir, env, "kustomization.yaml")))
 	g.Assert(t, "ingress-patch.yaml", readFile(t, &fs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationOverlayDir, env, "ingress-patch.json")))
 }
 

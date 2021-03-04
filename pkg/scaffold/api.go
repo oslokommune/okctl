@@ -120,6 +120,9 @@ func GenerateApplicationOverlay(application client.OkctlApplication, hostedZoneD
 	var err error
 	overlay := newApplicationOverlay()
 
+	kustomization := NewKustomization()
+	kustomization.AddResource("../../base")
+
 	if application.HasIngress() {
 		ingressPatch := NewPatch()
 
@@ -149,6 +152,16 @@ func GenerateApplicationOverlay(application client.OkctlApplication, hostedZoneD
 		if err != nil {
 			return overlay, fmt.Errorf("marshalling ingress patch: %w", err)
 		}
+
+		kustomization.AddPatch(PatchReference{
+			Path:   "ingress-patch.json",
+			Target: PatchTarget{Kind: "Ingress"},
+		})
+	}
+
+	overlay.Kustomization, err = yaml.Marshal(kustomization)
+	if err != nil {
+		return overlay, fmt.Errorf("marshalling kustomization: %w", err)
 	}
 
 	return overlay, nil

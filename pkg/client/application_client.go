@@ -86,11 +86,12 @@ type ScaffoldedApplication struct {
 	Volume            []byte
 	Ingress           []byte
 
-	Service         []byte
-	Deployment      []byte
-	IngressPatch    []byte
-	ServicePatch    []byte
-	DeploymentPatch []byte
+	OverlayKustomization []byte
+	Service              []byte
+	Deployment           []byte
+	IngressPatch         []byte
+	ServicePatch         []byte
+	DeploymentPatch      []byte
 }
 
 // ApplicationService applies the scaffolding API and produces the requested resources

@@ -52,6 +52,8 @@ func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplica
 	addOperationIfNotEmpty(operations, baseDir, "service.yaml", application.Service)
 	addOperationIfNotEmpty(operations, baseDir, "kustomization.yaml", application.BaseKustomization)
 
+	// TODO: figure out path problem
+	addOperationIfNotEmpty(operations, overlayDir, "kustomization.yaml", application.OverlayKustomization)
 	addOperationIfNotEmpty(operations, overlayDir, "ingress-patch.json", application.IngressPatch)
 	addOperationIfNotEmpty(operations, overlayDir, "service-patch.json", application.ServicePatch)
 

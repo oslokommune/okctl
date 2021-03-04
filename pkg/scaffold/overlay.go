@@ -1,6 +1,7 @@
 package scaffold
 
 type applicationOverlay struct {
+	Kustomization   []byte
 	IngressPatch    []byte
 	ServicePatch    []byte
 	DeploymentPatch []byte
@@ -8,6 +9,7 @@ type applicationOverlay struct {
 
 func newApplicationOverlay() applicationOverlay {
 	return applicationOverlay{
+		Kustomization:   []byte(""),
 		IngressPatch:    []byte(""),
 		ServicePatch:    []byte(""),
 		DeploymentPatch: []byte(""),

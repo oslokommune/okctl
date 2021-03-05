@@ -124,6 +124,10 @@ func TestNewApplicationService(t *testing.T) {
 	// TODO: This fails because the kustomize dependency is 2.0.3, a really old version of kustomize.
 	// See https://github.com/kubernetes/kubernetes/pull/98946.
 	// We should attempt to use the kustomize lib directly.
+	// Useful links:
+	// https://github.com/kubernetes-sigs/kustomize/issues/142#issuecomment-426054466
+	// https://github.com/kubernetes-sigs/kustomize/blob/master/kustomize/commands/build/build.go
+	// https://pkg.go.dev/search?q=kustomize
 	err = kustomize.RunKustomizeBuild(&buf, kustomizeFs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationOverlayDir, env))
 	assert.NilError(t, err)
 	fmt.Println(err)

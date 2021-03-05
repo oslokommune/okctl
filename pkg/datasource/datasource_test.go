@@ -1,4 +1,4 @@
-package loki_test
+package datasource_test
 
 import (
 	"testing"
@@ -7,17 +7,21 @@ import (
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/yaml"
 
-	"github.com/oslokommune/okctl/pkg/loki"
+	"github.com/oslokommune/okctl/pkg/datasource"
 )
 
-func TestNewDatasourceTemplate(t *testing.T) {
+func TestNewDatasource(t *testing.T) {
 	testCases := []struct {
 		name string
-		ds   *loki.Datasources
+		ds   *datasource.Datasources
 	}{
 		{
-			name: "default-datasource",
-			ds:   loki.NewDatasourceTemplate(),
+			name: "loki",
+			ds:   datasource.NewLoki(),
+		},
+		{
+			name: "tempo",
+			ds:   datasource.NewTempo(),
 		},
 	}
 

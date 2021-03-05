@@ -105,7 +105,9 @@ $ okctl delete cluster prod
 
 ## Roadmap
 
-We have a basic cluster up and running, and we are currently working on getting the basic components of the cluster deployed:
+We have a cluster up and running, and we are currently working on building a seamless experience on top of this cluster with integrations for common functionality:
+
+### Core cluster
 
 - [x] [ExternalSecrets](https://external-secrets.github.io/kubernetes-external-secrets/) for storing secrets securely
 - [x] [AWS ALB Ingress Controller](https://github.com/kubernetes-sigs/aws-alb-ingress-controller) creates load balancers for incoming traffic
@@ -114,8 +116,14 @@ We have a basic cluster up and running, and we are currently working on getting 
 - [x] [Argo CD](https://github.com/argoproj/argo-cd) gives us continuous delivery
 - [x] [Kubernetes Prometheus](https://github.com/prometheus-operator/kube-prometheus) for monitoring
 - [x] [Amazon Elastic Block Store (EBS) CSI driver](https://github.com/kubernetes-sigs/aws-ebs-csi-driver/) for block storage
-- [ ] [Loki](https://github.com/grafana/loki) for consuming logs
-- [ ] [Jaeger](https://www.jaegertracing.io/) for traces
+- [x] [Loki](https://github.com/grafana/loki) for consuming logs
+- [x] [Tempo](https://grafana.com/oss/tempo/) for processing trace
+
+### Application lifecycle
+
+- [ ] [Postgres](https://aws.amazon.com/rds/postgresql/) for creating and integrating a postgres database with your application
+- [ ] [Amazon Elastic Container Registry](https://aws.amazon.com/ecr/) for creating and assisting with the publication of container images for use in the cluster
+
 
 ## Compare and contrast
 

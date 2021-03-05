@@ -79,6 +79,7 @@ type Endpoints struct {
 
 // MakeEndpoints returns the endpoints initialised with their
 // corresponding service
+// nolint: funlen
 func MakeEndpoints(s Services) Endpoints {
 	return Endpoints{
 		CreateCluster:                                 makeCreateClusterEndpoint(s.Cluster),

@@ -209,6 +209,9 @@ type ClusterIntegrations struct {
 	// Promtail if set to true will install the Promtail log scraper
 	Promtail bool `json:"promtail,omitempty"`
 
+	// Tempo if set to true will install tempo for trace ingestion
+	Tempo bool `json:"tempo,omitempty"`
+
 	// Blockstorage if set to true will install the EBS CSI block storage driver into the
 	// cluster, which makes it possible to create PersistentVolumeClaims in AWS
 	// +optional
@@ -277,6 +280,7 @@ func NewDefaultCluster(name, env, org, repo, team, accountID string) Cluster {
 			KubePromStack:             true,
 			Loki:                      true,
 			Promtail:                  true,
+			Tempo:                     true,
 			Blockstorage:              true,
 			Cognito:                   true,
 			ArgoCD:                    true,

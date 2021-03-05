@@ -35,6 +35,8 @@ const (
 	ResourceNodeTypeLoki
 	// ResourceNodeTypePromtail represents a promtail deployment
 	ResourceNodeTypePromtail
+	// ResourceNodeTypeTempo represents a Tempo deployment
+	ResourceNodeTypeTempo
 	// ResourceNodeTypeALBIngress represents an ALB Ingress resource
 	ResourceNodeTypeALBIngress
 	// ResourceNodeTypeAWSLoadBalancerController represents an AWS load balancer controller resource
@@ -73,6 +75,8 @@ func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
 		return "Loki"
 	case ResourceNodeTypePromtail:
 		return "Promtail"
+	case ResourceNodeTypeTempo:
+		return "Tempo"
 	case ResourceNodeTypeBlockstorage:
 		return "Blockstorage"
 	case ResourceNodeTypeALBIngress:

@@ -144,6 +144,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				reconciler.NewKubePrometheusStackReconciler(services.Monitoring),
 				reconciler.NewLokiReconciler(services.Monitoring),
 				reconciler.NewPromtailReconciler(services.Monitoring),
+				reconciler.NewTempoReconciler(services.Monitoring),
 				reconciler.NewBlockstorageReconciler(services.Blockstorage),
 				reconciler.NewClusterReconciler(services.Cluster),
 				reconciler.NewExternalDNSReconciler(services.ExternalDNS),
@@ -180,14 +181,14 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("synchronizing declaration with state: %w", err)
 			}
 
-			fmt.Fprintln(o.Out, "\nYour cluster is up to date.")
-			fmt.Fprintln(o.Out,
+			_, _ = fmt.Fprintln(o.Out, "\nYour cluster is up to date.")
+			_, _ = fmt.Fprintln(o.Out,
 				fmt.Sprintf(
 					"\nTo access your cluster, run %s to activate the environment for your cluster",
 					aurora.Green(fmt.Sprintf("okctl venv %s", clusterID.Environment)),
 				),
 			)
-			fmt.Fprintln(o.Out, fmt.Sprintf("Your cluster should then be available with %s", aurora.Green("kubectl")))
+			_, _ = fmt.Fprintln(o.Out, fmt.Sprintf("Your cluster should then be available with %s", aurora.Green("kubectl")))
 
 			return nil
 		},
@@ -257,12 +258,12 @@ func inferClusterFromStdinOrFile(stdin io.Reader, path string) (*v1alpha1.Cluste
 
 	_, err = io.Copy(&buffer, inputReader)
 	if err != nil {
-		return nil, fmt.Errorf("error copying reader data: %w", err)
+		return nil, fmt.Errorf("copying reader data: %w", err)
 	}
 
 	err = yaml.Unmarshal(buffer.Bytes(), &cluster)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling buffer: %w", err)
+		return nil, fmt.Errorf("unmarshalling buffer: %w", err)
 	}
 
 	return &cluster, nil

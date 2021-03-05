@@ -15,6 +15,7 @@ integrations:
   kubePromStack: true
   loki: true
   promtail: true
+  tempo: true
 kind: Cluster
 metadata:
   accountID: "123456789012"

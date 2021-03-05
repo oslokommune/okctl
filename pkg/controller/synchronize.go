@@ -55,9 +55,9 @@ func Synchronize(opts *SynchronizeOpts) error {
 	setRefreshers(diffTree, opts)
 
 	if opts.Debug {
-		fmt.Fprintf(opts.Out, "Present resources in desired tree (what is desired): \n%s\n\n", desiredTree.String())
-		fmt.Fprintf(opts.Out, "Present resources in current state tree (what is currently): \n%s\n\n", currentStateTree.String())
-		fmt.Fprintf(opts.Out, "Present resources in difference tree (what should be generated): \n%s\n\n", diffTree.String())
+		_, _ = fmt.Fprintf(opts.Out, "Present resources in desired tree (what is desired): \n%s\n\n", desiredTree.String())
+		_, _ = fmt.Fprintf(opts.Out, "Present resources in current state tree (what is currently): \n%s\n\n", currentStateTree.String())
+		_, _ = fmt.Fprintf(opts.Out, "Present resources in difference tree (what should be generated): \n%s\n\n", diffTree.String())
 	}
 
 	return handleNode(opts.ReconciliationManager, diffTree)
@@ -124,6 +124,8 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 			desiredTreeNode.State = boolToState(declaration.Integrations.Loki)
 		case resourcetree.ResourceNodeTypePromtail:
 			desiredTreeNode.State = boolToState(declaration.Integrations.Promtail)
+		case resourcetree.ResourceNodeTypeTempo:
+			desiredTreeNode.State = boolToState(declaration.Integrations.Tempo)
 		case resourcetree.ResourceNodeTypeArgoCD:
 			desiredTreeNode.State = boolToState(declaration.Integrations.ArgoCD)
 		}
@@ -164,6 +166,8 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 			receiver.State = boolToState(existingResources.hasLoki)
 		case resourcetree.ResourceNodeTypePromtail:
 			receiver.State = boolToState(existingResources.hasPromtail)
+		case resourcetree.ResourceNodeTypeTempo:
+			receiver.State = boolToState(existingResources.hasTempo)
 		case resourcetree.ResourceNodeTypeArgoCD:
 			receiver.State = boolToState(existingResources.hasArgoCD)
 		}

@@ -7,7 +7,7 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/tempo"
 
-	lokipkg "github.com/oslokommune/okctl/pkg/loki"
+	"github.com/oslokommune/okctl/pkg/datasource"
 	"sigs.k8s.io/yaml"
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/promtail"
@@ -53,14 +53,15 @@ const (
 	adminPassName    = "admin-pass"
 	secretsCfgName   = "grafana-secrets-cm"
 
-	lokiDatasourceConfigMapName = "loki-datasource"
+	lokiDatasourceConfigMapName  = "loki-datasource"
+	tempoDatasourceConfigMapName = "tempo-datasource"
 )
 
 func grafanaDomain(baseDomain string) string {
 	return fmt.Sprintf("%s.%s", grafanaSubDomain, baseDomain)
 }
 
-func (s *monitoringService) DeleteTempo(_ context.Context, opts client.DeleteTempoOpts) error {
+func (s *monitoringService) DeleteTempo(ctx context.Context, opts client.DeleteTempoOpts) error {
 	err := s.spinner.Start("Tempo")
 	if err != nil {
 		return err
@@ -69,6 +70,15 @@ func (s *monitoringService) DeleteTempo(_ context.Context, opts client.DeleteTem
 	defer func() {
 		err = s.spinner.Stop()
 	}()
+
+	err = s.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
+		ID:        opts.ID,
+		Name:      tempoDatasourceConfigMapName,
+		Namespace: config.DefaultMonitoringNamespace,
+	})
+	if err != nil {
+		return err
+	}
 
 	chart := tempo.New(nil)
 
@@ -89,7 +99,8 @@ func (s *monitoringService) DeleteTempo(_ context.Context, opts client.DeleteTem
 	return s.report.ReportRemoveTempo(report)
 }
 
-func (s *monitoringService) CreateTempo(_ context.Context, opts client.CreateTempoOpts) (*client.Tempo, error) {
+// nolint: funlen
+func (s *monitoringService) CreateTempo(ctx context.Context, opts client.CreateTempoOpts) (*client.Tempo, error) {
 	err := s.spinner.Start("Tempo")
 	if err != nil {
 		return nil, err
@@ -118,6 +129,40 @@ func (s *monitoringService) CreateTempo(_ context.Context, opts client.CreateTem
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	data, err := yaml.Marshal(datasource.NewTempo())
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.manifest.CreateConfigMap(ctx, client.CreateConfigMapOpts{
+		ID:        opts.ID,
+		Name:      tempoDatasourceConfigMapName,
+		Namespace: config.DefaultMonitoringNamespace,
+		Data: map[string]string{
+			"tempo-datasource.yaml": string(data),
+		},
+		Labels: map[string]string{
+			"grafana_datasource": "1",
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// The datasources are only loaded during grafana startup, so we need
+	// to cycle grafana to have it pick up the changes
+	for _, replicas := range []int32{0, 1} {
+		err = s.manifest.ScaleDeployment(ctx, api.ScaleDeploymentOpts{
+			ID:        opts.ID,
+			Name:      config.DefaultKubePrometheusStackGrafanaName,
+			Namespace: config.DefaultMonitoringNamespace,
+			Replicas:  replicas,
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	l := &client.Tempo{
@@ -217,6 +262,9 @@ func (s *monitoringService) DeleteLoki(ctx context.Context, opts client.DeleteLo
 		Name:      lokiDatasourceConfigMapName,
 		Namespace: config.DefaultMonitoringNamespace,
 	})
+	if err != nil {
+		return err
+	}
 
 	err = s.api.DeleteLoki(api.DeleteHelmReleaseOpts{
 		ID:          opts.ID,
@@ -251,7 +299,7 @@ func (s *monitoringService) CreateLoki(ctx context.Context, opts client.CreateLo
 		return nil, err
 	}
 
-	data, err := yaml.Marshal(lokipkg.NewDatasourceTemplate())
+	data, err := yaml.Marshal(datasource.NewLoki())
 	if err != nil {
 		return nil, err
 	}

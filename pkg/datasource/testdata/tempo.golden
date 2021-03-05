@@ -1,0 +1,12 @@
+apiVersion: 1
+datasources:
+- access: proxy
+  basicAuth: false
+  editable: false
+  jsonData:
+    tlsSkipVerify: true
+  name: Tempo
+  orgId: 1
+  type: tempo
+  url: http://tempo:16686
+  version: 1

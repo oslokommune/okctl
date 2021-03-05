@@ -17,6 +17,7 @@ type ScaffoldApplicationOpts struct {
 
 	ApplicationFilePath string
 	RepoDir             string
+	OutputDir           string
 
 	ID               *api.ID
 	HostedZoneID     string

@@ -27,35 +27,35 @@ func addOperationIfNotEmpty(operations store.Operations, root, filePath string, 
 
 // SaveApplication applies the application to the file system
 func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplication) (*store.Report, error) {
-	appDir := path.Join(s.paths.BaseDir, application.ApplicationName)
-	baseDir := config.DefaultApplicationBaseDir
-	overlayDir := path.Join(config.DefaultApplicationOverlayDir, application.Environment)
+	absoluteApplicationDir := path.Join(s.paths.BaseDir, application.ApplicationName)
+	relativeApplicationBaseDir := config.DefaultApplicationBaseDir
+	relativeApplicationOverlayDir := path.Join(config.DefaultApplicationOverlayDir, application.Environment)
 
-	err := s.fs.MkdirAll(path.Join(appDir, baseDir), 0o744)
+	err := s.fs.MkdirAll(path.Join(absoluteApplicationDir, relativeApplicationBaseDir), 0o744)
 	if err != nil {
 		return nil, fmt.Errorf("creating overlay directory: %w", err)
 	}
 
-	err = s.fs.MkdirAll(path.Join(appDir, overlayDir), 0o744)
+	err = s.fs.MkdirAll(path.Join(absoluteApplicationDir, relativeApplicationOverlayDir), 0o744)
 	if err != nil {
 		return nil, fmt.Errorf("creating overlay directory: %w", err)
 	}
 
-	operations := store.NewFileSystem(appDir, s.fs)
+	operations := store.NewFileSystem(absoluteApplicationDir, s.fs)
 
 	// TODO: clean up. Do we need patches? things? meaning of life?
 
-	addOperationIfNotEmpty(operations, baseDir, "deployment.yaml", application.Deployment)
-	addOperationIfNotEmpty(operations, baseDir, "argocd-application.yaml", application.ArgoCDResource)
-	addOperationIfNotEmpty(operations, baseDir, "volumes.yaml", application.Volume)
-	addOperationIfNotEmpty(operations, baseDir, "ingress.yaml", application.Ingress)
-	addOperationIfNotEmpty(operations, baseDir, "service.yaml", application.Service)
-	addOperationIfNotEmpty(operations, baseDir, "kustomization.yaml", application.BaseKustomization)
+	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "deployment.yaml", application.Deployment)
+	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "argocd-application.yaml", application.ArgoCDResource)
+	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "volumes.yaml", application.Volume)
+	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "ingress.yaml", application.Ingress)
+	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "service.yaml", application.Service)
+	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "kustomization.yaml", application.BaseKustomization)
 
 	// TODO: figure out path problem
-	addOperationIfNotEmpty(operations, overlayDir, "kustomization.yaml", application.OverlayKustomization)
-	addOperationIfNotEmpty(operations, overlayDir, config.DefaultIngressPatchFilename, application.IngressPatch)
-	addOperationIfNotEmpty(operations, overlayDir, "service-patch.json", application.ServicePatch)
+	addOperationIfNotEmpty(operations, relativeApplicationOverlayDir, "kustomization.yaml", application.OverlayKustomization)
+	addOperationIfNotEmpty(operations, relativeApplicationOverlayDir, config.DefaultIngressPatchFilename, application.IngressPatch)
+	addOperationIfNotEmpty(operations, relativeApplicationOverlayDir, "service-patch.json", application.ServicePatch)
 
 	report, err := operations.Do()
 	if err != nil {

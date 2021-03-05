@@ -115,8 +115,8 @@ const (
 	// EnvHome is the default env var parsed for determining the application home
 	EnvHome = "OKCTL_HOME"
 
-	// DefaultApplicationDir is where the application overlay files reside
-	DefaultApplicationDir = "applications"
+	// DefaultApplicationsOutputDir is where the application declarations reside
+	DefaultApplicationsOutputDir = "applications"
 	// DefaultApplicationBaseDir is where the directory where application base files reside
 	DefaultApplicationBaseDir = "base"
 	// DefaultApplicationOverlayDir is where the directory where application overlay files reside
@@ -399,13 +399,13 @@ func (c *Config) GetRepoOutputDir(env string) (string, error) {
 	return path.Join(base, c.RepoState.Metadata.OutputDir, env), nil
 }
 
-// GetRepoApplicationBaseDir returns the directory where application
+// GetRepoApplicatiosOutputDir returns the directory where application
 // resources are stored
-func (c *Config) GetRepoApplicationBaseDir() (string, error) {
+func (c *Config) GetRepoApplicatiosOutputDir() (string, error) {
 	base, err := c.GetRepoStateDir()
 	if err != nil {
 		return "", err
 	}
 
-	return path.Join(base, c.RepoState.Metadata.OutputDir, DefaultApplicationDir), nil
+	return path.Join(base, c.RepoState.Metadata.OutputDir, DefaultApplicationsOutputDir), nil
 }

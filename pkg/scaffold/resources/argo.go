@@ -37,7 +37,7 @@ func generateDefaultArgoApp() argo.Application {
 }
 
 // CreateArgoApp creates an ArgoCD definition customized for okctl
-func CreateArgoApp(app kaex.Application, iacRepoURL string, outputDir string) argo.Application {
+func CreateArgoApp(app kaex.Application, sourceRepositoryURL string, sourceRepositoryPath string) argo.Application {
 	argoApp := generateDefaultArgoApp()
 
 	argoApp.ObjectMeta.Name = app.Name
@@ -46,8 +46,8 @@ func CreateArgoApp(app kaex.Application, iacRepoURL string, outputDir string) ar
 		argoApp.Spec.Destination.Namespace = app.Namespace
 	}
 
-	argoApp.Spec.Source.Path = outputDir
-	argoApp.Spec.Source.RepoURL = iacRepoURL
+	argoApp.Spec.Source.Path = sourceRepositoryPath
+	argoApp.Spec.Source.RepoURL = sourceRepositoryURL
 
 	return argoApp
 }

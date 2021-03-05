@@ -70,6 +70,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			scaffoldOpts.Out = o.Out
 			scaffoldOpts.ApplicationFilePath = opts.File
 			scaffoldOpts.RepoDir, err = o.GetRepoDir()
+			scaffoldOpts.OutputDir = metadata.OutputDir
 			if err != nil {
 				return err
 			}

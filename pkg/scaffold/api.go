@@ -34,7 +34,7 @@ func NewApplicationBase() ApplicationBase {
 }
 
 // GenerateApplicationBase converts a Kaex Application to Kustomize base files
-func GenerateApplicationBase(app kaex.Application, iacRepoURL string, applicationOutputDir string) (ApplicationBase, error) {
+func GenerateApplicationBase(app kaex.Application, iacRepoURL, relativeApplicationOverlayDir string) (ApplicationBase, error) {
 	var err error
 	applicationBase := NewApplicationBase()
 	kustomization := NewKustomization()
@@ -102,7 +102,7 @@ func GenerateApplicationBase(app kaex.Application, iacRepoURL string, applicatio
 		return applicationBase, err
 	}
 
-	argoApp := resources.CreateArgoApp(app, iacRepoURL, applicationOutputDir)
+	argoApp := resources.CreateArgoApp(app, iacRepoURL, relativeApplicationOverlayDir)
 
 	applicationBase.ArgoApplication, err = resources.ResourceAsBytes(argoApp)
 	if err != nil {

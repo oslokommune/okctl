@@ -3,15 +3,14 @@ package core
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config"
+	"github.com/oslokommune/okctl/pkg/spinner"
 	"github.com/spf13/afero"
 	"io"
 	"io/ioutil"
 	"path"
 	"path/filepath"
 	"sigs.k8s.io/yaml"
-	"strings"
-
-	"github.com/oslokommune/okctl/pkg/spinner"
 
 	kaex "github.com/oslokommune/kaex/pkg/api"
 	"github.com/oslokommune/okctl/pkg/api"
@@ -45,11 +44,11 @@ func (s *applicationService) createCertificate(ctx context.Context, id *api.ID, 
 }
 
 func writeSuccessMessage(writer io.Writer, applicationName string, argoCDResourcePath string) {
-	fmt.Fprintf(writer, "Successfully scaffolded %s\n", applicationName)
+	fmt.Fprintf(writer, "\nSuccessfully scaffolded %s\n", applicationName)
 	fmt.Fprintln(writer, "To deploy your application:")
 	fmt.Fprintln(writer, "\t1. Commit and push the changes done by okctl")
 	fmt.Fprintf(writer, "\t2. Run kubectl apply -f %s\n", argoCDResourcePath)
-	fmt.Fprintf(writer, "If using an ingress, it can take up to five minutes for the routing to configure")
+	fmt.Fprintf(writer, "If using an ingress, it can take up to five minutes for the routing to configure\n")
 }
 
 // ScaffoldApplication turns a file path into Kubernetes resources
@@ -73,10 +72,10 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 	// See function comment
 	app := okctlApplicationToKaexApplication(okctlApp, opts.HostedZoneDomain)
 
-	applicationDir := path.Join(s.paths.BaseDir, app.Name)
-	applicationDir = strings.Replace(applicationDir, opts.RepoDir+"/", "", 1)
+	relativeApplicationDir := path.Join(opts.OutputDir, config.DefaultApplicationsOutputDir, okctlApp.Name)
+	relativeArgoCDSourcePath := path.Join(relativeApplicationDir, config.DefaultApplicationOverlayDir, opts.ID.Environment)
 
-	base, err := scaffold.GenerateApplicationBase(*app, opts.IACRepoURL, applicationDir)
+	base, err := scaffold.GenerateApplicationBase(*app, opts.IACRepoURL, relativeArgoCDSourcePath)
 	if err != nil {
 		return fmt.Errorf("error creating a new application deployment: %w", err)
 	}
@@ -121,7 +120,8 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 		return err
 	}
 
-	writeSuccessMessage(opts.Out, app.Name, path.Join(opts.RepoDir, applicationDir, fmt.Sprintf("%s-application.yaml", app.Name)))
+	argoCDResourcePath := path.Join(relativeApplicationDir, config.DefaultApplicationBaseDir, "argocd-application.yaml")
+	writeSuccessMessage(opts.Out, app.Name, argoCDResourcePath)
 
 	return nil
 }

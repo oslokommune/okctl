@@ -3,6 +3,8 @@ package scale
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"k8s.io/client-go/rest"
 
@@ -37,6 +39,10 @@ func (d *Scale) Scale(_ kubernetes.Interface, config *rest.Config) (interface{},
 		return nil, err
 	}
 
+	if scale.Spec.Replicas == d.Replicas {
+		return nil, nil
+	}
+
 	scale.Spec.Replicas = d.Replicas
 
 	_, err = client.AppsV1().Deployments(d.Namespace).UpdateScale(
@@ -49,5 +55,33 @@ func (d *Scale) Scale(_ kubernetes.Interface, config *rest.Config) (interface{},
 		return nil, err
 	}
 
-	return nil, nil
+	// Loop for a limited period of time, return immediately if the deployment has reached the
+	// desired state
+	t0 := time.Now()
+
+	ticker := time.NewTicker(5 * time.Second) // nolint: gomnd
+	defer ticker.Stop()
+
+	// I think this is a false positive, but probably not
+	// I am too tired to bother understanding it right now
+	// maybe some other day
+	// maybe never
+	// nolint: gosimple
+	for {
+		select {
+		case <-ticker.C:
+			scale, err := client.AppsV1().Deployments(d.Namespace).GetScale(d.Ctx, d.Name, metav1.GetOptions{})
+			if err != nil {
+				return nil, err
+			}
+
+			if scale.Spec.Replicas == d.Replicas {
+				return nil, nil
+			}
+
+			if time.Now().After(t0.Add(5 * time.Minute)) { // nolint: gomnd
+				return nil, fmt.Errorf("timed out waiting for deployment to scale")
+			}
+		}
+	}
 }

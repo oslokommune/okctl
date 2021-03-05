@@ -131,11 +131,9 @@ func GenerateApplicationOverlay(application client.OkctlApplication, hostedZoneD
 
 		ingressPatch.AddOperations(
 			Operation{
-				Type: OperationTypeAdd,
-				Path: "/metadata/annotations",
-				Value: map[string]string{
-					"alb.ingress.kubernetes.io~1certificate-arn": certARN,
-				},
+				Type:  OperationTypeAdd,
+				Path:  "/metadata/annotations/alb.ingress.kubernetes.io~1certificate-arn",
+				Value: certARN,
 			},
 			Operation{
 				Type:  OperationTypeAdd,

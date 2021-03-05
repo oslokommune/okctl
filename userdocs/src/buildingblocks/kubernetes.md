@@ -9,6 +9,8 @@ Kubernetes is [highly configurable and extensible](https://kubernetes.io/docs/co
 - [ExternalDNS](#externaldns)
 - [Cluster Autoscaler](#cluster-autoscaler)
 - [Kubernetes Prometheus](#kubernetes-prometheus)
+- [Loki](#loki)
+- [Tempo](#tempo)
 
 ### Kubernetes External Secrets
 
@@ -180,3 +182,11 @@ spec:
 ### Kubernetes Prometheus
 
 [Kubernetes Prometheus](https://github.com/prometheus-operator/kube-prometheus) is a stack meant for cluster monitoring, so it is pre-configured to collect metrics from all Kubernetes components. In addition to that it delivers a default set of dashboards and alerting rules. For a better idea of what possibilities this stack offers take a look at some [examples](https://github.com/prometheus-operator/kube-prometheus/tree/master/examples).
+
+### Loki
+
+[Loki](https://grafana.com/oss/loki/) is a horizontally-scalable, highly-available, multi-tenant log aggregation system inspired by Prometheus. It is designed to be very cost effective and easy to operate. It does not index the contents of the logs, but rather a set of labels for each log stream.
+
+### Tempo
+
+[Tempo](https://grafana.com/oss/tempo/)  is an open source, easy-to-use and high-scale distributed tracing backend. Tempo is cost-efficient, requiring only object storage to operate, and is deeply integrated with Grafana, Prometheus, and Loki. Tempo can be used with any of the open source tracing protocols, including Jaeger, Zipkin, and OpenTelemetry.

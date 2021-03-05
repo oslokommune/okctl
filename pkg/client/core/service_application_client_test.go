@@ -19,7 +19,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/oslokommune/okctl/pkg/spinner"
 	"gotest.tools/assert"
-	fsKust "sigs.k8s.io/kustomize/pkg/fs"
+	//fsKust "sigs.k8s.io/kustomize/pkg/fs"
 )
 
 const defaultTemplate = `
@@ -69,7 +69,10 @@ func TestNewApplicationService(t *testing.T) {
 	testInputBuffer := bytes.NewBufferString(defaultTemplate)
 
 	spin, _ := spinner.New("", testOutputBuffer)
-	aeroFs := afero.Afero{Fs: afero.NewMemMapFs()}
+	//aeroFs := afero.Afero{Fs: afero.NewMemMapFs()}
+	osFs := afero.Afero{Fs: afero.NewOsFs()}
+	aeroFs := afero.Afero{Fs: afero.NewBasePathFs(osFs, "/home/yngvar/yk/git/oslokommune/julius_iac")}
+
 	mockPaths := clientFilesystem.Paths{BaseDir: "infrastructure/applications"}
 
 	service := core.NewApplicationService(
@@ -117,6 +120,10 @@ func TestNewApplicationService(t *testing.T) {
 	kustomizeFs := KustomizeFs{
 		afero: aeroFs,
 	}
+
+	// TODO: This fails because the kustomize dependency is 2.0.3, a really old version of kustomize.
+	// See https://github.com/kubernetes/kubernetes/pull/98946.
+	// We should attempt to use the kustomize lib directly.
 	err = kustomize.RunKustomizeBuild(&buf, kustomizeFs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationOverlayDir, env))
 	assert.NilError(t, err)
 	fmt.Println(err)

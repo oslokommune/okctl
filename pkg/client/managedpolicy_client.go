@@ -26,7 +26,7 @@ type ManagedPolicyStore interface {
 	RemoveDeletePolicy(stackName string) (*store.Report, error)
 }
 
-// ManagedPolicyReports provides output on the result
+// ManagedPolicyReport provides output on the result
 type ManagedPolicyReport interface {
 	ReportCreatePolicy(policy *api.ManagedPolicy, report *store.Report) error
 	ReportDeletePolicy(stackName string, report *store.Report) error

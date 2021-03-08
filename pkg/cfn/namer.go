@@ -15,6 +15,7 @@ const (
 	DefaultStackNameBlockstoragePolicyID              = "blockstoragepolicy"
 	DefaultStackNameAlbIngressControllerPolicyID      = "albingresscontrollerpolicy"
 	DefaultStackNameAWSLoadBalancerControllerPolicyID = "awsloadbalancercontrollerpolicy"
+	DefaultStackNameCloudwatchDatasourceID            = "cloudwatchdatasource"
 	DefaultStackNameExternalDNSPolicyID               = "externaldns"
 	DefaultStackNameDomainID                          = "domain"
 	DefaultStackNameCertificateID                     = "certificate"
@@ -67,6 +68,16 @@ func (n *StackNamer) BlockstoragePolicy(repository, env string) string {
 	return fmt.Sprintf("%s-%s-%s-%s",
 		DefaultStackNamePrefix,
 		DefaultStackNameBlockstoragePolicyID,
+		repository,
+		env,
+	)
+}
+
+// CloudwatchDatasource returns the stack name of an Blockstorage policy
+func (n *StackNamer) CloudwatchDatasource(repository, env string) string {
+	return fmt.Sprintf("%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameCloudwatchDatasourceID,
 		repository,
 		env,
 	)

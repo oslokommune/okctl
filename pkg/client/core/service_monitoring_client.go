@@ -518,16 +518,17 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 	}
 
 	chart, err := s.api.CreateKubePromStack(api.CreateKubePrometheusStackOpts{
-		ID:                     opts.ID,
-		CertificateARN:         cert.CertificateARN,
-		Hostname:               cert.Domain,
-		AuthHostname:           opts.AuthDomain,
-		ClientID:               poolClient.ClientID,
-		SecretsConfigName:      secretsCfgName,
-		SecretsCookieSecretKey: cookieSecret.Name,
-		SecretsClientSecretKey: clientSecret.Name,
-		SecretsAdminUserKey:    adminUser.Name,
-		SecretsAdminPassKey:    adminPass.Name,
+		ID:                                  opts.ID,
+		GrafanaCloudWatchServiceAccountName: config.DefaultGrafanaCloudWatchDatasourceName,
+		CertificateARN:                      cert.CertificateARN,
+		Hostname:                            cert.Domain,
+		AuthHostname:                        opts.AuthDomain,
+		ClientID:                            poolClient.ClientID,
+		SecretsConfigName:                   secretsCfgName,
+		SecretsCookieSecretKey:              cookieSecret.Name,
+		SecretsClientSecretKey:              clientSecret.Name,
+		SecretsAdminUserKey:                 adminUser.Name,
+		SecretsAdminPassKey:                 adminPass.Name,
 	})
 	if err != nil {
 		return nil, err

@@ -4,6 +4,7 @@ package resources
 import (
 	"bytes"
 	"fmt"
+
 	kaex "github.com/oslokommune/kaex/pkg/api"
 	v1 "k8s.io/api/core/v1"
 )

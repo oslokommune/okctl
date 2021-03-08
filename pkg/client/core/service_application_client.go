@@ -3,13 +3,15 @@ package core
 import (
 	"context"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config"
-	"github.com/oslokommune/okctl/pkg/spinner"
-	"github.com/spf13/afero"
 	"io"
 	"io/ioutil"
 	"path"
 	"path/filepath"
+
+	"github.com/oslokommune/okctl/pkg/config"
+	"github.com/oslokommune/okctl/pkg/spinner"
+	"github.com/spf13/afero"
+
 	"sigs.k8s.io/yaml"
 
 	kaex "github.com/oslokommune/kaex/pkg/api"

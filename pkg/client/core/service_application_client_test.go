@@ -3,9 +3,10 @@ package core_test
 import (
 	"bytes"
 	"context"
-	"github.com/oslokommune/okctl/pkg/config"
 	"path/filepath"
 	"testing"
+
+	"github.com/oslokommune/okctl/pkg/config"
 
 	"github.com/sebdah/goldie/v2"
 	"github.com/spf13/afero"
@@ -17,7 +18,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/oslokommune/okctl/pkg/spinner"
 	"gotest.tools/assert"
-	//fsKust "sigs.k8s.io/kustomize/pkg/fs"
 )
 
 const defaultTemplate = `

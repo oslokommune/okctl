@@ -26,7 +26,7 @@ type ServiceAccountStore interface {
 	RemoveDeleteServiceAccount(name string) (*store.Report, error)
 }
 
-// ServiceAccountReports provides output on the result
+// ServiceAccountReport provides output on the result
 type ServiceAccountReport interface {
 	ReportCreateServiceAccount(account *api.ServiceAccount, report *store.Report) error
 	ReportDeleteServiceAccount(name string, report *store.Report) error

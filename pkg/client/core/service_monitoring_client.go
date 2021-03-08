@@ -5,6 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/clusterconfig"
+
+	"github.com/oslokommune/okctl/pkg/cfn"
+	"github.com/oslokommune/okctl/pkg/cfn/components"
+
 	"github.com/oslokommune/okctl/pkg/helm/charts/tempo"
 
 	"github.com/oslokommune/okctl/pkg/datasource"
@@ -42,6 +48,8 @@ type monitoringService struct {
 	ident    client.IdentityManagerService
 	param    client.ParameterService
 	manifest client.ManifestService
+	service  client.ServiceAccountService
+	policy   client.ManagedPolicyService
 }
 
 const (
@@ -406,6 +414,34 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 		return err
 	}
 
+	cc, err := clusterconfig.NewCloudwatchDatasourceServiceAccount(
+		opts.ID.ClusterName,
+		opts.ID.Region,
+		"",
+		config.DefaultMonitoringNamespace,
+		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
+	)
+	if err != nil {
+		return err
+	}
+
+	err = s.service.DeleteServiceAccount(ctx, api.DeleteServiceAccountOpts{
+		ID:     opts.ID,
+		Name:   "cloudwatch-datasource", // Make this configurable
+		Config: cc,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = s.policy.DeletePolicy(ctx, api.DeletePolicyOpts{
+		ID:        opts.ID,
+		StackName: cfn.NewStackNamer().CloudwatchDatasource(opts.ID.Repository, opts.ID.Environment),
+	})
+	if err != nil {
+		return err
+	}
+
 	r1, err := s.store.RemoveKubePromStack(opts.ID)
 	if err != nil {
 		return err
@@ -419,7 +455,7 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 	return s.report.ReportRemoveKubePromStack([]*store.Report{r1, r2})
 }
 
-// nolint: funlen
+// nolint: funlen, gocyclo
 func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client.CreateKubePromStackOpts) (*client.KubePromStack, error) {
 	err := s.spinner.Start("kubepromstack")
 	if err != nil {
@@ -429,6 +465,42 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 	defer func() {
 		_ = s.spinner.Stop()
 	}()
+
+	cft, err := cfn.New(components.NewCloudwatchDatasourcePolicyComposer(opts.ID.Repository, opts.ID.Environment)).Build()
+	if err != nil {
+		return nil, err
+	}
+
+	policy, err := s.policy.CreatePolicy(ctx, api.CreatePolicyOpts{
+		ID:                     opts.ID,
+		StackName:              cfn.NewStackNamer().CloudwatchDatasource(opts.ID.Repository, opts.ID.Environment),
+		PolicyOutputName:       "CloudwatchDatasourcePolicy", // We need to cleanup the way we name outputs
+		CloudFormationTemplate: cft,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	cc, err := clusterconfig.NewCloudwatchDatasourceServiceAccount(
+		opts.ID.ClusterName,
+		opts.ID.Region,
+		policy.PolicyARN,
+		config.DefaultMonitoringNamespace,
+		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.service.CreateServiceAccount(ctx, api.CreateServiceAccountOpts{
+		ID:        opts.ID,
+		Name:      "cloudwatch-datasource", // Like, why? We need to make these configurable
+		PolicyArn: policy.PolicyARN,
+		Config:    cc,
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	cert, err := s.cert.CreateCertificate(ctx, api.CreateCertificateOpts{
 		ID:           opts.ID,
@@ -580,6 +652,9 @@ func NewMonitoringService(
 	ident client.IdentityManagerService,
 	manifest client.ManifestService,
 	param client.ParameterService,
+	service client.ServiceAccountService,
+	policy client.ManagedPolicyService,
+
 ) client.MonitoringService {
 	return &monitoringService{
 		spinner:  spinner,
@@ -589,7 +664,9 @@ func NewMonitoringService(
 		report:   report,
 		cert:     cert,
 		ident:    ident,
-		manifest: manifest,
 		param:    param,
+		manifest: manifest,
+		service:  service,
+		policy:   policy,
 	}
 }

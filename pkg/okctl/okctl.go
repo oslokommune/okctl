@@ -199,6 +199,34 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 	}, nil
 }
 
+func (o *Okctl) managedPolicyService(outputDir string, spin spinner.Spinner) client.ManagedPolicyService {
+	return clientCore.NewManagedPolicyService(spin,
+		rest.NewManagedPolicyAPI(o.restClient),
+		clientFilesystem.NewManagedPolicyStore(
+			clientFilesystem.Paths{
+				OutputFile:         config.DefaultPolicyOutputFile,
+				CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
+				BaseDir:            path.Join(outputDir, config.DefaultPolicyBaseDir),
+			},
+			o.FileSystem,
+		),
+		console.NewManagedPolicyReport(o.Err, spin),
+	)
+}
+
+func (o *Okctl) serviceAccountService(outputDir string, spin spinner.Spinner) client.ServiceAccountService {
+	return clientCore.NewServiceAccountService(
+		spin,
+		rest.NewServiceAccountAPI(o.restClient),
+		clientFilesystem.NewServiceAccountStore(clientFilesystem.Paths{
+			OutputFile: config.DefaultServiceAccountOutputsFile,
+			ConfigFile: config.DefaultServiceAccountConfigFile,
+			BaseDir:    path.Join(outputDir, config.DefaultServiceAccountBaseDir),
+		}, o.FileSystem),
+		console.NewServiceAccountReport(o.Err, spin),
+	)
+}
+
 func (o *Okctl) monitoringService(outputDir string, spin spinner.Spinner) client.MonitoringService {
 	monitoringDir := path.Join(outputDir, config.DefaultMonitoringBaseDir)
 
@@ -242,6 +270,8 @@ func (o *Okctl) monitoringService(outputDir string, spin spinner.Spinner) client
 		o.identityManagerService(monitoringDir, spin.SubSpinner()),
 		o.manifestService(monitoringDir, spin.SubSpinner()),
 		o.paramService(monitoringDir, spin.SubSpinner()),
+		o.serviceAccountService(monitoringDir, spin.SubSpinner()),
+		o.managedPolicyService(monitoringDir, spin.SubSpinner()),
 	)
 }
 

@@ -39,7 +39,7 @@ func (m *serviceAccountStore) RemoveDeleteServiceAccount(name string) (*store.Re
 		Do()
 }
 
-// NewServiceAccountStore
+// NewServiceAccountStore returns an initialised store
 func NewServiceAccountStore(paths Paths, fs *afero.Afero) client.ServiceAccountStore {
 	return &serviceAccountStore{
 		paths: paths,

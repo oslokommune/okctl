@@ -116,8 +116,10 @@ const (
 	DefaultKubeOutputsFile                          = "kube-outputs.json"
 	DefaultParameterBaseDir                         = "parameters"
 	DefaultParameterOutputsFile                     = "parameter-outputs.json"
+	DefaultPolicyBaseDir                            = "policies"
 	DefaultPolicyCloudFormationTemplateFile         = "policy-cf.yml"
 	DefaultPolicyOutputFile                         = "policy-outputs.json"
+	DefaultServiceAccountBaseDir                    = "service-accounts"
 	DefaultServiceAccountConfigFile                 = "service-account-config.yml"
 	DefaultServiceAccountOutputsFile                = "service-account-outputs.json"
 

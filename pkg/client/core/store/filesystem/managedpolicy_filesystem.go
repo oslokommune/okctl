@@ -39,7 +39,7 @@ func (m *managedPolicyStore) RemoveDeletePolicy(stackName string) (*store.Report
 		Do()
 }
 
-// NewManagedPolicyStore
+// NewManagedPolicyStore returns an initialised store
 func NewManagedPolicyStore(paths Paths, fs *afero.Afero) client.ManagedPolicyStore {
 	return &managedPolicyStore{
 		paths: paths,

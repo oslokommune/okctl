@@ -322,6 +322,22 @@ func NewBlockstorageServiceAccount(clusterName, region, policyArn, permissionsBo
 	})
 }
 
+// NewCloudwatchDatasourceServiceAccount returns an initialised configuration
+// for creating a cluster CloudwatchDatasource service account
+func NewCloudwatchDatasourceServiceAccount(clusterName, region, policyArn, namespace, permissionsBoundaryArn string) (*v1alpha5.ClusterConfig, error) {
+	return NewServiceAccount(&ServiceAccountArgs{
+		ClusterName: clusterName,
+		Labels: map[string]string{
+			"aws-usage": "cluster-ops",
+		},
+		Name:                   "cloudwatch-datasource",
+		Namespace:              namespace,
+		PermissionsBoundaryArn: permissionsBoundaryArn,
+		PolicyArn:              policyArn,
+		Region:                 region,
+	})
+}
+
 // MinimalArgs contains the input arguments for creating a valid
 // cluster configuration
 type MinimalArgs struct {

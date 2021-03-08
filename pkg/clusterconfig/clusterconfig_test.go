@@ -3,6 +3,8 @@ package clusterconfig_test
 import (
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/config"
+
 	"github.com/oslokommune/okctl/pkg/api/mock"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/clusterconfig"
@@ -349,6 +351,52 @@ func TestNewBlockstorageServiceAccount(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := clusterconfig.NewBlockstorageServiceAccount(tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
+			if tc.expectErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.err, err.Error())
+			} else {
+				assert.NoError(t, err)
+
+				d, err := got.YAML()
+				assert.NoError(t, err)
+
+				g := goldie.New(t)
+				g.Assert(t, tc.golden, d)
+			}
+		})
+	}
+}
+
+func TestNewCloudwatchDatasourceServiceAccount(t *testing.T) {
+	testCases := []struct {
+		name                   string
+		clusterName            string
+		region                 string
+		policyArn              string
+		namespace              string
+		permissionsBoundaryArn string
+		golden                 string
+		expectErr              bool
+		err                    string
+	}{
+		{
+			name:                   "Validate service account",
+			clusterName:            "test",
+			region:                 mock.DefaultRegion,
+			policyArn:              mock.DefaultPolicyARN,
+			namespace:              config.DefaultMonitoringNamespace,
+			permissionsBoundaryArn: v1alpha1.PermissionsBoundaryARN(mock.DefaultAWSAccountID),
+			golden:                 "cloudwatch-datasource",
+			expectErr:              false,
+			err:                    "",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := clusterconfig.NewCloudwatchDatasourceServiceAccount(tc.clusterName, tc.region, tc.policyArn, tc.namespace, tc.permissionsBoundaryArn)
 			if tc.expectErr {
 				assert.Error(t, err)
 				assert.Equal(t, tc.err, err.Error())

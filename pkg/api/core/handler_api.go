@@ -75,6 +75,8 @@ type Endpoints struct {
 	ScaleDeployment                               endpoint.Endpoint
 	CreateHelmRelease                             endpoint.Endpoint
 	DeleteHelmRelease                             endpoint.Endpoint
+	CreatePolicy                                  endpoint.Endpoint
+	DeletePolicy                                  endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -141,6 +143,8 @@ func MakeEndpoints(s Services) Endpoints {
 		ScaleDeployment:                               makeScaleDeployment(s.Kube),
 		CreateHelmRelease:                             makeCreateHelmRelease(s.Helm),
 		DeleteHelmRelease:                             makeDeleteHelmRelease(s.Helm),
+		CreatePolicy:                                  makeCreatePolicyEndpoint(s.ManagedPolicy),
+		DeletePolicy:                                  makeDeletePolicyEndpoint(s.ManagedPolicy),
 	}
 }
 
@@ -205,6 +209,8 @@ type Handlers struct {
 	ScaleDeployment                               http.Handler
 	CreateHelmRelease                             http.Handler
 	DeleteHelmRelease                             http.Handler
+	CreatePolicy                                  http.Handler
+	DeletePolicy                                  http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -297,6 +303,8 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		ScaleDeployment:                               newServer(endpoints.ScaleDeployment, decodeScaleDeployment),
 		CreateHelmRelease:                             newServer(endpoints.CreateHelmRelease, decodeCreateHelmRelease),
 		DeleteHelmRelease:                             newServer(endpoints.DeleteHelmRelease, decodeDeleteHelmRelease),
+		CreatePolicy:                                  newServer(endpoints.CreatePolicy, decodeStructRequest(&api.CreatePolicyOpts{})),
+		DeletePolicy:                                  newServer(endpoints.DeletePolicy, decodeStructRequest(&api.DeletePolicyOpts{})),
 	}
 }
 
@@ -315,6 +323,8 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			r.Method(http.MethodDelete, "/", handlers.DeleteVpc)
 		})
 		r.Route("/managedpolicies", func(r chi.Router) {
+			r.Method(http.MethodPost, "/", handlers.CreatePolicy)
+			r.Method(http.MethodDelete, "/", handlers.DeletePolicy)
 			r.Route("/externalsecrets", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalSecretsPolicy)
 				r.Method(http.MethodDelete, "/", handlers.DeleteExternalSecretsPolicy)
@@ -572,8 +582,10 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateConfigMap:                               logmd.Logging(logger, strings.Join([]string{kubeTag, configMapTag}, "/"), "create")(endpoints.CreateConfigMap),
 			DeleteConfigMap:                               logmd.Logging(logger, strings.Join([]string{kubeTag, configMapTag}, "/"), "delete")(endpoints.DeleteConfigMap),
 			ScaleDeployment:                               logmd.Logging(logger, strings.Join([]string{kubeTag, scaleTag}, "/"), "create")(endpoints.ScaleDeployment),
-			CreateHelmRelease:                             logmd.Logging(logger, strings.Join([]string{kubeTag, scaleTag}, "/"), "create")(endpoints.CreateHelmRelease),
+			CreateHelmRelease:                             logmd.Logging(logger, strings.Join([]string{helmTag, releasesTag}, "/"), "create")(endpoints.CreateHelmRelease),
 			DeleteHelmRelease:                             logmd.Logging(logger, strings.Join([]string{helmTag, releasesTag}, "/"), "delete")(endpoints.DeleteHelmRelease),
+			CreatePolicy:                                  logmd.Logging(logger, managedPoliciesTag, "create")(endpoints.CreatePolicy),
+			DeletePolicy:                                  logmd.Logging(logger, managedPoliciesTag, "delete")(endpoints.DeletePolicy),
 		}
 	}
 }

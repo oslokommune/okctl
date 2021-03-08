@@ -23,6 +23,10 @@ func TestNewDatasource(t *testing.T) {
 			name: "tempo",
 			ds:   datasource.NewTempo(),
 		},
+		{
+			name: "cloudwatch",
+			ds:   datasource.NewCloudWatch("eu-west-1"),
+		},
 	}
 
 	for _, tc := range testCases {

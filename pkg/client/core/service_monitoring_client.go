@@ -61,8 +61,9 @@ const (
 	adminPassName    = "admin-pass"
 	secretsCfgName   = "grafana-secrets-cm"
 
-	lokiDatasourceConfigMapName  = "loki-datasource"
-	tempoDatasourceConfigMapName = "tempo-datasource"
+	lokiDatasourceConfigMapName       = "loki-datasource"
+	tempoDatasourceConfigMapName      = "tempo-datasource"
+	cloudwatchDatasourceConfigMapName = "cloudwatch-datasource"
 )
 
 func grafanaDomain(baseDomain string) string {
@@ -370,6 +371,15 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 		_ = s.spinner.Stop()
 	}()
 
+	err = s.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
+		ID:        opts.ID,
+		Name:      cloudwatchDatasourceConfigMapName,
+		Namespace: config.DefaultMonitoringNamespace,
+	})
+	if err != nil {
+		return err
+	}
+
 	// Do we like this? Probably not.
 	chart := kubepromstack.New(0*time.Second, nil)
 
@@ -621,6 +631,42 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 		Certificate:            cert,
 		IdentityPoolClient:     poolClient,
 		ExternalSecret:         manifest,
+	}
+
+	data, err := yaml.Marshal(datasource.NewCloudWatch(opts.ID.Region))
+	if err != nil {
+		return nil, err
+	}
+
+	// should move this into the default datasources instead
+	// probably
+	_, err = s.manifest.CreateConfigMap(ctx, client.CreateConfigMapOpts{
+		ID:        opts.ID,
+		Name:      cloudwatchDatasourceConfigMapName,
+		Namespace: config.DefaultMonitoringNamespace,
+		Data: map[string]string{
+			"cloudwatch-datasource.yaml": string(data),
+		},
+		Labels: map[string]string{
+			"grafana_datasource": "1",
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// The datasources are only loaded during grafana startup, so we need
+	// to cycle grafana to have it pick up the changes
+	for _, replicas := range []int32{0, 1} {
+		err = s.manifest.ScaleDeployment(ctx, api.ScaleDeploymentOpts{
+			ID:        opts.ID,
+			Name:      config.DefaultKubePrometheusStackGrafanaName,
+			Namespace: config.DefaultMonitoringNamespace,
+			Replicas:  replicas,
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	r1, err := s.store.SaveKubePromStack(stack)

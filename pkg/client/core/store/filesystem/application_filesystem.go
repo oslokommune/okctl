@@ -44,9 +44,9 @@ func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplica
 	operations := store.NewFileSystem(absoluteApplicationDir, s.fs)
 
 	// TODO: clean up. Do we need patches? things? meaning of life?
+	addOperationIfNotEmpty(operations, "", "argocd-application.yaml", application.ArgoCDResource)
 
 	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "deployment.yaml", application.Deployment)
-	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "argocd-application.yaml", application.ArgoCDResource)
 	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "volumes.yaml", application.Volume)
 	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "ingress.yaml", application.Ingress)
 	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "service.yaml", application.Service)

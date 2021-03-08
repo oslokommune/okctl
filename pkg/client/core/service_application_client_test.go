@@ -100,10 +100,11 @@ func TestNewApplicationService(t *testing.T) {
 	assert.NilError(t, err)
 
 	g := goldie.New(t)
+	g.Assert(t, "argocd-application.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", "argocd-application.yaml")))
+
 	g.Assert(t, "kustomization-base.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "kustomization.yaml")))
 
 	g.Assert(t, "deployment.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "deployment.yaml")))
-	g.Assert(t, "argocd-application.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "argocd-application.yaml")))
 	g.Assert(t, "volumes.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "volumes.yaml")))
 	g.Assert(t, "ingress.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "ingress.yaml")))
 	g.Assert(t, "service.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "service.yaml")))

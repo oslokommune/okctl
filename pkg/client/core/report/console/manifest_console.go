@@ -15,6 +15,22 @@ type manifestReport struct {
 	console *Console
 }
 
+func (r *manifestReport) RemoveNamespace(namespace string, report *store.Report) error {
+	return r.console.Report(
+		report.Actions,
+		"manifest",
+		fmt.Sprintf("%s (%s)", aurora.Green("namespace").String(), namespace),
+	)
+}
+
+func (r *manifestReport) SaveNamespace(namespace *client.Namespace, report *store.Report) error {
+	return r.console.Report(
+		report.Actions,
+		"manifest",
+		fmt.Sprintf("%s (%s)", aurora.Green("namespace").String(), namespace.Namespace),
+	)
+}
+
 func (r *manifestReport) SaveConfigMap(secret *client.ConfigMap, report *store.Report) error {
 	return r.console.Report(
 		report.Actions,

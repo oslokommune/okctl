@@ -130,8 +130,37 @@ func (k *kubeRun) CreateStorageClass(opts api.CreateStorageClassOpts) (*api.Stor
 	}, nil
 }
 
+func (k *kubeRun) CreateNamespace(opts api.CreateNamespaceOpts) (*api.Namespace, error) {
+	ns := namespace.New(opts.Namespace, opts.Labels)
+
+	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
+	if err != nil {
+		return nil, fmt.Errorf("creating kubernetes client: %w", err)
+	}
+
+	_, err = client.Apply(kube.Applier{
+		Fn:          ns.CreateNamespace,
+		Description: fmt.Sprintf("creating namespace: %s", opts.Namespace),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("creating namespace: %w", err)
+	}
+
+	manifest, err := ns.NamespaceManifest().Marshal()
+	if err != nil {
+		return nil, fmt.Errorf("marshalling manifest: %w", err)
+	}
+
+	return &api.Namespace{
+		ID:        opts.ID,
+		Namespace: opts.Namespace,
+		Labels:    opts.Labels,
+		Manifest:  manifest,
+	}, nil
+}
+
 func (k *kubeRun) DeleteNamespace(opts api.DeleteNamespaceOpts) error {
-	ns := namespace.New(opts.Namespace)
+	ns := namespace.New(opts.Namespace, nil)
 
 	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
 	if err != nil {
@@ -210,7 +239,7 @@ func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*ap
 	}
 
 	for ns := range namespaces {
-		newNS := namespace.New(ns)
+		newNS := namespace.New(ns, nil)
 
 		fns = append([]kube.Applier{
 			{

@@ -52,6 +52,7 @@ const (
 
 	DefaultGithubHost                      = "git@github.com"
 	DefaultArgoCDNamespace                 = "argocd"
+	DefaultFargateObservabilityNamespace   = "aws-observability"
 	DefaultMonitoringNamespace             = "monitoring"
 	DefaultKubePrometheusStackGrafanaName  = "kube-prometheus-stack-grafana"
 	DefaultGrafanaCloudWatchDatasourceName = "cloudwatch-datasource"
@@ -72,6 +73,9 @@ const (
 	DefaultVpcCloudFormationTemplate = "vpc-cf.yml"
 	DefaultVpcBaseDir                = "vpc"
 
+	DefaultNamespaceBaseDir                  = "namespaces"
+	DefaultNamespaceOutputFile               = "ns-output.json"
+	DefaultNamespaceConfigFile               = "ns-conf.yaml"
 	DefaultMonitoringBaseDir                 = "monitoring"
 	DefaultPromtailBaseDir                   = "promtail"
 	DefaultLokiBaseDir                       = "loki"

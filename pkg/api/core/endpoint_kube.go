@@ -54,3 +54,9 @@ func makeScaleDeployment(s api.KubeService) endpoint.Endpoint {
 		return Empty{}, s.ScaleDeployment(ctx, request.(api.ScaleDeploymentOpts))
 	}
 }
+
+func makeCreateNamespace(s api.KubeService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return s.CreateNamespace(ctx, request.(api.CreateNamespaceOpts))
+	}
+}

@@ -452,6 +452,14 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 		return err
 	}
 
+	err = s.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
+		ID:        opts.ID,
+		Namespace: config.DefaultFargateObservabilityNamespace,
+	})
+	if err != nil {
+		return err
+	}
+
 	r1, err := s.store.RemoveKubePromStack(opts.ID)
 	if err != nil {
 		return err
@@ -667,6 +675,37 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	_, err = s.manifest.CreateNamespace(ctx, api.CreateNamespaceOpts{
+		ID:        opts.ID,
+		Namespace: config.DefaultFargateObservabilityNamespace,
+		Labels: map[string]string{
+			"aws-observability": "enabled",
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.manifest.CreateConfigMap(ctx, client.CreateConfigMapOpts{
+		ID:        opts.ID,
+		Name:      "aws-logging",
+		Namespace: config.DefaultFargateObservabilityNamespace,
+		Data: map[string]string{
+			"output.conf": fmt.Sprintf(`[OUTPUT]
+	Name cloudwatch_logs
+	Match *
+	region %s
+	log_group_name okctl-fluent-cloudwatch
+	log_stream_prefix from-fluent-bit
+	auto_create_group true
+`, opts.ID.Region),
+		},
+		Labels: nil,
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	r1, err := s.store.SaveKubePromStack(stack)

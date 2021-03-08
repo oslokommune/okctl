@@ -114,10 +114,10 @@ We have a cluster up and running, and we are currently working on building a sea
 - [x] [ExternalDNS](https://github.com/kubernetes-sigs/external-dns) ensures humane DNS hostnames 
 - [x] [Autoscaler](https://github.com/kubernetes/autoscaler/) for adjusting the size of pods and nodes
 - [x] [Argo CD](https://github.com/argoproj/argo-cd) gives us continuous delivery
-- [x] [Kubernetes Prometheus](https://github.com/prometheus-operator/kube-prometheus) for monitoring
+- [x] [Kubernetes Prometheus](https://github.com/prometheus-operator/kube-prometheus) for prometheus and grafana
 - [x] [Amazon Elastic Block Store (EBS) CSI driver](https://github.com/kubernetes-sigs/aws-ebs-csi-driver/) for block storage
 - [x] [Loki](https://github.com/grafana/loki) for consuming logs
-- [x] [Tempo](https://grafana.com/oss/tempo/) for processing trace
+- [x] [Tempo](https://grafana.com/oss/tempo/) for processing traces
 
 ### Application lifecycle
 

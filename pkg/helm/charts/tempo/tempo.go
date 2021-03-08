@@ -56,6 +56,8 @@ func (v *Values) RawYAML() ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
+// valuesTemplate is based on the following file:
+// - https://github.com/grafana/helm-charts/blob/main/charts/tempo/values.yaml
 // nolint: lll
 const valuesTemplate = `# -- Overrides the chart's name
 nameOverride: ""

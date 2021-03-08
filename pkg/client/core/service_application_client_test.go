@@ -3,9 +3,7 @@ package core_test
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"github.com/oslokommune/okctl/pkg/config"
-	"k8s.io/cli-runtime/pkg/kustomize"
 	"path/filepath"
 	"testing"
 
@@ -69,9 +67,7 @@ func TestNewApplicationService(t *testing.T) {
 	testInputBuffer := bytes.NewBufferString(defaultTemplate)
 
 	spin, _ := spinner.New("", testOutputBuffer)
-	//aeroFs := afero.Afero{Fs: afero.NewMemMapFs()}
-	osFs := afero.Afero{Fs: afero.NewOsFs()}
-	aeroFs := afero.Afero{Fs: afero.NewBasePathFs(osFs, "/home/yngvar/yk/git/oslokommune/julius_iac")}
+	aeroFs := afero.Afero{Fs: afero.NewMemMapFs()}
 
 	mockPaths := clientFilesystem.Paths{BaseDir: "infrastructure/applications"}
 
@@ -114,23 +110,6 @@ func TestNewApplicationService(t *testing.T) {
 
 	g.Assert(t, "kustomization-overlay.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationOverlayDir, env, "kustomization.yaml")))
 	g.Assert(t, "ingress-patch.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationOverlayDir, env, "ingress-patch.json")))
-
-	var buf bytes.Buffer
-
-	kustomizeFs := KustomizeFs{
-		afero: aeroFs,
-	}
-
-	// TODO: This fails because the kustomize dependency is 2.0.3, a really old version of kustomize.
-	// See https://github.com/kubernetes/kubernetes/pull/98946.
-	// We should attempt to use the kustomize lib directly.
-	// Useful links:
-	// https://github.com/kubernetes-sigs/kustomize/issues/142#issuecomment-426054466
-	// https://github.com/kubernetes-sigs/kustomize/blob/master/kustomize/commands/build/build.go
-	// https://pkg.go.dev/search?q=kustomize
-	err = kustomize.RunKustomizeBuild(&buf, kustomizeFs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationOverlayDir, env))
-	assert.NilError(t, err)
-	fmt.Println(err)
 }
 
 func readFile(t *testing.T, fs *afero.Afero, path string) []byte {
@@ -164,64 +143,4 @@ func (m mockAppReporter) ReportCreateApplication(_ *client.ScaffoldedApplication
 
 func (m mockAppReporter) ReportDeleteApplication(_ []*store.Report) error {
 	return nil
-}
-
-// KustomizeFs
-
-type KustomizeFs struct {
-	afero afero.Afero
-}
-
-func (c KustomizeFs) Create(name string) (fsKust.File, error) {
-	return c.afero.Create(name)
-}
-
-func (c KustomizeFs) Mkdir(name string) error {
-	return c.afero.Mkdir(name, 0x744)
-}
-
-func (c KustomizeFs) MkdirAll(name string) error {
-	return c.afero.MkdirAll(name, 0x744)
-}
-
-func (c KustomizeFs) RemoveAll(name string) error {
-	return c.afero.RemoveAll(name)
-}
-
-func (c KustomizeFs) Open(name string) (fsKust.File, error) {
-	return c.afero.Open(name)
-}
-
-func (c KustomizeFs) IsDir(name string) bool {
-	isDir, _ := c.afero.IsDir(name)
-	return isDir
-}
-
-func (c KustomizeFs) CleanedAbs(path string) (fsKust.ConfirmedDir, string, error) {
-	// Copyed from fakefs
-	if c.IsDir(path) {
-		return fsKust.ConfirmedDir(path), "", nil
-	}
-	d := filepath.Dir(path)
-	if d == path {
-		return fsKust.ConfirmedDir(d), "", nil
-	}
-	return fsKust.ConfirmedDir(d), filepath.Base(path), nil
-}
-
-func (c KustomizeFs) Exists(name string) bool {
-	exists, _ := c.afero.Exists(name)
-	return exists
-}
-
-func (c KustomizeFs) Glob(pattern string) ([]string, error) {
-	return afero.Glob(c.afero, pattern)
-}
-
-func (c KustomizeFs) ReadFile(name string) ([]byte, error) {
-	return c.afero.ReadFile(name)
-}
-
-func (c KustomizeFs) WriteFile(name string, data []byte) error {
-	return c.afero.WriteFile(name, data, 0x644)
 }

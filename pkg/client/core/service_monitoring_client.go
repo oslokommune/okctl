@@ -68,7 +68,7 @@ func (s *monitoringService) DeleteTempo(ctx context.Context, opts client.DeleteT
 	}
 
 	defer func() {
-		err = s.spinner.Stop()
+		_ = s.spinner.Stop()
 	}()
 
 	err = s.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
@@ -107,7 +107,7 @@ func (s *monitoringService) CreateTempo(ctx context.Context, opts client.CreateT
 	}
 
 	defer func() {
-		err = s.spinner.Stop()
+		_ = s.spinner.Stop()
 	}()
 
 	chart := tempo.New(tempo.NewDefaultValues())
@@ -190,7 +190,7 @@ func (s *monitoringService) DeletePromtail(_ context.Context, opts client.Delete
 	}
 
 	defer func() {
-		err = s.spinner.Stop()
+		_ = s.spinner.Stop()
 	}()
 
 	chart := promtail.New(nil)
@@ -219,7 +219,7 @@ func (s *monitoringService) CreatePromtail(_ context.Context, opts client.Create
 	}
 
 	defer func() {
-		err = s.spinner.Stop()
+		_ = s.spinner.Stop()
 	}()
 
 	chart, err := s.api.CreatePromtail(opts)
@@ -252,7 +252,7 @@ func (s *monitoringService) DeleteLoki(ctx context.Context, opts client.DeleteLo
 	}
 
 	defer func() {
-		err = s.spinner.Stop()
+		_ = s.spinner.Stop()
 	}()
 
 	chart := loki.New(nil)
@@ -291,7 +291,7 @@ func (s *monitoringService) CreateLoki(ctx context.Context, opts client.CreateLo
 	}
 
 	defer func() {
-		err = s.spinner.Stop()
+		_ = s.spinner.Stop()
 	}()
 
 	chart, err := s.api.CreateLoki(opts)
@@ -359,7 +359,7 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 	}
 
 	defer func() {
-		err = s.spinner.Stop()
+		_ = s.spinner.Stop()
 	}()
 
 	// Do we like this? Probably not.
@@ -427,7 +427,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 	}
 
 	defer func() {
-		err = s.spinner.Stop()
+		_ = s.spinner.Stop()
 	}()
 
 	cert, err := s.cert.CreateCertificate(ctx, api.CreateCertificateOpts{
@@ -513,6 +513,9 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 			},
 		},
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	chart, err := s.api.CreateKubePromStack(api.CreateKubePrometheusStackOpts{
 		ID:                     opts.ID,

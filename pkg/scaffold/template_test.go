@@ -44,10 +44,11 @@ func TestGenerateTemplate(t *testing.T) {
 			scaffoldPath := "scaffoldedApplication.yaml"
 
 			err = scaffold.SaveOkctlAppTemplate(fs, scaffoldPath, interpolatedApp)
+			assert.Nil(t, err)
 
 			// Then
-			assert.Nil(t, err)
 			scaffolded, err := fs.ReadFile(scaffoldPath)
+			assert.Nil(t, err)
 
 			g := goldie.New(t)
 			g.Assert(t, tc.withGolden, scaffolded)

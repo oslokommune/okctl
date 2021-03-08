@@ -1,4 +1,4 @@
-// Package scaffold knows how to scaffold okctl applications
+// Package resources knows how to produce and handle Kubernetes resource
 package resources
 
 import (
@@ -9,6 +9,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+// VolumesAsBytes knows how to convert a Kubernetes PersistentVolumeClaim to a byte array
 func VolumesAsBytes(volumes []*v1.PersistentVolumeClaim) ([]byte, error) {
 	var writer bytes.Buffer
 
@@ -22,6 +23,7 @@ func VolumesAsBytes(volumes []*v1.PersistentVolumeClaim) ([]byte, error) {
 	return writer.Bytes(), nil
 }
 
+// ResourceAsBytes knows how to convert a Kubernetes resource to a byte array
 func ResourceAsBytes(data interface{}) ([]byte, error) {
 	var writer bytes.Buffer
 

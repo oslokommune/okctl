@@ -109,7 +109,10 @@ func TestNewApplicationService(t *testing.T) {
 	g.Assert(t, "ingress.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "ingress.yaml")))
 	g.Assert(t, "service.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationBaseDir, "service.yaml")))
 
-	g.Assert(t, "kustomization-overlay.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationOverlayDir, env, "kustomization.yaml")))
+	g.Assert(t,
+		"kustomization-overlay.yaml",
+		readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationOverlayDir, env, "kustomization.yaml")),
+	)
 	g.Assert(t, "ingress-patch.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", config.DefaultApplicationOverlayDir, env, "ingress-patch.json")))
 }
 

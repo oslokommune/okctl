@@ -43,7 +43,6 @@ func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplica
 
 	operations := store.NewFileSystem(absoluteApplicationDir, s.fs)
 
-	// TODO: clean up. Do we need patches? things? meaning of life?
 	addOperationIfNotEmpty(operations, "", "argocd-application.yaml", application.ArgoCDResource)
 
 	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "deployment.yaml", application.Deployment)
@@ -52,10 +51,8 @@ func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplica
 	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "service.yaml", application.Service)
 	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "kustomization.yaml", application.BaseKustomization)
 
-	// TODO: figure out path problem
 	addOperationIfNotEmpty(operations, relativeApplicationOverlayDir, "kustomization.yaml", application.OverlayKustomization)
 	addOperationIfNotEmpty(operations, relativeApplicationOverlayDir, config.DefaultIngressPatchFilename, application.IngressPatch)
-	addOperationIfNotEmpty(operations, relativeApplicationOverlayDir, "service-patch.json", application.ServicePatch)
 
 	report, err := operations.Do()
 	if err != nil {

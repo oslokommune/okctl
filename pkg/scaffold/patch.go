@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 )
 
+// OperationType represents one of the json patch operation types defines in https://tools.ietf.org/html/rfc6902#section-4
 type OperationType int
 
 const (
@@ -40,22 +41,26 @@ func operationTypeToString(t OperationType) string {
 	}
 }
 
+// Operation represents a single patch operation, meaning an action on a kubernetes resource attribute
 type Operation struct {
 	Type  OperationType `json:"op"`
 	Path  string        `json:"path"`
 	Value interface{}   `json:"value"`
 }
 
+// Patch represents a kustomize patch.json file containing a list of patch operations
 type Patch struct {
 	Operations []Operation `json:",inline"`
 }
 
+// NewPatch initializes a Patch struct
 func NewPatch() *Patch {
 	return &Patch{
 		Operations: []Operation{},
 	}
 }
 
+// AddOperations adds a patch operation to the patch
 func (p *Patch) AddOperations(o ...Operation) {
 	p.Operations = append(p.Operations, o...)
 }

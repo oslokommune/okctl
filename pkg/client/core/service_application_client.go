@@ -54,6 +54,7 @@ func writeSuccessMessage(writer io.Writer, applicationName string, argoCDResourc
 }
 
 // ScaffoldApplication turns a file path into Kubernetes resources
+// nolint: funlen
 func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *client.ScaffoldApplicationOpts) error {
 	err := opts.Validate()
 	if err != nil {
@@ -122,7 +123,7 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 		return err
 	}
 
-	argoCDResourcePath := path.Join(relativeApplicationDir, config.DefaultApplicationBaseDir, "argocd-application.yaml")
+	argoCDResourcePath := path.Join(relativeApplicationDir, "argocd-application.yaml")
 	writeSuccessMessage(opts.Out, app.Name, argoCDResourcePath)
 
 	return nil

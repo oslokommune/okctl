@@ -1,3 +1,4 @@
+// Package scaffold knows how to generate necessary resources for deploying an okctl application
 package scaffold
 
 import (
@@ -13,6 +14,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// ApplicationBase contains the content of the Kubernetes resource files
 type ApplicationBase struct {
 	Kustomization   []byte
 	ArgoApplication []byte
@@ -23,6 +25,7 @@ type ApplicationBase struct {
 	Volumes    []byte
 }
 
+// NewApplicationBase returns an initialized ApplicationBase struct
 func NewApplicationBase() ApplicationBase {
 	return ApplicationBase{
 		Kustomization:   []byte(""),
@@ -35,14 +38,17 @@ func NewApplicationBase() ApplicationBase {
 }
 
 // GenerateApplicationBase converts a Kaex Application to Kustomize base files
+// nolint: funlen gocyclo
 func GenerateApplicationBase(app kaex.Application, iacRepoURL, relativeApplicationOverlayDir string) (ApplicationBase, error) {
-	var err error
-	applicationBase := NewApplicationBase()
-	kustomization := NewKustomization()
+	var (
+		err             error
+		applicationBase = NewApplicationBase()
+		kustomization   = NewKustomization()
+	)
 
 	volumes := make([]*v1.PersistentVolumeClaim, len(app.Volumes))
-	for index := range app.Volumes {
 
+	for index := range app.Volumes {
 		pvc, err := resources.CreateOkctlVolume(app, app.Volumes[index])
 		if err != nil {
 			return applicationBase, fmt.Errorf("creating PersistentVolumeClaim resource: %w", err)
@@ -118,9 +124,12 @@ func GenerateApplicationBase(app kaex.Application, iacRepoURL, relativeApplicati
 	return applicationBase, nil
 }
 
-func GenerateApplicationOverlay(application client.OkctlApplication, hostedZoneDomain, certARN string) (applicationOverlay, error) {
-	var err error
-	overlay := newApplicationOverlay()
+// GenerateApplicationOverlay generates patches for environment specific parts of the kubernetes resources
+func GenerateApplicationOverlay(application client.OkctlApplication, hostedZoneDomain, certARN string) (ApplicationOverlay, error) {
+	var (
+		err     error
+		overlay = newApplicationOverlay()
+	)
 
 	kustomization := NewKustomization()
 	kustomization.AddResource("../../base")

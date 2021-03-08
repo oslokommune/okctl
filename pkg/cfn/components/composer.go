@@ -1139,3 +1139,92 @@ func (c *BlockstoragePolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolic
 
 	return managedpolicy.New("BlockstoragePolicy", policyName, policyDesc, d)
 }
+
+// CloudwatchDatasourcePolicyComposer contains state for building
+// a managed iam policy that allows grafana to read cloudwatch metrics
+// and logs
+// - https://grafana.com/docs/grafana/latest/datasources/cloudwatch/#iam-policies
+type CloudwatchDatasourcePolicyComposer struct {
+	Repository  string
+	Environment string
+}
+
+// NewCloudwatchDatasourcePolicyComposer returns an initialised cloudwatch datasource policy composer
+func NewCloudwatchDatasourcePolicyComposer(repository, env string) *CloudwatchDatasourcePolicyComposer {
+	return &CloudwatchDatasourcePolicyComposer{
+		Repository:  repository,
+		Environment: env,
+	}
+}
+
+// Compose builds the policy and returns the result
+func (c *CloudwatchDatasourcePolicyComposer) Compose() (*cfn.Composition, error) {
+	p := c.ManagedPolicy()
+
+	return &cfn.Composition{
+		Outputs:   []cfn.StackOutputer{p},
+		Resources: []cfn.ResourceNamer{p},
+	}, nil
+}
+
+// ManagedPolicy returns the policy
+func (c *CloudwatchDatasourcePolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
+	policyName := fmt.Sprintf("okctl-%s-%s-CloudwatchDatasourceServiceAccountPolicy", c.Repository, c.Environment)
+	policyDesc := "Service account policy for reading cloudwatch metrics and logs from grafana"
+
+	d := &policydocument.PolicyDocument{
+		Version: policydocument.Version,
+		Statement: []policydocument.StatementEntry{
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"cloudwatch:DescribeAlarmsForMetric",
+					"cloudwatch:DescribeAlarmHistory",
+					"cloudwatch:DescribeAlarms",
+					"cloudwatch:ListMetrics",
+					"cloudwatch:GetMetricStatistics",
+					"cloudwatch:GetMetricData",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"logs:DescribeLogGroups",
+					"logs:GetLogGroupFields",
+					"logs:StartQuery",
+					"logs:StopQuery",
+					"logs:GetQueryResults",
+					"logs:GetLogEvents",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"ec2:DescribeTags",
+					"ec2:DescribeInstances",
+					"ec2:DescribeRegions",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"tag:GetResources",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+		},
+	}
+
+	return managedpolicy.New("CloudwatchDatasourcePolicy", policyName, policyDesc, d)
+}

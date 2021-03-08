@@ -148,8 +148,8 @@ github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535/go.mod h1:o
 github.com/aws/aws-lambda-go v1.13.3/go.mod h1:4UKl9IzQMoD+QF79YdCuzCwp8VbmG4VAQwij/eHl5CU=
 github.com/aws/aws-sdk-go v1.27.0/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/aws/aws-sdk-go v1.30.0/go.mod h1:5zCpMtNQVjRREroY7sYe8lOMRSxkhG6MZveU8YkpAk0=
-github.com/aws/aws-sdk-go v1.37.23 h1:bO80NcSmRv52w+GFpBegoLdlP/Z0OwUqQ9bbeCLCy/0=
-github.com/aws/aws-sdk-go v1.37.23/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
+github.com/aws/aws-sdk-go v1.37.25 h1:q1C/ILIVusSmqgWG4tFU0uVt3Zm+1I3L2BmNCd2Ug4Q=
+github.com/aws/aws-sdk-go v1.37.25/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/aws/aws-sdk-go-v2 v0.18.0/go.mod h1:JWVYvqSMppoMJC0x5wdwiImzgXTI9FuZwxzkQq9wy+g=
 github.com/awslabs/goformation/v4 v4.17.0 h1:9QrA9/HzJMgScZPeafnakBP4J+QCiKnsTE6t6wlo7LQ=
 github.com/awslabs/goformation/v4 v4.17.0/go.mod h1:0ezDlDP+SJM5JTxPXuzzYNHcuSo6Mky6Gexnx31qcJY=

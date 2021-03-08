@@ -2,6 +2,8 @@
 // definitions
 package datasource
 
+import "github.com/aws/aws-sdk-go/aws"
+
 // Datasources contains a set of datasources
 type Datasources struct {
 	APIVersion  int          `json:"apiVersion"`
@@ -13,13 +15,31 @@ type Datasources struct {
 type Datasource struct {
 	Name      string                 `json:"name"`
 	Type      string                 `json:"type"`
-	Access    string                 `json:"access"`
-	OrgID     int                    `json:"orgId"`
-	URL       string                 `json:"url"`
-	BasicAuth bool                   `json:"basicAuth"`
+	Access    *string                `json:"access,omitempty"`
+	OrgID     *int                   `json:"orgId,omitempty"`
+	URL       *string                `json:"url,omitempty"`
+	BasicAuth *bool                  `json:"basicAuth,omitempty"`
 	JSONData  map[string]interface{} `json:"jsonData"`
-	Version   int                    `json:"version"`
-	Editable  bool                   `json:"editable"`
+	Version   *int                   `json:"version,omitempty"`
+	Editable  *bool                  `json:"editable,omitempty"`
+}
+
+// NewCloudWatch returns an initialised CloudWatch
+// datasource consumable by Grafana
+func NewCloudWatch(region string) *Datasources {
+	return &Datasources{
+		APIVersion: 1,
+		Datasources: []Datasource{
+			{
+				Name: "CloudWatch",
+				Type: "cloudwatch",
+				JSONData: map[string]interface{}{
+					"authType":      "default",
+					"defaultRegion": region,
+				},
+			},
+		},
+	}
 }
 
 // NewLoki returns an initialised Loki
@@ -31,15 +51,15 @@ func NewLoki() *Datasources {
 			{
 				Name:      "Loki",
 				Type:      "loki",
-				Access:    "proxy",
-				OrgID:     1,
-				URL:       "http://loki:3100",
-				BasicAuth: false,
+				Access:    aws.String("proxy"),
+				OrgID:     aws.Int(1),
+				URL:       aws.String("http://loki:3100"),
+				BasicAuth: aws.Bool(false),
 				JSONData: map[string]interface{}{
 					"tlsSkipVerify": true,
 				},
-				Version:  1,
-				Editable: false,
+				Version:  aws.Int(1),
+				Editable: aws.Bool(false),
 			},
 		},
 	}
@@ -54,15 +74,15 @@ func NewTempo() *Datasources {
 			{
 				Name:      "Tempo",
 				Type:      "tempo",
-				Access:    "proxy",
-				OrgID:     1,
-				URL:       "http://tempo:16686",
-				BasicAuth: false,
+				Access:    aws.String("proxy"),
+				OrgID:     aws.Int(1),
+				URL:       aws.String("http://tempo:16686"),
+				BasicAuth: aws.Bool(false),
 				JSONData: map[string]interface{}{
 					"tlsSkipVerify": true,
 				},
-				Version:  1,
-				Editable: false,
+				Version:  aws.Int(1),
+				Editable: aws.Bool(false),
 			},
 		},
 	}

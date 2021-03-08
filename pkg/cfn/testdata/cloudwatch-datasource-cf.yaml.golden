@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  CloudwatchDatasourcePolicy:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-CloudwatchDatasourcePolicy
+    Value:
+      Ref: CloudwatchDatasourcePolicy
+Resources:
+  CloudwatchDatasourcePolicy:
+    Properties:
+      Description: Service account policy for reading cloudwatch metrics and logs
+        from grafana
+      ManagedPolicyName: okctl-repo-env-CloudwatchDatasourceServiceAccountPolicy
+      PolicyDocument:
+        Statement:
+        - Action:
+          - cloudwatch:DescribeAlarmsForMetric
+          - cloudwatch:DescribeAlarmHistory
+          - cloudwatch:DescribeAlarms
+          - cloudwatch:ListMetrics
+          - cloudwatch:GetMetricStatistics
+          - cloudwatch:GetMetricData
+          Effect: Allow
+          Resource:
+          - '*'
+        - Action:
+          - logs:DescribeLogGroups
+          - logs:GetLogGroupFields
+          - logs:StartQuery
+          - logs:StopQuery
+          - logs:GetQueryResults
+          - logs:GetLogEvents
+          Effect: Allow
+          Resource:
+          - '*'
+        - Action:
+          - ec2:DescribeTags
+          - ec2:DescribeInstances
+          - ec2:DescribeRegions
+          Effect: Allow
+          Resource:
+          - '*'
+        - Action:
+          - tag:GetResources
+          Effect: Allow
+          Resource:
+          - '*'
+        Version: 2012-10-17
+    Type: AWS::IAM::ManagedPolicy

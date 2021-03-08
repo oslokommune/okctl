@@ -62,6 +62,11 @@ func TestBuilderAndComposers(t *testing.T) {
 			composer: components.NewPublicCertificateComposer("test.oslo.systems.", "AZ12345"),
 		},
 		{
+			name:     "Builder with CloudwatchDatasourcePolicyComposer",
+			golden:   "cloudwatch-datasource-cf.yaml",
+			composer: components.NewCloudwatchDatasourcePolicyComposer("repo", "env"),
+		},
+		{
 			name:   "Builder with UserPool composer",
 			golden: "userpool.yaml",
 			composer: components.NewUserPool(

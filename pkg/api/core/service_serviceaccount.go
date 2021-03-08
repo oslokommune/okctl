@@ -17,19 +17,51 @@ type serviceAccount struct {
 }
 
 var errDeleteServiceAccount = func(err error) error {
-	return errors.E(err, "failed to delete service account", errors.Internal)
+	return errors.E(err, "deleting service account", errors.Internal)
 }
 
 var errCreateServiceAccount = func(err error) error {
-	return errors.E(err, "failed to create service account", errors.Internal)
+	return errors.E(err, "creating service account", errors.Internal)
 }
 
 var errInvalidInputs = func(err error) error {
-	return errors.E(err, "failed to validate inputs", errors.Invalid)
+	return errors.E(err, "validating inputs", errors.Invalid)
 }
 
 var errBuildServiceAccount = func(err error) error {
-	return errors.E(err, "failed to build service account config", errors.Internal)
+	return errors.E(err, "building service account config", errors.Internal)
+}
+
+func (c *serviceAccount) CreateServiceAccount(_ context.Context, opts api.CreateServiceAccountOpts) (*api.ServiceAccount, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, errInvalidInputs(err)
+	}
+
+	err = c.run.CreateServiceAccount(opts.Config)
+	if err != nil {
+		return nil, errCreateServiceAccount(err)
+	}
+
+	return &api.ServiceAccount{
+		ID:        opts.ID,
+		PolicyArn: opts.PolicyArn,
+		Config:    opts.Config,
+	}, nil
+}
+
+func (c *serviceAccount) DeleteServiceAccount(_ context.Context, opts api.DeleteServiceAccountOpts) error {
+	err := opts.Validate()
+	if err != nil {
+		return errInvalidInputs(err)
+	}
+
+	err = c.run.DeleteServiceAccount(opts.Config)
+	if err != nil {
+		return errDeleteServiceAccount(err)
+	}
+
+	return nil
 }
 
 func (c *serviceAccount) CreateBlockstorageServiceAccount(_ context.Context, opts api.CreateBlockstorageServiceAccountOpts) (*api.ServiceAccount, error) {
@@ -48,7 +80,7 @@ func (c *serviceAccount) CreateBlockstorageServiceAccount(_ context.Context, opt
 		return nil, errBuildServiceAccount(err)
 	}
 
-	account, err := c.createServiceAccount(opts.CreateServiceAccountOpts, config)
+	account, err := c.createServiceAccount(opts.CreateServiceAccountBaseOpts, config)
 	if err != nil {
 		return nil, errCreateServiceAccount(err)
 	}
@@ -96,7 +128,7 @@ func (c *serviceAccount) CreateAutoscalerServiceAccount(_ context.Context, opts 
 		return nil, errBuildServiceAccount(err)
 	}
 
-	account, err := c.createServiceAccount(opts.CreateServiceAccountOpts, config)
+	account, err := c.createServiceAccount(opts.CreateServiceAccountBaseOpts, config)
 	if err != nil {
 		return nil, errCreateServiceAccount(err)
 	}
@@ -216,7 +248,7 @@ func (c *serviceAccount) CreateExternalDNSServiceAccount(_ context.Context, opts
 		return nil, errBuildServiceAccount(err)
 	}
 
-	account, err := c.createServiceAccount(opts.CreateServiceAccountOpts, config)
+	account, err := c.createServiceAccount(opts.CreateServiceAccountBaseOpts, config)
 	if err != nil {
 		return nil, errCreateServiceAccount(err)
 	}
@@ -240,7 +272,7 @@ func (c *serviceAccount) CreateAlbIngressControllerServiceAccount(_ context.Cont
 		return nil, errBuildServiceAccount(err)
 	}
 
-	account, err := c.createServiceAccount(opts.CreateServiceAccountOpts, config)
+	account, err := c.createServiceAccount(opts.CreateServiceAccountBaseOpts, config)
 	if err != nil {
 		return nil, errCreateServiceAccount(err)
 	}
@@ -265,7 +297,7 @@ func (c *serviceAccount) CreateAWSLoadBalancerControllerServiceAccount(_ context
 		return nil, errBuildServiceAccount(err)
 	}
 
-	account, err := c.createServiceAccount(opts.CreateServiceAccountOpts, config)
+	account, err := c.createServiceAccount(opts.CreateServiceAccountBaseOpts, config)
 	if err != nil {
 		return nil, errCreateServiceAccount(err)
 	}
@@ -313,7 +345,7 @@ func (c *serviceAccount) CreateExternalSecretsServiceAccount(_ context.Context, 
 		return nil, errBuildServiceAccount(err)
 	}
 
-	account, err := c.createServiceAccount(opts.CreateServiceAccountOpts, config)
+	account, err := c.createServiceAccount(opts.CreateServiceAccountBaseOpts, config)
 	if err != nil {
 		return nil, errCreateServiceAccount(err)
 	}
@@ -321,7 +353,7 @@ func (c *serviceAccount) CreateExternalSecretsServiceAccount(_ context.Context, 
 	return account, nil
 }
 
-func (c *serviceAccount) createServiceAccount(opts api.CreateServiceAccountOpts, config *v1alpha5.ClusterConfig) (*api.ServiceAccount, error) {
+func (c *serviceAccount) createServiceAccount(opts api.CreateServiceAccountBaseOpts, config *v1alpha5.ClusterConfig) (*api.ServiceAccount, error) {
 	err := c.run.CreateServiceAccount(config)
 	if err != nil {
 		return nil, errors.E(err, "failed to create service account", errors.Internal)

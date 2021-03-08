@@ -68,7 +68,7 @@ func (s *awsLoadBalancerControllerService) CreateAWSLoadBalancerController(_ con
 	}
 
 	account, err := s.api.CreateAWSLoadBalancerControllerServiceAccount(api.CreateAWSLoadBalancerControllerServiceAccountOpts{
-		CreateServiceAccountOpts: api.CreateServiceAccountOpts{
+		CreateServiceAccountBaseOpts: api.CreateServiceAccountBaseOpts{
 			ID:        opts.ID,
 			PolicyArn: policy.PolicyARN,
 		},

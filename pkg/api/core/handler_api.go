@@ -77,6 +77,8 @@ type Endpoints struct {
 	DeleteHelmRelease                             endpoint.Endpoint
 	CreatePolicy                                  endpoint.Endpoint
 	DeletePolicy                                  endpoint.Endpoint
+	CreateServiceAccount                          endpoint.Endpoint
+	DeleteServiceAccount                          endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -145,6 +147,8 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteHelmRelease:                             makeDeleteHelmRelease(s.Helm),
 		CreatePolicy:                                  makeCreatePolicyEndpoint(s.ManagedPolicy),
 		DeletePolicy:                                  makeDeletePolicyEndpoint(s.ManagedPolicy),
+		CreateServiceAccount:                          makeCreateServiceAccountEndpoint(s.ServiceAccount),
+		DeleteServiceAccount:                          makeDeleteServiceAccountEndpoint(s.ServiceAccount),
 	}
 }
 
@@ -211,6 +215,8 @@ type Handlers struct {
 	DeleteHelmRelease                             http.Handler
 	CreatePolicy                                  http.Handler
 	DeletePolicy                                  http.Handler
+	CreateServiceAccount                          http.Handler
+	DeleteServiceAccount                          http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -305,6 +311,8 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteHelmRelease:                             newServer(endpoints.DeleteHelmRelease, decodeDeleteHelmRelease),
 		CreatePolicy:                                  newServer(endpoints.CreatePolicy, decodeStructRequest(&api.CreatePolicyOpts{})),
 		DeletePolicy:                                  newServer(endpoints.DeletePolicy, decodeStructRequest(&api.DeletePolicyOpts{})),
+		CreateServiceAccount:                          newServer(endpoints.CreateServiceAccount, decodeStructRequest(&api.CreateServiceAccountOpts{})),
+		DeleteServiceAccount:                          newServer(endpoints.DeleteServiceAccount, decodeStructRequest(&api.DeleteServiceAccountOpts{})),
 	}
 }
 
@@ -351,6 +359,8 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			})
 		})
 		r.Route("/serviceaccounts", func(r chi.Router) {
+			r.Method(http.MethodPost, "/", handlers.CreateServiceAccount)
+			r.Method(http.MethodDelete, "/", handlers.DeleteServiceAccount)
 			r.Route("/externalsecrets", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalSecretsServiceAccount)
 				r.Method(http.MethodDelete, "/", handlers.DeleteExternalSecretsServiceAccount)
@@ -586,6 +596,8 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteHelmRelease:                             logmd.Logging(logger, strings.Join([]string{helmTag, releasesTag}, "/"), "delete")(endpoints.DeleteHelmRelease),
 			CreatePolicy:                                  logmd.Logging(logger, managedPoliciesTag, "create")(endpoints.CreatePolicy),
 			DeletePolicy:                                  logmd.Logging(logger, managedPoliciesTag, "delete")(endpoints.DeletePolicy),
+			CreateServiceAccount:                          logmd.Logging(logger, serviceAccountsTag, "create")(endpoints.CreateServiceAccount),
+			DeleteServiceAccount:                          logmd.Logging(logger, serviceAccountsTag, "delete")(endpoints.DeleteServiceAccount),
 		}
 	}
 }

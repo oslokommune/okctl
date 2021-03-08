@@ -68,7 +68,7 @@ func (s *externalSecretsService) CreateExternalSecrets(_ context.Context, opts c
 	}
 
 	sa, err := s.api.CreateExternalSecretsServiceAccount(api.CreateExternalSecretsServiceAccountOpts{
-		CreateServiceAccountOpts: api.CreateServiceAccountOpts{
+		CreateServiceAccountBaseOpts: api.CreateServiceAccountBaseOpts{
 			ID:        opts.ID,
 			PolicyArn: policy.PolicyARN,
 		},

@@ -72,7 +72,7 @@ func (s *blockstorageService) CreateBlockstorage(ctx context.Context, opts clien
 	}
 
 	sa, err := s.api.CreateBlockstorageServiceAccount(api.CreateBlockstorageServiceAccountOpts{
-		CreateServiceAccountOpts: api.CreateServiceAccountOpts{
+		CreateServiceAccountBaseOpts: api.CreateServiceAccountBaseOpts{
 			ID:        opts.ID,
 			PolicyArn: policy.PolicyARN,
 		},

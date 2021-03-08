@@ -78,3 +78,15 @@ func makeDeleteBlockstorageServiceAccountEndpoint(s api.ServiceAccountService) e
 		return &Empty{}, s.DeleteBlockstorageServiceAccount(ctx, request.(api.ID))
 	}
 }
+
+func makeCreateServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return s.CreateServiceAccount(ctx, request.(api.CreateServiceAccountOpts))
+	}
+}
+
+func makeDeleteServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return &Empty{}, s.DeleteServiceAccount(ctx, request.(api.DeleteServiceAccountOpts))
+	}
+}

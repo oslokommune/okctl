@@ -25,6 +25,7 @@ type ManagedPolicy struct {
 // be serialised to the output file
 type ServiceAccount struct {
 	ID        api.ID
+	Name      string
 	PolicyArn string
 }
 

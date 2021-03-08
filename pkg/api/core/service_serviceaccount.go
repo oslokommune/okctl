@@ -45,6 +45,7 @@ func (c *serviceAccount) CreateServiceAccount(_ context.Context, opts api.Create
 
 	return &api.ServiceAccount{
 		ID:        opts.ID,
+		Name:      opts.Name,
 		PolicyArn: opts.PolicyArn,
 		Config:    opts.Config,
 	}, nil

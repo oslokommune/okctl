@@ -14,6 +14,46 @@ type managedPolicy struct {
 	provider v1alpha1.CloudProvider
 }
 
+func (m *managedPolicy) CreatePolicy(opts api.CreatePolicyOpts) (*api.ManagedPolicy, error) {
+	r := cfn.NewRunner(m.provider)
+
+	err := r.CreateIfNotExists(
+		opts.StackName,
+		opts.CloudFormationTemplate,
+		[]string{cfn.CapabilityNamedIam},
+		defaultTimeOut,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("creating cloud formation stack: %w", err)
+	}
+
+	p := &api.ManagedPolicy{
+		ID:                     opts.ID,
+		StackName:              opts.StackName,
+		CloudFormationTemplate: opts.CloudFormationTemplate,
+	}
+
+	err = r.Outputs(opts.StackName, map[string]cfn.ProcessOutputFn{
+		opts.PolicyOutputName: cfn.String(&p.PolicyARN),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("processing outputs: %w", err)
+	}
+
+	return p, nil
+}
+
+func (m *managedPolicy) DeletePolicy(opts api.DeletePolicyOpts) error {
+	r := cfn.NewRunner(m.provider)
+
+	err := r.Delete(opts.StackName)
+	if err != nil {
+		return fmt.Errorf("deleting policy: %w", err)
+	}
+
+	return nil
+}
+
 func (m *managedPolicy) DeleteBlockstoragePolicy(id api.ID) error {
 	return m.deletePolicy(cfn.NewStackNamer().BlockstoragePolicy(id.Repository, id.Environment))
 }

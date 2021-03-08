@@ -11,6 +11,34 @@ type managedPolicyService struct {
 	provider api.ManagedPolicyCloudProvider
 }
 
+func (m *managedPolicyService) CreatePolicy(_ context.Context, opts api.CreatePolicyOpts) (*api.ManagedPolicy, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, errors.E(err, "validating inputs", errors.Invalid)
+	}
+
+	p, err := m.provider.CreatePolicy(opts)
+	if err != nil {
+		return nil, errors.E(err, "creating managed policy", errors.Internal)
+	}
+
+	return p, nil
+}
+
+func (m *managedPolicyService) DeletePolicy(_ context.Context, opts api.DeletePolicyOpts) error {
+	err := opts.Validate()
+	if err != nil {
+		return errors.E(err, "validating inputs", errors.Invalid)
+	}
+
+	err = m.provider.DeletePolicy(opts)
+	if err != nil {
+		return errors.E(err, "deleting managed policy", errors.Internal)
+	}
+
+	return nil
+}
+
 func (m *managedPolicyService) CreateBlockstoragePolicy(_ context.Context, opts api.CreateBlockstoragePolicy) (*api.ManagedPolicy, error) {
 	err := opts.Validate()
 	if err != nil {

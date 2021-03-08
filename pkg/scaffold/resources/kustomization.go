@@ -1,4 +1,4 @@
-package scaffold
+package resources
 
 // PatchTarget represents a target attribute in a PatchReference attribute
 type PatchTarget struct {

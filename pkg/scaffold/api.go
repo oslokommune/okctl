@@ -43,7 +43,7 @@ func GenerateApplicationBase(app kaex.Application, iacRepoURL, relativeApplicati
 	var (
 		err             error
 		applicationBase = NewApplicationBase()
-		kustomization   = NewKustomization()
+		kustomization   = resources.NewKustomization()
 	)
 
 	volumes := make([]*v1.PersistentVolumeClaim, len(app.Volumes))
@@ -131,37 +131,37 @@ func GenerateApplicationOverlay(application client.OkctlApplication, hostedZoneD
 		overlay = newApplicationOverlay()
 	)
 
-	kustomization := NewKustomization()
+	kustomization := resources.NewKustomization()
 	kustomization.AddResource("../../base")
 
 	if application.HasIngress() {
-		ingressPatch := NewPatch()
+		ingressPatch := resources.NewPatch()
 
 		host := fmt.Sprintf("%s.%s", application.SubDomain, hostedZoneDomain)
 
 		ingressPatch.AddOperations(
-			Operation{
-				Type:  OperationTypeAdd,
+			resources.Operation{
+				Type:  resources.OperationTypeAdd,
 				Path:  "/metadata/annotations/alb.ingress.kubernetes.io~1certificate-arn",
 				Value: certARN,
 			},
-			Operation{
-				Type:  OperationTypeAdd,
+			resources.Operation{
+				Type:  resources.OperationTypeAdd,
 				Path:  "/spec/rules/0/host",
 				Value: host,
 			},
-			Operation{
-				Type:  OperationTypeAdd,
+			resources.Operation{
+				Type:  resources.OperationTypeAdd,
 				Path:  "/spec/tls",
 				Value: []string{},
 			},
-			Operation{
-				Type:  OperationTypeAdd,
+			resources.Operation{
+				Type:  resources.OperationTypeAdd,
 				Path:  "/spec/tls/0",
 				Value: map[string]string{},
 			},
-			Operation{
-				Type:  OperationTypeAdd,
+			resources.Operation{
+				Type:  resources.OperationTypeAdd,
 				Path:  "/spec/tls/0/hosts",
 				Value: []string{host},
 			},
@@ -172,9 +172,9 @@ func GenerateApplicationOverlay(application client.OkctlApplication, hostedZoneD
 			return overlay, fmt.Errorf("marshalling ingress patch: %w", err)
 		}
 
-		kustomization.AddPatch(PatchReference{
+		kustomization.AddPatch(resources.PatchReference{
 			Path:   config.DefaultIngressPatchFilename,
-			Target: PatchTarget{Kind: "Ingress"},
+			Target: resources.PatchTarget{Kind: "Ingress"},
 		})
 	}
 

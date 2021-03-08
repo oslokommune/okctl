@@ -1,4 +1,4 @@
-package scaffold
+package resources
 
 import (
 	"encoding/json"

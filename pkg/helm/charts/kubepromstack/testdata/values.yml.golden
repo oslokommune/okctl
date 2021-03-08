@@ -563,6 +563,10 @@ grafana:
   enabled: true
   namespaceOverride: ""
 
+  serviceAccount:
+    create: false
+    name: cloudwatch-something
+
   ## Deploy default dashboards.
   ##
   defaultDashboardsEnabled: true

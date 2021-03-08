@@ -27,6 +27,7 @@ func New(timeout time.Duration, values *Values) *helm.Chart {
 
 // Values maps up the values.yaml file
 type Values struct {
+	GrafanaServiceAccountName          string
 	GrafanaCertificateARN              string
 	GrafanaHostname                    string
 	AuthHostname                       string
@@ -55,6 +56,8 @@ func (v *Values) RawYAML() ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
+// valuesTemplate is based on the following values.yaml:
+// - https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml
 // nolint: lll
 const valuesTemplate = `
 # Default values for kube-prometheus-stack.
@@ -620,6 +623,10 @@ alertmanager:
 grafana:
   enabled: true
   namespaceOverride: ""
+
+  serviceAccount:
+    create: false
+    name: {{.GrafanaServiceAccountName}}
 
   ## Deploy default dashboards.
   ##

@@ -19,6 +19,7 @@ func TestValues(t *testing.T) {
 			name: "kubepromstack values are valid",
 			values: &kubepromstack.Values{
 				GrafanaCertificateARN:              "arn::1234567890/certificate/fake",
+				GrafanaServiceAccountName:          "cloudwatch-something",
 				GrafanaHostname:                    "grafana.okctl-test.oslo.systems",
 				AuthHostname:                       "auth.okctl-test.oslo.system",
 				ClientID:                           "12345dsfg456ty",

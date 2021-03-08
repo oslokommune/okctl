@@ -142,22 +142,24 @@ func (o CreateArgoCDOpts) Validate() error {
 
 // CreateKubePrometheusStackOpts defines the required inputs
 type CreateKubePrometheusStackOpts struct {
-	ID                     ID
-	CertificateARN         string
-	Hostname               string
-	AuthHostname           string
-	ClientID               string
-	SecretsConfigName      string
-	SecretsCookieSecretKey string
-	SecretsClientSecretKey string
-	SecretsAdminUserKey    string
-	SecretsAdminPassKey    string
+	ID                                  ID
+	GrafanaCloudWatchServiceAccountName string
+	CertificateARN                      string
+	Hostname                            string
+	AuthHostname                        string
+	ClientID                            string
+	SecretsConfigName                   string
+	SecretsCookieSecretKey              string
+	SecretsClientSecretKey              string
+	SecretsAdminUserKey                 string
+	SecretsAdminPassKey                 string
 }
 
 // Validate the inputs
 func (o CreateKubePrometheusStackOpts) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.GrafanaCloudWatchServiceAccountName, validation.Required),
 		validation.Field(&o.CertificateARN, validation.Required),
 		validation.Field(&o.Hostname, validation.Required),
 		validation.Field(&o.AuthHostname, validation.Required),

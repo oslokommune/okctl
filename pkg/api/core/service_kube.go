@@ -12,6 +12,20 @@ type kubeService struct {
 	store api.KubeStore
 }
 
+func (k *kubeService) CreateNamespace(_ context.Context, opts api.CreateNamespaceOpts) (*api.Namespace, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, errors.E(err, "validating inputs", errors.Invalid)
+	}
+
+	ns, err := k.run.CreateNamespace(opts)
+	if err != nil {
+		return nil, errors.E(err, "creating namespace", errors.Internal)
+	}
+
+	return ns, nil
+}
+
 func (k *kubeService) ScaleDeployment(_ context.Context, opts api.ScaleDeploymentOpts) error {
 	err := opts.Validate()
 	if err != nil {

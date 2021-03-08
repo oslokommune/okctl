@@ -79,6 +79,7 @@ type Endpoints struct {
 	DeletePolicy                                  endpoint.Endpoint
 	CreateServiceAccount                          endpoint.Endpoint
 	DeleteServiceAccount                          endpoint.Endpoint
+	CreateNamespace                               endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -149,6 +150,7 @@ func MakeEndpoints(s Services) Endpoints {
 		DeletePolicy:                                  makeDeletePolicyEndpoint(s.ManagedPolicy),
 		CreateServiceAccount:                          makeCreateServiceAccountEndpoint(s.ServiceAccount),
 		DeleteServiceAccount:                          makeDeleteServiceAccountEndpoint(s.ServiceAccount),
+		CreateNamespace:                               makeCreateNamespace(s.Kube),
 	}
 }
 
@@ -217,6 +219,7 @@ type Handlers struct {
 	DeletePolicy                                  http.Handler
 	CreateServiceAccount                          http.Handler
 	DeleteServiceAccount                          http.Handler
+	CreateNamespace                               http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -313,6 +316,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeletePolicy:                                  newServer(endpoints.DeletePolicy, decodeStructRequest(&api.DeletePolicyOpts{})),
 		CreateServiceAccount:                          newServer(endpoints.CreateServiceAccount, decodeStructRequest(&api.CreateServiceAccountOpts{})),
 		DeleteServiceAccount:                          newServer(endpoints.DeleteServiceAccount, decodeStructRequest(&api.DeleteServiceAccountOpts{})),
+		CreateNamespace:                               newServer(endpoints.CreateNamespace, decodeStructRequest(&api.CreateNamespaceOpts{})),
 	}
 }
 
@@ -428,6 +432,7 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 				r.Method(http.MethodDelete, "/", handlers.DeleteExternalSecrets)
 			})
 			r.Route("/namespaces", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateNamespace)
 				r.Method(http.MethodDelete, "/", handlers.DeleteNamespace)
 			})
 			r.Route("/storageclasses", func(r chi.Router) {
@@ -598,6 +603,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeletePolicy:                                  logmd.Logging(logger, managedPoliciesTag, "delete")(endpoints.DeletePolicy),
 			CreateServiceAccount:                          logmd.Logging(logger, serviceAccountsTag, "create")(endpoints.CreateServiceAccount),
 			DeleteServiceAccount:                          logmd.Logging(logger, serviceAccountsTag, "delete")(endpoints.DeleteServiceAccount),
+			CreateNamespace:                               logmd.Logging(logger, strings.Join([]string{kubeTag, namespaceTag}, "/"), "create")(endpoints.CreateNamespace),
 		}
 	}
 }

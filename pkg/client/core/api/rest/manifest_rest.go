@@ -25,6 +25,11 @@ type manifestAPI struct {
 	client *HTTPClient
 }
 
+func (a *manifestAPI) CreateNamespace(opts api.CreateNamespaceOpts) (*api.Namespace, error) {
+	into := &api.Namespace{}
+	return into, a.client.DoPost(TargetKubeNamespace, &opts, into)
+}
+
 func (a *manifestAPI) ScaleDeployment(opts api.ScaleDeploymentOpts) error {
 	return a.client.DoPost(TargetKubeScaleDeployment, &opts, nil)
 }

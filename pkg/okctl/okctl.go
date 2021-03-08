@@ -366,6 +366,11 @@ func (o *Okctl) manifestService(outputDir string, spin spinner.Spinner) client.M
 		rest.NewManifestAPI(o.restClient),
 		clientFilesystem.NewManifestStore(
 			clientFilesystem.Paths{
+				OutputFile: config.DefaultNamespaceOutputFile,
+				ConfigFile: config.DefaultNamespaceConfigFile,
+				BaseDir:    path.Join(outputDir, config.DefaultNamespaceBaseDir),
+			},
+			clientFilesystem.Paths{
 				OutputFile: config.DefaultConfigMapOutputsFile,
 				ConfigFile: config.DefaultConfigMapConfigFile,
 				BaseDir:    path.Join(outputDir, config.DefaultConfigMapBaseDir),

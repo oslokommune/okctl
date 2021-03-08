@@ -15,10 +15,38 @@ import (
 )
 
 type manifestStore struct {
+	namespace      Paths
 	configMap      Paths
 	externalSecret Paths
 	storageClass   Paths
 	fs             *afero.Afero
+}
+
+// Namespace contains the outputs
+type Namespace struct {
+	ID        api.ID
+	Namespace string
+	Labels    map[string]string
+}
+
+func (s *manifestStore) RemoveNamespace(namespace string) (*store.Report, error) {
+	return store.NewFileSystem(path.Join(s.namespace.BaseDir, slug.Make(namespace)), s.fs).
+		Remove(s.namespace.OutputFile).
+		Remove(s.namespace.ConfigFile).
+		AlterStore(store.SetBaseDir(s.namespace.BaseDir)).
+		RemoveDir(slug.Make(namespace)).
+		Do()
+}
+
+func (s *manifestStore) SaveNamespace(namespace *client.Namespace) (*store.Report, error) {
+	return store.NewFileSystem(path.Join(s.namespace.BaseDir, slug.Make(namespace.Namespace)), s.fs).
+		StoreStruct(s.namespace.OutputFile, &Namespace{
+			ID:        namespace.ID,
+			Namespace: namespace.Namespace,
+			Labels:    namespace.Labels,
+		}, store.ToJSON()).
+		StoreBytes(s.namespace.ConfigFile, namespace.Manifest).
+		Do()
 }
 
 // ConfigMap is stored in the outputs file
@@ -131,8 +159,9 @@ func (s *manifestStore) SaveExternalSecret(e *client.ExternalSecret) (*store.Rep
 }
 
 // NewManifestStore returns an initialised store
-func NewManifestStore(configMap, storageClass, externalSecret Paths, fs *afero.Afero) client.ManifestStore {
+func NewManifestStore(namespace, configMap, storageClass, externalSecret Paths, fs *afero.Afero) client.ManifestStore {
 	return &manifestStore{
+		namespace:      namespace,
 		configMap:      configMap,
 		storageClass:   storageClass,
 		externalSecret: externalSecret,

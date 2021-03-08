@@ -40,6 +40,14 @@ type ConfigMap struct {
 	Manifest  []byte
 }
 
+// Namespace is the content of a k8s namespace
+type Namespace struct {
+	ID        api.ID
+	Namespace string
+	Labels    map[string]string
+	Manifest  []byte
+}
+
 // CreateConfigMapOpts contains the required inputs
 type CreateConfigMapOpts struct {
 	ID        api.ID
@@ -69,6 +77,7 @@ type ManifestService interface {
 	CreateConfigMap(ctx context.Context, opts CreateConfigMapOpts) (*ConfigMap, error)
 	DeleteConfigMap(ctx context.Context, opts DeleteConfigMapOpts) error
 	ScaleDeployment(ctx context.Context, opts api.ScaleDeploymentOpts) error
+	CreateNamespace(ctx context.Context, opts api.CreateNamespaceOpts) (*Namespace, error)
 }
 
 // ManifestAPI invokes the API
@@ -80,6 +89,7 @@ type ManifestAPI interface {
 	CreateConfigMap(opts api.CreateConfigMapOpts) (*api.ConfigMap, error)
 	DeleteConfigMap(opts api.DeleteConfigMapOpts) error
 	ScaleDeployment(opts api.ScaleDeploymentOpts) error
+	CreateNamespace(opts api.CreateNamespaceOpts) (*api.Namespace, error)
 }
 
 // ManifestStore defines the storage layer
@@ -87,8 +97,10 @@ type ManifestStore interface {
 	SaveStorageClass(sc *StorageClass) (*store.Report, error)
 	SaveExternalSecret(externalSecret *ExternalSecret) (*store.Report, error)
 	RemoveExternalSecret(secrets map[string]string) (*store.Report, error)
-	SaveConfigMap(ConfigMap *ConfigMap) (*store.Report, error)
+	SaveConfigMap(configMap *ConfigMap) (*store.Report, error)
 	RemoveConfigMap(name, namespace string) (*store.Report, error)
+	SaveNamespace(namespace *Namespace) (*store.Report, error)
+	RemoveNamespace(namespace string) (*store.Report, error)
 }
 
 // ManifestReport defines the report layer
@@ -98,4 +110,6 @@ type ManifestReport interface {
 	RemoveExternalSecret(report *store.Report) error
 	SaveConfigMap(secret *ConfigMap, report *store.Report) error
 	RemoveConfigMap(report *store.Report) error
+	SaveNamespace(namespace *Namespace, report *store.Report) error
+	RemoveNamespace(namespace string, report *store.Report) error
 }

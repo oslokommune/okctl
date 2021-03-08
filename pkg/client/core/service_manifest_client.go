@@ -155,6 +155,40 @@ func (s *manifestService) CreateStorageClass(_ context.Context, opts api.CreateS
 	return storage, nil
 }
 
+func (s *manifestService) CreateNamespace(_ context.Context, opts api.CreateNamespaceOpts) (*client.Namespace, error) {
+	err := s.spinner.Start("namespace")
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		_ = s.spinner.Stop()
+	}()
+
+	ns, err := s.api.CreateNamespace(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	namespace := &client.Namespace{
+		ID:        ns.ID,
+		Namespace: ns.Namespace,
+		Manifest:  ns.Manifest,
+	}
+
+	report, err := s.store.SaveNamespace(namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.report.SaveNamespace(namespace, report)
+	if err != nil {
+		return nil, err
+	}
+
+	return namespace, nil
+}
+
 func (s *manifestService) DeleteNamespace(_ context.Context, opts api.DeleteNamespaceOpts) error {
 	err := s.spinner.Start("namespace")
 	if err != nil {
@@ -162,10 +196,20 @@ func (s *manifestService) DeleteNamespace(_ context.Context, opts api.DeleteName
 	}
 
 	defer func() {
-		err = s.spinner.Stop()
+		_ = s.spinner.Stop()
 	}()
 
-	return s.api.DeleteNamespace(opts)
+	err = s.api.DeleteNamespace(opts)
+	if err != nil {
+		return err
+	}
+
+	report, err := s.store.RemoveNamespace(opts.Namespace)
+	if err != nil {
+		return err
+	}
+
+	return s.report.RemoveNamespace(opts.Namespace, report)
 }
 
 func (s *manifestService) CreateExternalSecret(_ context.Context, opts client.CreateExternalSecretOpts) (*client.ExternalSecret, error) {

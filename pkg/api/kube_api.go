@@ -105,6 +105,29 @@ func (d Data) Validate() error {
 	)
 }
 
+// Namespace contains the data for a namespace
+type Namespace struct {
+	ID        ID
+	Namespace string
+	Labels    map[string]string
+	Manifest  []byte
+}
+
+// CreateNamespaceOpts contains the required inputs
+type CreateNamespaceOpts struct {
+	ID        ID
+	Namespace string
+	Labels    map[string]string
+}
+
+// Validate the inputs
+func (o CreateNamespaceOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.Namespace, validation.Required),
+	)
+}
+
 // DeleteNamespaceOpts provides the inputs
 type DeleteNamespaceOpts struct {
 	ID        ID
@@ -205,6 +228,7 @@ type KubeService interface {
 	CreateConfigMap(ctx context.Context, opts CreateConfigMapOpts) (*ConfigMap, error)
 	DeleteConfigMap(ctx context.Context, opts DeleteConfigMapOpts) error
 	ScaleDeployment(ctx context.Context, opts ScaleDeploymentOpts) error
+	CreateNamespace(ctx context.Context, opts CreateNamespaceOpts) (*Namespace, error)
 }
 
 // KubeRun provides kube deployment run layer
@@ -217,6 +241,7 @@ type KubeRun interface {
 	CreateConfigMap(opts CreateConfigMapOpts) (*ConfigMap, error)
 	DeleteConfigMap(opts DeleteConfigMapOpts) error
 	ScaleDeployment(opts ScaleDeploymentOpts) error
+	CreateNamespace(opts CreateNamespaceOpts) (*Namespace, error)
 }
 
 // KubeStore provides kube store layer

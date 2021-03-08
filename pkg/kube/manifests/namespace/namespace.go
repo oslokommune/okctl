@@ -13,13 +13,15 @@ import (
 // Namespace contains the state for creating a namespace
 type Namespace struct {
 	Namespace string
+	Labels    map[string]string
 	Ctx       context.Context
 }
 
 // New returns an initialised namespace creator
-func New(namespace string) *Namespace {
+func New(namespace string, labels map[string]string) *Namespace {
 	return &Namespace{
 		Namespace: namespace,
+		Labels:    labels,
 		Ctx:       context.Background(),
 	}
 }
@@ -83,7 +85,8 @@ func (n *Namespace) NamespaceManifest() *v1.Namespace {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: n.Namespace,
+			Name:   n.Namespace,
+			Labels: n.Labels,
 		},
 	}
 }

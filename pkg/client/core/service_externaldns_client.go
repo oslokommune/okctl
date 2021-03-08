@@ -67,7 +67,7 @@ func (s *externalDNSService) CreateExternalDNS(_ context.Context, opts client.Cr
 	}
 
 	account, err := s.api.CreateExternalDNSServiceAccount(api.CreateExternalDNSServiceAccountOpts{
-		CreateServiceAccountOpts: api.CreateServiceAccountOpts{
+		CreateServiceAccountBaseOpts: api.CreateServiceAccountBaseOpts{
 			ID:        opts.ID,
 			PolicyArn: policy.PolicyARN,
 		},

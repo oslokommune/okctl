@@ -67,7 +67,7 @@ func (s *albIngressControllerService) CreateALBIngressController(_ context.Conte
 	}
 
 	account, err := s.api.CreateAlbIngressControllerServiceAccount(api.CreateAlbIngressControllerServiceAccountOpts{
-		CreateServiceAccountOpts: api.CreateServiceAccountOpts{
+		CreateServiceAccountBaseOpts: api.CreateServiceAccountBaseOpts{
 			ID:        opts.ID,
 			PolicyArn: policy.PolicyARN,
 		},

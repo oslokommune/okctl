@@ -68,7 +68,7 @@ func (s *autoscalerService) CreateAutoscaler(_ context.Context, opts client.Crea
 	}
 
 	sa, err := s.api.CreateAutoscalerServiceAccount(api.CreateAutoscalerServiceAccountOpts{
-		CreateServiceAccountOpts: api.CreateServiceAccountOpts{
+		CreateServiceAccountBaseOpts: api.CreateServiceAccountBaseOpts{
 			ID:        opts.ID,
 			PolicyArn: policy.PolicyARN,
 		},

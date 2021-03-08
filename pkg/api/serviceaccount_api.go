@@ -11,6 +11,7 @@ import (
 // ServiceAccount holds state for a service account
 type ServiceAccount struct {
 	ID        ID
+	Name      string
 	PolicyArn string
 	Config    *v1alpha5.ClusterConfig
 }
@@ -97,6 +98,7 @@ func (o CreateBlockstorageServiceAccountOpts) Validate() error {
 // for creating a new service account
 type CreateServiceAccountOpts struct {
 	ID        ID
+	Name      string
 	PolicyArn string
 	Config    *v1alpha5.ClusterConfig
 }
@@ -105,6 +107,7 @@ type CreateServiceAccountOpts struct {
 func (o CreateServiceAccountOpts) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.Name, validation.Required),
 		validation.Field(&o.PolicyArn, validation.Required),
 		validation.Field(&o.Config, validation.Required),
 	)
@@ -114,6 +117,7 @@ func (o CreateServiceAccountOpts) Validate() error {
 // for deleting a service account
 type DeleteServiceAccountOpts struct {
 	ID     ID
+	Name   string
 	Config *v1alpha5.ClusterConfig
 }
 
@@ -121,6 +125,7 @@ type DeleteServiceAccountOpts struct {
 func (o DeleteServiceAccountOpts) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.Name, validation.Required),
 		validation.Field(&o.Config, validation.Required),
 	)
 }

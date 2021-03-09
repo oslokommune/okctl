@@ -43,11 +43,22 @@ This command will create the following files in the ./infrastructure folder:
 After that, the following manual steps remain:
 
 1. (optional) Create the namespace you specified in the application declaration(application.yaml), i.e.:
-`kubectl create namespace <name of namespace>`. This is only needed if the namespace you specified in the application
+
+```bash
+kubectl create namespace <name of namespace>
+```
+
+This is only needed if the namespace you specified in the application
 declaration is not pre-existing.
+
 2. Commit and push the changes done by `okctl apply application` to your infrastructure as code repository remote accessible for
 ArgoCD.
-3. Apply the ArgoCD resource to the cluster: `kubectl apply -f ./infrastructure/base/applications/<app-name>/<app-name>-application.yaml`
+
+3. Apply the ArgoCD resource to the cluster:
+
+```
+kubectl apply -f ./infrastructure/base/applications/<app-name>/<app-name>-application.yaml
+```
 
 The application.yaml declaration can be neat to create resource files from for a while, but as soon as you find yourself
 adding configuration directly to the Kubernetes resource file or the ArgoCD resource file, there is no longer any point

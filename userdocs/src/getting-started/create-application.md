@@ -31,13 +31,13 @@ After configuring the application.yaml file, you turn it into Kubernetes and Arg
 okctl apply application ENV -f application.yaml
 ```
 
-This command will create the following files in the ./infrastructure folder:
+This command will create the following content in the ./infrastructure folder:
 
-1. ./infrastructure/applications/APP-NAME/base
-    * Contains Kubernetes resources common for your application for all environments
-2. ./infrastructure/applications/APP-NAME/overlays
-    * Contains (Kustomize) patches that specifies environment specific adjustments to the common resources.
-3. ./infrastructure/<env>/certificates/<application.url> (if https is specified)
+1. `./infrastructure/applications/APP-NAME/base`
+    * Contains Kubernetes resources common for your application regardless of environment
+2. `./infrastructure/applications/APP-NAME/overlays`
+    * Contains (Kustomize) patches containing environment specific adjustments to the common resources.
+3. `./infrastructure/<env>/certificates/APP-URL`
     * The certificate declaration for the URL specified in the application.yaml.
 
 After that, the following manual steps remain:
@@ -48,21 +48,24 @@ After that, the following manual steps remain:
 kubectl create namespace <name of namespace>
 ```
 
-This is only needed if the namespace you specified in the application
-declaration is not pre-existing.
+This is only needed if the namespace you specified in the application declaration is not pre-existing.
 
-2. Commit and push the changes done by `okctl apply application` to your infrastructure as code repository remote accessible for
-ArgoCD.
+2. Commit and push the changes done by `okctl apply application` to your infrastructure as code repository remote 
+   accessible for ArgoCD.
 
 3. Apply the ArgoCD resource to the cluster:
 
 ```
-kubectl apply -f ./infrastructure/base/applications/<app-name>/<app-name>-application.yaml
+kubectl apply -f ./infrastructure/applications/<app-name>/argocd-application.yaml
 ```
 
-The application.yaml declaration can be neat to create resource files from for a while, but as soon as you find yourself
-adding configuration directly to the Kubernetes resource file or the ArgoCD resource file, there is no longer any point
-to keep it around. Feel free to delete it.
+The application.yaml declaration is used as an alternative to a wizard or numerous command flags. After running 
+
+```shell
+okctl apply application
+```
+
+there is no longer any point to keep it around. Feel free to delete it.
 
 ## Setup an ArgoCD application manually
 

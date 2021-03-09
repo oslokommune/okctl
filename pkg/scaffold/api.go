@@ -55,46 +55,47 @@ func GenerateApplicationBase(app kaex.Application, iacRepoURL, relativeApplicati
 		}
 
 		volumes[index] = &pvc
+
+		applicationBase.Volumes, err = resources.VolumesAsBytes(volumes)
+		if err != nil {
+			return applicationBase, err
+		}
+
+		if len(applicationBase.Volumes) > 0 {
+			kustomization.AddResource("volumes.yaml")
+		}
 	}
 
-	applicationBase.Volumes, err = resources.VolumesAsBytes(volumes)
-	if err != nil {
-		return applicationBase, err
-	}
-
-	if len(applicationBase.Volumes) > 0 {
-		kustomization.AddResource("volumes.yaml")
-	}
-
-	var service v1.Service
 	if app.Port != 0 {
+		var service v1.Service
+
 		service, err = resources.CreateOkctlService(app)
 		if err != nil {
 			return applicationBase, fmt.Errorf("creating service resource: %w", err)
 		}
 
 		kustomization.AddResource("service.yaml")
+
+		applicationBase.Service, err = resources.ResourceAsBytes(service)
+		if err != nil {
+			return applicationBase, err
+		}
 	}
 
-	applicationBase.Service, err = resources.ResourceAsBytes(service)
-	if err != nil {
-		return applicationBase, err
-	}
-
-	var ingress networkingv1.Ingress
 	if app.Url != "" && app.Port != 0 {
+		var ingress networkingv1.Ingress
+
 		ingress, err = resources.CreateOkctlIngress(app)
 		if err != nil {
 			return applicationBase, err
 		}
 
 		kustomization.AddResource("ingress.yaml")
-	}
 
-	// TODO this needs to go into if above
-	applicationBase.Ingress, err = resources.ResourceAsBytes(ingress)
-	if err != nil {
-		return applicationBase, err
+		applicationBase.Ingress, err = resources.ResourceAsBytes(ingress)
+		if err != nil {
+			return applicationBase, err
+		}
 	}
 
 	deployment, err := resources.CreateOkctlDeployment(app)

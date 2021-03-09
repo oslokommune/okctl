@@ -33,14 +33,12 @@ okctl apply application ENV -f application.yaml
 
 This command will create the following files in the ./infrastructure folder:
 
-1. ./infrastructure/base/applications/<app-name>
-    * `<app-name>.yaml` containing all the Kubernetes resources.
-    * `<app-name>-application.yaml` containing the ArgoCD Application declaration.
-2. ./infrastructure/<env>/certificates/<application.url> (if https is specified)
+1. ./infrastructure/applications/APP-NAME/base
+    * Contains Kubernetes resources common for your application for all environments
+2. ./infrastructure/applications/APP-NAME/overlays
+    * Contains (Kustomize) patches that specifies environment specific adjustments to the common resources.
+3. ./infrastructure/<env>/certificates/<application.url> (if https is specified)
     * The certificate declaration for the URL specified in the application.yaml.
-
-Both files in 1. is needed by ArgoCD to deploy your application or service. Read more about ArgoCD
-[here](/buildingblocks/argocd/).
 
 After that, the following manual steps remain:
 

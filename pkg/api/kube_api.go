@@ -189,7 +189,6 @@ func (o CreateConfigMapOpts) Validate() error {
 		validation.Field(&o.Name, validation.Required),
 		validation.Field(&o.Namespace, validation.Required),
 		validation.Field(&o.Data, validation.Required),
-		validation.Field(&o.Labels, validation.Required),
 	)
 }
 

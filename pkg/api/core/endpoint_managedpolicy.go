@@ -81,12 +81,12 @@ func makeDeleteBlockstoragePolicyEndpoint(s api.ManagedPolicyService) endpoint.E
 
 func makeCreatePolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreatePolicy(ctx, request.(api.CreatePolicyOpts))
+		return s.CreatePolicy(ctx, *request.(*api.CreatePolicyOpts))
 	}
 }
 
 func makeDeletePolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return &Empty{}, s.DeletePolicy(ctx, request.(api.DeletePolicyOpts))
+		return &Empty{}, s.DeletePolicy(ctx, *request.(*api.DeletePolicyOpts))
 	}
 }

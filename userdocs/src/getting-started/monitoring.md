@@ -72,6 +72,8 @@ data:
   [...]
 ```
 
+For more inspiration, you can take a look at some of the [default dashboards](https://github.com/helm/charts/tree/master/stable/prometheus-operator/templates/grafana).
+
 The important part is the `grafana_dashboard` label, also, please remember that the name of the dashboard, e.g.: `k8s-dashboard.json` needs to be unique, if you use the same name everywhere they will overwrite each other. 
  
 ### Roadmap

@@ -693,13 +693,14 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 		Name:      "aws-logging",
 		Namespace: config.DefaultFargateObservabilityNamespace,
 		Data: map[string]string{
-			"output.conf": fmt.Sprintf(`[OUTPUT]
-	Name cloudwatch_logs
-	Match *
-	region %s
-	log_group_name okctl-fluent-cloudwatch
-	log_stream_prefix from-fluent-bit
-	auto_create_group true
+			"output.conf": fmt.Sprintf(`
+[OUTPUT]
+    Name cloudwatch_logs
+    Match *
+    region %s
+    log_group_name okctl-fluent-cloudwatch
+    log_stream_prefix from-fluent-bit
+    auto_create_group true
 `, opts.ID.Region),
 		},
 		Labels: nil,

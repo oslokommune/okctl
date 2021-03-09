@@ -10,10 +10,10 @@ To scaffold a cluster declaration, run the following:
 
 ```bash
 # Usage
-okctl scaffold cluster TEAM-/PRODUCT_NAME ENVIRONMENT_NAME > path
+okctl scaffold cluster > PATH
 
 # Example
-okctl scaffold cluster utviklerportalen production > cluster.yaml
+okctl scaffold cluster > cluster.yaml
 ```
 
 To create a cluster based on the declaration, run the following:
@@ -28,16 +28,16 @@ okctl apply cluster -f cluster.yaml
 
 ## Details
 
-The declarative approach does exactly the same as `okctl create cluster`, except that it gets all its user input up
-front. That way you can easily take down and recreate clusters as you experiment. You create a declaration once and 
-apply it as many times as you need.
+The declarative approach does exactly the same as `okctl create cluster` used to do, except that it gets all its user 
+input up front. That way you can easily take down and recreate clusters as you experiment. You create a declaration once
+and apply it as many times as you need.
 
 ## Usage
 
 When running 
 
 ```bash
-okctl scaffold cluster utviklerportalen production > cluster.yaml
+okctl scaffold cluster > cluster.yaml
 ``` 
 
 you'll end up with a file looking like this:
@@ -46,57 +46,71 @@ you'll end up with a file looking like this:
 apiVersion: okctl.io/v1alpha1
 kind: Cluster
 
+# For help finding values, see https://okctl.io/getting-started/create-cluster
 metadata:
-  # Account ID is your AWS account ID.
-  accountID: "123456789123"
+  # Account ID is your AWS account ID
+  accountID: '123456789123'
   # Environment is the name you use to identify the type of cluster it is. Common names are production, test, staging
-  environment: production
+  environment: development
   # Name can be anything, but should define the scope of the cluster. Meaning if the cluster is scoped to one product,
   # you might want to name it the name of the product. If the cluster contains all services and products owned by a
   # team, the team name might be more fitting.
-  name: utviklerportalen
+  name: my-product-name
   # Region defines the AWS region to prefer when creating resources
-  region: eu-west-1
+  # region: eu-west-1
 
-# The primary DNS zone defines the domain of which to create services beneath. For example; okctl will setup ArgoCD
-# which has a frontend. The frontend will be available at argocd.<parentDomain>. For Cognito it will be 
-# auth.<parentDomain>
-primaryDNSZone:
-  managedZone: false
-  parentDomain: utviklerportalen-production.oslo.systems
+# The cluster root URL defines the domain of which to create services beneath. For example; okctl will setup ArgoCD
+# which has a frontend. The frontend will be available at https://argocd.<clusterRootURL>. For Cognito it will be 
+# https://auth.<clusterRootURL>
+clusterRootURL: my-product-name-development.oslo.systems
 
 # For okctl to be able to setup ArgoCD correctly for you, it needs to know what repository on Github that will contain
-# your infrastructure
+# your infrastructure.
 github:
-  # The organization that owns the repository
-  organisation: oslokommune
   # The name of the repository
   repository: my_iac_repo_name
+  # The organization that owns the repository
+  # organisation: oslokommune
   # The folder to place infrastructure declarations
-  outputPath: infrastructure
-  # The team defined in Github that should be allowed access to the created resources
-  team: my_team
-
-# okctl creates a Virtual Private Cloud for you which it organizes all the intended resources that require networking.
-vpc:
-  # CIDR defines the VPC IP range. Leave this be if you don't know what it is/does
-  cidr: 192.168.0.0/20
-  highAvailability: true
+  # outputPath: infrastructure
 
 integrations:
-  # ALB Ingress Controller handles routing from the internet to your application running inside your okctl Kubernetes
-  # cluster. If you want your applications and services accessible from the internet, this needs to be enabled
-  albIngressController: true
   # ArgoCD is a service that watches a repository for Kubernetes charts and ensures the defined resources are running
   # as declared in the cluster
   argoCD: true
-  # Cognito is an authentication provider that okctl uses to control access to different resources, like ArgoCD
+  # Autoscaler automatically adjusts the size of pods and nodes in your cluster depending on load
+  autoscaler: true
+  # AWS Load Balancer Controller handles routing from the internet to your application running inside your okctl
+  # Kubernetes cluster. If you want your applications and services accessible from the internet, this needs to be
+  # enabled.
+  awsLoadBalancerController: true
+  # Block storage provides persistent storage for your cluster (Persistent Volumes)
+  blockstorage: true
+  # Cognito is an authentication provider that okctl uses to control access to different resources, like ArgoCD and
+  # Grafana
   cognito: true
   # External DNS handles defining the necessary DNS records required to route traffic to your defined service or 
   # application
   externalDNS: true
-  # External Secrets handles 
+  # External Secrets fetches secrets from external sources and exposes them as native Kubernetes secrets inside the
+  # cluster 
   externalSecrets: true
+  # KubePromStack enables Prometheus and Grafana for metrics
+  kubePromStack: true
+  # Loki collects logs and exposes them as a data source in Grafana
+  loki: true
+  # Promtail scrapes logs from pods and feeds them to Loki
+  promtail: true
+  # Tempo collects traces and exposes them as a data source in Grafana. Supports formats like jaeger, zipkin, open 
+  # telemetry
+  tempo: true
+
+## okctl creates a Virtual Private Cloud for you which it organizes all the intended resources that require networking.
+## A VPC is mandatory, but can be configured by the following attributes.
+#vpc:
+#  # CIDR defines the VPC IP range. Leave this be if you don't know what it is/does
+#  cidr: 192.168.0.0/20
+#  highAvailability: true
 ```
 
 Modify the declaration to suit your situation and needs, then use

@@ -10,9 +10,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/helm/charts/argocd"
 
-	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	"github.com/oslokommune/okctl/pkg/helm"
 	"github.com/oslokommune/okctl/pkg/integration"
@@ -105,11 +106,11 @@ func TestHelm(t *testing.T) {
 			helm: helm.New(
 				&helm.Config{
 					HomeDir:              dir,
-					HelmPluginsDirectory: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
-					HelmRegistryConfig:   path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
-					HelmRepositoryConfig: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryConfig),
-					HelmRepositoryCache:  path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryCache),
-					HelmBaseDir:          path.Join(dir, config.DefaultHelmBaseDir),
+					HelmPluginsDirectory: path.Join(dir, constant.DefaultHelmBaseDir, constant.DefaultHelmPluginsDirectory),
+					HelmRegistryConfig:   path.Join(dir, constant.DefaultHelmBaseDir, constant.DefaultHelmRegistryConfig),
+					HelmRepositoryConfig: path.Join(dir, constant.DefaultHelmBaseDir, constant.DefaultHelmRepositoryConfig),
+					HelmRepositoryCache:  path.Join(dir, constant.DefaultHelmBaseDir, constant.DefaultHelmRepositoryCache),
+					HelmBaseDir:          path.Join(dir, constant.DefaultHelmBaseDir),
 					Debug:                true,
 					DebugOutput:          os.Stderr,
 				},
@@ -133,11 +134,11 @@ func TestHelm(t *testing.T) {
 			helm: helm.New(
 				&helm.Config{
 					HomeDir:              dir,
-					HelmPluginsDirectory: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
-					HelmRegistryConfig:   path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
-					HelmRepositoryConfig: path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryConfig),
-					HelmRepositoryCache:  path.Join(dir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryCache),
-					HelmBaseDir:          path.Join(dir, config.DefaultHelmBaseDir),
+					HelmPluginsDirectory: path.Join(dir, constant.DefaultHelmBaseDir, constant.DefaultHelmPluginsDirectory),
+					HelmRegistryConfig:   path.Join(dir, constant.DefaultHelmBaseDir, constant.DefaultHelmRegistryConfig),
+					HelmRepositoryConfig: path.Join(dir, constant.DefaultHelmBaseDir, constant.DefaultHelmRepositoryConfig),
+					HelmRepositoryCache:  path.Join(dir, constant.DefaultHelmBaseDir, constant.DefaultHelmRepositoryCache),
+					HelmBaseDir:          path.Join(dir, constant.DefaultHelmBaseDir),
 					Debug:                true,
 					DebugOutput:          os.Stderr,
 				},

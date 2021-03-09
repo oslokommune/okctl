@@ -1,13 +1,10 @@
+clusterRootURL: ""
 github:
   organisation: ""
   outputPath: ""
   repository: ""
-  team: ""
 metadata:
   accountID: ""
   environment: ""
   name: ""
   region: ""
-primaryDNSZone:
-  managedZone: false
-  parentDomain: ""

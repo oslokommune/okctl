@@ -44,7 +44,7 @@ func (z *nameserverDelegationReconciler) Reconcile(node *resourcetree.ResourceNo
 
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		primaryHostedZoneFQDN := dns.Fqdn(z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain)
+		primaryHostedZoneFQDN := dns.Fqdn(z.commonMetadata.Declaration.ClusterRootURL)
 
 		_, err = z.client.CreateNameserverRecordDelegationRequest(&client.CreateNameserverDelegationRequestOpts{
 			ClusterID:             z.commonMetadata.ClusterID,

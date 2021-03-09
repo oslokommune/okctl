@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/context"
 
 	"github.com/logrusorgru/aurora/v3"
@@ -83,7 +85,7 @@ func (o *Okctl) InitialiseWithOnlyEnv(env string) error {
 	}
 
 	o.RepoStateWithEnv = state.NewRepositoryStateWithEnv(env, o.RepoState, state.DefaultFileSystemSaver(
-		config.DefaultRepositoryStateFile,
+		constant.DefaultRepositoryStateFile,
 		repoDir,
 		o.FileSystem,
 	))
@@ -102,7 +104,7 @@ func (o *Okctl) InitialiseWithEnvAndAWSAccountID(env, awsAccountID string) error
 	}
 
 	o.RepoStateWithEnv = state.NewRepositoryStateWithEnv(env, o.RepoState, state.DefaultFileSystemSaver(
-		config.DefaultRepositoryStateFile,
+		constant.DefaultRepositoryStateFile,
 		repoDir,
 		o.FileSystem,
 	))
@@ -158,7 +160,7 @@ $ cat %s
 	return func(err error) error {
 		return fmt.Errorf(errMsg,
 			command,
-			path.Join(userDir, config.DefaultLogDir, config.DefaultLogName),
+			path.Join(userDir, constant.DefaultLogDir, constant.DefaultLogName),
 			aurora.Bold("#kjøremiljø-support"),
 			err,
 		)
@@ -233,39 +235,39 @@ func (o *Okctl) serviceAccountService(outputDir string, spin spinner.Spinner) cl
 }
 
 func (o *Okctl) monitoringService(outputDir string, spin spinner.Spinner) client.MonitoringService {
-	monitoringDir := path.Join(outputDir, config.DefaultMonitoringBaseDir)
+	monitoringDir := path.Join(outputDir, constant.DefaultMonitoringBaseDir)
 
 	return clientCore.NewMonitoringService(
 		spin,
 		rest.NewMonitoringAPI(o.restClient),
 		clientFilesystem.NewMonitoringStore(
 			clientFilesystem.Paths{
-				OutputFile:  config.DefaultHelmOutputsFile,
-				ReleaseFile: config.DefaultHelmReleaseFile,
-				ChartFile:   config.DefaultHelmChartFile,
-				BaseDir:     path.Join(monitoringDir, config.DefaultTempoBaseDir),
+				OutputFile:  constant.DefaultHelmOutputsFile,
+				ReleaseFile: constant.DefaultHelmReleaseFile,
+				ChartFile:   constant.DefaultHelmChartFile,
+				BaseDir:     path.Join(monitoringDir, constant.DefaultTempoBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile:  config.DefaultHelmOutputsFile,
-				ReleaseFile: config.DefaultHelmReleaseFile,
-				ChartFile:   config.DefaultHelmChartFile,
-				BaseDir:     path.Join(monitoringDir, config.DefaultPromtailBaseDir),
+				OutputFile:  constant.DefaultHelmOutputsFile,
+				ReleaseFile: constant.DefaultHelmReleaseFile,
+				ChartFile:   constant.DefaultHelmChartFile,
+				BaseDir:     path.Join(monitoringDir, constant.DefaultPromtailBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile:  config.DefaultHelmOutputsFile,
-				ReleaseFile: config.DefaultHelmReleaseFile,
-				ChartFile:   config.DefaultHelmChartFile,
-				BaseDir:     path.Join(monitoringDir, config.DefaultLokiBaseDir),
+				OutputFile:  constant.DefaultHelmOutputsFile,
+				ReleaseFile: constant.DefaultHelmReleaseFile,
+				ChartFile:   constant.DefaultHelmChartFile,
+				BaseDir:     path.Join(monitoringDir, constant.DefaultLokiBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile:  config.DefaultHelmOutputsFile,
-				ReleaseFile: config.DefaultHelmReleaseFile,
-				ChartFile:   config.DefaultHelmChartFile,
-				BaseDir:     path.Join(monitoringDir, config.DefaultKubePromStackBaseDir),
+				OutputFile:  constant.DefaultHelmOutputsFile,
+				ReleaseFile: constant.DefaultHelmReleaseFile,
+				ChartFile:   constant.DefaultHelmChartFile,
+				BaseDir:     path.Join(monitoringDir, constant.DefaultKubePromStackBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile: config.DefaultKubePromStackOutputsFile,
-				BaseDir:    path.Join(monitoringDir, config.DefaultKubePromStackBaseDir),
+				OutputFile: constant.DefaultKubePromStackOutputsFile,
+				BaseDir:    path.Join(monitoringDir, constant.DefaultKubePromStackBaseDir),
 			},
 			o.FileSystem,
 		),
@@ -282,34 +284,34 @@ func (o *Okctl) monitoringService(outputDir string, spin spinner.Spinner) client
 }
 
 func (o *Okctl) identityManagerService(outputDir string, spin spinner.Spinner) client.IdentityManagerService {
-	identityPoolBaseDir := path.Join(outputDir, config.DefaultIdentityPoolBaseDir)
+	identityPoolBaseDir := path.Join(outputDir, constant.DefaultIdentityPoolBaseDir)
 
 	identityManagerService := clientCore.NewIdentityManagerService(
 		spin,
 		rest.NewIdentityManagerAPI(o.restClient),
 		clientFilesystem.NewIdentityManagerStore(
 			clientFilesystem.Paths{
-				OutputFile:         config.DefaultIdentityPoolOutputsFile,
-				CloudFormationFile: config.DefaultIdentityPoolCloudFormationTemplate,
+				OutputFile:         constant.DefaultIdentityPoolOutputsFile,
+				CloudFormationFile: constant.DefaultIdentityPoolCloudFormationTemplate,
 				BaseDir:            identityPoolBaseDir,
 			},
 			clientFilesystem.Paths{
-				CloudFormationFile: config.DefaultCertificateCloudFormationTemplate,
-				BaseDir:            path.Join(identityPoolBaseDir, config.DefaultCertificateBaseDir),
+				CloudFormationFile: constant.DefaultCertificateCloudFormationTemplate,
+				BaseDir:            path.Join(identityPoolBaseDir, constant.DefaultCertificateBaseDir),
 			},
 			clientFilesystem.Paths{
-				CloudFormationFile: config.DefaultAliasCloudFormationTemplate,
-				BaseDir:            path.Join(identityPoolBaseDir, config.DefaultAliasBaseDir),
+				CloudFormationFile: constant.DefaultAliasCloudFormationTemplate,
+				BaseDir:            path.Join(identityPoolBaseDir, constant.DefaultAliasBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile:         config.DefaultIdentityPoolClientOutputsFile,
-				CloudFormationFile: config.DefaultIdentityPoolClientCloudFormationTemplate,
-				BaseDir:            path.Join(identityPoolBaseDir, config.DefaultIdentityPoolClientsBaseDir),
+				OutputFile:         constant.DefaultIdentityPoolClientOutputsFile,
+				CloudFormationFile: constant.DefaultIdentityPoolClientCloudFormationTemplate,
+				BaseDir:            path.Join(identityPoolBaseDir, constant.DefaultIdentityPoolClientsBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile:         config.DefaultIdentityPoolUserOutputsFile,
-				CloudFormationFile: config.DefaultIdentityPoolUserCloudFormationTemplate,
-				BaseDir:            path.Join(identityPoolBaseDir, config.DefaultIdentityPoolUsersBaseDir),
+				OutputFile:         constant.DefaultIdentityPoolUserOutputsFile,
+				CloudFormationFile: constant.DefaultIdentityPoolUserCloudFormationTemplate,
+				BaseDir:            path.Join(identityPoolBaseDir, constant.DefaultIdentityPoolUsersBaseDir),
 			},
 			o.FileSystem,
 		),
@@ -322,7 +324,7 @@ func (o *Okctl) identityManagerService(outputDir string, spin spinner.Spinner) c
 }
 
 func (o *Okctl) argocdService(outputDir string, spin spinner.Spinner) client.ArgoCDService {
-	argoBaseDir := path.Join(outputDir, config.DefaultArgoCDBaseDir)
+	argoBaseDir := path.Join(outputDir, constant.DefaultArgoCDBaseDir)
 
 	argoService := clientCore.NewArgoCDService(
 		spin,
@@ -333,13 +335,13 @@ func (o *Okctl) argocdService(outputDir string, spin spinner.Spinner) client.Arg
 		rest.NewArgoCDAPI(o.restClient),
 		clientFilesystem.NewArgoCDStore(
 			clientFilesystem.Paths{
-				OutputFile:  config.DefaultHelmOutputsFile,
-				ReleaseFile: config.DefaultHelmReleaseFile,
-				ChartFile:   config.DefaultHelmChartFile,
-				BaseDir:     path.Join(outputDir, config.DefaultHelmBaseDir),
+				OutputFile:  constant.DefaultHelmOutputsFile,
+				ReleaseFile: constant.DefaultHelmReleaseFile,
+				ChartFile:   constant.DefaultHelmChartFile,
+				BaseDir:     path.Join(outputDir, constant.DefaultHelmBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile: config.DefaultArgoOutputsFile,
+				OutputFile: constant.DefaultArgoOutputsFile,
 				BaseDir:    argoBaseDir,
 			},
 			o.FileSystem,
@@ -357,8 +359,8 @@ func (o *Okctl) paramService(outputDir string, spin spinner.Spinner) client.Para
 		rest.NewParameterAPI(o.restClient),
 		clientFilesystem.NewParameterStore(
 			clientFilesystem.Paths{
-				OutputFile: config.DefaultParameterOutputsFile,
-				BaseDir:    path.Join(outputDir, config.DefaultParameterBaseDir),
+				OutputFile: constant.DefaultParameterOutputsFile,
+				BaseDir:    path.Join(outputDir, constant.DefaultParameterBaseDir),
 			},
 			o.FileSystem,
 		),
@@ -377,18 +379,18 @@ func (o *Okctl) manifestService(outputDir string, spin spinner.Spinner) client.M
 				BaseDir:    path.Join(outputDir, config.DefaultNamespaceBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile: config.DefaultConfigMapOutputsFile,
-				ConfigFile: config.DefaultConfigMapConfigFile,
-				BaseDir:    path.Join(outputDir, config.DefaultConfigMapBaseDir),
+				OutputFile: constant.DefaultConfigMapOutputsFile,
+				ConfigFile: constant.DefaultConfigMapConfigFile,
+				BaseDir:    path.Join(outputDir, constant.DefaultConfigMapBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile: config.DefaultStorageClassOutputsFile,
-				ConfigFile: config.DefaultStorageClassConfigFile,
-				BaseDir:    path.Join(outputDir, config.DefaultStorageClassBaseDir),
+				OutputFile: constant.DefaultStorageClassOutputsFile,
+				ConfigFile: constant.DefaultStorageClassConfigFile,
+				BaseDir:    path.Join(outputDir, constant.DefaultStorageClassBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile: config.DefaultKubeOutputsFile,
-				BaseDir:    path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+				OutputFile: constant.DefaultKubeOutputsFile,
+				BaseDir:    path.Join(outputDir, constant.DefaultExternalSecretsBaseDir),
 			},
 			o.FileSystem,
 		),
@@ -409,9 +411,9 @@ func (o *Okctl) certService(outputDir string, spin spinner.Spinner) client.Certi
 		rest.NewCertificateAPI(o.restClient),
 		clientFilesystem.NewCertificateStore(
 			clientFilesystem.Paths{
-				OutputFile:         config.DefaultCertificateOutputsFile,
-				CloudFormationFile: config.DefaultCertificateCloudFormationTemplate,
-				BaseDir:            path.Join(outputDir, config.DefaultCertificateBaseDir),
+				OutputFile:         constant.DefaultCertificateOutputsFile,
+				CloudFormationFile: constant.DefaultCertificateCloudFormationTemplate,
+				BaseDir:            path.Join(outputDir, constant.DefaultCertificateBaseDir),
 			},
 			o.FileSystem,
 		),
@@ -440,9 +442,9 @@ func (o *Okctl) vpcService(outputDir string, spin spinner.Spinner) client.VPCSer
 		rest.NewVPCAPI(o.restClient),
 		clientFilesystem.NewVpcStore(
 			clientFilesystem.Paths{
-				OutputFile:         config.DefaultVpcOutputs,
-				CloudFormationFile: config.DefaultVpcCloudFormationTemplate,
-				BaseDir:            path.Join(outputDir, config.DefaultVpcBaseDir),
+				OutputFile:         constant.DefaultVpcOutputs,
+				CloudFormationFile: constant.DefaultVpcCloudFormationTemplate,
+				BaseDir:            path.Join(outputDir, constant.DefaultVpcBaseDir),
 			},
 			o.FileSystem,
 		),
@@ -457,8 +459,8 @@ func (o *Okctl) clusterService(outputDir string, spin spinner.Spinner) client.Cl
 		rest.NewClusterAPI(o.restClient),
 		clientFilesystem.NewClusterStore(
 			clientFilesystem.Paths{
-				ConfigFile: config.DefaultClusterConfig,
-				BaseDir:    path.Join(outputDir, config.DefaultClusterBaseDir),
+				ConfigFile: constant.DefaultClusterConfig,
+				BaseDir:    path.Join(outputDir, constant.DefaultClusterBaseDir),
 			},
 			o.FileSystem,
 		),
@@ -473,20 +475,20 @@ func (o *Okctl) autoscalerService(outputDir string, spin spinner.Spinner) client
 		rest.NewAutoscalerAPI(o.restClient),
 		clientFilesystem.NewAutoscalerStore(
 			clientFilesystem.Paths{
-				OutputFile:         config.DefaultPolicyOutputFile,
-				CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
-				BaseDir:            path.Join(outputDir, config.DefaultAutoscalerBaseDir),
+				OutputFile:         constant.DefaultPolicyOutputFile,
+				CloudFormationFile: constant.DefaultPolicyCloudFormationTemplateFile,
+				BaseDir:            path.Join(outputDir, constant.DefaultAutoscalerBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile: config.DefaultServiceAccountOutputsFile,
-				ConfigFile: config.DefaultServiceAccountConfigFile,
-				BaseDir:    path.Join(outputDir, config.DefaultAutoscalerBaseDir),
+				OutputFile: constant.DefaultServiceAccountOutputsFile,
+				ConfigFile: constant.DefaultServiceAccountConfigFile,
+				BaseDir:    path.Join(outputDir, constant.DefaultAutoscalerBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile:  config.DefaultHelmOutputsFile,
-				ReleaseFile: config.DefaultHelmReleaseFile,
-				ChartFile:   config.DefaultHelmChartFile,
-				BaseDir:     path.Join(outputDir, config.DefaultAutoscalerBaseDir),
+				OutputFile:  constant.DefaultHelmOutputsFile,
+				ReleaseFile: constant.DefaultHelmReleaseFile,
+				ChartFile:   constant.DefaultHelmChartFile,
+				BaseDir:     path.Join(outputDir, constant.DefaultAutoscalerBaseDir),
 			},
 			o.FileSystem,
 		),
@@ -500,25 +502,25 @@ func (o *Okctl) blockstorageService(outputDir string, spin spinner.Spinner) clie
 		rest.NewBlockstorageAPI(o.restClient),
 		clientFilesystem.NewBlockstorageStore(
 			clientFilesystem.Paths{
-				OutputFile:         config.DefaultPolicyOutputFile,
-				CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
-				BaseDir:            path.Join(outputDir, config.DefaultBlockstorageBaseDir),
+				OutputFile:         constant.DefaultPolicyOutputFile,
+				CloudFormationFile: constant.DefaultPolicyCloudFormationTemplateFile,
+				BaseDir:            path.Join(outputDir, constant.DefaultBlockstorageBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile: config.DefaultServiceAccountOutputsFile,
-				ConfigFile: config.DefaultServiceAccountConfigFile,
-				BaseDir:    path.Join(outputDir, config.DefaultBlockstorageBaseDir),
+				OutputFile: constant.DefaultServiceAccountOutputsFile,
+				ConfigFile: constant.DefaultServiceAccountConfigFile,
+				BaseDir:    path.Join(outputDir, constant.DefaultBlockstorageBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile:  config.DefaultHelmOutputsFile,
-				ReleaseFile: config.DefaultHelmReleaseFile,
-				ChartFile:   config.DefaultHelmChartFile,
-				BaseDir:     path.Join(outputDir, config.DefaultBlockstorageBaseDir),
+				OutputFile:  constant.DefaultHelmOutputsFile,
+				ReleaseFile: constant.DefaultHelmReleaseFile,
+				ChartFile:   constant.DefaultHelmChartFile,
+				BaseDir:     path.Join(outputDir, constant.DefaultBlockstorageBaseDir),
 			},
 			o.FileSystem,
 		),
 		console.NewBlockstorageReport(o.Err, spin),
-		o.manifestService(path.Join(outputDir, config.DefaultBlockstorageBaseDir), spin.SubSpinner()),
+		o.manifestService(path.Join(outputDir, constant.DefaultBlockstorageBaseDir), spin.SubSpinner()),
 	)
 }
 
@@ -528,20 +530,20 @@ func (o *Okctl) externalSecretsService(outputDir string, spin spinner.Spinner) c
 		rest.NewExternalSecretsAPI(o.restClient),
 		clientFilesystem.NewExternalSecretsStore(
 			clientFilesystem.Paths{
-				OutputFile:         config.DefaultPolicyOutputFile,
-				CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
-				BaseDir:            path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+				OutputFile:         constant.DefaultPolicyOutputFile,
+				CloudFormationFile: constant.DefaultPolicyCloudFormationTemplateFile,
+				BaseDir:            path.Join(outputDir, constant.DefaultExternalSecretsBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile: config.DefaultServiceAccountOutputsFile,
-				ConfigFile: config.DefaultServiceAccountConfigFile,
-				BaseDir:    path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+				OutputFile: constant.DefaultServiceAccountOutputsFile,
+				ConfigFile: constant.DefaultServiceAccountConfigFile,
+				BaseDir:    path.Join(outputDir, constant.DefaultExternalSecretsBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile:  config.DefaultHelmOutputsFile,
-				ReleaseFile: config.DefaultHelmReleaseFile,
-				ChartFile:   config.DefaultHelmChartFile,
-				BaseDir:     path.Join(outputDir, config.DefaultExternalSecretsBaseDir),
+				OutputFile:  constant.DefaultHelmOutputsFile,
+				ReleaseFile: constant.DefaultHelmReleaseFile,
+				ChartFile:   constant.DefaultHelmChartFile,
+				BaseDir:     path.Join(outputDir, constant.DefaultExternalSecretsBaseDir),
 			},
 			o.FileSystem,
 		),
@@ -555,20 +557,20 @@ func (o *Okctl) albIngressService(outputDir string, spin spinner.Spinner) client
 		rest.NewALBIngressControllerAPI(o.restClient),
 		clientFilesystem.NewALBIngressControllerStore(
 			clientFilesystem.Paths{
-				OutputFile:         config.DefaultPolicyOutputFile,
-				CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
-				BaseDir:            path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
+				OutputFile:         constant.DefaultPolicyOutputFile,
+				CloudFormationFile: constant.DefaultPolicyCloudFormationTemplateFile,
+				BaseDir:            path.Join(outputDir, constant.DefaultAlbIngressControllerBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile: config.DefaultServiceAccountOutputsFile,
-				ConfigFile: config.DefaultServiceAccountConfigFile,
-				BaseDir:    path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
+				OutputFile: constant.DefaultServiceAccountOutputsFile,
+				ConfigFile: constant.DefaultServiceAccountConfigFile,
+				BaseDir:    path.Join(outputDir, constant.DefaultAlbIngressControllerBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile:  config.DefaultHelmOutputsFile,
-				ReleaseFile: config.DefaultHelmReleaseFile,
-				ChartFile:   config.DefaultHelmChartFile,
-				BaseDir:     path.Join(outputDir, config.DefaultAlbIngressControllerBaseDir),
+				OutputFile:  constant.DefaultHelmOutputsFile,
+				ReleaseFile: constant.DefaultHelmReleaseFile,
+				ChartFile:   constant.DefaultHelmChartFile,
+				BaseDir:     path.Join(outputDir, constant.DefaultAlbIngressControllerBaseDir),
 			},
 			o.FileSystem,
 		),
@@ -582,20 +584,20 @@ func (o *Okctl) awsLoadBalancerControllerService(outputDir string, spin spinner.
 		rest.NewAWSLoadBalancerControllerAPI(o.restClient),
 		clientFilesystem.NewAWSLoadBalancerControllerStore(
 			clientFilesystem.Paths{
-				OutputFile:         config.DefaultPolicyOutputFile,
-				CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
-				BaseDir:            path.Join(outputDir, config.DefaultAWSLoadBalancerControllerBaseDir),
+				OutputFile:         constant.DefaultPolicyOutputFile,
+				CloudFormationFile: constant.DefaultPolicyCloudFormationTemplateFile,
+				BaseDir:            path.Join(outputDir, constant.DefaultAWSLoadBalancerControllerBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile: config.DefaultServiceAccountOutputsFile,
-				ConfigFile: config.DefaultServiceAccountConfigFile,
-				BaseDir:    path.Join(outputDir, config.DefaultAWSLoadBalancerControllerBaseDir),
+				OutputFile: constant.DefaultServiceAccountOutputsFile,
+				ConfigFile: constant.DefaultServiceAccountConfigFile,
+				BaseDir:    path.Join(outputDir, constant.DefaultAWSLoadBalancerControllerBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile:  config.DefaultHelmOutputsFile,
-				ReleaseFile: config.DefaultHelmReleaseFile,
-				ChartFile:   config.DefaultHelmChartFile,
-				BaseDir:     path.Join(outputDir, config.DefaultAWSLoadBalancerControllerBaseDir),
+				OutputFile:  constant.DefaultHelmOutputsFile,
+				ReleaseFile: constant.DefaultHelmReleaseFile,
+				ChartFile:   constant.DefaultHelmChartFile,
+				BaseDir:     path.Join(outputDir, constant.DefaultAWSLoadBalancerControllerBaseDir),
 			},
 			o.FileSystem,
 		),
@@ -610,7 +612,7 @@ func (o *Okctl) applicationService(infrastructureOutputDir, applicationOutputDir
 		clientFilesystem.Paths{
 			BaseDir: applicationOutputDir,
 		},
-		o.certService(path.Join(infrastructureOutputDir, config.DefaultCertificateBaseDir), spin.SubSpinner()),
+		o.certService(path.Join(infrastructureOutputDir, constant.DefaultCertificateBaseDir), spin.SubSpinner()),
 		clientFilesystem.NewApplicationStore(
 			clientFilesystem.Paths{
 				BaseDir: applicationOutputDir,
@@ -629,9 +631,9 @@ func (o *Okctl) domainService(outputDir string, spin spinner.Spinner) client.Dom
 		rest.NewDomainAPI(o.restClient),
 		clientFilesystem.NewDomainStore(
 			clientFilesystem.Paths{
-				OutputFile:         config.DefaultDomainOutputsFile,
-				CloudFormationFile: config.DefaultDomainCloudFormationTemplate,
-				BaseDir:            path.Join(outputDir, config.DefaultDomainBaseDir),
+				OutputFile:         constant.DefaultDomainOutputsFile,
+				CloudFormationFile: constant.DefaultDomainCloudFormationTemplate,
+				BaseDir:            path.Join(outputDir, constant.DefaultDomainBaseDir),
 			},
 			o.FileSystem,
 		),
@@ -646,18 +648,18 @@ func (o *Okctl) externalDNSService(outputDir string, spin spinner.Spinner) clien
 		rest.NewExternalDNSAPI(o.restClient),
 		clientFilesystem.NewExternalDNSStore(
 			clientFilesystem.Paths{
-				OutputFile:         config.DefaultPolicyOutputFile,
-				CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
-				BaseDir:            path.Join(outputDir, config.DefaultExternalDNSBaseDir),
+				OutputFile:         constant.DefaultPolicyOutputFile,
+				CloudFormationFile: constant.DefaultPolicyCloudFormationTemplateFile,
+				BaseDir:            path.Join(outputDir, constant.DefaultExternalDNSBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile: config.DefaultServiceAccountOutputsFile,
-				ConfigFile: config.DefaultServiceAccountConfigFile,
-				BaseDir:    path.Join(outputDir, config.DefaultExternalDNSBaseDir),
+				OutputFile: constant.DefaultServiceAccountOutputsFile,
+				ConfigFile: constant.DefaultServiceAccountConfigFile,
+				BaseDir:    path.Join(outputDir, constant.DefaultExternalDNSBaseDir),
 			},
 			clientFilesystem.Paths{
-				OutputFile: config.DefaultKubeOutputsFile,
-				BaseDir:    path.Join(outputDir, config.DefaultExternalDNSBaseDir),
+				OutputFile: constant.DefaultKubeOutputsFile,
+				BaseDir:    path.Join(outputDir, constant.DefaultExternalDNSBaseDir),
 			},
 			o.FileSystem,
 		),
@@ -699,10 +701,10 @@ func (o *Okctl) initialise() error {
 
 	kubeConfigStore := filesystem.NewKubeConfigStore(
 		o.CloudProvider,
-		config.DefaultClusterKubeConfig,
-		path.Join(appDir, config.DefaultCredentialsDirName, clusterName),
-		config.DefaultClusterConfig,
-		path.Join(outputDir, config.DefaultClusterBaseDir),
+		constant.DefaultClusterKubeConfig,
+		path.Join(appDir, constant.DefaultCredentialsDirName, clusterName),
+		constant.DefaultClusterConfig,
+		path.Join(outputDir, constant.DefaultClusterBaseDir),
 		o.FileSystem,
 	)
 
@@ -723,8 +725,8 @@ func (o *Okctl) initialise() error {
 		run.NewClusterRun(
 			o.Debug,
 			kubeConfigStore,
-			path.Join(appDir, config.DefaultCredentialsDirName, clusterName, config.DefaultClusterAwsConfig),
-			path.Join(appDir, config.DefaultCredentialsDirName, clusterName, config.DefaultClusterAwsCredentials),
+			path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsConfig),
+			path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsCredentials),
 			o.BinariesProvider,
 			o.CloudProvider,
 		),
@@ -735,8 +737,8 @@ func (o *Okctl) initialise() error {
 	serviceAccountService := core.NewServiceAccountService(
 		run.NewServiceAccountRun(
 			o.Debug,
-			path.Join(appDir, config.DefaultCredentialsDirName, clusterName, config.DefaultClusterAwsConfig),
-			path.Join(appDir, config.DefaultCredentialsDirName, clusterName, config.DefaultClusterAwsCredentials),
+			path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsConfig),
+			path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsCredentials),
 			o.BinariesProvider,
 		),
 	)
@@ -755,11 +757,11 @@ func (o *Okctl) initialise() error {
 		helm.New(&helm.Config{
 			HomeDir:              homeDir,
 			Path:                 fmt.Sprintf("/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:%s", path.Dir(awsIamAuth.BinaryPath)),
-			HelmPluginsDirectory: path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
-			HelmRegistryConfig:   path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
-			HelmRepositoryConfig: path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryConfig),
-			HelmRepositoryCache:  path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryCache),
-			HelmBaseDir:          path.Join(appDir, config.DefaultHelmBaseDir),
+			HelmPluginsDirectory: path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmPluginsDirectory),
+			HelmRegistryConfig:   path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmRegistryConfig),
+			HelmRepositoryConfig: path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmRepositoryConfig),
+			HelmRepositoryCache:  path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmRepositoryCache),
+			HelmBaseDir:          path.Join(appDir, constant.DefaultHelmBaseDir),
 			Debug:                o.Debug,
 			DebugOutput:          o.Err,
 		},
@@ -947,9 +949,9 @@ https://www.passwordstore.org/
 	}
 
 	authStore := aws.NewIniPersister(aws.NewFileSystemIniStorer(
-		config.DefaultClusterAwsConfig,
-		config.DefaultClusterAwsCredentials,
-		path.Join(appDir, config.DefaultCredentialsDirName, o.RepoStateWithEnv.GetClusterName()),
+		constant.DefaultClusterAwsConfig,
+		constant.DefaultClusterAwsCredentials,
+		path.Join(appDir, constant.DefaultCredentialsDirName, o.RepoStateWithEnv.GetClusterName()),
 		o.FileSystem,
 	))
 

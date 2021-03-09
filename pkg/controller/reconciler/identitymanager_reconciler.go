@@ -46,7 +46,7 @@ func (z *identityManagerReconciler) Reconcile(node *resourcetree.ResourceNode) (
 
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		authDomain := fmt.Sprintf("auth.%s", z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain)
+		authDomain := fmt.Sprintf("auth.%s", z.commonMetadata.Declaration.ClusterRootURL)
 		authFQDN := dns.Fqdn(authDomain)
 
 		_, err = z.client.CreateIdentityPool(z.commonMetadata.Ctx, api.CreateIdentityPoolOpts{

@@ -6,9 +6,9 @@ import (
 	"io"
 	"time"
 
-	"github.com/mishudark/errors"
-	"github.com/oslokommune/okctl/pkg/config"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
+	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
@@ -68,7 +68,7 @@ func handleNode(reconcilerManager reconciler.Reconciler, currentNode *resourcetr
 	reconciliationResult := reconciler.ReconcilationResult{Requeue: true, RequeueAfter: 0 * time.Second}
 
 	for requeues := 0; reconciliationResult.Requeue; requeues++ {
-		if requeues == config.DefaultMaxReconciliationRequeues {
+		if requeues == constant.DefaultMaxReconciliationRequeues {
 			return errors.New("maximum allowed reconciliation requeues reached")
 		}
 

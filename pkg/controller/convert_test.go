@@ -20,7 +20,7 @@ func TestTreeCreators(t *testing.T) {
 		{
 			name: "Should produce equal trees when all is enabled",
 			declaration: func() *v1alpha1.Cluster {
-				declaration := v1alpha1.NewDefaultCluster("", "", "", "", "", "")
+				declaration := v1alpha1.NewDefaultCluster("", "", "", "", "")
 
 				return &declaration
 			},
@@ -47,7 +47,7 @@ func TestTreeCreators(t *testing.T) {
 		{
 			name: "Should produce equal trees when all but ExternalDNS is enabled",
 			declaration: func() *v1alpha1.Cluster {
-				declaration := v1alpha1.NewDefaultCluster("", "", "", "", "", "")
+				declaration := v1alpha1.NewDefaultCluster("", "", "", "", "")
 				declaration.Integrations.ExternalDNS = false
 
 				return &declaration

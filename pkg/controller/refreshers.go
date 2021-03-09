@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client/store"
-	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
@@ -19,7 +20,7 @@ func getVpcState(fs *afero.Afero, outputDir string) api.Vpc {
 	baseDir := path.Join(outputDir, "vpc")
 
 	_, err := store.NewFileSystem(baseDir, fs).
-		GetStruct(config.DefaultVpcOutputs, &vpc, store.FromJSON()).
+		GetStruct(constant.DefaultVpcOutputs, &vpc, store.FromJSON()).
 		Do()
 	if err != nil {
 		panic(fmt.Errorf("error reading from vpc state file: %w", err))

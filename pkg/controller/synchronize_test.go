@@ -3,7 +3,8 @@ package controller
 import (
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/config"
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 	"github.com/stretchr/testify/assert"
@@ -75,9 +76,9 @@ func TestHandleNode(t *testing.T) {
 		{
 			name: "Should call reconcile function on a node config.DefaultMax times with 'eternal' requeues",
 
-			withNumberOfRequeues: config.DefaultMaxReconciliationRequeues + 5,
+			withNumberOfRequeues: constant.DefaultMaxReconciliationRequeues + 5,
 
-			expectReconcileCallCount: config.DefaultMaxReconciliationRequeues,
+			expectReconcileCallCount: constant.DefaultMaxReconciliationRequeues,
 			expectErr:                true,
 		},
 	}

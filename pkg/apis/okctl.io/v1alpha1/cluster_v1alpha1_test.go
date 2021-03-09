@@ -29,7 +29,6 @@ func TestCluster(t *testing.T) {
 				"stage",
 				"oslokommune",
 				"okctl-iac",
-				"kjøremiljø",
 				"123456789012",
 			),
 			golden: "default-cluster.yml",
@@ -49,6 +48,78 @@ func TestCluster(t *testing.T) {
 	}
 }
 
+func newPassingCluster() v1alpha1.Cluster {
+	return v1alpha1.NewDefaultCluster(
+		"x",
+		"tre",
+		"x",
+		"x",
+		"000000000000",
+	)
+}
+
+func TestInvalidClusterValidations(t *testing.T) {
+	testCases := []struct {
+		name        string
+		withCluster func() v1alpha1.Cluster
+		expectError string
+	}{
+		{
+			name:        "Should pass when everything is A-ok",
+			withCluster: newPassingCluster,
+			expectError: "",
+		},
+		{
+			name: "Should fail when name is empty",
+			withCluster: func() v1alpha1.Cluster {
+				c := newPassingCluster()
+
+				c.Metadata.Name = ""
+
+				return c
+			},
+			expectError: "metadata: (name: cannot be blank.).",
+		},
+		{
+			name: "Should fail if clusterRootURL is missing",
+			withCluster: func() v1alpha1.Cluster {
+				c := newPassingCluster()
+
+				c.ClusterRootURL = ""
+
+				return c
+			},
+			expectError: "clusterRootURL: cannot be blank.",
+		},
+		{
+			name: "Should fail if clusterRootURL have improper casing",
+			withCluster: func() v1alpha1.Cluster {
+				c := newPassingCluster()
+
+				c.ClusterRootURL = "ThisIsNotAllowed.oslo.systems"
+
+				return c
+			},
+			expectError: "clusterRootURL: must be in lower case.",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.withCluster().Validate()
+
+			if tc.expectError != "" {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expectError, err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestValidateCluster(t *testing.T) {
 	testCases := []struct {
 		name      string
@@ -63,7 +134,6 @@ func TestValidateCluster(t *testing.T) {
 				"stage",
 				"oslokommune",
 				"okctl-iac",
-				"kjøremiljø",
 				"123456789012",
 			),
 		},
@@ -75,7 +145,6 @@ func TestValidateCluster(t *testing.T) {
 					"stage",
 					"oslokommune",
 					"okctl-iac",
-					"kjøremiljø",
 					"123456789012",
 				)
 
@@ -102,4 +171,3 @@ func TestValidateCluster(t *testing.T) {
 			}
 		})
 	}
-}

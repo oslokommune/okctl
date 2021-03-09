@@ -29,30 +29,31 @@ jobs:
       - name: Create cluster
         run: |
           cat <<EOF | dist/linux_linux_amd64/okctl apply cluster --github-credentials-type token --aws-credentials-type access-key --no-spinner --file -
-            kind: Cluster
-            apiVersion: okctl.io/v1alpha1
-            metadata:
-              accountID: "932360772598"
-              environment: test
-              name: nightly
-              region: eu-west-1
-            primaryDNSZone:
-              managedZone: false
-              parentDomain: nightly-test.oslo.systems
-            github:
-              organisation: oslokommune
-              outputPath: infrastructure
-              repository: okctl-iac
-              team: kjoremiljo
-            integrations:
-              argoCD: true
-              awsLoadBalancerController: true
-              cognito: true
-              externalDNS: true
-              externalSecrets: true
-            vpc:
-              cidr: 192.168.0.0/20
-              highAvailability: true
+          apiVersion: okctl.io/v1alpha2
+          kind: Cluster
+
+          metadata:
+            accountID: "932360772598"
+            environment: test
+            name: nightly
+
+          clusterRootURL: nightly-test.oslo.systems
+
+          github:
+            repository: okctl-iac
+
+          integrations:
+            argoCD: true
+            autoscaler: true
+            awsLoadBalancerController: true
+            blockstorage: true
+            cognito: true
+            externalDNS: true
+            externalSecrets: true
+            kubePromStack: true
+            loki: true
+            promtail: true
+            tempo: true
           EOF
         env:
           OKCTL_DEBUG: true

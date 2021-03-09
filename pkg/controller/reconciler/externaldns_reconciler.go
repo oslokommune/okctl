@@ -42,7 +42,7 @@ func (z *externalDNSReconciler) Reconcile(node *resourcetree.ResourceNode) (resu
 		_, err = z.client.CreateExternalDNS(z.commonMetadata.Ctx, client.CreateExternalDNSOpts{
 			ID:           z.commonMetadata.ClusterID,
 			HostedZoneID: resourceState.PrimaryHostedZoneID,
-			Domain:       z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain,
+			Domain:       z.commonMetadata.Declaration.ClusterRootURL,
 		})
 		if err != nil {
 			return result, fmt.Errorf("creating external DNS: %w", err)

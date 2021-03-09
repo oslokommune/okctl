@@ -44,7 +44,7 @@ func (z *kubePrometheusStackReconciler) Reconcile(node *resourcetree.ResourceNod
 	case resourcetree.ResourceNodeStatePresent:
 		_, err = z.client.CreateKubePromStack(z.commonMetadata.Ctx, client.CreateKubePromStackOpts{
 			ID:           z.commonMetadata.ClusterID,
-			Domain:       z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain,
+			Domain:       z.commonMetadata.Declaration.ClusterRootURL,
 			HostedZoneID: resourceState.HostedZone.ID,
 			AuthDomain:   resourceState.AuthDomain,
 			UserPoolID:   resourceState.UserPoolID,
@@ -55,7 +55,7 @@ func (z *kubePrometheusStackReconciler) Reconcile(node *resourcetree.ResourceNod
 	case resourcetree.ResourceNodeStateAbsent:
 		err = z.client.DeleteKubePromStack(z.commonMetadata.Ctx, client.DeleteKubePromStackOpts{
 			ID:     z.commonMetadata.ClusterID,
-			Domain: z.commonMetadata.Declaration.PrimaryDNSZone.ParentDomain,
+			Domain: z.commonMetadata.Declaration.ClusterRootURL,
 		})
 		if err != nil {
 			return result, fmt.Errorf("deleting kubepromstack: %w", err)

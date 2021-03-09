@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"text/template"
 
-	"github.com/oslokommune/okctl/pkg/config"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/helm"
 )
@@ -21,7 +21,7 @@ func New(values *Values) *helm.Chart {
 		Version:        "2.3.0",
 		Chart:          "loki",
 		Namespace:      "monitoring",
-		Timeout:        config.DefaultChartApplyTimeout,
+		Timeout:        constant.DefaultChartApplyTimeout,
 		Values:         values,
 	}
 }

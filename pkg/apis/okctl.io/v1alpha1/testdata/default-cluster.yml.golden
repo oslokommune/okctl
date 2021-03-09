@@ -1,9 +1,9 @@
 apiVersion: okctl.io/v1alpha1
+clusterRootURL: okctl-stage.oslo.systems
 github:
   organisation: oslokommune
   outputPath: infrastructure
   repository: okctl-iac
-  team: kjøremiljø
 integrations:
   argoCD: true
   autoscaler: true
@@ -22,9 +22,6 @@ metadata:
   environment: stage
   name: okctl
   region: eu-west-1
-primaryDNSZone:
-  managedZone: false
-  parentDomain: okctl-stage.oslo.systems
 vpc:
   cidr: 192.168.0.0/20
   highAvailability: true

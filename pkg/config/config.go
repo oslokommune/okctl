@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/go-git/go-git/v5"
@@ -217,9 +219,9 @@ func (c *Config) EnableFileLog() error {
 
 	rotateFileHook, err := rotatefilehook.NewRotateFileHook(rotatefilehook.RotateFileConfig{
 		Filename:   logFile,
-		MaxSize:    DefaultLogSizeInMb,
-		MaxBackups: DefaultLogBackups,
-		MaxAge:     DefaultLogDays,
+		MaxSize:    constant.DefaultLogSizeInMb,
+		MaxBackups: constant.DefaultLogBackups,
+		MaxAge:     constant.DefaultLogDays,
 		Levels: []logrus.Level{
 			logrus.PanicLevel,
 			logrus.FatalLevel,
@@ -279,7 +281,7 @@ func (c *Config) WriteCurrentUserData() error {
 	}
 
 	_, err = store.NewFileSystem(userDir, c.FileSystem).
-		StoreStruct(DefaultConfig, c.UserState, store.ToYAML()).
+		StoreStruct(constant.DefaultConfig, c.UserState, store.ToYAML()).
 		Do()
 	if err != nil {
 		return err
@@ -326,7 +328,7 @@ func (c *Config) GetRepoStatePath() (string, error) {
 		return "", err
 	}
 
-	return filepath.Join(base, DefaultRepositoryStateFile), nil
+	return filepath.Join(base, constant.DefaultRepositoryStateFile), nil
 }
 
 // WriteCurrentRepoState will write current repo state to disk
@@ -337,7 +339,7 @@ func (c *Config) WriteCurrentRepoState() error {
 	}
 
 	_, err = store.NewFileSystem(repoDir, c.FileSystem).
-		StoreStruct(DefaultRepositoryStateFile, c.RepoState, store.ToYAML()).
+		StoreStruct(constant.DefaultRepositoryStateFile, c.RepoState, store.ToYAML()).
 		Do()
 	if err != nil {
 		return err
@@ -352,7 +354,7 @@ func (c *Config) GetHomeDir() (string, error) {
 		return c.homeDir, nil
 	}
 
-	homeDir := os.Getenv(EnvHome)
+	homeDir := os.Getenv(constant.EnvHome)
 
 	if len(homeDir) == 0 {
 		dir, err := homedir.Dir()
@@ -381,7 +383,7 @@ func (c *Config) GetUserDataDir() (string, error) {
 		return "", err
 	}
 
-	return filepath.Join(home, DefaultDir), nil
+	return filepath.Join(home, constant.DefaultDir), nil
 }
 
 // GetUserDataPath returns the path to the okctl application
@@ -392,7 +394,7 @@ func (c *Config) GetUserDataPath() (string, error) {
 		return "", err
 	}
 
-	return filepath.Join(base, DefaultConfig), nil
+	return filepath.Join(base, constant.DefaultConfig), nil
 }
 
 // GetLogName returns the path to a logfile
@@ -402,7 +404,7 @@ func (c *Config) GetLogName() (string, error) {
 		return "", err
 	}
 
-	return filepath.Join(base, DefaultLogDir, DefaultLogName), nil
+	return filepath.Join(base, constant.DefaultLogDir, constant.DefaultLogName), nil
 }
 
 // GetRepoOutputDir return the repository output directory,
@@ -424,5 +426,5 @@ func (c *Config) GetRepoApplicatiosOutputDir() (string, error) {
 		return "", err
 	}
 
-	return path.Join(base, c.RepoState.Metadata.OutputDir, DefaultApplicationsOutputDir), nil
+	return path.Join(base, c.RepoState.Metadata.OutputDir, constant.DefaultApplicationsOutputDir), nil
 }

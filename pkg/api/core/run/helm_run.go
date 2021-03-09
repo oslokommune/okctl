@@ -3,11 +3,11 @@ package run
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/helm/charts/promtail"
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/loki"
-
-	"github.com/oslokommune/okctl/pkg/config"
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/kubepromstack"
 
@@ -38,7 +38,7 @@ func (r *helmRun) CreateHelmRelease(opts api.CreateHelmReleaseOpts) (*api.Helm, 
 		Version:        opts.Version,
 		Chart:          opts.Chart,
 		Namespace:      opts.Namespace,
-		Timeout:        config.DefaultChartApplyTimeout,
+		Timeout:        constant.DefaultChartApplyTimeout,
 		Values:         opts.Values,
 	})
 }
@@ -52,7 +52,7 @@ func (r *helmRun) DeleteHelmRelease(opts api.DeleteHelmReleaseOpts) error {
 	err = r.helm.Delete(kubeConf.Path, &helm.DeleteConfig{
 		ReleaseName: opts.ReleaseName,
 		Namespace:   opts.Namespace,
-		Timeout:     config.DefaultChartRemoveTimeout,
+		Timeout:     constant.DefaultChartRemoveTimeout,
 	})
 	if err != nil {
 		return fmt.Errorf("removing chart: %w", err)
@@ -156,7 +156,7 @@ func (r *helmRun) createHelmChart(id api.ID, chart *helm.Chart) (*api.Helm, erro
 }
 
 func (r *helmRun) CreateKubePromStack(opts api.CreateKubePrometheusStackOpts) (*api.Helm, error) {
-	chart := kubepromstack.New(config.DefaultChartApplyTimeout, &kubepromstack.Values{
+	chart := kubepromstack.New(constant.DefaultChartApplyTimeout, &kubepromstack.Values{
 		GrafanaServiceAccountName:          opts.GrafanaCloudWatchServiceAccountName,
 		GrafanaCertificateARN:              opts.CertificateARN,
 		GrafanaHostname:                    opts.Hostname,

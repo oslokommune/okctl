@@ -15,6 +15,8 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn"
 	"github.com/oslokommune/okctl/pkg/cfn/components"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/helm/charts/tempo"
 
 	"github.com/oslokommune/okctl/pkg/datasource"
@@ -27,8 +29,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/helm/charts/kubepromstack"
 
 	"github.com/miekg/dns"
-
-	"github.com/oslokommune/okctl/pkg/config"
 
 	"github.com/oslokommune/okctl/pkg/client/store"
 
@@ -89,7 +89,7 @@ func (s *monitoringService) DeleteTempo(ctx context.Context, opts client.DeleteT
 	err = s.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
 		ID:        opts.ID,
 		Name:      tempoDatasourceConfigMapName,
-		Namespace: config.DefaultMonitoringNamespace,
+		Namespace: constant.DefaultMonitoringNamespace,
 	})
 	if err != nil {
 		return err
@@ -154,7 +154,7 @@ func (s *monitoringService) CreateTempo(ctx context.Context, opts client.CreateT
 	_, err = s.manifest.CreateConfigMap(ctx, client.CreateConfigMapOpts{
 		ID:        opts.ID,
 		Name:      tempoDatasourceConfigMapName,
-		Namespace: config.DefaultMonitoringNamespace,
+		Namespace: constant.DefaultMonitoringNamespace,
 		Data: map[string]string{
 			"tempo-datasource.yaml": string(data),
 		},
@@ -171,8 +171,8 @@ func (s *monitoringService) CreateTempo(ctx context.Context, opts client.CreateT
 	for _, replicas := range []int32{0, 1} {
 		err = s.manifest.ScaleDeployment(ctx, api.ScaleDeploymentOpts{
 			ID:        opts.ID,
-			Name:      config.DefaultKubePrometheusStackGrafanaName,
-			Namespace: config.DefaultMonitoringNamespace,
+			Name:      constant.DefaultKubePrometheusStackGrafanaName,
+			Namespace: constant.DefaultMonitoringNamespace,
 			Replicas:  replicas,
 		})
 		if err != nil {
@@ -275,7 +275,7 @@ func (s *monitoringService) DeleteLoki(ctx context.Context, opts client.DeleteLo
 	err = s.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
 		ID:        opts.ID,
 		Name:      lokiDatasourceConfigMapName,
-		Namespace: config.DefaultMonitoringNamespace,
+		Namespace: constant.DefaultMonitoringNamespace,
 	})
 	if err != nil {
 		return err
@@ -322,7 +322,7 @@ func (s *monitoringService) CreateLoki(ctx context.Context, opts client.CreateLo
 	_, err = s.manifest.CreateConfigMap(ctx, client.CreateConfigMapOpts{
 		ID:        opts.ID,
 		Name:      lokiDatasourceConfigMapName,
-		Namespace: config.DefaultMonitoringNamespace,
+		Namespace: constant.DefaultMonitoringNamespace,
 		Data: map[string]string{
 			"loki-datasource.yaml": string(data),
 		},
@@ -339,8 +339,8 @@ func (s *monitoringService) CreateLoki(ctx context.Context, opts client.CreateLo
 	for _, replicas := range []int32{0, 1} {
 		err = s.manifest.ScaleDeployment(ctx, api.ScaleDeploymentOpts{
 			ID:        opts.ID,
-			Name:      config.DefaultKubePrometheusStackGrafanaName,
-			Namespace: config.DefaultMonitoringNamespace,
+			Name:      constant.DefaultKubePrometheusStackGrafanaName,
+			Namespace: constant.DefaultMonitoringNamespace,
 			Replicas:  replicas,
 		})
 		if err != nil {
@@ -380,7 +380,7 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 	err = s.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
 		ID:        opts.ID,
 		Name:      cloudwatchDatasourceConfigMapName,
-		Namespace: config.DefaultMonitoringNamespace,
+		Namespace: constant.DefaultMonitoringNamespace,
 	})
 	if err != nil {
 		return err
@@ -401,7 +401,7 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 	err = s.manifest.DeleteExternalSecret(ctx, client.DeleteExternalSecretOpts{
 		ID: opts.ID,
 		Secrets: map[string]string{
-			secretsCfgName: config.DefaultMonitoringNamespace,
+			secretsCfgName: constant.DefaultMonitoringNamespace,
 		},
 	})
 	if err != nil {
@@ -434,7 +434,7 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 		opts.ID.ClusterName,
 		opts.ID.Region,
 		"",
-		config.DefaultMonitoringNamespace,
+		constant.DefaultMonitoringNamespace,
 		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
 	)
 	if err != nil {
@@ -468,7 +468,7 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 
 	err = s.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
 		ID:        opts.ID,
-		Namespace: config.DefaultFargateObservabilityNamespace,
+		Namespace: constant.DefaultFargateObservabilityNamespace,
 	})
 	if err != nil {
 		return err
@@ -517,7 +517,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 		opts.ID.ClusterName,
 		opts.ID.Region,
 		policy.PolicyARN,
-		config.DefaultMonitoringNamespace,
+		constant.DefaultMonitoringNamespace,
 		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
 	)
 	if err != nil {
@@ -595,7 +595,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 		Manifests: []api.Manifest{
 			{
 				Name:      secretsCfgName,
-				Namespace: config.DefaultMonitoringNamespace,
+				Namespace: constant.DefaultMonitoringNamespace,
 				Data: []api.Data{
 					{
 						Key:  clientSecret.Path,
@@ -623,7 +623,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 
 	chart, err := s.api.CreateKubePromStack(api.CreateKubePrometheusStackOpts{
 		ID:                                  opts.ID,
-		GrafanaCloudWatchServiceAccountName: config.DefaultGrafanaCloudWatchDatasourceName,
+		GrafanaCloudWatchServiceAccountName: constant.DefaultGrafanaCloudWatchDatasourceName,
 		CertificateARN:                      cert.CertificateARN,
 		Hostname:                            cert.Domain,
 		AuthHostname:                        opts.AuthDomain,
@@ -665,7 +665,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 	_, err = s.manifest.CreateConfigMap(ctx, client.CreateConfigMapOpts{
 		ID:        opts.ID,
 		Name:      cloudwatchDatasourceConfigMapName,
-		Namespace: config.DefaultMonitoringNamespace,
+		Namespace: constant.DefaultMonitoringNamespace,
 		Data: map[string]string{
 			"cloudwatch-datasource.yaml": string(data),
 		},
@@ -682,8 +682,8 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 	for _, replicas := range []int32{0, 1} {
 		err = s.manifest.ScaleDeployment(ctx, api.ScaleDeploymentOpts{
 			ID:        opts.ID,
-			Name:      config.DefaultKubePrometheusStackGrafanaName,
-			Namespace: config.DefaultMonitoringNamespace,
+			Name:      constant.DefaultKubePrometheusStackGrafanaName,
+			Namespace: constant.DefaultMonitoringNamespace,
 			Replicas:  replicas,
 		})
 		if err != nil {
@@ -693,7 +693,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 
 	_, err = s.manifest.CreateNamespace(ctx, api.CreateNamespaceOpts{
 		ID:        opts.ID,
-		Namespace: config.DefaultFargateObservabilityNamespace,
+		Namespace: constant.DefaultFargateObservabilityNamespace,
 		Labels: map[string]string{
 			"aws-observability": "enabled",
 		},
@@ -705,7 +705,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 	_, err = s.manifest.CreateConfigMap(ctx, client.CreateConfigMapOpts{
 		ID:        opts.ID,
 		Name:      "aws-logging",
-		Namespace: config.DefaultFargateObservabilityNamespace,
+		Namespace: constant.DefaultFargateObservabilityNamespace,
 		Data: map[string]string{
 			"output.conf": fmt.Sprintf(`
 [OUTPUT]

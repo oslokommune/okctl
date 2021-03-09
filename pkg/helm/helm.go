@@ -324,7 +324,7 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 
 	awsEnvs, err := h.auth.AsEnv()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting authentication details as environment: %w", err)
 	}
 
 	for k, v := range SplitEnv(awsEnvs) {
@@ -338,7 +338,7 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 	}()
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("establishing environment: %w", err)
 	}
 
 	settings := cli.New()
@@ -358,12 +358,12 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 
 	err = actionConfig.Init(restClient, settings.Namespace(), DefaultHelmDriver, debug)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("initializing action configuration: %w", err)
 	}
 
 	rel, err := h.findRelease(cfg.ReleaseName, actionConfig)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("finding release: %w", err)
 	}
 
 	if rel != nil {
@@ -395,17 +395,17 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 
 	cp, err := client.ChartPathOptions.LocateChart(cfg.RepoChart(), settings)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("locating chart: %w", err)
 	}
 
 	chart, err := loader.Load(cp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("loading chart: %w", err)
 	}
 
 	err = IsChartInstallable(chart)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("checking if chart is installable: %w", err)
 	}
 
 	if req := chart.Metadata.Dependencies; req != nil {
@@ -425,7 +425,7 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 					Debug:            h.config.Debug,
 				}
 				if err := man.Update(); err != nil {
-					return nil, err
+					return nil, fmt.Errorf("updating local charts directory: %w", err)
 				}
 				// Reload the chart with the updated Chart.lock file.
 				if chart, err = loader.Load(cp); err != nil {
@@ -439,7 +439,7 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 
 	values, err := cfg.ValuesMap()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("generating values map: %w", err)
 	}
 
 	r, err := client.Run(chart, values)
@@ -448,13 +448,13 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 			k, debugErr := kube.New(kube.NewFromKubeConfig(kubeConfigPath))
 			if debugErr != nil {
 				_, _ = fmt.Fprintf(h.config.DebugOutput, "failed to create debug client: %s", err)
-				return nil, err
+				return nil, fmt.Errorf("creating debugger: %w", err)
 			}
 
 			output, debugErr := k.Debug(settings.Namespace())
 			if debugErr != nil {
 				_, _ = fmt.Fprintf(h.config.DebugOutput, "failed to get debug information: %s", debugErr)
-				return nil, err
+				return nil, fmt.Errorf("debugging namespace: %w", err)
 			}
 
 			for title, data := range output {
@@ -462,7 +462,7 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 			}
 		}
 
-		return nil, err
+		return nil, fmt.Errorf("running helm install command: %w", err)
 	}
 
 	return r, nil

@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/aws/aws-sdk-go/service/servicequotas/servicequotasiface"
 
@@ -259,6 +262,18 @@ func (a *CIPAPI) DescribeUserPoolDomain(input *cognitoidentityprovider.DescribeU
 	return a.DescribeUserPoolDomainFn(input)
 }
 
+// IAMAPI mocks the IAM API
+type IAMAPI struct {
+	iamiface.IAMAPI
+
+	AttachRolePolicyFn func(*iam.AttachRolePolicyInput) (*iam.AttachRolePolicyOutput, error)
+}
+
+// AttachRolePolicy mocks the invocation
+func (a *IAMAPI) AttachRolePolicy(input *iam.AttachRolePolicyInput) (*iam.AttachRolePolicyOutput, error) {
+	return a.AttachRolePolicyFn(input)
+}
+
 // DescribeStackEventsSuccess sets a success response on the describe event
 func (p *CloudProvider) DescribeStackEventsSuccess() *CloudProvider {
 	p.CFAPI.DescribeStackEventsFn = func(input *cloudformation.DescribeStackEventsInput) (*cloudformation.DescribeStackEventsOutput, error) {
@@ -324,6 +339,7 @@ func (p *CloudProvider) DescribeStacksResponse(status string) *CloudProvider {
 type CloudProvider struct {
 	v1alpha1.CloudProvider
 
+	IAMAPI    *IAMAPI
 	EC2API    *EC2API
 	CFAPI     *CFAPI
 	EKSAPI    *EKSAPI
@@ -331,6 +347,11 @@ type CloudProvider struct {
 	CFRONTAPI *CFRONTAPI
 	CIPAPI    *CIPAPI
 	SQAPI     *SQAPI
+}
+
+// IAM returns the mocked IAM API
+func (p *CloudProvider) IAM() iamiface.IAMAPI {
+	return p.IAMAPI
 }
 
 // ServiceQuotas returns the mocked SQ API
@@ -483,20 +504,32 @@ func NewGoodCloudProvider() *CloudProvider {
 				}, nil
 			},
 		},
+		IAMAPI: &IAMAPI{
+			AttachRolePolicyFn: func(*iam.AttachRolePolicyInput) (*iam.AttachRolePolicyOutput, error) {
+				return &iam.AttachRolePolicyOutput{}, nil
+			},
+		},
 	}
 }
+
+var errBad = fmt.Errorf("something bad")
 
 // NewBadCloudProvider returns a mocked cloud provider with failure set on all
 func NewBadCloudProvider() *CloudProvider {
 	return &CloudProvider{
 		EC2API: &EC2API{
 			DescribeSubnetsFn: func(*ec2.DescribeSubnetsInput) (*ec2.DescribeSubnetsOutput, error) {
-				return nil, fmt.Errorf("something bad")
+				return nil, errBad
 			},
 		},
 		EKSAPI: &EKSAPI{
 			DescribeFargateProfileFn: func(*eks.DescribeFargateProfileInput) (*eks.DescribeFargateProfileOutput, error) {
-				return nil, fmt.Errorf("something bad")
+				return nil, errBad
+			},
+		},
+		IAMAPI: &IAMAPI{
+			AttachRolePolicyFn: func(*iam.AttachRolePolicyInput) (*iam.AttachRolePolicyOutput, error) {
+				return nil, errBad
 			},
 		},
 	}

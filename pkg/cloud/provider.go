@@ -4,6 +4,10 @@ package cloud
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/service/iam"
+
+	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/elbv2/elbv2iface"
 
@@ -63,6 +67,7 @@ func NewFromSession(region, principalARN string, sess *session.Session) (*Provid
 		Provider: services,
 	}
 
+	services.iam = iam.New(sess)
 	services.cfn = cloudformation.New(sess)
 	services.ec2 = ec2.New(sess)
 	services.elbv2 = elbv2.New(sess)
@@ -103,6 +108,7 @@ func NewSession(region string, auth awsauth.Authenticator) (*session.Session, *a
 
 // Services stores access to the various AWS APIs
 type Services struct {
+	iam   iamiface.IAMAPI
 	cfn   cloudformationiface.CloudFormationAPI
 	ec2   ec2iface.EC2API
 	elbv2 elbv2iface.ELBV2API
@@ -115,6 +121,11 @@ type Services struct {
 
 	region       string
 	principalARN string
+}
+
+// IAM returns an interface to the IAM API
+func (s *Services) IAM() iamiface.IAMAPI {
+	return s.iam
 }
 
 // CloudFront returns an interface to the AWS CloudFront API

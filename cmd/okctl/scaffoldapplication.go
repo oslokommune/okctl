@@ -5,7 +5,6 @@ import (
 
 	"github.com/logrusorgru/aurora"
 
-	kaex "github.com/oslokommune/kaex/pkg/api"
 	"github.com/oslokommune/okctl/pkg/scaffold"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -15,15 +14,14 @@ import (
 
 const requiredArgumentsForCreateApplicationCommand = 1
 
-// CreateApplicationOpts contains all the possible options for "create application"
-type CreateApplicationOpts struct {
+// scaffoldApplicationOpts contains all the possible options for "scaffold application"
+type scaffoldApplicationOpts struct {
 	Environment string
-	KaexOpts    *kaex.Kaex
 	Outfile     string
 }
 
 // Validate the options for "create application"
-func (o *CreateApplicationOpts) Validate() error {
+func (o *scaffoldApplicationOpts) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.Environment),
 	)
@@ -31,7 +29,7 @@ func (o *CreateApplicationOpts) Validate() error {
 
 // nolint: funlen
 func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
-	opts := &CreateApplicationOpts{}
+	opts := &scaffoldApplicationOpts{}
 	interpolationOpts := &scaffold.InterpolationOpts{}
 
 	cmd := &cobra.Command{
@@ -48,14 +46,7 @@ func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			}
 
 			hostedZone := o.RepoStateWithEnv.GetPrimaryHostedZone()
-			interpolationOpts.Domain = hostedZone.Domain
-
-			opts.KaexOpts = &kaex.Kaex{
-				Err:             o.Err,
-				Out:             o.Out,
-				In:              o.In,
-				TemplatesDirURL: "https://raw.githubusercontent.com/oslokommune/kaex/master/templates",
-			}
+			interpolationOpts.PrimaryHostedZone = hostedZone.Domain
 
 			return nil
 		},
@@ -65,17 +56,12 @@ func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			template, err := scaffold.FetchTemplate(*opts.KaexOpts)
-			if err != nil {
-				return fmt.Errorf("failed fetching application.yaml example: %w", err)
-			}
-
-			interpolatedResult, err := scaffold.InterpolateTemplate(template, interpolationOpts)
+			okctlAppTemplate, err := scaffold.GenerateOkctlAppTemplate(interpolationOpts)
 			if err != nil {
 				return err
 			}
 
-			err = scaffold.SaveTemplate(o.FileSystem, opts.Outfile, interpolatedResult)
+			err = scaffold.SaveOkctlAppTemplate(o.FileSystem, opts.Outfile, okctlAppTemplate)
 			if err != nil {
 				return err
 			}

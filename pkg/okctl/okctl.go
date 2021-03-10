@@ -172,6 +172,11 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		return nil, err
 	}
 
+	applicationsOutputDir, err := o.GetRepoApplicatiosOutputDir()
+	if err != nil {
+		return nil, err
+	}
+
 	ghClient, err := githubClient.New(o.Ctx, o.CredentialsProvider.Github())
 	if err != nil {
 		return nil, err
@@ -181,7 +186,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		ALBIngressController:             o.albIngressService(outputDir, spin),
 		AWSLoadBalancerControllerService: o.awsLoadBalancerControllerService(outputDir, spin),
 		ArgoCD:                           o.argocdService(outputDir, spin),
-		ApplicationService:               o.applicationService(outputDir, spin),
+		ApplicationService:               o.applicationService(outputDir, applicationsOutputDir, spin),
 		Certificate:                      o.certService(outputDir, spin),
 		Cluster:                          o.clusterService(outputDir, spin),
 		Domain:                           o.domainService(outputDir, spin),
@@ -597,21 +602,17 @@ func (o *Okctl) awsLoadBalancerControllerService(outputDir string, spin spinner.
 	)
 }
 
-func (o *Okctl) applicationService(outputDir string, spin spinner.Spinner) client.ApplicationService {
-	applicationsOverlayBaseDir, err := o.GetRepoApplicationBaseDir()
-	if err != nil {
-		return nil
-	}
-
+func (o *Okctl) applicationService(infrastructureOutputDir, applicationOutputDir string, spin spinner.Spinner) client.ApplicationService {
 	return clientCore.NewApplicationService(
+		o.FileSystem,
 		spin,
 		clientFilesystem.Paths{
-			BaseDir: applicationsOverlayBaseDir,
+			BaseDir: applicationOutputDir,
 		},
-		o.certService(path.Join(outputDir, config.DefaultCertificateBaseDir), spin.SubSpinner()),
+		o.certService(path.Join(infrastructureOutputDir, config.DefaultCertificateBaseDir), spin.SubSpinner()),
 		clientFilesystem.NewApplicationStore(
 			clientFilesystem.Paths{
-				BaseDir: applicationsOverlayBaseDir,
+				BaseDir: applicationOutputDir,
 			},
 			o.FileSystem,
 		),

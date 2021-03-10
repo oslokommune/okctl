@@ -1,16 +1,18 @@
 package core
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
-	"os"
+	"io/ioutil"
 	"path"
 	"path/filepath"
-	"strings"
 
+	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/spinner"
+	"github.com/spf13/afero"
+
+	"sigs.k8s.io/yaml"
 
 	kaex "github.com/oslokommune/kaex/pkg/api"
 	"github.com/oslokommune/okctl/pkg/api"
@@ -21,6 +23,7 @@ import (
 )
 
 type applicationService struct {
+	fs     *afero.Afero
 	spin   spinner.Spinner
 	paths  clientFilesystem.Paths
 	cert   client.CertificateService
@@ -28,31 +31,30 @@ type applicationService struct {
 	report client.ApplicationReport
 }
 
-func createCertificateFn(ctx context.Context, certService client.CertificateService, id *api.ID, hostedZoneID string) func(domain string) (string, error) {
-	return func(fqdn string) (string, error) {
-		cert, certFnErr := certService.CreateCertificate(ctx, api.CreateCertificateOpts{
-			ID:           *id,
-			FQDN:         fqdn,
-			Domain:       fqdn,
-			HostedZoneID: hostedZoneID,
-		})
-		if certFnErr != nil {
-			return "", certFnErr
-		}
-
-		return cert.CertificateARN, nil
+func (s *applicationService) createCertificate(ctx context.Context, id *api.ID, hostedZoneID, fqdn string) (string, error) {
+	cert, certFnErr := s.cert.CreateCertificate(ctx, api.CreateCertificateOpts{
+		ID:           *id,
+		FQDN:         fqdn,
+		Domain:       fqdn,
+		HostedZoneID: hostedZoneID,
+	})
+	if certFnErr != nil {
+		return "", certFnErr
 	}
+
+	return cert.CertificateARN, nil
 }
 
 func writeSuccessMessage(writer io.Writer, applicationName string, argoCDResourcePath string) {
-	fmt.Fprintf(writer, "Successfully scaffolded %s\n", applicationName)
+	fmt.Fprintf(writer, "\nSuccessfully scaffolded %s\n", applicationName)
 	fmt.Fprintln(writer, "To deploy your application:")
 	fmt.Fprintln(writer, "\t1. Commit and push the changes done by okctl")
 	fmt.Fprintf(writer, "\t2. Run kubectl apply -f %s\n", argoCDResourcePath)
-	fmt.Fprintf(writer, "If using an ingress, it can take up to five minutes for the routing to configure")
+	fmt.Fprintf(writer, "If using an ingress, it can take up to five minutes for the routing to configure\n")
 }
 
 // ScaffoldApplication turns a file path into Kubernetes resources
+// nolint: funlen
 func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *client.ScaffoldApplicationOpts) error {
 	err := opts.Validate()
 	if err != nil {
@@ -65,36 +67,50 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 		err = s.spin.Stop()
 	}()
 
-	app, err := inferApplicationFromStdinOrFile(opts.In, opts.ApplicationFilePath)
+	okctlApp, err := inferApplicationFromStdinOrFile(opts.In, s.fs, opts.ApplicationFilePath)
 	if err != nil {
 		return err
 	}
 
-	applicationDir := path.Join(s.paths.BaseDir, app.Name)
-	applicationDir = strings.Replace(applicationDir, opts.RepoDir+"/", "", 1)
-	certFn := createCertificateFn(ctx, s.cert, opts.ID, opts.HostedZoneID)
+	// See function comment
+	app := okctlApplicationToKaexApplication(okctlApp, opts.HostedZoneDomain)
 
-	deployment, err := scaffold.NewApplicationDeployment(*app, certFn, opts.IACRepoURL, applicationDir)
+	relativeApplicationDir := path.Join(opts.OutputDir, config.DefaultApplicationsOutputDir, okctlApp.Name)
+	relativeArgoCDSourcePath := path.Join(relativeApplicationDir, config.DefaultApplicationOverlayDir, opts.ID.Environment)
+
+	base, err := scaffold.GenerateApplicationBase(*app, opts.IACRepoURL, relativeArgoCDSourcePath)
 	if err != nil {
 		return fmt.Errorf("error creating a new application deployment: %w", err)
 	}
 
-	var kubernetesResources, argoCDResource bytes.Buffer
-
-	err = deployment.WriteKubernetesResources(&kubernetesResources)
+	certArn, err := s.createCertificate(
+		ctx,
+		opts.ID,
+		opts.HostedZoneID,
+		fmt.Sprintf("%s.%s", okctlApp.SubDomain, opts.HostedZoneDomain),
+	)
 	if err != nil {
-		return err
+		return fmt.Errorf("create certificate: %w", err)
 	}
 
-	err = deployment.WriteArgoResources(&argoCDResource)
+	overlay, err := scaffold.GenerateApplicationOverlay(okctlApp, opts.HostedZoneDomain, certArn)
 	if err != nil {
-		return err
+		return fmt.Errorf("generating application overlay: %w", err)
 	}
 
 	applicationScaffold := &client.ScaffoldedApplication{
-		ApplicationName:     app.Name,
-		KubernetesResources: kubernetesResources.Bytes(),
-		ArgoCDResource:      argoCDResource.Bytes(),
+		ApplicationName:      app.Name,
+		Environment:          opts.ID.Environment,
+		BaseKustomization:    base.Kustomization,
+		Deployment:           base.Deployment,
+		Service:              base.Service,
+		Ingress:              base.Ingress,
+		Volume:               base.Volumes,
+		OverlayKustomization: overlay.Kustomization,
+		ArgoCDResource:       base.ArgoApplication,
+		IngressPatch:         overlay.IngressPatch,
+		ServicePatch:         overlay.ServicePatch,
+		DeploymentPatch:      overlay.DeploymentPatch,
 	}
 
 	report, err := s.store.SaveApplication(applicationScaffold)
@@ -107,13 +123,15 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 		return err
 	}
 
-	writeSuccessMessage(opts.Out, app.Name, path.Join(opts.RepoDir, applicationDir, fmt.Sprintf("%s-application.yaml", app.Name)))
+	argoCDResourcePath := path.Join(relativeApplicationDir, "argocd-application.yaml")
+	writeSuccessMessage(opts.Out, app.Name, argoCDResourcePath)
 
 	return nil
 }
 
 // NewApplicationService initializes a new Scaffold application service
 func NewApplicationService(
+	fs *afero.Afero,
 	spin spinner.Spinner,
 	paths clientFilesystem.Paths,
 	cert client.CertificateService,
@@ -121,6 +139,7 @@ func NewApplicationService(
 	state client.ApplicationReport,
 ) client.ApplicationService {
 	return &applicationService{
+		fs:     fs,
 		spin:   spin,
 		paths:  paths,
 		cert:   cert,
@@ -129,26 +148,53 @@ func NewApplicationService(
 	}
 }
 
-func inferApplicationFromStdinOrFile(stdin io.Reader, path string) (*kaex.Application, error) {
+func inferApplicationFromStdinOrFile(stdin io.Reader, fs *afero.Afero, path string) (client.OkctlApplication, error) {
 	var (
-		inputReader io.Reader
 		err         error
+		app         client.OkctlApplication
+		inputReader io.Reader
 	)
 
 	switch path {
 	case "-":
 		inputReader = stdin
 	default:
-		inputReader, err = os.Open(filepath.Clean(path))
+		inputReader, err = fs.Open(filepath.Clean(path))
 		if err != nil {
-			return nil, fmt.Errorf("unable to read file: %w", err)
+			return app, fmt.Errorf("opening application file: %w", err)
 		}
 	}
 
-	app, err := kaex.ParseApplication(inputReader)
+	var buf []byte
+
+	buf, err = ioutil.ReadAll(inputReader)
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse application.yaml: %w", err)
+		return app, fmt.Errorf("reading application file: %w", err)
 	}
 
-	return &app, nil
+	err = yaml.Unmarshal(buf, &app)
+	if err != nil {
+		return app, fmt.Errorf("parsing application yaml: %w", err)
+	}
+
+	return app, nil
+}
+
+// I'm assuming we'll be making enough customizations down the line to have our own okctlApplication, but for now
+// mapping it to a Kaex application works fine
+func okctlApplicationToKaexApplication(okctlApp client.OkctlApplication, primaryHostedZoneDomain string) (kaexApp *kaex.Application) {
+	kaexApp = &kaex.Application{
+		Name:            okctlApp.Name,
+		Namespace:       okctlApp.Namespace,
+		Image:           okctlApp.Image,
+		Version:         okctlApp.Version,
+		ImagePullSecret: okctlApp.ImagePullSecret,
+		Url:             fmt.Sprintf("%s.%s", okctlApp.SubDomain, primaryHostedZoneDomain),
+		Port:            okctlApp.Port,
+		Replicas:        okctlApp.Replicas,
+		Environment:     okctlApp.Environment,
+		Volumes:         okctlApp.Volumes,
+	}
+
+	return kaexApp
 }

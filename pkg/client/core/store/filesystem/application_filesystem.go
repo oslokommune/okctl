@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/oslokommune/okctl/pkg/config"
+
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/spf13/afero"
@@ -14,14 +16,38 @@ type applicationStore struct {
 	fs    *afero.Afero
 }
 
+// Helper for optional resources
+func addOperationIfNotEmpty(operations store.Operations, filePath string, content []byte) {
+	if len(content) == 0 {
+		return
+	}
+
+	operations.StoreBytes(filePath, content)
+}
+
 // SaveApplication applies the application to the file system
 func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplication) (*store.Report, error) {
-	report, err := store.NewFileSystem(path.Join(s.paths.BaseDir, application.ApplicationName), s.fs).
-		StoreBytes(fmt.Sprintf("%s.yaml", application.ApplicationName), application.KubernetesResources).
-		StoreBytes(fmt.Sprintf("%s-application.yaml", application.ApplicationName), application.ArgoCDResource).
-		Do()
+	absoluteApplicationDir := path.Join(s.paths.BaseDir, application.ApplicationName)
+	relativeApplicationBaseDir := config.DefaultApplicationBaseDir
+	relativeApplicationOverlayDir := path.Join(config.DefaultApplicationOverlayDir, application.Environment)
+
+	operations := store.NewFileSystem(absoluteApplicationDir, s.fs)
+	addOperationIfNotEmpty(operations, "argocd-application.yaml", application.ArgoCDResource)
+
+	operations.AlterStore(store.SetBaseDir(path.Join(absoluteApplicationDir, relativeApplicationBaseDir)))
+	addOperationIfNotEmpty(operations, "deployment.yaml", application.Deployment)
+	addOperationIfNotEmpty(operations, "volumes.yaml", application.Volume)
+	addOperationIfNotEmpty(operations, "ingress.yaml", application.Ingress)
+	addOperationIfNotEmpty(operations, "service.yaml", application.Service)
+	addOperationIfNotEmpty(operations, "kustomization.yaml", application.BaseKustomization)
+
+	operations.AlterStore(store.SetBaseDir(path.Join(absoluteApplicationDir, relativeApplicationOverlayDir)))
+	addOperationIfNotEmpty(operations, "kustomization.yaml", application.OverlayKustomization)
+	addOperationIfNotEmpty(operations, config.DefaultIngressPatchFilename, application.IngressPatch)
+
+	report, err := operations.Do()
 	if err != nil {
-		return nil, fmt.Errorf("failed to store application resources: %w", err)
+		return nil, fmt.Errorf("storing application resources: %w", err)
 	}
 
 	return report, nil
@@ -30,11 +56,10 @@ func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplica
 // RemoveApplication removes an application from the file system
 func (s *applicationStore) RemoveApplication(applicationName string) (*store.Report, error) {
 	report, err := store.NewFileSystem(path.Join(s.paths.BaseDir, applicationName), s.fs).
-		Remove(fmt.Sprintf("%s.yaml", applicationName)).
-		Remove(fmt.Sprintf("%s-application.yaml", applicationName)).
+		Remove("").
 		Do()
 	if err != nil {
-		return nil, fmt.Errorf("failed to remove application: %w", err)
+		return nil, fmt.Errorf("removing application: %w", err)
 	}
 
 	return report, err

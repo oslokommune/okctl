@@ -1,0 +1,6 @@
+patches:
+- path: ingress-patch.json
+  target:
+    kind: Ingress
+resources:
+- ../../base

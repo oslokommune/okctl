@@ -1228,3 +1228,57 @@ func (c *CloudwatchDatasourcePolicyComposer) ManagedPolicy() *managedpolicy.Mana
 
 	return managedpolicy.New("CloudwatchDatasourcePolicy", policyName, policyDesc, d)
 }
+
+// FargateCloudwatchPolicyComposer contains state for building
+// a managed iam policy that allows the fargate pod execution role
+// to send logs to cloudwatch
+// - https://docs.aws.amazon.com/eks/latest/userguide/fargate-logging.html
+// - https://github.com/aws-samples/amazon-eks-fluent-logging-examples/blob/mainline/examples/fargate/cloudwatchlogs/permissions.json
+type FargateCloudwatchPolicyComposer struct {
+	Repository  string
+	Environment string
+}
+
+// NewFargateCloudwatchPolicyComposer returns an initialised cloudwatch datasource policy composer
+func NewFargateCloudwatchPolicyComposer(repository, env string) *FargateCloudwatchPolicyComposer {
+	return &FargateCloudwatchPolicyComposer{
+		Repository:  repository,
+		Environment: env,
+	}
+}
+
+// Compose builds the policy and returns the result
+func (c *FargateCloudwatchPolicyComposer) Compose() (*cfn.Composition, error) {
+	p := c.ManagedPolicy()
+
+	return &cfn.Composition{
+		Outputs:   []cfn.StackOutputer{p},
+		Resources: []cfn.ResourceNamer{p},
+	}, nil
+}
+
+// ManagedPolicy returns the policy
+func (c *FargateCloudwatchPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
+	policyName := fmt.Sprintf("okctl-%s-%s-FargateCloudwatchPolicy", c.Repository, c.Environment)
+	policyDesc := "Service account policy for reading cloudwatch metrics and logs from grafana"
+
+	d := &policydocument.PolicyDocument{
+		Version: policydocument.Version,
+		Statement: []policydocument.StatementEntry{
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"logs:CreateLogStream",
+					"logs:CreateLogGroup",
+					"logs:DescribeLogStreams",
+					"logs:PutLogEvents",
+				},
+				Resource: []string{
+					"*",
+				},
+			},
+		},
+	}
+
+	return managedpolicy.New("FargateCloudwatchPolicy", policyName, policyDesc, d)
+}

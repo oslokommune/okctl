@@ -2,9 +2,9 @@ package client
 
 import (
 	"context"
-	"regexp"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
 
 	"github.com/oslokommune/okctl/pkg/config/state"
 
@@ -19,14 +19,11 @@ type CreateIdentityPoolUserOpts struct {
 	UserPoolID string
 }
 
-// nolint: lll
-const emailRx = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])"
-
 // Validate the inputs
 func (o CreateIdentityPoolUserOpts) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.UserPoolID, validation.Required),
-		validation.Field(&o.Email, validation.Required, validation.Match(regexp.MustCompile(emailRx)).Error("must be valid email")),
+		validation.Field(&o.Email, validation.Required, is.EmailFormat),
 	)
 }
 

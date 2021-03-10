@@ -295,7 +295,7 @@ func (a *AuthSAML) Validate() error {
 func (a *AuthSAML) Retrieve() (*Credentials, error) {
 	err := a.PopulateFn(a)
 	if err != nil {
-		return nil, fmt.Errorf("populating required fields")
+		return nil, fmt.Errorf("populating required fields: %w", err)
 	}
 
 	samlAssertion, err := a.Scraper.Scrape(a.Username, a.Password, a.MFAToken)

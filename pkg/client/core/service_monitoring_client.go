@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/iamapi"
+
+	"github.com/oslokommune/okctl/pkg/eksapi"
+
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/clusterconfig"
 
@@ -50,6 +54,8 @@ type monitoringService struct {
 	manifest client.ManifestService
 	service  client.ServiceAccountService
 	policy   client.ManagedPolicyService
+
+	provider v1alpha1.CloudProvider
 }
 
 const (
@@ -360,7 +366,7 @@ func (s *monitoringService) CreateLoki(ctx context.Context, opts client.CreateLo
 	return l, nil
 }
 
-// nolint: funlen
+// nolint: funlen gocyclo
 func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client.DeleteKubePromStackOpts) error {
 	err := s.spinner.Start("kubepromstack")
 	if err != nil {
@@ -447,6 +453,14 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 	err = s.policy.DeletePolicy(ctx, api.DeletePolicyOpts{
 		ID:        opts.ID,
 		StackName: cfn.NewStackNamer().CloudwatchDatasource(opts.ID.Repository, opts.ID.Environment),
+	})
+	if err != nil {
+		return err
+	}
+
+	err = s.policy.DeletePolicy(ctx, api.DeletePolicyOpts{
+		ID:        opts.ID,
+		StackName: cfn.NewStackNamer().FargateCloudwatch(opts.ID.Repository, opts.ID.Environment),
 	})
 	if err != nil {
 		return err
@@ -709,6 +723,32 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 		return nil, err
 	}
 
+	fcp, err := cfn.New(components.NewFargateCloudwatchPolicyComposer(opts.ID.Repository, opts.ID.Environment)).Build()
+	if err != nil {
+		return nil, err
+	}
+
+	fargatePolicy, err := s.policy.CreatePolicy(ctx, api.CreatePolicyOpts{
+		ID:                     opts.ID,
+		StackName:              cfn.NewStackNamer().FargateCloudwatch(opts.ID.Repository, opts.ID.Environment),
+		PolicyOutputName:       "FargateCloudwatchPolicy", // We need to cleanup the way we name outputs
+		CloudFormationTemplate: fcp,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	roleARN, err := eksapi.New(opts.ID.ClusterName, s.provider).
+		FargateProfilePodExecutionRoleARN("fp-default") // another string that needs to be set explicitly
+	if err != nil {
+		return nil, err
+	}
+
+	err = iamapi.New(s.provider).AttachRolePolicy(fargatePolicy.PolicyARN, roleARN)
+	if err != nil {
+		return nil, err
+	}
+
 	r1, err := s.store.SaveKubePromStack(stack)
 	if err != nil {
 		return nil, err
@@ -740,7 +780,7 @@ func NewMonitoringService(
 	param client.ParameterService,
 	service client.ServiceAccountService,
 	policy client.ManagedPolicyService,
-
+	provider v1alpha1.CloudProvider,
 ) client.MonitoringService {
 	return &monitoringService{
 		spinner:  spinner,
@@ -754,5 +794,6 @@ func NewMonitoringService(
 		manifest: manifest,
 		service:  service,
 		policy:   policy,
+		provider: provider,
 	}
 }

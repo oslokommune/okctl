@@ -1,3 +1,5 @@
+// Package iamapi provides some convenience functions
+// for interacting with the AWS IAM API
 package iamapi
 
 import (

@@ -106,7 +106,7 @@ func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, id api.
 	return nil
 }
 
-func (s *identityManagerService) CreateIdentityPoolUser(_ context.Context, opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {
+func (s *identityManagerService) CreateIdentityPoolUser(_ context.Context, opts client.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {
 	err := s.spinner.Start("identity-pool-user")
 	if err != nil {
 		return nil, err
@@ -116,7 +116,16 @@ func (s *identityManagerService) CreateIdentityPoolUser(_ context.Context, opts 
 		err = s.spinner.Stop()
 	}()
 
-	u, err := s.api.CreateIdentityPoolUser(opts)
+	err = opts.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	u, err := s.api.CreateIdentityPoolUser(api.CreateIdentityPoolUserOpts{
+		ID:         opts.ID,
+		Email:      opts.Email,
+		UserPoolID: opts.UserPoolID,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("creating identity pool user: %w", err)
 	}

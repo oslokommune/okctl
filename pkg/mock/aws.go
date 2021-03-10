@@ -53,6 +53,8 @@ const (
 	DefaultStackName = "myStack"
 	// DefaultCloudFrontDistributionARN is a mocked default
 	DefaultCloudFrontDistributionARN = "arn:::::/distribution/FHH78FAKE"
+	// DefaultFargateProfilePodExecutionRoleARN is the default name of the pod execution role
+	DefaultFargateProfilePodExecutionRoleARN = "arn:aws:iam::123456789012:role/fargatePodExecutionRole-GHEFFAKE"
 )
 
 // DefaultCredentials returns a mocked set of aws credentials
@@ -142,12 +144,18 @@ func NewGoodSTSAPI() stsiface.STSAPI {
 type EKSAPI struct {
 	eksiface.EKSAPI
 
-	DescribeClusterFn func(*eks.DescribeClusterInput) (*eks.DescribeClusterOutput, error)
+	DescribeClusterFn        func(*eks.DescribeClusterInput) (*eks.DescribeClusterOutput, error)
+	DescribeFargateProfileFn func(*eks.DescribeFargateProfileInput) (*eks.DescribeFargateProfileOutput, error)
 }
 
 // DescribeCluster mocks describe cluster invocation
 func (a *EKSAPI) DescribeCluster(input *eks.DescribeClusterInput) (*eks.DescribeClusterOutput, error) {
 	return a.DescribeClusterFn(input)
+}
+
+// DescribeFargateProfile mocks the API invocation
+func (a *EKSAPI) DescribeFargateProfile(input *eks.DescribeFargateProfileInput) (*eks.DescribeFargateProfileOutput, error) {
+	return a.DescribeFargateProfileFn(input)
 }
 
 // EC2API provides a mocked structure of the ec2 API
@@ -423,6 +431,13 @@ func NewGoodCloudProvider() *CloudProvider {
 					},
 				}, nil
 			},
+			DescribeFargateProfileFn: func(*eks.DescribeFargateProfileInput) (*eks.DescribeFargateProfileOutput, error) {
+				return &eks.DescribeFargateProfileOutput{
+					FargateProfile: &eks.FargateProfile{
+						PodExecutionRoleArn: aws.String(DefaultFargateProfilePodExecutionRoleARN),
+					},
+				}, nil
+			},
 		},
 		R53API: &R53API{
 			ListHostedZonesFn: func(*route53.ListHostedZonesInput) (*route53.ListHostedZonesOutput, error) {
@@ -476,6 +491,11 @@ func NewBadCloudProvider() *CloudProvider {
 	return &CloudProvider{
 		EC2API: &EC2API{
 			DescribeSubnetsFn: func(*ec2.DescribeSubnetsInput) (*ec2.DescribeSubnetsOutput, error) {
+				return nil, fmt.Errorf("something bad")
+			},
+		},
+		EKSAPI: &EKSAPI{
+			DescribeFargateProfileFn: func(*eks.DescribeFargateProfileInput) (*eks.DescribeFargateProfileOutput, error) {
 				return nil, fmt.Errorf("something bad")
 			},
 		},

@@ -17,12 +17,12 @@ type applicationStore struct {
 }
 
 // Helper for optional resources
-func addOperationIfNotEmpty(operations store.Operations, root, filePath string, content []byte) {
+func addOperationIfNotEmpty(operations store.Operations, filePath string, content []byte) {
 	if len(content) == 0 {
 		return
 	}
 
-	operations.StoreBytes(path.Join(root, filePath), content)
+	operations.StoreBytes(filePath, content)
 }
 
 // SaveApplication applies the application to the file system
@@ -31,28 +31,19 @@ func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplica
 	relativeApplicationBaseDir := config.DefaultApplicationBaseDir
 	relativeApplicationOverlayDir := path.Join(config.DefaultApplicationOverlayDir, application.Environment)
 
-	err := s.fs.MkdirAll(path.Join(absoluteApplicationDir, relativeApplicationBaseDir), 0o744)
-	if err != nil {
-		return nil, fmt.Errorf("creating overlay directory: %w", err)
-	}
-
-	err = s.fs.MkdirAll(path.Join(absoluteApplicationDir, relativeApplicationOverlayDir), 0o744)
-	if err != nil {
-		return nil, fmt.Errorf("creating overlay directory: %w", err)
-	}
-
 	operations := store.NewFileSystem(absoluteApplicationDir, s.fs)
+	addOperationIfNotEmpty(operations, "argocd-application.yaml", application.ArgoCDResource)
 
-	addOperationIfNotEmpty(operations, "", "argocd-application.yaml", application.ArgoCDResource)
+	operations.AlterStore(store.SetBaseDir(path.Join(absoluteApplicationDir, relativeApplicationBaseDir)))
+	addOperationIfNotEmpty(operations, "deployment.yaml", application.Deployment)
+	addOperationIfNotEmpty(operations, "volumes.yaml", application.Volume)
+	addOperationIfNotEmpty(operations, "ingress.yaml", application.Ingress)
+	addOperationIfNotEmpty(operations, "service.yaml", application.Service)
+	addOperationIfNotEmpty(operations, "kustomization.yaml", application.BaseKustomization)
 
-	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "deployment.yaml", application.Deployment)
-	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "volumes.yaml", application.Volume)
-	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "ingress.yaml", application.Ingress)
-	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "service.yaml", application.Service)
-	addOperationIfNotEmpty(operations, relativeApplicationBaseDir, "kustomization.yaml", application.BaseKustomization)
-
-	addOperationIfNotEmpty(operations, relativeApplicationOverlayDir, "kustomization.yaml", application.OverlayKustomization)
-	addOperationIfNotEmpty(operations, relativeApplicationOverlayDir, config.DefaultIngressPatchFilename, application.IngressPatch)
+	operations.AlterStore(store.SetBaseDir(path.Join(absoluteApplicationDir, relativeApplicationOverlayDir)))
+	addOperationIfNotEmpty(operations, "kustomization.yaml", application.OverlayKustomization)
+	addOperationIfNotEmpty(operations, config.DefaultIngressPatchFilename, application.IngressPatch)
 
 	report, err := operations.Do()
 	if err != nil {

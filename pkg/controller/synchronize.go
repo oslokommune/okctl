@@ -128,6 +128,8 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 			desiredTreeNode.State = boolToState(declaration.Integrations.Tempo)
 		case resourcetree.ResourceNodeTypeArgoCD:
 			desiredTreeNode.State = boolToState(declaration.Integrations.ArgoCD)
+		case resourcetree.ResourceNodeTypeUsers:
+			desiredTreeNode.State = boolToState(len(declaration.Users) > 0)
 		}
 	}
 }
@@ -170,6 +172,8 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 			receiver.State = boolToState(existingResources.hasTempo)
 		case resourcetree.ResourceNodeTypeArgoCD:
 			receiver.State = boolToState(existingResources.hasArgoCD)
+		case resourcetree.ResourceNodeTypeUsers:
+			receiver.State = boolToState(existingResources.hasUsers)
 		}
 	}
 }
@@ -220,6 +224,10 @@ func setRefreshers(desiredTree *resourcetree.ResourceNode, opts *SynchronizeOpts
 
 	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeNameserverDelegator, CreateNameserverDelegationStateRefresher(
 		opts.PrimaryHostedZoneGetter,
+	))
+
+	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeUsers, CreateUsersRefresher(
+		opts.IdentityPoolFetcher,
 	))
 }
 

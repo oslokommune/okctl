@@ -28,6 +28,7 @@ type ExistingResources struct {
 	hasVPC                                bool
 	hasDelegatedHostedZoneNameservers     bool
 	hasDelegatedHostedZoneNameserversTest bool
+	hasUsers                              bool
 }
 
 // IdentifyResourcePresence creates an initialized ExistingResources struct
@@ -52,6 +53,7 @@ func IdentifyResourcePresence(fs *afero.Afero, outputDir string, hzFetcher Hoste
 		hasArgoCD:                             directoryTester(fs, outputDir, config.DefaultArgoCDBaseDir),
 		hasDelegatedHostedZoneNameservers:     hz != nil && hz.IsDelegated,
 		hasDelegatedHostedZoneNameserversTest: false,
+		hasUsers:                              false, // this means we will always check? needs to be changed?
 	}, nil
 }
 
@@ -82,6 +84,7 @@ func CreateResourceDependencyTree() (root *resourcetree.ResourceNode) {
 	identityProviderNode := createNode(delegatedNameserversConfirmedNode, resourcetree.ResourceNodeTypeIdentityManager)
 	kubePromStack := createNode(identityProviderNode, resourcetree.ResourceNodeTypeKubePromStack)
 	createNode(identityProviderNode, resourcetree.ResourceNodeTypeArgoCD)
+	createNode(identityProviderNode, resourcetree.ResourceNodeTypeUsers)
 	// This is not strictly required, but to a large extent it doesn't make much sense to setup Loki before
 	// we have setup grafana.
 	loki := createNode(kubePromStack, resourcetree.ResourceNodeTypeLoki)

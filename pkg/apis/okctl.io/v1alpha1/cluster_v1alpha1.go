@@ -1,7 +1,6 @@
 package v1alpha1
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 
@@ -48,19 +47,22 @@ type Cluster struct {
 	// this cluster.
 	// +optional
 	DNSZones []ClusterDNSZone `json:"dnsZones,omitempty"`
+
+	// Users is an optional list of email addresses
+	// +optional
+	Users []ClusterUser `json:"users,omitempty"`
 }
 
 // Validate calls each members Validate function
 func (c Cluster) Validate() error {
-	result := validation.ValidateStruct(&c,
+	return validation.ValidateStruct(&c,
 		validation.Field(&c.Metadata),
 		validation.Field(&c.Github),
 		validation.Field(&c.PrimaryDNSZone),
 		validation.Field(&c.VPC),
 		validation.Field(&c.Integrations),
+		validation.Field(&c.Users),
 	)
-
-	return result
 }
 
 // ClusterMeta describes a unique cluster
@@ -231,11 +233,22 @@ type ClusterIntegrations struct {
 
 // Validate ensures there is no conflicting options
 func (c ClusterIntegrations) Validate() error {
-	if c.ArgoCD && !c.Cognito {
-		return errors.New("the identity provider cognito is required when using ArgoCD")
-	}
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.Cognito, validation.When(c.ArgoCD, validation.Required.Error("is required when argocd is enabled"))),
+	)
+}
 
-	return nil
+// ClusterUser represents the identity of a user
+// that should have access to the cluster
+type ClusterUser struct {
+	Email string `json:"email"`
+}
+
+// Validate the cluster user
+func (c ClusterUser) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.Email, validation.Required, is.EmailFormat),
+	)
 }
 
 // ClusterTypeMeta returns an initialised TypeMeta object

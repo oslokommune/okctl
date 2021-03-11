@@ -67,6 +67,11 @@ func TestBuilderAndComposers(t *testing.T) {
 			composer: components.NewCloudwatchDatasourcePolicyComposer("repo", "env"),
 		},
 		{
+			name:     "Builder with FargateCloudWatchPolicy",
+			golden:   "fargate-cloudwatch.yaml",
+			composer: components.NewFargateCloudwatchPolicyComposer("repo", "env"),
+		},
+		{
 			name:   "Builder with UserPool composer",
 			golden: "userpool.yaml",
 			composer: components.NewUserPool(

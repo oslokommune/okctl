@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/aws/aws-sdk-go/service/servicequotas/servicequotasiface"
 
@@ -53,6 +56,8 @@ const (
 	DefaultStackName = "myStack"
 	// DefaultCloudFrontDistributionARN is a mocked default
 	DefaultCloudFrontDistributionARN = "arn:::::/distribution/FHH78FAKE"
+	// DefaultFargateProfilePodExecutionRoleARN is the default name of the pod execution role
+	DefaultFargateProfilePodExecutionRoleARN = "arn:aws:iam::123456789012:role/fargatePodExecutionRole-GHEFFAKE"
 )
 
 // DefaultCredentials returns a mocked set of aws credentials
@@ -142,12 +147,18 @@ func NewGoodSTSAPI() stsiface.STSAPI {
 type EKSAPI struct {
 	eksiface.EKSAPI
 
-	DescribeClusterFn func(*eks.DescribeClusterInput) (*eks.DescribeClusterOutput, error)
+	DescribeClusterFn        func(*eks.DescribeClusterInput) (*eks.DescribeClusterOutput, error)
+	DescribeFargateProfileFn func(*eks.DescribeFargateProfileInput) (*eks.DescribeFargateProfileOutput, error)
 }
 
 // DescribeCluster mocks describe cluster invocation
 func (a *EKSAPI) DescribeCluster(input *eks.DescribeClusterInput) (*eks.DescribeClusterOutput, error) {
 	return a.DescribeClusterFn(input)
+}
+
+// DescribeFargateProfile mocks the API invocation
+func (a *EKSAPI) DescribeFargateProfile(input *eks.DescribeFargateProfileInput) (*eks.DescribeFargateProfileOutput, error) {
+	return a.DescribeFargateProfileFn(input)
 }
 
 // EC2API provides a mocked structure of the ec2 API
@@ -251,6 +262,18 @@ func (a *CIPAPI) DescribeUserPoolDomain(input *cognitoidentityprovider.DescribeU
 	return a.DescribeUserPoolDomainFn(input)
 }
 
+// IAMAPI mocks the IAM API
+type IAMAPI struct {
+	iamiface.IAMAPI
+
+	AttachRolePolicyFn func(*iam.AttachRolePolicyInput) (*iam.AttachRolePolicyOutput, error)
+}
+
+// AttachRolePolicy mocks the invocation
+func (a *IAMAPI) AttachRolePolicy(input *iam.AttachRolePolicyInput) (*iam.AttachRolePolicyOutput, error) {
+	return a.AttachRolePolicyFn(input)
+}
+
 // DescribeStackEventsSuccess sets a success response on the describe event
 func (p *CloudProvider) DescribeStackEventsSuccess() *CloudProvider {
 	p.CFAPI.DescribeStackEventsFn = func(input *cloudformation.DescribeStackEventsInput) (*cloudformation.DescribeStackEventsOutput, error) {
@@ -316,6 +339,7 @@ func (p *CloudProvider) DescribeStacksResponse(status string) *CloudProvider {
 type CloudProvider struct {
 	v1alpha1.CloudProvider
 
+	IAMAPI    *IAMAPI
 	EC2API    *EC2API
 	CFAPI     *CFAPI
 	EKSAPI    *EKSAPI
@@ -323,6 +347,11 @@ type CloudProvider struct {
 	CFRONTAPI *CFRONTAPI
 	CIPAPI    *CIPAPI
 	SQAPI     *SQAPI
+}
+
+// IAM returns the mocked IAM API
+func (p *CloudProvider) IAM() iamiface.IAMAPI {
+	return p.IAMAPI
 }
 
 // ServiceQuotas returns the mocked SQ API
@@ -423,6 +452,13 @@ func NewGoodCloudProvider() *CloudProvider {
 					},
 				}, nil
 			},
+			DescribeFargateProfileFn: func(*eks.DescribeFargateProfileInput) (*eks.DescribeFargateProfileOutput, error) {
+				return &eks.DescribeFargateProfileOutput{
+					FargateProfile: &eks.FargateProfile{
+						PodExecutionRoleArn: aws.String(DefaultFargateProfilePodExecutionRoleARN),
+					},
+				}, nil
+			},
 		},
 		R53API: &R53API{
 			ListHostedZonesFn: func(*route53.ListHostedZonesInput) (*route53.ListHostedZonesOutput, error) {
@@ -468,15 +504,32 @@ func NewGoodCloudProvider() *CloudProvider {
 				}, nil
 			},
 		},
+		IAMAPI: &IAMAPI{
+			AttachRolePolicyFn: func(*iam.AttachRolePolicyInput) (*iam.AttachRolePolicyOutput, error) {
+				return &iam.AttachRolePolicyOutput{}, nil
+			},
+		},
 	}
 }
+
+var errBad = fmt.Errorf("something bad")
 
 // NewBadCloudProvider returns a mocked cloud provider with failure set on all
 func NewBadCloudProvider() *CloudProvider {
 	return &CloudProvider{
 		EC2API: &EC2API{
 			DescribeSubnetsFn: func(*ec2.DescribeSubnetsInput) (*ec2.DescribeSubnetsOutput, error) {
-				return nil, fmt.Errorf("something bad")
+				return nil, errBad
+			},
+		},
+		EKSAPI: &EKSAPI{
+			DescribeFargateProfileFn: func(*eks.DescribeFargateProfileInput) (*eks.DescribeFargateProfileOutput, error) {
+				return nil, errBad
+			},
+		},
+		IAMAPI: &IAMAPI{
+			AttachRolePolicyFn: func(*iam.AttachRolePolicyInput) (*iam.AttachRolePolicyOutput, error) {
+				return nil, errBad
 			},
 		},
 	}

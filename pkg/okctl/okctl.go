@@ -277,6 +277,7 @@ func (o *Okctl) monitoringService(outputDir string, spin spinner.Spinner) client
 		o.paramService(monitoringDir, spin.SubSpinner()),
 		o.serviceAccountService(monitoringDir, spin.SubSpinner()),
 		o.managedPolicyService(monitoringDir, spin.SubSpinner()),
+		o.CloudProvider,
 	)
 }
 

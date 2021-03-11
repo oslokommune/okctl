@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  FargateCloudwatchPolicy:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-FargateCloudwatchPolicy
+    Value:
+      Ref: FargateCloudwatchPolicy
+Resources:
+  FargateCloudwatchPolicy:
+    Properties:
+      Description: Service account policy for reading cloudwatch metrics and logs
+        from grafana
+      ManagedPolicyName: okctl-repo-env-FargateCloudwatchPolicy
+      PolicyDocument:
+        Statement:
+        - Action:
+          - logs:CreateLogStream
+          - logs:CreateLogGroup
+          - logs:DescribeLogStreams
+          - logs:PutLogEvents
+          Effect: Allow
+          Resource:
+          - '*'
+        Version: 2012-10-17
+    Type: AWS::IAM::ManagedPolicy

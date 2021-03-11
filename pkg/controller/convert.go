@@ -82,9 +82,9 @@ func CreateResourceDependencyTree() (root *resourcetree.ResourceNode) {
 	delegatedNameserversConfirmedNode := createNode(clusterNode, resourcetree.ResourceNodeTypeNameserversDelegatedTest)
 
 	identityProviderNode := createNode(delegatedNameserversConfirmedNode, resourcetree.ResourceNodeTypeIdentityManager)
-	kubePromStack := createNode(identityProviderNode, resourcetree.ResourceNodeTypeKubePromStack)
 	createNode(identityProviderNode, resourcetree.ResourceNodeTypeArgoCD)
 	createNode(identityProviderNode, resourcetree.ResourceNodeTypeUsers)
+	kubePromStack := createNode(identityProviderNode, resourcetree.ResourceNodeTypeKubePromStack)
 	// This is not strictly required, but to a large extent it doesn't make much sense to setup Loki before
 	// we have setup grafana.
 	loki := createNode(kubePromStack, resourcetree.ResourceNodeTypeLoki)

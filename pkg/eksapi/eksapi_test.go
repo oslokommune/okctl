@@ -25,7 +25,7 @@ func TestEKSAPIFargateProfilePodExecutionRoleARN(t *testing.T) {
 			expectErr: false,
 		},
 		{
-			name:      "Should fai",
+			name:      "Should fail",
 			provider:  mock.NewBadCloudProvider(),
 			expect:    "getting fargate profile: something bad",
 			expectErr: true,

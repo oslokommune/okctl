@@ -51,10 +51,12 @@ const (
 	ResourceNodeTypeNameserverDelegator
 	// ResourceNodeTypeNameserversDelegatedTest represents testing if nameservers has been successfully delegated
 	ResourceNodeTypeNameserversDelegatedTest
+	// ResourceNodeTypeUsers represents the users we want to add to the cognito user pool
+	ResourceNodeTypeUsers
 )
 
 // ResourceNodeTypeToString knows how to convert a Resource Node type to a human readable string
-// nolint: gocyclo
+// nolint: gocyclo funlen
 func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
 	switch nodeType {
 	case ResourceNodeTypeGroup:
@@ -93,6 +95,8 @@ func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
 		return "Nameserver Delegation"
 	case ResourceNodeTypeNameserversDelegatedTest:
 		return "Nameservers Delegated Test"
+	case ResourceNodeTypeUsers:
+		return "Users"
 	default:
 		return "N/A"
 	}

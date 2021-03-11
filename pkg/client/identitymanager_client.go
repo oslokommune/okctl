@@ -3,17 +3,35 @@ package client
 import (
 	"context"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
+
 	"github.com/oslokommune/okctl/pkg/config/state"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client/store"
 )
 
+// CreateIdentityPoolUserOpts contains the required inputs
+type CreateIdentityPoolUserOpts struct {
+	ID         api.ID
+	Email      string
+	UserPoolID string
+}
+
+// Validate the inputs
+func (o CreateIdentityPoolUserOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.UserPoolID, validation.Required),
+		validation.Field(&o.Email, validation.Required, is.EmailFormat),
+	)
+}
+
 // IdentityManagerService orchestrates the creation of an identity pool
 type IdentityManagerService interface {
 	CreateIdentityPool(ctx context.Context, opts api.CreateIdentityPoolOpts) (*api.IdentityPool, error)
 	CreateIdentityPoolClient(ctx context.Context, opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error)
-	CreateIdentityPoolUser(ctx context.Context, opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error)
+	CreateIdentityPoolUser(ctx context.Context, opts CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error)
 	DeleteIdentityPool(ctx context.Context, opts api.ID) error
 	DeleteIdentityPoolClient(ctx context.Context, opts api.DeleteIdentityPoolClientOpts) error
 }
@@ -31,7 +49,7 @@ type IdentityManagerAPI interface {
 type IdentityManagerStore interface {
 	SaveIdentityPool(pool *api.IdentityPool) (*store.Report, error)
 	SaveIdentityPoolClient(client *api.IdentityPoolClient) (*store.Report, error)
-	SaveIdentityPoolUser(client *api.IdentityPoolUser) (*store.Report, error)
+	SaveIdentityPoolUser(user *api.IdentityPoolUser) (*store.Report, error)
 	RemoveIdentityPool(id api.ID) (*store.Report, error)
 	RemoveIdentityPoolClient(opts api.DeleteIdentityPoolClientOpts) (*store.Report, error)
 }
@@ -40,7 +58,7 @@ type IdentityManagerStore interface {
 type IdentityManagerState interface {
 	SaveIdentityPool(pool *api.IdentityPool) (*store.Report, error)
 	SaveIdentityPoolClient(client *api.IdentityPoolClient) (*store.Report, error)
-	SaveIdentityPoolUser(client *api.IdentityPoolUser) (*store.Report, error)
+	SaveIdentityPoolUser(user *api.IdentityPoolUser) (*store.Report, error)
 	GetIdentityPool() state.IdentityPool
 	RemoveIdentityPool(id api.ID) (*store.Report, error)
 	RemoveIdentityPoolClient(opts api.DeleteIdentityPoolClientOpts) (*store.Report, error)

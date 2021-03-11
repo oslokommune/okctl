@@ -116,6 +116,17 @@ func CreateKubePromStackRefresher(idpFetcher IdentityPoolFetcher, hzFetecher Hos
 	}
 }
 
+// CreateUsersRefresher creates a function that gathers required runtime data for a Users resource
+func CreateUsersRefresher(idpFetcher IdentityPoolFetcher) resourcetree.StateRefreshFn {
+	return func(node *resourcetree.ResourceNode) {
+		idp := idpFetcher()
+
+		node.ResourceState = reconciler.UsersState{
+			UserPoolID: idp.UserPoolID,
+		}
+	}
+}
+
 // CreateNameserverDelegationStateRefresher creates a function that gathers required runtime data for a nameserver delegation
 // request
 func CreateNameserverDelegationStateRefresher(fetcher HostedZoneFetcher) resourcetree.StateRefreshFn {

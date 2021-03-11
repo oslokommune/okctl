@@ -3,7 +3,7 @@ package main
 import (
 	"regexp"
 
-	"github.com/go-ozzo/ozzo-validation/v4/is"
+	"github.com/oslokommune/okctl/pkg/client"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
@@ -36,7 +36,7 @@ func (o *AddUserOpts) Validate() error {
 		validation.Field(&o.Region, validation.Required),
 		validation.Field(&o.ClusterName, validation.Required),
 		validation.Field(&o.UserPoolID, validation.Required),
-		validation.Field(&o.UserEmail, validation.Required, is.Email),
+		validation.Field(&o.UserEmail, validation.Required),
 	)
 }
 
@@ -46,9 +46,9 @@ func buildAddUserCommand(o *okctl.Okctl) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "adduser [env] [email]",
 		Short: "Add a user access to the cluster's services",
-		Long:  `Add a user to the AWS identitypool associated with the cluster, for login in ArgoCD and other applications`,
+		Long:  `Add a user to the AWS identitypool associated with the cluster, for login in ArgoCD, Grafana and other applications`,
 		Args:  cobra.ExactArgs(addUserArgs),
-		RunE: func(_ *cobra.Command, args []string) error {
+		PreRunE: func(_ *cobra.Command, args []string) error {
 			environment := args[0]
 			userEmail := args[1]
 
@@ -82,15 +82,18 @@ func buildAddUserCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
+			return nil
+		},
+		RunE: func(_ *cobra.Command, args []string) error {
 			id := api.ID{
-				Region:       meta.Region,
+				Region:       opts.Region,
 				AWSAccountID: opts.AWSAccountID,
 				Environment:  opts.Environment,
 				Repository:   opts.RepositoryName,
 				ClusterName:  opts.ClusterName,
 			}
 
-			spin, err := spinner.New("creating-identity-pool-users", o.Err)
+			spin, err := spinner.New("creating", o.Err)
 			if err != nil {
 				return err
 			}
@@ -100,7 +103,7 @@ func buildAddUserCommand(o *okctl.Okctl) *cobra.Command {
 				return nil
 			}
 
-			_, err = services.IdentityManager.CreateIdentityPoolUser(o.Ctx, api.CreateIdentityPoolUserOpts{
+			_, err = services.IdentityManager.CreateIdentityPoolUser(o.Ctx, client.CreateIdentityPoolUserOpts{
 				ID:         id,
 				Email:      opts.UserEmail,
 				UserPoolID: opts.UserPoolID,

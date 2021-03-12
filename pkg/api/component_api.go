@@ -13,6 +13,7 @@ type PostgresDatabase struct {
 	ApplicationName              string
 	UserName                     string
 	StackName                    string
+	AdminSecretFriendlyName      string
 	EndpointAddress              string
 	EndpointPort                 int
 	OutgoingSecurityGroupID      string

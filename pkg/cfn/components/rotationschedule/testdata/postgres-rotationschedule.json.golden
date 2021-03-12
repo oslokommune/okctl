@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  myPostgresRotationSchedule:
+    DependsOn:
+    - mySecretAttachment
+    Properties:
+      HostedRotationLambda:
+        RotationLambdaName: myPostgresRotationSchedule-SecretsManagerRotation
+        RotationType: PostgreSQLSingleUser
+        VpcSecurityGroupIds:
+          Fn::GetAtt:
+          - mySecurityGroup
+          - GroupId
+        VpcSubnetIds: subnetid-3fjij3,subnetid-jfe29md
+      RotationRules:
+        AutomaticallyAfterDays: 30
+      SecretId:
+        Ref: mySecret
+    Type: AWS::SecretsManager::RotationSchedule

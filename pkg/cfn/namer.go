@@ -24,6 +24,7 @@ const (
 	DefaultStackNameIdentityPoolClient                = "identitypoolclient"
 	DefaultStackNameAliasRecordSet                    = "aliasrecordset"
 	DefaultStackNameIdentityPoolUser                  = "identitypooluser"
+	DefaultStackNameRDSPostgres                       = "rdspostgres"
 )
 
 // StackNamer knows how to name cloud formation stacks
@@ -32,6 +33,17 @@ type StackNamer struct{}
 // NewStackNamer returns an initialised stack namer
 func NewStackNamer() *StackNamer {
 	return &StackNamer{}
+}
+
+// RDSPostgres returns the stack name of a RDS Postgres instance
+func (n *StackNamer) RDSPostgres(app, repository, env string) string {
+	return fmt.Sprintf("%s-%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameRDSPostgres,
+		repository,
+		env,
+		app,
+	)
 }
 
 // Vpc returns the stack name of a vpc

@@ -12,7 +12,7 @@ func TestNew(t *testing.T) {
 		{
 			Name:    "RDSInstanceSecret",
 			Golden:  "rdsinstance-secret.json",
-			Content: secret.NewRDSInstanceSecret("myAdminSecret", "admin"),
+			Content: secret.NewRDSInstanceSecret("myAdminSecret", "/something/env/app", "admin"),
 		},
 	}
 

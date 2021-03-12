@@ -1,0 +1,8 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  myParameterGroup:
+    Properties:
+      Family: postgres13
+      Parameters:
+        some_parameter: some_value
+    Type: AWS::RDS::DBParameterGroup

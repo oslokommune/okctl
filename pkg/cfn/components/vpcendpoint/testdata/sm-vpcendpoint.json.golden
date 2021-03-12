@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  mySecretsManagerEndpoint:
+    Properties:
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+      - Fn::GetAtt:
+        - mySecurityGroup
+        - GroupId
+      ServiceName:
+        Fn::Sub: com.amazonaws.${AWS::Region}.secretsmanager
+      SubnetIds:
+      - subnetid-0ei0fgi
+      - subnetid-0ie0fie
+      VpcEndpointType: Interface
+      VpcId: vpcid-30fejkjhs
+    Type: AWS::EC2::VPCEndpoint

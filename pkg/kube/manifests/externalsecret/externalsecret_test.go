@@ -7,6 +7,10 @@ import (
 	"testing"
 	"time"
 
+	typesv1 "github.com/oslokommune/okctl/pkg/kube/externalsecret/api/types/v1"
+
+	"github.com/oslokommune/okctl/pkg/api"
+
 	"github.com/oslokommune/okctl/pkg/kube/manifests/externalsecret"
 
 	"github.com/oslokommune/okctl/pkg/integration"
@@ -23,8 +27,11 @@ func TestNew(t *testing.T) {
 	}{
 		{
 			name: "Should work",
-			ext: externalsecret.New("name", "default", externalsecret.SecretManifest("name", "default", nil, nil, map[string]string{
-				"from": "/path",
+			ext: externalsecret.New("name", "default", externalsecret.SecretManifest("name", "default", api.BackendTypeParameterStore, nil, nil, []typesv1.ExternalSecretData{
+				{
+					Key:  "/path",
+					Name: "from",
+				},
 			})),
 		},
 	}
@@ -79,8 +86,11 @@ func TestExternalDNS(t *testing.T) {
 		// - https://github.com/external-secrets/kubernetes-external-secrets/blob/master/charts/kubernetes-external-secrets/crds/kubernetes-client.io_externalsecrets_crd.yaml
 		{
 			name: "Should work",
-			ext: externalsecret.New("name", "default", externalsecret.SecretManifest("name", "default", nil, nil, map[string]string{
-				"from": "/path",
+			ext: externalsecret.New("name", "default", externalsecret.SecretManifest("name", "default", api.BackendTypeParameterStore, nil, nil, []typesv1.ExternalSecretData{
+				{
+					Key:  "/path",
+					Name: "",
+				},
 			})),
 		},
 	}

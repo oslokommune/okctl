@@ -84,7 +84,7 @@ func (a *ExternalSecret) DeleteSecret(_ kubernetes.Interface, config *rest.Confi
 }
 
 // SecretManifest returns the manifest
-func SecretManifest(name, namespace string, annotations, labels, data map[string]string) *typesv1.ExternalSecret {
+func SecretManifest(name, namespace, backendType string, annotations, labels map[string]string, data []typesv1.ExternalSecretData) *typesv1.ExternalSecret {
 	e := &typesv1.ExternalSecret{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ExternalSecret",
@@ -95,8 +95,8 @@ func SecretManifest(name, namespace string, annotations, labels, data map[string
 			Namespace: namespace,
 		},
 		Spec: typesv1.ExternalSecretSpec{
-			BackendType: "systemManager",
-			Data:        []typesv1.ExternalSecretData{},
+			BackendType: backendType,
+			Data:        data,
 		},
 	}
 
@@ -107,13 +107,6 @@ func SecretManifest(name, namespace string, annotations, labels, data map[string
 				Labels:      labels,
 			},
 		}
-	}
-
-	for name, key := range data {
-		e.Spec.Data = append(e.Spec.Data, typesv1.ExternalSecretData{
-			Key:  key,
-			Name: name,
-		})
 	}
 
 	return e

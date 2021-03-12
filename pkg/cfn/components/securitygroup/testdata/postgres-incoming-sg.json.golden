@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  GroupId:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-GroupId
+    Value:
+      Fn::GetAtt:
+      - myIncomingPG
+      - GroupId
+  myIncomingPG:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-myIncomingPG
+    Value:
+      Ref: myIncomingPG
+Resources:
+  myIncomingPG:
+    Properties:
+      GroupDescription: RDS Postgres Incoming Security Group
+      GroupName: myIncomingPG
+      SecurityGroupIngress:
+      - FromPort: 5432
+        IpProtocol: tcp
+        SourceSecurityGroupId:
+          Fn::GetAtt:
+          - mySourceSecurityGroup
+          - GroupId
+        ToPort: 5432
+      VpcId: vpcid-r3ufh3
+    Type: AWS::EC2::SecurityGroup

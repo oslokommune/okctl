@@ -6,6 +6,23 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/cfn/components/securitygroup"
+
+	"github.com/oslokommune/okctl/pkg/cfn/components/rotationschedule"
+
+	"github.com/oslokommune/okctl/pkg/cfn/components/secrettargetattachment"
+
+	"github.com/oslokommune/okctl/pkg/cfn/components/secret"
+
+	"github.com/oslokommune/okctl/pkg/cfn/components/vpcendpoint"
+
+	"github.com/oslokommune/okctl/pkg/cfn/components/dbinstance"
+
+	"github.com/oslokommune/okctl/pkg/cfn/components/dbparametergroup"
+
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/cfn/components/role"
+
 	"github.com/oslokommune/okctl/pkg/cfn/components/userpooluser"
 	"github.com/oslokommune/okctl/pkg/cfn/components/userpoolusertogroupattachment"
 
@@ -1281,4 +1298,156 @@ func (c *FargateCloudwatchPolicyComposer) ManagedPolicy() *managedpolicy.Managed
 	}
 
 	return managedpolicy.New("FargateCloudwatchPolicy", policyName, policyDesc, d)
+}
+
+// RDSPostgresComposer contains state for building
+// an RDS Postgres database
+// - https://aws.amazon.com/rds/postgresql/
+type RDSPostgresComposer struct {
+	ApplicationDBName string
+	AWSAccountID      string
+	Repository        string
+	Environment       string
+	DBSubnetGroupName string
+	UserName          string
+	VpcID             string
+	VPCDBSubnetIDs    []string
+	VPCDBSubnetCIDRs  []string
+}
+
+// NewRDSPostgresComposer returns an initialised RDS postgres composer
+func NewRDSPostgresComposer(
+	appDBName, awsAccountID, repository, env, userName, vpcID, dbSubnetGroupName string,
+	vpcSubnetIDs, vpcSubnetCIDRs []string,
+) *RDSPostgresComposer {
+	return &RDSPostgresComposer{
+		ApplicationDBName: appDBName,
+		AWSAccountID:      awsAccountID,
+		Repository:        repository,
+		Environment:       env,
+		DBSubnetGroupName: dbSubnetGroupName,
+		UserName:          userName,
+		VpcID:             vpcID,
+		VPCDBSubnetIDs:    vpcSubnetIDs,
+		VPCDBSubnetCIDRs:  vpcSubnetCIDRs,
+	}
+}
+
+// We use the policy document described here:
+// https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html
+const amazonRDSEnhancedMonitoringRole = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+
+// Compose builds the policy and returns the result
+// nolint: funlen
+func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
+	nameResource := func(resource string) string {
+		return fmt.Sprintf("%s-%s-%s-%s", c.ApplicationDBName, c.Repository, c.Environment, resource)
+	}
+
+	monitoringRole := role.New(
+		nameResource("RDSPostgresMonitoringRole"),
+		v1alpha1.PermissionsBoundaryARN(c.AWSAccountID),
+		[]string{amazonRDSEnhancedMonitoringRole},
+		policydocument.PolicyDocument{
+			Version: policydocument.Version,
+			Statement: []policydocument.StatementEntry{
+				{
+					Effect: policydocument.EffectTypeAllow,
+					Action: []string{
+						"sts:AssumeRole",
+					},
+					Principal: &policydocument.Principal{
+						Service: []string{
+							"monitoring.rds.amazonaws.com",
+						},
+					},
+				},
+			},
+		},
+	)
+
+	params := map[string]string{
+		"shared_preload_libraries":     "pg_stat_statements",
+		"pg_stat_statements.max":       "10000",
+		"pg_stat_statements.track":     "all",
+		"log_min_duration_statement":   "1000",
+		"log_duration":                 "on",
+		"random_page_cost":             "1.1",
+		"checkpoint_completion_target": "0.9",
+		"min_wal_size":                 "80",
+		"effective_io_concurrency":     "200",
+		"log_statement":                "all",
+		"max_connections":              "100",
+	}
+	parameterGroup := dbparametergroup.New(
+		nameResource("RDSPostgresParameterGroup"),
+		params,
+	)
+
+	admin := secret.NewRDSInstanceSecret(
+		nameResource("RDSInstanceAdmin"),
+		c.UserName,
+	)
+
+	outgoing := securitygroup.NewPostgresOutgoing(
+		nameResource("RDSPostgresOutgoing"),
+		c.VpcID,
+		c.VPCDBSubnetCIDRs,
+	)
+
+	incoming := securitygroup.NewPostgresIncoming(
+		nameResource("RDSPostgresIncoming"),
+		c.VpcID,
+		outgoing,
+	)
+
+	postgres := dbinstance.New(
+		nameResource("RDSPostgres"),
+		c.ApplicationDBName,
+		c.DBSubnetGroupName,
+		parameterGroup,
+		monitoringRole,
+		admin,
+		incoming,
+	)
+
+	attachment := secrettargetattachment.NewRDSDBInstance(
+		nameResource("SecretTargetAttachment"),
+		admin,
+		postgres,
+	)
+
+	rotation := rotationschedule.NewPostgres(
+		nameResource("AdminRotationSchedule"),
+		admin,
+		attachment,
+		c.VPCDBSubnetIDs,
+		outgoing,
+	)
+
+	sme := vpcendpoint.NewSecretsManager(
+		nameResource("SecretsManagerVPCEndpoint"),
+		outgoing,
+		c.VpcID,
+		c.VPCDBSubnetIDs,
+	)
+
+	return &cfn.Composition{
+		Outputs: []cfn.StackOutputer{
+			postgres,
+			admin,
+			outgoing,
+		},
+		Resources: []cfn.ResourceNamer{
+			monitoringRole,
+			parameterGroup,
+			admin,
+			outgoing,
+			incoming,
+			postgres,
+			attachment,
+			rotation,
+			sme,
+		},
+	}, nil
 }

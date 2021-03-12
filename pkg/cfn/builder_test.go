@@ -99,6 +99,21 @@ func TestBuilderAndComposers(t *testing.T) {
 				"GHFJE78FAKE",
 			),
 		},
+		{
+			name:   "Builder with RDSPostgres composer",
+			golden: "rds-postgres.yaml",
+			composer: components.NewRDSPostgresComposer(
+				"okctl",
+				"123456789012",
+				"repo",
+				"env",
+				"admin",
+				"vpcid-w9ufe",
+				"myDBSubnetGroupName",
+				[]string{"dbsubnetid-123okf", "dbsubnetid-fjeo338"},
+				[]string{"192.168.1.0/20", "192.168.2.0/20"},
+			),
+		},
 	}
 
 	for _, tc := range testCases {

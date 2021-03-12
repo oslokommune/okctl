@@ -1,27 +1,27 @@
 AWSTemplateFormatVersion: 2010-09-09
 Outputs:
-  EndpointAddress:
-    Export:
-      Name:
-        Fn::Sub: ${AWS::StackName}-EndpointAddress
-    Value:
-      Fn::GetAtt:
-      - myPostgresDatabase
-      - Endpoint.Address
-  EndpointPort:
-    Export:
-      Name:
-        Fn::Sub: ${AWS::StackName}-EndpointPort
-    Value:
-      Fn::GetAtt:
-      - myPostgresDatabase
-      - Endpoint.Port
   myPostgresDatabase:
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-myPostgresDatabase
     Value:
       Ref: myPostgresDatabase
+  myPostgresDatabase-EndpointAddress:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-myPostgresDatabase-EndpointAddress
+    Value:
+      Fn::GetAtt:
+      - myPostgresDatabase
+      - Endpoint.Address
+  myPostgresDatabase-EndpointPort:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-myPostgresDatabase-EndpointPort
+    Value:
+      Fn::GetAtt:
+      - myPostgresDatabase
+      - Endpoint.Port
 Resources:
   myPostgresDatabase:
     DependsOn:

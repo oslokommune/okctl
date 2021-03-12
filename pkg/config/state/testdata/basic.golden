@@ -86,3 +86,4 @@ clusters:
             users: {}
         monitoring:
             dashboardurl: ""
+        databases: {}

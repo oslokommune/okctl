@@ -45,12 +45,13 @@ func (s *Secret) Resource() cloudformation.Resource {
 			PasswordLength:       passwordLength,
 			SecretStringTemplate: s.Opts.SecretStringTemplate,
 		},
-		Name: s.Name(),
+		Name: s.Opts.FriendlyName,
 	}
 }
 
 // Opts contains the required inputs
 type Opts struct {
+	FriendlyName         string
 	ExcludeCharacters    string
 	SecretStringTemplate string
 	GenerateStringKey    string
@@ -67,8 +68,9 @@ func New(resourceName string, opts Opts) *Secret {
 
 // NewRDSInstanceSecret returns an initialised cloud formation secret
 // compatible with RDSInstance
-func NewRDSInstanceSecret(resourceName, userName string) *Secret {
+func NewRDSInstanceSecret(resourceName, friendlyName, userName string) *Secret {
 	return New(resourceName, Opts{
+		FriendlyName:         friendlyName,
 		ExcludeCharacters:    `"@/\`,
 		SecretStringTemplate: fmt.Sprintf(`{"username": "%s"}`, userName),
 		GenerateStringKey:    "password",

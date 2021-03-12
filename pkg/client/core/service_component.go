@@ -216,7 +216,7 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 	err = c.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
 		ID:        opts.ID,
 		Name:      pgConfigMapName(opts.ApplicationName),
-		Namespace: db.Namespace,
+		Namespace: opts.Namespace,
 	})
 	if err != nil {
 		return err
@@ -225,7 +225,7 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 	err = c.manifest.DeleteExternalSecret(ctx, client.DeleteExternalSecretOpts{
 		ID: opts.ID,
 		Secrets: map[string]string{
-			pgConfigMapName(opts.ApplicationName): db.Namespace,
+			pgConfigMapName(opts.ApplicationName): opts.Namespace,
 		},
 	})
 	if err != nil {

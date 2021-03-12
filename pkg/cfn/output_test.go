@@ -115,6 +115,32 @@ func TestStringSlice(t *testing.T) {
 	}
 }
 
+func TestInt(t *testing.T) {
+	testCases := []struct {
+		name   string
+		input  string
+		to     int
+		expect int
+	}{
+		{
+			name:   "Should work",
+			input:  "5432",
+			to:     0,
+			expect: 5432,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			err := cfn.Int(&tc.to)(tc.input)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expect, tc.to)
+		})
+	}
+}
+
 func TestOutput(t *testing.T) {
 	testCases := []struct {
 		name     string

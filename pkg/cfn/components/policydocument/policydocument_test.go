@@ -35,6 +35,26 @@ func TestPolicyDocument(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:   "Validate principal",
+			golden: "principal.json",
+			document: &policydocument.PolicyDocument{
+				Version: policydocument.Version,
+				Statement: []policydocument.StatementEntry{
+					{
+						Effect: policydocument.EffectTypeAllow,
+						Action: []string{
+							"sts:AssumeRole",
+						},
+						Principal: &policydocument.Principal{
+							Service: []string{
+								"monitoring.rds.amazonaws.com",
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

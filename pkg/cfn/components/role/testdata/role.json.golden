@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  myIAMRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - someAction
+          Effect: Allow
+          Resource:
+          - '*'
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:::policy/some-policy
+      PermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
+      RoleName: myIAMRole
+    Type: AWS::IAM::Role

@@ -4,11 +4,16 @@ import (
 	"github.com/awslabs/goformation/v4/cloudformation"
 )
 
+// ResourceNameOutputReferencer provides a common interface for all stack operations
+type ResourceNameOutputReferencer interface {
+	ResourceNameReferencer
+	StackOutputer
+}
+
 // ResourceNameReferencer knows how to name, referencer and return a cloud formation resource
 type ResourceNameReferencer interface {
 	Resourcer
-	Namer
-	Referencer
+	NameReferencer
 }
 
 // NameReferencer knows how to name and reference a cloud formation resource

@@ -6,8 +6,9 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 //+kubebuilder:object:generate:=true
 type ExternalSecretData struct {
-	Key  string `json:"key"`
-	Name string `json:"name"`
+	Key      string `json:"key"`
+	Name     string `json:"name"`
+	Property string `json:"property,omitempty"`
 }
 
 //+kubebuilder:object:generate:=true

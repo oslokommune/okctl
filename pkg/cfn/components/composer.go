@@ -1348,15 +1348,16 @@ func NewRDSPostgresComposer(opts RDSPostgresComposerOpts) *RDSPostgresComposer {
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html
 const amazonRDSEnhancedMonitoringRole = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
 
+// NameResource returns the resource name
+func (c *RDSPostgresComposer) NameResource(resource string) string {
+	return fmt.Sprintf("%s-%s-%s-%s", c.ApplicationDBName, c.Repository, c.Environment, resource)
+}
+
 // Compose builds the policy and returns the result
 // nolint: funlen
 func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
-	nameResource := func(resource string) string {
-		return fmt.Sprintf("%s-%s-%s-%s", c.ApplicationDBName, c.Repository, c.Environment, resource)
-	}
-
 	monitoringRole := role.New(
-		nameResource("RDSPostgresMonitoringRole"),
+		c.NameResource("RDSPostgresMonitoringRole"),
 		v1alpha1.PermissionsBoundaryARN(c.AWSAccountID),
 		[]string{amazonRDSEnhancedMonitoringRole},
 		policydocument.PolicyDocument{
@@ -1391,29 +1392,29 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 		"max_connections":              "100",
 	}
 	parameterGroup := dbparametergroup.New(
-		nameResource("RDSPostgresParameterGroup"),
+		c.NameResource("RDSPostgresParameterGroup"),
 		params,
 	)
 
 	admin := secret.NewRDSInstanceSecret(
-		nameResource("RDSInstanceAdmin"),
+		c.NameResource("RDSInstanceAdmin"),
 		c.UserName,
 	)
 
 	outgoing := securitygroup.NewPostgresOutgoing(
-		nameResource("RDSPostgresOutgoing"),
+		c.NameResource("RDSPostgresOutgoing"),
 		c.VpcID,
 		c.VPCDBSubnetCIDRs,
 	)
 
 	incoming := securitygroup.NewPostgresIncoming(
-		nameResource("RDSPostgresIncoming"),
+		c.NameResource("RDSPostgresIncoming"),
 		c.VpcID,
 		outgoing,
 	)
 
 	postgres := dbinstance.New(
-		nameResource("RDSPostgres"),
+		c.NameResource("RDSPostgres"),
 		c.ApplicationDBName,
 		c.DBSubnetGroupName,
 		parameterGroup,
@@ -1423,13 +1424,13 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 	)
 
 	attachment := secrettargetattachment.NewRDSDBInstance(
-		nameResource("SecretTargetAttachment"),
+		c.NameResource("SecretTargetAttachment"),
 		admin,
 		postgres,
 	)
 
 	rotation := rotationschedule.NewPostgres(
-		nameResource("AdminRotationSchedule"),
+		c.NameResource("AdminRotationSchedule"),
 		admin,
 		attachment,
 		c.VPCDBSubnetIDs,
@@ -1437,7 +1438,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 	)
 
 	sme := vpcendpoint.NewSecretsManager(
-		nameResource("SecretsManagerVPCEndpoint"),
+		c.NameResource("SecretsManagerVPCEndpoint"),
 		outgoing,
 		c.VpcID,
 		c.VPCDBSubnetIDs,

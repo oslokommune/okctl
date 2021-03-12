@@ -73,10 +73,18 @@ func (o CreateExternalSecretsOpts) Validate() error {
 	)
 }
 
+const (
+	// BackendTypeSecretsManager for AWS SecretsManager
+	BackendTypeSecretsManager = "secretsManager"
+	// BackendTypeParameterStore for AWS Parameter Store
+	BackendTypeParameterStore = "systemManager"
+)
+
 // Manifest represents a single external secret
 type Manifest struct {
 	Name        string
 	Namespace   string
+	Backend     string
 	Annotations map[string]string
 	Labels      map[string]string
 	Data        []Data
@@ -87,14 +95,16 @@ func (m Manifest) Validate() error {
 	return validation.ValidateStruct(&m,
 		validation.Field(&m.Namespace, validation.Required),
 		validation.Field(&m.Name, validation.Required),
+		validation.Field(&m.Backend, validation.Required),
 		validation.Field(&m.Data, validation.Required),
 	)
 }
 
 // Data represents the items in the manifest
 type Data struct {
-	Key  string
-	Name string
+	Key      string
+	Name     string
+	Property string
 }
 
 // Validate data

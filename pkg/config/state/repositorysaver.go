@@ -76,6 +76,14 @@ type Monitorer interface {
 	SaveMonitoring(monitoring Monitoring) (*store.Report, error)
 }
 
+// Componenter defines the allowed actions on the component state
+type Componenter interface {
+	SaveDatabase(applicationName string, database Database) (*store.Report, error)
+	GetDatabase(applicationName string) Database
+	GetDatabases() map[string]Database
+	DeleteDatabase(applicationName string) (*store.Report, error)
+}
+
 // RepositoryStateWithEnv provides actions for interacting with
 // the state of a repository
 type RepositoryStateWithEnv interface {
@@ -88,6 +96,7 @@ type RepositoryStateWithEnv interface {
 	Metadataer
 	IdentityPooler
 	Monitorer
+	Componenter
 	GetClusterName() string
 	Save() (*store.Report, error)
 }
@@ -169,6 +178,41 @@ func NewRepositoryStateWithEnv(env string, r *Repository, fn SaverFn) Repository
 		env:     env,
 		saverFn: fn,
 	}
+}
+
+// SaveDatabase updates the state with the provided Database
+func (r *repository) SaveDatabase(applicationName string, db Database) (*store.Report, error) {
+	_ = r.GetDatabases()
+	r.state.Clusters[r.env].Databases[applicationName] = db
+
+	return r.save()
+}
+
+func (r *repository) DeleteDatabase(applicationName string) (*store.Report, error) {
+	cluster := r.GetCluster()
+
+	delete(cluster.Databases, applicationName)
+
+	return r.SaveCluster(cluster)
+}
+
+// GetDatabase returns the Database for the given domain
+func (r *repository) GetDatabase(applicationName string) Database {
+	databases := r.GetDatabases()
+	return databases[applicationName]
+}
+
+// GetDatabases returns all Databases
+func (r *repository) GetDatabases() map[string]Database {
+	cluster := r.GetCluster()
+
+	if cluster.Databases == nil {
+		cluster.Databases = map[string]Database{}
+	}
+
+	r.state.Clusters[r.env] = cluster
+
+	return cluster.Databases
 }
 
 // SaveIdentityPoolClient saves the identity pool client

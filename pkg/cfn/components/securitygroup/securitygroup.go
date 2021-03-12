@@ -11,20 +11,20 @@ import (
 // cloud formation security group
 type SecurityGroup struct {
 	StoredName string
-	VPC        cfn.Referencer
+	Group      *ec2.SecurityGroup
 }
 
 // NamedOutputs returns the outputs commonly used by other stacks or components
 func (s *SecurityGroup) NamedOutputs() map[string]cloudformation.Output {
-	return cfn.NewValue(s.Name(), s.Ref()).NamedOutputs()
+	return cfn.NewValueMap().
+		Add(cfn.NewValue(s.Name(), s.Ref())).
+		Add(cfn.NewValue("GroupId", cloudformation.GetAtt(s.Name(), "GroupId"))).
+		NamedOutputs()
 }
 
 // Resource returns the cloud formation resource for creating a SG
 func (s *SecurityGroup) Resource() cloudformation.Resource {
-	return &ec2.SecurityGroup{
-		VpcId:            s.VPC.Ref(),
-		GroupDescription: s.StoredName,
-	}
+	return s.Group
 }
 
 // Name returns the name of the cloud formation resource
@@ -37,10 +37,54 @@ func (s *SecurityGroup) Ref() string {
 	return cloudformation.Ref(s.Name())
 }
 
-// ControlPlane creates an EKS control plane security group
-func ControlPlane(vpc cfn.Referencer) *SecurityGroup {
+const (
+	postgresPort = 5432
+)
+
+// NewPostgresOutgoing returns an initialised security group
+// that allows outgoing traffic from the pod or node to the
+// postgres subnets on the postgres port
+func NewPostgresOutgoing(resourceName, vpcID string, cidrs []string) *SecurityGroup {
+	egresses := make([]ec2.SecurityGroup_Egress, len(cidrs))
+
+	for i, cidr := range cidrs {
+		egresses[i] = ec2.SecurityGroup_Egress{
+			CidrIp:     cidr,
+			FromPort:   postgresPort,
+			IpProtocol: "tcp",
+			ToPort:     postgresPort,
+		}
+	}
+
 	return &SecurityGroup{
-		StoredName: "ControlPlaneSecurityGroup",
-		VPC:        vpc,
+		StoredName: resourceName,
+		Group: &ec2.SecurityGroup{
+			GroupDescription:    "RDS Postgres Outgoing Security Group",
+			GroupName:           resourceName,
+			SecurityGroupEgress: egresses,
+			VpcId:               vpcID,
+		},
+	}
+}
+
+// NewPostgresIncoming returns an initialised security group that
+// allows incoming traffic to the postgres database instance
+func NewPostgresIncoming(resourceName, vpcID string, source cfn.Namer) *SecurityGroup {
+	return &SecurityGroup{
+		StoredName: resourceName,
+		Group: &ec2.SecurityGroup{
+			GroupDescription:    "RDS Postgres Incoming Security Group",
+			GroupName:           resourceName,
+			SecurityGroupEgress: nil,
+			SecurityGroupIngress: []ec2.SecurityGroup_Ingress{
+				{
+					FromPort:              postgresPort,
+					IpProtocol:            "tcp",
+					SourceSecurityGroupId: cloudformation.GetAtt(source.Name(), "GroupId"),
+					ToPort:                postgresPort,
+				},
+			},
+			VpcId: vpcID,
+		},
 	}
 }

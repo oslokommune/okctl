@@ -1300,6 +1300,20 @@ func (c *FargateCloudwatchPolicyComposer) ManagedPolicy() *managedpolicy.Managed
 	return managedpolicy.New("FargateCloudwatchPolicy", policyName, policyDesc, d)
 }
 
+// RDSPostgresComposerOpts contains the required
+// inputs
+type RDSPostgresComposerOpts struct {
+	ApplicationDBName string
+	AWSAccountID      string
+	Repository        string
+	Environment       string
+	DBSubnetGroupName string
+	UserName          string
+	VpcID             string
+	VPCDBSubnetIDs    []string
+	VPCDBSubnetCIDRs  []string
+}
+
 // RDSPostgresComposer contains state for building
 // an RDS Postgres database
 // - https://aws.amazon.com/rds/postgresql/
@@ -1316,20 +1330,17 @@ type RDSPostgresComposer struct {
 }
 
 // NewRDSPostgresComposer returns an initialised RDS postgres composer
-func NewRDSPostgresComposer(
-	appDBName, awsAccountID, repository, env, userName, vpcID, dbSubnetGroupName string,
-	vpcSubnetIDs, vpcSubnetCIDRs []string,
-) *RDSPostgresComposer {
+func NewRDSPostgresComposer(opts RDSPostgresComposerOpts) *RDSPostgresComposer {
 	return &RDSPostgresComposer{
-		ApplicationDBName: appDBName,
-		AWSAccountID:      awsAccountID,
-		Repository:        repository,
-		Environment:       env,
-		DBSubnetGroupName: dbSubnetGroupName,
-		UserName:          userName,
-		VpcID:             vpcID,
-		VPCDBSubnetIDs:    vpcSubnetIDs,
-		VPCDBSubnetCIDRs:  vpcSubnetCIDRs,
+		ApplicationDBName: opts.ApplicationDBName,
+		AWSAccountID:      opts.AWSAccountID,
+		Repository:        opts.Repository,
+		Environment:       opts.Environment,
+		DBSubnetGroupName: opts.DBSubnetGroupName,
+		UserName:          opts.UserName,
+		VpcID:             opts.VpcID,
+		VPCDBSubnetIDs:    opts.VPCDBSubnetIDs,
+		VPCDBSubnetCIDRs:  opts.VPCDBSubnetCIDRs,
 	}
 }
 

@@ -57,8 +57,15 @@ type StatementEntry struct {
 	Sid       string                                      `json:"Sid,omitempty"`
 	Effect    EffectType                                  `json:"Effect"`
 	Action    []string                                    `json:"Action"`
-	Resource  []string                                    `json:"Resource"`
+	Resource  []string                                    `json:"Resource,omitempty"`
 	Condition map[ConditionOperatorType]map[string]string `json:"Condition,omitempty"`
+	Principal *Principal                                  `json:"Principal,omitempty"`
+}
+
+// Principal provides a subset of the principal policy element:
+// - https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html
+type Principal struct {
+	Service []string `json:"Service"`
 }
 
 // JSON returns the json marshalled version of the policy document

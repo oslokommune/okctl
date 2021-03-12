@@ -50,11 +50,12 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 	}
 
 	p := &api.PostgresDatabase{
-		ID:                     opts.ID,
-		ApplicationName:        opts.ApplicationName,
-		UserName:               opts.UserName,
-		StackName:              opts.StackName,
-		CloudFormationTemplate: template,
+		ID:                      opts.ID,
+		ApplicationName:         opts.ApplicationName,
+		UserName:                opts.UserName,
+		StackName:               opts.StackName,
+		AdminSecretFriendlyName: composer.AdminSecretFriendlyName(),
+		CloudFormationTemplate:  template,
 	}
 
 	err = r.Outputs(opts.StackName, map[string]cfn.ProcessOutputFn{

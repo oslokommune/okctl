@@ -127,6 +127,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 			{
 				Name:      privateKeyName,
 				Namespace: constant.DefaultArgoCDNamespace,
+				Backend:   api.BackendTypeParameterStore,
 				Annotations: map[string]string{
 					"meta.helm.sh/release-name":      "argocd",
 					"meta.helm.sh/release-namespace": "argocd",
@@ -144,6 +145,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 			{
 				Name:      "argocd-secret",
 				Namespace: "argocd",
+				Backend:   api.BackendTypeParameterStore,
 				Annotations: map[string]string{
 					"meta.helm.sh/release-name":      "argocd",
 					"meta.helm.sh/release-namespace": "argocd",

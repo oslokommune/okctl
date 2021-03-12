@@ -1353,6 +1353,11 @@ func (c *RDSPostgresComposer) NameResource(resource string) string {
 	return fmt.Sprintf("%s-%s-%s-%s", c.ApplicationDBName, c.Repository, c.Environment, resource)
 }
 
+// AdminSecretFriendlyName returns the friendly name of the secret
+func (c *RDSPostgresComposer) AdminSecretFriendlyName() string {
+	return fmt.Sprintf("/%s/%s/%s/postgres_admin", c.ApplicationDBName, c.Repository, c.Environment)
+}
+
 // Compose builds the policy and returns the result
 // nolint: funlen
 func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
@@ -1398,6 +1403,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 
 	admin := secret.NewRDSInstanceSecret(
 		c.NameResource("RDSInstanceAdmin"),
+		c.AdminSecretFriendlyName(),
 		c.UserName,
 	)
 

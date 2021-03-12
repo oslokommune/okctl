@@ -596,6 +596,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 			{
 				Name:      secretsCfgName,
 				Namespace: config.DefaultMonitoringNamespace,
+				Backend:   api.BackendTypeParameterStore,
 				Data: []api.Data{
 					{
 						Key:  clientSecret.Path,

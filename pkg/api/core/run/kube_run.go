@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	v1 "github.com/oslokommune/okctl/pkg/kube/externalsecret/api/types/v1"
+
 	"github.com/oslokommune/okctl/pkg/kube/manifests/scale"
 
 	"github.com/oslokommune/okctl/pkg/kube/manifests/configmap"
@@ -215,13 +217,25 @@ func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*ap
 	namespaces := map[string]struct{}{}
 
 	for i, manifest := range opts.Manifests {
-		data := map[string]string{}
+		data := make([]v1.ExternalSecretData, len(manifest.Data))
 
-		for _, d := range manifest.Data {
-			data[d.Name] = d.Key
+		for i, d := range manifest.Data {
+			data[i] = v1.ExternalSecretData{
+				Key:      d.Key,
+				Name:     d.Name,
+				Property: d.Property,
+			}
 		}
 
-		secretManifest := externalsecret.SecretManifest(manifest.Name, manifest.Namespace, manifest.Annotations, manifest.Labels, data)
+		secretManifest := externalsecret.SecretManifest(
+			manifest.Name,
+			manifest.Namespace,
+			manifest.Backend,
+			manifest.Annotations,
+			manifest.Labels,
+			data,
+		)
+
 		fn := externalsecret.New(manifest.Name, manifest.Namespace, secretManifest)
 
 		raw, err := yaml.Marshal(secretManifest)

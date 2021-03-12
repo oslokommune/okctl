@@ -1,0 +1,199 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  EndpointAddress:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-EndpointAddress
+    Value:
+      Fn::GetAtt:
+      - okctl-repo-env-RDSPostgres
+      - Endpoint.Address
+  EndpointPort:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-EndpointPort
+    Value:
+      Fn::GetAtt:
+      - okctl-repo-env-RDSPostgres
+      - Endpoint.Port
+  GroupId:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-GroupId
+    Value:
+      Fn::GetAtt:
+      - okctl-repo-env-RDSPostgresOutgoing
+      - GroupId
+  okctl-repo-env-RDSInstanceAdmin:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-okctl-repo-env-RDSInstanceAdmin
+    Value:
+      Ref: okctl-repo-env-RDSInstanceAdmin
+  okctl-repo-env-RDSPostgres:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-okctl-repo-env-RDSPostgres
+    Value:
+      Ref: okctl-repo-env-RDSPostgres
+  okctl-repo-env-RDSPostgresOutgoing:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-okctl-repo-env-RDSPostgresOutgoing
+    Value:
+      Ref: okctl-repo-env-RDSPostgresOutgoing
+Resources:
+  okctl-repo-env-AdminRotationSchedule:
+    DependsOn:
+    - okctl-repo-env-SecretTargetAttachment
+    Properties:
+      HostedRotationLambda:
+        RotationLambdaName: okctl-repo-env-AdminRotationSchedule-SecretsManagerRotation
+        RotationType: PostgreSQLSingleUser
+        VpcSecurityGroupIds:
+          Fn::GetAtt:
+          - okctl-repo-env-RDSPostgresOutgoing
+          - GroupId
+        VpcSubnetIds: dbsubnetid-123okf,dbsubnetid-fjeo338
+      RotationRules:
+        AutomaticallyAfterDays: 30
+      SecretId:
+        Ref: okctl-repo-env-RDSInstanceAdmin
+    Type: AWS::SecretsManager::RotationSchedule
+  okctl-repo-env-RDSInstanceAdmin:
+    Properties:
+      GenerateSecretString:
+        ExcludeCharacters: '"@/\'
+        GenerateStringKey: password
+        PasswordLength: 16
+        SecretStringTemplate: '{"username": "admin"}'
+      Name: okctl-repo-env-RDSInstanceAdmin
+    Type: AWS::SecretsManager::Secret
+  okctl-repo-env-RDSPostgres:
+    DependsOn:
+    - okctl-repo-env-RDSPostgresParameterGroup
+    - okctl-repo-env-RDSPostgresMonitoringRole
+    Properties:
+      AllocatedStorage: "20"
+      AutoMinorVersionUpgrade: true
+      BackupRetentionPeriod: 7
+      CopyTagsToSnapshot: true
+      DBInstanceClass: db.t3.small
+      DBName: okctl
+      DBParameterGroupName:
+        Ref: okctl-repo-env-RDSPostgresParameterGroup
+      DBSubnetGroupName: myDBSubnetGroupName
+      DeleteAutomatedBackups: true
+      EnableCloudwatchLogsExports:
+      - postgresql
+      - upgrade
+      EnablePerformanceInsights: true
+      Engine: postgres
+      EngineVersion: "13.1"
+      MasterUserPassword:
+        Fn::Sub: '{{resolve:secretsmanager:${okctl-repo-env-RDSInstanceAdmin}::password}}'
+      MasterUsername:
+        Fn::Sub: '{{resolve:secretsmanager:${okctl-repo-env-RDSInstanceAdmin}::username}}'
+      MaxAllocatedStorage: 100
+      MonitoringInterval: 10
+      MonitoringRoleArn:
+        Fn::GetAtt:
+        - okctl-repo-env-RDSPostgresMonitoringRole
+        - Arn
+      MultiAZ: true
+      PerformanceInsightsRetentionPeriod: 7
+      Port: "5432"
+      PreferredBackupWindow: 03:00-06:00
+      PreferredMaintenanceWindow: Mon:00:00-Mon:03:00
+      StorageEncrypted: true
+      StorageType: gp2
+      UseDefaultProcessorFeatures: true
+      VPCSecurityGroups:
+      - Fn::GetAtt:
+        - okctl-repo-env-RDSPostgresIncoming
+        - GroupId
+    Type: AWS::RDS::DBInstance
+  okctl-repo-env-RDSPostgresIncoming:
+    Properties:
+      GroupDescription: RDS Postgres Incoming Security Group
+      GroupName: okctl-repo-env-RDSPostgresIncoming
+      SecurityGroupIngress:
+      - FromPort: 5432
+        IpProtocol: tcp
+        SourceSecurityGroupId:
+          Fn::GetAtt:
+          - okctl-repo-env-RDSPostgresOutgoing
+          - GroupId
+        ToPort: 5432
+      VpcId: vpcid-w9ufe
+    Type: AWS::EC2::SecurityGroup
+  okctl-repo-env-RDSPostgresMonitoringRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - monitoring.rds.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
+      PermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
+      RoleName: okctl-repo-env-RDSPostgresMonitoringRole
+    Type: AWS::IAM::Role
+  okctl-repo-env-RDSPostgresOutgoing:
+    Properties:
+      GroupDescription: RDS Postgres Outgoing Security Group
+      GroupName: okctl-repo-env-RDSPostgresOutgoing
+      SecurityGroupEgress:
+      - CidrIp: 192.168.1.0/20
+        FromPort: 5432
+        IpProtocol: tcp
+        ToPort: 5432
+      - CidrIp: 192.168.2.0/20
+        FromPort: 5432
+        IpProtocol: tcp
+        ToPort: 5432
+      VpcId: vpcid-w9ufe
+    Type: AWS::EC2::SecurityGroup
+  okctl-repo-env-RDSPostgresParameterGroup:
+    Properties:
+      Family: postgres13
+      Parameters:
+        checkpoint_completion_target: "0.9"
+        effective_io_concurrency: "200"
+        log_duration: "on"
+        log_min_duration_statement: "1000"
+        log_statement: all
+        max_connections: "100"
+        min_wal_size: "80"
+        pg_stat_statements.max: "10000"
+        pg_stat_statements.track: all
+        random_page_cost: "1.1"
+        shared_preload_libraries: pg_stat_statements
+    Type: AWS::RDS::DBParameterGroup
+  okctl-repo-env-SecretTargetAttachment:
+    Properties:
+      SecretId:
+        Ref: okctl-repo-env-RDSInstanceAdmin
+      TargetId:
+        Ref: okctl-repo-env-RDSPostgres
+      TargetType: AWS::RDS::DBInstance
+    Type: AWS::SecretsManager::SecretTargetAttachment
+  okctl-repo-env-SecretsManagerVPCEndpoint:
+    Properties:
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+      - Fn::GetAtt:
+        - okctl-repo-env-RDSPostgresOutgoing
+        - GroupId
+      ServiceName:
+        Fn::Sub: com.amazonaws.${AWS::Region}.secretsmanager
+      SubnetIds:
+      - dbsubnetid-123okf
+      - dbsubnetid-fjeo338
+      VpcEndpointType: Interface
+      VpcId: vpcid-w9ufe
+    Type: AWS::EC2::VPCEndpoint

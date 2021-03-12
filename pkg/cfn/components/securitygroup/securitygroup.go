@@ -2,6 +2,8 @@
 package securitygroup
 
 import (
+	"fmt"
+
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/ec2"
 	"github.com/oslokommune/okctl/pkg/cfn"
@@ -18,7 +20,7 @@ type SecurityGroup struct {
 func (s *SecurityGroup) NamedOutputs() map[string]cloudformation.Output {
 	return cfn.NewValueMap().
 		Add(cfn.NewValue(s.Name(), s.Ref())).
-		Add(cfn.NewValue("GroupId", cloudformation.GetAtt(s.Name(), "GroupId"))).
+		Add(cfn.NewValue(fmt.Sprintf("%s-GroupId", s.Name()), cloudformation.GetAtt(s.Name(), "GroupId"))).
 		NamedOutputs()
 }
 

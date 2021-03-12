@@ -2,6 +2,7 @@ package cfn
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -158,6 +159,21 @@ func String(to *string) ProcessOutputFn {
 func StringSlice(to *[]string) ProcessOutputFn {
 	return func(s string) error {
 		*to = strings.Split(s, ",")
+
+		return nil
+	}
+}
+
+// Int knows how to process a string representing an
+// integer
+func Int(to *int) ProcessOutputFn {
+	return func(v string) error {
+		got, err := strconv.Atoi(v)
+		if err != nil {
+			return err
+		}
+
+		*to = got
 
 		return nil
 	}

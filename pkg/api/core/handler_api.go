@@ -2,7 +2,6 @@ package core
 
 import (
 	"net/http"
-	"strings"
 
 	logmd "github.com/oslokommune/okctl/pkg/middleware/logger"
 
@@ -80,6 +79,8 @@ type Endpoints struct {
 	CreateServiceAccount                          endpoint.Endpoint
 	DeleteServiceAccount                          endpoint.Endpoint
 	CreateNamespace                               endpoint.Endpoint
+	CreatePostgresDatabase                        endpoint.Endpoint
+	DeletePostgresDatabase                        endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -151,6 +152,8 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateServiceAccount:                          makeCreateServiceAccountEndpoint(s.ServiceAccount),
 		DeleteServiceAccount:                          makeDeleteServiceAccountEndpoint(s.ServiceAccount),
 		CreateNamespace:                               makeCreateNamespace(s.Kube),
+		CreatePostgresDatabase:                        makeCreatePostgresDatabaseEndpoint(s.ComponentService),
+		DeletePostgresDatabase:                        makeDeletePostgresDatabaseEndpoint(s.ComponentService),
 	}
 }
 
@@ -220,6 +223,8 @@ type Handlers struct {
 	CreateServiceAccount                          http.Handler
 	DeleteServiceAccount                          http.Handler
 	CreateNamespace                               http.Handler
+	CreatePostgresDatabase                        http.Handler
+	DeletePostgresDatabase                        http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -317,6 +322,8 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateServiceAccount:                          newServer(endpoints.CreateServiceAccount, decodeStructRequest(&api.CreateServiceAccountOpts{})),
 		DeleteServiceAccount:                          newServer(endpoints.DeleteServiceAccount, decodeStructRequest(&api.DeleteServiceAccountOpts{})),
 		CreateNamespace:                               newServer(endpoints.CreateNamespace, decodeStructRequest(&api.CreateNamespaceOpts{})),
+		CreatePostgresDatabase:                        newServer(endpoints.CreatePostgresDatabase, decodeStructRequest(&api.CreatePostgresDatabaseOpts{})),
+		DeletePostgresDatabase:                        newServer(endpoints.DeletePostgresDatabase, decodeStructRequest(&api.DeletePostgresDatabaseOpts{})),
 	}
 }
 
@@ -478,6 +485,12 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 				})
 			})
 		})
+		r.Route("/components", func(r chi.Router) {
+			r.Route("/postgres", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreatePostgresDatabase)
+				r.Method(http.MethodDelete, "/", handlers.DeletePostgresDatabase)
+			})
+		})
 	})
 
 	return r
@@ -485,16 +498,17 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 
 // Services defines all available services
 type Services struct {
-	Cluster         api.ClusterService
-	Vpc             api.VpcService
-	ManagedPolicy   api.ManagedPolicyService
-	ServiceAccount  api.ServiceAccountService
-	Helm            api.HelmService
-	Kube            api.KubeService
-	Domain          api.DomainService
-	Certificate     api.CertificateService
-	Parameter       api.ParameterService
-	IdentityManager api.IdentityManagerService
+	Cluster          api.ClusterService
+	Vpc              api.VpcService
+	ManagedPolicy    api.ManagedPolicyService
+	ServiceAccount   api.ServiceAccountService
+	Helm             api.HelmService
+	Kube             api.KubeService
+	Domain           api.DomainService
+	Certificate      api.CertificateService
+	Parameter        api.ParameterService
+	IdentityManager  api.IdentityManagerService
+	ComponentService api.ComponentService
 }
 
 // EndpointOption makes it easy to enable and disable the endpoint
@@ -533,6 +547,8 @@ const (
 	promtailTag                  = "promtail"
 	configMapTag                 = "configmap"
 	scaleTag                     = "scale"
+	postgresTag                  = "postgres"
+	componentsTag                = "components"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -540,70 +556,72 @@ const (
 func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 	return func(endpoints Endpoints) Endpoints {
 		return Endpoints{
-			CreateCluster:                                 logmd.Logging(logger, clusterTag, "create")(endpoints.CreateCluster),
-			DeleteCluster:                                 logmd.Logging(logger, clusterTag, "delete")(endpoints.DeleteCluster),
-			CreateVpc:                                     logmd.Logging(logger, vpcTag, "create")(endpoints.CreateVpc),
-			DeleteVpc:                                     logmd.Logging(logger, vpcTag, "delete")(endpoints.DeleteVpc),
-			CreateExternalSecretsPolicy:                   logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsPolicy),
-			CreateExternalSecretsServiceAccount:           logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsServiceAccount),
-			CreateExternalSecretsHelmChart:                logmd.Logging(logger, strings.Join([]string{helmTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecretsHelmChart),
-			CreateAlbIngressControllerServiceAccount:      logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerServiceAccount),
-			CreateAlbIngressControllerPolicy:              logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerPolicy),
-			CreateAlbIngressControllerHelmChart:           logmd.Logging(logger, strings.Join([]string{helmTag, albIngressControllerTag}, "/"), "create")(endpoints.CreateAlbIngressControllerHelmChart),
-			CreateExternalDNSPolicy:                       logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDNSPolicy),
-			CreateExternalDNSServiceAccount:               logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDNSServiceAccount),
-			CreateExternalDNSKubeDeployment:               logmd.Logging(logger, strings.Join([]string{kubeTag, externalDNSTag}, "/"), "create")(endpoints.CreateExternalDNSKubeDeployment),
-			CreateHostedZone:                              logmd.Logging(logger, strings.Join([]string{domainTag, hostedZoneTag}, "/"), "create")(endpoints.CreateHostedZone),
-			CreateCertificate:                             logmd.Logging(logger, certificateTag, "create")(endpoints.CreateCertificate),
-			CreateSecret:                                  logmd.Logging(logger, strings.Join([]string{parameterTag, secretTag}, "/"), "create")(endpoints.CreateSecret),
-			DeleteSecret:                                  logmd.Logging(logger, strings.Join([]string{parameterTag, secretTag}, "/"), "delete")(endpoints.DeleteSecret),
-			CreateArgoCD:                                  logmd.Logging(logger, strings.Join([]string{helmTag, argocdTag}, "/"), "create")(endpoints.CreateArgoCD),
-			CreateExternalSecrets:                         logmd.Logging(logger, strings.Join([]string{kubeTag, externalSecretsTag}, "/"), "create")(endpoints.CreateExternalSecrets),
-			DeleteExternalSecretsPolicy:                   logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, externalSecretsTag}, "/"), "delete")(endpoints.DeleteExternalSecretsPolicy),
-			DeleteAlbIngressControllerPolicy:              logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, albIngressControllerTag}, "/"), "delete")(endpoints.DeleteAlbIngressControllerPolicy),
-			DeleteExternalDNSPolicy:                       logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, externalDNSTag}, "/"), "delete")(endpoints.DeleteExternalDNSPolicy),
-			DeleteHostedZone:                              logmd.Logging(logger, strings.Join([]string{domainTag, hostedZoneTag}, "/"), "delete")(endpoints.DeleteHostedZone),
-			DeleteExternalSecretsServiceAccount:           logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, externalSecretsTag}, "/"), "delete")(endpoints.DeleteExternalSecretsServiceAccount),
-			DeleteAlbIngressControllerServiceAccount:      logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, albIngressControllerTag}, "/"), "delete")(endpoints.DeleteAlbIngressControllerServiceAccount),
-			DeleteExternalDNSServiceAccount:               logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, externalDNSTag}, "/"), "delete")(endpoints.DeleteExternalDNSServiceAccount),
-			CreateIdentityPool:                            logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag}, "/"), "create")(endpoints.CreateIdentityPool),
-			CreateIdentityPoolClient:                      logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag, identityPoolClientTag}, "/"), "create")(endpoints.CreateIdentityPoolClient),
-			CreateIdentityPoolUser:                        logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag, identityPoolUserTag}, "/"), "create")(endpoints.CreateIdentityPoolUser),
-			DeleteIdentityPool:                            logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolTag}, "/"), "delete")(endpoints.DeleteIdentityPool),
-			DeleteIdentityPoolClient:                      logmd.Logging(logger, strings.Join([]string{identityManagerTag, identityPoolClientTag}, "/"), "delete")(endpoints.DeleteIdentityPoolClient),
-			CreateAWSLoadBalancerControllerServiceAccount: logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, awsLoadBalancerControllerTag}, "/"), "create")(endpoints.CreateAWSLoadBalancerControllerServiceAccount),
-			DeleteAWSLoadBalancerControllerServiceAccount: logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, awsLoadBalancerControllerTag}, "/"), "delete")(endpoints.DeleteAWSLoadBalancerControllerServiceAccount),
-			CreateAWSLoadBalancerControllerPolicy:         logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, awsLoadBalancerControllerTag}, "/"), "create")(endpoints.CreateAWSLoadBalancerControllerPolicy),
-			DeleteAWSLoadBalancerControllerPolicy:         logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, awsLoadBalancerControllerTag}, "/"), "delete")(endpoints.DeleteAWSLoadBalancerControllerPolicy),
-			CreateAWSLoadBalancerControllerHelmChart:      logmd.Logging(logger, strings.Join([]string{helmTag, awsLoadBalancerControllerTag}, "/"), "create")(endpoints.CreateAWSLoadBalancerControllerHelmChart),
-			DeleteCertificate:                             logmd.Logging(logger, certificateTag, "delete")(endpoints.DeleteCertificate),
-			DeleteNamespace:                               logmd.Logging(logger, strings.Join([]string{kubeTag, namespaceTag}, "/"), "delete")(endpoints.DeleteNamespace),
-			DeleteCognitoCertificate:                      logmd.Logging(logger, strings.Join([]string{certificateTag, cognitoTag}, "/"), "delete")(endpoints.DeleteCognitoCertificate),
-			CreateAutoscalerHelmChart:                     logmd.Logging(logger, strings.Join([]string{helmTag, autoscalerTag}, "/"), "create")(endpoints.CreateAutoscalerHelmChart),
-			CreateAutoscalerServiceAccount:                logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, autoscalerTag}, "/"), "create")(endpoints.CreateAutoscalerServiceAccount),
-			DeleteAutoscalerServiceAccount:                logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, autoscalerTag}, "/"), "delete")(endpoints.DeleteAutoscalerServiceAccount),
-			CreateAutoscalerPolicy:                        logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, autoscalerTag}, "/"), "create")(endpoints.CreateAutoscalerPolicy),
-			DeleteAutoscalerPolicy:                        logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, autoscalerTag}, "/"), "delete")(endpoints.DeleteAutoscalerPolicy),
-			CreateBlockstoragePolicy:                      logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, blockstorageTag}, "/"), "create")(endpoints.CreateBlockstoragePolicy),
-			DeleteBlockstoragePolicy:                      logmd.Logging(logger, strings.Join([]string{managedPoliciesTag, blockstorageTag}, "/"), "delete")(endpoints.DeleteBlockstoragePolicy),
-			CreateBlockstorageServiceAccount:              logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, blockstorageTag}, "/"), "create")(endpoints.CreateBlockstorageServiceAccount),
-			DeleteBlockstorageServiceAccount:              logmd.Logging(logger, strings.Join([]string{serviceAccountsTag, blockstorageTag}, "/"), "delete")(endpoints.DeleteBlockstorageServiceAccount),
-			CreateBlockstorageHelmChart:                   logmd.Logging(logger, strings.Join([]string{helmTag, blockstorageTag}, "/"), "create")(endpoints.CreateBlockstorageHelmChart),
-			CreateStorageClass:                            logmd.Logging(logger, strings.Join([]string{kubeTag, storageclassTag}, "/"), "create")(endpoints.CreateStorageClass),
-			CreateKubePrometheusStack:                     logmd.Logging(logger, strings.Join([]string{helmTag, kubePrometheusStackTag}, "/"), "create")(endpoints.CreateKubePrometheusStack),
-			CreateLokiHelmChart:                           logmd.Logging(logger, strings.Join([]string{helmTag, lokiTag}, "/"), "create")(endpoints.CreateLokiHelmChart),
-			DeleteExternalSecrets:                         logmd.Logging(logger, strings.Join([]string{kubeTag, externalSecretsTag}, "/"), "delete")(endpoints.DeleteExternalSecrets),
-			CreatePromtailHelmChart:                       logmd.Logging(logger, strings.Join([]string{helmTag, promtailTag}, "/"), "create")(endpoints.CreatePromtailHelmChart),
-			CreateConfigMap:                               logmd.Logging(logger, strings.Join([]string{kubeTag, configMapTag}, "/"), "create")(endpoints.CreateConfigMap),
-			DeleteConfigMap:                               logmd.Logging(logger, strings.Join([]string{kubeTag, configMapTag}, "/"), "delete")(endpoints.DeleteConfigMap),
-			ScaleDeployment:                               logmd.Logging(logger, strings.Join([]string{kubeTag, scaleTag}, "/"), "create")(endpoints.ScaleDeployment),
-			CreateHelmRelease:                             logmd.Logging(logger, strings.Join([]string{helmTag, releasesTag}, "/"), "create")(endpoints.CreateHelmRelease),
-			DeleteHelmRelease:                             logmd.Logging(logger, strings.Join([]string{helmTag, releasesTag}, "/"), "delete")(endpoints.DeleteHelmRelease),
-			CreatePolicy:                                  logmd.Logging(logger, managedPoliciesTag, "create")(endpoints.CreatePolicy),
-			DeletePolicy:                                  logmd.Logging(logger, managedPoliciesTag, "delete")(endpoints.DeletePolicy),
-			CreateServiceAccount:                          logmd.Logging(logger, serviceAccountsTag, "create")(endpoints.CreateServiceAccount),
-			DeleteServiceAccount:                          logmd.Logging(logger, serviceAccountsTag, "delete")(endpoints.DeleteServiceAccount),
-			CreateNamespace:                               logmd.Logging(logger, strings.Join([]string{kubeTag, namespaceTag}, "/"), "create")(endpoints.CreateNamespace),
+			CreateCluster:                                 logmd.Logging(logger, "create", clusterTag)(endpoints.CreateCluster),
+			DeleteCluster:                                 logmd.Logging(logger, "delete", clusterTag)(endpoints.DeleteCluster),
+			CreateVpc:                                     logmd.Logging(logger, "create", vpcTag)(endpoints.CreateVpc),
+			DeleteVpc:                                     logmd.Logging(logger, "delete", vpcTag)(endpoints.DeleteVpc),
+			CreateExternalSecretsPolicy:                   logmd.Logging(logger, "create", managedPoliciesTag, externalSecretsTag)(endpoints.CreateExternalSecretsPolicy),
+			CreateExternalSecretsServiceAccount:           logmd.Logging(logger, "create", serviceAccountsTag, externalSecretsTag)(endpoints.CreateExternalSecretsServiceAccount),
+			CreateExternalSecretsHelmChart:                logmd.Logging(logger, "create", helmTag, externalSecretsTag)(endpoints.CreateExternalSecretsHelmChart),
+			CreateAlbIngressControllerServiceAccount:      logmd.Logging(logger, "create", serviceAccountsTag, albIngressControllerTag)(endpoints.CreateAlbIngressControllerServiceAccount),
+			CreateAlbIngressControllerPolicy:              logmd.Logging(logger, "create", managedPoliciesTag, albIngressControllerTag)(endpoints.CreateAlbIngressControllerPolicy),
+			CreateAlbIngressControllerHelmChart:           logmd.Logging(logger, "create", helmTag, albIngressControllerTag)(endpoints.CreateAlbIngressControllerHelmChart),
+			CreateExternalDNSPolicy:                       logmd.Logging(logger, "create", managedPoliciesTag, externalDNSTag)(endpoints.CreateExternalDNSPolicy),
+			CreateExternalDNSServiceAccount:               logmd.Logging(logger, "create", serviceAccountsTag, externalDNSTag)(endpoints.CreateExternalDNSServiceAccount),
+			CreateExternalDNSKubeDeployment:               logmd.Logging(logger, "create", kubeTag, externalDNSTag)(endpoints.CreateExternalDNSKubeDeployment),
+			CreateHostedZone:                              logmd.Logging(logger, "create", domainTag, hostedZoneTag)(endpoints.CreateHostedZone),
+			CreateCertificate:                             logmd.Logging(logger, "create", certificateTag)(endpoints.CreateCertificate),
+			CreateSecret:                                  logmd.Logging(logger, "create", parameterTag, secretTag)(endpoints.CreateSecret),
+			DeleteSecret:                                  logmd.Logging(logger, "delete", parameterTag, secretTag)(endpoints.DeleteSecret),
+			CreateArgoCD:                                  logmd.Logging(logger, "create", helmTag, argocdTag)(endpoints.CreateArgoCD),
+			CreateExternalSecrets:                         logmd.Logging(logger, "create", kubeTag, externalSecretsTag)(endpoints.CreateExternalSecrets),
+			DeleteExternalSecretsPolicy:                   logmd.Logging(logger, "delete", managedPoliciesTag, externalSecretsTag)(endpoints.DeleteExternalSecretsPolicy),
+			DeleteAlbIngressControllerPolicy:              logmd.Logging(logger, "delete", managedPoliciesTag, albIngressControllerTag)(endpoints.DeleteAlbIngressControllerPolicy),
+			DeleteExternalDNSPolicy:                       logmd.Logging(logger, "delete", managedPoliciesTag, externalDNSTag)(endpoints.DeleteExternalDNSPolicy),
+			DeleteHostedZone:                              logmd.Logging(logger, "delete", domainTag, hostedZoneTag)(endpoints.DeleteHostedZone),
+			DeleteExternalSecretsServiceAccount:           logmd.Logging(logger, "delete", serviceAccountsTag, externalSecretsTag)(endpoints.DeleteExternalSecretsServiceAccount),
+			DeleteAlbIngressControllerServiceAccount:      logmd.Logging(logger, "delete", serviceAccountsTag, albIngressControllerTag)(endpoints.DeleteAlbIngressControllerServiceAccount),
+			DeleteExternalDNSServiceAccount:               logmd.Logging(logger, "delete", serviceAccountsTag, externalDNSTag)(endpoints.DeleteExternalDNSServiceAccount),
+			CreateIdentityPool:                            logmd.Logging(logger, "create", identityManagerTag, identityPoolTag)(endpoints.CreateIdentityPool),
+			CreateIdentityPoolClient:                      logmd.Logging(logger, "create", identityManagerTag, identityPoolTag, identityPoolClientTag)(endpoints.CreateIdentityPoolClient),
+			CreateIdentityPoolUser:                        logmd.Logging(logger, "create", identityManagerTag, identityPoolTag, identityPoolUserTag)(endpoints.CreateIdentityPoolUser),
+			DeleteIdentityPool:                            logmd.Logging(logger, "delete", identityManagerTag, identityPoolTag)(endpoints.DeleteIdentityPool),
+			DeleteIdentityPoolClient:                      logmd.Logging(logger, "delete", identityManagerTag, identityPoolClientTag)(endpoints.DeleteIdentityPoolClient),
+			CreateAWSLoadBalancerControllerServiceAccount: logmd.Logging(logger, "create", serviceAccountsTag, awsLoadBalancerControllerTag)(endpoints.CreateAWSLoadBalancerControllerServiceAccount),
+			DeleteAWSLoadBalancerControllerServiceAccount: logmd.Logging(logger, "delete", serviceAccountsTag, awsLoadBalancerControllerTag)(endpoints.DeleteAWSLoadBalancerControllerServiceAccount),
+			CreateAWSLoadBalancerControllerPolicy:         logmd.Logging(logger, "create", managedPoliciesTag, awsLoadBalancerControllerTag)(endpoints.CreateAWSLoadBalancerControllerPolicy),
+			DeleteAWSLoadBalancerControllerPolicy:         logmd.Logging(logger, "delete", managedPoliciesTag, awsLoadBalancerControllerTag)(endpoints.DeleteAWSLoadBalancerControllerPolicy),
+			CreateAWSLoadBalancerControllerHelmChart:      logmd.Logging(logger, "create", helmTag, awsLoadBalancerControllerTag)(endpoints.CreateAWSLoadBalancerControllerHelmChart),
+			DeleteCertificate:                             logmd.Logging(logger, "delete", certificateTag)(endpoints.DeleteCertificate),
+			DeleteNamespace:                               logmd.Logging(logger, "delete", kubeTag, namespaceTag)(endpoints.DeleteNamespace),
+			DeleteCognitoCertificate:                      logmd.Logging(logger, "delete", certificateTag, cognitoTag)(endpoints.DeleteCognitoCertificate),
+			CreateAutoscalerHelmChart:                     logmd.Logging(logger, "create", helmTag, autoscalerTag)(endpoints.CreateAutoscalerHelmChart),
+			CreateAutoscalerServiceAccount:                logmd.Logging(logger, "create", serviceAccountsTag, autoscalerTag)(endpoints.CreateAutoscalerServiceAccount),
+			DeleteAutoscalerServiceAccount:                logmd.Logging(logger, "delete", serviceAccountsTag, autoscalerTag)(endpoints.DeleteAutoscalerServiceAccount),
+			CreateAutoscalerPolicy:                        logmd.Logging(logger, "create", managedPoliciesTag, autoscalerTag)(endpoints.CreateAutoscalerPolicy),
+			DeleteAutoscalerPolicy:                        logmd.Logging(logger, "delete", managedPoliciesTag, autoscalerTag)(endpoints.DeleteAutoscalerPolicy),
+			CreateBlockstoragePolicy:                      logmd.Logging(logger, "create", managedPoliciesTag, blockstorageTag)(endpoints.CreateBlockstoragePolicy),
+			DeleteBlockstoragePolicy:                      logmd.Logging(logger, "delete", managedPoliciesTag, blockstorageTag)(endpoints.DeleteBlockstoragePolicy),
+			CreateBlockstorageServiceAccount:              logmd.Logging(logger, "create", serviceAccountsTag, blockstorageTag)(endpoints.CreateBlockstorageServiceAccount),
+			DeleteBlockstorageServiceAccount:              logmd.Logging(logger, "delete", serviceAccountsTag, blockstorageTag)(endpoints.DeleteBlockstorageServiceAccount),
+			CreateBlockstorageHelmChart:                   logmd.Logging(logger, "create", helmTag, blockstorageTag)(endpoints.CreateBlockstorageHelmChart),
+			CreateStorageClass:                            logmd.Logging(logger, "create", kubeTag, storageclassTag)(endpoints.CreateStorageClass),
+			CreateKubePrometheusStack:                     logmd.Logging(logger, "create", helmTag, kubePrometheusStackTag)(endpoints.CreateKubePrometheusStack),
+			CreateLokiHelmChart:                           logmd.Logging(logger, "create", helmTag, lokiTag)(endpoints.CreateLokiHelmChart),
+			DeleteExternalSecrets:                         logmd.Logging(logger, "delete", kubeTag, externalSecretsTag)(endpoints.DeleteExternalSecrets),
+			CreatePromtailHelmChart:                       logmd.Logging(logger, "create", helmTag, promtailTag)(endpoints.CreatePromtailHelmChart),
+			CreateConfigMap:                               logmd.Logging(logger, "create", kubeTag, configMapTag)(endpoints.CreateConfigMap),
+			DeleteConfigMap:                               logmd.Logging(logger, "delete", kubeTag, configMapTag)(endpoints.DeleteConfigMap),
+			ScaleDeployment:                               logmd.Logging(logger, "create", kubeTag, scaleTag)(endpoints.ScaleDeployment),
+			CreateHelmRelease:                             logmd.Logging(logger, "create", helmTag, releasesTag)(endpoints.CreateHelmRelease),
+			DeleteHelmRelease:                             logmd.Logging(logger, "delete", helmTag, releasesTag)(endpoints.DeleteHelmRelease),
+			CreatePolicy:                                  logmd.Logging(logger, "create", managedPoliciesTag)(endpoints.CreatePolicy),
+			DeletePolicy:                                  logmd.Logging(logger, "delete", managedPoliciesTag)(endpoints.DeletePolicy),
+			CreateServiceAccount:                          logmd.Logging(logger, "create", serviceAccountsTag)(endpoints.CreateServiceAccount),
+			DeleteServiceAccount:                          logmd.Logging(logger, "delete", serviceAccountsTag)(endpoints.DeleteServiceAccount),
+			CreateNamespace:                               logmd.Logging(logger, "create", kubeTag, namespaceTag)(endpoints.CreateNamespace),
+			CreatePostgresDatabase:                        logmd.Logging(logger, "create", componentsTag, postgresTag)(endpoints.CreatePostgresDatabase),
+			DeletePostgresDatabase:                        logmd.Logging(logger, "delete", componentsTag, postgresTag)(endpoints.DeletePostgresDatabase),
 		}
 	}
 }

@@ -85,6 +85,7 @@ type Cluster struct {
 	ArgoCD       ArgoCD
 	IdentityPool IdentityPool
 	Monitoring   Monitoring
+	Databases    map[string]Database
 }
 
 const (
@@ -103,6 +104,31 @@ func (c Cluster) Validate() error {
 		validation.Field(&c.HostedZone, validation.Required),
 		validation.Field(&c.VPC),
 		validation.Field(&c.Certificates),
+		validation.Field(&c.Databases),
+	)
+}
+
+// Database contains state information about a
+// database
+type Database struct {
+	Type                  string
+	Namespace             string
+	EndpointAddress       string
+	EndpointPort          int
+	SecurityGroupID       string
+	AdminSecretName       string
+	DatabaseConfigMapName string
+}
+
+// Validate the database
+func (d Database) Validate() error {
+	return validation.ValidateStruct(&d,
+		validation.Field(&d.Type, validation.Required),
+		validation.Field(&d.EndpointAddress, validation.Required),
+		validation.Field(&d.EndpointPort, validation.Required),
+		validation.Field(&d.SecurityGroupID, validation.Required),
+		validation.Field(&d.AdminSecretName, validation.Required),
+		validation.Field(&d.DatabaseConfigMapName, validation.Required),
 	)
 }
 

@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  EndpointAddress:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-EndpointAddress
+    Value:
+      Fn::GetAtt:
+      - myPostgresDatabase
+      - Endpoint.Address
+  EndpointPort:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-EndpointPort
+    Value:
+      Fn::GetAtt:
+      - myPostgresDatabase
+      - Endpoint.Port
+  myPostgresDatabase:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-myPostgresDatabase
+    Value:
+      Ref: myPostgresDatabase
+Resources:
+  myPostgresDatabase:
+    DependsOn:
+    - myDbParameterGroup
+    - myMonitoringRole
+    Properties:
+      AllocatedStorage: "20"
+      AutoMinorVersionUpgrade: true
+      BackupRetentionPeriod: 7
+      CopyTagsToSnapshot: true
+      DBInstanceClass: db.t3.small
+      DBName: databaseName
+      DBParameterGroupName:
+        Ref: myDbParameterGroup
+      DBSubnetGroupName: myDbSubnetGroupName
+      DeleteAutomatedBackups: true
+      EnableCloudwatchLogsExports:
+      - postgresql
+      - upgrade
+      EnablePerformanceInsights: true
+      Engine: postgres
+      EngineVersion: "13.1"
+      MasterUserPassword:
+        Fn::Sub: '{{resolve:secretsmanager:${myAdminSecret}::password}}'
+      MasterUsername:
+        Fn::Sub: '{{resolve:secretsmanager:${myAdminSecret}::username}}'
+      MaxAllocatedStorage: 100
+      MonitoringInterval: 10
+      MonitoringRoleArn:
+        Fn::GetAtt:
+        - myMonitoringRole
+        - Arn
+      MultiAZ: true
+      PerformanceInsightsRetentionPeriod: 7
+      Port: "5432"
+      PreferredBackupWindow: 03:00-06:00
+      PreferredMaintenanceWindow: Mon:00:00-Mon:03:00
+      StorageEncrypted: true
+      StorageType: gp2
+      UseDefaultProcessorFeatures: true
+      VPCSecurityGroups:
+      - Fn::GetAtt:
+        - mySecurityGroup
+        - GroupId
+    Type: AWS::RDS::DBInstance

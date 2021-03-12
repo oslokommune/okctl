@@ -3,6 +3,7 @@ package logger
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
@@ -23,9 +24,9 @@ type AnonymizeResponseLogger interface {
 }
 
 // Logging returns a logging middleware
-func Logging(logger *logrus.Logger, serviceTag, endpointTag string) endpoint.Middleware {
+func Logging(logger *logrus.Logger, endpointTag string, serviceTags ...string) endpoint.Middleware {
 	logCtx := logger.WithFields(logrus.Fields{
-		"service":  serviceTag,
+		"service":  strings.Join(serviceTags, "/"),
 		"endpoint": endpointTag,
 	})
 

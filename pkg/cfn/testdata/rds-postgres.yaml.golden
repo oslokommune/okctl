@@ -1,29 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
 Outputs:
-  EndpointAddress:
-    Export:
-      Name:
-        Fn::Sub: ${AWS::StackName}-EndpointAddress
-    Value:
-      Fn::GetAtt:
-      - okctl-repo-env-RDSPostgres
-      - Endpoint.Address
-  EndpointPort:
-    Export:
-      Name:
-        Fn::Sub: ${AWS::StackName}-EndpointPort
-    Value:
-      Fn::GetAtt:
-      - okctl-repo-env-RDSPostgres
-      - Endpoint.Port
-  GroupId:
-    Export:
-      Name:
-        Fn::Sub: ${AWS::StackName}-GroupId
-    Value:
-      Fn::GetAtt:
-      - okctl-repo-env-RDSPostgresOutgoing
-      - GroupId
   okctl-repo-env-RDSInstanceAdmin:
     Export:
       Name:
@@ -36,12 +12,36 @@ Outputs:
         Fn::Sub: ${AWS::StackName}-okctl-repo-env-RDSPostgres
     Value:
       Ref: okctl-repo-env-RDSPostgres
+  okctl-repo-env-RDSPostgres-EndpointAddress:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-okctl-repo-env-RDSPostgres-EndpointAddress
+    Value:
+      Fn::GetAtt:
+      - okctl-repo-env-RDSPostgres
+      - Endpoint.Address
+  okctl-repo-env-RDSPostgres-EndpointPort:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-okctl-repo-env-RDSPostgres-EndpointPort
+    Value:
+      Fn::GetAtt:
+      - okctl-repo-env-RDSPostgres
+      - Endpoint.Port
   okctl-repo-env-RDSPostgresOutgoing:
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-okctl-repo-env-RDSPostgresOutgoing
     Value:
       Ref: okctl-repo-env-RDSPostgresOutgoing
+  okctl-repo-env-RDSPostgresOutgoing-GroupId:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-okctl-repo-env-RDSPostgresOutgoing-GroupId
+    Value:
+      Fn::GetAtt:
+      - okctl-repo-env-RDSPostgresOutgoing
+      - GroupId
 Resources:
   okctl-repo-env-AdminRotationSchedule:
     DependsOn:

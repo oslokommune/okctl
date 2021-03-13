@@ -43,6 +43,8 @@ const (
 	DefaultPrivateSubnetsLogicalID = "PrivateSubnetIds"
 	// DefaultPublicSubnetsLogicalID defines the logical id for the stack outputs
 	DefaultPublicSubnetsLogicalID = "PublicSubnetIds"
+	// DefaultDatabaseSubnetsLogicalID defines the logical id for the stack outputs
+	DefaultDatabaseSubnetsLogicalID = "DatabaseSubnetIds"
 )
 
 // Subnet stores state required for creating a
@@ -249,9 +251,16 @@ func (s *Subnets) NamedOutputs() map[string]cloudformation.Output {
 		public.Add(p.Ref())
 	}
 
+	database := cfn.NewJoined(DefaultDatabaseSubnetsLogicalID)
+
+	for _, p := range s.Database {
+		database.Add(p.Ref())
+	}
+
 	return map[string]cloudformation.Output{
-		private.Name(): private.Outputs(),
-		public.Name():  public.Outputs(),
+		private.Name():  private.Outputs(),
+		public.Name():   public.Outputs(),
+		database.Name(): database.Outputs(),
 	}
 }
 

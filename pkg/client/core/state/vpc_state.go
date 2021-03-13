@@ -22,10 +22,12 @@ func (s *vpcState) SaveVpc(vpc *api.Vpc) (*store.Report, error) {
 
 	v.VpcID = vpc.VpcID
 	v.CIDR = vpc.Cidr
+	v.DatabaseSubnetsGroupName = vpc.DatabaseSubnetsGroupName
 	v.Subnets = map[string][]state.VPCSubnet{
 		state.SubnetTypePublic: func() (subnets []state.VPCSubnet) {
 			for _, sub := range vpc.PublicSubnets {
 				subnets = append(subnets, state.VPCSubnet{
+					ID:               sub.ID,
 					CIDR:             sub.Cidr,
 					AvailabilityZone: sub.AvailabilityZone,
 				})
@@ -36,6 +38,18 @@ func (s *vpcState) SaveVpc(vpc *api.Vpc) (*store.Report, error) {
 		state.SubnetTypePrivate: func() (subnets []state.VPCSubnet) {
 			for _, sub := range vpc.PrivateSubnets {
 				subnets = append(subnets, state.VPCSubnet{
+					ID:               sub.ID,
+					CIDR:             sub.Cidr,
+					AvailabilityZone: sub.AvailabilityZone,
+				})
+			}
+
+			return subnets
+		}(),
+		state.SubnetTypeDatabase: func() (subnets []state.VPCSubnet) {
+			for _, sub := range vpc.DatabaseSubnets {
+				subnets = append(subnets, state.VPCSubnet{
+					ID:               sub.ID,
 					CIDR:             sub.Cidr,
 					AvailabilityZone: sub.AvailabilityZone,
 				})

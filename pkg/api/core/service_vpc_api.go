@@ -16,17 +16,17 @@ type vpc struct {
 func (v *vpc) CreateVpc(_ context.Context, opts api.CreateVpcOpts) (*api.Vpc, error) {
 	err := opts.Validate()
 	if err != nil {
-		return nil, errors.E(err, "failed to validate create vpc options", errors.Invalid)
+		return nil, errors.E(err, "validating the inputs", errors.Invalid)
 	}
 
 	got, err := v.cloud.CreateVpc(opts)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(err, "creating vpc", errors.Internal)
 	}
 
 	err = v.store.SaveVpc(got)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(err, "storing vpc", errors.Internal)
 	}
 
 	return got, nil
@@ -36,7 +36,7 @@ func (v *vpc) CreateVpc(_ context.Context, opts api.CreateVpcOpts) (*api.Vpc, er
 func (v *vpc) DeleteVpc(_ context.Context, opts api.DeleteVpcOpts) error {
 	err := v.cloud.DeleteVpc(opts)
 	if err != nil {
-		return err
+		return errors.E(err, "deleting vpc", errors.Internal)
 	}
 
 	return v.store.DeleteVpc(opts.ID)

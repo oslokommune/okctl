@@ -21,12 +21,15 @@ clusters:
         vpc:
             vpcid: 3456ygfghj
             cidr: 192.168.0.0/20
+            databasesubnetsgroupname: ""
             subnets:
                 private:
-                    - cidr: 192.168.10.0/24
+                    - id: ""
+                      cidr: 192.168.10.0/24
                       availabilityzone: eu-west-1c
                 public:
-                    - cidr: 192.168.0.0/24
+                    - id: ""
+                      cidr: 192.168.0.0/24
                       availabilityzone: eu-west-1a
         certificates:
             argocd.test.oslo.systems:

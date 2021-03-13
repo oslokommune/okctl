@@ -16,6 +16,8 @@ const (
 	SubnetTypePublic = "public"
 	// SubnetTypePrivate is a private subnet
 	SubnetTypePrivate = "private"
+	// SubnetTypeDatabase is a database subnet
+	SubnetTypeDatabase = "database"
 )
 
 // Repository stores the configured state of a repository
@@ -228,13 +230,15 @@ func (c Certificate) Validate() error {
 
 // VPC contains state about the VPC
 type VPC struct {
-	VpcID   string
-	CIDR    string
-	Subnets map[string][]VPCSubnet
+	VpcID                    string
+	CIDR                     string
+	DatabaseSubnetsGroupName string
+	Subnets                  map[string][]VPCSubnet
 }
 
 // VPCSubnet is a vpc subnet
 type VPCSubnet struct {
+	ID               string
 	CIDR             string
 	AvailabilityZone string
 }

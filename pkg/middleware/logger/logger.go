@@ -25,43 +25,62 @@ type AnonymizeResponseLogger interface {
 
 // Logging returns a logging middleware
 func Logging(logger *logrus.Logger, endpointTag string, serviceTags ...string) endpoint.Middleware {
-	logCtx := logger.WithFields(logrus.Fields{
-		"service":  strings.Join(serviceTags, "/"),
-		"endpoint": endpointTag,
-	})
-
-	return func(next endpoint.Endpoint) endpoint.Endpoint {
-		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-			logCtx.Info("handling request")
-
-			if anonReq, ok := request.(AnonymizeRequestLogger); ok {
-				anon := anonReq.AnonymizeRequest(request)
-				logCtx.Debug(litter.Sdump(anon))
-			} else {
-				logCtx.Debug(litter.Sdump(request))
-			}
-
-			defer func(begin time.Time) {
-				if err != nil {
-					logCtx.Warn("failed to process request, because: ", err.Error())
-					logCtx.Debug(litter.Sdump(err))
-				}
-
-				if err == nil {
-					logCtx.Info("done with request, sending response")
-
-					if anonResp, ok := request.(AnonymizeResponseLogger); ok {
-						anon := anonResp.AnonymizeResponse(response)
-						logCtx.Debug(litter.Sdump(anon))
-					} else {
-						logCtx.Debug(litter.Sdump(response))
-					}
-				}
-
-				logCtx.Info("request completed in: ", time.Since(begin).String())
-			}(time.Now())
-
-			return next(ctx, request)
-		}
+	l := &logging{
+		log: logger.WithFields(logrus.Fields{
+			"service":  strings.Join(serviceTags, "/"),
+			"endpoint": endpointTag,
+		}),
 	}
+
+	return l.ProcessRequest
+}
+
+type logging struct {
+	log *logrus.Entry
+}
+
+// ProcessRequest handles logging of the request
+func (l *logging) ProcessRequest(next endpoint.Endpoint) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		l.log.Info("request received")
+
+		var d string
+
+		switch r := request.(type) {
+		case AnonymizeRequestLogger:
+			d = litter.Sdump(r.AnonymizeRequest(request))
+		default:
+			d = litter.Sdump(request)
+		}
+
+		l.log.Debug("request: ", d)
+
+		defer func() {
+			l.ProcessResponse(err, response, time.Now())
+		}()
+
+		return next(ctx, request)
+	}
+}
+
+// ProcessResponse handles logging of the response
+func (l *logging) ProcessResponse(err error, response interface{}, begin time.Time) {
+	if err != nil {
+		l.log.Errorf("processing request: %s", err.Error())
+	}
+
+	if err == nil {
+		var d string
+
+		switch r := response.(type) {
+		case AnonymizeResponseLogger:
+			d = litter.Sdump(r.AnonymizeResponse(response))
+		default:
+			d = litter.Sdump(response)
+		}
+
+		l.log.Debug("response: ", d)
+	}
+
+	l.log.Info("request completed in: ", time.Since(begin).String())
 }

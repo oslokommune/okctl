@@ -798,10 +798,6 @@ func (o *Okctl) initialise() error {
 		awsProvider.NewComponentCloudProvider(o.CloudProvider),
 	)
 
-	componentService := core.NewComponentService(
-		awsProvider.NewComponentCloudProvider(o.CloudProvider),
-	)
-
 	// When creating a certificate for a CloudFront distribution, we
 	// need to create the certificate in us-east-1
 	provider, err := o.NewCloudProviderWithRegion("us-east-1")

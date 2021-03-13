@@ -1350,7 +1350,7 @@ const amazonRDSEnhancedMonitoringRole = "arn:aws:iam::aws:policy/service-role/Am
 
 // NameResource returns the resource name
 func (c *RDSPostgresComposer) NameResource(resource string) string {
-	return fmt.Sprintf("%s-%s-%s-%s", c.ApplicationDBName, c.Repository, c.Environment, resource)
+	return fmt.Sprintf("%s%s%s%s", c.ApplicationDBName, c.Repository, c.Environment, resource)
 }
 
 // AdminSecretFriendlyName returns the friendly name of the secret
@@ -1384,17 +1384,13 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 	)
 
 	params := map[string]string{
-		"shared_preload_libraries":     "pg_stat_statements",
-		"pg_stat_statements.max":       "10000",
-		"pg_stat_statements.track":     "all",
-		"log_min_duration_statement":   "1000",
-		"log_duration":                 "on",
-		"random_page_cost":             "1.1",
-		"checkpoint_completion_target": "0.9",
-		"min_wal_size":                 "80",
-		"effective_io_concurrency":     "200",
-		"log_statement":                "all",
-		"max_connections":              "100",
+		"shared_preload_libraries":   "pg_stat_statements",
+		"pg_stat_statements.max":     "10000",
+		"pg_stat_statements.track":   "all",
+		"log_min_duration_statement": "1000",
+		"log_duration":               "on",
+		"log_statement":              "all",
+		"max_connections":            "100",
 	}
 	parameterGroup := dbparametergroup.New(
 		c.NameResource("RDSPostgresParameterGroup"),

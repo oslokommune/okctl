@@ -25,8 +25,8 @@ type DBInstance struct {
 func (i *DBInstance) NamedOutputs() map[string]cloudformation.Output {
 	return cfn.NewValueMap().
 		Add(cfn.NewValue(i.Name(), i.Ref())).
-		Add(cfn.NewValue(fmt.Sprintf("%s-EndpointAddress", i.Name()), cloudformation.GetAtt(i.Name(), "Endpoint.Address"))).
-		Add(cfn.NewValue(fmt.Sprintf("%s-EndpointPort", i.Name()), cloudformation.GetAtt(i.Name(), "Endpoint.Port"))).
+		Add(cfn.NewValue(fmt.Sprintf("%sEndpointAddress", i.Name()), cloudformation.GetAtt(i.Name(), "Endpoint.Address"))).
+		Add(cfn.NewValue(fmt.Sprintf("%sEndpointPort", i.Name()), cloudformation.GetAtt(i.Name(), "Endpoint.Port"))).
 		NamedOutputs()
 }
 

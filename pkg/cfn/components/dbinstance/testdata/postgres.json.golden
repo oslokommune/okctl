@@ -6,18 +6,18 @@ Outputs:
         Fn::Sub: ${AWS::StackName}-myPostgresDatabase
     Value:
       Ref: myPostgresDatabase
-  myPostgresDatabase-EndpointAddress:
+  myPostgresDatabaseEndpointAddress:
     Export:
       Name:
-        Fn::Sub: ${AWS::StackName}-myPostgresDatabase-EndpointAddress
+        Fn::Sub: ${AWS::StackName}-myPostgresDatabaseEndpointAddress
     Value:
       Fn::GetAtt:
       - myPostgresDatabase
       - Endpoint.Address
-  myPostgresDatabase-EndpointPort:
+  myPostgresDatabaseEndpointPort:
     Export:
       Name:
-        Fn::Sub: ${AWS::StackName}-myPostgresDatabase-EndpointPort
+        Fn::Sub: ${AWS::StackName}-myPostgresDatabaseEndpointPort
     Value:
       Fn::GetAtt:
       - myPostgresDatabase

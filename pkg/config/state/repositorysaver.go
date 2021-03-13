@@ -28,6 +28,7 @@ type Vpcer interface {
 	SaveVPC(vpc VPC) (*store.Report, error)
 	DeleteVPC() (*store.Report, error)
 	GetVPC() VPC
+	GetSubnets(subnetType string) []VPCSubnet
 }
 
 // Githuber defines the allowed actions on the github state
@@ -374,6 +375,13 @@ func (r *repository) DeleteVPC() (*store.Report, error) {
 func (r *repository) GetVPC() VPC {
 	cluster := r.GetCluster()
 	return cluster.VPC
+}
+
+// GetSubnets returns the subnets of the given subnet type
+func (r *repository) GetSubnets(subnetType string) []VPCSubnet {
+	vpc := r.GetVPC()
+
+	return vpc.Subnets[subnetType]
 }
 
 // SaveCluster stores the cluster

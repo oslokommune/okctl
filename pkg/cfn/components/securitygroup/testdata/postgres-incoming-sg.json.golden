@@ -6,10 +6,10 @@ Outputs:
         Fn::Sub: ${AWS::StackName}-myIncomingPG
     Value:
       Ref: myIncomingPG
-  myIncomingPG-GroupId:
+  myIncomingPGGroupId:
     Export:
       Name:
-        Fn::Sub: ${AWS::StackName}-myIncomingPG-GroupId
+        Fn::Sub: ${AWS::StackName}-myIncomingPGGroupId
     Value:
       Fn::GetAtt:
       - myIncomingPG

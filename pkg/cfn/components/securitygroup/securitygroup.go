@@ -20,7 +20,7 @@ type SecurityGroup struct {
 func (s *SecurityGroup) NamedOutputs() map[string]cloudformation.Output {
 	return cfn.NewValueMap().
 		Add(cfn.NewValue(s.Name(), s.Ref())).
-		Add(cfn.NewValue(fmt.Sprintf("%s-GroupId", s.Name()), cloudformation.GetAtt(s.Name(), "GroupId"))).
+		Add(cfn.NewValue(fmt.Sprintf("%sGroupId", s.Name()), cloudformation.GetAtt(s.Name(), "GroupId"))).
 		NamedOutputs()
 }
 

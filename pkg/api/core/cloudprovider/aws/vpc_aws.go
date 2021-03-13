@@ -2,7 +2,8 @@
 package aws
 
 import (
-	"github.com/mishudark/errors"
+	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn"
@@ -28,7 +29,7 @@ func (c *vpcCloudProvider) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
 
 	template, err := b.Build()
 	if err != nil {
-		return nil, errors.E(err, "failed to build cloud formation template", errors.Internal)
+		return nil, fmt.Errorf("building cloud formation template: %w", err)
 	}
 
 	stackName := cfn.NewStackNamer().Vpc(opts.ID.Repository, opts.ID.Environment)
@@ -37,7 +38,7 @@ func (c *vpcCloudProvider) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
 
 	err = r.CreateIfNotExists(stackName, template, nil, defaultTimeOut)
 	if err != nil {
-		return nil, errors.E(err, "failed to create vpc")
+		return nil, fmt.Errorf("creating vpc stack: %w", err)
 	}
 
 	v := &api.Vpc{
@@ -48,12 +49,14 @@ func (c *vpcCloudProvider) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
 	}
 
 	err = r.Outputs(stackName, map[string]cfn.ProcessOutputFn{
-		"PrivateSubnetIds": cfn.Subnets(c.provider, &v.PrivateSubnets),
-		"PublicSubnetIds":  cfn.Subnets(c.provider, &v.PublicSubnets),
-		"Vpc":              cfn.String(&v.VpcID),
+		"Vpc":                     cfn.String(&v.VpcID),
+		"PrivateSubnetIds":        cfn.Subnets(c.provider, &v.PrivateSubnets),
+		"PublicSubnetIds":         cfn.Subnets(c.provider, &v.PublicSubnets),
+		"DatabaseSubnetIds":       cfn.Subnets(c.provider, &v.DatabaseSubnets),
+		"DatabaseSubnetGroupName": cfn.String(&v.DatabaseSubnetsGroupName),
 	})
 	if err != nil {
-		return nil, errors.E(err, "failed to process outputs")
+		return nil, fmt.Errorf("processing stack outputs: %w", err)
 	}
 
 	return v, nil

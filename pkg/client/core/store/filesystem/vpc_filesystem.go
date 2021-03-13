@@ -17,11 +17,13 @@ type vpcStore struct {
 // Vpc represents the information that is stored
 // about a vpc
 type Vpc struct {
-	ID             api.ID
-	StackName      string
-	VpcID          string
-	PublicSubnets  []VpcSubnet
-	PrivateSubnets []VpcSubnet
+	ID                       api.ID
+	StackName                string
+	VpcID                    string
+	PublicSubnets            []VpcSubnet
+	PrivateSubnets           []VpcSubnet
+	DatabaseSubnets          []VpcSubnet
+	DatabaseSubnetsGroupName string
 }
 
 // VpcSubnet represents the information that is stored
@@ -53,12 +55,24 @@ func storeFromDef(vpc *api.Vpc) Vpc {
 		}
 	}
 
+	db := make([]VpcSubnet, len(vpc.DatabaseSubnets))
+
+	for i, p := range vpc.DatabaseSubnets {
+		db[i] = VpcSubnet{
+			ID:               p.ID,
+			Cidr:             p.Cidr,
+			AvailabilityZone: p.AvailabilityZone,
+		}
+	}
+
 	vpcState := Vpc{
-		ID:             vpc.ID,
-		StackName:      vpc.StackName,
-		VpcID:          vpc.VpcID,
-		PublicSubnets:  pub,
-		PrivateSubnets: pri,
+		ID:                       vpc.ID,
+		StackName:                vpc.StackName,
+		VpcID:                    vpc.VpcID,
+		PublicSubnets:            pub,
+		PrivateSubnets:           pri,
+		DatabaseSubnets:          db,
+		DatabaseSubnetsGroupName: vpc.DatabaseSubnetsGroupName,
 	}
 
 	return vpcState
@@ -85,12 +99,24 @@ func defFromStore(vpc *Vpc) *api.Vpc {
 		}
 	}
 
+	db := make([]api.VpcSubnet, len(vpc.DatabaseSubnets))
+
+	for i, p := range vpc.DatabaseSubnets {
+		db[i] = api.VpcSubnet{
+			ID:               p.ID,
+			Cidr:             p.Cidr,
+			AvailabilityZone: p.AvailabilityZone,
+		}
+	}
+
 	return &api.Vpc{
-		ID:             vpc.ID,
-		StackName:      vpc.StackName,
-		VpcID:          vpc.VpcID,
-		PublicSubnets:  pub,
-		PrivateSubnets: pri,
+		ID:                       vpc.ID,
+		StackName:                vpc.StackName,
+		VpcID:                    vpc.VpcID,
+		PublicSubnets:            pub,
+		PrivateSubnets:           pri,
+		DatabaseSubnets:          db,
+		DatabaseSubnetsGroupName: vpc.DatabaseSubnetsGroupName,
 	}
 }
 

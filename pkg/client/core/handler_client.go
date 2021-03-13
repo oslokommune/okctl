@@ -22,5 +22,5 @@ type Services struct {
 	Autoscaler                       client.AutoscalerService
 	Blockstorage                     client.BlockstorageService
 	Monitoring                       client.MonitoringService
-	Components                       client.ComponentService
+	Component                        client.ComponentService
 }

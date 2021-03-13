@@ -203,7 +203,25 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		Autoscaler:                       o.autoscalerService(outputDir, spin),
 		Blockstorage:                     o.blockstorageService(outputDir, spin),
 		Monitoring:                       o.monitoringService(outputDir, spin),
+		Component:                        o.componentService(outputDir, spin),
 	}, nil
+}
+
+func (o *Okctl) componentService(outputDir string, spin spinner.Spinner) client.ComponentService {
+	return clientCore.NewComponentService(spin,
+		rest.NewComponentAPI(o.restClient),
+		clientFilesystem.NewComponentStore(
+			clientFilesystem.Paths{
+				OutputFile:         config.DefaultPostgresOutputFile,
+				CloudFormationFile: config.DefaultPostgresCloudFormationFile,
+				BaseDir:            path.Join(outputDir, config.DefaultComponentBaseDir, config.DefaultPostgresBaseDir),
+			},
+			o.FileSystem,
+		),
+		stateSaver.NewComponentState(o.RepoStateWithEnv),
+		console.NewComponentReport(o.Err, spin),
+		o.manifestService(path.Join(outputDir, config.DefaultComponentBaseDir), spin.SubSpinner()),
+	)
 }
 
 func (o *Okctl) managedPolicyService(outputDir string, spin spinner.Spinner) client.ManagedPolicyService {
@@ -790,6 +808,10 @@ func (o *Okctl) initialise() error {
 		parameterStore,
 	)
 
+	componentService := core.NewComponentService(
+		awsProvider.NewComponentCloudProvider(o.CloudProvider),
+	)
+
 	// When creating a certificate for a CloudFront distribution, we
 	// need to create the certificate in us-east-1
 	provider, err := o.NewCloudProviderWithRegion("us-east-1")
@@ -803,16 +825,17 @@ func (o *Okctl) initialise() error {
 	)
 
 	services := core.Services{
-		Cluster:         clusterService,
-		Vpc:             vpcService,
-		ManagedPolicy:   managedPolicyService,
-		ServiceAccount:  serviceAccountService,
-		Helm:            helmService,
-		Kube:            kubeService,
-		Domain:          domainService,
-		Certificate:     certificateService,
-		Parameter:       parameterService,
-		IdentityManager: identityManagerService,
+		Cluster:          clusterService,
+		Vpc:              vpcService,
+		ManagedPolicy:    managedPolicyService,
+		ServiceAccount:   serviceAccountService,
+		Helm:             helmService,
+		Kube:             kubeService,
+		Domain:           domainService,
+		Certificate:      certificateService,
+		Parameter:        parameterService,
+		IdentityManager:  identityManagerService,
+		ComponentService: componentService,
 	}
 
 	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))
@@ -879,7 +902,7 @@ func (o *Okctl) newBinariesProvider() error {
 		storage.NewFileSystemStorage(userDataDir),
 	)
 	if err != nil {
-		return errors.E(err, "failed to create binaries fetcher", errors.Internal)
+		return errors.E(err, "creating binaries fetcher", errors.Internal)
 	}
 
 	out := ioutil.Discard
@@ -892,7 +915,7 @@ func (o *Okctl) newBinariesProvider() error {
 	return nil
 }
 
-// NewCloudProviderWithRegion create a cloud provider with a spesific region
+// NewCloudProviderWithRegion create a cloud provider with a specific region
 func (o *Okctl) NewCloudProviderWithRegion(region string) (v1alpha1.CloudProvider, error) {
 	c, err := cloud.New(region, o.CredentialsProvider.Aws())
 	if err != nil {
@@ -1001,12 +1024,12 @@ https://www.passwordstore.org/
 func (o *Okctl) newCredentialsProvider() error {
 	awsAuthenticator, err := o.getAWSAuthenticator()
 	if err != nil {
-		return fmt.Errorf("error acquiring AWS authenticator: %w", err)
+		return fmt.Errorf("acquiring AWS authenticator: %w", err)
 	}
 
 	githubAuthenticator, err := o.getGithubAuthenticator()
 	if err != nil {
-		return fmt.Errorf("error acquiring Github authenticator: %w", err)
+		return fmt.Errorf("acquiring Github authenticator: %w", err)
 	}
 
 	o.CredentialsProvider = credentials.New(awsAuthenticator, githubAuthenticator)

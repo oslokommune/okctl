@@ -14,7 +14,7 @@ type componentCloudProvider struct {
 }
 
 const (
-	postgresTimeOutInMinutes = 10
+	postgresTimeOutInMinutes = 20
 )
 
 func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgresDatabaseOpts) (*api.PostgresDatabase, error) {
@@ -59,10 +59,10 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 	}
 
 	err = r.Outputs(opts.StackName, map[string]cfn.ProcessOutputFn{
-		fmt.Sprintf("%s-EndpointAddress", composer.NameResource("RDSPostgres")): cfn.String(&p.EndpointAddress),
-		fmt.Sprintf("%s-EndpointPort", composer.NameResource("RDSPostgres")):    cfn.Int(&p.EndpointPort),
-		fmt.Sprintf("%s-GroupId", composer.NameResource("RDSPostgresOutgoing")): cfn.String(&p.OutgoingSecurityGroupID),
-		composer.NameResource("RDSInstanceAdmin"):                               cfn.String(&p.SecretsManagerAdminSecretARN),
+		fmt.Sprintf("%sEndpointAddress", composer.NameResource("RDSPostgres")): cfn.String(&p.EndpointAddress),
+		fmt.Sprintf("%sEndpointPort", composer.NameResource("RDSPostgres")):    cfn.Int(&p.EndpointPort),
+		fmt.Sprintf("%sGroupId", composer.NameResource("RDSPostgresOutgoing")): cfn.String(&p.OutgoingSecurityGroupID),
+		composer.NameResource("RDSInstanceAdmin"):                              cfn.String(&p.SecretsManagerAdminSecretARN),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("collecting stack outputs: %w", err)

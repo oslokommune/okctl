@@ -6,6 +6,16 @@ Outputs:
         Fn::Sub: ${AWS::StackName}-DatabaseSubnetGroupName
     Value:
       Ref: DatabaseSubnetGroup
+  DatabaseSubnetIds:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DatabaseSubnetIds
+    Value:
+      Fn::Join:
+      - ','
+      - - Ref: DatabaseSubnet00
+        - Ref: DatabaseSubnet01
+        - Ref: DatabaseSubnet02
   PrivateSubnetIds:
     Export:
       Name:

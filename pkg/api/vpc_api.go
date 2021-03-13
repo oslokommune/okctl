@@ -12,10 +12,12 @@ type Vpc struct {
 	StackName              string
 	CloudFormationTemplate []byte
 
-	VpcID          string
-	Cidr           string
-	PublicSubnets  []VpcSubnet
-	PrivateSubnets []VpcSubnet
+	VpcID                    string
+	Cidr                     string
+	PublicSubnets            []VpcSubnet
+	PrivateSubnets           []VpcSubnet
+	DatabaseSubnets          []VpcSubnet
+	DatabaseSubnetsGroupName string
 }
 
 // VpcSubnet represents an aws vpc subnet

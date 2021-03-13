@@ -28,8 +28,9 @@ func (g *DBParameterGroup) Name() string {
 // - https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.PostgreSQL.CommonDBATasks.html#Appendix.PostgreSQL.CommonDBATasks.Parameters
 func (g *DBParameterGroup) Resource() cloudformation.Resource {
 	return &rds.DBParameterGroup{
-		Family:     "postgres13",
-		Parameters: g.Parameters,
+		Description: "Postgres 13 property group",
+		Family:      "postgres13",
+		Parameters:  g.Parameters,
 	}
 }
 

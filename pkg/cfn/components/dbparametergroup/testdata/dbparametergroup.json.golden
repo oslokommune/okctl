@@ -2,6 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Resources:
   myParameterGroup:
     Properties:
+      Description: Postgres 13 property group
       Family: postgres13
       Parameters:
         some_parameter: some_value

@@ -51,18 +51,10 @@ func (o CreateVpcOpts) Validate() error {
 type VpcService interface {
 	CreateVpc(ctx context.Context, opts CreateVpcOpts) (*Vpc, error)
 	DeleteVpc(ctx context.Context, opts DeleteVpcOpts) error
-	GetVpc(ctx context.Context, id ID) (*Vpc, error)
 }
 
 // VpcCloudProvider defines the cloud actions that a Vpc service requires
 type VpcCloudProvider interface {
 	CreateVpc(opts CreateVpcOpts) (*Vpc, error)
 	DeleteVpc(opts DeleteVpcOpts) error
-}
-
-// VpcStore defines the storage actions that a vpc service requires
-type VpcStore interface {
-	SaveVpc(vpc *Vpc) error
-	DeleteVpc(id ID) error
-	GetVpc(id ID) (*Vpc, error)
 }

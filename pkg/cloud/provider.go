@@ -4,6 +4,10 @@ package cloud
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/service/s3"
+
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+
 	"github.com/aws/aws-sdk-go/service/iam"
 
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
@@ -67,6 +71,7 @@ func NewFromSession(region, principalARN string, sess *session.Session) (*Provid
 		Provider: services,
 	}
 
+	services.s3 = s3.New(sess)
 	services.iam = iam.New(sess)
 	services.cfn = cloudformation.New(sess)
 	services.ec2 = ec2.New(sess)
@@ -108,6 +113,7 @@ func NewSession(region string, auth awsauth.Authenticator) (*session.Session, *a
 
 // Services stores access to the various AWS APIs
 type Services struct {
+	s3    s3iface.S3API
 	iam   iamiface.IAMAPI
 	cfn   cloudformationiface.CloudFormationAPI
 	ec2   ec2iface.EC2API
@@ -121,6 +127,11 @@ type Services struct {
 
 	region       string
 	principalARN string
+}
+
+// S3 returns an interface to the S3 API
+func (s *Services) S3() s3iface.S3API {
+	return s.s3
 }
 
 // IAM returns an interface to the IAM API

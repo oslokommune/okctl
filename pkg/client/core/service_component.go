@@ -1,9 +1,15 @@
 package core
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strconv"
+
+	"github.com/oslokommune/okctl/pkg/s3api"
+	"github.com/oslokommune/okctl/pkg/static"
+
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/cfn"
 
@@ -22,6 +28,12 @@ type componentService struct {
 	report  client.ComponentReport
 
 	manifest client.ManifestService
+
+	provider v1alpha1.CloudProvider
+}
+
+func rotaterBucketName(clusterName, applicationName string) string {
+	return fmt.Sprintf("%s-%s-lambdas", clusterName, applicationName)
 }
 
 func adminSecretName(applicationName string) string {
@@ -32,8 +44,12 @@ func pgConfigMapName(applicationName string) string {
 	return fmt.Sprintf("%s-postgres", applicationName)
 }
 
+const (
+	postgresRotaterLambdaKey = "rotate-postgres-single.zip"
+)
+
 // nolint: funlen
-func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts client.CreatePostgresDatabaseOpts) (*api.PostgresDatabase, error) {
+func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts client.CreatePostgresDatabaseOpts) (*client.PostgresDatabase, error) {
 	err := c.spinner.Start("postgres")
 	if err != nil {
 		return nil, err
@@ -42,6 +58,24 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 	defer func() {
 		_ = c.spinner.Stop()
 	}()
+
+	rotaterBucket, err := c.api.CreateS3Bucket(api.CreateS3BucketOpts{
+		ID:        opts.ID,
+		Name:      rotaterBucketName(opts.ID.ClusterName, opts.ApplicationName),
+		StackName: cfn.NewStackNamer().S3Bucket(opts.ApplicationName, opts.ID.Repository, opts.ID.Environment),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = s3api.New(c.provider).PutObject(
+		rotaterBucket.Name,
+		postgresRotaterLambdaKey,
+		bytes.NewReader([]byte(static.SecretsManagerPostgresRotationSingleUserBody)),
+	)
+	if err != nil {
+		return nil, err
+	}
 
 	pg, err := c.api.CreatePostgresDatabase(api.CreatePostgresDatabaseOpts{
 		ID:                opts.ID,
@@ -109,6 +143,7 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		PostgresDatabase:      pg,
 		AdminSecretName:       adminSecretName(opts.ApplicationName),
 		DatabaseConfigMapName: pgConfigMapName(opts.ApplicationName),
+		RotaterBucket:         rotaterBucket,
 	}
 
 	r1, err := c.store.SavePostgresDatabase(postgres)
@@ -126,9 +161,10 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		return nil, err
 	}
 
-	return pg, nil
+	return postgres, nil
 }
 
+// nolint: funlen
 func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts client.DeletePostgresDatabaseOpts) error {
 	err := c.spinner.Start("postgres")
 	if err != nil {
@@ -166,6 +202,22 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 		return err
 	}
 
+	err = s3api.New(c.provider).DeleteObject(
+		rotaterBucketName(opts.ID.ClusterName, opts.ApplicationName),
+		postgresRotaterLambdaKey,
+	)
+	if err != nil {
+		return err
+	}
+
+	err = c.api.DeleteS3Bucket(api.DeleteS3BucketOpts{
+		ID:        opts.ID,
+		StackName: cfn.NewStackNamer().S3Bucket(opts.ApplicationName, opts.ID.Repository, opts.ID.Environment),
+	})
+	if err != nil {
+		return err
+	}
+
 	r1, err := c.store.RemovePostgresDatabase(opts.ApplicationName)
 	if err != nil {
 		return err
@@ -192,6 +244,7 @@ func NewComponentService(
 	state client.ComponentState,
 	report client.ComponentReport,
 	manifest client.ManifestService,
+	provider v1alpha1.CloudProvider,
 ) client.ComponentService {
 	return &componentService{
 		spinner:  spin,
@@ -200,5 +253,6 @@ func NewComponentService(
 		state:    state,
 		report:   report,
 		manifest: manifest,
+		provider: provider,
 	}
 }

@@ -43,23 +43,6 @@ Outputs:
       - okctlrepoenvRDSPostgresOutgoing
       - GroupId
 Resources:
-  okctlrepoenvAdminRotationSchedule:
-    DependsOn:
-    - okctlrepoenvSecretTargetAttachment
-    Properties:
-      HostedRotationLambda:
-        RotationLambdaName: okctlrepoenvAdminRotationSchedule-SecretsManagerRotation
-        RotationType: PostgreSQLSingleUser
-        VpcSecurityGroupIds:
-          Fn::GetAtt:
-          - okctlrepoenvRDSPostgresOutgoing
-          - GroupId
-        VpcSubnetIds: dbsubnetid-123okf,dbsubnetid-fjeo338
-      RotationRules:
-        AutomaticallyAfterDays: 30
-      SecretId:
-        Ref: okctlrepoenvRDSInstanceAdmin
-    Type: AWS::SecretsManager::RotationSchedule
   okctlrepoenvRDSInstanceAdmin:
     Properties:
       GenerateSecretString:
@@ -194,4 +177,3 @@ Resources:
       VpcEndpointType: Interface
       VpcId: vpcid-w9ufe
     Type: AWS::EC2::VPCEndpoint
-Transform: AWS::SecretsManager-2020-07-23

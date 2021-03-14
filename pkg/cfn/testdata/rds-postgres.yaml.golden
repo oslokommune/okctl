@@ -194,3 +194,4 @@ Resources:
       VpcEndpointType: Interface
       VpcId: vpcid-w9ufe
     Type: AWS::EC2::VPCEndpoint
+Transform: AWS::SecretsManager-2020-07-23

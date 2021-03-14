@@ -9,7 +9,6 @@ import (
 
 type vpc struct {
 	cloud api.VpcCloudProvider
-	store api.VpcStore
 }
 
 // CreateVpc implements the business logic for creating a vpc
@@ -24,11 +23,6 @@ func (v *vpc) CreateVpc(_ context.Context, opts api.CreateVpcOpts) (*api.Vpc, er
 		return nil, errors.E(err, "creating vpc", errors.Internal)
 	}
 
-	err = v.store.SaveVpc(got)
-	if err != nil {
-		return nil, errors.E(err, "storing vpc", errors.Internal)
-	}
-
 	return got, nil
 }
 
@@ -39,17 +33,12 @@ func (v *vpc) DeleteVpc(_ context.Context, opts api.DeleteVpcOpts) error {
 		return errors.E(err, "deleting vpc", errors.Internal)
 	}
 
-	return v.store.DeleteVpc(opts.ID)
+	return nil
 }
 
 // NewVpcService returns an instantiated vpc service
-func NewVpcService(cloud api.VpcCloudProvider, store api.VpcStore) api.VpcService {
+func NewVpcService(cloud api.VpcCloudProvider) api.VpcService {
 	return &vpc{
 		cloud: cloud,
-		store: store,
 	}
-}
-
-func (v *vpc) GetVpc(_ context.Context, id api.ID) (*api.Vpc, error) {
-	return v.store.GetVpc(id)
 }

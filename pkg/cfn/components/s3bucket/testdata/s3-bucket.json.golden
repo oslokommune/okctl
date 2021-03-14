@@ -1,0 +1,14 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  myS3Bucket:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-myS3Bucket
+    Value:
+      Ref: myS3Bucket
+Resources:
+  myS3Bucket:
+    Properties:
+      AccessControl: BucketOwnerFullControl
+      BucketName: lambda-code
+    Type: AWS::S3::Bucket

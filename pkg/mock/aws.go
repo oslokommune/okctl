@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 
@@ -274,6 +277,24 @@ func (a *IAMAPI) AttachRolePolicy(input *iam.AttachRolePolicyInput) (*iam.Attach
 	return a.AttachRolePolicyFn(input)
 }
 
+// S3API mocks the S3 API
+type S3API struct {
+	s3iface.S3API
+
+	PutObjectFn    func(*s3.PutObjectInput) (*s3.PutObjectOutput, error)
+	DeleteObjectFn func(*s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error)
+}
+
+// DeleteObject mocks the invocation
+func (a *S3API) DeleteObject(input *s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error) {
+	return a.DeleteObjectFn(input)
+}
+
+// PutObject mocks the invocation
+func (a *S3API) PutObject(input *s3.PutObjectInput) (*s3.PutObjectOutput, error) {
+	return a.PutObjectFn(input)
+}
+
 // DescribeStackEventsSuccess sets a success response on the describe event
 func (p *CloudProvider) DescribeStackEventsSuccess() *CloudProvider {
 	p.CFAPI.DescribeStackEventsFn = func(input *cloudformation.DescribeStackEventsInput) (*cloudformation.DescribeStackEventsOutput, error) {
@@ -339,6 +360,7 @@ func (p *CloudProvider) DescribeStacksResponse(status string) *CloudProvider {
 type CloudProvider struct {
 	v1alpha1.CloudProvider
 
+	S3API     *S3API
 	IAMAPI    *IAMAPI
 	EC2API    *EC2API
 	CFAPI     *CFAPI
@@ -347,6 +369,11 @@ type CloudProvider struct {
 	CFRONTAPI *CFRONTAPI
 	CIPAPI    *CIPAPI
 	SQAPI     *SQAPI
+}
+
+// S3 returns the mocked S3 API
+func (p *CloudProvider) S3() s3iface.S3API {
+	return p.S3API
 }
 
 // IAM returns the mocked IAM API
@@ -397,6 +424,8 @@ func (p *CloudProvider) PrincipalARN() string {
 // NewCloudProvider returns a mocked cloud provider with no mocks sets
 func NewCloudProvider() *CloudProvider {
 	return &CloudProvider{
+
+		S3API:     &S3API{},
 		EC2API:    &EC2API{},
 		CFAPI:     &CFAPI{},
 		EKSAPI:    &EKSAPI{},
@@ -509,6 +538,14 @@ func NewGoodCloudProvider() *CloudProvider {
 				return &iam.AttachRolePolicyOutput{}, nil
 			},
 		},
+		S3API: &S3API{
+			PutObjectFn: func(*s3.PutObjectInput) (*s3.PutObjectOutput, error) {
+				return &s3.PutObjectOutput{}, nil
+			},
+			DeleteObjectFn: func(*s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error) {
+				return &s3.DeleteObjectOutput{}, nil
+			},
+		},
 	}
 }
 
@@ -529,6 +566,14 @@ func NewBadCloudProvider() *CloudProvider {
 		},
 		IAMAPI: &IAMAPI{
 			AttachRolePolicyFn: func(*iam.AttachRolePolicyInput) (*iam.AttachRolePolicyOutput, error) {
+				return nil, errBad
+			},
+		},
+		S3API: &S3API{
+			PutObjectFn: func(*s3.PutObjectInput) (*s3.PutObjectOutput, error) {
+				return nil, errBad
+			},
+			DeleteObjectFn: func(*s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error) {
 				return nil, errBad
 			},
 		},

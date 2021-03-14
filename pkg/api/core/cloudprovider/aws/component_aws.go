@@ -13,6 +13,46 @@ type componentCloudProvider struct {
 	provider v1alpha1.CloudProvider
 }
 
+func (c *componentCloudProvider) CreateS3Bucket(opts *api.CreateS3BucketOpts) (*api.S3Bucket, error) {
+	composition := components.NewS3BucketComposer(opts.Name, opts.ID.Repository, opts.ID.Environment)
+
+	template, err := cfn.New(composition).Build()
+	if err != nil {
+		return nil, fmt.Errorf("building the cloud formation template: %w", err)
+	}
+
+	r := cfn.NewRunner(c.provider)
+
+	err = r.CreateIfNotExists(
+		opts.StackName,
+		template,
+		nil,
+		defaultTimeOut,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("creating cloud formation stack: %w", err)
+	}
+
+	b := &api.S3Bucket{
+		ID:                     opts.ID,
+		StackName:              opts.StackName,
+		CloudFormationTemplate: string(template),
+	}
+
+	err = r.Outputs(opts.StackName, map[string]cfn.ProcessOutputFn{
+		composition.ResourceBucketNameOutput(): cfn.String(&b.Name),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("collecting stack outputs: %w", err)
+	}
+
+	return b, nil
+}
+
+func (c *componentCloudProvider) DeleteS3Bucket(opts *api.DeleteS3BucketOpts) error {
+	return cfn.NewRunner(c.provider).Delete(opts.StackName)
+}
+
 const (
 	postgresTimeOutInMinutes = 45
 )

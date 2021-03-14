@@ -25,6 +25,7 @@ const (
 	DefaultStackNameAliasRecordSet                    = "aliasrecordset"
 	DefaultStackNameIdentityPoolUser                  = "identitypooluser"
 	DefaultStackNameRDSPostgres                       = "rdspostgres"
+	DefaultStackNameS3Bucket                          = "s3bucket"
 )
 
 // StackNamer knows how to name cloud formation stacks
@@ -33,6 +34,17 @@ type StackNamer struct{}
 // NewStackNamer returns an initialised stack namer
 func NewStackNamer() *StackNamer {
 	return &StackNamer{}
+}
+
+// S3Bucket returns the stack name of an AWS S3 Bucket
+func (n *StackNamer) S3Bucket(app, repository, env string) string {
+	return fmt.Sprintf("%s-%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameS3Bucket,
+		repository,
+		env,
+		app,
+	)
 }
 
 // RDSPostgres returns the stack name of a RDS Postgres instance

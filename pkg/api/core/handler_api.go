@@ -81,6 +81,8 @@ type Endpoints struct {
 	CreateNamespace                               endpoint.Endpoint
 	CreatePostgresDatabase                        endpoint.Endpoint
 	DeletePostgresDatabase                        endpoint.Endpoint
+	CreateS3Bucket                                endpoint.Endpoint
+	DeleteS3Bucket                                endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -154,6 +156,8 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateNamespace:                               makeCreateNamespace(s.Kube),
 		CreatePostgresDatabase:                        makeCreatePostgresDatabaseEndpoint(s.ComponentService),
 		DeletePostgresDatabase:                        makeDeletePostgresDatabaseEndpoint(s.ComponentService),
+		CreateS3Bucket:                                makeCreateS3BucketEndpoint(s.ComponentService),
+		DeleteS3Bucket:                                makeDeleteS3BucketEndpoint(s.ComponentService),
 	}
 }
 
@@ -225,6 +229,8 @@ type Handlers struct {
 	CreateNamespace                               http.Handler
 	CreatePostgresDatabase                        http.Handler
 	DeletePostgresDatabase                        http.Handler
+	CreateS3Bucket                                http.Handler
+	DeleteS3Bucket                                http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -324,6 +330,8 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateNamespace:                               newServer(endpoints.CreateNamespace, decodeStructRequest(&api.CreateNamespaceOpts{})),
 		CreatePostgresDatabase:                        newServer(endpoints.CreatePostgresDatabase, decodeStructRequest(&api.CreatePostgresDatabaseOpts{})),
 		DeletePostgresDatabase:                        newServer(endpoints.DeletePostgresDatabase, decodeStructRequest(&api.DeletePostgresDatabaseOpts{})),
+		CreateS3Bucket:                                newServer(endpoints.CreateS3Bucket, decodeStructRequest(&api.CreateS3BucketOpts{})),
+		DeleteS3Bucket:                                newServer(endpoints.DeleteS3Bucket, decodeStructRequest(&api.DeleteS3BucketOpts{})),
 	}
 }
 
@@ -490,6 +498,10 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 				r.Method(http.MethodPost, "/", handlers.CreatePostgresDatabase)
 				r.Method(http.MethodDelete, "/", handlers.DeletePostgresDatabase)
 			})
+			r.Route("/s3bucket", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.CreateS3Bucket)
+				r.Method(http.MethodDelete, "/", handlers.DeleteS3Bucket)
+			})
 		})
 	})
 
@@ -549,6 +561,7 @@ const (
 	scaleTag                     = "scale"
 	postgresTag                  = "postgres"
 	componentsTag                = "components"
+	s3bucketTag                  = "s3bucket"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -622,6 +635,8 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateNamespace:                               logmd.Logging(logger, "create", kubeTag, namespaceTag)(endpoints.CreateNamespace),
 			CreatePostgresDatabase:                        logmd.Logging(logger, "create", componentsTag, postgresTag)(endpoints.CreatePostgresDatabase),
 			DeletePostgresDatabase:                        logmd.Logging(logger, "delete", componentsTag, postgresTag)(endpoints.DeletePostgresDatabase),
+			CreateS3Bucket:                                logmd.Logging(logger, "create", componentsTag, s3bucketTag)(endpoints.CreateS3Bucket),
+			DeleteS3Bucket:                                logmd.Logging(logger, "delete", componentsTag, s3bucketTag)(endpoints.DeleteS3Bucket),
 		}
 	}
 }

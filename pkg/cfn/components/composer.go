@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/cfn/components/s3bucket"
+
 	"github.com/oslokommune/okctl/pkg/cfn/components/securitygroup"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/secrettargetattachment"
@@ -1489,4 +1491,39 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 		// 	String: aws.String(serverlessTransform),
 		// },
 	}, nil
+}
+
+// S3BucketComposer contains the state required for creating
+// the AWS S3 bucket
+type S3BucketComposer struct {
+	BucketName  string
+	Repository  string
+	Environment string
+}
+
+// ResourceBucketNameOutput returns the name of the resource
+func (s *S3BucketComposer) ResourceBucketNameOutput() string {
+	return fmt.Sprintf("%s-%s-%s-S3Bucket", s.BucketName, s.Repository, s.Environment)
+}
+
+// Compose returns the outputs and resources
+func (s *S3BucketComposer) Compose() (*cfn.Composition, error) {
+	b := s3bucket.New(
+		s.ResourceBucketNameOutput(),
+		s.BucketName,
+	)
+
+	return &cfn.Composition{
+		Outputs:   []cfn.StackOutputer{b},
+		Resources: []cfn.ResourceNamer{b},
+	}, nil
+}
+
+// NewS3BucketComposer returns an initialised AWS S3 bucket composer
+func NewS3BucketComposer(bucketName, repo, env string) *S3BucketComposer {
+	return &S3BucketComposer{
+		BucketName:  bucketName,
+		Repository:  repo,
+		Environment: env,
+	}
 }

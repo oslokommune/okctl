@@ -17,62 +17,62 @@ func TestBuilderAndComposers(t *testing.T) {
 		composer cfn.Composer
 	}{
 		{
-			name:     "Builder with VPC composer",
+			name:     "VPC composer",
 			golden:   "vpc-cloudformation.yaml",
 			composer: components.NewVPCComposer("test", "test", "192.168.0.0/20", "eu-west-1"),
 		},
 		{
-			name:     "Builder with Minimal VPC composer",
+			name:     "Minimal VPC composer",
 			golden:   "vpc-minimal-cf.yaml",
 			composer: components.NewMinimalVPCComposer("test", "test", "192.168.0.0/20", "eu-west-1"),
 		},
 		{
-			name:     "Builder with ExternalSecretsPolicy composer",
+			name:     "ExternalSecretsPolicy composer",
 			golden:   "esp-cloudformation.yaml",
 			composer: components.NewExternalSecretsPolicyComposer("repo", "test"),
 		},
 		{
-			name:     "Builder with AlbIngressControllerPolicy composer",
+			name:     "AlbIngressControllerPolicy composer",
 			golden:   "alb-ingress-cloudformation.yaml",
 			composer: components.NewAlbIngressControllerPolicyComposer("repo", "env"),
 		},
 		{
-			name:     "Builder with AWSLoadBalancerControllerPolicy composer",
+			name:     "AWSLoadBalancerControllerPolicy composer",
 			golden:   "aws-load-balancer-controller.yaml",
 			composer: components.NewAWSLoadBalancerControllerComposer("repo", "env"),
 		},
 		{
-			name:     "Builder with ExternalDNSPolicy composer",
+			name:     "ExternalDNSPolicy composer",
 			golden:   "external-dns-cloudformation.yaml",
 			composer: components.NewExternalDNSPolicyComposer("repo", "env"),
 		},
 		{
-			name:     "Builder with AutoscalerPolicy composer",
+			name:     "AutoscalerPolicy composer",
 			golden:   "autoscaler-cloudformation.yaml",
 			composer: components.NewAutoscalerPolicyComposer("repo", "env"),
 		},
 		{
-			name:     "Builder with BlockstoragePolicy composer",
+			name:     "BlockstoragePolicy composer",
 			golden:   "blockstorage-cloudformation.yaml",
 			composer: components.NewBlockstoragePolicyComposer("repo", "env"),
 		},
 		{
-			name:     "Builder with PublicCertificate composer",
+			name:     "PublicCertificate composer",
 			golden:   "public-certificate-cf.yaml",
 			composer: components.NewPublicCertificateComposer("test.oslo.systems.", "AZ12345"),
 		},
 		{
-			name:     "Builder with CloudwatchDatasourcePolicyComposer",
+			name:     "CloudwatchDatasourcePolicyComposer",
 			golden:   "cloudwatch-datasource-cf.yaml",
 			composer: components.NewCloudwatchDatasourcePolicyComposer("repo", "env"),
 		},
 		{
-			name:     "Builder with FargateCloudWatchPolicy",
+			name:     "FargateCloudWatchPolicy",
 			golden:   "fargate-cloudwatch.yaml",
 			composer: components.NewFargateCloudwatchPolicyComposer("repo", "env"),
 		},
 		{
-			name:   "Builder with UserPool composer",
+			name:   "UserPool composer",
 			golden: "userpool.yaml",
 			composer: components.NewUserPool(
 				"env",
@@ -83,12 +83,12 @@ func TestBuilderAndComposers(t *testing.T) {
 			),
 		},
 		{
-			name:     "Builder with UserPoolClient",
+			name:     "UserPoolClient",
 			golden:   "userpool-client.yaml",
 			composer: components.NewUserPoolClient("argocd", "test", "test", "https://argocd/callback", "GHFE723FAKE"),
 		},
 		{
-			name:   "Builder with AliasRecordSet composer",
+			name:   "AliasRecordSet composer",
 			golden: "alias-recordset.yaml",
 			composer: components.NewAliasRecordSet(
 
@@ -100,7 +100,7 @@ func TestBuilderAndComposers(t *testing.T) {
 			),
 		},
 		{
-			name:   "Builder with RDSPostgres composer",
+			name:   "RDSPostgres composer",
 			golden: "rds-postgres.yaml",
 			composer: components.NewRDSPostgresComposer(
 				components.RDSPostgresComposerOpts{
@@ -115,6 +115,11 @@ func TestBuilderAndComposers(t *testing.T) {
 					VPCDBSubnetCIDRs:  []string{"192.168.1.0/20", "192.168.2.0/20"},
 				},
 			),
+		},
+		{
+			name:     "S3Bucket composer",
+			golden:   "s3-bucket.yaml",
+			composer: components.NewS3BucketComposer("myBucket", "repo", "env"),
 		},
 	}
 

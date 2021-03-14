@@ -41,6 +41,13 @@ type DeleteSecretOpts struct {
 	Name string
 }
 
+// Validate the inputs
+func (o DeleteSecretOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.Name, validation.Required),
+	)
+}
+
 // AnonymizeRequest removes sensitive data from the logs
 func (o CreateSecretOpts) AnonymizeRequest(request interface{}) interface{} {
 	r, _ := request.(CreateSecretOpts)
@@ -69,9 +76,4 @@ type ParameterService interface {
 type ParameterCloudProvider interface {
 	CreateSecret(opts CreateSecretOpts) (*SecretParameter, error)
 	DeleteSecret(opts DeleteSecretOpts) error
-}
-
-// ParameterStore defines the storage operations
-type ParameterStore interface {
-	SaveSecret(*SecretParameter) error
 }

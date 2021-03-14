@@ -726,7 +726,6 @@ func (o *Okctl) initialise() error {
 		o.FileSystem,
 	)
 
-	clusterStore := noop.NewClusterStore()
 	certificateStore := noop.NewCertificateStore()
 
 	vpcService := core.NewVpcService(
@@ -734,7 +733,6 @@ func (o *Okctl) initialise() error {
 	)
 
 	clusterService := core.NewClusterService(
-		clusterStore,
 		run.NewClusterRun(
 			o.Debug,
 			kubeConfigStore,

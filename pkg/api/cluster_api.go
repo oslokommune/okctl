@@ -62,10 +62,3 @@ type ClusterRun interface {
 	CreateCluster(opts ClusterCreateOpts) (*Cluster, error)
 	DeleteCluster(opts ClusterDeleteOpts) error
 }
-
-// ClusterStore provides an interface for storage operations
-type ClusterStore interface {
-	SaveCluster(cluster *Cluster) error
-	DeleteCluster(id ID) error
-	GetCluster(id ID) (*Cluster, error)
-}

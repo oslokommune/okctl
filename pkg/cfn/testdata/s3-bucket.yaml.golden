@@ -1,0 +1,14 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  myBucket-repo-env-S3Bucket:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-myBucket-repo-env-S3Bucket
+    Value:
+      Ref: myBucket-repo-env-S3Bucket
+Resources:
+  myBucket-repo-env-S3Bucket:
+    Properties:
+      AccessControl: BucketOwnerFullControl
+      BucketName: myBucket
+    Type: AWS::S3::Bucket

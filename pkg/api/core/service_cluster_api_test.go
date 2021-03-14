@@ -34,7 +34,7 @@ func TestClusterCreateCluster(t *testing.T) {
 			),
 			opts: api.ClusterCreateOpts{},
 			//nolint: lll
-			expect:      "failed to validate inputs: Cidr: cannot be blank; ID: (AWSAccountID: cannot be blank; ClusterName: cannot be blank; Environment: cannot be blank; Region: cannot be blank; Repository: cannot be blank.); Version: cannot be blank; VpcID: cannot be blank; VpcPrivateSubnets: cannot be blank; VpcPublicSubnets: cannot be blank.",
+			expect:      "validating inputs: Cidr: cannot be blank; ID: (AWSAccountID: cannot be blank; ClusterName: cannot be blank; Environment: cannot be blank; Region: cannot be blank; Repository: cannot be blank.); Version: cannot be blank; VpcID: cannot be blank; VpcPrivateSubnets: cannot be blank; VpcPublicSubnets: cannot be blank.",
 			expectError: true,
 		},
 	}

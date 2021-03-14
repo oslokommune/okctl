@@ -730,7 +730,6 @@ func (o *Okctl) initialise() error {
 	helmStore := noop.NewHelmStore()
 	kubeStore := noop.NewKubeStore()
 	certificateStore := noop.NewCertificateStore()
-	parameterStore := noop.NewParameterStore()
 
 	vpcService := core.NewVpcService(
 		awsProvider.NewVpcCloud(o.CloudProvider),
@@ -803,7 +802,6 @@ func (o *Okctl) initialise() error {
 
 	parameterService := core.NewParameterService(
 		awsProvider.NewParameterCloudProvider(o.CloudProvider),
-		parameterStore,
 	)
 
 	componentService := core.NewComponentService(

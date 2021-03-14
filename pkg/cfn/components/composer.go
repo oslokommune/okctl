@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/oslokommune/okctl/pkg/cfn/components/securitygroup"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/secrettargetattachment"
@@ -289,12 +288,22 @@ func (e *ExternalSecretsPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPo
 			{
 				Effect: policydocument.EffectTypeAllow,
 				Action: []string{
-					"secretsmanager:GetSecretValue",
 					"ssm:GetParameter",
 				},
 				Resource: []string{
-					asmParameterARN("*"),
 					ssmParameterARN("*"),
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"secretsmanager:GetResourcePolicy",
+					"secretsmanager:GetSecretValue",
+					"secretsmanager:DescribeSecret",
+					"secretsmanager:ListSecretVersionIds",
+				},
+				Resource: []string{
+					asmParameterARN("*"),
 				},
 			},
 		},
@@ -1476,8 +1485,8 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 			sme,
 		},
 		// This is not required for the time being
-		Transform: &cloudformation.Transform{
-			String: aws.String(serverlessTransform),
-		},
+		// Transform: &cloudformation.Transform{
+		// 	String: aws.String(serverlessTransform),
+		// },
 	}, nil
 }

@@ -726,7 +726,6 @@ func (o *Okctl) initialise() error {
 		o.FileSystem,
 	)
 
-	vpcStore := noop.NewVpcStore()
 	clusterStore := noop.NewClusterStore()
 	helmStore := noop.NewHelmStore()
 	kubeStore := noop.NewKubeStore()
@@ -735,7 +734,6 @@ func (o *Okctl) initialise() error {
 
 	vpcService := core.NewVpcService(
 		awsProvider.NewVpcCloud(o.CloudProvider),
-		vpcStore,
 	)
 
 	clusterService := core.NewClusterService(

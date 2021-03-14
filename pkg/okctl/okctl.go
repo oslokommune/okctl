@@ -219,6 +219,7 @@ func (o *Okctl) componentService(outputDir string, spin spinner.Spinner) client.
 		stateSaver.NewComponentState(o.RepoStateWithEnv),
 		console.NewComponentReport(o.Err, spin),
 		o.manifestService(path.Join(outputDir, config.DefaultComponentBaseDir), spin.SubSpinner()),
+		o.CloudProvider,
 	)
 }
 

@@ -156,15 +156,3 @@ type ManagedPolicyCloudProvider interface {
 	CreatePolicy(opts CreatePolicyOpts) (*ManagedPolicy, error)
 	DeletePolicy(opts DeletePolicyOpts) error
 }
-
-// ManagedPolicyStore defines the storage layer for managed policies
-type ManagedPolicyStore interface {
-	SaveExternalSecretsPolicy(policy *ManagedPolicy) error
-	GetExternalSecretsPolicy() (*ManagedPolicy, error)
-	SaveAlbIngressControllerPolicy(policy *ManagedPolicy) error
-	GetAlbIngressControllerPolicy() (*ManagedPolicy, error)
-	SaveAWSLoadBalancerControllerPolicy(policy *ManagedPolicy) error
-	GetAWSLoadBalancerControllerPolicy() (*ManagedPolicy, error)
-	SaveExternalDNSPolicy(policy *ManagedPolicy) error
-	GetExternalDNSPolicy() (*ManagedPolicy, error)
-}

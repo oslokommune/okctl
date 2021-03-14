@@ -32,12 +32,13 @@ type PostgresDatabase struct {
 	Namespace             string
 	AdminSecretName       string
 	DatabaseConfigMapName string
+	RotaterBucket         *api.S3Bucket
 	*api.PostgresDatabase
 }
 
 // ComponentService orchestrates the creation of various services
 type ComponentService interface {
-	CreatePostgresDatabase(ctx context.Context, opts CreatePostgresDatabaseOpts) (*api.PostgresDatabase, error)
+	CreatePostgresDatabase(ctx context.Context, opts CreatePostgresDatabaseOpts) (*PostgresDatabase, error)
 	DeletePostgresDatabase(ctx context.Context, opts DeletePostgresDatabaseOpts) error
 }
 
@@ -45,6 +46,8 @@ type ComponentService interface {
 type ComponentAPI interface {
 	CreatePostgresDatabase(opts api.CreatePostgresDatabaseOpts) (*api.PostgresDatabase, error)
 	DeletePostgresDatabase(opts api.DeletePostgresDatabaseOpts) error
+	CreateS3Bucket(opts api.CreateS3BucketOpts) (*api.S3Bucket, error)
+	DeleteS3Bucket(opts api.DeleteS3BucketOpts) error
 }
 
 // ComponentStore saves the data

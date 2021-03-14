@@ -7,10 +7,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-
 	"github.com/oslokommune/okctl/pkg/cfn/components/securitygroup"
-
-	"github.com/oslokommune/okctl/pkg/cfn/components/rotationschedule"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/secrettargetattachment"
 
@@ -1347,12 +1344,18 @@ func NewRDSPostgresComposer(opts RDSPostgresComposerOpts) *RDSPostgresComposer {
 }
 
 // We use the policy document described here:
-// https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html
+// - https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html
 const amazonRDSEnhancedMonitoringRole = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
 
 // This transform is required when adding the hosted rotation lambda
-// https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-secretsmanager-rotationschedule-hostedrotationlambda.html
+// - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-secretsmanager-rotationschedule-hostedrotationlambda.html
+// nolint
 const hostedRotationLambdaTransform = "AWS::SecretsManager-2020-07-23"
+
+// This transform is required when adding the serverless lambdas
+// - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-aws-serverless.html
+// nolint
+const serverlessTransform = "AWS::Serverless-2016-10-31"
 
 // NameResource returns the resource name
 func (c *RDSPostgresComposer) NameResource(resource string) string {
@@ -1437,13 +1440,16 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 		postgres,
 	)
 
-	rotation := rotationschedule.NewPostgres(
-		c.NameResource("AdminRotationSchedule"),
-		admin,
-		attachment,
-		c.VPCDBSubnetIDs,
-		outgoing,
-	)
+	// Commenting out the rotation now, will rather set this
+	// up in a subsequent PR as it will require more work
+	// than originally expected.
+	// rotation := rotationschedule.NewPostgres(
+	// 	c.NameResource("AdminRotationSchedule"),
+	// 	admin,
+	// 	attachment,
+	// 	c.VPCDBSubnetIDs,
+	// 	outgoing,
+	// )
 
 	sme := vpcendpoint.NewSecretsManager(
 		c.NameResource("SecretsManagerVPCEndpoint"),
@@ -1466,11 +1472,12 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 			incoming,
 			postgres,
 			attachment,
-			rotation,
+			// rotation,
 			sme,
 		},
+		// This is not required for the time being
 		Transform: &cloudformation.Transform{
-			String: aws.String(hostedRotationLambdaTransform),
+			String: aws.String(serverlessTransform),
 		},
 	}, nil
 }

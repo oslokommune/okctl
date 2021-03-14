@@ -246,11 +246,3 @@ type HelmRun interface {
 	CreateHelmRelease(opts CreateHelmReleaseOpts) (*Helm, error)
 	DeleteHelmRelease(opts DeleteHelmReleaseOpts) error
 }
-
-// HelmStore defines the storage layer
-type HelmStore interface {
-	SaveExternalSecretsHelmChart(*Helm) error
-	SaveAlbIngressControllerHelmChart(*Helm) error
-	SaveAWSLoadBalancerControllerHelmChart(*Helm) error
-	SaveArgoCD(*Helm) error
-}

@@ -727,7 +727,6 @@ func (o *Okctl) initialise() error {
 	)
 
 	clusterStore := noop.NewClusterStore()
-	helmStore := noop.NewHelmStore()
 	certificateStore := noop.NewCertificateStore()
 
 	vpcService := core.NewVpcService(
@@ -786,7 +785,6 @@ func (o *Okctl) initialise() error {
 
 	helmService := core.NewHelmService(
 		helmRun,
-		helmStore,
 	)
 
 	domainService := core.NewDomainService(

@@ -9,43 +9,39 @@ import (
 
 type parameter struct {
 	cloudProvider api.ParameterCloudProvider
-	store         api.ParameterStore
 }
 
-func (p *parameter) DeleteSecret(ctx context.Context, opts api.DeleteSecretOpts) error {
-	err := p.cloudProvider.DeleteSecret(api.DeleteSecretOpts{
-		Name: opts.Name,
-	})
+func (p *parameter) DeleteSecret(_ context.Context, opts api.DeleteSecretOpts) error {
+	err := opts.Validate()
 	if err != nil {
-		return err
+		return errors.E(err, "validating inputs", errors.Invalid)
+	}
+
+	err = p.cloudProvider.DeleteSecret(opts)
+	if err != nil {
+		return errors.E(err, "deleting secret parameter", errors.Internal)
 	}
 
 	return nil
 }
 
-func (p *parameter) CreateSecret(ctx context.Context, opts api.CreateSecretOpts) (*api.SecretParameter, error) {
+func (p *parameter) CreateSecret(_ context.Context, opts api.CreateSecretOpts) (*api.SecretParameter, error) {
 	err := opts.Validate()
 	if err != nil {
-		return nil, errors.E(err, "failed to validate secret parameter input", errors.Invalid)
+		return nil, errors.E(err, "validating inputs", errors.Invalid)
 	}
 
 	param, err := p.cloudProvider.CreateSecret(opts)
 	if err != nil {
-		return nil, errors.E(err, "failed to create secret parameter", errors.Internal)
-	}
-
-	err = p.store.SaveSecret(param)
-	if err != nil {
-		return nil, errors.E(err, "failed to store secret parameter", errors.Internal)
+		return nil, errors.E(err, "creating secret parameter", errors.Internal)
 	}
 
 	return param, nil
 }
 
 // NewParameterService returns an initialised parameter service
-func NewParameterService(cloudProvider api.ParameterCloudProvider, store api.ParameterStore) api.ParameterService {
+func NewParameterService(cloudProvider api.ParameterCloudProvider) api.ParameterService {
 	return &parameter{
 		cloudProvider: cloudProvider,
-		store:         store,
 	}
 }

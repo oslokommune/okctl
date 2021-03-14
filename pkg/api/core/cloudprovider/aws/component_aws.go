@@ -42,7 +42,7 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 	err = r.CreateIfNotExists(
 		opts.StackName,
 		template,
-		[]string{cfn.CapabilityNamedIam},
+		[]string{cfn.CapabilityNamedIam, cfn.CapabilityAutoExpand},
 		postgresTimeOutInMinutes,
 	)
 	if err != nil {

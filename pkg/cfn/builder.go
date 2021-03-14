@@ -24,6 +24,7 @@ type Builder struct {
 type Composition struct {
 	Outputs   []StackOutputer
 	Resources []ResourceNamer
+	Transform *cloudformation.Transform
 }
 
 // New returns a VPC builder
@@ -60,6 +61,8 @@ func (b *Builder) Build() ([]byte, error) {
 
 		b.template.Resources[resource.Name()] = resource.Resource()
 	}
+
+	b.template.Transform = c.Transform
 
 	return b.template.YAML()
 }

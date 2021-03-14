@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+
 	"github.com/oslokommune/okctl/pkg/cfn/components/securitygroup"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/rotationschedule"
@@ -1348,6 +1350,10 @@ func NewRDSPostgresComposer(opts RDSPostgresComposerOpts) *RDSPostgresComposer {
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html
 const amazonRDSEnhancedMonitoringRole = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
 
+// This transform is required when adding the hosted rotation lambda
+// https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-secretsmanager-rotationschedule-hostedrotationlambda.html
+const hostedRotationLambdaTransform = "AWS::SecretsManager-2020-07-23"
+
 // NameResource returns the resource name
 func (c *RDSPostgresComposer) NameResource(resource string) string {
 	return fmt.Sprintf("%s%s%s%s", c.ApplicationDBName, c.Repository, c.Environment, resource)
@@ -1462,6 +1468,9 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 			attachment,
 			rotation,
 			sme,
+		},
+		Transform: &cloudformation.Transform{
+			String: aws.String(hostedRotationLambdaTransform),
 		},
 	}, nil
 }

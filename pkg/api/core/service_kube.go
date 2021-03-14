@@ -8,8 +8,7 @@ import (
 )
 
 type kubeService struct {
-	run   api.KubeRun
-	store api.KubeStore
+	run api.KubeRun
 }
 
 func (k *kubeService) CreateNamespace(_ context.Context, opts api.CreateNamespaceOpts) (*api.Namespace, error) {
@@ -99,7 +98,7 @@ func (k *kubeService) CreateStorageClass(_ context.Context, opts api.CreateStora
 func (k *kubeService) DeleteNamespace(_ context.Context, opts api.DeleteNamespaceOpts) error {
 	err := opts.Validate()
 	if err != nil {
-		return errors.E(err, "validating inputs", errors.Internal)
+		return errors.E(err, "validating inputs", errors.Invalid)
 	}
 
 	err = k.run.DeleteNamespace(opts)
@@ -113,17 +112,12 @@ func (k *kubeService) DeleteNamespace(_ context.Context, opts api.DeleteNamespac
 func (k *kubeService) CreateExternalSecrets(_ context.Context, opts api.CreateExternalSecretsOpts) (*api.ExternalSecretsKube, error) {
 	err := opts.Validate()
 	if err != nil {
-		return nil, errors.E(err, "failed to validate input options")
+		return nil, errors.E(err, "validating inputs", errors.Invalid)
 	}
 
 	kube, err := k.run.CreateExternalSecrets(opts)
 	if err != nil {
-		return nil, errors.E(err, "failed to deploy kubernetes manifests")
-	}
-
-	err = k.store.SaveExternalSecrets(kube)
-	if err != nil {
-		return nil, errors.E(err, "failed to save kubernetes manifests")
+		return nil, errors.E(err, "creating external secrets", errors.Internal)
 	}
 
 	return kube, nil
@@ -132,26 +126,20 @@ func (k *kubeService) CreateExternalSecrets(_ context.Context, opts api.CreateEx
 func (k *kubeService) CreateExternalDNSKubeDeployment(_ context.Context, opts api.CreateExternalDNSKubeDeploymentOpts) (*api.ExternalDNSKube, error) {
 	err := opts.Validate()
 	if err != nil {
-		return nil, errors.E(err, "failed to validate input options")
+		return nil, errors.E(err, "validating inputs", errors.Invalid)
 	}
 
 	kube, err := k.run.CreateExternalDNSKubeDeployment(opts)
 	if err != nil {
-		return nil, errors.E(err, "failed to deploy kubernetes manifests")
-	}
-
-	err = k.store.SaveExternalDNSKubeDeployment(kube)
-	if err != nil {
-		return nil, errors.E(err, "failed to save kubernetes manifests")
+		return nil, errors.E(err, "creating external dns", errors.Internal)
 	}
 
 	return kube, nil
 }
 
 // NewKubeService returns an initialised kube service
-func NewKubeService(store api.KubeStore, run api.KubeRun) api.KubeService {
+func NewKubeService(run api.KubeRun) api.KubeService {
 	return &kubeService{
-		run:   run,
-		store: store,
+		run: run,
 	}
 }

@@ -728,7 +728,6 @@ func (o *Okctl) initialise() error {
 
 	clusterStore := noop.NewClusterStore()
 	helmStore := noop.NewHelmStore()
-	kubeStore := noop.NewKubeStore()
 	certificateStore := noop.NewCertificateStore()
 
 	vpcService := core.NewVpcService(
@@ -759,7 +758,6 @@ func (o *Okctl) initialise() error {
 	)
 
 	kubeService := core.NewKubeService(
-		kubeStore,
 		run.NewKubeRun(o.CloudProvider, o.CredentialsProvider.Aws()),
 	)
 

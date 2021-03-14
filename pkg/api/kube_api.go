@@ -252,10 +252,3 @@ type KubeRun interface {
 	ScaleDeployment(opts ScaleDeploymentOpts) error
 	CreateNamespace(opts CreateNamespaceOpts) (*Namespace, error)
 }
-
-// KubeStore provides kube store layer
-type KubeStore interface {
-	SaveExternalDNSKubeDeployment(kube *ExternalDNSKube) error
-	GetExternalDNSKubeDeployment() (*ExternalDNSKube, error)
-	SaveExternalSecrets(kube *ExternalSecretsKube) error
-}

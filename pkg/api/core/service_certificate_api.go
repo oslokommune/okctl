@@ -9,13 +9,12 @@ import (
 
 type certificateService struct {
 	cloudProvider api.CertificateCloudProvider
-	store         api.CertificateStore
 }
 
 func (c *certificateService) DeleteCognitoCertificate(_ context.Context, opts api.DeleteCognitoCertificateOpts) error {
 	err := opts.Validate()
 	if err != nil {
-		return errors.E(err, "validating cognito inputs", errors.Invalid)
+		return errors.E(err, "validating inputs", errors.Invalid)
 	}
 
 	err = c.cloudProvider.DeleteCognitoCertificate(opts)
@@ -29,7 +28,7 @@ func (c *certificateService) DeleteCognitoCertificate(_ context.Context, opts ap
 func (c *certificateService) DeleteCertificate(_ context.Context, opts api.DeleteCertificateOpts) error {
 	err := opts.Validate()
 	if err != nil {
-		return errors.E(err, "validating certificate inputs", errors.Invalid)
+		return errors.E(err, "validating inputs", errors.Invalid)
 	}
 
 	err = c.cloudProvider.DeleteCertificate(opts)
@@ -40,10 +39,10 @@ func (c *certificateService) DeleteCertificate(_ context.Context, opts api.Delet
 	return nil
 }
 
-func (c *certificateService) CreateCertificate(ctx context.Context, opts api.CreateCertificateOpts) (*api.Certificate, error) {
+func (c *certificateService) CreateCertificate(_ context.Context, opts api.CreateCertificateOpts) (*api.Certificate, error) {
 	err := opts.Validate()
 	if err != nil {
-		return nil, errors.E(err, "validating certificate inputs", errors.Invalid)
+		return nil, errors.E(err, "validating inputs", errors.Invalid)
 	}
 
 	cert, err := c.cloudProvider.CreateCertificate(opts)
@@ -51,18 +50,12 @@ func (c *certificateService) CreateCertificate(ctx context.Context, opts api.Cre
 		return nil, errors.E(err, "creating certificate", errors.Internal)
 	}
 
-	err = c.store.SaveCertificate(cert)
-	if err != nil {
-		return nil, errors.E(err, "storing certificate", errors.IO)
-	}
-
 	return cert, nil
 }
 
 // NewCertificateService returns an initialised certificate service
-func NewCertificateService(cloudProvider api.CertificateCloudProvider, store api.CertificateStore) api.CertificateService {
+func NewCertificateService(cloudProvider api.CertificateCloudProvider) api.CertificateService {
 	return &certificateService{
 		cloudProvider: cloudProvider,
-		store:         store,
 	}
 }

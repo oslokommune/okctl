@@ -32,8 +32,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/config/state"
 
-	"github.com/oslokommune/okctl/pkg/api/core/store/noop"
-
 	"github.com/oslokommune/okctl/pkg/credentials/github"
 
 	"github.com/mishudark/errors"
@@ -726,8 +724,6 @@ func (o *Okctl) initialise() error {
 		o.FileSystem,
 	)
 
-	certificateStore := noop.NewCertificateStore()
-
 	vpcService := core.NewVpcService(
 		awsProvider.NewVpcCloud(o.CloudProvider),
 	)
@@ -791,7 +787,6 @@ func (o *Okctl) initialise() error {
 
 	certificateService := core.NewCertificateService(
 		awsProvider.NewCertificateCloudProvider(o.CloudProvider),
-		certificateStore,
 	)
 
 	parameterService := core.NewParameterService(

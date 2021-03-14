@@ -76,8 +76,3 @@ type CertificateCloudProvider interface {
 	DeleteCertificate(opts DeleteCertificateOpts) error
 	DeleteCognitoCertificate(opts DeleteCognitoCertificateOpts) error
 }
-
-// CertificateStore defines the storage operations
-type CertificateStore interface {
-	SaveCertificate(certificate *Certificate) error
-}

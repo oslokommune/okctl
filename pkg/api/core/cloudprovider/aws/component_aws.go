@@ -14,7 +14,7 @@ type componentCloudProvider struct {
 }
 
 const (
-	postgresTimeOutInMinutes = 20
+	postgresTimeOutInMinutes = 45
 )
 
 func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgresDatabaseOpts) (*api.PostgresDatabase, error) {

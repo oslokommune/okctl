@@ -14,11 +14,17 @@ Resources:
       PolicyDocument:
         Statement:
         - Action:
-          - secretsmanager:GetSecretValue
           - ssm:GetParameter
           Effect: Allow
           Resource:
-          - Fn::Sub: arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*
           - Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*
+        - Action:
+          - secretsmanager:GetResourcePolicy
+          - secretsmanager:GetSecretValue
+          - secretsmanager:DescribeSecret
+          - secretsmanager:ListSecretVersionIds
+          Effect: Allow
+          Resource:
+          - Fn::Sub: arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*
         Version: 2012-10-17
     Type: AWS::IAM::ManagedPolicy

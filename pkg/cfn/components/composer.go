@@ -1545,6 +1545,9 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 						"secretsmanager:PutSecretValue",
 						"secretsmanager:UpdateSecretVersionStage",
 					},
+					Resource: []string{
+						"*",
+					},
 					Condition: map[policydocument.ConditionOperatorType]map[string]string{
 						policydocument.ConditionOperatorTypeStringEquals: {
 							"secretsmanager:resource/AllowRotationLambdaArn": cloudformation.Ref(c.NameResource("RDSPostgresLambdaRotateFunction")),

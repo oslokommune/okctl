@@ -70,7 +70,7 @@ func (l *LambdaFunction) Ref() string {
 
 // NamedOutputs returns the outputs
 func (l *LambdaFunction) NamedOutputs() map[string]cloudformation.Output {
-	return nil
+	return cfn.NewValue(l.Name(), cloudformation.GetAtt(l.Name(), "Arn")).NamedOutputs()
 }
 
 // New returns an initialised lambda function resource

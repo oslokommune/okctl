@@ -1370,6 +1370,8 @@ func NewRDSPostgresComposer(opts RDSPostgresComposerOpts) *RDSPostgresComposer {
 // - https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html
 const amazonRDSEnhancedMonitoringRole = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
 
+const awsLambdaBasicExecutionRole = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+
 // This transform is required when adding the hosted rotation lambda
 // - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-secretsmanager-rotationschedule-hostedrotationlambda.html
 // nolint
@@ -1477,7 +1479,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 	lambdaRole := role.New(
 		c.NameResource("RDSPostgresLambdaRotateRole"),
 		v1alpha1.PermissionsBoundaryARN(c.AWSAccountID),
-		nil,
+		[]string{awsLambdaBasicExecutionRole},
 		policydocument.PolicyDocument{
 			Version: policydocument.Version,
 			Statement: []policydocument.StatementEntry{
@@ -1550,7 +1552,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 					},
 					Condition: map[policydocument.ConditionOperatorType]map[string]string{
 						policydocument.ConditionOperatorTypeStringEquals: {
-							"secretsmanager:resource/AllowRotationLambdaArn": cloudformation.Ref(c.NameResource("RDSPostgresLambdaRotateFunction")),
+							"secretsmanager:resource/AllowRotationLambdaArn": cloudformation.GetAtt(c.NameResource("RDSPostgresLambdaRotateFunction"), "Arn"),
 						},
 					},
 				},
@@ -1576,6 +1578,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 			admin,
 			outgoing,
 			lambdaManagedPolicy,
+			lambdaRole,
 		},
 		Resources: []cfn.ResourceNamer{
 			monitoringRole,

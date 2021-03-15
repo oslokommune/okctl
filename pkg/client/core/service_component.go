@@ -37,7 +37,7 @@ type componentService struct {
 }
 
 func rotaterBucketName(clusterName, applicationName string) (string, error) {
-	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
+	reg, err := regexp.Compile("[^a-zA-Z0-9]+") // nolint: gocritic
 	if err != nil {
 		return "", err
 	}
@@ -57,7 +57,7 @@ const (
 	postgresRotaterLambdaKey = "rotate-postgres-single.zip"
 )
 
-// nolint: funlen
+// nolint: funlen gocyclo
 func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts client.CreatePostgresDatabaseOpts) (*client.PostgresDatabase, error) {
 	err := c.spinner.Start("postgres")
 	if err != nil {
@@ -84,8 +84,8 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 
 	buf := new(bytes.Buffer)
 
-	// Create a zip archive of the lambda code
 	w := zip.NewWriter(buf)
+
 	f, err := w.Create(postgresRotaterLambdaKey)
 	if err != nil {
 		return nil, err

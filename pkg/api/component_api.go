@@ -32,6 +32,8 @@ type CreatePostgresDatabaseOpts struct {
 	DBSubnetGroupName string
 	DBSubnetIDs       []string
 	DBSubnetCIDRs     []string
+	RotaterBucket     string
+	RotaterKey        string
 }
 
 // Validate the inputs

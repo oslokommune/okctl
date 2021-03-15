@@ -19,8 +19,8 @@ type PostgresDatabase struct {
 	OutgoingSecurityGroupID      string
 	SecretsManagerAdminSecretARN string
 	LambdaPolicyARN              string
-	LambdaFunctionARN            string
-	CloudFormationTemplate       []byte
+	LambdaRoleARN                string
+	CloudFormationTemplate       string
 }
 
 // CreatePostgresDatabaseOpts contains the inputs

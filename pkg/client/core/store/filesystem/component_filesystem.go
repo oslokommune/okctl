@@ -49,7 +49,7 @@ func (c *componentStore) SavePostgresDatabase(db *client.PostgresDatabase) (*sto
 
 	report, err := store.NewFileSystem(path.Join(c.paths.BaseDir, db.ApplicationName), c.fs).
 		StoreStruct(c.paths.OutputFile, pg, store.ToJSON()).
-		StoreBytes(c.paths.CloudFormationFile, db.CloudFormationTemplate).
+		StoreBytes(c.paths.CloudFormationFile, []byte(db.CloudFormationTemplate)).
 		Do()
 	if err != nil {
 		return nil, err

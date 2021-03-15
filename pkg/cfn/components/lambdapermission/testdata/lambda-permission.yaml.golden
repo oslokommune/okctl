@@ -8,6 +8,4 @@ Resources:
         - myFunction
         - Arn
       Principal: secretsmanager.amazonaws.com
-      SourceAccount:
-        Ref: AWS::AccountId
     Type: AWS::Lambda::Permission

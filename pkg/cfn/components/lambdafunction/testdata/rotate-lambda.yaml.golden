@@ -1,4 +1,13 @@
 AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  myRotater:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-myRotater
+    Value:
+      Fn::GetAtt:
+      - myRotater
+      - Arn
 Resources:
   myRotater:
     Properties:

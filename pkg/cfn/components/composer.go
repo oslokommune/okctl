@@ -6,6 +6,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/cfn/components/rotationschedule"
+
+	"github.com/oslokommune/okctl/pkg/cfn/components/lambdafunction"
+
+	"github.com/oslokommune/okctl/pkg/cfn/components/lambdapermission"
+
 	"github.com/oslokommune/okctl/pkg/cfn/components/s3bucket"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/securitygroup"
@@ -1322,6 +1328,8 @@ type RDSPostgresComposerOpts struct {
 	VpcID             string
 	VPCDBSubnetIDs    []string
 	VPCDBSubnetCIDRs  []string
+	Bucket            string
+	Key               string
 }
 
 // RDSPostgresComposer contains state for building
@@ -1337,6 +1345,8 @@ type RDSPostgresComposer struct {
 	VpcID             string
 	VPCDBSubnetIDs    []string
 	VPCDBSubnetCIDRs  []string
+	Bucket            string
+	Key               string
 }
 
 // NewRDSPostgresComposer returns an initialised RDS postgres composer
@@ -1351,6 +1361,8 @@ func NewRDSPostgresComposer(opts RDSPostgresComposerOpts) *RDSPostgresComposer {
 		VpcID:             opts.VpcID,
 		VPCDBSubnetIDs:    opts.VPCDBSubnetIDs,
 		VPCDBSubnetCIDRs:  opts.VPCDBSubnetCIDRs,
+		Bucket:            opts.Bucket,
+		Key:               opts.Key,
 	}
 }
 
@@ -1401,6 +1413,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 				},
 			},
 		},
+		nil,
 	)
 
 	params := map[string]string{
@@ -1451,22 +1464,85 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 		postgres,
 	)
 
-	// Commenting out the rotation now, will rather set this
-	// up in a subsequent PR as it will require more work
-	// than originally expected.
-	// rotation := rotationschedule.NewPostgres(
-	// 	c.NameResource("AdminRotationSchedule"),
-	// 	admin,
-	// 	attachment,
-	// 	c.VPCDBSubnetIDs,
-	// 	outgoing,
-	// )
-
 	sme := vpcendpoint.NewSecretsManager(
 		c.NameResource("SecretsManagerVPCEndpoint"),
 		outgoing,
 		c.VpcID,
 		c.VPCDBSubnetIDs,
+	)
+
+	// Based on the following content:
+	// https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets-required-permissions.html
+	lambdaRole := role.New(
+		c.NameResource("RDSPostgresLambdaRotateRole"),
+		v1alpha1.PermissionsBoundaryARN(c.AWSAccountID),
+		nil,
+		nil,
+		map[string]interface{}{
+			c.NameResource("RDSPostgresLambdaRotatePolicy"): policydocument.PolicyDocument{
+				Version: policydocument.Version,
+				Statement: []policydocument.StatementEntry{
+					{
+						Effect: policydocument.EffectTypeAllow,
+						Action: []string{
+							"secretsmanager:DescribeSecret",
+							"secretsmanager:GetSecretValue",
+							"secretsmanager:PutSecretValue",
+							"secretsmanager:UpdateSecretVersionStage",
+						},
+						Resource: []string{
+							"*",
+						},
+						Condition: map[policydocument.ConditionOperatorType]map[string]string{
+							policydocument.ConditionOperatorTypeStringEquals: {
+								"secretsmanager:resource/AllowRotationLambdaArn": cloudformation.Ref(c.NameResource("RDSPostgresLambdaRotateFunction")),
+							},
+						},
+					},
+					{
+						Effect: policydocument.EffectTypeAllow,
+						Action: []string{
+							"secretsmanager:GetRandomPassword",
+						},
+						Resource: []string{
+							"*",
+						},
+					},
+					{
+						Effect: policydocument.EffectTypeAllow,
+						Action: []string{
+							"ec2:CreateNetworkInterface",
+							"ec2:DeleteNetworkInterface",
+							"ec2:DescribeNetworkInterfaces",
+						},
+						Resource: []string{
+							"*",
+						},
+					},
+				},
+			},
+		},
+	)
+
+	lambdaFunction := lambdafunction.NewRotateLambda(
+		c.NameResource("RDSPostgresLambdaRotateFunction"),
+		c.Bucket,
+		c.Key,
+		lambdaRole,
+		outgoing,
+		c.VPCDBSubnetIDs,
+	)
+
+	lambdaPermission := lambdapermission.NewRotateLambdaPermission(
+		c.NameResource("RDSPostgresLambdaRotatePermission"),
+		lambdaFunction,
+	)
+
+	rotation := rotationschedule.NewPostgres(
+		c.NameResource("AdminRotationSchedule"),
+		admin,
+		attachment,
+		lambdaFunction,
 	)
 
 	return &cfn.Composition{
@@ -1483,13 +1559,12 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 			incoming,
 			postgres,
 			attachment,
-			// rotation,
+			lambdaRole,
+			lambdaFunction,
+			lambdaPermission,
+			rotation,
 			sme,
 		},
-		// This is not required for the time being
-		// Transform: &cloudformation.Transform{
-		// 	String: aws.String(serverlessTransform),
-		// },
 	}, nil
 }
 

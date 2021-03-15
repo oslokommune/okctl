@@ -81,7 +81,7 @@ Resources:
       BackupRetentionPeriod: 7
       CopyTagsToSnapshot: true
       DBInstanceClass: db.t3.small
-      DBInstanceIdentifier: okctl
+      DBInstanceIdentifier: repo-env-okctl
       DBName: okctl
       DBParameterGroupName:
         Ref: okctlrepoenvRDSPostgresParameterGroup
@@ -146,6 +146,8 @@ Resources:
               secretsmanager:resource/AllowRotationLambdaArn:
                 Ref: okctlrepoenvRDSPostgresLambdaRotateFunction
           Effect: Allow
+          Resource:
+          - '*'
         Version: 2012-10-17
     Type: AWS::IAM::ManagedPolicy
   okctlrepoenvRDSPostgresLambdaRotateFunction:

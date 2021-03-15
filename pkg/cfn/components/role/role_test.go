@@ -32,6 +32,7 @@ func TestNew(t *testing.T) {
 						},
 					},
 				},
+				nil,
 			),
 		},
 	}

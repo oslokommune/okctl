@@ -3,9 +3,6 @@
 package rotationschedule
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/secretsmanager"
 	"github.com/oslokommune/okctl/pkg/cfn"
@@ -14,12 +11,11 @@ import (
 // RotationSchedule contains the required state for building
 // the cloud formation resource
 type RotationSchedule struct {
-	StoredName     string
-	Secret         cfn.Referencer
-	Attachment     cfn.Namer
-	RotationType   string
-	SecurityGroup  cfn.Namer
-	VPCDBSubnetIDs []string
+	StoredName   string
+	Secret       cfn.Referencer
+	Attachment   cfn.Namer
+	RotationType string
+	Lambda       cfn.Namer
 }
 
 // NamedOutputs returns the resource outputs
@@ -44,12 +40,7 @@ const (
 // Resource returns the cloud formation resource for a secret target attachment
 func (e *RotationSchedule) Resource() cloudformation.Resource {
 	return &secretsmanager.RotationSchedule{
-		HostedRotationLambda: &secretsmanager.RotationSchedule_HostedRotationLambda{
-			RotationLambdaName:  fmt.Sprintf("%s-SecretsManagerRotation", e.Name()),
-			RotationType:        e.RotationType,
-			VpcSecurityGroupIds: cloudformation.GetAtt(e.SecurityGroup.Name(), "GroupId"),
-			VpcSubnetIds:        strings.Join(e.VPCDBSubnetIDs, ","),
-		},
+		RotationLambdaARN: cloudformation.GetAtt(e.Lambda.Name(), "Arn"),
 		RotationRules: &secretsmanager.RotationSchedule_RotationRules{
 			AutomaticallyAfterDays: rotateAfterDays,
 		},
@@ -65,17 +56,14 @@ func (e *RotationSchedule) Resource() cloudformation.Resource {
 func New(
 	resourceName, rotationType string,
 	secret cfn.Referencer,
-	attachment cfn.Namer,
-	vpcDBSubnetIDs []string,
-	securityGroup cfn.Namer,
+	attachment, lambda cfn.Namer,
 ) *RotationSchedule {
 	return &RotationSchedule{
-		StoredName:     resourceName,
-		Secret:         secret,
-		Attachment:     attachment,
-		RotationType:   rotationType,
-		SecurityGroup:  securityGroup,
-		VPCDBSubnetIDs: vpcDBSubnetIDs,
+		StoredName:   resourceName,
+		Secret:       secret,
+		Attachment:   attachment,
+		RotationType: rotationType,
+		Lambda:       lambda,
 	}
 }
 
@@ -84,16 +72,13 @@ func New(
 func NewPostgres(
 	resourceName string,
 	secret cfn.Referencer,
-	attachment cfn.Namer,
-	vpcDBSubnetIDs []string,
-	securityGroup cfn.Namer,
+	attachment, lambda cfn.Namer,
 ) *RotationSchedule {
 	return New(
 		resourceName,
 		"PostgreSQLSingleUser",
 		secret,
 		attachment,
-		vpcDBSubnetIDs,
-		securityGroup,
+		lambda,
 	)
 }

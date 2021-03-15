@@ -43,6 +43,19 @@ Outputs:
       - okctlrepoenvRDSPostgresOutgoing
       - GroupId
 Resources:
+  okctlrepoenvAdminRotationSchedule:
+    DependsOn:
+    - okctlrepoenvSecretTargetAttachment
+    Properties:
+      RotationLambdaARN:
+        Fn::GetAtt:
+        - okctlrepoenvRDSPostgresLambdaRotateFunction
+        - Arn
+      RotationRules:
+        AutomaticallyAfterDays: 30
+      SecretId:
+        Ref: okctlrepoenvRDSInstanceAdmin
+    Type: AWS::SecretsManager::RotationSchedule
   okctlrepoenvRDSInstanceAdmin:
     Properties:
       GenerateSecretString:
@@ -110,6 +123,73 @@ Resources:
         ToPort: 5432
       VpcId: vpcid-w9ufe
     Type: AWS::EC2::SecurityGroup
+  okctlrepoenvRDSPostgresLambdaRotateFunction:
+    Properties:
+      Code: {}
+      Environment: {}
+      FunctionName: okctlrepoenvrdspostgreslambdarotatefunction-Rotater
+      Handler: lambda_function.lambda_handler
+      PackageType: Zip
+      Role:
+        Fn::GetAtt:
+        - okctlrepoenvRDSPostgresLambdaRotateRole
+        - Arn
+      Runtime: python3.7
+      Timeout: 30
+      VpcConfig:
+        SecurityGroupIds:
+        - Fn::GetAtt:
+          - okctlrepoenvRDSPostgresOutgoing
+          - GroupId
+        SubnetIds:
+        - dbsubnetid-123okf
+        - dbsubnetid-fjeo338
+    Type: AWS::Lambda::Function
+  okctlrepoenvRDSPostgresLambdaRotatePermission:
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - okctlrepoenvRDSPostgresLambdaRotateFunction
+        - Arn
+      Principal: secretsmanager.amazonaws.com
+      SourceAccount:
+        Ref: AWS::AccountId
+    Type: AWS::Lambda::Permission
+  okctlrepoenvRDSPostgresLambdaRotateRole:
+    Properties:
+      PermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - secretsmanager:DescribeSecret
+            - secretsmanager:GetSecretValue
+            - secretsmanager:PutSecretValue
+            - secretsmanager:UpdateSecretVersionStage
+            Condition:
+              StringEquals:
+                secretsmanager:resource/AllowRotationLambdaArn:
+                  Ref: okctlrepoenvRDSPostgresLambdaRotateFunction
+            Effect: Allow
+            Resource:
+            - '*'
+          - Action:
+            - secretsmanager:GetRandomPassword
+            Effect: Allow
+            Resource:
+            - '*'
+          - Action:
+            - ec2:CreateNetworkInterface
+            - ec2:DeleteNetworkInterface
+            - ec2:DescribeNetworkInterfaces
+            Effect: Allow
+            Resource:
+            - '*'
+          Version: 2012-10-17
+        PolicyName: okctlrepoenvRDSPostgresLambdaRotatePolicy
+      RoleName: okctlrepoenvRDSPostgresLambdaRotateRole
+    Type: AWS::IAM::Role
   okctlrepoenvRDSPostgresMonitoringRole:
     Properties:
       AssumeRolePolicyDocument:

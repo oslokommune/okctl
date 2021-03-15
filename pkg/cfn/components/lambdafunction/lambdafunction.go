@@ -42,7 +42,6 @@ func (l *LambdaFunction) Resource() cloudformation.Resource {
 		},
 		FunctionName: l.Opts.FunctionName,
 		Handler:      l.Opts.Handler,
-		PackageType:  "Zip",
 		Role:         cloudformation.GetAtt(l.Opts.Role.Name(), "Arn"),
 		Runtime:      "python3.7",
 		Timeout:      30,

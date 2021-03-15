@@ -18,6 +18,8 @@ type PostgresDatabase struct {
 	EndpointPort                 int
 	OutgoingSecurityGroupID      string
 	SecretsManagerAdminSecretARN string
+	LambdaPolicyARN              string
+	LambdaFunctionARN            string
 	CloudFormationTemplate       []byte
 }
 

@@ -15,6 +15,7 @@ func TestNew(t *testing.T) {
 			Golden: "postgres.json",
 			Content: dbinstance.New(
 				"myPostgresDatabase",
+				"databaseIdentifier",
 				"databaseName",
 				"myDbSubnetGroupName",
 				tstr.NewNameReferencer("myDbParameterGroup"),

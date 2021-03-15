@@ -1450,6 +1450,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 
 	postgres := dbinstance.New(
 		c.NameResource("RDSPostgres"),
+		fmt.Sprintf("%s-%s-%s", c.Repository, c.Environment, c.ApplicationDBName),
 		c.ApplicationDBName,
 		c.DBSubnetGroupName,
 		parameterGroup,
@@ -1477,28 +1478,24 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 		c.NameResource("RDSPostgresLambdaRotateRole"),
 		v1alpha1.PermissionsBoundaryARN(c.AWSAccountID),
 		nil,
-		nil,
+		policydocument.PolicyDocument{
+			Version: policydocument.Version,
+			Statement: []policydocument.StatementEntry{
+				{
+					Effect: policydocument.EffectTypeAllow,
+					Action: []string{
+						"sts:AssumeRole",
+					},
+					Principal: &policydocument.Principal{
+						Service: []string{"lambda.amazonaws.com"},
+					},
+				},
+			},
+		},
 		map[string]interface{}{
 			c.NameResource("RDSPostgresLambdaRotatePolicy"): policydocument.PolicyDocument{
 				Version: policydocument.Version,
 				Statement: []policydocument.StatementEntry{
-					{
-						Effect: policydocument.EffectTypeAllow,
-						Action: []string{
-							"secretsmanager:DescribeSecret",
-							"secretsmanager:GetSecretValue",
-							"secretsmanager:PutSecretValue",
-							"secretsmanager:UpdateSecretVersionStage",
-						},
-						Resource: []string{
-							"*",
-						},
-						Condition: map[policydocument.ConditionOperatorType]map[string]string{
-							policydocument.ConditionOperatorTypeStringEquals: {
-								"secretsmanager:resource/AllowRotationLambdaArn": cloudformation.Ref(c.NameResource("RDSPostgresLambdaRotateFunction")),
-							},
-						},
-					},
 					{
 						Effect: policydocument.EffectTypeAllow,
 						Action: []string{
@@ -1533,6 +1530,31 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 		c.VPCDBSubnetIDs,
 	)
 
+	lambdaManagedPolicy := managedpolicy.New(
+		c.NameResource("RDSPostgresLambdaManagedPolicy"),
+		c.NameResource("RDSPostgresLambdaManagedPolicy"),
+		c.NameResource("RDSPostgresLambdaManagedPolicy"),
+		policydocument.PolicyDocument{
+			Version: policydocument.Version,
+			Statement: []policydocument.StatementEntry{
+				{
+					Effect: policydocument.EffectTypeAllow,
+					Action: []string{
+						"secretsmanager:DescribeSecret",
+						"secretsmanager:GetSecretValue",
+						"secretsmanager:PutSecretValue",
+						"secretsmanager:UpdateSecretVersionStage",
+					},
+					Condition: map[policydocument.ConditionOperatorType]map[string]string{
+						policydocument.ConditionOperatorTypeStringEquals: {
+							"secretsmanager:resource/AllowRotationLambdaArn": cloudformation.Ref(c.NameResource("RDSPostgresLambdaRotateFunction")),
+						},
+					},
+				},
+			},
+		},
+	)
+
 	lambdaPermission := lambdapermission.NewRotateLambdaPermission(
 		c.NameResource("RDSPostgresLambdaRotatePermission"),
 		lambdaFunction,
@@ -1550,6 +1572,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 			postgres,
 			admin,
 			outgoing,
+			lambdaManagedPolicy,
 		},
 		Resources: []cfn.ResourceNamer{
 			monitoringRole,
@@ -1564,6 +1587,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 			lambdaPermission,
 			rotation,
 			sme,
+			lambdaManagedPolicy,
 		},
 	}, nil
 }
@@ -1578,7 +1602,7 @@ type S3BucketComposer struct {
 
 // ResourceBucketNameOutput returns the name of the resource
 func (s *S3BucketComposer) ResourceBucketNameOutput() string {
-	return fmt.Sprintf("%s-%s-%s-S3Bucket", s.BucketName, s.Repository, s.Environment)
+	return fmt.Sprintf("%s%s%sS3Bucket", s.BucketName, s.Repository, s.Environment)
 }
 
 // Compose returns the outputs and resources

@@ -3,8 +3,11 @@
 package role
 
 import (
+	"fmt"
+
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/iam"
+	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
 // Role stores the state for a cloud formation iam role
@@ -18,7 +21,7 @@ type Role struct {
 
 // NamedOutputs returns the resource outputs
 func (r *Role) NamedOutputs() map[string]cloudformation.Output {
-	return nil
+	return cfn.NewValue(fmt.Sprintf("%sArn", r.Name()), cloudformation.GetAtt(r.Name(), "Arn")).NamedOutputs()
 }
 
 // Name returns the name of the resource

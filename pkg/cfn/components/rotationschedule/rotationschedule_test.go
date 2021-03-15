@@ -16,8 +16,7 @@ func TestNew(t *testing.T) {
 				"myPostgresRotationSchedule",
 				tstr.NewNameReferencer("mySecret"),
 				tstr.NewNameReferencer("mySecretAttachment"),
-				[]string{"subnetid-3fjij3", "subnetid-jfe29md"},
-				tstr.NewNameReferencer("mySecurityGroup"),
+				tstr.NewNameReferencer("myLambdaFunction"),
 			),
 		},
 	}

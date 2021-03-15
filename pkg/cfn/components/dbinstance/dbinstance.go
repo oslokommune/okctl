@@ -13,6 +13,7 @@ import (
 // DBInstance stores the state for a cloud formation dbinstance
 type DBInstance struct {
 	StoredName        string
+	DBIdentifier      string
 	DBName            string
 	DBSubnetGroupName string
 	DBParameterGroup  cfn.NameReferencer
@@ -64,6 +65,7 @@ func (i *DBInstance) Resource() cloudformation.Resource {
 		DBName:                      i.DBName,
 		DBParameterGroupName:        i.DBParameterGroup.Ref(),
 		DBSubnetGroupName:           i.DBSubnetGroupName,
+		DBInstanceIdentifier:        i.DBIdentifier,
 		DeleteAutomatedBackups:      true,
 		DeletionProtection:          false,
 		EnableCloudwatchLogsExports: []string{"postgresql", "upgrade"},
@@ -105,7 +107,7 @@ func (i *DBInstance) Resource() cloudformation.Resource {
 // - Configuring TLS for encrypted connection to the database
 // - Enabling IAM database authentication
 func New(
-	resourceName, dbName, dbSubnetGroupName string,
+	resourceName, dbIdentifier, dbName, dbSubnetGroupName string,
 	dbParameterGroup cfn.NameReferencer,
 	monitoringRole cfn.Namer,
 	admin cfn.NameReferencer,
@@ -113,6 +115,7 @@ func New(
 ) *DBInstance {
 	return &DBInstance{
 		StoredName:        resourceName,
+		DBIdentifier:      dbIdentifier,
 		DBName:            dbName,
 		DBSubnetGroupName: dbSubnetGroupName,
 		DBParameterGroup:  dbParameterGroup,

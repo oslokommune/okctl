@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  myRotater:
+    Properties:
+      Code:
+        S3Bucket: mybucket
+        S3Key: mykey
+      Environment: {}
+      FunctionName: myrotater-Rotater
+      Handler: lambda_function.lambda_handler
+      PackageType: Zip
+      Role:
+        Fn::GetAtt:
+        - myRole
+        - Arn
+      Runtime: python3.7
+      Timeout: 30
+      VpcConfig:
+        SecurityGroupIds:
+        - Fn::GetAtt:
+          - mySecGroup
+          - GroupId
+        SubnetIds:
+        - subnet893u290uf
+        - subnet90uf03j
+    Type: AWS::Lambda::Function

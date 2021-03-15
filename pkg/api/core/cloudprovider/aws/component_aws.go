@@ -68,6 +68,8 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 		VpcID:             opts.VpcID,
 		VPCDBSubnetIDs:    opts.DBSubnetIDs,
 		VPCDBSubnetCIDRs:  opts.DBSubnetCIDRs,
+		Bucket:            opts.RotaterBucket,
+		Key:               opts.RotaterKey,
 	})
 
 	b := cfn.New(composer)
@@ -103,6 +105,8 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 		fmt.Sprintf("%sEndpointPort", composer.NameResource("RDSPostgres")):    cfn.Int(&p.EndpointPort),
 		fmt.Sprintf("%sGroupId", composer.NameResource("RDSPostgresOutgoing")): cfn.String(&p.OutgoingSecurityGroupID),
 		composer.NameResource("RDSInstanceAdmin"):                              cfn.String(&p.SecretsManagerAdminSecretARN),
+		composer.NameResource("RDSPostgresLambdaManagedPolicy"):                cfn.String(&p.LambdaPolicyARN),
+		composer.NameResource("RDSPostgresLambdaManagedPolicy"):                cfn.String(&p.LambdaFunctionARN),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("collecting stack outputs: %w", err)

@@ -5,7 +5,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"regexp"
 	"strconv"
+
+	"github.com/oslokommune/okctl/pkg/iamapi"
 
 	"github.com/oslokommune/okctl/pkg/s3api"
 	"github.com/oslokommune/okctl/pkg/static"
@@ -33,8 +36,13 @@ type componentService struct {
 	provider v1alpha1.CloudProvider
 }
 
-func rotaterBucketName(clusterName, applicationName string) string {
-	return fmt.Sprintf("%s-%s-lambdas", clusterName, applicationName)
+func rotaterBucketName(clusterName, applicationName string) (string, error) {
+	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
+	if err != nil {
+		return "", err
+	}
+
+	return reg.ReplaceAllString(fmt.Sprintf("%s%slambdas", clusterName, applicationName), ""), nil
 }
 
 func adminSecretName(applicationName string) string {
@@ -60,9 +68,14 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		_ = c.spinner.Stop()
 	}()
 
+	bucketName, err := rotaterBucketName(opts.ID.ClusterName, opts.ApplicationName)
+	if err != nil {
+		return nil, err
+	}
+
 	rotaterBucket, err := c.api.CreateS3Bucket(api.CreateS3BucketOpts{
 		ID:        opts.ID,
-		Name:      rotaterBucketName(opts.ID.ClusterName, opts.ApplicationName),
+		Name:      bucketName,
 		StackName: cfn.NewStackNamer().S3Bucket(opts.ApplicationName, opts.ID.Repository, opts.ID.Environment),
 	})
 	if err != nil {
@@ -79,6 +92,11 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 	}
 
 	_, err = f.Write([]byte(static.SecretsManagerPostgresRotationSingleUserBody))
+	if err != nil {
+		return nil, err
+	}
+
+	err = w.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -104,6 +122,11 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		RotaterBucket:     rotaterBucket.Name,
 		RotaterKey:        postgresRotaterLambdaKey,
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = iamapi.New(c.provider).AttachRolePolicy(pg.LambdaPolicyARN, pg.LambdaFunctionARN)
 	if err != nil {
 		return nil, err
 	}
@@ -219,8 +242,13 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 		return err
 	}
 
+	bucketName, err := rotaterBucketName(opts.ID.ClusterName, opts.ApplicationName)
+	if err != nil {
+		return err
+	}
+
 	err = s3api.New(c.provider).DeleteObject(
-		rotaterBucketName(opts.ID.ClusterName, opts.ApplicationName),
+		bucketName,
 		postgresRotaterLambdaKey,
 	)
 	if err != nil {

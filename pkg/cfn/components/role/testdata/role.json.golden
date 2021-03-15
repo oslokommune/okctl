@@ -1,4 +1,13 @@
 AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  myIAMRoleArn:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-myIAMRoleArn
+    Value:
+      Fn::GetAtt:
+      - myIAMRole
+      - Arn
 Resources:
   myIAMRole:
     Properties:

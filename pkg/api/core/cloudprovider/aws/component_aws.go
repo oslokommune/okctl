@@ -97,16 +97,16 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 		UserName:                opts.UserName,
 		StackName:               opts.StackName,
 		AdminSecretFriendlyName: composer.AdminSecretFriendlyName(),
-		CloudFormationTemplate:  template,
+		CloudFormationTemplate:  string(template),
 	}
 
 	err = r.Outputs(opts.StackName, map[string]cfn.ProcessOutputFn{
-		fmt.Sprintf("%sEndpointAddress", composer.NameResource("RDSPostgres")): cfn.String(&p.EndpointAddress),
-		fmt.Sprintf("%sEndpointPort", composer.NameResource("RDSPostgres")):    cfn.Int(&p.EndpointPort),
-		fmt.Sprintf("%sGroupId", composer.NameResource("RDSPostgresOutgoing")): cfn.String(&p.OutgoingSecurityGroupID),
-		composer.NameResource("RDSInstanceAdmin"):                              cfn.String(&p.SecretsManagerAdminSecretARN),
-		composer.NameResource("RDSPostgresLambdaManagedPolicy"):                cfn.String(&p.LambdaPolicyARN),
-		composer.NameResource("RDSPostgresLambdaManagedPolicy"):                cfn.String(&p.LambdaFunctionARN),
+		fmt.Sprintf("%sEndpointAddress", composer.NameResource("RDSPostgres")):     cfn.String(&p.EndpointAddress),
+		fmt.Sprintf("%sEndpointPort", composer.NameResource("RDSPostgres")):        cfn.Int(&p.EndpointPort),
+		fmt.Sprintf("%sGroupId", composer.NameResource("RDSPostgresOutgoing")):     cfn.String(&p.OutgoingSecurityGroupID),
+		composer.NameResource("RDSInstanceAdmin"):                                  cfn.String(&p.SecretsManagerAdminSecretARN),
+		composer.NameResource("RDSPostgresLambdaManagedPolicy"):                    cfn.String(&p.LambdaPolicyARN),
+		fmt.Sprintf("%sArn", composer.NameResource("RDSPostgresLambdaRotateRole")): cfn.String(&p.LambdaRoleARN),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("collecting stack outputs: %w", err)

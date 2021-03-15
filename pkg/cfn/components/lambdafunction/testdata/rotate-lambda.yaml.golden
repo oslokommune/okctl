@@ -8,7 +8,6 @@ Resources:
       Environment: {}
       FunctionName: myrotater-Rotater
       Handler: lambda_function.lambda_handler
-      PackageType: Zip
       Role:
         Fn::GetAtt:
         - myRole

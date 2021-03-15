@@ -28,6 +28,12 @@ Outputs:
       Fn::GetAtt:
       - okctlrepoenvRDSPostgres
       - Endpoint.Port
+  okctlrepoenvRDSPostgresLambdaManagedPolicy:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-okctlrepoenvRDSPostgresLambdaManagedPolicy
+    Value:
+      Ref: okctlrepoenvRDSPostgresLambdaManagedPolicy
   okctlrepoenvRDSPostgresOutgoing:
     Export:
       Name:
@@ -75,6 +81,7 @@ Resources:
       BackupRetentionPeriod: 7
       CopyTagsToSnapshot: true
       DBInstanceClass: db.t3.small
+      DBInstanceIdentifier: okctl
       DBName: okctl
       DBParameterGroupName:
         Ref: okctlrepoenvRDSPostgresParameterGroup
@@ -123,13 +130,30 @@ Resources:
         ToPort: 5432
       VpcId: vpcid-w9ufe
     Type: AWS::EC2::SecurityGroup
+  okctlrepoenvRDSPostgresLambdaManagedPolicy:
+    Properties:
+      Description: okctlrepoenvRDSPostgresLambdaManagedPolicy
+      ManagedPolicyName: okctlrepoenvRDSPostgresLambdaManagedPolicy
+      PolicyDocument:
+        Statement:
+        - Action:
+          - secretsmanager:DescribeSecret
+          - secretsmanager:GetSecretValue
+          - secretsmanager:PutSecretValue
+          - secretsmanager:UpdateSecretVersionStage
+          Condition:
+            StringEquals:
+              secretsmanager:resource/AllowRotationLambdaArn:
+                Ref: okctlrepoenvRDSPostgresLambdaRotateFunction
+          Effect: Allow
+        Version: 2012-10-17
+    Type: AWS::IAM::ManagedPolicy
   okctlrepoenvRDSPostgresLambdaRotateFunction:
     Properties:
       Code: {}
       Environment: {}
       FunctionName: okctlrepoenvrdspostgreslambdarotatefunction-Rotater
       Handler: lambda_function.lambda_handler
-      PackageType: Zip
       Role:
         Fn::GetAtt:
         - okctlrepoenvRDSPostgresLambdaRotateRole
@@ -158,22 +182,19 @@ Resources:
     Type: AWS::Lambda::Permission
   okctlrepoenvRDSPostgresLambdaRotateRole:
     Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+        Version: 2012-10-17
       PermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
       Policies:
       - PolicyDocument:
           Statement:
-          - Action:
-            - secretsmanager:DescribeSecret
-            - secretsmanager:GetSecretValue
-            - secretsmanager:PutSecretValue
-            - secretsmanager:UpdateSecretVersionStage
-            Condition:
-              StringEquals:
-                secretsmanager:resource/AllowRotationLambdaArn:
-                  Ref: okctlrepoenvRDSPostgresLambdaRotateFunction
-            Effect: Allow
-            Resource:
-            - '*'
           - Action:
             - secretsmanager:GetRandomPassword
             Effect: Allow

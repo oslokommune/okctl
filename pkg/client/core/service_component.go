@@ -1,6 +1,7 @@
 package core
 
 import (
+	"archive/zip"
 	"bytes"
 	"context"
 	"fmt"
@@ -68,10 +69,24 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		return nil, err
 	}
 
+	buf := new(bytes.Buffer)
+
+	// Create a zip archive of the lambda code
+	w := zip.NewWriter(buf)
+	f, err := w.Create(postgresRotaterLambdaKey)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = f.Write([]byte(static.SecretsManagerPostgresRotationSingleUserBody))
+	if err != nil {
+		return nil, err
+	}
+
 	err = s3api.New(c.provider).PutObject(
 		rotaterBucket.Name,
 		postgresRotaterLambdaKey,
-		bytes.NewReader([]byte(static.SecretsManagerPostgresRotationSingleUserBody)),
+		bytes.NewReader(buf.Bytes()),
 	)
 	if err != nil {
 		return nil, err
@@ -86,6 +101,8 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		DBSubnetGroupName: opts.DBSubnetGroupName,
 		DBSubnetIDs:       opts.DBSubnetIDs,
 		DBSubnetCIDRs:     opts.DBSubnetCIDRs,
+		RotaterBucket:     rotaterBucket.Name,
+		RotaterKey:        postgresRotaterLambdaKey,
 	})
 	if err != nil {
 		return nil, err

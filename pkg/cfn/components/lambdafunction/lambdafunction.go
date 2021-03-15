@@ -30,6 +30,10 @@ type Opts struct {
 	SubnetIds       []string
 }
 
+const (
+	timeoutInSeconds = 30
+)
+
 // Resource returns the cloud formation resource
 func (l *LambdaFunction) Resource() cloudformation.Resource {
 	return &lambda.Function{
@@ -44,7 +48,7 @@ func (l *LambdaFunction) Resource() cloudformation.Resource {
 		Handler:      l.Opts.Handler,
 		Role:         cloudformation.GetAtt(l.Opts.Role.Name(), "Arn"),
 		Runtime:      "python3.7",
-		Timeout:      30,
+		Timeout:      timeoutInSeconds,
 		VpcConfig: &lambda.Function_VpcConfig{
 			SecurityGroupIds: []string{
 				cloudformation.GetAtt(l.Opts.SecurityGroupID.Name(), "GroupId"),
@@ -64,7 +68,7 @@ func (l *LambdaFunction) Ref() string {
 	return cloudformation.Ref(l.Name())
 }
 
-// NamedOutput returns the outputs
+// NamedOutputs returns the outputs
 func (l *LambdaFunction) NamedOutputs() map[string]cloudformation.Output {
 	return nil
 }

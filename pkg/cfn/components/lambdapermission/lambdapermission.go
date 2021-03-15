@@ -1,3 +1,5 @@
+// Package lambdapermission knows how to create lambda permission
+// cloud formation resources
 package lambdapermission
 
 import (
@@ -14,6 +16,7 @@ type LambdaPermission struct {
 	Function   string
 }
 
+// Resource returns the cloud formation resource
 func (l *LambdaPermission) Resource() cloudformation.Resource {
 	return &lambda.Permission{
 		Action:        "lambda:InvokeFunction",

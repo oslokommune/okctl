@@ -34,6 +34,14 @@ Outputs:
         Fn::Sub: ${AWS::StackName}-okctlrepoenvRDSPostgresLambdaManagedPolicy
     Value:
       Ref: okctlrepoenvRDSPostgresLambdaManagedPolicy
+  okctlrepoenvRDSPostgresLambdaRotateRoleArn:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-okctlrepoenvRDSPostgresLambdaRotateRoleArn
+    Value:
+      Fn::GetAtt:
+      - okctlrepoenvRDSPostgresLambdaRotateRole
+      - Arn
   okctlrepoenvRDSPostgresOutgoing:
     Export:
       Name:
@@ -144,7 +152,9 @@ Resources:
           Condition:
             StringEquals:
               secretsmanager:resource/AllowRotationLambdaArn:
-                Ref: okctlrepoenvRDSPostgresLambdaRotateFunction
+                Fn::GetAtt:
+                - okctlrepoenvRDSPostgresLambdaRotateFunction
+                - Arn
           Effect: Allow
           Resource:
           - '*'
@@ -179,8 +189,6 @@ Resources:
         - okctlrepoenvRDSPostgresLambdaRotateFunction
         - Arn
       Principal: secretsmanager.amazonaws.com
-      SourceAccount:
-        Ref: AWS::AccountId
     Type: AWS::Lambda::Permission
   okctlrepoenvRDSPostgresLambdaRotateRole:
     Properties:
@@ -193,6 +201,8 @@ Resources:
             Service:
             - lambda.amazonaws.com
         Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       PermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
       Policies:
       - PolicyDocument:

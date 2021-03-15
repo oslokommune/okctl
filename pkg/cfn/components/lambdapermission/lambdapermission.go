@@ -19,10 +19,9 @@ type LambdaPermission struct {
 // Resource returns the cloud formation resource
 func (l *LambdaPermission) Resource() cloudformation.Resource {
 	return &lambda.Permission{
-		Action:        "lambda:InvokeFunction",
-		FunctionName:  l.Function,
-		Principal:     l.Principal,
-		SourceAccount: cloudformation.Ref("AWS::AccountId"),
+		Action:       "lambda:InvokeFunction",
+		FunctionName: l.Function,
+		Principal:    l.Principal,
 	}
 }
 

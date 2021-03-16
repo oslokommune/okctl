@@ -45,6 +45,24 @@ func (i *IAMAPI) AttachRolePolicy(policyARN, roleARN string) error {
 	return nil
 }
 
+// DetachRolePolicy detaches the provided policy from the role
+func (i *IAMAPI) DetachRolePolicy(policyARN, roleARN string) error {
+	friendlyName, err := RoleFriendlyName(roleARN)
+	if err != nil {
+		return err
+	}
+
+	_, err = i.provider.IAM().DetachRolePolicy(&iam.DetachRolePolicyInput{
+		PolicyArn: aws.String(policyARN),
+		RoleName:  aws.String(friendlyName),
+	})
+	if err != nil {
+		return fmt.Errorf("detaching policy from role: %w", err)
+	}
+
+	return nil
+}
+
 // RoleFriendlyName returns the friendly name of the role
 // by extracting it from the provided ARN
 func RoleFriendlyName(roleARN string) (string, error) {

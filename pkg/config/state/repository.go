@@ -114,13 +114,15 @@ func (c Cluster) Validate() error {
 // Database contains state information about a
 // database
 type Database struct {
-	Type                  string
-	Namespace             string
-	EndpointAddress       string
-	EndpointPort          int
-	SecurityGroupID       string
-	AdminSecretName       string
-	DatabaseConfigMapName string
+	Type                   string
+	Namespace              string
+	EndpointAddress        string
+	EndpointPort           int
+	SecurityGroupID        string
+	AdminSecretName        string
+	DatabaseConfigMapName  string
+	RotaterLambdaRoleARN   string
+	RotaterLambdaPolicyARN string
 }
 
 // Validate the database
@@ -132,6 +134,8 @@ func (d Database) Validate() error {
 		validation.Field(&d.SecurityGroupID, validation.Required),
 		validation.Field(&d.AdminSecretName, validation.Required),
 		validation.Field(&d.DatabaseConfigMapName, validation.Required),
+		validation.Field(&d.RotaterLambdaRoleARN, validation.Required),
+		validation.Field(&d.RotaterLambdaPolicyARN, validation.Required),
 	)
 }
 

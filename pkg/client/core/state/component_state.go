@@ -3,6 +3,8 @@ package state
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/api"
+
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/oslokommune/okctl/pkg/config/state"
@@ -24,6 +26,8 @@ func (c *componentState) SavePostgresDatabase(database *client.PostgresDatabase)
 	db.Type = dbTypePostgres
 	db.AdminSecretName = database.AdminSecretName
 	db.DatabaseConfigMapName = database.DatabaseConfigMapName
+	db.RotaterLambdaRoleARN = database.LambdaRoleARN
+	db.RotaterLambdaPolicyARN = database.LambdaPolicyARN
 
 	report, err := c.state.SaveDatabase(database.ApplicationName, db)
 	if err != nil {
@@ -39,6 +43,24 @@ func (c *componentState) SavePostgresDatabase(database *client.PostgresDatabase)
 	}, report.Actions...)
 
 	return report, nil
+}
+
+func (c *componentState) GetPostgresDatabase(applicationName string) (*client.PostgresDatabase, error) {
+	db := c.state.GetDatabase(applicationName)
+
+	return &client.PostgresDatabase{
+		Namespace:             db.Namespace,
+		AdminSecretName:       db.AdminSecretName,
+		DatabaseConfigMapName: db.DatabaseConfigMapName,
+		PostgresDatabase: &api.PostgresDatabase{
+			ApplicationName:         applicationName,
+			EndpointAddress:         db.EndpointAddress,
+			EndpointPort:            db.EndpointPort,
+			OutgoingSecurityGroupID: db.SecurityGroupID,
+			LambdaPolicyARN:         db.RotaterLambdaPolicyARN,
+			LambdaRoleARN:           db.RotaterLambdaRoleARN,
+		},
+	}, nil
 }
 
 func (c *componentState) RemovePostgresDatabase(applicationName string) (*store.Report, error) {

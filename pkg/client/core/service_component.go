@@ -86,7 +86,7 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 
 	w := zip.NewWriter(buf)
 
-	f, err := w.Create(postgresRotaterLambdaKey)
+	f, err := w.Create("lambda_function.py")
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +236,7 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 	err = c.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
 		ID:        opts.ID,
 		Name:      pgConfigMapName(opts.ApplicationName),
-		Namespace: opts.Namespace,
+		Namespace: db.Namespace,
 	})
 	if err != nil {
 		return err
@@ -245,7 +245,7 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 	err = c.manifest.DeleteExternalSecret(ctx, client.DeleteExternalSecretOpts{
 		ID: opts.ID,
 		Secrets: map[string]string{
-			pgConfigMapName(opts.ApplicationName): opts.Namespace,
+			pgConfigMapName(opts.ApplicationName): db.Namespace,
 		},
 	})
 	if err != nil {

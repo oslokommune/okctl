@@ -23,7 +23,6 @@ type CreatePostgresDatabaseOpts struct {
 type DeletePostgresDatabaseOpts struct {
 	ID              api.ID
 	ApplicationName string
-	Namespace       string
 }
 
 // PostgresDatabase contains the state after

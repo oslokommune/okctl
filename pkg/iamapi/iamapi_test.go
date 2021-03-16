@@ -88,3 +88,44 @@ func TestIAMAPIAttachRolePolicy(t *testing.T) {
 		})
 	}
 }
+
+func TestIAMAPIDetachRolePolicy(t *testing.T) {
+	testCases := []struct {
+		name      string
+		provider  v1alpha1.CloudProvider
+		policyARN string
+		roleARN   string
+		expect    interface{}
+		expectErr bool
+	}{
+		{
+			name:      "Should work",
+			provider:  mock.NewGoodCloudProvider(),
+			policyARN: "arn:iam:::policy/somethingFAHJFAKE",
+			roleARN:   mock.DefaultFargateProfilePodExecutionRoleARN,
+		},
+		{
+			name:      "Should fail",
+			provider:  mock.NewBadCloudProvider(),
+			policyARN: "arn:iam:::policy/somethingFAHJFAKE",
+			roleARN:   mock.DefaultFargateProfilePodExecutionRoleARN,
+			expect:    "detaching policy from role: something bad",
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			err := iamapi.New(tc.provider).DetachRolePolicy(tc.policyARN, tc.roleARN)
+
+			if tc.expectErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expect, err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}

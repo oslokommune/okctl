@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/context"
@@ -684,6 +685,28 @@ func (o *Okctl) externalDNSService(outputDir string, spin spinner.Spinner) clien
 	)
 }
 
+// KubeConfigStore returns an initialised kube config store
+func (o *Okctl) KubeConfigStore() (api.KubeConfigStore, error) {
+	appDir, err := o.GetUserDataDir()
+	if err != nil {
+		return nil, err
+	}
+
+	outputDir, err := o.GetRepoOutputDir(o.activeEnv)
+	if err != nil {
+		return nil, err
+	}
+
+	return filesystem.NewKubeConfigStore(
+		o.CloudProvider,
+		constant.DefaultClusterKubeConfig,
+		path.Join(appDir, constant.DefaultCredentialsDirName, o.RepoStateWithEnv.GetClusterName()),
+		constant.DefaultClusterConfig,
+		path.Join(outputDir, constant.DefaultClusterBaseDir),
+		o.FileSystem,
+	), nil
+}
+
 // Initialise okctl for receiving requests
 // nolint: funlen
 func (o *Okctl) initialise() error {
@@ -709,21 +732,12 @@ func (o *Okctl) initialise() error {
 		return err
 	}
 
-	outputDir, err := o.GetRepoOutputDir(o.activeEnv)
+	clusterName := o.RepoStateWithEnv.GetClusterName()
+
+	kubeConfigStore, err := o.KubeConfigStore()
 	if err != nil {
 		return err
 	}
-
-	clusterName := o.RepoStateWithEnv.GetClusterName()
-
-	kubeConfigStore := filesystem.NewKubeConfigStore(
-		o.CloudProvider,
-		constant.DefaultClusterKubeConfig,
-		path.Join(appDir, constant.DefaultCredentialsDirName, clusterName),
-		constant.DefaultClusterConfig,
-		path.Join(outputDir, constant.DefaultClusterBaseDir),
-		o.FileSystem,
-	)
 
 	vpcService := core.NewVpcService(
 		awsProvider.NewVpcCloud(o.CloudProvider),

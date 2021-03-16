@@ -1,19 +1,18 @@
 package core
 
 import (
-	"archive/zip"
 	"bytes"
 	"context"
 	"fmt"
 	"regexp"
 	"strconv"
 
+	"github.com/oslokommune/okctl/pkg/static/rotater"
+
 	"github.com/oslokommune/okctl/pkg/iamapi"
 
-	"github.com/oslokommune/okctl/pkg/s3api"
-	"github.com/oslokommune/okctl/pkg/static"
-
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/s3api"
 
 	"github.com/oslokommune/okctl/pkg/cfn"
 
@@ -82,29 +81,10 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		return nil, err
 	}
 
-	buf := new(bytes.Buffer)
-
-	w := zip.NewWriter(buf)
-
-	f, err := w.Create("lambda_function.py")
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = f.Write([]byte(static.SecretsManagerPostgresRotationSingleUserBody))
-	if err != nil {
-		return nil, err
-	}
-
-	err = w.Close()
-	if err != nil {
-		return nil, err
-	}
-
 	err = s3api.New(c.provider).PutObject(
 		rotaterBucket.Name,
 		postgresRotaterLambdaKey,
-		bytes.NewReader(buf.Bytes()),
+		bytes.NewReader(rotater.LambdaFunctionZip),
 	)
 	if err != nil {
 		return nil, err

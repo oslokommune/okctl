@@ -171,3 +171,4 @@ func TestValidateCluster(t *testing.T) {
 			}
 		})
 	}
+}

@@ -33,11 +33,13 @@ const (
 	DefaultChartApplyTimeout  = 5 * time.Minute
 	DefaultChartRemoveTimeout = 5 * time.Minute
 
-	DefaultGithubHost                     = "git@github.com"
-	DefaultGithubOrganization             = "oslokommune"
-	DefaultArgoCDNamespace                = "argocd"
-	DefaultMonitoringNamespace            = "monitoring"
-	DefaultKubePrometheusStackGrafanaName = "kube-prometheus-stack-grafana"
+	DefaultGithubHost                      = "git@github.com"
+	DefaultGithubOrganization              = "oslokommune"
+	DefaultFargateObservabilityNamespace   = "aws-observability"
+	DefaultArgoCDNamespace                 = "argocd"
+	DefaultMonitoringNamespace             = "monitoring"
+	DefaultKubePrometheusStackGrafanaName  = "kube-prometheus-stack-grafana"
+	DefaultGrafanaCloudWatchDatasourceName = "cloudwatch-datasource"
 
 	DefaultClusterConfig         = "cluster.yml"
 	DefaultClusterKubeConfig     = "kubeconfig"
@@ -54,6 +56,10 @@ const (
 	DefaultVpcOutputs                = "vpc-outputs.json"
 	DefaultVpcCloudFormationTemplate = "vpc-cf.yml"
 	DefaultVpcBaseDir                = "vpc"
+
+	DefaultNamespaceBaseDir    = "namespaces"
+	DefaultNamespaceOutputFile = "ns-output.json"
+	DefaultNamespaceConfigFile = "ns-conf.yaml"
 
 	DefaultMonitoringBaseDir                 = "monitoring"
 	DefaultPromtailBaseDir                   = "promtail"
@@ -99,8 +105,10 @@ const (
 	DefaultKubeOutputsFile                          = "kube-outputs.json"
 	DefaultParameterBaseDir                         = "parameters"
 	DefaultParameterOutputsFile                     = "parameter-outputs.json"
+	DefaultPolicyBaseDir                            = "policies"
 	DefaultPolicyCloudFormationTemplateFile         = "policy-cf.yml"
 	DefaultPolicyOutputFile                         = "policy-outputs.json"
+	DefaultServiceAccountBaseDir                    = "service-accounts"
 	DefaultServiceAccountConfigFile                 = "service-account-config.yml"
 	DefaultServiceAccountOutputsFile                = "service-account-outputs.json"
 
@@ -109,10 +117,14 @@ const (
 	// EnvHome is the default env var parsed for determining the application home
 	EnvHome = "OKCTL_HOME"
 
-	// DefaultApplicationOverlayBaseDir is where the directory where overlay files reside
-	DefaultApplicationOverlayBaseDir = "base"
-	// DefaultApplicationDir is where the application overlay files reside
-	DefaultApplicationDir = "applications"
+	// DefaultApplicationsOutputDir is where the application declarations reside
+	DefaultApplicationsOutputDir = "applications"
+	// DefaultApplicationBaseDir is where the directory where application base files reside
+	DefaultApplicationBaseDir = "base"
+	// DefaultApplicationOverlayDir is where the directory where application overlay files reside
+	DefaultApplicationOverlayDir = "overlays"
+	// DefaultIngressPatchFilename defines the filename of the ingress patch
+	DefaultIngressPatchFilename = "ingress-patch.json"
 
 	// DefaultKeyringServiceName is the name of the keyring or encrypted file used to store client secrets
 	DefaultKeyringServiceName = "okctlService"

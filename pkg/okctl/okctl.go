@@ -211,9 +211,9 @@ func (o *Okctl) managedPolicyService(outputDir string, spin spinner.Spinner) cli
 		rest.NewManagedPolicyAPI(o.restClient),
 		clientFilesystem.NewManagedPolicyStore(
 			clientFilesystem.Paths{
-				OutputFile:         config.DefaultPolicyOutputFile,
-				CloudFormationFile: config.DefaultPolicyCloudFormationTemplateFile,
-				BaseDir:            path.Join(outputDir, config.DefaultPolicyBaseDir),
+				OutputFile:         constant.DefaultPolicyOutputFile,
+				CloudFormationFile: constant.DefaultPolicyCloudFormationTemplateFile,
+				BaseDir:            path.Join(outputDir, constant.DefaultPolicyBaseDir),
 			},
 			o.FileSystem,
 		),
@@ -226,9 +226,9 @@ func (o *Okctl) serviceAccountService(outputDir string, spin spinner.Spinner) cl
 		spin,
 		rest.NewServiceAccountAPI(o.restClient),
 		clientFilesystem.NewServiceAccountStore(clientFilesystem.Paths{
-			OutputFile: config.DefaultServiceAccountOutputsFile,
-			ConfigFile: config.DefaultServiceAccountConfigFile,
-			BaseDir:    path.Join(outputDir, config.DefaultServiceAccountBaseDir),
+			OutputFile: constant.DefaultServiceAccountOutputsFile,
+			ConfigFile: constant.DefaultServiceAccountConfigFile,
+			BaseDir:    path.Join(outputDir, constant.DefaultServiceAccountBaseDir),
 		}, o.FileSystem),
 		console.NewServiceAccountReport(o.Err, spin),
 	)
@@ -374,9 +374,9 @@ func (o *Okctl) manifestService(outputDir string, spin spinner.Spinner) client.M
 		rest.NewManifestAPI(o.restClient),
 		clientFilesystem.NewManifestStore(
 			clientFilesystem.Paths{
-				OutputFile: config.DefaultNamespaceOutputFile,
-				ConfigFile: config.DefaultNamespaceConfigFile,
-				BaseDir:    path.Join(outputDir, config.DefaultNamespaceBaseDir),
+				OutputFile: constant.DefaultNamespaceOutputFile,
+				ConfigFile: constant.DefaultNamespaceConfigFile,
+				BaseDir:    path.Join(outputDir, constant.DefaultNamespaceBaseDir),
 			},
 			clientFilesystem.Paths{
 				OutputFile: constant.DefaultConfigMapOutputsFile,

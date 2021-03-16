@@ -3,7 +3,7 @@ package clusterconfig_test
 import (
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/config"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/api/mock"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -384,7 +384,7 @@ func TestNewCloudwatchDatasourceServiceAccount(t *testing.T) {
 			clusterName:            "test",
 			region:                 mock.DefaultRegion,
 			policyArn:              mock.DefaultPolicyARN,
-			namespace:              config.DefaultMonitoringNamespace,
+			namespace:              constant.DefaultMonitoringNamespace,
 			permissionsBoundaryArn: v1alpha1.PermissionsBoundaryARN(mock.DefaultAWSAccountID),
 			golden:                 "cloudwatch-datasource",
 			expectErr:              false,

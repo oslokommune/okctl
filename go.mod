@@ -1,6 +1,6 @@
 module github.com/oslokommune/okctl
 
-go 1.14
+go 1.16
 
 replace github.com/docker/distribution => github.com/docker/distribution v2.7.1-0.20190205005809-0d3efadf0154+incompatible // indirect
 

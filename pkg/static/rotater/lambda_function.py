@@ -1,18 +1,11 @@
-// Package static contains some static data, we could probably have
-// used embed here, but maybe some other time..
-package static
-
-// SecretsManagerPostgresRotationSingleUserBody contains the code for the AWS Secrets Manager rotation for postgres
-// - https://github.com/aws-samples/aws-secrets-manager-rotation-lambdas/blob/master/SecretsManagerRDSPostgreSQLRotationSingleUser
-const SecretsManagerPostgresRotationSingleUserBody = `# Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
 
 import boto3
 import json
 import logging
 import os
-import pg
-import pgdb
+import psycopg2
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -265,7 +258,7 @@ def get_connection(secret_dict):
         secret_dict (dict): The Secret Dictionary
 
     Returns:
-        Connection: The pgdb.Connection object if successful. None otherwise
+        Connection: The psycopg2.Connection object if successful. None otherwise
 
     Raises:
         KeyError: If the secret json does not contain the expected keys
@@ -277,9 +270,9 @@ def get_connection(secret_dict):
 
     # Try to obtain a connection to the db
     try:
-        conn = pgdb.connect(host=secret_dict['host'], user=secret_dict['username'], password=secret_dict['password'], database=dbname, port=port, connect_timeout=5)
+        conn = psycopg2.connect(host=secret_dict['host'], user=secret_dict['username'], password=secret_dict['password'], database=dbname, port=port, connect_timeout=5)
         return conn
-    except pg.InternalError:
+    except psycopg2.InternalError:
         return None
 
 
@@ -324,4 +317,4 @@ def get_secret_dict(service_client, arn, stage, token=None):
             raise KeyError("%s key is missing from secret JSON" % field)
 
     # Parse and return the secret JSON string
-    return secret_dict`
+    return secret_dict

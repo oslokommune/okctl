@@ -270,11 +270,17 @@ type IAMAPI struct {
 	iamiface.IAMAPI
 
 	AttachRolePolicyFn func(*iam.AttachRolePolicyInput) (*iam.AttachRolePolicyOutput, error)
+	DetachRolePolicyFn func(*iam.DetachRolePolicyInput) (*iam.DetachRolePolicyOutput, error)
 }
 
 // AttachRolePolicy mocks the invocation
 func (a *IAMAPI) AttachRolePolicy(input *iam.AttachRolePolicyInput) (*iam.AttachRolePolicyOutput, error) {
 	return a.AttachRolePolicyFn(input)
+}
+
+// DetachRolePolicy mocks the invocation
+func (a *IAMAPI) DetachRolePolicy(input *iam.DetachRolePolicyInput) (*iam.DetachRolePolicyOutput, error) {
+	return a.DetachRolePolicyFn(input)
 }
 
 // S3API mocks the S3 API
@@ -537,6 +543,9 @@ func NewGoodCloudProvider() *CloudProvider {
 			AttachRolePolicyFn: func(*iam.AttachRolePolicyInput) (*iam.AttachRolePolicyOutput, error) {
 				return &iam.AttachRolePolicyOutput{}, nil
 			},
+			DetachRolePolicyFn: func(*iam.DetachRolePolicyInput) (*iam.DetachRolePolicyOutput, error) {
+				return &iam.DetachRolePolicyOutput{}, nil
+			},
 		},
 		S3API: &S3API{
 			PutObjectFn: func(*s3.PutObjectInput) (*s3.PutObjectOutput, error) {
@@ -566,6 +575,9 @@ func NewBadCloudProvider() *CloudProvider {
 		},
 		IAMAPI: &IAMAPI{
 			AttachRolePolicyFn: func(*iam.AttachRolePolicyInput) (*iam.AttachRolePolicyOutput, error) {
+				return nil, errBad
+			},
+			DetachRolePolicyFn: func(*iam.DetachRolePolicyInput) (*iam.DetachRolePolicyOutput, error) {
 				return nil, errBad
 			},
 		},

@@ -60,6 +60,7 @@ type ComponentStore interface {
 type ComponentState interface {
 	SavePostgresDatabase(database *PostgresDatabase) (*store.Report, error)
 	RemovePostgresDatabase(applicationName string) (*store.Report, error)
+	GetPostgresDatabase(applicationName string) (*PostgresDatabase, error)
 }
 
 // ComponentReport reports on the state and storage operations

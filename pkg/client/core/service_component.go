@@ -215,6 +215,16 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 		_ = c.spinner.Stop()
 	}()
 
+	db, err := c.state.GetPostgresDatabase(opts.ApplicationName)
+	if err != nil {
+		return err
+	}
+
+	err = iamapi.New(c.provider).DetachRolePolicy(db.LambdaPolicyARN, db.LambdaRoleARN)
+	if err != nil {
+		return err
+	}
+
 	err = c.api.DeletePostgresDatabase(api.DeletePostgresDatabaseOpts{
 		ID:        opts.ID,
 		StackName: cfn.NewStackNamer().RDSPostgres(opts.ApplicationName, opts.ID.Repository, opts.ID.Environment),

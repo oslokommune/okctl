@@ -47,7 +47,7 @@ func (l *LambdaFunction) Resource() cloudformation.Resource {
 		FunctionName: l.Opts.FunctionName,
 		Handler:      l.Opts.Handler,
 		Role:         cloudformation.GetAtt(l.Opts.Role.Name(), "Arn"),
-		Runtime:      "python3.7",
+		Runtime:      "python3.8",
 		Timeout:      timeoutInSeconds,
 		VpcConfig: &lambda.Function_VpcConfig{
 			SecurityGroupIds: []string{

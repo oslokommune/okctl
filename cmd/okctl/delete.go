@@ -60,6 +60,15 @@ type DeleteClusterOpts struct {
 // Validate the inputs
 func (o *DeleteClusterOpts) Validate() error {
 	return validation.ValidateStruct(o,
+		validation.Field(&o.ClusterName, validation.NewStringRule(
+			func(s string) bool {
+				return fmt.Sprintf("%s-%s", o.Repository, o.Environment) == s
+			},
+			fmt.Sprintf(
+				`internal error: cluster name needs to be in the format repository-environment, but was "%s"`,
+				o.ClusterName,
+			),
+		)),
 		validation.Field(&o.Environment, validation.Required),
 		validation.Field(&o.AWSAccountID, validation.Required),
 		validation.Field(&o.Region, validation.Required),
@@ -103,7 +112,7 @@ including VPC, this is a highly destructive operation.`,
 			opts.Region = meta.Region
 			opts.AWSAccountID = cluster.AWSAccountID
 			opts.Environment = cluster.Environment
-			opts.ClusterName = cluster.Name
+			opts.ClusterName = o.RepoStateWithEnv.GetClusterName()
 
 			err = opts.Validate()
 			if err != nil {

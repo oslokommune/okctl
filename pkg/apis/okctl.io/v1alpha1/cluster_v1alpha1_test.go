@@ -81,26 +81,26 @@ func TestInvalidClusterValidations(t *testing.T) {
 			expectError: "metadata: (name: cannot be blank.).",
 		},
 		{
-			name: "Should fail if clusterRootURL is missing",
+			name: "Should fail if clusterRootDomain is missing",
 			withCluster: func() v1alpha1.Cluster {
 				c := newPassingCluster()
 
-				c.ClusterRootURL = ""
+				c.ClusterRootDomain = ""
 
 				return c
 			},
-			expectError: "clusterRootURL: cannot be blank.",
+			expectError: "clusterRootDomain: cannot be blank.",
 		},
 		{
-			name: "Should fail if clusterRootURL have improper casing",
+			name: "Should fail if clusterRootDomain have improper casing",
 			withCluster: func() v1alpha1.Cluster {
 				c := newPassingCluster()
 
-				c.ClusterRootURL = "ThisIsNotAllowed.oslo.systems"
+				c.ClusterRootDomain = "ThisIsNotAllowed.oslo.systems"
 
 				return c
 			},
-			expectError: "clusterRootURL: must be in lower case.",
+			expectError: "clusterRootDomain: must be in lower case.",
 		},
 	}
 

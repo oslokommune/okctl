@@ -1,4 +1,4 @@
-clusterRootURL: ""
+clusterRootDomain: ""
 github:
   organisation: ""
   outputPath: ""

@@ -37,7 +37,7 @@ jobs:
             environment: test
             name: nightly
 
-          clusterRootURL: nightly-test.oslo.systems
+          clusterRootDomain: nightly-test.oslo.systems
 
           github:
             repository: okctl-iac

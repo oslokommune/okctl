@@ -41,7 +41,7 @@ func (n *nameserversDelegatedTestReconciler) Reconcile(node *resourcetree.Resour
 			aurora.Bold("#kjøremiljø-support"),
 		)
 
-		primaryHostedZoneFQDN := dns.Fqdn(n.commonMetadata.Declaration.ClusterRootURL)
+		primaryHostedZoneFQDN := dns.Fqdn(n.commonMetadata.Declaration.ClusterRootDomain)
 
 		err = domain.ShouldHaveNameServers(primaryHostedZoneFQDN)
 		if err != nil {
@@ -53,7 +53,7 @@ func (n *nameserversDelegatedTestReconciler) Reconcile(node *resourcetree.Resour
 
 		err = n.domainService.SetHostedZoneDelegation(
 			n.commonMetadata.Ctx,
-			n.commonMetadata.Declaration.ClusterRootURL,
+			n.commonMetadata.Declaration.ClusterRootDomain,
 			true,
 		)
 		if err != nil {

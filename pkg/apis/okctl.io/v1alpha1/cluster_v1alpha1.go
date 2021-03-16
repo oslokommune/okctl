@@ -31,10 +31,10 @@ type Cluster struct {
 	// this cluster will integrate with.
 	Github ClusterGithub `json:"github"`
 
-	// ClusterRootURL defines the main primary zone to associate with this
+	// ClusterRootDomain defines the main primary zone to associate with this
 	// cluster. This will be the zone that we will use to create subdomains
 	// for auth, ArgoCD, etc.
-	ClusterRootURL string `json:"clusterRootURL"`
+	ClusterRootDomain string `json:"clusterRootDomain"`
 
 	// VPC defines how we configure the VPC for the cluster
 	// +optional
@@ -58,7 +58,7 @@ type Cluster struct {
 // Validate calls each members Validate function
 func (c Cluster) Validate() error {
 	return validation.ValidateStruct(&c,
-		validation.Field(&c.ClusterRootURL, validation.Required, is.LowerCase),
+		validation.Field(&c.ClusterRootDomain, validation.Required, is.LowerCase),
 		validation.Field(&c.Metadata),
 		validation.Field(&c.Github),
 		validation.Field(&c.VPC),
@@ -267,7 +267,7 @@ func NewDefaultCluster(name, env, org, repo, accountID string) Cluster {
 			Region:      "eu-west-1",
 			AccountID:   accountID,
 		},
-		ClusterRootURL: fmt.Sprintf("%s-%s.oslo.systems", name, env),
+		ClusterRootDomain: fmt.Sprintf("%s-%s.oslo.systems", name, env),
 		Github: ClusterGithub{
 			Organisation: org,
 			Repository:   repo,

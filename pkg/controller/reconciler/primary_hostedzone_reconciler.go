@@ -32,8 +32,8 @@ func (z *zoneReconciler) Reconcile(node *resourcetree.ResourceNode) (result Reco
 	case resourcetree.ResourceNodeStatePresent:
 		_, err = z.client.CreatePrimaryHostedZoneWithoutUserinput(z.commonMetadata.Ctx, client.CreatePrimaryHostedZoneOpts{
 			ID:     z.commonMetadata.ClusterID,
-			Domain: z.commonMetadata.Declaration.ClusterRootURL,
-			FQDN:   dns.Fqdn(z.commonMetadata.Declaration.ClusterRootURL),
+			Domain: z.commonMetadata.Declaration.ClusterRootDomain,
+			FQDN:   dns.Fqdn(z.commonMetadata.Declaration.ClusterRootDomain),
 		})
 		if err != nil {
 			return result, fmt.Errorf("creating hosted zone: %w", err)

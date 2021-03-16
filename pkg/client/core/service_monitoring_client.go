@@ -433,7 +433,7 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 	cc, err := clusterconfig.NewCloudwatchDatasourceServiceAccount(
 		opts.ID.ClusterName,
 		opts.ID.Region,
-		"",
+		"N/A",
 		constant.DefaultMonitoringNamespace,
 		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
 	)

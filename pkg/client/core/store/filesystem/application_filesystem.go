@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/oslokommune/okctl/pkg/config"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
@@ -28,8 +28,8 @@ func addOperationIfNotEmpty(operations store.Operations, filePath string, conten
 // SaveApplication applies the application to the file system
 func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplication) (*store.Report, error) {
 	absoluteApplicationDir := path.Join(s.paths.BaseDir, application.ApplicationName)
-	relativeApplicationBaseDir := config.DefaultApplicationBaseDir
-	relativeApplicationOverlayDir := path.Join(config.DefaultApplicationOverlayDir, application.Environment)
+	relativeApplicationBaseDir := constant.DefaultApplicationBaseDir
+	relativeApplicationOverlayDir := path.Join(constant.DefaultApplicationOverlayDir, application.Environment)
 
 	operations := store.NewFileSystem(absoluteApplicationDir, s.fs)
 	addOperationIfNotEmpty(operations, "argocd-application.yaml", application.ArgoCDResource)
@@ -43,7 +43,7 @@ func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplica
 
 	operations.AlterStore(store.SetBaseDir(path.Join(absoluteApplicationDir, relativeApplicationOverlayDir)))
 	addOperationIfNotEmpty(operations, "kustomization.yaml", application.OverlayKustomization)
-	addOperationIfNotEmpty(operations, config.DefaultIngressPatchFilename, application.IngressPatch)
+	addOperationIfNotEmpty(operations, constant.DefaultIngressPatchFilename, application.IngressPatch)
 
 	report, err := operations.Do()
 	if err != nil {

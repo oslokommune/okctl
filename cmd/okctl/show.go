@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
 
 	"github.com/logrusorgru/aurora/v3"
@@ -14,7 +16,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/kubeconfig"
 	"sigs.k8s.io/yaml"
 
-	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
@@ -79,7 +80,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			kubeConfig := path.Join(appDir, config.DefaultCredentialsDirName, okctlEnvironment.ClusterName, config.DefaultClusterKubeConfig)
+			kubeConfig := path.Join(appDir, constant.DefaultCredentialsDirName, okctlEnvironment.ClusterName, constant.DefaultClusterKubeConfig)
 
 			k, err := o.BinariesProvider.Kubectl(kubectl.Version)
 			if err != nil {
@@ -111,7 +112,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			data, err := o.FileSystem.ReadFile(path.Join(outputDir, config.DefaultClusterBaseDir, config.DefaultClusterConfig))
+			data, err := o.FileSystem.ReadFile(path.Join(outputDir, constant.DefaultClusterBaseDir, constant.DefaultClusterConfig))
 			if err != nil {
 				return err
 			}

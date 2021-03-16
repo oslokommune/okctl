@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/go-git/go-billy/v5/memfs"
 
 	"github.com/go-git/go-billy/v5"
@@ -16,7 +18,6 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/oslokommune/okctl/pkg/client"
-	okctlconfig "github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/github"
 )
 
@@ -273,7 +274,7 @@ func toHCL(record *client.NameserverRecord) []byte {
 		"\tzone_id = var.top_level_id # Leave this be",
 		fmt.Sprintf("\tname = \"%s\"", record.FQDN),
 		"\ttype = \"NS\"",
-		fmt.Sprintf("\tttl = %d", okctlconfig.DefaultNameserverRecordTTL),
+		fmt.Sprintf("\tttl = %d", constant.DefaultNameserverRecordTTL),
 		"\trecords = [",
 	}
 

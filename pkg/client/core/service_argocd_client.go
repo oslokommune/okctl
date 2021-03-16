@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/oslokommune/okctl/pkg/config"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/spinner"
 
@@ -44,7 +44,7 @@ func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgo
 
 	err = s.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
 		ID:        opts.ID,
-		Namespace: config.DefaultArgoCDNamespace,
+		Namespace: constant.DefaultArgoCDNamespace,
 	})
 	if err != nil {
 		return err
@@ -126,7 +126,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		Manifests: []api.Manifest{
 			{
 				Name:      privateKeyName,
-				Namespace: config.DefaultArgoCDNamespace,
+				Namespace: constant.DefaultArgoCDNamespace,
 				Annotations: map[string]string{
 					"meta.helm.sh/release-name":      "argocd",
 					"meta.helm.sh/release-namespace": "argocd",

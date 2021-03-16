@@ -5,6 +5,8 @@ import (
 	"path"
 	"regexp"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/servicequota"
 
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
@@ -24,7 +26,6 @@ import (
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/commands"
-	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/spinner"
 	"github.com/spf13/cobra"
@@ -146,7 +147,7 @@ with Github or other production services.
 				aurora.Green("45 minutes"),
 				aurora.Green("user input"),
 				aurora.Bold("#kjøremiljø-support"),
-				path.Join(userDir, config.DefaultLogDir, config.DefaultLogName),
+				path.Join(userDir, constant.DefaultLogDir, constant.DefaultLogName),
 			)
 			if err != nil {
 				return formatErr(err)
@@ -158,9 +159,9 @@ with Github or other production services.
 			vpcProvisioned := len(o.RepoStateWithEnv.GetVPC().VpcID) > 0
 
 			err = servicequota.CheckQuotas(
-				servicequota.NewVpcCheck(vpcProvisioned, config.DefaultRequiredVpcsTestCluster, o.CloudProvider),
-				servicequota.NewEipCheck(vpcProvisioned, config.DefaultRequiredEpisTestCluster, o.CloudProvider),
-				servicequota.NewIgwCheck(vpcProvisioned, config.DefaultRequiredIgwsTestCluster, o.CloudProvider),
+				servicequota.NewVpcCheck(vpcProvisioned, constant.DefaultRequiredVpcsTestCluster, o.CloudProvider),
+				servicequota.NewEipCheck(vpcProvisioned, constant.DefaultRequiredEpisTestCluster, o.CloudProvider),
+				servicequota.NewIgwCheck(vpcProvisioned, constant.DefaultRequiredIgwsTestCluster, o.CloudProvider),
 			)
 			if err != nil {
 				return formatErr(err)
@@ -279,7 +280,7 @@ with Github or other production services.
 			_, err = services.Cluster.CreateCluster(o.Ctx, api.ClusterCreateOpts{
 				ID:                id,
 				Cidr:              vpc.Cidr,
-				Version:           config.DefaultEKSKubernetesVersion,
+				Version:           constant.DefaultEKSKubernetesVersion,
 				VpcID:             vpc.VpcID,
 				VpcPrivateSubnets: vpc.PrivateSubnets,
 				VpcPublicSubnets:  vpc.PublicSubnets,
@@ -327,9 +328,9 @@ with Github or other production services.
 				return formatErr(err)
 			}
 
-			kubeConfig := path.Join(userDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterKubeConfig)
-			awsConfig := path.Join(userDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterAwsConfig)
-			awsCredentials := path.Join(userDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterAwsCredentials)
+			kubeConfig := path.Join(userDir, constant.DefaultCredentialsDirName, opts.ClusterName, constant.DefaultClusterKubeConfig)
+			awsConfig := path.Join(userDir, constant.DefaultCredentialsDirName, opts.ClusterName, constant.DefaultClusterAwsConfig)
+			awsCredentials := path.Join(userDir, constant.DefaultCredentialsDirName, opts.ClusterName, constant.DefaultClusterAwsCredentials)
 
 			exports := fmt.Sprintf(
 				"export AWS_CONFIG_FILE=%s\nexport AWS_SHARED_CREDENTIALS_FILE=%s\nexport AWS_PROFILE=default\nexport KUBECONFIG=%s\n",

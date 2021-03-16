@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/ask"
@@ -68,7 +70,7 @@ func CreateOnUserDataNotFoundWithNoInput() DataNotFoundFn {
 		c.UserState = data
 
 		_, err = store.NewFileSystem(userDir, c.FileSystem).
-			StoreStruct(config.DefaultConfig, c.UserState, store.ToYAML()).
+			StoreStruct(constant.DefaultConfig, c.UserState, store.ToYAML()).
 			Do()
 		if err != nil {
 			return err
@@ -129,7 +131,7 @@ func CreateOnUserDataNotFound() DataNotFoundFn {
 		c.UserState = data
 
 		_, err = store.NewFileSystem(userDir, c.FileSystem).
-			StoreStruct(config.DefaultConfig, c.UserState, store.ToYAML()).
+			StoreStruct(constant.DefaultConfig, c.UserState, store.ToYAML()).
 			Do()
 		if err != nil {
 			return err
@@ -165,7 +167,7 @@ func loadDefaultUserData(_ *config.Config, v *viper.Viper) error {
 
 	defaultUserData := bytes.NewReader(b)
 
-	v.SetConfigType(config.DefaultConfigType)
+	v.SetConfigType(constant.DefaultConfigType)
 
 	err = v.MergeConfig(defaultUserData)
 	if err != nil {
@@ -183,7 +185,7 @@ func loadStoredUserData(notFoundFn DataNotFoundFn) LoaderFn {
 		}
 
 		v.AddConfigPath(configPath)
-		v.SetConfigName(config.DefaultConfigName)
+		v.SetConfigName(constant.DefaultConfigName)
 
 		err = v.MergeInConfig()
 		if err != nil {
@@ -204,7 +206,7 @@ func loadStoredUserData(notFoundFn DataNotFoundFn) LoaderFn {
 
 func loadEnvUserData(_ *config.Config, v *viper.Viper) error {
 	v.AutomaticEnv()
-	v.SetEnvPrefix(config.EnvPrefix)
+	v.SetEnvPrefix(constant.EnvPrefix)
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	return nil

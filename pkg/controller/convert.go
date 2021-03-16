@@ -3,7 +3,8 @@ package controller
 import (
 	"path"
 
-	"github.com/oslokommune/okctl/pkg/config"
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 	"github.com/spf13/afero"
@@ -37,20 +38,20 @@ func IdentifyResourcePresence(fs *afero.Afero, outputDir string, hzFetcher Hoste
 
 	return ExistingResources{
 		hasPrimaryHostedZone:                  hz != nil,
-		hasVPC:                                directoryTester(fs, outputDir, config.DefaultVpcBaseDir),
-		hasCluster:                            directoryTester(fs, outputDir, config.DefaultClusterBaseDir),
-		hasExternalSecrets:                    directoryTester(fs, outputDir, config.DefaultExternalSecretsBaseDir),
-		hasAutoscaler:                         directoryTester(fs, outputDir, config.DefaultAutoscalerBaseDir),
-		hasKubePromStack:                      directoryTester(fs, outputDir, path.Join(config.DefaultMonitoringBaseDir, config.DefaultKubePromStackBaseDir)),
-		hasLoki:                               directoryTester(fs, outputDir, path.Join(config.DefaultMonitoringBaseDir, config.DefaultLokiBaseDir)),
-		hasPromtail:                           directoryTester(fs, outputDir, path.Join(config.DefaultMonitoringBaseDir, config.DefaultPromtailBaseDir)),
-		hasTempo:                              directoryTester(fs, outputDir, path.Join(config.DefaultMonitoringBaseDir, config.DefaultTempoBaseDir)),
-		hasBlockstorage:                       directoryTester(fs, outputDir, config.DefaultBlockstorageBaseDir),
-		hasALBIngressController:               directoryTester(fs, outputDir, config.DefaultAlbIngressControllerBaseDir),
-		hasAWSLoadBalancerController:          directoryTester(fs, outputDir, config.DefaultAWSLoadBalancerControllerBaseDir),
-		hasExternalDNS:                        directoryTester(fs, outputDir, config.DefaultExternalDNSBaseDir),
-		hasIdentityManager:                    directoryTester(fs, outputDir, config.DefaultIdentityPoolBaseDir),
-		hasArgoCD:                             directoryTester(fs, outputDir, config.DefaultArgoCDBaseDir),
+		hasVPC:                                directoryTester(fs, outputDir, constant.DefaultVpcBaseDir),
+		hasCluster:                            directoryTester(fs, outputDir, constant.DefaultClusterBaseDir),
+		hasExternalSecrets:                    directoryTester(fs, outputDir, constant.DefaultExternalSecretsBaseDir),
+		hasAutoscaler:                         directoryTester(fs, outputDir, constant.DefaultAutoscalerBaseDir),
+		hasKubePromStack:                      directoryTester(fs, outputDir, path.Join(constant.DefaultMonitoringBaseDir, constant.DefaultKubePromStackBaseDir)),
+		hasLoki:                               directoryTester(fs, outputDir, path.Join(constant.DefaultMonitoringBaseDir, constant.DefaultLokiBaseDir)),
+		hasPromtail:                           directoryTester(fs, outputDir, path.Join(constant.DefaultMonitoringBaseDir, constant.DefaultPromtailBaseDir)),
+		hasTempo:                              directoryTester(fs, outputDir, path.Join(constant.DefaultMonitoringBaseDir, constant.DefaultTempoBaseDir)),
+		hasBlockstorage:                       directoryTester(fs, outputDir, constant.DefaultBlockstorageBaseDir),
+		hasALBIngressController:               directoryTester(fs, outputDir, constant.DefaultAlbIngressControllerBaseDir),
+		hasAWSLoadBalancerController:          directoryTester(fs, outputDir, constant.DefaultAWSLoadBalancerControllerBaseDir),
+		hasExternalDNS:                        directoryTester(fs, outputDir, constant.DefaultExternalDNSBaseDir),
+		hasIdentityManager:                    directoryTester(fs, outputDir, constant.DefaultIdentityPoolBaseDir),
+		hasArgoCD:                             directoryTester(fs, outputDir, constant.DefaultArgoCDBaseDir),
 		hasDelegatedHostedZoneNameservers:     hz != nil && hz.IsDelegated,
 		hasDelegatedHostedZoneNameserversTest: false,
 		hasUsers:                              false, // this means we will always check? needs to be changed?

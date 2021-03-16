@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/client/store"
@@ -70,7 +72,7 @@ func CreateOnRepoDataNotFoundWithNoUserInput(declaration *v1alpha1.Cluster) Data
 		}
 
 		_, err = store.NewFileSystem(repoDir, c.FileSystem).
-			StoreStruct(config.DefaultRepositoryStateFile, c.RepoState, store.ToYAML()).
+			StoreStruct(constant.DefaultRepositoryStateFile, c.RepoState, store.ToYAML()).
 			Do()
 		if err != nil {
 			return err
@@ -132,7 +134,7 @@ func CreateOnRepoDataNotFound() DataNotFoundFn {
 		}
 
 		_, err = store.NewFileSystem(repoDir, c.FileSystem).
-			StoreStruct(config.DefaultRepositoryStateFile, c.RepoState, store.ToYAML()).
+			StoreStruct(constant.DefaultRepositoryStateFile, c.RepoState, store.ToYAML()).
 			Do()
 		if err != nil {
 			return err
@@ -166,7 +168,7 @@ func buildRepoDataLoader(notFoundFn DataNotFoundFn, _ func(v *viper.Viper)) conf
 
 		cfg.RepoState = &state.Repository{}
 
-		exists, err := cfg.FileSystem.Exists(path.Join(baseDir, config.DefaultRepositoryStateFile))
+		exists, err := cfg.FileSystem.Exists(path.Join(baseDir, constant.DefaultRepositoryStateFile))
 		if err != nil {
 			return err
 		}
@@ -179,7 +181,7 @@ func buildRepoDataLoader(notFoundFn DataNotFoundFn, _ func(v *viper.Viper)) conf
 		}
 
 		_, err = store.NewFileSystem(baseDir, cfg.FileSystem).
-			GetStruct(config.DefaultRepositoryStateFile, cfg.RepoState, store.FromYAML()).
+			GetStruct(constant.DefaultRepositoryStateFile, cfg.RepoState, store.FromYAML()).
 			Do()
 		if err != nil {
 			return err

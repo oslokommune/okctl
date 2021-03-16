@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"runtime"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	krPkg "github.com/99designs/keyring"
-	"github.com/oslokommune/okctl/pkg/config"
 )
 
 // KeyType : the type of key we are storing or fetching from keyring
@@ -44,7 +45,7 @@ func New(keyring krPkg.Keyring, debug bool) (*Keyring, error) {
 // DefaultKeyringForOS is the default keyring to store client secrets
 func DefaultKeyringForOS() (krPkg.Keyring, error) {
 	cfg := krPkg.Config{
-		ServiceName: config.DefaultKeyringServiceName,
+		ServiceName: constant.DefaultKeyringServiceName,
 	}
 
 	switch runtime.GOOS {

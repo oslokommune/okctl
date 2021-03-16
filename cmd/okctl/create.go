@@ -5,6 +5,8 @@ import (
 	"path"
 	"regexp"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
 	"github.com/oslokommune/okctl/pkg/commands"
@@ -24,8 +26,6 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/logrusorgru/aurora"
-
-	"github.com/oslokommune/okctl/pkg/config"
 
 	"github.com/oslokommune/okctl/pkg/github"
 
@@ -229,7 +229,7 @@ or see documentation on %s
 				aurora.Green("infrastructure as code repository"),
 				aurora.Green("private"),
 				aurora.Bold("#kjøremiljø-support"),
-				path.Join(userDir, config.DefaultLogDir, config.DefaultLogName),
+				path.Join(userDir, constant.DefaultLogDir, constant.DefaultLogName),
 			)
 			if err != nil {
 				return formatErr(err)
@@ -241,9 +241,9 @@ or see documentation on %s
 			vpcProvisioned := len(o.RepoStateWithEnv.GetVPC().VpcID) > 0
 
 			err = servicequota.CheckQuotas(
-				servicequota.NewVpcCheck(vpcProvisioned, config.DefaultRequiredVpcs, o.CloudProvider),
-				servicequota.NewEipCheck(vpcProvisioned, config.DefaultRequiredEpis, o.CloudProvider),
-				servicequota.NewIgwCheck(vpcProvisioned, config.DefaultRequiredIgws, o.CloudProvider),
+				servicequota.NewVpcCheck(vpcProvisioned, constant.DefaultRequiredVpcs, o.CloudProvider),
+				servicequota.NewEipCheck(vpcProvisioned, constant.DefaultRequiredEpis, o.CloudProvider),
+				servicequota.NewIgwCheck(vpcProvisioned, constant.DefaultRequiredIgws, o.CloudProvider),
 			)
 			if err != nil {
 				return formatErr(err)
@@ -371,7 +371,7 @@ or see documentation on %s
 			_, err = services.Cluster.CreateCluster(o.Ctx, api.ClusterCreateOpts{
 				ID:                id,
 				Cidr:              vpc.Cidr,
-				Version:           config.DefaultEKSKubernetesVersion,
+				Version:           constant.DefaultEKSKubernetesVersion,
 				VpcID:             vpc.VpcID,
 				VpcPrivateSubnets: vpc.PrivateSubnets,
 				VpcPublicSubnets:  vpc.PublicSubnets,
@@ -495,9 +495,9 @@ or see documentation on %s
 				return formatErr(err)
 			}
 
-			kubeConfig := path.Join(userDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterKubeConfig)
-			awsConfig := path.Join(userDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterAwsConfig)
-			awsCredentials := path.Join(userDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterAwsCredentials)
+			kubeConfig := path.Join(userDir, constant.DefaultCredentialsDirName, opts.ClusterName, constant.DefaultClusterKubeConfig)
+			awsConfig := path.Join(userDir, constant.DefaultCredentialsDirName, opts.ClusterName, constant.DefaultClusterAwsConfig)
+			awsCredentials := path.Join(userDir, constant.DefaultCredentialsDirName, opts.ClusterName, constant.DefaultClusterAwsCredentials)
 
 			exports := fmt.Sprintf(
 				"export AWS_CONFIG_FILE=%s\nexport AWS_SHARED_CREDENTIALS_FILE=%s\nexport AWS_PROFILE=default\nexport KUBECONFIG=%s\n",
@@ -525,7 +525,7 @@ or see documentation on %s
 				AwsIamAuthenticatorCmd:  aurora.Green("aws-iam-authenticator").String(),
 				KubectlPath:             k.BinaryPath,
 				AwsIamAuthenticatorPath: a.BinaryPath,
-				K8sClusterVersion:       aurora.Green(config.DefaultEKSKubernetesVersion).String(),
+				K8sClusterVersion:       aurora.Green(constant.DefaultEKSKubernetesVersion).String(),
 				ArgoCD:                  aurora.Green("ArgoCD").String(),
 				ArgoCDURL:               aurora.Green(argoCD.ArgoURL).String(),
 			}

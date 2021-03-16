@@ -6,10 +6,11 @@ import (
 	"path"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
-	"github.com/oslokommune/okctl/pkg/config"
 	"github.com/oslokommune/okctl/pkg/helm"
 	"github.com/oslokommune/okctl/pkg/okctl"
 )
@@ -84,16 +85,16 @@ func GetOkctlEnvironment(o *okctl.Okctl) (OkctlEnvironment, error) {
 func GetOkctlEnvVars(opts OkctlEnvironment) map[string]string {
 	appDir := opts.UserDataDir
 
-	kubeConfig := path.Join(appDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterKubeConfig)
-	awsConfig := path.Join(appDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterAwsConfig)
-	awsCredentials := path.Join(appDir, config.DefaultCredentialsDirName, opts.ClusterName, config.DefaultClusterAwsCredentials)
+	kubeConfig := path.Join(appDir, constant.DefaultCredentialsDirName, opts.ClusterName, constant.DefaultClusterKubeConfig)
+	awsConfig := path.Join(appDir, constant.DefaultCredentialsDirName, opts.ClusterName, constant.DefaultClusterAwsConfig)
+	awsCredentials := path.Join(appDir, constant.DefaultCredentialsDirName, opts.ClusterName, constant.DefaultClusterAwsCredentials)
 
 	h := &helm.Config{
-		HelmPluginsDirectory: path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmPluginsDirectory),
-		HelmRegistryConfig:   path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmRegistryConfig),
-		HelmRepositoryCache:  path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryCache),
-		HelmRepositoryConfig: path.Join(appDir, config.DefaultHelmBaseDir, config.DefaultHelmRepositoryConfig),
-		HelmBaseDir:          path.Join(appDir, config.DefaultHelmBaseDir),
+		HelmPluginsDirectory: path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmPluginsDirectory),
+		HelmRegistryConfig:   path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmRegistryConfig),
+		HelmRepositoryCache:  path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmRepositoryCache),
+		HelmRepositoryConfig: path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmRepositoryConfig),
+		HelmBaseDir:          path.Join(appDir, constant.DefaultHelmBaseDir),
 		Debug:                opts.Debug,
 	}
 

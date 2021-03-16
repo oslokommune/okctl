@@ -8,7 +8,8 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/oslokommune/okctl/pkg/config"
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/spinner"
 	"github.com/spf13/afero"
 
@@ -75,8 +76,8 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 	// See function comment
 	app := okctlApplicationToKaexApplication(okctlApp, opts.HostedZoneDomain)
 
-	relativeApplicationDir := path.Join(opts.OutputDir, config.DefaultApplicationsOutputDir, okctlApp.Name)
-	relativeArgoCDSourcePath := path.Join(relativeApplicationDir, config.DefaultApplicationOverlayDir, opts.ID.Environment)
+	relativeApplicationDir := path.Join(opts.OutputDir, constant.DefaultApplicationsOutputDir, okctlApp.Name)
+	relativeArgoCDSourcePath := path.Join(relativeApplicationDir, constant.DefaultApplicationOverlayDir, opts.ID.Environment)
 
 	base, err := scaffold.GenerateApplicationBase(*app, opts.IACRepoURL, relativeArgoCDSourcePath)
 	if err != nil {

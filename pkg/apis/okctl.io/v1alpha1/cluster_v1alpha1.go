@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 
@@ -25,14 +27,14 @@ type Cluster struct {
 	// Metadata uniquely identifies a cluster.
 	Metadata ClusterMeta `json:"metadata"`
 
-	// Github defines what organisation, repository, team, etc. that
+	// Github defines what organisation, repository, etc. that
 	// this cluster will integrate with.
 	Github ClusterGithub `json:"github"`
 
-	// PrimaryDNSZone defines the main primary zone to associate with this
-	// cluster. This will be the zone that we will use to create domains
+	// ClusterRootDomain defines the main primary zone to associate with this
+	// cluster. This will be the zone that we will use to create subdomains
 	// for auth, ArgoCD, etc.
-	PrimaryDNSZone ClusterDNSZone `json:"primaryDNSZone"`
+	ClusterRootDomain string `json:"clusterRootDomain"`
 
 	// VPC defines how we configure the VPC for the cluster
 	// +optional
@@ -56,9 +58,9 @@ type Cluster struct {
 // Validate calls each members Validate function
 func (c Cluster) Validate() error {
 	return validation.ValidateStruct(&c,
+		validation.Field(&c.ClusterRootDomain, validation.Required, is.LowerCase),
 		validation.Field(&c.Metadata),
 		validation.Field(&c.Github),
-		validation.Field(&c.PrimaryDNSZone),
 		validation.Field(&c.VPC),
 		validation.Field(&c.Integrations),
 		validation.Field(&c.Users),
@@ -159,10 +161,6 @@ type ClusterGithub struct {
 	// OutputPath is a path from the root of the org/repository where
 	// we can store generated output files
 	OutputPath string `json:"outputPath"`
-
-	// Team name on github.com, e.g., "kjøremiljø". The team you
-	// specify here must be owned by the organisation specified above.
-	Team string `json:"team"`
 }
 
 // Validate returns an error if ClusterGithub is missing required information
@@ -171,7 +169,6 @@ func (c ClusterGithub) Validate() error {
 		validation.Field(&c.Organisation, validation.Required),
 		validation.Field(&c.Repository, validation.Required),
 		validation.Field(&c.OutputPath, validation.Required),
-		validation.Field(&c.Team, validation.Required),
 	)
 }
 
@@ -261,7 +258,7 @@ func ClusterTypeMeta() metav1.TypeMeta {
 }
 
 // NewDefaultCluster returns a cluster definition with sensible defaults
-func NewDefaultCluster(name, env, org, repo, team, accountID string) Cluster {
+func NewDefaultCluster(name, env, org, repo, accountID string) Cluster {
 	return Cluster{
 		TypeMeta: ClusterTypeMeta(),
 		Metadata: ClusterMeta{
@@ -270,18 +267,14 @@ func NewDefaultCluster(name, env, org, repo, team, accountID string) Cluster {
 			Region:      "eu-west-1",
 			AccountID:   accountID,
 		},
-		PrimaryDNSZone: ClusterDNSZone{
-			ParentDomain:  fmt.Sprintf("%s-%s.oslo.systems", name, env),
-			ReuseExisting: false,
-		},
+		ClusterRootDomain: fmt.Sprintf("%s-%s.oslo.systems", name, env),
 		Github: ClusterGithub{
 			Organisation: org,
 			Repository:   repo,
-			OutputPath:   "infrastructure",
-			Team:         team,
+			OutputPath:   constant.DefaultOutputDirectory,
 		},
 		VPC: &ClusterVPC{
-			CIDR:             "192.168.0.0/20",
+			CIDR:             constant.DefaultClusterCIDR,
 			HighAvailability: true,
 		},
 		Integrations: &ClusterIntegrations{

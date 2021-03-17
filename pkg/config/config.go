@@ -22,14 +22,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// nolint: golint
-const (
-	DefaultComponentBaseDir           = "component"
-	DefaultPostgresBaseDir            = "postgres"
-	DefaultPostgresOutputFile         = "postgres-output.json"
-	DefaultPostgresCloudFormationFile = "postgres-cf.yaml"
-)
-
 // DataLoaderFn is the type for loading configuration data
 type DataLoaderFn func(*Config) error
 

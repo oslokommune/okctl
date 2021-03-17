@@ -34,7 +34,7 @@ func createMonitoringService(retriever clusterConfigRetrieverFn) client.Monitori
 		mockParameterService{},
 		mockServiceAccountService{retrieverFn: retriever},
 		mockManagedPolicyService{},
-		mock.NewCloudProvider(),
+		mock.NewGoodCloudProvider(),
 	)
 }
 
@@ -120,6 +120,13 @@ func (m mockStore) RemoveTempo(_ api.ID) (*store.Report, error) {
 }
 
 type mockState struct{}
+
+func (m mockState) GetKubePromStack() (*client.KubePromStack, error) {
+	return &client.KubePromStack{
+		FargateCloudWatchPolicyARN:        "",
+		FargateProfilePodExecutionRoleARN: mock.DefaultFargateProfilePodExecutionRoleARN,
+	}, nil
+}
 
 func (m mockState) SaveKubePromStack(_ *client.KubePromStack) (*store.Report, error) {
 	panic("implement me")

@@ -1,0 +1,13 @@
+apiVersion: vpcresources.k8s.aws/v1beta1
+kind: SecurityGroupPolicy
+metadata:
+  creationTimestamp: null
+  name: name
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: psqlclient
+  securityGroups:
+    groupIds:
+    - sg-a90eug3FAKE

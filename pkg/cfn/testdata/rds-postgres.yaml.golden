@@ -163,14 +163,17 @@ Resources:
   okctlrepoenvRDSPostgresLambdaRotateFunction:
     Properties:
       Code: {}
-      Environment: {}
+      Environment:
+        Variables:
+          SECRETS_MANAGER_ENDPOINT:
+            Fn::Sub: https://secretsmanager.${AWS::Region}.amazonaws.com
       FunctionName: okctlrepoenvrdspostgreslambdarotatefunction-Rotater
       Handler: lambda_function.lambda_handler
       Role:
         Fn::GetAtt:
         - okctlrepoenvRDSPostgresLambdaRotateRole
         - Arn
-      Runtime: python3.7
+      Runtime: python3.8
       Timeout: 30
       VpcConfig:
         SecurityGroupIds:

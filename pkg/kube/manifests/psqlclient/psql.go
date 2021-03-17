@@ -1,3 +1,5 @@
+// Package psqlclient provides functionality for
+// creating a psql client pod and attaching to it
 package psqlclient
 
 import (
@@ -16,6 +18,10 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+)
+
+const (
+	podWatchTimeoutInSeconds = 60
 )
 
 // PSQLClient contains the state required for
@@ -73,12 +79,14 @@ func (c *PSQLClient) Watch(resp *v1.Pod) error {
 				if !ok {
 					return
 				}
+
 				resp = events.Object.(*v1.Pod)
 				status = resp.Status
+
 				if resp.Status.Phase != v1.PodPending {
 					w.Stop()
 				}
-			case <-time.After(30 * time.Second):
+			case <-time.After(podWatchTimeoutInSeconds * time.Second):
 				w.Stop()
 			}
 		}

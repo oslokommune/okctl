@@ -29,6 +29,7 @@ func (o *attachPostgresOpts) Validate() error {
 	)
 }
 
+// nolint: funlen
 func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 	opts := &attachPostgresOpts{}
 

@@ -89,12 +89,15 @@ func NewRotateLambda(
 	subnetIDs []string,
 ) *LambdaFunction {
 	return New(resourceName, Opts{
-		FunctionName:    fmt.Sprintf("%s-Rotater", slug.Make(resourceName)),
-		Handler:         "lambda_function.lambda_handler",
-		Runtime:         "python3.7",
-		Bucket:          bucket,
-		Key:             key,
-		Role:            role,
+		FunctionName: fmt.Sprintf("%s-Rotater", slug.Make(resourceName)),
+		Handler:      "lambda_function.lambda_handler",
+		Runtime:      "python3.7",
+		Bucket:       bucket,
+		Key:          key,
+		Role:         role,
+		Env: map[string]string{
+			"SECRETS_MANAGER_ENDPOINT": cloudformation.Sub("https://secretsmanager.${AWS::Region}.amazonaws.com"),
+		},
 		SecurityGroupID: securityGroup,
 		SubnetIds:       subnetIDs,
 	})

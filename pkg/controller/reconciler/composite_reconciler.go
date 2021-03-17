@@ -32,6 +32,11 @@ func (c *compositeReconciler) Reconcile(node *resourcetree.ResourceNode) (result
 
 	node.RefreshState()
 
+	_, ok := c.reconcilers[node.Type]
+	if !ok {
+		return result, fmt.Errorf("no reconciler for type exists: %s", resourcetree.ResourceNodeTypeToString(node.Type))
+	}
+
 	return c.reconcilers[node.Type].Reconcile(node)
 }
 

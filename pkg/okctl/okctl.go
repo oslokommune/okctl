@@ -485,7 +485,8 @@ func (o *Okctl) clusterService(outputDir string, spin spinner.Spinner) client.Cl
 		),
 		console.NewClusterReport(o.Err, spin),
 		stateSaver.NewClusterState(o.RepoStateWithEnv),
-		o.kubeConfigStore,
+		o.CloudProvider,
+		o.CredentialsProvider.Aws(),
 	)
 }
 

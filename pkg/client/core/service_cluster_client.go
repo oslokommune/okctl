@@ -3,6 +3,10 @@ package core
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/credentials/aws"
+
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/kube"
 	"github.com/oslokommune/okctl/pkg/kube/manifests/awsnode"
 
@@ -21,7 +25,8 @@ type clusterService struct {
 	report  client.ClusterReport
 	state   client.ClusterState
 
-	kubeconf api.KubeConfigStore
+	provider v1alpha1.CloudProvider
+	auth     aws.Authenticator
 }
 
 func (s *clusterService) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error) {
@@ -39,12 +44,7 @@ func (s *clusterService) CreateCluster(_ context.Context, opts api.ClusterCreate
 		return nil, err
 	}
 
-	cfg, err := s.kubeconf.GetKubeConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	clientSet, _, err := kube.NewFromKubeConfig(cfg.Path).Get()
+	clientSet, _, err := kube.NewFromEKSCluster(cluster.ID.ClusterName, cluster.ID.Region, s.provider, s.auth).Get()
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,8 @@ func NewClusterService(
 	store client.ClusterStore,
 	report client.ClusterReport,
 	state client.ClusterState,
-	kubeconf api.KubeConfigStore,
+	provider v1alpha1.CloudProvider,
+	auth aws.Authenticator,
 ) client.ClusterService {
 	return &clusterService{
 		spinner:  spinner,
@@ -115,6 +116,7 @@ func NewClusterService(
 		store:    store,
 		report:   report,
 		state:    state,
-		kubeconf: kubeconf,
+		provider: provider,
+		auth:     auth,
 	}
 }

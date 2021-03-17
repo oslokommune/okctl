@@ -430,7 +430,7 @@ func (p *CloudProvider) PrincipalARN() string {
 // NewCloudProvider returns a mocked cloud provider with no mocks sets
 func NewCloudProvider() *CloudProvider {
 	return &CloudProvider{
-
+		IAMAPI:    &IAMAPI{},
 		S3API:     &S3API{},
 		EC2API:    &EC2API{},
 		CFAPI:     &CFAPI{},

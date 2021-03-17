@@ -211,15 +211,15 @@ func (o *Okctl) componentService(outputDir string, spin spinner.Spinner) client.
 		rest.NewComponentAPI(o.restClient),
 		clientFilesystem.NewComponentStore(
 			clientFilesystem.Paths{
-				OutputFile:         config.DefaultPostgresOutputFile,
-				CloudFormationFile: config.DefaultPostgresCloudFormationFile,
-				BaseDir:            path.Join(outputDir, config.DefaultComponentBaseDir, config.DefaultPostgresBaseDir),
+				OutputFile:         constant.DefaultPostgresOutputFile,
+				CloudFormationFile: constant.DefaultPostgresCloudFormationFile,
+				BaseDir:            path.Join(outputDir, constant.DefaultComponentBaseDir, constant.DefaultPostgresBaseDir),
 			},
 			o.FileSystem,
 		),
 		stateSaver.NewComponentState(o.RepoStateWithEnv),
 		console.NewComponentReport(o.Err, spin),
-		o.manifestService(path.Join(outputDir, config.DefaultComponentBaseDir), spin.SubSpinner()),
+		o.manifestService(path.Join(outputDir, constant.DefaultComponentBaseDir), spin.SubSpinner()),
 		o.CloudProvider,
 	)
 }

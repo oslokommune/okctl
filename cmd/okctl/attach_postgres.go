@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/kube/manifests/securitygrouppolicy"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/kube"
@@ -84,15 +86,38 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
+			app := fmt.Sprintf("%s-psqlclient", opts.ApplicationName)
+
+			labels := map[string]string{
+				"psqlclient": app,
+			}
+
+			policyClient := securitygrouppolicy.New(
+				app,
+				opts.Namespace,
+				securitygrouppolicy.Manifest(
+					app,
+					opts.Namespace,
+					labels,
+					[]string{opts.SecurityGroup},
+				),
+				config,
+			)
+
+			_, err = policyClient.Create()
+			if err != nil {
+				return err
+			}
+
 			client := psqlclient.New(
-				fmt.Sprintf("%s-psqlclient", opts.ApplicationName),
+				app,
 				opts.Namespace,
 				psqlclient.Manifest(
-					fmt.Sprintf("%s-psqlclient", opts.ApplicationName),
+					app,
 					opts.Namespace,
 					opts.ConfigMapName,
 					opts.SecretName,
-					opts.SecurityGroup,
+					labels,
 				),
 				clientSet,
 				config,
@@ -113,7 +138,12 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			return client.Delete()
+			err = client.Delete()
+			if err != nil {
+				return err
+			}
+
+			return policyClient.Delete()
 		},
 	}
 

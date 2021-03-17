@@ -121,7 +121,9 @@ func (c *PSQLClient) Attach() error {
 }
 
 // Manifest returns the manifest
-func Manifest(name, namespace, configMapName, secretName, securityGroup string) *v1.Pod {
+func Manifest(name, namespace, configMapName, secretName string, labels map[string]string) *v1.Pod {
+	var terminationGracePeriodSeconds int64 = 30
+
 	optional := false
 
 	return &v1.Pod{
@@ -132,8 +134,10 @@ func Manifest(name, namespace, configMapName, secretName, securityGroup string) 
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
+			Labels:    labels,
 		},
 		Spec: v1.PodSpec{
+			TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 			Containers: []v1.Container{
 				{
 					Name:    "psqlclient",
@@ -159,7 +163,6 @@ func Manifest(name, namespace, configMapName, secretName, securityGroup string) 
 					TTY:   true,
 				},
 			},
-			ImagePullSecrets: nil,
 		},
 	}
 }

@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/oslokommune/okctl/pkg/ec2api"
+
 	"github.com/oslokommune/okctl/pkg/static/rotater"
 
 	"github.com/oslokommune/okctl/pkg/iamapi"
@@ -168,6 +170,15 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		RotaterBucket:         rotaterBucket,
 	}
 
+	err = ec2api.New(c.provider).AuthorizePodToNodeGroupTraffic(
+		"ng-generic",
+		pg.OutgoingSecurityGroupID,
+		opts.VpcID,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	r1, err := c.store.SavePostgresDatabase(postgres)
 	if err != nil {
 		return nil, err
@@ -202,6 +213,15 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 		return err
 	}
 
+	err = ec2api.New(c.provider).RevokePodToNodeGroupTraffic(
+		"ng-generic",
+		db.OutgoingSecurityGroupID,
+		opts.VpcID,
+	)
+	if err != nil {
+		return err
+	}
+
 	err = iamapi.New(c.provider).DetachRolePolicy(db.LambdaPolicyARN, db.LambdaRoleARN)
 	if err != nil {
 		return err
@@ -218,7 +238,7 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 	err = c.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
 		ID:        opts.ID,
 		Name:      pgConfigMapName(opts.ApplicationName),
-		Namespace: opts.Namespace,
+		Namespace: db.Namespace,
 	})
 	if err != nil {
 		return err
@@ -227,7 +247,7 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 	err = c.manifest.DeleteExternalSecret(ctx, client.DeleteExternalSecretOpts{
 		ID: opts.ID,
 		Secrets: map[string]string{
-			pgConfigMapName(opts.ApplicationName): opts.Namespace,
+			pgConfigMapName(opts.ApplicationName): db.Namespace,
 		},
 	})
 	if err != nil {

@@ -377,6 +377,16 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 		_ = s.spinner.Stop()
 	}()
 
+	stack, err := s.state.GetKubePromStack()
+	if err != nil {
+		return err
+	}
+
+	err = iamapi.New(s.provider).DetachRolePolicy(stack.FargateCloudWatchPolicyARN, stack.FargateProfilePodExecutionRoleARN)
+	if err != nil {
+		return err
+	}
+
 	err = s.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
 		ID:        opts.ID,
 		Name:      cloudwatchDatasourceConfigMapName,
@@ -749,6 +759,9 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 	if err != nil {
 		return nil, err
 	}
+
+	stack.FargateProfilePodExecutionRoleARN = roleARN
+	stack.FargateCloudWatchPolicyARN = fargatePolicy.PolicyARN
 
 	r1, err := s.store.SaveKubePromStack(stack)
 	if err != nil {

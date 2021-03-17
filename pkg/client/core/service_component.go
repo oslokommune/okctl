@@ -129,12 +129,12 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 				Data: []api.Data{
 					{
 						Key:      pg.AdminSecretFriendlyName,
-						Name:     "username",
+						Name:     "PGUSER",
 						Property: "username",
 					},
 					{
 						Key:      pg.AdminSecretFriendlyName,
-						Name:     "password",
+						Name:     "PGPASSWORD",
 						Property: "password",
 					},
 				},
@@ -150,8 +150,10 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		Name:      pgConfigMapName(opts.ApplicationName),
 		Namespace: opts.Namespace,
 		Data: map[string]string{
-			"endpointAddress": pg.EndpointAddress,
-			"endpointPort":    strconv.Itoa(pg.EndpointPort),
+			"PGHOST":     pg.EndpointAddress,
+			"PGPORT":     strconv.Itoa(pg.EndpointPort),
+			"PGDATABASE": opts.ApplicationName,
+			"PGSSLMODE":  "disable", // We should enable this eventually
 		},
 	})
 	if err != nil {

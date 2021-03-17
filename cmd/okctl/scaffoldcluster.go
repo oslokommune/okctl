@@ -45,5 +45,5 @@ const (
 	usageOrganization    = `organization that owns the infrastructure-as-code repository`
 	usageRepository      = `name of the repository that will contain infrastructure-as-code`
 	usageOutputDirectory = `name of the directory where okctl will place all infrastructure files`
-	exampleUsage         = `okctl scaffold cluster utviklerportalen production > cluster.yaml`
+	exampleUsage         = `okctl scaffold cluster > cluster.yaml`
 )

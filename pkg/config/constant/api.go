@@ -152,4 +152,9 @@ const (
 	// DefaultClusterCIDR defines the default CIDR to use when creating cluster VPCs
 	DefaultClusterCIDR     = "192.168.0.0/20"
 	DefaultOutputDirectory = "infrastructure"
+
+	DefaultComponentBaseDir           = "component"
+	DefaultPostgresBaseDir            = "postgres"
+	DefaultPostgresOutputFile         = "postgres-output.json"
+	DefaultPostgresCloudFormationFile = "postgres-cf.yaml"
 )

@@ -11,3 +11,7 @@ The code for the lambda requires some python modules, so we use a docker contain
 3. This should result in a new lambda_function.zip with the new content
 4. The zip file will be embedded into the rotater.go file
 5. Success
+
+## Code
+
+We have slightly modified the code found at this location: https://github.com/aws-samples/aws-secrets-manager-rotation-lambdas/blob/master/SecretsManagerRDSPostgreSQLRotationSingleUser

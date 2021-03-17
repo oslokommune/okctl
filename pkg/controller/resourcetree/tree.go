@@ -53,6 +53,8 @@ const (
 	ResourceNodeTypeNameserversDelegatedTest
 	// ResourceNodeTypeUsers represents the users we want to add to the cognito user pool
 	ResourceNodeTypeUsers
+	// ResourceNodeTypePostgres represents the postgres databases we want to add to the cluster
+	ResourceNodeTypePostgres
 )
 
 // ResourceNodeTypeToString knows how to convert a Resource Node type to a human readable string
@@ -97,6 +99,8 @@ func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
 		return "Nameservers Delegated Test"
 	case ResourceNodeTypeUsers:
 		return "Users"
+	case ResourceNodeTypePostgres:
+		return "Postgres"
 	default:
 		return "N/A"
 	}

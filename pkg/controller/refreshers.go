@@ -140,3 +140,25 @@ func CreateNameserverDelegationStateRefresher(fetcher HostedZoneFetcher) resourc
 		}
 	}
 }
+
+// CreatePostgresDatabasesRefresher creates a function that gathers required runtime data
+func CreatePostgresDatabasesRefresher(fs *afero.Afero, outputDir string) resourcetree.StateRefreshFn {
+	return func(node *resourcetree.ResourceNode) {
+		vpc := getVpcState(fs, outputDir)
+
+		ids := make([]string, len(vpc.DatabaseSubnets))
+		cidrs := make([]string, len(vpc.DatabaseSubnets))
+
+		for i, s := range vpc.DatabaseSubnets {
+			ids[i] = s.ID
+			cidrs[i] = s.Cidr
+		}
+
+		node.ResourceState = reconciler.PostgresState{
+			VpcID:             vpc.VpcID,
+			DBSubnetGroupName: vpc.DatabaseSubnetsGroupName,
+			DBSubnetIDs:       ids,
+			DBSubnetCIDRs:     cidrs,
+		}
+	}
+}

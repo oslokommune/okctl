@@ -153,6 +153,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				reconciler.NewNameserverDelegationReconciler(services.NameserverHandler),
 				reconciler.NewNameserverDelegatedTestReconciler(services.Domain),
 				reconciler.NewUsersReconciler(services.IdentityManager),
+				reconciler.NewPostgresReconciler(services.Component),
 			)
 
 			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{

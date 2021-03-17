@@ -130,6 +130,12 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 			desiredTreeNode.State = boolToState(declaration.Integrations.ArgoCD)
 		case resourcetree.ResourceNodeTypeUsers:
 			desiredTreeNode.State = boolToState(len(declaration.Users) > 0)
+		case resourcetree.ResourceNodeTypePostgres:
+			desiredTreeNode.State = boolToState(false)
+
+			if declaration.Databases != nil {
+				desiredTreeNode.State = boolToState(len(declaration.Databases.Postgres) > 0)
+			}
 		}
 	}
 }
@@ -174,6 +180,8 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 			receiver.State = boolToState(existingResources.hasArgoCD)
 		case resourcetree.ResourceNodeTypeUsers:
 			receiver.State = boolToState(existingResources.hasUsers)
+		case resourcetree.ResourceNodeTypePostgres:
+			receiver.State = boolToState(existingResources.hasPostgres)
 		}
 	}
 }
@@ -228,6 +236,11 @@ func setRefreshers(desiredTree *resourcetree.ResourceNode, opts *SynchronizeOpts
 
 	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeUsers, CreateUsersRefresher(
 		opts.IdentityPoolFetcher,
+	))
+
+	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypePostgres, CreatePostgresDatabasesRefresher(
+		opts.Fs,
+		opts.OutputDir,
 	))
 }
 

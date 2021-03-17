@@ -19,7 +19,6 @@ require (
 	github.com/aws/aws-sdk-go v1.37.32
 	github.com/awslabs/goformation/v4 v4.18.1
 	github.com/beevik/etree v1.1.0
-	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/bshuster-repo/logrus-logstash-hook v1.0.0 // indirect
 	github.com/bugsnag/bugsnag-go v1.5.3 // indirect

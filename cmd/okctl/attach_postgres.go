@@ -16,6 +16,7 @@ import (
 type attachPostgresOpts struct {
 	ID              api.ID
 	ApplicationName string
+	Environment     string
 	Namespace       string
 	ConfigMapName   string
 	SecretName      string
@@ -27,6 +28,7 @@ func (o *attachPostgresOpts) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.ApplicationName, validation.Required),
+		validation.Field(&o.Environment, validation.Required),
 		validation.Field(&o.Namespace, validation.Required),
 	)
 }
@@ -36,28 +38,24 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 	opts := &attachPostgresOpts{}
 
 	cmd := &cobra.Command{
-		Use:   "postgres ENV APPLICATION_NAME",
+		Use:   "postgres",
 		Short: "Attach to the given postgres database",
-		Args:  cobra.ExactArgs(2), // nolint: gomnd
+		Args:  cobra.ExactArgs(0), // nolint: gomnd
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			environment := args[0]
-			applicationName := args[1]
-
-			err := o.InitialiseWithOnlyEnv(environment)
+			err := o.InitialiseWithOnlyEnv(opts.Environment)
 			if err != nil {
 				return err
 			}
 
 			meta := o.RepoStateWithEnv.GetMetadata()
 			cluster := o.RepoStateWithEnv.GetCluster()
-			db := o.RepoStateWithEnv.GetDatabase(applicationName)
+			db := o.RepoStateWithEnv.GetDatabase(opts.ApplicationName)
 
-			opts.ID.Environment = environment
+			opts.ID.Environment = opts.Environment
 			opts.ID.AWSAccountID = cluster.AWSAccountID
 			opts.ID.Repository = meta.Name
 			opts.ID.Region = meta.Region
 			opts.ID.ClusterName = cluster.Name
-			opts.ApplicationName = applicationName
 			opts.Namespace = db.Namespace
 			opts.ConfigMapName = db.DatabaseConfigMapName
 			opts.SecretName = db.AdminSecretName
@@ -146,6 +144,22 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 			return policyClient.Delete()
 		},
 	}
+
+	flags := cmd.Flags()
+
+	flags.StringVarP(&opts.ApplicationName,
+		"environment",
+		"e",
+		"",
+		"The environment the postgres database was created in",
+	)
+
+	flags.StringVarP(&opts.ApplicationName,
+		"name",
+		"n",
+		"",
+		"The name of the database to attach to",
+	)
 
 	return cmd
 }

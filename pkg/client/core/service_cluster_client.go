@@ -3,6 +3,9 @@ package core
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/kube"
+	"github.com/oslokommune/okctl/pkg/kube/manifests/awsnode"
+
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/oslokommune/okctl/pkg/client/store"
@@ -17,6 +20,8 @@ type clusterService struct {
 	store   client.ClusterStore
 	report  client.ClusterReport
 	state   client.ClusterState
+
+	kubeconf api.KubeConfigStore
 }
 
 func (s *clusterService) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error) {
@@ -30,6 +35,21 @@ func (s *clusterService) CreateCluster(_ context.Context, opts api.ClusterCreate
 	}()
 
 	cluster, err := s.api.CreateCluster(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, err := s.kubeconf.GetKubeConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	clientSet, _, err := kube.NewFromKubeConfig(cfg.Path).Get()
+	if err != nil {
+		return nil, err
+	}
+
+	err = awsnode.New(clientSet).EnablePodENI()
 	if err != nil {
 		return nil, err
 	}
@@ -87,12 +107,14 @@ func NewClusterService(
 	store client.ClusterStore,
 	report client.ClusterReport,
 	state client.ClusterState,
+	kubeconf api.KubeConfigStore,
 ) client.ClusterService {
 	return &clusterService{
-		spinner: spinner,
-		api:     api,
-		store:   store,
-		report:  report,
-		state:   state,
+		spinner:  spinner,
+		api:      api,
+		store:    store,
+		report:   report,
+		state:    state,
+		kubeconf: kubeconf,
 	}
 }

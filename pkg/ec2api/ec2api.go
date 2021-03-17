@@ -3,6 +3,8 @@
 package ec2api
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -39,7 +41,7 @@ func (a *EC2API) securityGroupForNodeGroup(name, vpcID string) (string, error) {
 		},
 	})
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("getting security group for node: %w", err)
 	}
 
 	return *sgs.SecurityGroups[0].GroupId, nil
@@ -55,14 +57,23 @@ func (a *EC2API) AuthorizePodToNodeGroupTraffic(nodegroupName, podSecurityGroup,
 
 	for _, protocol := range []string{"tcp", "udp"} {
 		_, err = a.provider.EC2().AuthorizeSecurityGroupIngress(&ec2.AuthorizeSecurityGroupIngressInput{
-			FromPort:                aws.Int64(dnsPort),
-			GroupId:                 aws.String(nodegroupSecurityGroup),
-			IpProtocol:              aws.String(protocol),
-			SourceSecurityGroupName: aws.String(podSecurityGroup),
-			ToPort:                  aws.Int64(dnsPort),
+			GroupId: aws.String(nodegroupSecurityGroup),
+			IpPermissions: []*ec2.IpPermission{
+				{
+					FromPort:   aws.Int64(dnsPort),
+					IpProtocol: aws.String(protocol),
+					ToPort:     aws.Int64(dnsPort),
+					UserIdGroupPairs: []*ec2.UserIdGroupPair{
+						{
+							GroupId: aws.String(podSecurityGroup),
+							VpcId:   aws.String(vpcID),
+						},
+					},
+				},
+			},
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("authorizing security group ingress: %w", err)
 		}
 	}
 
@@ -78,14 +89,23 @@ func (a *EC2API) RevokePodToNodeGroupTraffic(nodegroupName, podSecurityGroup, vp
 
 	for _, protocol := range []string{"tcp", "udp"} {
 		_, err = a.provider.EC2().RevokeSecurityGroupIngress(&ec2.RevokeSecurityGroupIngressInput{
-			FromPort:                aws.Int64(dnsPort),
-			GroupId:                 aws.String(nodegroupSecurityGroup),
-			IpProtocol:              aws.String(protocol),
-			SourceSecurityGroupName: aws.String(podSecurityGroup),
-			ToPort:                  aws.Int64(dnsPort),
+			GroupId: aws.String(nodegroupSecurityGroup),
+			IpPermissions: []*ec2.IpPermission{
+				{
+					FromPort:   aws.Int64(dnsPort),
+					IpProtocol: aws.String(protocol),
+					ToPort:     aws.Int64(dnsPort),
+					UserIdGroupPairs: []*ec2.UserIdGroupPair{
+						{
+							GroupId: aws.String(podSecurityGroup),
+							VpcId:   aws.String(vpcID),
+						},
+					},
+				},
+			},
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("revoking security group ingress: %w", err)
 		}
 	}
 

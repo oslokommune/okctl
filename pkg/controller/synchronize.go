@@ -33,6 +33,7 @@ type SynchronizeOpts struct {
 	CIDRGetter              StringFetcher
 	IdentityPoolFetcher     IdentityPoolFetcher
 	PrimaryHostedZoneGetter HostedZoneFetcher
+	VpcFetcher              VpcFetcher
 }
 
 // Synchronize knows how to discover differences between desired and actual state and rectify them
@@ -239,8 +240,7 @@ func setRefreshers(desiredTree *resourcetree.ResourceNode, opts *SynchronizeOpts
 	))
 
 	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypePostgres, CreatePostgresDatabasesRefresher(
-		opts.Fs,
-		opts.OutputDir,
+		opts.VpcFetcher,
 	))
 }
 

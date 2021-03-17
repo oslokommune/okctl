@@ -174,6 +174,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				IdentityPoolFetcher:     func() state.IdentityPool { return o.RepoStateWithEnv.GetIdentityPool() },
 				CIDRGetter:              func() string { return o.RepoStateWithEnv.GetVPC().CIDR },
 				PrimaryHostedZoneGetter: func() *state.HostedZone { return o.RepoStateWithEnv.GetPrimaryHostedZone() },
+				VpcFetcher:              func() state.VPC { return o.RepoStateWithEnv.GetVPC() },
 			}
 
 			err = controller.Synchronize(synchronizeOpts)

@@ -142,13 +142,17 @@ func (d Database) Validate() error {
 // Monitoring contains state information about
 // the monitoring setup
 type Monitoring struct {
-	DashboardURL string
+	DashboardURL                      string
+	FargateCloudWatchPolicyARN        string
+	FargateProfilePodExecutionRoleARN string
 }
 
 // Validate the monitoring struct
 func (m Monitoring) Validate() error {
 	return validation.ValidateStruct(&m,
 		validation.Field(&m.DashboardURL, validation.Required),
+		validation.Field(&m.FargateCloudWatchPolicyARN, validation.Required),
+		validation.Field(&m.FargateProfilePodExecutionRoleARN, validation.Required),
 	)
 }
 

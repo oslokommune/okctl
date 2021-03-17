@@ -89,4 +89,6 @@ clusters:
             users: {}
         monitoring:
             dashboardurl: ""
+            fargatecloudwatchpolicyarn: ""
+            fargateprofilepodexecutionrolearn: ""
         databases: {}

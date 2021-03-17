@@ -10,20 +10,22 @@ import (
 
 // KubePromStack is the content of a kubernetes prometheus stack deployment
 type KubePromStack struct {
-	ID                     api.ID
-	CertificateARN         string
-	Hostname               string
-	AuthHostname           string
-	ClientID               string
-	SecretsConfigName      string
-	SecretsCookieSecretKey string
-	SecretsClientSecretKey string
-	SecretsAdminUserKey    string
-	SecretsAdminPassKey    string
-	Chart                  *api.Helm
-	Certificate            *api.Certificate
-	IdentityPoolClient     *api.IdentityPoolClient
-	ExternalSecret         *ExternalSecret
+	ID                                api.ID
+	CertificateARN                    string
+	Hostname                          string
+	AuthHostname                      string
+	ClientID                          string
+	SecretsConfigName                 string
+	SecretsCookieSecretKey            string
+	SecretsClientSecretKey            string
+	SecretsAdminUserKey               string
+	SecretsAdminPassKey               string
+	Chart                             *api.Helm
+	Certificate                       *api.Certificate
+	IdentityPoolClient                *api.IdentityPoolClient
+	ExternalSecret                    *ExternalSecret
+	FargateCloudWatchPolicyARN        string
+	FargateProfilePodExecutionRoleARN string
 }
 
 // CreateKubePromStackOpts are the required inputs
@@ -129,6 +131,7 @@ type MonitoringStore interface {
 type MonitoringState interface {
 	SaveKubePromStack(stack *KubePromStack) (*store.Report, error)
 	RemoveKubePromStack(id api.ID) (*store.Report, error)
+	GetKubePromStack() (*KubePromStack, error)
 }
 
 // MonitoringReport is a report layer

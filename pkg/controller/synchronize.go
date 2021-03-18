@@ -83,7 +83,7 @@ func handleNode(reconcilerManager reconciler.Reconciler, currentNode *resourcetr
 	for _, node := range currentNode.Children {
 		err = handleNode(reconcilerManager, node)
 		if err != nil {
-			return fmt.Errorf("handling node: %w", err)
+			return err
 		}
 	}
 

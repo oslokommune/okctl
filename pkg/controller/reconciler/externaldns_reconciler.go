@@ -1,8 +1,9 @@
 package reconciler
 
 import (
-	"errors"
 	"fmt"
+
+	"github.com/mishudark/errors"
 
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
@@ -45,6 +46,8 @@ func (z *externalDNSReconciler) Reconcile(node *resourcetree.ResourceNode) (resu
 			Domain:       z.commonMetadata.Declaration.ClusterRootDomain,
 		})
 		if err != nil {
+			result.Requeue = errors.IsKind(err, errors.Timeout)
+
 			return result, fmt.Errorf("creating external DNS: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:

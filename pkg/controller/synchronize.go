@@ -8,7 +8,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
-	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
@@ -64,18 +63,19 @@ func Synchronize(opts *SynchronizeOpts) error {
 }
 
 // handleNode knows how to run Reconcile() on every node of a ResourceNode tree
+//goland:noinspection GoNilness
 func handleNode(reconcilerManager reconciler.Reconciler, currentNode *resourcetree.ResourceNode) (err error) {
 	reconciliationResult := reconciler.ReconcilationResult{Requeue: true, RequeueAfter: 0 * time.Second}
 
 	for requeues := 0; reconciliationResult.Requeue; requeues++ {
 		if requeues == constant.DefaultMaxReconciliationRequeues {
-			return errors.New("maximum allowed reconciliation requeues reached")
+			return fmt.Errorf("maximum allowed reconciliation requeues reached: %w", err)
 		}
 
 		time.Sleep(reconciliationResult.RequeueAfter)
 
 		reconciliationResult, err = reconcilerManager.Reconcile(currentNode)
-		if err != nil {
+		if err != nil && !reconciliationResult.Requeue {
 			return fmt.Errorf("reconciling node: %w", err)
 		}
 	}

@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: 2010-09-09
+AWSTemplateFormatVersion: "2010-09-09"
 Outputs:
   myRotater:
     Export:
@@ -16,7 +16,15 @@ Resources:
         S3Key: mykey
       Environment:
         Variables:
-          SECRETS_MANAGER_ENDPOINT: eyAiRm46OlNlbGVjdCI6IFsgJ1x4MDAnLCAgImV5QWlSbTQ2T2tkbGRFRjBkQ0lnT2lCYklDSnRlVlpRUTBWdVpIQnZhVzUwSWl3Z0lrUnVjMFZ1ZEhKcFpYTWlJRjBnZlE9PSIgXSB9
+          SECRETS_MANAGER_ENDPOINT:
+            Fn::Join:
+            - ""
+            - - https://
+              - Fn::Select:
+                - "0"
+                - - Fn::GetAtt:
+                    - myVPCEndpoint
+                    - DnsEntries
       FunctionName: myrotater-Rotater
       Handler: lambda_function.lambda_handler
       Role:

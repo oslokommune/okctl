@@ -3,6 +3,8 @@ package aws
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/cfn/components/lambdafunction"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn"
@@ -77,6 +79,15 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 	template, err := b.Build()
 	if err != nil {
 		return nil, fmt.Errorf("building cloud formation template: %w", err)
+	}
+
+	template, err = lambdafunction.PatchRotateLambda(
+		composer.NameResource("RDSPostgresLambdaRotateFunction"),
+		composer.NameResource("SecretsManagerVPCEndpoint"),
+		template,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("patching cloud formation template: %w", err)
 	}
 
 	r := cfn.NewRunner(c.provider)

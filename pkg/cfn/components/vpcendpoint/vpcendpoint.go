@@ -2,6 +2,8 @@
 package vpcendpoint
 
 import (
+	"fmt"
+
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/ec2"
 	"github.com/oslokommune/okctl/pkg/cfn"
@@ -20,7 +22,9 @@ type VPCEndpoint struct {
 
 // NamedOutputs returns the resource outputs
 func (e *VPCEndpoint) NamedOutputs() map[string]cloudformation.Output {
-	return nil
+	return cfn.NewValue(
+		fmt.Sprintf("%sDnsEntries", e.Name()), cloudformation.GetAtt(e.Name(), "DnsEntries"),
+	).NamedOutputs()
 }
 
 // Name returns the name of the cloud formation resource
@@ -36,7 +40,7 @@ func (e *VPCEndpoint) Ref() string {
 // Resource returns the cloud formation resource for a VPC endpoint
 func (e *VPCEndpoint) Resource() cloudformation.Resource {
 	return &ec2.VPCEndpoint{
-		PrivateDnsEnabled: true,
+		PrivateDnsEnabled: false,
 		SecurityGroupIds: []string{
 			cloudformation.GetAtt(e.SecurityGroup.Name(), "GroupId"),
 		},

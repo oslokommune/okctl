@@ -41,8 +41,8 @@ type CloudFormationTemplateTestCase struct {
 }
 
 // RunTests runs the cloud formation template tests
-func RunTests(t *testing.T, testCases []CloudFormationTemplateTestCase) {
-	for _, tc := range testCases {
+func RunTests(t *testing.T, testCases []CloudFormationTemplateTestCase, callback func(int, []byte)) {
+	for i, tc := range testCases {
 		tc := tc
 
 		t.Run(tc.Name, func(t *testing.T) {
@@ -60,6 +60,10 @@ func RunTests(t *testing.T, testCases []CloudFormationTemplateTestCase) {
 
 			g := goldie.New(t)
 			g.Assert(t, tc.Golden, data)
+
+			if callback != nil {
+				callback(i, data)
+			}
 		})
 	}
 }

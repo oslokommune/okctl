@@ -4,6 +4,7 @@ package ec2api
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -73,6 +74,10 @@ func (a *EC2API) AuthorizePodToNodeGroupTraffic(nodegroupName, podSecurityGroup,
 			},
 		})
 		if err != nil {
+			if strings.Contains(err.Error(), "InvalidPermission.Duplicate") {
+				continue
+			}
+
 			return fmt.Errorf("authorizing security group ingress: %w", err)
 		}
 	}

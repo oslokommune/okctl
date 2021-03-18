@@ -136,6 +136,13 @@ Resources:
           - okctlrepoenvRDSPostgresOutgoing
           - GroupId
         ToPort: 5432
+      - FromPort: 5432
+        IpProtocol: tcp
+        SourceSecurityGroupId:
+          Fn::GetAtt:
+          - okctlrepoenvRotaterLambdaOutgoingSecurityGroup
+          - GroupId
+        ToPort: 5432
       VpcId: vpcid-w9ufe
     Type: AWS::EC2::SecurityGroup
   okctlrepoenvRDSPostgresLambdaManagedPolicy:
@@ -165,8 +172,7 @@ Resources:
       Code: {}
       Environment:
         Variables:
-          SECRETS_MANAGER_ENDPOINT:
-            Fn::Sub: https://secretsmanager.${AWS::Region}.amazonaws.com
+          SECRETS_MANAGER_ENDPOINT: eyAiRm46OlNlbGVjdCI6IFsgJ1x4MDAnLCAgImV5QWlSbTQ2T2tkbGRFRjBkQ0lnT2lCYklDSnZhMk4wYkhKbGNHOWxiblpUWldOeVpYUnpUV0Z1WVdkbGNsWlFRMFZ1WkhCdmFXNTBJaXdnSWtSdWMwVnVkSEpwWlhNaUlGMGdmUT09IiBdIH0=
       FunctionName: okctlrepoenvrdspostgreslambdarotatefunction-Rotater
       Handler: lambda_function.lambda_handler
       Role:
@@ -178,7 +184,7 @@ Resources:
       VpcConfig:
         SecurityGroupIds:
         - Fn::GetAtt:
-          - okctlrepoenvRDSPostgresOutgoing
+          - okctlrepoenvRotaterLambdaOutgoingSecurityGroup
           - GroupId
         SubnetIds:
         - dbsubnetid-123okf
@@ -270,6 +276,21 @@ Resources:
         pg_stat_statements.track: all
         shared_preload_libraries: pg_stat_statements
     Type: AWS::RDS::DBParameterGroup
+  okctlrepoenvRotaterLambdaOutgoingSecurityGroup:
+    Properties:
+      GroupDescription: Rotater lambda function outgoing Security Group
+      GroupName: okctlrepoenvRotaterLambdaOutgoingSecurityGroup
+      SecurityGroupEgress:
+      - CidrIp: 192.168.1.0/20
+        FromPort: 5432
+        IpProtocol: tcp
+        ToPort: 5432
+      - CidrIp: 192.168.2.0/20
+        FromPort: 5432
+        IpProtocol: tcp
+        ToPort: 5432
+      VpcId: vpcid-w9ufe
+    Type: AWS::EC2::SecurityGroup
   okctlrepoenvSecretTargetAttachment:
     Properties:
       SecretId:
@@ -280,10 +301,9 @@ Resources:
     Type: AWS::SecretsManager::SecretTargetAttachment
   okctlrepoenvSecretsManagerVPCEndpoint:
     Properties:
-      PrivateDnsEnabled: true
       SecurityGroupIds:
       - Fn::GetAtt:
-        - okctlrepoenvRDSPostgresOutgoing
+        - okctlrepoenvSecretsManagerVPCEndpointSecurityGroup
         - GroupId
       ServiceName:
         Fn::Sub: com.amazonaws.${AWS::Region}.secretsmanager
@@ -293,3 +313,17 @@ Resources:
       VpcEndpointType: Interface
       VpcId: vpcid-w9ufe
     Type: AWS::EC2::VPCEndpoint
+  okctlrepoenvSecretsManagerVPCEndpointSecurityGroup:
+    Properties:
+      GroupDescription: SecretsManager VPC Endpoint incoming
+      GroupName: okctlrepoenvSecretsManagerVPCEndpointSecurityGroup
+      SecurityGroupIngress:
+      - FromPort: 443
+        IpProtocol: tcp
+        SourceSecurityGroupId:
+          Fn::GetAtt:
+          - okctlrepoenvRotaterLambdaOutgoingSecurityGroup
+          - GroupId
+        ToPort: 443
+      VpcId: vpcid-w9ufe
+    Type: AWS::EC2::SecurityGroup

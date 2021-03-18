@@ -20,5 +20,5 @@ func TestNew(t *testing.T) {
 		},
 	}
 
-	tstr.RunTests(t, testCases)
+	tstr.RunTests(t, testCases, nil)
 }

@@ -4,6 +4,10 @@ package lambdafunction
 import (
 	"fmt"
 
+	jsonpatch "github.com/evanphx/json-patch/v5"
+
+	"sigs.k8s.io/yaml"
+
 	"github.com/oslokommune/okctl/pkg/cfn"
 
 	"github.com/awslabs/goformation/v4/cloudformation"
@@ -87,6 +91,7 @@ func NewRotateLambda(
 	role cfn.Namer,
 	securityGroup cfn.Namer,
 	subnetIDs []string,
+	secretsManagerVPCEndpoint cfn.Namer,
 ) *LambdaFunction {
 	return New(resourceName, Opts{
 		FunctionName: fmt.Sprintf("%s-Rotater", slug.Make(resourceName)),
@@ -96,9 +101,56 @@ func NewRotateLambda(
 		Key:          key,
 		Role:         role,
 		Env: map[string]string{
-			"SECRETS_MANAGER_ENDPOINT": cloudformation.Sub("https://secretsmanager.${AWS::Region}.amazonaws.com"),
+			"SECRETS_MANAGER_ENDPOINT": cloudformation.Select(
+				0,
+				[]string{cloudformation.GetAtt(secretsManagerVPCEndpoint.Name(), "DnsEntries")},
+			),
 		},
 		SecurityGroupID: securityGroup,
 		SubnetIds:       subnetIDs,
 	})
+}
+
+func PatchRotateLambda(lambdaFunctionName, secretsManagerVPCEndpointName string, template []byte) ([]byte, error) {
+	patchJSON := []byte(fmt.Sprintf(`[
+  {
+    "op": "replace",
+    "path": "/Resources/%s/Properties/Environment/Variables/SECRETS_MANAGER_ENDPOINT",
+    "value": {
+      "Fn::Join": [
+        "", [
+          "https://",
+          {
+            "Fn::Select": [
+              "0", [
+                {
+                  "Fn::GetAtt": [
+                    "%s", "DnsEntries"
+                  ]
+                }
+              ]
+            ]
+          }
+        ]
+      ]
+    }
+  }
+]`, lambdaFunctionName, secretsManagerVPCEndpointName))
+
+	jsonData, err := yaml.YAMLToJSON(template)
+	if err != nil {
+		return nil, fmt.Errorf("converting json to yaml: %w", err)
+	}
+
+	patch, err := jsonpatch.DecodePatch(patchJSON)
+	if err != nil {
+		return nil, fmt.Errorf("decoding patch: %w", err)
+	}
+
+	modified, err := patch.Apply(jsonData)
+	if err != nil {
+		return nil, fmt.Errorf("applying patch: %w", err)
+	}
+
+	return yaml.JSONToYAML(modified)
 }

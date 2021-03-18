@@ -3,6 +3,8 @@ package controller
 import (
 	"testing"
 
+	"github.com/mishudark/errors"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/controller/reconciler"
@@ -102,6 +104,65 @@ func TestHandleNode(t *testing.T) {
 			}
 
 			assert.Equal(t, tc.expectReconcileCallCount, dummy.ReconcileCounter)
+		})
+	}
+}
+
+type mockAlwaysErrorReconciler struct {
+	iteration            int
+	ReconciliationResult []reconciler.ReconcilationResult
+}
+
+func (m *mockAlwaysErrorReconciler) NodeType() resourcetree.ResourceNodeType {
+	return resourcetree.ResourceNodeTypeGroup
+}
+
+func (m *mockAlwaysErrorReconciler) Reconcile(_ *resourcetree.ResourceNode) (reconciler.ReconcilationResult, error) {
+	m.iteration++
+
+	return m.ReconciliationResult[m.iteration-1], errors.New("dummy err")
+}
+
+func (m *mockAlwaysErrorReconciler) SetCommonMetadata(_ *resourcetree.CommonMetadata) {}
+
+func TestReceivedErrorAfterRequeues(t *testing.T) {
+	testCases := []struct {
+		name string
+
+		withResults []reconciler.ReconcilationResult
+
+		expectErrorAfterIterations int
+		expectError                error
+	}{
+		{
+			name: "Should break out of handleNode immediately when requeue is false",
+
+			withResults: []reconciler.ReconcilationResult{{Requeue: false}},
+
+			expectErrorAfterIterations: 1,
+			expectError:                errors.New("reconciling node: dummy err"),
+		},
+		{
+			name: "Should break out of handleNode after second reconciliation when requeues are true, false",
+
+			withResults: []reconciler.ReconcilationResult{{Requeue: true}, {Requeue: false}},
+
+			expectErrorAfterIterations: 2,
+			expectError:                errors.New("reconciling node: dummy err"),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			r := &mockAlwaysErrorReconciler{ReconciliationResult: tc.withResults}
+
+			err := handleNode(r, &resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeGroup})
+			assert.NotNil(t, err)
+
+			assert.Equal(t, tc.expectErrorAfterIterations, r.iteration)
+			assert.Equal(t, tc.expectError.Error(), err.Error())
 		})
 	}
 }

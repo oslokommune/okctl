@@ -145,7 +145,7 @@ func (r *helmRun) createHelmChart(id api.ID, chart *helm.Chart) (*api.Helm, erro
 
 	release, err := r.helm.Install(kubeConf.Path, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("nstalling chart: %w", err)
+		return nil, fmt.Errorf("installing chart: %w", err)
 	}
 
 	return &api.Helm{

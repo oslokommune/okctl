@@ -22,7 +22,7 @@ type SecretParameter struct {
 
 // AnonymizeResponse removes sensitive data from the logs
 func (p *SecretParameter) AnonymizeResponse(response interface{}) interface{} {
-	r, _ := response.(*Parameter)
+	r, _ := response.(*SecretParameter)
 	rCopy := *r
 	rCopy.Content = "XXXXXXXX"
 

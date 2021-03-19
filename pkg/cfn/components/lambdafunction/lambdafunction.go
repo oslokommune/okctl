@@ -112,30 +112,11 @@ func NewRotateLambda(
 }
 
 func PatchRotateLambda(lambdaFunctionName, secretsManagerVPCEndpointName string, template []byte) ([]byte, error) {
-	patchJSON := []byte(fmt.Sprintf(`[
-  {
-    "op": "replace",
-    "path": "/Resources/%s/Properties/Environment/Variables/SECRETS_MANAGER_ENDPOINT",
-    "value": {
-      "Fn::Join": [
-        "", [
-          "https://",
-          {
-            "Fn::Select": [
-              "0", [
-                {
-                  "Fn::GetAtt": [
-                    "%s", "DnsEntries"
-                  ]
-                }
-              ]
-            ]
-          }
-        ]
-      ]
-    }
-  }
-]`, lambdaFunctionName, secretsManagerVPCEndpointName))
+	patchJSON := []byte(fmt.Sprintf(`[{
+  "op":"replace",
+  "path":"/Resources/%s/Properties/Environment/Variables/SECRETS_MANAGER_ENDPOINT",
+  "value":{"Fn::Join":["/",["https:/",{"Fn::Select":["1",{"Fn::Split":[":",{"Fn::Select":["0",{"Fn::GetAtt":["%s","DnsEntries"]}]}]}]}]]}
+}]`, lambdaFunctionName, secretsManagerVPCEndpointName))
 
 	jsonData, err := yaml.YAMLToJSON(template)
 	if err != nil {

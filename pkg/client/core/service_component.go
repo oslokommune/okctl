@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/oslokommune/okctl/pkg/smapi"
+
 	"github.com/oslokommune/okctl/pkg/ec2api"
 
 	"github.com/oslokommune/okctl/pkg/static/rotater"
@@ -109,6 +111,14 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 	}
 
 	err = iamapi.New(c.provider).AttachRolePolicy(pg.LambdaPolicyARN, pg.LambdaRoleARN)
+	if err != nil {
+		return nil, err
+	}
+
+	// We cannot enable the secret rotation until all the policies have been created,
+	// we couldn't find a way of doing this in cloud formation. Therefore we do it
+	// here, after the policy has been attached to the role
+	err = smapi.New(c.provider).RotateSecret(pg.LambdaFunctionARN, pg.SecretsManagerAdminSecretARN)
 	if err != nil {
 		return nil, err
 	}
@@ -218,6 +228,11 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 		db.OutgoingSecurityGroupID,
 		opts.VpcID,
 	)
+	if err != nil {
+		return err
+	}
+
+	err = smapi.New(c.provider).CancelRotateSecret(db.SecretsManagerAdminSecretARN)
 	if err != nil {
 		return err
 	}

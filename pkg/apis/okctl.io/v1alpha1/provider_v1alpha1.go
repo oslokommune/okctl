@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 	"github.com/aws/aws-sdk-go/service/route53/route53iface"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
 	"github.com/aws/aws-sdk-go/service/servicequotas/servicequotasiface"
 	"github.com/aws/aws-sdk-go/service/ssm/ssmiface"
 )
@@ -17,6 +18,7 @@ import (
 // CloudProvider defines the interface for interacting with
 // AWS cloud services
 type CloudProvider interface {
+	SecretsManager() secretsmanageriface.SecretsManagerAPI
 	S3() s3iface.S3API
 	IAM() iamiface.IAMAPI
 	SSM() ssmiface.SSMAPI

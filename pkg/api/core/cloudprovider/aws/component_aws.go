@@ -119,6 +119,7 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 		composer.NameResource("RDSInstanceAdmin"):                                  cfn.String(&p.SecretsManagerAdminSecretARN),
 		composer.NameResource("RDSPostgresLambdaManagedPolicy"):                    cfn.String(&p.LambdaPolicyARN),
 		fmt.Sprintf("%sArn", composer.NameResource("RDSPostgresLambdaRotateRole")): cfn.String(&p.LambdaRoleARN),
+		composer.NameResource("RDSPostgresLambdaRotateFunction"):                   cfn.String(&p.LambdaFunctionARN),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("collecting stack outputs: %w", err)

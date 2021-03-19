@@ -110,6 +110,9 @@ func (a *EC2API) RevokePodToNodeGroupTraffic(nodegroupName, podSecurityGroup, vp
 			},
 		})
 		if err != nil {
+			if strings.Contains(err.Error(), "InvalidPermission.NotFound") {
+				continue
+			}
 			return fmt.Errorf("revoking security group ingress: %w", err)
 		}
 	}

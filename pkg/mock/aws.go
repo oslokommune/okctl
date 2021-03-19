@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
+
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 
@@ -301,6 +304,24 @@ func (a *S3API) PutObject(input *s3.PutObjectInput) (*s3.PutObjectOutput, error)
 	return a.PutObjectFn(input)
 }
 
+// SMAPI mocks the SecretsManager API
+type SMAPI struct {
+	secretsmanageriface.SecretsManagerAPI
+
+	RotateSecretFn       func(*secretsmanager.RotateSecretInput) (*secretsmanager.RotateSecretOutput, error)
+	CancelRotateSecretFn func(*secretsmanager.CancelRotateSecretInput) (*secretsmanager.CancelRotateSecretOutput, error)
+}
+
+// RotateSecret mocks the invocation
+func (a *SMAPI) RotateSecret(input *secretsmanager.RotateSecretInput) (*secretsmanager.RotateSecretOutput, error) {
+	return a.RotateSecretFn(input)
+}
+
+// CancelRotateSecret mocks the invocation
+func (a *SMAPI) CancelRotateSecret(input *secretsmanager.CancelRotateSecretInput) (*secretsmanager.CancelRotateSecretOutput, error) {
+	return a.CancelRotateSecretFn(input)
+}
+
 // DescribeStackEventsSuccess sets a success response on the describe event
 func (p *CloudProvider) DescribeStackEventsSuccess() *CloudProvider {
 	p.CFAPI.DescribeStackEventsFn = func(input *cloudformation.DescribeStackEventsInput) (*cloudformation.DescribeStackEventsOutput, error) {
@@ -366,6 +387,7 @@ func (p *CloudProvider) DescribeStacksResponse(status string) *CloudProvider {
 type CloudProvider struct {
 	v1alpha1.CloudProvider
 
+	SMAPI     *SMAPI
 	S3API     *S3API
 	IAMAPI    *IAMAPI
 	EC2API    *EC2API
@@ -375,6 +397,11 @@ type CloudProvider struct {
 	CFRONTAPI *CFRONTAPI
 	CIPAPI    *CIPAPI
 	SQAPI     *SQAPI
+}
+
+// SecretsManager returns the mocked SecretsManager API
+func (p *CloudProvider) SecretsManager() secretsmanageriface.SecretsManagerAPI {
+	return p.SMAPI
 }
 
 // S3 returns the mocked S3 API
@@ -430,14 +457,16 @@ func (p *CloudProvider) PrincipalARN() string {
 // NewCloudProvider returns a mocked cloud provider with no mocks sets
 func NewCloudProvider() *CloudProvider {
 	return &CloudProvider{
-		IAMAPI:    &IAMAPI{},
+		SMAPI:     &SMAPI{},
 		S3API:     &S3API{},
+		IAMAPI:    &IAMAPI{},
 		EC2API:    &EC2API{},
 		CFAPI:     &CFAPI{},
 		EKSAPI:    &EKSAPI{},
 		R53API:    &R53API{},
 		CFRONTAPI: &CFRONTAPI{},
 		CIPAPI:    &CIPAPI{},
+		SQAPI:     &SQAPI{},
 	}
 }
 
@@ -555,6 +584,14 @@ func NewGoodCloudProvider() *CloudProvider {
 				return &s3.DeleteObjectOutput{}, nil
 			},
 		},
+		SMAPI: &SMAPI{
+			RotateSecretFn: func(*secretsmanager.RotateSecretInput) (*secretsmanager.RotateSecretOutput, error) {
+				return &secretsmanager.RotateSecretOutput{}, nil
+			},
+			CancelRotateSecretFn: func(*secretsmanager.CancelRotateSecretInput) (*secretsmanager.CancelRotateSecretOutput, error) {
+				return &secretsmanager.CancelRotateSecretOutput{}, nil
+			},
+		},
 	}
 }
 
@@ -586,6 +623,14 @@ func NewBadCloudProvider() *CloudProvider {
 				return nil, errBad
 			},
 			DeleteObjectFn: func(*s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error) {
+				return nil, errBad
+			},
+		},
+		SMAPI: &SMAPI{
+			RotateSecretFn: func(*secretsmanager.RotateSecretInput) (*secretsmanager.RotateSecretOutput, error) {
+				return nil, errBad
+			},
+			CancelRotateSecretFn: func(*secretsmanager.CancelRotateSecretInput) (*secretsmanager.CancelRotateSecretOutput, error) {
 				return nil, errBad
 			},
 		},

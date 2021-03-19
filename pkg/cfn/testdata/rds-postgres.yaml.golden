@@ -34,6 +34,14 @@ Outputs:
         Fn::Sub: ${AWS::StackName}-okctlrepoenvRDSPostgresLambdaManagedPolicy
     Value:
       Ref: okctlrepoenvRDSPostgresLambdaManagedPolicy
+  okctlrepoenvRDSPostgresLambdaRotateFunction:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-okctlrepoenvRDSPostgresLambdaRotateFunction
+    Value:
+      Fn::GetAtt:
+      - okctlrepoenvRDSPostgresLambdaRotateFunction
+      - Arn
   okctlrepoenvRDSPostgresLambdaRotateRoleArn:
     Export:
       Name:
@@ -57,19 +65,6 @@ Outputs:
       - okctlrepoenvRDSPostgresOutgoing
       - GroupId
 Resources:
-  okctlrepoenvAdminRotationSchedule:
-    DependsOn:
-    - okctlrepoenvSecretTargetAttachment
-    Properties:
-      RotationLambdaARN:
-        Fn::GetAtt:
-        - okctlrepoenvRDSPostgresLambdaRotateFunction
-        - Arn
-      RotationRules:
-        AutomaticallyAfterDays: 30
-      SecretId:
-        Ref: okctlrepoenvRDSInstanceAdmin
-    Type: AWS::SecretsManager::RotationSchedule
   okctlrepoenvRDSInstanceAdmin:
     Properties:
       GenerateSecretString:

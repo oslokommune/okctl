@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/oslokommune/okctl/pkg/cfn/components/rotationschedule"
-
 	"github.com/oslokommune/okctl/pkg/cfn/components/lambdafunction"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/lambdapermission"
@@ -1570,13 +1568,6 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 		lambdaFunction,
 	)
 
-	rotation := rotationschedule.NewPostgres(
-		c.NameResource("AdminRotationSchedule"),
-		admin,
-		attachment,
-		lambdaFunction,
-	)
-
 	return &cfn.Composition{
 		Outputs: []cfn.StackOutputer{
 			postgres,
@@ -1584,6 +1575,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 			outgoing,
 			lambdaManagedPolicy,
 			lambdaRole,
+			lambdaFunction,
 		},
 		Resources: []cfn.ResourceNamer{
 			monitoringRole,
@@ -1597,7 +1589,6 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 			lambdaRole,
 			lambdaFunction,
 			lambdaPermission,
-			rotation,
 			secretsManagerIncoming,
 			sme,
 			lambdaManagedPolicy,

@@ -4,6 +4,10 @@ package cloud
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
+
+	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
+
 	"github.com/aws/aws-sdk-go/service/s3"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
@@ -71,6 +75,7 @@ func NewFromSession(region, principalARN string, sess *session.Session) (*Provid
 		Provider: services,
 	}
 
+	services.sm = secretsmanager.New(sess)
 	services.s3 = s3.New(sess)
 	services.iam = iam.New(sess)
 	services.cfn = cloudformation.New(sess)
@@ -113,6 +118,7 @@ func NewSession(region string, auth awsauth.Authenticator) (*session.Session, *a
 
 // Services stores access to the various AWS APIs
 type Services struct {
+	sm    secretsmanageriface.SecretsManagerAPI
 	s3    s3iface.S3API
 	iam   iamiface.IAMAPI
 	cfn   cloudformationiface.CloudFormationAPI
@@ -127,6 +133,11 @@ type Services struct {
 
 	region       string
 	principalARN string
+}
+
+// SecretsManager returns an interface to the SecretsManager API
+func (s *Services) SecretsManager() secretsmanageriface.SecretsManagerAPI {
+	return s.sm
 }
 
 // S3 returns an interface to the S3 API

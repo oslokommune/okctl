@@ -20,6 +20,7 @@ type PostgresDatabase struct {
 	SecretsManagerAdminSecretARN string
 	LambdaPolicyARN              string
 	LambdaRoleARN                string
+	LambdaFunctionARN            string
 	CloudFormationTemplate       string
 }
 

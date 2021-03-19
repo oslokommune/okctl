@@ -41,6 +41,7 @@ func (s *SecurityGroup) Ref() string {
 
 const (
 	postgresPort = 5432
+	httpsPort    = 443
 )
 
 // NewPostgresOutgoing returns an initialised security group
@@ -103,10 +104,10 @@ func NewSecretsManagerVPCEndpointIncoming(resourceName, vpcID string, source cfn
 			GroupName:        resourceName,
 			SecurityGroupIngress: []ec2.SecurityGroup_Ingress{
 				{
-					FromPort:              443,
+					FromPort:              httpsPort,
 					IpProtocol:            "tcp",
 					SourceSecurityGroupId: cloudformation.GetAtt(source.Name(), "GroupId"),
-					ToPort:                443,
+					ToPort:                httpsPort,
 				},
 			},
 			VpcId: vpcID,
@@ -115,14 +116,16 @@ func NewSecretsManagerVPCEndpointIncoming(resourceName, vpcID string, source cfn
 }
 
 func NewLambdaFunctionOutgoing(resourceName, vpcID string, cidrs []string) *SecurityGroup {
-	egresses := make([]ec2.SecurityGroup_Egress, len(cidrs))
+	egresses := []ec2.SecurityGroup_Egress{}
 
-	for i, cidr := range cidrs {
-		egresses[i] = ec2.SecurityGroup_Egress{
-			CidrIp:     cidr,
-			FromPort:   postgresPort,
-			IpProtocol: "tcp",
-			ToPort:     postgresPort,
+	for _, cidr := range cidrs {
+		for _, port := range []int{httpsPort, postgresPort} {
+			egresses = append(egresses, ec2.SecurityGroup_Egress{
+				CidrIp:     cidr,
+				FromPort:   port,
+				IpProtocol: "tcp",
+				ToPort:     port,
+			})
 		}
 	}
 

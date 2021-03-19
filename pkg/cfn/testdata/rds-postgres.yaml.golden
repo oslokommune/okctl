@@ -282,9 +282,17 @@ Resources:
       GroupName: okctlrepoenvRotaterLambdaOutgoingSecurityGroup
       SecurityGroupEgress:
       - CidrIp: 192.168.1.0/20
+        FromPort: 443
+        IpProtocol: tcp
+        ToPort: 443
+      - CidrIp: 192.168.1.0/20
         FromPort: 5432
         IpProtocol: tcp
         ToPort: 5432
+      - CidrIp: 192.168.2.0/20
+        FromPort: 443
+        IpProtocol: tcp
+        ToPort: 443
       - CidrIp: 192.168.2.0/20
         FromPort: 5432
         IpProtocol: tcp

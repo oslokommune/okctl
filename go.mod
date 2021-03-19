@@ -63,7 +63,7 @@ require (
 	github.com/logrusorgru/aurora/v3 v3.0.0
 	github.com/magiconair/properties v1.8.2 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
-	github.com/miekg/dns v1.1.40
+	github.com/miekg/dns v1.1.41
 	github.com/mishudark/errors v0.0.0-20210318113247-bd4e9ef2fc74
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
@@ -97,8 +97,6 @@ require (
 	go.opencensus.io v0.22.6 // indirect
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	golang.org/x/oauth2 v0.0.0-20210201163806-010130855d6c
-	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a // indirect
-	golang.org/x/sys v0.0.0-20210218085108-9555bcde0c6a // indirect
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

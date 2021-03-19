@@ -77,4 +77,4 @@ jobs:
           SLACK_MSG_AUTHOR: okctl-bot
           SLACK_COLOR: ${{job.status}}
           SLACK_TITLE: Nightly build
-          SLACK_ICON_EMOJI: ':okctl-closeup:
+          SLACK_ICON_EMOJI: ':okctl-closeup:'

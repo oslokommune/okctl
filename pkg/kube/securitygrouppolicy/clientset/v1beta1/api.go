@@ -2,6 +2,8 @@
 package v1beta1
 
 import (
+	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/kube/securitygrouppolicy/api/types/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -25,7 +27,7 @@ type Client struct {
 func NewForConfig(config *rest.Config) (*Client, error) {
 	err := v1beta1.AddToScheme(scheme.Scheme)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("adding scheme: %w", err)
 	}
 
 	crdConfig := *config
@@ -36,7 +38,7 @@ func NewForConfig(config *rest.Config) (*Client, error) {
 
 	restClient, err := rest.UnversionedRESTClientFor(&crdConfig)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("building rest client: %w", err)
 	}
 
 	return &Client{

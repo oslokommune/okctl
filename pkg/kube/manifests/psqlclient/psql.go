@@ -52,7 +52,7 @@ func New(name, namespace string, pod *v1.Pod, clientSet kubernetes.Interface, co
 func (c *PSQLClient) Create() (*v1.Pod, error) {
 	p, err := c.Client.CoreV1().Pods(c.Namespace).Create(c.Ctx, c.Manifest, metav1.CreateOptions{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating psql client pod: %w", err)
 	}
 
 	return p, nil
@@ -69,7 +69,7 @@ func (c *PSQLClient) Watch(resp *v1.Pod) error {
 		LabelSelector:   labels.Everything().String(),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("watching psql client pod: %w", err)
 	}
 
 	func() {
@@ -103,14 +103,19 @@ func (c *PSQLClient) Watch(resp *v1.Pod) error {
 func (c *PSQLClient) Delete() error {
 	policy := metav1.DeletePropagationForeground
 
-	return c.Client.CoreV1().Pods(c.Namespace).Delete(c.Ctx, c.Name, metav1.DeleteOptions{
+	err := c.Client.CoreV1().Pods(c.Namespace).Delete(c.Ctx, c.Name, metav1.DeleteOptions{
 		PropagationPolicy: &policy,
 	})
+	if err != nil {
+		return fmt.Errorf("deleting psql client pod: %w", err)
+	}
+
+	return nil
 }
 
 // Attach to the psql pod and hook up all the stds (pun intended)
 func (c *PSQLClient) Attach() error {
-	return attach.New(c.Client, c.Config).Run(
+	err := attach.New(c.Client, c.Config).Run(
 		c.Name,
 		c.Namespace,
 		"psql",
@@ -118,6 +123,11 @@ func (c *PSQLClient) Attach() error {
 		os.Stdout,
 		os.Stderr,
 	)
+	if err != nil {
+		return fmt.Errorf("attaching to psql client pod: %w", err)
+	}
+
+	return nil
 }
 
 // Manifest returns the manifest

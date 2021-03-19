@@ -11,6 +11,7 @@ import (
 
 type deletePostgresOpts struct {
 	ID              api.ID
+	Environment     string
 	ApplicationName string
 	VpcID           string
 }
@@ -19,6 +20,7 @@ type deletePostgresOpts struct {
 func (o *deletePostgresOpts) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.Environment, validation.Required),
 		validation.Field(&o.ApplicationName, validation.Required),
 		validation.Field(&o.VpcID, validation.Required),
 	)
@@ -29,15 +31,12 @@ func buildDeletePostgresCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &deletePostgresOpts{}
 
 	cmd := &cobra.Command{
-		Use:   "postgres ENV APPLICATION_NAME",
+		Use:   "postgres",
 		Short: "Delete an AWS RDS Postgres database",
 		Long:  `Delete the AWS RDS Postgres database`,
-		Args:  cobra.ExactArgs(2), // nolint: gomnd
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			environment := args[0]
-			applicationName := args[1]
-
-			err := o.InitialiseWithOnlyEnv(environment)
+		Args:  cobra.ExactArgs(0), // nolint: gomnd
+		PreRunE: func(_ *cobra.Command, _ []string) error {
+			err := o.InitialiseWithOnlyEnv(opts.Environment)
 			if err != nil {
 				return err
 			}
@@ -45,12 +44,11 @@ func buildDeletePostgresCommand(o *okctl.Okctl) *cobra.Command {
 			meta := o.RepoStateWithEnv.GetMetadata()
 			cluster := o.RepoStateWithEnv.GetCluster()
 
-			opts.ID.Environment = environment
+			opts.ID.Environment = opts.Environment
 			opts.ID.AWSAccountID = cluster.AWSAccountID
 			opts.ID.Repository = meta.Name
 			opts.ID.Region = meta.Region
-			opts.ID.ClusterName = cluster.Name
-			opts.ApplicationName = applicationName
+			opts.ID.ClusterName = o.RepoStateWithEnv.GetClusterName()
 			opts.VpcID = o.RepoStateWithEnv.GetVPC().VpcID
 
 			err = opts.Validate()
@@ -84,6 +82,22 @@ func buildDeletePostgresCommand(o *okctl.Okctl) *cobra.Command {
 		},
 		Hidden: true,
 	}
+
+	flags := cmd.Flags()
+
+	flags.StringVarP(&opts.Environment,
+		"environment",
+		"e",
+		"",
+		"The environment the postgres database was created in",
+	)
+
+	flags.StringVarP(&opts.ApplicationName,
+		"name",
+		"n",
+		"",
+		"The name of the database to delete",
+	)
 
 	return cmd
 }

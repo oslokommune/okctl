@@ -4,6 +4,7 @@ package securitygrouppolicy
 
 import (
 	"context"
+	"fmt"
 
 	v1beta1client "github.com/oslokommune/okctl/pkg/kube/securitygrouppolicy/clientset/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,12 +38,12 @@ func New(name, namespace string, manifest *v1beta1.SecurityGroupPolicy, config *
 func (s *SecurityGroupPolicy) Create() (*v1beta1.SecurityGroupPolicy, error) {
 	client, err := v1beta1client.NewForConfig(s.Config)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("building client from config: %w", err)
 	}
 
 	p, err := client.SecurityGroupPolicy(s.Namespace).Create(s.Ctx, s.Manifest)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("applying security group policy: %w", err)
 	}
 
 	return p, nil

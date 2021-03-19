@@ -41,7 +41,7 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 		Use:   "postgres",
 		Short: "Attach to the given postgres database",
 		Args:  cobra.ExactArgs(0), // nolint: gomnd
-		PreRunE: func(_ *cobra.Command, args []string) error {
+		PreRunE: func(_ *cobra.Command, _ []string) error {
 			err := o.InitialiseWithOnlyEnv(opts.Environment)
 			if err != nil {
 				return err
@@ -55,7 +55,7 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 			opts.ID.AWSAccountID = cluster.AWSAccountID
 			opts.ID.Repository = meta.Name
 			opts.ID.Region = meta.Region
-			opts.ID.ClusterName = cluster.Name
+			opts.ID.ClusterName = o.RepoStateWithEnv.GetClusterName()
 			opts.Namespace = db.Namespace
 			opts.ConfigMapName = db.DatabaseConfigMapName
 			opts.SecretName = db.AdminSecretName
@@ -69,17 +69,13 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			kubeConfigStore, err := o.KubeConfigStore()
-			if err != nil {
-				return err
-			}
-
-			cfg, err := kubeConfigStore.GetKubeConfig()
-			if err != nil {
-				return err
-			}
-
-			clientSet, config, err := kube.NewFromKubeConfig(cfg.Path).Get()
+			clientSet, config, err := kube.NewFromEKSCluster(
+				opts.ID.ClusterName,
+				opts.ID.Region,
+				o.CloudProvider,
+				o.CredentialsProvider.Aws(),
+			).
+				Get()
 			if err != nil {
 				return err
 			}
@@ -147,7 +143,7 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 
 	flags := cmd.Flags()
 
-	flags.StringVarP(&opts.ApplicationName,
+	flags.StringVarP(&opts.Environment,
 		"environment",
 		"e",
 		"",

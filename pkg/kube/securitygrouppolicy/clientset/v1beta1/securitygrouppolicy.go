@@ -32,7 +32,7 @@ type securityGroupPolicyClient struct {
 func (e *securityGroupPolicyClient) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
 	return e.restClient.Delete().
 		Namespace(e.ns).
-		Resource("SecurityGroupPolicy").
+		Resource("securitygrouppolicies").
 		Name(name).
 		Body(&opts).
 		Do(ctx).
@@ -45,7 +45,7 @@ func (e *securityGroupPolicyClient) List(ctx context.Context, opts metav1.ListOp
 	err := e.restClient.
 		Get().
 		Namespace(e.ns).
-		Resource("SecurityGroupPolicy").
+		Resource("securitygrouppolicies").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Do(ctx).
 		Into(&result)
@@ -59,7 +59,7 @@ func (e *securityGroupPolicyClient) Get(ctx context.Context, name string, opts m
 	err := e.restClient.
 		Get().
 		Namespace(e.ns).
-		Resource("SecurityGroupPolicy").
+		Resource("securitygrouppolicies").
 		Name(name).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Do(ctx).
@@ -74,7 +74,7 @@ func (e *securityGroupPolicyClient) Create(ctx context.Context, policy *v1beta1t
 	err := e.restClient.
 		Post().
 		Namespace(e.ns).
-		Resource("SecurityGroupPolicy").
+		Resource("securitygrouppolicies").
 		Body(policy).
 		Do(ctx).
 		Into(&result)
@@ -89,7 +89,7 @@ func (e *securityGroupPolicyClient) Watch(ctx context.Context, opts metav1.ListO
 	return e.restClient.
 		Get().
 		Namespace(e.ns).
-		Resource("SecurityGroupPolicy").
+		Resource("securitygrouppolicies").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Watch(ctx)
 }

@@ -111,6 +111,7 @@ func NewRotateLambda(
 	})
 }
 
+// PatchRotateLambda patches the rotater lambda
 func PatchRotateLambda(lambdaFunctionName, secretsManagerVPCEndpointName string, template []byte) ([]byte, error) {
 	patchJSON := []byte(fmt.Sprintf(`[{
   "op":"replace",

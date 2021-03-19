@@ -115,6 +115,8 @@ func NewSecretsManagerVPCEndpointIncoming(resourceName, vpcID string, source cfn
 	}
 }
 
+// NewLambdaFunctionOutgoing allows the lambda function to communicate on the correct
+// ports and cidrs
 func NewLambdaFunctionOutgoing(resourceName, vpcID string, cidrs []string) *SecurityGroup {
 	egresses := []ec2.SecurityGroup_Egress{}
 

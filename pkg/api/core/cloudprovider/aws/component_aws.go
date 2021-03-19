@@ -59,6 +59,7 @@ const (
 	postgresTimeOutInMinutes = 45
 )
 
+// nolint: funlen
 func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgresDatabaseOpts) (*api.PostgresDatabase, error) {
 	composer := components.NewRDSPostgresComposer(components.RDSPostgresComposerOpts{
 		ApplicationDBName: opts.ApplicationName,

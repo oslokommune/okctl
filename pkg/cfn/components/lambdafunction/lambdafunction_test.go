@@ -29,7 +29,7 @@ func TestNew(t *testing.T) {
 
 	var template []byte
 
-	cb := func(_ int, tmpl []byte) {
+	cb := func(tmpl []byte) {
 		template = tmpl
 	}
 

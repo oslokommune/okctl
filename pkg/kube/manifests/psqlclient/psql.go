@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	podWatchTimeoutInSeconds = 60
+	podWatchTimeoutInSeconds = 120
 )
 
 // PSQLClient contains the state required for
@@ -161,6 +161,8 @@ func Manifest(name, namespace, configMapName, secretName string, labels map[stri
 								},
 								Optional: &optional,
 							},
+						},
+						{
 							SecretRef: &v1.SecretEnvSource{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: secretName,

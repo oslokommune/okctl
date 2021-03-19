@@ -41,6 +41,17 @@ func (s *SecurityGroupPolicy) Create() (*v1beta1.SecurityGroupPolicy, error) {
 		return nil, fmt.Errorf("building client from config: %w", err)
 	}
 
+	policies, err := client.SecurityGroupPolicy(s.Namespace).List(s.Ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("listing security group policies; %w", err)
+	}
+
+	for _, policy := range policies.Items {
+		if policy.Name == s.Name {
+			return &policy, nil
+		}
+	}
+
 	p, err := client.SecurityGroupPolicy(s.Namespace).Create(s.Ctx, s.Manifest)
 	if err != nil {
 		return nil, fmt.Errorf("applying security group policy: %w", err)

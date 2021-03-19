@@ -68,7 +68,7 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 
 			return nil
 		},
-		RunE: func(_ *cobra.Command, _ []string) error {
+		RunE: func(_ *cobra.Command, _ []string) (err error) {
 			clientSet, config, err := kube.NewFromEKSCluster(
 				opts.ID.ClusterName,
 				opts.ID.Region,
@@ -103,6 +103,10 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
+			defer func() {
+				err = policyClient.Delete()
+			}()
+
 			client := psqlclient.New(
 				app,
 				opts.Namespace,
@@ -122,6 +126,10 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
+			defer func() {
+				err = client.Delete()
+			}()
+
 			err = client.Watch(pod)
 			if err != nil {
 				return err
@@ -132,12 +140,7 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			err = client.Delete()
-			if err != nil {
-				return err
-			}
-
-			return policyClient.Delete()
+			return err
 		},
 	}
 

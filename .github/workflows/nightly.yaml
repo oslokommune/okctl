@@ -73,8 +73,8 @@ jobs:
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_KJOREMILJO }}
-          SLACK_CHANNEL: kjøremiljø
           SLACK_USERNAME: okctl-bot
           SLACK_MSG_AUTHOR: okctl-bot
           SLACK_COLOR: ${{job.status}}
           SLACK_TITLE: Nightly build
+          SLACK_ICON_EMOJI: :okctl-closeup:

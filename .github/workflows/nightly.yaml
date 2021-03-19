@@ -68,3 +68,13 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           GITHUB_TOKEN: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_PAT }}
+
+      - name: Notify
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_KJOREMILJO }}
+          SLACK_CHANNEL: kjøremiljø
+          SLACK_USERNAME: okctl-bot
+          SLACK_MSG_AUTHOR: okctl-bot
+          SLACK_COLOR: ${{job.status}}
+          SLACK_TITLE: Nightly build

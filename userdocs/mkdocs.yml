@@ -16,7 +16,8 @@ nav:
       - 5. Create application: getting-started/create-application.md
       - 6. View bundled applications: getting-started/view-bundled-applications.md
       - 7. Monitoring your cluster and applications: getting-started/monitoring.md
-      - 8. Delete cluster: getting-started/clean-up.md
+      - 8. Application addons: getting-started/application-addons.md
+      - 9. Delete cluster: getting-started/clean-up.md
   - Building blocks:
     - buildingblocks/cloud.md
     - buildingblocks/github.md

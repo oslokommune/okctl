@@ -121,8 +121,9 @@ We have a cluster up and running, and we are currently working on building a sea
 
 ### Application lifecycle
 
-- [ ] [Postgres](https://aws.amazon.com/rds/postgresql/) for creating and integrating a postgres database with your application
+- [x] [Postgres](https://aws.amazon.com/rds/postgresql/) for creating and integrating a postgres database with your application
 - [ ] [Amazon Elastic Container Registry](https://aws.amazon.com/ecr/) for creating and assisting with the publication of container images for use in the cluster
+- [ ] Reference application that demonstrates how to use the cluster and its integrations
 
 
 ## Compare and contrast

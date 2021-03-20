@@ -43,7 +43,7 @@ func (a *AWSNode) EnablePodENI() error {
 			for j, e := range c.Env {
 				e := e
 
-				if e.Name == "ENABLE_POD_ENI" {
+				if e.Name == "ENABLE_POD_ENI" && e.Value == "false" {
 					e.Value = "true"
 					ds.Spec.Template.Spec.Containers[i].Env[j] = e
 				}

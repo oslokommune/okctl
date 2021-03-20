@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/kube/manifests/awsnode"
+
 	"github.com/oslokommune/okctl/pkg/kube/manifests/securitygrouppolicy"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -76,6 +78,12 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 				o.CredentialsProvider.Aws(),
 			).
 				Get()
+			if err != nil {
+				return err
+			}
+
+			// Ensure that ENABLE_POD_ENI is true
+			err = awsnode.New(clientSet).EnablePodENI()
 			if err != nil {
 				return err
 			}

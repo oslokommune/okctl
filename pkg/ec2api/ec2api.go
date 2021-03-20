@@ -48,6 +48,28 @@ func (a *EC2API) securityGroupForNodeGroup(name, vpcID string) (string, error) {
 	return *sgs.SecurityGroups[0].GroupId, nil
 }
 
+func (a *EC2API) permissionsForPodToNodeGroup(podSecurityGroup, vpcID string) []*ec2.IpPermission {
+	protocols := []string{"tcp", "udp"}
+
+	permissions := make([]*ec2.IpPermission, len(protocols))
+
+	for _, protocol := range protocols {
+		permissions = append(permissions, &ec2.IpPermission{
+			FromPort:   aws.Int64(dnsPort),
+			IpProtocol: aws.String(protocol),
+			ToPort:     aws.Int64(dnsPort),
+			UserIdGroupPairs: []*ec2.UserIdGroupPair{
+				{
+					GroupId: aws.String(podSecurityGroup),
+					VpcId:   aws.String(vpcID),
+				},
+			},
+		})
+	}
+
+	return permissions
+}
+
 // AuthorizePodToNodeGroupTraffic adds ingress rules that allows the pod
 // to communicate with the node
 func (a *EC2API) AuthorizePodToNodeGroupTraffic(nodegroupName, podSecurityGroup, vpcID string) error {
@@ -56,30 +78,16 @@ func (a *EC2API) AuthorizePodToNodeGroupTraffic(nodegroupName, podSecurityGroup,
 		return err
 	}
 
-	for _, protocol := range []string{"tcp", "udp"} {
-		_, err = a.provider.EC2().AuthorizeSecurityGroupIngress(&ec2.AuthorizeSecurityGroupIngressInput{
-			GroupId: aws.String(nodegroupSecurityGroup),
-			IpPermissions: []*ec2.IpPermission{
-				{
-					FromPort:   aws.Int64(dnsPort),
-					IpProtocol: aws.String(protocol),
-					ToPort:     aws.Int64(dnsPort),
-					UserIdGroupPairs: []*ec2.UserIdGroupPair{
-						{
-							GroupId: aws.String(podSecurityGroup),
-							VpcId:   aws.String(vpcID),
-						},
-					},
-				},
-			},
-		})
-		if err != nil {
-			if strings.Contains(err.Error(), "InvalidPermission.Duplicate") {
-				continue
-			}
-
-			return fmt.Errorf("authorizing security group ingress: %w", err)
+	_, err = a.provider.EC2().AuthorizeSecurityGroupIngress(&ec2.AuthorizeSecurityGroupIngressInput{
+		GroupId:       aws.String(nodegroupSecurityGroup),
+		IpPermissions: a.permissionsForPodToNodeGroup(podSecurityGroup, vpcID),
+	})
+	if err != nil {
+		if strings.Contains(err.Error(), "InvalidPermission.Duplicate") {
+			return nil
 		}
+
+		return fmt.Errorf("authorizing security group ingress: %w", err)
 	}
 
 	return nil
@@ -92,30 +100,16 @@ func (a *EC2API) RevokePodToNodeGroupTraffic(nodegroupName, podSecurityGroup, vp
 		return err
 	}
 
-	for _, protocol := range []string{"tcp", "udp"} {
-		_, err = a.provider.EC2().RevokeSecurityGroupIngress(&ec2.RevokeSecurityGroupIngressInput{
-			GroupId: aws.String(nodegroupSecurityGroup),
-			IpPermissions: []*ec2.IpPermission{
-				{
-					FromPort:   aws.Int64(dnsPort),
-					IpProtocol: aws.String(protocol),
-					ToPort:     aws.Int64(dnsPort),
-					UserIdGroupPairs: []*ec2.UserIdGroupPair{
-						{
-							GroupId: aws.String(podSecurityGroup),
-							VpcId:   aws.String(vpcID),
-						},
-					},
-				},
-			},
-		})
-		if err != nil {
-			if strings.Contains(err.Error(), "InvalidPermission.NotFound") {
-				continue
-			}
-
-			return fmt.Errorf("revoking security group ingress: %w", err)
+	_, err = a.provider.EC2().RevokeSecurityGroupIngress(&ec2.RevokeSecurityGroupIngressInput{
+		GroupId:       aws.String(nodegroupSecurityGroup),
+		IpPermissions: a.permissionsForPodToNodeGroup(podSecurityGroup, vpcID),
+	})
+	if err != nil {
+		if strings.Contains(err.Error(), "InvalidPermission.NotFound") {
+			return nil
 		}
+
+		return fmt.Errorf("revoking security group ingress: %w", err)
 	}
 
 	return nil

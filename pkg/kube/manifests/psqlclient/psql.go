@@ -148,6 +148,7 @@ func Manifest(name, namespace, configMapName, secretName string, labels map[stri
 		},
 		Spec: v1.PodSpec{
 			TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+			DNSPolicy:                     v1.DNSDefault,
 			Containers: []v1.Container{
 				{
 					Name:    "psqlclient",

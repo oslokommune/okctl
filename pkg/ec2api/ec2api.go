@@ -53,8 +53,8 @@ func (a *EC2API) permissionsForPodToNodeGroup(podSecurityGroup, vpcID string) []
 
 	permissions := make([]*ec2.IpPermission, len(protocols))
 
-	for _, protocol := range protocols {
-		permissions = append(permissions, &ec2.IpPermission{
+	for i, protocol := range protocols {
+		permissions[i] = &ec2.IpPermission{
 			FromPort:   aws.Int64(dnsPort),
 			IpProtocol: aws.String(protocol),
 			ToPort:     aws.Int64(dnsPort),
@@ -64,7 +64,7 @@ func (a *EC2API) permissionsForPodToNodeGroup(podSecurityGroup, vpcID string) []
 					VpcId:   aws.String(vpcID),
 				},
 			},
-		})
+		}
 	}
 
 	return permissions

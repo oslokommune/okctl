@@ -171,10 +171,13 @@ func (a *EKSAPI) DescribeFargateProfile(input *eks.DescribeFargateProfileInput) 
 type EC2API struct {
 	ec2iface.EC2API
 
-	DescribeSubnetsFn          func(*ec2.DescribeSubnetsInput) (*ec2.DescribeSubnetsOutput, error)
-	DescribeAddressesFn        func(*ec2.DescribeAddressesInput) (*ec2.DescribeAddressesOutput, error)
-	DescribeInternetGatewaysFn func(*ec2.DescribeInternetGatewaysInput) (*ec2.DescribeInternetGatewaysOutput, error)
-	DescribeVpcsFn             func(*ec2.DescribeVpcsInput) (*ec2.DescribeVpcsOutput, error)
+	DescribeSubnetsFn               func(*ec2.DescribeSubnetsInput) (*ec2.DescribeSubnetsOutput, error)
+	DescribeAddressesFn             func(*ec2.DescribeAddressesInput) (*ec2.DescribeAddressesOutput, error)
+	DescribeInternetGatewaysFn      func(*ec2.DescribeInternetGatewaysInput) (*ec2.DescribeInternetGatewaysOutput, error)
+	DescribeVpcsFn                  func(*ec2.DescribeVpcsInput) (*ec2.DescribeVpcsOutput, error)
+	DescribeSecurityGroupsFn        func(*ec2.DescribeSecurityGroupsInput) (*ec2.DescribeSecurityGroupsOutput, error)
+	AuthorizeSecurityGroupIngressFn func(*ec2.AuthorizeSecurityGroupIngressInput) (*ec2.AuthorizeSecurityGroupIngressOutput, error)
+	RevokeSecurityGroupIngressFn    func(*ec2.RevokeSecurityGroupIngressInput) (*ec2.RevokeSecurityGroupIngressOutput, error)
 }
 
 // DescribeSubnets invokes the mocked response
@@ -195,6 +198,21 @@ func (a *EC2API) DescribeInternetGateways(input *ec2.DescribeInternetGatewaysInp
 // DescribeVpcs invokes the mocked response
 func (a *EC2API) DescribeVpcs(input *ec2.DescribeVpcsInput) (*ec2.DescribeVpcsOutput, error) {
 	return a.DescribeVpcsFn(input)
+}
+
+// DescribeSecurityGroups invokes the mocked response
+func (a *EC2API) DescribeSecurityGroups(input *ec2.DescribeSecurityGroupsInput) (*ec2.DescribeSecurityGroupsOutput, error) {
+	return a.DescribeSecurityGroupsFn(input)
+}
+
+// AuthorizeSecurityGroupIngress invokes the mocked response
+func (a *EC2API) AuthorizeSecurityGroupIngress(input *ec2.AuthorizeSecurityGroupIngressInput) (*ec2.AuthorizeSecurityGroupIngressOutput, error) {
+	return a.AuthorizeSecurityGroupIngressFn(input)
+}
+
+// RevokeSecurityGroupIngress invokes the mocked response
+func (a *EC2API) RevokeSecurityGroupIngress(input *ec2.RevokeSecurityGroupIngressInput) (*ec2.RevokeSecurityGroupIngressOutput, error) {
+	return a.RevokeSecurityGroupIngressFn(input)
 }
 
 // CFAPI provides a mocked structure of the cf API
@@ -379,6 +397,33 @@ func (p *CloudProvider) DescribeStacksResponse(status string) *CloudProvider {
 			Stacks: Stacks(status),
 		}, nil
 	})
+
+	return p
+}
+
+// DescribeSecurityGroupsResponse returns the provided outputs
+func (p *CloudProvider) DescribeSecurityGroupsResponse(output *ec2.DescribeSecurityGroupsOutput, err error) *CloudProvider {
+	p.EC2API.DescribeSecurityGroupsFn = func(*ec2.DescribeSecurityGroupsInput) (*ec2.DescribeSecurityGroupsOutput, error) {
+		return output, err
+	}
+
+	return p
+}
+
+// AuthorizeSecurityGroupIngressResponse returns the provided outputs
+func (p *CloudProvider) AuthorizeSecurityGroupIngressResponse(output *ec2.AuthorizeSecurityGroupIngressOutput, err error) *CloudProvider {
+	p.EC2API.AuthorizeSecurityGroupIngressFn = func(*ec2.AuthorizeSecurityGroupIngressInput) (*ec2.AuthorizeSecurityGroupIngressOutput, error) {
+		return output, err
+	}
+
+	return p
+}
+
+// RevokeSecurityGroupIngressResponse returns the provided outputs
+func (p *CloudProvider) RevokeSecurityGroupIngressResponse(output *ec2.RevokeSecurityGroupIngressOutput, err error) *CloudProvider {
+	p.EC2API.RevokeSecurityGroupIngressFn = func(*ec2.RevokeSecurityGroupIngressInput) (*ec2.RevokeSecurityGroupIngressOutput, error) {
+		return output, err
+	}
 
 	return p
 }

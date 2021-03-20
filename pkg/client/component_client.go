@@ -31,6 +31,7 @@ type DeletePostgresDatabaseOpts struct {
 type PostgresDatabase struct {
 	Namespace             string
 	AdminSecretName       string
+	AdminSecretARN        string
 	DatabaseConfigMapName string
 	RotaterBucket         *api.S3Bucket
 	*api.PostgresDatabase

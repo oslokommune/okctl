@@ -232,7 +232,7 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 		return err
 	}
 
-	err = smapi.New(c.provider).CancelRotateSecret(db.SecretsManagerAdminSecretARN)
+	err = smapi.New(c.provider).CancelRotateSecret(db.AdminSecretARN)
 	if err != nil {
 		return err
 	}

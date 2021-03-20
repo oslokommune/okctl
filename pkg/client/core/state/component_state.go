@@ -25,6 +25,7 @@ func (c *componentState) SavePostgresDatabase(database *client.PostgresDatabase)
 	db.EndpointAddress = database.EndpointAddress
 	db.Type = dbTypePostgres
 	db.AdminSecretName = database.AdminSecretName
+	db.AdminSecretARN = database.SecretsManagerAdminSecretARN
 	db.DatabaseConfigMapName = database.DatabaseConfigMapName
 	db.RotaterLambdaRoleARN = database.LambdaRoleARN
 	db.RotaterLambdaPolicyARN = database.LambdaPolicyARN
@@ -51,6 +52,7 @@ func (c *componentState) GetPostgresDatabase(applicationName string) (*client.Po
 	return &client.PostgresDatabase{
 		Namespace:             db.Namespace,
 		AdminSecretName:       db.AdminSecretName,
+		AdminSecretARN:        db.AdminSecretARN,
 		DatabaseConfigMapName: db.DatabaseConfigMapName,
 		PostgresDatabase: &api.PostgresDatabase{
 			ApplicationName:         applicationName,

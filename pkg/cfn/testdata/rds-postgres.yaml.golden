@@ -68,9 +68,10 @@ Resources:
   okctlrepoenvRDSInstanceAdmin:
     Properties:
       GenerateSecretString:
-        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
         GenerateStringKey: password
         PasswordLength: 16
+        RequireEachIncludedType: true
         SecretStringTemplate: '{"username": "admin"}'
       Name: /okctl/repo/env/postgres_admin
     Type: AWS::SecretsManager::Secret

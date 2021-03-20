@@ -40,10 +40,11 @@ const (
 func (s *Secret) Resource() cloudformation.Resource {
 	return &secretsmanager.Secret{
 		GenerateSecretString: &secretsmanager.Secret_GenerateSecretString{
-			ExcludeCharacters:    s.Opts.ExcludeCharacters,
-			GenerateStringKey:    s.Opts.GenerateStringKey,
-			PasswordLength:       passwordLength,
-			SecretStringTemplate: s.Opts.SecretStringTemplate,
+			ExcludePunctuation:      true,
+			GenerateStringKey:       s.Opts.GenerateStringKey,
+			PasswordLength:          passwordLength,
+			RequireEachIncludedType: true,
+			SecretStringTemplate:    s.Opts.SecretStringTemplate,
 		},
 		Name: s.Opts.FriendlyName,
 	}
@@ -52,7 +53,6 @@ func (s *Secret) Resource() cloudformation.Resource {
 // Opts contains the required inputs
 type Opts struct {
 	FriendlyName         string
-	ExcludeCharacters    string
 	SecretStringTemplate string
 	GenerateStringKey    string
 }
@@ -71,7 +71,6 @@ func New(resourceName string, opts Opts) *Secret {
 func NewRDSInstanceSecret(resourceName, friendlyName, userName string) *Secret {
 	return New(resourceName, Opts{
 		FriendlyName:         friendlyName,
-		ExcludeCharacters:    `"@/\`,
 		SecretStringTemplate: fmt.Sprintf(`{"username": "%s"}`, userName),
 		GenerateStringKey:    "password",
 	})

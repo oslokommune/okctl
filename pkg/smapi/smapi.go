@@ -4,6 +4,7 @@ package smapi
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
@@ -48,6 +49,10 @@ func (a *SMAPI) CancelRotateSecret(secretID string) error {
 		SecretId: aws.String(secretID),
 	})
 	if err != nil {
+		if strings.Contains(err.Error(), "ResourceNotFoundException: Secrets Manager can't find the specified secret.") {
+			return nil
+		}
+
 		return fmt.Errorf("canceling secret rotation: %w", err)
 	}
 

@@ -56,6 +56,8 @@ func (z *identityManagerReconciler) Reconcile(node *resourcetree.ResourceNode) (
 			HostedZoneID: resourceState.HostedZoneID,
 		})
 		if err != nil {
+			result.Requeue = errors.IsKind(err, errors.Timeout)
+
 			return result, fmt.Errorf("creating identity manager resource: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:

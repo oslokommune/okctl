@@ -1,6 +1,7 @@
 package cfn_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -34,7 +35,7 @@ func TestCreate(t *testing.T) {
 					DescribeStacksResponse(cloudformation.StackStatusCreateFailed).
 					DescribeStackEventsSuccess(),
 			),
-			expect:      "stack: something, failed events: ec2: something went wrong",
+			expect:      `{"detail":{"failed events":["ec2: something went wrong"]},"type":"internal error","error":"stack failed","code":7}`,
 			expectError: true,
 		},
 	}
@@ -44,8 +45,10 @@ func TestCreate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.runner.CreateIfNotExists(mock.DefaultStackName, []byte{}, nil, 10)
 			if tc.expectError {
+				result, _ := json.Marshal(err)
+
 				assert.Error(t, err)
-				assert.Equal(t, tc.expect, err.Error())
+				assert.Equal(t, tc.expect, string(result))
 			} else {
 				assert.NoError(t, err)
 			}

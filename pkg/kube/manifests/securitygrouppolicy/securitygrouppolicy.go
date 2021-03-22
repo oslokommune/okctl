@@ -34,7 +34,7 @@ func New(name, namespace string, manifest *v1beta1.SecurityGroupPolicy, config *
 	}
 }
 
-// Create the security group policy
+// Create the security group policy if it doesn't exists
 func (s *SecurityGroupPolicy) Create() (*v1beta1.SecurityGroupPolicy, error) {
 	client, err := v1beta1client.NewForConfig(s.Config)
 	if err != nil {

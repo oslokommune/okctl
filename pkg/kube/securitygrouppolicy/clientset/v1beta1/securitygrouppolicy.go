@@ -12,6 +12,10 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+const (
+	awsSecurityGroupPolicyCRDResourceName = "securitygrouppolicies"
+)
+
 // SecurityGroupPolicyInterface enumerates the allowed operations
 // For implementing more of these, see:
 // - https://github.com/kubernetes/client-go/blob/master/kubernetes/typed/core/v1/pod.go
@@ -32,7 +36,7 @@ type securityGroupPolicyClient struct {
 func (e *securityGroupPolicyClient) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
 	return e.restClient.Delete().
 		Namespace(e.ns).
-		Resource("securitygrouppolicies").
+		Resource(awsSecurityGroupPolicyCRDResourceName).
 		Name(name).
 		Body(&opts).
 		Do(ctx).
@@ -45,7 +49,7 @@ func (e *securityGroupPolicyClient) List(ctx context.Context, opts metav1.ListOp
 	err := e.restClient.
 		Get().
 		Namespace(e.ns).
-		Resource("securitygrouppolicies").
+		Resource(awsSecurityGroupPolicyCRDResourceName).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Do(ctx).
 		Into(&result)
@@ -59,7 +63,7 @@ func (e *securityGroupPolicyClient) Get(ctx context.Context, name string, opts m
 	err := e.restClient.
 		Get().
 		Namespace(e.ns).
-		Resource("securitygrouppolicies").
+		Resource(awsSecurityGroupPolicyCRDResourceName).
 		Name(name).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Do(ctx).
@@ -74,7 +78,7 @@ func (e *securityGroupPolicyClient) Create(ctx context.Context, policy *v1beta1t
 	err := e.restClient.
 		Post().
 		Namespace(e.ns).
-		Resource("securitygrouppolicies").
+		Resource(awsSecurityGroupPolicyCRDResourceName).
 		Body(policy).
 		Do(ctx).
 		Into(&result)
@@ -89,7 +93,7 @@ func (e *securityGroupPolicyClient) Watch(ctx context.Context, opts metav1.ListO
 	return e.restClient.
 		Get().
 		Namespace(e.ns).
-		Resource("securitygrouppolicies").
+		Resource(awsSecurityGroupPolicyCRDResourceName).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Watch(ctx)
 }

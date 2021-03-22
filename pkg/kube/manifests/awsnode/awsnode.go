@@ -43,6 +43,9 @@ func (a *AWSNode) EnablePodENI() error {
 			for j, e := range c.Env {
 				e := e
 
+				// The environment variable `ENABLE_POD_ENI` is part of the `vpc-cni-k8s`
+				// project and is documented here:
+				// https://github.com/aws/amazon-vpc-cni-k8s#cni-configuration-variables
 				if e.Name == "ENABLE_POD_ENI" && e.Value == "false" {
 					e.Value = "true"
 					ds.Spec.Template.Spec.Containers[i].Env[j] = e

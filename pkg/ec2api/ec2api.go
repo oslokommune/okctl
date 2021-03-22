@@ -1,5 +1,5 @@
 // Package ec2api provides some convenience functions
-// for
+// for interacting with the AWS EC2 API
 package ec2api
 
 import (

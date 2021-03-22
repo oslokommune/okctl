@@ -1,4 +1,6 @@
-package resources
+// Package jsonpatch provides some convenience structs for building
+// a type safe patch
+package jsonpatch
 
 import (
 	"encoding/json"
@@ -53,16 +55,29 @@ type Patch struct {
 	Operations []Operation `json:",inline"`
 }
 
-// NewPatch initializes a Patch struct
-func NewPatch() *Patch {
+// Inline provides a convenient way of inlining
+// pre-serialised json
+type Inline struct {
+	Data []byte `json:",inline"`
+}
+
+// MarshalJSON implements the json encode marshaller interface
+func (b *Inline) MarshalJSON() ([]byte, error) {
+	return b.Data, nil
+}
+
+// New initializes a Patch struct
+func New() *Patch {
 	return &Patch{
 		Operations: []Operation{},
 	}
 }
 
-// AddOperations adds a patch operation to the patch
-func (p *Patch) AddOperations(o ...Operation) {
+// Add adds a patch operation to the patch
+func (p *Patch) Add(o ...Operation) *Patch {
 	p.Operations = append(p.Operations, o...)
+
+	return p
 }
 
 // MarshalJSON knows how to turn a Patch into a kustomize patch.json

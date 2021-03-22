@@ -1,4 +1,4 @@
-package resources
+package jsonpatch
 
 import (
 	"encoding/json"

@@ -4,6 +4,8 @@ package lambdafunction
 import (
 	"fmt"
 
+	patchpkg "github.com/oslokommune/okctl/pkg/jsonpatch"
+
 	jsonpatch "github.com/evanphx/json-patch/v5"
 
 	"sigs.k8s.io/yaml"
@@ -112,12 +114,18 @@ func NewRotateLambda(
 }
 
 // PatchRotateLambda patches the rotater lambda
+// nolint: lll
 func PatchRotateLambda(lambdaFunctionName, secretsManagerVPCEndpointName string, template []byte) ([]byte, error) {
-	patchJSON := []byte(fmt.Sprintf(`[{
-  "op":"replace",
-  "path":"/Resources/%s/Properties/Environment/Variables/SECRETS_MANAGER_ENDPOINT",
-  "value":{"Fn::Join":["/",["https:/",{"Fn::Select":["1",{"Fn::Split":[":",{"Fn::Select":["0",{"Fn::GetAtt":["%s","DnsEntries"]}]}]}]}]]}
-}]`, lambdaFunctionName, secretsManagerVPCEndpointName))
+	patchJSON, err := patchpkg.New().Add(patchpkg.Operation{
+		Type: patchpkg.OperationTypeReplace,
+		Path: fmt.Sprintf("/Resources/%s/Properties/Environment/Variables/SECRETS_MANAGER_ENDPOINT", lambdaFunctionName),
+		Value: &patchpkg.Inline{Data: []byte(
+			fmt.Sprintf(`{"Fn::Join":["/",["https:/",{"Fn::Select":["1",{"Fn::Split":[":",{"Fn::Select":["0",{"Fn::GetAtt":["%s","DnsEntries"]}]}]}]}]]}`, secretsManagerVPCEndpointName),
+		)},
+	}).MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
 
 	jsonData, err := yaml.YAMLToJSON(template)
 	if err != nil {

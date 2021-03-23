@@ -1,15 +1,11 @@
 package run
 
 import (
-	stdlibErrors "errors"
 	"fmt"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/wait"
-
 	v1 "github.com/oslokommune/okctl/pkg/kube/externalsecret/api/types/v1"
 
-	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/kube/manifests/scale"
 
 	"github.com/oslokommune/okctl/pkg/kube/manifests/configmap"
@@ -310,13 +306,7 @@ func (k *kubeRun) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKube
 
 	err = client.Watch(resources, 2*time.Minute) // nolint: gomnd
 	if err != nil {
-		wrappedErr := fmt.Errorf("failed while waiting for resources to be created: %w", err)
-
-		if stdlibErrors.Is(wrappedErr, wait.ErrWaitTimeout) {
-			return nil, errors.E(err, errors.Timeout)
-		}
-
-		return nil, wrappedErr
+		return nil, fmt.Errorf("failed while waiting for resources to be created: %w", err)
 	}
 
 	deployment, err := yaml.Marshal(ext.DeploymentManifest())

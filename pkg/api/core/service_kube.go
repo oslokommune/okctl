@@ -2,6 +2,10 @@ package core
 
 import (
 	"context"
+	stderrors "errors"
+	"fmt"
+
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
@@ -131,7 +135,19 @@ func (k *kubeService) CreateExternalDNSKubeDeployment(_ context.Context, opts ap
 
 	kube, err := k.run.CreateExternalDNSKubeDeployment(opts)
 	if err != nil {
-		return nil, errors.E(err, "creating external dns", errors.Internal)
+		var (
+			wrappedErr = fmt.Errorf("creating external dns: %w", err)
+			kind       errors.Kind
+		)
+
+		switch {
+		case stderrors.Is(err, wait.ErrWaitTimeout):
+			kind = errors.Timeout
+		default:
+			kind = errors.Internal
+		}
+
+		return nil, errors.E(wrappedErr, kind)
 	}
 
 	return kube, nil

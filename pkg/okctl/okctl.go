@@ -12,6 +12,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/client"
+	"github.com/oslokommune/okctl/pkg/client/core/report/console"
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	"github.com/asdine/storm/v3/codec/json"
 
 	stormpkg "github.com/asdine/storm/v3"
@@ -331,6 +335,23 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	}
 
 	return services, nil
+}
+
+func (o *Okctl) containerRegistryService(outputDir string, spin spinner.Spinner) client.ContainerRepositoryService {
+	return clientCore.NewContainerRepositoryService(spin,
+		rest.NewContainerRepositoryAPI(o.restClient),
+		clientFilesystem.NewContainerRepositoryStore(
+			clientFilesystem.Paths{
+				OutputFile:         constant.DefaultContainerRepositoryOutputFile,
+				CloudFormationFile: constant.DefaultContainerRepositoryCloudFormationFile,
+				BaseDir:            path.Join(outputDir, constant.DefaultContainerRepositoryBaseDir),
+			},
+			o.FileSystem,
+		),
+		stateSaver.NewContainerRepositoryState(o.RepoStateWithEnv),
+		console.NewContainerRepositoryReport(o.Err, spin),
+		o.CloudProvider,
+	)
 }
 
 // KubeConfigStore returns an initialised kube config store

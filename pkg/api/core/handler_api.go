@@ -50,6 +50,8 @@ type Endpoints struct {
 	DeletePostgresDatabase          endpoint.Endpoint
 	CreateS3Bucket                  endpoint.Endpoint
 	DeleteS3Bucket                  endpoint.Endpoint
+	CreateContainerRepository       endpoint.Endpoint
+	DeleteContainerRepository       endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -92,6 +94,8 @@ func MakeEndpoints(s Services) Endpoints {
 		DeletePostgresDatabase:          makeDeletePostgresDatabaseEndpoint(s.ComponentService),
 		CreateS3Bucket:                  makeCreateS3BucketEndpoint(s.ComponentService),
 		DeleteS3Bucket:                  makeDeleteS3BucketEndpoint(s.ComponentService),
+		CreateContainerRepository:       makeCreateContainerRepositoryEndpoint(s.containerRepositoryService),
+		DeleteContainerRepository:       makeDeleteContainerRepositoryEndpoint(s.containerRepositoryService),
 	}
 }
 
@@ -132,6 +136,8 @@ type Handlers struct {
 	DeletePostgresDatabase          http.Handler
 	CreateS3Bucket                  http.Handler
 	DeleteS3Bucket                  http.Handler
+	CreateContainerRepository       http.Handler
+	DeleteContainerRepository       http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -200,6 +206,8 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeletePostgresDatabase:          newServer(endpoints.DeletePostgresDatabase, decodeStructRequest(&api.DeletePostgresDatabaseOpts{})),
 		CreateS3Bucket:                  newServer(endpoints.CreateS3Bucket, decodeStructRequest(&api.CreateS3BucketOpts{})),
 		DeleteS3Bucket:                  newServer(endpoints.DeleteS3Bucket, decodeStructRequest(&api.DeleteS3BucketOpts{})),
+		CreateContainerRepository:       newServer(endpoints.CreateContainerRepository, decodeStructRequest(&api.CreateContainerRepositoryOpts{})),
+		DeleteContainerRepository:       newServer(endpoints.DeleteContainerRepository, decodeStructRequest(&api.DeleteContainerRepositoryOpts{})),
 	}
 }
 
@@ -296,6 +304,10 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 				r.Method(http.MethodDelete, "/", handlers.DeleteS3Bucket)
 			})
 		})
+		r.Route("/containerrepositories", func(r chi.Router) {
+			r.Method(http.MethodPost, "/", handlers.CreateContainerRepository)
+			r.Method(http.MethodDelete, "/", handlers.DeleteContainerRepository)
+		})
 	})
 
 	return r
@@ -303,17 +315,18 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 
 // Services defines all available services
 type Services struct {
-	Cluster          api.ClusterService
-	Vpc              api.VpcService
-	ManagedPolicy    api.ManagedPolicyService
-	ServiceAccount   api.ServiceAccountService
-	Helm             api.HelmService
-	Kube             api.KubeService
-	Domain           api.DomainService
-	Certificate      api.CertificateService
-	Parameter        api.ParameterService
-	IdentityManager  api.IdentityManagerService
-	ComponentService api.ComponentService
+	Cluster                    api.ClusterService
+	Vpc                        api.VpcService
+	ManagedPolicy              api.ManagedPolicyService
+	ServiceAccount             api.ServiceAccountService
+	Helm                       api.HelmService
+	Kube                       api.KubeService
+	Domain                     api.DomainService
+	Certificate                api.CertificateService
+	Parameter                  api.ParameterService
+	IdentityManager            api.IdentityManagerService
+	ComponentService           api.ComponentService
+	containerRepositoryService api.ContainerRepositoryService
 }
 
 // EndpointOption makes it easy to enable and disable the endpoint
@@ -321,32 +334,33 @@ type Services struct {
 type EndpointOption func(Endpoints) Endpoints
 
 const (
-	clusterTag            = "clusterService"
-	vpcTag                = "vpc"
-	managedPoliciesTag    = "managedPolicies"
-	externalSecretsTag    = "externalSecrets"
-	serviceAccountsTag    = "serviceAccounts"
-	helmTag               = "helm"
-	externalDNSTag        = "externaldns"
-	kubeTag               = "kube"
-	domainTag             = "domain"
-	hostedZoneTag         = "hostedZone"
-	certificateTag        = "certificate"
-	parameterTag          = "parameter"
-	secretTag             = "secret"
-	identityManagerTag    = "identitymanager"
-	identityPoolTag       = "identitypool"
-	identityPoolClientTag = "identitypoolclient"
-	identityPoolUserTag   = "identitypooluser"
-	namespaceTag          = "namespace"
-	cognitoTag            = "cognito"
-	storageclassTag       = "storageclass"
-	releasesTag           = "releases"
-	configMapTag          = "configmap"
-	scaleTag              = "scale"
-	postgresTag           = "postgres"
-	componentsTag         = "components"
-	s3bucketTag           = "s3bucket"
+	clusterTag             = "clusterService"
+	vpcTag                 = "vpc"
+	managedPoliciesTag     = "managedPolicies"
+	externalSecretsTag     = "externalSecrets"
+	serviceAccountsTag     = "serviceAccounts"
+	helmTag                = "helm"
+	externalDNSTag         = "externaldns"
+	kubeTag                = "kube"
+	domainTag              = "domain"
+	hostedZoneTag          = "hostedZone"
+	certificateTag         = "certificate"
+	parameterTag           = "parameter"
+	secretTag              = "secret"
+	identityManagerTag     = "identitymanager"
+	identityPoolTag        = "identitypool"
+	identityPoolClientTag  = "identitypoolclient"
+	identityPoolUserTag    = "identitypooluser"
+	namespaceTag           = "namespace"
+	cognitoTag             = "cognito"
+	storageclassTag        = "storageclass"
+	releasesTag            = "releases"
+	configMapTag           = "configmap"
+	scaleTag               = "scale"
+	postgresTag            = "postgres"
+	componentsTag          = "components"
+	s3bucketTag            = "s3bucket"
+	containerRepositoryTag = "containerrepository"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -389,6 +403,8 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeletePostgresDatabase:          logmd.Logging(logger, "delete", componentsTag, postgresTag)(endpoints.DeletePostgresDatabase),
 			CreateS3Bucket:                  logmd.Logging(logger, "create", componentsTag, s3bucketTag)(endpoints.CreateS3Bucket),
 			DeleteS3Bucket:                  logmd.Logging(logger, "delete", componentsTag, s3bucketTag)(endpoints.DeleteS3Bucket),
+			CreateContainerRepository:       logmd.Logging(logger, "create", componentsTag, containerRepositoryTag)(endpoints.CreateContainerRepository),
+			DeleteContainerRepository:       logmd.Logging(logger, "delete", componentsTag, containerRepositoryTag)(endpoints.DeleteContainerRepository),
 		}
 	}
 }

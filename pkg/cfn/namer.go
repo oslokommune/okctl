@@ -26,6 +26,7 @@ const (
 	DefaultStackNameIdentityPoolUser                  = "identitypooluser"
 	DefaultStackNameRDSPostgres                       = "rdspostgres"
 	DefaultStackNameS3Bucket                          = "s3bucket"
+	DefaultStackNameContainerRepository               = "containerrepository"
 )
 
 // StackNamer knows how to name cloud formation stacks
@@ -193,5 +194,16 @@ func (n *StackNamer) AliasRecordSet(clusterName, subdomain string) string {
 		DefaultStackNameAliasRecordSet,
 		clusterName,
 		subdomain,
+	)
+}
+
+// ContainerRepository returns the stack name of the container repository
+func (n *StackNamer) ContainerRepository(repository, environment, imageName string) string {
+	return fmt.Sprintf("%s-%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameContainerRepository,
+		repository,
+		environment,
+		imageName,
 	)
 }

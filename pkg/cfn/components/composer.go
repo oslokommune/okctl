@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/cfn/components/containerrepository"
+
 	"github.com/oslokommune/okctl/pkg/cfn/components/lambdafunction"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/lambdapermission"
@@ -1599,5 +1601,32 @@ func NewS3BucketComposer(bucketName, clusterName string) *S3BucketComposer {
 	return &S3BucketComposer{
 		BucketName:  bucketName,
 		ClusterName: clusterName,
+	}
+}
+
+type ECRepositoryComposer struct {
+	ImageName   string
+	Repository  string
+	Environment string
+}
+
+func (e *ECRepositoryComposer) ResourceRepositoryNameOutput() string {
+	return fmt.Sprintf("%s%s%sECRepository", e.Repository, e.Environment, e.ImageName)
+}
+
+func (e *ECRepositoryComposer) Compose() (*cfn.Composition, error) {
+	repository := containerrepository.New(e.Environment, e.ImageName)
+
+	return &cfn.Composition{
+		Outputs:   []cfn.StackOutputer{repository},
+		Resources: []cfn.ResourceNamer{repository},
+	}, nil
+}
+
+func NewECRepositoryComposer(imageName, repository, environment string) *ECRepositoryComposer {
+	return &ECRepositoryComposer{
+		ImageName:   imageName,
+		Repository:  repository,
+		Environment: environment,
 	}
 }

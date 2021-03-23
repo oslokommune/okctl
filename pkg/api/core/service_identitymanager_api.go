@@ -2,6 +2,8 @@ package core
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/mishudark/errors"
 
@@ -65,7 +67,18 @@ func (s *identityManagerService) CreateIdentityPool(_ context.Context, opts api.
 		HostedZoneID: opts.HostedZoneID,
 	})
 	if err != nil {
-		return nil, errors.E(err, "creating a certificate for auth domain", errors.Internal)
+		var (
+			kind         errors.Kind
+			wrappedError = fmt.Errorf("creating a certificate for auth domain: %w", err)
+		)
+
+		if strings.Contains(strings.ToLower(err.Error()), "stack creation time exceeded the specified timeout") {
+			kind = errors.Timeout
+		} else {
+			kind = errors.Internal
+		}
+
+		return nil, errors.E(wrappedError, kind)
 	}
 
 	pool, err := s.provider.CreateIdentityPool(certificate.CertificateARN, opts)

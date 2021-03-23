@@ -168,7 +168,8 @@ That's it! You are all set. Switch back to the console and enjoy `okctl` creatin
 In some cases it can be useful to use a service user for authentication. 
 
 By passing the flag `--aws-credentials-type access-key` to `okctl apply cluster`, `okctl` will look for the following
-environment variables to be used to authenticate.
+environment variables to be used to authenticate:
+
 * `AWS_ACCESS_KEY_ID`
 * `AWS_SECRET_ACCESS_KEY`
 
@@ -185,7 +186,8 @@ okctl apply cluster --aws-credentials-type access-key -f cluster.yaml
 In some cases it can be useful to use a service user for authentication.
 
 By passing the flag `--github-credentials-type token` to `okctl apply cluster`, `okctl` will look for the following
-environment variable to be used to authenticate.
+environment variable to be used to authenticate:
+
 * `GITHUB_TOKEN`
 
 Example
@@ -206,6 +208,7 @@ Log in as you usually do - find account id as shown here:
 ### Environment
 
 The name of the environment depends on what the cluster will be used for. Examples being:
+
 * production
 * development
 * staging

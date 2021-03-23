@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mishudark/errors"
-
 	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -279,21 +277,9 @@ func (r *Runner) detailedErr(stack *Stack) error {
 		reason = *stack.StackStatusReason
 	}
 
-	metadata := errors.MetaData{
-		"failed events": failures,
-	}
-
-	var kind errors.Kind
-	if strings.Contains(reason, "Stack creation time exceeded the specified timeout") {
-		kind = errors.Timeout
-	} else {
-		kind = errors.Internal
-	}
-
-	return errors.E(
-		errors.New(fmt.Sprintf("stack failed: %s", reason)),
-		metadata,
-		kind,
+	return fmt.Errorf("stack: %s, failed events: %s",
+		reason,
+		strings.Join(failures, "\n"),
 	)
 }
 

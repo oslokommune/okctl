@@ -57,6 +57,10 @@ func (i *IAMAPI) DetachRolePolicy(policyARN, roleARN string) error {
 		RoleName:  aws.String(friendlyName),
 	})
 	if err != nil {
+		if strings.Contains(err.Error(), fmt.Sprintf("NoSuchEntity: The role with name %s cannot be found.", friendlyName)) {
+			return nil
+		}
+
 		return fmt.Errorf("detaching policy from role: %w", err)
 	}
 

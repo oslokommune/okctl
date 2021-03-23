@@ -30,6 +30,7 @@ type ExistingResources struct {
 	hasDelegatedHostedZoneNameservers     bool
 	hasDelegatedHostedZoneNameserversTest bool
 	hasUsers                              bool
+	hasPostgres                           bool
 }
 
 // IdentifyResourcePresence creates an initialized ExistingResources struct
@@ -54,7 +55,8 @@ func IdentifyResourcePresence(fs *afero.Afero, outputDir string, hzFetcher Hoste
 		hasArgoCD:                             directoryTester(fs, outputDir, constant.DefaultArgoCDBaseDir),
 		hasDelegatedHostedZoneNameservers:     hz != nil && hz.IsDelegated,
 		hasDelegatedHostedZoneNameserversTest: false,
-		hasUsers:                              false, // this means we will always check? needs to be changed?
+		hasUsers:                              false, // For now we will always check if there are missing users
+		hasPostgres:                           false, // For now we will always check if there are missing postgres databases
 	}, nil
 }
 
@@ -78,6 +80,7 @@ func CreateResourceDependencyTree() (root *resourcetree.ResourceNode) {
 	createNode(clusterNode, resourcetree.ResourceNodeTypeALBIngress)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeAWSLoadBalancerController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalDNS)
+	createNode(clusterNode, resourcetree.ResourceNodeTypePostgres)
 
 	// All resources that requires SSL / a certificate needs the delegatedNameserversConfirmedNode as a dependency
 	delegatedNameserversConfirmedNode := createNode(clusterNode, resourcetree.ResourceNodeTypeNameserversDelegatedTest)

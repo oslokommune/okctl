@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/jsonpatch"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	kaex "github.com/oslokommune/kaex/pkg/api"
@@ -137,33 +139,33 @@ func GenerateApplicationOverlay(application client.OkctlApplication, hostedZoneD
 	kustomization.AddResource("../../base")
 
 	if application.HasIngress() {
-		ingressPatch := resources.NewPatch()
+		ingressPatch := jsonpatch.New()
 
 		host := fmt.Sprintf("%s.%s", application.SubDomain, hostedZoneDomain)
 
-		ingressPatch.AddOperations(
-			resources.Operation{
-				Type:  resources.OperationTypeAdd,
+		ingressPatch.Add(
+			jsonpatch.Operation{
+				Type:  jsonpatch.OperationTypeAdd,
 				Path:  "/metadata/annotations/alb.ingress.kubernetes.io~1certificate-arn",
 				Value: certARN,
 			},
-			resources.Operation{
-				Type:  resources.OperationTypeAdd,
+			jsonpatch.Operation{
+				Type:  jsonpatch.OperationTypeAdd,
 				Path:  "/spec/rules/0/host",
 				Value: host,
 			},
-			resources.Operation{
-				Type:  resources.OperationTypeAdd,
+			jsonpatch.Operation{
+				Type:  jsonpatch.OperationTypeAdd,
 				Path:  "/spec/tls",
 				Value: []string{},
 			},
-			resources.Operation{
-				Type:  resources.OperationTypeAdd,
+			jsonpatch.Operation{
+				Type:  jsonpatch.OperationTypeAdd,
 				Path:  "/spec/tls/0",
 				Value: map[string]string{},
 			},
-			resources.Operation{
-				Type:  resources.OperationTypeAdd,
+			jsonpatch.Operation{
+				Type:  jsonpatch.OperationTypeAdd,
 				Path:  "/spec/tls/0/hosts",
 				Value: []string{host},
 			},

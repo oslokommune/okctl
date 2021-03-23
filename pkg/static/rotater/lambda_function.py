@@ -48,15 +48,19 @@ def lambda_handler(event, context):
     token = event['ClientRequestToken']
     step = event['Step']
 
+    logger.info("step: %s" % step)
+
     # Setup the client
     service_client = boto3.client('secretsmanager', endpoint_url=os.environ['SECRETS_MANAGER_ENDPOINT'])
-
+    
+    logger.info("Describing secret: %s" % arn)
     # Make sure the version is staged correctly
     metadata = service_client.describe_secret(SecretId=arn)
     if "RotationEnabled" in metadata and not metadata['RotationEnabled']:
         logger.error("Secret %s is not enabled for rotation" % arn)
         raise ValueError("Secret %s is not enabled for rotation" % arn)
     versions = metadata['VersionIdsToStages']
+    logger.info("secret versions: %s" % versions)
     if token not in versions:
         logger.error("Secret version %s has no stage for rotation of secret %s." % (token, arn))
         raise ValueError("Secret version %s has no stage for rotation of secret %s." % (token, arn))
@@ -112,10 +116,9 @@ def create_secret(service_client, arn, token):
         get_secret_dict(service_client, arn, "AWSPENDING", token)
         logger.info("createSecret: Successfully retrieved secret for %s." % arn)
     except service_client.exceptions.ResourceNotFoundException:
-        # Get exclude characters from environment variable
-        exclude_characters = os.environ['EXCLUDE_CHARACTERS'] if 'EXCLUDE_CHARACTERS' in os.environ else ':/@"\'\\'
         # Generate a random password
-        passwd = service_client.get_random_password(ExcludeCharacters=exclude_characters)
+        logger.info("crateSecret: generating a random password")
+        passwd = service_client.get_random_password(ExcludePunctuation=True, RequireEachIncludedType=True)
         current_dict['password'] = passwd['RandomPassword']
 
         # Put the secret
@@ -158,6 +161,7 @@ def set_secret(service_client, arn, token):
     if not conn:
         # If both current and pending do not work, try previous
         try:
+            logger.info("setSecret: trying AWSPREVIOUS")
             conn = get_connection(get_secret_dict(service_client, arn, "AWSPREVIOUS"))
         except service_client.exceptions.ResourceNotFoundException:
             conn = None
@@ -272,7 +276,8 @@ def get_connection(secret_dict):
     try:
         conn = psycopg2.connect(host=secret_dict['host'], user=secret_dict['username'], password=secret_dict['password'], database=dbname, port=port, connect_timeout=5)
         return conn
-    except psycopg2.InternalError:
+    except psycopg2.OperationalError as e:
+        logger.info("unable to connect: %s" % e)
         return None
 
 

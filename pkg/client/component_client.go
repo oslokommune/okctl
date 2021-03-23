@@ -23,7 +23,7 @@ type CreatePostgresDatabaseOpts struct {
 type DeletePostgresDatabaseOpts struct {
 	ID              api.ID
 	ApplicationName string
-	Namespace       string
+	VpcID           string
 }
 
 // PostgresDatabase contains the state after
@@ -31,6 +31,7 @@ type DeletePostgresDatabaseOpts struct {
 type PostgresDatabase struct {
 	Namespace             string
 	AdminSecretName       string
+	AdminSecretARN        string
 	DatabaseConfigMapName string
 	RotaterBucket         *api.S3Bucket
 	*api.PostgresDatabase

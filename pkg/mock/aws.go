@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
+
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 
@@ -168,10 +171,13 @@ func (a *EKSAPI) DescribeFargateProfile(input *eks.DescribeFargateProfileInput) 
 type EC2API struct {
 	ec2iface.EC2API
 
-	DescribeSubnetsFn          func(*ec2.DescribeSubnetsInput) (*ec2.DescribeSubnetsOutput, error)
-	DescribeAddressesFn        func(*ec2.DescribeAddressesInput) (*ec2.DescribeAddressesOutput, error)
-	DescribeInternetGatewaysFn func(*ec2.DescribeInternetGatewaysInput) (*ec2.DescribeInternetGatewaysOutput, error)
-	DescribeVpcsFn             func(*ec2.DescribeVpcsInput) (*ec2.DescribeVpcsOutput, error)
+	DescribeSubnetsFn               func(*ec2.DescribeSubnetsInput) (*ec2.DescribeSubnetsOutput, error)
+	DescribeAddressesFn             func(*ec2.DescribeAddressesInput) (*ec2.DescribeAddressesOutput, error)
+	DescribeInternetGatewaysFn      func(*ec2.DescribeInternetGatewaysInput) (*ec2.DescribeInternetGatewaysOutput, error)
+	DescribeVpcsFn                  func(*ec2.DescribeVpcsInput) (*ec2.DescribeVpcsOutput, error)
+	DescribeSecurityGroupsFn        func(*ec2.DescribeSecurityGroupsInput) (*ec2.DescribeSecurityGroupsOutput, error)
+	AuthorizeSecurityGroupIngressFn func(*ec2.AuthorizeSecurityGroupIngressInput) (*ec2.AuthorizeSecurityGroupIngressOutput, error)
+	RevokeSecurityGroupIngressFn    func(*ec2.RevokeSecurityGroupIngressInput) (*ec2.RevokeSecurityGroupIngressOutput, error)
 }
 
 // DescribeSubnets invokes the mocked response
@@ -192,6 +198,21 @@ func (a *EC2API) DescribeInternetGateways(input *ec2.DescribeInternetGatewaysInp
 // DescribeVpcs invokes the mocked response
 func (a *EC2API) DescribeVpcs(input *ec2.DescribeVpcsInput) (*ec2.DescribeVpcsOutput, error) {
 	return a.DescribeVpcsFn(input)
+}
+
+// DescribeSecurityGroups invokes the mocked response
+func (a *EC2API) DescribeSecurityGroups(input *ec2.DescribeSecurityGroupsInput) (*ec2.DescribeSecurityGroupsOutput, error) {
+	return a.DescribeSecurityGroupsFn(input)
+}
+
+// AuthorizeSecurityGroupIngress invokes the mocked response
+func (a *EC2API) AuthorizeSecurityGroupIngress(input *ec2.AuthorizeSecurityGroupIngressInput) (*ec2.AuthorizeSecurityGroupIngressOutput, error) {
+	return a.AuthorizeSecurityGroupIngressFn(input)
+}
+
+// RevokeSecurityGroupIngress invokes the mocked response
+func (a *EC2API) RevokeSecurityGroupIngress(input *ec2.RevokeSecurityGroupIngressInput) (*ec2.RevokeSecurityGroupIngressOutput, error) {
+	return a.RevokeSecurityGroupIngressFn(input)
 }
 
 // CFAPI provides a mocked structure of the cf API
@@ -301,6 +322,24 @@ func (a *S3API) PutObject(input *s3.PutObjectInput) (*s3.PutObjectOutput, error)
 	return a.PutObjectFn(input)
 }
 
+// SMAPI mocks the SecretsManager API
+type SMAPI struct {
+	secretsmanageriface.SecretsManagerAPI
+
+	RotateSecretFn       func(*secretsmanager.RotateSecretInput) (*secretsmanager.RotateSecretOutput, error)
+	CancelRotateSecretFn func(*secretsmanager.CancelRotateSecretInput) (*secretsmanager.CancelRotateSecretOutput, error)
+}
+
+// RotateSecret mocks the invocation
+func (a *SMAPI) RotateSecret(input *secretsmanager.RotateSecretInput) (*secretsmanager.RotateSecretOutput, error) {
+	return a.RotateSecretFn(input)
+}
+
+// CancelRotateSecret mocks the invocation
+func (a *SMAPI) CancelRotateSecret(input *secretsmanager.CancelRotateSecretInput) (*secretsmanager.CancelRotateSecretOutput, error) {
+	return a.CancelRotateSecretFn(input)
+}
+
 // DescribeStackEventsSuccess sets a success response on the describe event
 func (p *CloudProvider) DescribeStackEventsSuccess() *CloudProvider {
 	p.CFAPI.DescribeStackEventsFn = func(input *cloudformation.DescribeStackEventsInput) (*cloudformation.DescribeStackEventsOutput, error) {
@@ -362,10 +401,38 @@ func (p *CloudProvider) DescribeStacksResponse(status string) *CloudProvider {
 	return p
 }
 
+// DescribeSecurityGroupsResponse returns the provided outputs
+func (p *CloudProvider) DescribeSecurityGroupsResponse(output *ec2.DescribeSecurityGroupsOutput, err error) *CloudProvider {
+	p.EC2API.DescribeSecurityGroupsFn = func(*ec2.DescribeSecurityGroupsInput) (*ec2.DescribeSecurityGroupsOutput, error) {
+		return output, err
+	}
+
+	return p
+}
+
+// AuthorizeSecurityGroupIngressResponse returns the provided outputs
+func (p *CloudProvider) AuthorizeSecurityGroupIngressResponse(output *ec2.AuthorizeSecurityGroupIngressOutput, err error) *CloudProvider {
+	p.EC2API.AuthorizeSecurityGroupIngressFn = func(*ec2.AuthorizeSecurityGroupIngressInput) (*ec2.AuthorizeSecurityGroupIngressOutput, error) {
+		return output, err
+	}
+
+	return p
+}
+
+// RevokeSecurityGroupIngressResponse returns the provided outputs
+func (p *CloudProvider) RevokeSecurityGroupIngressResponse(output *ec2.RevokeSecurityGroupIngressOutput, err error) *CloudProvider {
+	p.EC2API.RevokeSecurityGroupIngressFn = func(*ec2.RevokeSecurityGroupIngressInput) (*ec2.RevokeSecurityGroupIngressOutput, error) {
+		return output, err
+	}
+
+	return p
+}
+
 // CloudProvider provides a structure for the mocked CloudProvider
 type CloudProvider struct {
 	v1alpha1.CloudProvider
 
+	SMAPI     *SMAPI
 	S3API     *S3API
 	IAMAPI    *IAMAPI
 	EC2API    *EC2API
@@ -375,6 +442,11 @@ type CloudProvider struct {
 	CFRONTAPI *CFRONTAPI
 	CIPAPI    *CIPAPI
 	SQAPI     *SQAPI
+}
+
+// SecretsManager returns the mocked SecretsManager API
+func (p *CloudProvider) SecretsManager() secretsmanageriface.SecretsManagerAPI {
+	return p.SMAPI
 }
 
 // S3 returns the mocked S3 API
@@ -430,14 +502,16 @@ func (p *CloudProvider) PrincipalARN() string {
 // NewCloudProvider returns a mocked cloud provider with no mocks sets
 func NewCloudProvider() *CloudProvider {
 	return &CloudProvider{
-		IAMAPI:    &IAMAPI{},
+		SMAPI:     &SMAPI{},
 		S3API:     &S3API{},
+		IAMAPI:    &IAMAPI{},
 		EC2API:    &EC2API{},
 		CFAPI:     &CFAPI{},
 		EKSAPI:    &EKSAPI{},
 		R53API:    &R53API{},
 		CFRONTAPI: &CFRONTAPI{},
 		CIPAPI:    &CIPAPI{},
+		SQAPI:     &SQAPI{},
 	}
 }
 
@@ -555,6 +629,14 @@ func NewGoodCloudProvider() *CloudProvider {
 				return &s3.DeleteObjectOutput{}, nil
 			},
 		},
+		SMAPI: &SMAPI{
+			RotateSecretFn: func(*secretsmanager.RotateSecretInput) (*secretsmanager.RotateSecretOutput, error) {
+				return &secretsmanager.RotateSecretOutput{}, nil
+			},
+			CancelRotateSecretFn: func(*secretsmanager.CancelRotateSecretInput) (*secretsmanager.CancelRotateSecretOutput, error) {
+				return &secretsmanager.CancelRotateSecretOutput{}, nil
+			},
+		},
 	}
 }
 
@@ -586,6 +668,14 @@ func NewBadCloudProvider() *CloudProvider {
 				return nil, errBad
 			},
 			DeleteObjectFn: func(*s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error) {
+				return nil, errBad
+			},
+		},
+		SMAPI: &SMAPI{
+			RotateSecretFn: func(*secretsmanager.RotateSecretInput) (*secretsmanager.RotateSecretOutput, error) {
+				return nil, errBad
+			},
+			CancelRotateSecretFn: func(*secretsmanager.CancelRotateSecretInput) (*secretsmanager.CancelRotateSecretOutput, error) {
 				return nil, errBad
 			},
 		},

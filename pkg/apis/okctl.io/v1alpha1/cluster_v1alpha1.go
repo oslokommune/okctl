@@ -53,6 +53,10 @@ type Cluster struct {
 	// Users is an optional list of email addresses
 	// +optional
 	Users []ClusterUser `json:"users,omitempty"`
+
+	// Databases is an optional list of databases
+	// +optional
+	Databases *ClusterDatabases `json:"databases,omitempty"`
 }
 
 // Validate calls each members Validate function
@@ -238,6 +242,7 @@ func (c ClusterIntegrations) Validate() error {
 // ClusterUser represents the identity of a user
 // that should have access to the cluster
 type ClusterUser struct {
+	// Email is the valid email address of the user
 	Email string `json:"email"`
 }
 
@@ -245,6 +250,48 @@ type ClusterUser struct {
 func (c ClusterUser) Validate() error {
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.Email, validation.Required, is.EmailFormat),
+	)
+}
+
+// ClusterDatabases contains the declaration of
+// different types of databases
+type ClusterDatabases struct {
+	// Postgres contains the declared list of postgres databases
+	// +optional
+	Postgres []ClusterDatabasesPostgres `json:"postgres"`
+}
+
+// Validate the cluster databases
+func (c ClusterDatabases) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.Postgres),
+	)
+}
+
+// ClusterDatabasesPostgres contains the declaration of a postgres database
+type ClusterDatabasesPostgres struct {
+	// Name we should give to the database
+	Name string `json:"name"`
+
+	// User is the name we give to the admin user,
+	// you can not set this to `admin` as that is a reserved
+	// word
+	User string `json:"user"`
+
+	// Namespace determines where we will write the
+	// Kubernetes ConfigMap and Secret; for easily
+	// accessing the database
+	Namespace string `json:"namespace"`
+}
+
+// Validate the content of a postgres database declaration
+func (c ClusterDatabasesPostgres) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.Name, validation.Required),
+		validation.Field(&c.User, validation.Required, validation.NotIn([]string{
+			"admin",
+		})),
+		validation.Field(&c.Namespace, validation.Required),
 	)
 }
 
@@ -267,12 +314,12 @@ func NewDefaultCluster(name, env, org, repo, accountID string) Cluster {
 			Region:      "eu-west-1",
 			AccountID:   accountID,
 		},
-		ClusterRootDomain: fmt.Sprintf("%s-%s.oslo.systems", name, env),
 		Github: ClusterGithub{
 			Organisation: org,
 			Repository:   repo,
 			OutputPath:   constant.DefaultOutputDirectory,
 		},
+		ClusterRootDomain: fmt.Sprintf("%s-%s.oslo.systems", name, env),
 		VPC: &ClusterVPC{
 			CIDR:             constant.DefaultClusterCIDR,
 			HighAvailability: true,

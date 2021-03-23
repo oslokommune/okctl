@@ -93,10 +93,10 @@ func ExternalSecrets(values interface{}) *helm.Chart {
 		RepositoryName: "external-secrets",
 		RepositoryURL:  "https://external-secrets.github.io/kubernetes-external-secrets/",
 		ReleaseName:    "external-secrets",
-		Version:        "5.2.0",
+		Version:        "6.4.0",
 		Chart:          "kubernetes-external-secrets",
 		Namespace:      "kube-system",
-		Timeout:        3 * time.Minute, // nolint: gomnd
+		Timeout:        5 * time.Minute, // nolint: gomnd
 		Values:         values,
 	}
 }
@@ -113,7 +113,7 @@ func DefaultExternalSecretsValues() *Values {
 			AwsRegion:                  "eu-west-1",
 			AwsDefaultRegion:           "eu-west-1",
 			PollerIntervalMilliseconds: 10000, // nolint: gomnd
-			LogLevel:                   "info",
+			LogLevel:                   "debug",
 			LogMessageKey:              "msg",
 			MetricsPort:                3001, // nolint: gomnd
 			UseHumanReadableLogLevels:  true,
@@ -127,8 +127,8 @@ func DefaultExternalSecretsValues() *Values {
 		},
 		ReplicaCount: 1,
 		Image: Image{
-			Repository: "godaddy/kubernetes-external-secrets",
-			Tag:        "5.2.0",
+			Repository: "ghcr.io/external-secrets/kubernetes-external-secrets",
+			Tag:        "6.4.0",
 			PullPolicy: "IfNotPresent",
 		},
 		SecurityContext: SecurityContext{

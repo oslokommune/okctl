@@ -64,8 +64,9 @@ type Okctl struct {
 	BinariesProvider    binaries.Provider
 	CredentialsProvider credentials.Provider
 
-	activeEnv  string
-	restClient *rest.HTTPClient
+	activeEnv       string
+	restClient      *rest.HTTPClient
+	kubeConfigStore api.KubeConfigStore
 }
 
 // InitialiseWithOnlyEnv initialises okctl when the aws account is has been
@@ -484,6 +485,8 @@ func (o *Okctl) clusterService(outputDir string, spin spinner.Spinner) client.Cl
 		),
 		console.NewClusterReport(o.Err, spin),
 		stateSaver.NewClusterState(o.RepoStateWithEnv),
+		o.CloudProvider,
+		o.CredentialsProvider.Aws(),
 	)
 }
 
@@ -738,6 +741,8 @@ func (o *Okctl) initialise() error {
 	if err != nil {
 		return err
 	}
+
+	o.kubeConfigStore = kubeConfigStore
 
 	vpcService := core.NewVpcService(
 		awsProvider.NewVpcCloud(o.CloudProvider),

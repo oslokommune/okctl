@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	podWatchTimeoutInSeconds = 60
+	podWatchTimeoutInSeconds = 120
 )
 
 // PSQLClient contains the state required for
@@ -52,7 +52,7 @@ func New(name, namespace string, pod *v1.Pod, clientSet kubernetes.Interface, co
 func (c *PSQLClient) Create() (*v1.Pod, error) {
 	p, err := c.Client.CoreV1().Pods(c.Namespace).Create(c.Ctx, c.Manifest, metav1.CreateOptions{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating psql client pod: %w", err)
 	}
 
 	return p, nil
@@ -69,7 +69,7 @@ func (c *PSQLClient) Watch(resp *v1.Pod) error {
 		LabelSelector:   labels.Everything().String(),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("watching psql client pod: %w", err)
 	}
 
 	func() {
@@ -103,14 +103,19 @@ func (c *PSQLClient) Watch(resp *v1.Pod) error {
 func (c *PSQLClient) Delete() error {
 	policy := metav1.DeletePropagationForeground
 
-	return c.Client.CoreV1().Pods(c.Namespace).Delete(c.Ctx, c.Name, metav1.DeleteOptions{
+	err := c.Client.CoreV1().Pods(c.Namespace).Delete(c.Ctx, c.Name, metav1.DeleteOptions{
 		PropagationPolicy: &policy,
 	})
+	if err != nil {
+		return fmt.Errorf("deleting psql client pod: %w", err)
+	}
+
+	return nil
 }
 
 // Attach to the psql pod and hook up all the stds (pun intended)
 func (c *PSQLClient) Attach() error {
-	return attach.New(c.Client, c.Config).Run(
+	err := attach.New(c.Client, c.Config).Run(
 		c.Name,
 		c.Namespace,
 		"psql",
@@ -118,10 +123,17 @@ func (c *PSQLClient) Attach() error {
 		os.Stdout,
 		os.Stderr,
 	)
+	if err != nil {
+		return fmt.Errorf("attaching to psql client pod: %w", err)
+	}
+
+	return nil
 }
 
 // Manifest returns the manifest
-func Manifest(name, namespace, configMapName, secretName, securityGroup string) *v1.Pod {
+func Manifest(name, namespace, configMapName, secretName string, labels map[string]string) *v1.Pod {
+	var terminationGracePeriodSeconds int64 = 30
+
 	optional := false
 
 	return &v1.Pod{
@@ -132,8 +144,11 @@ func Manifest(name, namespace, configMapName, secretName, securityGroup string) 
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
+			Labels:    labels,
 		},
 		Spec: v1.PodSpec{
+			TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+			DNSPolicy:                     v1.DNSDefault,
 			Containers: []v1.Container{
 				{
 					Name:    "psqlclient",
@@ -147,6 +162,8 @@ func Manifest(name, namespace, configMapName, secretName, securityGroup string) 
 								},
 								Optional: &optional,
 							},
+						},
+						{
 							SecretRef: &v1.SecretEnvSource{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: secretName,
@@ -159,7 +176,6 @@ func Manifest(name, namespace, configMapName, secretName, securityGroup string) 
 					TTY:   true,
 				},
 			},
-			ImagePullSecrets: nil,
 		},
 	}
 }

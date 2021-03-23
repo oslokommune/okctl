@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Outputs:
+  myRotater:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-myRotater
+    Value:
+      Fn::GetAtt:
+      - myRotater
+      - Arn
+Resources:
+  myRotater:
+    Properties:
+      Code:
+        S3Bucket: mybucket
+        S3Key: mykey
+      Environment:
+        Variables:
+          SECRETS_MANAGER_ENDPOINT:
+            Fn::Join:
+            - /
+            - - https:/
+              - Fn::Select:
+                - "1"
+                - Fn::Split:
+                  - ':'
+                  - Fn::Select:
+                    - "0"
+                    - Fn::GetAtt:
+                      - myVPCEndpoint
+                      - DnsEntries
+      FunctionName: myrotater-Rotater
+      Handler: lambda_function.lambda_handler
+      Role:
+        Fn::GetAtt:
+        - myRole
+        - Arn
+      Runtime: python3.8
+      Timeout: 30
+      VpcConfig:
+        SecurityGroupIds:
+        - Fn::GetAtt:
+          - mySecGroup
+          - GroupId
+        SubnetIds:
+        - subnet893u290uf
+        - subnet90uf03j
+    Type: AWS::Lambda::Function

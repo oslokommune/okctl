@@ -1,8 +1,16 @@
 AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  mySecretsManagerEndpointDnsEntries:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-mySecretsManagerEndpointDnsEntries
+    Value:
+      Fn::GetAtt:
+      - mySecretsManagerEndpoint
+      - DnsEntries
 Resources:
   mySecretsManagerEndpoint:
     Properties:
-      PrivateDnsEnabled: true
       SecurityGroupIds:
       - Fn::GetAtt:
         - mySecurityGroup

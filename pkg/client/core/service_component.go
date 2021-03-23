@@ -7,6 +7,10 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/oslokommune/okctl/pkg/smapi"
+
+	"github.com/oslokommune/okctl/pkg/ec2api"
+
 	"github.com/oslokommune/okctl/pkg/static/rotater"
 
 	"github.com/oslokommune/okctl/pkg/iamapi"
@@ -111,6 +115,14 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		return nil, err
 	}
 
+	// We cannot enable the secret rotation until all the policies have been created,
+	// we couldn't find a way of doing this in cloud formation. Therefore we do it
+	// here, after the policy has been attached to the role
+	err = smapi.New(c.provider).RotateSecret(pg.LambdaFunctionARN, pg.SecretsManagerAdminSecretARN)
+	if err != nil {
+		return nil, err
+	}
+
 	_, err = c.manifest.CreateNamespace(ctx, api.CreateNamespaceOpts{
 		ID:        opts.ID,
 		Namespace: opts.Namespace,
@@ -129,12 +141,12 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 				Data: []api.Data{
 					{
 						Key:      pg.AdminSecretFriendlyName,
-						Name:     "username",
+						Name:     "PGUSER",
 						Property: "username",
 					},
 					{
 						Key:      pg.AdminSecretFriendlyName,
-						Name:     "password",
+						Name:     "PGPASSWORD",
 						Property: "password",
 					},
 				},
@@ -150,8 +162,10 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		Name:      pgConfigMapName(opts.ApplicationName),
 		Namespace: opts.Namespace,
 		Data: map[string]string{
-			"endpointAddress": pg.EndpointAddress,
-			"endpointPort":    strconv.Itoa(pg.EndpointPort),
+			"PGHOST":     pg.EndpointAddress,
+			"PGPORT":     strconv.Itoa(pg.EndpointPort),
+			"PGDATABASE": opts.ApplicationName,
+			"PGSSLMODE":  "disable", // We should enable this eventually
 		},
 	})
 	if err != nil {
@@ -164,6 +178,15 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		AdminSecretName:       adminSecretName(opts.ApplicationName),
 		DatabaseConfigMapName: pgConfigMapName(opts.ApplicationName),
 		RotaterBucket:         rotaterBucket,
+	}
+
+	err = ec2api.New(c.provider).AuthorizePodToNodeGroupTraffic(
+		"ng-generic",
+		pg.OutgoingSecurityGroupID,
+		opts.VpcID,
+	)
+	if err != nil {
+		return nil, err
 	}
 
 	r1, err := c.store.SavePostgresDatabase(postgres)
@@ -200,6 +223,20 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 		return err
 	}
 
+	err = ec2api.New(c.provider).RevokePodToNodeGroupTraffic(
+		"ng-generic",
+		db.OutgoingSecurityGroupID,
+		opts.VpcID,
+	)
+	if err != nil {
+		return err
+	}
+
+	err = smapi.New(c.provider).CancelRotateSecret(db.AdminSecretARN)
+	if err != nil {
+		return err
+	}
+
 	err = iamapi.New(c.provider).DetachRolePolicy(db.LambdaPolicyARN, db.LambdaRoleARN)
 	if err != nil {
 		return err
@@ -216,7 +253,7 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 	err = c.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
 		ID:        opts.ID,
 		Name:      pgConfigMapName(opts.ApplicationName),
-		Namespace: opts.Namespace,
+		Namespace: db.Namespace,
 	})
 	if err != nil {
 		return err
@@ -225,7 +262,7 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 	err = c.manifest.DeleteExternalSecret(ctx, client.DeleteExternalSecretOpts{
 		ID: opts.ID,
 		Secrets: map[string]string{
-			pgConfigMapName(opts.ApplicationName): opts.Namespace,
+			pgConfigMapName(opts.ApplicationName): db.Namespace,
 		},
 	})
 	if err != nil {

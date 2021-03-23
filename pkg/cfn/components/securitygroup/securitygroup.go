@@ -41,6 +41,7 @@ func (s *SecurityGroup) Ref() string {
 
 const (
 	postgresPort = 5432
+	httpsPort    = 443
 )
 
 // NewPostgresOutgoing returns an initialised security group
@@ -71,22 +72,72 @@ func NewPostgresOutgoing(resourceName, vpcID string, cidrs []string) *SecurityGr
 
 // NewPostgresIncoming returns an initialised security group that
 // allows incoming traffic to the postgres database instance
-func NewPostgresIncoming(resourceName, vpcID string, source cfn.Namer) *SecurityGroup {
+func NewPostgresIncoming(resourceName, vpcID string, sources ...cfn.Namer) *SecurityGroup {
+	ingresses := make([]ec2.SecurityGroup_Ingress, len(sources))
+
+	for i, source := range sources {
+		ingresses[i] = ec2.SecurityGroup_Ingress{
+			FromPort:              postgresPort,
+			IpProtocol:            "tcp",
+			SourceSecurityGroupId: cloudformation.GetAtt(source.Name(), "GroupId"),
+			ToPort:                postgresPort,
+		}
+	}
+
 	return &SecurityGroup{
 		StoredName: resourceName,
 		Group: &ec2.SecurityGroup{
-			GroupDescription:    "RDS Postgres Incoming Security Group",
-			GroupName:           resourceName,
-			SecurityGroupEgress: nil,
+			GroupDescription:     "RDS Postgres Incoming Security Group",
+			GroupName:            resourceName,
+			SecurityGroupIngress: ingresses,
+			VpcId:                vpcID,
+		},
+	}
+}
+
+// NewSecretsManagerVPCEndpointIncoming allows incoming traffic to the VPC SM endpoint
+func NewSecretsManagerVPCEndpointIncoming(resourceName, vpcID string, source cfn.Namer) *SecurityGroup {
+	return &SecurityGroup{
+		StoredName: resourceName,
+		Group: &ec2.SecurityGroup{
+			GroupDescription: "SecretsManager VPC Endpoint incoming",
+			GroupName:        resourceName,
 			SecurityGroupIngress: []ec2.SecurityGroup_Ingress{
 				{
-					FromPort:              postgresPort,
+					FromPort:              httpsPort,
 					IpProtocol:            "tcp",
 					SourceSecurityGroupId: cloudformation.GetAtt(source.Name(), "GroupId"),
-					ToPort:                postgresPort,
+					ToPort:                httpsPort,
 				},
 			},
 			VpcId: vpcID,
+		},
+	}
+}
+
+// NewLambdaFunctionOutgoing allows the lambda function to communicate on the correct
+// ports and cidrs
+func NewLambdaFunctionOutgoing(resourceName, vpcID string, cidrs []string) *SecurityGroup {
+	egresses := []ec2.SecurityGroup_Egress{}
+
+	for _, cidr := range cidrs {
+		for _, port := range []int{httpsPort, postgresPort} {
+			egresses = append(egresses, ec2.SecurityGroup_Egress{
+				CidrIp:     cidr,
+				FromPort:   port,
+				IpProtocol: "tcp",
+				ToPort:     port,
+			})
+		}
+	}
+
+	return &SecurityGroup{
+		StoredName: resourceName,
+		Group: &ec2.SecurityGroup{
+			GroupDescription:    "Rotater lambda function outgoing Security Group",
+			GroupName:           resourceName,
+			SecurityGroupEgress: egresses,
+			VpcId:               vpcID,
 		},
 	}
 }

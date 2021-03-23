@@ -34,6 +34,7 @@ require (
 	github.com/docker/docker v20.10.3+incompatible // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
+	github.com/evanphx/json-patch/v5 v5.2.0
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/foolin/pagser v0.1.5
 	github.com/garyburd/redigo v1.6.2 // indirect

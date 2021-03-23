@@ -120,6 +120,7 @@ type Database struct {
 	EndpointPort           int
 	SecurityGroupID        string
 	AdminSecretName        string
+	AdminSecretARN         string
 	DatabaseConfigMapName  string
 	RotaterLambdaRoleARN   string
 	RotaterLambdaPolicyARN string
@@ -133,6 +134,7 @@ func (d Database) Validate() error {
 		validation.Field(&d.EndpointPort, validation.Required),
 		validation.Field(&d.SecurityGroupID, validation.Required),
 		validation.Field(&d.AdminSecretName, validation.Required),
+		validation.Field(&d.AdminSecretARN, validation.Required),
 		validation.Field(&d.DatabaseConfigMapName, validation.Required),
 		validation.Field(&d.RotaterLambdaRoleARN, validation.Required),
 		validation.Field(&d.RotaterLambdaPolicyARN, validation.Required),

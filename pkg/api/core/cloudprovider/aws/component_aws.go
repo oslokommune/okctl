@@ -3,6 +3,8 @@ package aws
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/cfn/components/lambdafunction"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn"
@@ -57,6 +59,7 @@ const (
 	postgresTimeOutInMinutes = 45
 )
 
+// nolint: funlen
 func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgresDatabaseOpts) (*api.PostgresDatabase, error) {
 	composer := components.NewRDSPostgresComposer(components.RDSPostgresComposerOpts{
 		ApplicationDBName: opts.ApplicationName,
@@ -77,6 +80,15 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 	template, err := b.Build()
 	if err != nil {
 		return nil, fmt.Errorf("building cloud formation template: %w", err)
+	}
+
+	template, err = lambdafunction.PatchRotateLambda(
+		composer.NameResource("RDSPostgresLambdaRotateFunction"),
+		composer.NameResource("SecretsManagerVPCEndpoint"),
+		template,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("patching cloud formation template: %w", err)
 	}
 
 	r := cfn.NewRunner(c.provider)
@@ -107,6 +119,7 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 		composer.NameResource("RDSInstanceAdmin"):                                  cfn.String(&p.SecretsManagerAdminSecretARN),
 		composer.NameResource("RDSPostgresLambdaManagedPolicy"):                    cfn.String(&p.LambdaPolicyARN),
 		fmt.Sprintf("%sArn", composer.NameResource("RDSPostgresLambdaRotateRole")): cfn.String(&p.LambdaRoleARN),
+		composer.NameResource("RDSPostgresLambdaRotateFunction"):                   cfn.String(&p.LambdaFunctionARN),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("collecting stack outputs: %w", err)

@@ -38,6 +38,9 @@ type HostedZoneFetcher func() *state.HostedZone
 // IdentityPoolFetcher defines a function which can be used to delay fetching of IdentityPool data
 type IdentityPoolFetcher func() state.IdentityPool
 
+// VpcFetcher returns the VPC
+type VpcFetcher func() state.VPC
+
 // CreateClusterStateRefresher creates a function that gathers required runtime data for a cluster resource
 func CreateClusterStateRefresher(fs *afero.Afero, outputDir string, cidrFn StringFetcher) resourcetree.StateRefreshFn {
 	return func(node *resourcetree.ResourceNode) {
@@ -137,6 +140,28 @@ func CreateNameserverDelegationStateRefresher(fetcher HostedZoneFetcher) resourc
 		node.ResourceState = reconciler.NameserverHandlerReconcilerResourceState{
 			PrimaryHostedZoneFQDN: zone.FQDN,
 			Nameservers:           zone.NameServers,
+		}
+	}
+}
+
+// CreatePostgresDatabasesRefresher creates a function that gathers required runtime data
+func CreatePostgresDatabasesRefresher(fetcher VpcFetcher) resourcetree.StateRefreshFn {
+	return func(node *resourcetree.ResourceNode) {
+		vpc := fetcher()
+
+		ids := make([]string, len(vpc.Subnets[state.SubnetTypeDatabase]))
+		cidrs := make([]string, len(vpc.Subnets[state.SubnetTypeDatabase]))
+
+		for i, s := range vpc.Subnets[state.SubnetTypeDatabase] {
+			ids[i] = s.ID
+			cidrs[i] = s.CIDR
+		}
+
+		node.ResourceState = reconciler.PostgresState{
+			VpcID:             vpc.VpcID,
+			DBSubnetGroupName: vpc.DatabaseSubnetsGroupName,
+			DBSubnetIDs:       ids,
+			DBSubnetCIDRs:     cidrs,
 		}
 	}
 }

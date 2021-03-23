@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/oslokommune/okctl/pkg/cfn/components/rotationschedule"
-
 	"github.com/oslokommune/okctl/pkg/cfn/components/lambdafunction"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/lambdapermission"
@@ -1366,21 +1364,12 @@ func NewRDSPostgresComposer(opts RDSPostgresComposerOpts) *RDSPostgresComposer {
 	}
 }
 
-// We use the policy document described here:
-// - https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html
-const amazonRDSEnhancedMonitoringRole = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
-
-const awsLambdaBasicExecutionRole = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-
-// This transform is required when adding the hosted rotation lambda
-// - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-secretsmanager-rotationschedule-hostedrotationlambda.html
-// nolint
-const hostedRotationLambdaTransform = "AWS::SecretsManager-2020-07-23"
-
-// This transform is required when adding the serverless lambdas
-// - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-aws-serverless.html
-// nolint
-const serverlessTransform = "AWS::Serverless-2016-10-31"
+const (
+	// We use the policy document described here:
+	// - https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html
+	amazonRDSEnhancedMonitoringRole = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+	awsLambdaBasicExecutionRole     = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+)
 
 // NameResource returns the resource name
 func (c *RDSPostgresComposer) NameResource(resource string) string {
@@ -1438,6 +1427,25 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 		c.UserName,
 	)
 
+	lambdaSG := securitygroup.NewLambdaFunctionOutgoing(
+		c.NameResource("RotaterLambdaOutgoingSecurityGroup"),
+		c.VpcID,
+		c.VPCDBSubnetCIDRs,
+	)
+
+	secretsManagerIncoming := securitygroup.NewSecretsManagerVPCEndpointIncoming(
+		c.NameResource("SecretsManagerVPCEndpointSecurityGroup"),
+		c.VpcID,
+		lambdaSG,
+	)
+
+	sme := vpcendpoint.NewSecretsManager(
+		c.NameResource("SecretsManagerVPCEndpoint"),
+		secretsManagerIncoming,
+		c.VpcID,
+		c.VPCDBSubnetIDs,
+	)
+
 	outgoing := securitygroup.NewPostgresOutgoing(
 		c.NameResource("RDSPostgresOutgoing"),
 		c.VpcID,
@@ -1448,6 +1456,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 		c.NameResource("RDSPostgresIncoming"),
 		c.VpcID,
 		outgoing,
+		lambdaSG,
 	)
 
 	postgres := dbinstance.New(
@@ -1465,13 +1474,6 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 		c.NameResource("SecretTargetAttachment"),
 		admin,
 		postgres,
-	)
-
-	sme := vpcendpoint.NewSecretsManager(
-		c.NameResource("SecretsManagerVPCEndpoint"),
-		outgoing,
-		c.VpcID,
-		c.VPCDBSubnetIDs,
 	)
 
 	// Based on the following content:
@@ -1528,8 +1530,9 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 		c.Bucket,
 		c.Key,
 		lambdaRole,
-		outgoing,
+		lambdaSG,
 		c.VPCDBSubnetIDs,
+		sme,
 	)
 
 	lambdaManagedPolicy := managedpolicy.New(
@@ -1565,13 +1568,6 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 		lambdaFunction,
 	)
 
-	rotation := rotationschedule.NewPostgres(
-		c.NameResource("AdminRotationSchedule"),
-		admin,
-		attachment,
-		lambdaFunction,
-	)
-
 	return &cfn.Composition{
 		Outputs: []cfn.StackOutputer{
 			postgres,
@@ -1579,6 +1575,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 			outgoing,
 			lambdaManagedPolicy,
 			lambdaRole,
+			lambdaFunction,
 		},
 		Resources: []cfn.ResourceNamer{
 			monitoringRole,
@@ -1588,10 +1585,11 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 			incoming,
 			postgres,
 			attachment,
+			lambdaSG,
 			lambdaRole,
 			lambdaFunction,
 			lambdaPermission,
-			rotation,
+			secretsManagerIncoming,
 			sme,
 			lambdaManagedPolicy,
 		},

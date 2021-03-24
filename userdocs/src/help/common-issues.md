@@ -34,9 +34,9 @@ kubectl delete namespace myapp
 ```
 
 * If you are not able to use the cluster with kubectl, open the AWS console
-  * EC2 -> Load Balancers -> Delete any load balancers with tags matching the name of your cluster (try the filter
+    * EC2 -> Load Balancers -> Delete any load balancers with tags matching the name of your cluster (try the filter
     `tag:elbv2.k8s.aws/cluster : mycluster-myenv`)
-  * EC2 -> Auto Scaling Groups -> Delete any auto scaling groups with a name matching your cluster
+    * EC2 -> Auto Scaling Groups -> Delete any auto scaling groups with a name matching your cluster
 
 ### Delete Fargate Profile
 
@@ -47,18 +47,19 @@ Open the AWS console
 ### Delete all CloudFormation stacks
 
 Open the AWS console
+
 * CloudFormation -> Enter a filter for your cluster name to only see the stacks for your cluster 
 * Then for every stack repeat the following
-  * Select the stack on the top (which is the newst)
-  * Delete it
-  * Refresh the page, wait until the stack has been deleted (it is gone)
-    * (We have to wait because some stacks may have dependencies on other stacks) 
+    * Select the stack on the top (which is the newst)
+    * Delete it
+    * Refresh the page, wait until the stack has been deleted (it is gone)
+        * (We have to wait because some stacks may have dependencies on other stacks) 
 
 ### Delete files in your infrastructure-as-code repository
 
 * In your infrastructure-as-code repository, delete
-  ** infrastructure/<env>
-  ** .okctl.yaml, the block containing your environment (or the whole file if you only have one environment)
+    * infrastructure/<env>
+    * .okctl.yaml, the block containing your environment (or the whole file if you only have one environment)
 
 
 ## okctl create cluster: Create identitypool fails / Re-create cluster within short timespan fails

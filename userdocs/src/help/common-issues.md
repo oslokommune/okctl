@@ -11,7 +11,7 @@ This is known to happen if `pass init <gpg-key-id>` has not been run after insta
 
 Initialize `pass` as described in [Prerequisites](../../getting-started/prerequisites/#initialize-pass).
 
-##okctl delete cluster fails
+## okctl delete cluster fails
 
 In some cases, it's possible to fix the issue and run `okctl delete cluster` again. We cannot give a guide general
 guide for fixing this here, but ask us if you want support with this.

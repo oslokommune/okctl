@@ -130,7 +130,7 @@ func deserializeErrorPayload(jsonContent []byte) error {
 	err := json.Unmarshal(jsonContent, &data)
 	if err != nil {
 		return errors.E(
-			fmt.Errorf("unmarshalling error from server side: %w", err),
+			fmt.Errorf("unmarshalling error from server side: %w: %s", err, string(jsonContent)),
 			errors.Internal)
 	}
 

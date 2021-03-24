@@ -61,10 +61,10 @@ func New() *Context {
 
 	logger.Out = os.Stderr
 	logger.Formatter = &logrus.TextFormatter{}
-	logger.Level = logrus.WarnLevel
+	logger.Level = logrus.InfoLevel
 
 	if debug {
-		logger.Level = logrus.DebugLevel
+		logger.Level = logrus.TraceLevel
 	}
 
 	return &Context{

@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/context"
@@ -70,6 +73,13 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) (err error) {
+			c := make(chan os.Signal)
+			signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+			go func() {
+				<-c
+				os.Exit(1)
+			}()
+
 			return nil
 		},
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {

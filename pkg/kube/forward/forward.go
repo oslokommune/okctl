@@ -71,7 +71,7 @@ func (f *Forward) Start(listenPort int32, p *v1.Pod) (err error) {
 	f.wg.Add(1)
 
 	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
 		<-sigs

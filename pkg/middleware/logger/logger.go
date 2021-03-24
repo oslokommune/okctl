@@ -42,7 +42,7 @@ type logging struct {
 // ProcessRequest handles logging of the request
 func (l *logging) ProcessRequest(next endpoint.Endpoint) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		l.log.Info("request received")
+		l.log.Debug("request received")
 
 		var d string
 
@@ -53,7 +53,7 @@ func (l *logging) ProcessRequest(next endpoint.Endpoint) endpoint.Endpoint {
 			d = litter.Sdump(request)
 		}
 
-		l.log.Debug("request: ", d)
+		l.log.Trace("request: ", d)
 
 		defer func() {
 			l.ProcessResponse(err, response, time.Now())
@@ -79,8 +79,8 @@ func (l *logging) ProcessResponse(err error, response interface{}, begin time.Ti
 			d = litter.Sdump(response)
 		}
 
-		l.log.Debug("response: ", d)
+		l.log.Trace("response: ", d)
 	}
 
-	l.log.Info("request completed in: ", time.Since(begin).String())
+	l.log.Debug("request completed in: ", time.Since(begin).String())
 }

@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"k8s.io/apimachinery/pkg/watch"
 
 	v1 "k8s.io/api/core/v1"
@@ -24,6 +26,8 @@ const (
 	StateDeleted State = "deleted"
 	// StateRunning means we want to wait for this state
 	StateRunning State = "running"
+
+	sleepTimeWaitingForPodInSeconds = 10
 )
 
 // Pod contains the required state for interacting with
@@ -32,14 +36,16 @@ type Pod struct {
 	Client  kubernetes.Interface
 	Ctx     context.Context
 	Timeout time.Duration
+	Logger  *logrus.Logger
 }
 
 // New returns an initialised Pod client
-func New(ctx context.Context, timeout time.Duration, client kubernetes.Interface) *Pod {
+func New(ctx context.Context, logger *logrus.Logger, timeout time.Duration, client kubernetes.Interface) *Pod {
 	return &Pod{
 		Client:  client,
 		Ctx:     ctx,
 		Timeout: timeout,
+		Logger:  logger,
 	}
 }
 
@@ -86,6 +92,14 @@ func (p *Pod) WaitFor(state State, pod *v1.Pod) error {
 				}
 			case <-time.After(p.Timeout):
 				w.Stop()
+			default:
+				what := "terminate"
+				if state == StateRunning {
+					what = "start"
+				}
+
+				p.Logger.Infof("waiting for pod to %s", what)
+				time.Sleep(sleepTimeWaitingForPodInSeconds * time.Second)
 			}
 		}
 	}()

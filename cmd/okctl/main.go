@@ -64,7 +64,7 @@ being captured. Together with slack and slick.`,
 
 			err = loadUserData(o, cmd)
 			if err != nil {
-				return fmt.Errorf("failed to load application data: %w", err)
+				return fmt.Errorf("loading application data: %w", err)
 			}
 
 			err = loadRepoData(o, cmd)
@@ -74,7 +74,7 @@ being captured. Together with slack and slick.`,
 						"various configuration files that will be stored here)")
 				}
 
-				return fmt.Errorf("failed to load repository data: %w", err)
+				return fmt.Errorf("loading repository data: %w", err)
 			}
 
 			o.Out = cmd.OutOrStdout()

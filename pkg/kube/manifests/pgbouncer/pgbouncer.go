@@ -12,6 +12,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
+	"k8s.io/apimachinery/pkg/watch"
+
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
+
 	podpkg "github.com/oslokommune/okctl/pkg/kube/pod"
 
 	"github.com/oslokommune/okctl/pkg/kube/forward"
@@ -23,11 +30,13 @@ import (
 )
 
 const (
-	podWatchTimeoutInSeconds = 120
+	podWatchTimeoutInSeconds          = 120
+	secretWatchTimeoutInSeconds       = 10
+	secretWatchSleepIntervalInSeconds = 1
 )
 
 // PgBouncer contains the state we need
-// to deploy onto Kubernetse
+// to deploy onto Kubernetes
 type PgBouncer struct {
 	ListenPort int32
 
@@ -41,7 +50,8 @@ type PgBouncer struct {
 	Client kubernetes.Interface
 	Config *restclient.Config
 
-	Ctx context.Context
+	Ctx    context.Context
+	Logger *logrus.Logger
 }
 
 // Config contains all the required inputs
@@ -61,6 +71,8 @@ type Config struct {
 
 	ClientSet kubernetes.Interface
 	Config    *restclient.Config
+
+	Logger *logrus.Logger
 }
 
 // New returns an initialised PgBouncer client
@@ -92,36 +104,100 @@ func New(config *Config) *PgBouncer {
 		Client:     config.ClientSet,
 		Config:     config.Config,
 		Ctx:        context.Background(),
+		Logger:     config.Logger,
 	}
 }
 
-// Create all the PgBouncer resources
-func (p *PgBouncer) Create() error {
+// DeleteSecret deletes the secret
+func (p *PgBouncer) DeleteSecret(s *v1.Secret) error {
 	policy := metav1.DeletePropagationForeground
 
-	secrets, err := p.Client.CoreV1().Secrets(p.Secret.Namespace).List(p.Ctx, metav1.ListOptions{})
+	p.Logger.Info("removing pgbouncer secret")
+
+	err := p.Client.CoreV1().Secrets(s.Namespace).Delete(p.Ctx, s.Name, metav1.DeleteOptions{
+		PropagationPolicy: &policy,
+	})
 	if err != nil {
 		return err
 	}
 
+	w, err := p.Client.CoreV1().Secrets(s.Namespace).Watch(p.Ctx, metav1.ListOptions{
+		Watch:           true,
+		ResourceVersion: s.ResourceVersion,
+		FieldSelector:   fields.OneTermEqualSelector("metadata.name", s.Name).String(),
+		LabelSelector:   labels.Everything().String(),
+	})
+	if err != nil {
+		return err
+	}
+
+	var eventType watch.EventType
+
+	func() {
+		for {
+			select {
+			case event, ok := <-w.ResultChan():
+				if !ok {
+					return
+				}
+
+				eventType = event.Type
+
+				if event.Type == watch.Deleted {
+					w.Stop()
+				}
+			case <-time.After(secretWatchTimeoutInSeconds * time.Second):
+				w.Stop()
+			default:
+				p.Logger.Info("waiting for secret to be removed")
+				time.Sleep(secretWatchSleepIntervalInSeconds * time.Second)
+			}
+		}
+	}()
+
+	if eventType != watch.Deleted {
+		return fmt.Errorf("timed out waiting for secret to be deleted")
+	}
+
+	return nil
+}
+
+// CreateSecret first removes any existing secret then creates a new one
+func (p *PgBouncer) CreateSecret() error {
+	secrets, err := p.Client.CoreV1().Secrets(p.Secret.Namespace).List(p.Ctx, metav1.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("listing secrets: %w", err)
+	}
+
 	for _, s := range secrets.Items {
 		if s.Name == p.Secret.Name {
-			err = p.Client.CoreV1().Secrets(s.Namespace).Delete(p.Ctx, s.Name, metav1.DeleteOptions{
-				PropagationPolicy: &policy,
-			})
-			if err != nil {
-				return err
-			}
+			s := s
 
-			// Replace with watch?
-			time.Sleep(1 * time.Second)
+			err = p.DeleteSecret(&s)
+			if err != nil {
+				return fmt.Errorf("removing existing secret: %w", err)
+			}
 		}
 	}
+
+	p.Logger.Info("creating pgbouncer secret")
 
 	_, err = p.Client.CoreV1().Secrets(p.Secret.Namespace).Create(p.Ctx, p.Secret, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("creating secret: %w", err)
 	}
+
+	return nil
+}
+
+// Create all the PgBouncer resources
+func (p *PgBouncer) Create() error {
+	err := p.CreateSecret()
+	if err != nil {
+		return err
+	}
+
+	policy := metav1.DeletePropagationForeground
 
 	pods, err := p.Client.CoreV1().Pods(p.Pod.Namespace).List(p.Ctx, metav1.ListOptions{})
 	if err != nil {
@@ -132,6 +208,8 @@ func (p *PgBouncer) Create() error {
 		if po.Name == p.Pod.Name {
 			po := po
 
+			p.Logger.Info("deleting existing pgbouncer pod")
+
 			err = p.Client.CoreV1().Pods(po.Namespace).Delete(p.Ctx, po.Name, metav1.DeleteOptions{
 				PropagationPolicy: &policy,
 			})
@@ -139,7 +217,9 @@ func (p *PgBouncer) Create() error {
 				return err
 			}
 
-			err = podpkg.New(p.Ctx, podWatchTimeoutInSeconds*time.Second, p.Client).WaitFor(podpkg.StateDeleted, &po)
+			p.Logger.Info("waiting for pod to terminate")
+
+			err = podpkg.New(p.Ctx, p.Logger, podWatchTimeoutInSeconds*time.Second, p.Client).WaitFor(podpkg.StateDeleted, &po)
 			if err != nil {
 				return err
 			}
@@ -151,7 +231,7 @@ func (p *PgBouncer) Create() error {
 		return fmt.Errorf("creating pod: %w", err)
 	}
 
-	err = podpkg.New(p.Ctx, podWatchTimeoutInSeconds*time.Second, p.Client).WaitFor(podpkg.StateRunning, pod)
+	err = podpkg.New(p.Ctx, p.Logger, podWatchTimeoutInSeconds*time.Second, p.Client).WaitFor(podpkg.StateRunning, pod)
 	if err != nil {
 		return err
 	}
@@ -161,6 +241,8 @@ func (p *PgBouncer) Create() error {
 
 // Forward start forwarding the connection
 func (p *PgBouncer) Forward(listenPort int32, pod *v1.Pod) error {
+	p.Logger.Info("starting port forwarder")
+
 	err := forward.New(os.Stdin, os.Stdout, os.Stderr, p.Config).Start(listenPort, pod)
 	if err != nil {
 		return err
@@ -173,6 +255,8 @@ func (p *PgBouncer) Forward(listenPort int32, pod *v1.Pod) error {
 func (p *PgBouncer) Delete() error {
 	policy := metav1.DeletePropagationForeground
 
+	p.Logger.Info("deleting pgbouncer pod")
+
 	err := p.Client.CoreV1().Pods(p.Pod.Namespace).Delete(p.Ctx, p.Pod.Name, metav1.DeleteOptions{
 		PropagationPolicy: &policy,
 	})
@@ -180,9 +264,7 @@ func (p *PgBouncer) Delete() error {
 		return fmt.Errorf("deleting pgbouncer client pod: %w", err)
 	}
 
-	err = p.Client.CoreV1().Secrets(p.Secret.Namespace).Delete(p.Ctx, p.Secret.Name, metav1.DeleteOptions{
-		PropagationPolicy: &policy,
-	})
+	err = p.DeleteSecret(p.Secret)
 	if err != nil {
 		return fmt.Errorf("deleting pgbouncer secret: %w", err)
 	}

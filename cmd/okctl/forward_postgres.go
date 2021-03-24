@@ -5,6 +5,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/pkg/errors"
+
 	"github.com/oslokommune/okctl/pkg/kube/manifests/pgbouncer"
 
 	"github.com/oslokommune/okctl/pkg/kube/manifests/awsnode"
@@ -52,6 +55,33 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 		Use:   "postgres",
 		Short: "Forward to the given postgres database",
 		Args:  cobra.ExactArgs(0), // nolint: gomnd
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if cmd.Name() == cobra.ShellCompRequestCmd {
+				return nil
+			}
+
+			var err error
+
+			err = loadUserData(o, cmd)
+			if err != nil {
+				return fmt.Errorf("loading application data: %w", err)
+			}
+
+			err = loadRepoData(o, cmd)
+			if err != nil {
+				if errors.Is(err, git.ErrRepositoryNotExists) {
+					return fmt.Errorf("okctl needs to be run inside a Git repository (okctl outputs " +
+						"various configuration files that will be stored here)")
+				}
+
+				return fmt.Errorf("loading repository data: %w", err)
+			}
+
+			o.Out = cmd.OutOrStdout()
+			o.Err = cmd.OutOrStderr()
+
+			return nil
+		},
 		PreRunE: func(_ *cobra.Command, _ []string) error {
 			err := o.InitialiseWithOnlyEnv(opts.Environment)
 			if err != nil {
@@ -125,8 +155,12 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 			}
 
 			defer func() {
+				o.Logger.Info("removing pgbouncer security group policy")
+
 				perr := policyClient.Delete()
 				if perr != nil {
+					o.Logger.Warnf("deleting pgbouncer security group policy: %s", perr)
+
 					err = perr
 				}
 			}()
@@ -145,6 +179,7 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 				Err:                   os.Stderr,
 				ClientSet:             clientSet,
 				Config:                config,
+				Logger:                o.Logger,
 			})
 
 			err = client.Create()
@@ -153,8 +188,10 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 			}
 
 			defer func() {
+				o.Logger.Info("removing pgbouncer pod")
 				cerr := client.Delete()
 				if cerr != nil {
+					o.Logger.Warnf("deleting pgbouncer pod: %s", cerr)
 					err = cerr
 				}
 			}()

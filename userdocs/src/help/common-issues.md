@@ -11,11 +11,55 @@ This is known to happen if `pass init <gpg-key-id>` has not been run after insta
 
 Initialize `pass` as described in [Prerequisites](../../getting-started/prerequisites/#initialize-pass).
 
-##On `okctl delete cluster`, some resources are not deleted (automatic deletion is coming in a later version)
+##`okctl delete cluster` fails
 
-Workaround: manually delete the following resources:
+In some cases, it's possible to fix the issue and run `okctl delete cluster` again. However, it's too hard giving a
+a guide for fixing such issues here. Ask us if you want support with this.
 
-* It is recommended to delete the infrastructure/<env> directory and .okctl.yaml file upon successful delete of cluster, as the last manual step.
+If not, you can proceed to delete the cluster manually, as described below.
+
+### Delete application resources
+
+* If you are able to use the cluster with kubectl, run
+
+```shell
+kubectl delete namespace monitoring
+kubectl delete namespace argocd
+```
+
+Delete any namespace containing applications you have made
+
+```shell
+kubectl delete namespace myapp
+```
+
+* If you are not able to use the cluster with kubectl, open the AWS console
+  * EC2 -> Load Balancers -> Delete any load balancers with tags matching the name of your cluster (try the filter
+    `tag:elbv2.k8s.aws/cluster : mycluster-myenv`)
+  * EC2 -> Auto Scaling Groups -> Delete any auto scaling groups with a name matching your cluster
+
+### Delete Fargate Profile
+
+Open the AWS console
+* EKS -> Clusters -> Open your cluster -> Configuration -> Compute -> Delete all fargate profiles
+  (usually one, `fp-default`) 
+
+### Delete all CloudFormation stacks
+
+Open the AWS console
+* CloudFormation -> Enter a filter for your cluster name to only see the stacks for your cluster 
+* Then for every stack repeat the following
+  * Select the stack on the top (which is the newst)
+  * Delete it
+  * Refresh the page, wait until the stack has been deleted (it is gone)
+    * (We have to wait because some stacks may have dependencies on other stacks) 
+
+### Delete files in your infrastructure-as-code repository
+
+* In your infrastructure-as-code repository, delete
+  ** infrastructure/<env>
+  ** .okctl.yaml, the block containing your environment (or the whole file if you only have one environment)
+
 
 ##okctl create cluster: Create identitypool fails / Re-create cluster within short timespan fails
 

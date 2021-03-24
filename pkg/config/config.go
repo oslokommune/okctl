@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/rancher/k3d/v3/cmd/util"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/client/store"
@@ -52,7 +54,12 @@ type Config struct {
 
 // New Config initialises a default okctl configuration
 func New() *Config {
-	dest := "127.0.0.1:8085"
+	port, err := util.GetFreePort()
+	if err != nil {
+		port = 8085
+	}
+
+	dest := fmt.Sprintf("127.0.0.1:%d", port)
 
 	return &Config{
 		Context:        context.New(),

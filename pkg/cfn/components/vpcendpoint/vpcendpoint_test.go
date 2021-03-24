@@ -10,7 +10,7 @@ import (
 func TestNew(t *testing.T) {
 	testCases := []tstr.CloudFormationTemplateTestCase{
 		{
-			Name:   "SecretsManagerVPCEndpoint",
+			Name:   "RDSPGSMVPCEndpoint",
 			Golden: "sm-vpcendpoint.json",
 			Content: vpcendpoint.NewSecretsManager(
 				"mySecretsManagerEndpoint",

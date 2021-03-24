@@ -6,6 +6,28 @@ Outputs:
         Fn::Sub: ${AWS::StackName}-okctlrepoenvRDSInstanceAdmin
     Value:
       Ref: okctlrepoenvRDSInstanceAdmin
+  okctlrepoenvRDSPGRotater:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-okctlrepoenvRDSPGRotater
+    Value:
+      Fn::GetAtt:
+      - okctlrepoenvRDSPGRotater
+      - Arn
+  okctlrepoenvRDSPGRotaterPolicy:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-okctlrepoenvRDSPGRotaterPolicy
+    Value:
+      Ref: okctlrepoenvRDSPGRotaterPolicy
+  okctlrepoenvRDSPGRotaterRoleArn:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-okctlrepoenvRDSPGRotaterRoleArn
+    Value:
+      Fn::GetAtt:
+      - okctlrepoenvRDSPGRotaterRole
+      - Arn
   okctlrepoenvRDSPostgres:
     Export:
       Name:
@@ -28,28 +50,6 @@ Outputs:
       Fn::GetAtt:
       - okctlrepoenvRDSPostgres
       - Endpoint.Port
-  okctlrepoenvRDSPostgresLambdaManagedPolicy:
-    Export:
-      Name:
-        Fn::Sub: ${AWS::StackName}-okctlrepoenvRDSPostgresLambdaManagedPolicy
-    Value:
-      Ref: okctlrepoenvRDSPostgresLambdaManagedPolicy
-  okctlrepoenvRDSPostgresLambdaRotateFunction:
-    Export:
-      Name:
-        Fn::Sub: ${AWS::StackName}-okctlrepoenvRDSPostgresLambdaRotateFunction
-    Value:
-      Fn::GetAtt:
-      - okctlrepoenvRDSPostgresLambdaRotateFunction
-      - Arn
-  okctlrepoenvRDSPostgresLambdaRotateRoleArn:
-    Export:
-      Name:
-        Fn::Sub: ${AWS::StackName}-okctlrepoenvRDSPostgresLambdaRotateRoleArn
-    Value:
-      Fn::GetAtt:
-      - okctlrepoenvRDSPostgresLambdaRotateRole
-      - Arn
   okctlrepoenvRDSPostgresOutgoing:
     Export:
       Name:
@@ -75,10 +75,177 @@ Resources:
         SecretStringTemplate: '{"username": "admin"}'
       Name: /okctl/repo/env/postgres_admin
     Type: AWS::SecretsManager::Secret
+  okctlrepoenvRDSPGMonitoringRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - monitoring.rds.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
+      PermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
+      RoleName: okctlrepoenvRDSPGMonitoringRole
+    Type: AWS::IAM::Role
+  okctlrepoenvRDSPGOutgoingSG:
+    Properties:
+      GroupDescription: Rotater lambda function outgoing Security Group
+      GroupName: okctlrepoenvRDSPGOutgoingSG
+      SecurityGroupEgress:
+      - CidrIp: 192.168.1.0/20
+        FromPort: 443
+        IpProtocol: tcp
+        ToPort: 443
+      - CidrIp: 192.168.1.0/20
+        FromPort: 5432
+        IpProtocol: tcp
+        ToPort: 5432
+      - CidrIp: 192.168.2.0/20
+        FromPort: 443
+        IpProtocol: tcp
+        ToPort: 443
+      - CidrIp: 192.168.2.0/20
+        FromPort: 5432
+        IpProtocol: tcp
+        ToPort: 5432
+      VpcId: vpcid-w9ufe
+    Type: AWS::EC2::SecurityGroup
+  okctlrepoenvRDSPGParamGroup:
+    Properties:
+      Description: Postgres 13 property group
+      Family: postgres13
+      Parameters:
+        log_duration: "on"
+        log_min_duration_statement: "1000"
+        log_statement: all
+        max_connections: "100"
+        pg_stat_statements.max: "10000"
+        pg_stat_statements.track: all
+        shared_preload_libraries: pg_stat_statements
+    Type: AWS::RDS::DBParameterGroup
+  okctlrepoenvRDSPGRotater:
+    Properties:
+      Code: {}
+      Environment:
+        Variables:
+          SECRETS_MANAGER_ENDPOINT: eyAiRm46OlNlbGVjdCI6IFsgJ1x4MDAnLCAgImV5QWlSbTQ2T2tkbGRFRjBkQ0lnT2lCYklDSnZhMk4wYkhKbGNHOWxiblpTUkZOUVIxTk5WbEJEUlc1a2NHOXBiblFpTENBaVJHNXpSVzUwY21sbGN5SWdYU0I5IiBdIH0=
+      FunctionName: okctlrepoenvrdspgrotater-Rotater
+      Handler: lambda_function.lambda_handler
+      Role:
+        Fn::GetAtt:
+        - okctlrepoenvRDSPGRotaterRole
+        - Arn
+      Runtime: python3.8
+      Timeout: 30
+      VpcConfig:
+        SecurityGroupIds:
+        - Fn::GetAtt:
+          - okctlrepoenvRDSPGOutgoingSG
+          - GroupId
+        SubnetIds:
+        - dbsubnetid-123okf
+        - dbsubnetid-fjeo338
+    Type: AWS::Lambda::Function
+  okctlrepoenvRDSPGRotaterPermission:
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - okctlrepoenvRDSPGRotater
+        - Arn
+      Principal: secretsmanager.amazonaws.com
+    Type: AWS::Lambda::Permission
+  okctlrepoenvRDSPGRotaterPolicy:
+    Properties:
+      Description: okctlrepoenvRDSPGRotaterPolicy
+      ManagedPolicyName: okctlrepoenvRDSPGRotaterPolicy
+      PolicyDocument:
+        Statement:
+        - Action:
+          - secretsmanager:DescribeSecret
+          - secretsmanager:GetSecretValue
+          - secretsmanager:PutSecretValue
+          - secretsmanager:UpdateSecretVersionStage
+          Condition:
+            StringEquals:
+              secretsmanager:resource/AllowRotationLambdaArn:
+                Fn::GetAtt:
+                - okctlrepoenvRDSPGRotater
+                - Arn
+          Effect: Allow
+          Resource:
+          - '*'
+        Version: 2012-10-17
+    Type: AWS::IAM::ManagedPolicy
+  okctlrepoenvRDSPGRotaterRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      PermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - secretsmanager:GetRandomPassword
+            Effect: Allow
+            Resource:
+            - '*'
+          - Action:
+            - ec2:CreateNetworkInterface
+            - ec2:DeleteNetworkInterface
+            - ec2:DescribeNetworkInterfaces
+            Effect: Allow
+            Resource:
+            - '*'
+          Version: 2012-10-17
+        PolicyName: okctlrepoenvRDSPGRotaterPolicy
+      RoleName: okctlrepoenvRDSPGRotaterRole
+    Type: AWS::IAM::Role
+  okctlrepoenvRDSPGSMVPCEndpoint:
+    Properties:
+      SecurityGroupIds:
+      - Fn::GetAtt:
+        - okctlrepoenvRDSPGSMVPCEndpointSG
+        - GroupId
+      ServiceName:
+        Fn::Sub: com.amazonaws.${AWS::Region}.secretsmanager
+      SubnetIds:
+      - dbsubnetid-123okf
+      - dbsubnetid-fjeo338
+      VpcEndpointType: Interface
+      VpcId: vpcid-w9ufe
+    Type: AWS::EC2::VPCEndpoint
+  okctlrepoenvRDSPGSMVPCEndpointSG:
+    Properties:
+      GroupDescription: SecretsManager VPC Endpoint incoming
+      GroupName: okctlrepoenvRDSPGSMVPCEndpointSG
+      SecurityGroupIngress:
+      - FromPort: 443
+        IpProtocol: tcp
+        SourceSecurityGroupId:
+          Fn::GetAtt:
+          - okctlrepoenvRDSPGOutgoingSG
+          - GroupId
+        ToPort: 443
+      VpcId: vpcid-w9ufe
+    Type: AWS::EC2::SecurityGroup
   okctlrepoenvRDSPostgres:
     DependsOn:
-    - okctlrepoenvRDSPostgresParameterGroup
-    - okctlrepoenvRDSPostgresMonitoringRole
+    - okctlrepoenvRDSPGParamGroup
+    - okctlrepoenvRDSPGMonitoringRole
     Properties:
       AllocatedStorage: "20"
       AutoMinorVersionUpgrade: true
@@ -88,7 +255,7 @@ Resources:
       DBInstanceIdentifier: repo-env-okctl
       DBName: okctl
       DBParameterGroupName:
-        Ref: okctlrepoenvRDSPostgresParameterGroup
+        Ref: okctlrepoenvRDSPGParamGroup
       DBSubnetGroupName: myDBSubnetGroupName
       DeleteAutomatedBackups: true
       EnableCloudwatchLogsExports:
@@ -105,7 +272,7 @@ Resources:
       MonitoringInterval: 10
       MonitoringRoleArn:
         Fn::GetAtt:
-        - okctlrepoenvRDSPostgresMonitoringRole
+        - okctlrepoenvRDSPGMonitoringRole
         - Arn
       MultiAZ: true
       PerformanceInsightsRetentionPeriod: 7
@@ -136,114 +303,11 @@ Resources:
         IpProtocol: tcp
         SourceSecurityGroupId:
           Fn::GetAtt:
-          - okctlrepoenvRotaterLambdaOutgoingSecurityGroup
+          - okctlrepoenvRDSPGOutgoingSG
           - GroupId
         ToPort: 5432
       VpcId: vpcid-w9ufe
     Type: AWS::EC2::SecurityGroup
-  okctlrepoenvRDSPostgresLambdaManagedPolicy:
-    Properties:
-      Description: okctlrepoenvRDSPostgresLambdaManagedPolicy
-      ManagedPolicyName: okctlrepoenvRDSPostgresLambdaManagedPolicy
-      PolicyDocument:
-        Statement:
-        - Action:
-          - secretsmanager:DescribeSecret
-          - secretsmanager:GetSecretValue
-          - secretsmanager:PutSecretValue
-          - secretsmanager:UpdateSecretVersionStage
-          Condition:
-            StringEquals:
-              secretsmanager:resource/AllowRotationLambdaArn:
-                Fn::GetAtt:
-                - okctlrepoenvRDSPostgresLambdaRotateFunction
-                - Arn
-          Effect: Allow
-          Resource:
-          - '*'
-        Version: 2012-10-17
-    Type: AWS::IAM::ManagedPolicy
-  okctlrepoenvRDSPostgresLambdaRotateFunction:
-    Properties:
-      Code: {}
-      Environment:
-        Variables:
-          SECRETS_MANAGER_ENDPOINT: eyAiRm46OlNlbGVjdCI6IFsgJ1x4MDAnLCAgImV5QWlSbTQ2T2tkbGRFRjBkQ0lnT2lCYklDSnZhMk4wYkhKbGNHOWxiblpUWldOeVpYUnpUV0Z1WVdkbGNsWlFRMFZ1WkhCdmFXNTBJaXdnSWtSdWMwVnVkSEpwWlhNaUlGMGdmUT09IiBdIH0=
-      FunctionName: okctlrepoenvrdspostgreslambdarotatefunction-Rotater
-      Handler: lambda_function.lambda_handler
-      Role:
-        Fn::GetAtt:
-        - okctlrepoenvRDSPostgresLambdaRotateRole
-        - Arn
-      Runtime: python3.8
-      Timeout: 30
-      VpcConfig:
-        SecurityGroupIds:
-        - Fn::GetAtt:
-          - okctlrepoenvRotaterLambdaOutgoingSecurityGroup
-          - GroupId
-        SubnetIds:
-        - dbsubnetid-123okf
-        - dbsubnetid-fjeo338
-    Type: AWS::Lambda::Function
-  okctlrepoenvRDSPostgresLambdaRotatePermission:
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName:
-        Fn::GetAtt:
-        - okctlrepoenvRDSPostgresLambdaRotateFunction
-        - Arn
-      Principal: secretsmanager.amazonaws.com
-    Type: AWS::Lambda::Permission
-  okctlrepoenvRDSPostgresLambdaRotateRole:
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action:
-          - sts:AssumeRole
-          Effect: Allow
-          Principal:
-            Service:
-            - lambda.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      PermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
-      Policies:
-      - PolicyDocument:
-          Statement:
-          - Action:
-            - secretsmanager:GetRandomPassword
-            Effect: Allow
-            Resource:
-            - '*'
-          - Action:
-            - ec2:CreateNetworkInterface
-            - ec2:DeleteNetworkInterface
-            - ec2:DescribeNetworkInterfaces
-            Effect: Allow
-            Resource:
-            - '*'
-          Version: 2012-10-17
-        PolicyName: okctlrepoenvRDSPostgresLambdaRotatePolicy
-      RoleName: okctlrepoenvRDSPostgresLambdaRotateRole
-    Type: AWS::IAM::Role
-  okctlrepoenvRDSPostgresMonitoringRole:
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action:
-          - sts:AssumeRole
-          Effect: Allow
-          Principal:
-            Service:
-            - monitoring.rds.amazonaws.com
-        Version: 2012-10-17
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
-      PermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
-      RoleName: okctlrepoenvRDSPostgresMonitoringRole
-    Type: AWS::IAM::Role
   okctlrepoenvRDSPostgresOutgoing:
     Properties:
       GroupDescription: RDS Postgres Outgoing Security Group
@@ -259,42 +323,6 @@ Resources:
         ToPort: 5432
       VpcId: vpcid-w9ufe
     Type: AWS::EC2::SecurityGroup
-  okctlrepoenvRDSPostgresParameterGroup:
-    Properties:
-      Description: Postgres 13 property group
-      Family: postgres13
-      Parameters:
-        log_duration: "on"
-        log_min_duration_statement: "1000"
-        log_statement: all
-        max_connections: "100"
-        pg_stat_statements.max: "10000"
-        pg_stat_statements.track: all
-        shared_preload_libraries: pg_stat_statements
-    Type: AWS::RDS::DBParameterGroup
-  okctlrepoenvRotaterLambdaOutgoingSecurityGroup:
-    Properties:
-      GroupDescription: Rotater lambda function outgoing Security Group
-      GroupName: okctlrepoenvRotaterLambdaOutgoingSecurityGroup
-      SecurityGroupEgress:
-      - CidrIp: 192.168.1.0/20
-        FromPort: 443
-        IpProtocol: tcp
-        ToPort: 443
-      - CidrIp: 192.168.1.0/20
-        FromPort: 5432
-        IpProtocol: tcp
-        ToPort: 5432
-      - CidrIp: 192.168.2.0/20
-        FromPort: 443
-        IpProtocol: tcp
-        ToPort: 443
-      - CidrIp: 192.168.2.0/20
-        FromPort: 5432
-        IpProtocol: tcp
-        ToPort: 5432
-      VpcId: vpcid-w9ufe
-    Type: AWS::EC2::SecurityGroup
   okctlrepoenvSecretTargetAttachment:
     Properties:
       SecretId:
@@ -303,31 +331,3 @@ Resources:
         Ref: okctlrepoenvRDSPostgres
       TargetType: AWS::RDS::DBInstance
     Type: AWS::SecretsManager::SecretTargetAttachment
-  okctlrepoenvSecretsManagerVPCEndpoint:
-    Properties:
-      SecurityGroupIds:
-      - Fn::GetAtt:
-        - okctlrepoenvSecretsManagerVPCEndpointSecurityGroup
-        - GroupId
-      ServiceName:
-        Fn::Sub: com.amazonaws.${AWS::Region}.secretsmanager
-      SubnetIds:
-      - dbsubnetid-123okf
-      - dbsubnetid-fjeo338
-      VpcEndpointType: Interface
-      VpcId: vpcid-w9ufe
-    Type: AWS::EC2::VPCEndpoint
-  okctlrepoenvSecretsManagerVPCEndpointSecurityGroup:
-    Properties:
-      GroupDescription: SecretsManager VPC Endpoint incoming
-      GroupName: okctlrepoenvSecretsManagerVPCEndpointSecurityGroup
-      SecurityGroupIngress:
-      - FromPort: 443
-        IpProtocol: tcp
-        SourceSecurityGroupId:
-          Fn::GetAtt:
-          - okctlrepoenvRotaterLambdaOutgoingSecurityGroup
-          - GroupId
-        ToPort: 443
-      VpcId: vpcid-w9ufe
-    Type: AWS::EC2::SecurityGroup

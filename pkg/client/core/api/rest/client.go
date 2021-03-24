@@ -98,9 +98,11 @@ func (c *HTTPClient) Do(method, endpoint string, body interface{}, into interfac
 		}
 	}
 
-	_, err = io.Copy(c.Progress, strings.NewReader(string(out)))
-	if err != nil {
-		return fmt.Errorf("%s: %w", pretty("failed to write progress for", method, endpoint), err)
+	if c.Debug {
+		_, err = io.Copy(c.Progress, strings.NewReader(string(out)))
+		if err != nil {
+			return fmt.Errorf("%s: %w", pretty("failed to write progress for", method, endpoint), err)
+		}
 	}
 
 	return nil

@@ -723,7 +723,7 @@ func (o *Okctl) initialise() error {
 		return err
 	}
 
-	o.restClient = rest.New(o.Debug, ioutil.Discard, o.ServerURL)
+	o.restClient = rest.New(o.Debug, o.Err, o.ServerURL)
 
 	homeDir, err := o.GetHomeDir()
 	if err != nil {

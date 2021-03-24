@@ -95,8 +95,8 @@ func NewPostgresIncoming(resourceName, vpcID string, sources ...cfn.Namer) *Secu
 	}
 }
 
-// NewSecretsManagerVPCEndpointIncoming allows incoming traffic to the VPC SM endpoint
-func NewSecretsManagerVPCEndpointIncoming(resourceName, vpcID string, source cfn.Namer) *SecurityGroup {
+// NewRDSPGSMVPCEndpointIncoming allows incoming traffic to the VPC SM endpoint
+func NewRDSPGSMVPCEndpointIncoming(resourceName, vpcID string, source cfn.Namer) *SecurityGroup {
 	return &SecurityGroup{
 		StoredName: resourceName,
 		Group: &ec2.SecurityGroup{

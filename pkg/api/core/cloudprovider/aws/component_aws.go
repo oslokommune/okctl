@@ -83,8 +83,8 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 	}
 
 	template, err = lambdafunction.PatchRotateLambda(
-		composer.NameResource("RDSPostgresLambdaRotateFunction"),
-		composer.NameResource("SecretsManagerVPCEndpoint"),
+		composer.NameResource("RDSPGRotater"),
+		composer.NameResource("RDSPGSMVPCEndpoint"),
 		template,
 	)
 	if err != nil {
@@ -113,13 +113,13 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 	}
 
 	err = r.Outputs(opts.StackName, map[string]cfn.ProcessOutputFn{
-		fmt.Sprintf("%sEndpointAddress", composer.NameResource("RDSPostgres")):     cfn.String(&p.EndpointAddress),
-		fmt.Sprintf("%sEndpointPort", composer.NameResource("RDSPostgres")):        cfn.Int(&p.EndpointPort),
-		fmt.Sprintf("%sGroupId", composer.NameResource("RDSPostgresOutgoing")):     cfn.String(&p.OutgoingSecurityGroupID),
-		composer.NameResource("RDSInstanceAdmin"):                                  cfn.String(&p.SecretsManagerAdminSecretARN),
-		composer.NameResource("RDSPostgresLambdaManagedPolicy"):                    cfn.String(&p.LambdaPolicyARN),
-		fmt.Sprintf("%sArn", composer.NameResource("RDSPostgresLambdaRotateRole")): cfn.String(&p.LambdaRoleARN),
-		composer.NameResource("RDSPostgresLambdaRotateFunction"):                   cfn.String(&p.LambdaFunctionARN),
+		fmt.Sprintf("%sEndpointAddress", composer.NameResource("RDSPostgres")): cfn.String(&p.EndpointAddress),
+		fmt.Sprintf("%sEndpointPort", composer.NameResource("RDSPostgres")):    cfn.Int(&p.EndpointPort),
+		fmt.Sprintf("%sGroupId", composer.NameResource("RDSPostgresOutgoing")): cfn.String(&p.OutgoingSecurityGroupID),
+		composer.NameResource("RDSInstanceAdmin"):                              cfn.String(&p.SecretsManagerAdminSecretARN),
+		composer.NameResource("RDSPGRotaterPolicy"):                            cfn.String(&p.LambdaPolicyARN),
+		fmt.Sprintf("%sArn", composer.NameResource("RDSPGRotaterRole")):        cfn.String(&p.LambdaRoleARN),
+		composer.NameResource("RDSPGRotater"):                                  cfn.String(&p.LambdaFunctionARN),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("collecting stack outputs: %w", err)

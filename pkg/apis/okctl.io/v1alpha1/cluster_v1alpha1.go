@@ -68,6 +68,7 @@ func (c Cluster) Validate() error {
 		validation.Field(&c.VPC),
 		validation.Field(&c.Integrations),
 		validation.Field(&c.Users),
+		validation.Field(&c.Databases),
 	)
 }
 
@@ -287,7 +288,7 @@ type ClusterDatabasesPostgres struct {
 // Validate the content of a postgres database declaration
 func (c ClusterDatabasesPostgres) Validate() error {
 	return validation.ValidateStruct(&c,
-		validation.Field(&c.Name, validation.Required),
+		validation.Field(&c.Name, validation.Required, is.Alphanumeric),
 		validation.Field(&c.User, validation.Required, validation.NotIn([]string{
 			"admin",
 		})),

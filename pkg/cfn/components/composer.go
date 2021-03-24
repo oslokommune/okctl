@@ -1385,7 +1385,7 @@ func (c *RDSPostgresComposer) AdminSecretFriendlyName() string {
 // nolint: funlen
 func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 	monitoringRole := role.New(
-		c.NameResource("RDSPostgresMonitoringRole"),
+		c.NameResource("RDSPGMonitoringRole"),
 		v1alpha1.PermissionsBoundaryARN(c.AWSAccountID),
 		[]string{amazonRDSEnhancedMonitoringRole},
 		policydocument.PolicyDocument{
@@ -1417,7 +1417,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 		"max_connections":            "100",
 	}
 	parameterGroup := dbparametergroup.New(
-		c.NameResource("RDSPostgresParameterGroup"),
+		c.NameResource("RDSPGParamGroup"),
 		params,
 	)
 
@@ -1428,19 +1428,19 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 	)
 
 	lambdaSG := securitygroup.NewLambdaFunctionOutgoing(
-		c.NameResource("RotaterLambdaOutgoingSecurityGroup"),
+		c.NameResource("RDSPGOutgoingSG"),
 		c.VpcID,
 		c.VPCDBSubnetCIDRs,
 	)
 
-	secretsManagerIncoming := securitygroup.NewSecretsManagerVPCEndpointIncoming(
-		c.NameResource("SecretsManagerVPCEndpointSecurityGroup"),
+	secretsManagerIncoming := securitygroup.NewRDSPGSMVPCEndpointIncoming(
+		c.NameResource("RDSPGSMVPCEndpointSG"),
 		c.VpcID,
 		lambdaSG,
 	)
 
 	sme := vpcendpoint.NewSecretsManager(
-		c.NameResource("SecretsManagerVPCEndpoint"),
+		c.NameResource("RDSPGSMVPCEndpoint"),
 		secretsManagerIncoming,
 		c.VpcID,
 		c.VPCDBSubnetIDs,
@@ -1479,7 +1479,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 	// Based on the following content:
 	// https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets-required-permissions.html
 	lambdaRole := role.New(
-		c.NameResource("RDSPostgresLambdaRotateRole"),
+		c.NameResource("RDSPGRotaterRole"),
 		v1alpha1.PermissionsBoundaryARN(c.AWSAccountID),
 		[]string{awsLambdaBasicExecutionRole},
 		policydocument.PolicyDocument{
@@ -1497,7 +1497,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 			},
 		},
 		map[string]interface{}{
-			c.NameResource("RDSPostgresLambdaRotatePolicy"): policydocument.PolicyDocument{
+			c.NameResource("RDSPGRotaterPolicy"): policydocument.PolicyDocument{
 				Version: policydocument.Version,
 				Statement: []policydocument.StatementEntry{
 					{
@@ -1526,7 +1526,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 	)
 
 	lambdaFunction := lambdafunction.NewRotateLambda(
-		c.NameResource("RDSPostgresLambdaRotateFunction"),
+		c.NameResource("RDSPGRotater"),
 		c.Bucket,
 		c.Key,
 		lambdaRole,
@@ -1536,9 +1536,9 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 	)
 
 	lambdaManagedPolicy := managedpolicy.New(
-		c.NameResource("RDSPostgresLambdaManagedPolicy"),
-		c.NameResource("RDSPostgresLambdaManagedPolicy"),
-		c.NameResource("RDSPostgresLambdaManagedPolicy"),
+		c.NameResource("RDSPGRotaterPolicy"),
+		c.NameResource("RDSPGRotaterPolicy"),
+		c.NameResource("RDSPGRotaterPolicy"),
 		policydocument.PolicyDocument{
 			Version: policydocument.Version,
 			Statement: []policydocument.StatementEntry{
@@ -1555,7 +1555,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 					},
 					Condition: map[policydocument.ConditionOperatorType]map[string]string{
 						policydocument.ConditionOperatorTypeStringEquals: {
-							"secretsmanager:resource/AllowRotationLambdaArn": cloudformation.GetAtt(c.NameResource("RDSPostgresLambdaRotateFunction"), "Arn"),
+							"secretsmanager:resource/AllowRotationLambdaArn": cloudformation.GetAtt(c.NameResource("RDSPGRotater"), "Arn"),
 						},
 					},
 				},
@@ -1564,7 +1564,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 	)
 
 	lambdaPermission := lambdapermission.NewRotateLambdaPermission(
-		c.NameResource("RDSPostgresLambdaRotatePermission"),
+		c.NameResource("RDSPGRotaterPermission"),
 		lambdaFunction,
 	)
 

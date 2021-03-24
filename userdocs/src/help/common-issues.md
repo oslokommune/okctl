@@ -13,7 +13,7 @@ Initialize `pass` as described in [Prerequisites](../../getting-started/prerequi
 
 ## okctl delete cluster fails
 
-In some cases, it's possible to fix the issue and run `okctl delete cluster` again. We cannot give a guide general
+In some cases, it's possible to fix the issue and run `okctl delete cluster` again. We cannot give a general
 guide for fixing this here, but ask us if you want support with this.
 
 If not, you can proceed to delete the cluster manually, as described below.

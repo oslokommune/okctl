@@ -52,7 +52,7 @@ In Kubernetes, it is possible to define a [DNS Policy](https://kubernetes.io/doc
 If you want to attach to the database from intellij or some other IDE, you can do so by setting up a port forwarder, you can do so with the following command:
 
 ```bash
-# echo "builder" > my-password-file
+# uuidgen > my-password-file
 # okctl forward postgres --environment test --name dbtest --username bob --password-file my-password-file
 ```
 

@@ -8,6 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+	"github.com/oslokommune/okctl/pkg/servicequota"
+
 	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/context"
 
@@ -130,6 +133,20 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				spinnerWriter = ioutil.Discard
 			} else {
 				spinnerWriter = o.Err
+			}
+
+			// The cloud formation stack is created atomically, and the EIP and IGW
+			// are created as part of this stack, therefore this check is sufficient
+			// for all of these checks.
+			vpcProvisioned := len(o.RepoStateWithEnv.GetVPC().VpcID) > 0
+
+			err = servicequota.CheckQuotas(
+				servicequota.NewVpcCheck(vpcProvisioned, constant.DefaultRequiredVpcs, o.CloudProvider),
+				servicequota.NewEipCheck(vpcProvisioned, constant.DefaultRequiredEpis, o.CloudProvider),
+				servicequota.NewIgwCheck(vpcProvisioned, constant.DefaultRequiredIgws, o.CloudProvider),
+			)
+			if err != nil {
+				return fmt.Errorf("checking service quotas: %w", err)
 			}
 
 			spin, err := spinner.New("synchronizing", spinnerWriter)

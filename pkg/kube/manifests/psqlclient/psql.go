@@ -132,6 +132,8 @@ func (c *PSQLClient) Attach() error {
 
 // Manifest returns the manifest
 func Manifest(name, namespace, configMapName, secretName string, labels map[string]string) *v1.Pod {
+	// Pods using security groups must contain terminationGracePeriodSeconds in their pod spec
+	// - https://docs.aws.amazon.com/eks/latest/userguide/security-groups-for-pods.html
 	var terminationGracePeriodSeconds int64 = 30
 
 	optional := false

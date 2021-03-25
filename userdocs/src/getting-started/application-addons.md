@@ -47,6 +47,17 @@ When combined these can be used to create a valid postgresql connection string.
 
 In Kubernetes, it is possible to define a [DNS Policy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy) for a pod. For a Pod to be able to connect to the Postgres database it needs permissions via an attached security group, but also need to be able to resolve the PGHOST. To resolve the PGHOST, it might be necessary to set the `dnsPolicy` of the pod to `Default`, which means that the Pod inherits the node's DNS policy. 
 
+### Forwarding traffic to the database from a local machine
+
+If you want to attach to the database from intellij or some other IDE, you can do so by setting up a port forwarder, you can do so with the following command:
+
+```bash
+# uuidgen > my-password-file
+# okctl forward postgres --environment test --name dbtest --username bob --password-file my-password-file
+```
+
+By default this will use the postgres default port of `5432`, but you can change this to what you want.
+
 ### Attaching to the database from a local machine
 
 We also provide a convenience function for connecting to the Postgres database from your local machine with minimal effort:
@@ -54,6 +65,8 @@ We also provide a convenience function for connecting to the Postgres database f
 ```bash
 $ okctl attach postgres --environment test --name dbtest
 ```
+
+The above command will drop you into a `psql` shell.
 
 ### Security Group Policy
 

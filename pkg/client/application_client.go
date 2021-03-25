@@ -69,13 +69,13 @@ func (o OkctlApplication) HasService() bool {
 func (o OkctlApplication) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.Name, validation.Required, is.Subdomain),
-		validation.Field(&o.Namespace, validation.Required, is.DNSName),
-		validation.Field(&o.Image, validation.Required),
-		validation.Field(&o.Version, validation.Required),
-		validation.Field(&o.ImagePullSecret, is.DNSName),
-		validation.Field(&o.SubDomain, is.Subdomain),
 		validation.Field(&o.Port, validation.Min(minPortNumber), validation.Max(maxPortNumber)),
 		validation.Field(&o.Replicas, validation.Min(minReplicas)),
+		validation.Field(&o.Namespace, validation.Required, is.Subdomain),
+		validation.Field(&o.Image, validation.Required, is.URL),
+		validation.Field(&o.Version, validation.Required),
+		validation.Field(&o.ImagePullSecret, is.Subdomain),
+		validation.Field(&o.SubDomain, is.Subdomain),
 	)
 }
 

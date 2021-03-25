@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/controller"
 	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
@@ -42,10 +42,6 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 		Args:  cobra.ExactArgs(requiredApplyApplicationArguments),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			err := o.Initialise()
-			if err != nil {
-				return err
-			}
-
 			scaffoldOpts.ID = &api.ID{
 				Region:       o.Declaration.Metadata.Region,
 				AWSAccountID: o.Declaration.Metadata.AccountID,

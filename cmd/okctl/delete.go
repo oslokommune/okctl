@@ -177,7 +177,7 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
-			domain, err := services.Domain.GetPrimaryHostedZone(o.Ctx, id)
+			domain, err := services.Domain.GetPrimaryHostedZone(o.Ctx)
 			if err != nil {
 				return formatErr(err)
 			}
@@ -205,7 +205,7 @@ including VPC, this is a highly destructive operation.`,
 
 			err = services.Monitoring.DeleteKubePromStack(o.Ctx, client.DeleteKubePromStackOpts{
 				ID:     id,
-				Domain: domain.HostedZone.Domain,
+				Domain: domain.Domain,
 			})
 			if err != nil {
 				return formatErr(err)

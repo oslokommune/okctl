@@ -12,6 +12,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/asdine/storm/v3/codec/json"
+
+	stormpkg "github.com/asdine/storm/v3"
+
+	"github.com/oslokommune/okctl/pkg/client/core/state/storm"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
@@ -63,6 +69,8 @@ type Okctl struct {
 	CloudProvider       v1alpha1.CloudProvider
 	BinariesProvider    binaries.Provider
 	CredentialsProvider credentials.Provider
+
+	StormDB *stormpkg.DB
 
 	activeEnv       string
 	restClient      *rest.HTTPClient
@@ -630,7 +638,7 @@ func (o *Okctl) domainService(outputDir string, spin spinner.Spinner) client.Dom
 			o.FileSystem,
 		),
 		console.NewDomainReport(o.Err, spin),
-		stateSaver.NewDomainState(o.RepoStateWithEnv),
+		storm.NewDomainState(o.StormDB),
 	)
 }
 
@@ -690,6 +698,11 @@ func (o *Okctl) initialise() error {
 	}
 
 	err = o.initialiseProviders()
+	if err != nil {
+		return err
+	}
+
+	err = o.initialiseStorm()
 	if err != nil {
 		return err
 	}
@@ -838,6 +851,20 @@ func (o *Okctl) initialise() error {
 		signal.Notify(c, syscall.SIGINT)
 		errs <- fmt.Errorf("%s", <-c)
 	}()
+
+	return nil
+}
+
+func (o *Okctl) initialiseStorm() error {
+	outputDir, err := o.GetRepoOutputDir(o.activeEnv)
+	if err != nil {
+		return err
+	}
+
+	o.StormDB, err = stormpkg.Open(path.Join(outputDir, constant.DefaultStormDBName), stormpkg.Codec(json.Codec))
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

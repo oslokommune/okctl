@@ -131,7 +131,7 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			app := fmt.Sprintf("%s-pgbouncer", opts.ApplicationName)
+			app := fmt.Sprintf("%s-pgbouncer-%s", opts.ApplicationName, o.UserState.User.Username)
 
 			labels := map[string]string{
 				"pgbouncer": app,

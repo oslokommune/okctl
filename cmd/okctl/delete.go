@@ -36,7 +36,6 @@ func buildDeleteCommand(o *okctl.Okctl) *cobra.Command {
 
 	deleteClusterCommand := buildDeleteClusterCommand(o)
 	cmd.AddCommand(deleteClusterCommand)
-	cmd.AddCommand(buildDeleteTestClusterCommand(o))
 	cmd.AddCommand(buildDeletePostgresCommand(o))
 	deleteClusterCommand.Flags().String(deleteHostedZoneFlag, "false", "Delete hosted zone")
 

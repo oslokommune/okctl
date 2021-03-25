@@ -97,9 +97,6 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateExternalSecretsPolicy:                   makeCreateExternalSecretsPolicyEndpoint(s.ManagedPolicy),
 		CreateExternalSecretsServiceAccount:           makeCreateExternalSecretsServiceAccountEndpoint(s.ServiceAccount),
 		CreateExternalSecretsHelmChart:                makeCreateExternalSecretsHelmChartEndpoint(s.Helm),
-		CreateAlbIngressControllerServiceAccount:      makeCreateAlbIngressControllerServiceAccountEndpoint(s.ServiceAccount),
-		CreateAlbIngressControllerPolicy:              makeCreateAlbIngressControllerPolicyEndpoint(s.ManagedPolicy),
-		CreateAlbIngressControllerHelmChart:           makeCreateAlbIngressControllerHelmChartEndpoint(s.Helm),
 		CreateExternalDNSPolicy:                       makeCreateExternalDNSPolicyEndpoint(s.ManagedPolicy),
 		CreateExternalDNSServiceAccount:               makeCreateExternalDNSServiceAccountEndpoint(s.ServiceAccount),
 		CreateExternalDNSKubeDeployment:               makeCreateExternalDNSKubeDeploymentEndpoint(s.Kube),
@@ -110,11 +107,9 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateArgoCD:                                  makeCreateArgoCD(s.Helm),
 		CreateExternalSecrets:                         makeCreateExternalSecretsEndpoint(s.Kube),
 		DeleteExternalSecretsPolicy:                   makeDeleteExternalSecretsPolicyEndpoint(s.ManagedPolicy),
-		DeleteAlbIngressControllerPolicy:              makeDeleteAlbIngressControllerPolicyEndpoint(s.ManagedPolicy),
 		DeleteExternalDNSPolicy:                       makeDeleteExternalDNSPolicyEndpoint(s.ManagedPolicy),
 		DeleteHostedZone:                              makeDeleteHostedZoneEndpoint(s.Domain),
 		DeleteExternalSecretsServiceAccount:           makeDeleteExternalSecretsServiceAccountEndpoint(s.ServiceAccount),
-		DeleteAlbIngressControllerServiceAccount:      makeDeleteAlbIngressControllerServiceAccountEndpoint(s.ServiceAccount),
 		DeleteExternalDNSServiceAccount:               makeDeleteExternalDNSServiceAccountEndpoint(s.ServiceAccount),
 		CreateIdentityPool:                            makeCreateIdentityPoolEndpoint(s.IdentityManager),
 		CreateIdentityPoolClient:                      makeCreateIdentityPoolClient(s.IdentityManager),
@@ -170,9 +165,6 @@ type Handlers struct {
 	CreateExternalSecretsPolicy                   http.Handler
 	CreateExternalSecretsServiceAccount           http.Handler
 	CreateExternalSecretsHelmChart                http.Handler
-	CreateAlbIngressControllerServiceAccount      http.Handler
-	CreateAlbIngressControllerPolicy              http.Handler
-	CreateAlbIngressControllerHelmChart           http.Handler
 	CreateExternalDNSPolicy                       http.Handler
 	CreateExternalDNSServiceAccount               http.Handler
 	CreateExternalDNSKubeDeployment               http.Handler
@@ -183,11 +175,9 @@ type Handlers struct {
 	CreateArgoCD                                  http.Handler
 	CreateExternalSecrets                         http.Handler
 	DeleteExternalSecretsPolicy                   http.Handler
-	DeleteAlbIngressControllerPolicy              http.Handler
 	DeleteExternalDNSPolicy                       http.Handler
 	DeleteHostedZone                              http.Handler
 	DeleteExternalSecretsServiceAccount           http.Handler
-	DeleteAlbIngressControllerServiceAccount      http.Handler
 	DeleteExternalDNSServiceAccount               http.Handler
 	CreateIdentityPool                            http.Handler
 	CreateIdentityPoolClient                      http.Handler
@@ -271,9 +261,6 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateExternalSecretsPolicy:                   newServer(endpoints.CreateExternalSecretsPolicy, decodeCreateExternalSecretsPolicyRequest),
 		CreateExternalSecretsServiceAccount:           newServer(endpoints.CreateExternalSecretsServiceAccount, decodeCreateExternalSecretsServiceAccount),
 		CreateExternalSecretsHelmChart:                newServer(endpoints.CreateExternalSecretsHelmChart, decodeCreateExternalSecretsHelmChart),
-		CreateAlbIngressControllerServiceAccount:      newServer(endpoints.CreateAlbIngressControllerServiceAccount, decodeCreateAlbIngressControllerServiceAccount),
-		CreateAlbIngressControllerPolicy:              newServer(endpoints.CreateAlbIngressControllerPolicy, decodeCreateAlbIngressControllerPolicyRequest),
-		CreateAlbIngressControllerHelmChart:           newServer(endpoints.CreateAlbIngressControllerHelmChart, decodeCreateAlbIngressControllerHelmChart),
 		CreateExternalDNSPolicy:                       newServer(endpoints.CreateExternalDNSPolicy, decodeCreateExternalDNSPolicyRequest),
 		CreateExternalDNSServiceAccount:               newServer(endpoints.CreateExternalDNSServiceAccount, decodeCreateExternalDNSServiceAccount),
 		CreateExternalDNSKubeDeployment:               newServer(endpoints.CreateExternalDNSKubeDeployment, decodeCreateExternalDNSKubeDeployment),
@@ -284,11 +271,9 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateArgoCD:                                  newServer(endpoints.CreateArgoCD, decodeCreateArgoCD),
 		CreateExternalSecrets:                         newServer(endpoints.CreateExternalSecrets, decodeCreateExternalSecrets),
 		DeleteExternalSecretsPolicy:                   newServer(endpoints.DeleteExternalSecretsPolicy, decodeIDRequest),
-		DeleteAlbIngressControllerPolicy:              newServer(endpoints.DeleteAlbIngressControllerPolicy, decodeIDRequest),
 		DeleteExternalDNSPolicy:                       newServer(endpoints.DeleteExternalDNSPolicy, decodeIDRequest),
 		DeleteHostedZone:                              newServer(endpoints.DeleteHostedZone, decodeDeleteHostedZone),
 		DeleteExternalSecretsServiceAccount:           newServer(endpoints.DeleteExternalSecretsServiceAccount, decodeIDRequest),
-		DeleteAlbIngressControllerServiceAccount:      newServer(endpoints.DeleteAlbIngressControllerServiceAccount, decodeIDRequest),
 		DeleteExternalDNSServiceAccount:               newServer(endpoints.DeleteExternalDNSServiceAccount, decodeIDRequest),
 		CreateIdentityPool:                            newServer(endpoints.CreateIdentityPool, decodeCreateIdentityPool),
 		CreateIdentityPoolClient:                      newServer(endpoints.CreateIdentityPoolClient, decodeCreateIdentityPoolClient),
@@ -356,10 +341,6 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalSecretsPolicy)
 				r.Method(http.MethodDelete, "/", handlers.DeleteExternalSecretsPolicy)
 			})
-			r.Route("/albingresscontroller", func(r chi.Router) {
-				r.Method(http.MethodPost, "/", handlers.CreateAlbIngressControllerPolicy)
-				r.Method(http.MethodDelete, "/", handlers.DeleteAlbIngressControllerPolicy)
-			})
 			r.Route("/awsloadbalancercontroller", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAWSLoadBalancerControllerPolicy)
 				r.Method(http.MethodDelete, "/", handlers.DeleteAWSLoadBalancerControllerPolicy)
@@ -384,10 +365,6 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalSecretsServiceAccount)
 				r.Method(http.MethodDelete, "/", handlers.DeleteExternalSecretsServiceAccount)
 			})
-			r.Route("/albingresscontroller", func(r chi.Router) {
-				r.Method(http.MethodPost, "/", handlers.CreateAlbIngressControllerServiceAccount)
-				r.Method(http.MethodDelete, "/", handlers.DeleteAlbIngressControllerServiceAccount)
-			})
 			r.Route("/awsloadbalancercontroller", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAWSLoadBalancerControllerServiceAccount)
 				r.Method(http.MethodDelete, "/", handlers.DeleteAWSLoadBalancerControllerServiceAccount)
@@ -408,9 +385,6 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/helm", func(r chi.Router) {
 			r.Route("/externalsecrets", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateExternalSecretsHelmChart)
-			})
-			r.Route("/albingresscontroller", func(r chi.Router) {
-				r.Method(http.MethodPost, "/", handlers.CreateAlbIngressControllerHelmChart)
 			})
 			r.Route("/awsloadbalancercontroller", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAWSLoadBalancerControllerHelmChart)
@@ -534,7 +508,6 @@ const (
 	externalSecretsTag           = "externalSecrets"
 	serviceAccountsTag           = "serviceAccounts"
 	helmTag                      = "helm"
-	albIngressControllerTag      = "albingresscontroller"
 	awsLoadBalancerControllerTag = "awsloadbalancercontroller"
 	externalDNSTag               = "externaldns"
 	kubeTag                      = "kube"
@@ -576,9 +549,6 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateExternalSecretsPolicy:                   logmd.Logging(logger, "create", managedPoliciesTag, externalSecretsTag)(endpoints.CreateExternalSecretsPolicy),
 			CreateExternalSecretsServiceAccount:           logmd.Logging(logger, "create", serviceAccountsTag, externalSecretsTag)(endpoints.CreateExternalSecretsServiceAccount),
 			CreateExternalSecretsHelmChart:                logmd.Logging(logger, "create", helmTag, externalSecretsTag)(endpoints.CreateExternalSecretsHelmChart),
-			CreateAlbIngressControllerServiceAccount:      logmd.Logging(logger, "create", serviceAccountsTag, albIngressControllerTag)(endpoints.CreateAlbIngressControllerServiceAccount),
-			CreateAlbIngressControllerPolicy:              logmd.Logging(logger, "create", managedPoliciesTag, albIngressControllerTag)(endpoints.CreateAlbIngressControllerPolicy),
-			CreateAlbIngressControllerHelmChart:           logmd.Logging(logger, "create", helmTag, albIngressControllerTag)(endpoints.CreateAlbIngressControllerHelmChart),
 			CreateExternalDNSPolicy:                       logmd.Logging(logger, "create", managedPoliciesTag, externalDNSTag)(endpoints.CreateExternalDNSPolicy),
 			CreateExternalDNSServiceAccount:               logmd.Logging(logger, "create", serviceAccountsTag, externalDNSTag)(endpoints.CreateExternalDNSServiceAccount),
 			CreateExternalDNSKubeDeployment:               logmd.Logging(logger, "create", kubeTag, externalDNSTag)(endpoints.CreateExternalDNSKubeDeployment),
@@ -589,11 +559,9 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateArgoCD:                                  logmd.Logging(logger, "create", helmTag, argocdTag)(endpoints.CreateArgoCD),
 			CreateExternalSecrets:                         logmd.Logging(logger, "create", kubeTag, externalSecretsTag)(endpoints.CreateExternalSecrets),
 			DeleteExternalSecretsPolicy:                   logmd.Logging(logger, "delete", managedPoliciesTag, externalSecretsTag)(endpoints.DeleteExternalSecretsPolicy),
-			DeleteAlbIngressControllerPolicy:              logmd.Logging(logger, "delete", managedPoliciesTag, albIngressControllerTag)(endpoints.DeleteAlbIngressControllerPolicy),
 			DeleteExternalDNSPolicy:                       logmd.Logging(logger, "delete", managedPoliciesTag, externalDNSTag)(endpoints.DeleteExternalDNSPolicy),
 			DeleteHostedZone:                              logmd.Logging(logger, "delete", domainTag, hostedZoneTag)(endpoints.DeleteHostedZone),
 			DeleteExternalSecretsServiceAccount:           logmd.Logging(logger, "delete", serviceAccountsTag, externalSecretsTag)(endpoints.DeleteExternalSecretsServiceAccount),
-			DeleteAlbIngressControllerServiceAccount:      logmd.Logging(logger, "delete", serviceAccountsTag, albIngressControllerTag)(endpoints.DeleteAlbIngressControllerServiceAccount),
 			DeleteExternalDNSServiceAccount:               logmd.Logging(logger, "delete", serviceAccountsTag, externalDNSTag)(endpoints.DeleteExternalDNSServiceAccount),
 			CreateIdentityPool:                            logmd.Logging(logger, "create", identityManagerTag, identityPoolTag)(endpoints.CreateIdentityPool),
 			CreateIdentityPoolClient:                      logmd.Logging(logger, "create", identityManagerTag, identityPoolTag, identityPoolClientTag)(endpoints.CreateIdentityPoolClient),

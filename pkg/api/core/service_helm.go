@@ -110,20 +110,6 @@ func (s *helmService) CreateArgoCD(_ context.Context, opts api.CreateArgoCDOpts)
 	return h, nil
 }
 
-func (s *helmService) CreateAlbIngressControllerHelmChart(_ context.Context, opts api.CreateAlbIngressControllerHelmChartOpts) (*api.Helm, error) {
-	err := opts.Validate()
-	if err != nil {
-		return nil, errors.E(err, "failed to validate input options")
-	}
-
-	h, err := s.run.CreateAlbIngressControllerHelmChart(opts)
-	if err != nil {
-		return nil, errors.E(err, "failed to create alb ingress controller helm chart")
-	}
-
-	return h, nil
-}
-
 func (s *helmService) CreateAWSLoadBalancerControllerHelmChart(_ context.Context, opts api.CreateAWSLoadBalancerControllerHelmChartOpts) (*api.Helm, error) {
 	err := opts.Validate()
 	if err != nil {

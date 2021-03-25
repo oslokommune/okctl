@@ -52,16 +52,6 @@ func CreateClusterStateRefresher(fs *afero.Afero, outputDir string, cidrFn Strin
 	}
 }
 
-// CreateALBIngressControllerRefresher creates a function that gathers required runtime data for a ALB Ingress
-// Controller resource
-func CreateALBIngressControllerRefresher(fs *afero.Afero, outputDir string) resourcetree.StateRefreshFn {
-	return func(node *resourcetree.ResourceNode) {
-		vpc := getVpcState(fs, outputDir)
-
-		node.ResourceState = reconciler.AlbIngressControllerResourceState{VpcID: vpc.VpcID}
-	}
-}
-
 // CreateAWSLoadBalancerControllerRefresher creates a function that gathers required runtime data for AWS
 // load balancer controller
 func CreateAWSLoadBalancerControllerRefresher(fs *afero.Afero, outputDir string) resourcetree.StateRefreshFn {

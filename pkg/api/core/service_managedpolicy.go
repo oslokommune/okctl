@@ -109,20 +109,6 @@ func (m *managedPolicyService) DeleteExternalSecretsPolicy(_ context.Context, id
 	return nil
 }
 
-func (m *managedPolicyService) DeleteAlbIngressControllerPolicy(_ context.Context, id api.ID) error {
-	err := id.Validate()
-	if err != nil {
-		return errors.E(err, "failed to validate id", errors.Invalid)
-	}
-
-	err = m.provider.DeleteAlbIngressControllerPolicy(id)
-	if err != nil {
-		return errors.E(err, "failed to delete alb ingress controller policy", errors.Internal)
-	}
-
-	return nil
-}
-
 func (m *managedPolicyService) DeleteAWSLoadBalancerControllerPolicy(_ context.Context, id api.ID) error {
 	err := id.Validate()
 	if err != nil {
@@ -160,20 +146,6 @@ func (m *managedPolicyService) CreateExternalDNSPolicy(_ context.Context, opts a
 	got, err := m.provider.CreateExternalDNSPolicy(opts)
 	if err != nil {
 		return nil, errors.E(err, "failed to create external dns policy")
-	}
-
-	return got, nil
-}
-
-func (m *managedPolicyService) CreateAlbIngressControllerPolicy(_ context.Context, opts api.CreateAlbIngressControllerPolicyOpts) (*api.ManagedPolicy, error) {
-	err := opts.Validate()
-	if err != nil {
-		return nil, errors.E(err, "failed to validate alb ingress controller opts")
-	}
-
-	got, err := m.provider.CreateAlbIngressControllerPolicy(opts)
-	if err != nil {
-		return nil, errors.E(err, "failed to create alb ingress controller policy")
 	}
 
 	return got, nil

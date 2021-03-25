@@ -179,11 +179,6 @@ func (c ClusterGithub) Validate() error {
 
 // ClusterIntegrations ...
 type ClusterIntegrations struct {
-	// ALBIngressController if set to true will install the AWS ALB Ingress Controller
-	// into the cluster
-	// +optional
-	ALBIngressController bool `json:"albIngressController,omitempty"`
-
 	// AWSLoadBalancerController if set to true will install the AWS load balancer controller
 	// +optional
 	AWSLoadBalancerController bool `json:"awsLoadBalancerController"`
@@ -326,7 +321,6 @@ func NewDefaultCluster(name, env, org, repo, accountID string) Cluster {
 			HighAvailability: true,
 		},
 		Integrations: &ClusterIntegrations{
-			ALBIngressController:      false,
 			AWSLoadBalancerController: true,
 			ExternalDNS:               true,
 			ExternalSecrets:           true,

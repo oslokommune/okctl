@@ -145,7 +145,6 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			outputDir, _ := o.GetRepoOutputDir(opts.Declaration.Metadata.Environment)
 
 			reconciliationManager := reconciler.NewCompositeReconciler(spin,
-				reconciler.NewALBIngressReconciler(services.ALBIngressController),
 				reconciler.NewArgocdReconciler(services.ArgoCD, services.Github),
 				reconciler.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService),
 				reconciler.NewAutoscalerReconciler(services.Autoscaler),

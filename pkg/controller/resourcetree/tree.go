@@ -37,8 +37,6 @@ const (
 	ResourceNodeTypePromtail
 	// ResourceNodeTypeTempo represents a Tempo deployment
 	ResourceNodeTypeTempo
-	// ResourceNodeTypeALBIngress represents an ALB Ingress resource
-	ResourceNodeTypeALBIngress
 	// ResourceNodeTypeAWSLoadBalancerController represents an AWS load balancer controller resource
 	ResourceNodeTypeAWSLoadBalancerController
 	// ResourceNodeTypeExternalDNS represents an External DNS resource
@@ -83,8 +81,6 @@ func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
 		return "Tempo"
 	case ResourceNodeTypeBlockstorage:
 		return "Blockstorage"
-	case ResourceNodeTypeALBIngress:
-		return "ALB Ingress Controller"
 	case ResourceNodeTypeAWSLoadBalancerController:
 		return "AWS Load Balancer Controller"
 	case ResourceNodeTypeExternalDNS:

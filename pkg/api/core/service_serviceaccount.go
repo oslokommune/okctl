@@ -185,30 +185,6 @@ func (c *serviceAccount) DeleteExternalSecretsServiceAccount(_ context.Context, 
 	return nil
 }
 
-func (c *serviceAccount) DeleteAlbIngressControllerServiceAccount(_ context.Context, id api.ID) error {
-	err := id.Validate()
-	if err != nil {
-		return errInvalidInputs(err)
-	}
-
-	config, err := clusterconfig.NewAlbIngressControllerServiceAccount(
-		id.ClusterName,
-		id.Region,
-		"n/a",
-		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
-	)
-	if err != nil {
-		return errBuildServiceAccount(err)
-	}
-
-	err = c.run.DeleteServiceAccount(config)
-	if err != nil {
-		return errDeleteServiceAccount(err)
-	}
-
-	return nil
-}
-
 func (c *serviceAccount) DeleteExternalDNSServiceAccount(_ context.Context, id api.ID) error {
 	err := id.Validate()
 	if err != nil {
@@ -240,30 +216,6 @@ func (c *serviceAccount) CreateExternalDNSServiceAccount(_ context.Context, opts
 	}
 
 	config, err := clusterconfig.NewExternalDNSServiceAccount(
-		opts.ID.ClusterName,
-		opts.ID.Region,
-		opts.PolicyArn,
-		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
-	)
-	if err != nil {
-		return nil, errBuildServiceAccount(err)
-	}
-
-	account, err := c.createServiceAccount(opts.CreateServiceAccountBaseOpts, config)
-	if err != nil {
-		return nil, errCreateServiceAccount(err)
-	}
-
-	return account, nil
-}
-
-func (c *serviceAccount) CreateAlbIngressControllerServiceAccount(_ context.Context, opts api.CreateAlbIngressControllerServiceAccountOpts) (*api.ServiceAccount, error) {
-	err := opts.Validate()
-	if err != nil {
-		return nil, errInvalidInputs(err)
-	}
-
-	config, err := clusterconfig.NewAlbIngressControllerServiceAccount(
 		opts.ID.ClusterName,
 		opts.ID.Region,
 		opts.PolicyArn,

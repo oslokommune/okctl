@@ -27,18 +27,6 @@ func (o CreateExternalSecretsPolicyOpts) Validate() error {
 	)
 }
 
-// CreateAlbIngressControllerPolicyOpts contains the input
-type CreateAlbIngressControllerPolicyOpts struct {
-	ID ID
-}
-
-// Validate the input
-func (o CreateAlbIngressControllerPolicyOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-	)
-}
-
 // CreateAWSLoadBalancerControllerPolicyOpts contains the input
 type CreateAWSLoadBalancerControllerPolicyOpts struct {
 	ID ID
@@ -125,8 +113,6 @@ func (o DeletePolicyOpts) Validate() error {
 type ManagedPolicyService interface {
 	CreateExternalSecretsPolicy(ctx context.Context, opts CreateExternalSecretsPolicyOpts) (*ManagedPolicy, error)
 	DeleteExternalSecretsPolicy(ctx context.Context, id ID) error
-	CreateAlbIngressControllerPolicy(ctx context.Context, opts CreateAlbIngressControllerPolicyOpts) (*ManagedPolicy, error)
-	DeleteAlbIngressControllerPolicy(ctx context.Context, id ID) error
 	CreateAWSLoadBalancerControllerPolicy(ctx context.Context, opts CreateAWSLoadBalancerControllerPolicyOpts) (*ManagedPolicy, error)
 	DeleteAWSLoadBalancerControllerPolicy(ctx context.Context, id ID) error
 	CreateExternalDNSPolicy(ctx context.Context, opts CreateExternalDNSPolicyOpts) (*ManagedPolicy, error)
@@ -143,8 +129,6 @@ type ManagedPolicyService interface {
 type ManagedPolicyCloudProvider interface {
 	CreateExternalSecretsPolicy(opts CreateExternalSecretsPolicyOpts) (*ManagedPolicy, error)
 	DeleteExternalSecretsPolicy(id ID) error
-	CreateAlbIngressControllerPolicy(opts CreateAlbIngressControllerPolicyOpts) (*ManagedPolicy, error)
-	DeleteAlbIngressControllerPolicy(id ID) error
 	CreateAWSLoadBalancerControllerPolicy(opts CreateAWSLoadBalancerControllerPolicyOpts) (*ManagedPolicy, error)
 	DeleteAWSLoadBalancerControllerPolicy(id ID) error
 	CreateExternalDNSPolicy(opts CreateExternalDNSPolicyOpts) (*ManagedPolicy, error)

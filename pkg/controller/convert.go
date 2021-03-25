@@ -5,14 +5,12 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
-	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 	"github.com/spf13/afero"
 )
 
 // ExistingResources contains information about what services already exists in a cluster
 type ExistingResources struct {
-	hasALBIngressController               bool
 	hasAWSLoadBalancerController          bool
 	hasCluster                            bool
 	hasExternalDNS                        bool
@@ -48,7 +46,6 @@ func IdentifyResourcePresence(fs *afero.Afero, outputDir string, hzFetcher Hoste
 		hasPromtail:                           directoryTester(fs, outputDir, path.Join(constant.DefaultMonitoringBaseDir, constant.DefaultPromtailBaseDir)),
 		hasTempo:                              directoryTester(fs, outputDir, path.Join(constant.DefaultMonitoringBaseDir, constant.DefaultTempoBaseDir)),
 		hasBlockstorage:                       directoryTester(fs, outputDir, constant.DefaultBlockstorageBaseDir),
-		hasALBIngressController:               directoryTester(fs, outputDir, constant.DefaultAlbIngressControllerBaseDir),
 		hasAWSLoadBalancerController:          directoryTester(fs, outputDir, constant.DefaultAWSLoadBalancerControllerBaseDir),
 		hasExternalDNS:                        directoryTester(fs, outputDir, constant.DefaultExternalDNSBaseDir),
 		hasIdentityManager:                    directoryTester(fs, outputDir, constant.DefaultIdentityPoolBaseDir),
@@ -77,7 +74,6 @@ func CreateResourceDependencyTree() (root *resourcetree.ResourceNode) {
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalSecrets)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeAutoscaler)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeBlockstorage)
-	createNode(clusterNode, resourcetree.ResourceNodeTypeALBIngress)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeAWSLoadBalancerController)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalDNS)
 	createNode(clusterNode, resourcetree.ResourceNodeTypePostgres)
@@ -121,6 +117,3 @@ func directoryTester(fs *afero.Afero, outputDir string, target string) bool {
 
 	return exists
 }
-
-// GithubGetter knows how to get the current state Github
-type GithubGetter func() state.Github

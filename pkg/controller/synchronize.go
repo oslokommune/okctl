@@ -105,8 +105,6 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 		case resourcetree.ResourceNodeTypeCluster:
 			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
 		// Integrations
-		case resourcetree.ResourceNodeTypeALBIngress:
-			desiredTreeNode.State = boolToState(declaration.Integrations.ALBIngressController)
 		case resourcetree.ResourceNodeTypeAutoscaler:
 			desiredTreeNode.State = boolToState(declaration.Integrations.Autoscaler)
 		case resourcetree.ResourceNodeTypeAWSLoadBalancerController:
@@ -155,8 +153,6 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 		case resourcetree.ResourceNodeTypeCluster:
 			receiver.State = boolToState(existingResources.hasCluster)
 		// Integrations
-		case resourcetree.ResourceNodeTypeALBIngress:
-			receiver.State = boolToState(existingResources.hasALBIngressController)
 		case resourcetree.ResourceNodeTypeAutoscaler:
 			receiver.State = boolToState(existingResources.hasAutoscaler)
 		case resourcetree.ResourceNodeTypeAWSLoadBalancerController:
@@ -201,11 +197,6 @@ func setRefreshers(desiredTree *resourcetree.ResourceNode, opts *SynchronizeOpts
 		opts.Fs,
 		opts.OutputDir,
 		opts.CIDRGetter,
-	))
-
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeALBIngress, CreateALBIngressControllerRefresher(
-		opts.Fs,
-		opts.OutputDir,
 	))
 
 	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeAWSLoadBalancerController, CreateAWSLoadBalancerControllerRefresher(

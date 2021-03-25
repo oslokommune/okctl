@@ -19,17 +19,6 @@ func decodeCreateExternalSecretsServiceAccount(_ context.Context, r *http.Reques
 	return opts, nil
 }
 
-func decodeCreateAlbIngressControllerServiceAccount(_ context.Context, r *http.Request) (interface{}, error) {
-	var opts api.CreateAlbIngressControllerServiceAccountOpts
-
-	err := json.NewDecoder(r.Body).Decode(&opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return opts, nil
-}
-
 func decodeCreateAWSLoadBalancerControllerServiceAccount(_ context.Context, r *http.Request) (interface{}, error) {
 	var opts api.CreateAWSLoadBalancerControllerServiceAccountOpts
 

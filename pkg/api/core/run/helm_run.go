@@ -21,7 +21,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/helm"
-	"github.com/oslokommune/okctl/pkg/helm/charts/awsalbingresscontroller"
 	"github.com/oslokommune/okctl/pkg/helm/charts/externalsecrets"
 )
 
@@ -100,12 +99,6 @@ func (r *helmRun) CreateArgoCD(opts api.CreateArgoCDOpts) (*api.Helm, error) {
 		PrivateKeySecretName: opts.PrivateKeyName,
 		PrivateKeySecretKey:  opts.PrivateKeyKey,
 	}))
-
-	return r.createHelmChart(opts.ID, chart)
-}
-
-func (r *helmRun) CreateAlbIngressControllerHelmChart(opts api.CreateAlbIngressControllerHelmChartOpts) (*api.Helm, error) {
-	chart := awsalbingresscontroller.New(awsalbingresscontroller.NewDefaultValues(opts.ID.ClusterName, opts.VpcID, opts.ID.Region))
 
 	return r.createHelmChart(opts.ID, chart)
 }

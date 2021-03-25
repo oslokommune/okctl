@@ -10,8 +10,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/spinner"
 
-	"github.com/oslokommune/okctl/pkg/domain"
-
 	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/ask"
@@ -54,8 +52,8 @@ func (s *domainService) GetPrimaryHostedZone(_ context.Context, id api.ID) (*cli
 	return nil, nil
 }
 
-// DeletePrimaryHostedZone and all associed records
-func (s *domainService) DeletePrimaryHostedZone(ctx context.Context, opts client.DeletePrimaryHostedZoneOpts) error {
+// DeletePrimaryHostedZone and all associated records
+func (s *domainService) DeletePrimaryHostedZone(_ context.Context, opts client.DeletePrimaryHostedZoneOpts) error {
 	err := s.spinner.Start("domain")
 	if err != nil {
 		return err
@@ -115,61 +113,6 @@ func (s *domainService) DeletePrimaryHostedZone(ctx context.Context, opts client
 }
 
 func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.CreatePrimaryHostedZoneOpts) (*client.HostedZone, error) {
-	err := s.spinner.Start("domain")
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	for _, z := range s.state.GetHostedZones() {
-		if z.Primary {
-			return s.store.GetHostedZone(z.Domain)
-		}
-	}
-
-	// Shouldn't be doing this in here I think
-	d, err := s.ask.Domain(domain.Default(opts.ID.Repository, opts.ID.Environment))
-	if err != nil {
-		return nil, err
-	}
-
-	opts.Domain = d.Domain
-	opts.FQDN = d.FQDN
-
-	zone, err := s.api.CreatePrimaryHostedZone(opts)
-	if err != nil {
-		return nil, err
-	}
-
-	delegated, err := s.ask.ConfirmPostingNameServers(s.out, zone.HostedZone.Domain, zone.HostedZone.NameServers)
-	if err != nil {
-		return nil, err
-	}
-
-	zone.IsDelegated = delegated
-
-	r1, err := s.store.SaveHostedZone(zone)
-	if err != nil {
-		return nil, err
-	}
-
-	r2, err := s.state.SaveHostedZone(zone)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.report.ReportCreatePrimaryHostedZone(zone, []*store.Report{r1, r2})
-	if err != nil {
-		return nil, err
-	}
-
-	return zone, nil
-}
-
-func (s *domainService) CreatePrimaryHostedZoneWithoutUserinput(_ context.Context, opts client.CreatePrimaryHostedZoneOpts) (*client.HostedZone, error) {
 	err := s.spinner.Start("domain")
 	if err != nil {
 		return nil, err

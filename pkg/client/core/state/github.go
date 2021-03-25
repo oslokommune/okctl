@@ -13,7 +13,7 @@ type githubState struct {
 	state state.Githuber
 }
 
-func (s *githubState) GetGithubInfrastructureRepository(_ api.ID) state.GithubRepository {
+func (s *githubState) GetRepositoryDeployKey(_ api.ID) state.GithubRepository {
 	github := s.state.GetGithub()
 
 	for _, repo := range github.Repositories {
@@ -27,17 +27,7 @@ func (s *githubState) GetGithubInfrastructureRepository(_ api.ID) state.GithubRe
 	return state.GithubRepository{}
 }
 
-func (s *githubState) GetGithubOauthApp(appName string, _ api.ID) state.GithubOauthApp {
-	github := s.state.GetGithub()
-
-	if app, ok := github.OauthApp[appName]; ok {
-		return app
-	}
-
-	return state.GithubOauthApp{}
-}
-
-func (s *githubState) SaveGithubInfrastructureRepository(r *client.GithubRepository) (*store.Report, error) {
+func (s *githubState) SaveRepositoryDeployKey(r *client.GithubRepository) (*store.Report, error) {
 	github := s.state.GetGithub()
 
 	for _, repo := range github.Repositories {
@@ -85,44 +75,6 @@ func (s *githubState) SaveGithubInfrastructureRepository(r *client.GithubReposit
 				r.DeployKey.Title,
 				r.ID.ClusterName,
 			),
-			Type: "StateUpdate[add]",
-		},
-	}, report.Actions...)
-
-	return report, nil
-}
-
-func (s *githubState) SaveGithubOauthApp(app *client.GithubOauthApp) (*store.Report, error) {
-	github := s.state.GetGithub()
-
-	local := state.GithubOauthApp{
-		Team:        app.Team.Name,
-		Name:        app.Name,
-		SiteURL:     app.SiteURL,
-		CallbackURL: app.CallbackURL,
-		ClientID:    app.ClientID,
-		ClientSecret: state.ClientSecret{
-			Name:    app.ClientSecret.Name,
-			Path:    app.ClientSecret.Path,
-			Version: app.ClientSecret.Version,
-		},
-	}
-
-	if github.OauthApp == nil {
-		github.OauthApp = map[string]state.GithubOauthApp{}
-	}
-
-	github.OauthApp[app.Name] = local
-
-	report, err := s.state.SaveGithub(github)
-	if err != nil {
-		return nil, err
-	}
-
-	report.Actions = append([]store.Action{
-		{
-			Name: "GithubOauthApp",
-			Path: fmt.Sprintf("name=%s, clusterName=%s", app.Name, app.ID.ClusterName),
 			Type: "StateUpdate[add]",
 		},
 	}, report.Actions...)

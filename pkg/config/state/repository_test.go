@@ -87,18 +87,6 @@ func TestData(t *testing.T) {
 						},
 						Github: state.Github{
 							Organisation: "oslokommune",
-							OauthApp: map[string]state.GithubOauthApp{
-								"okctl-kjøremlijø-pro": {
-									Team:     "kjøremiljø",
-									Name:     "okctl-kjøremiljø-pro",
-									ClientID: "asdfg123456",
-									ClientSecret: state.ClientSecret{
-										Name:    "argocd-client-secret",
-										Path:    "/something/argocd",
-										Version: 1,
-									},
-								},
-							},
 							Repositories: map[string]state.GithubRepository{
 								"oslokommune/okctl-iac": {
 									Name:   "okctl-iac",

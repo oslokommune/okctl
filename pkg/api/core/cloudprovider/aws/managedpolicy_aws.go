@@ -66,10 +66,6 @@ func (m *managedPolicy) DeleteExternalSecretsPolicy(id api.ID) error {
 	return m.deletePolicy(cfn.NewStackNamer().ExternalSecretsPolicy(id.Repository, id.Environment))
 }
 
-func (m *managedPolicy) DeleteAlbIngressControllerPolicy(id api.ID) error {
-	return m.deletePolicy(cfn.NewStackNamer().AlbIngressControllerPolicy(id.Repository, id.Environment))
-}
-
 func (m *managedPolicy) DeleteAWSLoadBalancerControllerPolicy(id api.ID) error {
 	return m.deletePolicy(cfn.NewStackNamer().AWSLoadBalancerControllerPolicy(id.Repository, id.Environment))
 }
@@ -120,17 +116,6 @@ func (m *managedPolicy) CreateExternalDNSPolicy(opts api.CreateExternalDNSPolicy
 		ExternalDNSPolicy(opts.ID.Repository, opts.ID.Environment)
 
 	return m.createPolicy(stackName, opts.ID, "ExternalDNSPolicy", b)
-}
-
-func (m *managedPolicy) CreateAlbIngressControllerPolicy(opts api.CreateAlbIngressControllerPolicyOpts) (*api.ManagedPolicy, error) {
-	b := cfn.New(
-		components.NewAlbIngressControllerPolicyComposer(opts.ID.Repository, opts.ID.Environment),
-	)
-
-	stackName := cfn.NewStackNamer().
-		AlbIngressControllerPolicy(opts.ID.Repository, opts.ID.Environment)
-
-	return m.createPolicy(stackName, opts.ID, "AlbIngressControllerPolicy", b)
 }
 
 func (m *managedPolicy) CreateAWSLoadBalancerControllerPolicy(opts api.CreateAWSLoadBalancerControllerPolicyOpts) (*api.ManagedPolicy, error) {

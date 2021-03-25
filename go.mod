@@ -11,7 +11,6 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.2.9
 	github.com/Microsoft/go-winio v0.4.16 // indirect
 	github.com/Microsoft/hcsshim v0.8.14 // indirect
-	github.com/Netflix/go-expect v0.0.0-20180615182759-c93bf25de8e8
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d // indirect
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
@@ -53,7 +52,6 @@ require (
 	github.com/gosimple/slug v1.9.0
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
 	github.com/hako/durafmt v0.0.0-20200710122514-c0fb7b4da026
-	github.com/hinshun/vt10x v0.0.0-20180616224451-1954e6464174
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/jarcoal/httpmock v1.0.8
 	github.com/jmoiron/sqlx v1.2.1-0.20190826204134-d7d95172beb5 // indirect

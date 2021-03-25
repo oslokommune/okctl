@@ -185,7 +185,6 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 	}
 
 	return &clientCore.Services{
-		ALBIngressController:             o.albIngressService(outputDir, spin),
 		AWSLoadBalancerControllerService: o.awsLoadBalancerControllerService(outputDir, spin),
 		ArgoCD:                           o.argocdService(outputDir, spin),
 		ApplicationService:               o.applicationService(outputDir, applicationsOutputDir, spin),
@@ -569,33 +568,6 @@ func (o *Okctl) externalSecretsService(outputDir string, spin spinner.Spinner) c
 			o.FileSystem,
 		),
 		console.NewExternalSecretsReport(o.Err, spin),
-	)
-}
-
-func (o *Okctl) albIngressService(outputDir string, spin spinner.Spinner) client.ALBIngressControllerService {
-	return clientCore.NewALBIngressControllerService(
-		spin,
-		rest.NewALBIngressControllerAPI(o.restClient),
-		clientFilesystem.NewALBIngressControllerStore(
-			clientFilesystem.Paths{
-				OutputFile:         constant.DefaultPolicyOutputFile,
-				CloudFormationFile: constant.DefaultPolicyCloudFormationTemplateFile,
-				BaseDir:            path.Join(outputDir, constant.DefaultAlbIngressControllerBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile: constant.DefaultServiceAccountOutputsFile,
-				ConfigFile: constant.DefaultServiceAccountConfigFile,
-				BaseDir:    path.Join(outputDir, constant.DefaultAlbIngressControllerBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile:  constant.DefaultHelmOutputsFile,
-				ReleaseFile: constant.DefaultHelmReleaseFile,
-				ChartFile:   constant.DefaultHelmChartFile,
-				BaseDir:     path.Join(outputDir, constant.DefaultAlbIngressControllerBaseDir),
-			},
-			o.FileSystem,
-		),
-		console.NewAlbIngressControllerReport(o.Err, spin),
 	)
 }
 

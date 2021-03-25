@@ -4,7 +4,6 @@ import "github.com/oslokommune/okctl/pkg/client"
 
 // Services contains all client-side services
 type Services struct {
-	ALBIngressController             client.ALBIngressControllerService
 	AWSLoadBalancerControllerService client.AWSLoadBalancerControllerService
 	ArgoCD                           client.ArgoCDService
 	ApplicationService               client.ApplicationService

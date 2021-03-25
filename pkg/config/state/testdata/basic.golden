@@ -37,17 +37,6 @@ clusters:
                 arn: arn:::cert/something
         github:
             organisation: oslokommune
-            oauthapp:
-                okctl-kjøremlijø-pro:
-                    team: kjøremiljø
-                    name: okctl-kjøremiljø-pro
-                    siteurl: ""
-                    callbackurl: ""
-                    clientid: asdfg123456
-                    clientsecret:
-                        name: argocd-client-secret
-                        path: /something/argocd
-                        version: 1
             repositories:
                 oslokommune/okctl-iac:
                     name: okctl-iac

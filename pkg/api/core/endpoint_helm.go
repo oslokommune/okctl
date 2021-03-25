@@ -13,12 +13,6 @@ func makeCreateExternalSecretsHelmChartEndpoint(s api.HelmService) endpoint.Endp
 	}
 }
 
-func makeCreateAlbIngressControllerHelmChartEndpoint(s api.HelmService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateAlbIngressControllerHelmChart(ctx, request.(api.CreateAlbIngressControllerHelmChartOpts))
-	}
-}
-
 func makeCreateAWSLoadBalancerControllerHelmChartEndpoint(s api.HelmService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return s.CreateAWSLoadBalancerControllerHelmChart(ctx, request.(api.CreateAWSLoadBalancerControllerHelmChartOpts))

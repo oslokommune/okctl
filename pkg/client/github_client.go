@@ -48,37 +48,6 @@ func NewGithubRepository(clusterID api.ID, host, organization, name string) *Git
 	}
 }
 
-// ReadyGithubInfrastructureRepositoryOpts contains required inputs
-type ReadyGithubInfrastructureRepositoryOpts struct {
-	ID           api.ID
-	Organisation string
-	Repository   string // +optional
-}
-
-// Validate the inputs
-func (o ReadyGithubInfrastructureRepositoryOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-		validation.Field(&o.Organisation, validation.Required),
-	)
-}
-
-// SelectedGithubRepository contains the selected github repo
-type SelectedGithubRepository struct {
-	ID           api.ID
-	Organisation string
-	Repository   string
-	FullName     string
-	GitURL       string
-}
-
-// SelectGithubInfrastructureRepositoryOpts contains required inputs
-type SelectGithubInfrastructureRepositoryOpts struct {
-	ID           api.ID
-	Organisation string
-	Repository   string
-}
-
 // GithubSecret represents an SSM secret parameter
 type GithubSecret struct {
 	Name    string
@@ -92,72 +61,6 @@ func (s GithubSecret) Validate() error {
 		validation.Field(&s.Name, validation.Required),
 		validation.Field(&s.Path, validation.Required),
 	)
-}
-
-// GithubOauthApp is a github oauth app
-type GithubOauthApp struct {
-	ID           api.ID
-	Organisation string
-	Name         string
-	SiteURL      string
-	CallbackURL  string
-	ClientID     string
-	ClientSecret *GithubSecret
-	Team         *GithubTeam
-}
-
-// Validate the data
-func (a GithubOauthApp) Validate() error {
-	return validation.ValidateStruct(&a,
-		validation.Field(&a.Organisation, validation.Required),
-		validation.Field(&a.Name, validation.Required),
-		validation.Field(&a.SiteURL, validation.Required),
-		validation.Field(&a.CallbackURL, validation.Required),
-		validation.Field(&a.ClientID, validation.Required),
-		validation.Field(&a.ClientSecret, validation.Required),
-		validation.Field(&a.Team, validation.Required),
-	)
-}
-
-// CreateGithubOauthAppOpts contains required inputs
-type CreateGithubOauthAppOpts struct {
-	ID           api.ID
-	Organisation string
-	Team         *GithubTeam // +optional
-	Name         string
-	SiteURL      string
-	CallbackURL  string
-}
-
-// Validate the inputs
-func (o CreateGithubOauthAppOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-		validation.Field(&o.Organisation, validation.Required),
-		validation.Field(&o.Name, validation.Required),
-		validation.Field(&o.SiteURL, validation.Required),
-		validation.Field(&o.CallbackURL, validation.Required),
-	)
-}
-
-// GithubTeam is a github team
-type GithubTeam struct {
-	ID           api.ID
-	Organisation string
-	Name         string
-}
-
-// Validate the data
-func (t GithubTeam) Validate() error {
-	return validation.ValidateStruct(&t,
-		validation.Field(&t.Name, validation.Required),
-	)
-}
-
-// SelectGithubTeam contains required inputs
-type SelectGithubTeam struct {
-	ID           api.ID
-	Organisation string
 }
 
 // GithubDeployKey is a github deploy key
@@ -183,8 +86,8 @@ func (k GithubDeployKey) Validate() error {
 	)
 }
 
-// CreateGithubDeployKey contains required inputs
-type CreateGithubDeployKey struct {
+// CreateGithubDeployKeyOpts contains required inputs
+type CreateGithubDeployKeyOpts struct {
 	ID           api.ID
 	Organisation string
 	Repository   string
@@ -193,31 +96,21 @@ type CreateGithubDeployKey struct {
 
 // GithubService is a business logic implementation
 type GithubService interface {
-	CreateDeployKey(ctx context.Context, repository *GithubRepository) (key *GithubDeployKey, err error)
-	ReadyGithubInfrastructureRepository(ctx context.Context, opts ReadyGithubInfrastructureRepositoryOpts) (*GithubRepository, error)
-	CreateGithubOauthApp(ctx context.Context, opts CreateGithubOauthAppOpts) (*GithubOauthApp, error)
+	CreateRepositoryDeployKey(ctx context.Context, repository *GithubRepository) (*GithubDeployKey, error)
 }
 
 // GithubAPI invokes the Github API
 type GithubAPI interface {
-	SelectGithubInfrastructureRepository(opts SelectGithubInfrastructureRepositoryOpts) (*SelectedGithubRepository, error)
-	GetGithubInfrastructureRepository(opts SelectGithubInfrastructureRepositoryOpts) (*SelectedGithubRepository, error)
-	CreateGithubDeployKey(opts CreateGithubDeployKey) (*GithubDeployKey, error)
-	SelectGithubTeam(opts SelectGithubTeam) (*GithubTeam, error)
-	CreateGithubOauthApp(opts CreateGithubOauthAppOpts) (*GithubOauthApp, error)
-	CreateNSRecordPullRequest(sourceBranch string) error
+	CreateRepositoryDeployKey(opts CreateGithubDeployKeyOpts) (*GithubDeployKey, error)
 }
 
 // GithubReport is the report layer
 type GithubReport interface {
-	ReadyGithubInfrastructureRepository(repository *GithubRepository, report *store.Report) error
-	CreateGithubOauthApp(app *GithubOauthApp, report *store.Report) error
+	ReportRepositoryDeployKey(repository *GithubRepository, report *store.Report) error
 }
 
 // GithubState is the state layer
 type GithubState interface {
-	SaveGithubInfrastructureRepository(repository *GithubRepository) (*store.Report, error)
-	GetGithubInfrastructureRepository(id api.ID) state.GithubRepository
-	SaveGithubOauthApp(app *GithubOauthApp) (*store.Report, error)
-	GetGithubOauthApp(appName string, id api.ID) state.GithubOauthApp
+	SaveRepositoryDeployKey(repository *GithubRepository) (*store.Report, error)
+	GetRepositoryDeployKey(id api.ID) state.GithubRepository
 }

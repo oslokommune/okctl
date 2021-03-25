@@ -273,7 +273,6 @@ type SecretKeySecret struct {
 // clusters configuration towards github
 type Github struct {
 	Organisation string
-	OauthApp     map[string]GithubOauthApp
 	Repositories map[string]GithubRepository
 }
 
@@ -295,28 +294,6 @@ func (r GithubRepository) Validate() error {
 		validation.Field(&r.Types, validation.Required),
 		validation.Field(&r.GitURL, validation.Required),
 		validation.Field(&r.Organization, validation.Required),
-	)
-}
-
-// GithubOauthApp contains github oauth application data
-type GithubOauthApp struct {
-	Team         string
-	Name         string
-	SiteURL      string
-	CallbackURL  string
-	ClientID     string
-	ClientSecret ClientSecret
-}
-
-// Validate the data
-func (a GithubOauthApp) Validate() error {
-	return validation.ValidateStruct(&a,
-		validation.Field(&a.Team, validation.Required),
-		validation.Field(&a.Name, validation.Required),
-		validation.Field(&a.SiteURL, validation.Required),
-		validation.Field(&a.CallbackURL, validation.Required),
-		validation.Field(&a.ClientSecret, validation.Required),
-		validation.Field(&a.ClientID, validation.Required),
 	)
 }
 

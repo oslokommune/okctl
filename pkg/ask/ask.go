@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
@@ -49,70 +48,6 @@ func New() *Ask {
 func (a *Ask) WithSpinner(spinner spinner.Spinner) *Ask {
 	a.spinner = spinner
 	return a
-}
-
-const nameServersMsg = `	We have created a domain for you at: %s
-
-	For this domain to resolve we need to delegate an
-	AWS HostedZone to your account, to do this we need
-	that you send us the domain and NS records that we
-	have printed below to one of these places:
-
-		- Slack: #kjøremiljø-support on slack
-		- Email: okctl@oslo.kommune.no
-
-	----
-	Hi!
-
-	Please create a delegated zone for our domain:
-
-	Domain: %s
-	NameServers: %s
-
-	Thank you.
-    ----
-`
-
-// ConfirmPostingNameServers asks the user to confirm that they have posted the nameservers
-// to a channel where we can receive them
-func (a *Ask) ConfirmPostingNameServers(to io.Writer, domain string, nameServers []string) (bool, error) {
-	_, err := fmt.Fprintf(to, nameServersMsg, domain, domain, strings.Join(nameServers, ","))
-	if err != nil {
-		return false, err
-	}
-
-	prompt := &survey.Confirm{
-		Message: "Have you sent us the information outlined above?",
-		Default: true,
-		Help:    "We have printed the name of your domain and name servers above, these need to be sent to use so we can create a delegated zone",
-	}
-
-	haveSent := false
-
-	if a.spinner != nil {
-		err = a.spinner.Pause()
-		if err != nil {
-			return false, fmt.Errorf("stopping spinner: %w", err)
-		}
-
-		defer func() {
-			_ = a.spinner.Unpause()
-		}()
-	}
-
-	err = survey.AskOne(prompt, &haveSent, survey.WithStdio(a.In, a.Out, a.Err))
-	if err != nil {
-		return false, err
-	}
-
-	if !haveSent {
-		_, err = fmt.Fprintf(to, "! You have not sent the domain and name server, your DNS records will not resolve until you do so")
-		if err != nil {
-			return false, err
-		}
-	}
-
-	return true, nil
 }
 
 const iacHelp = `	The github repository that you select will

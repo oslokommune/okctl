@@ -52,8 +52,8 @@ func (s *domainService) GetPrimaryHostedZone(_ context.Context, id api.ID) (*cli
 	return nil, nil
 }
 
-// DeletePrimaryHostedZone and all associed records
-func (s *domainService) DeletePrimaryHostedZone(ctx context.Context, opts client.DeletePrimaryHostedZoneOpts) error {
+// DeletePrimaryHostedZone and all associated records
+func (s *domainService) DeletePrimaryHostedZone(_ context.Context, opts client.DeletePrimaryHostedZoneOpts) error {
 	err := s.spinner.Start("domain")
 	if err != nil {
 		return err
@@ -112,7 +112,7 @@ func (s *domainService) DeletePrimaryHostedZone(ctx context.Context, opts client
 	return nil
 }
 
-func (s *domainService) CreatePrimaryHostedZoneWithoutUserinput(_ context.Context, opts client.CreatePrimaryHostedZoneOpts) (*client.HostedZone, error) {
+func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.CreatePrimaryHostedZoneOpts) (*client.HostedZone, error) {
 	err := s.spinner.Start("domain")
 	if err != nil {
 		return nil, err

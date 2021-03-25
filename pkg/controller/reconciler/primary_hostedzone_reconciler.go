@@ -30,7 +30,7 @@ func (z *zoneReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata
 func (z *zoneReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err = z.client.CreatePrimaryHostedZoneWithoutUserinput(z.commonMetadata.Ctx, client.CreatePrimaryHostedZoneOpts{
+		_, err = z.client.CreatePrimaryHostedZone(z.commonMetadata.Ctx, client.CreatePrimaryHostedZoneOpts{
 			ID:     z.commonMetadata.ClusterID,
 			Domain: z.commonMetadata.Declaration.ClusterRootDomain,
 			FQDN:   dns.Fqdn(z.commonMetadata.Declaration.ClusterRootDomain),

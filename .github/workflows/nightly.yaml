@@ -33,11 +33,11 @@ jobs:
           kind: Cluster
 
           metadata:
-            accountID: "932360772598"
+            accountID: "${{ secrets.NIGHTLY_AWS_ACCOUNT_ID }}"
             environment: test
             name: nightly
 
-          clusterRootDomain: nightly-test.oslo.systems
+          clusterRootDomain: nightly.oslo.systems
 
           github:
             repository: okctl-iac

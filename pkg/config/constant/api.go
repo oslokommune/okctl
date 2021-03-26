@@ -28,7 +28,7 @@ const (
 
 	DefaultRepositoryStateFile = ".okctl.yml"
 
-	DefaultEKSKubernetesVersion = "1.17"
+	DefaultEKSKubernetesVersion = "1.19"
 
 	DefaultChartApplyTimeout  = 5 * time.Minute
 	DefaultChartRemoveTimeout = 5 * time.Minute

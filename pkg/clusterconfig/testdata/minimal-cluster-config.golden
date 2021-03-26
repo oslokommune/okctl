@@ -1,3 +1,8 @@
+addons:
+- attachPolicyARNs:
+  - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+  name: vpc-cni
+  permissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
 apiVersion: eksctl.io/v1alpha5
 fargateProfiles:
 - name: fp-default

@@ -28,6 +28,14 @@ type ClusterConfig struct {
 	NodeGroups      []NodeGroup        `json:"nodeGroups,omitempty"`
 	Status          *ClusterStatus     `json:"status,omitempty"`
 	CloudWatch      *ClusterCloudWatch `json:"cloudWatch,omitempty"`
+	Addons          []*Addon           `json:"addons,omitempty"`
+}
+
+// Addon holds the EKS addon configuration
+type Addon struct {
+	Name                string   `json:"name,omitempty"`
+	AttachPolicyARNs    []string `json:"attachPolicyARNs,omitempty"`
+	PermissionsBoundary string   `json:"permissionsBoundary,omitempty"`
 }
 
 // ClusterCloudWatch maps up parts of the eksctl config that we require

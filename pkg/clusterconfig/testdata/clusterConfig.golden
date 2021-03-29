@@ -1,3 +1,8 @@
+addons:
+- attachPolicyARNs:
+  - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+  name: vpc-cni
+  permissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
 apiVersion: eksctl.io/v1alpha5
 cloudWatch:
   clusterLogging:
@@ -15,13 +20,6 @@ fargateProfiles:
   - namespace: argocd
 iam:
   fargatePodExecutionRolePermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
-  serviceAccounts:
-  - attachPolicyARNs:
-    - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
-    metadata:
-      name: aws-node
-      namespace: kube-system
-    permissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
   serviceRolePermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
   withOIDC: true
 kind: ClusterConfig

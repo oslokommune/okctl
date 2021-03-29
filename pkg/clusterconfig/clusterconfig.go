@@ -70,17 +70,14 @@ func (a *Args) build() *v1alpha5.ClusterConfig {
 			ServiceRolePermissionsBoundary:             a.PermissionsBoundaryARN,
 			FargatePodExecutionRolePermissionsBoundary: a.PermissionsBoundaryARN,
 			WithOIDC: true,
-			ServiceAccounts: []*v1alpha5.ClusterIAMServiceAccount{
-				{
-					ClusterIAMMeta: v1alpha5.ClusterIAMMeta{
-						Name:      "aws-node",
-						Namespace: "kube-system",
-					},
-					AttachPolicyARNs: []string{
-						"arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
-					},
-					PermissionsBoundary: a.PermissionsBoundaryARN,
+		},
+		Addons: []*v1alpha5.Addon{
+			{
+				Name: "vpc-cni",
+				AttachPolicyARNs: []string{
+					"arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
 				},
+				PermissionsBoundary: a.PermissionsBoundaryARN,
 			},
 		},
 		VPC: &v1alpha5.ClusterVPC{
@@ -425,6 +422,15 @@ func (a *MinimalArgs) build() *v1alpha5.ClusterConfig {
 				IAM: v1alpha5.NodeGroupIAM{
 					InstanceRolePermissionsBoundary: a.PermissionsBoundaryARN,
 				},
+			},
+		},
+		Addons: []*v1alpha5.Addon{
+			{
+				Name: "vpc-cni",
+				AttachPolicyARNs: []string{
+					"arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
+				},
+				PermissionsBoundary: a.PermissionsBoundaryARN,
 			},
 		},
 		VPC: &v1alpha5.ClusterVPC{

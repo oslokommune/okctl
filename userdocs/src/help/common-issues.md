@@ -1,23 +1,23 @@
-##Device authentication flow fails (Linux only)
+## Device authentication flow fails (Linux only)
 
 If you are unable to complete device authentication against github, you need to install `pass`
 This is because github token is stored in an encrypted keyring on your device.
 
 Install pass as described in the [Prerequisites](../../getting-started/prerequisites/#pass-linux-only).
 
-##okctl keeps trying to do the Github Device Authentication Flow while trying to do \<any action\>
+## okctl keeps trying to do the Github Device Authentication Flow while trying to do \<any action\>
 
 This is known to happen if `pass init <gpg-key-id>` has not been run after installing `pass`.
 
 Initialize `pass` as described in [Prerequisites](../../getting-started/prerequisites/#initialize-pass).
 
-##On `okctl delete cluster`, some resources are not deleted (automatic deletion is coming in a later version)
+## On `okctl delete cluster`, some resources are not deleted (automatic deletion is coming in a later version)
 
 Workaround: manually delete the following resources:
 
 * It is recommended to delete the infrastructure/<env> directory and .okctl.yaml file upon successful delete of cluster, as the last manual step.
 
-##okctl create cluster: Create identitypool fails / Re-create cluster within short timespan fails
+## okctl create cluster: Create identitypool fails / Re-create cluster within short timespan fails
 
 If you do the following:
 
@@ -33,7 +33,7 @@ Workaround: Wait for up to 15 minutes before creating cluster again.
 15 minutes is the TTL (Time to live, i.e. cache expiry) of the NS record. You can see this value in
 Route 53 -> Hosted zones -> Your domain -> NS record for your top domain -> Edit -> See TTL field.
 
-##okctl create cluster: Failed to create external secrets helm chart
+## okctl create cluster: Failed to create external secrets helm chart
 
 You get the following error (shortened):
 

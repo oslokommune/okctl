@@ -124,17 +124,17 @@ func readFile(t *testing.T, fs *afero.Afero, path string) []byte {
 
 type mockCertService struct{}
 
-func (m mockCertService) DeleteCertificate(_ context.Context, _ api.DeleteCertificateOpts) error {
+func (m mockCertService) DeleteCertificate(_ context.Context, _ client.DeleteCertificateOpts) error {
 	return nil
 }
 
-func (m mockCertService) DeleteCognitoCertificate(_ context.Context, _ api.DeleteCognitoCertificateOpts) error {
+func (m mockCertService) DeleteCognitoCertificate(_ context.Context, _ client.DeleteCognitoCertificateOpts) error {
 	return nil
 }
 
-func (m mockCertService) CreateCertificate(_ context.Context, _ api.CreateCertificateOpts) (*api.Certificate, error) {
-	return &api.Certificate{
-		CertificateARN: "arn:which:isnt:an:arn",
+func (m mockCertService) CreateCertificate(_ context.Context, _ client.CreateCertificateOpts) (*client.Certificate, error) {
+	return &client.Certificate{
+		ARN: "arn:which:isnt:an:arn",
 	}, nil
 }
 

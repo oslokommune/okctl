@@ -8,21 +8,23 @@ import (
 
 // nolint: golint
 const (
-	DefaultRegion       = "eu-west-1"
-	DefaultAWSAccountID = "123456789012"
-	DefaultEnvironment  = "staging"
-	DefaultRepository   = "okctl"
-	DefaultClusterName  = "okctl-staging"
-	DefaultDomain       = "okctl-staging.oslo.systems"
-	DefaultFQN          = "okctl-staging.oslo.systems."
-	DefaultHostedZoneID = "Z0FAKE41FAKE6I841FAKE"
+	DefaultRegion         = "eu-west-1"
+	DefaultAWSAccountID   = "123456789012"
+	DefaultEnvironment    = "staging"
+	DefaultRepository     = "okctl"
+	DefaultClusterName    = "okctl-staging"
+	DefaultDomain         = "okctl-staging.oslo.systems"
+	DefaultFQDN           = "okctl-staging.oslo.systems."
+	DefaultHostedZoneID   = "Z0FAKE41FAKE6I841FAKE"
+	DefaultCertificateARN = "arn:aws:acm:eu-west-1:123456789012:certificate/123456789012-1234-1234-1234-12345678"
 
-	StackNameHostedZone = "okctl-staging-oslo-systems-HostedZone"
+	StackNameHostedZone  = "okctl-staging-oslo-systems-HostedZone"
+	StackNameCertificate = "okctl-staging-oslo-systems-Certificate"
 )
 
 // ID returns a fake id
-func ID() *api.ID {
-	return &api.ID{
+func ID() api.ID {
+	return api.ID{
 		Region:       DefaultRegion,
 		AWSAccountID: DefaultAWSAccountID,
 		Environment:  DefaultEnvironment,
@@ -54,11 +56,24 @@ func HostedZone() *client.HostedZone {
 		IsDelegated:            true,
 		Primary:                true,
 		Managed:                true,
-		FQDN:                   DefaultFQN,
+		FQDN:                   DefaultFQDN,
 		Domain:                 DefaultDomain,
 		HostedZoneID:           DefaultHostedZoneID,
 		NameServers:            NameServers(),
 		StackName:              StackNameHostedZone,
+		CloudFormationTemplate: CloudFormationTemplate(),
+	}
+}
+
+// Certificate returns a fake certificate
+func Certificate() *client.Certificate {
+	return &client.Certificate{
+		ID:                     ID(),
+		FQDN:                   DefaultFQDN,
+		Domain:                 DefaultDomain,
+		HostedZoneID:           DefaultHostedZoneID,
+		ARN:                    DefaultCertificateARN,
+		StackName:              StackNameCertificate,
 		CloudFormationTemplate: CloudFormationTemplate(),
 	}
 }

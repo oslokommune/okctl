@@ -71,7 +71,7 @@ func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, id api.
 		return nil
 	}
 
-	err = s.cert.DeleteCognitoCertificate(ctx, api.DeleteCognitoCertificateOpts{
+	err = s.cert.DeleteCognitoCertificate(ctx, client.DeleteCognitoCertificateOpts{
 		ID:     id,
 		Domain: pool.AuthDomain,
 	})

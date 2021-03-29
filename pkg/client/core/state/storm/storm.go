@@ -1,10 +1,14 @@
 package storm
 
 import (
+	"errors"
 	"time"
 
 	"github.com/oslokommune/okctl/pkg/api"
 )
+
+// ErrNotFound is a not found error
+var ErrNotFound = errors.New("not found")
 
 // Metadata contains some useful metadata
 // about a struct stored in storm
@@ -13,6 +17,14 @@ type Metadata struct {
 	CreatedAt  time.Time
 	UpdatedAt  time.Time `storm:"index"`
 	Deleted    bool
+}
+
+// NewMetadata returns initialised metadata state
+func NewMetadata() Metadata {
+	return Metadata{
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
 }
 
 // ID contains the same content as an api.ID
@@ -27,8 +39,8 @@ type ID struct {
 
 // NewID returns an ID constructed from an
 // api.ID
-func NewID(id *api.ID) *ID {
-	return &ID{
+func NewID(id api.ID) ID {
+	return ID{
 		Region:       id.Region,
 		AWSAccountID: id.AWSAccountID,
 		Environment:  id.Environment,
@@ -38,8 +50,8 @@ func NewID(id *api.ID) *ID {
 }
 
 // Convert to an api.ID
-func (i *ID) Convert() *api.ID {
-	return &api.ID{
+func (i ID) Convert() api.ID {
+	return api.ID{
 		Region:       i.Region,
 		AWSAccountID: i.AWSAccountID,
 		Environment:  i.Environment,

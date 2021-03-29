@@ -70,7 +70,7 @@ type Okctl struct {
 	BinariesProvider    binaries.Provider
 	CredentialsProvider credentials.Provider
 
-	StormDB *stormpkg.DB
+	StormRootNode stormpkg.Node
 
 	activeEnv       string
 	restClient      *rest.HTTPClient
@@ -196,9 +196,9 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		AWSLoadBalancerControllerService: o.awsLoadBalancerControllerService(outputDir, spin),
 		ArgoCD:                           o.argocdService(outputDir, spin),
 		ApplicationService:               o.applicationService(outputDir, applicationsOutputDir, spin),
-		Certificate:                      o.certService(outputDir, spin),
+		Certificate:                      o.certService(outputDir, o.StormRootNode.From(constant.DefaultStormNodeCertificates)),
 		Cluster:                          o.clusterService(outputDir, spin),
-		Domain:                           o.domainService(outputDir, o.StormDB.From(constant.DefaultStormNodeDomains), spin),
+		Domain:                           o.domainService(outputDir, o.StormRootNode.From(constant.DefaultStormNodeDomains)),
 		ExternalDNS:                      o.externalDNSService(outputDir, spin),
 		ExternalSecrets:                  o.externalSecretsService(outputDir, spin),
 		Github:                           o.githubService(ghClient, spin),
@@ -299,7 +299,7 @@ func (o *Okctl) monitoringService(outputDir string, spin spinner.Spinner) client
 		),
 		stateSaver.NewMonitoringState(o.RepoStateWithEnv),
 		console.NewMonitoringReport(o.Err, spin),
-		o.certService(monitoringDir, spin.SubSpinner()),
+		o.certService(monitoringDir, o.StormRootNode.From(constant.DefaultMonitoringBaseDir, constant.DefaultStormNodeCertificates)),
 		o.identityManagerService(monitoringDir, spin.SubSpinner()),
 		o.manifestService(monitoringDir, spin.SubSpinner()),
 		o.paramService(monitoringDir, spin.SubSpinner()),
@@ -343,7 +343,7 @@ func (o *Okctl) identityManagerService(outputDir string, spin spinner.Spinner) c
 		),
 		stateSaver.NewIdentityManagerState(o.RepoStateWithEnv),
 		console.NewIdentityManagerReport(o.Err, spin),
-		o.certService(outputDir, spin.SubSpinner()),
+		o.certService(identityPoolBaseDir, o.StormRootNode.From(constant.DefaultIdentityPoolBaseDir, constant.DefaultStormNodeCertificates)),
 	)
 
 	return identityManagerService
@@ -355,7 +355,7 @@ func (o *Okctl) argocdService(outputDir string, spin spinner.Spinner) client.Arg
 	argoService := clientCore.NewArgoCDService(
 		spin,
 		o.identityManagerService(argoBaseDir, spin.SubSpinner()),
-		o.certService(argoBaseDir, spin.SubSpinner()),
+		o.certService(argoBaseDir, o.StormRootNode.From(constant.DefaultArgoCDBaseDir, constant.DefaultStormNodeCertificates)),
 		o.manifestService(argoBaseDir, spin.SubSpinner()),
 		o.paramService(argoBaseDir, spin.SubSpinner()),
 		rest.NewArgoCDAPI(o.restClient),
@@ -431,20 +431,17 @@ func (o *Okctl) nameserverHandlerService(ghClient githubClient.Githuber, _ strin
 	)
 }
 
-func (o *Okctl) certService(outputDir string, spin spinner.Spinner) client.CertificateService {
+func (o *Okctl) certService(outputDir string, node stormpkg.Node) client.CertificateService {
 	return clientCore.NewCertificateService(
-		spin,
 		rest.NewCertificateAPI(o.restClient),
 		clientFilesystem.NewCertificateStore(
 			clientFilesystem.Paths{
-				OutputFile:         constant.DefaultCertificateOutputsFile,
 				CloudFormationFile: constant.DefaultCertificateCloudFormationTemplate,
 				BaseDir:            path.Join(outputDir, constant.DefaultCertificateBaseDir),
 			},
 			o.FileSystem,
 		),
-		stateSaver.NewCertificateState(o.RepoStateWithEnv),
-		console.NewCertificateReport(o.Err, spin),
+		storm.NewCertificateState(node),
 	)
 }
 
@@ -612,7 +609,7 @@ func (o *Okctl) applicationService(infrastructureOutputDir, applicationOutputDir
 		clientFilesystem.Paths{
 			BaseDir: applicationOutputDir,
 		},
-		o.certService(path.Join(infrastructureOutputDir, constant.DefaultCertificateBaseDir), spin.SubSpinner()),
+		o.certService(path.Join(infrastructureOutputDir, constant.DefaultCertificateBaseDir), o.StormRootNode.From(constant.DefaultStormNodeCertificates)),
 		clientFilesystem.NewApplicationStore(
 			clientFilesystem.Paths{
 				BaseDir: applicationOutputDir,
@@ -623,11 +620,8 @@ func (o *Okctl) applicationService(infrastructureOutputDir, applicationOutputDir
 	)
 }
 
-func (o *Okctl) domainService(outputDir string, node stormpkg.Node, spin spinner.Spinner) client.DomainService {
+func (o *Okctl) domainService(outputDir string, node stormpkg.Node) client.DomainService {
 	return clientCore.NewDomainService(
-		spin,
-		o.Err,
-		ask.New().WithSpinner(spin),
 		rest.NewDomainAPI(o.restClient),
 		clientFilesystem.NewDomainStore(
 			clientFilesystem.Paths{
@@ -636,7 +630,6 @@ func (o *Okctl) domainService(outputDir string, node stormpkg.Node, spin spinner
 			},
 			o.FileSystem,
 		),
-		console.NewDomainReport(o.Err, spin),
 		storm.NewDomainState(node),
 	)
 }
@@ -860,10 +853,12 @@ func (o *Okctl) initialiseStorm() error {
 		return err
 	}
 
-	o.StormDB, err = stormpkg.Open(path.Join(outputDir, constant.DefaultStormDBName), stormpkg.Codec(json.Codec))
+	s, err := stormpkg.Open(path.Join(outputDir, constant.DefaultStormDBName), stormpkg.Codec(json.Codec))
 	if err != nil {
 		return err
 	}
+
+	o.StormRootNode = s.From(o.activeEnv)
 
 	return nil
 }

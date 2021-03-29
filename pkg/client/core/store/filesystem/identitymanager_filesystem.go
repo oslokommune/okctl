@@ -28,7 +28,7 @@ type IdentityPool struct {
 	AuthDomain     string
 	HostedZoneID   string
 	StackName      string
-	Certificate    Certificate
+	Certificate    client.Certificate
 	RecordSetAlias RecordSetAlias
 }
 
@@ -120,13 +120,13 @@ func (s *identityManagerStore) SaveIdentityPool(pool *api.IdentityPool) (*store.
 		AuthDomain:   pool.AuthDomain,
 		HostedZoneID: pool.HostedZoneID,
 		StackName:    pool.StackName,
-		Certificate: Certificate{
-			ID:             pool.ID,
-			FQDN:           pool.Certificate.FQDN,
-			Domain:         pool.Certificate.Domain,
-			HostedZoneID:   pool.Certificate.HostedZoneID,
-			CertificateARN: pool.Certificate.CertificateARN,
-			StackName:      pool.Certificate.StackName,
+		Certificate: client.Certificate{
+			ID:           pool.ID,
+			FQDN:         pool.Certificate.FQDN,
+			Domain:       pool.Certificate.Domain,
+			HostedZoneID: pool.Certificate.HostedZoneID,
+			ARN:          pool.Certificate.CertificateARN,
+			StackName:    pool.Certificate.StackName,
 		},
 		RecordSetAlias: RecordSetAlias{
 			AliasDomain:      pool.RecordSetAlias.AliasDomain,

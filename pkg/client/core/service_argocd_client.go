@@ -50,7 +50,7 @@ func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgo
 		return err
 	}
 
-	err = s.cert.DeleteCertificate(ctx, api.DeleteCertificateOpts{
+	err = s.cert.DeleteCertificate(ctx, client.DeleteCertificateOpts{
 		ID:     opts.ID,
 		Domain: info.ArgoDomain,
 	})
@@ -80,7 +80,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		err = s.spinner.Stop()
 	}()
 
-	cert, err := s.cert.CreateCertificate(ctx, api.CreateCertificateOpts{
+	cert, err := s.cert.CreateCertificate(ctx, client.CreateCertificateOpts{
 		ID:           opts.ID,
 		FQDN:         fmt.Sprintf("argocd.%s", opts.FQDN),
 		Domain:       fmt.Sprintf("argocd.%s", opts.Domain),
@@ -173,7 +173,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 	chartOpts := api.CreateArgoCDOpts{
 		ID:                 opts.ID,
 		ArgoDomain:         cert.Domain,
-		ArgoCertificateARN: cert.CertificateARN,
+		ArgoCertificateARN: cert.ARN,
 		GithubOrganisation: opts.GithubOrganisation,
 		GithubRepoURL:      opts.Repository.GitURL,
 		GithubRepoName:     opts.Repository.Repository,

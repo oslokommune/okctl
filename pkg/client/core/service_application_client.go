@@ -26,7 +26,7 @@ type applicationService struct {
 }
 
 func (s *applicationService) createCertificate(ctx context.Context, id *api.ID, hostedZoneID, fqdn string) (string, error) {
-	cert, certFnErr := s.cert.CreateCertificate(ctx, api.CreateCertificateOpts{
+	cert, certFnErr := s.cert.CreateCertificate(ctx, client.CreateCertificateOpts{
 		ID:           *id,
 		FQDN:         fqdn,
 		Domain:       fqdn,
@@ -36,7 +36,7 @@ func (s *applicationService) createCertificate(ctx context.Context, id *api.ID, 
 		return "", certFnErr
 	}
 
-	return cert.CertificateARN, nil
+	return cert.ARN, nil
 }
 
 // ScaffoldApplication turns a file path into Kubernetes resources

@@ -46,7 +46,7 @@ func (a *domainAPI) CreatePrimaryHostedZone(opts client.CreatePrimaryHostedZoneO
 	}
 
 	return &client.HostedZone{
-		ID:                     &into.ID,
+		ID:                     into.ID,
 		IsDelegated:            false,
 		Primary:                true,
 		Managed:                into.Managed,

@@ -1,15 +1,11 @@
 package storm
 
 import (
-	"errors"
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
 )
-
-// ErrNotFound is a not found error
-var ErrNotFound = errors.New("not found")
 
 type domainState struct {
 	node stormpkg.Node
@@ -17,7 +13,9 @@ type domainState struct {
 
 // HostedZone contains storm compatible state
 type HostedZone struct {
-	ID                     *ID
+	Metadata `storm:"inline"`
+
+	ID                     ID
 	IsDelegated            bool
 	Primary                bool
 	Managed                bool
@@ -27,13 +25,12 @@ type HostedZone struct {
 	NameServers            []string
 	StackName              string
 	CloudFormationTemplate []byte
-
-	Metadata `storm:"inline"`
 }
 
 // NewHostedZone constructs a storm compatible HostedZone
 func NewHostedZone(hz *client.HostedZone, meta Metadata) *HostedZone {
 	return &HostedZone{
+		Metadata:               meta,
 		ID:                     NewID(hz.ID),
 		IsDelegated:            hz.IsDelegated,
 		Primary:                hz.Primary,
@@ -44,7 +41,6 @@ func NewHostedZone(hz *client.HostedZone, meta Metadata) *HostedZone {
 		NameServers:            hz.NameServers,
 		StackName:              hz.StackName,
 		CloudFormationTemplate: hz.CloudFormationTemplate,
-		Metadata:               meta,
 	}
 }
 

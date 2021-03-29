@@ -172,15 +172,15 @@ func (m mockReport) ReportRemoveTempo(_ *store.Report) error {
 
 type mockCertService struct{}
 
-func (m mockCertService) CreateCertificate(_ context.Context, _ api.CreateCertificateOpts) (*api.Certificate, error) {
+func (m mockCertService) CreateCertificate(_ context.Context, _ client.CreateCertificateOpts) (*client.Certificate, error) {
 	panic("implement me")
 }
 
-func (m mockCertService) DeleteCertificate(_ context.Context, _ api.DeleteCertificateOpts) error {
+func (m mockCertService) DeleteCertificate(_ context.Context, _ client.DeleteCertificateOpts) error {
 	return nil
 }
 
-func (m mockCertService) DeleteCognitoCertificate(_ context.Context, _ api.DeleteCognitoCertificateOpts) error {
+func (m mockCertService) DeleteCognitoCertificate(_ context.Context, _ client.DeleteCognitoCertificateOpts) error {
 	panic("implement me")
 }
 

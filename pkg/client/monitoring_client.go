@@ -21,7 +21,7 @@ type KubePromStack struct {
 	SecretsAdminUserKey               string
 	SecretsAdminPassKey               string
 	Chart                             *api.Helm
-	Certificate                       *api.Certificate
+	Certificate                       *Certificate
 	IdentityPoolClient                *api.IdentityPoolClient
 	ExternalSecret                    *ExternalSecret
 	FargateCloudWatchPolicyARN        string

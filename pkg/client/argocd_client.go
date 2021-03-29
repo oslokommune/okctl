@@ -14,7 +14,7 @@ type ArgoCD struct {
 	ArgoDomain     string
 	ArgoURL        string
 	AuthDomain     string
-	Certificate    *api.Certificate
+	Certificate    *Certificate
 	IdentityClient *api.IdentityPoolClient
 	ExternalSecret *api.ExternalSecretsKube
 	ClientSecret   *api.SecretParameter

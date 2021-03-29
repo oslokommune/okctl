@@ -432,7 +432,7 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 		}
 	}
 
-	err = s.cert.DeleteCertificate(ctx, api.DeleteCertificateOpts{
+	err = s.cert.DeleteCertificate(ctx, client.DeleteCertificateOpts{
 		ID:     opts.ID,
 		Domain: grafanaDomain(opts.Domain),
 	})
@@ -544,7 +544,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 		return nil, err
 	}
 
-	cert, err := s.cert.CreateCertificate(ctx, api.CreateCertificateOpts{
+	cert, err := s.cert.CreateCertificate(ctx, client.CreateCertificateOpts{
 		ID:           opts.ID,
 		FQDN:         dns.Fqdn(grafanaDomain(opts.Domain)),
 		Domain:       grafanaDomain(opts.Domain),
@@ -635,7 +635,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 	chart, err := s.api.CreateKubePromStack(api.CreateKubePrometheusStackOpts{
 		ID:                                  opts.ID,
 		GrafanaCloudWatchServiceAccountName: constant.DefaultGrafanaCloudWatchDatasourceName,
-		CertificateARN:                      cert.CertificateARN,
+		CertificateARN:                      cert.ARN,
 		Hostname:                            cert.Domain,
 		AuthHostname:                        opts.AuthDomain,
 		ClientID:                            poolClient.ClientID,
@@ -651,7 +651,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 
 	stack := &client.KubePromStack{
 		ID:                     opts.ID,
-		CertificateARN:         cert.CertificateARN,
+		CertificateARN:         cert.ARN,
 		Hostname:               cert.Domain,
 		AuthHostname:           opts.AuthDomain,
 		ClientID:               poolClient.ClientID,

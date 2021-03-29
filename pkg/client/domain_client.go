@@ -9,7 +9,7 @@ import (
 
 // HostedZone contains the state we are interested in
 type HostedZone struct {
-	ID                     *api.ID
+	ID                     api.ID
 	IsDelegated            bool
 	Primary                bool
 	Managed                bool
@@ -63,11 +63,4 @@ type DomainState interface {
 	GetHostedZone(domain string) (*HostedZone, error)
 	GetPrimaryHostedZone() (*HostedZone, error)
 	GetHostedZones() ([]*HostedZone, error)
-}
-
-// DomainReport implements the report layer
-type DomainReport interface {
-	ReportCreatePrimaryHostedZone(zone *HostedZone, reports []*store.Report) error
-	ReportDeletePrimaryHostedZone(reports []*store.Report) error
-	ReportHostedZoneDelegation(zone *HostedZone) error
 }

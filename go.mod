@@ -38,7 +38,7 @@ require (
 	github.com/foolin/pagser v0.1.5
 	github.com/garyburd/redigo v1.6.2 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible
-	github.com/go-git/go-billy/v5 v5.0.0
+	github.com/go-git/go-billy/v5 v5.1.0
 	github.com/go-git/go-git/v5 v5.2.0
 	github.com/go-kit/kit v0.10.0
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0

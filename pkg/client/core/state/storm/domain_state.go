@@ -12,12 +12,11 @@ import (
 var ErrNotFound = errors.New("not found")
 
 type domainState struct {
-	db *stormpkg.DB
+	node stormpkg.Node
 }
 
 // HostedZone contains storm compatible state
 type HostedZone struct {
-	Identifier             int `storm:"id,increment"`
 	ID                     *ID
 	IsDelegated            bool
 	Primary                bool
@@ -66,7 +65,7 @@ func (hz *HostedZone) Convert() *client.HostedZone {
 }
 
 func (d *domainState) SaveHostedZone(hz *client.HostedZone) error {
-	return d.db.Save(NewHostedZone(hz, Metadata{
+	return d.node.Save(NewHostedZone(hz, Metadata{
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Deleted:   false,
@@ -74,24 +73,24 @@ func (d *domainState) SaveHostedZone(hz *client.HostedZone) error {
 }
 
 func (d *domainState) UpdateHostedZone(zone *client.HostedZone) error {
-	return d.db.Update(zone)
+	return d.node.Update(zone)
 }
 
 func (d *domainState) RemoveHostedZone(domain string) error {
 	hz := &HostedZone{}
 
-	err := d.db.One("Domain", domain, hz)
+	err := d.node.One("Domain", domain, hz)
 	if err != nil {
 		return err
 	}
 
-	return d.db.DeleteStruct(hz)
+	return d.node.DeleteStruct(hz)
 }
 
 func (d *domainState) GetHostedZone(domain string) (*client.HostedZone, error) {
 	var hz HostedZone
 
-	err := d.db.One("Domain", domain, &hz)
+	err := d.node.One("Domain", domain, &hz)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +101,7 @@ func (d *domainState) GetHostedZone(domain string) (*client.HostedZone, error) {
 func (d *domainState) GetHostedZones() ([]*client.HostedZone, error) {
 	var hzs []*HostedZone
 
-	err := d.db.AllByIndex("UpdatedAt", &hzs)
+	err := d.node.AllByIndex("UpdatedAt", &hzs)
 	if err != nil {
 		return nil, err
 	}
@@ -134,8 +133,8 @@ func (d *domainState) GetPrimaryHostedZone() (*client.HostedZone, error) {
 }
 
 // NewDomainState returns an initialised state store
-func NewDomainState(db *stormpkg.DB) client.DomainState {
+func NewDomainState(db stormpkg.Node) client.DomainState {
 	return &domainState{
-		db: db,
+		node: db,
 	}
 }

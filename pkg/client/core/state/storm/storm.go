@@ -9,9 +9,10 @@ import (
 // Metadata contains some useful metadata
 // about a struct stored in storm
 type Metadata struct {
-	CreatedAt time.Time
-	UpdatedAt time.Time `storm:"index"`
-	Deleted   bool
+	Identifier int `storm:"id,increment"`
+	CreatedAt  time.Time
+	UpdatedAt  time.Time `storm:"index"`
+	Deleted    bool
 }
 
 // ID contains the same content as an api.ID

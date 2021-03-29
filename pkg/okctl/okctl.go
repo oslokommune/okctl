@@ -198,7 +198,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		ApplicationService:               o.applicationService(outputDir, applicationsOutputDir, spin),
 		Certificate:                      o.certService(outputDir, spin),
 		Cluster:                          o.clusterService(outputDir, spin),
-		Domain:                           o.domainService(outputDir, spin),
+		Domain:                           o.domainService(outputDir, o.StormDB.From(constant.DefaultStormNodeDomains), spin),
 		ExternalDNS:                      o.externalDNSService(outputDir, spin),
 		ExternalSecrets:                  o.externalSecretsService(outputDir, spin),
 		Github:                           o.githubService(ghClient, spin),
@@ -623,7 +623,7 @@ func (o *Okctl) applicationService(infrastructureOutputDir, applicationOutputDir
 	)
 }
 
-func (o *Okctl) domainService(outputDir string, spin spinner.Spinner) client.DomainService {
+func (o *Okctl) domainService(outputDir string, node stormpkg.Node, spin spinner.Spinner) client.DomainService {
 	return clientCore.NewDomainService(
 		spin,
 		o.Err,
@@ -631,14 +631,13 @@ func (o *Okctl) domainService(outputDir string, spin spinner.Spinner) client.Dom
 		rest.NewDomainAPI(o.restClient),
 		clientFilesystem.NewDomainStore(
 			clientFilesystem.Paths{
-				OutputFile:         constant.DefaultDomainOutputsFile,
 				CloudFormationFile: constant.DefaultDomainCloudFormationTemplate,
 				BaseDir:            path.Join(outputDir, constant.DefaultDomainBaseDir),
 			},
 			o.FileSystem,
 		),
 		console.NewDomainReport(o.Err, spin),
-		storm.NewDomainState(o.StormDB),
+		storm.NewDomainState(node),
 	)
 }
 

@@ -4,7 +4,6 @@ import (
 	"path"
 
 	"github.com/gosimple/slug"
-	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/spf13/afero"
@@ -15,28 +14,29 @@ type serviceAccountStore struct {
 	fs    *afero.Afero
 }
 
-func (m *serviceAccountStore) SaveCreateServiceAccount(p *api.ServiceAccount) (*store.Report, error) {
-	return store.NewFileSystem(path.Join(m.paths.BaseDir, slug.Make(p.Name)), m.fs).
-		StoreStruct(
-			m.paths.OutputFile,
-			&ServiceAccount{
-				ID:        p.ID,
-				Name:      p.Name,
-				PolicyArn: p.PolicyArn,
-			},
-			store.ToJSON(),
-		).
-		StoreStruct(m.paths.ConfigFile, p.Config, store.ToJSON()).
+func (s *serviceAccountStore) SaveServiceAccount(sa *client.ServiceAccount) error {
+	_, err := store.NewFileSystem(path.Join(s.paths.BaseDir, slug.Make(sa.Name)), s.fs).
+		StoreStruct(s.paths.ConfigFile, sa.Config, store.ToJSON()).
 		Do()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (m *serviceAccountStore) RemoveDeleteServiceAccount(name string) (*store.Report, error) {
-	return store.NewFileSystem(path.Join(m.paths.BaseDir, slug.Make(name)), m.fs).
-		Remove(m.paths.OutputFile).
-		Remove(m.paths.ConfigFile).
-		AlterStore(store.SetBaseDir(m.paths.BaseDir)).
+func (s *serviceAccountStore) RemoveServiceAccount(name string) error {
+	_, err := store.NewFileSystem(path.Join(s.paths.BaseDir, slug.Make(name)), s.fs).
+		Remove(s.paths.ConfigFile).
+		AlterStore(store.SetBaseDir(s.paths.BaseDir)).
 		RemoveDir(slug.Make(name)).
+		RemoveDir("").
 		Do()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // NewServiceAccountStore returns an initialised store

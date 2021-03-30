@@ -258,11 +258,11 @@ type mockServiceAccountService struct {
 	retrieverFn clusterConfigRetrieverFn
 }
 
-func (m mockServiceAccountService) CreateServiceAccount(_ context.Context, _ api.CreateServiceAccountOpts) (*api.ServiceAccount, error) {
+func (m mockServiceAccountService) CreateServiceAccount(_ context.Context, _ client.CreateServiceAccountOpts) (*client.ServiceAccount, error) {
 	panic("implement me")
 }
 
-func (m mockServiceAccountService) DeleteServiceAccount(_ context.Context, opts api.DeleteServiceAccountOpts) error {
+func (m mockServiceAccountService) DeleteServiceAccount(_ context.Context, opts client.DeleteServiceAccountOpts) error {
 	m.retrieverFn(opts.Config)
 
 	return nil

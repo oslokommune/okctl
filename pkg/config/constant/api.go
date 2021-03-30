@@ -112,9 +112,10 @@ const (
 	DefaultServiceAccountConfigFile                 = "service-account-config.yml"
 	DefaultServiceAccountOutputsFile                = "service-account-outputs.json"
 
-	DefaultStormDBName           = "state.db"
-	DefaultStormNodeDomains      = "domains"
-	DefaultStormNodeCertificates = "certificates"
+	DefaultStormDBName              = "state.db"
+	DefaultStormNodeDomains         = "domains"
+	DefaultStormNodeCertificates    = "certificates"
+	DefaultStormNodeServiceAccounts = "serviceaccounts"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"

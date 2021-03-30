@@ -5,65 +5,61 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/spinner"
 )
 
 type serviceAccountService struct {
-	spinner spinner.Spinner
-	api     client.ServiceAccountAPI
-	store   client.ServiceAccountStore
-	report  client.ServiceAccountReport
+	api   client.ServiceAccountAPI
+	store client.ServiceAccountStore
+	state client.ServiceAccountState
 }
 
-func (m *serviceAccountService) CreateServiceAccount(_ context.Context, opts api.CreateServiceAccountOpts) (*api.ServiceAccount, error) {
-	err := m.spinner.Start("service-account")
+func (m *serviceAccountService) CreateServiceAccount(_ context.Context, opts client.CreateServiceAccountOpts) (*client.ServiceAccount, error) {
+	s, err := m.api.CreateServiceAccount(api.CreateServiceAccountOpts{
+		ID:        opts.ID,
+		Name:      opts.Name,
+		PolicyArn: opts.PolicyArn,
+		Config:    opts.Config,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	defer func() {
-		_ = m.spinner.Stop()
-	}()
+	sa := &client.ServiceAccount{
+		ID:        s.ID,
+		Name:      s.Name,
+		PolicyArn: s.PolicyArn,
+		Config:    s.Config,
+	}
 
-	p, err := m.api.CreateServiceAccount(opts)
+	err = m.store.SaveServiceAccount(sa)
 	if err != nil {
 		return nil, err
 	}
 
-	report, err := m.store.SaveCreateServiceAccount(p)
+	err = m.state.SaveServiceAccount(sa)
 	if err != nil {
 		return nil, err
 	}
 
-	err = m.report.ReportCreateServiceAccount(p, report)
-	if err != nil {
-		return nil, err
-	}
-
-	return p, nil
+	return sa, nil
 }
 
-func (m *serviceAccountService) DeleteServiceAccount(_ context.Context, opts api.DeleteServiceAccountOpts) error {
-	err := m.spinner.Start("service-account")
+func (m *serviceAccountService) DeleteServiceAccount(_ context.Context, opts client.DeleteServiceAccountOpts) error {
+	err := m.api.DeleteServiceAccount(api.DeleteServiceAccountOpts{
+		ID:     opts.ID,
+		Name:   opts.Name,
+		Config: opts.Config,
+	})
 	if err != nil {
 		return err
 	}
 
-	defer func() {
-		_ = m.spinner.Stop()
-	}()
-
-	err = m.api.DeleteServiceAccount(opts)
+	err = m.store.RemoveServiceAccount(opts.Name)
 	if err != nil {
 		return err
 	}
 
-	report, err := m.store.RemoveDeleteServiceAccount(opts.Name)
-	if err != nil {
-		return err
-	}
-
-	err = m.report.ReportDeleteServiceAccount(opts.Name, report)
+	err = m.state.RemoveServiceAccount(opts.Name)
 	if err != nil {
 		return err
 	}
@@ -73,15 +69,13 @@ func (m *serviceAccountService) DeleteServiceAccount(_ context.Context, opts api
 
 // NewServiceAccountService returns an initialised service
 func NewServiceAccountService(
-	spinner spinner.Spinner,
 	api client.ServiceAccountAPI,
 	store client.ServiceAccountStore,
-	report client.ServiceAccountReport,
+	state client.ServiceAccountState,
 ) client.ServiceAccountService {
 	return &serviceAccountService{
-		spinner: spinner,
-		api:     api,
-		store:   store,
-		report:  report,
+		api:   api,
+		store: store,
+		state: state,
 	}
 }

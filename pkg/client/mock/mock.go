@@ -3,23 +3,36 @@ package mock
 
 import (
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/client"
+	"github.com/oslokommune/okctl/pkg/clusterconfig"
 )
 
 // nolint: golint
 const (
-	DefaultRegion         = "eu-west-1"
-	DefaultAWSAccountID   = "123456789012"
-	DefaultEnvironment    = "staging"
-	DefaultRepository     = "okctl"
-	DefaultClusterName    = "okctl-staging"
-	DefaultDomain         = "okctl-staging.oslo.systems"
-	DefaultFQDN           = "okctl-staging.oslo.systems."
-	DefaultHostedZoneID   = "Z0FAKE41FAKE6I841FAKE"
-	DefaultCertificateARN = "arn:aws:acm:eu-west-1:123456789012:certificate/123456789012-1234-1234-1234-12345678"
+	DefaultRegion             = "eu-west-1"
+	DefaultAWSAccountID       = "123456789012"
+	DefaultEnvironment        = "staging"
+	DefaultRepository         = "okctl"
+	DefaultClusterName        = "okctl-staging"
+	DefaultDomain             = "okctl-staging.oslo.systems"
+	DefaultFQDN               = "okctl-staging.oslo.systems."
+	DefaultHostedZoneID       = "Z0FAKE41FAKE6I841FAKE"
+	DefaultCertificateARN     = "arn:aws:acm:eu-west-1:123456789012:certificate/123456789012-1234-1234-1234-12345678"
+	DefaultServiceAccountName = "important-sa"
+	DefaultPolicyARN          = "arn:aws:iam::123456789012:policy/policy-name-with-path"
+	DefaultNamespace          = "kube-system"
 
 	StackNameHostedZone  = "okctl-staging-oslo-systems-HostedZone"
 	StackNameCertificate = "okctl-staging-oslo-systems-Certificate"
+)
+
+// nolint: golint gochecknoglobals
+var (
+	DefaultServiceAccountLabels = map[string]string{
+		"aws-usage": "cluster-ops",
+	}
 )
 
 // ID returns a fake id
@@ -75,5 +88,31 @@ func Certificate() *client.Certificate {
 		ARN:                    DefaultCertificateARN,
 		StackName:              StackNameCertificate,
 		CloudFormationTemplate: CloudFormationTemplate(),
+	}
+}
+
+// ServiceAccountClusterConfig returns a fake cluster config
+// for a service account
+func ServiceAccountClusterConfig() *v1alpha5.ClusterConfig {
+	c, _ := clusterconfig.NewServiceAccount(&clusterconfig.ServiceAccountArgs{
+		ClusterName:            DefaultClusterName,
+		Labels:                 DefaultServiceAccountLabels,
+		Name:                   DefaultServiceAccountName,
+		Namespace:              DefaultNamespace,
+		PermissionsBoundaryArn: v1alpha1.PermissionsBoundaryARN(DefaultAWSAccountID),
+		PolicyArn:              DefaultPolicyARN,
+		Region:                 DefaultRegion,
+	})
+
+	return c
+}
+
+// ServiceAccount returns a fake service account
+func ServiceAccount() *client.ServiceAccount {
+	return &client.ServiceAccount{
+		ID:        ID(),
+		Name:      DefaultServiceAccountName,
+		PolicyArn: DefaultPolicyARN,
+		Config:    ServiceAccountClusterConfig(),
 	}
 }

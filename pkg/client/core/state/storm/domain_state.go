@@ -61,15 +61,21 @@ func (hz *HostedZone) Convert() *client.HostedZone {
 }
 
 func (d *domainState) SaveHostedZone(hz *client.HostedZone) error {
-	return d.node.Save(NewHostedZone(hz, Metadata{
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-		Deleted:   false,
-	}))
+	return d.node.Save(NewHostedZone(hz, NewMetadata()))
 }
 
 func (d *domainState) UpdateHostedZone(zone *client.HostedZone) error {
-	return d.node.Update(zone)
+	hz := &HostedZone{}
+
+	err := d.node.One("Domain", zone.Domain, hz)
+	if err != nil {
+		return err
+	}
+
+	updated := NewHostedZone(zone, hz.Metadata)
+	updated.UpdatedAt = time.Now()
+
+	return d.node.Save(updated)
 }
 
 func (d *domainState) RemoveHostedZone(domain string) error {
@@ -84,9 +90,9 @@ func (d *domainState) RemoveHostedZone(domain string) error {
 }
 
 func (d *domainState) GetHostedZone(domain string) (*client.HostedZone, error) {
-	var hz HostedZone
+	hz := &HostedZone{}
 
-	err := d.node.One("Domain", domain, &hz)
+	err := d.node.One("Domain", domain, hz)
 	if err != nil {
 		return nil, err
 	}

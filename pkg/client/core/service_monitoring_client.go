@@ -451,7 +451,7 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 		return err
 	}
 
-	err = s.service.DeleteServiceAccount(ctx, api.DeleteServiceAccountOpts{
+	err = s.service.DeleteServiceAccount(ctx, client.DeleteServiceAccountOpts{
 		ID:     opts.ID,
 		Name:   "cloudwatch-datasource", // Make this configurable
 		Config: cc,
@@ -534,7 +534,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 		return nil, err
 	}
 
-	_, err = s.service.CreateServiceAccount(ctx, api.CreateServiceAccountOpts{
+	_, err = s.service.CreateServiceAccount(ctx, client.CreateServiceAccountOpts{
 		ID:        opts.ID,
 		Name:      "cloudwatch-datasource", // Like, why? We need to make these configurable
 		PolicyArn: policy.PolicyARN,

@@ -6,8 +6,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/client"
-
 	"github.com/oslokommune/okctl/pkg/client/mock"
 
 	stormpkg "github.com/asdine/storm/v3"
@@ -16,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDomainStateScenario(t *testing.T) {
+func TestServiceAccountStateScenario(t *testing.T) {
 	dir, err := ioutil.TempDir(os.TempDir(), "storm")
 	assert.NoError(t, err)
 
@@ -28,27 +26,23 @@ func TestDomainStateScenario(t *testing.T) {
 	db, err := stormpkg.Open(filepath.Join(dir, "storm.db"), stormpkg.Codec(json.Codec))
 	assert.NoError(t, err)
 
-	err = db.Init(&storm.HostedZone{})
+	err = db.Init(&storm.ServiceAccount{})
 	assert.NoError(t, err)
 
-	state := storm.NewDomainState(db)
+	state := storm.NewServiceAccountState(db)
 
-	err = state.SaveHostedZone(mock.HostedZone())
+	err = state.SaveServiceAccount(mock.ServiceAccount())
 	assert.NoError(t, err)
 
-	hz, err := state.GetHostedZone(mock.DefaultDomain)
+	sa, err := state.GetServiceAccount(mock.DefaultServiceAccountName)
 	assert.NoError(t, err)
-	assert.Equal(t, mock.HostedZone(), hz)
+	assert.Equal(t, mock.ServiceAccount(), sa)
 
-	hz.NameServers = nil
-	err = state.UpdateHostedZone(hz)
+	sa.PolicyArn = "arn:aws:iam::123456789012:policy/new-policy"
+	err = state.UpdateServiceAccount(sa)
 	assert.NoError(t, err)
 
-	hzs, err := state.GetHostedZones()
-	assert.NoError(t, err)
-	assert.Equal(t, []*client.HostedZone{hz}, hzs)
-
-	err = state.RemoveHostedZone(mock.DefaultDomain)
+	err = state.RemoveServiceAccount(mock.DefaultServiceAccountName)
 	assert.NoError(t, err)
 
 	err = db.Close()

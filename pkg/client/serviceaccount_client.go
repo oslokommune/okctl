@@ -3,15 +3,60 @@ package client
 import (
 	"context"
 
-	"github.com/oslokommune/okctl/pkg/client/store"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
 
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
+// ServiceAccount holds state for a service account
+type ServiceAccount struct {
+	ID        api.ID
+	Name      string
+	PolicyArn string
+	Config    *v1alpha5.ClusterConfig
+}
+
+// CreateServiceAccountOpts contains the inputs required
+// for creating a new service account
+type CreateServiceAccountOpts struct {
+	ID        api.ID
+	Name      string
+	PolicyArn string
+	Config    *v1alpha5.ClusterConfig
+}
+
+// Validate the provided inputs
+func (o CreateServiceAccountOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.Name, validation.Required),
+		validation.Field(&o.PolicyArn, validation.Required),
+		validation.Field(&o.Config, validation.Required),
+	)
+}
+
+// DeleteServiceAccountOpts contains the inputs required
+// for deleting a service account
+type DeleteServiceAccountOpts struct {
+	ID     api.ID
+	Name   string
+	Config *v1alpha5.ClusterConfig
+}
+
+// Validate the provided inputs
+func (o DeleteServiceAccountOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.Name, validation.Required),
+		validation.Field(&o.Config, validation.Required),
+	)
+}
+
 // ServiceAccountService implements the business logic
 type ServiceAccountService interface {
-	CreateServiceAccount(ctx context.Context, opts api.CreateServiceAccountOpts) (*api.ServiceAccount, error)
-	DeleteServiceAccount(ctx context.Context, opts api.DeleteServiceAccountOpts) error
+	CreateServiceAccount(ctx context.Context, opts CreateServiceAccountOpts) (*ServiceAccount, error)
+	DeleteServiceAccount(ctx context.Context, opts DeleteServiceAccountOpts) error
 }
 
 // ServiceAccountAPI invokes the remote API
@@ -22,12 +67,14 @@ type ServiceAccountAPI interface {
 
 // ServiceAccountStore provides a persistence layer
 type ServiceAccountStore interface {
-	SaveCreateServiceAccount(account *api.ServiceAccount) (*store.Report, error)
-	RemoveDeleteServiceAccount(name string) (*store.Report, error)
+	SaveServiceAccount(account *ServiceAccount) error
+	RemoveServiceAccount(name string) error
 }
 
-// ServiceAccountReport provides output on the result
-type ServiceAccountReport interface {
-	ReportCreateServiceAccount(account *api.ServiceAccount, report *store.Report) error
-	ReportDeleteServiceAccount(name string, report *store.Report) error
+// ServiceAccountState defines the state layer
+type ServiceAccountState interface {
+	SaveServiceAccount(account *ServiceAccount) error
+	RemoveServiceAccount(name string) error
+	GetServiceAccount(name string) (*ServiceAccount, error)
+	UpdateServiceAccount(account *ServiceAccount) error
 }

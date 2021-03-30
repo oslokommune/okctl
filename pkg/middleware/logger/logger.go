@@ -79,8 +79,25 @@ func (l *logging) ProcessResponse(err error, response interface{}, begin time.Ti
 			d = litter.Sdump(response)
 		}
 
-		l.log.Trace("response: ", d)
+		truncatedDump := Truncate(&d, 5000)
+		l.log.Trace("response: ", truncatedDump)
 	}
 
 	l.log.Debug("request completed in: ", time.Since(begin).String())
+}
+
+// Truncate truncates a string to the minimum of its length and the given max length
+func Truncate(s *string, maxLength int) string {
+	// This way of doing substrings assumes ASCII and doesn't support UTF-8.
+	// See https://stackoverflow.com/a/56129336
+	truncateLength := min(maxLength, len(*s))
+	return (*s)[:truncateLength]
+}
+
+func min(x, y int) int {
+	if x < y {
+		return x
+	}
+
+	return y
 }

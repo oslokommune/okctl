@@ -33,11 +33,15 @@ and possible remedies.
 
 ### Delete all Kubernetes resources
 
+#### Using kubectl
+
+The following applies if you can access your cluster with `kubectl`.
+
 Delete everything in all namespaces except `kube-system`. In `kube-system`, some of the core components, such as 
 `AWS load balancer controller` are running. These controllers create AWS resources on your behalf. By removing all 
 resources from all namespaces, we allow these services to clean up themselves.
 
-#### MacOS
+*MacOS*
 
 ```bash
 for each in $(kubectl get ns -o jsonpath="{.items[*].metadata.name}" | grep -v kube-system);
@@ -46,7 +50,7 @@ do
 done
 ```
 
-#### Linux
+*Linux*
 
 ```bash
 for each in $(kubectl get ns -o jsonpath="{.items[*].metadata.name}" | tr ' ' \\n | grep -v kube-system);
@@ -54,6 +58,16 @@ do
   kubectl delete ns $each
 done
 ```
+
+#### Manually
+
+If you are not able to access the cluster with `kubectl`, you can delete the following through the AWS console instead:
+
+* EC2 -> Load Balancers -> Delete any load balancers with tags matching the name of your cluster (try the filter
+tag:elbv2.k8s.aws/cluster : mycluster-myenv)
+
+* EC2 -> Auto Scaling Groups -> Delete any auto scaling groups with a name matching your cluster
+
 
 ### Remove Fargate Profile
 

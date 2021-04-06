@@ -2,6 +2,8 @@
 package mock
 
 import (
+	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -23,6 +25,8 @@ const (
 	DefaultServiceAccountName = "important-sa"
 	DefaultPolicyARN          = "arn:aws:iam::123456789012:policy/policy-name-with-path"
 	DefaultNamespace          = "kube-system"
+	DefaultManifestName       = "okctl-cm"
+	DefaultManifestType       = client.ManifestTypeConfigMap
 
 	StackNameHostedZone  = "okctl-staging-oslo-systems-HostedZone"
 	StackNameCertificate = "okctl-staging-oslo-systems-Certificate"
@@ -114,5 +118,29 @@ func ServiceAccount() *client.ServiceAccount {
 		Name:      DefaultServiceAccountName,
 		PolicyArn: DefaultPolicyARN,
 		Config:    ServiceAccountClusterConfig(),
+	}
+}
+
+// ManifestContent returns a fake ConfigMap
+func ManifestContent() []byte {
+	return []byte(fmt.Sprintf(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: %s
+  namespace: %s
+data:
+  app.properties: |
+    env=dev
+`, DefaultManifestName, DefaultNamespace))
+}
+
+// KubernetesManifest returns a fake kubernetes manifest
+func KubernetesManifest() *client.KubernetesManifest {
+	return &client.KubernetesManifest{
+		ID:        ID(),
+		Name:      DefaultManifestName,
+		Namespace: DefaultNamespace,
+		Type:      DefaultManifestType,
+		Content:   ManifestContent(),
 	}
 }

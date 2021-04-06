@@ -212,11 +212,11 @@ func (m mockManifestService) DeleteNamespace(_ context.Context, _ api.DeleteName
 	return nil
 }
 
-func (m mockManifestService) CreateStorageClass(_ context.Context, _ api.CreateStorageClassOpts) (*client.StorageClass, error) {
+func (m mockManifestService) CreateStorageClass(_ context.Context, _ api.CreateStorageClassOpts) (*client.KubernetesManifest, error) {
 	panic("implement me")
 }
 
-func (m mockManifestService) CreateExternalSecret(_ context.Context, _ client.CreateExternalSecretOpts) (*client.ExternalSecret, error) {
+func (m mockManifestService) CreateExternalSecret(_ context.Context, _ client.CreateExternalSecretOpts) (*client.KubernetesManifest, error) {
 	panic("implement me")
 }
 
@@ -224,7 +224,7 @@ func (m mockManifestService) DeleteExternalSecret(_ context.Context, _ client.De
 	return nil
 }
 
-func (m mockManifestService) CreateConfigMap(_ context.Context, _ client.CreateConfigMapOpts) (*client.ConfigMap, error) {
+func (m mockManifestService) CreateConfigMap(_ context.Context, _ client.CreateConfigMapOpts) (*client.KubernetesManifest, error) {
 	panic("implement me")
 }
 
@@ -236,7 +236,7 @@ func (m mockManifestService) ScaleDeployment(_ context.Context, _ api.ScaleDeplo
 	panic("implement me")
 }
 
-func (m mockManifestService) CreateNamespace(_ context.Context, _ api.CreateNamespaceOpts) (*client.Namespace, error) {
+func (m mockManifestService) CreateNamespace(_ context.Context, _ api.CreateNamespaceOpts) (*client.KubernetesManifest, error) {
 	panic("implement me")
 }
 

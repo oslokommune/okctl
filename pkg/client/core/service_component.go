@@ -133,22 +133,20 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 
 	_, err = c.manifest.CreateExternalSecret(ctx, client.CreateExternalSecretOpts{
 		ID: opts.ID,
-		Manifests: []api.Manifest{
-			{
-				Name:      adminSecretName(opts.ApplicationName),
-				Namespace: opts.Namespace,
-				Backend:   api.BackendTypeSecretsManager,
-				Data: []api.Data{
-					{
-						Key:      pg.AdminSecretFriendlyName,
-						Name:     "PGUSER",
-						Property: "username",
-					},
-					{
-						Key:      pg.AdminSecretFriendlyName,
-						Name:     "PGPASSWORD",
-						Property: "password",
-					},
+		Manifest: api.Manifest{
+			Name:      adminSecretName(opts.ApplicationName),
+			Namespace: opts.Namespace,
+			Backend:   api.BackendTypeSecretsManager,
+			Data: []api.Data{
+				{
+					Key:      pg.AdminSecretFriendlyName,
+					Name:     "PGUSER",
+					Property: "username",
+				},
+				{
+					Key:      pg.AdminSecretFriendlyName,
+					Name:     "PGPASSWORD",
+					Property: "password",
 				},
 			},
 		},

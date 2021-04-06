@@ -207,67 +207,31 @@ func (k *kubeRun) DeleteExternalSecrets(opts api.DeleteExternalSecretsOpts) erro
 	return nil
 }
 
-// In all fairness, we should refactor this, probably by extending the functionality
-// on the kube side. First we collect all apply things, then we apply, or something like
-// this.
-// nolint: funlen
 func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*api.ExternalSecretsKube, error) {
-	fns := make([]kube.Applier, len(opts.Manifests))
-	manifests := map[string][]byte{}
-	namespaces := map[string]struct{}{}
+	data := make([]v1.ExternalSecretData, len(opts.Manifest.Data))
 
-	for i, manifest := range opts.Manifests {
-		data := make([]v1.ExternalSecretData, len(manifest.Data))
-
-		for i, d := range manifest.Data {
-			data[i] = v1.ExternalSecretData{
-				Key:      d.Key,
-				Name:     d.Name,
-				Property: d.Property,
-			}
+	for i, d := range opts.Manifest.Data {
+		data[i] = v1.ExternalSecretData{
+			Key:      d.Key,
+			Name:     d.Name,
+			Property: d.Property,
 		}
-
-		secretManifest := externalsecret.SecretManifest(
-			manifest.Name,
-			manifest.Namespace,
-			manifest.Backend,
-			manifest.Annotations,
-			manifest.Labels,
-			data,
-		)
-
-		fn := externalsecret.New(manifest.Name, manifest.Namespace, secretManifest)
-
-		raw, err := yaml.Marshal(secretManifest)
-		if err != nil {
-			return nil, fmt.Errorf("marshalling manifest: %w", err)
-		}
-
-		fns[i] = kube.Applier{
-			Fn:          fn.CreateSecret,
-			Description: fmt.Sprintf("external secret %s in %s", manifest.Name, manifest.Namespace),
-		}
-
-		manifests[fmt.Sprintf("external-secret-%s.yml", manifest.Name)] = raw
-		namespaces[manifest.Namespace] = struct{}{}
 	}
 
-	for ns := range namespaces {
-		newNS := namespace.New(ns, nil)
+	secretManifest := externalsecret.SecretManifest(
+		opts.Manifest.Name,
+		opts.Manifest.Namespace,
+		opts.Manifest.Backend,
+		opts.Manifest.Annotations,
+		opts.Manifest.Labels,
+		data,
+	)
 
-		fns = append([]kube.Applier{
-			{
-				Fn:          newNS.CreateNamespace,
-				Description: fmt.Sprintf("namespace %s", ns),
-			},
-		}, fns...)
+	fn := externalsecret.New(opts.Manifest.Name, opts.Manifest.Namespace, secretManifest)
 
-		data, err := yaml.Marshal(newNS.NamespaceManifest())
-		if err != nil {
-			return nil, fmt.Errorf("marshalling manifest: %w", err)
-		}
-
-		manifests[fmt.Sprintf("namespace-%s.yml", ns)] = data
+	raw, err := yaml.Marshal(secretManifest)
+	if err != nil {
+		return nil, fmt.Errorf("marshalling manifest: %w", err)
 	}
 
 	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
@@ -275,15 +239,19 @@ func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*ap
 		return nil, fmt.Errorf("creating kubernetes client: %w", err)
 	}
 
-	// Should probably watch these..
-	_, err = client.Apply(fns...)
+	_, err = client.Apply(kube.Applier{
+		Fn:          fn.CreateSecret,
+		Description: fmt.Sprintf("external secret %s in %s", opts.Manifest.Name, opts.Manifest.Namespace),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("applying kubernetes manifests: %w", err)
 	}
 
 	return &api.ExternalSecretsKube{
 		ID:        opts.ID,
-		Manifests: manifests,
+		Name:      opts.Manifest.Name,
+		Namespace: opts.Manifest.Namespace,
+		Content:   raw,
 	}, nil
 }
 

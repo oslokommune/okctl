@@ -57,6 +57,8 @@ const (
 	DefaultVpcCloudFormationTemplate = "vpc-cf.yml"
 	DefaultVpcBaseDir                = "vpc"
 
+	DefaultKubernetesManifestDir = "manifests"
+
 	DefaultNamespaceBaseDir    = "namespaces"
 	DefaultNamespaceOutputFile = "ns-output.json"
 	DefaultNamespaceConfigFile = "ns-conf.yaml"
@@ -112,10 +114,15 @@ const (
 	DefaultServiceAccountConfigFile                 = "service-account-config.yml"
 	DefaultServiceAccountOutputsFile                = "service-account-outputs.json"
 
-	DefaultStormDBName              = "state.db"
-	DefaultStormNodeDomains         = "domains"
-	DefaultStormNodeCertificates    = "certificates"
-	DefaultStormNodeServiceAccounts = "serviceaccounts"
+	DefaultStormDBName                 = "state.db"
+	DefaultStormNodeDomains            = "domains"
+	DefaultStormNodeCertificates       = "certificates"
+	DefaultStormNodeServiceAccounts    = "serviceaccounts"
+	DefaultStormNodeKubernetesManifest = "manifests"
+	DefaultStormNodeBlockStorage       = "blockstorage"
+	DefaultStormNodeMonitoring         = "monitoring"
+	DefaultStormNodeComponent          = "components"
+	DefaultStormNodeArgoCD             = "argocd"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"

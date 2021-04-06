@@ -100,6 +100,14 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		return nil, err
 	}
 
+	_, err = s.manifest.CreateNamespace(ctx, api.CreateNamespaceOpts{
+		ID:        opts.ID,
+		Namespace: constant.DefaultArgoCDNamespace,
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	clientSecret, err := s.param.CreateSecret(ctx, api.CreateSecretOpts{
 		ID:     opts.ID,
 		Name:   "argocd/client_secret",
@@ -121,47 +129,54 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 	privateKeyName := "argocd-privatekey"
 	privateKeyDataName := "ssh-private-key"
 
-	manifest, err := s.manifest.CreateExternalSecret(ctx, client.CreateExternalSecretOpts{
-		ID: opts.ID,
-		Manifests: []api.Manifest{
-			{
-				Name:      privateKeyName,
-				Namespace: constant.DefaultArgoCDNamespace,
-				Backend:   api.BackendTypeParameterStore,
-				Annotations: map[string]string{
-					"meta.helm.sh/release-name":      "argocd",
-					"meta.helm.sh/release-namespace": "argocd",
-				},
-				Labels: map[string]string{
-					"app.kubernetes.io/managed-by": "Helm",
-				},
-				Data: []api.Data{
-					{
-						Name: privateKeyDataName,
-						Key:  opts.Repository.DeployKey.PrivateKeySecret.Path,
-					},
+	priv, err := s.manifest.CreateExternalSecret(ctx, client.CreateExternalSecretOpts{
+		ID:        opts.ID,
+		Namespace: constant.DefaultArgoCDNamespace,
+		Manifest: api.Manifest{
+			Name:      privateKeyName,
+			Namespace: constant.DefaultArgoCDNamespace,
+			Backend:   api.BackendTypeParameterStore,
+			Annotations: map[string]string{
+				"meta.helm.sh/release-name":      "argocd",
+				"meta.helm.sh/release-namespace": "argocd",
+			},
+			Labels: map[string]string{
+				"app.kubernetes.io/managed-by": "Helm",
+			},
+			Data: []api.Data{
+				{
+					Name: privateKeyDataName,
+					Key:  opts.Repository.DeployKey.PrivateKeySecret.Path,
 				},
 			},
-			{
-				Name:      "argocd-secret",
-				Namespace: "argocd",
-				Backend:   api.BackendTypeParameterStore,
-				Annotations: map[string]string{
-					"meta.helm.sh/release-name":      "argocd",
-					"meta.helm.sh/release-namespace": "argocd",
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	sec, err := s.manifest.CreateExternalSecret(ctx, client.CreateExternalSecretOpts{
+		ID:        opts.ID,
+		Namespace: constant.DefaultArgoCDNamespace,
+		Manifest: api.Manifest{
+			Name:      "argocd-secret",
+			Namespace: "argocd",
+			Backend:   api.BackendTypeParameterStore,
+			Annotations: map[string]string{
+				"meta.helm.sh/release-name":      "argocd",
+				"meta.helm.sh/release-namespace": "argocd",
+			},
+			Labels: map[string]string{
+				"app.kubernetes.io/managed-by": "Helm",
+			},
+			Data: []api.Data{
+				{
+					Name: "dex.cognito.clientSecret",
+					Key:  clientSecret.Path,
 				},
-				Labels: map[string]string{
-					"app.kubernetes.io/managed-by": "Helm",
-				},
-				Data: []api.Data{
-					{
-						Name: "dex.cognito.clientSecret",
-						Key:  clientSecret.Path,
-					},
-					{
-						Name: "server.secretkey",
-						Key:  secretKey.Path,
-					},
+				{
+					Name: "server.secretkey",
+					Key:  secretKey.Path,
 				},
 			},
 		},
@@ -195,10 +210,8 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 	argo.Certificate = cert
 	argo.IdentityClient = identityClient
 	argo.ClientSecret = clientSecret
-	argo.ExternalSecret = &api.ExternalSecretsKube{
-		ID:        manifest.ID,
-		Manifests: manifest.Manifests,
-	}
+	argo.PrivateKey = priv
+	argo.Secret = sec
 	argo.SecretKey = secretKey
 	argo.AuthDomain = opts.AuthDomain
 

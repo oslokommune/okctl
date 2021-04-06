@@ -194,7 +194,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 
 	return &clientCore.Services{
 		AWSLoadBalancerControllerService: o.awsLoadBalancerControllerService(outputDir, spin),
-		ArgoCD:                           o.argocdService(outputDir, spin),
+		ArgoCD:                           o.argocdService(outputDir, o.StormDB.From(constant.DefaultStormNodeArgoCD), spin),
 		ApplicationService:               o.applicationService(outputDir, applicationsOutputDir, spin),
 		Certificate:                      o.certService(outputDir, o.StormDB.From(constant.DefaultStormNodeCertificates)),
 		Cluster:                          o.clusterService(outputDir, spin),
@@ -202,19 +202,19 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		ExternalDNS:                      o.externalDNSService(outputDir, spin),
 		ExternalSecrets:                  o.externalSecretsService(outputDir, spin),
 		Github:                           o.githubService(ghClient, spin),
-		Manifest:                         o.manifestService(outputDir, spin),
+		Manifest:                         o.manifestService(outputDir, o.StormDB.From(constant.DefaultStormNodeKubernetesManifest)),
 		NameserverHandler:                o.nameserverHandlerService(ghClient, outputDir, spin),
 		Parameter:                        o.paramService(outputDir, spin),
 		Vpc:                              o.vpcService(outputDir, spin),
 		IdentityManager:                  o.identityManagerService(outputDir, spin),
 		Autoscaler:                       o.autoscalerService(outputDir, spin),
-		Blockstorage:                     o.blockstorageService(outputDir, spin),
-		Monitoring:                       o.monitoringService(outputDir, spin),
-		Component:                        o.componentService(outputDir, spin),
+		Blockstorage:                     o.blockstorageService(outputDir, o.StormDB.From(constant.DefaultStormNodeBlockStorage), spin),
+		Monitoring:                       o.monitoringService(outputDir, o.StormDB.From(constant.DefaultStormNodeMonitoring), spin),
+		Component:                        o.componentService(outputDir, o.StormDB.From(constant.DefaultStormNodeComponent), spin),
 	}, nil
 }
 
-func (o *Okctl) componentService(outputDir string, spin spinner.Spinner) client.ComponentService {
+func (o *Okctl) componentService(outputDir string, node stormpkg.Node, spin spinner.Spinner) client.ComponentService {
 	return clientCore.NewComponentService(spin,
 		rest.NewComponentAPI(o.restClient),
 		clientFilesystem.NewComponentStore(
@@ -227,7 +227,7 @@ func (o *Okctl) componentService(outputDir string, spin spinner.Spinner) client.
 		),
 		stateSaver.NewComponentState(o.RepoStateWithEnv),
 		console.NewComponentReport(o.Err, spin),
-		o.manifestService(path.Join(outputDir, constant.DefaultComponentBaseDir), spin.SubSpinner()),
+		o.manifestService(path.Join(outputDir, constant.DefaultComponentBaseDir), node),
 		o.CloudProvider,
 	)
 }
@@ -258,7 +258,7 @@ func (o *Okctl) serviceAccountService(outputDir string, node stormpkg.Node) clie
 	)
 }
 
-func (o *Okctl) monitoringService(outputDir string, spin spinner.Spinner) client.MonitoringService {
+func (o *Okctl) monitoringService(outputDir string, node stormpkg.Node, spin spinner.Spinner) client.MonitoringService {
 	monitoringDir := path.Join(outputDir, constant.DefaultMonitoringBaseDir)
 
 	return clientCore.NewMonitoringService(
@@ -299,7 +299,7 @@ func (o *Okctl) monitoringService(outputDir string, spin spinner.Spinner) client
 		console.NewMonitoringReport(o.Err, spin),
 		o.certService(monitoringDir, o.StormDB.From(constant.DefaultMonitoringBaseDir, constant.DefaultStormNodeCertificates)),
 		o.identityManagerService(monitoringDir, spin.SubSpinner()),
-		o.manifestService(monitoringDir, spin.SubSpinner()),
+		o.manifestService(monitoringDir, node),
 		o.paramService(monitoringDir, spin.SubSpinner()),
 		o.serviceAccountService(monitoringDir, o.StormDB.From(constant.DefaultMonitoringBaseDir, constant.DefaultStormNodeServiceAccounts)),
 		o.managedPolicyService(monitoringDir, spin.SubSpinner()),
@@ -347,14 +347,14 @@ func (o *Okctl) identityManagerService(outputDir string, spin spinner.Spinner) c
 	return identityManagerService
 }
 
-func (o *Okctl) argocdService(outputDir string, spin spinner.Spinner) client.ArgoCDService {
+func (o *Okctl) argocdService(outputDir string, node stormpkg.Node, spin spinner.Spinner) client.ArgoCDService {
 	argoBaseDir := path.Join(outputDir, constant.DefaultArgoCDBaseDir)
 
 	argoService := clientCore.NewArgoCDService(
 		spin,
 		o.identityManagerService(argoBaseDir, spin.SubSpinner()),
 		o.certService(argoBaseDir, o.StormDB.From(constant.DefaultArgoCDBaseDir, constant.DefaultStormNodeCertificates)),
-		o.manifestService(argoBaseDir, spin.SubSpinner()),
+		o.manifestService(argoBaseDir, node),
 		o.paramService(argoBaseDir, spin.SubSpinner()),
 		rest.NewArgoCDAPI(o.restClient),
 		clientFilesystem.NewArgoCDStore(
@@ -392,33 +392,16 @@ func (o *Okctl) paramService(outputDir string, spin spinner.Spinner) client.Para
 	)
 }
 
-func (o *Okctl) manifestService(outputDir string, spin spinner.Spinner) client.ManifestService {
+func (o *Okctl) manifestService(outputDir string, node stormpkg.Node) client.ManifestService {
 	return clientCore.NewManifestService(
-		spin,
 		rest.NewManifestAPI(o.restClient),
 		clientFilesystem.NewManifestStore(
 			clientFilesystem.Paths{
-				OutputFile: constant.DefaultNamespaceOutputFile,
-				ConfigFile: constant.DefaultNamespaceConfigFile,
-				BaseDir:    path.Join(outputDir, constant.DefaultNamespaceBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile: constant.DefaultConfigMapOutputsFile,
-				ConfigFile: constant.DefaultConfigMapConfigFile,
-				BaseDir:    path.Join(outputDir, constant.DefaultConfigMapBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile: constant.DefaultStorageClassOutputsFile,
-				ConfigFile: constant.DefaultStorageClassConfigFile,
-				BaseDir:    path.Join(outputDir, constant.DefaultStorageClassBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile: constant.DefaultKubeOutputsFile,
-				BaseDir:    path.Join(outputDir, constant.DefaultExternalSecretsBaseDir),
+				BaseDir: path.Join(outputDir, constant.DefaultKubernetesManifestDir),
 			},
 			o.FileSystem,
 		),
-		console.NewManifestReport(o.Err, spin),
+		storm.NewManifestState(node),
 	)
 }
 
@@ -519,7 +502,7 @@ func (o *Okctl) autoscalerService(outputDir string, spin spinner.Spinner) client
 	)
 }
 
-func (o *Okctl) blockstorageService(outputDir string, spin spinner.Spinner) client.BlockstorageService {
+func (o *Okctl) blockstorageService(outputDir string, node stormpkg.Node, spin spinner.Spinner) client.BlockstorageService {
 	return clientCore.NewBlockstorageService(
 		spin,
 		rest.NewBlockstorageAPI(o.restClient),
@@ -543,7 +526,7 @@ func (o *Okctl) blockstorageService(outputDir string, spin spinner.Spinner) clie
 			o.FileSystem,
 		),
 		console.NewBlockstorageReport(o.Err, spin),
-		o.manifestService(path.Join(outputDir, constant.DefaultBlockstorageBaseDir), spin.SubSpinner()),
+		o.manifestService(path.Join(outputDir, constant.DefaultBlockstorageBaseDir), node),
 	)
 }
 

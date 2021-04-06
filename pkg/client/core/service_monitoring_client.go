@@ -600,30 +600,36 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 		return nil, err
 	}
 
+	_, err = s.manifest.CreateNamespace(ctx, api.CreateNamespaceOpts{
+		ID:        opts.ID,
+		Namespace: constant.DefaultMonitoringNamespace,
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	manifest, err := s.manifest.CreateExternalSecret(ctx, client.CreateExternalSecretOpts{
 		ID: opts.ID,
-		Manifests: []api.Manifest{
-			{
-				Name:      secretsCfgName,
-				Namespace: constant.DefaultMonitoringNamespace,
-				Backend:   api.BackendTypeParameterStore,
-				Data: []api.Data{
-					{
-						Key:  clientSecret.Path,
-						Name: clientSecret.Name,
-					},
-					{
-						Key:  cookieSecret.Path,
-						Name: cookieSecret.Name,
-					},
-					{
-						Key:  adminUser.Path,
-						Name: adminUser.Name,
-					},
-					{
-						Key:  adminPass.Path,
-						Name: adminPass.Name,
-					},
+		Manifest: api.Manifest{
+			Name:      secretsCfgName,
+			Namespace: constant.DefaultMonitoringNamespace,
+			Backend:   api.BackendTypeParameterStore,
+			Data: []api.Data{
+				{
+					Key:  clientSecret.Path,
+					Name: clientSecret.Name,
+				},
+				{
+					Key:  cookieSecret.Path,
+					Name: cookieSecret.Name,
+				},
+				{
+					Key:  adminUser.Path,
+					Name: adminUser.Name,
+				},
+				{
+					Key:  adminPass.Path,
+					Name: adminPass.Name,
 				},
 			},
 		},

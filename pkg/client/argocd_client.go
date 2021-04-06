@@ -16,7 +16,8 @@ type ArgoCD struct {
 	AuthDomain     string
 	Certificate    *Certificate
 	IdentityClient *api.IdentityPoolClient
-	ExternalSecret *api.ExternalSecretsKube
+	PrivateKey     *KubernetesManifest
+	Secret         *KubernetesManifest
 	ClientSecret   *api.SecretParameter
 	SecretKey      *api.SecretParameter
 	Chart          *api.Helm

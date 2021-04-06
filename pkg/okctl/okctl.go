@@ -482,6 +482,10 @@ func (o *Okctl) initialise() error {
 		awsProvider.NewComponentCloudProvider(o.CloudProvider),
 	)
 
+	containerRepositoryService := core.NewContainerRepositoryService(
+		awsProvider.NewContainerRepositoryCloudProvider(o.CloudProvider),
+	)
+
 	// When creating a certificate for a CloudFront distribution, we
 	// need to create the certificate in us-east-1
 	provider, err := o.NewCloudProviderWithRegion("us-east-1")
@@ -495,17 +499,18 @@ func (o *Okctl) initialise() error {
 	)
 
 	services := core.Services{
-		Cluster:          clusterService,
-		Vpc:              vpcService,
-		ManagedPolicy:    managedPolicyService,
-		ServiceAccount:   serviceAccountService,
-		Helm:             helmService,
-		Kube:             kubeService,
-		Domain:           domainService,
-		Certificate:      certificateService,
-		Parameter:        parameterService,
-		IdentityManager:  identityManagerService,
-		ComponentService: componentService,
+		Cluster:                    clusterService,
+		Vpc:                        vpcService,
+		ManagedPolicy:              managedPolicyService,
+		ServiceAccount:             serviceAccountService,
+		Helm:                       helmService,
+		Kube:                       kubeService,
+		Domain:                     domainService,
+		Certificate:                certificateService,
+		Parameter:                  parameterService,
+		IdentityManager:            identityManagerService,
+		ComponentService:           componentService,
+		ContainerRepositoryService: containerRepositoryService,
 	}
 
 	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))

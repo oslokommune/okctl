@@ -45,7 +45,10 @@ func (c *containerRepositoryService) CreateContainerRepository(_ context.Context
 	}
 
 	containerRepository := &client.ContainerRepository{
-		ImageName: repository.Name,
+		ClusterID:              repository.ClusterID,
+		ImageName:              repository.Name,
+		StackName:              repository.StackName,
+		CloudFormationTemplate: repository.CloudFormationTemplate,
 	}
 
 	r1, err := c.store.SaveContainerRepository(containerRepository)

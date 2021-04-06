@@ -11,54 +11,67 @@ import (
 )
 
 type (
+	// TagMutabilityConfiguration configures image tag mutability. If mutability is set to Immutable, we'll se an error
+	// trying to push an already existing tag
 	TagMutabilityConfiguration string
-	ImageScanConfiguration     bool
+	// ImageScanConfiguration configures whether to scan pushed images for security vulnerabilities
+	ImageScanConfiguration bool
 )
 
+//goland:noinspection GoUnusedConst
 const (
-	TagMutabilityConfigurationMutable   = "MUTABLE"
+	// TagMutabilityConfigurationMutable enables overwriting existing tags
+	TagMutabilityConfigurationMutable = "MUTABLE"
+	// TagMutabilityConfigurationImmutable disables overwriting existing tags
 	TagMutabilityConfigurationImmutable = "IMMUTABLE"
 
-	ImageScanConfigurationOn  = true
+	// ImageScanConfigurationOn enables image vulnerability scanning
+	ImageScanConfigurationOn = true
+	// ImageScanConfigurationOff disables image vulnerability scanning
 	ImageScanConfigurationOff = false
 )
 
+// ContainerRepository contains state for building a cloud formation resource
 type ContainerRepository struct {
-	StoredName string
+	clusterName string
+	environment string
+	imageName   string
 }
 
-// TODO: Lifecycle policy
+// Resource returns the cloud formation resource
 func (c *ContainerRepository) Resource() cloudformation.Resource {
 	return &ecr.Repository{
 		ImageScanningConfiguration: ImageScanConfigurationOn,
 		ImageTagMutability:         TagMutabilityConfigurationImmutable,
-		RepositoryName:             c.StoredName, // TODO: should be something else?
-		// TODO: Is this set at a sentralized place?
-		// Tags:                                 nil,
-		// AWSCloudFormationDeletionPolicy:      "",
-		// AWSCloudFormationUpdateReplacePolicy: "",
-		// AWSCloudFormationDependsOn:           nil,
-		// AWSCloudFormationMetadata:            nil,
-		// AWSCloudFormationCondition:           "",
+		RepositoryName: fmt.Sprintf("%s-%s-%s",
+			c.clusterName,
+			c.environment,
+			c.imageName,
+		),
 	}
 }
 
+// Name returns the logical identifier
 func (c *ContainerRepository) Name() string {
-	return c.StoredName
+	return c.imageName
 }
 
+// Ref returns an aws intrinsic ref to this resource
 func (c *ContainerRepository) Ref() string {
 	return cloudformation.Ref(c.Name())
 }
 
+// NamedOutputs returns the named outputs
 func (c *ContainerRepository) NamedOutputs() map[string]cloudformation.Output {
 	return cfn.NewValue(c.Name(), c.Ref()).NamedOutputs()
 }
 
 // New returns an initialised AWS S3 cloud formation template
 // - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-bucket.html
-func New(environment, imageName string) *ContainerRepository {
+func New(clustername, environment, imageName string) *ContainerRepository {
 	return &ContainerRepository{
-		StoredName: fmt.Sprintf("%s/%s", environment, imageName),
+		clusterName: clustername,
+		environment: environment,
+		imageName:   imageName,
 	}
 }

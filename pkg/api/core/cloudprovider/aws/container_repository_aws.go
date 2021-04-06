@@ -34,6 +34,7 @@ func (c *containerRepositoryCloudProvider) CreateContainerRepository(opts *api.C
 	}
 
 	repository := &api.ContainerRepository{
+		Name:                   opts.Name,
 		ClusterID:              opts.ClusterID,
 		StackName:              opts.StackName,
 		CloudFormationTemplate: string(template),

@@ -11,10 +11,11 @@ type containerRepositoryService struct {
 	provider api.ContainerRepositoryCloudProvider
 }
 
+// CreateContainerRepository handles creating a container repository
 func (c *containerRepositoryService) CreateContainerRepository(_ context.Context, opts *api.CreateContainerRepositoryOpts) (*api.ContainerRepository, error) {
 	err := opts.Validate()
 	if err != nil {
-		return nil, errors.E(err, "invalid inputs", errors.Invalid)
+		return nil, errors.E(err, "validating create opts", errors.Invalid)
 	}
 
 	repository, err := c.provider.CreateContainerRepository(opts)
@@ -25,6 +26,7 @@ func (c *containerRepositoryService) CreateContainerRepository(_ context.Context
 	return repository, nil
 }
 
+// DeleteContainerRepository handles deleting a container repository
 func (c *containerRepositoryService) DeleteContainerRepository(_ context.Context, opts *api.DeleteContainerRepositoryOpts) error {
 	err := opts.Validate()
 	if err != nil {
@@ -39,7 +41,7 @@ func (c *containerRepositoryService) DeleteContainerRepository(_ context.Context
 	return nil
 }
 
-// NewComponentService returns an initialised component service
+// NewContainerRepositoryService returns an initialised container repository service
 func NewContainerRepositoryService(provider api.ContainerRepositoryCloudProvider) api.ContainerRepositoryService {
 	return &containerRepositoryService{
 		provider: provider,

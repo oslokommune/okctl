@@ -2,16 +2,20 @@ package client
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client/store"
 )
 
+// CreateContainerRepositoryOpts contains necessary information to create a container repository
 type CreateContainerRepositoryOpts struct {
 	ClusterID api.ID
 	ImageName string
 }
 
+// DeleteContainerRepositoryOpts contains necessary information to delete a container repository
 type DeleteContainerRepositoryOpts struct {
 	ClusterID api.ID
 	ImageName string
@@ -19,8 +23,10 @@ type DeleteContainerRepositoryOpts struct {
 
 // ContainerRepository contains state after creating a container repository
 type ContainerRepository struct {
-	api.ContainerRepository
-	ImageName string
+	ClusterID              api.ID
+	ImageName              string
+	StackName              string
+	CloudFormationTemplate string
 }
 
 // ContainerRepositoryService orchestrates the creation of various services
@@ -52,4 +58,13 @@ type ContainerRepositoryState interface {
 type ContainerRepositoryReport interface {
 	ReportCreateContainerRepository(repository *ContainerRepository, reports []*store.Report) error
 	ReportDeleteContainerRepository(imageName string, reports []*store.Report) error
+}
+
+// URI returns the URI where the image can be pulled and pushed
+func (c ContainerRepository) URI() url.URL {
+	return url.URL{
+		Scheme: "https",
+		Host:   fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", c.ClusterID.AWSAccountID, c.ClusterID.Region),
+		Path:   fmt.Sprintf("%s-%s", c.ClusterID.ClusterName, c.ImageName),
+	}
 }

@@ -6,24 +6,29 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
+// CreateContainerRepositoryOpts contains necesessary information to create a container repository
 type CreateContainerRepositoryOpts struct {
 	ClusterID ID
 	Name      string
 	StackName string
 }
 
+// Validate ensures the struct contains valid data
 func (c CreateContainerRepositoryOpts) Validate() error {
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.ClusterID, validation.Required),
+		validation.Field(&c.Name, validation.Required),
 		validation.Field(&c.StackName, validation.Required),
 	)
 }
 
+// DeleteContainerRepositoryOpts contains necessary information to delete a container repository
 type DeleteContainerRepositoryOpts struct {
 	ClusterID ID
 	StackName string
 }
 
+// Validate ensures the struct contains valid data
 func (c DeleteContainerRepositoryOpts) Validate() error {
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.ClusterID, validation.Required),
@@ -31,6 +36,7 @@ func (c DeleteContainerRepositoryOpts) Validate() error {
 	)
 }
 
+// ContainerRepository represents a container repository
 type ContainerRepository struct {
 	ClusterID              ID
 	Name                   string

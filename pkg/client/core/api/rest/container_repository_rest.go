@@ -7,7 +7,7 @@ import (
 
 const (
 	// TargetComponentContainerRepository matches the REST API route
-	TargetComponentContainerRepository = "components/containerrepository"
+	TargetComponentContainerRepository = "containerrepositories"
 )
 
 type containerRepositoryAPI struct {

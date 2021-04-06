@@ -326,7 +326,7 @@ type Services struct {
 	Parameter                  api.ParameterService
 	IdentityManager            api.IdentityManagerService
 	ComponentService           api.ComponentService
-	containerRepositoryService api.ContainerRepositoryService
+	ContainerRepositoryService api.ContainerRepositoryService
 }
 
 // EndpointOption makes it easy to enable and disable the endpoint

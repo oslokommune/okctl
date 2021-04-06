@@ -142,6 +142,7 @@ func (d Database) Validate() error {
 	)
 }
 
+// ContainerRepository is the states representation of a Container Repository
 type ContainerRepository struct {
 	ImageName string
 }

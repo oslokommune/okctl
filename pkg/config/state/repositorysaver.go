@@ -85,6 +85,7 @@ type Componenter interface {
 	DeleteDatabase(applicationName string) (*store.Report, error)
 }
 
+// ContainerRepositorer defines allowed actions on the container repository state
 type ContainerRepositorer interface {
 	SaveContainerRepository(imageName string, repository ContainerRepository) (*store.Report, error)
 	GetContainerRepository(imageName string) ContainerRepository

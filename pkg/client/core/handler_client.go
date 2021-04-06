@@ -66,4 +66,5 @@ type Services struct {
 	Helm                             client.HelmService
 	ManagedPolicy                    client.ManagedPolicyService
 	ServiceAccount                   client.ServiceAccountService
+	ContainerRepository              client.ContainerRepositoryService
 }

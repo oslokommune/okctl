@@ -22,15 +22,18 @@ func (c *containerRepositoryState) SaveContainerRepository(updatedRepository *cl
 	repository := c.state.GetContainerRepository(updatedRepository.ImageName)
 
 	repository.ImageName = updatedRepository.ImageName
+
 	report, err := c.state.SaveContainerRepository(updatedRepository.ImageName, repository)
 	if err != nil {
 		return nil, err
 	}
 
+	repositoryURI := updatedRepository.URI()
+
 	report.Actions = append([]store.Action{
 		{
 			Name: "ContainerRepository",
-			Path: fmt.Sprintf(""),
+			Path: fmt.Sprintf("URI=%s", repositoryURI.String()),
 			Type: "StateUpdate[add]",
 		},
 	}, report.Actions...)

@@ -1,7 +1,10 @@
 package filesystem
 
 import (
+	"fmt"
 	"path"
+
+	"github.com/oslokommune/okctl/pkg/api"
 
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
@@ -13,9 +16,25 @@ type containerRepositoryStore struct {
 	fs    *afero.Afero
 }
 
+type outputtedContainerRegistry struct {
+	ClusterID api.ID
+	StackName string
+	ImageName string
+	ImageURI  string
+}
+
 func (c *containerRepositoryStore) SaveContainerRepository(repository *client.ContainerRepository) (*store.Report, error) {
+	imageURI := repository.URI()
+
+	output := outputtedContainerRegistry{
+		ClusterID: repository.ClusterID,
+		ImageName: repository.ImageName,
+		StackName: repository.StackName,
+		ImageURI:  fmt.Sprintf("%s/%s", imageURI.Host, imageURI.Path),
+	}
+
 	report, err := store.NewFileSystem(path.Join(c.paths.BaseDir, repository.ImageName), c.fs).
-		StoreStruct(c.paths.OutputFile, repository, store.ToJSON()).
+		StoreStruct(c.paths.OutputFile, output, store.ToJSON()).
 		StoreBytes(c.paths.CloudFormationFile, []byte(repository.CloudFormationTemplate)).
 		Do()
 	if err != nil {

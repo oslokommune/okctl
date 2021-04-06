@@ -88,7 +88,7 @@ func (c *HTTPClient) Do(method, endpoint string, body interface{}, into interfac
 	const logLineMaxlength = 3000
 	if into != nil {
 		if c.Debug {
-			truncatedOut := truncate.TruncateBytes(out, logLineMaxlength)
+			truncatedOut := truncate.Bytes(out, logLineMaxlength)
 			_, err = fmt.Fprintf(c.Progress, "client (method: %s, endpoint: %s) received data: %s", method, endpoint, truncatedOut)
 			if err != nil {
 				return fmt.Errorf("failed to write debug output: %w", err)
@@ -102,7 +102,7 @@ func (c *HTTPClient) Do(method, endpoint string, body interface{}, into interfac
 	}
 
 	if c.Debug {
-		truncatedOut := truncate.TruncateBytes(out, logLineMaxlength)
+		truncatedOut := truncate.Bytes(out, logLineMaxlength)
 		_, err = io.Copy(c.Progress, strings.NewReader(string(truncatedOut)))
 		if err != nil {
 			return fmt.Errorf("%s: %w", pretty("failed to write progress for", method, endpoint), err)

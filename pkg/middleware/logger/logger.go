@@ -80,7 +80,7 @@ func (l *logging) ProcessResponse(err error, response interface{}, begin time.Ti
 			d = litter.Sdump(response)
 		}
 
-		truncatedDump := truncate.Truncate(&d, 5000)
+		truncatedDump := truncate.String(&d, 5000)
 		l.log.Trace("response: ", truncatedDump)
 	}
 

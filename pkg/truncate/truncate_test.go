@@ -17,7 +17,13 @@ func TestTruncate(t *testing.T) {
 			name:      "Should truncate string",
 			input:     "1234567890",
 			maxLength: 5,
-			expected:  "12345",
+			expected:  "12345 [truncated 5 bytes]",
+		},
+		{
+			name:      "Should truncate some other string",
+			input:     "1234567890",
+			maxLength: 7,
+			expected:  "1234567 [truncated 3 bytes]",
 		},
 		{
 			name:      "Should keep string if it's equal to maxLength",
@@ -35,13 +41,13 @@ func TestTruncate(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			// Test Truncate string
-			truncatedString := truncate.Truncate(&tc.input, tc.maxLength)
+			// Test String string
+			truncatedString := truncate.String(&tc.input, tc.maxLength)
 			assert.Equal(t, tc.expected, truncatedString)
 
-			// Test Truncate bytes
+			// Test String bytes
 			inputBytes := []byte(tc.input)
-			truncatedBytes := truncate.TruncateBytes(inputBytes, tc.maxLength)
+			truncatedBytes := truncate.Bytes(inputBytes, tc.maxLength)
 			expectedBytes := []byte(tc.expected)
 			assert.Equal(t, expectedBytes, truncatedBytes)
 		})

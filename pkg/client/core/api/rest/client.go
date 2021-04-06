@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/truncate"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -84,9 +85,11 @@ func (c *HTTPClient) Do(method, endpoint string, body interface{}, into interfac
 		err = resp.Body.Close()
 	}()
 
+	const logLineMaxlength = 3000
 	if into != nil {
 		if c.Debug {
-			_, err = fmt.Fprintf(c.Progress, "client (method: %s, endpoint: %s) received data: %s", method, endpoint, out)
+			truncatedOut := truncate.TruncateBytes(out, logLineMaxlength)
+			_, err = fmt.Fprintf(c.Progress, "client (method: %s, endpoint: %s) received data: %s", method, endpoint, truncatedOut)
 			if err != nil {
 				return fmt.Errorf("failed to write debug output: %w", err)
 			}
@@ -99,7 +102,8 @@ func (c *HTTPClient) Do(method, endpoint string, body interface{}, into interfac
 	}
 
 	if c.Debug {
-		_, err = io.Copy(c.Progress, strings.NewReader(string(out)))
+		truncatedOut := truncate.TruncateBytes(out, logLineMaxlength)
+		_, err = io.Copy(c.Progress, strings.NewReader(string(truncatedOut)))
 		if err != nil {
 			return fmt.Errorf("%s: %w", pretty("failed to write progress for", method, endpoint), err)
 		}

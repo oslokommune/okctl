@@ -1,3 +1,4 @@
+// Package truncate implements truncating variables
 package truncate
 
 import "fmt"

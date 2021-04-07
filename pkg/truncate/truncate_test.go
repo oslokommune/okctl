@@ -1,9 +1,10 @@
 package truncate_test
 
 import (
+	"testing"
+
 	"github.com/oslokommune/okctl/pkg/truncate"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestTruncate(t *testing.T) {
@@ -48,6 +49,7 @@ func TestTruncate(t *testing.T) {
 			// Test String bytes
 			inputBytes := []byte(tc.input)
 			truncatedBytes := truncate.Bytes(inputBytes, tc.maxLength)
+
 			expectedBytes := []byte(tc.expected)
 			assert.Equal(t, expectedBytes, truncatedBytes)
 		})

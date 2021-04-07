@@ -3,9 +3,10 @@ package logger
 
 import (
 	"context"
-	"github.com/oslokommune/okctl/pkg/truncate"
 	"strings"
 	"time"
+
+	"github.com/oslokommune/okctl/pkg/truncate"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/sanity-io/litter"
@@ -80,7 +81,7 @@ func (l *logging) ProcessResponse(err error, response interface{}, begin time.Ti
 			d = litter.Sdump(response)
 		}
 
-		truncatedDump := truncate.String(&d, 5000)
+		truncatedDump := truncate.String(&d, 3500)
 		l.log.Trace("response: ", truncatedDump)
 	}
 

@@ -10,7 +10,6 @@ import (
 
 type manifestService struct {
 	api   client.ManifestAPI
-	store client.ManifestStore
 	state client.ManifestState
 }
 
@@ -38,11 +37,6 @@ func (s *manifestService) CreateConfigMap(_ context.Context, opts client.CreateC
 		Content:   cm.Manifest,
 	}
 
-	err = s.store.SaveKubernetesManifests(m)
-	if err != nil {
-		return nil, err
-	}
-
 	err = s.state.SaveKubernetesManifests(m)
 	if err != nil {
 		return nil, err
@@ -57,11 +51,6 @@ func (s *manifestService) DeleteConfigMap(_ context.Context, opts client.DeleteC
 		Name:      opts.Name,
 		Namespace: opts.Namespace,
 	})
-	if err != nil {
-		return err
-	}
-
-	err = s.store.RemoveKubernetesManifests(opts.Name, client.ManifestTypeConfigMap)
 	if err != nil {
 		return err
 	}
@@ -83,7 +72,7 @@ func (s *manifestService) DeleteExternalSecret(_ context.Context, opts client.De
 		return err
 	}
 
-	err = s.store.RemoveKubernetesManifests(opts.Name, client.ManifestTypeExternalSecret)
+	err = s.state.RemoveKubernetesManifests(opts.Name)
 	if err != nil {
 		return err
 	}
@@ -104,11 +93,6 @@ func (s *manifestService) CreateStorageClass(_ context.Context, opts api.CreateS
 		Content: sc.Manifest,
 	}
 
-	err = s.store.SaveKubernetesManifests(m)
-	if err != nil {
-		return nil, err
-	}
-
 	err = s.state.SaveKubernetesManifests(m)
 	if err != nil {
 		return nil, err
@@ -126,13 +110,8 @@ func (s *manifestService) CreateNamespace(_ context.Context, opts api.CreateName
 	m := &client.KubernetesManifest{
 		ID:      opts.ID,
 		Name:    opts.Namespace,
-		Type:    client.ManifestTypeStorageClass,
+		Type:    client.ManifestTypeNamespace,
 		Content: ns.Manifest,
-	}
-
-	err = s.store.SaveKubernetesManifests(m)
-	if err != nil {
-		return nil, err
 	}
 
 	err = s.state.SaveKubernetesManifests(m)
@@ -145,11 +124,6 @@ func (s *manifestService) CreateNamespace(_ context.Context, opts api.CreateName
 
 func (s *manifestService) DeleteNamespace(_ context.Context, opts api.DeleteNamespaceOpts) error {
 	err := s.api.DeleteNamespace(opts)
-	if err != nil {
-		return err
-	}
-
-	err = s.store.RemoveKubernetesManifests(opts.Namespace, client.ManifestTypeNamespace)
 	if err != nil {
 		return err
 	}
@@ -176,11 +150,6 @@ func (s *manifestService) CreateExternalSecret(_ context.Context, opts client.Cr
 		Content:   m.Content,
 	}
 
-	err = s.store.SaveKubernetesManifests(manifest)
-	if err != nil {
-		return nil, err
-	}
-
 	err = s.state.SaveKubernetesManifests(manifest)
 	if err != nil {
 		return nil, err
@@ -192,12 +161,10 @@ func (s *manifestService) CreateExternalSecret(_ context.Context, opts client.Cr
 // NewManifestService returns an initialised service
 func NewManifestService(
 	api client.ManifestAPI,
-	store client.ManifestStore,
 	state client.ManifestState,
 ) client.ManifestService {
 	return &manifestService{
 		api:   api,
-		store: store,
 		state: state,
 	}
 }

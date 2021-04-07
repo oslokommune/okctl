@@ -202,7 +202,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		ExternalDNS:                      o.externalDNSService(outputDir, spin),
 		ExternalSecrets:                  o.externalSecretsService(outputDir, spin),
 		Github:                           o.githubService(ghClient, spin),
-		Manifest:                         o.manifestService(outputDir, o.StormDB.From(constant.DefaultStormNodeKubernetesManifest)),
+		Manifest:                         o.manifestService(o.StormDB.From(constant.DefaultStormNodeKubernetesManifest)),
 		NameserverHandler:                o.nameserverHandlerService(ghClient, outputDir, spin),
 		Parameter:                        o.paramService(outputDir, spin),
 		Vpc:                              o.vpcService(outputDir, spin),
@@ -227,7 +227,7 @@ func (o *Okctl) componentService(outputDir string, node stormpkg.Node, spin spin
 		),
 		stateSaver.NewComponentState(o.RepoStateWithEnv),
 		console.NewComponentReport(o.Err, spin),
-		o.manifestService(path.Join(outputDir, constant.DefaultComponentBaseDir), node),
+		o.manifestService(node),
 		o.CloudProvider,
 	)
 }
@@ -291,7 +291,7 @@ func (o *Okctl) monitoringService(outputDir string, node stormpkg.Node, spin spi
 		console.NewMonitoringReport(o.Err, spin),
 		o.certService(monitoringDir, o.StormDB.From(constant.DefaultMonitoringBaseDir, constant.DefaultStormNodeCertificates)),
 		o.identityManagerService(monitoringDir, spin.SubSpinner()),
-		o.manifestService(monitoringDir, node),
+		o.manifestService(node),
 		o.paramService(monitoringDir, spin.SubSpinner()),
 		o.serviceAccountService(monitoringDir, o.StormDB.From(constant.DefaultMonitoringBaseDir, constant.DefaultStormNodeServiceAccounts)),
 		o.managedPolicyService(node),
@@ -346,7 +346,7 @@ func (o *Okctl) argocdService(outputDir string, node stormpkg.Node, spin spinner
 		spin,
 		o.identityManagerService(argoBaseDir, spin.SubSpinner()),
 		o.certService(argoBaseDir, o.StormDB.From(constant.DefaultArgoCDBaseDir, constant.DefaultStormNodeCertificates)),
-		o.manifestService(argoBaseDir, node),
+		o.manifestService(node),
 		o.paramService(argoBaseDir, spin.SubSpinner()),
 		rest.NewArgoCDAPI(o.restClient),
 		clientFilesystem.NewArgoCDStore(
@@ -384,15 +384,9 @@ func (o *Okctl) paramService(outputDir string, spin spinner.Spinner) client.Para
 	)
 }
 
-func (o *Okctl) manifestService(outputDir string, node stormpkg.Node) client.ManifestService {
+func (o *Okctl) manifestService(node stormpkg.Node) client.ManifestService {
 	return clientCore.NewManifestService(
 		rest.NewManifestAPI(o.restClient),
-		clientFilesystem.NewManifestStore(
-			clientFilesystem.Paths{
-				BaseDir: path.Join(outputDir, constant.DefaultKubernetesManifestDir),
-			},
-			o.FileSystem,
-		),
 		storm.NewManifestState(node),
 	)
 }
@@ -518,7 +512,7 @@ func (o *Okctl) blockstorageService(outputDir string, node stormpkg.Node, spin s
 			o.FileSystem,
 		),
 		console.NewBlockstorageReport(o.Err, spin),
-		o.manifestService(path.Join(outputDir, constant.DefaultBlockstorageBaseDir), node),
+		o.manifestService(node),
 	)
 }
 

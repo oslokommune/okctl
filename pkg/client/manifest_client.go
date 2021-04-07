@@ -92,12 +92,6 @@ type ManifestAPI interface {
 	ScaleDeployment(opts api.ScaleDeploymentOpts) error
 }
 
-// ManifestStore defines the storage layer
-type ManifestStore interface {
-	SaveKubernetesManifests(manifests *KubernetesManifest) error
-	RemoveKubernetesManifests(name string, typ ManifestType) error
-}
-
 // ManifestState defines the state layer
 type ManifestState interface {
 	SaveKubernetesManifests(manifests *KubernetesManifest) error

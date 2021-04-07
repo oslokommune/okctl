@@ -57,37 +57,21 @@ const (
 	DefaultVpcCloudFormationTemplate = "vpc-cf.yml"
 	DefaultVpcBaseDir                = "vpc"
 
-	DefaultKubernetesManifestDir = "manifests"
-
-	DefaultNamespaceBaseDir    = "namespaces"
-	DefaultNamespaceOutputFile = "ns-output.json"
-	DefaultNamespaceConfigFile = "ns-conf.yaml"
-
-	DefaultMonitoringBaseDir                 = "monitoring"
-	DefaultPromtailBaseDir                   = "promtail"
-	DefaultLokiBaseDir                       = "loki"
-	DefaultTempoBaseDir                      = "tempo"
-	DefaultAWSLoadBalancerControllerBaseDir  = "aws-load-balancer-controller"
-	DefaultAlbIngressControllerBaseDir       = "alb-ingress-controller"
-	DefaultAliasBaseDir                      = "alias"
-	DefaultAliasCloudFormationTemplate       = "alias-cf.yaml"
-	DefaultArgoCDBaseDir                     = "argocd"
-	DefaultArgoOutputsFile                   = "argocd-outputs.json"
-	DefaultCertificateBaseDir                = "certificates"
-	DefaultCertificateCloudFormationTemplate = "certificate-cf.yml"
-	DefaultCertificateOutputsFile            = "certificate-outputs.json"
-	DefaultDomainBaseDir                     = "domains"
-	DefaultDomainCloudFormationTemplate      = "domains-cf.yml"
-	DefaultDomainOutputsFile                 = "domains-outputs.json"
-	DefaultExternalDNSBaseDir                = "external-dns"
-	DefaultExternalSecretsBaseDir            = "external-secrets"
-	DefaultConfigMapBaseDir                  = "configmap"
-	DefaultConfigMapConfigFile               = "configmap.yml"
-	// nolint: gosec
-	DefaultConfigMapOutputsFile                     = "ns-outputs.json"
-	DefaultStorageClassBaseDir                      = "storageclass"
-	DefaultStorageClassConfigFile                   = "storageclass.yml"
-	DefaultStorageClassOutputsFile                  = "sc-outputs.json"
+	DefaultMonitoringBaseDir                        = "monitoring"
+	DefaultPromtailBaseDir                          = "promtail"
+	DefaultLokiBaseDir                              = "loki"
+	DefaultTempoBaseDir                             = "tempo"
+	DefaultAWSLoadBalancerControllerBaseDir         = "aws-load-balancer-controller"
+	DefaultAliasBaseDir                             = "alias"
+	DefaultAliasCloudFormationTemplate              = "alias-cf.yaml"
+	DefaultArgoCDBaseDir                            = "argocd"
+	DefaultArgoOutputsFile                          = "argocd-outputs.json"
+	DefaultCertificateBaseDir                       = "certificates"
+	DefaultCertificateCloudFormationTemplate        = "certificate-cf.yml"
+	DefaultDomainBaseDir                            = "domains"
+	DefaultDomainCloudFormationTemplate             = "domains-cf.yml"
+	DefaultExternalDNSBaseDir                       = "external-dns"
+	DefaultExternalSecretsBaseDir                   = "external-secrets"
 	DefaultAutoscalerBaseDir                        = "autoscaler"
 	DefaultBlockstorageBaseDir                      = "blockstorage"
 	DefaultKubePromStackBaseDir                     = "kubepromstack"
@@ -107,7 +91,6 @@ const (
 	DefaultKubeOutputsFile                          = "kube-outputs.json"
 	DefaultParameterBaseDir                         = "parameters"
 	DefaultParameterOutputsFile                     = "parameter-outputs.json"
-	DefaultPolicyBaseDir                            = "policies"
 	DefaultPolicyCloudFormationTemplateFile         = "policy-cf.yml"
 	DefaultPolicyOutputFile                         = "policy-outputs.json"
 	DefaultServiceAccountBaseDir                    = "service-accounts"
@@ -147,19 +130,11 @@ const (
 	DefaultRequiredVpcs = 1
 	// DefaultRequiredIgws number of internet gateways required for cluster creation
 	DefaultRequiredIgws = 1
-	// DefaultRequiredEpisTestCluster number of elastic ips required for testcluster creation
-	DefaultRequiredEpisTestCluster = 1
-	// DefaultRequiredVpcsTestCluster number of vpc(s) required for testcluster creation
-	DefaultRequiredVpcsTestCluster = 1
-	// DefaultRequiredIgwsTestCluster number of internet gateways required for testcluster creation
-	DefaultRequiredIgwsTestCluster = 1
 
 	DefaultNameserverRecordTTL = 300
 
 	// DefaultMaxReconciliationRequeues defines the maximum allowed times a reconciliation can be requeued
 	DefaultMaxReconciliationRequeues = 3
-	// DefaultReconciliationRequeueDelay defines the default amount of time between each reconciliation
-	DefaultReconciliationRequeueDelay = 5 * time.Second
 
 	// DefaultClusterCIDR defines the default CIDR to use when creating cluster VPCs
 	DefaultClusterCIDR     = "192.168.0.0/20"

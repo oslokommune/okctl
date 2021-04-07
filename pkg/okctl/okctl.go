@@ -232,18 +232,10 @@ func (o *Okctl) componentService(outputDir string, node stormpkg.Node, spin spin
 	)
 }
 
-func (o *Okctl) managedPolicyService(outputDir string, spin spinner.Spinner) client.ManagedPolicyService {
-	return clientCore.NewManagedPolicyService(spin,
+func (o *Okctl) managedPolicyService(node stormpkg.Node) client.ManagedPolicyService {
+	return clientCore.NewManagedPolicyService(
 		rest.NewManagedPolicyAPI(o.restClient),
-		clientFilesystem.NewManagedPolicyStore(
-			clientFilesystem.Paths{
-				OutputFile:         constant.DefaultPolicyOutputFile,
-				CloudFormationFile: constant.DefaultPolicyCloudFormationTemplateFile,
-				BaseDir:            path.Join(outputDir, constant.DefaultPolicyBaseDir),
-			},
-			o.FileSystem,
-		),
-		console.NewManagedPolicyReport(o.Err, spin),
+		storm.NewManagedPolicyState(node),
 	)
 }
 
@@ -302,7 +294,7 @@ func (o *Okctl) monitoringService(outputDir string, node stormpkg.Node, spin spi
 		o.manifestService(monitoringDir, node),
 		o.paramService(monitoringDir, spin.SubSpinner()),
 		o.serviceAccountService(monitoringDir, o.StormDB.From(constant.DefaultMonitoringBaseDir, constant.DefaultStormNodeServiceAccounts)),
-		o.managedPolicyService(monitoringDir, spin.SubSpinner()),
+		o.managedPolicyService(node),
 		o.CloudProvider,
 	)
 }

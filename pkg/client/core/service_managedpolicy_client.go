@@ -5,83 +5,58 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/spinner"
 )
 
 type managedPolicyService struct {
-	spinner spinner.Spinner
-	api     client.ManagedPolicyAPI
-	store   client.ManagedPolicyStore
-	report  client.ManagedPolicyReport
+	api   client.ManagedPolicyAPI
+	state client.ManagedPolicyState
 }
 
-func (m *managedPolicyService) CreatePolicy(_ context.Context, opts api.CreatePolicyOpts) (*api.ManagedPolicy, error) {
-	err := m.spinner.Start("managed-policy")
+func (m *managedPolicyService) CreatePolicy(_ context.Context, opts client.CreatePolicyOpts) (*client.ManagedPolicy, error) {
+	p, err := m.api.CreatePolicy(api.CreatePolicyOpts{
+		ID:                     opts.ID,
+		StackName:              opts.StackName,
+		PolicyOutputName:       opts.PolicyOutputName,
+		CloudFormationTemplate: opts.CloudFormationTemplate,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	defer func() {
-		_ = m.spinner.Stop()
-	}()
+	policy := &client.ManagedPolicy{
+		ID:                     p.ID,
+		StackName:              p.StackName,
+		PolicyARN:              p.PolicyARN,
+		CloudFormationTemplate: p.CloudFormationTemplate,
+	}
 
-	p, err := m.api.CreatePolicy(opts)
+	err = m.state.SavePolicy(policy)
 	if err != nil {
 		return nil, err
 	}
 
-	report, err := m.store.SaveCreatePolicy(p)
-	if err != nil {
-		return nil, err
-	}
-
-	err = m.report.ReportCreatePolicy(p, report)
-	if err != nil {
-		return nil, err
-	}
-
-	return p, nil
+	return policy, nil
 }
 
-func (m *managedPolicyService) DeletePolicy(_ context.Context, opts api.DeletePolicyOpts) error {
-	err := m.spinner.Start("managed-policy")
+func (m *managedPolicyService) DeletePolicy(_ context.Context, opts client.DeletePolicyOpts) error {
+	err := m.api.DeletePolicy(api.DeletePolicyOpts{
+		ID:        opts.ID,
+		StackName: opts.StackName,
+	})
 	if err != nil {
 		return err
 	}
 
-	defer func() {
-		_ = m.spinner.Stop()
-	}()
-
-	err = m.api.DeletePolicy(opts)
-	if err != nil {
-		return err
-	}
-
-	report, err := m.store.RemoveDeletePolicy(opts.StackName)
-	if err != nil {
-		return err
-	}
-
-	err = m.report.ReportDeletePolicy(opts.StackName, report)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return m.state.RemovePolicy(opts.StackName)
 }
 
 // NewManagedPolicyService returns an initialised service
 func NewManagedPolicyService(
-	spinner spinner.Spinner,
 	api client.ManagedPolicyAPI,
-	store client.ManagedPolicyStore,
-	report client.ManagedPolicyReport,
+	state client.ManagedPolicyState,
 ) client.ManagedPolicyService {
 	return &managedPolicyService{
-		spinner: spinner,
-		api:     api,
-		store:   store,
-		report:  report,
+		api:   api,
+		state: state,
 	}
 }

@@ -270,10 +270,10 @@ func (m mockServiceAccountService) DeleteServiceAccount(_ context.Context, opts 
 
 type mockManagedPolicyService struct{}
 
-func (m mockManagedPolicyService) CreatePolicy(_ context.Context, _ api.CreatePolicyOpts) (*api.ManagedPolicy, error) {
+func (m mockManagedPolicyService) CreatePolicy(_ context.Context, _ client.CreatePolicyOpts) (*client.ManagedPolicy, error) {
 	panic("implement me")
 }
 
-func (m mockManagedPolicyService) DeletePolicy(_ context.Context, _ api.DeletePolicyOpts) error {
+func (m mockManagedPolicyService) DeletePolicy(_ context.Context, _ client.DeletePolicyOpts) error {
 	return nil
 }

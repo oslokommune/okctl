@@ -460,7 +460,7 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 		return err
 	}
 
-	err = s.policy.DeletePolicy(ctx, api.DeletePolicyOpts{
+	err = s.policy.DeletePolicy(ctx, client.DeletePolicyOpts{
 		ID:        opts.ID,
 		StackName: cfn.NewStackNamer().CloudwatchDatasource(opts.ID.Repository, opts.ID.Environment),
 	})
@@ -468,7 +468,7 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 		return err
 	}
 
-	err = s.policy.DeletePolicy(ctx, api.DeletePolicyOpts{
+	err = s.policy.DeletePolicy(ctx, client.DeletePolicyOpts{
 		ID:        opts.ID,
 		StackName: cfn.NewStackNamer().FargateCloudwatch(opts.ID.Repository, opts.ID.Environment),
 	})
@@ -513,7 +513,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 		return nil, err
 	}
 
-	policy, err := s.policy.CreatePolicy(ctx, api.CreatePolicyOpts{
+	policy, err := s.policy.CreatePolicy(ctx, client.CreatePolicyOpts{
 		ID:                     opts.ID,
 		StackName:              cfn.NewStackNamer().CloudwatchDatasource(opts.ID.Repository, opts.ID.Environment),
 		PolicyOutputName:       "CloudwatchDatasourcePolicy", // We need to cleanup the way we name outputs
@@ -745,7 +745,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 		return nil, err
 	}
 
-	fargatePolicy, err := s.policy.CreatePolicy(ctx, api.CreatePolicyOpts{
+	fargatePolicy, err := s.policy.CreatePolicy(ctx, client.CreatePolicyOpts{
 		ID:                     opts.ID,
 		StackName:              cfn.NewStackNamer().FargateCloudwatch(opts.ID.Repository, opts.ID.Environment),
 		PolicyOutputName:       "FargateCloudwatchPolicy", // We need to cleanup the way we name outputs

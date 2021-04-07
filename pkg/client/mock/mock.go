@@ -28,8 +28,9 @@ const (
 	DefaultManifestName       = "okctl-cm"
 	DefaultManifestType       = client.ManifestTypeConfigMap
 
-	StackNameHostedZone  = "okctl-staging-oslo-systems-HostedZone"
-	StackNameCertificate = "okctl-staging-oslo-systems-Certificate"
+	StackNameHostedZone    = "okctl-staging-oslo-systems-HostedZone"
+	StackNameCertificate   = "okctl-staging-oslo-systems-Certificate"
+	StackNameManagedPolicy = "okctl-staging-ManagedPolicy"
 )
 
 // nolint: golint gochecknoglobals
@@ -142,5 +143,15 @@ func KubernetesManifest() *client.KubernetesManifest {
 		Namespace: DefaultNamespace,
 		Type:      DefaultManifestType,
 		Content:   ManifestContent(),
+	}
+}
+
+// ManagedPolicy returns a fake managed policy
+func ManagedPolicy() *client.ManagedPolicy {
+	return &client.ManagedPolicy{
+		ID:                     ID(),
+		StackName:              StackNameManagedPolicy,
+		PolicyARN:              DefaultPolicyARN,
+		CloudFormationTemplate: CloudFormationTemplate(),
 	}
 }

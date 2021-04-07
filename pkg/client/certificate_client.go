@@ -80,12 +80,6 @@ type CertificateAPI interface {
 	DeleteCognitoCertificate(opts api.DeleteCognitoCertificateOpts) error
 }
 
-// CertificateStore defines the storage operations
-type CertificateStore interface {
-	SaveCertificate(certificate *Certificate) error
-	RemoveCertificate(domain string) error
-}
-
 // CertificateState defines the state layer
 type CertificateState interface {
 	SaveCertificate(certificate *Certificate) error

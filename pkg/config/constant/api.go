@@ -111,6 +111,8 @@ const (
 	DefaultStormNodeExternalDNS              = "externaldns"
 	DefaultstormNodeAutoscaler               = "autoscaler"
 	DefaultStormNodeParameter                = "parameter"
+	DefaultStormNodeApplications             = "applications"
+	DefaultStormNodeIdentityManager          = "identitymanager"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"

@@ -13,7 +13,6 @@ import (
 
 type certificateService struct {
 	api   client.CertificateAPI
-	store client.CertificateStore
 	state client.CertificateState
 }
 
@@ -34,11 +33,6 @@ func (s *certificateService) DeleteCertificate(_ context.Context, opts client.De
 		ID:     opts.ID,
 		Domain: opts.Domain,
 	})
-	if err != nil {
-		return err
-	}
-
-	err = s.store.RemoveCertificate(opts.Domain)
 	if err != nil {
 		return err
 	}
@@ -88,11 +82,6 @@ func (s *certificateService) CreateCertificate(_ context.Context, opts client.Cr
 		CloudFormationTemplate: c.CloudFormationTemplate,
 	}
 
-	err = s.store.SaveCertificate(certificate)
-	if err != nil {
-		return nil, err
-	}
-
 	err = s.state.SaveCertificate(certificate)
 	if err != nil {
 		return nil, err
@@ -104,12 +93,10 @@ func (s *certificateService) CreateCertificate(_ context.Context, opts client.Cr
 // NewCertificateService returns an initialised service
 func NewCertificateService(
 	api client.CertificateAPI,
-	store client.CertificateStore,
 	state client.CertificateState,
 ) client.CertificateService {
 	return &certificateService{
 		api:   api,
-		store: store,
 		state: state,
 	}
 }

@@ -11,8 +11,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/kubepromstack"
 
-	"github.com/oslokommune/okctl/pkg/helm/charts/blockstorage"
-
 	"github.com/oslokommune/okctl/pkg/helm/charts/argocd"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -63,12 +61,6 @@ func (r *helmRun) CreatePromtailHelmChart(opts api.CreatePromtailHelmChartOpts) 
 
 func (r *helmRun) CreateLokiHelmChart(opts api.CreateLokiHelmChartOpts) (*api.Helm, error) {
 	chart := loki.New(loki.NewDefaultValues())
-
-	return r.createHelmChart(opts.ID, chart)
-}
-
-func (r *helmRun) CreateBlockstorageHelmChart(opts api.CreateBlockstorageHelmChartOpts) (*api.Helm, error) {
-	chart := blockstorage.New(blockstorage.NewDefaultValues(opts.ID.Region, opts.ID.ClusterName, "blockstorage"))
 
 	return r.createHelmChart(opts.ID, chart)
 }

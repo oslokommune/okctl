@@ -7,18 +7,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
-func makeCreateBlockstorageServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateBlockstorageServiceAccount(ctx, request.(api.CreateBlockstorageServiceAccountOpts))
-	}
-}
-
-func makeDeleteBlockstorageServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return &Empty{}, s.DeleteBlockstorageServiceAccount(ctx, request.(api.ID))
-	}
-}
-
 func makeCreateServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return s.CreateServiceAccount(ctx, *request.(*api.CreateServiceAccountOpts))

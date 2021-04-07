@@ -208,7 +208,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		Vpc:                              o.vpcService(outputDir, spin),
 		IdentityManager:                  o.identityManagerService(outputDir, spin),
 		Autoscaler:                       o.autoscalerService(o.StormDB.From(constant.DefaultstormNodeAutoscaler)),
-		Blockstorage:                     o.blockstorageService(outputDir, o.StormDB.From(constant.DefaultStormNodeBlockStorage), spin),
+		Blockstorage:                     o.blockstorageService(o.StormDB.From(constant.DefaultStormNodeBlockStorage)),
 		Monitoring:                       o.monitoringService(outputDir, o.StormDB.From(constant.DefaultStormNodeMonitoring), spin),
 		Component:                        o.componentService(outputDir, o.StormDB.From(constant.DefaultStormNodeComponent), spin),
 		Helm:                             o.helmService(o.StormDB.From(constant.DefaultStormNodeHelm)),
@@ -473,30 +473,11 @@ func (o *Okctl) autoscalerService(node stormpkg.Node) client.AutoscalerService {
 	)
 }
 
-func (o *Okctl) blockstorageService(outputDir string, node stormpkg.Node, spin spinner.Spinner) client.BlockstorageService {
+func (o *Okctl) blockstorageService(node stormpkg.Node) client.BlockstorageService {
 	return clientCore.NewBlockstorageService(
-		spin,
-		rest.NewBlockstorageAPI(o.restClient),
-		clientFilesystem.NewBlockstorageStore(
-			clientFilesystem.Paths{
-				OutputFile:         constant.DefaultPolicyOutputFile,
-				CloudFormationFile: constant.DefaultPolicyCloudFormationTemplateFile,
-				BaseDir:            path.Join(outputDir, constant.DefaultBlockstorageBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile: constant.DefaultServiceAccountOutputsFile,
-				ConfigFile: constant.DefaultServiceAccountConfigFile,
-				BaseDir:    path.Join(outputDir, constant.DefaultBlockstorageBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile:  constant.DefaultHelmOutputsFile,
-				ReleaseFile: constant.DefaultHelmReleaseFile,
-				ChartFile:   constant.DefaultHelmChartFile,
-				BaseDir:     path.Join(outputDir, constant.DefaultBlockstorageBaseDir),
-			},
-			o.FileSystem,
-		),
-		console.NewBlockstorageReport(o.Err, spin),
+		o.managedPolicyService(node),
+		o.serviceAccountService(node),
+		o.helmService(node),
 		o.manifestService(node),
 	)
 }

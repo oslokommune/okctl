@@ -68,20 +68,6 @@ func (s *helmService) CreateLokiHelmChart(_ context.Context, opts api.CreateLoki
 	return h, nil
 }
 
-func (s *helmService) CreateBlockstorageHelmChart(_ context.Context, opts api.CreateBlockstorageHelmChartOpts) (*api.Helm, error) {
-	err := opts.Validate()
-	if err != nil {
-		return nil, errors.E(err, "validating input options")
-	}
-
-	h, err := s.run.CreateBlockstorageHelmChart(opts)
-	if err != nil {
-		return nil, errors.E(err, "creating blockstorage helm chart", errors.Internal)
-	}
-
-	return h, nil
-}
-
 func (s *helmService) CreateArgoCD(_ context.Context, opts api.CreateArgoCDOpts) (*api.Helm, error) {
 	err := opts.Validate()
 	if err != nil {

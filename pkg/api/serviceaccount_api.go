@@ -16,30 +16,6 @@ type ServiceAccount struct {
 	Config    *v1alpha5.ClusterConfig
 }
 
-// CreateServiceAccountBaseOpts contains opts shared state
-type CreateServiceAccountBaseOpts struct {
-	ID        ID
-	PolicyArn string
-}
-
-// ValidateStruct validates the shared state
-func (o CreateServiceAccountBaseOpts) ValidateStruct() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-		validation.Field(&o.PolicyArn, validation.Required),
-	)
-}
-
-// CreateBlockstorageServiceAccountOpts contains the required inputs
-type CreateBlockstorageServiceAccountOpts struct {
-	CreateServiceAccountBaseOpts
-}
-
-// Validate the inputs
-func (o CreateBlockstorageServiceAccountOpts) Validate() error {
-	return o.ValidateStruct()
-}
-
 // CreateServiceAccountOpts contains the inputs required
 // for creating a new service account
 type CreateServiceAccountOpts struct {
@@ -78,8 +54,6 @@ func (o DeleteServiceAccountOpts) Validate() error {
 
 // ServiceAccountService provides the interface for all service account operations
 type ServiceAccountService interface {
-	CreateBlockstorageServiceAccount(context.Context, CreateBlockstorageServiceAccountOpts) (*ServiceAccount, error)
-	DeleteBlockstorageServiceAccount(context.Context, ID) error
 	CreateServiceAccount(ctx context.Context, opts CreateServiceAccountOpts) (*ServiceAccount, error)
 	DeleteServiceAccount(ctx context.Context, opts DeleteServiceAccountOpts) error
 }

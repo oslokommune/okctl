@@ -13,12 +13,6 @@ func makeCreateArgoCD(s api.HelmService) endpoint.Endpoint {
 	}
 }
 
-func makeCreateBlockstorageHelmChartEndpoint(s api.HelmService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateBlockstorageHelmChart(ctx, request.(api.CreateBlockstorageHelmChartOpts))
-	}
-}
-
 func makeCreateKubePrometheusStack(s api.HelmService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return s.CreateKubePrometheusStack(ctx, request.(api.CreateKubePrometheusStackOpts))

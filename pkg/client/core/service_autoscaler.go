@@ -3,7 +3,13 @@ package core
 import (
 	"context"
 
-	"github.com/oslokommune/okctl/pkg/spinner"
+	"github.com/oslokommune/okctl/pkg/cfn"
+	"github.com/oslokommune/okctl/pkg/cfn/components"
+
+	"github.com/oslokommune/okctl/pkg/helm/charts/autoscaler"
+
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/clusterconfig"
 
 	"github.com/oslokommune/okctl/pkg/api"
 
@@ -11,38 +17,49 @@ import (
 )
 
 type autoscalerService struct {
-	spinner spinner.Spinner
-	api     client.AutoscalerAPI
-	store   client.AutoscalerStore
-	report  client.AutoscalerReport
+	policy  client.ManagedPolicyService
+	account client.ServiceAccountService
+	helm    client.HelmService
 }
 
-func (s *autoscalerService) DeleteAutoscaler(_ context.Context, id api.ID) error {
-	err := s.spinner.Start("autoscaler")
+func (s *autoscalerService) DeleteAutoscaler(ctx context.Context, id api.ID) error {
+	config, err := clusterconfig.NewAutoscalerServiceAccount(
+		id.ClusterName,
+		id.Region,
+		"n/a",
+		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
+	)
 	if err != nil {
 		return err
 	}
 
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	err = s.api.DeleteAutoscalerServiceAccount(id)
+	err = s.account.DeleteServiceAccount(ctx, client.DeleteServiceAccountOpts{
+		ID:     id,
+		Name:   "autoscaler",
+		Config: config,
+	})
 	if err != nil {
 		return err
 	}
 
-	err = s.api.DeleteAutoscalerPolicy(id)
+	stackName := cfn.NewStackNamer().
+		AutoscalerPolicy(id.Repository, id.Environment)
+
+	err = s.policy.DeletePolicy(ctx, client.DeletePolicyOpts{
+		ID:        id,
+		StackName: stackName,
+	})
 	if err != nil {
 		return err
 	}
 
-	report, err := s.store.RemoveAutoscaler(id)
-	if err != nil {
-		return err
-	}
+	chart := autoscaler.New(autoscaler.NewDefaultValues(id.Region, id.ClusterName, "autoscaler"))
 
-	err = s.report.ReportDeleteAutoscaler(report)
+	err = s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
+		ID:          id,
+		ReleaseName: chart.ReleaseName,
+		Namespace:   chart.Namespace,
+	})
 	if err != nil {
 		return err
 	}
@@ -50,70 +67,87 @@ func (s *autoscalerService) DeleteAutoscaler(_ context.Context, id api.ID) error
 	return nil
 }
 
-func (s *autoscalerService) CreateAutoscaler(_ context.Context, opts client.CreateAutoscalerOpts) (*client.Autoscaler, error) {
-	err := s.spinner.Start("autoscaler")
+// nolint: funlen
+func (s *autoscalerService) CreateAutoscaler(ctx context.Context, opts client.CreateAutoscalerOpts) (*client.Autoscaler, error) {
+	b := cfn.New(
+		components.NewAutoscalerPolicyComposer(opts.ID.Repository, opts.ID.Environment),
+	)
+
+	stackName := cfn.NewStackNamer().
+		AutoscalerPolicy(opts.ID.Repository, opts.ID.Environment)
+
+	template, err := b.Build()
 	if err != nil {
 		return nil, err
 	}
 
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	policy, err := s.api.CreateAutoscalerPolicy(api.CreateAutoscalerPolicy{
-		ID: opts.ID,
+	policy, err := s.policy.CreatePolicy(ctx, client.CreatePolicyOpts{
+		ID:                     opts.ID,
+		StackName:              stackName,
+		PolicyOutputName:       "AutoscalerPolicy",
+		CloudFormationTemplate: template,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	sa, err := s.api.CreateAutoscalerServiceAccount(api.CreateAutoscalerServiceAccountOpts{
-		CreateServiceAccountBaseOpts: api.CreateServiceAccountBaseOpts{
-			ID:        opts.ID,
-			PolicyArn: policy.PolicyARN,
-		},
+	config, err := clusterconfig.NewAutoscalerServiceAccount(
+		opts.ID.ClusterName,
+		opts.ID.Region,
+		policy.PolicyARN,
+		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	sa, err := s.account.CreateServiceAccount(ctx, client.CreateServiceAccountOpts{
+		ID:        opts.ID,
+		Name:      "autoscaler",
+		PolicyArn: policy.PolicyARN,
+		Config:    config,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	chart, err := s.api.CreateAutoscalerHelmChart(api.CreateAutoscalerHelmChartOpts{
-		ID: opts.ID,
+	ch := autoscaler.New(autoscaler.NewDefaultValues(opts.ID.Region, opts.ID.ClusterName, "autoscaler"))
+
+	values, err := ch.ValuesYAML()
+	if err != nil {
+		return nil, err
+	}
+
+	chart, err := s.helm.CreateHelmRelease(ctx, client.CreateHelmReleaseOpts{
+		ID:             opts.ID,
+		RepositoryName: ch.RepositoryName,
+		RepositoryURL:  ch.RepositoryURL,
+		ReleaseName:    ch.ReleaseName,
+		Version:        ch.Version,
+		Chart:          ch.Chart,
+		Namespace:      ch.Namespace,
+		Values:         values,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	a := &client.Autoscaler{
+	return &client.Autoscaler{
 		Policy:         policy,
 		ServiceAccount: sa,
 		Chart:          chart,
-	}
-
-	report, err := s.store.SaveAutoscaler(a)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.report.ReportCreateAutoscaler(a, report)
-	if err != nil {
-		return nil, err
-	}
-
-	return a, nil
+	}, nil
 }
 
 // NewAutoscalerService returns an initialised service
 func NewAutoscalerService(
-	spinner spinner.Spinner,
-	api client.AutoscalerAPI,
-	store client.AutoscalerStore,
-	report client.AutoscalerReport,
+	policy client.ManagedPolicyService,
+	account client.ServiceAccountService,
+	helm client.HelmService,
 ) client.AutoscalerService {
 	return &autoscalerService{
-		spinner: spinner,
-		api:     api,
-		store:   store,
-		report:  report,
+		policy:  policy,
+		account: account,
+		helm:    helm,
 	}
 }

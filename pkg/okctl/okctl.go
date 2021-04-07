@@ -207,7 +207,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		Parameter:                        o.paramService(outputDir, spin),
 		Vpc:                              o.vpcService(outputDir, spin),
 		IdentityManager:                  o.identityManagerService(outputDir, spin),
-		Autoscaler:                       o.autoscalerService(outputDir, spin),
+		Autoscaler:                       o.autoscalerService(o.StormDB.From(constant.DefaultstormNodeAutoscaler)),
 		Blockstorage:                     o.blockstorageService(outputDir, o.StormDB.From(constant.DefaultStormNodeBlockStorage), spin),
 		Monitoring:                       o.monitoringService(outputDir, o.StormDB.From(constant.DefaultStormNodeMonitoring), spin),
 		Component:                        o.componentService(outputDir, o.StormDB.From(constant.DefaultStormNodeComponent), spin),
@@ -465,30 +465,11 @@ func (o *Okctl) clusterService(outputDir string, spin spinner.Spinner) client.Cl
 	)
 }
 
-func (o *Okctl) autoscalerService(outputDir string, spin spinner.Spinner) client.AutoscalerService {
+func (o *Okctl) autoscalerService(node stormpkg.Node) client.AutoscalerService {
 	return clientCore.NewAutoscalerService(
-		spin,
-		rest.NewAutoscalerAPI(o.restClient),
-		clientFilesystem.NewAutoscalerStore(
-			clientFilesystem.Paths{
-				OutputFile:         constant.DefaultPolicyOutputFile,
-				CloudFormationFile: constant.DefaultPolicyCloudFormationTemplateFile,
-				BaseDir:            path.Join(outputDir, constant.DefaultAutoscalerBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile: constant.DefaultServiceAccountOutputsFile,
-				ConfigFile: constant.DefaultServiceAccountConfigFile,
-				BaseDir:    path.Join(outputDir, constant.DefaultAutoscalerBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile:  constant.DefaultHelmOutputsFile,
-				ReleaseFile: constant.DefaultHelmReleaseFile,
-				ChartFile:   constant.DefaultHelmChartFile,
-				BaseDir:     path.Join(outputDir, constant.DefaultAutoscalerBaseDir),
-			},
-			o.FileSystem,
-		),
-		console.NewAutoscalerReport(o.Err, spin),
+		o.managedPolicyService(node),
+		o.serviceAccountService(node),
+		o.helmService(node),
 	)
 }
 

@@ -39,18 +39,6 @@ func (o CreatePromtailHelmChartOpts) Validate() error {
 	)
 }
 
-// CreateAutoscalerHelmChartOpts contains the required inputs
-type CreateAutoscalerHelmChartOpts struct {
-	ID ID
-}
-
-// Validate the inputs
-func (o CreateAutoscalerHelmChartOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-	)
-}
-
 // CreateBlockstorageHelmChartOpts contains the required inputs
 type CreateBlockstorageHelmChartOpts struct {
 	ID ID
@@ -177,7 +165,6 @@ func (o DeleteHelmReleaseOpts) Validate() error {
 // HelmService defines the service layer interface
 type HelmService interface {
 	CreateArgoCD(ctx context.Context, opts CreateArgoCDOpts) (*Helm, error)
-	CreateAutoscalerHelmChart(ctx context.Context, opts CreateAutoscalerHelmChartOpts) (*Helm, error)
 	CreateBlockstorageHelmChart(ctx context.Context, opts CreateBlockstorageHelmChartOpts) (*Helm, error)
 	CreateKubePrometheusStack(ctx context.Context, opts CreateKubePrometheusStackOpts) (*Helm, error)
 	CreateLokiHelmChart(ctx context.Context, opts CreateLokiHelmChartOpts) (*Helm, error)
@@ -189,7 +176,6 @@ type HelmService interface {
 // HelmRun defines the runner layer
 type HelmRun interface {
 	CreateArgoCD(opts CreateArgoCDOpts) (*Helm, error)
-	CreateAutoscalerHelmChart(opts CreateAutoscalerHelmChartOpts) (*Helm, error)
 	CreateBlockstorageHelmChart(opts CreateBlockstorageHelmChartOpts) (*Helm, error)
 	CreateKubePromStack(opts CreateKubePrometheusStackOpts) (*Helm, error)
 	CreateLokiHelmChart(opts CreateLokiHelmChartOpts) (*Helm, error)

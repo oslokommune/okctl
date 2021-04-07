@@ -14,18 +14,6 @@ type ManagedPolicy struct {
 	CloudFormationTemplate []byte
 }
 
-// CreateAutoscalerPolicy contains all required inputs
-type CreateAutoscalerPolicy struct {
-	ID ID
-}
-
-// Validate the inputs
-func (o CreateAutoscalerPolicy) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-	)
-}
-
 // CreateBlockstoragePolicy contains all required inputs
 type CreateBlockstoragePolicy struct {
 	ID ID
@@ -74,8 +62,6 @@ func (o DeletePolicyOpts) Validate() error {
 
 // ManagedPolicyService defines the service layer for managed policies
 type ManagedPolicyService interface {
-	CreateAutoscalerPolicy(ctx context.Context, opts CreateAutoscalerPolicy) (*ManagedPolicy, error)
-	DeleteAutoscalerPolicy(ctx context.Context, id ID) error
 	CreateBlockstoragePolicy(ctx context.Context, opts CreateBlockstoragePolicy) (*ManagedPolicy, error)
 	DeleteBlockstoragePolicy(ctx context.Context, id ID) error
 	CreatePolicy(ctx context.Context, opts CreatePolicyOpts) (*ManagedPolicy, error)
@@ -84,8 +70,6 @@ type ManagedPolicyService interface {
 
 // ManagedPolicyCloudProvider defines the cloud provider layer for managed policies
 type ManagedPolicyCloudProvider interface {
-	CreateAutoscalerPolicy(opts CreateAutoscalerPolicy) (*ManagedPolicy, error)
-	DeleteAutoscalerPolicy(id ID) error
 	CreateBlockstoragePolicy(opts CreateBlockstoragePolicy) (*ManagedPolicy, error)
 	DeleteBlockstoragePolicy(id ID) error
 	CreatePolicy(opts CreatePolicyOpts) (*ManagedPolicy, error)

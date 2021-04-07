@@ -13,8 +13,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/blockstorage"
 
-	"github.com/oslokommune/okctl/pkg/helm/charts/autoscaler"
-
 	"github.com/oslokommune/okctl/pkg/helm/charts/argocd"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -65,12 +63,6 @@ func (r *helmRun) CreatePromtailHelmChart(opts api.CreatePromtailHelmChartOpts) 
 
 func (r *helmRun) CreateLokiHelmChart(opts api.CreateLokiHelmChartOpts) (*api.Helm, error) {
 	chart := loki.New(loki.NewDefaultValues())
-
-	return r.createHelmChart(opts.ID, chart)
-}
-
-func (r *helmRun) CreateAutoscalerHelmChart(opts api.CreateAutoscalerHelmChartOpts) (*api.Helm, error) {
-	chart := autoscaler.New(autoscaler.NewDefaultValues(opts.ID.Region, opts.ID.ClusterName, "autoscaler"))
 
 	return r.createHelmChart(opts.ID, chart)
 }

@@ -30,16 +30,6 @@ func (o CreateServiceAccountBaseOpts) ValidateStruct() error {
 	)
 }
 
-// CreateAutoscalerServiceAccountOpts contains the required inputs
-type CreateAutoscalerServiceAccountOpts struct {
-	CreateServiceAccountBaseOpts
-}
-
-// Validate the inputs
-func (o CreateAutoscalerServiceAccountOpts) Validate() error {
-	return o.ValidateStruct()
-}
-
 // CreateBlockstorageServiceAccountOpts contains the required inputs
 type CreateBlockstorageServiceAccountOpts struct {
 	CreateServiceAccountBaseOpts
@@ -88,8 +78,6 @@ func (o DeleteServiceAccountOpts) Validate() error {
 
 // ServiceAccountService provides the interface for all service account operations
 type ServiceAccountService interface {
-	CreateAutoscalerServiceAccount(context.Context, CreateAutoscalerServiceAccountOpts) (*ServiceAccount, error)
-	DeleteAutoscalerServiceAccount(context.Context, ID) error
 	CreateBlockstorageServiceAccount(context.Context, CreateBlockstorageServiceAccountOpts) (*ServiceAccount, error)
 	DeleteBlockstorageServiceAccount(context.Context, ID) error
 	CreateServiceAccount(ctx context.Context, opts CreateServiceAccountOpts) (*ServiceAccount, error)

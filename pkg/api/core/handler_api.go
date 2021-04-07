@@ -35,11 +35,6 @@ type Endpoints struct {
 	DeleteCertificate                endpoint.Endpoint
 	DeleteNamespace                  endpoint.Endpoint
 	DeleteCognitoCertificate         endpoint.Endpoint
-	CreateAutoscalerHelmChart        endpoint.Endpoint
-	CreateAutoscalerServiceAccount   endpoint.Endpoint
-	DeleteAutoscalerServiceAccount   endpoint.Endpoint
-	CreateAutoscalerPolicy           endpoint.Endpoint
-	DeleteAutoscalerPolicy           endpoint.Endpoint
 	CreateBlockstoragePolicy         endpoint.Endpoint
 	DeleteBlockstoragePolicy         endpoint.Endpoint
 	CreateBlockstorageServiceAccount endpoint.Endpoint
@@ -91,11 +86,6 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteCertificate:                makeDeleteCertificateEndpoint(s.Certificate),
 		DeleteNamespace:                  makeDeleteNamespaceEndpoint(s.Kube),
 		DeleteCognitoCertificate:         makeDeleteCognitoCertificateEndpoint(s.Certificate),
-		CreateAutoscalerHelmChart:        makeCreateAutoscalerHelmChartEndpoint(s.Helm),
-		CreateAutoscalerServiceAccount:   makeCreateAutoscalerServiceAccountEndpoint(s.ServiceAccount),
-		DeleteAutoscalerServiceAccount:   makeDeleteAutoscalerServiceAccountEndpoint(s.ServiceAccount),
-		CreateAutoscalerPolicy:           makeCreateAutoscalerPolicyEndpoint(s.ManagedPolicy),
-		DeleteAutoscalerPolicy:           makeDeleteAutoscalerPolicyEndpoint(s.ManagedPolicy),
 		CreateBlockstoragePolicy:         makeCreateBlockstoragePolicyEndpoint(s.ManagedPolicy),
 		DeleteBlockstoragePolicy:         makeDeleteBlockstoragePolicyEndpoint(s.ManagedPolicy),
 		CreateBlockstorageServiceAccount: makeCreateBlockstorageServiceAccountEndpoint(s.ServiceAccount),
@@ -145,11 +135,6 @@ type Handlers struct {
 	DeleteCertificate                http.Handler
 	DeleteNamespace                  http.Handler
 	DeleteCognitoCertificate         http.Handler
-	CreateAutoscalerHelmChart        http.Handler
-	CreateAutoscalerServiceAccount   http.Handler
-	DeleteAutoscalerServiceAccount   http.Handler
-	CreateAutoscalerPolicy           http.Handler
-	DeleteAutoscalerPolicy           http.Handler
 	CreateBlockstoragePolicy         http.Handler
 	DeleteBlockstoragePolicy         http.Handler
 	CreateBlockstorageServiceAccount http.Handler
@@ -227,11 +212,6 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteCertificate:                newServer(endpoints.DeleteCertificate, decodeDeleteCertificate),
 		DeleteNamespace:                  newServer(endpoints.DeleteNamespace, decodeDeleteNamespace),
 		DeleteCognitoCertificate:         newServer(endpoints.DeleteCognitoCertificate, decodeDeleteCognitoCertificate),
-		CreateAutoscalerHelmChart:        newServer(endpoints.CreateAutoscalerHelmChart, decodeCreateAutoscalerHelmChart),
-		CreateAutoscalerServiceAccount:   newServer(endpoints.CreateAutoscalerServiceAccount, decodeCreateAutoscalerServiceAccount),
-		DeleteAutoscalerServiceAccount:   newServer(endpoints.DeleteAutoscalerServiceAccount, decodeIDRequest),
-		CreateAutoscalerPolicy:           newServer(endpoints.CreateAutoscalerPolicy, decodeCreateAutoscalerPolicy),
-		DeleteAutoscalerPolicy:           newServer(endpoints.DeleteAutoscalerPolicy, decodeIDRequest),
 		CreateBlockstoragePolicy:         newServer(endpoints.CreateBlockstoragePolicy, decodeCreateBlockstoragePolicy),
 		DeleteBlockstoragePolicy:         newServer(endpoints.DeleteBlockstoragePolicy, decodeIDRequest),
 		CreateBlockstorageServiceAccount: newServer(endpoints.CreateBlockstorageServiceAccount, decodeCreateBlockstorageServiceAccount),
@@ -276,10 +256,6 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/managedpolicies", func(r chi.Router) {
 			r.Method(http.MethodPost, "/", handlers.CreatePolicy)
 			r.Method(http.MethodDelete, "/", handlers.DeletePolicy)
-			r.Route("/autoscaler", func(r chi.Router) {
-				r.Method(http.MethodPost, "/", handlers.CreateAutoscalerPolicy)
-				r.Method(http.MethodDelete, "/", handlers.DeleteAutoscalerPolicy)
-			})
 			r.Route("/blockstorage", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateBlockstoragePolicy)
 				r.Method(http.MethodDelete, "/", handlers.DeleteBlockstoragePolicy)
@@ -288,10 +264,6 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/serviceaccounts", func(r chi.Router) {
 			r.Method(http.MethodPost, "/", handlers.CreateServiceAccount)
 			r.Method(http.MethodDelete, "/", handlers.DeleteServiceAccount)
-			r.Route("/autoscaler", func(r chi.Router) {
-				r.Method(http.MethodPost, "/", handlers.CreateAutoscalerServiceAccount)
-				r.Method(http.MethodDelete, "/", handlers.DeleteAutoscalerServiceAccount)
-			})
 			r.Route("/blockstorage", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateBlockstorageServiceAccount)
 				r.Method(http.MethodDelete, "/", handlers.DeleteBlockstorageServiceAccount)
@@ -300,9 +272,6 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/helm", func(r chi.Router) {
 			r.Route("/argocd", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateArgoCD)
-			})
-			r.Route("/autoscaler", func(r chi.Router) {
-				r.Method(http.MethodPost, "/", handlers.CreateAutoscalerHelmChart)
 			})
 			r.Route("/blockstorage", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateBlockstorageHelmChart)
@@ -431,7 +400,6 @@ const (
 	identityPoolUserTag    = "identitypooluser"
 	namespaceTag           = "namespace"
 	cognitoTag             = "cognito"
-	autoscalerTag          = "autoscaler"
 	blockstorageTag        = "blockstorage"
 	storageclassTag        = "storageclass"
 	kubePrometheusStackTag = "kubeprometheusstack"
@@ -470,11 +438,6 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteCertificate:                logmd.Logging(logger, "delete", certificateTag)(endpoints.DeleteCertificate),
 			DeleteNamespace:                  logmd.Logging(logger, "delete", kubeTag, namespaceTag)(endpoints.DeleteNamespace),
 			DeleteCognitoCertificate:         logmd.Logging(logger, "delete", certificateTag, cognitoTag)(endpoints.DeleteCognitoCertificate),
-			CreateAutoscalerHelmChart:        logmd.Logging(logger, "create", helmTag, autoscalerTag)(endpoints.CreateAutoscalerHelmChart),
-			CreateAutoscalerServiceAccount:   logmd.Logging(logger, "create", serviceAccountsTag, autoscalerTag)(endpoints.CreateAutoscalerServiceAccount),
-			DeleteAutoscalerServiceAccount:   logmd.Logging(logger, "delete", serviceAccountsTag, autoscalerTag)(endpoints.DeleteAutoscalerServiceAccount),
-			CreateAutoscalerPolicy:           logmd.Logging(logger, "create", managedPoliciesTag, autoscalerTag)(endpoints.CreateAutoscalerPolicy),
-			DeleteAutoscalerPolicy:           logmd.Logging(logger, "delete", managedPoliciesTag, autoscalerTag)(endpoints.DeleteAutoscalerPolicy),
 			CreateBlockstoragePolicy:         logmd.Logging(logger, "create", managedPoliciesTag, blockstorageTag)(endpoints.CreateBlockstoragePolicy),
 			DeleteBlockstoragePolicy:         logmd.Logging(logger, "delete", managedPoliciesTag, blockstorageTag)(endpoints.DeleteBlockstoragePolicy),
 			CreateBlockstorageServiceAccount: logmd.Logging(logger, "create", serviceAccountsTag, blockstorageTag)(endpoints.CreateBlockstorageServiceAccount),

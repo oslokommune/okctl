@@ -62,10 +62,6 @@ func (m *managedPolicy) DeleteAutoscalerPolicy(id api.ID) error {
 	return m.deletePolicy(cfn.NewStackNamer().AutoscalerPolicy(id.Repository, id.Environment))
 }
 
-func (m *managedPolicy) DeleteExternalDNSPolicy(id api.ID) error {
-	return m.deletePolicy(cfn.NewStackNamer().ExternalDNSPolicy(id.Repository, id.Environment))
-}
-
 func (m *managedPolicy) deletePolicy(stackName string) error {
 	r := cfn.NewRunner(m.provider)
 
@@ -97,17 +93,6 @@ func (m *managedPolicy) CreateAutoscalerPolicy(opts api.CreateAutoscalerPolicy) 
 		AutoscalerPolicy(opts.ID.Repository, opts.ID.Environment)
 
 	return m.createPolicy(stackName, opts.ID, "AutoscalerPolicy", b)
-}
-
-func (m *managedPolicy) CreateExternalDNSPolicy(opts api.CreateExternalDNSPolicyOpts) (*api.ManagedPolicy, error) {
-	b := cfn.New(
-		components.NewExternalDNSPolicyComposer(opts.ID.Repository, opts.ID.Environment),
-	)
-
-	stackName := cfn.NewStackNamer().
-		ExternalDNSPolicy(opts.ID.Repository, opts.ID.Environment)
-
-	return m.createPolicy(stackName, opts.ID, "ExternalDNSPolicy", b)
 }
 
 func (m *managedPolicy) createPolicy(stackName string, id api.ID, outputName string, builder cfn.StackBuilder) (*api.ManagedPolicy, error) {

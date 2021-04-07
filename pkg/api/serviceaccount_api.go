@@ -30,17 +30,6 @@ func (o CreateServiceAccountBaseOpts) ValidateStruct() error {
 	)
 }
 
-// CreateExternalDNSServiceAccountOpts contains the configuration
-// for creating an external dns service account
-type CreateExternalDNSServiceAccountOpts struct {
-	CreateServiceAccountBaseOpts
-}
-
-// Validate the input
-func (o CreateExternalDNSServiceAccountOpts) Validate() error {
-	return o.ValidateStruct()
-}
-
 // CreateAutoscalerServiceAccountOpts contains the required inputs
 type CreateAutoscalerServiceAccountOpts struct {
 	CreateServiceAccountBaseOpts
@@ -99,8 +88,6 @@ func (o DeleteServiceAccountOpts) Validate() error {
 
 // ServiceAccountService provides the interface for all service account operations
 type ServiceAccountService interface {
-	CreateExternalDNSServiceAccount(context.Context, CreateExternalDNSServiceAccountOpts) (*ServiceAccount, error)
-	DeleteExternalDNSServiceAccount(context.Context, ID) error
 	CreateAutoscalerServiceAccount(context.Context, CreateAutoscalerServiceAccountOpts) (*ServiceAccount, error)
 	DeleteAutoscalerServiceAccount(context.Context, ID) error
 	CreateBlockstorageServiceAccount(context.Context, CreateBlockstorageServiceAccountOpts) (*ServiceAccount, error)

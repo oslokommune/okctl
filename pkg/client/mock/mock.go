@@ -23,6 +23,7 @@ const (
 	DefaultRepository         = "okctl"
 	DefaultClusterName        = "okctl-staging"
 	DefaultDomain             = "okctl-staging.oslo.systems"
+	DefaultDomainFilter       = DefaultDomain
 	DefaultFQDN               = "okctl-staging.oslo.systems."
 	DefaultHostedZoneID       = "Z0FAKE41FAKE6I841FAKE"
 	DefaultCertificateARN     = "arn:aws:acm:eu-west-1:123456789012:certificate/123456789012-1234-1234-1234-12345678"
@@ -32,6 +33,7 @@ const (
 	DefaultManifestName       = "okctl-cm"
 	DefaultManifestType       = client.ManifestTypeConfigMap
 	DefaultHelmReleaseName    = "okctl-helm-release"
+	DefaultExternalDNSName    = "external-dns"
 
 	StackNameHostedZone    = "okctl-staging-oslo-systems-HostedZone"
 	StackNameCertificate   = "okctl-staging-oslo-systems-Certificate"
@@ -181,5 +183,25 @@ func Helm() *client.Helm {
 			Name: DefaultHelmReleaseName,
 		},
 		Chart: HelmChart(),
+	}
+}
+
+// ExternalDNSKube returns a fake external dns kube
+func ExternalDNSKube() *client.ExternalDNSKube {
+	return &client.ExternalDNSKube{
+		ID:           ID(),
+		HostedZoneID: DefaultHostedZoneID,
+		DomainFilter: DefaultDomainFilter,
+		Manifests: map[string][]byte{
+			"config-map.yaml": ManifestContent(),
+		},
+	}
+}
+
+// ExternalDNS returns a fake external dns
+func ExternalDNS() *client.ExternalDNS {
+	return &client.ExternalDNS{
+		Name: DefaultExternalDNSName,
+		Kube: ExternalDNSKube(),
 	}
 }

@@ -8,17 +8,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
-func decodeCreateExternalDNSServiceAccount(_ context.Context, r *http.Request) (interface{}, error) {
-	var opts api.CreateExternalDNSServiceAccountOpts
-
-	err := json.NewDecoder(r.Body).Decode(&opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return opts, nil
-}
-
 func decodeCreateAutoscalerServiceAccount(_ context.Context, r *http.Request) (interface{}, error) {
 	var opts api.CreateAutoscalerServiceAccountOpts
 

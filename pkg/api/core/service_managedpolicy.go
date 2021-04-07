@@ -95,34 +95,6 @@ func (m *managedPolicyService) DeleteAutoscalerPolicy(_ context.Context, id api.
 	return nil
 }
 
-func (m *managedPolicyService) DeleteExternalDNSPolicy(_ context.Context, id api.ID) error {
-	err := id.Validate()
-	if err != nil {
-		return errors.E(err, "failed to validate id", errors.Invalid)
-	}
-
-	err = m.provider.DeleteExternalDNSPolicy(id)
-	if err != nil {
-		return errors.E(err, "failed to delete external dns policy", errors.Internal)
-	}
-
-	return nil
-}
-
-func (m *managedPolicyService) CreateExternalDNSPolicy(_ context.Context, opts api.CreateExternalDNSPolicyOpts) (*api.ManagedPolicy, error) {
-	err := opts.Validate()
-	if err != nil {
-		return nil, errors.E(err, "failed to validate external dns opts")
-	}
-
-	got, err := m.provider.CreateExternalDNSPolicy(opts)
-	if err != nil {
-		return nil, errors.E(err, "failed to create external dns policy")
-	}
-
-	return got, nil
-}
-
 // NewManagedPolicyService returns an initialised managed policy service
 func NewManagedPolicyService(provider api.ManagedPolicyCloudProvider) api.ManagedPolicyService {
 	return &managedPolicyService{

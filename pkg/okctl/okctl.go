@@ -199,7 +199,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		Certificate:                      o.certService(outputDir, o.StormDB.From(constant.DefaultStormNodeCertificates)),
 		Cluster:                          o.clusterService(outputDir, spin),
 		Domain:                           o.domainService(outputDir, o.StormDB.From(constant.DefaultStormNodeDomains)),
-		ExternalDNS:                      o.externalDNSService(outputDir, spin),
+		ExternalDNS:                      o.externalDNSService(o.StormDB.From(constant.DefaultStormNodeExternalSecrets)),
 		ExternalSecrets:                  o.externalSecretsService(o.StormDB.From(constant.DefaultStormNodeExternalSecrets)),
 		Github:                           o.githubService(ghClient, spin),
 		Manifest:                         o.manifestService(o.StormDB.From(constant.DefaultStormNodeKubernetesManifest)),
@@ -567,28 +567,12 @@ func (o *Okctl) domainService(outputDir string, node stormpkg.Node) client.Domai
 	)
 }
 
-func (o *Okctl) externalDNSService(outputDir string, spin spinner.Spinner) client.ExternalDNSService {
+func (o *Okctl) externalDNSService(node stormpkg.Node) client.ExternalDNSService {
 	return clientCore.NewExternalDNSService(
-		spin,
 		rest.NewExternalDNSAPI(o.restClient),
-		clientFilesystem.NewExternalDNSStore(
-			clientFilesystem.Paths{
-				OutputFile:         constant.DefaultPolicyOutputFile,
-				CloudFormationFile: constant.DefaultPolicyCloudFormationTemplateFile,
-				BaseDir:            path.Join(outputDir, constant.DefaultExternalDNSBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile: constant.DefaultServiceAccountOutputsFile,
-				ConfigFile: constant.DefaultServiceAccountConfigFile,
-				BaseDir:    path.Join(outputDir, constant.DefaultExternalDNSBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile: constant.DefaultKubeOutputsFile,
-				BaseDir:    path.Join(outputDir, constant.DefaultExternalDNSBaseDir),
-			},
-			o.FileSystem,
-		),
-		console.NewExternalDNSReport(o.Err, spin),
+		storm.NewExternalDNSState(node),
+		o.managedPolicyService(node),
+		o.serviceAccountService(node),
 	)
 }
 

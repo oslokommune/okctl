@@ -7,18 +7,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
-func makeCreateExternalDNSServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateExternalDNSServiceAccount(ctx, request.(api.CreateExternalDNSServiceAccountOpts))
-	}
-}
-
-func makeDeleteExternalDNSServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return &Empty{}, s.DeleteExternalDNSServiceAccount(ctx, request.(api.ID))
-	}
-}
-
 func makeCreateAutoscalerServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return s.CreateAutoscalerServiceAccount(ctx, request.(api.CreateAutoscalerServiceAccountOpts))

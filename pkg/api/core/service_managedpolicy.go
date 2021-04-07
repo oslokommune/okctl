@@ -95,20 +95,6 @@ func (m *managedPolicyService) DeleteAutoscalerPolicy(_ context.Context, id api.
 	return nil
 }
 
-func (m *managedPolicyService) DeleteExternalSecretsPolicy(_ context.Context, id api.ID) error {
-	err := id.Validate()
-	if err != nil {
-		return errors.E(err, "failed to validate id", errors.Invalid)
-	}
-
-	err = m.provider.DeleteExternalSecretsPolicy(id)
-	if err != nil {
-		return errors.E(err, "failed to delete external secrets policy", errors.Internal)
-	}
-
-	return nil
-}
-
 func (m *managedPolicyService) DeleteAWSLoadBalancerControllerPolicy(_ context.Context, id api.ID) error {
 	err := id.Validate()
 	if err != nil {
@@ -160,20 +146,6 @@ func (m *managedPolicyService) CreateAWSLoadBalancerControllerPolicy(_ context.C
 	got, err := m.provider.CreateAWSLoadBalancerControllerPolicy(opts)
 	if err != nil {
 		return nil, errors.E(err, "creating aws load balancer controller policy")
-	}
-
-	return got, nil
-}
-
-func (m *managedPolicyService) CreateExternalSecretsPolicy(_ context.Context, opts api.CreateExternalSecretsPolicyOpts) (*api.ManagedPolicy, error) {
-	err := opts.Validate()
-	if err != nil {
-		return nil, errors.E(err, "failed to validate create external secrets policy options", errors.Invalid)
-	}
-
-	got, err := m.provider.CreateExternalSecretsPolicy(opts)
-	if err != nil {
-		return nil, errors.E(err, "failed to create external secrets policy")
 	}
 
 	return got, nil

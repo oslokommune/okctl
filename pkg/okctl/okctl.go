@@ -200,7 +200,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		Cluster:                          o.clusterService(outputDir, spin),
 		Domain:                           o.domainService(outputDir, o.StormDB.From(constant.DefaultStormNodeDomains)),
 		ExternalDNS:                      o.externalDNSService(outputDir, spin),
-		ExternalSecrets:                  o.externalSecretsService(outputDir, spin),
+		ExternalSecrets:                  o.externalSecretsService(o.StormDB.From(constant.DefaultStormNodeExternalSecrets)),
 		Github:                           o.githubService(ghClient, spin),
 		Manifest:                         o.manifestService(o.StormDB.From(constant.DefaultStormNodeKubernetesManifest)),
 		NameserverHandler:                o.nameserverHandlerService(ghClient, outputDir, spin),
@@ -211,7 +211,15 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		Blockstorage:                     o.blockstorageService(outputDir, o.StormDB.From(constant.DefaultStormNodeBlockStorage), spin),
 		Monitoring:                       o.monitoringService(outputDir, o.StormDB.From(constant.DefaultStormNodeMonitoring), spin),
 		Component:                        o.componentService(outputDir, o.StormDB.From(constant.DefaultStormNodeComponent), spin),
+		Helm:                             o.helmService(o.StormDB.From(constant.DefaultStormNodeHelm)),
 	}, nil
+}
+
+func (o *Okctl) helmService(node stormpkg.Node) client.HelmService {
+	return clientCore.NewHelmService(
+		rest.NewHelmAPI(o.restClient),
+		storm.NewHelmState(node),
+	)
 }
 
 func (o *Okctl) componentService(outputDir string, node stormpkg.Node, spin spinner.Spinner) client.ComponentService {
@@ -512,30 +520,11 @@ func (o *Okctl) blockstorageService(outputDir string, node stormpkg.Node, spin s
 	)
 }
 
-func (o *Okctl) externalSecretsService(outputDir string, spin spinner.Spinner) client.ExternalSecretsService {
+func (o *Okctl) externalSecretsService(node stormpkg.Node) client.ExternalSecretsService {
 	return clientCore.NewExternalSecretsService(
-		spin,
-		rest.NewExternalSecretsAPI(o.restClient),
-		clientFilesystem.NewExternalSecretsStore(
-			clientFilesystem.Paths{
-				OutputFile:         constant.DefaultPolicyOutputFile,
-				CloudFormationFile: constant.DefaultPolicyCloudFormationTemplateFile,
-				BaseDir:            path.Join(outputDir, constant.DefaultExternalSecretsBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile: constant.DefaultServiceAccountOutputsFile,
-				ConfigFile: constant.DefaultServiceAccountConfigFile,
-				BaseDir:    path.Join(outputDir, constant.DefaultExternalSecretsBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile:  constant.DefaultHelmOutputsFile,
-				ReleaseFile: constant.DefaultHelmReleaseFile,
-				ChartFile:   constant.DefaultHelmChartFile,
-				BaseDir:     path.Join(outputDir, constant.DefaultExternalSecretsBaseDir),
-			},
-			o.FileSystem,
-		),
-		console.NewExternalSecretsReport(o.Err, spin),
+		o.managedPolicyService(node),
+		o.serviceAccountService(node),
+		o.helmService(node),
 	)
 }
 

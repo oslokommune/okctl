@@ -7,12 +7,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
-func makeCreateExternalSecretsServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateExternalSecretsServiceAccount(ctx, request.(api.CreateExternalSecretsServiceAccountOpts))
-	}
-}
-
 func makeCreateAWSLoadBalancerControllerServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return s.CreateAWSLoadBalancerControllerServiceAccount(ctx, request.(api.CreateAWSLoadBalancerControllerServiceAccountOpts))
@@ -22,12 +16,6 @@ func makeCreateAWSLoadBalancerControllerServiceAccountEndpoint(s api.ServiceAcco
 func makeCreateExternalDNSServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return s.CreateExternalDNSServiceAccount(ctx, request.(api.CreateExternalDNSServiceAccountOpts))
-	}
-}
-
-func makeDeleteExternalSecretsServiceAccountEndpoint(s api.ServiceAccountService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return &Empty{}, s.DeleteExternalSecretsServiceAccount(ctx, request.(api.ID))
 	}
 }
 

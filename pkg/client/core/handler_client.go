@@ -22,4 +22,5 @@ type Services struct {
 	Blockstorage                     client.BlockstorageService
 	Monitoring                       client.MonitoringService
 	Component                        client.ComponentService
+	Helm                             client.HelmService
 }

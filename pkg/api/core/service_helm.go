@@ -124,20 +124,6 @@ func (s *helmService) CreateAWSLoadBalancerControllerHelmChart(_ context.Context
 	return h, nil
 }
 
-func (s *helmService) CreateExternalSecretsHelmChart(_ context.Context, opts api.CreateExternalSecretsHelmChartOpts) (*api.Helm, error) {
-	err := opts.Validate()
-	if err != nil {
-		return nil, fmt.Errorf("validating input options: %w", err)
-	}
-
-	h, err := s.run.CreateExternalSecretsHelmChart(opts)
-	if err != nil {
-		return nil, fmt.Errorf("creating external secrets helm chart: %w", err)
-	}
-
-	return h, nil
-}
-
 func (s *helmService) CreateKubePrometheusStack(_ context.Context, opts api.CreateKubePrometheusStackOpts) (*api.Helm, error) {
 	err := opts.Validate()
 	if err != nil {

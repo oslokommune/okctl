@@ -11,9 +11,6 @@ const TargetHelmKubePromStack = "helm/kubepromstack/"
 // TargetHelmLoki matches the REST API route
 const TargetHelmLoki = "helm/loki/"
 
-// TargetHelmReleases matches the REST API route
-const TargetHelmReleases = "helm/releases/"
-
 // TargetHelmPromtail matches the REST API route
 const TargetHelmPromtail = "helm/promtail/"
 

@@ -14,19 +14,6 @@ type ManagedPolicy struct {
 	CloudFormationTemplate []byte
 }
 
-// CreateExternalSecretsPolicyOpts contains the options
-// that are required for creating an external secrets policy
-type CreateExternalSecretsPolicyOpts struct {
-	ID ID
-}
-
-// Validate determines if the options are valid
-func (o CreateExternalSecretsPolicyOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-	)
-}
-
 // CreateAWSLoadBalancerControllerPolicyOpts contains the input
 type CreateAWSLoadBalancerControllerPolicyOpts struct {
 	ID ID
@@ -111,8 +98,6 @@ func (o DeletePolicyOpts) Validate() error {
 
 // ManagedPolicyService defines the service layer for managed policies
 type ManagedPolicyService interface {
-	CreateExternalSecretsPolicy(ctx context.Context, opts CreateExternalSecretsPolicyOpts) (*ManagedPolicy, error)
-	DeleteExternalSecretsPolicy(ctx context.Context, id ID) error
 	CreateAWSLoadBalancerControllerPolicy(ctx context.Context, opts CreateAWSLoadBalancerControllerPolicyOpts) (*ManagedPolicy, error)
 	DeleteAWSLoadBalancerControllerPolicy(ctx context.Context, id ID) error
 	CreateExternalDNSPolicy(ctx context.Context, opts CreateExternalDNSPolicyOpts) (*ManagedPolicy, error)
@@ -127,8 +112,6 @@ type ManagedPolicyService interface {
 
 // ManagedPolicyCloudProvider defines the cloud provider layer for managed policies
 type ManagedPolicyCloudProvider interface {
-	CreateExternalSecretsPolicy(opts CreateExternalSecretsPolicyOpts) (*ManagedPolicy, error)
-	DeleteExternalSecretsPolicy(id ID) error
 	CreateAWSLoadBalancerControllerPolicy(opts CreateAWSLoadBalancerControllerPolicyOpts) (*ManagedPolicy, error)
 	DeleteAWSLoadBalancerControllerPolicy(id ID) error
 	CreateExternalDNSPolicy(opts CreateExternalDNSPolicyOpts) (*ManagedPolicy, error)

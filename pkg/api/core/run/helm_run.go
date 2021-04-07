@@ -21,7 +21,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/helm"
-	"github.com/oslokommune/okctl/pkg/helm/charts/externalsecrets"
 )
 
 type helmRun struct {
@@ -105,12 +104,6 @@ func (r *helmRun) CreateArgoCD(opts api.CreateArgoCDOpts) (*api.Helm, error) {
 
 func (r *helmRun) CreateAWSLoadBalancerControllerHelmChart(opts api.CreateAWSLoadBalancerControllerHelmChartOpts) (*api.Helm, error) {
 	chart := awslbc.New(awslbc.NewDefaultValues(opts.ID.ClusterName, opts.VpcID, opts.ID.Region))
-
-	return r.createHelmChart(opts.ID, chart)
-}
-
-func (r *helmRun) CreateExternalSecretsHelmChart(opts api.CreateExternalSecretsHelmChartOpts) (*api.Helm, error) {
-	chart := externalsecrets.ExternalSecrets(externalsecrets.DefaultExternalSecretsValues())
 
 	return r.createHelmChart(opts.ID, chart)
 }

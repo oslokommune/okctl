@@ -62,10 +62,6 @@ func (m *managedPolicy) DeleteAutoscalerPolicy(id api.ID) error {
 	return m.deletePolicy(cfn.NewStackNamer().AutoscalerPolicy(id.Repository, id.Environment))
 }
 
-func (m *managedPolicy) DeleteExternalSecretsPolicy(id api.ID) error {
-	return m.deletePolicy(cfn.NewStackNamer().ExternalSecretsPolicy(id.Repository, id.Environment))
-}
-
 func (m *managedPolicy) DeleteAWSLoadBalancerControllerPolicy(id api.ID) error {
 	return m.deletePolicy(cfn.NewStackNamer().AWSLoadBalancerControllerPolicy(id.Repository, id.Environment))
 }
@@ -127,18 +123,6 @@ func (m *managedPolicy) CreateAWSLoadBalancerControllerPolicy(opts api.CreateAWS
 		AWSLoadBalancerControllerPolicy(opts.ID.Repository, opts.ID.Environment)
 
 	return m.createPolicy(stackName, opts.ID, "AWSLoadBalancerControllerPolicy", b)
-}
-
-// CreateExternalSecretsPolicy builds and applies a cloud formation template
-func (m *managedPolicy) CreateExternalSecretsPolicy(opts api.CreateExternalSecretsPolicyOpts) (*api.ManagedPolicy, error) {
-	b := cfn.New(
-		components.NewExternalSecretsPolicyComposer(opts.ID.Repository, opts.ID.Environment),
-	)
-
-	stackName := cfn.NewStackNamer().
-		ExternalSecretsPolicy(opts.ID.Repository, opts.ID.Environment)
-
-	return m.createPolicy(stackName, opts.ID, "ExternalSecretsPolicy", b)
 }
 
 func (m *managedPolicy) createPolicy(stackName string, id api.ID, outputName string, builder cfn.StackBuilder) (*api.ManagedPolicy, error) {

@@ -105,6 +105,8 @@ const (
 	DefaultStormNodeMonitoring         = "monitoring"
 	DefaultStormNodeComponent          = "components"
 	DefaultStormNodeArgoCD             = "argocd"
+	DefaultStormNodeHelm               = "helm"
+	DefaultStormNodeExternalSecrets    = "externalsecrets"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"

@@ -4,6 +4,10 @@ package mock
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/helm"
+
+	"helm.sh/helm/v3/pkg/release"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -27,6 +31,7 @@ const (
 	DefaultNamespace          = "kube-system"
 	DefaultManifestName       = "okctl-cm"
 	DefaultManifestType       = client.ManifestTypeConfigMap
+	DefaultHelmReleaseName    = "okctl-helm-release"
 
 	StackNameHostedZone    = "okctl-staging-oslo-systems-HostedZone"
 	StackNameCertificate   = "okctl-staging-oslo-systems-Certificate"
@@ -153,5 +158,28 @@ func ManagedPolicy() *client.ManagedPolicy {
 		StackName:              StackNameManagedPolicy,
 		PolicyARN:              DefaultPolicyARN,
 		CloudFormationTemplate: CloudFormationTemplate(),
+	}
+}
+
+// HelmChart returns a fake helm chart
+func HelmChart() *helm.Chart {
+	return &helm.Chart{
+		RepositoryName: "my-repo",
+		RepositoryURL:  "https://something/repo",
+		ReleaseName:    DefaultHelmReleaseName,
+		Version:        "v1.0.0",
+		Chart:          "my-chart",
+		Namespace:      DefaultNamespace,
+	}
+}
+
+// Helm returns a fake helm
+func Helm() *client.Helm {
+	return &client.Helm{
+		ID: ID(),
+		Release: &release.Release{
+			Name: DefaultHelmReleaseName,
+		},
+		Chart: HelmChart(),
 	}
 }

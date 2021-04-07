@@ -19,9 +19,6 @@ type Endpoints struct {
 	DeleteCluster                                 endpoint.Endpoint
 	CreateVpc                                     endpoint.Endpoint
 	DeleteVpc                                     endpoint.Endpoint
-	CreateExternalSecretsPolicy                   endpoint.Endpoint
-	CreateExternalSecretsServiceAccount           endpoint.Endpoint
-	CreateExternalSecretsHelmChart                endpoint.Endpoint
 	CreateAlbIngressControllerServiceAccount      endpoint.Endpoint
 	CreateAlbIngressControllerPolicy              endpoint.Endpoint
 	CreateAlbIngressControllerHelmChart           endpoint.Endpoint
@@ -34,11 +31,9 @@ type Endpoints struct {
 	DeleteSecret                                  endpoint.Endpoint
 	CreateArgoCD                                  endpoint.Endpoint
 	CreateExternalSecrets                         endpoint.Endpoint
-	DeleteExternalSecretsPolicy                   endpoint.Endpoint
 	DeleteAlbIngressControllerPolicy              endpoint.Endpoint
 	DeleteExternalDNSPolicy                       endpoint.Endpoint
 	DeleteHostedZone                              endpoint.Endpoint
-	DeleteExternalSecretsServiceAccount           endpoint.Endpoint
 	DeleteAlbIngressControllerServiceAccount      endpoint.Endpoint
 	DeleteExternalDNSServiceAccount               endpoint.Endpoint
 	CreateIdentityPool                            endpoint.Endpoint
@@ -90,32 +85,27 @@ type Endpoints struct {
 // nolint: funlen
 func MakeEndpoints(s Services) Endpoints {
 	return Endpoints{
-		CreateCluster:                                 makeCreateClusterEndpoint(s.Cluster),
-		DeleteCluster:                                 makeDeleteClusterEndpoint(s.Cluster),
-		CreateVpc:                                     makeCreateVpcEndpoint(s.Vpc),
-		DeleteVpc:                                     makeDeleteVpcEndpoint(s.Vpc),
-		CreateExternalSecretsPolicy:                   makeCreateExternalSecretsPolicyEndpoint(s.ManagedPolicy),
-		CreateExternalSecretsServiceAccount:           makeCreateExternalSecretsServiceAccountEndpoint(s.ServiceAccount),
-		CreateExternalSecretsHelmChart:                makeCreateExternalSecretsHelmChartEndpoint(s.Helm),
-		CreateExternalDNSPolicy:                       makeCreateExternalDNSPolicyEndpoint(s.ManagedPolicy),
-		CreateExternalDNSServiceAccount:               makeCreateExternalDNSServiceAccountEndpoint(s.ServiceAccount),
-		CreateExternalDNSKubeDeployment:               makeCreateExternalDNSKubeDeploymentEndpoint(s.Kube),
-		CreateHostedZone:                              makeCreateHostedZoneEndpoint(s.Domain),
-		CreateCertificate:                             makeCreateCertificateEndpoint(s.Certificate),
-		CreateSecret:                                  makeCreateSecret(s.Parameter),
-		DeleteSecret:                                  makeDeleteSecret(s.Parameter),
-		CreateArgoCD:                                  makeCreateArgoCD(s.Helm),
-		CreateExternalSecrets:                         makeCreateExternalSecretsEndpoint(s.Kube),
-		DeleteExternalSecretsPolicy:                   makeDeleteExternalSecretsPolicyEndpoint(s.ManagedPolicy),
-		DeleteExternalDNSPolicy:                       makeDeleteExternalDNSPolicyEndpoint(s.ManagedPolicy),
-		DeleteHostedZone:                              makeDeleteHostedZoneEndpoint(s.Domain),
-		DeleteExternalSecretsServiceAccount:           makeDeleteExternalSecretsServiceAccountEndpoint(s.ServiceAccount),
-		DeleteExternalDNSServiceAccount:               makeDeleteExternalDNSServiceAccountEndpoint(s.ServiceAccount),
-		CreateIdentityPool:                            makeCreateIdentityPoolEndpoint(s.IdentityManager),
-		CreateIdentityPoolClient:                      makeCreateIdentityPoolClient(s.IdentityManager),
-		CreateIdentityPoolUser:                        makeCreateIdentityPoolUser(s.IdentityManager),
-		DeleteIdentityPool:                            makeDeleteIdentityPoolEndpoint(s.IdentityManager),
-		DeleteIdentityPoolClient:                      makeDeleteIdentityPoolClientEndpoint(s.IdentityManager),
+		CreateCluster:                   makeCreateClusterEndpoint(s.Cluster),
+		DeleteCluster:                   makeDeleteClusterEndpoint(s.Cluster),
+		CreateVpc:                       makeCreateVpcEndpoint(s.Vpc),
+		DeleteVpc:                       makeDeleteVpcEndpoint(s.Vpc),
+		CreateExternalDNSPolicy:         makeCreateExternalDNSPolicyEndpoint(s.ManagedPolicy),
+		CreateExternalDNSServiceAccount: makeCreateExternalDNSServiceAccountEndpoint(s.ServiceAccount),
+		CreateExternalDNSKubeDeployment: makeCreateExternalDNSKubeDeploymentEndpoint(s.Kube),
+		CreateHostedZone:                makeCreateHostedZoneEndpoint(s.Domain),
+		CreateCertificate:               makeCreateCertificateEndpoint(s.Certificate),
+		CreateSecret:                    makeCreateSecret(s.Parameter),
+		DeleteSecret:                    makeDeleteSecret(s.Parameter),
+		CreateArgoCD:                    makeCreateArgoCD(s.Helm),
+		CreateExternalSecrets:           makeCreateExternalSecretsEndpoint(s.Kube),
+		DeleteExternalDNSPolicy:         makeDeleteExternalDNSPolicyEndpoint(s.ManagedPolicy),
+		DeleteHostedZone:                makeDeleteHostedZoneEndpoint(s.Domain),
+		DeleteExternalDNSServiceAccount: makeDeleteExternalDNSServiceAccountEndpoint(s.ServiceAccount),
+		CreateIdentityPool:              makeCreateIdentityPoolEndpoint(s.IdentityManager),
+		CreateIdentityPoolClient:        makeCreateIdentityPoolClient(s.IdentityManager),
+		CreateIdentityPoolUser:          makeCreateIdentityPoolUser(s.IdentityManager),
+		DeleteIdentityPool:              makeDeleteIdentityPoolEndpoint(s.IdentityManager),
+		DeleteIdentityPoolClient:        makeDeleteIdentityPoolClientEndpoint(s.IdentityManager),
 		CreateAWSLoadBalancerControllerServiceAccount: makeCreateAWSLoadBalancerControllerServiceAccountEndpoint(s.ServiceAccount),
 		DeleteAWSLoadBalancerControllerServiceAccount: makeDeleteAWSLoadBalancerControllerServiceAccountEndpoint(s.ServiceAccount),
 		CreateAWSLoadBalancerControllerPolicy:         makeCreateAWSLoadBalancerControllerPolicyEndpoint(s.ManagedPolicy),
@@ -162,9 +152,6 @@ type Handlers struct {
 	DeleteCluster                                 http.Handler
 	CreateVpc                                     http.Handler
 	DeleteVpc                                     http.Handler
-	CreateExternalSecretsPolicy                   http.Handler
-	CreateExternalSecretsServiceAccount           http.Handler
-	CreateExternalSecretsHelmChart                http.Handler
 	CreateExternalDNSPolicy                       http.Handler
 	CreateExternalDNSServiceAccount               http.Handler
 	CreateExternalDNSKubeDeployment               http.Handler
@@ -174,10 +161,8 @@ type Handlers struct {
 	DeleteSecret                                  http.Handler
 	CreateArgoCD                                  http.Handler
 	CreateExternalSecrets                         http.Handler
-	DeleteExternalSecretsPolicy                   http.Handler
 	DeleteExternalDNSPolicy                       http.Handler
 	DeleteHostedZone                              http.Handler
-	DeleteExternalSecretsServiceAccount           http.Handler
 	DeleteExternalDNSServiceAccount               http.Handler
 	CreateIdentityPool                            http.Handler
 	CreateIdentityPoolClient                      http.Handler
@@ -254,32 +239,27 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 	}
 
 	return &Handlers{
-		CreateCluster:                                 newServer(endpoints.CreateCluster, decodeClusterCreateRequest),
-		DeleteCluster:                                 newServer(endpoints.DeleteCluster, decodeClusterDeleteRequest),
-		CreateVpc:                                     newServer(endpoints.CreateVpc, decodeVpcCreateRequest),
-		DeleteVpc:                                     newServer(endpoints.DeleteVpc, decodeVpcDeleteRequest),
-		CreateExternalSecretsPolicy:                   newServer(endpoints.CreateExternalSecretsPolicy, decodeCreateExternalSecretsPolicyRequest),
-		CreateExternalSecretsServiceAccount:           newServer(endpoints.CreateExternalSecretsServiceAccount, decodeCreateExternalSecretsServiceAccount),
-		CreateExternalSecretsHelmChart:                newServer(endpoints.CreateExternalSecretsHelmChart, decodeCreateExternalSecretsHelmChart),
-		CreateExternalDNSPolicy:                       newServer(endpoints.CreateExternalDNSPolicy, decodeCreateExternalDNSPolicyRequest),
-		CreateExternalDNSServiceAccount:               newServer(endpoints.CreateExternalDNSServiceAccount, decodeCreateExternalDNSServiceAccount),
-		CreateExternalDNSKubeDeployment:               newServer(endpoints.CreateExternalDNSKubeDeployment, decodeCreateExternalDNSKubeDeployment),
-		CreateHostedZone:                              newServer(endpoints.CreateHostedZone, decodeCreateHostedZone),
-		CreateCertificate:                             newServer(endpoints.CreateCertificate, decodeCreateCertificate),
-		CreateSecret:                                  newServer(endpoints.CreateSecret, decodeCreateSecret),
-		DeleteSecret:                                  newServer(endpoints.DeleteSecret, decodeDeleteSecret),
-		CreateArgoCD:                                  newServer(endpoints.CreateArgoCD, decodeCreateArgoCD),
-		CreateExternalSecrets:                         newServer(endpoints.CreateExternalSecrets, decodeCreateExternalSecrets),
-		DeleteExternalSecretsPolicy:                   newServer(endpoints.DeleteExternalSecretsPolicy, decodeIDRequest),
-		DeleteExternalDNSPolicy:                       newServer(endpoints.DeleteExternalDNSPolicy, decodeIDRequest),
-		DeleteHostedZone:                              newServer(endpoints.DeleteHostedZone, decodeDeleteHostedZone),
-		DeleteExternalSecretsServiceAccount:           newServer(endpoints.DeleteExternalSecretsServiceAccount, decodeIDRequest),
-		DeleteExternalDNSServiceAccount:               newServer(endpoints.DeleteExternalDNSServiceAccount, decodeIDRequest),
-		CreateIdentityPool:                            newServer(endpoints.CreateIdentityPool, decodeCreateIdentityPool),
-		CreateIdentityPoolClient:                      newServer(endpoints.CreateIdentityPoolClient, decodeCreateIdentityPoolClient),
-		CreateIdentityPoolUser:                        newServer(endpoints.CreateIdentityPoolUser, decodeCreateIdentityPoolUser),
-		DeleteIdentityPool:                            newServer(endpoints.DeleteIdentityPool, decodeDeleteIdentityPool),
-		DeleteIdentityPoolClient:                      newServer(endpoints.DeleteIdentityPoolClient, decodeDeleteIdentityPoolClient),
+		CreateCluster:                   newServer(endpoints.CreateCluster, decodeClusterCreateRequest),
+		DeleteCluster:                   newServer(endpoints.DeleteCluster, decodeClusterDeleteRequest),
+		CreateVpc:                       newServer(endpoints.CreateVpc, decodeVpcCreateRequest),
+		DeleteVpc:                       newServer(endpoints.DeleteVpc, decodeVpcDeleteRequest),
+		CreateExternalDNSPolicy:         newServer(endpoints.CreateExternalDNSPolicy, decodeCreateExternalDNSPolicyRequest),
+		CreateExternalDNSServiceAccount: newServer(endpoints.CreateExternalDNSServiceAccount, decodeCreateExternalDNSServiceAccount),
+		CreateExternalDNSKubeDeployment: newServer(endpoints.CreateExternalDNSKubeDeployment, decodeCreateExternalDNSKubeDeployment),
+		CreateHostedZone:                newServer(endpoints.CreateHostedZone, decodeCreateHostedZone),
+		CreateCertificate:               newServer(endpoints.CreateCertificate, decodeCreateCertificate),
+		CreateSecret:                    newServer(endpoints.CreateSecret, decodeCreateSecret),
+		DeleteSecret:                    newServer(endpoints.DeleteSecret, decodeDeleteSecret),
+		CreateArgoCD:                    newServer(endpoints.CreateArgoCD, decodeCreateArgoCD),
+		CreateExternalSecrets:           newServer(endpoints.CreateExternalSecrets, decodeCreateExternalSecrets),
+		DeleteExternalDNSPolicy:         newServer(endpoints.DeleteExternalDNSPolicy, decodeIDRequest),
+		DeleteHostedZone:                newServer(endpoints.DeleteHostedZone, decodeDeleteHostedZone),
+		DeleteExternalDNSServiceAccount: newServer(endpoints.DeleteExternalDNSServiceAccount, decodeIDRequest),
+		CreateIdentityPool:              newServer(endpoints.CreateIdentityPool, decodeCreateIdentityPool),
+		CreateIdentityPoolClient:        newServer(endpoints.CreateIdentityPoolClient, decodeCreateIdentityPoolClient),
+		CreateIdentityPoolUser:          newServer(endpoints.CreateIdentityPoolUser, decodeCreateIdentityPoolUser),
+		DeleteIdentityPool:              newServer(endpoints.DeleteIdentityPool, decodeDeleteIdentityPool),
+		DeleteIdentityPoolClient:        newServer(endpoints.DeleteIdentityPoolClient, decodeDeleteIdentityPoolClient),
 		CreateAWSLoadBalancerControllerServiceAccount: newServer(endpoints.CreateAWSLoadBalancerControllerServiceAccount, decodeCreateAWSLoadBalancerControllerServiceAccount),
 		DeleteAWSLoadBalancerControllerServiceAccount: newServer(endpoints.DeleteAWSLoadBalancerControllerServiceAccount, decodeIDRequest),
 		CreateAWSLoadBalancerControllerPolicy:         newServer(endpoints.CreateAWSLoadBalancerControllerPolicy, decodeCreateAWSLoadBalancerControllerPolicyRequest),
@@ -337,10 +317,6 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/managedpolicies", func(r chi.Router) {
 			r.Method(http.MethodPost, "/", handlers.CreatePolicy)
 			r.Method(http.MethodDelete, "/", handlers.DeletePolicy)
-			r.Route("/externalsecrets", func(r chi.Router) {
-				r.Method(http.MethodPost, "/", handlers.CreateExternalSecretsPolicy)
-				r.Method(http.MethodDelete, "/", handlers.DeleteExternalSecretsPolicy)
-			})
 			r.Route("/awsloadbalancercontroller", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAWSLoadBalancerControllerPolicy)
 				r.Method(http.MethodDelete, "/", handlers.DeleteAWSLoadBalancerControllerPolicy)
@@ -361,10 +337,6 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/serviceaccounts", func(r chi.Router) {
 			r.Method(http.MethodPost, "/", handlers.CreateServiceAccount)
 			r.Method(http.MethodDelete, "/", handlers.DeleteServiceAccount)
-			r.Route("/externalsecrets", func(r chi.Router) {
-				r.Method(http.MethodPost, "/", handlers.CreateExternalSecretsServiceAccount)
-				r.Method(http.MethodDelete, "/", handlers.DeleteExternalSecretsServiceAccount)
-			})
 			r.Route("/awsloadbalancercontroller", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAWSLoadBalancerControllerServiceAccount)
 				r.Method(http.MethodDelete, "/", handlers.DeleteAWSLoadBalancerControllerServiceAccount)
@@ -383,9 +355,6 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			})
 		})
 		r.Route("/helm", func(r chi.Router) {
-			r.Route("/externalsecrets", func(r chi.Router) {
-				r.Method(http.MethodPost, "/", handlers.CreateExternalSecretsHelmChart)
-			})
 			r.Route("/awsloadbalancercontroller", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateAWSLoadBalancerControllerHelmChart)
 			})
@@ -542,32 +511,27 @@ const (
 func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 	return func(endpoints Endpoints) Endpoints {
 		return Endpoints{
-			CreateCluster:                                 logmd.Logging(logger, "create", clusterTag)(endpoints.CreateCluster),
-			DeleteCluster:                                 logmd.Logging(logger, "delete", clusterTag)(endpoints.DeleteCluster),
-			CreateVpc:                                     logmd.Logging(logger, "create", vpcTag)(endpoints.CreateVpc),
-			DeleteVpc:                                     logmd.Logging(logger, "delete", vpcTag)(endpoints.DeleteVpc),
-			CreateExternalSecretsPolicy:                   logmd.Logging(logger, "create", managedPoliciesTag, externalSecretsTag)(endpoints.CreateExternalSecretsPolicy),
-			CreateExternalSecretsServiceAccount:           logmd.Logging(logger, "create", serviceAccountsTag, externalSecretsTag)(endpoints.CreateExternalSecretsServiceAccount),
-			CreateExternalSecretsHelmChart:                logmd.Logging(logger, "create", helmTag, externalSecretsTag)(endpoints.CreateExternalSecretsHelmChart),
-			CreateExternalDNSPolicy:                       logmd.Logging(logger, "create", managedPoliciesTag, externalDNSTag)(endpoints.CreateExternalDNSPolicy),
-			CreateExternalDNSServiceAccount:               logmd.Logging(logger, "create", serviceAccountsTag, externalDNSTag)(endpoints.CreateExternalDNSServiceAccount),
-			CreateExternalDNSKubeDeployment:               logmd.Logging(logger, "create", kubeTag, externalDNSTag)(endpoints.CreateExternalDNSKubeDeployment),
-			CreateHostedZone:                              logmd.Logging(logger, "create", domainTag, hostedZoneTag)(endpoints.CreateHostedZone),
-			CreateCertificate:                             logmd.Logging(logger, "create", certificateTag)(endpoints.CreateCertificate),
-			CreateSecret:                                  logmd.Logging(logger, "create", parameterTag, secretTag)(endpoints.CreateSecret),
-			DeleteSecret:                                  logmd.Logging(logger, "delete", parameterTag, secretTag)(endpoints.DeleteSecret),
-			CreateArgoCD:                                  logmd.Logging(logger, "create", helmTag, argocdTag)(endpoints.CreateArgoCD),
-			CreateExternalSecrets:                         logmd.Logging(logger, "create", kubeTag, externalSecretsTag)(endpoints.CreateExternalSecrets),
-			DeleteExternalSecretsPolicy:                   logmd.Logging(logger, "delete", managedPoliciesTag, externalSecretsTag)(endpoints.DeleteExternalSecretsPolicy),
-			DeleteExternalDNSPolicy:                       logmd.Logging(logger, "delete", managedPoliciesTag, externalDNSTag)(endpoints.DeleteExternalDNSPolicy),
-			DeleteHostedZone:                              logmd.Logging(logger, "delete", domainTag, hostedZoneTag)(endpoints.DeleteHostedZone),
-			DeleteExternalSecretsServiceAccount:           logmd.Logging(logger, "delete", serviceAccountsTag, externalSecretsTag)(endpoints.DeleteExternalSecretsServiceAccount),
-			DeleteExternalDNSServiceAccount:               logmd.Logging(logger, "delete", serviceAccountsTag, externalDNSTag)(endpoints.DeleteExternalDNSServiceAccount),
-			CreateIdentityPool:                            logmd.Logging(logger, "create", identityManagerTag, identityPoolTag)(endpoints.CreateIdentityPool),
-			CreateIdentityPoolClient:                      logmd.Logging(logger, "create", identityManagerTag, identityPoolTag, identityPoolClientTag)(endpoints.CreateIdentityPoolClient),
-			CreateIdentityPoolUser:                        logmd.Logging(logger, "create", identityManagerTag, identityPoolTag, identityPoolUserTag)(endpoints.CreateIdentityPoolUser),
-			DeleteIdentityPool:                            logmd.Logging(logger, "delete", identityManagerTag, identityPoolTag)(endpoints.DeleteIdentityPool),
-			DeleteIdentityPoolClient:                      logmd.Logging(logger, "delete", identityManagerTag, identityPoolClientTag)(endpoints.DeleteIdentityPoolClient),
+			CreateCluster:                   logmd.Logging(logger, "create", clusterTag)(endpoints.CreateCluster),
+			DeleteCluster:                   logmd.Logging(logger, "delete", clusterTag)(endpoints.DeleteCluster),
+			CreateVpc:                       logmd.Logging(logger, "create", vpcTag)(endpoints.CreateVpc),
+			DeleteVpc:                       logmd.Logging(logger, "delete", vpcTag)(endpoints.DeleteVpc),
+			CreateExternalDNSPolicy:         logmd.Logging(logger, "create", managedPoliciesTag, externalDNSTag)(endpoints.CreateExternalDNSPolicy),
+			CreateExternalDNSServiceAccount: logmd.Logging(logger, "create", serviceAccountsTag, externalDNSTag)(endpoints.CreateExternalDNSServiceAccount),
+			CreateExternalDNSKubeDeployment: logmd.Logging(logger, "create", kubeTag, externalDNSTag)(endpoints.CreateExternalDNSKubeDeployment),
+			CreateHostedZone:                logmd.Logging(logger, "create", domainTag, hostedZoneTag)(endpoints.CreateHostedZone),
+			CreateCertificate:               logmd.Logging(logger, "create", certificateTag)(endpoints.CreateCertificate),
+			CreateSecret:                    logmd.Logging(logger, "create", parameterTag, secretTag)(endpoints.CreateSecret),
+			DeleteSecret:                    logmd.Logging(logger, "delete", parameterTag, secretTag)(endpoints.DeleteSecret),
+			CreateArgoCD:                    logmd.Logging(logger, "create", helmTag, argocdTag)(endpoints.CreateArgoCD),
+			CreateExternalSecrets:           logmd.Logging(logger, "create", kubeTag, externalSecretsTag)(endpoints.CreateExternalSecrets),
+			DeleteExternalDNSPolicy:         logmd.Logging(logger, "delete", managedPoliciesTag, externalDNSTag)(endpoints.DeleteExternalDNSPolicy),
+			DeleteHostedZone:                logmd.Logging(logger, "delete", domainTag, hostedZoneTag)(endpoints.DeleteHostedZone),
+			DeleteExternalDNSServiceAccount: logmd.Logging(logger, "delete", serviceAccountsTag, externalDNSTag)(endpoints.DeleteExternalDNSServiceAccount),
+			CreateIdentityPool:              logmd.Logging(logger, "create", identityManagerTag, identityPoolTag)(endpoints.CreateIdentityPool),
+			CreateIdentityPoolClient:        logmd.Logging(logger, "create", identityManagerTag, identityPoolTag, identityPoolClientTag)(endpoints.CreateIdentityPoolClient),
+			CreateIdentityPoolUser:          logmd.Logging(logger, "create", identityManagerTag, identityPoolTag, identityPoolUserTag)(endpoints.CreateIdentityPoolUser),
+			DeleteIdentityPool:              logmd.Logging(logger, "delete", identityManagerTag, identityPoolTag)(endpoints.DeleteIdentityPool),
+			DeleteIdentityPoolClient:        logmd.Logging(logger, "delete", identityManagerTag, identityPoolClientTag)(endpoints.DeleteIdentityPoolClient),
 			CreateAWSLoadBalancerControllerServiceAccount: logmd.Logging(logger, "create", serviceAccountsTag, awsLoadBalancerControllerTag)(endpoints.CreateAWSLoadBalancerControllerServiceAccount),
 			DeleteAWSLoadBalancerControllerServiceAccount: logmd.Logging(logger, "delete", serviceAccountsTag, awsLoadBalancerControllerTag)(endpoints.DeleteAWSLoadBalancerControllerServiceAccount),
 			CreateAWSLoadBalancerControllerPolicy:         logmd.Logging(logger, "create", managedPoliciesTag, awsLoadBalancerControllerTag)(endpoints.CreateAWSLoadBalancerControllerPolicy),

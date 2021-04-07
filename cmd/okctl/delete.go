@@ -170,8 +170,6 @@ including VPC, this is a highly destructive operation.`,
 
 			formatErr := o.ErrorFormatter(fmt.Sprintf("delete cluster %s", opts.Environment), userDir)
 
-			cluster := o.RepoStateWithEnv.GetCluster()
-
 			vpc, err := services.Vpc.GetVPC(o.Ctx, id)
 			if err != nil {
 				return formatErr(err)
@@ -266,11 +264,6 @@ including VPC, this is a highly destructive operation.`,
 				ID:                 id,
 				FargateProfileName: "fp-default",
 			})
-			if err != nil {
-				return formatErr(err)
-			}
-
-			err = services.Parameter.DeleteAllsecrets(o.Ctx, cluster)
 			if err != nil {
 				return formatErr(err)
 			}

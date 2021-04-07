@@ -15,25 +15,28 @@ import (
 	"github.com/oslokommune/okctl/pkg/clusterconfig"
 )
 
-// nolint: golint
+// nolint: golint gosec
 const (
-	DefaultRegion             = "eu-west-1"
-	DefaultAWSAccountID       = "123456789012"
-	DefaultEnvironment        = "staging"
-	DefaultRepository         = "okctl"
-	DefaultClusterName        = "okctl-staging"
-	DefaultDomain             = "okctl-staging.oslo.systems"
-	DefaultDomainFilter       = DefaultDomain
-	DefaultFQDN               = "okctl-staging.oslo.systems."
-	DefaultHostedZoneID       = "Z0FAKE41FAKE6I841FAKE"
-	DefaultCertificateARN     = "arn:aws:acm:eu-west-1:123456789012:certificate/123456789012-1234-1234-1234-12345678"
-	DefaultServiceAccountName = "important-sa"
-	DefaultPolicyARN          = "arn:aws:iam::123456789012:policy/policy-name-with-path"
-	DefaultNamespace          = "kube-system"
-	DefaultManifestName       = "okctl-cm"
-	DefaultManifestType       = client.ManifestTypeConfigMap
-	DefaultHelmReleaseName    = "okctl-helm-release"
-	DefaultExternalDNSName    = "external-dns"
+	DefaultRegion                 = "eu-west-1"
+	DefaultAWSAccountID           = "123456789012"
+	DefaultEnvironment            = "staging"
+	DefaultRepository             = "okctl"
+	DefaultClusterName            = "okctl-staging"
+	DefaultDomain                 = "okctl-staging.oslo.systems"
+	DefaultDomainFilter           = DefaultDomain
+	DefaultFQDN                   = "okctl-staging.oslo.systems."
+	DefaultHostedZoneID           = "Z0FAKE41FAKE6I841FAKE"
+	DefaultCertificateARN         = "arn:aws:acm:eu-west-1:123456789012:certificate/123456789012-1234-1234-1234-12345678"
+	DefaultServiceAccountName     = "important-sa"
+	DefaultPolicyARN              = "arn:aws:iam::123456789012:policy/policy-name-with-path"
+	DefaultNamespace              = "kube-system"
+	DefaultManifestName           = "okctl-cm"
+	DefaultManifestType           = client.ManifestTypeConfigMap
+	DefaultHelmReleaseName        = "okctl-helm-release"
+	DefaultExternalDNSName        = "external-dns"
+	DefaultSecretParameterName    = "release-secret"
+	DefaultSecretParameterVersion = 1
+	DefaultSecretParameterPath    = "/okctl/staging/release-secret"
 
 	StackNameHostedZone    = "okctl-staging-oslo-systems-HostedZone"
 	StackNameCertificate   = "okctl-staging-oslo-systems-Certificate"
@@ -203,5 +206,16 @@ func ExternalDNS() *client.ExternalDNS {
 	return &client.ExternalDNS{
 		Name: DefaultExternalDNSName,
 		Kube: ExternalDNSKube(),
+	}
+}
+
+// SecretParameter returns a fake secret parameter
+func SecretParameter(content string) *client.SecretParameter {
+	return &client.SecretParameter{
+		ID:      ID(),
+		Name:    DefaultSecretParameterName,
+		Path:    DefaultSecretParameterPath,
+		Version: DefaultSecretParameterVersion,
+		Content: content,
 	}
 }

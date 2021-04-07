@@ -18,8 +18,8 @@ type ArgoCD struct {
 	IdentityClient *api.IdentityPoolClient
 	PrivateKey     *KubernetesManifest
 	Secret         *KubernetesManifest
-	ClientSecret   *api.SecretParameter
-	SecretKey      *api.SecretParameter
+	ClientSecret   *SecretParameter
+	SecretKey      *SecretParameter
 	Chart          *api.Helm
 }
 

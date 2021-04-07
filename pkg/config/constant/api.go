@@ -110,6 +110,7 @@ const (
 	DefaultStormNodeAWSLoadBalanerController = "awsloadbalancercontroller"
 	DefaultStormNodeExternalDNS              = "externaldns"
 	DefaultstormNodeAutoscaler               = "autoscaler"
+	DefaultStormNodeParameter                = "parameter"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"

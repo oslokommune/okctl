@@ -6,8 +6,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
-	"github.com/oslokommune/okctl/pkg/spinner"
-
 	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/google/uuid"
@@ -17,8 +15,6 @@ import (
 )
 
 type argoCDService struct {
-	spinner spinner.Spinner
-
 	api    client.ArgoCDAPI
 	store  client.ArgoCDStore
 	report client.ArgoCDReport
@@ -30,19 +26,16 @@ type argoCDService struct {
 	param    client.ParameterService
 }
 
+// nolint: gosec
+const (
+	argoClientSecretName = "argocd/client_secret"
+	argoSecretKeyName    = "argocd/secret_key"
+)
+
 func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgoCDOpts) error {
-	err := s.spinner.Start("argocd")
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
 	info := s.state.GetArgoCD(opts.ID)
 
-	err = s.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
+	err := s.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
 		ID:        opts.ID,
 		Namespace: constant.DefaultArgoCDNamespace,
 	})
@@ -66,20 +59,21 @@ func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgo
 		return err
 	}
 
+	for _, secret := range []string{argoSecretKeyName, argoClientSecretName} {
+		err = s.param.DeleteSecret(ctx, client.DeleteSecretOpts{
+			ID:   opts.ID,
+			Name: secret,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 // nolint: funlen
 func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgoCDOpts) (*client.ArgoCD, error) {
-	err := s.spinner.Start("argocd")
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
 	cert, err := s.cert.CreateCertificate(ctx, client.CreateCertificateOpts{
 		ID:           opts.ID,
 		FQDN:         fmt.Sprintf("argocd.%s", opts.FQDN),
@@ -108,18 +102,18 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		return nil, err
 	}
 
-	clientSecret, err := s.param.CreateSecret(ctx, api.CreateSecretOpts{
+	clientSecret, err := s.param.CreateSecret(ctx, client.CreateSecretOpts{
 		ID:     opts.ID,
-		Name:   "argocd/client_secret",
+		Name:   argoClientSecretName,
 		Secret: identityClient.ClientSecret,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	secretKey, err := s.param.CreateSecret(ctx, api.CreateSecretOpts{
+	secretKey, err := s.param.CreateSecret(ctx, client.CreateSecretOpts{
 		ID:     opts.ID,
-		Name:   "argocd/secret_key",
+		Name:   argoSecretKeyName,
 		Secret: uuid.New().String(),
 	})
 	if err != nil {
@@ -235,7 +229,6 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 
 // NewArgoCDService returns an initialised service
 func NewArgoCDService(
-	spinner spinner.Spinner,
 	identity client.IdentityManagerService,
 	cert client.CertificateService,
 	manifest client.ManifestService,
@@ -246,7 +239,6 @@ func NewArgoCDService(
 	state client.ArgoCDState,
 ) client.ArgoCDService {
 	return &argoCDService{
-		spinner:  spinner,
 		api:      api,
 		store:    store,
 		report:   report,

@@ -1,7 +1,6 @@
 package core
 
 import (
-	"bytes"
 	"context"
 	"testing"
 
@@ -9,21 +8,14 @@ import (
 	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/store"
-	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/mock"
-	"github.com/oslokommune/okctl/pkg/spinner"
 	"github.com/stretchr/testify/assert"
 )
 
 type clusterConfigRetrieverFn func(config *v1alpha5.ClusterConfig)
 
 func createMonitoringService(retriever clusterConfigRetrieverFn) client.MonitoringService {
-	var stdout bytes.Buffer
-
-	spin, _ := spinner.New("test", &stdout)
-
 	return NewMonitoringService(
-		spin,
 		mockAPI{},
 		mockStore{},
 		mockState{},
@@ -242,16 +234,12 @@ func (m mockManifestService) CreateNamespace(_ context.Context, _ api.CreateName
 
 type mockParameterService struct{}
 
-func (m mockParameterService) CreateSecret(_ context.Context, _ api.CreateSecretOpts) (*api.SecretParameter, error) {
+func (m mockParameterService) CreateSecret(_ context.Context, _ client.CreateSecretOpts) (*client.SecretParameter, error) {
 	panic("implement me")
 }
 
-func (m mockParameterService) DeleteSecret(_ context.Context, _ api.DeleteSecretOpts) error {
+func (m mockParameterService) DeleteSecret(_ context.Context, _ client.DeleteSecretOpts) error {
 	return nil
-}
-
-func (m mockParameterService) DeleteAllsecrets(_ context.Context, _ state.Cluster) error {
-	panic("implement me")
 }
 
 type mockServiceAccountService struct {

@@ -239,13 +239,9 @@ func (o *Okctl) managedPolicyService(node stormpkg.Node) client.ManagedPolicySer
 	)
 }
 
-func (o *Okctl) serviceAccountService(outputDir string, node stormpkg.Node) client.ServiceAccountService {
+func (o *Okctl) serviceAccountService(node stormpkg.Node) client.ServiceAccountService {
 	return clientCore.NewServiceAccountService(
 		rest.NewServiceAccountAPI(o.restClient),
-		clientFilesystem.NewServiceAccountStore(clientFilesystem.Paths{
-			ConfigFile: constant.DefaultServiceAccountConfigFile,
-			BaseDir:    path.Join(outputDir, constant.DefaultServiceAccountBaseDir),
-		}, o.FileSystem),
 		storm.NewServiceAccountState(node),
 	)
 }
@@ -293,7 +289,7 @@ func (o *Okctl) monitoringService(outputDir string, node stormpkg.Node, spin spi
 		o.identityManagerService(monitoringDir, spin.SubSpinner()),
 		o.manifestService(node),
 		o.paramService(monitoringDir, spin.SubSpinner()),
-		o.serviceAccountService(monitoringDir, o.StormDB.From(constant.DefaultMonitoringBaseDir, constant.DefaultStormNodeServiceAccounts)),
+		o.serviceAccountService(o.StormDB.From(constant.DefaultMonitoringBaseDir, constant.DefaultStormNodeServiceAccounts)),
 		o.managedPolicyService(node),
 		o.CloudProvider,
 	)

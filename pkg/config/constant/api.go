@@ -93,7 +93,6 @@ const (
 	DefaultParameterOutputsFile                     = "parameter-outputs.json"
 	DefaultPolicyCloudFormationTemplateFile         = "policy-cf.yml"
 	DefaultPolicyOutputFile                         = "policy-outputs.json"
-	DefaultServiceAccountBaseDir                    = "service-accounts"
 	DefaultServiceAccountConfigFile                 = "service-account-config.yml"
 	DefaultServiceAccountOutputsFile                = "service-account-outputs.json"
 

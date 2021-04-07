@@ -9,7 +9,6 @@ import (
 
 type serviceAccountService struct {
 	api   client.ServiceAccountAPI
-	store client.ServiceAccountStore
 	state client.ServiceAccountState
 }
 
@@ -31,11 +30,6 @@ func (m *serviceAccountService) CreateServiceAccount(_ context.Context, opts cli
 		Config:    s.Config,
 	}
 
-	err = m.store.SaveServiceAccount(sa)
-	if err != nil {
-		return nil, err
-	}
-
 	err = m.state.SaveServiceAccount(sa)
 	if err != nil {
 		return nil, err
@@ -54,11 +48,6 @@ func (m *serviceAccountService) DeleteServiceAccount(_ context.Context, opts cli
 		return err
 	}
 
-	err = m.store.RemoveServiceAccount(opts.Name)
-	if err != nil {
-		return err
-	}
-
 	err = m.state.RemoveServiceAccount(opts.Name)
 	if err != nil {
 		return err
@@ -70,12 +59,10 @@ func (m *serviceAccountService) DeleteServiceAccount(_ context.Context, opts cli
 // NewServiceAccountService returns an initialised service
 func NewServiceAccountService(
 	api client.ServiceAccountAPI,
-	store client.ServiceAccountStore,
 	state client.ServiceAccountState,
 ) client.ServiceAccountService {
 	return &serviceAccountService{
 		api:   api,
-		store: store,
 		state: state,
 	}
 }

@@ -65,12 +65,6 @@ type ServiceAccountAPI interface {
 	DeleteServiceAccount(opts api.DeleteServiceAccountOpts) error
 }
 
-// ServiceAccountStore provides a persistence layer
-type ServiceAccountStore interface {
-	SaveServiceAccount(account *ServiceAccount) error
-	RemoveServiceAccount(name string) error
-}
-
 // ServiceAccountState defines the state layer
 type ServiceAccountState interface {
 	SaveServiceAccount(account *ServiceAccount) error

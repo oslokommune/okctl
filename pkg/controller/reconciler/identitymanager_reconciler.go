@@ -5,7 +5,6 @@ import (
 
 	"github.com/miekg/dns"
 	"github.com/mishudark/errors"
-	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
@@ -49,7 +48,7 @@ func (z *identityManagerReconciler) Reconcile(node *resourcetree.ResourceNode) (
 		authDomain := fmt.Sprintf("auth.%s", z.commonMetadata.Declaration.ClusterRootDomain)
 		authFQDN := dns.Fqdn(authDomain)
 
-		_, err = z.client.CreateIdentityPool(z.commonMetadata.Ctx, api.CreateIdentityPoolOpts{
+		_, err = z.client.CreateIdentityPool(z.commonMetadata.Ctx, client.CreateIdentityPoolOpts{
 			ID:           z.commonMetadata.ClusterID,
 			AuthDomain:   authDomain,
 			AuthFQDN:     authFQDN,

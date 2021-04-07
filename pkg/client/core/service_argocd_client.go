@@ -51,7 +51,7 @@ func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgo
 		return err
 	}
 
-	err = s.identity.DeleteIdentityPoolClient(ctx, api.DeleteIdentityPoolClientOpts{
+	err = s.identity.DeleteIdentityPoolClient(ctx, client.DeleteIdentityPoolClientOpts{
 		ID:      opts.ID,
 		Purpose: "argocd",
 	})
@@ -84,7 +84,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		return nil, err
 	}
 
-	identityClient, err := s.identity.CreateIdentityPoolClient(ctx, api.CreateIdentityPoolClientOpts{
+	identityClient, err := s.identity.CreateIdentityPoolClient(ctx, client.CreateIdentityPoolClientOpts{
 		ID:          opts.ID,
 		UserPoolID:  opts.UserPoolID,
 		Purpose:     "argocd",

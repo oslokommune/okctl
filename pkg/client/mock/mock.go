@@ -23,9 +23,12 @@ const (
 	DefaultRepository             = "okctl"
 	DefaultClusterName            = "okctl-staging"
 	DefaultDomain                 = "okctl-staging.oslo.systems"
+	DefaultAuthDomain             = "auth.okctl-staging.oslo.systems"
 	DefaultDomainFilter           = DefaultDomain
 	DefaultFQDN                   = "okctl-staging.oslo.systems."
+	DefaultCallbackURL            = "https://argocd.okctl-staging.oslo.systems/callback"
 	DefaultHostedZoneID           = "Z0FAKE41FAKE6I841FAKE"
+	DefaultAliasHostedZoneID      = "Z0FAKE67FAKE6I231FAKE"
 	DefaultCertificateARN         = "arn:aws:acm:eu-west-1:123456789012:certificate/123456789012-1234-1234-1234-12345678"
 	DefaultServiceAccountName     = "important-sa"
 	DefaultPolicyARN              = "arn:aws:iam::123456789012:policy/policy-name-with-path"
@@ -37,10 +40,19 @@ const (
 	DefaultSecretParameterName    = "release-secret"
 	DefaultSecretParameterVersion = 1
 	DefaultSecretParameterPath    = "/okctl/staging/release-secret"
+	DefaultEmail                  = "bob@thebuilder.com"
+	DefaultUserPoolID             = "TYUJBFW3893FAKE"
+	DefaultPurpose                = "argocd"
+	DefaultClientID               = "gehu-fgerg432-ewge"
+	DefaultClientSecret           = "0ef90weug09jfqh3rf"
 
-	StackNameHostedZone    = "okctl-staging-oslo-systems-HostedZone"
-	StackNameCertificate   = "okctl-staging-oslo-systems-Certificate"
-	StackNameManagedPolicy = "okctl-staging-ManagedPolicy"
+	StackNameHostedZone         = "okctl-staging-oslo-systems-HostedZone"
+	StackNameCertificate        = "okctl-staging-oslo-systems-Certificate"
+	StackNameManagedPolicy      = "okctl-staging-ManagedPolicy"
+	StackNameIdentityPool       = "okctl-staging-IdentityPool"
+	StackNameIdentityPoolClient = "okctl-staging-IdentityPoolClient"
+	StackNameIdentityPoolUser   = "okctl-staging-bobthebuilder-IdentityPoolUser"
+	StackNameRecordSetAlias     = "okctl-staging-RecordSetAlias"
 )
 
 // nolint: golint gochecknoglobals
@@ -217,5 +229,54 @@ func SecretParameter(content string) *client.SecretParameter {
 		Path:    DefaultSecretParameterPath,
 		Version: DefaultSecretParameterVersion,
 		Content: content,
+	}
+}
+
+// RecordSetAlias returns a fake record set alias
+func RecordSetAlias() *client.RecordSetAlias {
+	return &client.RecordSetAlias{
+		AliasDomain:            DefaultAuthDomain,
+		AliasHostedZones:       DefaultAliasHostedZoneID,
+		StackName:              StackNameRecordSetAlias,
+		CloudFormationTemplate: CloudFormationTemplate(),
+	}
+}
+
+// IdentityPool returns a fake identity pool
+func IdentityPool() *client.IdentityPool {
+	return &client.IdentityPool{
+		ID:                      ID(),
+		UserPoolID:              DefaultUserPoolID,
+		AuthDomain:              DefaultAuthDomain,
+		HostedZoneID:            DefaultHostedZoneID,
+		StackName:               StackNameIdentityPool,
+		CloudFormationTemplates: CloudFormationTemplate(),
+		Certificate:             Certificate(),
+		RecordSetAlias:          RecordSetAlias(),
+	}
+}
+
+// IdentityPoolClient returns a fake identity pool client
+func IdentityPoolClient() *client.IdentityPoolClient {
+	return &client.IdentityPoolClient{
+		ID:                      ID(),
+		UserPoolID:              DefaultUserPoolID,
+		Purpose:                 DefaultPurpose,
+		CallbackURL:             DefaultCallbackURL,
+		ClientID:                DefaultClientID,
+		ClientSecret:            DefaultClientSecret,
+		StackName:               StackNameIdentityPoolClient,
+		CloudFormationTemplates: CloudFormationTemplate(),
+	}
+}
+
+// IdentityPoolUser returns a fake identity pool user
+func IdentityPoolUser() *client.IdentityPoolUser {
+	return &client.IdentityPoolUser{
+		ID:                     ID(),
+		Email:                  DefaultEmail,
+		UserPoolID:             DefaultUserPoolID,
+		StackName:              StackNameIdentityPoolUser,
+		CloudFormationTemplate: CloudFormationTemplate(),
 	}
 }

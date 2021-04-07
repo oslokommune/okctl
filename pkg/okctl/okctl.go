@@ -206,7 +206,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		NameserverHandler:                o.nameserverHandlerService(ghClient, outputDir, spin),
 		Parameter:                        o.paramService(o.StormDB.From(constant.DefaultStormNodeParameter)),
 		Vpc:                              o.vpcService(outputDir, spin),
-		IdentityManager:                  o.identityManagerService(outputDir, o.StormDB.From(constant.DefaultStormNodeIdentityManager), spin),
+		IdentityManager:                  o.identityManagerService(o.StormDB.From(constant.DefaultStormNodeIdentityManager)),
 		Autoscaler:                       o.autoscalerService(o.StormDB.From(constant.DefaultstormNodeAutoscaler)),
 		Blockstorage:                     o.blockstorageService(o.StormDB.From(constant.DefaultStormNodeBlockStorage)),
 		Monitoring:                       o.monitoringService(outputDir, o.StormDB.From(constant.DefaultStormNodeMonitoring), spin),
@@ -293,7 +293,7 @@ func (o *Okctl) monitoringService(outputDir string, node stormpkg.Node, spin spi
 		stateSaver.NewMonitoringState(o.RepoStateWithEnv),
 		console.NewMonitoringReport(o.Err, spin),
 		o.certService(node),
-		o.identityManagerService(monitoringDir, node, spin.SubSpinner()),
+		o.identityManagerService(node),
 		o.manifestService(node),
 		o.paramService(node),
 		o.serviceAccountService(node),
@@ -302,51 +302,19 @@ func (o *Okctl) monitoringService(outputDir string, node stormpkg.Node, spin spi
 	)
 }
 
-func (o *Okctl) identityManagerService(outputDir string, node stormpkg.Node, spin spinner.Spinner) client.IdentityManagerService {
-	identityPoolBaseDir := path.Join(outputDir, constant.DefaultIdentityPoolBaseDir)
-
-	identityManagerService := clientCore.NewIdentityManagerService(
-		spin,
+func (o *Okctl) identityManagerService(node stormpkg.Node) client.IdentityManagerService {
+	return clientCore.NewIdentityManagerService(
 		rest.NewIdentityManagerAPI(o.restClient),
-		clientFilesystem.NewIdentityManagerStore(
-			clientFilesystem.Paths{
-				OutputFile:         constant.DefaultIdentityPoolOutputsFile,
-				CloudFormationFile: constant.DefaultIdentityPoolCloudFormationTemplate,
-				BaseDir:            identityPoolBaseDir,
-			},
-			clientFilesystem.Paths{
-				CloudFormationFile: constant.DefaultCertificateCloudFormationTemplate,
-				BaseDir:            path.Join(identityPoolBaseDir, constant.DefaultCertificateBaseDir),
-			},
-			clientFilesystem.Paths{
-				CloudFormationFile: constant.DefaultAliasCloudFormationTemplate,
-				BaseDir:            path.Join(identityPoolBaseDir, constant.DefaultAliasBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile:         constant.DefaultIdentityPoolClientOutputsFile,
-				CloudFormationFile: constant.DefaultIdentityPoolClientCloudFormationTemplate,
-				BaseDir:            path.Join(identityPoolBaseDir, constant.DefaultIdentityPoolClientsBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile:         constant.DefaultIdentityPoolUserOutputsFile,
-				CloudFormationFile: constant.DefaultIdentityPoolUserCloudFormationTemplate,
-				BaseDir:            path.Join(identityPoolBaseDir, constant.DefaultIdentityPoolUsersBaseDir),
-			},
-			o.FileSystem,
-		),
-		stateSaver.NewIdentityManagerState(o.RepoStateWithEnv),
-		console.NewIdentityManagerReport(o.Err, spin),
+		storm.NewIdentityManager(node),
 		o.certService(node),
 	)
-
-	return identityManagerService
 }
 
 func (o *Okctl) argocdService(outputDir string, node stormpkg.Node, spin spinner.Spinner) client.ArgoCDService {
 	argoBaseDir := path.Join(outputDir, constant.DefaultArgoCDBaseDir)
 
 	argoService := clientCore.NewArgoCDService(
-		o.identityManagerService(argoBaseDir, node, spin.SubSpinner()),
+		o.identityManagerService(node),
 		o.certService(node),
 		o.manifestService(node),
 		o.paramService(node),

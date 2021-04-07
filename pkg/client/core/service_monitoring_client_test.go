@@ -178,15 +178,15 @@ func (m mockCertService) DeleteCognitoCertificate(_ context.Context, _ client.De
 
 type mockIdentityManagerService struct{}
 
-func (m mockIdentityManagerService) CreateIdentityPool(_ context.Context, _ api.CreateIdentityPoolOpts) (*api.IdentityPool, error) {
+func (m mockIdentityManagerService) CreateIdentityPool(_ context.Context, _ client.CreateIdentityPoolOpts) (*client.IdentityPool, error) {
 	panic("implement me")
 }
 
-func (m mockIdentityManagerService) CreateIdentityPoolClient(_ context.Context, _ api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
+func (m mockIdentityManagerService) CreateIdentityPoolClient(_ context.Context, _ client.CreateIdentityPoolClientOpts) (*client.IdentityPoolClient, error) {
 	panic("implement me")
 }
 
-func (m mockIdentityManagerService) CreateIdentityPoolUser(_ context.Context, _ client.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {
+func (m mockIdentityManagerService) CreateIdentityPoolUser(_ context.Context, _ client.CreateIdentityPoolUserOpts) (*client.IdentityPoolUser, error) {
 	panic("implement me")
 }
 
@@ -194,7 +194,7 @@ func (m mockIdentityManagerService) DeleteIdentityPool(_ context.Context, _ api.
 	panic("implement me")
 }
 
-func (m mockIdentityManagerService) DeleteIdentityPoolClient(_ context.Context, _ api.DeleteIdentityPoolClientOpts) error {
+func (m mockIdentityManagerService) DeleteIdentityPoolClient(_ context.Context, _ client.DeleteIdentityPoolClientOpts) error {
 	return nil
 }
 

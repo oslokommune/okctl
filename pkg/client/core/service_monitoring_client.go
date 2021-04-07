@@ -352,7 +352,7 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 		return err
 	}
 
-	err = s.ident.DeleteIdentityPoolClient(ctx, api.DeleteIdentityPoolClientOpts{
+	err = s.ident.DeleteIdentityPoolClient(ctx, client.DeleteIdentityPoolClientOpts{
 		ID:      opts.ID,
 		Purpose: grafanaPurpose,
 	})
@@ -479,7 +479,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 		return nil, err
 	}
 
-	poolClient, err := s.ident.CreateIdentityPoolClient(ctx, api.CreateIdentityPoolClientOpts{
+	poolClient, err := s.ident.CreateIdentityPoolClient(ctx, client.CreateIdentityPoolClientOpts{
 		ID:          opts.ID,
 		UserPoolID:  opts.UserPoolID,
 		Purpose:     grafanaPurpose,

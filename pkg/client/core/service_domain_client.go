@@ -11,7 +11,6 @@ import (
 
 type domainService struct {
 	api   client.DomainAPI
-	store client.DomainStore
 	state client.DomainState
 }
 
@@ -35,11 +34,6 @@ func (s *domainService) DeletePrimaryHostedZone(_ context.Context, opts client.D
 	if hz.Managed {
 		// HostedZone is managed by us, so delete it
 		err = s.api.DeletePrimaryHostedZone(hz.Domain, opts)
-		if err != nil {
-			return err
-		}
-
-		_, err := s.store.RemoveHostedZone(hz.Domain)
 		if err != nil {
 			return err
 		}
@@ -77,11 +71,6 @@ func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.C
 
 	zone.IsDelegated = false
 
-	_, err = s.store.SaveHostedZone(zone)
-	if err != nil {
-		return nil, err
-	}
-
 	err = s.state.SaveHostedZone(zone)
 	if err != nil {
 		return nil, err
@@ -109,12 +98,10 @@ func (s *domainService) SetHostedZoneDelegation(_ context.Context, domain string
 // NewDomainService returns an initialised service
 func NewDomainService(
 	api client.DomainAPI,
-	store client.DomainStore,
 	state client.DomainState,
 ) client.DomainService {
 	return &domainService{
 		api:   api,
-		store: store,
 		state: state,
 	}
 }

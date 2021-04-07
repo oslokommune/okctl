@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/client/store"
 )
 
 // HostedZone contains the state we are interested in
@@ -47,12 +46,6 @@ type DomainService interface {
 type DomainAPI interface {
 	CreatePrimaryHostedZone(opts CreatePrimaryHostedZoneOpts) (*HostedZone, error)
 	DeletePrimaryHostedZone(domain string, opts DeletePrimaryHostedZoneOpts) error
-}
-
-// DomainStore stores the data
-type DomainStore interface {
-	SaveHostedZone(*HostedZone) (*store.Report, error)
-	RemoveHostedZone(domain string) (*store.Report, error)
 }
 
 // DomainState implements the in-memory state handling

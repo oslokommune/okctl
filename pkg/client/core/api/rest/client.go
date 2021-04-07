@@ -86,7 +86,7 @@ func (c *HTTPClient) Do(method, endpoint string, body interface{}, into interfac
 		err = resp.Body.Close()
 	}()
 
-	const logLineMaxlength = 3500
+	const logLineMaxlength = 5000
 
 	if into != nil {
 		if c.Debug {

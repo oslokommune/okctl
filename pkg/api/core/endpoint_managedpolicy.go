@@ -7,21 +7,9 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
-func makeCreateAWSLoadBalancerControllerPolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateAWSLoadBalancerControllerPolicy(ctx, request.(api.CreateAWSLoadBalancerControllerPolicyOpts))
-	}
-}
-
 func makeCreateExternalDNSPolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return s.CreateExternalDNSPolicy(ctx, request.(api.CreateExternalDNSPolicyOpts))
-	}
-}
-
-func makeDeleteAWSLoadBalancerControllerPolicyEndpoint(s api.ManagedPolicyService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return &Empty{}, s.DeleteAWSLoadBalancerControllerPolicy(ctx, request.(api.ID))
 	}
 }
 

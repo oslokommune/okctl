@@ -110,20 +110,6 @@ func (s *helmService) CreateArgoCD(_ context.Context, opts api.CreateArgoCDOpts)
 	return h, nil
 }
 
-func (s *helmService) CreateAWSLoadBalancerControllerHelmChart(_ context.Context, opts api.CreateAWSLoadBalancerControllerHelmChartOpts) (*api.Helm, error) {
-	err := opts.Validate()
-	if err != nil {
-		return nil, errors.E(err, "validating input options", errors.Invalid)
-	}
-
-	h, err := s.run.CreateAWSLoadBalancerControllerHelmChart(opts)
-	if err != nil {
-		return nil, errors.E(err, "creating aws load balancer controller helm chart", errors.Internal)
-	}
-
-	return h, nil
-}
-
 func (s *helmService) CreateKubePrometheusStack(_ context.Context, opts api.CreateKubePrometheusStackOpts) (*api.Helm, error) {
 	err := opts.Validate()
 	if err != nil {

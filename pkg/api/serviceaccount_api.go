@@ -30,17 +30,6 @@ func (o CreateServiceAccountBaseOpts) ValidateStruct() error {
 	)
 }
 
-// CreateAWSLoadBalancerControllerServiceAccountOpts contains the configuration
-// for creating an alb ingress controller service account
-type CreateAWSLoadBalancerControllerServiceAccountOpts struct {
-	CreateServiceAccountBaseOpts
-}
-
-// Validate the options
-func (o CreateAWSLoadBalancerControllerServiceAccountOpts) Validate() error {
-	return o.ValidateStruct()
-}
-
 // CreateExternalDNSServiceAccountOpts contains the configuration
 // for creating an external dns service account
 type CreateExternalDNSServiceAccountOpts struct {
@@ -110,8 +99,6 @@ func (o DeleteServiceAccountOpts) Validate() error {
 
 // ServiceAccountService provides the interface for all service account operations
 type ServiceAccountService interface {
-	CreateAWSLoadBalancerControllerServiceAccount(context.Context, CreateAWSLoadBalancerControllerServiceAccountOpts) (*ServiceAccount, error)
-	DeleteAWSLoadBalancerControllerServiceAccount(context.Context, ID) error
 	CreateExternalDNSServiceAccount(context.Context, CreateExternalDNSServiceAccountOpts) (*ServiceAccount, error)
 	DeleteExternalDNSServiceAccount(context.Context, ID) error
 	CreateAutoscalerServiceAccount(context.Context, CreateAutoscalerServiceAccountOpts) (*ServiceAccount, error)

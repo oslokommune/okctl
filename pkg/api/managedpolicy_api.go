@@ -14,18 +14,6 @@ type ManagedPolicy struct {
 	CloudFormationTemplate []byte
 }
 
-// CreateAWSLoadBalancerControllerPolicyOpts contains the input
-type CreateAWSLoadBalancerControllerPolicyOpts struct {
-	ID ID
-}
-
-// Validate the input
-func (o CreateAWSLoadBalancerControllerPolicyOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-	)
-}
-
 // CreateExternalDNSPolicyOpts contains the input
 type CreateExternalDNSPolicyOpts struct {
 	ID ID
@@ -98,8 +86,6 @@ func (o DeletePolicyOpts) Validate() error {
 
 // ManagedPolicyService defines the service layer for managed policies
 type ManagedPolicyService interface {
-	CreateAWSLoadBalancerControllerPolicy(ctx context.Context, opts CreateAWSLoadBalancerControllerPolicyOpts) (*ManagedPolicy, error)
-	DeleteAWSLoadBalancerControllerPolicy(ctx context.Context, id ID) error
 	CreateExternalDNSPolicy(ctx context.Context, opts CreateExternalDNSPolicyOpts) (*ManagedPolicy, error)
 	DeleteExternalDNSPolicy(ctx context.Context, id ID) error
 	CreateAutoscalerPolicy(ctx context.Context, opts CreateAutoscalerPolicy) (*ManagedPolicy, error)
@@ -112,8 +98,6 @@ type ManagedPolicyService interface {
 
 // ManagedPolicyCloudProvider defines the cloud provider layer for managed policies
 type ManagedPolicyCloudProvider interface {
-	CreateAWSLoadBalancerControllerPolicy(opts CreateAWSLoadBalancerControllerPolicyOpts) (*ManagedPolicy, error)
-	DeleteAWSLoadBalancerControllerPolicy(id ID) error
 	CreateExternalDNSPolicy(opts CreateExternalDNSPolicyOpts) (*ManagedPolicy, error)
 	DeleteExternalDNSPolicy(id ID) error
 	CreateAutoscalerPolicy(opts CreateAutoscalerPolicy) (*ManagedPolicy, error)

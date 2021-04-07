@@ -3,45 +3,62 @@ package core // nolint: dupl
 import (
 	"context"
 
-	"github.com/oslokommune/okctl/pkg/spinner"
+	"github.com/oslokommune/okctl/pkg/helm/charts/awslbc"
+
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/clusterconfig"
+
+	"github.com/oslokommune/okctl/pkg/cfn"
+	"github.com/oslokommune/okctl/pkg/cfn/components"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type awsLoadBalancerControllerService struct {
-	spinner spinner.Spinner
-	api     client.AWSLoadBalancerControllerAPI
-	store   client.AWSLoadBalancerControllerStore
-	report  client.AWSLoadBalancerControllerReport
+	policy  client.ManagedPolicyService
+	account client.ServiceAccountService
+	helm    client.HelmService
 }
 
-func (s *awsLoadBalancerControllerService) DeleteAWSLoadBalancerController(_ context.Context, id api.ID) error {
-	err := s.spinner.Start("aws-load-balancer-controller")
+func (s *awsLoadBalancerControllerService) DeleteAWSLoadBalancerController(ctx context.Context, id api.ID) error {
+	config, err := clusterconfig.NewAWSLoadBalancerControllerServiceAccount(
+		id.ClusterName,
+		id.Region,
+		"n/a",
+		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
+	)
 	if err != nil {
 		return err
 	}
 
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	err = s.api.DeleteAWSLoadBalancerControllerServiceAccount(id)
+	err = s.account.DeleteServiceAccount(ctx, client.DeleteServiceAccountOpts{
+		ID:     id,
+		Name:   "aws-load-balancer-controller",
+		Config: config,
+	})
 	if err != nil {
 		return err
 	}
 
-	err = s.api.DeleteAWSLoadBalancerControllerPolicy(id)
+	stackName := cfn.NewStackNamer().
+		AWSLoadBalancerControllerPolicy(id.Repository, id.Environment)
+
+	err = s.policy.DeletePolicy(ctx, client.DeletePolicyOpts{
+		ID:        id,
+		StackName: stackName,
+	})
 	if err != nil {
 		return err
 	}
 
-	report, err := s.store.RemoveAWSLoadBalancerController(id)
-	if err != nil {
-		return err
-	}
+	ch := awslbc.New(awslbc.NewDefaultValues(id.ClusterName, "n/a", id.Region))
 
-	err = s.report.ReportDeleteAWSLoadBalancerController(report)
+	err = s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
+		ID:          id,
+		ReleaseName: ch.ReleaseName,
+		Namespace:   ch.Namespace,
+	})
 	if err != nil {
 		return err
 	}
@@ -49,72 +66,90 @@ func (s *awsLoadBalancerControllerService) DeleteAWSLoadBalancerController(_ con
 	return nil
 }
 
-// nolint: lll
-func (s *awsLoadBalancerControllerService) CreateAWSLoadBalancerController(_ context.Context, opts client.CreateAWSLoadBalancerControllerOpts) (*client.AWSLoadBalancerController, error) {
-	err := s.spinner.Start("aws-load-balancer-controller")
+// nolint: lll funlen
+func (s *awsLoadBalancerControllerService) CreateAWSLoadBalancerController(ctx context.Context, opts client.CreateAWSLoadBalancerControllerOpts) (*client.AWSLoadBalancerController, error) {
+	b := cfn.New(
+		components.NewAWSLoadBalancerControllerComposer(
+			opts.ID.Repository,
+			opts.ID.Environment,
+		),
+	)
+
+	stackName := cfn.NewStackNamer().
+		AWSLoadBalancerControllerPolicy(opts.ID.Repository, opts.ID.Environment)
+
+	template, err := b.Build()
 	if err != nil {
 		return nil, err
 	}
 
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	policy, err := s.api.CreateAWSLoadBalancerControllerPolicy(api.CreateAWSLoadBalancerControllerPolicyOpts{
-		ID: opts.ID,
+	policy, err := s.policy.CreatePolicy(ctx, client.CreatePolicyOpts{
+		ID:                     opts.ID,
+		StackName:              stackName,
+		PolicyOutputName:       "AWSLoadBalancerControllerPolicy",
+		CloudFormationTemplate: template,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	account, err := s.api.CreateAWSLoadBalancerControllerServiceAccount(api.CreateAWSLoadBalancerControllerServiceAccountOpts{
-		CreateServiceAccountBaseOpts: api.CreateServiceAccountBaseOpts{
-			ID:        opts.ID,
-			PolicyArn: policy.PolicyARN,
-		},
+	config, err := clusterconfig.NewAWSLoadBalancerControllerServiceAccount(
+		opts.ID.ClusterName,
+		opts.ID.Region,
+		policy.PolicyARN,
+		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	account, err := s.account.CreateServiceAccount(ctx, client.CreateServiceAccountOpts{
+		ID:        opts.ID,
+		Name:      "aws-load-balancer-controller",
+		PolicyArn: policy.PolicyARN,
+		Config:    config,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	chart, err := s.api.CreateAWSLoadBalancerControllerHelmChart(api.CreateAWSLoadBalancerControllerHelmChartOpts{
-		ID:    opts.ID,
-		VpcID: opts.VPCID,
+	ch := awslbc.New(awslbc.NewDefaultValues(opts.ID.ClusterName, opts.VPCID, opts.ID.Region))
+
+	values, err := ch.ValuesYAML()
+	if err != nil {
+		return nil, err
+	}
+
+	chart, err := s.helm.CreateHelmRelease(ctx, client.CreateHelmReleaseOpts{
+		ID:             opts.ID,
+		RepositoryName: ch.RepositoryName,
+		RepositoryURL:  ch.RepositoryURL,
+		ReleaseName:    ch.ReleaseName,
+		Version:        ch.Version,
+		Chart:          ch.Chart,
+		Namespace:      ch.Namespace,
+		Values:         values,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	AWSLoadBalancerController := &client.AWSLoadBalancerController{
+	return &client.AWSLoadBalancerController{
 		Policy:         policy,
 		ServiceAccount: account,
 		Chart:          chart,
-	}
-
-	report, err := s.store.SaveAWSLoadBalancerController(AWSLoadBalancerController)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.report.ReportCreateAWSLoadBalancerController(AWSLoadBalancerController, report)
-	if err != nil {
-		return nil, err
-	}
-
-	return AWSLoadBalancerController, nil
+	}, nil
 }
 
 // NewAWSLoadBalancerControllerService returns an initialised service
 func NewAWSLoadBalancerControllerService(
-	spinner spinner.Spinner,
-	api client.AWSLoadBalancerControllerAPI,
-	store client.AWSLoadBalancerControllerStore,
-	report client.AWSLoadBalancerControllerReport,
+	policy client.ManagedPolicyService,
+	account client.ServiceAccountService,
+	helm client.HelmService,
 ) client.AWSLoadBalancerControllerService {
 	return &awsLoadBalancerControllerService{
-		spinner: spinner,
-		api:     api,
-		store:   store,
-		report:  report,
+		policy:  policy,
+		account: account,
+		helm:    helm,
 	}
 }

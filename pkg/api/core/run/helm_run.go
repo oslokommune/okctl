@@ -15,8 +15,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/autoscaler"
 
-	"github.com/oslokommune/okctl/pkg/helm/charts/awslbc"
-
 	"github.com/oslokommune/okctl/pkg/helm/charts/argocd"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -98,12 +96,6 @@ func (r *helmRun) CreateArgoCD(opts api.CreateArgoCDOpts) (*api.Helm, error) {
 		PrivateKeySecretName: opts.PrivateKeyName,
 		PrivateKeySecretKey:  opts.PrivateKeyKey,
 	}))
-
-	return r.createHelmChart(opts.ID, chart)
-}
-
-func (r *helmRun) CreateAWSLoadBalancerControllerHelmChart(opts api.CreateAWSLoadBalancerControllerHelmChartOpts) (*api.Helm, error) {
-	chart := awslbc.New(awslbc.NewDefaultValues(opts.ID.ClusterName, opts.VpcID, opts.ID.Region))
 
 	return r.createHelmChart(opts.ID, chart)
 }

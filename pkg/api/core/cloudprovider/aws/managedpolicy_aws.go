@@ -62,10 +62,6 @@ func (m *managedPolicy) DeleteAutoscalerPolicy(id api.ID) error {
 	return m.deletePolicy(cfn.NewStackNamer().AutoscalerPolicy(id.Repository, id.Environment))
 }
 
-func (m *managedPolicy) DeleteAWSLoadBalancerControllerPolicy(id api.ID) error {
-	return m.deletePolicy(cfn.NewStackNamer().AWSLoadBalancerControllerPolicy(id.Repository, id.Environment))
-}
-
 func (m *managedPolicy) DeleteExternalDNSPolicy(id api.ID) error {
 	return m.deletePolicy(cfn.NewStackNamer().ExternalDNSPolicy(id.Repository, id.Environment))
 }
@@ -112,17 +108,6 @@ func (m *managedPolicy) CreateExternalDNSPolicy(opts api.CreateExternalDNSPolicy
 		ExternalDNSPolicy(opts.ID.Repository, opts.ID.Environment)
 
 	return m.createPolicy(stackName, opts.ID, "ExternalDNSPolicy", b)
-}
-
-func (m *managedPolicy) CreateAWSLoadBalancerControllerPolicy(opts api.CreateAWSLoadBalancerControllerPolicyOpts) (*api.ManagedPolicy, error) {
-	b := cfn.New(
-		components.NewAWSLoadBalancerControllerComposer(opts.ID.Repository, opts.ID.Environment),
-	)
-
-	stackName := cfn.NewStackNamer().
-		AWSLoadBalancerControllerPolicy(opts.ID.Repository, opts.ID.Environment)
-
-	return m.createPolicy(stackName, opts.ID, "AWSLoadBalancerControllerPolicy", b)
 }
 
 func (m *managedPolicy) createPolicy(stackName string, id api.ID, outputName string, builder cfn.StackBuilder) (*api.ManagedPolicy, error) {

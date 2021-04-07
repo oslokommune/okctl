@@ -95,20 +95,6 @@ func (m *managedPolicyService) DeleteAutoscalerPolicy(_ context.Context, id api.
 	return nil
 }
 
-func (m *managedPolicyService) DeleteAWSLoadBalancerControllerPolicy(_ context.Context, id api.ID) error {
-	err := id.Validate()
-	if err != nil {
-		return errors.E(err, "failed to validate id", errors.Invalid)
-	}
-
-	err = m.provider.DeleteAWSLoadBalancerControllerPolicy(id)
-	if err != nil {
-		return errors.E(err, "deleting aws load balancer controller policy", errors.Internal)
-	}
-
-	return nil
-}
-
 func (m *managedPolicyService) DeleteExternalDNSPolicy(_ context.Context, id api.ID) error {
 	err := id.Validate()
 	if err != nil {
@@ -132,20 +118,6 @@ func (m *managedPolicyService) CreateExternalDNSPolicy(_ context.Context, opts a
 	got, err := m.provider.CreateExternalDNSPolicy(opts)
 	if err != nil {
 		return nil, errors.E(err, "failed to create external dns policy")
-	}
-
-	return got, nil
-}
-
-func (m *managedPolicyService) CreateAWSLoadBalancerControllerPolicy(_ context.Context, opts api.CreateAWSLoadBalancerControllerPolicyOpts) (*api.ManagedPolicy, error) {
-	err := opts.Validate()
-	if err != nil {
-		return nil, errors.E(err, "validating aws load balancer controller opts")
-	}
-
-	got, err := m.provider.CreateAWSLoadBalancerControllerPolicy(opts)
-	if err != nil {
-		return nil, errors.E(err, "creating aws load balancer controller policy")
 	}
 
 	return got, nil

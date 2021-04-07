@@ -193,7 +193,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 	}
 
 	return &clientCore.Services{
-		AWSLoadBalancerControllerService: o.awsLoadBalancerControllerService(outputDir, spin),
+		AWSLoadBalancerControllerService: o.awsLoadBalancerControllerService(o.StormDB.From(constant.DefaultStormNodeAWSLoadBalanerController)),
 		ArgoCD:                           o.argocdService(outputDir, o.StormDB.From(constant.DefaultStormNodeArgoCD), spin),
 		ApplicationService:               o.applicationService(outputDir, applicationsOutputDir, spin),
 		Certificate:                      o.certService(outputDir, o.StormDB.From(constant.DefaultStormNodeCertificates)),
@@ -528,30 +528,11 @@ func (o *Okctl) externalSecretsService(node stormpkg.Node) client.ExternalSecret
 	)
 }
 
-func (o *Okctl) awsLoadBalancerControllerService(outputDir string, spin spinner.Spinner) client.AWSLoadBalancerControllerService {
+func (o *Okctl) awsLoadBalancerControllerService(node stormpkg.Node) client.AWSLoadBalancerControllerService {
 	return clientCore.NewAWSLoadBalancerControllerService(
-		spin,
-		rest.NewAWSLoadBalancerControllerAPI(o.restClient),
-		clientFilesystem.NewAWSLoadBalancerControllerStore(
-			clientFilesystem.Paths{
-				OutputFile:         constant.DefaultPolicyOutputFile,
-				CloudFormationFile: constant.DefaultPolicyCloudFormationTemplateFile,
-				BaseDir:            path.Join(outputDir, constant.DefaultAWSLoadBalancerControllerBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile: constant.DefaultServiceAccountOutputsFile,
-				ConfigFile: constant.DefaultServiceAccountConfigFile,
-				BaseDir:    path.Join(outputDir, constant.DefaultAWSLoadBalancerControllerBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile:  constant.DefaultHelmOutputsFile,
-				ReleaseFile: constant.DefaultHelmReleaseFile,
-				ChartFile:   constant.DefaultHelmChartFile,
-				BaseDir:     path.Join(outputDir, constant.DefaultAWSLoadBalancerControllerBaseDir),
-			},
-			o.FileSystem,
-		),
-		console.NewAWSLoadBalancerControllerReport(o.Err, spin),
+		o.managedPolicyService(node),
+		o.serviceAccountService(node),
+		o.helmService(node),
 	)
 }
 

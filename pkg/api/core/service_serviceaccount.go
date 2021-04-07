@@ -209,55 +209,6 @@ func (c *serviceAccount) CreateExternalDNSServiceAccount(_ context.Context, opts
 	return account, nil
 }
 
-// nolint: lll
-func (c *serviceAccount) CreateAWSLoadBalancerControllerServiceAccount(_ context.Context, opts api.CreateAWSLoadBalancerControllerServiceAccountOpts) (*api.ServiceAccount, error) {
-	err := opts.Validate()
-	if err != nil {
-		return nil, errInvalidInputs(err)
-	}
-
-	config, err := clusterconfig.NewAWSLoadBalancerControllerServiceAccount(
-		opts.ID.ClusterName,
-		opts.ID.Region,
-		opts.PolicyArn,
-		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
-	)
-	if err != nil {
-		return nil, errBuildServiceAccount(err)
-	}
-
-	account, err := c.createServiceAccount(opts.CreateServiceAccountBaseOpts, config)
-	if err != nil {
-		return nil, errCreateServiceAccount(err)
-	}
-
-	return account, nil
-}
-
-func (c *serviceAccount) DeleteAWSLoadBalancerControllerServiceAccount(_ context.Context, id api.ID) error {
-	err := id.Validate()
-	if err != nil {
-		return errInvalidInputs(err)
-	}
-
-	config, err := clusterconfig.NewAWSLoadBalancerControllerServiceAccount(
-		id.ClusterName,
-		id.Region,
-		"n/a",
-		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
-	)
-	if err != nil {
-		return errBuildServiceAccount(err)
-	}
-
-	err = c.run.DeleteServiceAccount(config)
-	if err != nil {
-		return errDeleteServiceAccount(err)
-	}
-
-	return nil
-}
-
 func (c *serviceAccount) createServiceAccount(opts api.CreateServiceAccountBaseOpts, config *v1alpha5.ClusterConfig) (*api.ServiceAccount, error) {
 	err := c.run.CreateServiceAccount(config)
 	if err != nil {

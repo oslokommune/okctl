@@ -27,14 +27,12 @@ func (z *tempoReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadat
 func (z *tempoReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err = z.client.CreateTempo(z.commonMetadata.Ctx, client.CreateTempoOpts{ID: z.commonMetadata.ClusterID})
+		_, err = z.client.CreateTempo(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
 			return result, fmt.Errorf("creating tempo: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err = z.client.DeleteTempo(z.commonMetadata.Ctx, client.DeleteTempoOpts{
-			ID: z.commonMetadata.ClusterID,
-		})
+		err = z.client.DeleteTempo(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
 			return result, fmt.Errorf("deleting tempo: %w", err)
 		}

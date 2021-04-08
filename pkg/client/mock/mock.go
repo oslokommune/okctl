@@ -64,12 +64,13 @@ const (
 	DefaultPostgresSecretFriendlyName = "secrets/administrator"
 	DefaultPostgresAdminName          = "okctl-staging-backend-admin"
 	DefaultPostgresConfigMapName      = "okctl-staging-backend-cm"
-	DefaultPostgresLambdaRoleARN      = "arn:aws:iam::123456789012:role/okctl-staging-rotater"
+	DefaultRoleARN                    = "arn:aws:iam::123456789012:role/okctl-staging-Role"
 	DefaultPostgresLambdaFunctionARN  = "arn:aws:lambda:eu-west-1:123456789012:function:rotater"
 	DefaultS3BucketName               = "rotater"
 	DefaultPostgresDatabasePort       = 5432
 	DefaultArgoDomain                 = "argocd.okctl-staging.oslo.systems"
 	DefaultArgoURL                    = "https://argocd.okctl-staging.oslo.systems"
+	DefaultMonitoringURL              = "https://grafana.okctl-staging.oslo.systems"
 
 	StackNameHostedZone         = "okctl-staging-oslo-systems-HostedZone"
 	StackNameCertificate        = "okctl-staging-oslo-systems-Certificate"
@@ -426,7 +427,7 @@ func PostgresDatabase() *client.PostgresDatabase {
 		OutgoingSecurityGroupID:      DefaultSecurityGroupID,
 		SecretsManagerAdminSecretARN: DefaultPostgresSecretARN,
 		LambdaPolicyARN:              DefaultPolicyARN,
-		LambdaRoleARN:                DefaultPostgresLambdaRoleARN,
+		LambdaRoleARN:                DefaultRoleARN,
 		LambdaFunctionARN:            DefaultPostgresLambdaFunctionARN,
 		CloudFormationTemplate:       string(CloudFormationTemplate()),
 		Namespace:                    DefaultNamespace,
@@ -451,5 +452,27 @@ func ArgoCD() *client.ArgoCD {
 		ClientSecret:   SecretParameter("okay"),
 		SecretKey:      SecretParameter("something"),
 		Chart:          Helm(),
+	}
+}
+
+// KubePromStack returns a fake kube prom stack
+func KubePromStack() *client.KubePromStack {
+	return &client.KubePromStack{
+		ID:                                ID(),
+		AuthHostname:                      DefaultAuthDomain,
+		CertificateARN:                    DefaultCertificateARN,
+		ClientID:                          DefaultClientID,
+		FargateCloudWatchPolicyARN:        DefaultPolicyARN,
+		FargateProfilePodExecutionRoleARN: DefaultRoleARN,
+		Hostname:                          DefaultMonitoringURL,
+		SecretsAdminPassKey:               "admin-pass",
+		SecretsAdminUserKey:               "admin-user",
+		SecretsClientSecretKey:            "client-secret",
+		SecretsConfigName:                 "secrets-cm",
+		SecretsCookieSecretKey:            "cookie-secret",
+		Certificate:                       Certificate(),
+		Chart:                             Helm(),
+		ExternalSecret:                    KubernetesManifest(),
+		IdentityPoolClient:                IdentityPoolClient(),
 	}
 }

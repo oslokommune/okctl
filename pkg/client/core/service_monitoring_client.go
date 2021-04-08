@@ -30,8 +30,6 @@ import (
 
 	"github.com/miekg/dns"
 
-	"github.com/oslokommune/okctl/pkg/client/store"
-
 	"github.com/google/uuid"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -40,18 +38,14 @@ import (
 )
 
 type monitoringService struct {
-	api    client.MonitoringAPI
-	store  client.MonitoringStore
-	state  client.MonitoringState
-	report client.MonitoringReport
-
+	state    client.MonitoringState
+	helm     client.HelmService
 	cert     client.CertificateService
 	ident    client.IdentityManagerService
 	param    client.ParameterService
 	manifest client.ManifestService
 	service  client.ServiceAccountService
 	policy   client.ManagedPolicyService
-
 	provider v1alpha1.CloudProvider
 }
 
@@ -73,9 +67,9 @@ func grafanaDomain(baseDomain string) string {
 	return fmt.Sprintf("%s.%s", grafanaSubDomain, baseDomain)
 }
 
-func (s *monitoringService) DeleteTempo(ctx context.Context, opts client.DeleteTempoOpts) error {
+func (s *monitoringService) DeleteTempo(ctx context.Context, id api.ID) error {
 	err := s.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
-		ID:        opts.ID,
+		ID:        id,
 		Name:      tempoDatasourceConfigMapName,
 		Namespace: constant.DefaultMonitoringNamespace,
 	})
@@ -85,8 +79,8 @@ func (s *monitoringService) DeleteTempo(ctx context.Context, opts client.DeleteT
 
 	chart := tempo.New(nil)
 
-	err = s.api.DeleteTempo(api.DeleteHelmReleaseOpts{
-		ID:          opts.ID,
+	err = s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
+		ID:          id,
 		ReleaseName: chart.ReleaseName,
 		Namespace:   chart.Namespace,
 	})
@@ -94,16 +88,11 @@ func (s *monitoringService) DeleteTempo(ctx context.Context, opts client.DeleteT
 		return err
 	}
 
-	report, err := s.store.RemoveTempo(opts.ID)
-	if err != nil {
-		return err
-	}
-
-	return s.report.ReportRemoveTempo(report)
+	return nil
 }
 
 // nolint: funlen
-func (s *monitoringService) CreateTempo(ctx context.Context, opts client.CreateTempoOpts) (*client.Tempo, error) {
+func (s *monitoringService) CreateTempo(ctx context.Context, id api.ID) (*client.Helm, error) {
 	chart := tempo.New(tempo.NewDefaultValues())
 
 	values, err := chart.ValuesYAML()
@@ -111,8 +100,8 @@ func (s *monitoringService) CreateTempo(ctx context.Context, opts client.CreateT
 		return nil, err
 	}
 
-	c, err := s.api.CreateTempo(api.CreateHelmReleaseOpts{
-		ID:             opts.ID,
+	c, err := s.helm.CreateHelmRelease(ctx, client.CreateHelmReleaseOpts{
+		ID:             id,
 		RepositoryName: chart.RepositoryName,
 		RepositoryURL:  chart.RepositoryURL,
 		ReleaseName:    chart.ReleaseName,
@@ -131,7 +120,7 @@ func (s *monitoringService) CreateTempo(ctx context.Context, opts client.CreateT
 	}
 
 	_, err = s.manifest.CreateConfigMap(ctx, client.CreateConfigMapOpts{
-		ID:        opts.ID,
+		ID:        id,
 		Name:      tempoDatasourceConfigMapName,
 		Namespace: constant.DefaultMonitoringNamespace,
 		Data: map[string]string{
@@ -149,7 +138,7 @@ func (s *monitoringService) CreateTempo(ctx context.Context, opts client.CreateT
 	// to cycle grafana to have it pick up the changes
 	for _, replicas := range []int32{0, 1} {
 		err = s.manifest.ScaleDeployment(ctx, api.ScaleDeploymentOpts{
-			ID:        opts.ID,
+			ID:        id,
 			Name:      constant.DefaultKubePrometheusStackGrafanaName,
 			Namespace: constant.DefaultMonitoringNamespace,
 			Replicas:  replicas,
@@ -159,29 +148,14 @@ func (s *monitoringService) CreateTempo(ctx context.Context, opts client.CreateT
 		}
 	}
 
-	l := &client.Tempo{
-		ID:    opts.ID,
-		Chart: c,
-	}
-
-	report, err := s.store.SaveTempo(l)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.report.ReportSaveTempo(l, report)
-	if err != nil {
-		return nil, err
-	}
-
-	return l, nil
+	return c, nil
 }
 
-func (s *monitoringService) DeletePromtail(_ context.Context, opts client.DeletePromtailOpts) error {
+func (s *monitoringService) DeletePromtail(ctx context.Context, id api.ID) error {
 	chart := promtail.New(nil)
 
-	err := s.api.DeletePromtail(api.DeleteHelmReleaseOpts{
-		ID:          opts.ID,
+	err := s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
+		ID:          id,
 		ReleaseName: chart.ReleaseName,
 		Namespace:   chart.Namespace,
 	})
@@ -189,43 +163,39 @@ func (s *monitoringService) DeletePromtail(_ context.Context, opts client.Delete
 		return err
 	}
 
-	report, err := s.store.RemovePromtail(opts.ID)
-	if err != nil {
-		return err
-	}
-
-	return s.report.ReportRemovePromtail(report)
+	return nil
 }
 
-func (s *monitoringService) CreatePromtail(_ context.Context, opts client.CreatePromtailOpts) (*client.Promtail, error) {
-	chart, err := s.api.CreatePromtail(opts)
+func (s *monitoringService) CreatePromtail(ctx context.Context, id api.ID) (*client.Helm, error) {
+	chart := promtail.New(promtail.NewDefaultValues())
+
+	values, err := chart.ValuesYAML()
 	if err != nil {
 		return nil, err
 	}
 
-	l := &client.Promtail{
-		ID:    opts.ID,
-		Chart: chart,
-	}
-
-	report, err := s.store.SavePromtail(l)
+	c, err := s.helm.CreateHelmRelease(ctx, client.CreateHelmReleaseOpts{
+		ID:             id,
+		RepositoryName: chart.RepositoryName,
+		RepositoryURL:  chart.RepositoryURL,
+		ReleaseName:    chart.ReleaseName,
+		Version:        chart.Version,
+		Chart:          chart.Chart,
+		Namespace:      chart.Namespace,
+		Values:         values,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.report.ReportSavePromtail(l, report)
-	if err != nil {
-		return nil, err
-	}
-
-	return l, nil
+	return c, nil
 }
 
-func (s *monitoringService) DeleteLoki(ctx context.Context, opts client.DeleteLokiOpts) error {
+func (s *monitoringService) DeleteLoki(ctx context.Context, id api.ID) error {
 	chart := loki.New(nil)
 
 	err := s.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
-		ID:        opts.ID,
+		ID:        id,
 		Name:      lokiDatasourceConfigMapName,
 		Namespace: constant.DefaultMonitoringNamespace,
 	})
@@ -233,8 +203,8 @@ func (s *monitoringService) DeleteLoki(ctx context.Context, opts client.DeleteLo
 		return err
 	}
 
-	err = s.api.DeleteLoki(api.DeleteHelmReleaseOpts{
-		ID:          opts.ID,
+	err = s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
+		ID:          id,
 		ReleaseName: chart.ReleaseName,
 		Namespace:   chart.Namespace,
 	})
@@ -242,17 +212,28 @@ func (s *monitoringService) DeleteLoki(ctx context.Context, opts client.DeleteLo
 		return err
 	}
 
-	report, err := s.store.RemoveLoki(opts.ID)
-	if err != nil {
-		return err
-	}
-
-	return s.report.ReportRemoveLoki(report)
+	return nil
 }
 
 // nolint: funlen
-func (s *monitoringService) CreateLoki(ctx context.Context, opts client.CreateLokiOpts) (*client.Loki, error) {
-	chart, err := s.api.CreateLoki(opts)
+func (s *monitoringService) CreateLoki(ctx context.Context, id api.ID) (*client.Helm, error) {
+	chart := loki.New(loki.NewDefaultValues())
+
+	values, err := chart.ValuesYAML()
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := s.helm.CreateHelmRelease(ctx, client.CreateHelmReleaseOpts{
+		ID:             id,
+		RepositoryName: chart.RepositoryName,
+		RepositoryURL:  chart.RepositoryURL,
+		ReleaseName:    chart.ReleaseName,
+		Version:        chart.Version,
+		Chart:          chart.Chart,
+		Namespace:      chart.Namespace,
+		Values:         values,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -263,7 +244,7 @@ func (s *monitoringService) CreateLoki(ctx context.Context, opts client.CreateLo
 	}
 
 	_, err = s.manifest.CreateConfigMap(ctx, client.CreateConfigMapOpts{
-		ID:        opts.ID,
+		ID:        id,
 		Name:      lokiDatasourceConfigMapName,
 		Namespace: constant.DefaultMonitoringNamespace,
 		Data: map[string]string{
@@ -281,7 +262,7 @@ func (s *monitoringService) CreateLoki(ctx context.Context, opts client.CreateLo
 	// to cycle grafana to have it pick up the changes
 	for _, replicas := range []int32{0, 1} {
 		err = s.manifest.ScaleDeployment(ctx, api.ScaleDeploymentOpts{
-			ID:        opts.ID,
+			ID:        id,
 			Name:      constant.DefaultKubePrometheusStackGrafanaName,
 			Namespace: constant.DefaultMonitoringNamespace,
 			Replicas:  replicas,
@@ -291,22 +272,7 @@ func (s *monitoringService) CreateLoki(ctx context.Context, opts client.CreateLo
 		}
 	}
 
-	l := &client.Loki{
-		ID:    opts.ID,
-		Chart: chart,
-	}
-
-	report, err := s.store.SaveLoki(l)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.report.ReportSaveLoki(l, report)
-	if err != nil {
-		return nil, err
-	}
-
-	return l, nil
+	return c, nil
 }
 
 // nolint: funlen gocyclo
@@ -330,10 +296,9 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 		return err
 	}
 
-	// Do we like this? Probably not.
 	chart := kubepromstack.New(0*time.Second, nil)
 
-	err = s.api.DeleteKubePromStack(api.DeleteHelmReleaseOpts{
+	err = s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
 		ID:          opts.ID,
 		ReleaseName: chart.ReleaseName,
 		Namespace:   chart.Namespace,
@@ -418,17 +383,12 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 		return err
 	}
 
-	r1, err := s.store.RemoveKubePromStack(opts.ID)
+	err = s.state.RemoveKubePromStack()
 	if err != nil {
 		return err
 	}
 
-	r2, err := s.state.RemoveKubePromStack(opts.ID)
-	if err != nil {
-		return err
-	}
-
-	return s.report.ReportRemoveKubePromStack([]*store.Report{r1, r2})
+	return nil
 }
 
 // nolint: funlen, gocyclo
@@ -563,18 +523,33 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 		return nil, err
 	}
 
-	chart, err := s.api.CreateKubePromStack(api.CreateKubePrometheusStackOpts{
-		ID:                                  opts.ID,
-		GrafanaCloudWatchServiceAccountName: constant.DefaultGrafanaCloudWatchDatasourceName,
-		CertificateARN:                      cert.ARN,
-		Hostname:                            cert.Domain,
-		AuthHostname:                        opts.AuthDomain,
-		ClientID:                            poolClient.ClientID,
-		SecretsConfigName:                   secretsCfgName,
-		SecretsCookieSecretKey:              cookieSecret.Name,
-		SecretsClientSecretKey:              clientSecret.Name,
-		SecretsAdminUserKey:                 adminUser.Name,
-		SecretsAdminPassKey:                 adminPass.Name,
+	chart := kubepromstack.New(10*time.Minute, &kubepromstack.Values{ // nolint: gomnd
+		GrafanaServiceAccountName:          constant.DefaultGrafanaCloudWatchDatasourceName,
+		GrafanaCertificateARN:              cert.ARN,
+		GrafanaHostname:                    cert.Domain,
+		AuthHostname:                       opts.AuthDomain,
+		ClientID:                           poolClient.ClientID,
+		SecretsConfigName:                  secretsCfgName,
+		SecretsGrafanaCookieSecretKey:      cookieSecret.Name,
+		SecretsGrafanaOauthClientSecretKey: clientSecret.Name,
+		SecretsGrafanaAdminUserKey:         adminUser.Name,
+		SecretsGrafanaAdminPassKey:         adminPass.Name,
+	})
+
+	values, err := chart.ValuesYAML()
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := s.helm.CreateHelmRelease(ctx, client.CreateHelmReleaseOpts{
+		ID:             opts.ID,
+		RepositoryName: chart.RepositoryName,
+		RepositoryURL:  chart.RepositoryURL,
+		ReleaseName:    chart.ReleaseName,
+		Version:        chart.Version,
+		Chart:          chart.Chart,
+		Namespace:      chart.Namespace,
+		Values:         values,
 	})
 	if err != nil {
 		return nil, err
@@ -591,7 +566,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 		SecretsClientSecretKey: clientSecret.Name,
 		SecretsAdminUserKey:    adminUser.Name,
 		SecretsAdminPassKey:    adminPass.Name,
-		Chart:                  chart,
+		Chart:                  c,
 		Certificate:            cert,
 		IdentityPoolClient:     poolClient,
 		ExternalSecret:         manifest,
@@ -694,17 +669,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 	stack.FargateProfilePodExecutionRoleARN = roleARN
 	stack.FargateCloudWatchPolicyARN = fargatePolicy.PolicyARN
 
-	r1, err := s.store.SaveKubePromStack(stack)
-	if err != nil {
-		return nil, err
-	}
-
-	r2, err := s.state.SaveKubePromStack(stack)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.report.ReportSaveKubePromStack(stack, []*store.Report{r1, r2})
+	err = s.state.SaveKubePromStack(stack)
 	if err != nil {
 		return nil, err
 	}
@@ -714,10 +679,8 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 
 // NewMonitoringService returns an initialised service
 func NewMonitoringService(
-	api client.MonitoringAPI,
-	store client.MonitoringStore,
 	state client.MonitoringState,
-	report client.MonitoringReport,
+	helm client.HelmService,
 	cert client.CertificateService,
 	ident client.IdentityManagerService,
 	manifest client.ManifestService,
@@ -727,10 +690,8 @@ func NewMonitoringService(
 	provider v1alpha1.CloudProvider,
 ) client.MonitoringService {
 	return &monitoringService{
-		api:      api,
-		store:    store,
 		state:    state,
-		report:   report,
+		helm:     helm,
 		cert:     cert,
 		ident:    ident,
 		param:    param,

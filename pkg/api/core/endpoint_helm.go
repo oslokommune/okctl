@@ -7,24 +7,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
-func makeCreateKubePrometheusStack(s api.HelmService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateKubePrometheusStack(ctx, request.(api.CreateKubePrometheusStackOpts))
-	}
-}
-
-func makeCreateLokiHelmChartEndpoint(s api.HelmService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateLokiHelmChart(ctx, request.(api.CreateLokiHelmChartOpts))
-	}
-}
-
-func makeCreatePromtailHelmChartEndpoint(s api.HelmService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreatePromtailHelmChart(ctx, request.(api.CreatePromtailHelmChartOpts))
-	}
-}
-
 func makeCreateHelmRelease(s api.HelmService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return s.CreateHelmRelease(ctx, request.(api.CreateHelmReleaseOpts))

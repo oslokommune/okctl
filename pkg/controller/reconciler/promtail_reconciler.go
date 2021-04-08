@@ -27,14 +27,12 @@ func (z *promtailReconciler) SetCommonMetadata(metadata *resourcetree.CommonMeta
 func (z *promtailReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err = z.client.CreatePromtail(z.commonMetadata.Ctx, client.CreatePromtailOpts{ID: z.commonMetadata.ClusterID})
+		_, err = z.client.CreatePromtail(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
 			return result, fmt.Errorf("creating promtail: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err = z.client.DeletePromtail(z.commonMetadata.Ctx, client.DeletePromtailOpts{
-			ID: z.commonMetadata.ClusterID,
-		})
+		err = z.client.DeletePromtail(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
 			return result, fmt.Errorf("deleting promtail: %w", err)
 		}

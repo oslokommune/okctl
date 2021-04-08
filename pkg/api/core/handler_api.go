@@ -35,10 +35,7 @@ type Endpoints struct {
 	DeleteNamespace                 endpoint.Endpoint
 	DeleteCognitoCertificate        endpoint.Endpoint
 	CreateStorageClass              endpoint.Endpoint
-	CreateKubePrometheusStack       endpoint.Endpoint
-	CreateLokiHelmChart             endpoint.Endpoint
 	DeleteExternalSecrets           endpoint.Endpoint
-	CreatePromtailHelmChart         endpoint.Endpoint
 	CreateConfigMap                 endpoint.Endpoint
 	DeleteConfigMap                 endpoint.Endpoint
 	ScaleDeployment                 endpoint.Endpoint
@@ -80,10 +77,7 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteNamespace:                 makeDeleteNamespaceEndpoint(s.Kube),
 		DeleteCognitoCertificate:        makeDeleteCognitoCertificateEndpoint(s.Certificate),
 		CreateStorageClass:              makeCreateStorageClass(s.Kube),
-		CreateKubePrometheusStack:       makeCreateKubePrometheusStack(s.Helm),
-		CreateLokiHelmChart:             makeCreateLokiHelmChartEndpoint(s.Helm),
 		DeleteExternalSecrets:           makeDeleteExternalSecrets(s.Kube),
-		CreatePromtailHelmChart:         makeCreatePromtailHelmChartEndpoint(s.Helm),
 		CreateConfigMap:                 makeCreateConfigMapEndpoint(s.Kube),
 		DeleteConfigMap:                 makeDeleteConfigMap(s.Kube),
 		ScaleDeployment:                 makeScaleDeployment(s.Kube),
@@ -123,10 +117,7 @@ type Handlers struct {
 	DeleteNamespace                 http.Handler
 	DeleteCognitoCertificate        http.Handler
 	CreateStorageClass              http.Handler
-	CreateKubePrometheusStack       http.Handler
-	CreateLokiHelmChart             http.Handler
 	DeleteExternalSecrets           http.Handler
-	CreatePromtailHelmChart         http.Handler
 	CreateConfigMap                 http.Handler
 	DeleteConfigMap                 http.Handler
 	ScaleDeployment                 http.Handler
@@ -194,10 +185,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteNamespace:                 newServer(endpoints.DeleteNamespace, decodeDeleteNamespace),
 		DeleteCognitoCertificate:        newServer(endpoints.DeleteCognitoCertificate, decodeDeleteCognitoCertificate),
 		CreateStorageClass:              newServer(endpoints.CreateStorageClass, decodeCreateStorageClass),
-		CreateKubePrometheusStack:       newServer(endpoints.CreateKubePrometheusStack, decodeCreateKubePrometheusStackHelmChart),
-		CreateLokiHelmChart:             newServer(endpoints.CreateLokiHelmChart, decodeCreateLokiHelmChart),
 		DeleteExternalSecrets:           newServer(endpoints.DeleteExternalSecrets, decodeDeleteExternalSecrets),
-		CreatePromtailHelmChart:         newServer(endpoints.CreatePromtailHelmChart, decodeCreatePromtailHelmChart),
 		CreateConfigMap:                 newServer(endpoints.CreateConfigMap, decodeCreateConfigMap),
 		DeleteConfigMap:                 newServer(endpoints.DeleteConfigMap, decodeDeleteConfigMap),
 		ScaleDeployment:                 newServer(endpoints.ScaleDeployment, decodeScaleDeployment),
@@ -238,18 +226,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			r.Method(http.MethodDelete, "/", handlers.DeleteServiceAccount)
 		})
 		r.Route("/helm", func(r chi.Router) {
-			r.Route("/kubepromstack", func(r chi.Router) {
-				r.Method(http.MethodPost, "/", handlers.CreateKubePrometheusStack)
-			})
-			r.Route("/loki", func(r chi.Router) {
-				r.Method(http.MethodPost, "/", handlers.CreateLokiHelmChart)
-			})
 			r.Route("/releases", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateHelmRelease)
 				r.Method(http.MethodDelete, "/", handlers.DeleteHelmRelease)
-			})
-			r.Route("/promtail", func(r chi.Router) {
-				r.Method(http.MethodPost, "/", handlers.CreatePromtailHelmChart)
 			})
 		})
 		r.Route("/kube", func(r chi.Router) {
@@ -342,35 +321,32 @@ type Services struct {
 type EndpointOption func(Endpoints) Endpoints
 
 const (
-	clusterTag             = "clusterService"
-	vpcTag                 = "vpc"
-	managedPoliciesTag     = "managedPolicies"
-	externalSecretsTag     = "externalSecrets"
-	serviceAccountsTag     = "serviceAccounts"
-	helmTag                = "helm"
-	externalDNSTag         = "externaldns"
-	kubeTag                = "kube"
-	domainTag              = "domain"
-	hostedZoneTag          = "hostedZone"
-	certificateTag         = "certificate"
-	parameterTag           = "parameter"
-	secretTag              = "secret"
-	identityManagerTag     = "identitymanager"
-	identityPoolTag        = "identitypool"
-	identityPoolClientTag  = "identitypoolclient"
-	identityPoolUserTag    = "identitypooluser"
-	namespaceTag           = "namespace"
-	cognitoTag             = "cognito"
-	storageclassTag        = "storageclass"
-	kubePrometheusStackTag = "kubeprometheusstack"
-	lokiTag                = "loki"
-	releasesTag            = "releases"
-	promtailTag            = "promtail"
-	configMapTag           = "configmap"
-	scaleTag               = "scale"
-	postgresTag            = "postgres"
-	componentsTag          = "components"
-	s3bucketTag            = "s3bucket"
+	clusterTag            = "clusterService"
+	vpcTag                = "vpc"
+	managedPoliciesTag    = "managedPolicies"
+	externalSecretsTag    = "externalSecrets"
+	serviceAccountsTag    = "serviceAccounts"
+	helmTag               = "helm"
+	externalDNSTag        = "externaldns"
+	kubeTag               = "kube"
+	domainTag             = "domain"
+	hostedZoneTag         = "hostedZone"
+	certificateTag        = "certificate"
+	parameterTag          = "parameter"
+	secretTag             = "secret"
+	identityManagerTag    = "identitymanager"
+	identityPoolTag       = "identitypool"
+	identityPoolClientTag = "identitypoolclient"
+	identityPoolUserTag   = "identitypooluser"
+	namespaceTag          = "namespace"
+	cognitoTag            = "cognito"
+	storageclassTag       = "storageclass"
+	releasesTag           = "releases"
+	configMapTag          = "configmap"
+	scaleTag              = "scale"
+	postgresTag           = "postgres"
+	componentsTag         = "components"
+	s3bucketTag           = "s3bucket"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -398,10 +374,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteNamespace:                 logmd.Logging(logger, "delete", kubeTag, namespaceTag)(endpoints.DeleteNamespace),
 			DeleteCognitoCertificate:        logmd.Logging(logger, "delete", certificateTag, cognitoTag)(endpoints.DeleteCognitoCertificate),
 			CreateStorageClass:              logmd.Logging(logger, "create", kubeTag, storageclassTag)(endpoints.CreateStorageClass),
-			CreateKubePrometheusStack:       logmd.Logging(logger, "create", helmTag, kubePrometheusStackTag)(endpoints.CreateKubePrometheusStack),
-			CreateLokiHelmChart:             logmd.Logging(logger, "create", helmTag, lokiTag)(endpoints.CreateLokiHelmChart),
 			DeleteExternalSecrets:           logmd.Logging(logger, "delete", kubeTag, externalSecretsTag)(endpoints.DeleteExternalSecrets),
-			CreatePromtailHelmChart:         logmd.Logging(logger, "create", helmTag, promtailTag)(endpoints.CreatePromtailHelmChart),
 			CreateConfigMap:                 logmd.Logging(logger, "create", kubeTag, configMapTag)(endpoints.CreateConfigMap),
 			DeleteConfigMap:                 logmd.Logging(logger, "delete", kubeTag, configMapTag)(endpoints.DeleteConfigMap),
 			ScaleDeployment:                 logmd.Logging(logger, "create", kubeTag, scaleTag)(endpoints.ScaleDeployment),

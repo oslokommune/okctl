@@ -9,39 +9,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
-func decodeCreateKubePrometheusStackHelmChart(_ context.Context, r *http.Request) (interface{}, error) {
-	var opts api.CreateKubePrometheusStackOpts
-
-	err := json.NewDecoder(r.Body).Decode(&opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return opts, nil
-}
-
-func decodeCreateLokiHelmChart(_ context.Context, r *http.Request) (interface{}, error) {
-	var opts api.CreateLokiHelmChartOpts
-
-	err := json.NewDecoder(r.Body).Decode(&opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return opts, nil
-}
-
-func decodeCreatePromtailHelmChart(_ context.Context, r *http.Request) (interface{}, error) {
-	var opts api.CreatePromtailHelmChartOpts
-
-	err := json.NewDecoder(r.Body).Decode(&opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return opts, nil
-}
-
 func decodeCreateHelmRelease(_ context.Context, r *http.Request) (interface{}, error) {
 	var opts api.CreateHelmReleaseOpts
 

@@ -180,23 +180,17 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
-			err = services.Monitoring.DeleteTempo(o.Ctx, client.DeleteTempoOpts{
-				ID: id,
-			})
+			err = services.Monitoring.DeleteTempo(o.Ctx, id)
 			if err != nil {
 				return formatErr(err)
 			}
 
-			err = services.Monitoring.DeletePromtail(o.Ctx, client.DeletePromtailOpts{
-				ID: id,
-			})
+			err = services.Monitoring.DeletePromtail(o.Ctx, id)
 			if err != nil {
 				return formatErr(err)
 			}
 
-			err = services.Monitoring.DeleteLoki(o.Ctx, client.DeleteLokiOpts{
-				ID: id,
-			})
+			err = services.Monitoring.DeleteLoki(o.Ctx, id)
 			if err != nil {
 				return formatErr(err)
 			}

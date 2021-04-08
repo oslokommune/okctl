@@ -15,61 +15,6 @@ type Helm struct {
 	Chart   *helm.Chart
 }
 
-// CreateLokiHelmChartOpts contains the required inputs
-type CreateLokiHelmChartOpts struct {
-	ID ID
-}
-
-// Validate the inputs
-func (o CreateLokiHelmChartOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-	)
-}
-
-// CreatePromtailHelmChartOpts contains the required inputs
-type CreatePromtailHelmChartOpts struct {
-	ID ID
-}
-
-// Validate the inputs
-func (o CreatePromtailHelmChartOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-	)
-}
-
-// CreateKubePrometheusStackOpts defines the required inputs
-type CreateKubePrometheusStackOpts struct {
-	ID                                  ID
-	GrafanaCloudWatchServiceAccountName string
-	CertificateARN                      string
-	Hostname                            string
-	AuthHostname                        string
-	ClientID                            string
-	SecretsConfigName                   string
-	SecretsCookieSecretKey              string
-	SecretsClientSecretKey              string
-	SecretsAdminUserKey                 string
-	SecretsAdminPassKey                 string
-}
-
-// Validate the inputs
-func (o CreateKubePrometheusStackOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-		validation.Field(&o.GrafanaCloudWatchServiceAccountName, validation.Required),
-		validation.Field(&o.CertificateARN, validation.Required),
-		validation.Field(&o.Hostname, validation.Required),
-		validation.Field(&o.AuthHostname, validation.Required),
-		validation.Field(&o.ClientID, validation.Required),
-		validation.Field(&o.SecretsConfigName, validation.Required),
-		validation.Field(&o.SecretsCookieSecretKey, validation.Required),
-		validation.Field(&o.SecretsAdminUserKey, validation.Required),
-		validation.Field(&o.SecretsAdminPassKey, validation.Required),
-	)
-}
-
 // CreateHelmReleaseOpts contains the required inputs for
 // installing a Helm release on the Kubernetes cluster
 type CreateHelmReleaseOpts struct {
@@ -118,18 +63,12 @@ func (o DeleteHelmReleaseOpts) Validate() error {
 
 // HelmService defines the service layer interface
 type HelmService interface {
-	CreateKubePrometheusStack(ctx context.Context, opts CreateKubePrometheusStackOpts) (*Helm, error)
-	CreateLokiHelmChart(ctx context.Context, opts CreateLokiHelmChartOpts) (*Helm, error)
-	CreatePromtailHelmChart(ctx context.Context, opts CreatePromtailHelmChartOpts) (*Helm, error)
 	CreateHelmRelease(ctx context.Context, opts CreateHelmReleaseOpts) (*Helm, error)
 	DeleteHelmRelease(ctx context.Context, opts DeleteHelmReleaseOpts) error
 }
 
 // HelmRun defines the runner layer
 type HelmRun interface {
-	CreateKubePromStack(opts CreateKubePrometheusStackOpts) (*Helm, error)
-	CreateLokiHelmChart(opts CreateLokiHelmChartOpts) (*Helm, error)
-	CreatePromtailHelmChart(opts CreatePromtailHelmChartOpts) (*Helm, error)
 	CreateHelmRelease(opts CreateHelmReleaseOpts) (*Helm, error)
 	DeleteHelmRelease(opts DeleteHelmReleaseOpts) error
 }

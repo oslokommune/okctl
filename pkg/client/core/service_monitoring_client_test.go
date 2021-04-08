@@ -7,7 +7,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/oslokommune/okctl/pkg/mock"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,10 +15,8 @@ type clusterConfigRetrieverFn func(config *v1alpha5.ClusterConfig)
 
 func createMonitoringService(retriever clusterConfigRetrieverFn) client.MonitoringService {
 	return NewMonitoringService(
-		mockAPI{},
-		mockStore{},
 		mockState{},
-		mockReport{},
+		mockHelm{},
 		mockCertService{},
 		mockIdentityManagerService{},
 		mockManifestService{},
@@ -53,113 +50,32 @@ func TestKM196(t *testing.T) {
 	assert.NotEmpty(t, clusterConfig.IAM.ServiceAccounts[0].AttachPolicyARNs[0])
 }
 
-type mockAPI struct{}
-
-func (m mockAPI) CreateKubePromStack(_ api.CreateKubePrometheusStackOpts) (*api.Helm, error) {
-	panic("implement me")
+type mockHelm struct {
 }
 
-func (m mockAPI) DeleteKubePromStack(_ api.DeleteHelmReleaseOpts) error {
-	return nil
-}
-
-func (m mockAPI) CreateLoki(_ client.CreateLokiOpts) (*api.Helm, error) { panic("implement me") }
-
-func (m mockAPI) DeleteLoki(_ api.DeleteHelmReleaseOpts) error { panic("implement me") }
-
-func (m mockAPI) CreatePromtail(_ client.CreatePromtailOpts) (*api.Helm, error) {
-	panic("implement me")
-}
-
-func (m mockAPI) DeletePromtail(_ api.DeleteHelmReleaseOpts) error { panic("implement me") }
-
-func (m mockAPI) CreateTempo(_ api.CreateHelmReleaseOpts) (*api.Helm, error) { panic("implement me") }
-
-func (m mockAPI) DeleteTempo(_ api.DeleteHelmReleaseOpts) error { panic("implement me") }
-
-type mockStore struct{}
-
-func (m mockStore) SaveKubePromStack(_ *client.KubePromStack) (*store.Report, error) {
-	panic("implement me")
-}
-
-func (m mockStore) RemoveKubePromStack(_ api.ID) (*store.Report, error) {
+func (m mockHelm) CreateHelmRelease(context.Context, client.CreateHelmReleaseOpts) (*client.Helm, error) {
 	return nil, nil
 }
 
-func (m mockStore) SaveLoki(_ *client.Loki) (*store.Report, error) {
-	panic("implement me")
-}
-
-func (m mockStore) RemoveLoki(_ api.ID) (*store.Report, error) {
-	panic("implement me")
-}
-
-func (m mockStore) SavePromtail(_ *client.Promtail) (*store.Report, error) {
-	panic("implement me")
-}
-
-func (m mockStore) RemovePromtail(_ api.ID) (*store.Report, error) {
-	panic("implement me")
-}
-
-func (m mockStore) SaveTempo(_ *client.Tempo) (*store.Report, error) {
-	panic("implement me")
-}
-
-func (m mockStore) RemoveTempo(_ api.ID) (*store.Report, error) {
-	panic("implement me")
+func (m mockHelm) DeleteHelmRelease(context.Context, client.DeleteHelmReleaseOpts) error {
+	return nil
 }
 
 type mockState struct{}
+
+func (m mockState) SaveKubePromStack(_ *client.KubePromStack) error {
+	return nil
+}
+
+func (m mockState) RemoveKubePromStack() error {
+	return nil
+}
 
 func (m mockState) GetKubePromStack() (*client.KubePromStack, error) {
 	return &client.KubePromStack{
 		FargateCloudWatchPolicyARN:        "",
 		FargateProfilePodExecutionRoleARN: mock.DefaultFargateProfilePodExecutionRoleARN,
 	}, nil
-}
-
-func (m mockState) SaveKubePromStack(_ *client.KubePromStack) (*store.Report, error) {
-	panic("implement me")
-}
-
-func (m mockState) RemoveKubePromStack(_ api.ID) (*store.Report, error) {
-	return nil, nil
-}
-
-type mockReport struct{}
-
-func (m mockReport) ReportSaveKubePromStack(_ *client.KubePromStack, _ []*store.Report) error {
-	panic("implement me")
-}
-
-func (m mockReport) ReportRemoveKubePromStack(_ []*store.Report) error {
-	return nil
-}
-
-func (m mockReport) ReportSaveLoki(_ *client.Loki, _ *store.Report) error {
-	panic("implement me")
-}
-
-func (m mockReport) ReportRemoveLoki(_ *store.Report) error {
-	panic("implement me")
-}
-
-func (m mockReport) ReportSavePromtail(_ *client.Promtail, _ *store.Report) error {
-	panic("implement me")
-}
-
-func (m mockReport) ReportRemovePromtail(_ *store.Report) error {
-	panic("implement me")
-}
-
-func (m mockReport) ReportSaveTempo(_ *client.Tempo, _ *store.Report) error {
-	panic("implement me")
-}
-
-func (m mockReport) ReportRemoveTempo(_ *store.Report) error {
-	panic("implement me")
 }
 
 type mockCertService struct{}

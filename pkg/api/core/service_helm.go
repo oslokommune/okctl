@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
@@ -38,48 +37,6 @@ func (s *helmService) DeleteHelmRelease(_ context.Context, opts api.DeleteHelmRe
 	}
 
 	return nil
-}
-
-func (s *helmService) CreatePromtailHelmChart(_ context.Context, opts api.CreatePromtailHelmChartOpts) (*api.Helm, error) {
-	err := opts.Validate()
-	if err != nil {
-		return nil, errors.E(err, "validating input options", errors.Invalid)
-	}
-
-	h, err := s.run.CreatePromtailHelmChart(opts)
-	if err != nil {
-		return nil, errors.E(err, "creating promtail helm chart", errors.Internal)
-	}
-
-	return h, nil
-}
-
-func (s *helmService) CreateLokiHelmChart(_ context.Context, opts api.CreateLokiHelmChartOpts) (*api.Helm, error) {
-	err := opts.Validate()
-	if err != nil {
-		return nil, errors.E(err, "validating input options", errors.Invalid)
-	}
-
-	h, err := s.run.CreateLokiHelmChart(opts)
-	if err != nil {
-		return nil, errors.E(err, "creating loki helm chart", errors.Internal)
-	}
-
-	return h, nil
-}
-
-func (s *helmService) CreateKubePrometheusStack(_ context.Context, opts api.CreateKubePrometheusStackOpts) (*api.Helm, error) {
-	err := opts.Validate()
-	if err != nil {
-		return nil, fmt.Errorf("validating input options: %w", err)
-	}
-
-	h, err := s.run.CreateKubePromStack(opts)
-	if err != nil {
-		return nil, fmt.Errorf("creating kube prometheus stack helm chart: %w", err)
-	}
-
-	return h, nil
 }
 
 // NewHelmService returns an initialised helm service

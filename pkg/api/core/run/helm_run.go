@@ -5,12 +5,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
-	"github.com/oslokommune/okctl/pkg/helm/charts/promtail"
-
-	"github.com/oslokommune/okctl/pkg/helm/charts/loki"
-
-	"github.com/oslokommune/okctl/pkg/helm/charts/kubepromstack"
-
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/helm"
 )
@@ -51,18 +45,6 @@ func (r *helmRun) DeleteHelmRelease(opts api.DeleteHelmReleaseOpts) error {
 	return nil
 }
 
-func (r *helmRun) CreatePromtailHelmChart(opts api.CreatePromtailHelmChartOpts) (*api.Helm, error) {
-	chart := promtail.New(promtail.NewDefaultValues())
-
-	return r.createHelmChart(opts.ID, chart)
-}
-
-func (r *helmRun) CreateLokiHelmChart(opts api.CreateLokiHelmChartOpts) (*api.Helm, error) {
-	chart := loki.New(loki.NewDefaultValues())
-
-	return r.createHelmChart(opts.ID, chart)
-}
-
 func (r *helmRun) createHelmChart(id api.ID, chart *helm.Chart) (*api.Helm, error) {
 	err := r.helm.RepoAdd(chart.RepositoryName, chart.RepositoryURL)
 	if err != nil {
@@ -94,23 +76,6 @@ func (r *helmRun) createHelmChart(id api.ID, chart *helm.Chart) (*api.Helm, erro
 		Release: release,
 		Chart:   chart,
 	}, nil
-}
-
-func (r *helmRun) CreateKubePromStack(opts api.CreateKubePrometheusStackOpts) (*api.Helm, error) {
-	chart := kubepromstack.New(constant.DefaultChartApplyTimeout, &kubepromstack.Values{
-		GrafanaServiceAccountName:          opts.GrafanaCloudWatchServiceAccountName,
-		GrafanaCertificateARN:              opts.CertificateARN,
-		GrafanaHostname:                    opts.Hostname,
-		AuthHostname:                       opts.AuthHostname,
-		ClientID:                           opts.ClientID,
-		SecretsConfigName:                  opts.SecretsConfigName,
-		SecretsGrafanaCookieSecretKey:      opts.SecretsCookieSecretKey,
-		SecretsGrafanaOauthClientSecretKey: opts.SecretsClientSecretKey,
-		SecretsGrafanaAdminUserKey:         opts.SecretsAdminUserKey,
-		SecretsGrafanaAdminPassKey:         opts.SecretsAdminPassKey,
-	})
-
-	return r.createHelmChart(opts.ID, chart)
 }
 
 // NewHelmRun returns an initialised helm runner

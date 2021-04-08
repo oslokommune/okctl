@@ -27,14 +27,12 @@ func (z *lokiReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata
 func (z *lokiReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err = z.client.CreateLoki(z.commonMetadata.Ctx, client.CreateLokiOpts{ID: z.commonMetadata.ClusterID})
+		_, err = z.client.CreateLoki(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
 			return result, fmt.Errorf("creating Loki: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err = z.client.DeleteLoki(z.commonMetadata.Ctx, client.DeleteLokiOpts{
-			ID: z.commonMetadata.ClusterID,
-		})
+		err = z.client.DeleteLoki(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
 			return result, fmt.Errorf("deleting Loki: %w", err)
 		}

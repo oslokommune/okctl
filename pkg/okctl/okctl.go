@@ -209,7 +209,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		IdentityManager:                  o.identityManagerService(o.StormDB.From(constant.DefaultStormNodeIdentityManager)),
 		Autoscaler:                       o.autoscalerService(o.StormDB.From(constant.DefaultstormNodeAutoscaler)),
 		Blockstorage:                     o.blockstorageService(o.StormDB.From(constant.DefaultStormNodeBlockStorage)),
-		Monitoring:                       o.monitoringService(outputDir, o.StormDB.From(constant.DefaultStormNodeMonitoring), spin),
+		Monitoring:                       o.monitoringService(o.StormDB.From(constant.DefaultStormNodeMonitoring)),
 		Component:                        o.componentService(o.StormDB.From(constant.DefaultStormNodeComponent)),
 		Helm:                             o.helmService(o.StormDB.From(constant.DefaultStormNodeHelm)),
 	}, nil
@@ -245,44 +245,10 @@ func (o *Okctl) serviceAccountService(node stormpkg.Node) client.ServiceAccountS
 	)
 }
 
-func (o *Okctl) monitoringService(outputDir string, node stormpkg.Node, spin spinner.Spinner) client.MonitoringService {
-	monitoringDir := path.Join(outputDir, constant.DefaultMonitoringBaseDir)
-
+func (o *Okctl) monitoringService(node stormpkg.Node) client.MonitoringService {
 	return clientCore.NewMonitoringService(
-		rest.NewMonitoringAPI(o.restClient),
-		clientFilesystem.NewMonitoringStore(
-			clientFilesystem.Paths{
-				OutputFile:  constant.DefaultHelmOutputsFile,
-				ReleaseFile: constant.DefaultHelmReleaseFile,
-				ChartFile:   constant.DefaultHelmChartFile,
-				BaseDir:     path.Join(monitoringDir, constant.DefaultTempoBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile:  constant.DefaultHelmOutputsFile,
-				ReleaseFile: constant.DefaultHelmReleaseFile,
-				ChartFile:   constant.DefaultHelmChartFile,
-				BaseDir:     path.Join(monitoringDir, constant.DefaultPromtailBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile:  constant.DefaultHelmOutputsFile,
-				ReleaseFile: constant.DefaultHelmReleaseFile,
-				ChartFile:   constant.DefaultHelmChartFile,
-				BaseDir:     path.Join(monitoringDir, constant.DefaultLokiBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile:  constant.DefaultHelmOutputsFile,
-				ReleaseFile: constant.DefaultHelmReleaseFile,
-				ChartFile:   constant.DefaultHelmChartFile,
-				BaseDir:     path.Join(monitoringDir, constant.DefaultKubePromStackBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile: constant.DefaultKubePromStackOutputsFile,
-				BaseDir:    path.Join(monitoringDir, constant.DefaultKubePromStackBaseDir),
-			},
-			o.FileSystem,
-		),
-		stateSaver.NewMonitoringState(o.RepoStateWithEnv),
-		console.NewMonitoringReport(o.Err, spin),
+		storm.NewMonitoringState(node),
+		o.helmService(node),
 		o.certService(node),
 		o.identityManagerService(node),
 		o.manifestService(node),

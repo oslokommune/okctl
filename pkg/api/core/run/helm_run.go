@@ -11,8 +11,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/kubepromstack"
 
-	"github.com/oslokommune/okctl/pkg/helm/charts/argocd"
-
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/helm"
 )
@@ -61,25 +59,6 @@ func (r *helmRun) CreatePromtailHelmChart(opts api.CreatePromtailHelmChartOpts) 
 
 func (r *helmRun) CreateLokiHelmChart(opts api.CreateLokiHelmChartOpts) (*api.Helm, error) {
 	chart := loki.New(loki.NewDefaultValues())
-
-	return r.createHelmChart(opts.ID, chart)
-}
-
-func (r *helmRun) CreateArgoCD(opts api.CreateArgoCDOpts) (*api.Helm, error) {
-	chart := argocd.New(argocd.NewDefaultValues(argocd.ValuesOpts{
-		URL:                  fmt.Sprintf("https://%s", opts.ArgoDomain),
-		HostName:             opts.ArgoDomain,
-		Region:               opts.ID.Region,
-		CertificateARN:       opts.ArgoCertificateARN,
-		ClientID:             opts.ClientID,
-		Organisation:         opts.GithubOrganisation,
-		AuthDomain:           opts.AuthDomain,
-		UserPoolID:           opts.UserPoolID,
-		RepoURL:              opts.GithubRepoURL,
-		RepoName:             opts.GithubRepoName,
-		PrivateKeySecretName: opts.PrivateKeyName,
-		PrivateKeySecretKey:  opts.PrivateKeyKey,
-	}))
 
 	return r.createHelmChart(opts.ID, chart)
 }

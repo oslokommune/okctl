@@ -4,8 +4,6 @@ import (
 	"context"
 
 	"github.com/oslokommune/okctl/pkg/api"
-
-	"github.com/oslokommune/okctl/pkg/client/store"
 )
 
 // ArgoCD contains state about an argo cd deployment
@@ -20,14 +18,7 @@ type ArgoCD struct {
 	Secret         *KubernetesManifest
 	ClientSecret   *SecretParameter
 	SecretKey      *SecretParameter
-	Chart          *api.Helm
-}
-
-// ArgoCDStateInfo represents a subset of the available
-// argocd state information
-type ArgoCDStateInfo struct {
-	ID         api.ID
-	ArgoDomain string
+	Chart          *Helm
 }
 
 // CreateArgoCDOpts contains the required inputs
@@ -55,23 +46,9 @@ type ArgoCDService interface {
 	DeleteArgoCD(ctx context.Context, opts DeleteArgoCDOpts) error
 }
 
-// ArgoCDAPI invokes the APIs for creating resources
-type ArgoCDAPI interface {
-	CreateArgoCD(opts api.CreateArgoCDOpts) (*ArgoCD, error)
-}
-
-// ArgoCDStore implements the storage layer
-type ArgoCDStore interface {
-	SaveArgoCD(cd *ArgoCD) (*store.Report, error)
-}
-
-// ArgoCDReport implements the report layer
-type ArgoCDReport interface {
-	CreateArgoCD(cd *ArgoCD, reports []*store.Report) error
-}
-
 // ArgoCDState implements the state layer
 type ArgoCDState interface {
-	SaveArgoCD(cd *ArgoCD) (*store.Report, error)
-	GetArgoCD(id api.ID) ArgoCDStateInfo
+	SaveArgoCD(cd *ArgoCD) error
+	GetArgoCD() (*ArgoCD, error)
+	RemoveArgoCD() error
 }

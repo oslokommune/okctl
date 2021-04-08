@@ -53,7 +53,7 @@ func (s *autoscalerService) DeleteAutoscaler(ctx context.Context, id api.ID) err
 		return err
 	}
 
-	chart := autoscaler.New(autoscaler.NewDefaultValues(id.Region, id.ClusterName, "autoscaler"))
+	chart := autoscaler.New(nil)
 
 	err = s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
 		ID:          id,

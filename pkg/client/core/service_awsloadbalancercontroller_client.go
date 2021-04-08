@@ -52,7 +52,7 @@ func (s *awsLoadBalancerControllerService) DeleteAWSLoadBalancerController(ctx c
 		return err
 	}
 
-	ch := awslbc.New(awslbc.NewDefaultValues(id.ClusterName, "n/a", id.Region))
+	ch := awslbc.New(nil)
 
 	err = s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
 		ID:          id,

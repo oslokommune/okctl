@@ -68,6 +68,8 @@ const (
 	DefaultPostgresLambdaFunctionARN  = "arn:aws:lambda:eu-west-1:123456789012:function:rotater"
 	DefaultS3BucketName               = "rotater"
 	DefaultPostgresDatabasePort       = 5432
+	DefaultArgoDomain                 = "argocd.okctl-staging.oslo.systems"
+	DefaultArgoURL                    = "https://argocd.okctl-staging.oslo.systems"
 
 	StackNameHostedZone         = "okctl-staging-oslo-systems-HostedZone"
 	StackNameCertificate        = "okctl-staging-oslo-systems-Certificate"
@@ -432,5 +434,22 @@ func PostgresDatabase() *client.PostgresDatabase {
 		AdminSecretARN:               DefaultPostgresSecretARN,
 		DatabaseConfigMapName:        DefaultPostgresConfigMapName,
 		RotaterBucket:                RotaterBucket(),
+	}
+}
+
+// ArgoCD returns a fake argo cd
+func ArgoCD() *client.ArgoCD {
+	return &client.ArgoCD{
+		ID:             ID(),
+		ArgoDomain:     DefaultArgoDomain,
+		ArgoURL:        DefaultArgoURL,
+		AuthDomain:     DefaultAuthDomain,
+		Certificate:    Certificate(),
+		IdentityClient: IdentityPoolClient(),
+		PrivateKey:     KubernetesManifest(),
+		Secret:         KubernetesManifest(),
+		ClientSecret:   SecretParameter("okay"),
+		SecretKey:      SecretParameter("something"),
+		Chart:          Helm(),
 	}
 }

@@ -9,17 +9,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
-func decodeCreateArgoCD(_ context.Context, r *http.Request) (interface{}, error) {
-	var opts api.CreateArgoCDOpts
-
-	err := json.NewDecoder(r.Body).Decode(&opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return opts, nil
-}
-
 func decodeCreateKubePrometheusStackHelmChart(_ context.Context, r *http.Request) (interface{}, error) {
 	var opts api.CreateKubePrometheusStackOpts
 

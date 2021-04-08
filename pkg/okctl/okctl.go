@@ -194,7 +194,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 
 	return &clientCore.Services{
 		AWSLoadBalancerControllerService: o.awsLoadBalancerControllerService(o.StormDB.From(constant.DefaultStormNodeAWSLoadBalanerController)),
-		ArgoCD:                           o.argocdService(outputDir, o.StormDB.From(constant.DefaultStormNodeArgoCD), spin),
+		ArgoCD:                           o.argocdService(o.StormDB.From(constant.DefaultStormNodeArgoCD)),
 		ApplicationService:               o.applicationService(applicationsOutputDir, o.StormDB.From(constant.DefaultStormNodeApplications), spin),
 		Certificate:                      o.certService(o.StormDB.From(constant.DefaultStormNodeCertificates)),
 		Cluster:                          o.clusterService(o.StormDB.From(constant.DefaultStormNodeCluster)),
@@ -301,33 +301,14 @@ func (o *Okctl) identityManagerService(node stormpkg.Node) client.IdentityManage
 	)
 }
 
-func (o *Okctl) argocdService(outputDir string, node stormpkg.Node, spin spinner.Spinner) client.ArgoCDService {
-	argoBaseDir := path.Join(outputDir, constant.DefaultArgoCDBaseDir)
-
-	argoService := clientCore.NewArgoCDService(
+func (o *Okctl) argocdService(node stormpkg.Node) client.ArgoCDService {
+	return clientCore.NewArgoCDService(
 		o.identityManagerService(node),
 		o.certService(node),
 		o.manifestService(node),
 		o.paramService(node),
-		rest.NewArgoCDAPI(o.restClient),
-		clientFilesystem.NewArgoCDStore(
-			clientFilesystem.Paths{
-				OutputFile:  constant.DefaultHelmOutputsFile,
-				ReleaseFile: constant.DefaultHelmReleaseFile,
-				ChartFile:   constant.DefaultHelmChartFile,
-				BaseDir:     path.Join(outputDir, constant.DefaultHelmBaseDir),
-			},
-			clientFilesystem.Paths{
-				OutputFile: constant.DefaultArgoOutputsFile,
-				BaseDir:    argoBaseDir,
-			},
-			o.FileSystem,
-		),
-		console.NewArgoCDReport(o.Err, spin),
-		stateSaver.NewArgoCDState(o.RepoStateWithEnv),
+		storm.NewArgoCDState(node),
 	)
-
-	return argoService
 }
 
 func (o *Okctl) paramService(node stormpkg.Node) client.ParameterService {

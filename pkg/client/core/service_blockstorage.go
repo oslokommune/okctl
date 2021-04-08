@@ -27,7 +27,7 @@ type blockstorageService struct {
 }
 
 func (s *blockstorageService) DeleteBlockstorage(ctx context.Context, id api.ID) error {
-	chart := blockstorage.New(blockstorage.NewDefaultValues(id.Region, id.ClusterName, "blockstorage"))
+	chart := blockstorage.New(nil)
 
 	err := s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
 		ID:          id,

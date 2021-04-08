@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/oslokommune/okctl/pkg/config/constant"
+	"github.com/oslokommune/okctl/pkg/helm/charts/argocd"
 
-	"github.com/oslokommune/okctl/pkg/client/store"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/google/uuid"
 	"github.com/oslokommune/okctl/pkg/api"
@@ -15,27 +15,39 @@ import (
 )
 
 type argoCDService struct {
-	api    client.ArgoCDAPI
-	store  client.ArgoCDStore
-	report client.ArgoCDReport
-	state  client.ArgoCDState
-
+	state    client.ArgoCDState
 	identity client.IdentityManagerService
 	cert     client.CertificateService
 	manifest client.ManifestService
 	param    client.ParameterService
+	helm     client.HelmService
 }
 
 // nolint: gosec
 const (
 	argoClientSecretName = "argocd/client_secret"
 	argoSecretKeyName    = "argocd/secret_key"
+	argoPurpose          = "argocd"
 )
 
 func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgoCDOpts) error {
-	info := s.state.GetArgoCD(opts.ID)
+	cd, err := s.state.GetArgoCD()
+	if err != nil {
+		return err
+	}
 
-	err := s.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
+	chart := argocd.New(nil)
+
+	err = s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
+		ID:          opts.ID,
+		ReleaseName: chart.ReleaseName,
+		Namespace:   chart.Namespace,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = s.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
 		ID:        opts.ID,
 		Namespace: constant.DefaultArgoCDNamespace,
 	})
@@ -45,7 +57,7 @@ func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgo
 
 	err = s.cert.DeleteCertificate(ctx, client.DeleteCertificateOpts{
 		ID:     opts.ID,
-		Domain: info.ArgoDomain,
+		Domain: cd.ArgoDomain,
 	})
 	if err != nil {
 		return err
@@ -53,7 +65,7 @@ func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgo
 
 	err = s.identity.DeleteIdentityPoolClient(ctx, client.DeleteIdentityPoolClientOpts{
 		ID:      opts.ID,
-		Purpose: "argocd",
+		Purpose: argoPurpose,
 	})
 	if err != nil {
 		return err
@@ -67,6 +79,11 @@ func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgo
 		if err != nil {
 			return err
 		}
+	}
+
+	err = s.state.RemoveArgoCD()
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -87,7 +104,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 	identityClient, err := s.identity.CreateIdentityPoolClient(ctx, client.CreateIdentityPoolClientOpts{
 		ID:          opts.ID,
 		UserPoolID:  opts.UserPoolID,
-		Purpose:     "argocd",
+		Purpose:     argoPurpose,
 		CallbackURL: fmt.Sprintf("https://%s/api/dex/callback", cert.Domain),
 	})
 	if err != nil {
@@ -179,47 +196,59 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		return nil, err
 	}
 
-	chartOpts := api.CreateArgoCDOpts{
-		ID:                 opts.ID,
-		ArgoDomain:         cert.Domain,
-		ArgoCertificateARN: cert.ARN,
-		GithubOrganisation: opts.GithubOrganisation,
-		GithubRepoURL:      opts.Repository.GitURL,
-		GithubRepoName:     opts.Repository.Repository,
-		ClientID:           identityClient.ClientID,
-		AuthDomain:         opts.AuthDomain,
-		UserPoolID:         opts.UserPoolID,
-		PrivateKeyName:     privateKeyName,
-		PrivateKeyKey:      privateKeyDataName,
-	}
+	chart := argocd.New(argocd.NewDefaultValues(argocd.ValuesOpts{
+		URL:                  fmt.Sprintf("https://%s", cert.Domain),
+		HostName:             cert.Domain,
+		Region:               opts.ID.Region,
+		CertificateARN:       cert.ARN,
+		ClientID:             identityClient.ClientID,
+		Organisation:         opts.GithubOrganisation,
+		AuthDomain:           opts.AuthDomain,
+		UserPoolID:           opts.UserPoolID,
+		RepoURL:              opts.Repository.GitURL,
+		RepoName:             opts.Repository.Repository,
+		PrivateKeySecretName: privateKeyName,
+		PrivateKeySecretKey:  privateKeyDataName,
+	}))
 
-	argo, err := s.api.CreateArgoCD(chartOpts)
+	values, err := chart.ValuesYAML()
 	if err != nil {
 		return nil, err
 	}
 
-	argo.ID = opts.ID
-	argo.ArgoDomain = cert.Domain
-	argo.ArgoURL = fmt.Sprintf("https://%s", cert.Domain)
-	argo.Certificate = cert
-	argo.IdentityClient = identityClient
-	argo.ClientSecret = clientSecret
-	argo.PrivateKey = priv
-	argo.Secret = sec
-	argo.SecretKey = secretKey
-	argo.AuthDomain = opts.AuthDomain
-
-	r1, err := s.store.SaveArgoCD(argo)
+	a, err := s.helm.CreateHelmRelease(ctx, client.CreateHelmReleaseOpts{
+		ID:             opts.ID,
+		RepositoryName: chart.RepositoryName,
+		RepositoryURL:  chart.RepositoryURL,
+		ReleaseName:    chart.ReleaseName,
+		Version:        chart.Version,
+		Chart:          chart.Chart,
+		Namespace:      chart.Namespace,
+		Values:         values,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	r2, err := s.state.SaveArgoCD(argo)
-	if err != nil {
-		return nil, err
+	argo := &client.ArgoCD{
+		ID:             opts.ID,
+		ArgoDomain:     cert.Domain,
+		ArgoURL:        fmt.Sprintf("https://%s", cert.Domain),
+		AuthDomain:     opts.AuthDomain,
+		Certificate:    cert,
+		IdentityClient: identityClient,
+		PrivateKey:     priv,
+		Secret:         sec,
+		ClientSecret:   clientSecret,
+		SecretKey:      secretKey,
+		Chart: &client.Helm{
+			ID:      a.ID,
+			Release: a.Release,
+			Chart:   a.Chart,
+		},
 	}
 
-	err = s.report.CreateArgoCD(argo, []*store.Report{r1, r2})
+	err = s.state.SaveArgoCD(argo)
 	if err != nil {
 		return nil, err
 	}
@@ -233,15 +262,9 @@ func NewArgoCDService(
 	cert client.CertificateService,
 	manifest client.ManifestService,
 	param client.ParameterService,
-	api client.ArgoCDAPI,
-	store client.ArgoCDStore,
-	report client.ArgoCDReport,
 	state client.ArgoCDState,
 ) client.ArgoCDService {
 	return &argoCDService{
-		api:      api,
-		store:    store,
-		report:   report,
 		state:    state,
 		identity: identity,
 		cert:     cert,

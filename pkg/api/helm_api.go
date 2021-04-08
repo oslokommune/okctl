@@ -39,40 +39,6 @@ func (o CreatePromtailHelmChartOpts) Validate() error {
 	)
 }
 
-// CreateArgoCDOpts contains the required inputs
-type CreateArgoCDOpts struct {
-	ID ID
-
-	ArgoDomain         string
-	ArgoCertificateARN string
-
-	GithubOrganisation string
-	GithubRepoURL      string
-	GithubRepoName     string
-
-	ClientID   string
-	AuthDomain string
-	UserPoolID string
-
-	PrivateKeyName string
-	PrivateKeyKey  string
-}
-
-// Validate the input options
-func (o CreateArgoCDOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-		validation.Field(&o.ArgoDomain, validation.Required),
-		validation.Field(&o.ArgoCertificateARN, validation.Required),
-		validation.Field(&o.GithubOrganisation, validation.Required),
-		validation.Field(&o.GithubRepoURL, validation.Required),
-		validation.Field(&o.GithubRepoName, validation.Required),
-		validation.Field(&o.ClientID, validation.Required),
-		validation.Field(&o.PrivateKeyName, validation.Required),
-		validation.Field(&o.PrivateKeyKey, validation.Required),
-	)
-}
-
 // CreateKubePrometheusStackOpts defines the required inputs
 type CreateKubePrometheusStackOpts struct {
 	ID                                  ID
@@ -152,7 +118,6 @@ func (o DeleteHelmReleaseOpts) Validate() error {
 
 // HelmService defines the service layer interface
 type HelmService interface {
-	CreateArgoCD(ctx context.Context, opts CreateArgoCDOpts) (*Helm, error)
 	CreateKubePrometheusStack(ctx context.Context, opts CreateKubePrometheusStackOpts) (*Helm, error)
 	CreateLokiHelmChart(ctx context.Context, opts CreateLokiHelmChartOpts) (*Helm, error)
 	CreatePromtailHelmChart(ctx context.Context, opts CreatePromtailHelmChartOpts) (*Helm, error)
@@ -162,7 +127,6 @@ type HelmService interface {
 
 // HelmRun defines the runner layer
 type HelmRun interface {
-	CreateArgoCD(opts CreateArgoCDOpts) (*Helm, error)
 	CreateKubePromStack(opts CreateKubePrometheusStackOpts) (*Helm, error)
 	CreateLokiHelmChart(opts CreateLokiHelmChartOpts) (*Helm, error)
 	CreatePromtailHelmChart(opts CreatePromtailHelmChartOpts) (*Helm, error)

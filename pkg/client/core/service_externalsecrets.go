@@ -53,7 +53,7 @@ func (s *externalSecretsService) DeleteExternalSecrets(ctx context.Context, id a
 		return err
 	}
 
-	ch := externalsecrets.ExternalSecrets(externalsecrets.DefaultExternalSecretsValues())
+	ch := externalsecrets.ExternalSecrets(nil)
 
 	err = s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
 		ID:          id,

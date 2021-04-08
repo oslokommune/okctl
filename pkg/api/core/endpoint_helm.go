@@ -7,12 +7,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
-func makeCreateArgoCD(s api.HelmService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateArgoCD(ctx, request.(api.CreateArgoCDOpts))
-	}
-}
-
 func makeCreateKubePrometheusStack(s api.HelmService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return s.CreateKubePrometheusStack(ctx, request.(api.CreateKubePrometheusStackOpts))

@@ -24,7 +24,6 @@ type Endpoints struct {
 	CreateCertificate               endpoint.Endpoint
 	CreateSecret                    endpoint.Endpoint
 	DeleteSecret                    endpoint.Endpoint
-	CreateArgoCD                    endpoint.Endpoint
 	CreateExternalSecrets           endpoint.Endpoint
 	DeleteHostedZone                endpoint.Endpoint
 	CreateIdentityPool              endpoint.Endpoint
@@ -70,7 +69,6 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateCertificate:               makeCreateCertificateEndpoint(s.Certificate),
 		CreateSecret:                    makeCreateSecret(s.Parameter),
 		DeleteSecret:                    makeDeleteSecret(s.Parameter),
-		CreateArgoCD:                    makeCreateArgoCD(s.Helm),
 		CreateExternalSecrets:           makeCreateExternalSecretsEndpoint(s.Kube),
 		DeleteHostedZone:                makeDeleteHostedZoneEndpoint(s.Domain),
 		CreateIdentityPool:              makeCreateIdentityPoolEndpoint(s.IdentityManager),
@@ -114,7 +112,6 @@ type Handlers struct {
 	CreateCertificate               http.Handler
 	CreateSecret                    http.Handler
 	DeleteSecret                    http.Handler
-	CreateArgoCD                    http.Handler
 	CreateExternalSecrets           http.Handler
 	DeleteHostedZone                http.Handler
 	CreateIdentityPool              http.Handler
@@ -186,7 +183,6 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateCertificate:               newServer(endpoints.CreateCertificate, decodeCreateCertificate),
 		CreateSecret:                    newServer(endpoints.CreateSecret, decodeCreateSecret),
 		DeleteSecret:                    newServer(endpoints.DeleteSecret, decodeDeleteSecret),
-		CreateArgoCD:                    newServer(endpoints.CreateArgoCD, decodeCreateArgoCD),
 		CreateExternalSecrets:           newServer(endpoints.CreateExternalSecrets, decodeCreateExternalSecrets),
 		DeleteHostedZone:                newServer(endpoints.DeleteHostedZone, decodeDeleteHostedZone),
 		CreateIdentityPool:              newServer(endpoints.CreateIdentityPool, decodeCreateIdentityPool),
@@ -242,9 +238,6 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			r.Method(http.MethodDelete, "/", handlers.DeleteServiceAccount)
 		})
 		r.Route("/helm", func(r chi.Router) {
-			r.Route("/argocd", func(r chi.Router) {
-				r.Method(http.MethodPost, "/", handlers.CreateArgoCD)
-			})
 			r.Route("/kubepromstack", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.CreateKubePrometheusStack)
 			})
@@ -362,7 +355,6 @@ const (
 	certificateTag         = "certificate"
 	parameterTag           = "parameter"
 	secretTag              = "secret"
-	argocdTag              = "argocd"
 	identityManagerTag     = "identitymanager"
 	identityPoolTag        = "identitypool"
 	identityPoolClientTag  = "identitypoolclient"
@@ -395,7 +387,6 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateCertificate:               logmd.Logging(logger, "create", certificateTag)(endpoints.CreateCertificate),
 			CreateSecret:                    logmd.Logging(logger, "create", parameterTag, secretTag)(endpoints.CreateSecret),
 			DeleteSecret:                    logmd.Logging(logger, "delete", parameterTag, secretTag)(endpoints.DeleteSecret),
-			CreateArgoCD:                    logmd.Logging(logger, "create", helmTag, argocdTag)(endpoints.CreateArgoCD),
 			CreateExternalSecrets:           logmd.Logging(logger, "create", kubeTag, externalSecretsTag)(endpoints.CreateExternalSecrets),
 			DeleteHostedZone:                logmd.Logging(logger, "delete", domainTag, hostedZoneTag)(endpoints.DeleteHostedZone),
 			CreateIdentityPool:              logmd.Logging(logger, "create", identityManagerTag, identityPoolTag)(endpoints.CreateIdentityPool),

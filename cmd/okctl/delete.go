@@ -260,7 +260,7 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
-			err = services.Cluster.DeleteCluster(o.Ctx, api.ClusterDeleteOpts{
+			err = services.Cluster.DeleteCluster(o.Ctx, client.ClusterDeleteOpts{
 				ID:                 id,
 				FargateProfileName: "fp-default",
 			})

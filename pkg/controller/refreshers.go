@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/oslokommune/okctl/pkg/client"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
-	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/controller/reconciler"
@@ -14,8 +15,8 @@ import (
 	"github.com/spf13/afero"
 )
 
-func getVpcState(fs *afero.Afero, outputDir string) api.Vpc {
-	vpc := api.Vpc{}
+func getVpcState(fs *afero.Afero, outputDir string) client.Vpc {
+	vpc := client.Vpc{}
 
 	baseDir := path.Join(outputDir, "vpc")
 

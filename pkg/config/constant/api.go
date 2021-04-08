@@ -91,6 +91,7 @@ const (
 	DefaultStormNodeApplications             = "applications"
 	DefaultStormNodeIdentityManager          = "identitymanager"
 	DefaultStormNodeVpc                      = "vpc"
+	DefaultStormNodeCluster                  = "cluster"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"

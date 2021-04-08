@@ -23,7 +23,6 @@ type ClusterCreateOpts struct {
 	VpcID             string
 	VpcPrivateSubnets []VpcSubnet
 	VpcPublicSubnets  []VpcSubnet
-	Minimal           bool
 }
 
 // Validate the create inputs

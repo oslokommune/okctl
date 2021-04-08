@@ -55,6 +55,7 @@ const (
 	DefaultDatabaseSubnetID        = "djfh093FAKE"
 	DefaultDatabaseSubnetGroupName = "okctl-staging-DatabaseGroup"
 	DefaultAvailabilityZone        = "eu-west-1a"
+	DefaultVersion                 = "1.18"
 
 	StackNameHostedZone         = "okctl-staging-oslo-systems-HostedZone"
 	StackNameCertificate        = "okctl-staging-oslo-systems-Certificate"
@@ -303,9 +304,31 @@ func PublicSubnets() []client.VpcSubnet {
 	}
 }
 
+// PublicSubnetsAPI returns fake public subnets
+func PublicSubnetsAPI() []api.VpcSubnet {
+	return []api.VpcSubnet{
+		{
+			ID:               DefaultPublicSubnetID,
+			Cidr:             DefaultPublicSubnetCidr,
+			AvailabilityZone: DefaultAvailabilityZone,
+		},
+	}
+}
+
 // PrivateSubnets returns fake public subnets
 func PrivateSubnets() []client.VpcSubnet {
 	return []client.VpcSubnet{
+		{
+			ID:               DefaultPrivateSubnetID,
+			Cidr:             DefaultPrivateSubnetCidr,
+			AvailabilityZone: DefaultAvailabilityZone,
+		},
+	}
+}
+
+// PrivateSubnetsAPI returns fake private subnets
+func PrivateSubnetsAPI() []api.VpcSubnet {
+	return []api.VpcSubnet{
 		{
 			ID:               DefaultPrivateSubnetID,
 			Cidr:             DefaultPrivateSubnetCidr,
@@ -337,5 +360,30 @@ func Vpc() *client.Vpc {
 		PrivateSubnets:           PrivateSubnets(),
 		DatabaseSubnets:          DatabaseSubnets(),
 		DatabaseSubnetsGroupName: DefaultDatabaseSubnetGroupName,
+	}
+}
+
+// ClusterConfig returns a fake cluster config
+func ClusterConfig() *v1alpha5.ClusterConfig {
+	c, _ := clusterconfig.New(&clusterconfig.Args{
+		ClusterName:            DefaultClusterName,
+		PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(DefaultAWSAccountID),
+		PrivateSubnets:         PrivateSubnetsAPI(),
+		PublicSubnets:          PublicSubnetsAPI(),
+		Region:                 DefaultRegion,
+		Version:                DefaultVersion,
+		VpcCidr:                DefaultCidr,
+		VpcID:                  DefaultVpcID,
+	})
+
+	return c
+}
+
+// Cluster returns a fake cluster
+func Cluster() *client.Cluster {
+	return &client.Cluster{
+		ID:     ID(),
+		Name:   DefaultClusterName,
+		Config: ClusterConfig(),
 	}
 }

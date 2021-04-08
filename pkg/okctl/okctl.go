@@ -197,7 +197,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		ArgoCD:                           o.argocdService(outputDir, o.StormDB.From(constant.DefaultStormNodeArgoCD), spin),
 		ApplicationService:               o.applicationService(applicationsOutputDir, o.StormDB.From(constant.DefaultStormNodeApplications), spin),
 		Certificate:                      o.certService(o.StormDB.From(constant.DefaultStormNodeCertificates)),
-		Cluster:                          o.clusterService(outputDir, spin),
+		Cluster:                          o.clusterService(o.StormDB.From(constant.DefaultStormNodeCluster)),
 		Domain:                           o.domainService(o.StormDB.From(constant.DefaultStormNodeDomains)),
 		ExternalDNS:                      o.externalDNSService(o.StormDB.From(constant.DefaultStormNodeExternalDNS)),
 		ExternalSecrets:                  o.externalSecretsService(o.StormDB.From(constant.DefaultStormNodeExternalSecrets)),
@@ -388,19 +388,10 @@ func (o *Okctl) vpcService(node stormpkg.Node) client.VPCService {
 	)
 }
 
-func (o *Okctl) clusterService(outputDir string, spin spinner.Spinner) client.ClusterService {
+func (o *Okctl) clusterService(node stormpkg.Node) client.ClusterService {
 	return clientCore.NewClusterService(
-		spin,
 		rest.NewClusterAPI(o.restClient),
-		clientFilesystem.NewClusterStore(
-			clientFilesystem.Paths{
-				ConfigFile: constant.DefaultClusterConfig,
-				BaseDir:    path.Join(outputDir, constant.DefaultClusterBaseDir),
-			},
-			o.FileSystem,
-		),
-		console.NewClusterReport(o.Err, spin),
-		stateSaver.NewClusterState(o.RepoStateWithEnv),
+		storm.NewClusterState(node),
 		o.CloudProvider,
 		o.CredentialsProvider.Aws(),
 	)

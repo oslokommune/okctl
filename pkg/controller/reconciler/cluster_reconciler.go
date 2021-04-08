@@ -6,14 +6,13 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
-	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
 
 // ClusterResourceState contains runtime data needed in Reconcile()
 type ClusterResourceState struct {
-	VPC api.Vpc
+	VPC client.Vpc
 }
 
 // clusterReconciler contains service and metadata for the relevant resource
@@ -42,7 +41,7 @@ func (z *clusterReconciler) Reconcile(node *resourcetree.ResourceNode) (result R
 
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err = z.client.CreateCluster(z.commonMetadata.Ctx, api.ClusterCreateOpts{
+		_, err = z.client.CreateCluster(z.commonMetadata.Ctx, client.ClusterCreateOpts{
 			ID:                z.commonMetadata.ClusterID,
 			Cidr:              z.commonMetadata.Declaration.VPC.CIDR,
 			Version:           constant.DefaultEKSKubernetesVersion,
@@ -54,7 +53,7 @@ func (z *clusterReconciler) Reconcile(node *resourcetree.ResourceNode) (result R
 			return result, fmt.Errorf("creating cluster: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err = z.client.DeleteCluster(z.commonMetadata.Ctx, api.ClusterDeleteOpts{ID: z.commonMetadata.ClusterID})
+		err = z.client.DeleteCluster(z.commonMetadata.Ctx, client.ClusterDeleteOpts{ID: z.commonMetadata.ClusterID})
 		if err != nil {
 			return result, fmt.Errorf("deleting cluster: %w", err)
 		}

@@ -3,80 +3,90 @@ package core
 import (
 	"context"
 
-	"github.com/oslokommune/okctl/pkg/spinner"
-
-	"github.com/oslokommune/okctl/pkg/client/store"
+	"github.com/oslokommune/okctl/pkg/cfn"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type vpcService struct {
-	spinner spinner.Spinner
-	api     client.VPCAPI
-	store   client.VPCStore
-	report  client.VPCReport
-	state   client.VPCState
+	api   client.VPCAPI
+	state client.VPCState
 }
 
-func (s *vpcService) GetVPC(ctx context.Context, id api.ID) (*api.Vpc, error) {
-	return s.store.GetVpc(id)
+func (s *vpcService) GetVPC(_ context.Context, id api.ID) (*client.Vpc, error) {
+	return s.state.GetVpc(cfn.NewStackNamer().Vpc(id.Repository, id.Environment))
 }
 
-func (s *vpcService) CreateVpc(_ context.Context, opts api.CreateVpcOpts) (*api.Vpc, error) {
-	err := s.spinner.Start("vpc")
+func (s *vpcService) CreateVpc(_ context.Context, opts client.CreateVpcOpts) (*client.Vpc, error) {
+	vpc, err := s.api.CreateVpc(api.CreateVpcOpts{
+		ID:      opts.ID,
+		Cidr:    opts.Cidr,
+		Minimal: opts.Minimal,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	defer func() {
-		err = s.spinner.Stop()
-	}()
+	v := &client.Vpc{
+		ID:                     vpc.ID,
+		StackName:              vpc.StackName,
+		CloudFormationTemplate: vpc.CloudFormationTemplate,
+		VpcID:                  vpc.VpcID,
+		Cidr:                   vpc.Cidr,
+		PublicSubnets: func() (subs []client.VpcSubnet) {
+			for _, sub := range vpc.PublicSubnets {
+				subs = append(subs, client.VpcSubnet{
+					ID:               sub.ID,
+					Cidr:             sub.Cidr,
+					AvailabilityZone: sub.AvailabilityZone,
+				})
+			}
 
-	vpc, err := s.api.CreateVpc(opts)
+			return subs
+		}(),
+		PrivateSubnets: func() (subs []client.VpcSubnet) {
+			for _, sub := range vpc.PrivateSubnets {
+				subs = append(subs, client.VpcSubnet{
+					ID:               sub.ID,
+					Cidr:             sub.Cidr,
+					AvailabilityZone: sub.AvailabilityZone,
+				})
+			}
+
+			return subs
+		}(),
+		DatabaseSubnets: func() (subs []client.VpcSubnet) {
+			for _, sub := range vpc.DatabaseSubnets {
+				subs = append(subs, client.VpcSubnet{
+					ID:               sub.ID,
+					Cidr:             sub.Cidr,
+					AvailabilityZone: sub.AvailabilityZone,
+				})
+			}
+
+			return subs
+		}(),
+		DatabaseSubnetsGroupName: vpc.DatabaseSubnetsGroupName,
+	}
+
+	err = s.state.SaveVpc(v)
 	if err != nil {
 		return nil, err
 	}
 
-	r1, err := s.store.SaveVpc(vpc)
-	if err != nil {
-		return nil, err
-	}
-
-	r2, err := s.state.SaveVpc(vpc)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.report.ReportCreateVPC(vpc, []*store.Report{r1, r2})
-	if err != nil {
-		return nil, err
-	}
-
-	return vpc, nil
+	return v, nil
 }
 
-func (s *vpcService) DeleteVpc(_ context.Context, opts api.DeleteVpcOpts) error {
-	err := s.spinner.Start("vpc")
+func (s *vpcService) DeleteVpc(_ context.Context, opts client.DeleteVpcOpts) error {
+	err := s.api.DeleteVpc(api.DeleteVpcOpts{
+		ID: opts.ID,
+	})
 	if err != nil {
 		return err
 	}
 
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	err = s.api.DeleteVpc(opts)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.store.DeleteVpc(opts.ID)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.state.DeleteVpc(opts.ID)
+	err = s.state.RemoveVpc(cfn.NewStackNamer().Vpc(opts.ID.Repository, opts.ID.Environment))
 	if err != nil {
 		return err
 	}
@@ -85,12 +95,9 @@ func (s *vpcService) DeleteVpc(_ context.Context, opts api.DeleteVpcOpts) error 
 }
 
 // NewVPCService returns an initialised VPC service
-func NewVPCService(spinner spinner.Spinner, api client.VPCAPI, store client.VPCStore, report client.VPCReport, state client.VPCState) client.VPCService {
+func NewVPCService(api client.VPCAPI, state client.VPCState) client.VPCService {
 	return &vpcService{
-		spinner: spinner,
-		api:     api,
-		store:   store,
-		report:  report,
-		state:   state,
+		api:   api,
+		state: state,
 	}
 }

@@ -273,7 +273,7 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
-			err = services.Vpc.DeleteVpc(o.Ctx, api.DeleteVpcOpts{
+			err = services.Vpc.DeleteVpc(o.Ctx, client.DeleteVpcOpts{
 				ID: id,
 			})
 			if err != nil {

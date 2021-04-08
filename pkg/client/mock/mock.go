@@ -17,34 +17,44 @@ import (
 
 // nolint: golint gosec
 const (
-	DefaultRegion                 = "eu-west-1"
-	DefaultAWSAccountID           = "123456789012"
-	DefaultEnvironment            = "staging"
-	DefaultRepository             = "okctl"
-	DefaultClusterName            = "okctl-staging"
-	DefaultDomain                 = "okctl-staging.oslo.systems"
-	DefaultAuthDomain             = "auth.okctl-staging.oslo.systems"
-	DefaultDomainFilter           = DefaultDomain
-	DefaultFQDN                   = "okctl-staging.oslo.systems."
-	DefaultCallbackURL            = "https://argocd.okctl-staging.oslo.systems/callback"
-	DefaultHostedZoneID           = "Z0FAKE41FAKE6I841FAKE"
-	DefaultAliasHostedZoneID      = "Z0FAKE67FAKE6I231FAKE"
-	DefaultCertificateARN         = "arn:aws:acm:eu-west-1:123456789012:certificate/123456789012-1234-1234-1234-12345678"
-	DefaultServiceAccountName     = "important-sa"
-	DefaultPolicyARN              = "arn:aws:iam::123456789012:policy/policy-name-with-path"
-	DefaultNamespace              = "kube-system"
-	DefaultManifestName           = "okctl-cm"
-	DefaultManifestType           = client.ManifestTypeConfigMap
-	DefaultHelmReleaseName        = "okctl-helm-release"
-	DefaultExternalDNSName        = "external-dns"
-	DefaultSecretParameterName    = "release-secret"
-	DefaultSecretParameterVersion = 1
-	DefaultSecretParameterPath    = "/okctl/staging/release-secret"
-	DefaultEmail                  = "bob@thebuilder.com"
-	DefaultUserPoolID             = "TYUJBFW3893FAKE"
-	DefaultPurpose                = "argocd"
-	DefaultClientID               = "gehu-fgerg432-ewge"
-	DefaultClientSecret           = "0ef90weug09jfqh3rf"
+	DefaultRegion                  = "eu-west-1"
+	DefaultAWSAccountID            = "123456789012"
+	DefaultEnvironment             = "staging"
+	DefaultRepository              = "okctl"
+	DefaultClusterName             = "okctl-staging"
+	DefaultDomain                  = "okctl-staging.oslo.systems"
+	DefaultAuthDomain              = "auth.okctl-staging.oslo.systems"
+	DefaultDomainFilter            = DefaultDomain
+	DefaultFQDN                    = "okctl-staging.oslo.systems."
+	DefaultCallbackURL             = "https://argocd.okctl-staging.oslo.systems/callback"
+	DefaultHostedZoneID            = "Z0FAKE41FAKE6I841FAKE"
+	DefaultAliasHostedZoneID       = "Z0FAKE67FAKE6I231FAKE"
+	DefaultCertificateARN          = "arn:aws:acm:eu-west-1:123456789012:certificate/123456789012-1234-1234-1234-12345678"
+	DefaultServiceAccountName      = "important-sa"
+	DefaultPolicyARN               = "arn:aws:iam::123456789012:policy/policy-name-with-path"
+	DefaultNamespace               = "kube-system"
+	DefaultManifestName            = "okctl-cm"
+	DefaultManifestType            = client.ManifestTypeConfigMap
+	DefaultHelmReleaseName         = "okctl-helm-release"
+	DefaultExternalDNSName         = "external-dns"
+	DefaultSecretParameterName     = "release-secret"
+	DefaultSecretParameterVersion  = 1
+	DefaultSecretParameterPath     = "/okctl/staging/release-secret"
+	DefaultEmail                   = "bob@thebuilder.com"
+	DefaultUserPoolID              = "TYUJBFW3893FAKE"
+	DefaultPurpose                 = "argocd"
+	DefaultClientID                = "gehu-fgerg432-ewge"
+	DefaultClientSecret            = "0ef90weug09jfqh3rf"
+	DefaultVpcID                   = "vpc-0e9801d129EXAMPLE"
+	DefaultCidr                    = "192.168.0.0/20"
+	DefaultPublicSubnetCidr        = "192.168.1.0/24"
+	DefaultPublicSubnetID          = "gguhef789FAKE"
+	DefaultPrivateSubnetCidr       = "192.168.2.0/24"
+	DefaultPrivateSubnetID         = "e9e093ufFAKE"
+	DefaultDatabaseSubnetCidr      = "192.168.3.0/24"
+	DefaultDatabaseSubnetID        = "djfh093FAKE"
+	DefaultDatabaseSubnetGroupName = "okctl-staging-DatabaseGroup"
+	DefaultAvailabilityZone        = "eu-west-1a"
 
 	StackNameHostedZone         = "okctl-staging-oslo-systems-HostedZone"
 	StackNameCertificate        = "okctl-staging-oslo-systems-Certificate"
@@ -53,6 +63,7 @@ const (
 	StackNameIdentityPoolClient = "okctl-staging-IdentityPoolClient"
 	StackNameIdentityPoolUser   = "okctl-staging-bobthebuilder-IdentityPoolUser"
 	StackNameRecordSetAlias     = "okctl-staging-RecordSetAlias"
+	StackNameVpc                = "okctl-staging-Vpc"
 )
 
 // nolint: golint gochecknoglobals
@@ -278,5 +289,53 @@ func IdentityPoolUser() *client.IdentityPoolUser {
 		UserPoolID:             DefaultUserPoolID,
 		StackName:              StackNameIdentityPoolUser,
 		CloudFormationTemplate: CloudFormationTemplate(),
+	}
+}
+
+// PublicSubnets returns fake public subnets
+func PublicSubnets() []client.VpcSubnet {
+	return []client.VpcSubnet{
+		{
+			ID:               DefaultPublicSubnetID,
+			Cidr:             DefaultPublicSubnetCidr,
+			AvailabilityZone: DefaultAvailabilityZone,
+		},
+	}
+}
+
+// PrivateSubnets returns fake public subnets
+func PrivateSubnets() []client.VpcSubnet {
+	return []client.VpcSubnet{
+		{
+			ID:               DefaultPrivateSubnetID,
+			Cidr:             DefaultPrivateSubnetCidr,
+			AvailabilityZone: DefaultAvailabilityZone,
+		},
+	}
+}
+
+// DatabaseSubnets returns fake public subnets
+func DatabaseSubnets() []client.VpcSubnet {
+	return []client.VpcSubnet{
+		{
+			ID:               DefaultDatabaseSubnetID,
+			Cidr:             DefaultDatabaseSubnetCidr,
+			AvailabilityZone: DefaultAvailabilityZone,
+		},
+	}
+}
+
+// Vpc returns a fake vpc
+func Vpc() *client.Vpc {
+	return &client.Vpc{
+		ID:                       ID(),
+		StackName:                StackNameVpc,
+		CloudFormationTemplate:   CloudFormationTemplate(),
+		VpcID:                    DefaultVpcID,
+		Cidr:                     DefaultCidr,
+		PublicSubnets:            PublicSubnets(),
+		PrivateSubnets:           PrivateSubnets(),
+		DatabaseSubnets:          DatabaseSubnets(),
+		DatabaseSubnetsGroupName: DefaultDatabaseSubnetGroupName,
 	}
 }

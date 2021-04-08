@@ -195,17 +195,17 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 	return &clientCore.Services{
 		AWSLoadBalancerControllerService: o.awsLoadBalancerControllerService(o.StormDB.From(constant.DefaultStormNodeAWSLoadBalanerController)),
 		ArgoCD:                           o.argocdService(outputDir, o.StormDB.From(constant.DefaultStormNodeArgoCD), spin),
-		ApplicationService:               o.applicationService(applicationsOutputDir, o.StormDB.From(), spin),
+		ApplicationService:               o.applicationService(applicationsOutputDir, o.StormDB.From(constant.DefaultStormNodeApplications), spin),
 		Certificate:                      o.certService(o.StormDB.From(constant.DefaultStormNodeCertificates)),
 		Cluster:                          o.clusterService(outputDir, spin),
 		Domain:                           o.domainService(o.StormDB.From(constant.DefaultStormNodeDomains)),
-		ExternalDNS:                      o.externalDNSService(o.StormDB.From(constant.DefaultStormNodeExternalSecrets)),
+		ExternalDNS:                      o.externalDNSService(o.StormDB.From(constant.DefaultStormNodeExternalDNS)),
 		ExternalSecrets:                  o.externalSecretsService(o.StormDB.From(constant.DefaultStormNodeExternalSecrets)),
 		Github:                           o.githubService(ghClient, spin),
 		Manifest:                         o.manifestService(o.StormDB.From(constant.DefaultStormNodeKubernetesManifest)),
 		NameserverHandler:                o.nameserverHandlerService(ghClient, outputDir, spin),
 		Parameter:                        o.paramService(o.StormDB.From(constant.DefaultStormNodeParameter)),
-		Vpc:                              o.vpcService(outputDir, spin),
+		Vpc:                              o.vpcService(o.StormDB.From(constant.DefaultStormNodeVpc)),
 		IdentityManager:                  o.identityManagerService(o.StormDB.From(constant.DefaultStormNodeIdentityManager)),
 		Autoscaler:                       o.autoscalerService(o.StormDB.From(constant.DefaultstormNodeAutoscaler)),
 		Blockstorage:                     o.blockstorageService(o.StormDB.From(constant.DefaultStormNodeBlockStorage)),
@@ -381,20 +381,10 @@ func (o *Okctl) githubService(ghClient githubClient.Githuber, spin spinner.Spinn
 	)
 }
 
-func (o *Okctl) vpcService(outputDir string, spin spinner.Spinner) client.VPCService {
+func (o *Okctl) vpcService(node stormpkg.Node) client.VPCService {
 	return clientCore.NewVPCService(
-		spin,
 		rest.NewVPCAPI(o.restClient),
-		clientFilesystem.NewVpcStore(
-			clientFilesystem.Paths{
-				OutputFile:         constant.DefaultVpcOutputs,
-				CloudFormationFile: constant.DefaultVpcCloudFormationTemplate,
-				BaseDir:            path.Join(outputDir, constant.DefaultVpcBaseDir),
-			},
-			o.FileSystem,
-		),
-		console.NewVPCReport(o.Err, spin),
-		stateSaver.NewVpcState(o.RepoStateWithEnv),
+		storm.NewVpcState(node),
 	)
 }
 

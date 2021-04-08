@@ -13,16 +13,14 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	clientFilesystem "github.com/oslokommune/okctl/pkg/client/core/store/filesystem"
-	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/oslokommune/okctl/pkg/scaffold"
 )
 
 type applicationService struct {
-	fs     *afero.Afero
-	paths  clientFilesystem.Paths
-	cert   client.CertificateService
-	store  client.ApplicationStore
-	report client.ApplicationReport
+	fs    *afero.Afero
+	paths clientFilesystem.Paths
+	cert  client.CertificateService
+	store client.ApplicationStore
 }
 
 func (s *applicationService) createCertificate(ctx context.Context, id *api.ID, hostedZoneID, fqdn string) (string, error) {
@@ -90,12 +88,7 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 		DeploymentPatch:      overlay.DeploymentPatch,
 	}
 
-	report, err := s.store.SaveApplication(applicationScaffold)
-	if err != nil {
-		return err
-	}
-
-	err = s.report.ReportCreateApplication(applicationScaffold, []*store.Report{report})
+	_, err = s.store.SaveApplication(applicationScaffold)
 	if err != nil {
 		return err
 	}
@@ -109,14 +102,12 @@ func NewApplicationService(
 	paths clientFilesystem.Paths,
 	cert client.CertificateService,
 	store client.ApplicationStore,
-	state client.ApplicationReport,
 ) client.ApplicationService {
 	return &applicationService{
-		fs:     fs,
-		paths:  paths,
-		cert:   cert,
-		store:  store,
-		report: state,
+		fs:    fs,
+		paths: paths,
+		cert:  cert,
+		store: store,
 	}
 }
 

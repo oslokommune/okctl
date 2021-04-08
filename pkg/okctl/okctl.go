@@ -30,7 +30,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/ask"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/core/api/rest"
-	"github.com/oslokommune/okctl/pkg/client/core/report/console"
 	stateSaver "github.com/oslokommune/okctl/pkg/client/core/state"
 	githubClient "github.com/oslokommune/okctl/pkg/github"
 	"github.com/oslokommune/okctl/pkg/spinner"
@@ -195,7 +194,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 	return &clientCore.Services{
 		AWSLoadBalancerControllerService: o.awsLoadBalancerControllerService(o.StormDB.From(constant.DefaultStormNodeAWSLoadBalanerController)),
 		ArgoCD:                           o.argocdService(o.StormDB.From(constant.DefaultStormNodeArgoCD)),
-		ApplicationService:               o.applicationService(applicationsOutputDir, o.StormDB.From(constant.DefaultStormNodeApplications), spin),
+		ApplicationService:               o.applicationService(applicationsOutputDir, o.StormDB.From(constant.DefaultStormNodeApplications)),
 		Certificate:                      o.certService(o.StormDB.From(constant.DefaultStormNodeCertificates)),
 		Cluster:                          o.clusterService(o.StormDB.From(constant.DefaultStormNodeCluster)),
 		Domain:                           o.domainService(o.StormDB.From(constant.DefaultStormNodeDomains)),
@@ -307,14 +306,12 @@ func (o *Okctl) certService(node stormpkg.Node) client.CertificateService {
 
 func (o *Okctl) githubService(ghClient githubClient.Githuber, spin spinner.Spinner) client.GithubService {
 	return clientCore.NewGithubService(
-		spin,
 		rest.NewGithubAPI(
 			o.Err,
 			ask.New().WithSpinner(spin),
 			rest.NewParameterAPI(o.restClient),
 			ghClient,
 		),
-		console.NewGithubReport(o.Err, spin),
 		stateSaver.NewGithubState(o.RepoStateWithEnv),
 	)
 }
@@ -368,7 +365,7 @@ func (o *Okctl) awsLoadBalancerControllerService(node stormpkg.Node) client.AWSL
 	)
 }
 
-func (o *Okctl) applicationService(applicationOutputDir string, node stormpkg.Node, spin spinner.Spinner) client.ApplicationService {
+func (o *Okctl) applicationService(applicationOutputDir string, node stormpkg.Node) client.ApplicationService {
 	return clientCore.NewApplicationService(
 		o.FileSystem,
 		clientFilesystem.Paths{
@@ -381,7 +378,6 @@ func (o *Okctl) applicationService(applicationOutputDir string, node stormpkg.No
 			},
 			o.FileSystem,
 		),
-		console.NewApplicationReport(o.Out, spin),
 	)
 }
 

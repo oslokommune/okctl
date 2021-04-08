@@ -17,7 +17,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/core"
 	clientFilesystem "github.com/oslokommune/okctl/pkg/client/core/store/filesystem"
-	"github.com/oslokommune/okctl/pkg/client/store"
 	"gotest.tools/assert"
 )
 
@@ -75,7 +74,6 @@ func TestNewApplicationService(t *testing.T) {
 		mockPaths,
 		mockCertService{},
 		clientFilesystem.NewApplicationStore(mockPaths, &aferoFs),
-		mockAppReporter{},
 	)
 
 	application, err := commands.InferApplicationFromStdinOrFile(testInputBuffer, &aferoFs, "-")
@@ -136,14 +134,4 @@ func (m mockCertService) CreateCertificate(_ context.Context, _ client.CreateCer
 	return &client.Certificate{
 		ARN: "arn:which:isnt:an:arn",
 	}, nil
-}
-
-type mockAppReporter struct{}
-
-func (m mockAppReporter) ReportCreateApplication(_ *client.ScaffoldedApplication, _ []*store.Report) error {
-	return nil
-}
-
-func (m mockAppReporter) ReportDeleteApplication(_ []*store.Report) error {
-	return nil
 }

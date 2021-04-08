@@ -4,16 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/oslokommune/okctl/pkg/spinner"
-
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type githubService struct {
-	spinner spinner.Spinner
-	api     client.GithubAPI
-	report  client.GithubReport
-	state   client.GithubState
+	api   client.GithubAPI
+	state client.GithubState
 }
 
 // CreateDeployKey creates a new deploy key for a certain repository if it doesn't exist. If it exists, it returns the
@@ -49,25 +45,18 @@ func (s *githubService) CreateRepositoryDeployKey(_ context.Context, repository 
 
 	repository.DeployKey = key
 
-	report, err := s.state.SaveRepositoryDeployKey(repository)
+	_, err = s.state.SaveRepositoryDeployKey(repository)
 	if err != nil {
 		return nil, fmt.Errorf("saving repository state: %w", err)
-	}
-
-	err = s.report.ReportRepositoryDeployKey(repository, report)
-	if err != nil {
-		return nil, err
 	}
 
 	return key, nil
 }
 
 // NewGithubService returns an initialised service
-func NewGithubService(spinner spinner.Spinner, api client.GithubAPI, report client.GithubReport, state client.GithubState) client.GithubService {
+func NewGithubService(api client.GithubAPI, state client.GithubState) client.GithubService {
 	return &githubService{
-		spinner: spinner,
-		api:     api,
-		report:  report,
-		state:   state,
+		api:   api,
+		state: state,
 	}
 }

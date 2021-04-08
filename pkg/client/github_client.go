@@ -104,11 +104,6 @@ type GithubAPI interface {
 	CreateRepositoryDeployKey(opts CreateGithubDeployKeyOpts) (*GithubDeployKey, error)
 }
 
-// GithubReport is the report layer
-type GithubReport interface {
-	ReportRepositoryDeployKey(repository *GithubRepository, report *store.Report) error
-}
-
 // GithubState is the state layer
 type GithubState interface {
 	SaveRepositoryDeployKey(repository *GithubRepository) (*store.Report, error)

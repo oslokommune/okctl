@@ -22,7 +22,7 @@ jobs:
       - name: Build
         run: make release-local
 
-      - uses: webfactory/ssh-agent@v0.5.1
+      - uses: webfactory/ssh-agent@v0.5.2
         with:
           ssh-private-key: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_SECRET_KEY }}
 

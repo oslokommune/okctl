@@ -17,45 +17,57 @@ import (
 
 // nolint: golint gosec
 const (
-	DefaultRegion                  = "eu-west-1"
-	DefaultAWSAccountID            = "123456789012"
-	DefaultEnvironment             = "staging"
-	DefaultRepository              = "okctl"
-	DefaultClusterName             = "okctl-staging"
-	DefaultDomain                  = "okctl-staging.oslo.systems"
-	DefaultAuthDomain              = "auth.okctl-staging.oslo.systems"
-	DefaultDomainFilter            = DefaultDomain
-	DefaultFQDN                    = "okctl-staging.oslo.systems."
-	DefaultCallbackURL             = "https://argocd.okctl-staging.oslo.systems/callback"
-	DefaultHostedZoneID            = "Z0FAKE41FAKE6I841FAKE"
-	DefaultAliasHostedZoneID       = "Z0FAKE67FAKE6I231FAKE"
-	DefaultCertificateARN          = "arn:aws:acm:eu-west-1:123456789012:certificate/123456789012-1234-1234-1234-12345678"
-	DefaultServiceAccountName      = "important-sa"
-	DefaultPolicyARN               = "arn:aws:iam::123456789012:policy/policy-name-with-path"
-	DefaultNamespace               = "kube-system"
-	DefaultManifestName            = "okctl-cm"
-	DefaultManifestType            = client.ManifestTypeConfigMap
-	DefaultHelmReleaseName         = "okctl-helm-release"
-	DefaultExternalDNSName         = "external-dns"
-	DefaultSecretParameterName     = "release-secret"
-	DefaultSecretParameterVersion  = 1
-	DefaultSecretParameterPath     = "/okctl/staging/release-secret"
-	DefaultEmail                   = "bob@thebuilder.com"
-	DefaultUserPoolID              = "TYUJBFW3893FAKE"
-	DefaultPurpose                 = "argocd"
-	DefaultClientID                = "gehu-fgerg432-ewge"
-	DefaultClientSecret            = "0ef90weug09jfqh3rf"
-	DefaultVpcID                   = "vpc-0e9801d129EXAMPLE"
-	DefaultCidr                    = "192.168.0.0/20"
-	DefaultPublicSubnetCidr        = "192.168.1.0/24"
-	DefaultPublicSubnetID          = "gguhef789FAKE"
-	DefaultPrivateSubnetCidr       = "192.168.2.0/24"
-	DefaultPrivateSubnetID         = "e9e093ufFAKE"
-	DefaultDatabaseSubnetCidr      = "192.168.3.0/24"
-	DefaultDatabaseSubnetID        = "djfh093FAKE"
-	DefaultDatabaseSubnetGroupName = "okctl-staging-DatabaseGroup"
-	DefaultAvailabilityZone        = "eu-west-1a"
-	DefaultVersion                 = "1.18"
+	DefaultRegion                     = "eu-west-1"
+	DefaultAWSAccountID               = "123456789012"
+	DefaultEnvironment                = "staging"
+	DefaultRepository                 = "okctl"
+	DefaultClusterName                = "okctl-staging"
+	DefaultDomain                     = "okctl-staging.oslo.systems"
+	DefaultAuthDomain                 = "auth.okctl-staging.oslo.systems"
+	DefaultDomainFilter               = DefaultDomain
+	DefaultFQDN                       = "okctl-staging.oslo.systems."
+	DefaultCallbackURL                = "https://argocd.okctl-staging.oslo.systems/callback"
+	DefaultDatabaseEndpoint           = "https://db.okctl-staging.oslo.systems"
+	DefaultHostedZoneID               = "Z0FAKE41FAKE6I841FAKE"
+	DefaultAliasHostedZoneID          = "Z0FAKE67FAKE6I231FAKE"
+	DefaultCertificateARN             = "arn:aws:acm:eu-west-1:123456789012:certificate/123456789012-1234-1234-1234-12345678"
+	DefaultServiceAccountName         = "important-sa"
+	DefaultPolicyARN                  = "arn:aws:iam::123456789012:policy/policy-name-with-path"
+	DefaultNamespace                  = "kube-system"
+	DefaultManifestName               = "okctl-cm"
+	DefaultManifestType               = client.ManifestTypeConfigMap
+	DefaultHelmReleaseName            = "okctl-helm-release"
+	DefaultExternalDNSName            = "external-dns"
+	DefaultSecretParameterName        = "release-secret"
+	DefaultSecretParameterVersion     = 1
+	DefaultSecretParameterPath        = "/okctl/staging/release-secret"
+	DefaultEmail                      = "bob@thebuilder.com"
+	DefaultUserPoolID                 = "TYUJBFW3893FAKE"
+	DefaultPurpose                    = "argocd"
+	DefaultClientID                   = "gehu-fgerg432-ewge"
+	DefaultClientSecret               = "0ef90weug09jfqh3rf"
+	DefaultVpcID                      = "vpc-0e9801d129EXAMPLE"
+	DefaultCidr                       = "192.168.0.0/20"
+	DefaultPublicSubnetCidr           = "192.168.1.0/24"
+	DefaultPublicSubnetID             = "gguhef789FAKE"
+	DefaultPrivateSubnetCidr          = "192.168.2.0/24"
+	DefaultPrivateSubnetID            = "e9e093ufFAKE"
+	DefaultDatabaseSubnetCidr         = "192.168.3.0/24"
+	DefaultDatabaseSubnetID           = "djfh093FAKE"
+	DefaultDatabaseSubnetGroupName    = "okctl-staging-DatabaseGroup"
+	DefaultAvailabilityZone           = "eu-west-1a"
+	DefaultVersion                    = "1.18"
+	DefaultPostgresName               = "backend"
+	DefaultPostgresUserName           = "administrator"
+	DefaultSecurityGroupID            = "sg-2979fue9FAKE"
+	DefaultPostgresSecretARN          = "arn:aws:secretsmanager:eu-west-1:123456789012:secret:secret/administrator"
+	DefaultPostgresSecretFriendlyName = "secrets/administrator"
+	DefaultPostgresAdminName          = "okctl-staging-backend-admin"
+	DefaultPostgresConfigMapName      = "okctl-staging-backend-cm"
+	DefaultPostgresLambdaRoleARN      = "arn:aws:iam::123456789012:role/okctl-staging-rotater"
+	DefaultPostgresLambdaFunctionARN  = "arn:aws:lambda:eu-west-1:123456789012:function:rotater"
+	DefaultS3BucketName               = "rotater"
+	DefaultPostgresDatabasePort       = 5432
 
 	StackNameHostedZone         = "okctl-staging-oslo-systems-HostedZone"
 	StackNameCertificate        = "okctl-staging-oslo-systems-Certificate"
@@ -65,6 +77,8 @@ const (
 	StackNameIdentityPoolUser   = "okctl-staging-bobthebuilder-IdentityPoolUser"
 	StackNameRecordSetAlias     = "okctl-staging-RecordSetAlias"
 	StackNameVpc                = "okctl-staging-Vpc"
+	StackNamePostgresDatabase   = "okctl-staging-backend-PostgresDatabase"
+	StackNameRotaterBucket      = "okctl-staging-Rotater"
 )
 
 // nolint: golint gochecknoglobals
@@ -385,5 +399,38 @@ func Cluster() *client.Cluster {
 		ID:     ID(),
 		Name:   DefaultClusterName,
 		Config: ClusterConfig(),
+	}
+}
+
+// RotaterBucket returns a fake rotater bucket
+func RotaterBucket() *client.S3Bucket {
+	return &client.S3Bucket{
+		Name:                   DefaultS3BucketName,
+		StackName:              StackNameRotaterBucket,
+		CloudFormationTemplate: string(CloudFormationTemplate()),
+	}
+}
+
+// PostgresDatabase returns a fake postgres database
+func PostgresDatabase() *client.PostgresDatabase {
+	return &client.PostgresDatabase{
+		ID:                           ID(),
+		ApplicationName:              DefaultPostgresName,
+		UserName:                     DefaultPostgresUserName,
+		StackName:                    StackNamePostgresDatabase,
+		AdminSecretFriendlyName:      DefaultPostgresSecretFriendlyName,
+		EndpointAddress:              DefaultDatabaseEndpoint,
+		EndpointPort:                 DefaultPostgresDatabasePort,
+		OutgoingSecurityGroupID:      DefaultSecurityGroupID,
+		SecretsManagerAdminSecretARN: DefaultPostgresSecretARN,
+		LambdaPolicyARN:              DefaultPolicyARN,
+		LambdaRoleARN:                DefaultPostgresLambdaRoleARN,
+		LambdaFunctionARN:            DefaultPostgresLambdaFunctionARN,
+		CloudFormationTemplate:       string(CloudFormationTemplate()),
+		Namespace:                    DefaultNamespace,
+		AdminSecretName:              DefaultPostgresAdminName,
+		AdminSecretARN:               DefaultPostgresSecretARN,
+		DatabaseConfigMapName:        DefaultPostgresConfigMapName,
+		RotaterBucket:                RotaterBucket(),
 	}
 }

@@ -210,7 +210,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		Autoscaler:                       o.autoscalerService(o.StormDB.From(constant.DefaultstormNodeAutoscaler)),
 		Blockstorage:                     o.blockstorageService(o.StormDB.From(constant.DefaultStormNodeBlockStorage)),
 		Monitoring:                       o.monitoringService(outputDir, o.StormDB.From(constant.DefaultStormNodeMonitoring), spin),
-		Component:                        o.componentService(outputDir, o.StormDB.From(constant.DefaultStormNodeComponent), spin),
+		Component:                        o.componentService(o.StormDB.From(constant.DefaultStormNodeComponent)),
 		Helm:                             o.helmService(o.StormDB.From(constant.DefaultStormNodeHelm)),
 	}, nil
 }
@@ -222,19 +222,10 @@ func (o *Okctl) helmService(node stormpkg.Node) client.HelmService {
 	)
 }
 
-func (o *Okctl) componentService(outputDir string, node stormpkg.Node, spin spinner.Spinner) client.ComponentService {
-	return clientCore.NewComponentService(spin,
+func (o *Okctl) componentService(node stormpkg.Node) client.ComponentService {
+	return clientCore.NewComponentService(
 		rest.NewComponentAPI(o.restClient),
-		clientFilesystem.NewComponentStore(
-			clientFilesystem.Paths{
-				OutputFile:         constant.DefaultPostgresOutputFile,
-				CloudFormationFile: constant.DefaultPostgresCloudFormationFile,
-				BaseDir:            path.Join(outputDir, constant.DefaultComponentBaseDir, constant.DefaultPostgresBaseDir),
-			},
-			o.FileSystem,
-		),
-		stateSaver.NewComponentState(o.RepoStateWithEnv),
-		console.NewComponentReport(o.Err, spin),
+		storm.NewComponentState(node),
 		o.manifestService(node),
 		o.CloudProvider,
 	)

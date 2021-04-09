@@ -27,10 +27,8 @@ import (
 
 	clientFilesystem "github.com/oslokommune/okctl/pkg/client/core/store/filesystem"
 
-	"github.com/oslokommune/okctl/pkg/ask"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/core/api/rest"
-	stateSaver "github.com/oslokommune/okctl/pkg/client/core/state"
 	githubClient "github.com/oslokommune/okctl/pkg/github"
 	"github.com/oslokommune/okctl/pkg/spinner"
 
@@ -192,7 +190,7 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 	}
 
 	return &clientCore.Services{
-		AWSLoadBalancerControllerService: o.awsLoadBalancerControllerService(o.StormDB.From(constant.DefaultStormNodeAWSLoadBalanerController)),
+		AWSLoadBalancerControllerService: o.awsLoadBalancerControllerService(o.StormDB.From(constant.DefaultStormNodeAWSLoadBalancerController)),
 		ArgoCD:                           o.argocdService(o.StormDB.From(constant.DefaultStormNodeArgoCD)),
 		ApplicationService:               o.applicationService(applicationsOutputDir, o.StormDB.From(constant.DefaultStormNodeApplications)),
 		Certificate:                      o.certService(o.StormDB.From(constant.DefaultStormNodeCertificates)),
@@ -200,13 +198,13 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		Domain:                           o.domainService(o.StormDB.From(constant.DefaultStormNodeDomains)),
 		ExternalDNS:                      o.externalDNSService(o.StormDB.From(constant.DefaultStormNodeExternalDNS)),
 		ExternalSecrets:                  o.externalSecretsService(o.StormDB.From(constant.DefaultStormNodeExternalSecrets)),
-		Github:                           o.githubService(ghClient, spin),
+		Github:                           o.githubService(ghClient, o.StormDB.From(constant.DefaultStormNodeGithub)),
 		Manifest:                         o.manifestService(o.StormDB.From(constant.DefaultStormNodeKubernetesManifest)),
 		NameserverHandler:                o.nameserverHandlerService(ghClient, outputDir, spin),
 		Parameter:                        o.paramService(o.StormDB.From(constant.DefaultStormNodeParameter)),
 		Vpc:                              o.vpcService(o.StormDB.From(constant.DefaultStormNodeVpc)),
 		IdentityManager:                  o.identityManagerService(o.StormDB.From(constant.DefaultStormNodeIdentityManager)),
-		Autoscaler:                       o.autoscalerService(o.StormDB.From(constant.DefaultstormNodeAutoscaler)),
+		Autoscaler:                       o.autoscalerService(o.StormDB.From(constant.DefaultStormNodeAutoscaler)),
 		Blockstorage:                     o.blockstorageService(o.StormDB.From(constant.DefaultStormNodeBlockStorage)),
 		Monitoring:                       o.monitoringService(o.StormDB.From(constant.DefaultStormNodeMonitoring)),
 		Component:                        o.componentService(o.StormDB.From(constant.DefaultStormNodeComponent)),
@@ -304,15 +302,13 @@ func (o *Okctl) certService(node stormpkg.Node) client.CertificateService {
 	)
 }
 
-func (o *Okctl) githubService(ghClient githubClient.Githuber, spin spinner.Spinner) client.GithubService {
+func (o *Okctl) githubService(ghClient githubClient.Githuber, node stormpkg.Node) client.GithubService {
 	return clientCore.NewGithubService(
 		rest.NewGithubAPI(
-			o.Err,
-			ask.New().WithSpinner(spin),
 			rest.NewParameterAPI(o.restClient),
 			ghClient,
 		),
-		stateSaver.NewGithubState(o.RepoStateWithEnv),
+		storm.NewGithubState(node),
 	)
 }
 

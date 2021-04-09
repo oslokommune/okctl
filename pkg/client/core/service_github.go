@@ -2,7 +2,10 @@ package core
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
+	"github.com/oslokommune/okctl/pkg/client/core/state/storm"
 
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -12,45 +15,70 @@ type githubService struct {
 	state client.GithubState
 }
 
-// CreateDeployKey creates a new deploy key for a certain repository if it doesn't exist. If it exists, it returns the
-// existing key
-func (s *githubService) CreateRepositoryDeployKey(_ context.Context, repository *client.GithubRepository) (key *client.GithubDeployKey, err error) {
-	existingRepository := s.state.GetRepositoryDeployKey(repository.ID)
+func (s *githubService) DeleteGithubRepository(_ context.Context, opts client.DeleteGithubRepositoryOpts) error {
+	fullName := fmt.Sprintf("%s/%s", opts.Organisation, opts.Name)
 
-	if existingRepository.Validate() == nil && existingRepository.DeployKey.Validate() == nil {
-		return &client.GithubDeployKey{
-			ID:           repository.ID,
-			Organisation: repository.Organisation,
-			Repository:   repository.Repository,
-			Identifier:   existingRepository.DeployKey.ID,
-			Title:        existingRepository.DeployKey.Title,
-			PublicKey:    existingRepository.DeployKey.PublicKey,
-			PrivateKeySecret: &client.GithubSecret{
-				Name:    existingRepository.DeployKey.PrivateKeySecret.Name,
-				Path:    existingRepository.DeployKey.PrivateKeySecret.Path,
-				Version: existingRepository.DeployKey.PrivateKeySecret.Version,
-			},
-		}, nil
+	r, err := s.state.GetGithubRepository(fullName)
+	if err != nil {
+		if errors.Is(err, storm.ErrNotFound) {
+			return nil
+		}
+
+		return err
 	}
 
-	key, err = s.api.CreateRepositoryDeployKey(client.CreateGithubDeployKeyOpts{
-		ID:           repository.ID,
-		Organisation: repository.Organisation,
-		Repository:   repository.Repository,
-		Title:        fmt.Sprintf("okctl-iac-%s", repository.ID.ClusterName),
+	err = s.api.DeleteRepositoryDeployKey(client.DeleteGithubDeployKeyOpts{
+		ID:           opts.ID,
+		Organisation: opts.Organisation,
+		Repository:   opts.Name,
+		Identifier:   r.DeployKey.Identifier,
+	})
+	if err != nil {
+		return err
+	}
+
+	return s.state.RemoveGithubRepository(fullName)
+}
+
+// CreateGithubRepository creates a new github repository for a certain repository
+// if it doesn't exist. If it exists, it returns the existing repository
+func (s *githubService) CreateGithubRepository(_ context.Context, opts client.CreateGithubRepositoryOpts) (*client.GithubRepository, error) {
+	fullName := fmt.Sprintf("%s/%s", opts.Organization, opts.Name)
+
+	r, err := s.state.GetGithubRepository(fullName)
+	if err != nil && !errors.Is(err, storm.ErrNotFound) {
+		return nil, err
+	}
+
+	if r.Validate() == nil {
+		return r, nil
+	}
+
+	key, err := s.api.CreateRepositoryDeployKey(client.CreateGithubDeployKeyOpts{
+		ID:           opts.ID,
+		Organisation: opts.Organization,
+		Repository:   opts.Name,
+		Title:        fmt.Sprintf("okctl-iac-%s", opts.ID.ClusterName),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	repository.DeployKey = key
-
-	_, err = s.state.SaveRepositoryDeployKey(repository)
-	if err != nil {
-		return nil, fmt.Errorf("saving repository state: %w", err)
+	repo := &client.GithubRepository{
+		ID:           opts.ID,
+		Organisation: opts.Organization,
+		Repository:   opts.Name,
+		FullName:     fullName,
+		GitURL:       fmt.Sprintf("%s:%s", opts.Host, fullName),
+		DeployKey:    key,
 	}
 
-	return key, nil
+	err = s.state.SaveGithubRepository(repo)
+	if err != nil {
+		return nil, err
+	}
+
+	return repo, nil
 }
 
 // NewGithubService returns an initialised service

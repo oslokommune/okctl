@@ -19,6 +19,9 @@ type ArgocdResourceState struct {
 
 	UserPoolID string
 	AuthDomain string
+
+	Organisation string
+	Repository   string
 }
 
 // NodeType returns the relevant ResourceNodeType for this reconciler
@@ -46,6 +49,7 @@ Dependent on:
 - Cognito user pool
 - Primary hosted Zone
 */
+// nolint: funlen
 func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	resourceState, ok := node.ResourceState.(ArgocdResourceState)
 	if !ok {
@@ -54,21 +58,15 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (result Re
 
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		repository := client.NewGithubRepository(
-			z.commonMetadata.ClusterID,
-			constant.DefaultGithubHost,
-			z.commonMetadata.Declaration.Github.Organisation,
-			z.commonMetadata.Declaration.Github.Repository,
-		)
-
-		var key *client.GithubDeployKey
-
-		key, err = z.githubClient.CreateRepositoryDeployKey(z.commonMetadata.Ctx, repository)
+		repo, err := z.githubClient.CreateGithubRepository(z.commonMetadata.Ctx, client.CreateGithubRepositoryOpts{
+			ID:           z.commonMetadata.ClusterID,
+			Host:         constant.DefaultGithubHost,
+			Organization: z.commonMetadata.Declaration.Github.Organisation,
+			Name:         z.commonMetadata.Declaration.Github.Repository,
+		})
 		if err != nil {
 			return result, fmt.Errorf("fetching deploy key: %w", err)
 		}
-
-		repository.DeployKey = key
 
 		_, err = z.argocdClient.CreateArgoCD(z.commonMetadata.Ctx, client.CreateArgoCDOpts{
 			ID:                 z.commonMetadata.ClusterID,
@@ -78,7 +76,7 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (result Re
 			GithubOrganisation: z.commonMetadata.Declaration.Github.Organisation,
 			UserPoolID:         resourceState.UserPoolID,
 			AuthDomain:         resourceState.AuthDomain,
-			Repository:         repository,
+			Repository:         repo,
 		})
 
 		if err != nil {
@@ -96,7 +94,21 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (result Re
 			return result, fmt.Errorf("creating argocd: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		return result, errors.New("deletion of the argocd resource is not implemented")
+		err := z.argocdClient.DeleteArgoCD(z.commonMetadata.Ctx, client.DeleteArgoCDOpts{
+			ID: z.commonMetadata.ClusterID,
+		})
+		if err != nil {
+			return result, fmt.Errorf("deleting argocd: %w", err)
+		}
+
+		err = z.githubClient.DeleteGithubRepository(z.commonMetadata.Ctx, client.DeleteGithubRepositoryOpts{
+			ID:           z.commonMetadata.ClusterID,
+			Organisation: resourceState.Organisation,
+			Name:         resourceState.Repository,
+		})
+		if err != nil {
+			return result, fmt.Errorf("deleting github repository: %w", err)
+		}
 	}
 
 	return result, nil

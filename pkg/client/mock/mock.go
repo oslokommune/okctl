@@ -71,6 +71,10 @@ const (
 	DefaultArgoDomain                 = "argocd.okctl-staging.oslo.systems"
 	DefaultArgoURL                    = "https://argocd.okctl-staging.oslo.systems"
 	DefaultMonitoringURL              = "https://grafana.okctl-staging.oslo.systems"
+	DefaultGithubName                 = "okctl-iac"
+	DefaultGithubOrg                  = "oslokommune"
+	DefaultGithubFullName             = "oslokommune/okctl-iac"
+	DefaultGithubURL                  = "git@github.com:oslokommune/okctl-iac"
 
 	StackNameHostedZone         = "okctl-staging-oslo-systems-HostedZone"
 	StackNameCertificate        = "okctl-staging-oslo-systems-Certificate"
@@ -474,5 +478,38 @@ func KubePromStack() *client.KubePromStack {
 		Chart:                             Helm(),
 		ExternalSecret:                    KubernetesManifest(),
 		IdentityPoolClient:                IdentityPoolClient(),
+	}
+}
+
+// GithubSecret returns a fake github secret
+func GithubSecret() *client.GithubSecret {
+	return &client.GithubSecret{
+		Name:    "okctl-iac-privatekey",
+		Path:    "some/path/okctl-iac-privatekey",
+		Version: 2, // nolint: gomnd
+	}
+}
+
+// GithubDeployKey return a fake github deploy key
+func GithubDeployKey() *client.GithubDeployKey {
+	return &client.GithubDeployKey{
+		Organisation:     DefaultGithubOrg,
+		Repository:       DefaultGithubName,
+		Identifier:       234567, // nolint: gomnd
+		Title:            "okctl-iac-deploykey",
+		PublicKey:        "ssh-rsa y390uf30uf03",
+		PrivateKeySecret: GithubSecret(),
+	}
+}
+
+// GithubRepository returns a fake github repository
+func GithubRepository() *client.GithubRepository {
+	return &client.GithubRepository{
+		ID:           ID(),
+		Organisation: DefaultGithubURL,
+		Repository:   DefaultGithubName,
+		FullName:     DefaultGithubFullName,
+		GitURL:       DefaultGithubURL,
+		DeployKey:    GithubDeployKey(),
 	}
 }

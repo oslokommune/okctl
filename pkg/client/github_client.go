@@ -2,13 +2,8 @@ package client
 
 import (
 	"context"
-	"fmt"
-
-	"github.com/oslokommune/okctl/pkg/config/state"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-
-	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/oslokommune/okctl/pkg/api"
 )
@@ -34,38 +29,8 @@ func (r GithubRepository) Validate() error {
 	)
 }
 
-// NewGithubRepository initializes a new GithubRepository
-func NewGithubRepository(clusterID api.ID, host, organization, name string) *GithubRepository {
-	fullName := fmt.Sprintf("%s/%s", organization, name)
-
-	return &GithubRepository{
-		ID:           clusterID,
-		Organisation: organization,
-		Repository:   name,
-		FullName:     fullName,
-		GitURL:       fmt.Sprintf("%s:%s", host, fullName),
-		DeployKey:    nil,
-	}
-}
-
-// GithubSecret represents an SSM secret parameter
-type GithubSecret struct {
-	Name    string
-	Path    string
-	Version int64
-}
-
-// Validate the data
-func (s GithubSecret) Validate() error {
-	return validation.ValidateStruct(&s,
-		validation.Field(&s.Name, validation.Required),
-		validation.Field(&s.Path, validation.Required),
-	)
-}
-
 // GithubDeployKey is a github deploy key
 type GithubDeployKey struct {
-	ID               api.ID
 	Organisation     string
 	Repository       string
 	Identifier       int64
@@ -86,6 +51,46 @@ func (k GithubDeployKey) Validate() error {
 	)
 }
 
+// GithubSecret represents an SSM secret parameter
+type GithubSecret struct {
+	Name    string
+	Path    string
+	Version int64
+}
+
+// Validate the data
+func (s GithubSecret) Validate() error {
+	return validation.ValidateStruct(&s,
+		validation.Field(&s.Name, validation.Required),
+		validation.Field(&s.Path, validation.Required),
+	)
+}
+
+// DeleteGithubRepositoryOpts contains the required inputs
+type DeleteGithubRepositoryOpts struct {
+	ID           api.ID
+	Organisation string
+	Name         string
+}
+
+// CreateGithubRepositoryOpts contains the required inputs
+type CreateGithubRepositoryOpts struct {
+	ID           api.ID
+	Host         string
+	Organization string
+	Name         string
+}
+
+// Validate the inputs
+func (o CreateGithubRepositoryOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.Host, validation.Required),
+		validation.Field(&o.Organization, validation.Required),
+		validation.Field(&o.Name, validation.Required),
+	)
+}
+
 // CreateGithubDeployKeyOpts contains required inputs
 type CreateGithubDeployKeyOpts struct {
 	ID           api.ID
@@ -94,18 +99,29 @@ type CreateGithubDeployKeyOpts struct {
 	Title        string
 }
 
+// DeleteGithubDeployKeyOpts contains the required inputs
+type DeleteGithubDeployKeyOpts struct {
+	ID           api.ID
+	Organisation string
+	Repository   string
+	Identifier   int64
+}
+
 // GithubService is a business logic implementation
 type GithubService interface {
-	CreateRepositoryDeployKey(ctx context.Context, repository *GithubRepository) (*GithubDeployKey, error)
+	CreateGithubRepository(ctx context.Context, opts CreateGithubRepositoryOpts) (*GithubRepository, error)
+	DeleteGithubRepository(ctx context.Context, opts DeleteGithubRepositoryOpts) error
 }
 
 // GithubAPI invokes the Github API
 type GithubAPI interface {
 	CreateRepositoryDeployKey(opts CreateGithubDeployKeyOpts) (*GithubDeployKey, error)
+	DeleteRepositoryDeployKey(opts DeleteGithubDeployKeyOpts) error
 }
 
 // GithubState is the state layer
 type GithubState interface {
-	SaveRepositoryDeployKey(repository *GithubRepository) (*store.Report, error)
-	GetRepositoryDeployKey(id api.ID) state.GithubRepository
+	SaveGithubRepository(repository *GithubRepository) error
+	GetGithubRepository(fullName string) (*GithubRepository, error)
+	RemoveGithubRepository(fullName string) error
 }

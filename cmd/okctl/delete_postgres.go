@@ -5,7 +5,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/okctl"
-	"github.com/oslokommune/okctl/pkg/spinner"
 	"github.com/spf13/cobra"
 )
 
@@ -59,12 +58,7 @@ func buildDeletePostgresCommand(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			spin, err := spinner.New("deleting", o.Err)
-			if err != nil {
-				return err
-			}
-
-			services, err := o.ClientServices(spin)
+			services, err := o.ClientServices(o.StateHandlers(o.StateNodes()))
 			if err != nil {
 				return err
 			}

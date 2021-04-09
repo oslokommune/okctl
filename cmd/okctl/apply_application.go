@@ -12,7 +12,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 	"github.com/oslokommune/okctl/pkg/okctl"
-	"github.com/oslokommune/okctl/pkg/spinner"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -80,8 +79,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("failed validating options: %w", err)
 			}
 
-			spin, _ := spinner.New("synchronizing ", o.Out)
-			services, _ := o.ClientServices(spin)
+			services, _ := o.ClientServices(o.StateHandlers(o.StateNodes()))
 
 			reconciliationManager := reconciler.NewCompositeReconciler(spin,
 				reconciler.NewApplicationReconciler(services.ApplicationService),

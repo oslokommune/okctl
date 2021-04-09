@@ -27,12 +27,9 @@ import (
 
 	clientFilesystem "github.com/oslokommune/okctl/pkg/client/core/store/filesystem"
 
-	"github.com/oslokommune/okctl/pkg/client"
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/client/core/api/rest"
 	githubClient "github.com/oslokommune/okctl/pkg/github"
-	"github.com/oslokommune/okctl/pkg/spinner"
-
-	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
 	"github.com/oslokommune/okctl/pkg/config/state"
 
@@ -172,13 +169,51 @@ $ cat %s
 	}
 }
 
-// ClientServices returns the initialised client-side services
-func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, error) {
-	outputDir, err := o.GetRepoOutputDir(o.activeEnv)
-	if err != nil {
-		return nil, err
+// StateNodes returns the initialised state nodes
+func (o *Okctl) StateNodes() *clientCore.StateNodes {
+	return &clientCore.StateNodes{
+		ArgoCD:          o.StormDB.From(constant.DefaultStormNodeArgoCD),
+		Certificate:     o.StormDB.From(constant.DefaultStormNodeCertificates),
+		Cluster:         o.StormDB.From(constant.DefaultStormNodeCluster),
+		Domain:          o.StormDB.From(constant.DefaultStormNodeDomains),
+		ExternalDNS:     o.StormDB.From(constant.DefaultStormNodeExternalDNS),
+		Github:          o.StormDB.From(constant.DefaultStormNodeGithub),
+		Manifest:        o.StormDB.From(constant.DefaultStormNodeKubernetesManifest),
+		Parameter:       o.StormDB.From(constant.DefaultStormNodeParameter),
+		Vpc:             o.StormDB.From(constant.DefaultStormNodeVpc),
+		IdentityManager: o.StormDB.From(constant.DefaultStormNodeIdentityManager),
+		Monitoring:      o.StormDB.From(constant.DefaultStormNodeMonitoring),
+		Component:       o.StormDB.From(constant.DefaultStormNodeComponent),
+		Helm:            o.StormDB.From(constant.DefaultStormNodeHelm),
+		ManagedPolicy:   o.StormDB.From(constant.DefaultStormNodeManagedPolicy),
+		ServiceAccount:  o.StormDB.From(constant.DeefaultStormNodeServiceAccount),
 	}
+}
 
+// StateHandlers returns the initialised state handlers
+func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHandlers {
+	return &clientCore.StateHandlers{
+		Helm:            storm.NewHelmState(nodes.Helm),
+		ManagedPolicy:   storm.NewManagedPolicyState(nodes.ManagedPolicy),
+		ServiceAccount:  storm.NewServiceAccountState(nodes.ServiceAccount),
+		Certificate:     storm.NewCertificateState(nodes.Certificate),
+		IdentityManager: storm.NewIdentityManager(nodes.IdentityManager),
+		Github:          storm.NewGithubState(nodes.Github),
+		Manifest:        storm.NewManifestState(nodes.Manifest),
+		Vpc:             storm.NewVpcState(nodes.Vpc),
+		Parameter:       storm.NewParameterState(nodes.Parameter),
+		Domain:          storm.NewDomainState(nodes.Domain),
+		ExternalDNS:     storm.NewExternalDNSState(nodes.ExternalDNS),
+		Cluster:         storm.NewClusterState(nodes.Cluster),
+		Component:       storm.NewComponentState(nodes.Component),
+		Monitoring:      storm.NewMonitoringState(nodes.Monitoring),
+		ArgoCD:          storm.NewArgoCDState(nodes.ArgoCD),
+	}
+}
+
+// ClientServices returns the initialised client-side services
+// nolint: funlen
+func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.Services, error) {
 	applicationsOutputDir, err := o.GetRepoApplicatiosOutputDir()
 	if err != nil {
 		return nil, err
@@ -189,208 +224,167 @@ func (o *Okctl) ClientServices(spin spinner.Spinner) (*clientCore.Services, erro
 		return nil, err
 	}
 
-	return &clientCore.Services{
-		AWSLoadBalancerControllerService: o.awsLoadBalancerControllerService(o.StormDB.From(constant.DefaultStormNodeAWSLoadBalancerController)),
-		ArgoCD:                           o.argocdService(o.StormDB.From(constant.DefaultStormNodeArgoCD)),
-		ApplicationService:               o.applicationService(applicationsOutputDir, o.StormDB.From(constant.DefaultStormNodeApplications)),
-		Certificate:                      o.certService(o.StormDB.From(constant.DefaultStormNodeCertificates)),
-		Cluster:                          o.clusterService(o.StormDB.From(constant.DefaultStormNodeCluster)),
-		Domain:                           o.domainService(o.StormDB.From(constant.DefaultStormNodeDomains)),
-		ExternalDNS:                      o.externalDNSService(o.StormDB.From(constant.DefaultStormNodeExternalDNS)),
-		ExternalSecrets:                  o.externalSecretsService(o.StormDB.From(constant.DefaultStormNodeExternalSecrets)),
-		Github:                           o.githubService(ghClient, o.StormDB.From(constant.DefaultStormNodeGithub)),
-		Manifest:                         o.manifestService(o.StormDB.From(constant.DefaultStormNodeKubernetesManifest)),
-		NameserverHandler:                o.nameserverHandlerService(ghClient, outputDir, spin),
-		Parameter:                        o.paramService(o.StormDB.From(constant.DefaultStormNodeParameter)),
-		Vpc:                              o.vpcService(o.StormDB.From(constant.DefaultStormNodeVpc)),
-		IdentityManager:                  o.identityManagerService(o.StormDB.From(constant.DefaultStormNodeIdentityManager)),
-		Autoscaler:                       o.autoscalerService(o.StormDB.From(constant.DefaultStormNodeAutoscaler)),
-		Blockstorage:                     o.blockstorageService(o.StormDB.From(constant.DefaultStormNodeBlockStorage)),
-		Monitoring:                       o.monitoringService(o.StormDB.From(constant.DefaultStormNodeMonitoring)),
-		Component:                        o.componentService(o.StormDB.From(constant.DefaultStormNodeComponent)),
-		Helm:                             o.helmService(o.StormDB.From(constant.DefaultStormNodeHelm)),
-	}, nil
-}
-
-func (o *Okctl) helmService(node stormpkg.Node) client.HelmService {
-	return clientCore.NewHelmService(
+	helmService := clientCore.NewHelmService(
 		rest.NewHelmAPI(o.restClient),
-		storm.NewHelmState(node),
+		handlers.Helm,
 	)
-}
 
-func (o *Okctl) componentService(node stormpkg.Node) client.ComponentService {
-	return clientCore.NewComponentService(
-		rest.NewComponentAPI(o.restClient),
-		storm.NewComponentState(node),
-		o.manifestService(node),
-		o.CloudProvider,
-	)
-}
-
-func (o *Okctl) managedPolicyService(node stormpkg.Node) client.ManagedPolicyService {
-	return clientCore.NewManagedPolicyService(
+	managedPolicyService := clientCore.NewManagedPolicyService(
 		rest.NewManagedPolicyAPI(o.restClient),
-		storm.NewManagedPolicyState(node),
+		handlers.ManagedPolicy,
 	)
-}
 
-func (o *Okctl) serviceAccountService(node stormpkg.Node) client.ServiceAccountService {
-	return clientCore.NewServiceAccountService(
+	serviceAccountService := clientCore.NewServiceAccountService(
 		rest.NewServiceAccountAPI(o.restClient),
-		storm.NewServiceAccountState(node),
+		handlers.ServiceAccount,
 	)
-}
 
-func (o *Okctl) monitoringService(node stormpkg.Node) client.MonitoringService {
-	return clientCore.NewMonitoringService(
-		storm.NewMonitoringState(node),
-		o.helmService(node),
-		o.certService(node),
-		o.identityManagerService(node),
-		o.manifestService(node),
-		o.paramService(node),
-		o.serviceAccountService(node),
-		o.managedPolicyService(node),
-		o.CloudProvider,
-	)
-}
-
-func (o *Okctl) identityManagerService(node stormpkg.Node) client.IdentityManagerService {
-	return clientCore.NewIdentityManagerService(
-		rest.NewIdentityManagerAPI(o.restClient),
-		storm.NewIdentityManager(node),
-		o.certService(node),
-	)
-}
-
-func (o *Okctl) argocdService(node stormpkg.Node) client.ArgoCDService {
-	return clientCore.NewArgoCDService(
-		o.identityManagerService(node),
-		o.certService(node),
-		o.manifestService(node),
-		o.paramService(node),
-		storm.NewArgoCDState(node),
-	)
-}
-
-func (o *Okctl) paramService(node stormpkg.Node) client.ParameterService {
-	return clientCore.NewParameterService(
-		rest.NewParameterAPI(o.restClient),
-		storm.NewParameterState(node),
-	)
-}
-
-func (o *Okctl) manifestService(node stormpkg.Node) client.ManifestService {
-	return clientCore.NewManifestService(
-		rest.NewManifestAPI(o.restClient),
-		storm.NewManifestState(node),
-	)
-}
-
-func (o *Okctl) nameserverHandlerService(ghClient githubClient.Githuber, _ string, spin spinner.Spinner) client.NameserverRecordDelegationService {
-	return clientCore.NewNameserverHandlerService(
-		ghClient,
-		spin,
-	)
-}
-
-func (o *Okctl) certService(node stormpkg.Node) client.CertificateService {
-	return clientCore.NewCertificateService(
+	certificateService := clientCore.NewCertificateService(
 		rest.NewCertificateAPI(o.restClient),
-		storm.NewCertificateState(node),
+		handlers.Certificate,
 	)
-}
 
-func (o *Okctl) githubService(ghClient githubClient.Githuber, node stormpkg.Node) client.GithubService {
-	return clientCore.NewGithubService(
+	identityManagerService := clientCore.NewIdentityManagerService(
+		rest.NewIdentityManagerAPI(o.restClient),
+		handlers.IdentityManager,
+		certificateService,
+	)
+
+	githubService := clientCore.NewGithubService(
 		rest.NewGithubAPI(
 			rest.NewParameterAPI(o.restClient),
 			ghClient,
 		),
-		storm.NewGithubState(node),
+		handlers.Github,
 	)
-}
 
-func (o *Okctl) vpcService(node stormpkg.Node) client.VPCService {
-	return clientCore.NewVPCService(
+	autoscalerService := clientCore.NewAutoscalerService(
+		managedPolicyService,
+		serviceAccountService,
+		helmService,
+	)
+
+	manifestService := clientCore.NewManifestService(
+		rest.NewManifestAPI(o.restClient),
+		handlers.Manifest,
+	)
+
+	blockstorageService := clientCore.NewBlockstorageService(
+		managedPolicyService,
+		serviceAccountService,
+		helmService,
+		manifestService,
+	)
+
+	vpcService := clientCore.NewVPCService(
 		rest.NewVPCAPI(o.restClient),
-		storm.NewVpcState(node),
+		handlers.Vpc,
 	)
-}
 
-func (o *Okctl) clusterService(node stormpkg.Node) client.ClusterService {
-	return clientCore.NewClusterService(
+	paramService := clientCore.NewParameterService(
+		rest.NewParameterAPI(o.restClient),
+		handlers.Parameter,
+	)
+
+	externalSecretsService := clientCore.NewExternalSecretsService(
+		managedPolicyService,
+		serviceAccountService,
+		helmService,
+	)
+
+	domainService := clientCore.NewDomainService(
+		rest.NewDomainAPI(o.restClient),
+		handlers.Domain,
+	)
+
+	externalDNSService := clientCore.NewExternalDNSService(
+		rest.NewExternalDNSAPI(o.restClient),
+		handlers.ExternalDNS,
+		managedPolicyService,
+		serviceAccountService,
+	)
+
+	awsLoadBalancerControllerService := clientCore.NewAWSLoadBalancerControllerService(
+		managedPolicyService,
+		serviceAccountService,
+		helmService,
+	)
+
+	clusterService := clientCore.NewClusterService(
 		rest.NewClusterAPI(o.restClient),
-		storm.NewClusterState(node),
+		handlers.Cluster,
 		o.CloudProvider,
 		o.CredentialsProvider.Aws(),
 	)
-}
 
-func (o *Okctl) autoscalerService(node stormpkg.Node) client.AutoscalerService {
-	return clientCore.NewAutoscalerService(
-		o.managedPolicyService(node),
-		o.serviceAccountService(node),
-		o.helmService(node),
+	componentService := clientCore.NewComponentService(
+		rest.NewComponentAPI(o.restClient),
+		handlers.Component,
+		manifestService,
+		o.CloudProvider,
 	)
-}
 
-func (o *Okctl) blockstorageService(node stormpkg.Node) client.BlockstorageService {
-	return clientCore.NewBlockstorageService(
-		o.managedPolicyService(node),
-		o.serviceAccountService(node),
-		o.helmService(node),
-		o.manifestService(node),
+	monitoringService := clientCore.NewMonitoringService(
+		handlers.Monitoring,
+		helmService,
+		certificateService,
+		identityManagerService,
+		manifestService,
+		paramService,
+		serviceAccountService,
+		managedPolicyService,
+		o.CloudProvider,
 	)
-}
 
-func (o *Okctl) externalSecretsService(node stormpkg.Node) client.ExternalSecretsService {
-	return clientCore.NewExternalSecretsService(
-		o.managedPolicyService(node),
-		o.serviceAccountService(node),
-		o.helmService(node),
+	argocdService := clientCore.NewArgoCDService(
+		identityManagerService,
+		certificateService,
+		manifestService,
+		paramService,
+		handlers.ArgoCD,
 	)
-}
 
-func (o *Okctl) awsLoadBalancerControllerService(node stormpkg.Node) client.AWSLoadBalancerControllerService {
-	return clientCore.NewAWSLoadBalancerControllerService(
-		o.managedPolicyService(node),
-		o.serviceAccountService(node),
-		o.helmService(node),
-	)
-}
-
-func (o *Okctl) applicationService(applicationOutputDir string, node stormpkg.Node) client.ApplicationService {
-	return clientCore.NewApplicationService(
+	applicationService := clientCore.NewApplicationService(
 		o.FileSystem,
 		clientFilesystem.Paths{
-			BaseDir: applicationOutputDir,
+			BaseDir: applicationsOutputDir,
 		},
-		o.certService(node),
+		certificateService,
 		clientFilesystem.NewApplicationStore(
 			clientFilesystem.Paths{
-				BaseDir: applicationOutputDir,
+				BaseDir: applicationsOutputDir,
 			},
 			o.FileSystem,
 		),
 	)
-}
 
-func (o *Okctl) domainService(node stormpkg.Node) client.DomainService {
-	return clientCore.NewDomainService(
-		rest.NewDomainAPI(o.restClient),
-		storm.NewDomainState(node),
-	)
-}
+	nameserverService := clientCore.NewNameserverHandlerService(ghClient)
 
-func (o *Okctl) externalDNSService(node stormpkg.Node) client.ExternalDNSService {
-	return clientCore.NewExternalDNSService(
-		rest.NewExternalDNSAPI(o.restClient),
-		storm.NewExternalDNSState(node),
-		o.managedPolicyService(node),
-		o.serviceAccountService(node),
-	)
+	services := &clientCore.Services{
+		AWSLoadBalancerControllerService: awsLoadBalancerControllerService,
+		ArgoCD:                           argocdService,
+		ApplicationService:               applicationService,
+		Certificate:                      certificateService,
+		Cluster:                          clusterService,
+		Domain:                           domainService,
+		ExternalDNS:                      externalDNSService,
+		ExternalSecrets:                  externalSecretsService,
+		Github:                           githubService,
+		Manifest:                         manifestService,
+		NameserverHandler:                nameserverService,
+		Parameter:                        paramService,
+		Vpc:                              vpcService,
+		IdentityManager:                  identityManagerService,
+		Autoscaler:                       autoscalerService,
+		Blockstorage:                     blockstorageService,
+		Monitoring:                       monitoringService,
+		Component:                        componentService,
+		Helm:                             helmService,
+		ManagedPolicy:                    managedPolicyService,
+		ServiceAccount:                   serviceAccountService,
+	}
+
+	return services, nil
 }
 
 // KubeConfigStore returns an initialised kube config store

@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"io/ioutil"
 	"regexp"
 
 	"sigs.k8s.io/yaml"
@@ -15,8 +13,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api/core/cleanup"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/oslokommune/okctl/pkg/spinner"
-
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -139,13 +135,6 @@ including VPC, this is a highly destructive operation.`,
 				ClusterName:  opts.ClusterName,
 			}
 
-			var spinnerWriter io.Writer
-			if opts.DisableSpinner {
-				spinnerWriter = ioutil.Discard
-			} else {
-				spinnerWriter = o.Err
-			}
-
 			delzones, _ := cmd.Flags().GetString(deleteHostedZoneFlag)
 
 			ready, err := checkifReady(id.ClusterName, o, opts.Confirm)
@@ -158,12 +147,7 @@ including VPC, this is a highly destructive operation.`,
 				return err
 			}
 
-			spin, err := spinner.New("deleting", spinnerWriter)
-			if err != nil {
-				return err
-			}
-
-			services, err := o.ClientServices(spin)
+			services, err := o.ClientServices(o.StateHandlers(o.StateNodes()))
 			if err != nil {
 				return err
 			}

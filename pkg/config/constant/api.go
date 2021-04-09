@@ -88,6 +88,8 @@ const (
 	DefaultStormNodeVpc                       = "vpc"
 	DefaultStormNodeCluster                   = "cluster"
 	DefaultStormNodeGithub                    = "github"
+	DefaultStormNodeManagedPolicy             = "managedpolicy"
+	DeefaultStormNodeServiceAccount           = "serviceaccount"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"

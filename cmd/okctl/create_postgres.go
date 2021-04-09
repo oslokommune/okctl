@@ -6,7 +6,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/config/state"
-	"github.com/oslokommune/okctl/pkg/spinner"
 	"github.com/sanity-io/litter"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -75,12 +74,7 @@ in the provided namespace containing data for accessing the database.
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			spin, err := spinner.New("creating", o.Err)
-			if err != nil {
-				return err
-			}
-
-			services, err := o.ClientServices(spin)
+			services, err := o.ClientServices(o.StateHandlers(o.StateNodes()))
 			if err != nil {
 				return err
 			}

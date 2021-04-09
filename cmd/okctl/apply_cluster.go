@@ -154,7 +154,9 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("error creating spinner: %w", err)
 			}
 
-			services, err := o.ClientServices(spinner.NewNoopSpinner())
+			handlers := o.StateHandlers(o.StateNodes())
+
+			services, err := o.ClientServices(handlers)
 			if err != nil {
 				return fmt.Errorf("error getting services: %w", err)
 			}

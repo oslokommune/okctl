@@ -18,13 +18,13 @@ func TestTruncate(t *testing.T) {
 			name:      "Should truncate string",
 			input:     "1234567890",
 			maxLength: 5,
-			expected:  "12345 [truncated 5 bytes]",
+			expected:  "12345XXXtruncated5bytesXXX",
 		},
 		{
 			name:      "Should truncate some other string",
 			input:     "1234567890",
 			maxLength: 7,
-			expected:  "1234567 [truncated 3 bytes]",
+			expected:  "1234567XXXtruncated3bytesXXX",
 		},
 		{
 			name:      "Should keep string if it's equal to maxLength",
@@ -39,6 +39,7 @@ func TestTruncate(t *testing.T) {
 			expected:  "1234567890",
 		},
 	}
+
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -54,4 +55,22 @@ func TestTruncate(t *testing.T) {
 			assert.Equal(t, expectedBytes, truncatedBytes)
 		})
 	}
+}
+
+func TestTruncateNil(t *testing.T) {
+	t.Run("Should return empty values if receiving nil", func(t *testing.T) {
+		assert.Equal(t, "", truncate.String(nil, 5))
+		assert.Equal(t, []byte{}, truncate.Bytes(nil, 5))
+	})
+}
+
+func TestTruncateSideEffects(t *testing.T) {
+	t.Run("Should not modify original byte array", func(t *testing.T) {
+		b := []byte("hello")
+		expected := []byte("hello")
+
+		truncate.Bytes(b, 3)
+
+		assert.Equal(t, expected, b)
+	})
 }

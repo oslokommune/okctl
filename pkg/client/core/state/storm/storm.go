@@ -1,14 +1,10 @@
 package storm
 
 import (
-	"errors"
 	"time"
 
 	"github.com/oslokommune/okctl/pkg/api"
 )
-
-// ErrNotFound is a not found error
-var ErrNotFound = errors.New("not found")
 
 // Metadata contains some useful metadata
 // about a struct stored in storm

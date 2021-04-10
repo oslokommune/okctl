@@ -26,7 +26,7 @@ type SynchronizeOpts struct {
 
 	ClusterDeclaration    *v1alpha1.Cluster
 	ReconciliationManager reconciler.Reconciler
-	StateHandlers         clientCore.StateHandlers
+	StateHandlers         *clientCore.StateHandlers
 
 	Fs        *afero.Afero
 	OutputDir string

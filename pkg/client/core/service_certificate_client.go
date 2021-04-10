@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/oslokommune/okctl/pkg/api"
+	stormpkg "github.com/asdine/storm/v3"
 
-	"github.com/oslokommune/okctl/pkg/client/core/state/storm"
+	"github.com/oslokommune/okctl/pkg/api"
 
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -53,7 +53,7 @@ func (s *certificateService) CreateCertificate(_ context.Context, opts client.Cr
 	// time being, so we are compatible with expected behavior.
 	{
 		c, err := s.state.GetCertificate(opts.Domain)
-		if err != nil && !errors.Is(err, storm.ErrNotFound) {
+		if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
 			return nil, err
 		}
 

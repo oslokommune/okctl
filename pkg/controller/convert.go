@@ -48,8 +48,11 @@ func isNotFound(_ interface{}, err error) bool {
 }
 
 // IdentifyResourcePresence creates an initialized ExistingResources struct
-func IdentifyResourcePresence(id api.ID, handlers clientCore.StateHandlers) (ExistingResources, error) {
+func IdentifyResourcePresence(id api.ID, handlers *clientCore.StateHandlers) (ExistingResources, error) {
 	hz, err := handlers.Domain.GetPrimaryHostedZone()
+	if err != nil && !errors.Is(err, storm.ErrNotFound) {
+		return ExistingResources{}, err
+	}
 
 	return ExistingResources{
 		hasPrimaryHostedZone:                  isNotFound(handlers.Domain.GetPrimaryHostedZone()),
@@ -66,7 +69,7 @@ func IdentifyResourcePresence(id api.ID, handlers clientCore.StateHandlers) (Exi
 		hasExternalDNS:                        isNotFound(handlers.ExternalDNS.GetExternalDNS()),
 		hasIdentityManager:                    isNotFound(handlers.IdentityManager.GetIdentityPool(cfn.NewStackNamer().IdentityPool(id.ClusterName))),
 		hasArgoCD:                             isNotFound(handlers.ArgoCD.GetArgoCD()),
-		hasDelegatedHostedZoneNameservers:     isNotFound(hz, err) && hz.IsDelegated,
+		hasDelegatedHostedZoneNameservers:     errors.Is(err, storm.ErrNotFound) && hz != nil && hz.IsDelegated,
 		hasDelegatedHostedZoneNameserversTest: false,
 		hasUsers:                              false, // For now we will always check if there are missing users
 		hasPostgres:                           false, // For now we will always check if there are missing postgres databases

@@ -1,7 +1,10 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
+
+	"github.com/asdine/storm/v3"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/cfn"
@@ -14,12 +17,18 @@ import (
 
 // CreateClusterStateRefresher creates a function that gathers required runtime data for a cluster resource
 func CreateClusterStateRefresher(id api.ID, vpc client.VPCState) resourcetree.StateRefreshFn {
-	v, err := vpc.GetVpc(cfn.NewStackNamer().Vpc(id.ClusterName))
-	if err != nil {
-		panic(fmt.Errorf("getting vpc state: %w", err))
-	}
-
 	return func(node *resourcetree.ResourceNode) {
+		v, err := vpc.GetVpc(cfn.NewStackNamer().Vpc(id.ClusterName))
+		if err != nil && !errors.Is(err, storm.ErrNotFound) {
+			panic(fmt.Errorf("getting vpc state: %w", err))
+		}
+
+		if v == nil {
+			node.ResourceState = reconciler.ClusterResourceState{}
+
+			return
+		}
+
 		node.ResourceState = reconciler.ClusterResourceState{VPC: *v}
 	}
 }
@@ -29,8 +38,14 @@ func CreateClusterStateRefresher(id api.ID, vpc client.VPCState) resourcetree.St
 func CreateAWSLoadBalancerControllerRefresher(id api.ID, vpc client.VPCState) resourcetree.StateRefreshFn {
 	return func(node *resourcetree.ResourceNode) {
 		v, err := vpc.GetVpc(cfn.NewStackNamer().Vpc(id.ClusterName))
-		if err != nil {
+		if err != nil && !errors.Is(err, storm.ErrNotFound) {
 			panic(fmt.Errorf("getting vpc state: %w", err))
+		}
+
+		if v == nil {
+			node.ResourceState = reconciler.AWSLoadBalancerControllerResourceState{}
+
+			return
 		}
 
 		node.ResourceState = reconciler.AWSLoadBalancerControllerResourceState{
@@ -43,8 +58,14 @@ func CreateAWSLoadBalancerControllerRefresher(id api.ID, vpc client.VPCState) re
 func CreateExternalDNSStateRefresher(domainState client.DomainState) resourcetree.StateRefreshFn {
 	return func(node *resourcetree.ResourceNode) {
 		d, err := domainState.GetPrimaryHostedZone()
-		if err != nil {
+		if err != nil && !errors.Is(err, storm.ErrNotFound) {
 			panic(fmt.Errorf("getting primary hosted zone: %w", err))
+		}
+
+		if d == nil {
+			node.ResourceState = reconciler.ExternalDNSResourceState{}
+
+			return
 		}
 
 		node.ResourceState = reconciler.ExternalDNSResourceState{
@@ -57,8 +78,14 @@ func CreateExternalDNSStateRefresher(domainState client.DomainState) resourcetre
 func CreateIdentityManagerRefresher(domainState client.DomainState) resourcetree.StateRefreshFn {
 	return func(node *resourcetree.ResourceNode) {
 		d, err := domainState.GetPrimaryHostedZone()
-		if err != nil {
+		if err != nil && !errors.Is(err, storm.ErrNotFound) {
 			panic(fmt.Errorf("getting primary hosted zone: %w", err))
+		}
+
+		if d == nil {
+			node.ResourceState = reconciler.IdentityManagerResourceState{}
+
+			return
 		}
 
 		node.ResourceState = reconciler.IdentityManagerResourceState{
@@ -71,13 +98,23 @@ func CreateIdentityManagerRefresher(domainState client.DomainState) resourcetree
 func CreateArgocdStateRefresher(id api.ID, domainState client.DomainState, managerState client.IdentityManagerState) resourcetree.StateRefreshFn {
 	return func(node *resourcetree.ResourceNode) {
 		d, err := domainState.GetPrimaryHostedZone()
-		if err != nil {
+		if err != nil && !errors.Is(err, storm.ErrNotFound) {
 			panic(fmt.Errorf("getting primary hosted zone: %w", err))
 		}
 
+		node.ResourceState = reconciler.ArgocdResourceState{}
+
+		if d == nil {
+			return
+		}
+
 		i, err := managerState.GetIdentityPool(cfn.NewStackNamer().IdentityPool(id.ClusterName))
-		if err != nil {
+		if err != nil && !errors.Is(err, storm.ErrNotFound) {
 			panic(fmt.Errorf("getting identity pool: %w", err))
+		}
+
+		if i == nil {
+			return
 		}
 
 		node.ResourceState = reconciler.ArgocdResourceState{
@@ -92,13 +129,23 @@ func CreateArgocdStateRefresher(id api.ID, domainState client.DomainState, manag
 func CreateKubePromStackRefresher(id api.ID, domainState client.DomainState, managerState client.IdentityManagerState) resourcetree.StateRefreshFn {
 	return func(node *resourcetree.ResourceNode) {
 		d, err := domainState.GetPrimaryHostedZone()
-		if err != nil {
+		if err != nil && !errors.Is(err, storm.ErrNotFound) {
 			panic(fmt.Errorf("getting primary hosted zone: %w", err))
 		}
 
+		node.ResourceState = reconciler.KubePromStackState{}
+
+		if d == nil {
+			return
+		}
+
 		i, err := managerState.GetIdentityPool(cfn.NewStackNamer().IdentityPool(id.ClusterName))
-		if err != nil {
+		if err != nil && !errors.Is(err, storm.ErrNotFound) {
 			panic(fmt.Errorf("getting identity pool: %w", err))
+		}
+
+		if i == nil {
+			return
 		}
 
 		node.ResourceState = reconciler.KubePromStackState{
@@ -113,8 +160,14 @@ func CreateKubePromStackRefresher(id api.ID, domainState client.DomainState, man
 func CreateUsersRefresher(id api.ID, managerState client.IdentityManagerState) resourcetree.StateRefreshFn {
 	return func(node *resourcetree.ResourceNode) {
 		i, err := managerState.GetIdentityPool(cfn.NewStackNamer().IdentityPool(id.ClusterName))
-		if err != nil {
+		if err != nil && !errors.Is(err, storm.ErrNotFound) {
 			panic(fmt.Errorf("getting identity pool: %w", err))
+		}
+
+		if i == nil {
+			node.ResourceState = reconciler.UsersState{}
+
+			return
 		}
 
 		node.ResourceState = reconciler.UsersState{
@@ -128,8 +181,14 @@ func CreateUsersRefresher(id api.ID, managerState client.IdentityManagerState) r
 func CreateNameserverDelegationStateRefresher(domainState client.DomainState) resourcetree.StateRefreshFn {
 	return func(node *resourcetree.ResourceNode) {
 		d, err := domainState.GetPrimaryHostedZone()
-		if err != nil {
+		if err != nil && !errors.Is(err, storm.ErrNotFound) {
 			panic(fmt.Errorf("getting primary hosted zone: %w", err))
+		}
+
+		if d == nil {
+			node.ResourceState = reconciler.NameserverHandlerReconcilerResourceState{}
+
+			return
 		}
 
 		node.ResourceState = reconciler.NameserverHandlerReconcilerResourceState{
@@ -143,8 +202,14 @@ func CreateNameserverDelegationStateRefresher(domainState client.DomainState) re
 func CreatePostgresDatabasesRefresher(id api.ID, vpc client.VPCState) resourcetree.StateRefreshFn {
 	return func(node *resourcetree.ResourceNode) {
 		v, err := vpc.GetVpc(cfn.NewStackNamer().Vpc(id.ClusterName))
-		if err != nil {
+		if err != nil && !errors.Is(err, storm.ErrNotFound) {
 			panic(fmt.Errorf("getting vpc state: %w", err))
+		}
+
+		if v == nil {
+			node.ResourceState = reconciler.PostgresState{}
+
+			return
 		}
 
 		ids := make([]string, len(v.DatabaseSubnets))

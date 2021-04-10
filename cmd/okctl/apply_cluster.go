@@ -7,7 +7,10 @@ import (
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"path"
 	"syscall"
+
+	"github.com/asdine/storm/v3/codec/json"
 
 	"github.com/asdine/storm/v3"
 
@@ -90,6 +93,38 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			}
 
 			o.Declaration = opts.Declaration
+
+			// Move into a function
+			{
+				baseDir, err := o.GetRepoDir()
+				if err != nil {
+					return err
+				}
+
+				stormDB := path.Join(baseDir, o.Declaration.Github.OutputPath, o.Declaration.Metadata.Name, constant.DefaultStormDBName)
+
+				exists, err := o.FileSystem.Exists(stormDB)
+				if err != nil {
+					return err
+				}
+
+				if !exists {
+					err := o.FileSystem.MkdirAll(path.Dir(stormDB), 0o744)
+					if err != nil {
+						return err
+					}
+
+					db, err := storm.Open(stormDB, storm.Codec(json.Codec))
+					if err != nil {
+						return err
+					}
+
+					err = db.Close()
+					if err != nil {
+						return err
+					}
+				}
+			}
 
 			err = o.Initialise()
 			if err != nil {
@@ -179,6 +214,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				ReconciliationManager: reconciliationManager,
 				Fs:                    o.FileSystem,
 				OutputDir:             outputDir,
+				StateHandlers:         o.StateHandlers(o.StateNodes()),
 			}
 
 			err = controller.Synchronize(synchronizeOpts)

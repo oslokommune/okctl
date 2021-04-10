@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/oslokommune/okctl/pkg/client/core/state/storm"
+	stormpkg "github.com/asdine/storm/v3"
 
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -20,7 +20,7 @@ func (s *githubService) DeleteGithubRepository(_ context.Context, opts client.De
 
 	r, err := s.state.GetGithubRepository(fullName)
 	if err != nil {
-		if errors.Is(err, storm.ErrNotFound) {
+		if errors.Is(err, stormpkg.ErrNotFound) {
 			return nil
 		}
 
@@ -46,7 +46,7 @@ func (s *githubService) CreateGithubRepository(_ context.Context, opts client.Cr
 	fullName := fmt.Sprintf("%s/%s", opts.Organization, opts.Name)
 
 	r, err := s.state.GetGithubRepository(fullName)
-	if err != nil && !errors.Is(err, storm.ErrNotFound) {
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
 		return nil, err
 	}
 

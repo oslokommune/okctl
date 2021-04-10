@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/oslokommune/okctl/pkg/client/core/state/storm"
+	stormpkg "github.com/asdine/storm/v3"
 
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -22,7 +22,7 @@ func (s *domainService) GetPrimaryHostedZone(_ context.Context) (*client.HostedZ
 func (s *domainService) DeletePrimaryHostedZone(_ context.Context, opts client.DeletePrimaryHostedZoneOpts) error {
 	hz, err := s.state.GetPrimaryHostedZone()
 	if err != nil {
-		if errors.Is(err, storm.ErrNotFound) {
+		if errors.Is(err, stormpkg.ErrNotFound) {
 			return nil
 		}
 
@@ -55,7 +55,7 @@ func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.C
 	// time being, so we are compatible with expected behavior.
 	{
 		p, err := s.state.GetPrimaryHostedZone()
-		if err != nil && !errors.Is(err, storm.ErrNotFound) {
+		if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
 			return nil, err
 		}
 

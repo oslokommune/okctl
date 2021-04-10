@@ -131,7 +131,7 @@ func (d *domainState) GetPrimaryHostedZone() (*client.HostedZone, error) {
 		}
 	}
 
-	return nil, ErrNotFound
+	return nil, err
 }
 
 // NewDomainState returns an initialised state store

@@ -11,7 +11,7 @@ Resources:
     Properties:
       Description: Service account policy for reading cloudwatch metrics and logs
         from grafana
-      ManagedPolicyName: okctl-repo-env-CloudwatchDatasourceServiceAccountPolicy
+      ManagedPolicyName: okctl-test-CloudwatchDatasourceServiceAccountPolicy
       PolicyDocument:
         Statement:
         - Action:

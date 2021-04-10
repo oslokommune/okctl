@@ -29,7 +29,7 @@ func addOperationIfNotEmpty(operations store.Operations, filePath string, conten
 func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplication) (*store.Report, error) {
 	absoluteApplicationDir := path.Join(s.paths.BaseDir, application.ApplicationName)
 	relativeApplicationBaseDir := constant.DefaultApplicationBaseDir
-	relativeApplicationOverlayDir := path.Join(constant.DefaultApplicationOverlayDir, application.Environment)
+	relativeApplicationOverlayDir := path.Join(constant.DefaultApplicationOverlayDir, application.ClusterName)
 
 	operations := store.NewFileSystem(absoluteApplicationDir, s.fs)
 	addOperationIfNotEmpty(operations, "argocd-application.yaml", application.ArgoCDResource)

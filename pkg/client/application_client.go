@@ -82,7 +82,7 @@ func (o OkctlApplication) Validate() error {
 // ScaffoldedApplication contains information required by ApplicationStore and ApplicationReport
 type ScaffoldedApplication struct {
 	ApplicationName string
-	Environment     string
+	ClusterName     string
 
 	BaseKustomization []byte
 	ArgoCDResource    []byte

@@ -42,7 +42,7 @@ func New(opts CommandLinePromptOpts, shellType shelltype.ShellType) (CommandLine
 	switch shellType {
 	case shelltype.Bash:
 		return &bashPrompter{
-			environment: opts.Environment,
+			clusterName: opts.ClusterName,
 			osEnvVars:   osEnvVars,
 		}, nil
 	case shelltype.Zsh:
@@ -50,7 +50,7 @@ func New(opts CommandLinePromptOpts, shellType shelltype.ShellType) (CommandLine
 			userHomeDirStorage: opts.UserHomeDirStorage,
 			tmpStorer:          opts.TmpStorage,
 			osEnvVars:          osEnvVars,
-			environment:        opts.Environment,
+			clusterName:        opts.ClusterName,
 		}, nil
 	default:
 		return &noopPrompter{

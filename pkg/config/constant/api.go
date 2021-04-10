@@ -53,22 +53,6 @@ const (
 	DefaultHelmRepositoryCache  = "repository"
 	DefaultHelmPluginsDirectory = "plugins"
 
-	DefaultVpcOutputs = "vpc-outputs.json"
-	DefaultVpcBaseDir = "vpc"
-
-	DefaultMonitoringBaseDir                = "monitoring"
-	DefaultPromtailBaseDir                  = "promtail"
-	DefaultLokiBaseDir                      = "loki"
-	DefaultTempoBaseDir                     = "tempo"
-	DefaultAWSLoadBalancerControllerBaseDir = "aws-load-balancer-controller"
-	DefaultArgoCDBaseDir                    = "argocd"
-	DefaultExternalDNSBaseDir               = "external-dns"
-	DefaultExternalSecretsBaseDir           = "external-secrets"
-	DefaultAutoscalerBaseDir                = "autoscaler"
-	DefaultBlockstorageBaseDir              = "blockstorage"
-	DefaultKubePromStackBaseDir             = "kubepromstack"
-	DefaultIdentityPoolBaseDir              = "identitypool"
-
 	DefaultStormDBName                        = "state.db"
 	DefaultStormNodeDomains                   = "domains"
 	DefaultStormNodeCertificates              = "certificates"

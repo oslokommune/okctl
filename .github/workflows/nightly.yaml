@@ -34,8 +34,7 @@ jobs:
 
           metadata:
             accountID: "${{ secrets.NIGHTLY_AWS_ACCOUNT_ID }}"
-            environment: test
-            name: nightly
+            name: nightly-test
 
           clusterRootDomain: nightly.oslo.systems
 

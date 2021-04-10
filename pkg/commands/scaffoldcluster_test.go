@@ -20,7 +20,6 @@ func TestClusterDeclarationScaffold(t *testing.T) {
 			withOpts: ScaffoldClusterOpts{
 				Name:            "SomeClusterName",
 				AWSAccountID:    "123456789012",
-				Environment:     "production",
 				Organization:    "oslokommune",
 				RepositoryName:  "my_repo",
 				OutputDirectory: "my_infrastructure",
@@ -48,7 +47,6 @@ func TestEnsureValidDefaultTemplate(t *testing.T) {
 	err := ScaffoldClusterDeclaration(&buf, ScaffoldClusterOpts{
 		Name:            "name",
 		AWSAccountID:    "123456789012",
-		Environment:     "test",
 		Organization:    "oslokommune",
 		RepositoryName:  "my_iac_repo",
 		OutputDirectory: "infrastructure",

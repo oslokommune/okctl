@@ -19,8 +19,7 @@ integrations:
 kind: Cluster
 metadata:
   accountID: "123456789012"
-  environment: stage
-  name: okctl
+  name: okctl-stage
   region: eu-west-1
 vpc:
   cidr: 192.168.0.0/20

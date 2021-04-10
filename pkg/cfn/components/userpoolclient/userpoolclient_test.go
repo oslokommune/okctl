@@ -24,7 +24,6 @@ func TestNew(t *testing.T) {
 			resource: userpoolclient.New(
 				"argocd",
 				"test",
-				"test",
 				"https://argocd/callback",
 				"GHFJE78FAKE",
 			).Resource(),

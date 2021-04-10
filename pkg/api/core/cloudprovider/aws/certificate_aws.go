@@ -28,13 +28,13 @@ func (c *certificate) DeleteCognitoCertificate(opts api.DeleteCognitoCertificate
 }
 
 func (c *certificate) DeleteCertificate(opts api.DeleteCertificateOpts) error {
-	return cfn.NewRunner(c.provider).Delete(cfn.NewStackNamer().Certificate(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Domain)))
+	return cfn.NewRunner(c.provider).Delete(cfn.NewStackNamer().Certificate(opts.ID.ClusterName, slug.Make(opts.Domain)))
 }
 
 func (c *certificate) CreateCertificate(opts api.CreateCertificateOpts) (*api.Certificate, error) {
 	b := cfn.New(components.NewPublicCertificateComposer(opts.Domain, opts.HostedZoneID))
 
-	stackName := cfn.NewStackNamer().Certificate(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Domain))
+	stackName := cfn.NewStackNamer().Certificate(opts.ID.ClusterName, slug.Make(opts.Domain))
 
 	template, err := b.Build()
 	if err != nil {

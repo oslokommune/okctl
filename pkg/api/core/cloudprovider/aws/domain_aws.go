@@ -18,7 +18,7 @@ type domain struct {
 }
 
 func (d *domain) DeleteHostedZone(opts api.DeleteHostedZoneOpts) error {
-	err := cfn.NewRunner(d.provider).Delete(cfn.NewStackNamer().AliasRecordSet(opts.ID.Repository, opts.ID.Environment+"-auth", slug.Make(opts.Domain)))
+	err := cfn.NewRunner(d.provider).Delete(cfn.NewStackNamer().AliasRecordSet(opts.ID.ClusterName+"-auth", slug.Make(opts.Domain)))
 	if err != nil {
 		return err
 	}
@@ -28,7 +28,7 @@ func (d *domain) DeleteHostedZone(opts api.DeleteHostedZoneOpts) error {
 		return err
 	}
 
-	err = cfn.NewRunner(d.provider).Delete(cfn.NewStackNamer().Domain(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Domain)))
+	err = cfn.NewRunner(d.provider).Delete(cfn.NewStackNamer().Domain(opts.ID.ClusterName, slug.Make(opts.Domain)))
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func (d *domain) CreateHostedZone(opts api.CreateHostedZoneOpts) (*api.HostedZon
 	// Create hosted zone
 	b := cfn.New(components.NewHostedZoneComposer(opts.FQDN, "A public hosted zone for creating ingresses with"))
 
-	stackName := cfn.NewStackNamer().Domain(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Domain))
+	stackName := cfn.NewStackNamer().Domain(opts.ID.ClusterName, slug.Make(opts.Domain))
 
 	template, err := b.Build()
 	if err != nil {

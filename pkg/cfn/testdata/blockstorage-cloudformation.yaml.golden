@@ -10,7 +10,7 @@ Resources:
   BlockstoragePolicy:
     Properties:
       Description: Service account policy for provisioning persistent volume claims
-      ManagedPolicyName: okctl-repo-env-BlockstorageServiceAccountPolicy
+      ManagedPolicyName: okctl-tset-BlockstorageServiceAccountPolicy
       PolicyDocument:
         Statement:
         - Action:

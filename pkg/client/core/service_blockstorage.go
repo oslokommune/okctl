@@ -58,7 +58,7 @@ func (s *blockstorageService) DeleteBlockstorage(ctx context.Context, id api.ID)
 	}
 
 	stackName := cfn.NewStackNamer().
-		BlockstoragePolicy(id.Repository, id.Environment)
+		BlockstoragePolicy(id.ClusterName)
 
 	err = s.policy.DeletePolicy(ctx, client.DeletePolicyOpts{
 		ID:        id,
@@ -74,11 +74,11 @@ func (s *blockstorageService) DeleteBlockstorage(ctx context.Context, id api.ID)
 // nolint: funlen
 func (s *blockstorageService) CreateBlockstorage(ctx context.Context, opts client.CreateBlockstorageOpts) (*client.Blockstorage, error) {
 	b := cfn.New(
-		components.NewBlockstoragePolicyComposer(opts.ID.Repository, opts.ID.Environment),
+		components.NewBlockstoragePolicyComposer(opts.ID.ClusterName),
 	)
 
 	stackName := cfn.NewStackNamer().
-		BlockstoragePolicy(opts.ID.Repository, opts.ID.Environment)
+		BlockstoragePolicy(opts.ID.ClusterName)
 
 	template, err := b.Build()
 	if err != nil {

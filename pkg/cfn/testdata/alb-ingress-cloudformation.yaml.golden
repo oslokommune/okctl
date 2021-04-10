@@ -10,7 +10,7 @@ Resources:
   AlbIngressControllerPolicy:
     Properties:
       Description: Service account policy for creat ALBs
-      ManagedPolicyName: okctl-repo-env-AlbIngressControllServiceAccountPolicy
+      ManagedPolicyName: okctl-tset-AlbIngressControllServiceAccountPolicy
       PolicyDocument:
         Statement:
         - Action:

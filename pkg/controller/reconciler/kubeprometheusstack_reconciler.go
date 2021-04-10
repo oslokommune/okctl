@@ -3,15 +3,13 @@ package reconciler
 import (
 	"fmt"
 
-	"github.com/oslokommune/okctl/pkg/config/state"
-
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
 
 // KubePromStackState contains runtime data needed in Reconcile()
 type KubePromStackState struct {
-	HostedZone *state.HostedZone
+	HostedZone *client.HostedZone
 
 	UserPoolID string
 	AuthDomain string
@@ -45,7 +43,7 @@ func (z *kubePrometheusStackReconciler) Reconcile(node *resourcetree.ResourceNod
 		_, err = z.client.CreateKubePromStack(z.commonMetadata.Ctx, client.CreateKubePromStackOpts{
 			ID:           z.commonMetadata.ClusterID,
 			Domain:       z.commonMetadata.Declaration.ClusterRootDomain,
-			HostedZoneID: resourceState.HostedZone.ID,
+			HostedZoneID: resourceState.HostedZone.HostedZoneID,
 			AuthDomain:   resourceState.AuthDomain,
 			UserPoolID:   resourceState.UserPoolID,
 		})

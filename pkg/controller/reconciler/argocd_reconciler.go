@@ -9,13 +9,12 @@ import (
 	"github.com/miekg/dns"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
 
 // ArgocdResourceState contains runtime data needed in Reconcile()
 type ArgocdResourceState struct {
-	HostedZone *state.HostedZone
+	HostedZone *client.HostedZone
 
 	UserPoolID string
 	AuthDomain string
@@ -72,7 +71,7 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (result Re
 			ID:                 z.commonMetadata.ClusterID,
 			Domain:             z.commonMetadata.Declaration.ClusterRootDomain,
 			FQDN:               dns.Fqdn(z.commonMetadata.Declaration.ClusterRootDomain),
-			HostedZoneID:       resourceState.HostedZone.ID,
+			HostedZoneID:       resourceState.HostedZone.HostedZoneID,
 			GithubOrganisation: z.commonMetadata.Declaration.Github.Organisation,
 			UserPoolID:         resourceState.UserPoolID,
 			AuthDomain:         resourceState.AuthDomain,

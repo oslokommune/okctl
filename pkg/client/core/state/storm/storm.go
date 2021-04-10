@@ -32,8 +32,6 @@ func NewMetadata() Metadata {
 type ID struct {
 	Region       string
 	AWSAccountID string
-	Environment  string
-	Repository   string
 	ClusterName  string
 }
 
@@ -43,8 +41,6 @@ func NewID(id api.ID) ID {
 	return ID{
 		Region:       id.Region,
 		AWSAccountID: id.AWSAccountID,
-		Environment:  id.Environment,
-		Repository:   id.Repository,
 		ClusterName:  id.ClusterName,
 	}
 }
@@ -54,8 +50,6 @@ func (i ID) Convert() api.ID {
 	return api.ID{
 		Region:       i.Region,
 		AWSAccountID: i.AWSAccountID,
-		Environment:  i.Environment,
-		Repository:   i.Repository,
 		ClusterName:  i.ClusterName,
 	}
 }

@@ -51,7 +51,7 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 	app := okctlApplicationToKaexApplication(okctlApp, opts.HostedZoneDomain)
 
 	relativeApplicationDir := path.Join(opts.OutputDir, constant.DefaultApplicationsOutputDir, okctlApp.Name)
-	relativeArgoCDSourcePath := path.Join(relativeApplicationDir, constant.DefaultApplicationOverlayDir, opts.ID.Environment)
+	relativeArgoCDSourcePath := path.Join(relativeApplicationDir, constant.DefaultApplicationOverlayDir, opts.ID.ClusterName)
 
 	base, err := scaffold.GenerateApplicationBase(*app, opts.IACRepoURL, relativeArgoCDSourcePath)
 	if err != nil {
@@ -75,7 +75,7 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 
 	applicationScaffold := &client.ScaffoldedApplication{
 		ApplicationName:      app.Name,
-		Environment:          opts.ID.Environment,
+		ClusterName:          opts.ID.ClusterName,
 		BaseKustomization:    base.Kustomization,
 		Deployment:           base.Deployment,
 		Service:              base.Service,

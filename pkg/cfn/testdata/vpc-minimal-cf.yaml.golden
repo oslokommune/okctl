@@ -147,10 +147,10 @@ Resources:
       AvailabilityZone: eu-west-1a
       CidrBlock: 192.168.1.0/24
       Tags:
-      - Key: kubernetes.io/cluster/test-test
+      - Key: kubernetes.io/cluster/test
         Value: shared
       - Key: Name
-        Value: test-test-PrivateSubnet00
+        Value: test-PrivateSubnet00
       - Key: kubernetes.io/role/internal-elb
         Value: "1"
       VpcId:
@@ -168,10 +168,10 @@ Resources:
       AvailabilityZone: eu-west-1b
       CidrBlock: 192.168.4.0/24
       Tags:
-      - Key: kubernetes.io/cluster/test-test
+      - Key: kubernetes.io/cluster/test
         Value: shared
       - Key: Name
-        Value: test-test-PrivateSubnet01
+        Value: test-PrivateSubnet01
       - Key: kubernetes.io/role/internal-elb
         Value: "1"
       VpcId:
@@ -189,10 +189,10 @@ Resources:
       AvailabilityZone: eu-west-1c
       CidrBlock: 192.168.7.0/24
       Tags:
-      - Key: kubernetes.io/cluster/test-test
+      - Key: kubernetes.io/cluster/test
         Value: shared
       - Key: Name
-        Value: test-test-PrivateSubnet02
+        Value: test-PrivateSubnet02
       - Key: kubernetes.io/role/internal-elb
         Value: "1"
       VpcId:
@@ -226,10 +226,10 @@ Resources:
       CidrBlock: 192.168.0.0/24
       MapPublicIpOnLaunch: true
       Tags:
-      - Key: kubernetes.io/cluster/test-test
+      - Key: kubernetes.io/cluster/test
         Value: shared
       - Key: Name
-        Value: test-test-PublicSubnet00
+        Value: test-PublicSubnet00
       - Key: kubernetes.io/role/elb
         Value: "1"
       VpcId:
@@ -248,10 +248,10 @@ Resources:
       CidrBlock: 192.168.3.0/24
       MapPublicIpOnLaunch: true
       Tags:
-      - Key: kubernetes.io/cluster/test-test
+      - Key: kubernetes.io/cluster/test
         Value: shared
       - Key: Name
-        Value: test-test-PublicSubnet01
+        Value: test-PublicSubnet01
       - Key: kubernetes.io/role/elb
         Value: "1"
       VpcId:
@@ -270,10 +270,10 @@ Resources:
       CidrBlock: 192.168.6.0/24
       MapPublicIpOnLaunch: true
       Tags:
-      - Key: kubernetes.io/cluster/test-test
+      - Key: kubernetes.io/cluster/test
         Value: shared
       - Key: Name
-        Value: test-test-PublicSubnet02
+        Value: test-PublicSubnet02
       - Key: kubernetes.io/role/elb
         Value: "1"
       VpcId:
@@ -299,8 +299,8 @@ Resources:
       EnableDnsHostnames: true
       EnableDnsSupport: true
       Tags:
-      - Key: kubernetes.io/cluster/test-test
+      - Key: kubernetes.io/cluster/test
         Value: shared
       - Key: Name
-        Value: test-test
+        Value: test
     Type: AWS::EC2::VPC

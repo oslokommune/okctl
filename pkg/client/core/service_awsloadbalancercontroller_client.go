@@ -42,7 +42,7 @@ func (s *awsLoadBalancerControllerService) DeleteAWSLoadBalancerController(ctx c
 	}
 
 	stackName := cfn.NewStackNamer().
-		AWSLoadBalancerControllerPolicy(id.Repository, id.Environment)
+		AWSLoadBalancerControllerPolicy(id.ClusterName)
 
 	err = s.policy.DeletePolicy(ctx, client.DeletePolicyOpts{
 		ID:        id,
@@ -70,13 +70,12 @@ func (s *awsLoadBalancerControllerService) DeleteAWSLoadBalancerController(ctx c
 func (s *awsLoadBalancerControllerService) CreateAWSLoadBalancerController(ctx context.Context, opts client.CreateAWSLoadBalancerControllerOpts) (*client.AWSLoadBalancerController, error) {
 	b := cfn.New(
 		components.NewAWSLoadBalancerControllerComposer(
-			opts.ID.Repository,
-			opts.ID.Environment,
+			opts.ID.ClusterName,
 		),
 	)
 
 	stackName := cfn.NewStackNamer().
-		AWSLoadBalancerControllerPolicy(opts.ID.Repository, opts.ID.Environment)
+		AWSLoadBalancerControllerPolicy(opts.ID.ClusterName)
 
 	template, err := b.Build()
 	if err != nil {

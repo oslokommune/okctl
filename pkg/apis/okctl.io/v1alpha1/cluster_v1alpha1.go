@@ -78,10 +78,6 @@ type ClusterMeta struct {
 	// of the team, product, project, etc.
 	Name string `json:"name"`
 
-	// Environment defines the purpose of the cluster, e.g., testing,
-	// staging, production.
-	Environment string `json:"environment"`
-
 	// Region specifies the AWS region the cluster should be created in
 	// https://aws.amazon.com/about-aws/global-infrastructure/regions_az/
 	Region string `json:"region"`
@@ -94,10 +90,9 @@ type ClusterMeta struct {
 // Validate ensures ClusterMeta contains the right information
 func (receiver ClusterMeta) Validate() error {
 	return validation.ValidateStruct(&receiver,
-		validation.Field(&receiver.Name, validation.Required),
-		validation.Field(&receiver.Environment,
+		validation.Field(&receiver.Name,
 			validation.Required,
-			validation.Match(regexp.MustCompile("^[a-zA-Z]{3,64}$")).Error("must consist of 3-64 characters (a-z, A-Z)")),
+			validation.Match(regexp.MustCompile("^[a-zA-Z-]{3,64}$")).Error("must consist of 3-64 characters (a-z, A-Z)")),
 		validation.Field(&receiver.Region, validation.Required, validation.In("eu-west-1").Error("for now, only \"eu-west-1\" is supported")),
 		validation.Field(&receiver.AccountID, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{12}$")).Error("must consist of 12 digits")),
 	)
@@ -106,7 +101,7 @@ func (receiver ClusterMeta) Validate() error {
 // String returns a unique identifier for a cluster
 // Not sure about this..
 func (receiver *ClusterMeta) String() string {
-	return fmt.Sprintf("%s-%s.%s.okctl.io/%s", receiver.Name, receiver.Environment, receiver.Region, receiver.AccountID)
+	return fmt.Sprintf("%s.%s.okctl.io/%s", receiver.Name, receiver.Region, receiver.AccountID)
 }
 
 // ClusterVPC is a definition of the VPC we create for the EKS cluster
@@ -301,21 +296,20 @@ func ClusterTypeMeta() metav1.TypeMeta {
 }
 
 // NewDefaultCluster returns a cluster definition with sensible defaults
-func NewDefaultCluster(name, env, org, repo, accountID string) Cluster {
+func NewDefaultCluster(name, org, repo, accountID string) Cluster {
 	return Cluster{
 		TypeMeta: ClusterTypeMeta(),
 		Metadata: ClusterMeta{
-			Name:        name,
-			Environment: env,
-			Region:      "eu-west-1",
-			AccountID:   accountID,
+			Name:      name,
+			Region:    "eu-west-1",
+			AccountID: accountID,
 		},
 		Github: ClusterGithub{
 			Organisation: org,
 			Repository:   repo,
 			OutputPath:   constant.DefaultOutputDirectory,
 		},
-		ClusterRootDomain: fmt.Sprintf("%s-%s.oslo.systems", name, env),
+		ClusterRootDomain: fmt.Sprintf("%s.oslo.systems", name),
 		VPC: &ClusterVPC{
 			CIDR:             constant.DefaultClusterCIDR,
 			HighAvailability: true,

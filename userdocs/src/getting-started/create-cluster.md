@@ -51,9 +51,6 @@ metadata:
   ## Account ID is your AWS account ID
   accountID: '123456789012'
 
-  ## Environment is the name you use to identify the type of cluster it is. Common names are production, test, staging
-  environment: production
-
   ## Name can be anything, but should define the scope of the cluster. Meaning if the cluster is scoped to one product,
   ## you might want to name it the name of the product. If the cluster contains all services and products owned by a
   ## team, the team name might be more fitting.

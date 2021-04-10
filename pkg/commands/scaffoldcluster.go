@@ -12,7 +12,6 @@ type ScaffoldClusterOpts struct {
 	Name string
 
 	AWSAccountID    string
-	Environment     string
 	Organization    string
 	RepositoryName  string
 	OutputDirectory string
@@ -39,10 +38,9 @@ func sanitizeOpts(opts ScaffoldClusterOpts) ScaffoldClusterOpts {
 	return ScaffoldClusterOpts{
 		Name:            strings.ToLower(opts.Name),
 		AWSAccountID:    opts.AWSAccountID,
-		Environment:     strings.ToLower(opts.Environment),
 		Organization:    opts.Organization,
-		RepositoryName:  opts.RepositoryName,
 		OutputDirectory: opts.OutputDirectory,
+		RepositoryName:  opts.RepositoryName,
 	}
 }
 
@@ -53,9 +51,6 @@ kind: Cluster
 metadata:
   ## Account ID is your AWS account ID
   accountID: '{{ .AWSAccountID }}'
-
-  ## Environment is the name you use to identify the type of cluster it is. Common names are production, test, staging
-  environment: {{ .Environment }}
 
   ## Name can be anything, but should define the scope of the cluster. Meaning if the cluster is scoped to one product,
   ## you might want to name it the name of the product. If the cluster contains all services and products owned by a
@@ -68,7 +63,7 @@ metadata:
 ## The cluster root domain defines the domain of which to create services beneath. For example; okctl will setup ArgoCD
 ## which has a frontend. The frontend will be available at https://argocd.<clusterRootDomain>. For Cognito it will be 
 ## https://auth.<clusterRootDomain>
-clusterRootDomain: {{ .Name }}-{{ .Environment }}.oslo.systems
+clusterRootDomain: {{ .Name }}.oslo.systems
 
 ## For okctl to be able to setup ArgoCD correctly for you, it needs to know what repository on Github that will contain
 ## your infrastructure.

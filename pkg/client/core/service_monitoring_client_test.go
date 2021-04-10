@@ -39,8 +39,6 @@ func TestKM196(t *testing.T) {
 		ID: api.ID{
 			Region:       "eu-west-1",
 			AWSAccountID: "123456789012",
-			Environment:  "test",
-			Repository:   "something",
 			ClusterName:  "something",
 		},
 		Domain: "test.oslo.systems",

@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-	"regexp"
-
-	"sigs.k8s.io/yaml"
 
 	"github.com/oslokommune/okctl/pkg/context"
 
@@ -20,7 +17,7 @@ import (
 )
 
 const (
-	deleteClusterArgs    = 1
+	deleteClusterArgs    = 0
 	deleteHostedZoneFlag = "i-know-what-i-am-doing-delete-hosted-zone-and-records"
 )
 
@@ -48,24 +45,12 @@ type DeleteClusterOpts struct {
 
 	Region       string
 	AWSAccountID string
-	Environment  string
-	Repository   string
 	ClusterName  string
 }
 
 // Validate the inputs
 func (o *DeleteClusterOpts) Validate() error {
 	return validation.ValidateStruct(o,
-		validation.Field(&o.ClusterName, validation.NewStringRule(
-			func(s string) bool {
-				return fmt.Sprintf("%s-%s", o.Repository, o.Environment) == s
-			},
-			fmt.Sprintf(
-				`internal error: cluster name needs to be in the format repository-environment, but was "%s"`,
-				o.ClusterName,
-			),
-		)),
-		validation.Field(&o.Environment, validation.Required),
 		validation.Field(&o.AWSAccountID, validation.Required),
 		validation.Field(&o.Region, validation.Required),
 		validation.Field(&o.ClusterName, validation.Required),
@@ -77,7 +62,7 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &DeleteClusterOpts{}
 
 	cmd := &cobra.Command{
-		Use:   "cluster [env]",
+		Use:   "cluster",
 		Short: "Delete a cluster",
 		Long: `Delete all resources related to an EKS cluster,
 including VPC, this is a highly destructive operation.`,
@@ -85,43 +70,19 @@ including VPC, this is a highly destructive operation.`,
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			o.AWSCredentialsType = opts.AWSCredentialsType
 			o.GithubCredentialsType = opts.GithubCredentialsType
-			environment := args[0]
 
-			err := validation.Validate(
-				&environment,
-				validation.Required,
-				validation.Match(regexp.MustCompile("^[a-zA-Z]{3,64}$")).Error("the environment must consist of 3-64 characters (a-z, A-Z)"),
-			)
+			err := o.Initialise()
 			if err != nil {
 				return err
 			}
 
-			err = o.InitialiseWithOnlyEnv(environment)
-			if err != nil {
-				return err
-			}
-
-			meta := o.RepoStateWithEnv.GetMetadata()
-			cluster := o.RepoStateWithEnv.GetCluster()
-
-			opts.Repository = meta.Name
-			opts.Region = meta.Region
-			opts.AWSAccountID = cluster.AWSAccountID
-			opts.Environment = cluster.Environment
-			opts.ClusterName = o.RepoStateWithEnv.GetClusterName()
+			opts.Region = o.Declaration.Metadata.Region
+			opts.AWSAccountID = o.Declaration.Metadata.AccountID
+			opts.ClusterName = o.Declaration.Metadata.Name
 
 			err = opts.Validate()
 			if err != nil {
 				return err
-			}
-
-			if o.Debug {
-				result, err := yaml.Marshal(o.RepoStateWithEnv)
-				if err != nil {
-					return fmt.Errorf("marshalling repo state: %w", err)
-				}
-
-				_, _ = o.Out.Write(result)
 			}
 
 			return nil
@@ -130,8 +91,6 @@ including VPC, this is a highly destructive operation.`,
 			id := api.ID{
 				Region:       opts.Region,
 				AWSAccountID: opts.AWSAccountID,
-				Environment:  opts.Environment,
-				Repository:   opts.Repository,
 				ClusterName:  opts.ClusterName,
 			}
 
@@ -152,7 +111,7 @@ including VPC, this is a highly destructive operation.`,
 				return err
 			}
 
-			formatErr := o.ErrorFormatter(fmt.Sprintf("delete cluster %s", opts.Environment), userDir)
+			formatErr := o.ErrorFormatter(fmt.Sprintf("delete cluster %s", opts.ClusterName), userDir)
 
 			vpc, err := services.Vpc.GetVPC(o.Ctx, id)
 			if err != nil {

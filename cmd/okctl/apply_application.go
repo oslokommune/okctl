@@ -12,12 +12,11 @@ import (
 	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 	"github.com/oslokommune/okctl/pkg/okctl"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
 // requiredApplyApplicationArguments defines number of arguments the ApplyApplication command expects
-const requiredApplyApplicationArguments = 1
+const requiredApplyApplicationArguments = 0
 
 // applyApplicationOpts contains all the possible options for "apply application"
 type applyApplicationOpts struct {
@@ -37,39 +36,49 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &applyApplicationOpts{}
 
 	cmd := &cobra.Command{
-		Use:   "application [env]",
+		Use:   "application",
 		Short: "Applies an application.yaml to the IAC repo",
 		Args:  cobra.ExactArgs(requiredApplyApplicationArguments),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			environment := args[0]
-
-			err := o.InitialiseWithOnlyEnv(environment)
+			err := o.Initialise()
 			if err != nil {
-				errEnvNotFound := &okctl.ErrorEnvironmentNotFound{}
-
-				if errors.As(err, &errEnvNotFound) {
-					fmt.Fprintf(o.Err, "\nThe specified environment \"%s\" does not exist.", errEnvNotFound.TargetEnvironment)
-					fmt.Fprintf(o.Err, "Available environments: %v\n", errEnvNotFound.AvailableEnvironments)
-				}
-
 				return err
 			}
 
-			cluster := o.RepoStateWithEnv.GetCluster()
-			metadata := o.RepoStateWithEnv.GetMetadata()
-
 			scaffoldOpts.ID = &api.ID{
-				Region:       o.CloudProvider.Region(),
-				AWSAccountID: cluster.AWSAccountID,
-				Environment:  cluster.Environment,
-				Repository:   metadata.Name,
-				ClusterName:  o.RepoStateWithEnv.GetClusterName(),
+				Region:       o.Declaration.Metadata.Region,
+				AWSAccountID: o.Declaration.Metadata.AccountID,
+				ClusterName:  o.Declaration.Metadata.Name,
 			}
 
 			scaffoldOpts.Application, err = commands.InferApplicationFromStdinOrFile(o.In, o.FileSystem, opts.File)
 			if err != nil {
 				return fmt.Errorf("inferring application from stdin or file: %w", err)
 			}
+
+			scaffoldOpts.OutputDir, err = o.GetRepoOutputDir()
+			if err != nil {
+				return err
+			}
+
+			handlers := o.StateHandlers(o.StateNodes())
+
+			hz, err := handlers.Domain.GetPrimaryHostedZone()
+			if err != nil {
+				return err
+			}
+
+			scaffoldOpts.HostedZoneID = hz.HostedZoneID
+			scaffoldOpts.HostedZoneDomain = hz.Domain
+
+			repo, err := handlers.Github.GetGithubRepository(
+				fmt.Sprintf("%s/%s", o.Declaration.Github.Organisation, o.Declaration.Github.Repository),
+			)
+			if err != nil {
+				return err
+			}
+
+			scaffoldOpts.IACRepoURL = repo.GitURL
 
 			return nil
 		},

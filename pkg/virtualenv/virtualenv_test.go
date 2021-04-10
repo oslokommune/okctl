@@ -65,7 +65,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 			assertion: func(opts commandlineprompter.CommandLinePromptOpts, venv *virtualenv.VirtualEnvironment) {
 				expectedOsEnvVars := testHelper.toSlice(map[string]string{
 					"PATH":           fmt.Sprintf("%s:%s:%s", testHelper.ps1Dir, "/somepath", "/somepath2"),
-					"PROMPT_COMMAND": fmt.Sprintf(`PS1="\[\e[0;31m\]\w \[\e[0;34m\](\$(venv_ps1 %s)) \[\e[0m\]\$ "`, opts.Environment),
+					"PROMPT_COMMAND": fmt.Sprintf(`PS1="\[\e[0;31m\]\w \[\e[0;34m\](\$(venv_ps1 %s)) \[\e[0m\]\$ "`, opts.ClusterName),
 				})
 				assert.Equal(t, expectedOsEnvVars, venv.Environ())
 				testHelper.assertGoldenVenvPs1(t, opts)
@@ -204,7 +204,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 				expectedOsEnvVars := testHelper.toSlice(map[string]string{
 					"OKCTL_PS1":      `Dir: \w | \$(venv_ps1 %env) \$`,
 					"PATH":           testHelper.ps1Dir,
-					"PROMPT_COMMAND": fmt.Sprintf(`PS1="Dir: \w | \$(venv_ps1 %s) \$"`, opts.Environment),
+					"PROMPT_COMMAND": fmt.Sprintf(`PS1="Dir: \w | \$(venv_ps1 %s) \$"`, opts.ClusterName),
 				})
 				assert.Equal(t, expectedOsEnvVars, venv.Environ())
 				testHelper.assertGoldenVenvPs1(t, opts)
@@ -260,7 +260,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 				UserDirStorage:       userDirStorage.storage,
 				UserHomeDirStorage:   userHomeDirStorage,
 				TmpStorage:           tmpStorage,
-				Environment:          "myenv",
+				ClusterName:          "myenv",
 				CurrentUsername:      testHelper.currentUsername,
 			}
 			venv, err := virtualenv.CreateVirtualEnvironment(opts)

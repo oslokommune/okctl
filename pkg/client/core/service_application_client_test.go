@@ -62,6 +62,7 @@ volumes:
 #    cert-manager.io/cluster-issuer: letsencrypt-production
 `
 
+// nolint: lll
 func TestNewApplicationService(t *testing.T) {
 	testInputBuffer := bytes.NewBufferString(defaultTemplate)
 
@@ -79,15 +80,12 @@ func TestNewApplicationService(t *testing.T) {
 	application, err := commands.InferApplicationFromStdinOrFile(testInputBuffer, &aferoFs, "-")
 	assert.NilError(t, err)
 
-	env := "test"
-	err = service.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
-		OutputDir: "infrastructure",
+	clusterName := "test"
+	err := service.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
 		ID: &api.ID{
 			Region:       "eu-west-1",
 			AWSAccountID: "012345678912",
-			Environment:  env,
-			Repository:   "not blank",
-			ClusterName:  "dummy-cluster",
+			ClusterName:  clusterName,
 		},
 		HostedZoneID:     "dummyID",
 		HostedZoneDomain: "kjoremiljo.oslo.systems",
@@ -108,9 +106,9 @@ func TestNewApplicationService(t *testing.T) {
 
 	g.Assert(t,
 		"kustomization-overlay.yaml",
-		readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationOverlayDir, env, "kustomization.yaml")),
+		readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationOverlayDir, clusterName, "kustomization.yaml")),
 	)
-	g.Assert(t, "ingress-patch.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationOverlayDir, env, "ingress-patch.json")))
+	g.Assert(t, "ingress-patch.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationOverlayDir, clusterName, "ingress-patch.json")))
 }
 
 func readFile(t *testing.T, fs *afero.Afero, path string) []byte {

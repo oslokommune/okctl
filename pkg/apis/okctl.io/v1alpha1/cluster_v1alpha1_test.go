@@ -25,8 +25,7 @@ func TestCluster(t *testing.T) {
 		{
 			name: "Default cluster",
 			cluster: v1alpha1.NewDefaultCluster(
-				"okctl",
-				"stage",
+				"okctl-stage",
 				"oslokommune",
 				"okctl-iac",
 				"123456789012",
@@ -50,8 +49,7 @@ func TestCluster(t *testing.T) {
 
 func newPassingCluster() v1alpha1.Cluster {
 	return v1alpha1.NewDefaultCluster(
-		"x",
-		"tre",
+		"x-tre",
 		"x",
 		"x",
 		"000000000000",
@@ -130,8 +128,7 @@ func TestValidateCluster(t *testing.T) {
 		{
 			name: "Default cluster",
 			cluster: v1alpha1.NewDefaultCluster(
-				"okctl",
-				"stage",
+				"okctl-stage",
 				"oslokommune",
 				"okctl-iac",
 				"123456789012",
@@ -141,8 +138,7 @@ func TestValidateCluster(t *testing.T) {
 			name: "Cluster with argocd enabled, cognito disabled",
 			cluster: func() v1alpha1.Cluster {
 				c := v1alpha1.NewDefaultCluster(
-					"okctl",
-					"stage",
+					"okctl-stage",
 					"oslokommune",
 					"okctl-iac",
 					"123456789012",

@@ -66,17 +66,15 @@ import (
 // VPCComposer contains the required state for building
 // a VPC using cloud formation components
 type VPCComposer struct {
-	Name        string
-	Environment string
+	ClusterName string
 	CidrBlock   string
 	Region      string
 }
 
 // NewVPCComposer returns an initialised VPC composer
-func NewVPCComposer(name, env, cidrBlock, region string) *VPCComposer {
+func NewVPCComposer(name, cidrBlock, region string) *VPCComposer {
 	return &VPCComposer{
-		Name:        name,
-		Environment: env,
+		ClusterName: name,
 		CidrBlock:   cidrBlock,
 		Region:      region,
 	}
@@ -87,7 +85,7 @@ func NewVPCComposer(name, env, cidrBlock, region string) *VPCComposer {
 func (v *VPCComposer) Compose() (*cfn.Composition, error) {
 	composition := &cfn.Composition{}
 
-	cluster := clusterPkg.New(v.Name, v.Environment)
+	cluster := clusterPkg.New(v.ClusterName)
 
 	cidr, err := cidrPkg.NewDefault(v.CidrBlock)
 	if err != nil {
@@ -160,17 +158,15 @@ var _ cfn.Composer = &VPCComposer{}
 // MinimalVPCComposer contains the required state for building
 // a VPC using cloud formation components
 type MinimalVPCComposer struct {
-	Name        string
-	Environment string
+	ClusterName string
 	CidrBlock   string
 	Region      string
 }
 
 // NewMinimalVPCComposer returns an initialised VPC composer
-func NewMinimalVPCComposer(name, env, cidrBlock, region string) *MinimalVPCComposer {
+func NewMinimalVPCComposer(clusterName, cidrBlock, region string) *MinimalVPCComposer {
 	return &MinimalVPCComposer{
-		Name:        name,
-		Environment: env,
+		ClusterName: clusterName,
 		CidrBlock:   cidrBlock,
 		Region:      region,
 	}
@@ -181,7 +177,7 @@ func NewMinimalVPCComposer(name, env, cidrBlock, region string) *MinimalVPCCompo
 func (v *MinimalVPCComposer) Compose() (*cfn.Composition, error) {
 	composition := &cfn.Composition{}
 
-	cluster := clusterPkg.New(v.Name, v.Environment)
+	cluster := clusterPkg.New(v.ClusterName)
 
 	cidr, err := cidrPkg.NewDefault(v.CidrBlock)
 	if err != nil {
@@ -258,17 +254,15 @@ var _ cfn.Composer = &MinimalVPCComposer{}
 // ExternalSecretsPolicyComposer contains state for building
 // a managed iam policy compatible with external-secrets
 type ExternalSecretsPolicyComposer struct {
-	Repository  string
-	Environment string
+	ClusterName string
 }
 
 // NewExternalSecretsPolicyComposer returns a managed IAM policy
 // that allows: https://github.com/external-secrets/kubernetes-external-secrets
 // to read SSM parameters and make them available as Kubernetes Secrets
-func NewExternalSecretsPolicyComposer(repository, env string) *ExternalSecretsPolicyComposer {
+func NewExternalSecretsPolicyComposer(clusterName string) *ExternalSecretsPolicyComposer {
 	return &ExternalSecretsPolicyComposer{
-		Repository:  repository,
-		Environment: env,
+		ClusterName: clusterName,
 	}
 }
 
@@ -285,7 +279,7 @@ func (e *ExternalSecretsPolicyComposer) Compose() (*cfn.Composition, error) {
 
 // ManagedPolicy returns a managed policy
 func (e *ExternalSecretsPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
-	policyName := fmt.Sprintf("okctl-%s-%s-ExternalSecretsServiceAccountPolicy", e.Repository, e.Environment)
+	policyName := fmt.Sprintf("okctl-%s-ExternalSecretsServiceAccountPolicy", e.ClusterName)
 	policyDesc := "Service account policy for reading SSM parameters and ASM secrets"
 
 	d := &policydocument.PolicyDocument{
@@ -348,15 +342,13 @@ func asmParameterARN(resource string) string {
 // AlbIngressControllerPolicyComposer contains state for building
 // a managed iam policy compatible with aws-alb-ingress-controller
 type AlbIngressControllerPolicyComposer struct {
-	Repository  string
-	Environment string
+	ClusterName string
 }
 
 // NewAlbIngressControllerPolicyComposer returns an initialised alb ingress controller composer
-func NewAlbIngressControllerPolicyComposer(repository, env string) *AlbIngressControllerPolicyComposer {
+func NewAlbIngressControllerPolicyComposer(clusterName string) *AlbIngressControllerPolicyComposer {
 	return &AlbIngressControllerPolicyComposer{
-		Repository:  repository,
-		Environment: env,
+		ClusterName: clusterName,
 	}
 }
 
@@ -373,7 +365,7 @@ func (a *AlbIngressControllerPolicyComposer) Compose() (*cfn.Composition, error)
 // ManagedPolicy creates a managed policy
 // nolint: funlen
 func (a *AlbIngressControllerPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
-	policyName := fmt.Sprintf("okctl-%s-%s-AlbIngressControllServiceAccountPolicy", a.Repository, a.Environment)
+	policyName := fmt.Sprintf("okctl-%s-AlbIngressControllServiceAccountPolicy", a.ClusterName)
 	policyDesc := "Service account policy for creat ALBs"
 
 	d := &policydocument.PolicyDocument{
@@ -543,15 +535,13 @@ func (a *AlbIngressControllerPolicyComposer) ManagedPolicy() *managedpolicy.Mana
 // ExternalDNSPolicyComposer contains state for building
 // a managed iam policy compatible with aws-alb-ingress-controller
 type ExternalDNSPolicyComposer struct {
-	Repository  string
-	Environment string
+	ClusterName string
 }
 
 // NewExternalDNSPolicyComposer returns an initialised alb ingress controller composer
-func NewExternalDNSPolicyComposer(repository, env string) *ExternalDNSPolicyComposer {
+func NewExternalDNSPolicyComposer(clusterName string) *ExternalDNSPolicyComposer {
 	return &ExternalDNSPolicyComposer{
-		Repository:  repository,
-		Environment: env,
+		ClusterName: clusterName,
 	}
 }
 
@@ -567,7 +557,7 @@ func (c *ExternalDNSPolicyComposer) Compose() (*cfn.Composition, error) {
 
 // ManagedPolicy returns the policy
 func (c *ExternalDNSPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
-	policyName := fmt.Sprintf("okctl-%s-%s-ExternalDNSServiceAccountPolicy", c.Repository, c.Environment)
+	policyName := fmt.Sprintf("okctl-%s-ExternalDNSServiceAccountPolicy", c.ClusterName)
 	policyDesc := "Service account policy for creating route53 hostnames"
 
 	d := &policydocument.PolicyDocument{
@@ -650,8 +640,7 @@ func (c *PublicCertificateComposer) Compose() (*cfn.Composition, error) {
 // UserPool contains all state for building
 // a cognito user pool cloud formation template
 type UserPool struct {
-	Environment    string
-	Repository     string
+	ClusterName    string
 	CertificateARN string
 	Domain         string
 	HostedZoneID   string
@@ -661,7 +650,7 @@ type UserPool struct {
 func (u *UserPool) Compose() (*cfn.Composition, error) {
 	composition := &cfn.Composition{}
 
-	userPool := userpool.New(u.Environment, u.Repository)
+	userPool := userpool.New(u.ClusterName)
 	// Cognito User Pool Domain requires an A record on the base domain, for some or another
 	// reason. Frequently we don't have this, so we create a placeholder record.
 	placeholder := recordset.New("PlaceHolder", "1.1.1.1", RootDomain(u.Domain), u.HostedZoneID)
@@ -717,10 +706,9 @@ func RootDomain(domain string) string {
 
 // NewUserPool returns an initialised composer
 // for creating a cognito user pool with clients
-func NewUserPool(environment, repository, domain, hostedZoneID, certificateARN string) *UserPool {
+func NewUserPool(clusterName, domain, hostedZoneID, certificateARN string) *UserPool {
 	return &UserPool{
-		Environment:    environment,
-		Repository:     repository,
+		ClusterName:    clusterName,
 		Domain:         domain,
 		CertificateARN: certificateARN,
 		HostedZoneID:   hostedZoneID,
@@ -730,8 +718,7 @@ func NewUserPool(environment, repository, domain, hostedZoneID, certificateARN s
 // UserPoolClient contains state for building a
 // a cognito user pool client cloud formation template
 type UserPoolClient struct {
-	Environment string
-	Repository  string
+	ClusterName string
 	Purpose     string
 	CallbackURL string
 	UserPoolID  string
@@ -741,7 +728,7 @@ type UserPoolClient struct {
 func (c *UserPoolClient) Compose() (*cfn.Composition, error) {
 	composition := &cfn.Composition{}
 
-	upc := userpoolclient.New(c.Purpose, c.Environment, c.Repository, c.CallbackURL, c.UserPoolID)
+	upc := userpoolclient.New(c.Purpose, c.ClusterName, c.CallbackURL, c.UserPoolID)
 
 	composition.Resources = append(composition.Resources, upc)
 	composition.Outputs = append(composition.Outputs, upc)
@@ -751,10 +738,9 @@ func (c *UserPoolClient) Compose() (*cfn.Composition, error) {
 
 // NewUserPoolClient returns an initialised composer for
 // creating a cognito user pool client
-func NewUserPoolClient(purpose, environment, repository, callbackURL, userPoolID string) *UserPoolClient {
+func NewUserPoolClient(purpose, clusterName, callbackURL, userPoolID string) *UserPoolClient {
 	return &UserPoolClient{
-		Environment: environment,
-		Repository:  repository,
+		ClusterName: clusterName,
 		Purpose:     purpose,
 		CallbackURL: callbackURL,
 		UserPoolID:  userPoolID,
@@ -800,15 +786,13 @@ func NewAliasRecordSet(name, aliasDNS, aliasHostedZoneID, domain, hostedZoneID s
 // AWSLoadBalancerControllerComposer contains state for building
 // a managed iam policy compatible with aws-load-balancer-controller
 type AWSLoadBalancerControllerComposer struct {
-	Repository  string
-	Environment string
+	ClusterName string
 }
 
 // NewAWSLoadBalancerControllerComposer returns an initialised aws load balancer controller composer
-func NewAWSLoadBalancerControllerComposer(repository, env string) *AWSLoadBalancerControllerComposer {
+func NewAWSLoadBalancerControllerComposer(clusterName string) *AWSLoadBalancerControllerComposer {
 	return &AWSLoadBalancerControllerComposer{
-		Repository:  repository,
-		Environment: env,
+		ClusterName: clusterName,
 	}
 }
 
@@ -825,7 +809,7 @@ func (a *AWSLoadBalancerControllerComposer) Compose() (*cfn.Composition, error) 
 // ManagedPolicy creates a managed policy
 // nolint: funlen
 func (a *AWSLoadBalancerControllerComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
-	policyName := fmt.Sprintf("okctl-%s-%s-AWSLoadBalancerControllerServiceAccountPolicy", a.Repository, a.Environment)
+	policyName := fmt.Sprintf("okctl-%s-AWSLoadBalancerControllerServiceAccountPolicy", a.ClusterName)
 	policyDesc := "Service account policy for creating AWS load balancers"
 
 	d := &policydocument.PolicyDocument{
@@ -1050,15 +1034,13 @@ func (a *AWSLoadBalancerControllerComposer) ManagedPolicy() *managedpolicy.Manag
 // AutoscalerPolicyComposer contains state for building
 // a managed iam policy compatible with cluster autoscaler
 type AutoscalerPolicyComposer struct {
-	Repository  string
-	Environment string
+	ClusterName string
 }
 
 // NewAutoscalerPolicyComposer returns an initialised cluster autoscaler composer
-func NewAutoscalerPolicyComposer(repository, env string) *AutoscalerPolicyComposer {
+func NewAutoscalerPolicyComposer(clusterName string) *AutoscalerPolicyComposer {
 	return &AutoscalerPolicyComposer{
-		Repository:  repository,
-		Environment: env,
+		ClusterName: clusterName,
 	}
 }
 
@@ -1074,7 +1056,7 @@ func (c *AutoscalerPolicyComposer) Compose() (*cfn.Composition, error) {
 
 // ManagedPolicy returns the policy
 func (c *AutoscalerPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
-	policyName := fmt.Sprintf("okctl-%s-%s-AutoscalerServiceAccountPolicy", c.Repository, c.Environment)
+	policyName := fmt.Sprintf("okctl-%s-AutoscalerServiceAccountPolicy", c.ClusterName)
 	policyDesc := "Service account policy for automatically scaling the cluster nodegroup"
 
 	d := &policydocument.PolicyDocument{
@@ -1112,15 +1094,13 @@ func (c *AutoscalerPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy 
 // BlockstoragePolicyComposer contains state for building
 // a managed iam policy compatible with ebs csi blockstorage driver
 type BlockstoragePolicyComposer struct {
-	Repository  string
-	Environment string
+	ClusterName string
 }
 
 // NewBlockstoragePolicyComposer returns an initialised ebs csi blockstorage driver composer
-func NewBlockstoragePolicyComposer(repository, env string) *BlockstoragePolicyComposer {
+func NewBlockstoragePolicyComposer(clusterName string) *BlockstoragePolicyComposer {
 	return &BlockstoragePolicyComposer{
-		Repository:  repository,
-		Environment: env,
+		ClusterName: clusterName,
 	}
 }
 
@@ -1136,7 +1116,7 @@ func (c *BlockstoragePolicyComposer) Compose() (*cfn.Composition, error) {
 
 // ManagedPolicy returns the policy
 func (c *BlockstoragePolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
-	policyName := fmt.Sprintf("okctl-%s-%s-BlockstorageServiceAccountPolicy", c.Repository, c.Environment)
+	policyName := fmt.Sprintf("okctl-%s-BlockstorageServiceAccountPolicy", c.ClusterName)
 	policyDesc := "Service account policy for provisioning persistent volume claims"
 
 	d := &policydocument.PolicyDocument{
@@ -1176,15 +1156,13 @@ func (c *BlockstoragePolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolic
 // and logs
 // - https://grafana.com/docs/grafana/latest/datasources/cloudwatch/#iam-policies
 type CloudwatchDatasourcePolicyComposer struct {
-	Repository  string
-	Environment string
+	ClusterName string
 }
 
 // NewCloudwatchDatasourcePolicyComposer returns an initialised cloudwatch datasource policy composer
-func NewCloudwatchDatasourcePolicyComposer(repository, env string) *CloudwatchDatasourcePolicyComposer {
+func NewCloudwatchDatasourcePolicyComposer(clusterName string) *CloudwatchDatasourcePolicyComposer {
 	return &CloudwatchDatasourcePolicyComposer{
-		Repository:  repository,
-		Environment: env,
+		ClusterName: clusterName,
 	}
 }
 
@@ -1200,7 +1178,7 @@ func (c *CloudwatchDatasourcePolicyComposer) Compose() (*cfn.Composition, error)
 
 // ManagedPolicy returns the policy
 func (c *CloudwatchDatasourcePolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
-	policyName := fmt.Sprintf("okctl-%s-%s-CloudwatchDatasourceServiceAccountPolicy", c.Repository, c.Environment)
+	policyName := fmt.Sprintf("okctl-%s-CloudwatchDatasourceServiceAccountPolicy", c.ClusterName)
 	policyDesc := "Service account policy for reading cloudwatch metrics and logs from grafana"
 
 	d := &policydocument.PolicyDocument{
@@ -1266,15 +1244,13 @@ func (c *CloudwatchDatasourcePolicyComposer) ManagedPolicy() *managedpolicy.Mana
 // - https://docs.aws.amazon.com/eks/latest/userguide/fargate-logging.html
 // - https://github.com/aws-samples/amazon-eks-fluent-logging-examples/blob/mainline/examples/fargate/cloudwatchlogs/permissions.json
 type FargateCloudwatchPolicyComposer struct {
-	Repository  string
-	Environment string
+	ClusterName string
 }
 
 // NewFargateCloudwatchPolicyComposer returns an initialised cloudwatch datasource policy composer
-func NewFargateCloudwatchPolicyComposer(repository, env string) *FargateCloudwatchPolicyComposer {
+func NewFargateCloudwatchPolicyComposer(clusterName string) *FargateCloudwatchPolicyComposer {
 	return &FargateCloudwatchPolicyComposer{
-		Repository:  repository,
-		Environment: env,
+		ClusterName: clusterName,
 	}
 }
 
@@ -1290,7 +1266,7 @@ func (c *FargateCloudwatchPolicyComposer) Compose() (*cfn.Composition, error) {
 
 // ManagedPolicy returns the policy
 func (c *FargateCloudwatchPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
-	policyName := fmt.Sprintf("okctl-%s-%s-FargateCloudwatchPolicy", c.Repository, c.Environment)
+	policyName := fmt.Sprintf("okctl-%s-FargateCloudwatchPolicy", c.ClusterName)
 	policyDesc := "Service account policy for reading cloudwatch metrics and logs from grafana"
 
 	d := &policydocument.PolicyDocument{
@@ -1319,8 +1295,7 @@ func (c *FargateCloudwatchPolicyComposer) ManagedPolicy() *managedpolicy.Managed
 type RDSPostgresComposerOpts struct {
 	ApplicationDBName string
 	AWSAccountID      string
-	Repository        string
-	Environment       string
+	ClusterName       string
 	DBSubnetGroupName string
 	UserName          string
 	VpcID             string
@@ -1336,8 +1311,7 @@ type RDSPostgresComposerOpts struct {
 type RDSPostgresComposer struct {
 	ApplicationDBName string
 	AWSAccountID      string
-	Repository        string
-	Environment       string
+	ClusterName       string
 	DBSubnetGroupName string
 	UserName          string
 	VpcID             string
@@ -1352,8 +1326,7 @@ func NewRDSPostgresComposer(opts RDSPostgresComposerOpts) *RDSPostgresComposer {
 	return &RDSPostgresComposer{
 		ApplicationDBName: opts.ApplicationDBName,
 		AWSAccountID:      opts.AWSAccountID,
-		Repository:        opts.Repository,
-		Environment:       opts.Environment,
+		ClusterName:       opts.ClusterName,
 		DBSubnetGroupName: opts.DBSubnetGroupName,
 		UserName:          opts.UserName,
 		VpcID:             opts.VpcID,
@@ -1373,12 +1346,12 @@ const (
 
 // NameResource returns the resource name
 func (c *RDSPostgresComposer) NameResource(resource string) string {
-	return fmt.Sprintf("%s%s%s%s", c.ApplicationDBName, c.Repository, c.Environment, resource)
+	return fmt.Sprintf("%s%s%s", c.ApplicationDBName, c.ClusterName, resource)
 }
 
 // AdminSecretFriendlyName returns the friendly name of the secret
 func (c *RDSPostgresComposer) AdminSecretFriendlyName() string {
-	return fmt.Sprintf("/%s/%s/%s/postgres_admin", c.ApplicationDBName, c.Repository, c.Environment)
+	return fmt.Sprintf("/%s/%s/postgres_admin", c.ApplicationDBName, c.ClusterName)
 }
 
 // Compose builds the policy and returns the result
@@ -1461,7 +1434,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 
 	postgres := dbinstance.New(
 		c.NameResource("RDSPostgres"),
-		fmt.Sprintf("%s-%s-%s", c.Repository, c.Environment, c.ApplicationDBName),
+		fmt.Sprintf("%s-%s", c.ClusterName, c.ApplicationDBName),
 		c.ApplicationDBName,
 		c.DBSubnetGroupName,
 		parameterGroup,
@@ -1600,13 +1573,12 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 // the AWS S3 bucket
 type S3BucketComposer struct {
 	BucketName  string
-	Repository  string
-	Environment string
+	ClusterName string
 }
 
 // ResourceBucketNameOutput returns the name of the resource
 func (s *S3BucketComposer) ResourceBucketNameOutput() string {
-	return fmt.Sprintf("%s%s%sS3Bucket", s.BucketName, s.Repository, s.Environment)
+	return fmt.Sprintf("%s%sS3Bucket", s.BucketName, s.ClusterName)
 }
 
 // Compose returns the outputs and resources
@@ -1623,10 +1595,9 @@ func (s *S3BucketComposer) Compose() (*cfn.Composition, error) {
 }
 
 // NewS3BucketComposer returns an initialised AWS S3 bucket composer
-func NewS3BucketComposer(bucketName, repo, env string) *S3BucketComposer {
+func NewS3BucketComposer(bucketName, clusterName string) *S3BucketComposer {
 	return &S3BucketComposer{
 		BucketName:  bucketName,
-		Repository:  repo,
-		Environment: env,
+		ClusterName: clusterName,
 	}
 }

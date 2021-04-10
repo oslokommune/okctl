@@ -21,7 +21,7 @@ type ExternalDNS struct {
 func NewExternalDNS(e *client.ExternalDNS, meta Metadata) *ExternalDNS {
 	return &ExternalDNS{
 		Metadata: meta,
-		Name:     e.Name,
+		Name:     "external-dns",
 		Kube:     NewExternalDNSKube(e.Kube),
 	}
 }
@@ -29,7 +29,6 @@ func NewExternalDNS(e *client.ExternalDNS, meta Metadata) *ExternalDNS {
 // Convert to client.ExternalDNS
 func (e *ExternalDNS) Convert() *client.ExternalDNS {
 	return &client.ExternalDNS{
-		Name: e.Name,
 		Kube: e.Kube.Convert(),
 	}
 }
@@ -66,10 +65,10 @@ func (e *externalDNSState) SaveExternalDNS(dns *client.ExternalDNS) error {
 	return e.node.Save(NewExternalDNS(dns, NewMetadata()))
 }
 
-func (e *externalDNSState) GetExternalDNS(name string) (*client.ExternalDNS, error) {
+func (e *externalDNSState) GetExternalDNS() (*client.ExternalDNS, error) {
 	ex := &ExternalDNS{}
 
-	err := e.node.One("Name", name, ex)
+	err := e.node.One("Name", "external-dns", ex)
 	if err != nil {
 		return nil, err
 	}
@@ -77,10 +76,10 @@ func (e *externalDNSState) GetExternalDNS(name string) (*client.ExternalDNS, err
 	return ex.Convert(), nil
 }
 
-func (e *externalDNSState) RemoveExternalDNS(name string) error {
+func (e *externalDNSState) RemoveExternalDNS() error {
 	ex := &ExternalDNS{}
 
-	err := e.node.One("Name", name, ex)
+	err := e.node.One("Name", "external-dns", ex)
 	if err != nil {
 		return err
 	}

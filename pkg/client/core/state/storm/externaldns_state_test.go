@@ -34,11 +34,11 @@ func TestExternalDNSStateScenario(t *testing.T) {
 	err = state.SaveExternalDNS(mock.ExternalDNS())
 	assert.NoError(t, err)
 
-	m, err := state.GetExternalDNS(mock.DefaultExternalDNSName)
+	m, err := state.GetExternalDNS()
 	assert.NoError(t, err)
 	assert.Equal(t, mock.ExternalDNS(), m)
 
-	err = state.RemoveExternalDNS(mock.DefaultExternalDNSName)
+	err = state.RemoveExternalDNS()
 	assert.NoError(t, err)
 
 	err = db.Close()

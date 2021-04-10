@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
-	"regexp"
 	"strings"
 
 	"github.com/oslokommune/okctl/pkg/config/state"
@@ -14,7 +13,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/virtualenv/commandlineprompter"
 
-	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/logrusorgru/aurora"
 	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/storage"
@@ -36,19 +34,19 @@ environment variable that is set of the following: $OKCTL_SHELL, $SHELL. If none
 So to override, you can run for instance:
 
 export OKCTL_SHELL=/bin/bash
-okctl venv myenv
+okctl venv -c my-cluster.yaml
 `
 
 func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 	okctlEnvironment := commands.OkctlEnvironment{}
 
 	cmd := &cobra.Command{
-		Use:   "venv ENV",
+		Use:   "venv",
 		Short: "Runs a virtual environment",
 		Long:  venvLong,
 		Args:  cobra.ExactArgs(venvArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			e, err := venvPreRunE(args, o)
+			e, err := venvPreRunE(o)
 			if err != nil {
 				return err
 			}
@@ -65,19 +63,8 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 	return cmd
 }
 
-func venvPreRunE(args []string, o *okctl.Okctl) (commands.OkctlEnvironment, error) {
-	environment := args[0]
-
-	err := validation.Validate(
-		&environment,
-		validation.Required,
-		validation.Match(regexp.MustCompile("^[a-zA-Z]{3,64}$")).Error("the environment must consist of 3-64 characters (a-z, A-Z)"),
-	)
-	if err != nil {
-		return commands.OkctlEnvironment{}, err
-	}
-
-	err = o.InitialiseWithOnlyEnv(environment)
+func venvPreRunE(o *okctl.Okctl) (commands.OkctlEnvironment, error) {
+	err := o.Initialise()
 	if err != nil {
 		return commands.OkctlEnvironment{}, err
 	}
@@ -154,7 +141,7 @@ func createVenvOpts(host state.Host, okctlEnvironment commands.OkctlEnvironment)
 		UserDirStorage:       storage.NewFileSystemStorage(okctlEnvironment.UserDataDir),
 		UserHomeDirStorage:   storage.NewFileSystemStorage(homeDir),
 		TmpStorage:           nil,
-		Environment:          okctlEnvironment.Environment,
+		ClusterName:          okctlEnvironment.ClusterName,
 		CurrentUsername:      currentUser.Username,
 	}
 
@@ -184,6 +171,7 @@ func getOs(host state.Host) shellgetter.Os {
 }
 
 type venvWelcomeMessage struct {
+	ClusterName             string
 	Environment             string
 	KubectlPath             string
 	AwsIamAuthenticatorPath string
@@ -207,7 +195,7 @@ func printWelcomeMessage(stdout io.Writer, venv *virtualenv.VirtualEnvironment, 
 	}
 
 	params := venvWelcomeMessage{
-		Environment:             opts.Environment,
+		ClusterName:             opts.ClusterName,
 		KubectlPath:             whichKubectl,
 		AwsIamAuthenticatorPath: whichAwsIamAuthenticator,
 		CommandPrompt:           "<directory> <okctl environment:kubernetes namespace>",
@@ -216,7 +204,7 @@ func printWelcomeMessage(stdout io.Writer, venv *virtualenv.VirtualEnvironment, 
 		Warning:                 venv.Warning,
 	}
 	template := `----------------- OKCTL -----------------
-Environment: {{ .Environment }}
+Cluster: {{ .ClusterName }}
 Using kubectl: {{ .KubectlPath }}
 Using aws-iam-authenticator: {{ .AwsIamAuthenticatorPath }}
 

@@ -43,7 +43,7 @@ func (s *autoscalerService) DeleteAutoscaler(ctx context.Context, id api.ID) err
 	}
 
 	stackName := cfn.NewStackNamer().
-		AutoscalerPolicy(id.Repository, id.Environment)
+		AutoscalerPolicy(id.ClusterName)
 
 	err = s.policy.DeletePolicy(ctx, client.DeletePolicyOpts{
 		ID:        id,
@@ -70,11 +70,11 @@ func (s *autoscalerService) DeleteAutoscaler(ctx context.Context, id api.ID) err
 // nolint: funlen
 func (s *autoscalerService) CreateAutoscaler(ctx context.Context, opts client.CreateAutoscalerOpts) (*client.Autoscaler, error) {
 	b := cfn.New(
-		components.NewAutoscalerPolicyComposer(opts.ID.Repository, opts.ID.Environment),
+		components.NewAutoscalerPolicyComposer(opts.ID.ClusterName),
 	)
 
 	stackName := cfn.NewStackNamer().
-		AutoscalerPolicy(opts.ID.Repository, opts.ID.Environment)
+		AutoscalerPolicy(opts.ID.ClusterName)
 
 	template, err := b.Build()
 	if err != nil {

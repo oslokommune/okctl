@@ -66,63 +66,12 @@ type Okctl struct {
 
 	StormDB *stormpkg.DB
 
-	activeEnv       string
 	restClient      *rest.HTTPClient
 	kubeConfigStore api.KubeConfigStore
 }
 
-// InitialiseWithOnlyEnv initialises okctl when the aws account is has been
-// set previously
-func (o *Okctl) InitialiseWithOnlyEnv(env string) error {
-	if !o.RepoState.HasEnvironment(env) {
-		return ErrorEnvironmentNotFound{
-			TargetEnvironment:     env,
-			AvailableEnvironments: getEnvironments(o.RepoState.Clusters),
-		}
-	}
-
-	repoDir, err := o.GetRepoDir()
-	if err != nil {
-		return err
-	}
-
-	o.RepoStateWithEnv = state.NewRepositoryStateWithEnv(env, o.RepoState, state.DefaultFileSystemSaver(
-		constant.DefaultRepositoryStateFile,
-		repoDir,
-		o.FileSystem,
-	))
-
-	o.activeEnv = env
-
-	return o.initialise()
-}
-
-// InitialiseWithEnvAndAWSAccountID initialises okctl when aws account id hasn't
-// been set yet
-func (o *Okctl) InitialiseWithEnvAndAWSAccountID(env, awsAccountID string) error {
-	repoDir, err := o.GetRepoDir()
-	if err != nil {
-		return err
-	}
-
-	o.RepoStateWithEnv = state.NewRepositoryStateWithEnv(env, o.RepoState, state.DefaultFileSystemSaver(
-		constant.DefaultRepositoryStateFile,
-		repoDir,
-		o.FileSystem,
-	))
-
-	cluster := o.RepoStateWithEnv.GetCluster()
-	cluster.AWSAccountID = awsAccountID
-	cluster.Environment = env
-	cluster.Name = o.RepoState.Metadata.Name
-
-	_, err = o.RepoStateWithEnv.SaveCluster(cluster)
-	if err != nil {
-		return err
-	}
-
-	o.activeEnv = env
-
+// Initialise okctl
+func (o *Okctl) Initialise() error {
 	return o.initialise()
 }
 
@@ -394,7 +343,7 @@ func (o *Okctl) KubeConfigStore() (api.KubeConfigStore, error) {
 		return nil, err
 	}
 
-	outputDir, err := o.GetRepoOutputDir(o.activeEnv)
+	outputDir, err := o.GetRepoOutputDir()
 	if err != nil {
 		return nil, err
 	}
@@ -402,7 +351,7 @@ func (o *Okctl) KubeConfigStore() (api.KubeConfigStore, error) {
 	return filesystem.NewKubeConfigStore(
 		o.CloudProvider,
 		constant.DefaultClusterKubeConfig,
-		path.Join(appDir, constant.DefaultCredentialsDirName, o.RepoStateWithEnv.GetClusterName()),
+		path.Join(appDir, constant.DefaultCredentialsDirName, o.Declaration.Metadata.Name),
 		constant.DefaultClusterConfig,
 		path.Join(outputDir, constant.DefaultClusterBaseDir),
 		o.FileSystem,
@@ -439,8 +388,6 @@ func (o *Okctl) initialise() error {
 		return err
 	}
 
-	clusterName := o.RepoStateWithEnv.GetClusterName()
-
 	kubeConfigStore, err := o.KubeConfigStore()
 	if err != nil {
 		return err
@@ -451,6 +398,8 @@ func (o *Okctl) initialise() error {
 	vpcService := core.NewVpcService(
 		awsProvider.NewVpcCloud(o.CloudProvider),
 	)
+
+	clusterName := o.Declaration.Metadata.Name
 
 	clusterService := core.NewClusterService(
 		run.NewClusterRun(
@@ -576,7 +525,7 @@ func (o *Okctl) initialise() error {
 }
 
 func (o *Okctl) initialiseStorm() error {
-	outputDir, err := o.GetRepoOutputDir(o.activeEnv)
+	outputDir, err := o.GetRepoOutputDir()
 	if err != nil {
 		return err
 	}
@@ -652,7 +601,7 @@ func (o *Okctl) NewCloudProviderWithRegion(region string) (v1alpha1.CloudProvide
 
 // newCloudProvider creates a provider for running cloud operations
 func (o *Okctl) newCloudProvider() error {
-	c, err := cloud.New(o.RepoStateWithEnv.GetMetadata().Region, o.CredentialsProvider.Aws())
+	c, err := cloud.New(o.Declaration.Metadata.Region, o.CredentialsProvider.Aws())
 	if err != nil {
 		return err
 	}
@@ -664,7 +613,7 @@ func (o *Okctl) newCloudProvider() error {
 
 func (o *Okctl) getAWSAuthenticator() (*aws.Auth, error) {
 	if o.AWSCredentialsType == context.AWSCredentialsTypeAccessKey {
-		return aws.New(aws.NewInMemoryStorage(), aws.NewAuthEnvironment(o.RepoStateWithEnv.GetMetadata().Region, os.Getenv)), nil
+		return aws.New(aws.NewInMemoryStorage(), aws.NewAuthEnvironment(o.Declaration.Metadata.Region, os.Getenv)), nil
 	}
 
 	appDir, err := o.GetUserDataDir()
@@ -699,13 +648,13 @@ https://www.passwordstore.org/
 	authStore := aws.NewIniPersister(aws.NewFileSystemIniStorer(
 		constant.DefaultClusterAwsConfig,
 		constant.DefaultClusterAwsCredentials,
-		path.Join(appDir, constant.DefaultCredentialsDirName, o.RepoStateWithEnv.GetClusterName()),
+		path.Join(appDir, constant.DefaultCredentialsDirName, o.Declaration.Metadata.Name),
 		o.FileSystem,
 	))
 
 	return aws.New(authStore, aws.NewAuthSAML(
-		o.RepoStateWithEnv.GetCluster().AWSAccountID,
-		o.RepoStateWithEnv.GetMetadata().Region,
+		o.Declaration.Metadata.AccountID,
+		o.Declaration.Metadata.Region,
 		scrape.New(),
 		aws.DefaultStsProvider,
 		aws.Interactive(o.Username(), storedPassword, fn),

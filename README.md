@@ -2,8 +2,6 @@
 
 # `okctl` - Opinionated and effortless infrastructure and application management
 
-We will be building up the functionality of this CLI within the coming weeks, and the aim is to release frequently. At this stage we are mostly setting the CI/CD and release processes.
-
 <span style="display:block;text-align:center">![okctl](logo/okctl-gopher.png)</span>
 
 ## Installation
@@ -46,7 +44,7 @@ $ cd <the new repository>
 
 A "cluster" is a Kubernetes cluster in an environment as described in [Compare and contrast](#compare-and-contrast).
 
-You will soon be running `okctl create cluster`, which will ask you for the following information:
+You will soon be running `okctl apply cluster`, which will ask you for the following information:
 
 * Username and password: This is your Oslo Kommune AD organization username (oooXXXXX) and its password.
 * Multi factor token (MFA): The same one you use to login to
@@ -59,14 +57,10 @@ after logging in to [AWS](https://login.oslo.kommune.no/auth/realms/AD/protocol/
 
 ```bash
 
-# Create a cluster. Format:
-# okctl create cluster <environment name> <AWS account ID>
-#
-# <environment name>    can be for instance "prod" or "test".
-# <AWS account ID>      is the account ID described in the above
-#
-# Example:
-$ okctl create cluster prod 123456789012
+# Scaffold a cluster. Format:
+# okctl scaffold cluster -f cluster.yaml
+# <edit cluster.yaml>
+# okctl apply cluster -f cluster.yaml
 ```
 
 Follow the instructions.
@@ -74,7 +68,7 @@ Follow the instructions.
 When done, verify that you have a working cluster by running
 
 ```bash
-$ okctl venv
+$ okctl venv -c cluster.yaml
 $ kubectl get service
 
 ```
@@ -91,16 +85,15 @@ kubernetes   ClusterIP   10.100.0.1   <none>        443/TCP   1h
 ```bash
 # Get help for any command
 $ okctl --help
-$ okctl create cluster --help
 
 # Show credentials for cluster
-$ okctl show credentials prod
+$ okctl show credentials -c cluster.yaml
 
 # Run a sub shell with environment variables from the above command and a custom command prompt (PS1)
-$ okctl venv
+$ okctl venv -c cluster.yaml
 
 # Delete the cluster
-$ okctl delete cluster prod
+$ okctl delete cluster -c cluster.yaml
 ```
 
 ## Roadmap

@@ -19,8 +19,6 @@ import (
 const (
 	DefaultRegion                     = "eu-west-1"
 	DefaultAWSAccountID               = "123456789012"
-	DefaultEnvironment                = "staging"
-	DefaultRepository                 = "okctl"
 	DefaultClusterName                = "okctl-staging"
 	DefaultDomain                     = "okctl-staging.oslo.systems"
 	DefaultAuthDomain                 = "auth.okctl-staging.oslo.systems"
@@ -37,7 +35,6 @@ const (
 	DefaultManifestName               = "okctl-cm"
 	DefaultManifestType               = client.ManifestTypeConfigMap
 	DefaultHelmReleaseName            = "okctl-helm-release"
-	DefaultExternalDNSName            = "external-dns"
 	DefaultSecretParameterName        = "release-secret"
 	DefaultSecretParameterVersion     = 1
 	DefaultSecretParameterPath        = "/okctl/staging/release-secret"
@@ -100,8 +97,6 @@ func ID() api.ID {
 	return api.ID{
 		Region:       DefaultRegion,
 		AWSAccountID: DefaultAWSAccountID,
-		Environment:  DefaultEnvironment,
-		Repository:   DefaultRepository,
 		ClusterName:  DefaultClusterName,
 	}
 }
@@ -249,7 +244,6 @@ func ExternalDNSKube() *client.ExternalDNSKube {
 // ExternalDNS returns a fake external dns
 func ExternalDNS() *client.ExternalDNS {
 	return &client.ExternalDNS{
-		Name: DefaultExternalDNSName,
 		Kube: ExternalDNSKube(),
 	}
 }

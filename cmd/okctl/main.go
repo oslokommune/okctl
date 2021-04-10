@@ -22,10 +22,8 @@ func main() {
 	}
 }
 
-func loadRepoData(o *okctl.Okctl, _ *cobra.Command) error {
-	repoDataNotFound := load.CreateOnRepoDataNotFound()
-
-	o.RepoDataLoader = load.RepoDataFromConfigFile(repoDataNotFound)
+func loadRepoData(o *okctl.Okctl, configFile string, _ *cobra.Command) error {
+	o.RepoDataLoader = load.RepoDataFromConfigFile(configFile)
 
 	return o.LoadRepoData()
 }
@@ -40,7 +38,7 @@ func loadUserData(o *okctl.Okctl, cmd *cobra.Command) error {
 
 // nolint: funlen
 func buildRootCommand() *cobra.Command {
-	var outputFormat string
+	var outputFormat, config string
 
 	o := okctl.New()
 
@@ -62,12 +60,16 @@ being captured. Together with slack and slick.`,
 
 			var err error
 
+			if len(config) == 0 {
+				return fmt.Errorf("config must be provided")
+			}
+
 			err = loadUserData(o, cmd)
 			if err != nil {
 				return fmt.Errorf("loading application data: %w", err)
 			}
 
-			err = loadRepoData(o, cmd)
+			err = loadRepoData(o, config, cmd)
 			if err != nil {
 				if errors.Is(err, git.ErrRepositoryNotExists) {
 					return fmt.Errorf("okctl needs to be run inside a Git repository (okctl outputs " +
@@ -107,6 +109,9 @@ being captured. Together with slack and slick.`,
 	f := cmd.Flags()
 	f.StringVarP(&outputFormat, "output", "o", "text",
 		"The format of the output returned to the user")
+
+	f.StringVarP(&config, "config", "", "",
+		"The cluster config you want to use")
 
 	return cmd
 }

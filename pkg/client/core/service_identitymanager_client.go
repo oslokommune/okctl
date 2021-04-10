@@ -26,7 +26,7 @@ func (s *identityManagerService) DeleteIdentityPoolClient(_ context.Context, opt
 		return err
 	}
 
-	stackName := cfn.NewStackNamer().IdentityPoolClient(opts.ID.Repository, opts.ID.Environment, opts.Purpose)
+	stackName := cfn.NewStackNamer().IdentityPoolClient(opts.ID.ClusterName, opts.Purpose)
 
 	err = s.state.RemoveIdentityPoolClient(stackName)
 	if err != nil {
@@ -38,7 +38,7 @@ func (s *identityManagerService) DeleteIdentityPoolClient(_ context.Context, opt
 
 // DeleteIdentityPool and all users
 func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, id api.ID) error {
-	stackName := cfn.NewStackNamer().IdentityPool(id.Repository, id.Environment)
+	stackName := cfn.NewStackNamer().IdentityPool(id.ClusterName)
 
 	pool, err := s.state.GetIdentityPool(stackName)
 	if err != nil {

@@ -43,7 +43,7 @@ func (s *externalSecretsService) DeleteExternalSecrets(ctx context.Context, id a
 	}
 
 	stackName := cfn.NewStackNamer().
-		ExternalSecretsPolicy(id.Repository, id.Environment)
+		ExternalSecretsPolicy(id.ClusterName)
 
 	err = s.policy.DeletePolicy(ctx, client.DeletePolicyOpts{
 		ID:        id,
@@ -71,13 +71,12 @@ func (s *externalSecretsService) DeleteExternalSecrets(ctx context.Context, id a
 func (s *externalSecretsService) CreateExternalSecrets(ctx context.Context, opts client.CreateExternalSecretsOpts) (*client.ExternalSecrets, error) {
 	b := cfn.New(
 		components.NewExternalSecretsPolicyComposer(
-			opts.ID.Repository,
-			opts.ID.Environment,
+			opts.ID.ClusterName,
 		),
 	)
 
 	stackName := cfn.NewStackNamer().
-		ExternalSecretsPolicy(opts.ID.Repository, opts.ID.Environment)
+		ExternalSecretsPolicy(opts.ID.ClusterName)
 
 	template, err := b.Build()
 	if err != nil {

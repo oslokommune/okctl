@@ -22,10 +22,6 @@ type externalDNSService struct {
 	account client.ServiceAccountService
 }
 
-const (
-	externalDNSName = "external-dns"
-)
-
 func (s *externalDNSService) DeleteExternalDNS(ctx context.Context, id api.ID) error {
 	config, err := clusterconfig.NewExternalDNSServiceAccount(
 		id.ClusterName,
@@ -47,7 +43,7 @@ func (s *externalDNSService) DeleteExternalDNS(ctx context.Context, id api.ID) e
 	}
 
 	stackName := cfn.NewStackNamer().
-		ExternalDNSPolicy(id.Repository, id.Environment)
+		ExternalDNSPolicy(id.ClusterName)
 
 	err = s.policy.DeletePolicy(ctx, client.DeletePolicyOpts{
 		ID:        id,
@@ -57,7 +53,7 @@ func (s *externalDNSService) DeleteExternalDNS(ctx context.Context, id api.ID) e
 		return err
 	}
 
-	err = s.state.RemoveExternalDNS(externalDNSName)
+	err = s.state.RemoveExternalDNS()
 	if err != nil {
 		return err
 	}
@@ -68,11 +64,11 @@ func (s *externalDNSService) DeleteExternalDNS(ctx context.Context, id api.ID) e
 // nolint: funlen
 func (s *externalDNSService) CreateExternalDNS(ctx context.Context, opts client.CreateExternalDNSOpts) (*client.ExternalDNS, error) {
 	b := cfn.New(
-		components.NewExternalDNSPolicyComposer(opts.ID.Repository, opts.ID.Environment),
+		components.NewExternalDNSPolicyComposer(opts.ID.ClusterName),
 	)
 
 	stackName := cfn.NewStackNamer().
-		ExternalDNSPolicy(opts.ID.Repository, opts.ID.Environment)
+		ExternalDNSPolicy(opts.ID.ClusterName)
 
 	template, err := b.Build()
 	if err != nil {

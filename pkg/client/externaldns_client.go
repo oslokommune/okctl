@@ -8,7 +8,6 @@ import (
 
 // ExternalDNS contains state about an external dns deployment
 type ExternalDNS struct {
-	Name           string
 	Policy         *ManagedPolicy
 	ServiceAccount *ServiceAccount
 	Kube           *ExternalDNSKube
@@ -43,6 +42,6 @@ type ExternalDNSAPI interface {
 // ExternalDNSState implements the persistence layer
 type ExternalDNSState interface {
 	SaveExternalDNS(dns *ExternalDNS) error
-	GetExternalDNS(name string) (*ExternalDNS, error)
-	RemoveExternalDNS(name string) error
+	GetExternalDNS() (*ExternalDNS, error)
+	RemoveExternalDNS() error
 }

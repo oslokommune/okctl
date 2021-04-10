@@ -62,7 +62,7 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 	bucket, err := c.api.CreateS3Bucket(api.CreateS3BucketOpts{
 		ID:        opts.ID,
 		Name:      bucketName,
-		StackName: cfn.NewStackNamer().S3Bucket(opts.ApplicationName, opts.ID.Repository, opts.ID.Environment),
+		StackName: cfn.NewStackNamer().S3Bucket(opts.ApplicationName, opts.ID.ClusterName),
 	})
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		ID:                opts.ID,
 		ApplicationName:   opts.ApplicationName,
 		UserName:          opts.UserName,
-		StackName:         cfn.NewStackNamer().RDSPostgres(opts.ApplicationName, opts.ID.Repository, opts.ID.Environment),
+		StackName:         cfn.NewStackNamer().RDSPostgres(opts.ApplicationName, opts.ID.ClusterName),
 		VpcID:             opts.VpcID,
 		DBSubnetGroupName: opts.DBSubnetGroupName,
 		DBSubnetIDs:       opts.DBSubnetIDs,
@@ -197,7 +197,7 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 
 // nolint: funlen
 func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts client.DeletePostgresDatabaseOpts) error {
-	stackName := cfn.NewStackNamer().RDSPostgres(opts.ApplicationName, opts.ID.Repository, opts.ID.Environment)
+	stackName := cfn.NewStackNamer().RDSPostgres(opts.ApplicationName, opts.ID.ClusterName)
 
 	db, err := c.state.GetPostgresDatabase(stackName)
 	if err != nil {
@@ -265,7 +265,7 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 
 	err = c.api.DeleteS3Bucket(api.DeleteS3BucketOpts{
 		ID:        opts.ID,
-		StackName: cfn.NewStackNamer().S3Bucket(opts.ApplicationName, opts.ID.Repository, opts.ID.Environment),
+		StackName: cfn.NewStackNamer().S3Bucket(opts.ApplicationName, opts.ID.ClusterName),
 	})
 	if err != nil {
 		return err

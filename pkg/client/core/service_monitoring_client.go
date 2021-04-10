@@ -361,7 +361,7 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 
 	err = s.policy.DeletePolicy(ctx, client.DeletePolicyOpts{
 		ID:        opts.ID,
-		StackName: cfn.NewStackNamer().CloudwatchDatasource(opts.ID.Repository, opts.ID.Environment),
+		StackName: cfn.NewStackNamer().CloudwatchDatasource(opts.ID.ClusterName),
 	})
 	if err != nil {
 		return err
@@ -369,7 +369,7 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 
 	err = s.policy.DeletePolicy(ctx, client.DeletePolicyOpts{
 		ID:        opts.ID,
-		StackName: cfn.NewStackNamer().FargateCloudwatch(opts.ID.Repository, opts.ID.Environment),
+		StackName: cfn.NewStackNamer().FargateCloudwatch(opts.ID.ClusterName),
 	})
 	if err != nil {
 		return err
@@ -393,14 +393,14 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 
 // nolint: funlen, gocyclo
 func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client.CreateKubePromStackOpts) (*client.KubePromStack, error) {
-	cft, err := cfn.New(components.NewCloudwatchDatasourcePolicyComposer(opts.ID.Repository, opts.ID.Environment)).Build()
+	cft, err := cfn.New(components.NewCloudwatchDatasourcePolicyComposer(opts.ID.ClusterName)).Build()
 	if err != nil {
 		return nil, err
 	}
 
 	policy, err := s.policy.CreatePolicy(ctx, client.CreatePolicyOpts{
 		ID:                     opts.ID,
-		StackName:              cfn.NewStackNamer().CloudwatchDatasource(opts.ID.Repository, opts.ID.Environment),
+		StackName:              cfn.NewStackNamer().CloudwatchDatasource(opts.ID.ClusterName),
 		PolicyOutputName:       "CloudwatchDatasourcePolicy", // We need to cleanup the way we name outputs
 		CloudFormationTemplate: cft,
 	})
@@ -640,14 +640,14 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 		return nil, err
 	}
 
-	fcp, err := cfn.New(components.NewFargateCloudwatchPolicyComposer(opts.ID.Repository, opts.ID.Environment)).Build()
+	fcp, err := cfn.New(components.NewFargateCloudwatchPolicyComposer(opts.ID.ClusterName)).Build()
 	if err != nil {
 		return nil, err
 	}
 
 	fargatePolicy, err := s.policy.CreatePolicy(ctx, client.CreatePolicyOpts{
 		ID:                     opts.ID,
-		StackName:              cfn.NewStackNamer().FargateCloudwatch(opts.ID.Repository, opts.ID.Environment),
+		StackName:              cfn.NewStackNamer().FargateCloudwatch(opts.ID.ClusterName),
 		PolicyOutputName:       "FargateCloudwatchPolicy", // We need to cleanup the way we name outputs
 		CloudFormationTemplate: fcp,
 	})

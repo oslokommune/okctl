@@ -19,8 +19,7 @@ const (
 type UserPool struct {
 	StoredName  string
 	PoolName    string
-	Environment string
-	Repository  string
+	ClusterName string
 }
 
 // NamedOutputs returns the named outputs
@@ -71,7 +70,7 @@ func (p *UserPool) Resource() cloudformation.Resource {
 			AllowAdminCreateUserOnly: true,
 			InviteMessageTemplate: &cognito.UserPool_InviteMessageTemplate{
 				EmailMessage: "Your username is {username} and temporary password is {####}",
-				EmailSubject: fmt.Sprintf("Your temporary password for %s (%s)", p.Repository, p.Environment),
+				EmailSubject: fmt.Sprintf("Your temporary password for %s", p.ClusterName),
 			},
 		},
 		AutoVerifiedAttributes: []string{
@@ -87,7 +86,7 @@ func (p *UserPool) Resource() cloudformation.Resource {
 		EmailConfiguration: &cognito.UserPool_EmailConfiguration{
 			EmailSendingAccount: "COGNITO_DEFAULT",
 		},
-		EmailVerificationSubject: fmt.Sprintf("Your verification code for %s (%s)", p.Repository, p.Environment),
+		EmailVerificationSubject: fmt.Sprintf("Your verification code for %s", p.ClusterName),
 		EmailVerificationMessage: "Your verification code is {####}.",
 		Policies: &cognito.UserPool_Policies{
 			PasswordPolicy: &cognito.UserPool_PasswordPolicy{
@@ -122,7 +121,7 @@ func (p *UserPool) Resource() cloudformation.Resource {
 		VerificationMessageTemplate: &cognito.UserPool_VerificationMessageTemplate{
 			DefaultEmailOption: "CONFIRM_WITH_LINK",
 			EmailMessage:       "Your verification code is {####}.",
-			EmailSubject:       fmt.Sprintf("Your verification code for %s (%s)", p.Repository, p.Environment),
+			EmailSubject:       fmt.Sprintf("Your verification code for %s", p.ClusterName),
 		},
 	}
 }
@@ -138,11 +137,10 @@ func (p *UserPool) Ref() string {
 }
 
 // New returns an initialised cognito user pool
-func New(env, repository string) *UserPool {
+func New(clusterName string) *UserPool {
 	return &UserPool{
 		StoredName:  "UserPool",
-		PoolName:    fmt.Sprintf("okctl-%s-%s-userpool", env, repository),
-		Environment: env,
-		Repository:  repository,
+		PoolName:    fmt.Sprintf("okctl-%s-userpool", clusterName),
+		ClusterName: clusterName,
 	}
 }

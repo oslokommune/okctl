@@ -15,7 +15,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
-	"github.com/spf13/afero"
 )
 
 // SynchronizeOpts contains the necessary information that Synchronize() needs to do its work
@@ -27,9 +26,6 @@ type SynchronizeOpts struct {
 	ClusterDeclaration    *v1alpha1.Cluster
 	ReconciliationManager reconciler.Reconciler
 	StateHandlers         *clientCore.StateHandlers
-
-	Fs        *afero.Afero
-	OutputDir string
 }
 
 // Synchronize knows how to discover differences between desired and actual state and rectify them
@@ -48,7 +44,6 @@ func Synchronize(opts *SynchronizeOpts) error {
 
 	diffTree.ApplyFunction(applyDeclaration(opts.ClusterDeclaration), &resourcetree.ResourceNode{})
 	diffTree.ApplyFunction(applyCurrentState, currentStateTree)
-	setRefreshers(diffTree, opts)
 
 	if opts.Debug {
 		_, _ = fmt.Fprintf(opts.Out, "Present resources in desired tree (what is desired): \n%s\n\n", desiredTree.String())
@@ -185,53 +180,6 @@ func applyCurrentState(receiver *resourcetree.ResourceNode, target *resourcetree
 	if receiver.State == target.State {
 		receiver.State = resourcetree.ResourceNodeStateNoop
 	}
-}
-
-// setRefreshers sets a refresher on each node of a tree
-func setRefreshers(desiredTree *resourcetree.ResourceNode, opts *SynchronizeOpts) {
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeCluster, CreateClusterStateRefresher(
-		opts.ID,
-		opts.StateHandlers.Vpc,
-	))
-
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeAWSLoadBalancerController, CreateAWSLoadBalancerControllerRefresher(
-		opts.ID,
-		opts.StateHandlers.Vpc,
-	))
-
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeExternalDNS, CreateExternalDNSStateRefresher(
-		opts.StateHandlers.Domain,
-	))
-
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeIdentityManager, CreateIdentityManagerRefresher(
-		opts.StateHandlers.Domain,
-	))
-
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeArgoCD, CreateArgocdStateRefresher(
-		opts.ID,
-		opts.StateHandlers.Domain,
-		opts.StateHandlers.IdentityManager,
-	))
-
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeKubePromStack, CreateKubePromStackRefresher(
-		opts.ID,
-		opts.StateHandlers.Domain,
-		opts.StateHandlers.IdentityManager,
-	))
-
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeNameserverDelegator, CreateNameserverDelegationStateRefresher(
-		opts.StateHandlers.Domain,
-	))
-
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeUsers, CreateUsersRefresher(
-		opts.ID,
-		opts.StateHandlers.IdentityManager,
-	))
-
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypePostgres, CreatePostgresDatabasesRefresher(
-		opts.ID,
-		opts.StateHandlers.Vpc,
-	))
 }
 
 // boolToState converts a boolean to a resourcetree.ResourceNodeState

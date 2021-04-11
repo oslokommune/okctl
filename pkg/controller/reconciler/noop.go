@@ -1,12 +1,17 @@
 package reconciler
 
 import (
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
 
 // NoopReconciler handles reconciliation for dummy nodes (e.g. the root node) and acts as a template for other
 // reconcilers
 type NoopReconciler struct{}
+
+// SetStateHandlers sets the state handlers
+func (receiver *NoopReconciler) SetStateHandlers(_ *clientCore.StateHandlers) {
+}
 
 // NodeType returns the relevant ResourceNodeType for this reconciler
 func (receiver *NoopReconciler) NodeType() resourcetree.ResourceNodeType {

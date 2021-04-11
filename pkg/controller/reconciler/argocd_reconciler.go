@@ -4,24 +4,16 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/cfn"
+
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/miekg/dns"
-	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
-
-// ArgocdResourceState contains runtime data needed in Reconcile()
-type ArgocdResourceState struct {
-	HostedZone *client.HostedZone
-
-	UserPoolID string
-	AuthDomain string
-
-	Organisation string
-	Repository   string
-}
 
 // NodeType returns the relevant ResourceNodeType for this reconciler
 func (z *argocdReconciler) NodeType() resourcetree.ResourceNodeType {
@@ -31,6 +23,7 @@ func (z *argocdReconciler) NodeType() resourcetree.ResourceNodeType {
 // argocdReconciler contains service and metadata for the relevant resource
 type argocdReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
+	stateHandlers  *clientCore.StateHandlers
 
 	argocdClient client.ArgoCDService
 	githubClient client.GithubService
@@ -39,6 +32,10 @@ type argocdReconciler struct {
 // SetCommonMetadata saves common metadata for use in Reconcile()
 func (z *argocdReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
+}
+
+func (z *argocdReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
+	z.stateHandlers = handlers
 }
 
 /*
@@ -50,11 +47,6 @@ Dependent on:
 */
 // nolint: funlen
 func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
-	resourceState, ok := node.ResourceState.(ArgocdResourceState)
-	if !ok {
-		return result, errors.New("casting ArgoCD resource resourceState")
-	}
-
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		repo, err := z.githubClient.CreateGithubRepository(z.commonMetadata.Ctx, client.CreateGithubRepositoryOpts{
@@ -67,14 +59,26 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (result Re
 			return result, fmt.Errorf("fetching deploy key: %w", err)
 		}
 
+		hz, err := z.stateHandlers.Domain.GetPrimaryHostedZone()
+		if err != nil {
+			return result, fmt.Errorf("getting primary hosted zone: %w", err)
+		}
+
+		im, err := z.stateHandlers.IdentityManager.GetIdentityPool(
+			cfn.NewStackNamer().IdentityPool(z.commonMetadata.Declaration.Metadata.Name),
+		)
+		if err != nil {
+			return result, fmt.Errorf("getting identity pool: %w", err)
+		}
+
 		_, err = z.argocdClient.CreateArgoCD(z.commonMetadata.Ctx, client.CreateArgoCDOpts{
 			ID:                 z.commonMetadata.ClusterID,
 			Domain:             z.commonMetadata.Declaration.ClusterRootDomain,
 			FQDN:               dns.Fqdn(z.commonMetadata.Declaration.ClusterRootDomain),
-			HostedZoneID:       resourceState.HostedZone.HostedZoneID,
+			HostedZoneID:       hz.HostedZoneID,
 			GithubOrganisation: z.commonMetadata.Declaration.Github.Organisation,
-			UserPoolID:         resourceState.UserPoolID,
-			AuthDomain:         resourceState.AuthDomain,
+			UserPoolID:         im.UserPoolID,
+			AuthDomain:         im.AuthDomain,
 			Repository:         repo,
 		})
 
@@ -102,8 +106,8 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (result Re
 
 		err = z.githubClient.DeleteGithubRepository(z.commonMetadata.Ctx, client.DeleteGithubRepositoryOpts{
 			ID:           z.commonMetadata.ClusterID,
-			Organisation: resourceState.Organisation,
-			Name:         resourceState.Repository,
+			Organisation: z.commonMetadata.Declaration.Github.Organisation,
+			Name:         z.commonMetadata.Declaration.Github.Repository,
 		})
 		if err != nil {
 			return result, fmt.Errorf("deleting github repository: %w", err)
@@ -114,7 +118,10 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (result Re
 }
 
 // NewArgocdReconciler creates a new reconciler for the ArgoCD resource
-func NewArgocdReconciler(argocdClient client.ArgoCDService, githubClient client.GithubService) Reconciler {
+func NewArgocdReconciler(
+	argocdClient client.ArgoCDService,
+	githubClient client.GithubService,
+) Reconciler {
 	return &argocdReconciler{
 		argocdClient: argocdClient,
 		githubClient: githubClient,

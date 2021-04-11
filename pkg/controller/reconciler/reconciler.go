@@ -4,6 +4,8 @@ package reconciler
 import (
 	"time"
 
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
+
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
 
@@ -22,4 +24,6 @@ type Reconciler interface {
 	Reconcile(*resourcetree.ResourceNode) (ReconcilationResult, error)
 	// SetCommonMetadata knows how to store metadata needed by the reconciler for later use
 	SetCommonMetadata(metadata *resourcetree.CommonMetadata)
+	// SetStateHandlers knows how to set the state handlers needed by the reconciler
+	SetStateHandlers(handlers *clientCore.StateHandlers)
 }

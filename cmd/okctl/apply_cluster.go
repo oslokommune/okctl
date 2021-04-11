@@ -176,8 +176,6 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("error getting services: %w", err)
 			}
 
-			outputDir, _ := o.GetRepoOutputDir()
-
 			reconciliationManager := reconciler.NewCompositeReconciler(spin,
 				reconciler.NewArgocdReconciler(services.ArgoCD, services.Github),
 				reconciler.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService),
@@ -206,15 +204,15 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				Declaration: opts.Declaration,
 			})
 
+			reconciliationManager.SetStateHandlers(handlers)
+
 			synchronizeOpts := &controller.SynchronizeOpts{
 				Debug:                 o.Debug,
 				Out:                   o.Out,
 				ID:                    id,
 				ClusterDeclaration:    opts.Declaration,
 				ReconciliationManager: reconciliationManager,
-				Fs:                    o.FileSystem,
-				OutputDir:             outputDir,
-				StateHandlers:         o.StateHandlers(o.StateNodes()),
+				StateHandlers:         handlers,
 			}
 
 			err = controller.Synchronize(synchronizeOpts)

@@ -3,20 +3,18 @@ package reconciler
 import (
 	"fmt"
 
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
+
 	"github.com/mishudark/errors"
 
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
 
-// ExternalDNSResourceState contains runtime data needed in Reconcile()
-type ExternalDNSResourceState struct {
-	PrimaryHostedZoneID string
-}
-
 // externalDNSReconciler contains service and metadata for the relevant resource
 type externalDNSReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
+	stateHandlers  *clientCore.StateHandlers
 
 	client client.ExternalDNSService
 }
@@ -31,18 +29,23 @@ func (z *externalDNSReconciler) SetCommonMetadata(metadata *resourcetree.CommonM
 	z.commonMetadata = metadata
 }
 
+// SetStateHandlers sets the state handlers
+func (z *externalDNSReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
+	z.stateHandlers = handlers
+}
+
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
 func (z *externalDNSReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
-	resourceState, ok := node.ResourceState.(ExternalDNSResourceState)
-	if !ok {
-		return result, errors.New("casting External DNS resourceState")
-	}
-
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
+		hz, err := z.stateHandlers.Domain.GetPrimaryHostedZone()
+		if err != nil {
+			return result, fmt.Errorf("getting primary hosted zone: %w", err)
+		}
+
 		_, err = z.client.CreateExternalDNS(z.commonMetadata.Ctx, client.CreateExternalDNSOpts{
 			ID:           z.commonMetadata.ClusterID,
-			HostedZoneID: resourceState.PrimaryHostedZoneID,
+			HostedZoneID: hz.HostedZoneID,
 			Domain:       z.commonMetadata.Declaration.ClusterRootDomain,
 		})
 		if err != nil {

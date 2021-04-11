@@ -133,35 +133,9 @@ type StateRefreshFn func(node *ResourceNode)
 
 // ResourceNode represents a component of the cluster and its dependencies
 type ResourceNode struct {
-	Type  ResourceNodeType
-	State ResourceNodeState
-
-	StateRefresher StateRefreshFn
-	// ResourceState contains data that needs to be retrieved runtime. In other words, data that potentially only exist
-	// after an external resource has been created
-	ResourceState interface{}
-
+	Type     ResourceNodeType
+	State    ResourceNodeState
 	Children []*ResourceNode
-}
-
-// RefreshState calls the stored StateRefreshFn if it exists
-func (node *ResourceNode) RefreshState() {
-	if node.StateRefresher == nil {
-		return
-	}
-
-	node.StateRefresher(node)
-}
-
-// SetStateRefresher stores a StateRefreshFn on the node to be used to retrieve runtime state later
-func (node *ResourceNode) SetStateRefresher(nodeType ResourceNodeType, refresher StateRefreshFn) {
-	targetNode := node.GetNode(&ResourceNode{Type: nodeType})
-
-	if targetNode == nil {
-		return
-	}
-
-	targetNode.StateRefresher = refresher
 }
 
 // Equals knows how to compare two ResourceNodes and determine equality

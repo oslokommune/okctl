@@ -3,6 +3,8 @@ package controller
 import (
 	"testing"
 
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
+
 	"github.com/mishudark/errors"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
@@ -21,6 +23,8 @@ func (d *dummyReconciler) NodeType() resourcetree.ResourceNodeType {
 	return resourcetree.ResourceNodeTypeGroup
 }
 func (d *dummyReconciler) SetCommonMetadata(_ *resourcetree.CommonMetadata) {}
+
+func (d *dummyReconciler) SetStateHandlers(_ *clientCore.StateHandlers) {}
 
 func (d *dummyReconciler) Reconcile(_ *resourcetree.ResourceNode) (reconciler.ReconcilationResult, error) {
 	d.ReconcileCounter++
@@ -124,6 +128,8 @@ func (m *mockAlwaysErrorReconciler) Reconcile(_ *resourcetree.ResourceNode) (rec
 }
 
 func (m *mockAlwaysErrorReconciler) SetCommonMetadata(_ *resourcetree.CommonMetadata) {}
+
+func (m *mockAlwaysErrorReconciler) SetStateHandlers(_ *clientCore.StateHandlers) {}
 
 func TestReceivedErrorAfterRequeues(t *testing.T) {
 	testCases := []struct {

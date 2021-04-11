@@ -3,20 +3,17 @@ package reconciler
 import (
 	"fmt"
 
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/cfn"
+
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
 
-// UsersState contains runtime data needed in Reconcile()
-type UsersState struct {
-	UserPoolID string
-	Users      []v1alpha1.ClusterUser
-}
-
 type usersReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
+	stateHandlers  *clientCore.StateHandlers
 
 	client client.IdentityManagerService
 }
@@ -31,20 +28,27 @@ func (z *usersReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadat
 	z.commonMetadata = metadata
 }
 
+// SetStateHandlers sets the state handlers
+func (z *usersReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
+	z.stateHandlers = handlers
+}
+
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
 func (z *usersReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
-	resourceState, ok := node.ResourceState.(UsersState)
-	if !ok {
-		return ReconcilationResult{}, fmt.Errorf("casting UsersState resource resourceState")
-	}
-
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
+		im, err := z.stateHandlers.IdentityManager.GetIdentityPool(
+			cfn.NewStackNamer().IdentityPool(z.commonMetadata.Declaration.Metadata.Name),
+		)
+		if err != nil {
+			return result, fmt.Errorf("getting identity pool: %w", err)
+		}
+
 		for _, u := range z.commonMetadata.Declaration.Users {
 			_, err = z.client.CreateIdentityPoolUser(z.commonMetadata.Ctx, client.CreateIdentityPoolUserOpts{
 				ID:         z.commonMetadata.ClusterID,
 				Email:      u.Email,
-				UserPoolID: resourceState.UserPoolID,
+				UserPoolID: im.UserPoolID,
 			})
 			if err != nil {
 				return result, fmt.Errorf("creating user: %w", err)

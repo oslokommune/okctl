@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
+
 	"github.com/logrusorgru/aurora"
 	"github.com/miekg/dns"
 	"github.com/mishudark/errors"
@@ -16,6 +18,7 @@ const defaultTestingIntervalMinutes = 5 * time.Minute
 
 type nameserversDelegatedTestReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
+	stateHandlers  *clientCore.StateHandlers
 
 	domainService client.DomainService
 }
@@ -28,6 +31,11 @@ func (n *nameserversDelegatedTestReconciler) NodeType() resourcetree.ResourceNod
 // SetCommonMetadata saves common metadata for use in Reconcile()
 func (n *nameserversDelegatedTestReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	n.commonMetadata = metadata
+}
+
+// SetStateHandlers sets the state handlers
+func (n *nameserversDelegatedTestReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
+	n.stateHandlers = handlers
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved

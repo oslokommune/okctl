@@ -69,7 +69,7 @@ func IdentifyResourcePresence(id api.ID, handlers *clientCore.StateHandlers) (Ex
 		hasExternalDNS:                        !isNotFound(handlers.ExternalDNS.GetExternalDNS()),
 		hasIdentityManager:                    !isNotFound(handlers.IdentityManager.GetIdentityPool(cfn.NewStackNamer().IdentityPool(id.ClusterName))),
 		hasArgoCD:                             !isNotFound(handlers.ArgoCD.GetArgoCD()),
-		hasDelegatedHostedZoneNameservers:     !errors.Is(err, storm.ErrNotFound) && hz != nil && hz.IsDelegated,
+		hasDelegatedHostedZoneNameservers:     hz != nil && hz.IsDelegated,
 		hasDelegatedHostedZoneNameserversTest: false,
 		hasUsers:                              false, // For now we will always check if there are missing users
 		hasPostgres:                           false, // For now we will always check if there are missing postgres databases

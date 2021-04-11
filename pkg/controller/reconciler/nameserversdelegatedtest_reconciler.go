@@ -42,7 +42,7 @@ func (n *nameserversDelegatedTestReconciler) SetStateHandlers(handlers *clientCo
 func (n *nameserversDelegatedTestReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		fmt.Fprintf(
+		_, _ = fmt.Fprintf(
 			n.commonMetadata.Out,
 			delegationRequestMessage,
 			aurora.Green("nameserver delegation request"),

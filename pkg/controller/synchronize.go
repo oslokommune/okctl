@@ -68,7 +68,7 @@ func HandleNode(reconcilerManager reconciler.Reconciler, currentNode *resourcetr
 
 		reconciliationResult, err = reconcilerManager.Reconcile(currentNode)
 		if err != nil && !reconciliationResult.Requeue {
-			return fmt.Errorf("reconciling node: %w", err)
+			return fmt.Errorf("reconciling node (%s): %w", resourcetree.ResourceNodeTypeToString(currentNode.Type), err)
 		}
 	}
 

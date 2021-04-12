@@ -1,6 +1,7 @@
 package storm
 
 import (
+	"errors"
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
@@ -13,7 +14,7 @@ type ServiceAccount struct {
 	Metadata `storm:"inline"`
 
 	ID        ID
-	Name      string `storm:"unique,index"`
+	Name      string `storm:"unique"`
 	PolicyArn string
 	Config    *v1alpha5.ClusterConfig
 }
@@ -52,6 +53,10 @@ func (s *serviceAccountState) RemoveServiceAccount(name string) error {
 
 	err := s.node.One("Name", name, sa)
 	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 

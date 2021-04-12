@@ -1,6 +1,8 @@
 package storm
 
 import (
+	"errors"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -15,7 +17,7 @@ type Cluster struct {
 	Metadata `storm:"inline"`
 
 	ID     ID
-	Name   string `storm:"unique,index"`
+	Name   string `storm:"unique"`
 	Config *v1alpha5.ClusterConfig
 }
 
@@ -58,6 +60,10 @@ func (c *clusterState) RemoveCluster(name string) error {
 
 	err := c.node.One("Name", name, cluster)
 	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 

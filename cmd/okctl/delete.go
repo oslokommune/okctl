@@ -73,7 +73,7 @@ including VPC, this is a highly destructive operation.`,
 
 			err := o.Initialise()
 			if err != nil {
-				return err
+				return fmt.Errorf("initialising: %w", err)
 			}
 
 			opts.Region = o.Declaration.Metadata.Region
@@ -103,12 +103,12 @@ including VPC, this is a highly destructive operation.`,
 
 			userDir, err := o.GetUserDataDir()
 			if err != nil {
-				return err
+				return fmt.Errorf("getting user data: %w", err)
 			}
 
 			services, err := o.ClientServices(o.StateHandlers(o.StateNodes()))
 			if err != nil {
-				return err
+				return fmt.Errorf("creating client services: %w", err)
 			}
 
 			formatErr := o.ErrorFormatter(fmt.Sprintf("delete cluster %s", opts.ClusterName), userDir)

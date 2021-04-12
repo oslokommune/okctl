@@ -1,6 +1,8 @@
 package storm
 
 import (
+	"errors"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -16,7 +18,7 @@ type PostgresDatabase struct {
 	ID                           ID
 	ApplicationName              string
 	UserName                     string
-	StackName                    string `storm:"unique,index"`
+	StackName                    string `storm:"unique"`
 	AdminSecretFriendlyName      string
 	EndpointAddress              string
 	EndpointPort                 int
@@ -116,6 +118,10 @@ func (c *componentState) RemovePostgresDatabase(stackName string) error {
 
 	err := c.node.One("StackName", stackName, db)
 	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 

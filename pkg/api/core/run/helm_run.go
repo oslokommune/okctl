@@ -28,7 +28,7 @@ func (r *helmRun) CreateHelmRelease(opts api.CreateHelmReleaseOpts) (*api.Helm, 
 }
 
 func (r *helmRun) DeleteHelmRelease(opts api.DeleteHelmReleaseOpts) error {
-	kubeConf, err := r.kubeConfigStore.GetKubeConfig()
+	kubeConf, err := r.kubeConfigStore.GetKubeConfig(opts.ID.ClusterName)
 	if err != nil {
 		return fmt.Errorf("getting kubeconfig: %w", err)
 	}
@@ -61,7 +61,7 @@ func (r *helmRun) createHelmChart(id api.ID, chart *helm.Chart) (*api.Helm, erro
 		return nil, fmt.Errorf("creating install config: %w", err)
 	}
 
-	kubeConf, err := r.kubeConfigStore.GetKubeConfig()
+	kubeConf, err := r.kubeConfigStore.GetKubeConfig(id.ClusterName)
 	if err != nil {
 		return nil, fmt.Errorf("getting kubeconfig: %w", err)
 	}

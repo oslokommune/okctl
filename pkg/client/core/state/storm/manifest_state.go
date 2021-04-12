@@ -1,6 +1,8 @@
 package storm
 
 import (
+	"errors"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -14,7 +16,7 @@ type KubernetesManifest struct {
 	Metadata `storm:"inline"`
 
 	ID        ID
-	Name      string `storm:"unique,index"`
+	Name      string `storm:"unique"`
 	Namespace string
 	Type      string
 	Content   []byte
@@ -63,6 +65,10 @@ func (s *manifestState) RemoveKubernetesManifests(name string) error {
 
 	err := s.node.One("Name", name, m)
 	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 

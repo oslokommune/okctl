@@ -1,6 +1,8 @@
 package storm
 
 import (
+	"errors"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/helm"
@@ -15,7 +17,7 @@ type helmState struct {
 type Helm struct {
 	Metadata `storm:"inline"`
 
-	ReleaseName string `storm:"unique,index"`
+	ReleaseName string `storm:"unique"`
 	ID          ID
 	Release     *release.Release
 	Chart       *helm.Chart
@@ -50,6 +52,10 @@ func (h *helmState) RemoveHelmRelease(releaseName string) error {
 
 	err := h.node.One("ReleaseName", releaseName, r)
 	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 

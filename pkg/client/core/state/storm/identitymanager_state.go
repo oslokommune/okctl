@@ -1,6 +1,8 @@
 package storm
 
 import (
+	"errors"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -17,7 +19,7 @@ type IdentityPool struct {
 	UserPoolID              string
 	AuthDomain              string
 	HostedZoneID            string
-	StackName               string `storm:"unique,index"`
+	StackName               string `storm:"unique"`
 	CloudFormationTemplates []byte
 	Certificate             *Certificate
 	RecordSetAlias          *RecordSetAlias
@@ -166,6 +168,10 @@ func (s *identityManagerState) RemoveIdentityPool(stackName string) error {
 
 	err := s.node.One("StackName", stackName, p)
 	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 

@@ -1,6 +1,8 @@
 package storm
 
 import (
+	"errors"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -13,7 +15,7 @@ type externalDNSState struct {
 type ExternalDNS struct {
 	Metadata `storm:"inline"`
 
-	Name string `storm:"unique,index"`
+	Name string `storm:"unique"`
 	Kube *ExternalDNSKube
 }
 
@@ -81,6 +83,10 @@ func (e *externalDNSState) RemoveExternalDNS() error {
 
 	err := e.node.One("Name", "external-dns", ex)
 	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 

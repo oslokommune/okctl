@@ -264,9 +264,9 @@ func (c *Config) GetRepoOutputDir() (string, error) {
 	return path.Join(base, c.Declaration.Github.OutputPath, c.Declaration.Metadata.Name), nil
 }
 
-// GetRepoApplicatiosOutputDir returns the directory where application
+// GetRepoApplicationsOutputDir returns the directory where application
 // resources are stored
-func (c *Config) GetRepoApplicatiosOutputDir() (string, error) {
+func (c *Config) GetRepoApplicationsOutputDir() (string, error) {
 	base, err := c.GetRepoStateDir()
 	if err != nil {
 		return "", err

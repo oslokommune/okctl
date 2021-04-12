@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/oslokommune/okctl/pkg/config/constant"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/client/store"
 
@@ -19,26 +19,37 @@ func RepoDataFromConfigFile(configFile string) config.DataLoaderFn {
 
 func buildRepoDataLoader(configFile string, _ func(v *viper.Viper)) config.DataLoaderFn {
 	return func(cfg *config.Config) error {
-		baseDir, err := cfg.GetRepoDir()
+		repoDir, err := cfg.GetRepoDir()
 		if err != nil {
 			return err
 		}
 
-		exists, err := cfg.FileSystem.Exists(path.Join(baseDir, configFile))
+		cfgFile := path.Join(repoDir, configFile)
+
+		exists, err := cfg.FileSystem.Exists(cfgFile)
 		if err != nil {
 			return err
 		}
 
 		if !exists {
-			return fmt.Errorf("couldn't find config file: %s", path.Join(baseDir, configFile))
+			return fmt.Errorf("couldn't find config file: %s", cfgFile)
 		}
 
-		_, err = store.NewFileSystem(baseDir, cfg.FileSystem).
-			GetStruct(constant.DefaultRepositoryStateFile, cfg.Declaration, store.FromYAML()).
+		declaration := v1alpha1.NewDefaultCluster("", "", "", "")
+
+		_, err = store.NewFileSystem(repoDir, cfg.FileSystem).
+			GetStruct(configFile, &declaration, store.FromYAML()).
 			Do()
 		if err != nil {
 			return err
 		}
+
+		err = declaration.Validate()
+		if err != nil {
+			return err
+		}
+
+		cfg.Declaration = &declaration
 
 		return nil
 	}

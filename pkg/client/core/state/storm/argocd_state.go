@@ -1,6 +1,8 @@
 package storm
 
 import (
+	"errors"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -12,7 +14,7 @@ type argoCDState struct {
 // ArgoCD contains state about an argo cd deployment
 type ArgoCD struct {
 	Metadata `storm:"inline"`
-	Name     string `storm:"unique,index"`
+	Name     string `storm:"unique"`
 
 	ID         ID
 	ArgoDomain string
@@ -62,6 +64,10 @@ func (a *argoCDState) RemoveArgoCD() error {
 
 	err := a.node.One("Name", "argocd", cd)
 	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 

@@ -85,12 +85,47 @@ func TestHasNameServers(t *testing.T) {
 	testCases := []struct {
 		name      string
 		domain    string
+		ns        []string
 		expect    interface{}
 		expectErr bool
 	}{
 		{
-			name:   "Should work",
+			name:   "Should work with equal sets",
 			domain: "test.oslo.systems",
+			ns: []string{
+				"ns-612.awsdns-12.net.",
+				"ns-1322.awsdns-37.org.",
+				"ns-1706.awsdns-21.co.uk.",
+				"ns-327.awsdns-40.com.",
+			},
+		},
+		{
+			name:   "Should work with partial matches",
+			domain: "test.oslo.systems",
+			ns: []string{
+				"ns-612.awsdns-12.net.",
+				"ns-1322.awsdns-37.org.",
+				"fake.awsdns-21.co.uk.",
+			},
+		},
+		{
+			name:      "Should fail, with no nameservers",
+			domain:    "test.oslo.systems",
+			ns:        []string{},
+			expectErr: true,
+			expect:    "nameservers do not match, expected: [], but got: [ns-1322.awsdns-37.org. ns-1706.awsdns-21.co.uk. ns-327.awsdns-40.com. ns-612.awsdns-12.net.]",
+		},
+		{
+			name:   "Should fail, with no matches",
+			domain: "test.oslo.systems",
+			ns: []string{
+				"a",
+				"b",
+				"c",
+				"d",
+			},
+			expectErr: true,
+			expect:    "nameservers do not match, expected: [a b c d], but got: [ns-1322.awsdns-37.org. ns-1706.awsdns-21.co.uk. ns-327.awsdns-40.com. ns-612.awsdns-12.net.]",
 		},
 		{
 			name:      "Should fail",
@@ -104,7 +139,7 @@ func TestHasNameServers(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			err := domain.ShouldHaveNameServers(tc.domain)
+			err := domain.ShouldHaveNameServers(tc.domain, tc.ns)
 			if tc.expectErr {
 				assert.Error(t, err)
 				assert.Equal(t, tc.expect, err.Error())

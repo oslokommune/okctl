@@ -76,7 +76,7 @@ func (s *externalDNSService) CreateExternalDNS(ctx context.Context, opts client.
 	}
 
 	policy, err := s.policy.CreatePolicy(ctx, client.CreatePolicyOpts{
-		ID:                     api.ID{},
+		ID:                     opts.ID,
 		StackName:              stackName,
 		PolicyOutputName:       "ExternalDNSPolicy",
 		CloudFormationTemplate: template,
@@ -96,7 +96,7 @@ func (s *externalDNSService) CreateExternalDNS(ctx context.Context, opts client.
 	}
 
 	account, err := s.account.CreateServiceAccount(ctx, client.CreateServiceAccountOpts{
-		ID:        api.ID{},
+		ID:        opts.ID,
 		Name:      "external-dns",
 		PolicyArn: policy.PolicyARN,
 		Config:    config,

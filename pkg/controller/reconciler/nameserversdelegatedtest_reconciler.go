@@ -7,7 +7,6 @@ import (
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
 	"github.com/logrusorgru/aurora"
-	"github.com/miekg/dns"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
@@ -49,9 +48,12 @@ func (n *nameserversDelegatedTestReconciler) Reconcile(node *resourcetree.Resour
 			aurora.Bold("#kjøremiljø-support"),
 		)
 
-		primaryHostedZoneFQDN := dns.Fqdn(n.commonMetadata.Declaration.ClusterRootDomain)
+		hz, err := n.stateHandlers.Domain.GetPrimaryHostedZone()
+		if err != nil {
+			return result, fmt.Errorf("getting primary hosted zone: %w", err)
+		}
 
-		err = domain.ShouldHaveNameServers(primaryHostedZoneFQDN)
+		err = domain.ShouldHaveNameServers(hz.FQDN, hz.NameServers)
 		if err != nil {
 			result.Requeue = true
 			result.RequeueAfter = defaultTestingIntervalMinutes

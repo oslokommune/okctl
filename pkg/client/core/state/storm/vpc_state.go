@@ -1,6 +1,8 @@
 package storm
 
 import (
+	"errors"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -14,7 +16,7 @@ type Vpc struct {
 	Metadata `storm:"inline"`
 
 	ID                       ID
-	StackName                string `storm:"unique,index"`
+	StackName                string `storm:"unique"`
 	CloudFormationTemplate   []byte
 	VpcID                    string
 	Cidr                     string
@@ -136,6 +138,10 @@ func (v *vpcState) RemoveVpc(stackName string) error {
 
 	err := v.node.One("StackName", stackName, vpc)
 	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 

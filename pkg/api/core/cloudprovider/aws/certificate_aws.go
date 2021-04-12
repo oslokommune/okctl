@@ -1,8 +1,9 @@
 package aws
 
 import (
+	"fmt"
+
 	"github.com/gosimple/slug"
-	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn"
@@ -38,14 +39,14 @@ func (c *certificate) CreateCertificate(opts api.CreateCertificateOpts) (*api.Ce
 
 	template, err := b.Build()
 	if err != nil {
-		return nil, errors.E(err, "failed to build cloud formation template")
+		return nil, fmt.Errorf("building cloudformation template: %w", err)
 	}
 
 	r := cfn.NewRunner(c.provider)
 
 	err = r.CreateIfNotExists(stackName, template, nil, defaultTimeOut)
 	if err != nil {
-		return nil, errors.E(err, "failed to create cloud formation template")
+		return nil, fmt.Errorf("applying cloudformation template: %w", err)
 	}
 
 	p := &api.Certificate{
@@ -61,7 +62,7 @@ func (c *certificate) CreateCertificate(opts api.CreateCertificateOpts) (*api.Ce
 		"PublicCertificate": cfn.String(&p.CertificateARN),
 	})
 	if err != nil {
-		return nil, errors.E(err, "failed to process outputs")
+		return nil, fmt.Errorf("processing outputs: %w", err)
 	}
 
 	return p, nil

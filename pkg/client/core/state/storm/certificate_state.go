@@ -1,6 +1,8 @@
 package storm
 
 import (
+	"errors"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -15,7 +17,7 @@ type Certificate struct {
 
 	ID                     ID
 	FQDN                   string
-	Domain                 string `storm:"unique,index"`
+	Domain                 string `storm:"unique"`
 	HostedZoneID           string
 	ARN                    string
 	StackName              string
@@ -69,6 +71,10 @@ func (c *certificateState) RemoveCertificate(domain string) error {
 
 	err := c.node.One("Domain", domain, &cert)
 	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 

@@ -1,6 +1,8 @@
 package storm
 
 import (
+	"errors"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -14,7 +16,7 @@ type SecretParameter struct {
 	Metadata `storm:"inline"`
 
 	ID      ID
-	Name    string `storm:"unique,index"`
+	Name    string `storm:"unique"`
 	Path    string
 	Version int64
 }
@@ -61,6 +63,10 @@ func (p *parameterState) RemoveSecret(name string) error {
 
 	err := p.node.One("Name", name, s)
 	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 

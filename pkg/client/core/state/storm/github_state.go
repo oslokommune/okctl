@@ -1,6 +1,8 @@
 package storm
 
 import (
+	"errors"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -16,7 +18,7 @@ type GithubRepository struct {
 	ID           ID
 	Organisation string
 	Repository   string
-	FullName     string `storm:"unique,index"`
+	FullName     string `storm:"unique"`
 	GitURL       string
 	DeployKey    *GithubDeployKey
 }
@@ -114,6 +116,10 @@ func (g *githubState) RemoveGithubRepository(fullName string) error {
 
 	err := g.node.One("FullName", fullName, r)
 	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 

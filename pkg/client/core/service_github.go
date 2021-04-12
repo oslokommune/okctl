@@ -50,7 +50,7 @@ func (s *githubService) CreateGithubRepository(_ context.Context, opts client.Cr
 		return nil, err
 	}
 
-	if r.Validate() == nil {
+	if r != nil && r.Validate() == nil {
 		return r, nil
 	}
 

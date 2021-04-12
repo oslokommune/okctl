@@ -36,7 +36,9 @@ func (z *externalSecretsReconciler) SetStateHandlers(handlers *clientCore.StateH
 func (z *externalSecretsReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err = z.client.CreateExternalSecrets(z.commonMetadata.Ctx, client.CreateExternalSecretsOpts{ID: z.commonMetadata.ClusterID})
+		_, err = z.client.CreateExternalSecrets(z.commonMetadata.Ctx, client.CreateExternalSecretsOpts{
+			ID: z.commonMetadata.ClusterID,
+		})
 		if err != nil {
 			return result, fmt.Errorf("creating external secrets: %w", err)
 		}

@@ -105,7 +105,7 @@ func NotTaken(domain string) error {
 }
 
 // ShouldHaveNameServers returns if there are name servers
-func ShouldHaveNameServers(domain string) error {
+func ShouldHaveNameServers(domain string, expectedNameservers []string) error {
 	client := &http.Client{
 		Timeout: 5 * time.Second, // nolint: gomnd
 	}
@@ -156,11 +156,37 @@ func ShouldHaveNameServers(domain string) error {
 		return fmt.Errorf("don't know how to handle DNS response code: %d", dnsResponse.Status)
 	}
 
+	var nameservers []string
+
 	for _, a := range dnsResponse.Answer {
 		if a.Type == dns.TypeNS {
-			return nil
+			nameservers = append(nameservers, a.Data)
 		}
 	}
 
-	return fmt.Errorf("unable to get NS records for domain '%s', does not appear to be delegated yet", domain)
+	if len(nameservers) == 0 {
+		return fmt.Errorf("unable to get NS records for domain '%s', does not appear to be delegated yet", domain)
+	}
+
+	diff := compare(expectedNameservers, nameservers)
+
+	if len(diff) >= len(expectedNameservers) {
+		return fmt.Errorf("nameservers do not match, expected: %s, but got: %s", expectedNameservers, nameservers)
+	}
+
+	return nil
+}
+
+// compare is copied from:
+// https://gist.github.com/arxdsilva/7392013cbba7a7090cbcd120b7f5ca31
+func compare(a, b []string) []string {
+	for i := len(a) - 1; i >= 0; i-- {
+		for _, vD := range b {
+			if a[i] == vD {
+				a = append(a[:i], a[i+1:]...)
+				break
+			}
+		}
+	}
+	return a
 }

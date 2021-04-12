@@ -104,7 +104,7 @@ func (s *externalSecretsService) CreateExternalSecrets(ctx context.Context, opts
 	}
 
 	sa, err := s.account.CreateServiceAccount(ctx, client.CreateServiceAccountOpts{
-		ID:        api.ID{},
+		ID:        opts.ID,
 		Name:      "external-secrets",
 		PolicyArn: policy.PolicyARN,
 		Config:    config,

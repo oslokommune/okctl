@@ -1,6 +1,8 @@
 package storm
 
 import (
+	"errors"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -12,7 +14,7 @@ type monitoringState struct {
 // KubePromStack contains storm compatible state
 type KubePromStack struct {
 	Metadata `storm:"inline"`
-	Name     string `storm:"unique,index"`
+	Name     string `storm:"unique"`
 
 	ID                                ID
 	AuthHostname                      string
@@ -75,6 +77,10 @@ func (m *monitoringState) RemoveKubePromStack() error {
 
 	err := m.node.One("Name", "kubepromstack", s)
 	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 

@@ -106,7 +106,7 @@ $ OKCTL_DEBUG=true okctl %s
 $ cat %s
 # Ask for help on slack: %s
 
-%s`
+%w`
 
 	return func(err error) error {
 		return fmt.Errorf(errMsg,
@@ -163,7 +163,7 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 // ClientServices returns the initialised client-side services
 // nolint: funlen
 func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.Services, error) {
-	applicationsOutputDir, err := o.GetRepoApplicatiosOutputDir()
+	applicationsOutputDir, err := o.GetRepoApplicationsOutputDir()
 	if err != nil {
 		return nil, err
 	}
@@ -290,6 +290,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		certificateService,
 		manifestService,
 		paramService,
+		helmService,
 		handlers.ArgoCD,
 	)
 
@@ -343,17 +344,11 @@ func (o *Okctl) KubeConfigStore() (api.KubeConfigStore, error) {
 		return nil, err
 	}
 
-	outputDir, err := o.GetRepoOutputDir()
-	if err != nil {
-		return nil, err
-	}
-
 	return filesystem.NewKubeConfigStore(
 		o.CloudProvider,
 		constant.DefaultClusterKubeConfig,
 		path.Join(appDir, constant.DefaultCredentialsDirName, o.Declaration.Metadata.Name),
-		constant.DefaultClusterConfig,
-		path.Join(outputDir, constant.DefaultClusterBaseDir),
+		o.StateHandlers(o.StateNodes()).Cluster,
 		o.FileSystem,
 	), nil
 }
@@ -532,7 +527,7 @@ func (o *Okctl) initialiseStorm() error {
 
 	s, err := stormpkg.Open(path.Join(outputDir, constant.DefaultStormDBName), stormpkg.Codec(json.Codec))
 	if err != nil {
-		return err
+		return fmt.Errorf("loading state database: %w", err)
 	}
 
 	o.StormDB = s

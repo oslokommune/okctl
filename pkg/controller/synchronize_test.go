@@ -146,7 +146,7 @@ func TestReceivedErrorAfterRequeues(t *testing.T) {
 			withResults: []reconciler.ReconcilationResult{{Requeue: false}},
 
 			expectErrorAfterIterations: 1,
-			expectError:                errors.New("reconciling node: dummy err"),
+			expectError:                errors.New("reconciling node (Group): dummy err"),
 		},
 		{
 			name: "Should break out of HandleNode after second reconciliation when requeues are true, false",
@@ -154,7 +154,7 @@ func TestReceivedErrorAfterRequeues(t *testing.T) {
 			withResults: []reconciler.ReconcilationResult{{Requeue: true}, {Requeue: false}},
 
 			expectErrorAfterIterations: 2,
-			expectError:                errors.New("reconciling node: dummy err"),
+			expectError:                errors.New("reconciling node (Group): dummy err"),
 		},
 	}
 

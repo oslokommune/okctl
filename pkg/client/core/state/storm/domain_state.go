@@ -1,6 +1,7 @@
 package storm
 
 import (
+	"errors"
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
@@ -20,7 +21,7 @@ type HostedZone struct {
 	Primary                bool
 	Managed                bool
 	FQDN                   string
-	Domain                 string `storm:"unique,index"`
+	Domain                 string `storm:"unique"`
 	HostedZoneID           string
 	NameServers            []string
 	StackName              string
@@ -83,6 +84,10 @@ func (d *domainState) RemoveHostedZone(domain string) error {
 
 	err := d.node.One("Domain", domain, hz)
 	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 

@@ -3,6 +3,8 @@ package controller
 import (
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/helm/charts/externalsecrets"
+
 	"github.com/oslokommune/okctl/pkg/helm/charts/autoscaler"
 	"github.com/oslokommune/okctl/pkg/helm/charts/awslbc"
 	"github.com/oslokommune/okctl/pkg/helm/charts/blockstorage"
@@ -58,7 +60,7 @@ func IdentifyResourcePresence(id api.ID, handlers *clientCore.StateHandlers) (Ex
 		hasPrimaryHostedZone:                  !isNotFound(handlers.Domain.GetPrimaryHostedZone()),
 		hasVPC:                                !isNotFound(handlers.Vpc.GetVpc(cfn.NewStackNamer().Vpc(id.ClusterName))),
 		hasCluster:                            !isNotFound(handlers.Cluster.GetCluster(id.ClusterName)),
-		hasExternalSecrets:                    !isNotFound(handlers.ExternalDNS.GetExternalDNS()),
+		hasExternalSecrets:                    !isNotFound(handlers.Helm.GetHelmRelease(externalsecrets.ExternalSecrets(nil).ReleaseName)),
 		hasAutoscaler:                         !isNotFound(handlers.Helm.GetHelmRelease(autoscaler.New(nil).ReleaseName)),
 		hasKubePromStack:                      !isNotFound(handlers.Helm.GetHelmRelease(kubepromstack.New(0*time.Second, nil).ReleaseName)),
 		hasLoki:                               !isNotFound(handlers.Helm.GetHelmRelease(lokipkg.New(nil).ReleaseName)),

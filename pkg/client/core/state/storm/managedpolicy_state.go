@@ -1,6 +1,8 @@
 package storm
 
 import (
+	"errors"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -14,7 +16,7 @@ type ManagedPolicy struct {
 	Metadata `storm:"inline"`
 
 	ID                     ID
-	StackName              string `storm:"unique,index"`
+	StackName              string `storm:"unique"`
 	PolicyARN              string
 	CloudFormationTemplate []byte
 }
@@ -60,6 +62,10 @@ func (m *managedPolicyState) RemovePolicy(stackName string) error {
 
 	err := m.node.One("StackName", stackName, p)
 	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 

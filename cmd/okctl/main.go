@@ -59,8 +59,12 @@ being captured. Together with slack and slick.`,
 			}
 
 			var err error
+			cfg, err := cmd.Flags().GetString("config")
+			if err != nil {
+				return err
+			}
 
-			if len(config) == 0 {
+			if len(cfg) == 0 {
 				return fmt.Errorf("config must be provided")
 			}
 
@@ -69,7 +73,7 @@ being captured. Together with slack and slick.`,
 				return fmt.Errorf("loading application data: %w", err)
 			}
 
-			err = loadRepoData(o, config, cmd)
+			err = loadRepoData(o, cfg, cmd)
 			if err != nil {
 				if errors.Is(err, git.ErrRepositoryNotExists) {
 					return fmt.Errorf("okctl needs to be run inside a Git repository (okctl outputs " +
@@ -110,7 +114,7 @@ being captured. Together with slack and slick.`,
 	f.StringVarP(&outputFormat, "output", "o", "text",
 		"The format of the output returned to the user")
 
-	f.StringVarP(&config, "config", "", "",
+	cmd.PersistentFlags().StringVar(&config, "config", "",
 		"The cluster config you want to use")
 
 	return cmd

@@ -2,7 +2,10 @@ package core
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
+	"github.com/asdine/storm/v3"
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/argocd"
 
@@ -33,6 +36,10 @@ const (
 func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgoCDOpts) error {
 	cd, err := s.state.GetArgoCD()
 	if err != nil {
+		if errors.Is(err, storm.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 
@@ -262,6 +269,7 @@ func NewArgoCDService(
 	cert client.CertificateService,
 	manifest client.ManifestService,
 	param client.ParameterService,
+	helm client.HelmService,
 	state client.ArgoCDState,
 ) client.ArgoCDService {
 	return &argoCDService{
@@ -270,5 +278,6 @@ func NewArgoCDService(
 		cert:     cert,
 		manifest: manifest,
 		param:    param,
+		helm:     helm,
 	}
 }

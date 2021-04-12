@@ -60,12 +60,12 @@ func Synchronize(opts *SynchronizeOpts) error {
 		_, _ = fmt.Fprintf(opts.Out, "Present resources in difference tree (what should be generated): \n%s\n\n", diffTree.String())
 	}
 
-	return handleNode(opts.ReconciliationManager, diffTree)
+	return HandleNode(opts.ReconciliationManager, diffTree)
 }
 
-// handleNode knows how to run Reconcile() on every node of a ResourceNode tree
+// HandleNode knows how to run Reconcile() on every node of a ResourceNode tree
 //goland:noinspection GoNilness
-func handleNode(reconcilerManager reconciler.Reconciler, currentNode *resourcetree.ResourceNode) (err error) {
+func HandleNode(reconcilerManager reconciler.Reconciler, currentNode *resourcetree.ResourceNode) (err error) {
 	reconciliationResult := reconciler.ReconcilationResult{Requeue: true, RequeueAfter: 0 * time.Second}
 
 	for requeues := 0; reconciliationResult.Requeue; requeues++ {
@@ -82,7 +82,7 @@ func handleNode(reconcilerManager reconciler.Reconciler, currentNode *resourcetr
 	}
 
 	for _, node := range currentNode.Children {
-		err = handleNode(reconcilerManager, node)
+		err = HandleNode(reconcilerManager, node)
 		if err != nil {
 			return err
 		}

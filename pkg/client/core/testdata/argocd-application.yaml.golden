@@ -9,7 +9,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: applications/my-app/overlays/test
+    path: infrastructure/applications/my-app/overlays/test
     repoURL: git@dummy.com:test/repo.git
     targetRevision: HEAD
   syncPolicy:

@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"io"
 
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 
@@ -11,28 +10,30 @@ import (
 	"github.com/oslokommune/okctl/pkg/client/store"
 )
 
+const (
+	maxPortNumber = 65535
+	minPortNumber = 0
+	minReplicas   = 0
+)
+
 // ScaffoldApplicationOpts contains information necessary to scaffold application resources
 type ScaffoldApplicationOpts struct {
-	In  io.Reader
-	Out io.Writer
-
-	ApplicationFilePath string
-	RepoDir             string
-	OutputDir           string
+	OutputDir string
 
 	ID               *api.ID
 	HostedZoneID     string
 	HostedZoneDomain string
 	IACRepoURL       string
+	Application      OkctlApplication
 }
 
 // Validate ensures presented data is valid
 func (o *ScaffoldApplicationOpts) Validate() error {
 	return validation.ValidateStruct(o,
-		validation.Field(&o.ApplicationFilePath, validation.Required),
 		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.HostedZoneID, validation.Required),
 		validation.Field(&o.IACRepoURL, validation.Required),
+		validation.Field(&o.Application, validation.Required),
 	)
 }
 
@@ -67,14 +68,14 @@ func (o OkctlApplication) HasService() bool {
 // Validate knows if the application is valid or not
 func (o OkctlApplication) Validate() error {
 	return validation.ValidateStruct(&o,
-		validation.Field(&o.Name, validation.Required, is.DNSName),
+		validation.Field(&o.Name, validation.Required, is.Subdomain),
 		validation.Field(&o.Namespace, validation.Required, is.DNSName),
-		validation.Field(&o.Image, validation.Required, is.DNSName),
+		validation.Field(&o.Image, validation.Required),
 		validation.Field(&o.Version, validation.Required),
-		validation.Field(&o.ImagePullSecret, validation.Required, is.DNSName),
+		validation.Field(&o.ImagePullSecret, is.DNSName),
 		validation.Field(&o.SubDomain, is.Subdomain),
-		validation.Field(&o.Port, is.Port),
-		validation.Field(&o.Replicas, validation.Min(0)),
+		validation.Field(&o.Port, validation.Min(minPortNumber), validation.Max(maxPortNumber)),
+		validation.Field(&o.Replicas, validation.Min(minReplicas)),
 	)
 }
 

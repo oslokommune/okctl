@@ -53,6 +53,8 @@ const (
 	ResourceNodeTypeUsers
 	// ResourceNodeTypePostgres represents the postgres databases we want to add to the cluster
 	ResourceNodeTypePostgres
+	// ResourceNodeTypeApplication represents an okctl application resoure
+	ResourceNodeTypeApplication
 )
 
 // ResourceNodeTypeToString knows how to convert a Resource Node type to a human readable string

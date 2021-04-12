@@ -96,7 +96,7 @@ func TestHandleNode(t *testing.T) {
 
 			node := &resourcetree.ResourceNode{}
 
-			err := handleNode(dummy, node)
+			err := HandleNode(dummy, node)
 			if tc.expectErr {
 				assert.NotNil(t, err)
 			} else {
@@ -135,7 +135,7 @@ func TestReceivedErrorAfterRequeues(t *testing.T) {
 		expectError                error
 	}{
 		{
-			name: "Should break out of handleNode immediately when requeue is false",
+			name: "Should break out of HandleNode immediately when requeue is false",
 
 			withResults: []reconciler.ReconcilationResult{{Requeue: false}},
 
@@ -143,7 +143,7 @@ func TestReceivedErrorAfterRequeues(t *testing.T) {
 			expectError:                errors.New("reconciling node: dummy err"),
 		},
 		{
-			name: "Should break out of handleNode after second reconciliation when requeues are true, false",
+			name: "Should break out of HandleNode after second reconciliation when requeues are true, false",
 
 			withResults: []reconciler.ReconcilationResult{{Requeue: true}, {Requeue: false}},
 
@@ -158,7 +158,7 @@ func TestReceivedErrorAfterRequeues(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &mockAlwaysErrorReconciler{ReconciliationResult: tc.withResults}
 
-			err := handleNode(r, &resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeGroup})
+			err := HandleNode(r, &resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeGroup})
 			assert.NotNil(t, err)
 
 			assert.Equal(t, tc.expectErrorAfterIterations, r.iteration)

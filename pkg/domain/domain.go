@@ -105,6 +105,7 @@ func NotTaken(domain string) error {
 }
 
 // ShouldHaveNameServers returns if there are name servers
+// nolint: funlen
 func ShouldHaveNameServers(domain string, expectedNameservers []string) error {
 	client := &http.Client{
 		Timeout: 5 * time.Second, // nolint: gomnd
@@ -188,5 +189,6 @@ func compare(a, b []string) []string {
 			}
 		}
 	}
+
 	return a
 }

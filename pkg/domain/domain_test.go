@@ -81,6 +81,7 @@ func TestValidate(t *testing.T) {
 	}
 }
 
+// nolint: funlen
 func TestHasNameServers(t *testing.T) {
 	testCases := []struct {
 		name      string

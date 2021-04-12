@@ -15,7 +15,6 @@ import (
 type containerRepositoryService struct {
 	spinner spinner.Spinner
 	api     client.ContainerRepositoryAPI
-	store   client.ContainerRepositoryStore
 	state   client.ContainerRepositoryState
 
 	provider v1alpha1.CloudProvider
@@ -48,11 +47,6 @@ func (c *containerRepositoryService) CreateContainerRepository(_ context.Context
 		CloudFormationTemplate: repository.CloudFormationTemplate,
 	}
 
-	_, err = c.store.SaveContainerRepository(containerRepository)
-	if err != nil {
-		return nil, err
-	}
-
 	_, err = c.state.SaveContainerRepository(containerRepository)
 	if err != nil {
 		return nil, err
@@ -80,11 +74,6 @@ func (c *containerRepositoryService) DeleteContainerRepository(_ context.Context
 		return err
 	}
 
-	_, err = c.store.RemoveContainerRepository(opts.ImageName)
-	if err != nil {
-		return err
-	}
-
 	_, err = c.state.RemoveContainerRepository(opts.ImageName)
 	if err != nil {
 		return err
@@ -97,14 +86,12 @@ func (c *containerRepositoryService) DeleteContainerRepository(_ context.Context
 func NewContainerRepositoryService(
 	spin spinner.Spinner,
 	api client.ContainerRepositoryAPI,
-	store client.ContainerRepositoryStore,
 	state client.ContainerRepositoryState,
 	provider v1alpha1.CloudProvider,
 ) client.ContainerRepositoryService {
 	return &containerRepositoryService{
 		spinner:  spin,
 		api:      api,
-		store:    store,
 		state:    state,
 		provider: provider,
 	}

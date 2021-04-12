@@ -41,12 +41,6 @@ type ContainerRepositoryAPI interface {
 	DeleteContainerRepository(opts api.DeleteContainerRepositoryOpts) error
 }
 
-// ContainerRepositoryStore saves the data
-type ContainerRepositoryStore interface {
-	SaveContainerRepository(repository *ContainerRepository) (*store.Report, error)
-	RemoveContainerRepository(imageName string) (*store.Report, error)
-}
-
 // ContainerRepositoryState updates the state
 type ContainerRepositoryState interface {
 	SaveContainerRepository(repository *ContainerRepository) (*store.Report, error)

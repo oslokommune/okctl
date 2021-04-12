@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/client/core/report/console"
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/asdine/storm/v3/codec/json"

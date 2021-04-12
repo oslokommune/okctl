@@ -1,7 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+
+	"github.com/asdine/storm/v3"
 
 	"github.com/oslokommune/okctl/pkg/context"
 
@@ -113,11 +116,6 @@ including VPC, this is a highly destructive operation.`,
 
 			formatErr := o.ErrorFormatter(fmt.Sprintf("delete cluster %s", opts.ClusterName), userDir)
 
-			vpc, err := services.Vpc.GetVPC(o.Ctx, id)
-			if err != nil {
-				return formatErr(err)
-			}
-
 			domain, err := services.Domain.GetPrimaryHostedZone(o.Ctx)
 			if err != nil {
 				return formatErr(err)
@@ -192,20 +190,30 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
-			err = cleanup.DeleteDanglingALBs(o.CloudProvider, vpc.VpcID)
-			if err != nil {
+			vpc, err := services.Vpc.GetVPC(o.Ctx, id)
+			if err != nil && !errors.Is(err, storm.ErrNotFound) {
 				return formatErr(err)
+			}
+
+			// Even though we could not retrieve the vpc, we will
+			// try to delete the cluster and get rid of as much as
+			// possible
+			if vpc != nil {
+				err = cleanup.DeleteDanglingALBs(o.CloudProvider, vpc.VpcID)
+				if err != nil {
+					return formatErr(err)
+				}
+
+				err = cleanup.DeleteDanglingSecurityGroups(o.CloudProvider, vpc.VpcID)
+				if err != nil {
+					return formatErr(err)
+				}
 			}
 
 			err = services.Cluster.DeleteCluster(o.Ctx, client.ClusterDeleteOpts{
 				ID:                 id,
 				FargateProfileName: "fp-default",
 			})
-			if err != nil {
-				return formatErr(err)
-			}
-
-			err = cleanup.DeleteDanglingSecurityGroups(o.CloudProvider, vpc.VpcID)
 			if err != nil {
 				return formatErr(err)
 			}

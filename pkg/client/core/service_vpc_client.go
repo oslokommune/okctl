@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/oslokommune/okctl/pkg/cfn"
 
@@ -15,7 +16,12 @@ type vpcService struct {
 }
 
 func (s *vpcService) GetVPC(_ context.Context, id api.ID) (*client.Vpc, error) {
-	return s.state.GetVpc(cfn.NewStackNamer().Vpc(id.ClusterName))
+	vpc, err := s.state.GetVpc(cfn.NewStackNamer().Vpc(id.ClusterName))
+	if err != nil {
+		return nil, fmt.Errorf("getting vpc: %w", err)
+	}
+
+	return vpc, nil
 }
 
 func (s *vpcService) CreateVpc(_ context.Context, opts client.CreateVpcOpts) (*client.Vpc, error) {

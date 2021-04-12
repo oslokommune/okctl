@@ -337,16 +337,8 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 }
 
 func (o *Okctl) containerRegistryService(outputDir string, spin spinner.Spinner) client.ContainerRepositoryService {
-	return clientCore.NewContainerRepositoryService(spin,
+	return clientCore.NewContainerRepositoryService(
 		rest.NewContainerRepositoryAPI(o.restClient),
-		clientFilesystem.NewContainerRepositoryStore(
-			clientFilesystem.Paths{
-				OutputFile:         constant.DefaultContainerRepositoryOutputFile,
-				CloudFormationFile: constant.DefaultContainerRepositoryCloudFormationFile,
-				BaseDir:            path.Join(outputDir, constant.DefaultContainerRepositoryBaseDir),
-			},
-			o.FileSystem,
-		),
 		stateSaver.NewContainerRepositoryState(o.RepoStateWithEnv),
 		o.CloudProvider,
 	)

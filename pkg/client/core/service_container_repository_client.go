@@ -9,28 +9,17 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/spinner"
 )
 
 type containerRepositoryService struct {
-	spinner spinner.Spinner
-	api     client.ContainerRepositoryAPI
-	state   client.ContainerRepositoryState
+	api   client.ContainerRepositoryAPI
+	state client.ContainerRepositoryState
 
 	provider v1alpha1.CloudProvider
 }
 
 // CreateContainerRepository handles api, state, store and report orchistration for creation of a container repository
 func (c *containerRepositoryService) CreateContainerRepository(_ context.Context, opts client.CreateContainerRepositoryOpts) (*client.ContainerRepository, error) {
-	err := c.spinner.Start("container registry")
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		_ = c.spinner.Stop()
-	}()
-
 	repository, err := c.api.CreateContainerRepository(api.CreateContainerRepositoryOpts{
 		ClusterID: opts.ClusterID,
 		Name:      opts.ImageName,
@@ -57,16 +46,7 @@ func (c *containerRepositoryService) CreateContainerRepository(_ context.Context
 
 // DeleteContainerRepository handles api, state, store and report orchistration for deletion of a container repository
 func (c *containerRepositoryService) DeleteContainerRepository(_ context.Context, opts client.DeleteContainerRepositoryOpts) error {
-	err := c.spinner.Start("container registry")
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		_ = c.spinner.Stop()
-	}()
-
-	err = c.api.DeleteContainerRepository(api.DeleteContainerRepositoryOpts{
+	err := c.api.DeleteContainerRepository(api.DeleteContainerRepositoryOpts{
 		ClusterID: opts.ClusterID,
 		StackName: cfn.NewStackNamer().ContainerRepository(opts.ImageName, opts.ClusterID.Repository, opts.ClusterID.Environment),
 	})
@@ -84,13 +64,11 @@ func (c *containerRepositoryService) DeleteContainerRepository(_ context.Context
 
 // NewContainerRepositoryService returns an initialised container repository service
 func NewContainerRepositoryService(
-	spin spinner.Spinner,
 	api client.ContainerRepositoryAPI,
 	state client.ContainerRepositoryState,
 	provider v1alpha1.CloudProvider,
 ) client.ContainerRepositoryService {
 	return &containerRepositoryService{
-		spinner:  spin,
 		api:      api,
 		state:    state,
 		provider: provider,

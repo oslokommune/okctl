@@ -133,7 +133,7 @@ func writeSuccessMessage(writer io.Writer, applicationName, argoCDResourcePath s
 	To deploy your application:
 		1. Commit and push the changes done by okctl
 		2. Run kubectl apply -f {{ .ArgoCDResourcePath }}
-	If using an ingress, it can take up to five minutes for the routing to configure
+	If using an ingress, it can take around 10 minutes for the routing to configure
 `
 
 	tmpl, err := template.New("t").Parse(templateString)

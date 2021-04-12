@@ -1613,7 +1613,7 @@ type ECRRepositoryComposer struct {
 
 // ResourceRepositoryNameOutput returns the name of the resource
 func (e *ECRRepositoryComposer) ResourceRepositoryNameOutput() string {
-	return fmt.Sprintf("%s%s%sECRepository", e.Repository, e.Environment, e.ImageName)
+	return fmt.Sprintf("%s%s%sECRRepository", e.Repository, e.Environment, e.ImageName)
 }
 
 // Compose returns the outputs and resources
@@ -1626,8 +1626,8 @@ func (e *ECRRepositoryComposer) Compose() (*cfn.Composition, error) {
 	}, nil
 }
 
-// NewECRepositoryComposer returns an initialized ECR composer
-func NewECRepositoryComposer(imageName, repository, environment string) *ECRRepositoryComposer {
+// NewECRRepositoryComposer returns an initialized ECR composer
+func NewECRRepositoryComposer(imageName, repository, environment string) *ECRRepositoryComposer {
 	return &ECRRepositoryComposer{
 		ImageName:   imageName,
 		Repository:  repository,

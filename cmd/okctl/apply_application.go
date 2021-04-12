@@ -8,7 +8,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/commands"
-	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/controller"
 	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
@@ -95,7 +94,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				// We should pass inn cluster fetched from state here when state rewrite is done
 				Declaration: &v1alpha1.Cluster{
 					Github: v1alpha1.ClusterGithub{
-						Repository: getFirstGithubRepositoryURL(o.RepoStateWithEnv.GetGithub().Repositories),
+						Repository: commands.GetFirstGithubRepositoryURL(o.RepoStateWithEnv.GetGithub().Repositories),
 						OutputPath: o.RepoStateWithEnv.GetMetadata().OutputDir,
 					},
 				},
@@ -114,7 +113,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				}
 			})
 
-			err = synchronizeApplication(reconciliationManager, dependencyTree)
+			err = commands.SynchronizeApplication(reconciliationManager, dependencyTree)
 			if err != nil {
 				return fmt.Errorf("synchronizing application: %w", err)
 			}
@@ -130,22 +129,4 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	cmd.Flags().StringVarP(&opts.File, "file", "f", "", "Specify the file path. Use \"-\" for stdin")
 
 	return cmd
-}
-
-func synchronizeApplication(reconcilerManager reconciler.Reconciler, tree *resourcetree.ResourceNode) error {
-	tree.ApplyFunction(setAllToPresent, tree)
-
-	return controller.HandleNode(reconcilerManager, tree)
-}
-
-func setAllToPresent(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
-	receiver.State = resourcetree.ResourceNodeStatePresent
-}
-
-func getFirstGithubRepositoryURL(repositories map[string]state.GithubRepository) string {
-	for _, repo := range repositories {
-		return repo.GitURL
-	}
-
-	return "N/A"
 }

@@ -9,12 +9,37 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"github.com/oslokommune/okctl/pkg/config/state"
+	"github.com/oslokommune/okctl/pkg/controller"
+	"github.com/oslokommune/okctl/pkg/controller/reconciler"
+	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/config/constant"
 	"github.com/spf13/afero"
 
 	"sigs.k8s.io/yaml"
 )
+
+// SynchronizeApplication knows how to discover differences between desired and actual state and rectify them
+func SynchronizeApplication(reconcilerManager reconciler.Reconciler, tree *resourcetree.ResourceNode) error {
+	tree.ApplyFunction(setAllToPresent, tree)
+
+	return controller.HandleNode(reconcilerManager, tree)
+}
+
+// GetFirstGithubRepositoryURL returns the first available github repository URL
+func GetFirstGithubRepositoryURL(repositories map[string]state.GithubRepository) string {
+	for _, repo := range repositories {
+		return repo.GitURL
+	}
+
+	return "N/A"
+}
+
+func setAllToPresent(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
+	receiver.State = resourcetree.ResourceNodeStatePresent
+}
 
 // InferApplicationFromStdinOrFile returns an okctl application based on input. The function will parse input either
 // from the reader or from the fs based on if path is a path or if it is "-". "-" represents stdin

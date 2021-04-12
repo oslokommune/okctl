@@ -7,8 +7,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/cfn"
 
-	"github.com/oslokommune/okctl/pkg/client/store"
-
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/spinner"
@@ -19,7 +17,6 @@ type containerRepositoryService struct {
 	api     client.ContainerRepositoryAPI
 	store   client.ContainerRepositoryStore
 	state   client.ContainerRepositoryState
-	report  client.ContainerRepositoryReport
 
 	provider v1alpha1.CloudProvider
 }
@@ -51,17 +48,12 @@ func (c *containerRepositoryService) CreateContainerRepository(_ context.Context
 		CloudFormationTemplate: repository.CloudFormationTemplate,
 	}
 
-	r1, err := c.store.SaveContainerRepository(containerRepository)
+	_, err = c.store.SaveContainerRepository(containerRepository)
 	if err != nil {
 		return nil, err
 	}
 
-	r2, err := c.state.SaveContainerRepository(containerRepository)
-	if err != nil {
-		return nil, err
-	}
-
-	err = c.report.ReportCreateContainerRepository(containerRepository, []*store.Report{r1, r2})
+	_, err = c.state.SaveContainerRepository(containerRepository)
 	if err != nil {
 		return nil, err
 	}
@@ -88,17 +80,12 @@ func (c *containerRepositoryService) DeleteContainerRepository(_ context.Context
 		return err
 	}
 
-	r1, err := c.store.RemoveContainerRepository(opts.ImageName)
+	_, err = c.store.RemoveContainerRepository(opts.ImageName)
 	if err != nil {
 		return err
 	}
 
-	r2, err := c.state.RemoveContainerRepository(opts.ImageName)
-	if err != nil {
-		return err
-	}
-
-	err = c.report.ReportDeleteContainerRepository(opts.ImageName, []*store.Report{r1, r2})
+	_, err = c.state.RemoveContainerRepository(opts.ImageName)
 	if err != nil {
 		return err
 	}
@@ -112,7 +99,6 @@ func NewContainerRepositoryService(
 	api client.ContainerRepositoryAPI,
 	store client.ContainerRepositoryStore,
 	state client.ContainerRepositoryState,
-	report client.ContainerRepositoryReport,
 	provider v1alpha1.CloudProvider,
 ) client.ContainerRepositoryService {
 	return &containerRepositoryService{
@@ -120,7 +106,6 @@ func NewContainerRepositoryService(
 		api:      api,
 		store:    store,
 		state:    state,
-		report:   report,
 		provider: provider,
 	}
 }

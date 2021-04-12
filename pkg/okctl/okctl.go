@@ -349,7 +349,6 @@ func (o *Okctl) containerRegistryService(outputDir string, spin spinner.Spinner)
 			o.FileSystem,
 		),
 		stateSaver.NewContainerRepositoryState(o.RepoStateWithEnv),
-		console.NewContainerRepositoryReport(o.Err, spin),
 		o.CloudProvider,
 	)
 }

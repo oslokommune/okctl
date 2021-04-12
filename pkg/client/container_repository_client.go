@@ -54,12 +54,6 @@ type ContainerRepositoryState interface {
 	GetContainerRepository(imageName string) (*ContainerRepository, error)
 }
 
-// ContainerRepositoryReport reports on the state and storage operations
-type ContainerRepositoryReport interface {
-	ReportCreateContainerRepository(repository *ContainerRepository, reports []*store.Report) error
-	ReportDeleteContainerRepository(imageName string, reports []*store.Report) error
-}
-
 // URI returns the URI where the image can be pulled and pushed
 func (c ContainerRepository) URI() url.URL {
 	return url.URL{

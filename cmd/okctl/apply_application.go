@@ -129,7 +129,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 func writeSuccessMessage(writer io.Writer, applicationName, argoCDResourcePath string) error {
 	templateString := `
-	Successfully scaffolded {{ .ApplicationName }}
+	Successfully applied {{ .ApplicationName }}
 	To deploy your application:
 		1. Commit and push the changes done by okctl
 		2. Run kubectl apply -f {{ .ArgoCDResourcePath }}

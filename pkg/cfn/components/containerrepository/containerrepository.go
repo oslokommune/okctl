@@ -11,7 +11,7 @@ import (
 )
 
 type (
-	// TagMutabilityConfiguration configures image tag mutability. If mutability is set to Immutable, we'll se an error
+	// TagMutabilityConfiguration configures image tag mutability. If mutability is set to Immutable, we'll see an error
 	// trying to push an already existing tag
 	TagMutabilityConfiguration string
 	// ImageScanConfiguration configures whether to scan pushed images for security vulnerabilities

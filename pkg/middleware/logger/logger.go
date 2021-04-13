@@ -6,18 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/barkimedes/go-deepcopy"
-
-	"github.com/oslokommune/okctl/pkg/truncate"
-
 	"github.com/go-kit/kit/endpoint"
 	"github.com/sanity-io/litter"
 	"github.com/sirupsen/logrus"
 )
-
-// TruncateResponseAtLength sets how long log lines we allow
-// nolint: gochecknoglobals
-var TruncateResponseAtLength = 5000
 
 // AnonymizeRequestLogger can be implemented by the request types that want to conceal
 // items from the logs
@@ -73,8 +65,6 @@ func (l *logging) ProcessRequest(next endpoint.Endpoint) endpoint.Endpoint {
 
 // ProcessResponse handles logging of the response
 func (l *logging) ProcessResponse(err error, response interface{}, begin time.Time) {
-	responseCopy := deepcopy.MustAnything(response)
-
 	if err != nil {
 		l.log.Errorf("processing request: %s", err.Error())
 	}
@@ -82,15 +72,14 @@ func (l *logging) ProcessResponse(err error, response interface{}, begin time.Ti
 	if err == nil {
 		var d string
 
-		switch r := responseCopy.(type) {
+		switch r := response.(type) {
 		case AnonymizeResponseLogger:
-			d = litter.Sdump(r.AnonymizeResponse(responseCopy))
+			d = litter.Sdump(r.AnonymizeResponse(response))
 		default:
-			d = litter.Sdump(responseCopy)
+			d = litter.Sdump(response)
 		}
 
-		truncatedDump := truncate.String(d, TruncateResponseAtLength)
-		l.log.Trace("response: ", truncatedDump)
+		l.log.Trace("response: ", d)
 	}
 
 	l.log.Debug("request completed in: ", time.Since(begin).String())

@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/oslokommune/okctl/pkg/truncate"
-
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 
 	"github.com/mishudark/errors"
@@ -86,18 +84,11 @@ func (c *HTTPClient) Do(method, endpoint string, body interface{}, into interfac
 		err = resp.Body.Close()
 	}()
 
-	const logLineMaxlength = 5000
-
 	if into != nil {
 		err = json.Unmarshal(out, into)
 		if err != nil {
 			if c.Debug {
-				cpy := make([]byte, len(out))
-				copy(cpy, out)
-
-				truncatedOut := truncate.Bytes(cpy, logLineMaxlength)
-
-				_, err = fmt.Fprintf(c.Progress, "client (method: %s, endpoint: %s) received data: %s", method, endpoint, truncatedOut)
+				_, err = fmt.Fprintf(c.Progress, "client (method: %s, endpoint: %s) received data: %s", method, endpoint, out)
 				if err != nil {
 					return fmt.Errorf("failed to write debug output: %w", err)
 				}
@@ -108,9 +99,7 @@ func (c *HTTPClient) Do(method, endpoint string, body interface{}, into interfac
 	}
 
 	if c.Debug {
-		truncatedOut := truncate.Bytes(out, logLineMaxlength)
-
-		_, err = io.Copy(c.Progress, strings.NewReader(string(truncatedOut)))
+		_, err = io.Copy(c.Progress, strings.NewReader(string(out)))
 		if err != nil {
 			return fmt.Errorf("%s: %w", pretty("failed to write progress for", method, endpoint), err)
 		}

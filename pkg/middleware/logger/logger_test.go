@@ -34,15 +34,13 @@ func TestLogging(t *testing.T) {
 		request        interface{}
 		response       interface{}
 		expectResponse interface{}
-		truncateBytes  int
 		err            error
 		expect         []*regexp.Regexp
 	}{
 		{
-			name:          "Should work",
-			request:       Fake{Name: "hi"},
-			response:      Fake{Name: "goodbye"},
-			truncateBytes: 5000,
+			name:     "Should work",
+			request:  Fake{Name: "hi"},
+			response: Fake{Name: "goodbye"},
 			expect: []*regexp.Regexp{
 				regexp.MustCompile("time=\"(.*?)\" level=debug msg=\"request received\" endpoint=create service=something/else"),
 				regexp.MustCompile("time=\"(.*?)\" level=trace msg=\"request: logger_test.Fake(.*?)hi(.*?)endpoint=create service=something/else"),
@@ -51,28 +49,14 @@ func TestLogging(t *testing.T) {
 			},
 		},
 		{
-			name:          "With error",
-			request:       Fake{Name: "hi"},
-			truncateBytes: 5000,
-			response:      Fake{Name: "goodbye"},
-			err:           fmt.Errorf("oh no"),
+			name:     "With error",
+			request:  Fake{Name: "hi"},
+			response: Fake{Name: "goodbye"},
+			err:      fmt.Errorf("oh no"),
 			expect: []*regexp.Regexp{
 				regexp.MustCompile("time=\"(.*?)\" level=debug msg=\"request received\" endpoint=create service=something/else"),
 				regexp.MustCompile("time=\"(.*?)\" level=trace msg=\"request: logger_test.Fake(.*?)hi(.*?)endpoint=create service=something/else"),
 				regexp.MustCompile("time=\"(.*?)\" level=error msg=\"processing request: oh no\" endpoint=create service=something/else"),
-				regexp.MustCompile("time=\"(.*?)\" level=debug msg=\"request completed in: (.*?)\" endpoint=create service=something/else"),
-			},
-		},
-		{
-			name:           "Should keep response intact when truncating",
-			request:        Fake{Name: "hi"},
-			truncateBytes:  30,
-			response:       Fake{Name: "goodbye and hello, my dear old friend"},
-			expectResponse: Fake{Name: "goodbye and hello, my dear old friend"},
-			expect: []*regexp.Regexp{
-				regexp.MustCompile("time=\"(.*?)\" level=debug msg=\"request received\" endpoint=create service=something/else"),
-				regexp.MustCompile("time=\"(.*?)\" level=trace msg=\"request: logger_test.Fake(.*?)hi(.*?)endpoint=create service=something/else"),
-				regexp.MustCompile("time=\"(.*?)\" level=trace msg=\"response: logger_test.Fake(.*?)gooXXXtruncated38bytesXXX(.*?)endpoint=create service=something/else"),
 				regexp.MustCompile("time=\"(.*?)\" level=debug msg=\"request completed in: (.*?)\" endpoint=create service=something/else"),
 			},
 		},
@@ -82,15 +66,9 @@ func TestLogging(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			logger.TruncateResponseAtLength = tc.truncateBytes
-
 			l, hook := test.NewNullLogger()
 			l.SetLevel(logrus.TraceLevel)
-			got, _ := logger.Logging(l, "create", "something", "else")(Endpoint(tc.response, tc.err))(context.Background(), tc.request)
-
-			if tc.expectResponse != nil {
-				assert.Equal(t, tc.expectResponse, got)
-			}
+			_, _ = logger.Logging(l, "create", "something", "else")(Endpoint(tc.response, tc.err))(context.Background(), tc.request)
 
 			for i, entry := range hook.AllEntries() {
 				msg, err := entry.String()

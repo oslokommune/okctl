@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/version"
 )
 
 // DeleteDanglingALBs will delete any remaining ALBs in a vpc
@@ -46,6 +47,12 @@ func DeleteDanglingSecurityGroups(provider v1alpha1.CloudProvider, vpcID string)
 				Name: aws.String("vpc-id"),
 				Values: []*string{
 					aws.String(vpcID),
+				},
+			},
+			{
+				Name: aws.String("tag:alpha.okctl.io/okctl-version"),
+				Values: []*string{
+					aws.String(version.GetVersionInfo().Version),
 				},
 			},
 		},

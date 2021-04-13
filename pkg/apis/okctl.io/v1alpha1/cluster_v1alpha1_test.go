@@ -11,7 +11,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 )
 
-func TestCluster(t *testing.T) {
+func TestMarshalCluster(t *testing.T) {
 	testCases := []struct {
 		name    string
 		cluster v1alpha1.Cluster
@@ -73,7 +73,6 @@ func TestInvalidClusterValidations(t *testing.T) {
 			name: "Should fail when name is empty",
 			withCluster: func() v1alpha1.Cluster {
 				c := newPassingCluster()
-
 				c.Metadata.Name = ""
 
 				return c
@@ -84,7 +83,6 @@ func TestInvalidClusterValidations(t *testing.T) {
 			name: "Should fail if clusterRootDomain is missing",
 			withCluster: func() v1alpha1.Cluster {
 				c := newPassingCluster()
-
 				c.ClusterRootDomain = ""
 
 				return c
@@ -102,13 +100,26 @@ func TestInvalidClusterValidations(t *testing.T) {
 			},
 			expectError: "clusterRootDomain: must be in lower case.",
 		},
+		{
+			// This happens when the user doesn't provide a clusterRootDomain
+			name: "Should fail if clusterRootDomain starts with dash",
+			withCluster: func() v1alpha1.Cluster {
+				c := newPassingCluster()
+
+				c.ClusterRootDomain = "-.oslo.systems"
+
+				return c
+			},
+			expectError: "clusterRootDomain: invalid domain name.",
+		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.withCluster().Validate()
+			cluster := tc.withCluster()
+			err := cluster.Validate()
 
 			if tc.expectError != "" {
 				assert.Error(t, err)

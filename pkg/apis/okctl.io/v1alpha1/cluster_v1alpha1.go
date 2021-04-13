@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"fmt"
+	"github.com/asaskevich/govalidator"
 	"regexp"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
@@ -62,7 +63,17 @@ type Cluster struct {
 // Validate calls each members Validate function
 func (c Cluster) Validate() error {
 	return validation.ValidateStruct(&c,
-		validation.Field(&c.ClusterRootDomain, validation.Required, is.LowerCase),
+		validation.Field(&c.ClusterRootDomain,
+			validation.Required,
+			is.LowerCase,
+			validation.NewStringRule(func(clusterRootDomain string) bool {
+				return govalidator.IsDNSName(clusterRootDomain)
+			}, "invalid domain name: "+c.ClusterRootDomain)),
+
+		validation.Field(&c.ClusterRootDomain,
+			validation.Required,
+			is.LowerCase,
+		),
 		validation.Field(&c.Metadata),
 		validation.Field(&c.Github),
 		validation.Field(&c.VPC),
@@ -301,21 +312,22 @@ func ClusterTypeMeta() metav1.TypeMeta {
 }
 
 // NewDefaultCluster returns a cluster definition with sensible defaults
-func NewDefaultCluster(name, env, org, repo, accountID string) Cluster {
+func NewDefaultCluster(clusterName, env, repo, accountID string) Cluster {
 	return Cluster{
 		TypeMeta: ClusterTypeMeta(),
 		Metadata: ClusterMeta{
-			Name:        name,
+			Name:        clusterName,
 			Environment: env,
 			Region:      "eu-west-1",
 			AccountID:   accountID,
 		},
 		Github: ClusterGithub{
-			Organisation: org,
+			Organisation: constant.DefaultGithubOrganization,
 			Repository:   repo,
 			OutputPath:   constant.DefaultOutputDirectory,
 		},
-		ClusterRootDomain: fmt.Sprintf("%s-%s.oslo.systems", name, env),
+		// TODO [LØST] Problem: Vi justererer inputen. Ødelegger validering av raw user input.
+		ClusterRootDomain: fmt.Sprintf("%s-%s.oslo.systems", clusterName, env),
 		VPC: &ClusterVPC{
 			CIDR:             constant.DefaultClusterCIDR,
 			HighAvailability: true,

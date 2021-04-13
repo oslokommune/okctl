@@ -86,13 +86,38 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
+			// Alternativer:
+			// - Unmarshal cluster.yaml til egen struct, ClusterInput. Valider denne. Konverter strukt til v1alpha.Cluster.
+			//	 -> Mye duplikater
+			// - Valider valid domene
+			//   -> Feil å validere ikke-brukerinput.
+			//   -> Bruker vil få "invalid domain" (ikke si "invalid domain: -.oslo.systems)
+			// - Les fra fil/stdin to ganger, valider i første omgang, modifiser i andre omgang
+
 			o.AWSCredentialsType = opts.AWSCredentialsType
 			o.GithubCredentialsType = opts.GithubCredentialsType
 
-			opts.Declaration, err = commands.InferClusterFromStdinOrFile(o.In, opts.File)
+			clusterInput := v1alpha1.Cluster{}
+			err = commands.InferClusterFromStdinOrFile(o.In, opts.File, &clusterInput)
+			if err != nil {
+				return fmt.Errorf("inferring cluster input: %w", err)
+			}
+
+			err = commands.ValidateClusterInput(&clusterInput)
+			if err != nil {
+				return fmt.Errorf("validating cluster declaration input: %w", err)
+			}
+
+			// TODO remove empty strings. Confusing having these params when we don't use them.
+			// Inside the funciton we use constant.DefaultOutputDirectory, and inconsistently we set some
+			cluster := v1alpha1.NewDefaultCluster("", "", "", "")
+
+			err = commands.InferClusterFromStdinOrFile(o.In, opts.File, &cluster)
 			if err != nil {
 				return fmt.Errorf("inferring cluster: %w", err)
 			}
+
+			opts.Declaration = &cluster
 
 			err = opts.Declaration.Validate()
 			if err != nil {

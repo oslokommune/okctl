@@ -82,6 +82,11 @@ github:
   ## The folder to place infrastructure declarations
   # outputPath: {{ .OutputDirectory }}
 
+## Defines what users can access everything connected to Cognito. Applications connected to Cognito include: ArgoCD UI,
+## Grafana. 
+#users:
+#- email: user.email@emailprovider.org
+
 integrations:
   ## ArgoCD is a service that watches a repository for Kubernetes charts and ensures the defined resources are running
   ## as declared in the cluster

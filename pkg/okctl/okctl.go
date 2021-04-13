@@ -12,9 +12,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/spinner"
-
 	"github.com/asdine/storm/v3/codec/json"
 
 	stormpkg "github.com/asdine/storm/v3"
@@ -124,42 +121,44 @@ $ cat %s
 // StateNodes returns the initialised state nodes
 func (o *Okctl) StateNodes() *clientCore.StateNodes {
 	return &clientCore.StateNodes{
-		ArgoCD:          o.StormDB.From(constant.DefaultStormNodeArgoCD),
-		Certificate:     o.StormDB.From(constant.DefaultStormNodeCertificates),
-		Cluster:         o.StormDB.From(constant.DefaultStormNodeCluster),
-		Domain:          o.StormDB.From(constant.DefaultStormNodeDomains),
-		ExternalDNS:     o.StormDB.From(constant.DefaultStormNodeExternalDNS),
-		Github:          o.StormDB.From(constant.DefaultStormNodeGithub),
-		Manifest:        o.StormDB.From(constant.DefaultStormNodeKubernetesManifest),
-		Parameter:       o.StormDB.From(constant.DefaultStormNodeParameter),
-		Vpc:             o.StormDB.From(constant.DefaultStormNodeVpc),
-		IdentityManager: o.StormDB.From(constant.DefaultStormNodeIdentityManager),
-		Monitoring:      o.StormDB.From(constant.DefaultStormNodeMonitoring),
-		Component:       o.StormDB.From(constant.DefaultStormNodeComponent),
-		Helm:            o.StormDB.From(constant.DefaultStormNodeHelm),
-		ManagedPolicy:   o.StormDB.From(constant.DefaultStormNodeManagedPolicy),
-		ServiceAccount:  o.StormDB.From(constant.DeefaultStormNodeServiceAccount),
+		ArgoCD:              o.StormDB.From(constant.DefaultStormNodeArgoCD),
+		Certificate:         o.StormDB.From(constant.DefaultStormNodeCertificates),
+		Cluster:             o.StormDB.From(constant.DefaultStormNodeCluster),
+		Domain:              o.StormDB.From(constant.DefaultStormNodeDomains),
+		ExternalDNS:         o.StormDB.From(constant.DefaultStormNodeExternalDNS),
+		Github:              o.StormDB.From(constant.DefaultStormNodeGithub),
+		Manifest:            o.StormDB.From(constant.DefaultStormNodeKubernetesManifest),
+		Parameter:           o.StormDB.From(constant.DefaultStormNodeParameter),
+		Vpc:                 o.StormDB.From(constant.DefaultStormNodeVpc),
+		IdentityManager:     o.StormDB.From(constant.DefaultStormNodeIdentityManager),
+		Monitoring:          o.StormDB.From(constant.DefaultStormNodeMonitoring),
+		Component:           o.StormDB.From(constant.DefaultStormNodeComponent),
+		Helm:                o.StormDB.From(constant.DefaultStormNodeHelm),
+		ManagedPolicy:       o.StormDB.From(constant.DefaultStormNodeManagedPolicy),
+		ServiceAccount:      o.StormDB.From(constant.DefaultStormNodeServiceAccount),
+		ContainerRepository: o.StormDB.From(constant.DefaultStormNodeContainerRepository),
 	}
 }
 
 // StateHandlers returns the initialised state handlers
 func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHandlers {
 	return &clientCore.StateHandlers{
-		Helm:            storm.NewHelmState(nodes.Helm),
-		ManagedPolicy:   storm.NewManagedPolicyState(nodes.ManagedPolicy),
-		ServiceAccount:  storm.NewServiceAccountState(nodes.ServiceAccount),
-		Certificate:     storm.NewCertificateState(nodes.Certificate),
-		IdentityManager: storm.NewIdentityManager(nodes.IdentityManager),
-		Github:          storm.NewGithubState(nodes.Github),
-		Manifest:        storm.NewManifestState(nodes.Manifest),
-		Vpc:             storm.NewVpcState(nodes.Vpc),
-		Parameter:       storm.NewParameterState(nodes.Parameter),
-		Domain:          storm.NewDomainState(nodes.Domain),
-		ExternalDNS:     storm.NewExternalDNSState(nodes.ExternalDNS),
-		Cluster:         storm.NewClusterState(nodes.Cluster),
-		Component:       storm.NewComponentState(nodes.Component),
-		Monitoring:      storm.NewMonitoringState(nodes.Monitoring),
-		ArgoCD:          storm.NewArgoCDState(nodes.ArgoCD),
+		Helm:                storm.NewHelmState(nodes.Helm),
+		ManagedPolicy:       storm.NewManagedPolicyState(nodes.ManagedPolicy),
+		ServiceAccount:      storm.NewServiceAccountState(nodes.ServiceAccount),
+		Certificate:         storm.NewCertificateState(nodes.Certificate),
+		IdentityManager:     storm.NewIdentityManager(nodes.IdentityManager),
+		Github:              storm.NewGithubState(nodes.Github),
+		Manifest:            storm.NewManifestState(nodes.Manifest),
+		Vpc:                 storm.NewVpcState(nodes.Vpc),
+		Parameter:           storm.NewParameterState(nodes.Parameter),
+		Domain:              storm.NewDomainState(nodes.Domain),
+		ExternalDNS:         storm.NewExternalDNSState(nodes.ExternalDNS),
+		Cluster:             storm.NewClusterState(nodes.Cluster),
+		Component:           storm.NewComponentState(nodes.Component),
+		Monitoring:          storm.NewMonitoringState(nodes.Monitoring),
+		ArgoCD:              storm.NewArgoCDState(nodes.ArgoCD),
+		ContainerRepository: storm.NewContainerRepositoryState(nodes.ContainerRepository),
 	}
 }
 
@@ -309,6 +308,12 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 
 	nameserverService := clientCore.NewNameserverHandlerService(ghClient)
 
+	containerRepositoryService := clientCore.NewContainerRepositoryService(
+		rest.NewContainerRepositoryAPI(o.restClient),
+		handlers.ContainerRepository,
+		o.CloudProvider,
+	)
+
 	services := &clientCore.Services{
 		AWSLoadBalancerControllerService: awsLoadBalancerControllerService,
 		ArgoCD:                           argocdService,
@@ -331,17 +336,10 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		Helm:                             helmService,
 		ManagedPolicy:                    managedPolicyService,
 		ServiceAccount:                   serviceAccountService,
+		ContainerRepository:              containerRepositoryService,
 	}
 
 	return services, nil
-}
-
-func (o *Okctl) containerRegistryService(outputDir string, spin spinner.Spinner) client.ContainerRepositoryService {
-	return clientCore.NewContainerRepositoryService(
-		rest.NewContainerRepositoryAPI(o.restClient),
-		stateSaver.NewContainerRepositoryState(o.RepoStateWithEnv),
-		o.CloudProvider,
-	)
 }
 
 // KubeConfigStore returns an initialised kube config store

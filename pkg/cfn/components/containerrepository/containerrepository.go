@@ -3,8 +3,6 @@
 package containerrepository
 
 import (
-	"fmt"
-
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/ecr"
 	"github.com/oslokommune/okctl/pkg/cfn"
@@ -33,9 +31,8 @@ const (
 
 // ContainerRepository contains state for building a cloud formation resource
 type ContainerRepository struct {
-	clusterName string
-	environment string
-	imageName   string
+	StoredName string
+	ImageName  string
 }
 
 // Resource returns the cloud formation resource
@@ -43,17 +40,13 @@ func (c *ContainerRepository) Resource() cloudformation.Resource {
 	return &ecr.Repository{
 		ImageScanningConfiguration: ImageScanConfigurationOn,
 		ImageTagMutability:         TagMutabilityConfigurationImmutable,
-		RepositoryName: fmt.Sprintf("%s-%s-%s",
-			c.clusterName,
-			c.environment,
-			c.imageName,
-		),
+		RepositoryName:             c.ImageName,
 	}
 }
 
 // Name returns the logical identifier
 func (c *ContainerRepository) Name() string {
-	return c.imageName
+	return c.StoredName
 }
 
 // Ref returns an aws intrinsic ref to this resource
@@ -68,10 +61,9 @@ func (c *ContainerRepository) NamedOutputs() map[string]cloudformation.Output {
 
 // New returns an initialised AWS S3 cloud formation template
 // - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-bucket.html
-func New(clustername, environment, imageName string) *ContainerRepository {
+func New(imageName string) *ContainerRepository {
 	return &ContainerRepository{
-		clusterName: clustername,
-		environment: environment,
-		imageName:   imageName,
+		StoredName: "ECRContainerRepository",
+		ImageName:  imageName,
 	}
 }

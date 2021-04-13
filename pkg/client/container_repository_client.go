@@ -6,7 +6,6 @@ import (
 	"net/url"
 
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/client/store"
 )
 
 // CreateContainerRepositoryOpts contains necessary information to create a container repository
@@ -43,9 +42,9 @@ type ContainerRepositoryAPI interface {
 
 // ContainerRepositoryState updates the state
 type ContainerRepositoryState interface {
-	SaveContainerRepository(repository *ContainerRepository) (*store.Report, error)
-	RemoveContainerRepository(imageName string) (*store.Report, error)
-	GetContainerRepository(imageName string) (*ContainerRepository, error)
+	SaveContainerRepository(repository *ContainerRepository) error
+	RemoveContainerRepository(stackName string) error
+	GetContainerRepository(stackName string) (*ContainerRepository, error)
 }
 
 // URI returns the URI where the image can be pulled and pushed

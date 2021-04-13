@@ -1606,19 +1606,17 @@ func NewS3BucketComposer(bucketName, clusterName string) *S3BucketComposer {
 
 // ECRRepositoryComposer contains state required for creating a ECR repository
 type ECRRepositoryComposer struct {
-	ImageName   string
-	Repository  string
-	Environment string
+	ImageName string
 }
 
 // ResourceRepositoryNameOutput returns the name of the resource
 func (e *ECRRepositoryComposer) ResourceRepositoryNameOutput() string {
-	return fmt.Sprintf("%s%s%sECRRepository", e.Repository, e.Environment, e.ImageName)
+	return fmt.Sprintf("%sECRRepository", e.ImageName)
 }
 
 // Compose returns the outputs and resources
 func (e *ECRRepositoryComposer) Compose() (*cfn.Composition, error) {
-	repository := containerrepository.New(e.Repository, e.Environment, e.ImageName)
+	repository := containerrepository.New(e.ImageName)
 
 	return &cfn.Composition{
 		Outputs:   []cfn.StackOutputer{repository},
@@ -1627,10 +1625,8 @@ func (e *ECRRepositoryComposer) Compose() (*cfn.Composition, error) {
 }
 
 // NewECRRepositoryComposer returns an initialized ECR composer
-func NewECRRepositoryComposer(imageName, repository, environment string) *ECRRepositoryComposer {
+func NewECRRepositoryComposer(imageName string) *ECRRepositoryComposer {
 	return &ECRRepositoryComposer{
-		ImageName:   imageName,
-		Repository:  repository,
-		Environment: environment,
+		ImageName: imageName,
 	}
 }

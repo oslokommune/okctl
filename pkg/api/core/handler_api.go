@@ -94,8 +94,8 @@ func MakeEndpoints(s Services) Endpoints {
 		DeletePostgresDatabase:          makeDeletePostgresDatabaseEndpoint(s.ComponentService),
 		CreateS3Bucket:                  makeCreateS3BucketEndpoint(s.ComponentService),
 		DeleteS3Bucket:                  makeDeleteS3BucketEndpoint(s.ComponentService),
-		CreateContainerRepository:       makeCreateContainerRepositoryEndpoint(s.containerRepositoryService),
-		DeleteContainerRepository:       makeDeleteContainerRepositoryEndpoint(s.containerRepositoryService),
+		CreateContainerRepository:       makeCreateContainerRepositoryEndpoint(s.ContainerRepositoryService),
+		DeleteContainerRepository:       makeDeleteContainerRepositoryEndpoint(s.ContainerRepositoryService),
 	}
 }
 

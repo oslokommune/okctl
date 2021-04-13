@@ -23,7 +23,7 @@ func (c *containerRepositoryService) CreateContainerRepository(_ context.Context
 	repository, err := c.api.CreateContainerRepository(api.CreateContainerRepositoryOpts{
 		ClusterID: opts.ClusterID,
 		Name:      opts.ImageName,
-		StackName: cfn.NewStackNamer().ContainerRepository(opts.ImageName, opts.ClusterID.Repository, opts.ClusterID.Environment),
+		StackName: cfn.NewStackNamer().ContainerRepository(opts.ImageName, opts.ClusterID.ClusterName),
 	})
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func (c *containerRepositoryService) CreateContainerRepository(_ context.Context
 		CloudFormationTemplate: repository.CloudFormationTemplate,
 	}
 
-	_, err = c.state.SaveContainerRepository(containerRepository)
+	err = c.state.SaveContainerRepository(containerRepository)
 	if err != nil {
 		return nil, err
 	}
@@ -48,13 +48,13 @@ func (c *containerRepositoryService) CreateContainerRepository(_ context.Context
 func (c *containerRepositoryService) DeleteContainerRepository(_ context.Context, opts client.DeleteContainerRepositoryOpts) error {
 	err := c.api.DeleteContainerRepository(api.DeleteContainerRepositoryOpts{
 		ClusterID: opts.ClusterID,
-		StackName: cfn.NewStackNamer().ContainerRepository(opts.ImageName, opts.ClusterID.Repository, opts.ClusterID.Environment),
+		StackName: cfn.NewStackNamer().ContainerRepository(opts.ImageName, opts.ClusterID.ClusterName),
 	})
 	if err != nil {
 		return err
 	}
 
-	_, err = c.state.RemoveContainerRepository(opts.ImageName)
+	err = c.state.RemoveContainerRepository(opts.ImageName)
 	if err != nil {
 		return err
 	}

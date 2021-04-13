@@ -14,7 +14,7 @@ type containerRepositoryCloudProvider struct {
 }
 
 func (c *containerRepositoryCloudProvider) CreateContainerRepository(opts *api.CreateContainerRepositoryOpts) (*api.ContainerRepository, error) {
-	composition := components.NewECRRepositoryComposer(opts.Name, opts.ClusterID.Repository, opts.ClusterID.Environment)
+	composition := components.NewECRRepositoryComposer(opts.Name)
 
 	template, err := cfn.New(composition).Build()
 	if err != nil {

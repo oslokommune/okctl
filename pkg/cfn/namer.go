@@ -198,12 +198,11 @@ func (n *StackNamer) AliasRecordSet(clusterName, subdomain string) string {
 }
 
 // ContainerRepository returns the stack name of the container repository
-func (n *StackNamer) ContainerRepository(repository, environment, imageName string) string {
-	return fmt.Sprintf("%s-%s-%s-%s-%s",
+func (n *StackNamer) ContainerRepository(clusterName, imageName string) string {
+	return fmt.Sprintf("%s-%s-%s-%s",
 		DefaultStackNamePrefix,
 		DefaultStackNameContainerRepository,
-		repository,
-		environment,
+		clusterName,
 		imageName,
 	)
 }

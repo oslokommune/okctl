@@ -493,6 +493,9 @@ func (o *Okctl) initialise() error {
 
 	router := http.NewServeMux()
 	router.Handle("/", core.AttachRoutes(handlers))
+	router.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 
 	server := &http.Server{
 		Handler: router,
@@ -512,7 +515,38 @@ func (o *Okctl) initialise() error {
 		errs <- fmt.Errorf("%s", <-c)
 	}()
 
-	return nil
+	return o.waitForServer()
+}
+
+// waitForServer waits for the http.Server to become active
+func (o *Okctl) waitForServer() error {
+	const (
+		serverHealthTimeoutInSec = 5
+		serverHealthIntervalInMs = 100
+	)
+
+	timeout := time.After(serverHealthTimeoutInSec * time.Second)
+	tick := time.NewTicker(serverHealthIntervalInMs * time.Millisecond)
+
+	for {
+		select {
+		case <-timeout:
+			return errors.New("timed out waiting for server")
+		case <-tick.C:
+			r, err := http.Get(fmt.Sprintf("%s%s", o.ServerBaseURL, "health"))
+			if err != nil {
+				return err
+			}
+
+			defer func() {
+				_ = r.Body.Close()
+			}()
+
+			if r.StatusCode == http.StatusOK {
+				return nil
+			}
+		}
+	}
 }
 
 func (o *Okctl) initialiseStorm() error {

@@ -46,8 +46,9 @@ type Config struct {
 
 	Declaration *v1alpha1.Cluster
 
-	Destination string
-	ServerURL   string
+	Destination   string
+	ServerURL     string
+	ServerBaseURL string
 
 	format  core.EncodeResponseType
 	homeDir string
@@ -70,6 +71,7 @@ func New() *Config {
 		RepoDataLoader: NoopDataLoader,
 		Destination:    dest,
 		ServerURL:      fmt.Sprintf("http://%s/v1/", dest),
+		ServerBaseURL:  fmt.Sprintf("http://%s/", dest),
 	}
 }
 

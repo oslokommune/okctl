@@ -7,18 +7,13 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
-	"github.com/spf13/afero"
-
 	kaex "github.com/oslokommune/kaex/pkg/api"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
-	clientFilesystem "github.com/oslokommune/okctl/pkg/client/core/store/filesystem"
 	"github.com/oslokommune/okctl/pkg/scaffold"
 )
 
 type applicationService struct {
-	fs    *afero.Afero
-	paths clientFilesystem.Paths
 	cert  client.CertificateService
 	store client.ApplicationStore
 }
@@ -98,14 +93,10 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 
 // NewApplicationService initializes a new Scaffold application service
 func NewApplicationService(
-	fs *afero.Afero,
-	paths clientFilesystem.Paths,
 	cert client.CertificateService,
 	store client.ApplicationStore,
 ) client.ApplicationService {
 	return &applicationService{
-		fs:    fs,
-		paths: paths,
 		cert:  cert,
 		store: store,
 	}

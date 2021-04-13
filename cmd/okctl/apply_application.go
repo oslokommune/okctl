@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/spinner"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/controller"
@@ -24,8 +25,8 @@ type applyApplicationOpts struct {
 }
 
 // Validate the options for "apply application"
-func (o *applyApplicationOpts) Validate() error {
-	return validation.ValidateStruct(o,
+func (o applyApplicationOpts) Validate() error {
+	return validation.ValidateStruct(&o,
 		validation.Field(&o.File, validation.Required),
 	)
 }
@@ -90,35 +91,24 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 			services, _ := o.ClientServices(o.StateHandlers(o.StateNodes()))
 
+			spin, err := spinner.New("synchronizing", o.Err)
+			if err != nil {
+				return fmt.Errorf("error creating spinner: %w", err)
+			}
+
 			reconciliationManager := reconciler.NewCompositeReconciler(spin,
 				reconciler.NewApplicationReconciler(services.ApplicationService),
 			)
 
 			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{
-				Ctx:       o.Ctx,
-				Out:       o.Out,
-				ClusterID: *scaffoldOpts.ID,
-				// TODO: should pass in cluster as done in the huge rewrite PR
-				Declaration: &v1alpha1.Cluster{
-					Github: v1alpha1.ClusterGithub{
-						Repository: commands.GetFirstGithubRepositoryURL(o.RepoStateWithEnv.GetGithub().Repositories),
-						OutputPath: o.RepoStateWithEnv.GetMetadata().OutputDir,
-					},
-				},
+				Ctx:                    o.Ctx,
+				Out:                    o.Out,
+				ClusterID:              *scaffoldOpts.ID,
+				Declaration:            o.Declaration,
+				ApplicationDeclaration: scaffoldOpts.Application,
 			})
 
 			dependencyTree := controller.CreateApplicationResourceDependencyTree()
-
-			dependencyTree.SetStateRefresher(resourcetree.ResourceNodeTypeApplication, func(node *resourcetree.ResourceNode) {
-				primaryHostedZone := o.RepoStateWithEnv.GetPrimaryHostedZone()
-
-				node.ResourceState = &reconciler.ApplicationState{
-					Declaration: scaffoldOpts.Application,
-
-					PrimaryHostedZoneID:     primaryHostedZone.ID,
-					PrimaryHostedZoneDomain: primaryHostedZone.Domain,
-				}
-			})
 
 			err = commands.SynchronizeApplication(reconciliationManager, dependencyTree)
 			if err != nil {

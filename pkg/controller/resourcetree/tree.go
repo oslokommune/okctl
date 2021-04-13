@@ -6,6 +6,8 @@ import (
 	"context"
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/client"
+
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -123,8 +125,9 @@ type CommonMetadata struct {
 
 	Out io.Writer
 
-	ClusterID   api.ID
-	Declaration *v1alpha1.Cluster
+	ClusterID              api.ID
+	Declaration            *v1alpha1.Cluster
+	ApplicationDeclaration client.OkctlApplication
 }
 
 // StateRefreshFn is a function that attempts to retrieve state potentially can only be retrieved at runtime. E.g.:

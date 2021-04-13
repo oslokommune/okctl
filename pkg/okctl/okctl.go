@@ -295,10 +295,6 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	applicationService := clientCore.NewApplicationService(
-		o.FileSystem,
-		clientFilesystem.Paths{
-			BaseDir: applicationsOutputDir,
-		},
 		certificateService,
 		clientFilesystem.NewApplicationStore(
 			clientFilesystem.Paths{

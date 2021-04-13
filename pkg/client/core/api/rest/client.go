@@ -89,17 +89,20 @@ func (c *HTTPClient) Do(method, endpoint string, body interface{}, into interfac
 	const logLineMaxlength = 5000
 
 	if into != nil {
-		if c.Debug {
-			truncatedOut := truncate.Bytes(out, logLineMaxlength)
-
-			_, err = fmt.Fprintf(c.Progress, "client (method: %s, endpoint: %s) received data: %s", method, endpoint, truncatedOut)
-			if err != nil {
-				return fmt.Errorf("failed to write debug output: %w", err)
-			}
-		}
-
 		err = json.Unmarshal(out, into)
 		if err != nil {
+			if c.Debug {
+				cpy := make([]byte, len(out))
+				copy(cpy, out)
+
+				truncatedOut := truncate.Bytes(cpy, logLineMaxlength)
+
+				_, err = fmt.Fprintf(c.Progress, "client (method: %s, endpoint: %s) received data: %s", method, endpoint, truncatedOut)
+				if err != nil {
+					return fmt.Errorf("failed to write debug output: %w", err)
+				}
+			}
+
 			return fmt.Errorf("failed to parse response: %w", err)
 		}
 	}

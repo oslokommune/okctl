@@ -91,7 +91,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				Ctx:       o.Ctx,
 				Out:       o.Out,
 				ClusterID: *scaffoldOpts.ID,
-				// We should pass inn cluster fetched from state here when state rewrite is done
+				// TODO: should pass in cluster as done in the huge rewrite PR
 				Declaration: &v1alpha1.Cluster{
 					Github: v1alpha1.ClusterGithub{
 						Repository: commands.GetFirstGithubRepositoryURL(o.RepoStateWithEnv.GetGithub().Repositories),

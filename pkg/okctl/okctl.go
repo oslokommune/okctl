@@ -601,7 +601,6 @@ func (o *Okctl) awsLoadBalancerControllerService(outputDir string, spin spinner.
 func (o *Okctl) applicationService(infrastructureOutputDir, applicationOutputDir string, spin spinner.Spinner) client.ApplicationService {
 	return clientCore.NewApplicationService(
 		o.FileSystem,
-		spin,
 		clientFilesystem.Paths{
 			BaseDir: applicationOutputDir,
 		},

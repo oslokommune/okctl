@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/commands"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/sebdah/goldie/v2"
@@ -16,7 +18,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/client/core"
 	clientFilesystem "github.com/oslokommune/okctl/pkg/client/core/store/filesystem"
 	"github.com/oslokommune/okctl/pkg/client/store"
-	"github.com/oslokommune/okctl/pkg/spinner"
 	"gotest.tools/assert"
 )
 
@@ -63,29 +64,26 @@ volumes:
 `
 
 func TestNewApplicationService(t *testing.T) {
-	testOutputBuffer := bytes.NewBufferString("")
 	testInputBuffer := bytes.NewBufferString(defaultTemplate)
 
-	spin, _ := spinner.New("", testOutputBuffer)
-	aeroFs := afero.Afero{Fs: afero.NewMemMapFs()}
+	aferoFs := afero.Afero{Fs: afero.NewMemMapFs()}
 
 	mockPaths := clientFilesystem.Paths{BaseDir: "infrastructure/applications"}
 
 	service := core.NewApplicationService(
-		&aeroFs,
-		spin,
+		&aferoFs,
 		mockPaths,
 		mockCertService{},
-		clientFilesystem.NewApplicationStore(mockPaths, &aeroFs),
+		clientFilesystem.NewApplicationStore(mockPaths, &aferoFs),
 		mockAppReporter{},
 	)
 
+	application, err := commands.InferApplicationFromStdinOrFile(testInputBuffer, &aferoFs, "-")
+	assert.NilError(t, err)
+
 	env := "test"
-	err := service.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
-		In:                  testInputBuffer,
-		Out:                 testOutputBuffer,
-		ApplicationFilePath: "-",
-		RepoDir:             "infrastructure",
+	err = service.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
+		OutputDir: "infrastructure",
 		ID: &api.ID{
 			Region:       "eu-west-1",
 			AWSAccountID: "012345678912",
@@ -96,24 +94,25 @@ func TestNewApplicationService(t *testing.T) {
 		HostedZoneID:     "dummyID",
 		HostedZoneDomain: "kjoremiljo.oslo.systems",
 		IACRepoURL:       "git@dummy.com:test/repo.git",
+		Application:      application,
 	})
 	assert.NilError(t, err)
 
 	g := goldie.New(t)
-	g.Assert(t, "argocd-application.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", "argocd-application.yaml")))
+	g.Assert(t, "argocd-application.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", "argocd-application.yaml")))
 
-	g.Assert(t, "kustomization-base.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "kustomization.yaml")))
+	g.Assert(t, "kustomization-base.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "kustomization.yaml")))
 
-	g.Assert(t, "deployment.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "deployment.yaml")))
-	g.Assert(t, "volumes.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "volumes.yaml")))
-	g.Assert(t, "ingress.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "ingress.yaml")))
-	g.Assert(t, "service.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "service.yaml")))
+	g.Assert(t, "deployment.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "deployment.yaml")))
+	g.Assert(t, "volumes.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "volumes.yaml")))
+	g.Assert(t, "ingress.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "ingress.yaml")))
+	g.Assert(t, "service.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "service.yaml")))
 
 	g.Assert(t,
 		"kustomization-overlay.yaml",
-		readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationOverlayDir, env, "kustomization.yaml")),
+		readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationOverlayDir, env, "kustomization.yaml")),
 	)
-	g.Assert(t, "ingress-patch.yaml", readFile(t, &aeroFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationOverlayDir, env, "ingress-patch.json")))
+	g.Assert(t, "ingress-patch.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationOverlayDir, env, "ingress-patch.json")))
 }
 
 func readFile(t *testing.T, fs *afero.Afero, path string) []byte {

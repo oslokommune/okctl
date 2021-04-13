@@ -95,6 +95,15 @@ func CreateResourceDependencyTree() (root *resourcetree.ResourceNode) {
 	return root
 }
 
+// CreateApplicationResourceDependencyTree creates a dependency tree for applications
+func CreateApplicationResourceDependencyTree() (root *resourcetree.ResourceNode) {
+	root = createNode(nil, resourcetree.ResourceNodeTypeGroup)
+
+	createNode(root, resourcetree.ResourceNodeTypeApplication)
+
+	return root
+}
+
 func createNode(parent *resourcetree.ResourceNode, nodeType resourcetree.ResourceNodeType) (child *resourcetree.ResourceNode) {
 	child = &resourcetree.ResourceNode{
 		Type:     nodeType,

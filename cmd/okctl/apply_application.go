@@ -3,13 +3,17 @@ package main
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
-
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/client"
+	"github.com/oslokommune/okctl/pkg/commands"
+	"github.com/oslokommune/okctl/pkg/controller"
+	"github.com/oslokommune/okctl/pkg/controller/reconciler"
+	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/spinner"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -42,14 +46,11 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 			err := o.InitialiseWithOnlyEnv(environment)
 			if err != nil {
-				if errors.As(err, &okctl.ErrorEnvironmentNotFound{}) {
-					envError, ok := err.(okctl.ErrorEnvironmentNotFound)
-					if !ok {
-						return err
-					}
+				errEnvNotFound := &okctl.ErrorEnvironmentNotFound{}
 
-					fmt.Fprintln(o.Err, fmt.Sprintf("\nThe specified environment \"%s\" does not exist.", envError.TargetEnvironment))
-					fmt.Fprintln(o.Err, fmt.Sprintf("Available environments: %v\n", envError.AvailableEnvironments))
+				if errors.As(err, &errEnvNotFound) {
+					fmt.Fprintf(o.Err, "\nThe specified environment \"%s\" does not exist.", errEnvNotFound.TargetEnvironment)
+					fmt.Fprintf(o.Err, "Available environments: %v\n", errEnvNotFound.AvailableEnvironments)
 				}
 
 				return err
@@ -63,24 +64,12 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				AWSAccountID: cluster.AWSAccountID,
 				Environment:  cluster.Environment,
 				Repository:   metadata.Name,
-				ClusterName:  cluster.Name,
+				ClusterName:  o.RepoStateWithEnv.GetClusterName(),
 			}
 
-			scaffoldOpts.In = o.In
-			scaffoldOpts.Out = o.Out
-			scaffoldOpts.ApplicationFilePath = opts.File
-			scaffoldOpts.RepoDir, err = o.GetRepoDir()
-			scaffoldOpts.OutputDir = metadata.OutputDir
+			scaffoldOpts.Application, err = commands.InferApplicationFromStdinOrFile(o.In, o.FileSystem, opts.File)
 			if err != nil {
-				return err
-			}
-
-			hostedZone := o.RepoStateWithEnv.GetPrimaryHostedZone()
-			scaffoldOpts.HostedZoneID = hostedZone.ID
-			scaffoldOpts.HostedZoneDomain = hostedZone.Domain
-
-			for _, repo := range cluster.Github.Repositories {
-				scaffoldOpts.IACRepoURL = repo.GitURL
+				return fmt.Errorf("inferring application from stdin or file: %w", err)
 			}
 
 			return nil
@@ -91,15 +80,49 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("failed validating options: %w", err)
 			}
 
-			spin, _ := spinner.New("applying application", o.Out)
+			spin, _ := spinner.New("synchronizing ", o.Out)
 			services, _ := o.ClientServices(spin)
 
-			err = services.ApplicationService.ScaffoldApplication(o.Ctx, scaffoldOpts)
+			reconciliationManager := reconciler.NewCompositeReconciler(spin,
+				reconciler.NewApplicationReconciler(services.ApplicationService),
+			)
+
+			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{
+				Ctx:       o.Ctx,
+				Out:       o.Out,
+				ClusterID: *scaffoldOpts.ID,
+				// TODO: should pass in cluster as done in the huge rewrite PR
+				Declaration: &v1alpha1.Cluster{
+					Github: v1alpha1.ClusterGithub{
+						Repository: commands.GetFirstGithubRepositoryURL(o.RepoStateWithEnv.GetGithub().Repositories),
+						OutputPath: o.RepoStateWithEnv.GetMetadata().OutputDir,
+					},
+				},
+			})
+
+			dependencyTree := controller.CreateApplicationResourceDependencyTree()
+
+			dependencyTree.SetStateRefresher(resourcetree.ResourceNodeTypeApplication, func(node *resourcetree.ResourceNode) {
+				primaryHostedZone := o.RepoStateWithEnv.GetPrimaryHostedZone()
+
+				node.ResourceState = &reconciler.ApplicationState{
+					Declaration: scaffoldOpts.Application,
+
+					PrimaryHostedZoneID:     primaryHostedZone.ID,
+					PrimaryHostedZoneDomain: primaryHostedZone.Domain,
+				}
+			})
+
+			err = commands.SynchronizeApplication(reconciliationManager, dependencyTree)
 			if err != nil {
-				return err
+				return fmt.Errorf("synchronizing application: %w", err)
 			}
 
-			return nil
+			return commands.WriteApplyApplicationSuccessMessage(
+				o.Out,
+				scaffoldOpts.Application.Name,
+				scaffoldOpts.OutputDir,
+			)
 		},
 	}
 

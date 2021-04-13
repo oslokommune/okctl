@@ -35,11 +35,14 @@ jobs:
           metadata:
             accountID: "${{ secrets.NIGHTLY_AWS_ACCOUNT_ID }}"
             name: nightly-test
+            region: eu-west-1
 
           clusterRootDomain: nightly.oslo.systems
 
           github:
             repository: okctl-iac
+            organisation: oslokommune
+            outputPath: infra
 
           integrations:
             argoCD: true
@@ -53,11 +56,15 @@ jobs:
             loki: true
             promtail: true
             tempo: true
+
+          vpc:
+            cidr: 192.168.0.0/20
+            highAvailability: true
           EOF
 
       - name: Cache state
         if: ${{ always() }}
-        uses: actions/cache@v2
+        uses: pat-s/always-upload-cache@v2.1.3
         with:
           path: infra/nightly-test/state.db
           key: ${{ runner.os }}-state-db

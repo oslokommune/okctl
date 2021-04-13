@@ -26,9 +26,9 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_SECRET_KEY }}
 
-      - name: Create cluster
+      - name: Create config
         run: |
-          cat <<EOF | dist/linux_linux_amd64/okctl apply cluster --github-credentials-type token --aws-credentials-type access-key --no-spinner --file -
+          cat <<EOF > nightly-cfg.yaml
           apiVersion: okctl.io/v1alpha1
           kind: Cluster
 
@@ -54,6 +54,9 @@ jobs:
             promtail: true
             tempo: true
           EOF
+
+      - name: Create cluster
+        run: dist/linux_linux_amd64/okctl apply cluster --github-credentials-type token --aws-credentials-type access-key --no-spinner --file nightly-cfg.yaml
         env:
           OKCTL_DEBUG: true
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -61,7 +64,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_PAT }}
 
       - name: Delete cluster
-        run: dist/linux_linux_amd64/okctl delete cluster --github-credentials-type token --aws-credentials-type access-key --no-spinner --confirm test
+        run: dist/linux_linux_amd64/okctl delete cluster --github-credentials-type token --aws-credentials-type access-key --no-spinner --confirm test --config nightly-cfg.yaml
         env:
           OKCTL_DEBUG: true
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

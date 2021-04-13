@@ -18,7 +18,7 @@ Resources:
       - openid
       CallbackURLs:
       - https://argocd/callback
-      ClientName: okctl-test-test-argocd
+      ClientName: okctl-test-argocd
       DefaultRedirectURI: https://argocd/callback
       GenerateSecret: true
       PreventUserExistenceErrors: ENABLED

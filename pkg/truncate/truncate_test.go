@@ -44,7 +44,7 @@ func TestTruncate(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			// Test String string
-			truncatedString := truncate.String(&tc.input, tc.maxLength)
+			truncatedString := truncate.String(tc.input, tc.maxLength)
 			assert.Equal(t, tc.expected, truncatedString)
 
 			// Test String bytes
@@ -59,7 +59,7 @@ func TestTruncate(t *testing.T) {
 
 func TestTruncateNil(t *testing.T) {
 	t.Run("Should return empty values if receiving nil", func(t *testing.T) {
-		assert.Equal(t, "", truncate.String(nil, 5))
+		assert.Equal(t, "", truncate.String("", 5))
 		assert.Equal(t, []byte{}, truncate.Bytes(nil, 5))
 	})
 }

@@ -7,26 +7,19 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
-	"github.com/spf13/afero"
-
 	kaex "github.com/oslokommune/kaex/pkg/api"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
-	clientFilesystem "github.com/oslokommune/okctl/pkg/client/core/store/filesystem"
-	"github.com/oslokommune/okctl/pkg/client/store"
 	"github.com/oslokommune/okctl/pkg/scaffold"
 )
 
 type applicationService struct {
-	fs     *afero.Afero
-	paths  clientFilesystem.Paths
-	cert   client.CertificateService
-	store  client.ApplicationStore
-	report client.ApplicationReport
+	cert  client.CertificateService
+	store client.ApplicationStore
 }
 
 func (s *applicationService) createCertificate(ctx context.Context, id *api.ID, hostedZoneID, fqdn string) (string, error) {
-	cert, certFnErr := s.cert.CreateCertificate(ctx, api.CreateCertificateOpts{
+	cert, certFnErr := s.cert.CreateCertificate(ctx, client.CreateCertificateOpts{
 		ID:           *id,
 		FQDN:         fqdn,
 		Domain:       fqdn,
@@ -36,7 +29,7 @@ func (s *applicationService) createCertificate(ctx context.Context, id *api.ID, 
 		return "", certFnErr
 	}
 
-	return cert.CertificateARN, nil
+	return cert.ARN, nil
 }
 
 // ScaffoldApplication turns a file path into Kubernetes resources
@@ -53,7 +46,7 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 	app := okctlApplicationToKaexApplication(okctlApp, opts.HostedZoneDomain)
 
 	relativeApplicationDir := path.Join(opts.OutputDir, constant.DefaultApplicationsOutputDir, okctlApp.Name)
-	relativeArgoCDSourcePath := path.Join(relativeApplicationDir, constant.DefaultApplicationOverlayDir, opts.ID.Environment)
+	relativeArgoCDSourcePath := path.Join(relativeApplicationDir, constant.DefaultApplicationOverlayDir, opts.ID.ClusterName)
 
 	base, err := scaffold.GenerateApplicationBase(*app, opts.IACRepoURL, relativeArgoCDSourcePath)
 	if err != nil {
@@ -77,7 +70,7 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 
 	applicationScaffold := &client.ScaffoldedApplication{
 		ApplicationName:      app.Name,
-		Environment:          opts.ID.Environment,
+		ClusterName:          opts.ID.ClusterName,
 		BaseKustomization:    base.Kustomization,
 		Deployment:           base.Deployment,
 		Service:              base.Service,
@@ -90,12 +83,7 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 		DeploymentPatch:      overlay.DeploymentPatch,
 	}
 
-	report, err := s.store.SaveApplication(applicationScaffold)
-	if err != nil {
-		return err
-	}
-
-	err = s.report.ReportCreateApplication(applicationScaffold, []*store.Report{report})
+	_, err = s.store.SaveApplication(applicationScaffold)
 	if err != nil {
 		return err
 	}
@@ -105,18 +93,12 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 
 // NewApplicationService initializes a new Scaffold application service
 func NewApplicationService(
-	fs *afero.Afero,
-	paths clientFilesystem.Paths,
 	cert client.CertificateService,
 	store client.ApplicationStore,
-	state client.ApplicationReport,
 ) client.ApplicationService {
 	return &applicationService{
-		fs:     fs,
-		paths:  paths,
-		cert:   cert,
-		store:  store,
-		report: state,
+		cert:  cert,
+		store: store,
 	}
 }
 

@@ -24,7 +24,7 @@ type identityManagerCloudProvider struct {
 }
 
 func (s *identityManagerCloudProvider) DeleteIdentityPoolClient(opts api.DeleteIdentityPoolClientOpts) error {
-	err := cfn.NewRunner(s.provider).Delete(cfn.NewStackNamer().IdentityPoolClient(opts.ID.Repository, opts.ID.Environment, opts.Purpose))
+	err := cfn.NewRunner(s.provider).Delete(cfn.NewStackNamer().IdentityPoolClient(opts.ID.ClusterName, opts.Purpose))
 	if err != nil {
 		return fmt.Errorf("deleting identity pool client: %w", err)
 	}
@@ -35,13 +35,12 @@ func (s *identityManagerCloudProvider) DeleteIdentityPoolClient(opts api.DeleteI
 func (s *identityManagerCloudProvider) CreateIdentityPoolClient(opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
 	b := cfn.New(components.NewUserPoolClient(
 		opts.Purpose,
-		opts.ID.Environment,
-		opts.ID.Repository,
+		opts.ID.ClusterName,
 		opts.CallbackURL,
 		opts.UserPoolID,
 	))
 
-	stackName := cfn.NewStackNamer().IdentityPoolClient(opts.ID.Repository, opts.ID.Environment, opts.Purpose)
+	stackName := cfn.NewStackNamer().IdentityPoolClient(opts.ID.ClusterName, opts.Purpose)
 
 	template, err := b.Build()
 	if err != nil {
@@ -84,12 +83,12 @@ func (s *identityManagerCloudProvider) CreateIdentityPoolClient(opts api.CreateI
 func (s *identityManagerCloudProvider) DeleteIdentityPool(opts api.DeleteIdentityPoolOpts) error {
 	r := cfn.NewRunner(s.provider)
 
-	err := r.Delete(cfn.NewStackNamer().AliasRecordSet(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Domain)))
+	err := r.Delete(cfn.NewStackNamer().AliasRecordSet(opts.ID.ClusterName, slug.Make(opts.Domain)))
 	if err != nil {
 		return fmt.Errorf("deleting alias record set for identity pool: %w", err)
 	}
 
-	err = r.Delete(cfn.NewStackNamer().IdentityPool(opts.ID.Repository, opts.ID.Environment))
+	err = r.Delete(cfn.NewStackNamer().IdentityPool(opts.ID.ClusterName))
 	if err != nil {
 		return fmt.Errorf("deleting identity pool: %w", err)
 	}
@@ -100,15 +99,14 @@ func (s *identityManagerCloudProvider) DeleteIdentityPool(opts api.DeleteIdentit
 // nolint: funlen
 func (s *identityManagerCloudProvider) CreateIdentityPool(certificateARN string, opts api.CreateIdentityPoolOpts) (*api.IdentityPool, error) {
 	b := cfn.New(components.NewUserPool(
-		opts.ID.Environment,
-		opts.ID.Repository,
+		opts.ID.ClusterName,
 		opts.AuthDomain,
 		opts.HostedZoneID,
 		certificateARN,
 	),
 	)
 
-	stackName := cfn.NewStackNamer().IdentityPool(opts.ID.Repository, opts.ID.Environment)
+	stackName := cfn.NewStackNamer().IdentityPool(opts.ID.ClusterName)
 
 	template, err := b.Build()
 	if err != nil {
@@ -134,7 +132,7 @@ func (s *identityManagerCloudProvider) CreateIdentityPool(certificateARN string,
 		return nil, fmt.Errorf("building alias cloud formation template: %w", err)
 	}
 
-	aliasStackName := cfn.NewStackNamer().AliasRecordSet(opts.ID.Repository, opts.ID.Environment, slug.Make(d.UserPoolDomain))
+	aliasStackName := cfn.NewStackNamer().AliasRecordSet(opts.ID.ClusterName, slug.Make(d.UserPoolDomain))
 
 	err = r.CreateIfNotExists(aliasStackName, aliasTemplate, nil, defaultTimeOut)
 	if err != nil {
@@ -178,7 +176,7 @@ func (s *identityManagerCloudProvider) CreateIdentityPoolUser(opts api.CreateIde
 		opts.UserPoolID,
 	),
 	)
-	stackName := cfn.NewStackNamer().IdentityPoolUser(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Email))
+	stackName := cfn.NewStackNamer().IdentityPoolUser(opts.ID.ClusterName, slug.Make(opts.Email))
 
 	template, err := b.Build()
 	if err != nil {

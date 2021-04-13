@@ -155,3 +155,38 @@ func TestGithubCreateDeployKey(t *testing.T) {
 		})
 	}
 }
+
+func TestGithubDeleteDeployKey(t *testing.T) {
+	testCases := []struct {
+		name   string
+		github *github.Github
+	}{
+		{
+			name: "Should work",
+			github: func() *github.Github {
+				gh, err := github.New(context.Background(), githubAuth.New(githubAuth.NewInMemoryPersister(), &http.Client{}, githubAuth.NewAuthStatic(&githubAuth.Credentials{
+					AccessToken: "meh",
+					Type:        githubAuth.CredentialsTypePersonalAccessToken,
+				})))
+				assert.NoError(t, err)
+
+				return gh
+			}(),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			defer gock.Off()
+
+			gock.New(tc.github.Client.BaseURL.String()).
+				Delete("/repos/oslokommune/myRepo/keys").
+				Reply(http.StatusOK)
+
+			err := tc.github.DeleteDeployKey(github.DefaultOrg, "myRepo", 56782)
+			assert.NoError(t, err)
+		})
+	}
+}

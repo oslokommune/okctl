@@ -4,8 +4,6 @@ package run
 import (
 	"fmt"
 
-	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
-
 	"github.com/oslokommune/okctl/pkg/kubeconfig"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -47,31 +45,16 @@ func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, er
 		return nil, fmt.Errorf("retrieving eksctl binary: %w", err)
 	}
 
-	var cfg *v1alpha5.ClusterConfig
-	if opts.Minimal {
-		cfg, err = clusterconfig.NewMinimal(&clusterconfig.MinimalArgs{
-			ClusterName:            opts.ID.ClusterName,
-			PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
-			PrivateSubnets:         opts.VpcPrivateSubnets,
-			PublicSubnets:          opts.VpcPublicSubnets,
-			Region:                 opts.ID.Region,
-			Version:                opts.Version,
-			VpcCidr:                opts.Cidr,
-			VpcID:                  opts.VpcID,
-		})
-	} else {
-		cfg, err = clusterconfig.New(&clusterconfig.Args{
-			ClusterName:            opts.ID.ClusterName,
-			PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
-			PrivateSubnets:         opts.VpcPrivateSubnets,
-			PublicSubnets:          opts.VpcPublicSubnets,
-			Region:                 opts.ID.Region,
-			Version:                opts.Version,
-			VpcCidr:                opts.Cidr,
-			VpcID:                  opts.VpcID,
-		})
-	}
-
+	cfg, err := clusterconfig.New(&clusterconfig.Args{
+		ClusterName:            opts.ID.ClusterName,
+		PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
+		PrivateSubnets:         opts.VpcPrivateSubnets,
+		PublicSubnets:          opts.VpcPublicSubnets,
+		Region:                 opts.ID.Region,
+		Version:                opts.Version,
+		VpcCidr:                opts.Cidr,
+		VpcID:                  opts.VpcID,
+	})
 	if err != nil {
 		return nil, errors.E(err, "creating cluster config", errors.Internal)
 	}

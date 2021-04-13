@@ -3,6 +3,8 @@ package reconciler
 import (
 	"fmt"
 
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
+
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
@@ -10,6 +12,7 @@ import (
 // blockstorageReconciler contains service and metadata for the relevant resource
 type blockstorageReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
+	stateHandlers  *clientCore.StateHandlers
 
 	client client.BlockstorageService
 }
@@ -22,6 +25,11 @@ func (z *blockstorageReconciler) NodeType() resourcetree.ResourceNodeType {
 // SetCommonMetadata saves common metadata for use in Reconcile()
 func (z *blockstorageReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
+}
+
+// SetStateHandlers sets the state handlers
+func (z *blockstorageReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
+	z.stateHandlers = handlers
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved

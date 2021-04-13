@@ -20,7 +20,7 @@ func TestNew(t *testing.T) {
 		{
 			name:     "Validate output",
 			golden:   "user-pool.json",
-			resource: userpool.New("test", "test").Resource(),
+			resource: userpool.New("test").Resource(),
 		},
 	}
 

@@ -13,7 +13,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	up := userpool.New("test", "test")
+	up := userpool.New("test")
 
 	testCases := []struct {
 		name     string

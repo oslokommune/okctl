@@ -19,8 +19,6 @@ import (
 type OkctlEnvironment struct {
 	Region                 string
 	AWSAccountID           string
-	Environment            string
-	Repository             string
 	ClusterName            string
 	UserDataDir            string
 	Debug                  bool
@@ -31,7 +29,6 @@ type OkctlEnvironment struct {
 // Validate the inputs
 func (o *OkctlEnvironment) Validate() error {
 	return validation.ValidateStruct(o,
-		validation.Field(&o.Environment, validation.Required),
 		validation.Field(&o.AWSAccountID, validation.Required),
 		validation.Field(&o.Region, validation.Required),
 		validation.Field(&o.ClusterName, validation.Required),
@@ -43,9 +40,6 @@ func (o *OkctlEnvironment) Validate() error {
 
 // GetOkctlEnvironment returns data needed to connect to an okctl cluster
 func GetOkctlEnvironment(o *okctl.Okctl) (OkctlEnvironment, error) {
-	meta := o.RepoStateWithEnv.GetMetadata()
-	cluster := o.RepoStateWithEnv.GetCluster()
-
 	userDataDir, err := o.GetUserDataDir()
 	if err != nil {
 		return OkctlEnvironment{}, err
@@ -62,11 +56,9 @@ func GetOkctlEnvironment(o *okctl.Okctl) (OkctlEnvironment, error) {
 	}
 
 	opts := OkctlEnvironment{
-		Region:                 meta.Region,
-		AWSAccountID:           cluster.AWSAccountID,
-		Environment:            cluster.Environment,
-		Repository:             meta.Name,
-		ClusterName:            o.RepoStateWithEnv.GetClusterName(),
+		Region:                 o.Declaration.Metadata.Region,
+		AWSAccountID:           o.Declaration.Metadata.AccountID,
+		ClusterName:            o.Declaration.Metadata.Name,
 		UserDataDir:            userDataDir,
 		Debug:                  o.Debug,
 		KubectlBinaryDir:       path.Dir(k.BinaryPath),

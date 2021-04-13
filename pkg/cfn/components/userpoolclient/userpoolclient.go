@@ -21,8 +21,7 @@ type UserPoolClient struct {
 	StoredName  string
 	ClientName  string
 	CallBackURL string
-	Environment string
-	Repository  string
+	ClusterName string
 	Purpose     string
 	UserPoolID  string
 }
@@ -75,13 +74,12 @@ func (c *UserPoolClient) Name() string {
 
 // New returns an initialised cloud formation creator for
 // a cognito user pool client
-func New(purpose, environment, repository, callBackURL, userPoolID string) *UserPoolClient {
+func New(purpose, clusterName, callBackURL, userPoolID string) *UserPoolClient {
 	return &UserPoolClient{
 		StoredName:  fmt.Sprintf("UserPoolClient%s", purpose),
 		CallBackURL: callBackURL,
-		Environment: environment,
-		Repository:  repository,
-		ClientName:  fmt.Sprintf("okctl-%s-%s-%s", environment, repository, purpose),
+		ClusterName: clusterName,
+		ClientName:  fmt.Sprintf("okctl-%s-%s", clusterName, purpose),
 		UserPoolID:  userPoolID,
 		Purpose:     purpose,
 	}

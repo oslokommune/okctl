@@ -14,7 +14,7 @@ type CommandLinePromptOpts struct {
 	UserDirStorage       storage.Storer
 	UserHomeDirStorage   storage.Storer
 	TmpStorage           storage.Storer
-	Environment          string
+	ClusterName          string
 	CurrentUsername      string
 }
 

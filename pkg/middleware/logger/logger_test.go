@@ -27,13 +27,15 @@ func Endpoint(response interface{}, err error) endpoint.Endpoint {
 	}
 }
 
+// nolint: funlen
 func TestLogging(t *testing.T) {
 	testCases := []struct {
-		name     string
-		request  interface{}
-		response interface{}
-		err      error
-		expect   []*regexp.Regexp
+		name           string
+		request        interface{}
+		response       interface{}
+		expectResponse interface{}
+		err            error
+		expect         []*regexp.Regexp
 	}{
 		{
 			name:     "Should work",

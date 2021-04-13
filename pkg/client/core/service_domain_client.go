@@ -2,87 +2,34 @@ package core
 
 import (
 	"context"
-	"io"
+	"errors"
 
-	"github.com/oslokommune/okctl/pkg/config/state"
-
-	"github.com/oslokommune/okctl/pkg/api"
-
-	"github.com/oslokommune/okctl/pkg/spinner"
-
-	"github.com/oslokommune/okctl/pkg/client/store"
-
-	"github.com/oslokommune/okctl/pkg/ask"
+	stormpkg "github.com/asdine/storm/v3"
 
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type domainService struct {
-	spinner spinner.Spinner
-	out     io.Writer
-	ask     *ask.Ask
-	api     client.DomainAPI
-	store   client.DomainStore
-	state   client.DomainState
-	report  client.DomainReport
+	api   client.DomainAPI
+	state client.DomainState
 }
 
-func (s *domainService) GetPrimaryHostedZone(_ context.Context, id api.ID) (*client.HostedZone, error) {
-	for _, z := range s.state.GetHostedZones() {
-		if z.Primary && z.Managed {
-			return s.store.GetHostedZone(z.Domain)
-		}
-
-		if z.Primary {
-			return &client.HostedZone{
-				IsDelegated: z.IsDelegated,
-				Primary:     z.Primary,
-				HostedZone: &api.HostedZone{
-					ID:           id,
-					Managed:      z.Managed,
-					FQDN:         z.FQDN,
-					Domain:       z.Domain,
-					HostedZoneID: z.ID,
-					NameServers:  z.NameServers,
-				},
-			}, nil
-		}
-	}
-
-	return nil, nil
+func (s *domainService) GetPrimaryHostedZone(_ context.Context) (*client.HostedZone, error) {
+	return s.state.GetPrimaryHostedZone()
 }
 
 // DeletePrimaryHostedZone and all associated records
 func (s *domainService) DeletePrimaryHostedZone(_ context.Context, opts client.DeletePrimaryHostedZoneOpts) error {
-	err := s.spinner.Start("domain")
+	hz, err := s.state.GetPrimaryHostedZone()
 	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	var hz *state.HostedZone
-
-	for _, z := range s.state.GetHostedZones() {
-		z := z
-
-		if z.Primary {
-			hz = &z
-			break
-		}
-	}
-
-	if hz == nil {
-		// Couldn't find a primary hosted zone, which means it has
-		// already been removed
-		return nil
-	}
-
-	var reports []*store.Report
-
-	opts.HostedZoneID = hz.ID
+	opts.HostedZoneID = hz.HostedZoneID
 
 	if hz.Managed {
 		// HostedZone is managed by us, so delete it
@@ -90,21 +37,9 @@ func (s *domainService) DeletePrimaryHostedZone(_ context.Context, opts client.D
 		if err != nil {
 			return err
 		}
-
-		report, err := s.store.RemoveHostedZone(hz.Domain)
-		if err != nil {
-			return err
-		}
-
-		reports = append(reports, report)
 	}
 
-	report, err := s.state.RemoveHostedZone(hz.Domain)
-	if err != nil {
-		return err
-	}
-
-	err = s.report.ReportDeletePrimaryHostedZone(append([]*store.Report{report}, reports...))
+	err = s.state.RemoveHostedZone(hz.Domain)
 	if err != nil {
 		return err
 	}
@@ -113,18 +48,19 @@ func (s *domainService) DeletePrimaryHostedZone(_ context.Context, opts client.D
 }
 
 func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.CreatePrimaryHostedZoneOpts) (*client.HostedZone, error) {
-	err := s.spinner.Start("domain")
-	if err != nil {
-		return nil, err
-	}
+	// [Refactor] Reconciler is responsible for ordering operations
+	//
+	// We should be doing this check in the reconciler together with a
+	// verification towards the AWS API. Keeping this here for the
+	// time being, so we are compatible with expected behavior.
+	{
+		p, err := s.state.GetPrimaryHostedZone()
+		if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+			return nil, err
+		}
 
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	for _, z := range s.state.GetHostedZones() {
-		if z.Primary {
-			return s.store.GetHostedZone(z.Domain)
+		if err == nil {
+			return p, nil
 		}
 	}
 
@@ -135,17 +71,7 @@ func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.C
 
 	zone.IsDelegated = false
 
-	r1, err := s.store.SaveHostedZone(zone)
-	if err != nil {
-		return nil, err
-	}
-
-	r2, err := s.state.SaveHostedZone(zone)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.report.ReportCreatePrimaryHostedZone(zone, []*store.Report{r1, r2})
+	err = s.state.SaveHostedZone(zone)
 	if err != nil {
 		return nil, err
 	}
@@ -154,24 +80,14 @@ func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.C
 }
 
 func (s *domainService) SetHostedZoneDelegation(_ context.Context, domain string, isDelegated bool) (err error) {
-	relevantZone, err := s.store.GetHostedZone(domain)
+	hz, err := s.state.GetHostedZone(domain)
 	if err != nil {
 		return err
 	}
 
-	relevantZone.IsDelegated = isDelegated
+	hz.IsDelegated = isDelegated
 
-	r1, err := s.store.SaveHostedZone(relevantZone)
-	if err != nil {
-		return err
-	}
-
-	r2, err := s.state.SaveHostedZone(relevantZone)
-	if err != nil {
-		return err
-	}
-
-	err = s.report.ReportHostedZoneDelegation(relevantZone, []*store.Report{r1, r2})
+	err = s.state.UpdateHostedZone(hz)
 	if err != nil {
 		return err
 	}
@@ -181,21 +97,11 @@ func (s *domainService) SetHostedZoneDelegation(_ context.Context, domain string
 
 // NewDomainService returns an initialised service
 func NewDomainService(
-	spinner spinner.Spinner,
-	out io.Writer,
-	ask *ask.Ask,
 	api client.DomainAPI,
-	store client.DomainStore,
-	report client.DomainReport,
 	state client.DomainState,
 ) client.DomainService {
 	return &domainService{
-		spinner: spinner,
-		api:     api,
-		out:     out,
-		store:   store,
-		report:  report,
-		ask:     ask,
-		state:   state,
+		api:   api,
+		state: state,
 	}
 }

@@ -61,6 +61,10 @@ func (i *IAMAPI) DetachRolePolicy(policyARN, roleARN string) error {
 			return nil
 		}
 
+		if strings.Contains(err.Error(), fmt.Sprintf("NoSuchEntity: Policy %s was not found.", policyARN)) {
+			return nil
+		}
+
 		return fmt.Errorf("detaching policy from role: %w", err)
 	}
 

@@ -3,45 +3,57 @@ package core
 import (
 	"context"
 
-	"github.com/oslokommune/okctl/pkg/spinner"
+	"github.com/oslokommune/okctl/pkg/cfn/components"
+
+	"github.com/oslokommune/okctl/pkg/cfn"
+
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/clusterconfig"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type externalDNSService struct {
-	spinner spinner.Spinner
-	api     client.ExternalDNSAPI
-	store   client.ExternalDNSStore
-	report  client.ExternalDNSReport
+	api   client.ExternalDNSAPI
+	state client.ExternalDNSState
+
+	policy  client.ManagedPolicyService
+	account client.ServiceAccountService
 }
 
-func (s *externalDNSService) DeleteExternalDNS(_ context.Context, id api.ID) error {
-	err := s.spinner.Start("external-dns")
+func (s *externalDNSService) DeleteExternalDNS(ctx context.Context, id api.ID) error {
+	config, err := clusterconfig.NewExternalDNSServiceAccount(
+		id.ClusterName,
+		id.Region,
+		"n/a",
+		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
+	)
 	if err != nil {
 		return err
 	}
 
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	err = s.api.DeleteExternalDNSServiceAccount(id)
+	err = s.account.DeleteServiceAccount(ctx, client.DeleteServiceAccountOpts{
+		ID:     id,
+		Name:   "external-dns",
+		Config: config,
+	})
 	if err != nil {
 		return err
 	}
 
-	err = s.api.DeleteExternalDNSPolicy(id)
+	stackName := cfn.NewStackNamer().
+		ExternalDNSPolicy(id.ClusterName)
+
+	err = s.policy.DeletePolicy(ctx, client.DeletePolicyOpts{
+		ID:        id,
+		StackName: stackName,
+	})
 	if err != nil {
 		return err
 	}
 
-	report, err := s.store.RemoveExternalDNS(id)
-	if err != nil {
-		return err
-	}
-
-	err = s.report.ReportDeleteExternalDNS(report)
+	err = s.state.RemoveExternalDNS()
 	if err != nil {
 		return err
 	}
@@ -49,28 +61,45 @@ func (s *externalDNSService) DeleteExternalDNS(_ context.Context, id api.ID) err
 	return nil
 }
 
-func (s *externalDNSService) CreateExternalDNS(_ context.Context, opts client.CreateExternalDNSOpts) (*client.ExternalDNS, error) {
-	err := s.spinner.Start("external-dns")
+// nolint: funlen
+func (s *externalDNSService) CreateExternalDNS(ctx context.Context, opts client.CreateExternalDNSOpts) (*client.ExternalDNS, error) {
+	b := cfn.New(
+		components.NewExternalDNSPolicyComposer(opts.ID.ClusterName),
+	)
+
+	stackName := cfn.NewStackNamer().
+		ExternalDNSPolicy(opts.ID.ClusterName)
+
+	template, err := b.Build()
 	if err != nil {
 		return nil, err
 	}
 
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	policy, err := s.api.CreateExternalDNSPolicy(api.CreateExternalDNSPolicyOpts{
-		ID: opts.ID,
+	policy, err := s.policy.CreatePolicy(ctx, client.CreatePolicyOpts{
+		ID:                     opts.ID,
+		StackName:              stackName,
+		PolicyOutputName:       "ExternalDNSPolicy",
+		CloudFormationTemplate: template,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	account, err := s.api.CreateExternalDNSServiceAccount(api.CreateExternalDNSServiceAccountOpts{
-		CreateServiceAccountBaseOpts: api.CreateServiceAccountBaseOpts{
-			ID:        opts.ID,
-			PolicyArn: policy.PolicyARN,
-		},
+	config, err := clusterconfig.NewExternalDNSServiceAccount(
+		opts.ID.ClusterName,
+		opts.ID.Region,
+		policy.PolicyARN,
+		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	account, err := s.account.CreateServiceAccount(ctx, client.CreateServiceAccountOpts{
+		ID:        opts.ID,
+		Name:      "external-dns",
+		PolicyArn: policy.PolicyARN,
+		Config:    config,
 	})
 	if err != nil {
 		return nil, err
@@ -88,15 +117,15 @@ func (s *externalDNSService) CreateExternalDNS(_ context.Context, opts client.Cr
 	externalDNS := &client.ExternalDNS{
 		Policy:         policy,
 		ServiceAccount: account,
-		Kube:           kube,
+		Kube: &client.ExternalDNSKube{
+			ID:           kube.ID,
+			HostedZoneID: kube.HostedZoneID,
+			DomainFilter: kube.DomainFilter,
+			Manifests:    kube.Manifests,
+		},
 	}
 
-	report, err := s.store.SaveExternalDNS(externalDNS)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.report.ReportCreateExternalDNS(externalDNS, report)
+	err = s.state.SaveExternalDNS(externalDNS)
 	if err != nil {
 		return nil, err
 	}
@@ -105,11 +134,16 @@ func (s *externalDNSService) CreateExternalDNS(_ context.Context, opts client.Cr
 }
 
 // NewExternalDNSService returns an initialised service
-func NewExternalDNSService(spinner spinner.Spinner, api client.ExternalDNSAPI, store client.ExternalDNSStore, report client.ExternalDNSReport) client.ExternalDNSService {
+func NewExternalDNSService(
+	api client.ExternalDNSAPI,
+	state client.ExternalDNSState,
+	policy client.ManagedPolicyService,
+	account client.ServiceAccountService,
+) client.ExternalDNSService {
 	return &externalDNSService{
-		spinner: spinner,
 		api:     api,
-		store:   store,
-		report:  report,
+		state:   state,
+		policy:  policy,
+		account: account,
 	}
 }

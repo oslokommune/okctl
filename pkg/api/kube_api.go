@@ -11,7 +11,9 @@ import (
 // ExternalSecretsKube is the state of an external secrets deployment
 type ExternalSecretsKube struct {
 	ID        ID
-	Manifests map[string][]byte
+	Name      string
+	Namespace string
+	Content   []byte
 }
 
 // StorageClassKube is the state of a storage class manifest
@@ -61,15 +63,15 @@ func (o DeleteExternalSecretsOpts) Validate() error {
 
 // CreateExternalSecretsOpts contains the required inputs
 type CreateExternalSecretsOpts struct {
-	ID        ID
-	Manifests []Manifest
+	ID       ID
+	Manifest Manifest
 }
 
 // Validate the inputs
 func (o CreateExternalSecretsOpts) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.ID, validation.Required),
-		validation.Field(&o.Manifests, validation.Required),
+		validation.Field(&o.Manifest, validation.Required),
 	)
 }
 

@@ -1,8 +1,9 @@
 package aws
 
 import (
+	"fmt"
+
 	"github.com/gosimple/slug"
-	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn"
@@ -28,24 +29,24 @@ func (c *certificate) DeleteCognitoCertificate(opts api.DeleteCognitoCertificate
 }
 
 func (c *certificate) DeleteCertificate(opts api.DeleteCertificateOpts) error {
-	return cfn.NewRunner(c.provider).Delete(cfn.NewStackNamer().Certificate(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Domain)))
+	return cfn.NewRunner(c.provider).Delete(cfn.NewStackNamer().Certificate(opts.ID.ClusterName, slug.Make(opts.Domain)))
 }
 
 func (c *certificate) CreateCertificate(opts api.CreateCertificateOpts) (*api.Certificate, error) {
 	b := cfn.New(components.NewPublicCertificateComposer(opts.Domain, opts.HostedZoneID))
 
-	stackName := cfn.NewStackNamer().Certificate(opts.ID.Repository, opts.ID.Environment, slug.Make(opts.Domain))
+	stackName := cfn.NewStackNamer().Certificate(opts.ID.ClusterName, slug.Make(opts.Domain))
 
 	template, err := b.Build()
 	if err != nil {
-		return nil, errors.E(err, "failed to build cloud formation template")
+		return nil, fmt.Errorf("building cloudformation template: %w", err)
 	}
 
 	r := cfn.NewRunner(c.provider)
 
 	err = r.CreateIfNotExists(stackName, template, nil, defaultTimeOut)
 	if err != nil {
-		return nil, errors.E(err, "failed to create cloud formation template")
+		return nil, fmt.Errorf("applying cloudformation template: %w", err)
 	}
 
 	p := &api.Certificate{
@@ -61,7 +62,7 @@ func (c *certificate) CreateCertificate(opts api.CreateCertificateOpts) (*api.Ce
 		"PublicCertificate": cfn.String(&p.CertificateARN),
 	})
 	if err != nil {
-		return nil, errors.E(err, "failed to process outputs")
+		return nil, fmt.Errorf("processing outputs: %w", err)
 	}
 
 	return p, nil

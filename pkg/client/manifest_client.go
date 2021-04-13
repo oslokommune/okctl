@@ -4,48 +4,48 @@ import (
 	"context"
 
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/client/store"
 )
 
-// ExternalSecret is the content of a kubernetes external secret
-type ExternalSecret struct {
+// ManifestType enumerates the available
+// manifest types
+type ManifestType string
+
+// String returns the string representation
+func (t ManifestType) String() string {
+	return string(t)
+}
+
+// nolint: golint
+const (
+	ManifestTypeExternalSecret = "external-secret"
+	ManifestTypeStorageClass   = "storage-class"
+	ManifestTypeConfigMap      = "config-map"
+	ManifestTypeNamespace      = "namespace"
+)
+
+// KubernetesManifest contains data about
+// a manifest
+type KubernetesManifest struct {
 	ID        api.ID
-	Manifests map[string][]byte
+	Name      string
+	Namespace string
+	Type      ManifestType
+	Content   []byte
 }
 
 // CreateExternalSecretOpts contains the required inputs
 type CreateExternalSecretOpts struct {
 	ID        api.ID
-	Manifests []api.Manifest
+	Name      string
+	Namespace string
+	Manifest  api.Manifest
 }
 
 // DeleteExternalSecretOpts contains the required inputs
 type DeleteExternalSecretOpts struct {
 	ID      api.ID
+	Name    string
 	Secrets map[string]string
-}
-
-// StorageClass is the content of a kubernetes storage class
-type StorageClass struct {
-	ID       api.ID
-	Name     string
-	Manifest []byte
-}
-
-// ConfigMap is the content of a kubernetes configmap
-type ConfigMap struct {
-	ID        api.ID
-	Name      string
-	Namespace string
-	Manifest  []byte
-}
-
-// Namespace is the content of a k8s namespace
-type Namespace struct {
-	ID        api.ID
-	Namespace string
-	Labels    map[string]string
-	Manifest  []byte
 }
 
 // CreateConfigMapOpts contains the required inputs
@@ -70,46 +70,31 @@ type DeleteConfigMapOpts struct {
 // and remove resources. That is basically what this service does, it handles
 // kubernetes resources from the client side.
 type ManifestService interface {
-	DeleteNamespace(ctx context.Context, opts api.DeleteNamespaceOpts) error
-	CreateStorageClass(ctx context.Context, opts api.CreateStorageClassOpts) (*StorageClass, error)
-	CreateExternalSecret(ctx context.Context, opts CreateExternalSecretOpts) (*ExternalSecret, error)
+	CreateStorageClass(ctx context.Context, opts api.CreateStorageClassOpts) (*KubernetesManifest, error)
+	CreateExternalSecret(ctx context.Context, opts CreateExternalSecretOpts) (*KubernetesManifest, error)
 	DeleteExternalSecret(ctx context.Context, opts DeleteExternalSecretOpts) error
-	CreateConfigMap(ctx context.Context, opts CreateConfigMapOpts) (*ConfigMap, error)
+	CreateConfigMap(ctx context.Context, opts CreateConfigMapOpts) (*KubernetesManifest, error)
 	DeleteConfigMap(ctx context.Context, opts DeleteConfigMapOpts) error
+	CreateNamespace(ctx context.Context, opts api.CreateNamespaceOpts) (*KubernetesManifest, error)
+	DeleteNamespace(ctx context.Context, opts api.DeleteNamespaceOpts) error
 	ScaleDeployment(ctx context.Context, opts api.ScaleDeploymentOpts) error
-	CreateNamespace(ctx context.Context, opts api.CreateNamespaceOpts) (*Namespace, error)
 }
 
 // ManifestAPI invokes the API
 type ManifestAPI interface {
-	DeleteNamespace(opts api.DeleteNamespaceOpts) error
 	CreateStorageClass(opts api.CreateStorageClassOpts) (*api.StorageClassKube, error)
 	CreateExternalSecret(opts CreateExternalSecretOpts) (*api.ExternalSecretsKube, error)
 	DeleteExternalSecret(opts api.DeleteExternalSecretsOpts) error
 	CreateConfigMap(opts api.CreateConfigMapOpts) (*api.ConfigMap, error)
 	DeleteConfigMap(opts api.DeleteConfigMapOpts) error
-	ScaleDeployment(opts api.ScaleDeploymentOpts) error
 	CreateNamespace(opts api.CreateNamespaceOpts) (*api.Namespace, error)
+	DeleteNamespace(opts api.DeleteNamespaceOpts) error
+	ScaleDeployment(opts api.ScaleDeploymentOpts) error
 }
 
-// ManifestStore defines the storage layer
-type ManifestStore interface {
-	SaveStorageClass(sc *StorageClass) (*store.Report, error)
-	SaveExternalSecret(externalSecret *ExternalSecret) (*store.Report, error)
-	RemoveExternalSecret(secrets map[string]string) (*store.Report, error)
-	SaveConfigMap(configMap *ConfigMap) (*store.Report, error)
-	RemoveConfigMap(name, namespace string) (*store.Report, error)
-	SaveNamespace(namespace *Namespace) (*store.Report, error)
-	RemoveNamespace(namespace string) (*store.Report, error)
-}
-
-// ManifestReport defines the report layer
-type ManifestReport interface {
-	SaveStorageClass(sc *StorageClass, report *store.Report) error
-	SaveExternalSecret(secret *ExternalSecret, report *store.Report) error
-	RemoveExternalSecret(report *store.Report) error
-	SaveConfigMap(secret *ConfigMap, report *store.Report) error
-	RemoveConfigMap(report *store.Report) error
-	SaveNamespace(namespace *Namespace, report *store.Report) error
-	RemoveNamespace(namespace string, report *store.Report) error
+// ManifestState defines the state layer
+type ManifestState interface {
+	SaveKubernetesManifests(manifests *KubernetesManifest) error
+	GetKubernetesManifests(name string) (*KubernetesManifest, error)
+	RemoveKubernetesManifests(name string) error
 }

@@ -38,7 +38,6 @@ func InferClusterFromStdinOrFile(stdin io.Reader, path string) (*v1alpha1.Cluste
 
 	cluster = v1alpha1.NewDefaultCluster(
 		"",
-		"",
 		constant.DefaultGithubOrganization,
 		"",
 		"",

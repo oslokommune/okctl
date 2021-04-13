@@ -82,7 +82,7 @@ func (o OkctlApplication) Validate() error {
 // ScaffoldedApplication contains information required by ApplicationStore and ApplicationReport
 type ScaffoldedApplication struct {
 	ApplicationName string
-	Environment     string
+	ClusterName     string
 
 	BaseKustomization []byte
 	ArgoCDResource    []byte
@@ -109,12 +109,4 @@ type ApplicationStore interface {
 	SaveApplication(*ScaffoldedApplication) (*store.Report, error)
 	// RemoveApplication should implement functionality for removing the scaffolded application from the persistent storage
 	RemoveApplication(string) (*store.Report, error)
-}
-
-// ApplicationReport handles writing output and progress
-type ApplicationReport interface {
-	// ReportCreateApplication should implement a way of reporting when a ScaffoldedApplication is saved in the ApplicationStore
-	ReportCreateApplication(*ScaffoldedApplication, []*store.Report) error
-	// ReportDeleteApplication should implement a way of reporting when a ScaffoldedApplication is removed in the ApplicationStore
-	ReportDeleteApplication([]*store.Report) error
 }

@@ -465,6 +465,9 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 		return nil, fmt.Errorf("running helm install command: %w", err)
 	}
 
+	r.Chart = nil
+	r.Hooks = nil
+
 	return r, nil
 }
 

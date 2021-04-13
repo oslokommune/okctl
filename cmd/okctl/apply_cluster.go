@@ -1,12 +1,20 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"path"
 	"syscall"
+
+	"github.com/asdine/storm/v3/codec/json"
+
+	"github.com/asdine/storm/v3"
+
+	"github.com/oslokommune/okctl/pkg/cfn"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 	"github.com/oslokommune/okctl/pkg/servicequota"
@@ -20,26 +28,20 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/config/load"
-	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/controller"
 	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/spinner"
 	"github.com/spf13/cobra"
-
-	"sigs.k8s.io/yaml"
 )
 
 type applyClusterOpts struct {
 	AWSCredentialsType    string
 	GithubCredentialsType string
-
-	DisableSpinner bool
-
-	File string
-
-	Declaration *v1alpha1.Cluster
+	DisableSpinner        bool
+	File                  string
+	Declaration           *v1alpha1.Cluster
 }
 
 // Validate ensures the applyClusterOpts contains the right information
@@ -53,7 +55,7 @@ func (o *applyClusterOpts) Validate() error {
 func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := applyClusterOpts{}
 
-	var clusterID api.ID
+	var id api.ID
 
 	cmd := &cobra.Command{
 		Use:     "cluster -f declaration_file",
@@ -61,20 +63,6 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 		Short:   "apply a cluster definition to the world",
 		Long:    "ensures your cluster reflects the declaration of it",
 		Args:    cobra.ExactArgs(0),
-		PostRunE: func(cmd *cobra.Command, args []string) error {
-			if !o.Debug {
-				return nil
-			}
-
-			result, err := yaml.Marshal(o.RepoStateWithEnv)
-			if err != nil {
-				return fmt.Errorf("marshalling repo state: %w", err)
-			}
-
-			_, _ = o.Out.Write(result)
-
-			return nil
-		},
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) (err error) {
 			c := make(chan os.Signal)
 			signal.Notify(c, os.Interrupt, syscall.SIGTERM)
@@ -104,25 +92,49 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("loading application data: %w", err)
 			}
 
-			err = loadNoUserInputRepoData(o, opts.Declaration)
-			if err != nil {
-				return fmt.Errorf("loading repository data: %w", err)
+			o.Declaration = opts.Declaration
+
+			// Move into a function
+			{
+				baseDir, err := o.GetRepoDir()
+				if err != nil {
+					return err
+				}
+
+				stormDB := path.Join(baseDir, o.Declaration.Github.OutputPath, o.Declaration.Metadata.Name, constant.DefaultStormDBName)
+
+				exists, err := o.FileSystem.Exists(stormDB)
+				if err != nil {
+					return err
+				}
+
+				if !exists {
+					err := o.FileSystem.MkdirAll(path.Dir(stormDB), 0o744)
+					if err != nil {
+						return err
+					}
+
+					db, err := storm.Open(stormDB, storm.Codec(json.Codec))
+					if err != nil {
+						return err
+					}
+
+					err = db.Close()
+					if err != nil {
+						return err
+					}
+				}
 			}
 
-			err = o.InitialiseWithEnvAndAWSAccountID(
-				opts.Declaration.Metadata.Environment,
-				opts.Declaration.Metadata.AccountID,
-			)
+			err = o.Initialise()
 			if err != nil {
 				return fmt.Errorf("initializing okctl: %w", err)
 			}
 
-			clusterID = api.ID{
+			id = api.ID{
 				Region:       opts.Declaration.Metadata.Region,
 				AWSAccountID: opts.Declaration.Metadata.AccountID,
-				Environment:  opts.Declaration.Metadata.Environment,
-				Repository:   o.RepoStateWithEnv.GetMetadata().Name,
-				ClusterName:  o.RepoStateWithEnv.GetClusterName(),
+				ClusterName:  opts.Declaration.Metadata.Name,
 			}
 
 			return nil
@@ -135,10 +147,13 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				spinnerWriter = o.Err
 			}
 
-			// The cloud formation stack is created atomically, and the EIP and IGW
-			// are created as part of this stack, therefore this check is sufficient
-			// for all of these checks.
-			vpcProvisioned := len(o.RepoStateWithEnv.GetVPC().VpcID) > 0
+			vpc, err := o.StateHandlers(o.StateNodes()).
+				Vpc.GetVpc(cfn.NewStackNamer().Vpc(o.Declaration.Metadata.Name))
+			if err != nil && !errors.Is(err, storm.ErrNotFound) {
+				return err
+			}
+
+			vpcProvisioned := vpc != nil
 
 			err = servicequota.CheckQuotas(
 				servicequota.NewVpcCheck(vpcProvisioned, constant.DefaultRequiredVpcs, o.CloudProvider),
@@ -154,12 +169,12 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("error creating spinner: %w", err)
 			}
 
-			services, err := o.ClientServices(spinner.NewNoopSpinner())
+			handlers := o.StateHandlers(o.StateNodes())
+
+			services, err := o.ClientServices(handlers)
 			if err != nil {
 				return fmt.Errorf("error getting services: %w", err)
 			}
-
-			outputDir, _ := o.GetRepoOutputDir(opts.Declaration.Metadata.Environment)
 
 			reconciliationManager := reconciler.NewCompositeReconciler(spin,
 				reconciler.NewArgocdReconciler(services.ArgoCD, services.Github),
@@ -185,22 +200,19 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{
 				Ctx:         o.Ctx,
 				Out:         o.Out,
-				ClusterID:   clusterID,
+				ClusterID:   id,
 				Declaration: opts.Declaration,
 			})
 
+			reconciliationManager.SetStateHandlers(handlers)
+
 			synchronizeOpts := &controller.SynchronizeOpts{
-				Debug:                   o.Debug,
-				Out:                     o.Out,
-				ClusterID:               clusterID,
-				ClusterDeclaration:      opts.Declaration,
-				ReconciliationManager:   reconciliationManager,
-				Fs:                      o.FileSystem,
-				OutputDir:               outputDir,
-				IdentityPoolFetcher:     func() state.IdentityPool { return o.RepoStateWithEnv.GetIdentityPool() },
-				CIDRGetter:              func() string { return o.RepoStateWithEnv.GetVPC().CIDR },
-				PrimaryHostedZoneGetter: func() *state.HostedZone { return o.RepoStateWithEnv.GetPrimaryHostedZone() },
-				VpcFetcher:              func() state.VPC { return o.RepoStateWithEnv.GetVPC() },
+				Debug:                 o.Debug,
+				Out:                   o.Out,
+				ID:                    id,
+				ClusterDeclaration:    opts.Declaration,
+				ReconciliationManager: reconciliationManager,
+				StateHandlers:         handlers,
 			}
 
 			err = controller.Synchronize(synchronizeOpts)
@@ -212,7 +224,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			_, _ = fmt.Fprintln(o.Out,
 				fmt.Sprintf(
 					"\nTo access your cluster, run %s to activate the environment for your cluster",
-					aurora.Green(fmt.Sprintf("okctl venv %s", clusterID.Environment)),
+					aurora.Green(fmt.Sprintf("okctl venv %s", id.ClusterName)),
 				),
 			)
 			_, _ = fmt.Fprintln(o.Out, fmt.Sprintf("Your cluster should then be available with %s", aurora.Green("kubectl")))
@@ -267,13 +279,4 @@ func loadNoUserInputUserData(o *okctl.Okctl, cmd *cobra.Command) error {
 	o.UserDataLoader = load.UserDataFromFlagsEnvConfigDefaults(cmd, userDataNotFound)
 
 	return o.LoadUserData()
-}
-
-// .okctl.yaml
-func loadNoUserInputRepoData(o *okctl.Okctl, declaration *v1alpha1.Cluster) error {
-	repoDataNotFound := load.CreateOnRepoDataNotFoundWithNoUserInput(declaration)
-
-	o.RepoDataLoader = load.RepoDataFromConfigFile(repoDataNotFound)
-
-	return o.LoadRepoData()
 }

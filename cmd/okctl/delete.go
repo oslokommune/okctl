@@ -1,12 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"regexp"
 
-	"sigs.k8s.io/yaml"
+	"github.com/asdine/storm/v3"
 
 	"github.com/oslokommune/okctl/pkg/context"
 
@@ -15,8 +13,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api/core/cleanup"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/oslokommune/okctl/pkg/spinner"
-
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -24,7 +20,7 @@ import (
 )
 
 const (
-	deleteClusterArgs    = 1
+	deleteClusterArgs    = 0
 	deleteHostedZoneFlag = "i-know-what-i-am-doing-delete-hosted-zone-and-records"
 )
 
@@ -52,24 +48,12 @@ type DeleteClusterOpts struct {
 
 	Region       string
 	AWSAccountID string
-	Environment  string
-	Repository   string
 	ClusterName  string
 }
 
 // Validate the inputs
 func (o *DeleteClusterOpts) Validate() error {
 	return validation.ValidateStruct(o,
-		validation.Field(&o.ClusterName, validation.NewStringRule(
-			func(s string) bool {
-				return fmt.Sprintf("%s-%s", o.Repository, o.Environment) == s
-			},
-			fmt.Sprintf(
-				`internal error: cluster name needs to be in the format repository-environment, but was "%s"`,
-				o.ClusterName,
-			),
-		)),
-		validation.Field(&o.Environment, validation.Required),
 		validation.Field(&o.AWSAccountID, validation.Required),
 		validation.Field(&o.Region, validation.Required),
 		validation.Field(&o.ClusterName, validation.Required),
@@ -81,7 +65,7 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &DeleteClusterOpts{}
 
 	cmd := &cobra.Command{
-		Use:   "cluster [env]",
+		Use:   "cluster",
 		Short: "Delete a cluster",
 		Long: `Delete all resources related to an EKS cluster,
 including VPC, this is a highly destructive operation.`,
@@ -89,43 +73,19 @@ including VPC, this is a highly destructive operation.`,
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			o.AWSCredentialsType = opts.AWSCredentialsType
 			o.GithubCredentialsType = opts.GithubCredentialsType
-			environment := args[0]
 
-			err := validation.Validate(
-				&environment,
-				validation.Required,
-				validation.Match(regexp.MustCompile("^[a-zA-Z]{3,64}$")).Error("the environment must consist of 3-64 characters (a-z, A-Z)"),
-			)
+			err := o.Initialise()
 			if err != nil {
-				return err
+				return fmt.Errorf("initialising: %w", err)
 			}
 
-			err = o.InitialiseWithOnlyEnv(environment)
-			if err != nil {
-				return err
-			}
-
-			meta := o.RepoStateWithEnv.GetMetadata()
-			cluster := o.RepoStateWithEnv.GetCluster()
-
-			opts.Repository = meta.Name
-			opts.Region = meta.Region
-			opts.AWSAccountID = cluster.AWSAccountID
-			opts.Environment = cluster.Environment
-			opts.ClusterName = o.RepoStateWithEnv.GetClusterName()
+			opts.Region = o.Declaration.Metadata.Region
+			opts.AWSAccountID = o.Declaration.Metadata.AccountID
+			opts.ClusterName = o.Declaration.Metadata.Name
 
 			err = opts.Validate()
 			if err != nil {
 				return err
-			}
-
-			if o.Debug {
-				result, err := yaml.Marshal(o.RepoStateWithEnv)
-				if err != nil {
-					return fmt.Errorf("marshalling repo state: %w", err)
-				}
-
-				_, _ = o.Out.Write(result)
 			}
 
 			return nil
@@ -134,16 +94,7 @@ including VPC, this is a highly destructive operation.`,
 			id := api.ID{
 				Region:       opts.Region,
 				AWSAccountID: opts.AWSAccountID,
-				Environment:  opts.Environment,
-				Repository:   opts.Repository,
 				ClusterName:  opts.ClusterName,
-			}
-
-			var spinnerWriter io.Writer
-			if opts.DisableSpinner {
-				spinnerWriter = ioutil.Discard
-			} else {
-				spinnerWriter = o.Err
 			}
 
 			delzones, _ := cmd.Flags().GetString(deleteHostedZoneFlag)
@@ -155,57 +106,39 @@ including VPC, this is a highly destructive operation.`,
 
 			userDir, err := o.GetUserDataDir()
 			if err != nil {
-				return err
+				return fmt.Errorf("getting user data: %w", err)
 			}
 
-			spin, err := spinner.New("deleting", spinnerWriter)
+			services, err := o.ClientServices(o.StateHandlers(o.StateNodes()))
 			if err != nil {
-				return err
+				return fmt.Errorf("creating client services: %w", err)
 			}
 
-			services, err := o.ClientServices(spin)
-			if err != nil {
-				return err
-			}
+			formatErr := o.ErrorFormatter(fmt.Sprintf("delete cluster %s", opts.ClusterName), userDir)
 
-			formatErr := o.ErrorFormatter(fmt.Sprintf("delete cluster %s", opts.Environment), userDir)
-
-			cluster := o.RepoStateWithEnv.GetCluster()
-
-			vpc, err := services.Vpc.GetVPC(o.Ctx, id)
+			domain, err := services.Domain.GetPrimaryHostedZone(o.Ctx)
 			if err != nil {
 				return formatErr(err)
 			}
 
-			domain, err := services.Domain.GetPrimaryHostedZone(o.Ctx, id)
+			err = services.Monitoring.DeleteTempo(o.Ctx, id)
 			if err != nil {
 				return formatErr(err)
 			}
 
-			err = services.Monitoring.DeleteTempo(o.Ctx, client.DeleteTempoOpts{
-				ID: id,
-			})
+			err = services.Monitoring.DeletePromtail(o.Ctx, id)
 			if err != nil {
 				return formatErr(err)
 			}
 
-			err = services.Monitoring.DeletePromtail(o.Ctx, client.DeletePromtailOpts{
-				ID: id,
-			})
-			if err != nil {
-				return formatErr(err)
-			}
-
-			err = services.Monitoring.DeleteLoki(o.Ctx, client.DeleteLokiOpts{
-				ID: id,
-			})
+			err = services.Monitoring.DeleteLoki(o.Ctx, id)
 			if err != nil {
 				return formatErr(err)
 			}
 
 			err = services.Monitoring.DeleteKubePromStack(o.Ctx, client.DeleteKubePromStackOpts{
 				ID:     id,
-				Domain: domain.HostedZone.Domain,
+				Domain: domain.Domain,
 			})
 			if err != nil {
 				return formatErr(err)
@@ -257,12 +190,19 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
-			err = cleanup.DeleteDanglingALBs(o.CloudProvider, vpc.VpcID)
-			if err != nil {
+			vpc, err := services.Vpc.GetVPC(o.Ctx, id)
+			if err != nil && !errors.Is(err, storm.ErrNotFound) {
 				return formatErr(err)
 			}
 
-			err = services.Cluster.DeleteCluster(o.Ctx, api.ClusterDeleteOpts{
+			if vpc != nil {
+				err = cleanup.DeleteDanglingALBs(o.CloudProvider, vpc.VpcID)
+				if err != nil {
+					return formatErr(err)
+				}
+			}
+
+			err = services.Cluster.DeleteCluster(o.Ctx, client.ClusterDeleteOpts{
 				ID:                 id,
 				FargateProfileName: "fp-default",
 			})
@@ -270,17 +210,14 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
-			err = services.Parameter.DeleteAllsecrets(o.Ctx, cluster)
-			if err != nil {
-				return formatErr(err)
+			if vpc != nil {
+				err = cleanup.DeleteDanglingSecurityGroups(o.CloudProvider, vpc.VpcID)
+				if err != nil {
+					return formatErr(err)
+				}
 			}
 
-			err = cleanup.DeleteDanglingSecurityGroups(o.CloudProvider, vpc.VpcID)
-			if err != nil {
-				return formatErr(err)
-			}
-
-			err = services.Vpc.DeleteVpc(o.Ctx, api.DeleteVpcOpts{
+			err = services.Vpc.DeleteVpc(o.Ctx, client.DeleteVpcOpts{
 				ID: id,
 			})
 			if err != nil {

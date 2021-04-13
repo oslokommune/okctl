@@ -26,6 +26,7 @@ type Githuber interface {
 	Teams(org string) ([]*Team, error)
 	Repositories(org string) ([]*Repository, error)
 	CreateDeployKey(org, repository, title, publicKey string) (*Key, error)
+	DeleteDeployKey(org, repository string, id int64) error
 	CreateNSRecordPullRequest(sourceBranch string) error
 	HasExistingNSRecordPullRequest(potentialBranch string) (bool, error)
 }
@@ -133,10 +134,20 @@ func (g *Github) CreateDeployKey(org, repository, title, publicKey string) (*Key
 		ReadOnly: BoolPtr(true),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create deploy key: %w", err)
+		return nil, fmt.Errorf("creating deploy key: %w", err)
 	}
 
 	return key, nil
+}
+
+// DeleteDeployKey removes a read-only deploy key
+func (g *Github) DeleteDeployKey(org, repository string, identifier int64) error {
+	_, err := g.Client.Repositories.DeleteKey(g.Ctx, org, repository, identifier)
+	if err != nil {
+		return fmt.Errorf("deleting deploy key: %w", err)
+	}
+
+	return nil
 }
 
 // CreateNSRecordPullRequest creates a pull request from sourceBranch to destinationBranch

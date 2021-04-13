@@ -2,13 +2,14 @@ package core
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/asdine/storm/v3"
+
+	"github.com/oslokommune/okctl/pkg/helm/charts/argocd"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
-
-	"github.com/oslokommune/okctl/pkg/spinner"
-
-	"github.com/oslokommune/okctl/pkg/client/store"
 
 	"github.com/google/uuid"
 	"github.com/oslokommune/okctl/pkg/api"
@@ -17,30 +18,41 @@ import (
 )
 
 type argoCDService struct {
-	spinner spinner.Spinner
-
-	api    client.ArgoCDAPI
-	store  client.ArgoCDStore
-	report client.ArgoCDReport
-	state  client.ArgoCDState
-
+	state    client.ArgoCDState
 	identity client.IdentityManagerService
 	cert     client.CertificateService
 	manifest client.ManifestService
 	param    client.ParameterService
+	helm     client.HelmService
 }
 
+// nolint: gosec
+const (
+	argoClientSecretName = "argocd/client_secret"
+	argoSecretKeyName    = "argocd/secret_key"
+	argoPurpose          = "argocd"
+)
+
 func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgoCDOpts) error {
-	err := s.spinner.Start("argocd")
+	cd, err := s.state.GetArgoCD()
 	if err != nil {
+		if errors.Is(err, storm.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 
-	defer func() {
-		err = s.spinner.Stop()
-	}()
+	chart := argocd.New(nil)
 
-	info := s.state.GetArgoCD(opts.ID)
+	err = s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
+		ID:          opts.ID,
+		ReleaseName: chart.ReleaseName,
+		Namespace:   chart.Namespace,
+	})
+	if err != nil {
+		return err
+	}
 
 	err = s.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
 		ID:        opts.ID,
@@ -50,18 +62,33 @@ func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgo
 		return err
 	}
 
-	err = s.cert.DeleteCertificate(ctx, api.DeleteCertificateOpts{
+	err = s.cert.DeleteCertificate(ctx, client.DeleteCertificateOpts{
 		ID:     opts.ID,
-		Domain: info.ArgoDomain,
+		Domain: cd.ArgoDomain,
 	})
 	if err != nil {
 		return err
 	}
 
-	err = s.identity.DeleteIdentityPoolClient(ctx, api.DeleteIdentityPoolClientOpts{
+	err = s.identity.DeleteIdentityPoolClient(ctx, client.DeleteIdentityPoolClientOpts{
 		ID:      opts.ID,
-		Purpose: "argocd",
+		Purpose: argoPurpose,
 	})
+	if err != nil {
+		return err
+	}
+
+	for _, secret := range []string{argoSecretKeyName, argoClientSecretName} {
+		err = s.param.DeleteSecret(ctx, client.DeleteSecretOpts{
+			ID:   opts.ID,
+			Name: secret,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	err = s.state.RemoveArgoCD()
 	if err != nil {
 		return err
 	}
@@ -71,16 +98,7 @@ func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgo
 
 // nolint: funlen
 func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgoCDOpts) (*client.ArgoCD, error) {
-	err := s.spinner.Start("argocd")
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	cert, err := s.cert.CreateCertificate(ctx, api.CreateCertificateOpts{
+	cert, err := s.cert.CreateCertificate(ctx, client.CreateCertificateOpts{
 		ID:           opts.ID,
 		FQDN:         fmt.Sprintf("argocd.%s", opts.FQDN),
 		Domain:       fmt.Sprintf("argocd.%s", opts.Domain),
@@ -90,28 +108,36 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		return nil, err
 	}
 
-	identityClient, err := s.identity.CreateIdentityPoolClient(ctx, api.CreateIdentityPoolClientOpts{
+	identityClient, err := s.identity.CreateIdentityPoolClient(ctx, client.CreateIdentityPoolClientOpts{
 		ID:          opts.ID,
 		UserPoolID:  opts.UserPoolID,
-		Purpose:     "argocd",
+		Purpose:     argoPurpose,
 		CallbackURL: fmt.Sprintf("https://%s/api/dex/callback", cert.Domain),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	clientSecret, err := s.param.CreateSecret(ctx, api.CreateSecretOpts{
+	_, err = s.manifest.CreateNamespace(ctx, api.CreateNamespaceOpts{
+		ID:        opts.ID,
+		Namespace: constant.DefaultArgoCDNamespace,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	clientSecret, err := s.param.CreateSecret(ctx, client.CreateSecretOpts{
 		ID:     opts.ID,
-		Name:   "argocd/client_secret",
+		Name:   argoClientSecretName,
 		Secret: identityClient.ClientSecret,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	secretKey, err := s.param.CreateSecret(ctx, api.CreateSecretOpts{
+	secretKey, err := s.param.CreateSecret(ctx, client.CreateSecretOpts{
 		ID:     opts.ID,
-		Name:   "argocd/secret_key",
+		Name:   argoSecretKeyName,
 		Secret: uuid.New().String(),
 	})
 	if err != nil {
@@ -121,47 +147,24 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 	privateKeyName := "argocd-privatekey"
 	privateKeyDataName := "ssh-private-key"
 
-	manifest, err := s.manifest.CreateExternalSecret(ctx, client.CreateExternalSecretOpts{
-		ID: opts.ID,
-		Manifests: []api.Manifest{
-			{
-				Name:      privateKeyName,
-				Namespace: constant.DefaultArgoCDNamespace,
-				Backend:   api.BackendTypeParameterStore,
-				Annotations: map[string]string{
-					"meta.helm.sh/release-name":      "argocd",
-					"meta.helm.sh/release-namespace": "argocd",
-				},
-				Labels: map[string]string{
-					"app.kubernetes.io/managed-by": "Helm",
-				},
-				Data: []api.Data{
-					{
-						Name: privateKeyDataName,
-						Key:  opts.Repository.DeployKey.PrivateKeySecret.Path,
-					},
-				},
+	priv, err := s.manifest.CreateExternalSecret(ctx, client.CreateExternalSecretOpts{
+		ID:        opts.ID,
+		Namespace: constant.DefaultArgoCDNamespace,
+		Manifest: api.Manifest{
+			Name:      privateKeyName,
+			Namespace: constant.DefaultArgoCDNamespace,
+			Backend:   api.BackendTypeParameterStore,
+			Annotations: map[string]string{
+				"meta.helm.sh/release-name":      "argocd",
+				"meta.helm.sh/release-namespace": "argocd",
 			},
-			{
-				Name:      "argocd-secret",
-				Namespace: "argocd",
-				Backend:   api.BackendTypeParameterStore,
-				Annotations: map[string]string{
-					"meta.helm.sh/release-name":      "argocd",
-					"meta.helm.sh/release-namespace": "argocd",
-				},
-				Labels: map[string]string{
-					"app.kubernetes.io/managed-by": "Helm",
-				},
-				Data: []api.Data{
-					{
-						Name: "dex.cognito.clientSecret",
-						Key:  clientSecret.Path,
-					},
-					{
-						Name: "server.secretkey",
-						Key:  secretKey.Path,
-					},
+			Labels: map[string]string{
+				"app.kubernetes.io/managed-by": "Helm",
+			},
+			Data: []api.Data{
+				{
+					Name: privateKeyDataName,
+					Key:  opts.Repository.DeployKey.PrivateKeySecret.Path,
 				},
 			},
 		},
@@ -170,49 +173,89 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		return nil, err
 	}
 
-	chartOpts := api.CreateArgoCDOpts{
-		ID:                 opts.ID,
-		ArgoDomain:         cert.Domain,
-		ArgoCertificateARN: cert.CertificateARN,
-		GithubOrganisation: opts.GithubOrganisation,
-		GithubRepoURL:      opts.Repository.GitURL,
-		GithubRepoName:     opts.Repository.Repository,
-		ClientID:           identityClient.ClientID,
-		AuthDomain:         opts.AuthDomain,
-		UserPoolID:         opts.UserPoolID,
-		PrivateKeyName:     privateKeyName,
-		PrivateKeyKey:      privateKeyDataName,
-	}
-
-	argo, err := s.api.CreateArgoCD(chartOpts)
+	sec, err := s.manifest.CreateExternalSecret(ctx, client.CreateExternalSecretOpts{
+		ID:        opts.ID,
+		Namespace: constant.DefaultArgoCDNamespace,
+		Manifest: api.Manifest{
+			Name:      "argocd-secret",
+			Namespace: "argocd",
+			Backend:   api.BackendTypeParameterStore,
+			Annotations: map[string]string{
+				"meta.helm.sh/release-name":      "argocd",
+				"meta.helm.sh/release-namespace": "argocd",
+			},
+			Labels: map[string]string{
+				"app.kubernetes.io/managed-by": "Helm",
+			},
+			Data: []api.Data{
+				{
+					Name: "dex.cognito.clientSecret",
+					Key:  clientSecret.Path,
+				},
+				{
+					Name: "server.secretkey",
+					Key:  secretKey.Path,
+				},
+			},
+		},
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	argo.ID = opts.ID
-	argo.ArgoDomain = cert.Domain
-	argo.ArgoURL = fmt.Sprintf("https://%s", cert.Domain)
-	argo.Certificate = cert
-	argo.IdentityClient = identityClient
-	argo.ClientSecret = clientSecret
-	argo.ExternalSecret = &api.ExternalSecretsKube{
-		ID:        manifest.ID,
-		Manifests: manifest.Manifests,
-	}
-	argo.SecretKey = secretKey
-	argo.AuthDomain = opts.AuthDomain
+	chart := argocd.New(argocd.NewDefaultValues(argocd.ValuesOpts{
+		URL:                  fmt.Sprintf("https://%s", cert.Domain),
+		HostName:             cert.Domain,
+		Region:               opts.ID.Region,
+		CertificateARN:       cert.ARN,
+		ClientID:             identityClient.ClientID,
+		Organisation:         opts.GithubOrganisation,
+		AuthDomain:           opts.AuthDomain,
+		UserPoolID:           opts.UserPoolID,
+		RepoURL:              opts.Repository.GitURL,
+		RepoName:             opts.Repository.Repository,
+		PrivateKeySecretName: privateKeyName,
+		PrivateKeySecretKey:  privateKeyDataName,
+	}))
 
-	r1, err := s.store.SaveArgoCD(argo)
+	values, err := chart.ValuesYAML()
 	if err != nil {
 		return nil, err
 	}
 
-	r2, err := s.state.SaveArgoCD(argo)
+	a, err := s.helm.CreateHelmRelease(ctx, client.CreateHelmReleaseOpts{
+		ID:             opts.ID,
+		RepositoryName: chart.RepositoryName,
+		RepositoryURL:  chart.RepositoryURL,
+		ReleaseName:    chart.ReleaseName,
+		Version:        chart.Version,
+		Chart:          chart.Chart,
+		Namespace:      chart.Namespace,
+		Values:         values,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.report.CreateArgoCD(argo, []*store.Report{r1, r2})
+	argo := &client.ArgoCD{
+		ID:             opts.ID,
+		ArgoDomain:     cert.Domain,
+		ArgoURL:        fmt.Sprintf("https://%s", cert.Domain),
+		AuthDomain:     opts.AuthDomain,
+		Certificate:    cert,
+		IdentityClient: identityClient,
+		PrivateKey:     priv,
+		Secret:         sec,
+		ClientSecret:   clientSecret,
+		SecretKey:      secretKey,
+		Chart: &client.Helm{
+			ID:      a.ID,
+			Release: a.Release,
+			Chart:   a.Chart,
+		},
+	}
+
+	err = s.state.SaveArgoCD(argo)
 	if err != nil {
 		return nil, err
 	}
@@ -222,25 +265,19 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 
 // NewArgoCDService returns an initialised service
 func NewArgoCDService(
-	spinner spinner.Spinner,
 	identity client.IdentityManagerService,
 	cert client.CertificateService,
 	manifest client.ManifestService,
 	param client.ParameterService,
-	api client.ArgoCDAPI,
-	store client.ArgoCDStore,
-	report client.ArgoCDReport,
+	helm client.HelmService,
 	state client.ArgoCDState,
 ) client.ArgoCDService {
 	return &argoCDService{
-		spinner:  spinner,
-		api:      api,
-		store:    store,
-		report:   report,
 		state:    state,
 		identity: identity,
 		cert:     cert,
 		manifest: manifest,
 		param:    param,
+		helm:     helm,
 	}
 }

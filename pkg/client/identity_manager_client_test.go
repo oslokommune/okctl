@@ -23,8 +23,6 @@ func TestCreateIdentityPoolUserOptsValidate(t *testing.T) {
 				ID: api.ID{
 					Region:       "eu-west-1",
 					AWSAccountID: "123456789012",
-					Environment:  "dev",
-					Repository:   "okctl",
 					ClusterName:  "okctl-dev",
 				},
 				Email:      "someone.with-hyphen@origo.oslo.kommune.no",

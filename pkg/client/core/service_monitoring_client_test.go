@@ -1,33 +1,22 @@
 package core
 
 import (
-	"bytes"
 	"context"
 	"testing"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/client/store"
-	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/mock"
-	"github.com/oslokommune/okctl/pkg/spinner"
 	"github.com/stretchr/testify/assert"
 )
 
 type clusterConfigRetrieverFn func(config *v1alpha5.ClusterConfig)
 
 func createMonitoringService(retriever clusterConfigRetrieverFn) client.MonitoringService {
-	var stdout bytes.Buffer
-
-	spin, _ := spinner.New("test", &stdout)
-
 	return NewMonitoringService(
-		spin,
-		mockAPI{},
-		mockStore{},
 		mockState{},
-		mockReport{},
+		mockHelm{},
 		mockCertService{},
 		mockIdentityManagerService{},
 		mockManifestService{},
@@ -50,8 +39,6 @@ func TestKM196(t *testing.T) {
 		ID: api.ID{
 			Region:       "eu-west-1",
 			AWSAccountID: "123456789012",
-			Environment:  "test",
-			Repository:   "something",
 			ClusterName:  "something",
 		},
 		Domain: "test.oslo.systems",
@@ -61,65 +48,26 @@ func TestKM196(t *testing.T) {
 	assert.NotEmpty(t, clusterConfig.IAM.ServiceAccounts[0].AttachPolicyARNs[0])
 }
 
-type mockAPI struct{}
-
-func (m mockAPI) CreateKubePromStack(_ api.CreateKubePrometheusStackOpts) (*api.Helm, error) {
-	panic("implement me")
+type mockHelm struct {
 }
 
-func (m mockAPI) DeleteKubePromStack(_ api.DeleteHelmReleaseOpts) error {
-	return nil
-}
-
-func (m mockAPI) CreateLoki(_ client.CreateLokiOpts) (*api.Helm, error) { panic("implement me") }
-
-func (m mockAPI) DeleteLoki(_ api.DeleteHelmReleaseOpts) error { panic("implement me") }
-
-func (m mockAPI) CreatePromtail(_ client.CreatePromtailOpts) (*api.Helm, error) {
-	panic("implement me")
-}
-
-func (m mockAPI) DeletePromtail(_ api.DeleteHelmReleaseOpts) error { panic("implement me") }
-
-func (m mockAPI) CreateTempo(_ api.CreateHelmReleaseOpts) (*api.Helm, error) { panic("implement me") }
-
-func (m mockAPI) DeleteTempo(_ api.DeleteHelmReleaseOpts) error { panic("implement me") }
-
-type mockStore struct{}
-
-func (m mockStore) SaveKubePromStack(_ *client.KubePromStack) (*store.Report, error) {
-	panic("implement me")
-}
-
-func (m mockStore) RemoveKubePromStack(_ api.ID) (*store.Report, error) {
+func (m mockHelm) CreateHelmRelease(context.Context, client.CreateHelmReleaseOpts) (*client.Helm, error) {
 	return nil, nil
 }
 
-func (m mockStore) SaveLoki(_ *client.Loki) (*store.Report, error) {
-	panic("implement me")
-}
-
-func (m mockStore) RemoveLoki(_ api.ID) (*store.Report, error) {
-	panic("implement me")
-}
-
-func (m mockStore) SavePromtail(_ *client.Promtail) (*store.Report, error) {
-	panic("implement me")
-}
-
-func (m mockStore) RemovePromtail(_ api.ID) (*store.Report, error) {
-	panic("implement me")
-}
-
-func (m mockStore) SaveTempo(_ *client.Tempo) (*store.Report, error) {
-	panic("implement me")
-}
-
-func (m mockStore) RemoveTempo(_ api.ID) (*store.Report, error) {
-	panic("implement me")
+func (m mockHelm) DeleteHelmRelease(context.Context, client.DeleteHelmReleaseOpts) error {
+	return nil
 }
 
 type mockState struct{}
+
+func (m mockState) SaveKubePromStack(_ *client.KubePromStack) error {
+	return nil
+}
+
+func (m mockState) RemoveKubePromStack() error {
+	return nil
+}
 
 func (m mockState) GetKubePromStack() (*client.KubePromStack, error) {
 	return &client.KubePromStack{
@@ -128,73 +76,31 @@ func (m mockState) GetKubePromStack() (*client.KubePromStack, error) {
 	}, nil
 }
 
-func (m mockState) SaveKubePromStack(_ *client.KubePromStack) (*store.Report, error) {
-	panic("implement me")
-}
-
-func (m mockState) RemoveKubePromStack(_ api.ID) (*store.Report, error) {
-	return nil, nil
-}
-
-type mockReport struct{}
-
-func (m mockReport) ReportSaveKubePromStack(_ *client.KubePromStack, _ []*store.Report) error {
-	panic("implement me")
-}
-
-func (m mockReport) ReportRemoveKubePromStack(_ []*store.Report) error {
-	return nil
-}
-
-func (m mockReport) ReportSaveLoki(_ *client.Loki, _ *store.Report) error {
-	panic("implement me")
-}
-
-func (m mockReport) ReportRemoveLoki(_ *store.Report) error {
-	panic("implement me")
-}
-
-func (m mockReport) ReportSavePromtail(_ *client.Promtail, _ *store.Report) error {
-	panic("implement me")
-}
-
-func (m mockReport) ReportRemovePromtail(_ *store.Report) error {
-	panic("implement me")
-}
-
-func (m mockReport) ReportSaveTempo(_ *client.Tempo, _ *store.Report) error {
-	panic("implement me")
-}
-
-func (m mockReport) ReportRemoveTempo(_ *store.Report) error {
-	panic("implement me")
-}
-
 type mockCertService struct{}
 
-func (m mockCertService) CreateCertificate(_ context.Context, _ api.CreateCertificateOpts) (*api.Certificate, error) {
+func (m mockCertService) CreateCertificate(_ context.Context, _ client.CreateCertificateOpts) (*client.Certificate, error) {
 	panic("implement me")
 }
 
-func (m mockCertService) DeleteCertificate(_ context.Context, _ api.DeleteCertificateOpts) error {
+func (m mockCertService) DeleteCertificate(_ context.Context, _ client.DeleteCertificateOpts) error {
 	return nil
 }
 
-func (m mockCertService) DeleteCognitoCertificate(_ context.Context, _ api.DeleteCognitoCertificateOpts) error {
+func (m mockCertService) DeleteCognitoCertificate(_ context.Context, _ client.DeleteCognitoCertificateOpts) error {
 	panic("implement me")
 }
 
 type mockIdentityManagerService struct{}
 
-func (m mockIdentityManagerService) CreateIdentityPool(_ context.Context, _ api.CreateIdentityPoolOpts) (*api.IdentityPool, error) {
+func (m mockIdentityManagerService) CreateIdentityPool(_ context.Context, _ client.CreateIdentityPoolOpts) (*client.IdentityPool, error) {
 	panic("implement me")
 }
 
-func (m mockIdentityManagerService) CreateIdentityPoolClient(_ context.Context, _ api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
+func (m mockIdentityManagerService) CreateIdentityPoolClient(_ context.Context, _ client.CreateIdentityPoolClientOpts) (*client.IdentityPoolClient, error) {
 	panic("implement me")
 }
 
-func (m mockIdentityManagerService) CreateIdentityPoolUser(_ context.Context, _ client.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {
+func (m mockIdentityManagerService) CreateIdentityPoolUser(_ context.Context, _ client.CreateIdentityPoolUserOpts) (*client.IdentityPoolUser, error) {
 	panic("implement me")
 }
 
@@ -202,7 +108,7 @@ func (m mockIdentityManagerService) DeleteIdentityPool(_ context.Context, _ api.
 	panic("implement me")
 }
 
-func (m mockIdentityManagerService) DeleteIdentityPoolClient(_ context.Context, _ api.DeleteIdentityPoolClientOpts) error {
+func (m mockIdentityManagerService) DeleteIdentityPoolClient(_ context.Context, _ client.DeleteIdentityPoolClientOpts) error {
 	return nil
 }
 
@@ -212,11 +118,11 @@ func (m mockManifestService) DeleteNamespace(_ context.Context, _ api.DeleteName
 	return nil
 }
 
-func (m mockManifestService) CreateStorageClass(_ context.Context, _ api.CreateStorageClassOpts) (*client.StorageClass, error) {
+func (m mockManifestService) CreateStorageClass(_ context.Context, _ api.CreateStorageClassOpts) (*client.KubernetesManifest, error) {
 	panic("implement me")
 }
 
-func (m mockManifestService) CreateExternalSecret(_ context.Context, _ client.CreateExternalSecretOpts) (*client.ExternalSecret, error) {
+func (m mockManifestService) CreateExternalSecret(_ context.Context, _ client.CreateExternalSecretOpts) (*client.KubernetesManifest, error) {
 	panic("implement me")
 }
 
@@ -224,7 +130,7 @@ func (m mockManifestService) DeleteExternalSecret(_ context.Context, _ client.De
 	return nil
 }
 
-func (m mockManifestService) CreateConfigMap(_ context.Context, _ client.CreateConfigMapOpts) (*client.ConfigMap, error) {
+func (m mockManifestService) CreateConfigMap(_ context.Context, _ client.CreateConfigMapOpts) (*client.KubernetesManifest, error) {
 	panic("implement me")
 }
 
@@ -236,33 +142,29 @@ func (m mockManifestService) ScaleDeployment(_ context.Context, _ api.ScaleDeplo
 	panic("implement me")
 }
 
-func (m mockManifestService) CreateNamespace(_ context.Context, _ api.CreateNamespaceOpts) (*client.Namespace, error) {
+func (m mockManifestService) CreateNamespace(_ context.Context, _ api.CreateNamespaceOpts) (*client.KubernetesManifest, error) {
 	panic("implement me")
 }
 
 type mockParameterService struct{}
 
-func (m mockParameterService) CreateSecret(_ context.Context, _ api.CreateSecretOpts) (*api.SecretParameter, error) {
+func (m mockParameterService) CreateSecret(_ context.Context, _ client.CreateSecretOpts) (*client.SecretParameter, error) {
 	panic("implement me")
 }
 
-func (m mockParameterService) DeleteSecret(_ context.Context, _ api.DeleteSecretOpts) error {
+func (m mockParameterService) DeleteSecret(_ context.Context, _ client.DeleteSecretOpts) error {
 	return nil
-}
-
-func (m mockParameterService) DeleteAllsecrets(_ context.Context, _ state.Cluster) error {
-	panic("implement me")
 }
 
 type mockServiceAccountService struct {
 	retrieverFn clusterConfigRetrieverFn
 }
 
-func (m mockServiceAccountService) CreateServiceAccount(_ context.Context, _ api.CreateServiceAccountOpts) (*api.ServiceAccount, error) {
+func (m mockServiceAccountService) CreateServiceAccount(_ context.Context, _ client.CreateServiceAccountOpts) (*client.ServiceAccount, error) {
 	panic("implement me")
 }
 
-func (m mockServiceAccountService) DeleteServiceAccount(_ context.Context, opts api.DeleteServiceAccountOpts) error {
+func (m mockServiceAccountService) DeleteServiceAccount(_ context.Context, opts client.DeleteServiceAccountOpts) error {
 	m.retrieverFn(opts.Config)
 
 	return nil
@@ -270,10 +172,10 @@ func (m mockServiceAccountService) DeleteServiceAccount(_ context.Context, opts 
 
 type mockManagedPolicyService struct{}
 
-func (m mockManagedPolicyService) CreatePolicy(_ context.Context, _ api.CreatePolicyOpts) (*api.ManagedPolicy, error) {
+func (m mockManagedPolicyService) CreatePolicy(_ context.Context, _ client.CreatePolicyOpts) (*client.ManagedPolicy, error) {
 	panic("implement me")
 }
 
-func (m mockManagedPolicyService) DeletePolicy(_ context.Context, _ api.DeletePolicyOpts) error {
+func (m mockManagedPolicyService) DeletePolicy(_ context.Context, _ client.DeletePolicyOpts) error {
 	return nil
 }

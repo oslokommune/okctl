@@ -4,9 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/oslokommune/okctl/pkg/kube/manifests/storageclass"
+	"github.com/oslokommune/okctl/pkg/cfn"
+	"github.com/oslokommune/okctl/pkg/cfn/components"
 
-	"github.com/oslokommune/okctl/pkg/spinner"
+	"github.com/oslokommune/okctl/pkg/helm/charts/blockstorage"
+
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/clusterconfig"
+
+	"github.com/oslokommune/okctl/pkg/kube/manifests/storageclass"
 
 	"github.com/oslokommune/okctl/pkg/api"
 
@@ -14,39 +20,50 @@ import (
 )
 
 type blockstorageService struct {
-	spinner spinner.Spinner
-	api     client.BlockstorageAPI
-	store   client.BlockstorageStore
-	report  client.BlockstorageReport
+	policy  client.ManagedPolicyService
+	account client.ServiceAccountService
+	helm    client.HelmService
 	kube    client.ManifestService
 }
 
-func (s *blockstorageService) DeleteBlockstorage(_ context.Context, id api.ID) error {
-	err := s.spinner.Start("blockstorage")
+func (s *blockstorageService) DeleteBlockstorage(ctx context.Context, id api.ID) error {
+	chart := blockstorage.New(nil)
+
+	err := s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
+		ID:          id,
+		ReleaseName: chart.ReleaseName,
+		Namespace:   chart.Namespace,
+	})
 	if err != nil {
 		return err
 	}
 
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	err = s.api.DeleteBlockstorageServiceAccount(id)
+	config, err := clusterconfig.NewBlockstorageServiceAccount(
+		id.ClusterName,
+		id.Region,
+		"n/a",
+		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
+	)
 	if err != nil {
 		return err
 	}
 
-	err = s.api.DeleteBlockstoragePolicy(id)
+	err = s.account.DeleteServiceAccount(ctx, client.DeleteServiceAccountOpts{
+		ID:     id,
+		Name:   "blockstorage",
+		Config: config,
+	})
 	if err != nil {
 		return err
 	}
 
-	report, err := s.store.RemoveBlockstorage(id)
-	if err != nil {
-		return err
-	}
+	stackName := cfn.NewStackNamer().
+		BlockstoragePolicy(id.ClusterName)
 
-	err = s.report.ReportDeleteBlockstorage(report)
+	err = s.policy.DeletePolicy(ctx, client.DeletePolicyOpts{
+		ID:        id,
+		StackName: stackName,
+	})
 	if err != nil {
 		return err
 	}
@@ -54,35 +71,66 @@ func (s *blockstorageService) DeleteBlockstorage(_ context.Context, id api.ID) e
 	return nil
 }
 
+// nolint: funlen
 func (s *blockstorageService) CreateBlockstorage(ctx context.Context, opts client.CreateBlockstorageOpts) (*client.Blockstorage, error) {
-	err := s.spinner.Start("blockstorage")
+	b := cfn.New(
+		components.NewBlockstoragePolicyComposer(opts.ID.ClusterName),
+	)
+
+	stackName := cfn.NewStackNamer().
+		BlockstoragePolicy(opts.ID.ClusterName)
+
+	template, err := b.Build()
 	if err != nil {
 		return nil, err
 	}
 
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	policy, err := s.api.CreateBlockstoragePolicy(api.CreateBlockstoragePolicy{
-		ID: opts.ID,
+	policy, err := s.policy.CreatePolicy(ctx, client.CreatePolicyOpts{
+		ID:                     opts.ID,
+		StackName:              stackName,
+		PolicyOutputName:       "BlockstoragePolicy",
+		CloudFormationTemplate: template,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	sa, err := s.api.CreateBlockstorageServiceAccount(api.CreateBlockstorageServiceAccountOpts{
-		CreateServiceAccountBaseOpts: api.CreateServiceAccountBaseOpts{
-			ID:        opts.ID,
-			PolicyArn: policy.PolicyARN,
-		},
+	config, err := clusterconfig.NewBlockstorageServiceAccount(
+		opts.ID.ClusterName,
+		opts.ID.Region,
+		policy.PolicyARN,
+		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	sa, err := s.account.CreateServiceAccount(ctx, client.CreateServiceAccountOpts{
+		ID:        opts.ID,
+		Name:      "blockstorage",
+		PolicyArn: policy.PolicyARN,
+		Config:    config,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	chart, err := s.api.CreateBlockstorageHelmChart(api.CreateBlockstorageHelmChartOpts{
-		ID: opts.ID,
+	ch := blockstorage.New(blockstorage.NewDefaultValues(opts.ID.Region, opts.ID.ClusterName, "blockstorage"))
+
+	values, err := ch.ValuesYAML()
+	if err != nil {
+		return nil, err
+	}
+
+	chart, err := s.helm.CreateHelmRelease(ctx, client.CreateHelmReleaseOpts{
+		ID:             opts.ID,
+		RepositoryName: ch.RepositoryName,
+		RepositoryURL:  ch.RepositoryURL,
+		ReleaseName:    ch.ReleaseName,
+		Version:        ch.Version,
+		Chart:          ch.Chart,
+		Namespace:      ch.Namespace,
+		Values:         values,
 	})
 	if err != nil {
 		return nil, err
@@ -104,32 +152,20 @@ func (s *blockstorageService) CreateBlockstorage(ctx context.Context, opts clien
 		return nil, fmt.Errorf("creating default storage class: %w", err)
 	}
 
-	report, err := s.store.SaveBlockstorage(a)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.report.ReportCreateBlockstorage(a, report)
-	if err != nil {
-		return nil, err
-	}
-
 	return a, nil
 }
 
 // NewBlockstorageService returns an initialised service
 func NewBlockstorageService(
-	spinner spinner.Spinner,
-	api client.BlockstorageAPI,
-	store client.BlockstorageStore,
-	report client.BlockstorageReport,
+	policy client.ManagedPolicyService,
+	account client.ServiceAccountService,
+	helm client.HelmService,
 	kube client.ManifestService,
 ) client.BlockstorageService {
 	return &blockstorageService{
-		spinner: spinner,
-		api:     api,
-		store:   store,
-		report:  report,
+		policy:  policy,
+		account: account,
+		helm:    helm,
 		kube:    kube,
 	}
 }

@@ -11,7 +11,7 @@ type zshPrompter struct {
 	userHomeDirStorage storage.Storer
 	tmpStorer          storage.Storer
 	osEnvVars          map[string]string
-	environment        string
+	clusterName        string
 }
 
 // CreatePrompt returns environment variables that when set in zsh will show a command prompt.
@@ -82,10 +82,10 @@ prompt() {
 
 	ps1, overridePs1 := p.osEnvVars["OKCTL_PS1"]
 	if overridePs1 {
-		withEnv := strings.ReplaceAll(ps1, "%env", p.environment)
+		withEnv := strings.ReplaceAll(ps1, "%env", p.clusterName)
 		zshrcBuilder.WriteString(fmt.Sprintf(`PS1="%s"`, withEnv))
 	} else {
-		zshrcBuilder.WriteString(fmt.Sprint(`PS1="%F{red}%~ %f%F{blue}($(venv_ps1 ` + p.environment + `)%f) $ "`))
+		zshrcBuilder.WriteString(fmt.Sprint(`PS1="%F{red}%~ %f%F{blue}($(venv_ps1 ` + p.clusterName + `)%f) $ "`))
 	}
 
 	zshrcBuilder.WriteString(`

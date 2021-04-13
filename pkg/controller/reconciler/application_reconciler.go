@@ -1,22 +1,18 @@
 package reconciler
 
 import (
+	"fmt"
+
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/client"
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
-
-// ApplicationState contains information only available at runtime
-type ApplicationState struct {
-	Declaration client.OkctlApplication
-
-	PrimaryHostedZoneID     string
-	PrimaryHostedZoneDomain string
-}
 
 // applicationReconciler contains service and metadata for the relevant resource
 type applicationReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
+	handlers       *clientCore.StateHandlers
 
 	client client.ApplicationService
 }
@@ -31,22 +27,27 @@ func (a *applicationReconciler) SetCommonMetadata(metadata *resourcetree.CommonM
 	a.commonMetadata = metadata
 }
 
+// SetStateHandlers sets the state handlers
+func (a *applicationReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
+	a.handlers = handlers
+}
+
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
 func (a *applicationReconciler) Reconcile(node *resourcetree.ResourceNode) (ReconcilationResult, error) {
-	state, ok := node.ResourceState.(*ApplicationState)
-	if !ok {
-		return ReconcilationResult{}, errors.New("casting application state")
-	}
-
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		err := a.client.ScaffoldApplication(a.commonMetadata.Ctx, &client.ScaffoldApplicationOpts{
+		hz, err := a.handlers.Domain.GetPrimaryHostedZone()
+		if err != nil {
+			return ReconcilationResult{}, fmt.Errorf("getting primary hosted zone: %w", err)
+		}
+
+		err = a.client.ScaffoldApplication(a.commonMetadata.Ctx, &client.ScaffoldApplicationOpts{
 			OutputDir:        a.commonMetadata.Declaration.Github.OutputPath,
 			ID:               &a.commonMetadata.ClusterID,
-			HostedZoneID:     state.PrimaryHostedZoneID,
-			HostedZoneDomain: state.PrimaryHostedZoneDomain,
+			HostedZoneID:     hz.HostedZoneID,
+			HostedZoneDomain: hz.Domain,
 			IACRepoURL:       a.commonMetadata.Declaration.Github.Repository,
-			Application:      state.Declaration,
+			Application:      a.commonMetadata.ApplicationDeclaration,
 		})
 		if err != nil {
 			return ReconcilationResult{}, err

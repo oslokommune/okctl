@@ -1,12 +1,26 @@
 package controller
 
 import (
-	"path"
+	"time"
 
-	"github.com/oslokommune/okctl/pkg/config/constant"
+	"github.com/oslokommune/okctl/pkg/helm/charts/externalsecrets"
+
+	"github.com/oslokommune/okctl/pkg/helm/charts/autoscaler"
+	"github.com/oslokommune/okctl/pkg/helm/charts/awslbc"
+	"github.com/oslokommune/okctl/pkg/helm/charts/blockstorage"
+	"github.com/oslokommune/okctl/pkg/helm/charts/kubepromstack"
+	lokipkg "github.com/oslokommune/okctl/pkg/helm/charts/loki"
+	"github.com/oslokommune/okctl/pkg/helm/charts/promtail"
+	"github.com/oslokommune/okctl/pkg/helm/charts/tempo"
+
+	"github.com/asdine/storm/v3"
+	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/cfn"
+	"github.com/pkg/errors"
+
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
-	"github.com/spf13/afero"
 )
 
 // ExistingResources contains information about what services already exists in a cluster
@@ -31,25 +45,32 @@ type ExistingResources struct {
 	hasPostgres                           bool
 }
 
+func isNotFound(_ interface{}, err error) bool {
+	return errors.Is(err, storm.ErrNotFound)
+}
+
 // IdentifyResourcePresence creates an initialized ExistingResources struct
-func IdentifyResourcePresence(fs *afero.Afero, outputDir string, hzFetcher HostedZoneFetcher) (ExistingResources, error) {
-	hz := hzFetcher()
+func IdentifyResourcePresence(id api.ID, handlers *clientCore.StateHandlers) (ExistingResources, error) {
+	hz, err := handlers.Domain.GetPrimaryHostedZone()
+	if err != nil && !errors.Is(err, storm.ErrNotFound) {
+		return ExistingResources{}, err
+	}
 
 	return ExistingResources{
-		hasPrimaryHostedZone:                  hz != nil,
-		hasVPC:                                directoryTester(fs, outputDir, constant.DefaultVpcBaseDir),
-		hasCluster:                            directoryTester(fs, outputDir, constant.DefaultClusterBaseDir),
-		hasExternalSecrets:                    directoryTester(fs, outputDir, constant.DefaultExternalSecretsBaseDir),
-		hasAutoscaler:                         directoryTester(fs, outputDir, constant.DefaultAutoscalerBaseDir),
-		hasKubePromStack:                      directoryTester(fs, outputDir, path.Join(constant.DefaultMonitoringBaseDir, constant.DefaultKubePromStackBaseDir)),
-		hasLoki:                               directoryTester(fs, outputDir, path.Join(constant.DefaultMonitoringBaseDir, constant.DefaultLokiBaseDir)),
-		hasPromtail:                           directoryTester(fs, outputDir, path.Join(constant.DefaultMonitoringBaseDir, constant.DefaultPromtailBaseDir)),
-		hasTempo:                              directoryTester(fs, outputDir, path.Join(constant.DefaultMonitoringBaseDir, constant.DefaultTempoBaseDir)),
-		hasBlockstorage:                       directoryTester(fs, outputDir, constant.DefaultBlockstorageBaseDir),
-		hasAWSLoadBalancerController:          directoryTester(fs, outputDir, constant.DefaultAWSLoadBalancerControllerBaseDir),
-		hasExternalDNS:                        directoryTester(fs, outputDir, constant.DefaultExternalDNSBaseDir),
-		hasIdentityManager:                    directoryTester(fs, outputDir, constant.DefaultIdentityPoolBaseDir),
-		hasArgoCD:                             directoryTester(fs, outputDir, constant.DefaultArgoCDBaseDir),
+		hasPrimaryHostedZone:                  !isNotFound(handlers.Domain.GetPrimaryHostedZone()),
+		hasVPC:                                !isNotFound(handlers.Vpc.GetVpc(cfn.NewStackNamer().Vpc(id.ClusterName))),
+		hasCluster:                            !isNotFound(handlers.Cluster.GetCluster(id.ClusterName)),
+		hasExternalSecrets:                    !isNotFound(handlers.Helm.GetHelmRelease(externalsecrets.ExternalSecrets(nil).ReleaseName)),
+		hasAutoscaler:                         !isNotFound(handlers.Helm.GetHelmRelease(autoscaler.New(nil).ReleaseName)),
+		hasKubePromStack:                      !isNotFound(handlers.Helm.GetHelmRelease(kubepromstack.New(0*time.Second, nil).ReleaseName)),
+		hasLoki:                               !isNotFound(handlers.Helm.GetHelmRelease(lokipkg.New(nil).ReleaseName)),
+		hasPromtail:                           !isNotFound(handlers.Helm.GetHelmRelease(promtail.New(nil).ReleaseName)),
+		hasTempo:                              !isNotFound(handlers.Helm.GetHelmRelease(tempo.New(nil).ReleaseName)),
+		hasBlockstorage:                       !isNotFound(handlers.Helm.GetHelmRelease(blockstorage.New(nil).ReleaseName)),
+		hasAWSLoadBalancerController:          !isNotFound(handlers.Helm.GetHelmRelease(awslbc.New(nil).ReleaseName)),
+		hasExternalDNS:                        !isNotFound(handlers.ExternalDNS.GetExternalDNS()),
+		hasIdentityManager:                    !isNotFound(handlers.IdentityManager.GetIdentityPool(cfn.NewStackNamer().IdentityPool(id.ClusterName))),
+		hasArgoCD:                             !isNotFound(handlers.ArgoCD.GetArgoCD()),
 		hasDelegatedHostedZoneNameservers:     hz != nil && hz.IsDelegated,
 		hasDelegatedHostedZoneNameserversTest: false,
 		hasUsers:                              false, // For now we will always check if there are missing users
@@ -117,12 +138,4 @@ func createNode(parent *resourcetree.ResourceNode, nodeType resourcetree.Resourc
 	}
 
 	return child
-}
-
-func directoryTester(fs *afero.Afero, outputDir string, target string) bool {
-	baseDir := path.Join(outputDir, target)
-
-	exists, _ := fs.DirExists(baseDir)
-
-	return exists
 }

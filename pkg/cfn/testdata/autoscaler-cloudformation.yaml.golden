@@ -10,7 +10,7 @@ Resources:
   AutoscalerPolicy:
     Properties:
       Description: Service account policy for automatically scaling the cluster nodegroup
-      ManagedPolicyName: okctl-repo-env-AutoscalerServiceAccountPolicy
+      ManagedPolicyName: okctl-tset-AutoscalerServiceAccountPolicy
       PolicyDocument:
         Statement:
         - Action:

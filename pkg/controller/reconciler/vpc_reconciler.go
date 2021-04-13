@@ -3,7 +3,8 @@ package reconciler
 import (
 	"fmt"
 
-	"github.com/oslokommune/okctl/pkg/api"
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
+
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
@@ -11,6 +12,7 @@ import (
 // vpcReconciler contains service and metadata for the relevant resource
 type vpcReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
+	stateHandlers  *clientCore.StateHandlers
 
 	client client.VPCService
 }
@@ -25,11 +27,16 @@ func (z *vpcReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata)
 	z.commonMetadata = metadata
 }
 
+// SetStateHandlers sets the state handlers
+func (z *vpcReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
+	z.stateHandlers = handlers
+}
+
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
 func (z *vpcReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err = z.client.CreateVpc(z.commonMetadata.Ctx, api.CreateVpcOpts{
+		_, err = z.client.CreateVpc(z.commonMetadata.Ctx, client.CreateVpcOpts{
 			ID:      z.commonMetadata.ClusterID,
 			Cidr:    z.commonMetadata.Declaration.VPC.CIDR,
 			Minimal: !z.commonMetadata.Declaration.VPC.HighAvailability,
@@ -38,7 +45,7 @@ func (z *vpcReconciler) Reconcile(node *resourcetree.ResourceNode) (result Recon
 			return result, fmt.Errorf("creating vpc: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		err = z.client.DeleteVpc(z.commonMetadata.Ctx, api.DeleteVpcOpts{ID: z.commonMetadata.ClusterID})
+		err = z.client.DeleteVpc(z.commonMetadata.Ctx, client.DeleteVpcOpts{ID: z.commonMetadata.ClusterID})
 		if err != nil {
 			return result, fmt.Errorf("deleting vpc: %w", err)
 		}

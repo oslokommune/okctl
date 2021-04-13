@@ -15,147 +15,6 @@ type Helm struct {
 	Chart   *helm.Chart
 }
 
-// CreateLokiHelmChartOpts contains the required inputs
-type CreateLokiHelmChartOpts struct {
-	ID ID
-}
-
-// Validate the inputs
-func (o CreateLokiHelmChartOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-	)
-}
-
-// CreatePromtailHelmChartOpts contains the required inputs
-type CreatePromtailHelmChartOpts struct {
-	ID ID
-}
-
-// Validate the inputs
-func (o CreatePromtailHelmChartOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-	)
-}
-
-// CreateAutoscalerHelmChartOpts contains the required inputs
-type CreateAutoscalerHelmChartOpts struct {
-	ID ID
-}
-
-// Validate the inputs
-func (o CreateAutoscalerHelmChartOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-	)
-}
-
-// CreateBlockstorageHelmChartOpts contains the required inputs
-type CreateBlockstorageHelmChartOpts struct {
-	ID ID
-}
-
-// Validate the inputs
-func (o CreateBlockstorageHelmChartOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-	)
-}
-
-// CreateExternalSecretsHelmChartOpts contains the data
-// required for creating a helm chart
-type CreateExternalSecretsHelmChartOpts struct {
-	ID ID
-}
-
-// Validate the helm create inputs
-func (o CreateExternalSecretsHelmChartOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-	)
-}
-
-// CreateAWSLoadBalancerControllerHelmChartOpts contains the data
-// required for creating a helm chart
-type CreateAWSLoadBalancerControllerHelmChartOpts struct {
-	ID    ID
-	VpcID string
-}
-
-// Validate the input options
-func (o CreateAWSLoadBalancerControllerHelmChartOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-		validation.Field(&o.VpcID, validation.Required),
-	)
-}
-
-// CreateArgoCDOpts contains the required inputs
-type CreateArgoCDOpts struct {
-	ID ID
-
-	ArgoDomain         string
-	ArgoCertificateARN string
-
-	GithubOrganisation string
-	GithubRepoURL      string
-	GithubRepoName     string
-
-	ClientID   string
-	AuthDomain string
-	UserPoolID string
-
-	PrivateKeyName string
-	PrivateKeyKey  string
-}
-
-// Validate the input options
-func (o CreateArgoCDOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-		validation.Field(&o.ArgoDomain, validation.Required),
-		validation.Field(&o.ArgoCertificateARN, validation.Required),
-		validation.Field(&o.GithubOrganisation, validation.Required),
-		validation.Field(&o.GithubRepoURL, validation.Required),
-		validation.Field(&o.GithubRepoName, validation.Required),
-		validation.Field(&o.ClientID, validation.Required),
-		validation.Field(&o.PrivateKeyName, validation.Required),
-		validation.Field(&o.PrivateKeyKey, validation.Required),
-	)
-}
-
-// CreateKubePrometheusStackOpts defines the required inputs
-type CreateKubePrometheusStackOpts struct {
-	ID                                  ID
-	GrafanaCloudWatchServiceAccountName string
-	CertificateARN                      string
-	Hostname                            string
-	AuthHostname                        string
-	ClientID                            string
-	SecretsConfigName                   string
-	SecretsCookieSecretKey              string
-	SecretsClientSecretKey              string
-	SecretsAdminUserKey                 string
-	SecretsAdminPassKey                 string
-}
-
-// Validate the inputs
-func (o CreateKubePrometheusStackOpts) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.ID, validation.Required),
-		validation.Field(&o.GrafanaCloudWatchServiceAccountName, validation.Required),
-		validation.Field(&o.CertificateARN, validation.Required),
-		validation.Field(&o.Hostname, validation.Required),
-		validation.Field(&o.AuthHostname, validation.Required),
-		validation.Field(&o.ClientID, validation.Required),
-		validation.Field(&o.SecretsConfigName, validation.Required),
-		validation.Field(&o.SecretsCookieSecretKey, validation.Required),
-		validation.Field(&o.SecretsAdminUserKey, validation.Required),
-		validation.Field(&o.SecretsAdminPassKey, validation.Required),
-	)
-}
-
 // CreateHelmReleaseOpts contains the required inputs for
 // installing a Helm release on the Kubernetes cluster
 type CreateHelmReleaseOpts struct {
@@ -204,28 +63,12 @@ func (o DeleteHelmReleaseOpts) Validate() error {
 
 // HelmService defines the service layer interface
 type HelmService interface {
-	CreateExternalSecretsHelmChart(ctx context.Context, opts CreateExternalSecretsHelmChartOpts) (*Helm, error)
-	CreateAWSLoadBalancerControllerHelmChart(ctx context.Context, opts CreateAWSLoadBalancerControllerHelmChartOpts) (*Helm, error)
-	CreateArgoCD(ctx context.Context, opts CreateArgoCDOpts) (*Helm, error)
-	CreateAutoscalerHelmChart(ctx context.Context, opts CreateAutoscalerHelmChartOpts) (*Helm, error)
-	CreateBlockstorageHelmChart(ctx context.Context, opts CreateBlockstorageHelmChartOpts) (*Helm, error)
-	CreateKubePrometheusStack(ctx context.Context, opts CreateKubePrometheusStackOpts) (*Helm, error)
-	CreateLokiHelmChart(ctx context.Context, opts CreateLokiHelmChartOpts) (*Helm, error)
-	CreatePromtailHelmChart(ctx context.Context, opts CreatePromtailHelmChartOpts) (*Helm, error)
 	CreateHelmRelease(ctx context.Context, opts CreateHelmReleaseOpts) (*Helm, error)
 	DeleteHelmRelease(ctx context.Context, opts DeleteHelmReleaseOpts) error
 }
 
 // HelmRun defines the runner layer
 type HelmRun interface {
-	CreateExternalSecretsHelmChart(opts CreateExternalSecretsHelmChartOpts) (*Helm, error)
-	CreateAWSLoadBalancerControllerHelmChart(opts CreateAWSLoadBalancerControllerHelmChartOpts) (*Helm, error)
-	CreateArgoCD(opts CreateArgoCDOpts) (*Helm, error)
-	CreateAutoscalerHelmChart(opts CreateAutoscalerHelmChartOpts) (*Helm, error)
-	CreateBlockstorageHelmChart(opts CreateBlockstorageHelmChartOpts) (*Helm, error)
-	CreateKubePromStack(opts CreateKubePrometheusStackOpts) (*Helm, error)
-	CreateLokiHelmChart(opts CreateLokiHelmChartOpts) (*Helm, error)
-	CreatePromtailHelmChart(opts CreatePromtailHelmChartOpts) (*Helm, error)
 	CreateHelmRelease(opts CreateHelmReleaseOpts) (*Helm, error)
 	DeleteHelmRelease(opts DeleteHelmReleaseOpts) error
 }

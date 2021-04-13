@@ -6,11 +6,9 @@ import (
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/core/api/git"
 	"github.com/oslokommune/okctl/pkg/github"
-	"github.com/oslokommune/okctl/pkg/spinner"
 )
 
 type nameserverRecordDelegationService struct {
-	spin      spinner.Spinner
 	githubAPI github.Githuber
 }
 
@@ -39,9 +37,8 @@ func (n *nameserverRecordDelegationService) CreateNameserverRecordDelegationRequ
 }
 
 // NewNameserverHandlerService initializes a new NameserverRecordDelegationService
-func NewNameserverHandlerService(githubAPI github.Githuber, spin spinner.Spinner) client.NameserverRecordDelegationService {
+func NewNameserverHandlerService(githubAPI github.Githuber) client.NameserverRecordDelegationService {
 	return &nameserverRecordDelegationService{
-		spin:      spin,
 		githubAPI: githubAPI,
 	}
 }

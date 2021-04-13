@@ -3,18 +3,57 @@ package client
 import (
 	"context"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/client/store"
 )
 
-// We are shadowing the api interfaces for now, but
-// this is probably not sustainable.
+// Vpc represents the state of an aws vpc
+type Vpc struct {
+	ID                     api.ID
+	StackName              string
+	CloudFormationTemplate []byte
+
+	VpcID                    string
+	Cidr                     string
+	PublicSubnets            []VpcSubnet
+	PrivateSubnets           []VpcSubnet
+	DatabaseSubnets          []VpcSubnet
+	DatabaseSubnetsGroupName string
+}
+
+// VpcSubnet represents an aws vpc subnet
+type VpcSubnet struct {
+	ID               string
+	Cidr             string
+	AvailabilityZone string
+}
+
+// CreateVpcOpts defines the inputs to create a vpc
+type CreateVpcOpts struct {
+	ID      api.ID
+	Cidr    string
+	Minimal bool
+}
+
+// DeleteVpcOpts defines the inputs to delete a vpc
+type DeleteVpcOpts struct {
+	ID api.ID
+}
+
+// Validate a vpc create request
+func (o CreateVpcOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.Cidr, validation.Required),
+	)
+}
 
 // VPCService orchestrates the creation of a vpc
 type VPCService interface {
-	CreateVpc(ctx context.Context, opts api.CreateVpcOpts) (*api.Vpc, error)
-	DeleteVpc(ctx context.Context, opts api.DeleteVpcOpts) error
-	GetVPC(ctx context.Context, id api.ID) (*api.Vpc, error)
+	CreateVpc(ctx context.Context, opts CreateVpcOpts) (*Vpc, error)
+	DeleteVpc(ctx context.Context, opts DeleteVpcOpts) error
+	GetVPC(ctx context.Context, id api.ID) (*Vpc, error)
 }
 
 // VPCAPI invokes the API calls for creating a vpc
@@ -23,20 +62,9 @@ type VPCAPI interface {
 	DeleteVpc(opts api.DeleteVpcOpts) error
 }
 
-// VPCStore stores the data
-type VPCStore interface {
-	SaveVpc(vpc *api.Vpc) (*store.Report, error)
-	DeleteVpc(id api.ID) (*store.Report, error)
-	GetVpc(id api.ID) (*api.Vpc, error)
-}
-
-// VPCReport summaries the creation of a VPC
-type VPCReport interface {
-	ReportCreateVPC(vpc *api.Vpc, reports []*store.Report) error
-}
-
 // VPCState implement the state layer
 type VPCState interface {
-	SaveVpc(vpc *api.Vpc) (*store.Report, error)
-	DeleteVpc(id api.ID) (*store.Report, error)
+	SaveVpc(vpc *Vpc) error
+	GetVpc(stackName string) (*Vpc, error)
+	RemoveVpc(stackName string) error
 }

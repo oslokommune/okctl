@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"github.com/rancher/k3d/v3/cmd/util"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
@@ -40,12 +42,13 @@ type Config struct {
 	UserDataLoader DataLoaderFn
 	UserState      *state.User
 
-	RepoDataLoader   DataLoaderFn
-	RepoState        *state.Repository
-	RepoStateWithEnv state.RepositoryStateWithEnv
+	RepoDataLoader DataLoaderFn
 
-	Destination string
-	ServerURL   string
+	Declaration *v1alpha1.Cluster
+
+	Destination   string
+	ServerURL     string
+	ServerBaseURL string
 
 	format  core.EncodeResponseType
 	homeDir string
@@ -66,9 +69,9 @@ func New() *Config {
 		UserDataLoader: NoopDataLoader,
 		UserState:      &state.User{},
 		RepoDataLoader: NoopDataLoader,
-		RepoState:      &state.Repository{},
 		Destination:    dest,
 		ServerURL:      fmt.Sprintf("http://%s/v1/", dest),
+		ServerBaseURL:  fmt.Sprintf("http://%s/", dest),
 	}
 }
 
@@ -193,23 +196,6 @@ func (c *Config) GetRepoStatePath() (string, error) {
 	return filepath.Join(base, constant.DefaultRepositoryStateFile), nil
 }
 
-// WriteCurrentRepoState will write current repo state to disk
-func (c *Config) WriteCurrentRepoState() error {
-	repoDir, err := c.GetRepoDir()
-	if err != nil {
-		return err
-	}
-
-	_, err = store.NewFileSystem(repoDir, c.FileSystem).
-		StoreStruct(constant.DefaultRepositoryStateFile, c.RepoState, store.ToYAML()).
-		Do()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // GetHomeDir will get the okctl application home dir
 func (c *Config) GetHomeDir() (string, error) {
 	if len(c.homeDir) != 0 {
@@ -271,22 +257,22 @@ func (c *Config) GetLogName() (string, error) {
 
 // GetRepoOutputDir return the repository output directory,
 // where cloud formation stacks, etc., should be written
-func (c *Config) GetRepoOutputDir(env string) (string, error) {
+func (c *Config) GetRepoOutputDir() (string, error) {
 	base, err := c.GetRepoStateDir()
 	if err != nil {
 		return "", err
 	}
 
-	return path.Join(base, c.RepoState.Metadata.OutputDir, env), nil
+	return path.Join(base, c.Declaration.Github.OutputPath, c.Declaration.Metadata.Name), nil
 }
 
-// GetRepoApplicatiosOutputDir returns the directory where application
+// GetRepoApplicationsOutputDir returns the directory where application
 // resources are stored
-func (c *Config) GetRepoApplicatiosOutputDir() (string, error) {
+func (c *Config) GetRepoApplicationsOutputDir() (string, error) {
 	base, err := c.GetRepoStateDir()
 	if err != nil {
 		return "", err
 	}
 
-	return path.Join(base, c.RepoState.Metadata.OutputDir, constant.DefaultApplicationsOutputDir), nil
+	return path.Join(base, c.Declaration.Github.OutputPath, constant.DefaultApplicationsOutputDir), nil
 }

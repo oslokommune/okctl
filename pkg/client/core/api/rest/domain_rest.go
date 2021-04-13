@@ -39,16 +39,23 @@ func (a *domainAPI) CreatePrimaryHostedZone(opts client.CreatePrimaryHostedZoneO
 		ID:     opts.ID,
 		Domain: opts.Domain,
 		FQDN:   opts.FQDN,
-		NSTTL:  opts.NSTTL,
+		NSTTL:  opts.NameServerTTL,
 	}, into)
 	if err != nil {
 		return nil, err
 	}
 
 	return &client.HostedZone{
-		IsDelegated: false,
-		Primary:     true,
-		HostedZone:  into,
+		ID:                     into.ID,
+		IsDelegated:            false,
+		Primary:                true,
+		Managed:                into.Managed,
+		FQDN:                   into.FQDN,
+		Domain:                 into.Domain,
+		HostedZoneID:           into.HostedZoneID,
+		NameServers:            into.NameServers,
+		StackName:              into.StackName,
+		CloudFormationTemplate: into.CloudFormationTemplate,
 	}, nil
 }
 

@@ -195,16 +195,8 @@ including VPC, this is a highly destructive operation.`,
 				return formatErr(err)
 			}
 
-			// Even though we could not retrieve the vpc, we will
-			// try to delete the cluster and get rid of as much as
-			// possible
 			if vpc != nil {
 				err = cleanup.DeleteDanglingALBs(o.CloudProvider, vpc.VpcID)
-				if err != nil {
-					return formatErr(err)
-				}
-
-				err = cleanup.DeleteDanglingSecurityGroups(o.CloudProvider, vpc.VpcID)
 				if err != nil {
 					return formatErr(err)
 				}
@@ -216,6 +208,13 @@ including VPC, this is a highly destructive operation.`,
 			})
 			if err != nil {
 				return formatErr(err)
+			}
+
+			if vpc != nil {
+				err = cleanup.DeleteDanglingSecurityGroups(o.CloudProvider, vpc.VpcID)
+				if err != nil {
+					return formatErr(err)
+				}
 			}
 
 			err = services.Vpc.DeleteVpc(o.Ctx, client.DeleteVpcOpts{

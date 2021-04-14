@@ -1,6 +1,9 @@
 name: janitor
 
-on: [workflow_dispatch, pull_request]
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "0 12 * * 4"
 
 jobs:
   undelegated-hosted-zones:

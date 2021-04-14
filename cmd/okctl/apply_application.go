@@ -42,6 +42,10 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 		Args:  cobra.ExactArgs(requiredApplyApplicationArguments),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			err := o.Initialise()
+			if err != nil {
+				return err
+			}
+
 			scaffoldOpts.ID = &api.ID{
 				Region:       o.Declaration.Metadata.Region,
 				AWSAccountID: o.Declaration.Metadata.AccountID,

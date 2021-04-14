@@ -6,6 +6,8 @@ import (
 	"io"
 	"time"
 
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -13,27 +15,17 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
-	"github.com/spf13/afero"
 )
 
 // SynchronizeOpts contains the necessary information that Synchronize() needs to do its work
 type SynchronizeOpts struct {
+	ID    api.ID
 	Debug bool
 	Out   io.Writer
 
-	ClusterID api.ID
-
-	ClusterDeclaration *v1alpha1.Cluster
-
+	ClusterDeclaration    *v1alpha1.Cluster
 	ReconciliationManager reconciler.Reconciler
-
-	Fs        *afero.Afero
-	OutputDir string
-
-	CIDRGetter              StringFetcher
-	IdentityPoolFetcher     IdentityPoolFetcher
-	PrimaryHostedZoneGetter HostedZoneFetcher
-	VpcFetcher              VpcFetcher
+	StateHandlers         *clientCore.StateHandlers
 }
 
 // Synchronize knows how to discover differences between desired and actual state and rectify them
@@ -42,7 +34,7 @@ func Synchronize(opts *SynchronizeOpts) error {
 	currentStateTree := CreateResourceDependencyTree()
 	diffTree := CreateResourceDependencyTree()
 
-	existingResources, err := IdentifyResourcePresence(opts.Fs, opts.OutputDir, opts.PrimaryHostedZoneGetter)
+	existingResources, err := IdentifyResourcePresence(opts.ID, opts.StateHandlers)
 	if err != nil {
 		return fmt.Errorf("getting existing integrations: %w", err)
 	}
@@ -52,7 +44,6 @@ func Synchronize(opts *SynchronizeOpts) error {
 
 	diffTree.ApplyFunction(applyDeclaration(opts.ClusterDeclaration), &resourcetree.ResourceNode{})
 	diffTree.ApplyFunction(applyCurrentState, currentStateTree)
-	setRefreshers(diffTree, opts)
 
 	if opts.Debug {
 		_, _ = fmt.Fprintf(opts.Out, "Present resources in desired tree (what is desired): \n%s\n\n", desiredTree.String())
@@ -77,7 +68,7 @@ func HandleNode(reconcilerManager reconciler.Reconciler, currentNode *resourcetr
 
 		reconciliationResult, err = reconcilerManager.Reconcile(currentNode)
 		if err != nil && !reconciliationResult.Requeue {
-			return fmt.Errorf("reconciling node: %w", err)
+			return fmt.Errorf("reconciling node (%s): %w", resourcetree.ResourceNodeTypeToString(currentNode.Type), err)
 		}
 	}
 
@@ -189,50 +180,6 @@ func applyCurrentState(receiver *resourcetree.ResourceNode, target *resourcetree
 	if receiver.State == target.State {
 		receiver.State = resourcetree.ResourceNodeStateNoop
 	}
-}
-
-// setRefreshers sets a refresher on each node of a tree
-func setRefreshers(desiredTree *resourcetree.ResourceNode, opts *SynchronizeOpts) {
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeCluster, CreateClusterStateRefresher(
-		opts.Fs,
-		opts.OutputDir,
-		opts.CIDRGetter,
-	))
-
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeAWSLoadBalancerController, CreateAWSLoadBalancerControllerRefresher(
-		opts.Fs,
-		opts.OutputDir,
-	))
-
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeExternalDNS, CreateExternalDNSStateRefresher(
-		opts.PrimaryHostedZoneGetter,
-	))
-
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeIdentityManager, CreateIdentityManagerRefresher(
-		opts.PrimaryHostedZoneGetter,
-	))
-
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeArgoCD, CreateArgocdStateRefresher(
-		opts.IdentityPoolFetcher,
-		opts.PrimaryHostedZoneGetter,
-	))
-
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeKubePromStack, CreateKubePromStackRefresher(
-		opts.IdentityPoolFetcher,
-		opts.PrimaryHostedZoneGetter,
-	))
-
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeNameserverDelegator, CreateNameserverDelegationStateRefresher(
-		opts.PrimaryHostedZoneGetter,
-	))
-
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypeUsers, CreateUsersRefresher(
-		opts.IdentityPoolFetcher,
-	))
-
-	desiredTree.SetStateRefresher(resourcetree.ResourceNodeTypePostgres, CreatePostgresDatabasesRefresher(
-		opts.VpcFetcher,
-	))
 }
 
 // boolToState converts a boolean to a resourcetree.ResourceNodeState

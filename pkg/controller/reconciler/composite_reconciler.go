@@ -3,6 +3,8 @@ package reconciler
 import (
 	"fmt"
 
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
+
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 	"github.com/oslokommune/okctl/pkg/spinner"
 )
@@ -30,8 +32,6 @@ func (c *compositeReconciler) Reconcile(node *resourcetree.ResourceNode) (result
 		_ = c.spinner.Stop()
 	}()
 
-	node.RefreshState()
-
 	_, ok := c.reconcilers[node.Type]
 	if !ok {
 		return result, fmt.Errorf("no reconciler for type exists: %s", resourcetree.ResourceNodeTypeToString(node.Type))
@@ -44,6 +44,13 @@ func (c *compositeReconciler) Reconcile(node *resourcetree.ResourceNode) (result
 func (c *compositeReconciler) SetCommonMetadata(commonMetadata *resourcetree.CommonMetadata) {
 	for _, reconciler := range c.reconcilers {
 		reconciler.SetCommonMetadata(commonMetadata)
+	}
+}
+
+// SetStateHandlers sets state handlers for all reconcilers
+func (c *compositeReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
+	for _, reconciler := range c.reconcilers {
+		reconciler.SetStateHandlers(handlers)
 	}
 }
 

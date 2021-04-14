@@ -28,8 +28,6 @@ func createValidID() api.ID {
 	return api.ID{
 		Region:       "eu-west-1",
 		AWSAccountID: "123456789012",
-		Environment:  "test",
-		Repository:   "bugged",
 		ClusterName:  "bugged-test",
 	}
 }

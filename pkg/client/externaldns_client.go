@@ -4,14 +4,21 @@ import (
 	"context"
 
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/client/store"
 )
 
 // ExternalDNS contains state about an external dns deployment
 type ExternalDNS struct {
-	Policy         *api.ManagedPolicy
-	ServiceAccount *api.ServiceAccount
-	Kube           *api.ExternalDNSKube
+	Policy         *ManagedPolicy
+	ServiceAccount *ServiceAccount
+	Kube           *ExternalDNSKube
+}
+
+// ExternalDNSKube contains the kubernetes data
+type ExternalDNSKube struct {
+	ID           api.ID
+	HostedZoneID string
+	DomainFilter string
+	Manifests    map[string][]byte
 }
 
 // CreateExternalDNSOpts contains required inputs
@@ -29,21 +36,12 @@ type ExternalDNSService interface {
 
 // ExternalDNSAPI implements the API invocation
 type ExternalDNSAPI interface {
-	CreateExternalDNSPolicy(opts api.CreateExternalDNSPolicyOpts) (*api.ManagedPolicy, error)
-	DeleteExternalDNSPolicy(id api.ID) error
-	CreateExternalDNSServiceAccount(opts api.CreateExternalDNSServiceAccountOpts) (*api.ServiceAccount, error)
-	DeleteExternalDNSServiceAccount(id api.ID) error
 	CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKubeDeploymentOpts) (*api.ExternalDNSKube, error)
 }
 
-// ExternalDNSStore implements the storage layer
-type ExternalDNSStore interface {
-	SaveExternalDNS(dns *ExternalDNS) (*store.Report, error)
-	RemoveExternalDNS(id api.ID) (*store.Report, error)
-}
-
-// ExternalDNSReport implements the report layer
-type ExternalDNSReport interface {
-	ReportCreateExternalDNS(dns *ExternalDNS, report *store.Report) error
-	ReportDeleteExternalDNS(report *store.Report) error
+// ExternalDNSState implements the persistence layer
+type ExternalDNSState interface {
+	SaveExternalDNS(dns *ExternalDNS) error
+	GetExternalDNS() (*ExternalDNS, error)
+	RemoveExternalDNS() error
 }

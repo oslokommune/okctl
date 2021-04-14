@@ -3,24 +3,19 @@ package reconciler
 import (
 	"fmt"
 
-	"github.com/miekg/dns"
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
 
-// NameserverHandlerReconcilerResourceState contains data extracted from the desired state
-type NameserverHandlerReconcilerResourceState struct {
-	PrimaryHostedZoneFQDN string
-	Nameservers           []string
-}
-
 // nameserverDelegationReconciler handles creation (later edit and deletion) of nameserver delegation resources.
 // A nameserver delegation consists of creating a request to add a NS record to the top level domain and verifying
 // that the delegation has happened.
 type nameserverDelegationReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
+	stateHandlers  *clientCore.StateHandlers
 
 	client client.NameserverRecordDelegationService
 }
@@ -35,21 +30,24 @@ func (z *nameserverDelegationReconciler) SetCommonMetadata(metadata *resourcetre
 	z.commonMetadata = metadata
 }
 
+// SetStateHandlers sets the state handlers
+func (z *nameserverDelegationReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
+	z.stateHandlers = handlers
+}
+
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
 func (z *nameserverDelegationReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
-	resourceState, ok := node.ResourceState.(NameserverHandlerReconcilerResourceState)
-	if !ok {
-		return result, errors.New("casting nameserverhandler state")
-	}
-
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		primaryHostedZoneFQDN := dns.Fqdn(z.commonMetadata.Declaration.ClusterRootDomain)
+		hz, err := z.stateHandlers.Domain.GetPrimaryHostedZone()
+		if err != nil {
+			return result, fmt.Errorf("getting primary hosted zone: %w", err)
+		}
 
 		_, err = z.client.CreateNameserverRecordDelegationRequest(&client.CreateNameserverDelegationRequestOpts{
 			ClusterID:             z.commonMetadata.ClusterID,
-			PrimaryHostedZoneFQDN: primaryHostedZoneFQDN,
-			Nameservers:           resourceState.Nameservers,
+			PrimaryHostedZoneFQDN: hz.FQDN,
+			Nameservers:           hz.NameServers,
 		})
 		if err != nil {
 			return result, fmt.Errorf("handling nameservers: %w", err)

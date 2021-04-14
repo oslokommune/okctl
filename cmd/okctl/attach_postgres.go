@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/cfn"
+
 	"github.com/oslokommune/okctl/pkg/kube/manifests/awsnode"
 
 	"github.com/oslokommune/okctl/pkg/kube/manifests/securitygrouppolicy"
@@ -18,7 +20,6 @@ import (
 type attachPostgresOpts struct {
 	ID              api.ID
 	ApplicationName string
-	Environment     string
 	Namespace       string
 	ConfigMapName   string
 	SecretName      string
@@ -30,7 +31,6 @@ func (o *attachPostgresOpts) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.ApplicationName, validation.Required),
-		validation.Field(&o.Environment, validation.Required),
 		validation.Field(&o.Namespace, validation.Required),
 	)
 }
@@ -44,24 +44,25 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 		Short: "Attach to the given postgres database",
 		Args:  cobra.ExactArgs(0), // nolint: gomnd
 		PreRunE: func(_ *cobra.Command, _ []string) error {
-			err := o.InitialiseWithOnlyEnv(opts.Environment)
+			err := o.Initialise()
 			if err != nil {
 				return err
 			}
 
-			meta := o.RepoStateWithEnv.GetMetadata()
-			cluster := o.RepoStateWithEnv.GetCluster()
-			db := o.RepoStateWithEnv.GetDatabase(opts.ApplicationName)
+			db, err := o.StateHandlers(o.StateNodes()).Component.
+				GetPostgresDatabase(cfn.NewStackNamer().
+					RDSPostgres(opts.ApplicationName, o.Declaration.Metadata.Name))
+			if err != nil {
+				return err
+			}
 
-			opts.ID.Environment = opts.Environment
-			opts.ID.AWSAccountID = cluster.AWSAccountID
-			opts.ID.Repository = meta.Name
-			opts.ID.Region = meta.Region
-			opts.ID.ClusterName = o.RepoStateWithEnv.GetClusterName()
+			opts.ID.AWSAccountID = o.Declaration.Metadata.AccountID
+			opts.ID.Region = o.Declaration.Metadata.Region
+			opts.ID.ClusterName = o.Declaration.Metadata.Name
 			opts.Namespace = db.Namespace
 			opts.ConfigMapName = db.DatabaseConfigMapName
 			opts.SecretName = db.AdminSecretName
-			opts.SecurityGroup = db.SecurityGroupID
+			opts.SecurityGroup = db.OutgoingSecurityGroupID
 
 			err = opts.Validate()
 			if err != nil {
@@ -153,13 +154,6 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-
-	flags.StringVarP(&opts.Environment,
-		"environment",
-		"e",
-		"",
-		"The environment the postgres database was created in",
-	)
 
 	flags.StringVarP(&opts.ApplicationName,
 		"name",

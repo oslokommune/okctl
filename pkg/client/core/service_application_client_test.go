@@ -3,6 +3,7 @@ package core_test
 import (
 	"bytes"
 	"context"
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -17,7 +18,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/core"
 	clientFilesystem "github.com/oslokommune/okctl/pkg/client/core/store/filesystem"
-	"github.com/oslokommune/okctl/pkg/client/store"
 	"gotest.tools/assert"
 )
 
@@ -63,46 +63,45 @@ volumes:
 #    cert-manager.io/cluster-issuer: letsencrypt-production
 `
 
+// nolint: lll
 func TestNewApplicationService(t *testing.T) {
 	testInputBuffer := bytes.NewBufferString(defaultTemplate)
 
-	aferoFs := afero.Afero{Fs: afero.NewMemMapFs()}
+	aferoFs := afero.Afero{
+		Fs: afero.NewMemMapFs(),
+	}
 
-	mockPaths := clientFilesystem.Paths{BaseDir: "infrastructure/applications"}
+	mockPaths := clientFilesystem.Paths{
+		BaseDir: path.Join("infrastructure", "applications"),
+	}
 
 	service := core.NewApplicationService(
-		&aferoFs,
-		mockPaths,
 		mockCertService{},
 		clientFilesystem.NewApplicationStore(mockPaths, &aferoFs),
-		mockAppReporter{},
 	)
 
 	application, err := commands.InferApplicationFromStdinOrFile(testInputBuffer, &aferoFs, "-")
 	assert.NilError(t, err)
 
-	env := "test"
+	clusterName := "test"
 	err = service.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
-		OutputDir: "infrastructure",
 		ID: &api.ID{
 			Region:       "eu-west-1",
 			AWSAccountID: "012345678912",
-			Environment:  env,
-			Repository:   "not blank",
-			ClusterName:  "dummy-cluster",
+			ClusterName:  clusterName,
 		},
 		HostedZoneID:     "dummyID",
 		HostedZoneDomain: "kjoremiljo.oslo.systems",
 		IACRepoURL:       "git@dummy.com:test/repo.git",
 		Application:      application,
+		OutputDir:        "infrastructure",
 	})
 	assert.NilError(t, err)
 
 	g := goldie.New(t)
+
 	g.Assert(t, "argocd-application.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", "argocd-application.yaml")))
-
 	g.Assert(t, "kustomization-base.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "kustomization.yaml")))
-
 	g.Assert(t, "deployment.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "deployment.yaml")))
 	g.Assert(t, "volumes.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "volumes.yaml")))
 	g.Assert(t, "ingress.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "ingress.yaml")))
@@ -110,9 +109,9 @@ func TestNewApplicationService(t *testing.T) {
 
 	g.Assert(t,
 		"kustomization-overlay.yaml",
-		readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationOverlayDir, env, "kustomization.yaml")),
+		readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationOverlayDir, clusterName, "kustomization.yaml")),
 	)
-	g.Assert(t, "ingress-patch.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationOverlayDir, env, "ingress-patch.json")))
+	g.Assert(t, "ingress-patch.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationOverlayDir, clusterName, "ingress-patch.json")))
 }
 
 func readFile(t *testing.T, fs *afero.Afero, path string) []byte {
@@ -124,26 +123,16 @@ func readFile(t *testing.T, fs *afero.Afero, path string) []byte {
 
 type mockCertService struct{}
 
-func (m mockCertService) DeleteCertificate(_ context.Context, _ api.DeleteCertificateOpts) error {
+func (m mockCertService) DeleteCertificate(_ context.Context, _ client.DeleteCertificateOpts) error {
 	return nil
 }
 
-func (m mockCertService) DeleteCognitoCertificate(_ context.Context, _ api.DeleteCognitoCertificateOpts) error {
+func (m mockCertService) DeleteCognitoCertificate(_ context.Context, _ client.DeleteCognitoCertificateOpts) error {
 	return nil
 }
 
-func (m mockCertService) CreateCertificate(_ context.Context, _ api.CreateCertificateOpts) (*api.Certificate, error) {
-	return &api.Certificate{
-		CertificateARN: "arn:which:isnt:an:arn",
+func (m mockCertService) CreateCertificate(_ context.Context, _ client.CreateCertificateOpts) (*client.Certificate, error) {
+	return &client.Certificate{
+		ARN: "arn:which:isnt:an:arn",
 	}, nil
-}
-
-type mockAppReporter struct{}
-
-func (m mockAppReporter) ReportCreateApplication(_ *client.ScaffoldedApplication, _ []*store.Report) error {
-	return nil
-}
-
-func (m mockAppReporter) ReportDeleteApplication(_ []*store.Report) error {
-	return nil
 }

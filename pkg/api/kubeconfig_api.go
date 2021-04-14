@@ -11,6 +11,6 @@ type KubeConfig struct {
 // KubeConfigStore defines the storage operations on a kubeconfig
 type KubeConfigStore interface {
 	SaveKubeConfig(cfg *kubeconfig.Config) error
-	GetKubeConfig() (*KubeConfig, error)
+	GetKubeConfig(clusterName string) (*KubeConfig, error)
 	DeleteKubeConfig() error
 }

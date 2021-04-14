@@ -3,6 +3,8 @@ package reconciler
 import (
 	"fmt"
 
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
+
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
@@ -10,6 +12,7 @@ import (
 // autoscalerReconciler contains service and metadata for the relevant resource
 type autoscalerReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
+	stateHandlers  *clientCore.StateHandlers
 
 	client client.AutoscalerService
 }
@@ -22,6 +25,11 @@ func (z *autoscalerReconciler) NodeType() resourcetree.ResourceNodeType {
 // SetCommonMetadata saves common metadata for use in Reconcile()
 func (z *autoscalerReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
 	z.commonMetadata = metadata
+}
+
+// SetStateHandlers sets the state handlers
+func (z *autoscalerReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
+	z.stateHandlers = handlers
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved

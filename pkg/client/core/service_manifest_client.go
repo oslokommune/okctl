@@ -5,42 +5,20 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/api"
 
-	"github.com/oslokommune/okctl/pkg/spinner"
-
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type manifestService struct {
-	spinner spinner.Spinner
-	api     client.ManifestAPI
-	store   client.ManifestStore
-	report  client.ManifestReport
+	api   client.ManifestAPI
+	state client.ManifestState
 }
 
 func (s *manifestService) ScaleDeployment(_ context.Context, opts api.ScaleDeploymentOpts) error {
-	err := s.spinner.Start("scale-deployment")
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
 	return s.api.ScaleDeployment(opts)
 }
 
-func (s *manifestService) CreateConfigMap(_ context.Context, opts client.CreateConfigMapOpts) (*client.ConfigMap, error) {
-	err := s.spinner.Start("native-secret")
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	secret, err := s.api.CreateConfigMap(api.CreateConfigMapOpts{
+func (s *manifestService) CreateConfigMap(_ context.Context, opts client.CreateConfigMapOpts) (*client.KubernetesManifest, error) {
+	cm, err := s.api.CreateConfigMap(api.CreateConfigMapOpts{
 		ID:        opts.ID,
 		Name:      opts.Name,
 		Namespace: opts.Namespace,
@@ -51,61 +29,42 @@ func (s *manifestService) CreateConfigMap(_ context.Context, opts client.CreateC
 		return nil, err
 	}
 
-	sec := &client.ConfigMap{
-		ID:        secret.ID,
-		Name:      secret.Name,
-		Namespace: secret.Namespace,
-		Manifest:  secret.Manifest,
+	m := &client.KubernetesManifest{
+		ID:        opts.ID,
+		Name:      opts.Name,
+		Namespace: opts.Namespace,
+		Type:      client.ManifestTypeConfigMap,
+		Content:   cm.Manifest,
 	}
 
-	report, err := s.store.SaveConfigMap(sec)
+	err = s.state.SaveKubernetesManifests(m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.report.SaveConfigMap(sec, report)
-	if err != nil {
-		return nil, err
-	}
-
-	return sec, nil
+	return m, nil
 }
 
 func (s *manifestService) DeleteConfigMap(_ context.Context, opts client.DeleteConfigMapOpts) error {
-	err := s.spinner.Start("native-secret")
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	err = s.api.DeleteConfigMap(api.DeleteConfigMapOpts{
+	err := s.api.DeleteConfigMap(api.DeleteConfigMapOpts{
 		ID:        opts.ID,
 		Name:      opts.Name,
 		Namespace: opts.Namespace,
 	})
-
-	report, err := s.store.RemoveConfigMap(opts.Name, opts.Namespace)
 	if err != nil {
 		return err
 	}
 
-	return s.report.RemoveConfigMap(report)
+	err = s.state.RemoveKubernetesManifests(opts.Name)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *manifestService) DeleteExternalSecret(_ context.Context, opts client.DeleteExternalSecretOpts) error {
-	err := s.spinner.Start("storage-class")
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	err = s.api.DeleteExternalSecret(api.DeleteExternalSecretsOpts{
+	err := s.api.DeleteExternalSecret(api.DeleteExternalSecretsOpts{
 		ID:        opts.ID,
 		Manifests: opts.Secrets,
 	})
@@ -113,131 +72,85 @@ func (s *manifestService) DeleteExternalSecret(_ context.Context, opts client.De
 		return err
 	}
 
-	report, err := s.store.RemoveExternalSecret(opts.Secrets)
+	err = s.state.RemoveKubernetesManifests(opts.Name)
 	if err != nil {
 		return err
 	}
 
-	return s.report.RemoveExternalSecret(report)
+	return nil
 }
 
-func (s *manifestService) CreateStorageClass(_ context.Context, opts api.CreateStorageClassOpts) (*client.StorageClass, error) {
-	err := s.spinner.Start("storage-class")
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
+func (s *manifestService) CreateStorageClass(_ context.Context, opts api.CreateStorageClassOpts) (*client.KubernetesManifest, error) {
 	sc, err := s.api.CreateStorageClass(opts)
 	if err != nil {
 		return nil, err
 	}
 
-	storage := &client.StorageClass{
-		ID:       sc.ID,
-		Name:     sc.Name,
-		Manifest: sc.Manifest,
+	m := &client.KubernetesManifest{
+		ID:      opts.ID,
+		Name:    opts.Name,
+		Type:    client.ManifestTypeStorageClass,
+		Content: sc.Manifest,
 	}
 
-	report, err := s.store.SaveStorageClass(storage)
+	err = s.state.SaveKubernetesManifests(m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.report.SaveStorageClass(storage, report)
-	if err != nil {
-		return nil, err
-	}
-
-	return storage, nil
+	return m, nil
 }
 
-func (s *manifestService) CreateNamespace(_ context.Context, opts api.CreateNamespaceOpts) (*client.Namespace, error) {
-	err := s.spinner.Start("namespace")
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		_ = s.spinner.Stop()
-	}()
-
+func (s *manifestService) CreateNamespace(_ context.Context, opts api.CreateNamespaceOpts) (*client.KubernetesManifest, error) {
 	ns, err := s.api.CreateNamespace(opts)
 	if err != nil {
 		return nil, err
 	}
 
-	namespace := &client.Namespace{
-		ID:        ns.ID,
-		Namespace: ns.Namespace,
-		Manifest:  ns.Manifest,
+	m := &client.KubernetesManifest{
+		ID:      opts.ID,
+		Name:    opts.Namespace,
+		Type:    client.ManifestTypeNamespace,
+		Content: ns.Manifest,
 	}
 
-	report, err := s.store.SaveNamespace(namespace)
+	err = s.state.SaveKubernetesManifests(m)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.report.SaveNamespace(namespace, report)
-	if err != nil {
-		return nil, err
-	}
-
-	return namespace, nil
+	return m, nil
 }
 
 func (s *manifestService) DeleteNamespace(_ context.Context, opts api.DeleteNamespaceOpts) error {
-	err := s.spinner.Start("namespace")
+	err := s.api.DeleteNamespace(opts)
 	if err != nil {
 		return err
 	}
 
-	defer func() {
-		_ = s.spinner.Stop()
-	}()
-
-	err = s.api.DeleteNamespace(opts)
+	err = s.state.RemoveKubernetesManifests(opts.Namespace)
 	if err != nil {
 		return err
 	}
 
-	report, err := s.store.RemoveNamespace(opts.Namespace)
-	if err != nil {
-		return err
-	}
-
-	return s.report.RemoveNamespace(opts.Namespace, report)
+	return nil
 }
 
-func (s *manifestService) CreateExternalSecret(_ context.Context, opts client.CreateExternalSecretOpts) (*client.ExternalSecret, error) {
-	err := s.spinner.Start("parameter")
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
+func (s *manifestService) CreateExternalSecret(_ context.Context, opts client.CreateExternalSecretOpts) (*client.KubernetesManifest, error) {
 	m, err := s.api.CreateExternalSecret(opts)
 	if err != nil {
 		return nil, err
 	}
 
-	manifest := &client.ExternalSecret{
-		ID:        m.ID,
-		Manifests: m.Manifests,
+	manifest := &client.KubernetesManifest{
+		ID:        opts.ID,
+		Name:      opts.Name,
+		Namespace: opts.Namespace,
+		Type:      client.ManifestTypeExternalSecret,
+		Content:   m.Content,
 	}
 
-	report, err := s.store.SaveExternalSecret(manifest)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.report.SaveExternalSecret(manifest, report)
+	err = s.state.SaveKubernetesManifests(manifest)
 	if err != nil {
 		return nil, err
 	}
@@ -246,11 +159,12 @@ func (s *manifestService) CreateExternalSecret(_ context.Context, opts client.Cr
 }
 
 // NewManifestService returns an initialised service
-func NewManifestService(spinner spinner.Spinner, api client.ManifestAPI, store client.ManifestStore, report client.ManifestReport) client.ManifestService {
+func NewManifestService(
+	api client.ManifestAPI,
+	state client.ManifestState,
+) client.ManifestService {
 	return &manifestService{
-		spinner: spinner,
-		api:     api,
-		store:   store,
-		report:  report,
+		api:   api,
+		state: state,
 	}
 }

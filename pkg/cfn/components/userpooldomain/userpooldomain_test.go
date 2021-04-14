@@ -14,7 +14,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	up := userpool.New("test", "test")
+	up := userpool.New("test")
 	ph := recordset.New("placeholder", "1.1.1.1", "auth.test.com", "GHFJE378FAKE")
 
 	testCases := []struct {

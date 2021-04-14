@@ -7,54 +7,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
-func makeCreateExternalSecretsHelmChartEndpoint(s api.HelmService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateExternalSecretsHelmChart(ctx, request.(api.CreateExternalSecretsHelmChartOpts))
-	}
-}
-
-func makeCreateAWSLoadBalancerControllerHelmChartEndpoint(s api.HelmService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateAWSLoadBalancerControllerHelmChart(ctx, request.(api.CreateAWSLoadBalancerControllerHelmChartOpts))
-	}
-}
-
-func makeCreateArgoCD(s api.HelmService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateArgoCD(ctx, request.(api.CreateArgoCDOpts))
-	}
-}
-
-func makeCreateAutoscalerHelmChartEndpoint(s api.HelmService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateAutoscalerHelmChart(ctx, request.(api.CreateAutoscalerHelmChartOpts))
-	}
-}
-
-func makeCreateBlockstorageHelmChartEndpoint(s api.HelmService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateBlockstorageHelmChart(ctx, request.(api.CreateBlockstorageHelmChartOpts))
-	}
-}
-
-func makeCreateKubePrometheusStack(s api.HelmService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateKubePrometheusStack(ctx, request.(api.CreateKubePrometheusStackOpts))
-	}
-}
-
-func makeCreateLokiHelmChartEndpoint(s api.HelmService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreateLokiHelmChart(ctx, request.(api.CreateLokiHelmChartOpts))
-	}
-}
-
-func makeCreatePromtailHelmChartEndpoint(s api.HelmService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return s.CreatePromtailHelmChart(ctx, request.(api.CreatePromtailHelmChartOpts))
-	}
-}
-
 func makeCreateHelmRelease(s api.HelmService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return s.CreateHelmRelease(ctx, request.(api.CreateHelmReleaseOpts))

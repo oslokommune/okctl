@@ -10,41 +10,50 @@ import (
 	"github.com/oslokommune/okctl/pkg/kube"
 	"github.com/oslokommune/okctl/pkg/kube/manifests/awsnode"
 
-	"github.com/oslokommune/okctl/pkg/spinner"
-
-	"github.com/oslokommune/okctl/pkg/client/store"
-
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type clusterService struct {
-	spinner spinner.Spinner
-	api     client.ClusterAPI
-	store   client.ClusterStore
-	report  client.ClusterReport
-	state   client.ClusterState
+	api   client.ClusterAPI
+	state client.ClusterState
 
 	provider v1alpha1.CloudProvider
 	auth     aws.Authenticator
 }
 
-func (s *clusterService) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error) {
-	err := s.spinner.Start("cluster")
+func (s *clusterService) CreateCluster(_ context.Context, opts client.ClusterCreateOpts) (*client.Cluster, error) {
+	c, err := s.api.CreateCluster(api.ClusterCreateOpts{
+		ID:      opts.ID,
+		Cidr:    opts.Cidr,
+		Version: opts.Version,
+		VpcID:   opts.VpcID,
+		VpcPrivateSubnets: func() (subs []api.VpcSubnet) {
+			for _, sub := range opts.VpcPrivateSubnets {
+				subs = append(subs, api.VpcSubnet{
+					ID:               sub.ID,
+					Cidr:             sub.Cidr,
+					AvailabilityZone: sub.AvailabilityZone,
+				})
+			}
+			return subs
+		}(),
+		VpcPublicSubnets: func() (subs []api.VpcSubnet) {
+			for _, sub := range opts.VpcPublicSubnets {
+				subs = append(subs, api.VpcSubnet{
+					ID:               sub.ID,
+					Cidr:             sub.Cidr,
+					AvailabilityZone: sub.AvailabilityZone,
+				})
+			}
+			return subs
+		}(),
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	cluster, err := s.api.CreateCluster(opts)
-	if err != nil {
-		return nil, err
-	}
-
-	clientSet, _, err := kube.NewFromEKSCluster(cluster.ID.ClusterName, cluster.ID.Region, s.provider, s.auth).Get()
+	clientSet, _, err := kube.NewFromEKSCluster(c.ID.ClusterName, c.ID.Region, s.provider, s.auth).Get()
 	if err != nil {
 		return nil, err
 	}
@@ -54,17 +63,13 @@ func (s *clusterService) CreateCluster(_ context.Context, opts api.ClusterCreate
 		return nil, err
 	}
 
-	r1, err := s.store.SaveCluster(cluster)
-	if err != nil {
-		return nil, err
+	cluster := &client.Cluster{
+		ID:     c.ID,
+		Name:   c.ID.ClusterName,
+		Config: c.Config,
 	}
 
-	r2, err := s.state.SaveCluster(cluster)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.report.ReportCreateCluster(cluster, []*store.Report{r1, r2})
+	err = s.state.SaveCluster(cluster)
 	if err != nil {
 		return nil, err
 	}
@@ -72,27 +77,16 @@ func (s *clusterService) CreateCluster(_ context.Context, opts api.ClusterCreate
 	return cluster, nil
 }
 
-func (s *clusterService) DeleteCluster(_ context.Context, opts api.ClusterDeleteOpts) error {
-	err := s.spinner.Start("cluster")
+func (s *clusterService) DeleteCluster(_ context.Context, opts client.ClusterDeleteOpts) error {
+	err := s.api.DeleteCluster(api.ClusterDeleteOpts{
+		ID:                 opts.ID,
+		FargateProfileName: opts.FargateProfileName,
+	})
 	if err != nil {
 		return err
 	}
 
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	err = s.api.DeleteCluster(opts)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.store.DeleteCluster(opts.ID)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.state.DeleteCluster(opts.ID)
+	err = s.state.RemoveCluster(opts.ID.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -102,19 +96,13 @@ func (s *clusterService) DeleteCluster(_ context.Context, opts api.ClusterDelete
 
 // NewClusterService returns an initialised cluster service
 func NewClusterService(
-	spinner spinner.Spinner,
 	api client.ClusterAPI,
-	store client.ClusterStore,
-	report client.ClusterReport,
 	state client.ClusterState,
 	provider v1alpha1.CloudProvider,
 	auth aws.Authenticator,
 ) client.ClusterService {
 	return &clusterService{
-		spinner:  spinner,
 		api:      api,
-		store:    store,
-		report:   report,
 		state:    state,
 		provider: provider,
 		auth:     auth,

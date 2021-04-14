@@ -2,34 +2,25 @@ package core
 
 import (
 	"context"
+	"errors"
 
-	"github.com/oslokommune/okctl/pkg/spinner"
-
-	"github.com/oslokommune/okctl/pkg/client/store"
+	stormpkg "github.com/asdine/storm/v3"
 
 	"github.com/oslokommune/okctl/pkg/api"
+
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type certificateService struct {
-	spinner spinner.Spinner
-	api     client.CertificateAPI
-	store   client.CertificateStore
-	state   client.CertificateState
-	report  client.CertificateReport
+	api   client.CertificateAPI
+	state client.CertificateState
 }
 
-func (s *certificateService) DeleteCognitoCertificate(_ context.Context, opts api.DeleteCognitoCertificateOpts) error {
-	err := s.spinner.Start("cognito certificate")
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	err = s.api.DeleteCognitoCertificate(opts)
+func (s *certificateService) DeleteCognitoCertificate(_ context.Context, opts client.DeleteCognitoCertificateOpts) error {
+	err := s.api.DeleteCognitoCertificate(api.DeleteCognitoCertificateOpts{
+		ID:     opts.ID,
+		Domain: opts.Domain,
+	})
 	if err != nil {
 		return err
 	}
@@ -37,32 +28,16 @@ func (s *certificateService) DeleteCognitoCertificate(_ context.Context, opts ap
 	return nil
 }
 
-func (s *certificateService) DeleteCertificate(_ context.Context, opts api.DeleteCertificateOpts) error {
-	err := s.spinner.Start("delete certificate")
+func (s *certificateService) DeleteCertificate(_ context.Context, opts client.DeleteCertificateOpts) error {
+	err := s.api.DeleteCertificate(api.DeleteCertificateOpts{
+		ID:     opts.ID,
+		Domain: opts.Domain,
+	})
 	if err != nil {
 		return err
 	}
 
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	err = s.api.DeleteCertificate(opts)
-	if err != nil {
-		return err
-	}
-
-	r1, err := s.store.RemoveCertificate(opts.Domain)
-	if err != nil {
-		return err
-	}
-
-	r2, err := s.state.RemoveCertificate(opts.Domain)
-	if err != nil {
-		return err
-	}
-
-	err = s.report.RemoveCertificate(opts.Domain, []*store.Report{r1, r2})
+	err = s.state.RemoveCertificate(opts.Domain)
 	if err != nil {
 		return err
 	}
@@ -70,37 +45,44 @@ func (s *certificateService) DeleteCertificate(_ context.Context, opts api.Delet
 	return nil
 }
 
-func (s *certificateService) CreateCertificate(_ context.Context, opts api.CreateCertificateOpts) (*api.Certificate, error) {
-	err := s.spinner.Start("certificate")
+func (s *certificateService) CreateCertificate(_ context.Context, opts client.CreateCertificateOpts) (*client.Certificate, error) {
+	// [Refactor] Reconciler is responsible for ordering operations
+	//
+	// We should be doing this check in the reconciler together with a
+	// verification towards the AWS API. Keeping this here for the
+	// time being, so we are compatible with expected behavior.
+	{
+		c, err := s.state.GetCertificate(opts.Domain)
+		if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+			return nil, err
+		}
+
+		if err == nil {
+			return c, nil
+		}
+	}
+
+	c, err := s.api.CreateCertificate(api.CreateCertificateOpts{
+		ID:           opts.ID,
+		FQDN:         opts.FQDN,
+		Domain:       opts.Domain,
+		HostedZoneID: opts.HostedZoneID,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	defer func() {
-		err = s.spinner.Stop()
-	}()
-
-	c := s.state.GetCertificate(opts.Domain)
-	if c.Validate() == nil {
-		return s.store.GetCertificate(opts.Domain)
+	certificate := &client.Certificate{
+		ID:                     c.ID,
+		FQDN:                   c.FQDN,
+		Domain:                 c.Domain,
+		HostedZoneID:           c.HostedZoneID,
+		ARN:                    c.CertificateARN,
+		StackName:              c.StackName,
+		CloudFormationTemplate: c.CloudFormationTemplate,
 	}
 
-	certificate, err := s.api.CreateCertificate(opts)
-	if err != nil {
-		return nil, err
-	}
-
-	r1, err := s.store.SaveCertificate(certificate)
-	if err != nil {
-		return nil, err
-	}
-
-	r2, err := s.state.SaveCertificate(certificate)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.report.SaveCertificate(certificate, []*store.Report{r1, r2})
+	err = s.state.SaveCertificate(certificate)
 	if err != nil {
 		return nil, err
 	}
@@ -110,17 +92,11 @@ func (s *certificateService) CreateCertificate(_ context.Context, opts api.Creat
 
 // NewCertificateService returns an initialised service
 func NewCertificateService(
-	spinner spinner.Spinner,
 	api client.CertificateAPI,
-	store client.CertificateStore,
 	state client.CertificateState,
-	report client.CertificateReport,
 ) client.CertificateService {
 	return &certificateService{
-		spinner: spinner,
-		api:     api,
-		store:   store,
-		state:   state,
-		report:  report,
+		api:   api,
+		state: state,
 	}
 }

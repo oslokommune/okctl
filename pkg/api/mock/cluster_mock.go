@@ -13,8 +13,6 @@ import (
 )
 
 const (
-	// DefaultEnv is a default environment used in mocks
-	DefaultEnv = "pro"
 	// DefaultAWSAccountID is a default aws account id used in mocks
 	DefaultAWSAccountID = "123456789012"
 	// DefaultCidr is a default cidr used in mocks
@@ -25,8 +23,6 @@ const (
 	DefaultVersion = "1.18"
 	// DefaultAvailabilityZone is a default aws availability zone used in mocks
 	DefaultAvailabilityZone = "eu-west-1a"
-	// DefaultRepositoryName is a default git repo name used in mocks
-	DefaultRepositoryName = "test"
 	// DefaultClusterName is a default eks cluster name used in mocks
 	DefaultClusterName = "test-cluster-pro"
 	// DefaultVpcID is a default aws vpc id used in mocks
@@ -75,8 +71,6 @@ func DefaultID() api.ID {
 	return api.ID{
 		Region:       DefaultRegion,
 		AWSAccountID: DefaultAWSAccountID,
-		Environment:  DefaultEnv,
-		Repository:   DefaultRepositoryName,
 		ClusterName:  DefaultClusterName,
 	}
 }

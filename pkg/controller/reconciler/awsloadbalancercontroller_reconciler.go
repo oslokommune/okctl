@@ -1,17 +1,14 @@
 package reconciler
 
 import (
-	"errors"
 	"fmt"
+
+	"github.com/oslokommune/okctl/pkg/cfn"
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
-
-// AWSLoadBalancerControllerResourceState contains runtime data necessary for Reconcile to do its job
-type AWSLoadBalancerControllerResourceState struct {
-	VpcID string
-}
 
 // NodeType returns the relevant ResourceNodeType for this reconciler
 func (z *awsLoadBalancerControllerReconciler) NodeType() resourcetree.ResourceNodeType {
@@ -21,6 +18,7 @@ func (z *awsLoadBalancerControllerReconciler) NodeType() resourcetree.ResourceNo
 // albIngressReconciler contains service and metadata for the relevant resource
 type awsLoadBalancerControllerReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
+	stateHandlers  *clientCore.StateHandlers
 	client         client.AWSLoadBalancerControllerService
 }
 
@@ -29,18 +27,25 @@ func (z *awsLoadBalancerControllerReconciler) SetCommonMetadata(metadata *resour
 	z.commonMetadata = metadata
 }
 
+// SetStateHandlers sets the state handlers
+func (z *awsLoadBalancerControllerReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
+	z.stateHandlers = handlers
+}
+
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
 func (z *awsLoadBalancerControllerReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
-	state, ok := node.ResourceState.(AWSLoadBalancerControllerResourceState)
-	if !ok {
-		return result, errors.New("casting aws load balancer controller state")
-	}
-
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
+		vpc, err := z.stateHandlers.Vpc.GetVpc(
+			cfn.NewStackNamer().Vpc(z.commonMetadata.Declaration.Metadata.Name),
+		)
+		if err != nil {
+			return result, fmt.Errorf("getting vpc: %w", err)
+		}
+
 		_, err = z.client.CreateAWSLoadBalancerController(z.commonMetadata.Ctx, client.CreateAWSLoadBalancerControllerOpts{
 			ID:    z.commonMetadata.ClusterID,
-			VPCID: state.VpcID,
+			VPCID: vpc.VpcID,
 		})
 		if err != nil {
 			return result, fmt.Errorf("creating aws load balancer controller: %w", err)

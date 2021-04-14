@@ -45,7 +45,8 @@ func New(keyring krPkg.Keyring, debug bool) (*Keyring, error) {
 // DefaultKeyringForOS is the default keyring to store client secrets
 func DefaultKeyringForOS() (krPkg.Keyring, error) {
 	cfg := krPkg.Config{
-		ServiceName: constant.DefaultKeyringServiceName,
+		ServiceName:              constant.DefaultKeyringServiceName,
+		KeychainTrustApplication: true,
 	}
 
 	switch runtime.GOOS {
@@ -95,7 +96,7 @@ func NewInMemoryKeyring() *InMemoryKeyring {
 }
 
 // Get : get a value from the in memory keyring
-func (i *InMemoryKeyring) Get(key string) (krPkg.Item, error) {
+func (i *InMemoryKeyring) Get(_ string) (krPkg.Item, error) {
 	return i.item, nil
 }
 

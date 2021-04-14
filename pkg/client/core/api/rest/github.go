@@ -2,9 +2,6 @@ package rest
 
 import (
 	"fmt"
-	"io"
-
-	"github.com/oslokommune/okctl/pkg/ask"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -15,8 +12,21 @@ import (
 type githubAPI struct {
 	client       github.Githuber
 	parameterAPI client.ParameterAPI
-	ask          *ask.Ask
-	out          io.Writer
+}
+
+func githubDeployKeySecretName(org, repo string) string {
+	return fmt.Sprintf("github/deploykeys/%s/%s/privatekey", org, repo)
+}
+
+func (a *githubAPI) DeleteRepositoryDeployKey(opts client.DeleteGithubDeployKeyOpts) error {
+	err := a.parameterAPI.DeleteSecret(api.DeleteSecretOpts{
+		Name: githubDeployKeySecretName(opts.Organisation, opts.Repository),
+	})
+	if err != nil {
+		return err
+	}
+
+	return a.client.DeleteDeployKey(opts.Organisation, opts.Repository, opts.Identifier)
 }
 
 func (a *githubAPI) CreateRepositoryDeployKey(opts client.CreateGithubDeployKeyOpts) (*client.GithubDeployKey, error) {
@@ -27,7 +37,7 @@ func (a *githubAPI) CreateRepositoryDeployKey(opts client.CreateGithubDeployKeyO
 
 	param, err := a.parameterAPI.CreateSecret(api.CreateSecretOpts{
 		ID:     opts.ID,
-		Name:   fmt.Sprintf("github/deploykeys/%s/%s/privatekey", opts.Organisation, opts.Repository),
+		Name:   githubDeployKeySecretName(opts.Organisation, opts.Repository),
 		Secret: string(key.PrivateKey),
 	})
 	if err != nil {
@@ -40,7 +50,6 @@ func (a *githubAPI) CreateRepositoryDeployKey(opts client.CreateGithubDeployKeyO
 	}
 
 	return &client.GithubDeployKey{
-		ID:           opts.ID,
 		Organisation: opts.Organisation,
 		Repository:   opts.Repository,
 		Identifier:   deployKey.GetID(),
@@ -55,11 +64,9 @@ func (a *githubAPI) CreateRepositoryDeployKey(opts client.CreateGithubDeployKeyO
 }
 
 // NewGithubAPI returns an instantiated github API client
-func NewGithubAPI(out io.Writer, ask *ask.Ask, paramAPI client.ParameterAPI, client github.Githuber) client.GithubAPI {
+func NewGithubAPI(paramAPI client.ParameterAPI, client github.Githuber) client.GithubAPI {
 	return &githubAPI{
 		client:       client,
 		parameterAPI: paramAPI,
-		ask:          ask,
-		out:          out,
 	}
 }

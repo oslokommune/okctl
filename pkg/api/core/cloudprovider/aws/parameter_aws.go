@@ -30,7 +30,7 @@ func (p *parameter) DeleteSecret(opts api.DeleteSecretOpts) error {
 }
 
 func (p *parameter) CreateSecret(opts api.CreateSecretOpts) (*api.SecretParameter, error) {
-	path := fmt.Sprintf("/okctl/%s/%s/%s", opts.ID.Repository, opts.ID.Environment, opts.Name)
+	path := fmt.Sprintf("/okctl/%s/%s", opts.ID.ClusterName, opts.Name)
 
 	got, err := p.provider.SSM().PutParameter(&ssm.PutParameterInput{
 		DataType:    aws.String("text"),

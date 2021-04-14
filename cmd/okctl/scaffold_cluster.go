@@ -28,8 +28,7 @@ func buildScaffoldClusterCommand(o *okctl.Okctl) *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.StringVarP(&opts.Name, "name", "n", "my-product-name", usageName)
-	flags.StringVarP(&opts.Environment, "environment", "e", "development", usageEnvironment)
+	flags.StringVarP(&opts.Name, "name", "n", "my-cluster-name", usageName)
 	flags.StringVarP(&opts.Organization, "github-organization", "o", "oslokommune", usageOrganization)
 	flags.StringVarP(&opts.RepositoryName, "repository-name", "r", "my_iac_repo_name", usageRepository)
 	flags.StringVarP(&opts.AWSAccountID, "aws-account-id", "i", "123456789123", usageAWSAccountID)
@@ -40,10 +39,9 @@ func buildScaffoldClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 const (
 	usageName            = `name of the cluster`
-	usageEnvironment     = `environment for the cluster, for example dev or production`
 	usageAWSAccountID    = `aws account where the resources provisioned by okctl should reside`
-	usageOrganization    = `organization that owns the infrastructure-as-code repository`
 	usageRepository      = `name of the repository that will contain infrastructure-as-code`
+	usageOrganization    = `organization that owns the infrastructure-as-code repository`
 	usageOutputDirectory = `name of the directory where okctl will place all infrastructure files`
 	exampleUsage         = `okctl scaffold cluster > cluster.yaml`
 )

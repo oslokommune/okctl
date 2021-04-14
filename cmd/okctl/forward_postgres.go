@@ -5,8 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/go-git/go-git/v5"
-	"github.com/pkg/errors"
+	"github.com/oslokommune/okctl/pkg/cfn"
 
 	"github.com/oslokommune/okctl/pkg/kube/manifests/pgbouncer"
 
@@ -24,7 +23,6 @@ import (
 type forwardPostgresOpts struct {
 	ID              api.ID
 	ApplicationName string
-	Environment     string
 	Namespace       string
 	ConfigMapName   string
 	SecretName      string
@@ -39,7 +37,6 @@ func (o *forwardPostgresOpts) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.ApplicationName, validation.Required),
-		validation.Field(&o.Environment, validation.Required),
 		validation.Field(&o.Namespace, validation.Required),
 		validation.Field(&o.Username, validation.Required),
 		validation.Field(&o.PasswordFile, validation.Required),
@@ -55,52 +52,26 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 		Use:   "postgres",
 		Short: "Forward to the given postgres database",
 		Args:  cobra.ExactArgs(0), // nolint: gomnd
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			if cmd.Name() == cobra.ShellCompRequestCmd {
-				return nil
-			}
-
-			var err error
-
-			err = loadUserData(o, cmd)
-			if err != nil {
-				return fmt.Errorf("loading application data: %w", err)
-			}
-
-			err = loadRepoData(o, cmd)
-			if err != nil {
-				if errors.Is(err, git.ErrRepositoryNotExists) {
-					return fmt.Errorf("okctl needs to be run inside a Git repository (okctl outputs " +
-						"various configuration files that will be stored here)")
-				}
-
-				return fmt.Errorf("loading repository data: %w", err)
-			}
-
-			o.Out = cmd.OutOrStdout()
-			o.Err = cmd.OutOrStderr()
-
-			return nil
-		},
 		PreRunE: func(_ *cobra.Command, _ []string) error {
-			err := o.InitialiseWithOnlyEnv(opts.Environment)
+			err := o.Initialise()
 			if err != nil {
 				return err
 			}
 
-			meta := o.RepoStateWithEnv.GetMetadata()
-			cluster := o.RepoStateWithEnv.GetCluster()
-			db := o.RepoStateWithEnv.GetDatabase(opts.ApplicationName)
+			db, err := o.StateHandlers(o.StateNodes()).Component.GetPostgresDatabase(
+				cfn.NewStackNamer().RDSPostgres(opts.ApplicationName, o.Declaration.Metadata.Name),
+			)
+			if err != nil {
+				return err
+			}
 
-			opts.ID.Environment = opts.Environment
-			opts.ID.AWSAccountID = cluster.AWSAccountID
-			opts.ID.Repository = meta.Name
-			opts.ID.Region = meta.Region
-			opts.ID.ClusterName = o.RepoStateWithEnv.GetClusterName()
+			opts.ID.AWSAccountID = o.Declaration.Metadata.AccountID
+			opts.ID.Region = o.Declaration.Metadata.Region
+			opts.ID.ClusterName = o.Declaration.Metadata.Name
 			opts.Namespace = db.Namespace
 			opts.ConfigMapName = db.DatabaseConfigMapName
 			opts.SecretName = db.AdminSecretName
-			opts.SecurityGroup = db.SecurityGroupID
+			opts.SecurityGroup = db.OutgoingSecurityGroupID
 
 			err = opts.Validate()
 			if err != nil {
@@ -201,13 +172,6 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-
-	flags.StringVarP(&opts.Environment,
-		"environment",
-		"e",
-		"",
-		"The environment the postgres database was created in",
-	)
 
 	flags.StringVarP(&opts.ApplicationName,
 		"name",

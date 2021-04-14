@@ -51,9 +51,6 @@ metadata:
   ## Account ID is your AWS account ID
   accountID: '123456789012'
 
-  ## Environment is the name you use to identify the type of cluster it is. Common names are production, test, staging
-  environment: production
-
   ## Name can be anything, but should define the scope of the cluster. Meaning if the cluster is scoped to one product,
   ## you might want to name it the name of the product. If the cluster contains all services and products owned by a
   ## team, the team name might be more fitting.
@@ -126,6 +123,16 @@ integrations:
   ## telemetry
   tempo: true
 
+## Defines databases to provision
+#databases:
+#  postgres:
+## Name defines the name of the database to provision
+#  - name: dbname
+## Namespace defines what namespace to place the database information (secret for user, pass and configmap hostname, port
+#    namespace: relevantnamespace
+## User defines what user to provision for operations
+#    user: postgres
+  
 ## okctl creates a Virtual Private Cloud for you which it organizes all the intended resources that require networking.
 ## A VPC is mandatory, but can be configured by the following attributes.
 #vpc:

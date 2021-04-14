@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
+
 	"github.com/logrusorgru/aurora"
-	"github.com/miekg/dns"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
@@ -16,6 +17,7 @@ const defaultTestingIntervalMinutes = 5 * time.Minute
 
 type nameserversDelegatedTestReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
+	stateHandlers  *clientCore.StateHandlers
 
 	domainService client.DomainService
 }
@@ -30,20 +32,28 @@ func (n *nameserversDelegatedTestReconciler) SetCommonMetadata(metadata *resourc
 	n.commonMetadata = metadata
 }
 
+// SetStateHandlers sets the state handlers
+func (n *nameserversDelegatedTestReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
+	n.stateHandlers = handlers
+}
+
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
 func (n *nameserversDelegatedTestReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		fmt.Fprintf(
+		_, _ = fmt.Fprintf(
 			n.commonMetadata.Out,
 			delegationRequestMessage,
 			aurora.Green("nameserver delegation request"),
 			aurora.Bold("#kjøremiljø-support"),
 		)
 
-		primaryHostedZoneFQDN := dns.Fqdn(n.commonMetadata.Declaration.ClusterRootDomain)
+		hz, err := n.stateHandlers.Domain.GetPrimaryHostedZone()
+		if err != nil {
+			return result, fmt.Errorf("getting primary hosted zone: %w", err)
+		}
 
-		err = domain.ShouldHaveNameServers(primaryHostedZoneFQDN)
+		err = domain.ShouldHaveNameServers(hz.FQDN, hz.NameServers)
 		if err != nil {
 			result.Requeue = true
 			result.RequeueAfter = defaultTestingIntervalMinutes

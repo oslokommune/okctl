@@ -16,7 +16,7 @@ type componentCloudProvider struct {
 }
 
 func (c *componentCloudProvider) CreateS3Bucket(opts *api.CreateS3BucketOpts) (*api.S3Bucket, error) {
-	composition := components.NewS3BucketComposer(opts.Name, opts.ID.Repository, opts.ID.Environment)
+	composition := components.NewS3BucketComposer(opts.Name, opts.ID.ClusterName)
 
 	template, err := cfn.New(composition).Build()
 	if err != nil {
@@ -64,8 +64,7 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 	composer := components.NewRDSPostgresComposer(components.RDSPostgresComposerOpts{
 		ApplicationDBName: opts.ApplicationName,
 		AWSAccountID:      opts.ID.AWSAccountID,
-		Repository:        opts.ID.Repository,
-		Environment:       opts.ID.Environment,
+		ClusterName:       opts.ID.ClusterName,
 		DBSubnetGroupName: opts.DBSubnetGroupName,
 		UserName:          opts.UserName,
 		VpcID:             opts.VpcID,

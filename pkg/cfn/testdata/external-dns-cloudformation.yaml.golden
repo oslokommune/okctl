@@ -10,7 +10,7 @@ Resources:
   ExternalDNSPolicy:
     Properties:
       Description: Service account policy for creating route53 hostnames
-      ManagedPolicyName: okctl-repo-env-ExternalDNSServiceAccountPolicy
+      ManagedPolicyName: okctl-tset-ExternalDNSServiceAccountPolicy
       PolicyDocument:
         Statement:
         - Action:

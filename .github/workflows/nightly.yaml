@@ -26,21 +26,23 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_SECRET_KEY }}
 
-      - name: Create cluster
+      - name: Create config
         run: |
-          cat <<EOF | dist/linux_linux_amd64/okctl apply cluster --github-credentials-type token --aws-credentials-type access-key --no-spinner --file -
+          cat <<EOF > nightly-cfg.yaml
           apiVersion: okctl.io/v1alpha1
           kind: Cluster
 
           metadata:
             accountID: "${{ secrets.NIGHTLY_AWS_ACCOUNT_ID }}"
-            environment: test
-            name: nightly
+            name: nightly-test
+            region: eu-west-1
 
           clusterRootDomain: nightly.oslo.systems
 
           github:
             repository: okctl-iac
+            organisation: oslokommune
+            outputPath: infra
 
           integrations:
             argoCD: true
@@ -54,7 +56,21 @@ jobs:
             loki: true
             promtail: true
             tempo: true
+
+          vpc:
+            cidr: 192.168.0.0/20
+            highAvailability: true
           EOF
+
+      - name: Cache state
+        if: ${{ always() }}
+        uses: pat-s/always-upload-cache@v2.1.3
+        with:
+          path: infra/nightly-test/state.db
+          key: ${{ runner.os }}-state-db
+
+      - name: Create cluster
+        run: dist/linux_linux_amd64/okctl apply cluster --github-credentials-type token --aws-credentials-type access-key --no-spinner --file nightly-cfg.yaml
         env:
           OKCTL_DEBUG: true
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -62,7 +78,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_PAT }}
 
       - name: Delete cluster
-        run: dist/linux_linux_amd64/okctl delete cluster --github-credentials-type token --aws-credentials-type access-key --no-spinner --confirm test
+        run: dist/linux_linux_amd64/okctl delete cluster --github-credentials-type token --aws-credentials-type access-key --no-spinner --confirm --config nightly-cfg.yaml
         env:
           OKCTL_DEBUG: true
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

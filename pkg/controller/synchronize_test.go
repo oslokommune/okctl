@@ -3,6 +3,8 @@ package controller
 import (
 	"testing"
 
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
+
 	"github.com/mishudark/errors"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
@@ -21,6 +23,8 @@ func (d *dummyReconciler) NodeType() resourcetree.ResourceNodeType {
 	return resourcetree.ResourceNodeTypeGroup
 }
 func (d *dummyReconciler) SetCommonMetadata(_ *resourcetree.CommonMetadata) {}
+
+func (d *dummyReconciler) SetStateHandlers(_ *clientCore.StateHandlers) {}
 
 func (d *dummyReconciler) Reconcile(_ *resourcetree.ResourceNode) (reconciler.ReconcilationResult, error) {
 	d.ReconcileCounter++
@@ -125,6 +129,8 @@ func (m *mockAlwaysErrorReconciler) Reconcile(_ *resourcetree.ResourceNode) (rec
 
 func (m *mockAlwaysErrorReconciler) SetCommonMetadata(_ *resourcetree.CommonMetadata) {}
 
+func (m *mockAlwaysErrorReconciler) SetStateHandlers(_ *clientCore.StateHandlers) {}
+
 func TestReceivedErrorAfterRequeues(t *testing.T) {
 	testCases := []struct {
 		name string
@@ -140,7 +146,7 @@ func TestReceivedErrorAfterRequeues(t *testing.T) {
 			withResults: []reconciler.ReconcilationResult{{Requeue: false}},
 
 			expectErrorAfterIterations: 1,
-			expectError:                errors.New("reconciling node: dummy err"),
+			expectError:                errors.New("reconciling node (Group): dummy err"),
 		},
 		{
 			name: "Should break out of HandleNode after second reconciliation when requeues are true, false",
@@ -148,7 +154,7 @@ func TestReceivedErrorAfterRequeues(t *testing.T) {
 			withResults: []reconciler.ReconcilationResult{{Requeue: true}, {Requeue: false}},
 
 			expectErrorAfterIterations: 2,
-			expectError:                errors.New("reconciling node: dummy err"),
+			expectError:                errors.New("reconciling node (Group): dummy err"),
 		},
 	}
 

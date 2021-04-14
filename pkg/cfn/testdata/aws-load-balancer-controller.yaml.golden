@@ -10,7 +10,7 @@ Resources:
   AWSLoadBalancerControllerPolicy:
     Properties:
       Description: Service account policy for creating AWS load balancers
-      ManagedPolicyName: okctl-repo-env-AWSLoadBalancerControllerServiceAccountPolicy
+      ManagedPolicyName: okctl-tset-AWSLoadBalancerControllerServiceAccountPolicy
       PolicyDocument:
         Statement:
         - Action:

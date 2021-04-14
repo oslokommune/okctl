@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	showCredentialsArgs = 1
+	showCredentialsArgs = 0
 )
 
 func buildShowCommand(o *okctl.Okctl) *cobra.Command {
@@ -40,14 +40,12 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 	okctlEnvironment := commands.OkctlEnvironment{}
 
 	cmd := &cobra.Command{
-		Use:   "credentials [env]",
+		Use:   "credentials",
 		Short: "Show the location of the credentials",
 		Long:  `This makes it possible to source the output from this command to run with kubectl`,
 		Args:  cobra.ExactArgs(showCredentialsArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			environment := args[0]
-
-			err := o.InitialiseWithOnlyEnv(environment)
+			err := o.Initialise()
 			if err != nil {
 				return err
 			}
@@ -70,7 +68,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				}
 			}
 
-			outputDir, err := o.GetRepoOutputDir(okctlEnvironment.Environment)
+			outputDir, err := o.GetRepoOutputDir()
 			if err != nil {
 				return err
 			}
@@ -92,6 +90,11 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
+			argo, err := o.StateHandlers(o.StateNodes()).ArgoCD.GetArgoCD()
+			if err != nil {
+				return err
+			}
+
 			msg := commands.ShowMessageOpts{
 				VenvCmd:                 aurora.Green("okctl venv").String(),
 				KubectlCmd:              aurora.Green("kubectl").String(),
@@ -100,7 +103,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				AwsIamAuthenticatorPath: a.BinaryPath,
 				K8sClusterVersion:       aurora.Green("1.17").String(),
 				ArgoCD:                  aurora.Green("ArgoCD").String(),
-				ArgoCDURL:               o.RepoStateWithEnv.GetArgoCD().SiteURL,
+				ArgoCDURL:               argo.ArgoURL,
 			}
 			txt, err := commands.GoTemplateToString(commands.ShowMsg, msg)
 			if err != nil {

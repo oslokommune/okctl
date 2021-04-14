@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/controller"
 	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
@@ -26,15 +25,6 @@ func SynchronizeApplication(reconcilerManager reconciler.Reconciler, tree *resou
 	tree.ApplyFunction(setAllToPresent, tree)
 
 	return controller.HandleNode(reconcilerManager, tree)
-}
-
-// GetFirstGithubRepositoryURL returns the first available github repository URL
-func GetFirstGithubRepositoryURL(repositories map[string]state.GithubRepository) string {
-	for _, repo := range repositories {
-		return repo.GitURL
-	}
-
-	return "N/A"
 }
 
 func setAllToPresent(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {

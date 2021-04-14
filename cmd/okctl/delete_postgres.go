@@ -3,15 +3,14 @@ package main
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/cfn"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/okctl"
-	"github.com/oslokommune/okctl/pkg/spinner"
 	"github.com/spf13/cobra"
 )
 
 type deletePostgresOpts struct {
 	ID              api.ID
-	Environment     string
 	ApplicationName string
 	VpcID           string
 }
@@ -20,7 +19,6 @@ type deletePostgresOpts struct {
 func (o *deletePostgresOpts) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.ID, validation.Required),
-		validation.Field(&o.Environment, validation.Required),
 		validation.Field(&o.ApplicationName, validation.Required),
 		validation.Field(&o.VpcID, validation.Required),
 	)
@@ -36,20 +34,23 @@ func buildDeletePostgresCommand(o *okctl.Okctl) *cobra.Command {
 		Long:  `Delete the AWS RDS Postgres database`,
 		Args:  cobra.ExactArgs(0), // nolint: gomnd
 		PreRunE: func(_ *cobra.Command, _ []string) error {
-			err := o.InitialiseWithOnlyEnv(opts.Environment)
+			err := o.Initialise()
 			if err != nil {
 				return err
 			}
 
-			meta := o.RepoStateWithEnv.GetMetadata()
-			cluster := o.RepoStateWithEnv.GetCluster()
+			opts.ID.AWSAccountID = o.Declaration.Metadata.AccountID
+			opts.ID.Region = o.Declaration.Metadata.Region
+			opts.ID.ClusterName = o.Declaration.Metadata.Name
 
-			opts.ID.Environment = opts.Environment
-			opts.ID.AWSAccountID = cluster.AWSAccountID
-			opts.ID.Repository = meta.Name
-			opts.ID.Region = meta.Region
-			opts.ID.ClusterName = o.RepoStateWithEnv.GetClusterName()
-			opts.VpcID = o.RepoStateWithEnv.GetVPC().VpcID
+			vpc, err := o.StateHandlers(o.StateNodes()).Vpc.GetVpc(
+				cfn.NewStackNamer().Vpc(o.Declaration.Metadata.Name),
+			)
+			if err != nil {
+				return err
+			}
+
+			opts.VpcID = vpc.VpcID
 
 			err = opts.Validate()
 			if err != nil {
@@ -59,12 +60,7 @@ func buildDeletePostgresCommand(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			spin, err := spinner.New("deleting", o.Err)
-			if err != nil {
-				return err
-			}
-
-			services, err := o.ClientServices(spin)
+			services, err := o.ClientServices(o.StateHandlers(o.StateNodes()))
 			if err != nil {
 				return err
 			}
@@ -84,13 +80,6 @@ func buildDeletePostgresCommand(o *okctl.Okctl) *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-
-	flags.StringVarP(&opts.Environment,
-		"environment",
-		"e",
-		"",
-		"The environment the postgres database was created in",
-	)
 
 	flags.StringVarP(&opts.ApplicationName,
 		"name",

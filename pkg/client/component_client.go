@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/client/store"
 )
 
 // CreatePostgresDatabaseOpts contains the required inputs
@@ -29,12 +28,32 @@ type DeletePostgresDatabaseOpts struct {
 // PostgresDatabase contains the state after
 // creating the database
 type PostgresDatabase struct {
-	Namespace             string
-	AdminSecretName       string
-	AdminSecretARN        string
-	DatabaseConfigMapName string
-	RotaterBucket         *api.S3Bucket
-	*api.PostgresDatabase
+	ID                           api.ID
+	ApplicationName              string
+	UserName                     string
+	StackName                    string
+	AdminSecretFriendlyName      string
+	EndpointAddress              string
+	EndpointPort                 int
+	OutgoingSecurityGroupID      string
+	SecretsManagerAdminSecretARN string
+	LambdaPolicyARN              string
+	LambdaRoleARN                string
+	LambdaFunctionARN            string
+	CloudFormationTemplate       string
+	Namespace                    string
+	AdminSecretName              string
+	AdminSecretARN               string
+	DatabaseConfigMapName        string
+	RotaterBucket                *S3Bucket
+}
+
+// S3Bucket contains the state after an AWS S3
+// bucket has been created
+type S3Bucket struct {
+	Name                   string
+	StackName              string
+	CloudFormationTemplate string
 }
 
 // ComponentService orchestrates the creation of various services
@@ -51,21 +70,9 @@ type ComponentAPI interface {
 	DeleteS3Bucket(opts api.DeleteS3BucketOpts) error
 }
 
-// ComponentStore saves the data
-type ComponentStore interface {
-	SavePostgresDatabase(database *PostgresDatabase) (*store.Report, error)
-	RemovePostgresDatabase(applicationName string) (*store.Report, error)
-}
-
 // ComponentState updates the state
 type ComponentState interface {
-	SavePostgresDatabase(database *PostgresDatabase) (*store.Report, error)
-	RemovePostgresDatabase(applicationName string) (*store.Report, error)
-	GetPostgresDatabase(applicationName string) (*PostgresDatabase, error)
-}
-
-// ComponentReport reports on the state and storage operations
-type ComponentReport interface {
-	ReportCreatePostgresDatabase(database *PostgresDatabase, reports []*store.Report) error
-	ReportDeletePostgresDatabase(applicationName string, reports []*store.Report) error
+	SavePostgresDatabase(database *PostgresDatabase) error
+	RemovePostgresDatabase(stackName string) error
+	GetPostgresDatabase(stackName string) (*PostgresDatabase, error)
 }

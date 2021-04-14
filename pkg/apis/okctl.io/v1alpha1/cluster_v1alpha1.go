@@ -92,7 +92,7 @@ func (receiver ClusterMeta) Validate() error {
 	return validation.ValidateStruct(&receiver,
 		validation.Field(&receiver.Name,
 			validation.Required,
-			validation.Match(regexp.MustCompile("^[a-zA-Z-]{3,64}$")).Error("must consist of 3-64 characters (a-z, A-Z)")),
+			validation.Match(regexp.MustCompile("^[a-zA-Z-]{3,64}$")).Error("must consist of 3-64 characters (a-z, A-Z, -)")),
 		validation.Field(&receiver.Region, validation.Required, validation.In("eu-west-1").Error("for now, only \"eu-west-1\" is supported")),
 		validation.Field(&receiver.AccountID, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{12}$")).Error("must consist of 12 digits")),
 	)

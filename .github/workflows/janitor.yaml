@@ -17,7 +17,7 @@ jobs:
         with:
           slack-function: send-message
           slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_TOKEN }}
-          slack-channel: C0197JME6QH
+          slack-channel: C018EFCSC4W
           slack-text: "Running job: *undelegated-hosted-zones*, for: *oslo.systems*"
 
       - name: Undelegated HostedZones

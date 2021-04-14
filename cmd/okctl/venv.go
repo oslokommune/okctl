@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	venvArgs = 1
+	venvArgs = 0
 )
 
 const venvLong = `Runs a sub shell with all needed environmental variables set.

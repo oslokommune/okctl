@@ -9,6 +9,6 @@ outputs:
     description: 'The result of running the command'
 runs:
   using: 'docker'
-  image: '../../../Dockerfile-janitor'
+  image: '../../../Dockerfile'
   args:
     - ${{ inputs.command }}

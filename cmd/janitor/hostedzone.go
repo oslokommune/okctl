@@ -48,13 +48,13 @@ func buildHostedZoneUndelegatedNameServerRecords() *cobra.Command {
 				return err
 			}
 
-			_, err = fmt.Fprintln(os.Stdout, "Undelegated hosted zones:")
+			_, err = fmt.Fprintln(os.Stderr, "Undelegated hosted zones:")
 			if err != nil {
 				return err
 			}
 
 			for _, u := range undelegated {
-				_, err := fmt.Fprintf(os.Stdout, "- %s\n", u.Name)
+				_, err := fmt.Fprintln(os.Stdout, u.Name)
 				if err != nil {
 					return err
 				}

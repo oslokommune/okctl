@@ -102,6 +102,7 @@ func NotTaken(domain string) error {
 
 // NameServers returns the name servers for the domain
 // or an empty list.
+// nolint: funlen
 func NameServers(domain string) ([]string, error) {
 	client := &http.Client{
 		Timeout: 5 * time.Second, // nolint: gomnd

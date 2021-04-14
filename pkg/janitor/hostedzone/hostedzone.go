@@ -1,3 +1,5 @@
+// Package hostedzone provides some functionality for interacting
+// with the AWS API
 package hostedzone
 
 import (

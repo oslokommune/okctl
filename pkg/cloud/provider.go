@@ -4,7 +4,6 @@ package cloud
 import (
 	"fmt"
 
-	credentialspkg "github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 
 	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
@@ -120,7 +119,7 @@ func NewSession(region string, auth awsauth.Authenticator) (*session.Session, *a
 // NewSessionFromEnv returns an initialised session
 func NewSessionFromEnv(region string) (*session.Session, error) {
 	sess, err := session.NewSession(&aws.Config{
-		Credentials: credentialspkg.NewEnvCredentials(),
+		Credentials: awsCreds.NewEnvCredentials(),
 		Region:      aws.String(region),
 	})
 	if err != nil {

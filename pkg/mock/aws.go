@@ -600,6 +600,7 @@ func NewGoodCloudProvider() *CloudProvider {
 									Value: aws.String("ns1.something.com"),
 								},
 							},
+							Type: aws.String("NS"),
 						},
 					},
 				}, nil

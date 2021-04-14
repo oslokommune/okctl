@@ -38,7 +38,7 @@ func loadUserData(o *okctl.Okctl, cmd *cobra.Command) error {
 
 // nolint: funlen
 func buildRootCommand() *cobra.Command {
-	var outputFormat, config string
+	var outputFormat, declaration string
 
 	o := okctl.New()
 
@@ -59,13 +59,13 @@ being captured. Together with slack and slick.`,
 			}
 
 			var err error
-			cfg, err := cmd.Flags().GetString("config")
+			cfg, err := cmd.Flags().GetString("declaration")
 			if err != nil {
 				return err
 			}
 
 			if len(cfg) == 0 {
-				return fmt.Errorf("config must be provided")
+				return fmt.Errorf("declaration must be provided")
 			}
 
 			err = loadUserData(o, cmd)
@@ -114,8 +114,8 @@ being captured. Together with slack and slick.`,
 	f.StringVarP(&outputFormat, "output", "o", "text",
 		"The format of the output returned to the user")
 
-	cmd.PersistentFlags().StringVar(&config, "config", "",
-		"The cluster config you want to use")
+	cmd.PersistentFlags().StringVarP(&declaration, "cluster-declaration", "c", "",
+		"The cluster declaration you want to use")
 
 	return cmd
 }

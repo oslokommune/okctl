@@ -4,6 +4,7 @@ package cloud
 import (
 	"fmt"
 
+	credentialspkg "github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 
 	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
@@ -114,6 +115,19 @@ func NewSession(region string, auth awsauth.Authenticator) (*session.Session, *a
 	}
 
 	return sess, creds, err
+}
+
+// NewSessionFromEnv returns an initialised session
+func NewSessionFromEnv(region string) (*session.Session, error) {
+	sess, err := session.NewSession(&aws.Config{
+		Credentials: credentialspkg.NewEnvCredentials(),
+		Region:      aws.String(region),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("retrieving credentials from env: %w", err)
+	}
+
+	return sess, nil
 }
 
 // Services stores access to the various AWS APIs

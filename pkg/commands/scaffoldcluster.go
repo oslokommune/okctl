@@ -118,6 +118,16 @@ integrations:
   ## telemetry
   tempo: true
 
+## Defines databases to provision
+#databases:
+#  postgres:
+## Name defines the name of the database to provision
+#  - name: dbname
+## Namespace defines what namespace to place the database information (secret for user, pass and configmap hostname, port
+#    namespace: relevantnamespace
+## User defines what user to provision for operations
+#    user: postgres
+
 ## okctl creates a Virtual Private Cloud for you which it organizes all the intended resources that require networking.
 ## A VPC is mandatory, but can be configured by the following attributes.
 #vpc:

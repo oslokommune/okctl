@@ -48,8 +48,7 @@ func TestKM196(t *testing.T) {
 	assert.NotEmpty(t, clusterConfig.IAM.ServiceAccounts[0].AttachPolicyARNs[0])
 }
 
-type mockHelm struct {
-}
+type mockHelm struct{}
 
 func (m mockHelm) CreateHelmRelease(context.Context, client.CreateHelmReleaseOpts) (*client.Helm, error) {
 	return nil, nil

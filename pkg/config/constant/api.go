@@ -73,7 +73,8 @@ const (
 	DefaultStormNodeCluster                   = "cluster"
 	DefaultStormNodeGithub                    = "github"
 	DefaultStormNodeManagedPolicy             = "managedpolicy"
-	DeefaultStormNodeServiceAccount           = "serviceaccount"
+	DefaultStormNodeServiceAccount            = "serviceaccount"
+	DefaultStormNodeContainerRepository       = "containers"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"
@@ -107,4 +108,8 @@ const (
 	// DefaultClusterCIDR defines the default CIDR to use when creating cluster VPCs
 	DefaultClusterCIDR     = "192.168.0.0/20"
 	DefaultOutputDirectory = "infrastructure"
+
+	DefaultContainerRepositoryBaseDir            = "container-repository"
+	DefaultContainerRepositoryOutputFile         = "repository-output.json"
+	DefaultContainerRepositoryCloudFormationFile = "repository-cf.yaml"
 )

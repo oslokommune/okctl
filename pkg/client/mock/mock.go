@@ -73,16 +73,17 @@ const (
 	DefaultGithubFullName             = "oslokommune/okctl-iac"
 	DefaultGithubURL                  = "git@github.com:oslokommune/okctl-iac"
 
-	StackNameHostedZone         = "okctl-staging-oslo-systems-HostedZone"
-	StackNameCertificate        = "okctl-staging-oslo-systems-Certificate"
-	StackNameManagedPolicy      = "okctl-staging-ManagedPolicy"
-	StackNameIdentityPool       = "okctl-staging-IdentityPool"
-	StackNameIdentityPoolClient = "okctl-staging-IdentityPoolClient"
-	StackNameIdentityPoolUser   = "okctl-staging-bobthebuilder-IdentityPoolUser"
-	StackNameRecordSetAlias     = "okctl-staging-RecordSetAlias"
-	StackNameVpc                = "okctl-staging-Vpc"
-	StackNamePostgresDatabase   = "okctl-staging-backend-PostgresDatabase"
-	StackNameRotaterBucket      = "okctl-staging-Rotater"
+	StackNameHostedZone          = "okctl-staging-oslo-systems-HostedZone"
+	StackNameCertificate         = "okctl-staging-oslo-systems-Certificate"
+	StackNameManagedPolicy       = "okctl-staging-ManagedPolicy"
+	StackNameIdentityPool        = "okctl-staging-IdentityPool"
+	StackNameIdentityPoolClient  = "okctl-staging-IdentityPoolClient"
+	StackNameIdentityPoolUser    = "okctl-staging-bobthebuilder-IdentityPoolUser"
+	StackNameRecordSetAlias      = "okctl-staging-RecordSetAlias"
+	StackNameVpc                 = "okctl-staging-Vpc"
+	StackNamePostgresDatabase    = "okctl-staging-backend-PostgresDatabase"
+	StackNameRotaterBucket       = "okctl-staging-Rotater"
+	StackNameContainerRepository = "okctl-staging-Container"
 )
 
 // nolint: golint gochecknoglobals
@@ -505,5 +506,15 @@ func GithubRepository() *client.GithubRepository {
 		FullName:     DefaultGithubFullName,
 		GitURL:       DefaultGithubURL,
 		DeployKey:    GithubDeployKey(),
+	}
+}
+
+// ContainerRepository returns a fake container repository
+func ContainerRepository() *client.ContainerRepository {
+	return &client.ContainerRepository{
+		ClusterID:              ID(),
+		ImageName:              "my-image",
+		StackName:              StackNameContainerRepository,
+		CloudFormationTemplate: string(CloudFormationTemplate()),
 	}
 }

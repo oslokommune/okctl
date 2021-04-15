@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	maxPortNumber = 65535
-	minPortNumber = 0
-	minReplicas   = 0
+	lowestPossiblePort     = 1
+	highestPossiblePort    = 65535
+	lowestPossibleReplicas = 0
 )
 
 // ScaffoldApplicationOpts contains information necessary to scaffold application resources
@@ -53,6 +53,8 @@ type OkctlApplication struct {
 
 	Environment map[string]string   `json:"environment"`
 	Volumes     []map[string]string `json:"volumes"`
+
+	ContainerRepositories []string `json:"containerRepositories"`
 }
 
 // HasIngress returns true if the application requires an ingress
@@ -69,13 +71,14 @@ func (o OkctlApplication) HasService() bool {
 func (o OkctlApplication) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.Name, validation.Required, is.Subdomain),
-		validation.Field(&o.Namespace, validation.Required, is.DNSName),
+		validation.Field(&o.Namespace, validation.Required, is.Subdomain),
 		validation.Field(&o.Image, validation.Required),
 		validation.Field(&o.Version, validation.Required),
-		validation.Field(&o.ImagePullSecret, is.DNSName),
+		validation.Field(&o.ImagePullSecret, is.Subdomain),
 		validation.Field(&o.SubDomain, is.Subdomain),
-		validation.Field(&o.Port, validation.Min(minPortNumber), validation.Max(maxPortNumber)),
-		validation.Field(&o.Replicas, validation.Min(minReplicas)),
+		validation.Field(&o.Port, validation.Min(lowestPossiblePort), validation.Max(highestPossiblePort)),
+		validation.Field(&o.Replicas, validation.Min(lowestPossibleReplicas)),
+		validation.Field(&o.ContainerRepositories, validation.Each(is.Alphanumeric)),
 	)
 }
 

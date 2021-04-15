@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/cfn/components/containerrepository"
+
 	"github.com/oslokommune/okctl/pkg/cfn/components/lambdafunction"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/lambdapermission"
@@ -1599,5 +1601,32 @@ func NewS3BucketComposer(bucketName, clusterName string) *S3BucketComposer {
 	return &S3BucketComposer{
 		BucketName:  bucketName,
 		ClusterName: clusterName,
+	}
+}
+
+// ECRRepositoryComposer contains state required for creating a ECR repository
+type ECRRepositoryComposer struct {
+	ImageName string
+}
+
+// ResourceRepositoryNameOutput returns the name of the resource
+func (e *ECRRepositoryComposer) ResourceRepositoryNameOutput() string {
+	return fmt.Sprintf("%sECRRepository", e.ImageName)
+}
+
+// Compose returns the outputs and resources
+func (e *ECRRepositoryComposer) Compose() (*cfn.Composition, error) {
+	repository := containerrepository.New(e.ImageName)
+
+	return &cfn.Composition{
+		Outputs:   []cfn.StackOutputer{repository},
+		Resources: []cfn.ResourceNamer{repository},
+	}, nil
+}
+
+// NewECRRepositoryComposer returns an initialized ECR composer
+func NewECRRepositoryComposer(imageName string) *ECRRepositoryComposer {
+	return &ECRRepositoryComposer{
+		ImageName: imageName,
 	}
 }

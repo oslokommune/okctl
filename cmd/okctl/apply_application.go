@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/controller"
 	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
@@ -89,7 +89,9 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("failed validating options: %w", err)
 			}
 
-			services, _ := o.ClientServices(o.StateHandlers(o.StateNodes()))
+			handlers := o.StateHandlers(o.StateNodes())
+
+			services, _ := o.ClientServices(handlers)
 
 			spin, err := spinner.New("synchronizing", o.Err)
 			if err != nil {
@@ -107,6 +109,8 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				Declaration:            o.Declaration,
 				ApplicationDeclaration: scaffoldOpts.Application,
 			})
+
+			reconciliationManager.SetStateHandlers(handlers)
 
 			dependencyTree := controller.CreateApplicationResourceDependencyTree()
 

@@ -43,27 +43,27 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 	okctlApp := opts.Application
 
 	// See function comment
-	app := okctlApplicationToKaexApplication(okctlApp, opts.HostedZoneDomain)
+	app := okctlApplicationToKaexApplication(opts.Application, opts.HostedZoneDomain)
 
 	relativeApplicationDir := path.Join(opts.OutputDir, constant.DefaultApplicationsOutputDir, okctlApp.Name)
 	relativeArgoCDSourcePath := path.Join(relativeApplicationDir, constant.DefaultApplicationOverlayDir, opts.ID.ClusterName)
 
 	base, err := scaffold.GenerateApplicationBase(*app, opts.IACRepoURL, relativeArgoCDSourcePath)
 	if err != nil {
-		return fmt.Errorf("error creating a new application deployment: %w", err)
+		return fmt.Errorf("creating a new application deployment: %w", err)
 	}
 
 	certArn, err := s.createCertificate(
 		ctx,
 		opts.ID,
 		opts.HostedZoneID,
-		fmt.Sprintf("%s.%s", okctlApp.SubDomain, opts.HostedZoneDomain),
+		fmt.Sprintf("%s.%s", opts.Application.SubDomain, opts.HostedZoneDomain),
 	)
 	if err != nil {
 		return fmt.Errorf("create certificate: %w", err)
 	}
 
-	overlay, err := scaffold.GenerateApplicationOverlay(okctlApp, opts.HostedZoneDomain, certArn)
+	overlay, err := scaffold.GenerateApplicationOverlay(opts.Application, opts.HostedZoneDomain, certArn)
 	if err != nil {
 		return fmt.Errorf("generating application overlay: %w", err)
 	}

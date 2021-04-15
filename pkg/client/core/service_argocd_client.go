@@ -105,7 +105,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		HostedZoneID: opts.HostedZoneID,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating certificate: %w", err)
 	}
 
 	identityClient, err := s.identity.CreateIdentityPoolClient(ctx, client.CreateIdentityPoolClientOpts{
@@ -115,7 +115,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		CallbackURL: fmt.Sprintf("https://%s/api/dex/callback", cert.Domain),
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating IdentityPool client: %w", err)
 	}
 
 	_, err = s.manifest.CreateNamespace(ctx, api.CreateNamespaceOpts{
@@ -123,7 +123,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		Namespace: constant.DefaultArgoCDNamespace,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating k8s namespace: %w", err)
 	}
 
 	clientSecret, err := s.param.CreateSecret(ctx, client.CreateSecretOpts{
@@ -132,7 +132,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		Secret: identityClient.ClientSecret,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating IdentityPool client secret: %w", err)
 	}
 
 	secretKey, err := s.param.CreateSecret(ctx, client.CreateSecretOpts{
@@ -141,7 +141,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		Secret: uuid.New().String(),
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating Argo secret key: %w", err)
 	}
 
 	privateKeyName := "argocd-privatekey"
@@ -170,7 +170,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		},
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating external secret for deploy key: %w", err)
 	}
 
 	sec, err := s.manifest.CreateExternalSecret(ctx, client.CreateExternalSecretOpts{
@@ -200,7 +200,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		},
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating external secret for IdentityPool client: %w", err)
 	}
 
 	chart := argocd.New(argocd.NewDefaultValues(argocd.ValuesOpts{
@@ -220,7 +220,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 
 	values, err := chart.ValuesYAML()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("preparing chart values: %w", err)
 	}
 
 	a, err := s.helm.CreateHelmRelease(ctx, client.CreateHelmReleaseOpts{
@@ -234,7 +234,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		Values:         values,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating Helm release: %w", err)
 	}
 
 	argo := &client.ArgoCD{
@@ -257,7 +257,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 
 	err = s.state.SaveArgoCD(argo)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("storing state: %w", err)
 	}
 
 	return argo, nil

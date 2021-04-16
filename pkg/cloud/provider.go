@@ -116,6 +116,19 @@ func NewSession(region string, auth awsauth.Authenticator) (*session.Session, *a
 	return sess, creds, err
 }
 
+// NewSessionFromEnv returns an initialised session
+func NewSessionFromEnv(region string) (*session.Session, error) {
+	sess, err := session.NewSession(&aws.Config{
+		Credentials: awsCreds.NewEnvCredentials(),
+		Region:      aws.String(region),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("retrieving credentials from env: %w", err)
+	}
+
+	return sess, nil
+}
+
 // Services stores access to the various AWS APIs
 type Services struct {
 	sm    secretsmanageriface.SecretsManagerAPI

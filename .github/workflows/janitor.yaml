@@ -1,0 +1,44 @@
+name: janitor
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "0 12 * * 4"
+
+jobs:
+  undelegated-hosted-zones:
+    runs-on: ubuntu-20.04
+    name: Finds entries in a hosted zone that haven't been delegated
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Send Slack Message
+        uses: archive/github-actions-slack@master
+        id: send-message
+        with:
+          slack-function: send-message
+          slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          slack-channel: C018EFCSC4W
+          slack-text: "Running job: *undelegated-hosted-zones*, for: *oslo.systems*"
+
+      - name: Undelegated HostedZones
+        uses: ./.github/actions/janitor
+        id: undelegated
+        with:
+          command: hostedzone undelegated --hosted-zone-id ${{ secrets.AWS_OSLO_SYSTEMS_HOSTEDZONE_ID }}
+        env:
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ORIGO_PROD_JANITOR_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ORIGO_PROD_JANITOR_ACCESS_KEY_ID }}
+          AWS_DEFAULT_REGION: eu-west-1
+
+      - name: Send Thread Message
+        id: thread-message
+        uses: archive/github-actions-slack@master
+        with:
+          slack-function: send-message
+          slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          slack-channel: ${{ fromJson(steps.send-message.outputs.slack-result).response.channel }}
+          slack-text: "${{ steps.undelegated.outputs.result }}"
+          slack-optional-thread_ts: ${{ fromJson(steps.send-message.outputs.slack-result).response.message.ts }}

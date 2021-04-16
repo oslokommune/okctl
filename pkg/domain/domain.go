@@ -14,11 +14,6 @@ import (
 	"github.com/miekg/dns"
 )
 
-// Default returns the default domain name
-func Default(repo, env string) string {
-	return fmt.Sprintf("%s-%s.oslo.systems", repo, env)
-}
-
 // Validate the provided domain
 func Validate(fqdn string) error {
 	return validation.Validate(&fqdn,
@@ -30,8 +25,9 @@ func Validate(fqdn string) error {
 // DNSResponse maps up the parts we are interested
 // in from the response
 type DNSResponse struct {
-	Status int `json:"Status"`
-	Answer []DNSAnswerSection
+	Status  int `json:"Status"`
+	Answer  []DNSAnswerSection
+	Comment string `json:"Comment"`
 }
 
 // DNSAnswerSection contains the answer part
@@ -104,9 +100,10 @@ func NotTaken(domain string) error {
 	return nil
 }
 
-// ShouldHaveNameServers returns if there are name servers
+// NameServers returns the name servers for the domain
+// or an empty list.
 // nolint: funlen
-func ShouldHaveNameServers(domain string, expectedNameservers []string) error {
+func NameServers(domain string) ([]string, error) {
 	client := &http.Client{
 		Timeout: 5 * time.Second, // nolint: gomnd
 	}
@@ -115,7 +112,7 @@ func ShouldHaveNameServers(domain string, expectedNameservers []string) error {
 	// - https://developers.google.com/speed/public-dns/docs/doh/json
 	req, err := http.NewRequest(http.MethodGet, "https://dns.google/resolve", nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	q := req.URL.Query()
@@ -127,7 +124,7 @@ func ShouldHaveNameServers(domain string, expectedNameservers []string) error {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer func() {
@@ -136,25 +133,27 @@ func ShouldHaveNameServers(domain string, expectedNameservers []string) error {
 
 	switch resp.StatusCode {
 	case http.StatusBadRequest:
-		return fmt.Errorf("invalid domain: %s", domain)
+		return nil, fmt.Errorf("invalid domain: %s", domain)
 	case http.StatusInternalServerError:
-		return fmt.Errorf("holy crap")
+		return nil, fmt.Errorf("holy crap")
 	}
 
 	dnsResponse := &DNSResponse{}
 
 	err = json.NewDecoder(resp.Body).Decode(dnsResponse)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	switch dnsResponse.Status {
 	case dns.RcodeSuccess:
 		break
+	case dns.RcodeServerFailure:
+		return nil, fmt.Errorf("%s", dnsResponse.Comment)
 	case dns.RcodeNameError:
-		return fmt.Errorf("unable to get NS records for domain '%s', does not appear to be delegated yet", domain)
+		return nil, fmt.Errorf("unable to get NS records for domain '%s', does not appear to be delegated yet", domain)
 	default:
-		return fmt.Errorf("don't know how to handle DNS response code: %d", dnsResponse.Status)
+		return nil, fmt.Errorf("don't know how to handle DNS response code: %d", dnsResponse.Status)
 	}
 
 	var nameservers []string
@@ -163,6 +162,17 @@ func ShouldHaveNameServers(domain string, expectedNameservers []string) error {
 		if a.Type == dns.TypeNS {
 			nameservers = append(nameservers, a.Data)
 		}
+	}
+
+	return nameservers, nil
+}
+
+// ShouldHaveNameServers returns if there are name servers
+// nolint: funlen
+func ShouldHaveNameServers(domain string, expectedNameservers []string) error {
+	nameservers, err := NameServers(domain)
+	if err != nil {
+		return err
 	}
 
 	if len(nameservers) == 0 {

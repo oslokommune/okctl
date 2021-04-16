@@ -254,7 +254,13 @@ func (a *CFAPI) DescribeStacks(stack *cloudformation.DescribeStacksInput) (*clou
 type R53API struct {
 	route53iface.Route53API
 
-	ListHostedZonesFn func(*route53.ListHostedZonesInput) (*route53.ListHostedZonesOutput, error)
+	ListHostedZonesFn        func(*route53.ListHostedZonesInput) (*route53.ListHostedZonesOutput, error)
+	ListResourceRecordSetsFn func(*route53.ListResourceRecordSetsInput) (*route53.ListResourceRecordSetsOutput, error)
+}
+
+// ListResourceRecordSets returns a mocked response
+func (a *R53API) ListResourceRecordSets(input *route53.ListResourceRecordSetsInput) (*route53.ListResourceRecordSetsOutput, error) {
+	return a.ListResourceRecordSetsFn(input)
 }
 
 // ListHostedZones invokes a mocked response
@@ -579,6 +585,22 @@ func NewGoodCloudProvider() *CloudProvider {
 							},
 							Id:   aws.String("/hostedzone/AABBCCDD"),
 							Name: aws.String("test.oslo.systems."),
+						},
+					},
+				}, nil
+			},
+			ListResourceRecordSetsFn: func(*route53.ListResourceRecordSetsInput) (*route53.ListResourceRecordSetsOutput, error) {
+				return &route53.ListResourceRecordSetsOutput{
+					IsTruncated: aws.Bool(false),
+					ResourceRecordSets: []*route53.ResourceRecordSet{
+						{
+							Name: aws.String("mine.oslo.systems"),
+							ResourceRecords: []*route53.ResourceRecord{
+								{
+									Value: aws.String("ns1.something.com"),
+								},
+							},
+							Type: aws.String("NS"),
 						},
 					},
 				}, nil

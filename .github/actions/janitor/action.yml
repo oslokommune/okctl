@@ -1,0 +1,14 @@
+name: 'Janitor'
+description: 'Helps keep things clean and nice'
+inputs:
+  command:
+    description: 'The sub-command you want to run'
+    required: true
+outputs:
+  result:
+    description: 'The result of running the command'
+runs:
+  using: 'docker'
+  image: '../../../Dockerfile'
+  args:
+    - ${{ inputs.command }}

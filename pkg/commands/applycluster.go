@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
-	"github.com/oslokommune/okctl/pkg/config/constant"
-
 	"sigs.k8s.io/yaml"
 )
 
@@ -36,12 +34,7 @@ func InferClusterFromStdinOrFile(stdin io.Reader, path string) (*v1alpha1.Cluste
 		cluster v1alpha1.Cluster
 	)
 
-	cluster = v1alpha1.NewDefaultCluster(
-		"",
-		constant.DefaultGithubOrganization,
-		"",
-		"",
-	)
+	cluster = v1alpha1.NewCluster()
 
 	_, err = io.Copy(&buffer, inputReader)
 	if err != nil {

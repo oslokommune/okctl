@@ -11,7 +11,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 )
 
-func TestCluster(t *testing.T) {
+func TestMarshalCluster(t *testing.T) {
 	testCases := []struct {
 		name    string
 		cluster v1alpha1.Cluster
@@ -24,8 +24,9 @@ func TestCluster(t *testing.T) {
 		},
 		{
 			name: "Default cluster",
-			cluster: v1alpha1.NewDefaultCluster(
+			cluster: newCluster(
 				"okctl-stage",
+				"okctl-stage.oslo.systems",
 				"oslokommune",
 				"okctl-iac",
 				"123456789012",
@@ -47,124 +48,13 @@ func TestCluster(t *testing.T) {
 	}
 }
 
-func newPassingCluster() v1alpha1.Cluster {
-	return v1alpha1.NewDefaultCluster(
-		"x-tre",
-		"x",
-		"x",
-		"000000000000",
-	)
-}
+func newCluster(name, rootDomain, githubOrganization, githubRepository, awsAccountID string) v1alpha1.Cluster {
+	c := v1alpha1.NewCluster()
+	c.Metadata.Name = name
+	c.Metadata.AccountID = awsAccountID
+	c.Github.Organisation = githubOrganization
+	c.Github.Repository = githubRepository
+	c.ClusterRootDomain = rootDomain
 
-func TestInvalidClusterValidations(t *testing.T) {
-	testCases := []struct {
-		name        string
-		withCluster func() v1alpha1.Cluster
-		expectError string
-	}{
-		{
-			name:        "Should pass when everything is A-ok",
-			withCluster: newPassingCluster,
-			expectError: "",
-		},
-		{
-			name: "Should fail when name is empty",
-			withCluster: func() v1alpha1.Cluster {
-				c := newPassingCluster()
-
-				c.Metadata.Name = ""
-
-				return c
-			},
-			expectError: "metadata: (name: cannot be blank.).",
-		},
-		{
-			name: "Should fail if clusterRootDomain is missing",
-			withCluster: func() v1alpha1.Cluster {
-				c := newPassingCluster()
-
-				c.ClusterRootDomain = ""
-
-				return c
-			},
-			expectError: "clusterRootDomain: cannot be blank.",
-		},
-		{
-			name: "Should fail if clusterRootDomain have improper casing",
-			withCluster: func() v1alpha1.Cluster {
-				c := newPassingCluster()
-
-				c.ClusterRootDomain = "ThisIsNotAllowed.oslo.systems"
-
-				return c
-			},
-			expectError: "clusterRootDomain: must be in lower case.",
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			err := tc.withCluster().Validate()
-
-			if tc.expectError != "" {
-				assert.Error(t, err)
-				assert.Equal(t, tc.expectError, err.Error())
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
-func TestValidateCluster(t *testing.T) {
-	testCases := []struct {
-		name      string
-		cluster   v1alpha1.Cluster
-		expectErr bool
-		expect    interface{}
-	}{
-		{
-			name: "Default cluster",
-			cluster: v1alpha1.NewDefaultCluster(
-				"okctl-stage",
-				"oslokommune",
-				"okctl-iac",
-				"123456789012",
-			),
-		},
-		{
-			name: "Cluster with argocd enabled, cognito disabled",
-			cluster: func() v1alpha1.Cluster {
-				c := v1alpha1.NewDefaultCluster(
-					"okctl-stage",
-					"oslokommune",
-					"okctl-iac",
-					"123456789012",
-				)
-
-				c.Integrations.Cognito = false
-
-				return c
-			}(),
-			expect:    "integrations: (cognito: is required when argocd is enabled.).",
-			expectErr: true,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			err := tc.cluster.Validate()
-
-			if tc.expectErr {
-				assert.Error(t, err)
-				assert.Equal(t, tc.expect, err.Error())
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
+	return c
 }

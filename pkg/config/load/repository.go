@@ -35,7 +35,7 @@ func buildRepoDataLoader(configFile string, _ func(v *viper.Viper)) config.DataL
 			return fmt.Errorf("couldn't find config file: %s", cfgFile)
 		}
 
-		declaration := v1alpha1.NewDefaultCluster("", "", "", "")
+		declaration := v1alpha1.NewCluster()
 
 		_, err = store.NewFileSystem(repoDir, cfg.FileSystem).
 			GetStruct(configFile, &declaration, store.FromYAML()).

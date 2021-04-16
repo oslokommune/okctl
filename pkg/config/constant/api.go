@@ -33,6 +33,7 @@ const (
 	DefaultChartApplyTimeout  = 5 * time.Minute
 	DefaultChartRemoveTimeout = 5 * time.Minute
 
+	DefaultAwsRegion                       = "eu-west-1"
 	DefaultGithubHost                      = "git@github.com"
 	DefaultGithubOrganization              = "oslokommune"
 	DefaultFargateObservabilityNamespace   = "aws-observability"

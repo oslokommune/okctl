@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/oslokommune/okctl/pkg/cfn"
 	"github.com/oslokommune/okctl/pkg/cfn/components"
@@ -11,8 +10,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/clusterconfig"
-
-	"github.com/oslokommune/okctl/pkg/kube/manifests/storageclass"
 
 	"github.com/oslokommune/okctl/pkg/api"
 
@@ -140,16 +137,6 @@ func (s *blockstorageService) CreateBlockstorage(ctx context.Context, opts clien
 		Policy:         policy,
 		ServiceAccount: sa,
 		Chart:          chart,
-	}
-
-	_, err = s.kube.CreateStorageClass(ctx, api.CreateStorageClassOpts{
-		ID:          opts.ID,
-		Name:        "ebs-sc",
-		Parameters:  storageclass.NewEBSParameters(),
-		Annotations: storageclass.DefaultStorageClassAnnotation(),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("creating default storage class: %w", err)
 	}
 
 	return a, nil

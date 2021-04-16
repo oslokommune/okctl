@@ -14,6 +14,7 @@ require (
 	github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d // indirect
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
 	github.com/apparentlymart/go-cidr v1.1.0
+	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/aws/aws-sdk-go v1.38.21
 	github.com/awslabs/goformation/v4 v4.18.3

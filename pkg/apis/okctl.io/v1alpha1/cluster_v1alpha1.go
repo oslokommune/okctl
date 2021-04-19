@@ -62,7 +62,11 @@ type Cluster struct {
 // Validate calls each members Validate function
 func (c Cluster) Validate() error {
 	return validation.ValidateStruct(&c,
-		validation.Field(&c.ClusterRootDomain, validation.Required, is.LowerCase),
+		validation.Field(&c.ClusterRootDomain,
+			validation.Required,
+			is.LowerCase,
+			is.DNSName.Error(fmt.Sprintf("invalid domain name: '%s'", c.ClusterRootDomain)),
+		),
 		validation.Field(&c.Metadata),
 		validation.Field(&c.Github),
 		validation.Field(&c.VPC),
@@ -295,21 +299,21 @@ func ClusterTypeMeta() metav1.TypeMeta {
 	}
 }
 
-// NewDefaultCluster returns a cluster definition with sensible defaults
-func NewDefaultCluster(name, org, repo, accountID string) Cluster {
+// NewCluster returns a Cluster with sensible defaults
+func NewCluster() Cluster {
 	return Cluster{
 		TypeMeta: ClusterTypeMeta(),
 		Metadata: ClusterMeta{
-			Name:      name,
-			Region:    "eu-west-1",
-			AccountID: accountID,
+			Name:      "",
+			Region:    constant.DefaultAwsRegion,
+			AccountID: "",
 		},
 		Github: ClusterGithub{
-			Organisation: org,
-			Repository:   repo,
+			Organisation: constant.DefaultGithubOrganization,
+			Repository:   "",
 			OutputPath:   constant.DefaultOutputDirectory,
 		},
-		ClusterRootDomain: fmt.Sprintf("%s.oslo.systems", name),
+		ClusterRootDomain: "",
 		VPC: &ClusterVPC{
 			CIDR:             constant.DefaultClusterCIDR,
 			HighAvailability: true,

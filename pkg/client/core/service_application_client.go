@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	kaex "github.com/oslokommune/kaex/pkg/api"
@@ -45,7 +47,7 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 	// See function comment
 	app := okctlApplicationToKaexApplication(opts.Application, opts.HostedZoneDomain)
 
-	relativeApplicationDir := path.Join(opts.OutputDir, constant.DefaultApplicationsOutputDir, okctlApp.Name)
+	relativeApplicationDir := path.Join(opts.OutputDir, constant.DefaultApplicationsOutputDir, okctlApp.Metadata.Name)
 	relativeArgoCDSourcePath := path.Join(relativeApplicationDir, constant.DefaultApplicationOverlayDir, opts.ID.ClusterName)
 
 	base, err := scaffold.GenerateApplicationBase(*app, opts.IACRepoURL, relativeArgoCDSourcePath)
@@ -104,10 +106,10 @@ func NewApplicationService(
 
 // I'm assuming we'll be making enough customizations down the line to have our own okctlApplication, but for now
 // mapping it to a Kaex application works fine
-func okctlApplicationToKaexApplication(okctlApp client.OkctlApplication, primaryHostedZoneDomain string) (kaexApp *kaex.Application) {
+func okctlApplicationToKaexApplication(okctlApp v1alpha1.Application, primaryHostedZoneDomain string) (kaexApp *kaex.Application) {
 	kaexApp = &kaex.Application{
-		Name:            okctlApp.Name,
-		Namespace:       okctlApp.Namespace,
+		Name:            okctlApp.Metadata.Name,
+		Namespace:       okctlApp.Metadata.Namespace,
 		Image:           okctlApp.Image,
 		Version:         okctlApp.Version,
 		ImagePullSecret: okctlApp.ImagePullSecret,

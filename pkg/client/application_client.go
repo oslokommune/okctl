@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -24,7 +26,7 @@ type ScaffoldApplicationOpts struct {
 	HostedZoneID     string
 	HostedZoneDomain string
 	IACRepoURL       string
-	Application      OkctlApplication
+	Application      v1alpha1.Application
 }
 
 // Validate ensures presented data is valid

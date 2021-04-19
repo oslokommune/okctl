@@ -45,7 +45,7 @@ func TestEnsureValidDefaultApplicationTemplate(t *testing.T) {
 	err := ScaffoldApplicationDeclaration(&buf, ScaffoldApplicationOpts{})
 	assert.NoError(t, err)
 
-	application, err := InferApplicationFromStdinOrFileNew(&buf, &afero.Afero{}, "-")
+	application, err := InferApplicationFromStdinOrFile(&buf, &afero.Afero{}, "-")
 	assert.NoError(t, err)
 
 	err = application.Validate()

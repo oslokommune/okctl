@@ -15,7 +15,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 
-	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/config/constant"
 	"github.com/spf13/afero"
 
@@ -35,39 +34,7 @@ func setAllToPresent(receiver *resourcetree.ResourceNode, _ *resourcetree.Resour
 
 // InferApplicationFromStdinOrFile returns an okctl application based on input. The function will parse input either
 // from the reader or from the fs based on if path is a path or if it is "-". "-" represents stdin
-func InferApplicationFromStdinOrFile(stdin io.Reader, fs *afero.Afero, path string) (client.OkctlApplication, error) {
-	var (
-		err         error
-		app         client.OkctlApplication
-		inputReader io.Reader
-	)
-
-	switch path {
-	case "-":
-		inputReader = stdin
-	default:
-		inputReader, err = fs.Open(filepath.Clean(path))
-		if err != nil {
-			return app, fmt.Errorf("opening application file: %w", err)
-		}
-	}
-
-	var buf []byte
-
-	buf, err = ioutil.ReadAll(inputReader)
-	if err != nil {
-		return app, fmt.Errorf("reading application file: %w", err)
-	}
-
-	err = yaml.Unmarshal(buf, &app)
-	if err != nil {
-		return app, fmt.Errorf("parsing application yaml: %w", err)
-	}
-
-	return app, nil
-}
-
-func InferApplicationFromStdinOrFileNew(stdin io.Reader, fs *afero.Afero, path string) (v1alpha1.Application, error) {
+func InferApplicationFromStdinOrFile(stdin io.Reader, fs *afero.Afero, path string) (v1alpha1.Application, error) {
 	var (
 		err         error
 		inputReader io.Reader

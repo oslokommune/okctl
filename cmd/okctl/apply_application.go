@@ -121,7 +121,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 			return commands.WriteApplyApplicationSuccessMessage(
 				o.Out,
-				scaffoldOpts.Application.Name,
+				scaffoldOpts.Application.Metadata.Name,
 				scaffoldOpts.OutputDir,
 			)
 		},

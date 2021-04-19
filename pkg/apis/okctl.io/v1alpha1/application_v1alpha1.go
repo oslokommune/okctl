@@ -26,6 +26,7 @@ type Application struct {
 	Metadata ApplicationMeta `json:"metadata"`
 
 	Image           string `json:"image"`
+	Version         string `json:"version"`
 	ImagePullSecret string `json:"ImagePullSecret"`
 
 	SubDomain string `json:"subDomain"`
@@ -75,6 +76,16 @@ func ApplicationTypeMeta() metav1.TypeMeta {
 		Kind:       ApplicationKind,
 		APIVersion: ApplicationAPIVersion,
 	}
+}
+
+// HasIngress returns true if the application has an ingress
+func (a Application) HasIngress() bool {
+	return a.SubDomain != ""
+}
+
+// HasService returns true if the application has a service
+func (a Application) HasService() bool {
+	return a.Port > 0
 }
 
 // NewApplication returns an initialized application definition

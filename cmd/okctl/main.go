@@ -59,12 +59,8 @@ being captured. Together with slack and slick.`,
 			}
 
 			var err error
-			cfg, err := cmd.Flags().GetString("declaration")
-			if err != nil {
-				return err
-			}
 
-			if len(cfg) == 0 {
+			if len(declaration) == 0 {
 				return fmt.Errorf("declaration must be provided")
 			}
 
@@ -73,7 +69,7 @@ being captured. Together with slack and slick.`,
 				return fmt.Errorf("loading application data: %w", err)
 			}
 
-			err = loadRepoData(o, cfg, cmd)
+			err = loadRepoData(o, declaration, cmd)
 			if err != nil {
 				if errors.Is(err, git.ErrRepositoryNotExists) {
 					return fmt.Errorf("okctl needs to be run inside a Git repository (okctl outputs " +

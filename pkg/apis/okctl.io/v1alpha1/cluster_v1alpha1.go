@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/asaskevich/govalidator"
-
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -67,7 +65,8 @@ func (c Cluster) Validate() error {
 		validation.Field(&c.ClusterRootDomain,
 			validation.Required,
 			is.LowerCase,
-			validation.NewStringRule(govalidator.IsDNSName, fmt.Sprintf("invalid domain name: '%s'", c.ClusterRootDomain))),
+			is.DNSName.Error(fmt.Sprintf("invalid domain name: '%s'", c.ClusterRootDomain)),
+		),
 		validation.Field(&c.Metadata),
 		validation.Field(&c.Github),
 		validation.Field(&c.VPC),

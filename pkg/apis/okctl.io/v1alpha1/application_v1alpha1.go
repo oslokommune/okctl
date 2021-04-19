@@ -1,10 +1,11 @@
 package v1alpha1
 
 import (
+	"regexp"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"regexp"
 )
 
 const (
@@ -24,8 +25,8 @@ type Application struct {
 
 	Metadata ApplicationMeta `json:"metadata"`
 
-	Images          []ApplicationImage `json:"images"`
-	ImagePullSecret string             `json:"ImagePullSecret"`
+	Image           string `json:"image"`
+	ImagePullSecret string `json:"ImagePullSecret"`
 
 	SubDomain string `json:"subDomain"`
 	Port      int32  `json:"port"`
@@ -36,10 +37,11 @@ type Application struct {
 	Volumes     []map[string]string `json:"volumes"`
 }
 
+// Validate ensures Application contains the right information
 func (a Application) Validate() error {
 	return validation.ValidateStruct(&a,
 		validation.Field(&a.Metadata, validation.Required),
-		validation.Field(&a.Images),
+		validation.Field(&a.Image),
 		validation.Field(&a.ImagePullSecret, is.Subdomain),
 		validation.Field(&a.Port, validation.Min(minimumPossiblePort), validation.Max(maximumPossiblePort)),
 		validation.Field(&a.Replicas, validation.Min(minimumPossibleReplicas)),
@@ -63,22 +65,6 @@ func (a ApplicationMeta) Validate() error {
 			validation.Required,
 			validation.Match(regexp.MustCompile("^[a-zA-Z-]{3,64}$")).Error("must consist of 3-64 characters (a-z, A-Z, -)")),
 		validation.Field(&a.Namespace, validation.Required, is.Subdomain),
-	)
-}
-
-// ApplicationImage describes a single image associated with the application
-type ApplicationImage struct {
-	// Name is the name of the image
-	Name string
-	// URI is the location of the image
-	URI string
-}
-
-// Validate ensures ApplicationImage contains the right information
-func (a ApplicationImage) Validate() error {
-	return validation.ValidateStruct(&a,
-		validation.Field(&a.Name, validation.Required, is.Subdomain),
-		validation.Field(&a.URI, is.URL),
 	)
 }
 

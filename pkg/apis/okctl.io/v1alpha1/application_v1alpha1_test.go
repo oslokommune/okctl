@@ -1,4 +1,4 @@
-package client
+package v1alpha1
 
 import (
 	"testing"
@@ -6,19 +6,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func generateValidApplication() OkctlApplication {
-	return OkctlApplication{
-		Name:            "test-app",
-		Namespace:       "test",
-		Image:           "testimage",
-		Version:         "latest",
-		ImagePullSecret: "sometoken",
-		SubDomain:       "testapp",
-		Port:            80,
-		Replicas:        1,
-		Environment:     nil,
-		Volumes:         nil,
-	}
+func generateValidApplication() Application {
+	app := NewApplication()
+
+	app.Metadata.Name = "test-app"
+	app.Metadata.Namespace = "test"
+
+	app.Image = "testimage"
+	app.Version = "latest"
+	app.ImagePullSecret = "sometoken"
+
+	app.SubDomain = "testapp"
+	app.Port = 80
+
+	app.Replicas = 1
+	app.Environment = nil
+	app.Volumes = nil
+
+	return app
 }
 
 // nolint: funlen
@@ -26,7 +31,7 @@ func TestOkctlApplicationValidation(t *testing.T) {
 	testCases := []struct {
 		name string
 
-		withApplication func() OkctlApplication
+		withApplication func() Application
 
 		expectFail    bool
 		expectedError string
@@ -41,7 +46,7 @@ func TestOkctlApplicationValidation(t *testing.T) {
 		{
 			name: "Should allow images from Docker hub",
 
-			withApplication: func() OkctlApplication {
+			withApplication: func() Application {
 				app := generateValidApplication()
 
 				app.Image = "postgres"
@@ -54,7 +59,7 @@ func TestOkctlApplicationValidation(t *testing.T) {
 		{
 			name: "Should allow images from GHCR",
 
-			withApplication: func() OkctlApplication {
+			withApplication: func() Application {
 				app := generateValidApplication()
 
 				app.Image = "ghcr.io/oslokommune/test-app"
@@ -67,7 +72,7 @@ func TestOkctlApplicationValidation(t *testing.T) {
 		{
 			name: "Should allow images from ECR",
 
-			withApplication: func() OkctlApplication {
+			withApplication: func() Application {
 				app := generateValidApplication()
 
 				app.Image = "012345678912.dkr.ecr.eu-west-1.amazonaws.com/cluster-test-testapp"

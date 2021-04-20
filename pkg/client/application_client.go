@@ -5,17 +5,9 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
-	"github.com/go-ozzo/ozzo-validation/v4/is"
-
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client/store"
-)
-
-const (
-	lowestPossiblePort     = 1
-	highestPossiblePort    = 65535
-	lowestPossibleReplicas = 0
 )
 
 // ScaffoldApplicationOpts contains information necessary to scaffold application resources
@@ -36,51 +28,6 @@ func (o *ScaffoldApplicationOpts) Validate() error {
 		validation.Field(&o.HostedZoneID, validation.Required),
 		validation.Field(&o.IACRepoURL, validation.Required),
 		validation.Field(&o.Application, validation.Required),
-	)
-}
-
-// OkctlApplication represents the necessary information okctl needs to deploy an application
-type OkctlApplication struct {
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
-
-	Image           string `json:"image"`
-	Version         string `json:"version"`
-	ImagePullSecret string `json:"imagePullSecret"`
-
-	SubDomain string `json:"subDomain"`
-	Port      int32  `json:"port"`
-
-	Replicas int32 `json:"replicas"`
-
-	Environment map[string]string   `json:"environment"`
-	Volumes     []map[string]string `json:"volumes"`
-
-	ContainerRepositories []string `json:"containerRepositories"`
-}
-
-// HasIngress returns true if the application requires an ingress
-func (o OkctlApplication) HasIngress() bool {
-	return o.SubDomain != ""
-}
-
-// HasService returns true if the application requires a service
-func (o OkctlApplication) HasService() bool {
-	return o.Port > 0
-}
-
-// Validate knows if the application is valid or not
-func (o OkctlApplication) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.Name, validation.Required, is.Subdomain),
-		validation.Field(&o.Namespace, validation.Required, is.Subdomain),
-		validation.Field(&o.Image, validation.Required),
-		validation.Field(&o.Version, validation.Required),
-		validation.Field(&o.ImagePullSecret, is.Subdomain),
-		validation.Field(&o.SubDomain, is.Subdomain),
-		validation.Field(&o.Port, validation.Min(lowestPossiblePort), validation.Max(highestPossiblePort)),
-		validation.Field(&o.Replicas, validation.Min(lowestPossibleReplicas)),
-		validation.Field(&o.ContainerRepositories, validation.Each(is.Alphanumeric)),
 	)
 }
 

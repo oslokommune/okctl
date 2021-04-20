@@ -12,7 +12,7 @@ func buildScaffoldCommand(o *okctl.Okctl) *cobra.Command {
 	}
 
 	cmd.AddCommand(buildScaffoldClusterCommand(o))
-	cmd.AddCommand(buildCreateApplicationCommand(o))
+	cmd.AddCommand(buildScaffoldApplicationCommand(o))
 
 	return cmd
 }

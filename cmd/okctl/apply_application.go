@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller"
 	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
@@ -22,6 +23,9 @@ const requiredApplyApplicationArguments = 0
 // applyApplicationOpts contains all the possible options for "apply application"
 type applyApplicationOpts struct {
 	File string
+
+	ClusterID   api.ID
+	Application v1alpha1.Application
 }
 
 // Validate the options for "apply application"
@@ -33,7 +37,6 @@ func (o applyApplicationOpts) Validate() error {
 
 //nolint funlen
 func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
-	scaffoldOpts := &client.ScaffoldApplicationOpts{}
 	opts := &applyApplicationOpts{}
 
 	cmd := &cobra.Command{
@@ -46,40 +49,16 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			scaffoldOpts.ID = &api.ID{
+			opts.ClusterID = api.ID{
 				Region:       o.Declaration.Metadata.Region,
 				AWSAccountID: o.Declaration.Metadata.AccountID,
 				ClusterName:  o.Declaration.Metadata.Name,
 			}
 
-			scaffoldOpts.Application, err = commands.InferApplicationFromStdinOrFile(o.In, o.FileSystem, opts.File)
+			opts.Application, err = commands.InferApplicationFromStdinOrFile(o.In, o.FileSystem, opts.File)
 			if err != nil {
 				return fmt.Errorf("inferring application from stdin or file: %w", err)
 			}
-
-			scaffoldOpts.OutputDir, err = o.GetRepoOutputDir()
-			if err != nil {
-				return err
-			}
-
-			handlers := o.StateHandlers(o.StateNodes())
-
-			hz, err := handlers.Domain.GetPrimaryHostedZone()
-			if err != nil {
-				return err
-			}
-
-			scaffoldOpts.HostedZoneID = hz.HostedZoneID
-			scaffoldOpts.HostedZoneDomain = hz.Domain
-
-			repo, err := handlers.Github.GetGithubRepository(
-				fmt.Sprintf("%s/%s", o.Declaration.Github.Organisation, o.Declaration.Github.Repository),
-			)
-			if err != nil {
-				return err
-			}
-
-			scaffoldOpts.IACRepoURL = repo.GitURL
 
 			return nil
 		},
@@ -105,9 +84,9 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{
 				Ctx:                    o.Ctx,
 				Out:                    o.Out,
-				ClusterID:              *scaffoldOpts.ID,
+				ClusterID:              opts.ClusterID,
 				Declaration:            o.Declaration,
-				ApplicationDeclaration: scaffoldOpts.Application,
+				ApplicationDeclaration: opts.Application,
 			})
 
 			reconciliationManager.SetStateHandlers(handlers)
@@ -121,8 +100,8 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 			return commands.WriteApplyApplicationSuccessMessage(
 				o.Out,
-				scaffoldOpts.Application.Name,
-				scaffoldOpts.OutputDir,
+				opts.Application.Metadata.Name,
+				o.Declaration.Github.OutputPath,
 			)
 		},
 	}

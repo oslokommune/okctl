@@ -21,16 +21,20 @@ import (
 	"gotest.tools/assert"
 )
 
-const defaultTemplate = `
-# A name that identifies your app
-name: my-app
+const defaultTemplate = `apiVersion: okctl.io/v1alpha1
+kind: Application
+
+metadata:
+  # A name that identifies your app
+  name: my-app
+  # The Kubernetes namespace where your app will live
+  namespace: okctl
+
 # An URI for your app Docker image
 image: docker.pkg.github.com/my-org/my-repo/my-package
+
 # The version of your app which is available as an image
 version: 0.0.1
-# A namespace where your app will live
-namespace: okctl
-
 
 # The URL your app should be available on
 # Change to something other than https to disable configuring TLS

@@ -9,11 +9,12 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/controller"
 	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 
-	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/config/constant"
 	"github.com/spf13/afero"
 
@@ -33,11 +34,11 @@ func setAllToPresent(receiver *resourcetree.ResourceNode, _ *resourcetree.Resour
 
 // InferApplicationFromStdinOrFile returns an okctl application based on input. The function will parse input either
 // from the reader or from the fs based on if path is a path or if it is "-". "-" represents stdin
-func InferApplicationFromStdinOrFile(stdin io.Reader, fs *afero.Afero, path string) (client.OkctlApplication, error) {
+func InferApplicationFromStdinOrFile(stdin io.Reader, fs *afero.Afero, path string) (v1alpha1.Application, error) {
 	var (
 		err         error
-		app         client.OkctlApplication
 		inputReader io.Reader
+		app         = v1alpha1.NewApplication()
 	)
 
 	switch path {

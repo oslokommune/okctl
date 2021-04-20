@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/jsonpatch"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	kaex "github.com/oslokommune/kaex/pkg/api"
-	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/scaffold/resources"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1beta1"
@@ -129,7 +130,7 @@ func GenerateApplicationBase(app kaex.Application, iacRepoURL, relativeApplicati
 }
 
 // GenerateApplicationOverlay generates patches for environment specific parts of the kubernetes resources
-func GenerateApplicationOverlay(application client.OkctlApplication, hostedZoneDomain, certARN string) (ApplicationOverlay, error) {
+func GenerateApplicationOverlay(application v1alpha1.Application, hostedZoneDomain, certARN string) (ApplicationOverlay, error) {
 	var (
 		err     error
 		overlay = newApplicationOverlay()

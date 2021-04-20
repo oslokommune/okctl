@@ -1,11 +1,7 @@
 package main
 
 import (
-	"fmt"
-
-	"github.com/logrusorgru/aurora"
-
-	"github.com/oslokommune/okctl/pkg/scaffold"
+	"github.com/oslokommune/okctl/pkg/commands"
 
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
@@ -13,18 +9,12 @@ import (
 
 const requiredArgumentsForCreateApplicationCommand = 0
 
-// scaffoldApplicationOpts contains all the possible options for "scaffold application"
-type scaffoldApplicationOpts struct {
-	Outfile string
-}
-
 // nolint: funlen
 func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
-	opts := &scaffoldApplicationOpts{}
-	interpolationOpts := &scaffold.InterpolationOpts{}
+	opts := commands.ScaffoldApplicationOpts{}
 
 	cmd := &cobra.Command{
-		Use:   "application ENV",
+		Use:   "application",
 		Short: "Scaffold an application template",
 		Long:  "Scaffolds an application.yaml template which can be used to produce necessary Kubernetes and ArgoCD resources",
 		Args:  cobra.ExactArgs(requiredArgumentsForCreateApplicationCommand),
@@ -39,34 +29,14 @@ func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			interpolationOpts.PrimaryHostedZone = hostedZone.Domain
+			opts.PrimaryHostedZone = hostedZone.Domain
 
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			okctlAppTemplate, err := scaffold.GenerateOkctlAppTemplate(interpolationOpts)
-			if err != nil {
-				return err
-			}
-
-			err = scaffold.SaveOkctlAppTemplate(o.FileSystem, opts.Outfile, okctlAppTemplate)
-			if err != nil {
-				return err
-			}
-
-			_, _ = fmt.Fprintln(o.Out, "Scaffolding successful.")
-			_, _ = fmt.Fprintf(
-				o.Out,
-				"Edit %s to your liking and run %s\n",
-				opts.Outfile,
-				aurora.Green(fmt.Sprintf("okctl apply application -f %s\n", opts.Outfile)),
-			)
-
-			return err
+			return commands.ScaffoldApplicationDeclaration(o.Out, opts)
 		},
 	}
-
-	cmd.Flags().StringVarP(&opts.Outfile, "out", "o", "application.yaml", "specify where to output result")
 
 	return cmd
 }

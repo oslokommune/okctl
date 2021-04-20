@@ -1,18 +1,24 @@
-# A name that identifies your app
-name: my-app
-# An URI for your app Docker image
+apiVersion: okctl.io/v1alpha1
+kind: Application
+
+metadata:
+  # A name that identifies your app
+  name: my-app
+  # The Kubernetes namespace where your app will live
+  namespace: my-namespace
+
+# A collection of images required to run the application.
 image: docker.pkg.github.com/my-org/my-repo/my-package
+
 # The version of your app which is available as an image
 version: 0.0.1
-# The Kubernetes namespace where your app will live
-namespace: my-namespace
 
 # The subdomain of the URL your app should be available on
-# Example in a cluster with  as root cluster URL (as defined by primary DNS zone in the
+# Example in a cluster with okctl.io as root cluster URL (as defined by primary DNS zone in the
 # cluster declaration):
 #
 # subDomain: okctl
-# result: okctl.
+# result: okctl.okctl.io
 # Comment this out to avoid setting up an ingress, in other words - avoid exposing it on the internet
 #
 subDomain: my-app

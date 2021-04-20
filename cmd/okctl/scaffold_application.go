@@ -10,7 +10,7 @@ import (
 const requiredArgumentsForCreateApplicationCommand = 0
 
 // nolint: funlen
-func buildCreateApplicationCommand(o *okctl.Okctl) *cobra.Command {
+func buildScaffoldApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	opts := commands.ScaffoldApplicationOpts{}
 
 	cmd := &cobra.Command{

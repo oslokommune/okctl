@@ -95,6 +95,13 @@ func venvRunE(o *okctl.Okctl, okctlEnvironment commands.OkctlEnvironment) error 
 		}
 	}()
 
+	// Close Storm so that okctl commands running in the venv subshell can access Storm state without hitting
+	// the exclusive lock limitation: https://github.com/etcd-io/bbolt#caveats--limitations
+	err = o.StormDB.Close()
+	if err != nil {
+		return fmt.Errorf("closing storm: %w", err)
+	}
+
 	err = printWelcomeMessage(o.Out, venv, okctlEnvironment)
 	if err != nil {
 		return fmt.Errorf("could not print welcome message: %w", err)

@@ -7,11 +7,8 @@ metadata:
   # The Kubernetes namespace where your app will live
   namespace: my-namespace
 
-# A collection of images required to run the application.
-image: docker.pkg.github.com/my-org/my-repo/my-package
-
-# The version of your app which is available as an image
-version: 0.0.1
+images:
+  - uri: something/helloworld:0.0.1
 
 # The subdomain of the URL your app should be available on
 # Example in a cluster with okctl.io as root cluster URL (as defined by primary DNS zone in the

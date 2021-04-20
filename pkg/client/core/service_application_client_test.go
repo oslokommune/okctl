@@ -30,11 +30,8 @@ metadata:
   # The Kubernetes namespace where your app will live
   namespace: okctl
 
-# An URI for your app Docker image
-image: docker.pkg.github.com/my-org/my-repo/my-package
-
-# The version of your app which is available as an image
-version: 0.0.1
+images:
+  - uri: docker.pkg.github.com/my-org/my-repo/my-package:0.0.1
 
 # The URL your app should be available on
 # Change to something other than https to disable configuring TLS

@@ -41,12 +41,23 @@ func (a *applicationReconciler) Reconcile(node *resourcetree.ResourceNode) (Reco
 			return ReconcilationResult{}, fmt.Errorf("getting primary hosted zone: %w", err)
 		}
 
+		gh, err := a.handlers.Github.GetGithubRepository(
+			fmt.Sprintf(
+				"%s/%s",
+				a.commonMetadata.Declaration.Github.Organisation,
+				a.commonMetadata.Declaration.Github.Repository,
+			),
+		)
+		if err != nil {
+			return ReconcilationResult{}, fmt.Errorf("retrieving Github information")
+		}
+
 		err = a.client.ScaffoldApplication(a.commonMetadata.Ctx, &client.ScaffoldApplicationOpts{
 			OutputDir:        a.commonMetadata.Declaration.Github.OutputPath,
 			ID:               &a.commonMetadata.ClusterID,
 			HostedZoneID:     hz.HostedZoneID,
 			HostedZoneDomain: hz.Domain,
-			IACRepoURL:       a.commonMetadata.Declaration.Github.Repository,
+			IACRepoURL:       gh.GitURL,
 			Application:      a.commonMetadata.ApplicationDeclaration,
 		})
 		if err != nil {

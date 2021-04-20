@@ -27,7 +27,7 @@ func generateValidApplication() Application {
 }
 
 // nolint: funlen
-func TestOkctlApplicationValidation(t *testing.T) {
+func TestApplicationValidation(t *testing.T) {
 	testCases := []struct {
 		name string
 

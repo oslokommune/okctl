@@ -51,8 +51,7 @@ func (a Application) Validate() error {
 
 // ApplicationMeta describes a unique application
 type ApplicationMeta struct {
-	// Name is a descriptive value given to the cluster, e.g., the name
-	// of the team, product, project, etc.
+	// Name is a descriptive value given to the application
 	Name string `json:"name"`
 
 	// Namespace defines which Kubernetes namespace to place the application in

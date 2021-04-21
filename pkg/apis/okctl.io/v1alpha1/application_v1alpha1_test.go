@@ -12,8 +12,9 @@ func generateValidApplication() Application {
 	app.Metadata.Name = "test-app"
 	app.Metadata.Namespace = "test"
 
-	app.Image = "testimage"
-	app.Version = "latest"
+	app.Images = append(app.Images, ApplicationImage{
+		URI: "testimage:latest",
+	})
 	app.ImagePullSecret = "sometoken"
 
 	app.SubDomain = "testapp"
@@ -49,7 +50,7 @@ func TestApplicationValidation(t *testing.T) {
 			withApplication: func() Application {
 				app := generateValidApplication()
 
-				app.Image = "postgres"
+				app.Images[0].URI = "postgres"
 
 				return app
 			},
@@ -62,7 +63,7 @@ func TestApplicationValidation(t *testing.T) {
 			withApplication: func() Application {
 				app := generateValidApplication()
 
-				app.Image = "ghcr.io/oslokommune/test-app"
+				app.Images[0].URI = "ghcr.io/oslokommune/test-app"
 
 				return app
 			},
@@ -75,7 +76,7 @@ func TestApplicationValidation(t *testing.T) {
 			withApplication: func() Application {
 				app := generateValidApplication()
 
-				app.Image = "012345678912.dkr.ecr.eu-west-1.amazonaws.com/cluster-test-testapp"
+				app.Images[0].URI = "012345678912.dkr.ecr.eu-west-1.amazonaws.com/cluster-test-testapp"
 
 				return app
 			},
@@ -91,7 +92,7 @@ func TestApplicationValidation(t *testing.T) {
 			err := tc.withApplication().Validate()
 
 			if !tc.expectFail {
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 			} else {
 				assert.NotNil(t, err)
 				assert.Equal(t, tc.expectedError, err.Error())

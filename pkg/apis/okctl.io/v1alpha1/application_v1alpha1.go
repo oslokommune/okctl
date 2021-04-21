@@ -25,9 +25,8 @@ type Application struct {
 
 	Metadata ApplicationMeta `json:"metadata"`
 
-	Image           string `json:"image"`
-	Version         string `json:"version"`
-	ImagePullSecret string `json:"ImagePullSecret"`
+	Images          []ApplicationImage `json:"images"`
+	ImagePullSecret string             `json:"ImagePullSecret"`
 
 	SubDomain string `json:"subDomain"`
 	Port      int32  `json:"port"`
@@ -42,7 +41,7 @@ type Application struct {
 func (a Application) Validate() error {
 	return validation.ValidateStruct(&a,
 		validation.Field(&a.Metadata, validation.Required),
-		validation.Field(&a.Image),
+		validation.Field(&a.Images, validation.Required, validation.Length(1, 0)),
 		validation.Field(&a.ImagePullSecret, is.Subdomain),
 		validation.Field(&a.Port, validation.Min(minimumPossiblePort), validation.Max(maximumPossiblePort)),
 		validation.Field(&a.Replicas, validation.Min(minimumPossibleReplicas)),
@@ -77,6 +76,19 @@ func ApplicationTypeMeta() metav1.TypeMeta {
 	}
 }
 
+type ApplicationImage struct {
+	Name string `json:"name"`
+	URI  string `json:"uri"`
+}
+
+// Validate ensures ApplicationImage contains the right information
+func (a ApplicationImage) Validate() error {
+	return validation.ValidateStruct(&a,
+		validation.Field(&a.Name, is.Subdomain),
+		validation.Field(&a.URI),
+	)
+}
+
 // HasIngress returns true if the application has an ingress
 func (a Application) HasIngress() bool {
 	return a.SubDomain != ""
@@ -91,5 +103,6 @@ func (a Application) HasService() bool {
 func NewApplication() Application {
 	return Application{
 		TypeMeta: ApplicationTypeMeta(),
+		Images:   []ApplicationImage{},
 	}
 }

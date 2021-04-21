@@ -81,7 +81,7 @@ func TestNewApplicationService(t *testing.T) {
 		clientFilesystem.NewApplicationStore(mockPaths, &aferoFs),
 	)
 
-	application, err := commands.InferApplicationFromStdinOrFile(testInputBuffer, &aferoFs, "-")
+	application, err := commands.InferApplicationFromStdinOrFile(nil, testInputBuffer, &aferoFs, "-")
 	assert.NilError(t, err)
 
 	clusterName := "test"

@@ -55,7 +55,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				ClusterName:  o.Declaration.Metadata.Name,
 			}
 
-			opts.Application, err = commands.InferApplicationFromStdinOrFile(o.In, o.FileSystem, opts.File)
+			opts.Application, err = commands.InferApplicationFromStdinOrFile(*o.Declaration, o.In, o.FileSystem, opts.File)
 			if err != nil {
 				return fmt.Errorf("inferring application from stdin or file: %w", err)
 			}

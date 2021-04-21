@@ -1,12 +1,11 @@
 package resources
 
 import (
+	"fmt"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	intstrutil "k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/util/intstr"
-	"net/url"
 	"strings"
 )
 
@@ -32,18 +31,14 @@ func CreateOkctlIngress(app v1alpha1.Application) (networkingv1.Ingress, error) 
 	redirectPath := networkingv1.HTTPIngressPath{
 		Path: "/*",
 		Backend: networkingv1.IngressBackend{
-			Service:  &networkingv1.IngressServiceBackend{
+			Service: &networkingv1.IngressServiceBackend{
 				Name: "ssl-redirect",
 				Port: networkingv1.ServiceBackendPort{
-					Name:   "",
-					Number: intstrutil.Parse("use-annotation").StrVal,
+					Name: "use-annotation", // TODO: Test
 				},
 			},
-			Resource: nil,
 		},
 	}
-	//ServiceName: "ssl-redirect",
-	//ServicePort: intstrutil.Parse("use-annotation"),
 
 	ingress.Spec.Rules[0].HTTP.Paths = append([]networkingv1.HTTPIngressPath{redirectPath}, ingress.Spec.Rules[0].HTTP.Paths...)
 
@@ -67,11 +62,10 @@ func generateDefaultIngress() networkingv1.Ingress {
 	}
 }
 
-
 func createIngress(app v1alpha1.Application) (networkingv1.Ingress, error) {
-	hostUrl, err := url.Parse(app.Url)
+	hostUrl, err := app.Url()
 	if err != nil {
-		return networkingv1.Ingress{}, err
+		return networkingv1.Ingress{}, fmt.Errorf("getting application URL: %w", err)
 	}
 
 	ingress := generateDefaultIngress()
@@ -81,7 +75,7 @@ func createIngress(app v1alpha1.Application) (networkingv1.Ingress, error) {
 	ingress.ObjectMeta.Annotations = app.Ingress.Annotations
 
 	ingress.Spec.Rules[0] = networkingv1.IngressRule{
-		Host: hostUrl.Host,
+		Host: app.Url(),
 		IngressRuleValue: networkingv1.IngressRuleValue{
 			HTTP: &networkingv1.HTTPIngressRuleValue{
 				Paths: []networkingv1.HTTPIngressPath{{

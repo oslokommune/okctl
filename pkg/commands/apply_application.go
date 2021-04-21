@@ -34,11 +34,11 @@ func setAllToPresent(receiver *resourcetree.ResourceNode, _ *resourcetree.Resour
 
 // InferApplicationFromStdinOrFile returns an okctl application based on input. The function will parse input either
 // from the reader or from the fs based on if path is a path or if it is "-". "-" represents stdin
-func InferApplicationFromStdinOrFile(stdin io.Reader, fs *afero.Afero, path string) (v1alpha1.Application, error) {
+func InferApplicationFromStdinOrFile(declaration v1alpha1.Cluster, stdin io.Reader, fs *afero.Afero, path string) (v1alpha1.Application, error) {
 	var (
 		err         error
 		inputReader io.Reader
-		app         = v1alpha1.NewApplication()
+		app         = v1alpha1.NewApplication(declaration)
 	)
 
 	switch path {

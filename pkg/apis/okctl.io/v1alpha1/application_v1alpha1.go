@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	"fmt"
+	"net/url"
 	"regexp"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -25,16 +27,19 @@ type Application struct {
 
 	Metadata ApplicationMeta `json:"metadata"`
 
-	Images          []ApplicationImage `json:"images"`
-	ImagePullSecret string             `json:"ImagePullSecret"`
+	Images []ApplicationImage `json:"images"`
 
-	SubDomain string `json:"subDomain"`
-	Port      int32  `json:"port"`
+	ImagePullSecret string `json:"ImagePullSecret"`
+	SubDomain       string `json:"subDomain"`
 
+	Port     int32 `json:"port"`
 	Replicas int32 `json:"replicas"`
 
-	Environment map[string]string   `json:"environment"`
-	Volumes     []map[string]string `json:"volumes"`
+	Environment map[string]string `json:"environment"`
+
+	Volumes []map[string]string `json:"volumes"`
+
+	cluster Cluster
 }
 
 // Validate ensures Application contains the right information
@@ -99,10 +104,16 @@ func (a Application) HasService() bool {
 	return a.Port > 0
 }
 
+func (a Application) Url() (url.URL, error) {
+	tmpUrl, err := url.Parse(fmt.Sprintf("%s.%s", a.SubDomain, a.cluster.ClusterRootDomain))
+	return *tmpUrl, err
+}
+
 // NewApplication returns an initialized application definition
-func NewApplication() Application {
+func NewApplication(cluster Cluster) Application {
 	return Application{
 		TypeMeta: ApplicationTypeMeta(),
 		Images:   []ApplicationImage{},
+		cluster:  cluster,
 	}
 }

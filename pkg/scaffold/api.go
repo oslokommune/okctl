@@ -13,7 +13,7 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/scaffold/resources"
 	v1 "k8s.io/api/core/v1"
-	networkingv1 "k8s.io/api/networking/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/yaml"
 )
 
@@ -40,7 +40,7 @@ func NewApplicationBase() ApplicationBase {
 	}
 }
 
-// GenerateApplicationBase converts a Kaex Application to Kustomize base files
+// GenerateApplicationBase converts an Application to Kustomize base files
 // nolint: funlen gocyclo
 func GenerateApplicationBase(app v1alpha1.Application, iacRepoURL, relativeApplicationOverlayDir string) (ApplicationBase, error) {
 	var (
@@ -69,7 +69,7 @@ func GenerateApplicationBase(app v1alpha1.Application, iacRepoURL, relativeAppli
 		}
 	}
 
-	if app.Port != 0 {
+	if app.HasService() {
 		var service v1.Service
 
 		service, err = resources.CreateOkctlService(app)
@@ -84,6 +84,7 @@ func GenerateApplicationBase(app v1alpha1.Application, iacRepoURL, relativeAppli
 			return applicationBase, err
 		}
 	}
+
 	if app.HasIngress() && app.HasService() {
 		var ingress networkingv1.Ingress
 

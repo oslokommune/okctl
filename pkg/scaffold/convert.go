@@ -7,14 +7,17 @@ import (
 	"io"
 	"io/ioutil"
 	"regexp"
-	"sigs.k8s.io/yaml"
 	"strings"
+
+	"sigs.k8s.io/yaml"
 
 	v1 "k8s.io/api/core/v1"
 )
 
-var emptyMatcher, _ = regexp.Compile("^.*: (null|{})$")
-var statusMatcher, _ = regexp.Compile("^\\s*?status*:$")
+var (
+	emptyMatcher, _  = regexp.Compile("^.*: (null|{})$")
+	statusMatcher, _ = regexp.Compile("^\\s*?status*:$")
+)
 
 // volumesAsBytes knows how to convert a Kubernetes PersistentVolumeClaim to a byte array
 func volumesAsBytes(volumes []*v1.PersistentVolumeClaim) ([]byte, error) {
@@ -41,7 +44,6 @@ func resourceAsBytes(data interface{}) ([]byte, error) {
 
 	return writer.Bytes(), nil
 }
-
 
 func writeResource(w io.Writer, resource interface{}) error {
 	serializedResource, err := yaml.Marshal(resource)

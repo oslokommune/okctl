@@ -2,11 +2,12 @@ package resources
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 // CreateOkctlVolume creates persistent volume claims customized for okctl
@@ -27,7 +28,6 @@ func CreateOkctlVolume(app v1alpha1.Application, volume map[string]string) (core
 
 	return pvc, nil
 }
-
 
 func createPersistentVolume(app v1alpha1.Application, path string, size string) (corev1.PersistentVolumeClaim, error) {
 	volume := generateDefaultPVC()
@@ -84,4 +84,3 @@ func createStorageRequest(requestSize string) (corev1.ResourceList, error) {
 		corev1.ResourceStorage: quantity,
 	}, nil
 }
-

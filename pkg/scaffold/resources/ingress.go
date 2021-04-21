@@ -2,25 +2,20 @@ package resources
 
 import (
 	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/util/intstr"
-	"strings"
 )
 
 // CreateOkctlIngress creates an ingress customized for okctl
 func CreateOkctlIngress(app v1alpha1.Application) (networkingv1.Ingress, error) {
-	ingress, err := createIngress(app)
+	ingress, err := createGenericIngress(app)
 	if err != nil {
 		return networkingv1.Ingress{}, err
 	}
 
 	ingress.Spec.Rules[0].HTTP.Paths[0].Path = "/*"
-
-	if ingress.Annotations == nil {
-		ingress.Annotations = map[string]string{}
-	}
 
 	ingress.Annotations["kubernetes.io/ingress.class"] = "alb"
 	ingress.Annotations["alb.ingress.kubernetes.io/scheme"] = "internet-facing"
@@ -49,12 +44,11 @@ func generateDefaultIngress() networkingv1.Ingress {
 	return networkingv1.Ingress{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Ingress",
-			APIVersion: "networking.k8s.io/v1beta1",
+			APIVersion: "networking.k8s.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        "name",
-			Labels:      nil,
-			Annotations: nil,
+			Labels:      map[string]string{},
+			Annotations: map[string]string{},
 		},
 		Spec: networkingv1.IngressSpec{
 			Rules: make([]networkingv1.IngressRule, 1),
@@ -62,7 +56,7 @@ func generateDefaultIngress() networkingv1.Ingress {
 	}
 }
 
-func createIngress(app v1alpha1.Application) (networkingv1.Ingress, error) {
+func createGenericIngress(app v1alpha1.Application) (networkingv1.Ingress, error) {
 	hostUrl, err := app.Url()
 	if err != nil {
 		return networkingv1.Ingress{}, fmt.Errorf("getting application URL: %w", err)
@@ -72,37 +66,26 @@ func createIngress(app v1alpha1.Application) (networkingv1.Ingress, error) {
 	ingress.ObjectMeta.Namespace = app.Metadata.Namespace
 
 	ingress.ObjectMeta.Name = app.Metadata.Name
-	ingress.ObjectMeta.Annotations = app.Ingress.Annotations
 
-	ingress.Spec.Rules[0] = networkingv1.IngressRule{
-		Host: app.Url(),
-		IngressRuleValue: networkingv1.IngressRuleValue{
-			HTTP: &networkingv1.HTTPIngressRuleValue{
-				Paths: []networkingv1.HTTPIngressPath{{
-					Path: "/",
-					Backend: networkingv1.IngressBackend{
-						ServiceName: app.Metadata.Name,
-						ServicePort: intstr.IntOrString{
-							IntVal: 80,
+	ingress.Spec.Rules = []networkingv1.IngressRule{
+		{
+			Host: hostUrl.Host,
+			IngressRuleValue: networkingv1.IngressRuleValue{
+				HTTP: &networkingv1.HTTPIngressRuleValue{
+					Paths: []networkingv1.HTTPIngressPath{{
+						Path: "/",
+						Backend: networkingv1.IngressBackend{
+							Service: &networkingv1.IngressServiceBackend{
+								Name: app.Metadata.Name,
+								Port: networkingv1.ServiceBackendPort{
+									Number: 80,
+								},
+							},
 						},
-					},
-				}},
+					}},
+				},
 			},
 		},
-	}
-
-	if hostUrl.Scheme == "https" {
-		ingress.Spec.TLS = []networkingv1.IngressTLS{
-			{
-				Hosts: []string{
-					hostUrl.Host,
-				},
-				SecretName: strings.Join([]string{
-					app.Metadata.Name,
-					"tls",
-				}, "-"),
-			},
-		}
 	}
 
 	return ingress, nil

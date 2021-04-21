@@ -2,6 +2,7 @@ package resources
 
 import (
 	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -87,7 +88,6 @@ func createVolumes(app v1alpha1.Application) []corev1.Volume {
 
 	return volumes
 }
-
 
 func createDeployment(app v1alpha1.Application) (appsv1.Deployment, error) {
 	deployment := generateDefaultDeployment()

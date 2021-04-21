@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/pkg/errors"
@@ -38,7 +41,7 @@ func loadUserData(o *okctl.Okctl, cmd *cobra.Command) error {
 
 // nolint: funlen
 func buildRootCommand() *cobra.Command {
-	var outputFormat, declaration string
+	var outputFormat, declarationPath string
 
 	o := okctl.New()
 
@@ -60,8 +63,13 @@ being captured. Together with slack and slick.`,
 
 			var err error
 
-			if len(declaration) == 0 {
+			if len(declarationPath) == 0 {
 				return fmt.Errorf("declaration must be provided")
+			}
+
+			declarationPath, err = filepath.Abs(declarationPath)
+			if err != nil {
+				return fmt.Errorf("converting declaration path to absolute path: %w", err)
 			}
 
 			err = loadUserData(o, cmd)
@@ -69,7 +77,7 @@ being captured. Together with slack and slick.`,
 				return fmt.Errorf("loading application data: %w", err)
 			}
 
-			err = loadRepoData(o, declaration, cmd)
+			err = loadRepoData(o, declarationPath, cmd)
 			if err != nil {
 				if errors.Is(err, git.ErrRepositoryNotExists) {
 					return fmt.Errorf("okctl needs to be run inside a Git repository (okctl outputs " +
@@ -110,8 +118,12 @@ being captured. Together with slack and slick.`,
 	f.StringVarP(&outputFormat, "output", "o", "text",
 		"The format of the output returned to the user")
 
-	cmd.PersistentFlags().StringVarP(&declaration, "cluster-declaration", "c", "",
-		"The cluster declaration you want to use")
+	cmd.PersistentFlags().StringVarP(&declarationPath,
+		"cluster-declaration",
+		"c",
+		os.Getenv(fmt.Sprintf("%s_%s", constant.EnvPrefix, constant.EnvClusterDeclaration)),
+		"The cluster declaration you want to use",
+	)
 
 	return cmd
 }

@@ -2,7 +2,7 @@ package load
 
 import (
 	"fmt"
-	"path"
+	"path/filepath"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
@@ -13,32 +13,28 @@ import (
 )
 
 // RepoDataFromConfigFile defines the default behavior for loading configuration data
-func RepoDataFromConfigFile(configFile string) config.DataLoaderFn {
-	return buildRepoDataLoader(configFile, nil)
+func RepoDataFromConfigFile(declarationPath string) config.DataLoaderFn {
+	return buildRepoDataLoader(declarationPath, nil)
 }
 
-func buildRepoDataLoader(configFile string, _ func(v *viper.Viper)) config.DataLoaderFn {
+func buildRepoDataLoader(declarationPath string, _ func(v *viper.Viper)) config.DataLoaderFn {
 	return func(cfg *config.Config) error {
-		repoDir, err := cfg.GetRepoDir()
-		if err != nil {
-			return err
-		}
-
-		cfgFile := path.Join(repoDir, configFile)
-
-		exists, err := cfg.FileSystem.Exists(cfgFile)
+		exists, err := cfg.FileSystem.Exists(declarationPath)
 		if err != nil {
 			return err
 		}
 
 		if !exists {
-			return fmt.Errorf("couldn't find config file: %s", cfgFile)
+			return fmt.Errorf("couldn't find config file: %s", declarationPath)
 		}
+
+		directory := filepath.Dir(declarationPath)
+		base := filepath.Base(declarationPath)
 
 		declaration := v1alpha1.NewCluster()
 
-		_, err = store.NewFileSystem(repoDir, cfg.FileSystem).
-			GetStruct(configFile, &declaration, store.FromYAML()).
+		_, err = store.NewFileSystem(directory, cfg.FileSystem).
+			GetStruct(base, &declaration, store.FromYAML()).
 			Do()
 		if err != nil {
 			return err

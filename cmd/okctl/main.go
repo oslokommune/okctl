@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
@@ -64,6 +65,11 @@ being captured. Together with slack and slick.`,
 
 			if len(declarationPath) == 0 {
 				return fmt.Errorf("declaration must be provided")
+			}
+
+			declarationPath, err = filepath.Abs(declarationPath)
+			if err != nil {
+				return fmt.Errorf("converting declaration path to absolute path: %w", err)
 			}
 
 			err = loadUserData(o, cmd)

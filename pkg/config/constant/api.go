@@ -81,6 +81,8 @@ const (
 	EnvPrefix = "OKCTL"
 	// EnvHome is the default env var parsed for determining the application home
 	EnvHome = "OKCTL_HOME"
+	// EnvClusterDeclaration specifies the path to the cluster declaration context
+	EnvClusterDeclaration = "CLUSTER_DECLARATION"
 
 	// DefaultApplicationsOutputDir is where the application declarations reside
 	DefaultApplicationsOutputDir = "applications"

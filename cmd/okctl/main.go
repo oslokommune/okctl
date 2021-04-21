@@ -115,8 +115,9 @@ being captured. Together with slack and slick.`,
 	cmd.PersistentFlags().StringVarP(&declarationPath,
 		"cluster-declaration",
 		"c",
-		os.Getenv(fmt.Sprintf("%s_DECLARATION", constant.EnvPrefix)),
-		"The cluster declaration you want to use")
+		os.Getenv(fmt.Sprintf("%s_%s", constant.EnvPrefix, constant.EnvClusterDeclaration)),
+		"The cluster declaration you want to use",
+	)
 
 	return cmd
 }

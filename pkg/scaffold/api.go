@@ -11,7 +11,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
-	kaex "github.com/oslokommune/kaex/pkg/api"
 	"github.com/oslokommune/okctl/pkg/scaffold/resources"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1beta1"
@@ -43,7 +42,7 @@ func NewApplicationBase() ApplicationBase {
 
 // GenerateApplicationBase converts a Kaex Application to Kustomize base files
 // nolint: funlen gocyclo
-func GenerateApplicationBase(app kaex.Application, iacRepoURL, relativeApplicationOverlayDir string) (ApplicationBase, error) {
+func GenerateApplicationBase(app v1alpha1.Application, iacRepoURL, relativeApplicationOverlayDir string) (ApplicationBase, error) {
 	var (
 		err             error
 		applicationBase = NewApplicationBase()
@@ -60,7 +59,7 @@ func GenerateApplicationBase(app kaex.Application, iacRepoURL, relativeApplicati
 
 		volumes[index] = &pvc
 
-		applicationBase.Volumes, err = resources.VolumesAsBytes(volumes)
+		applicationBase.Volumes, err = volumesAsBytes(volumes)
 		if err != nil {
 			return applicationBase, err
 		}
@@ -80,13 +79,12 @@ func GenerateApplicationBase(app kaex.Application, iacRepoURL, relativeApplicati
 
 		kustomization.AddResource("service.yaml")
 
-		applicationBase.Service, err = resources.ResourceAsBytes(service)
+		applicationBase.Service, err = resourceAsBytes(service)
 		if err != nil {
 			return applicationBase, err
 		}
 	}
-
-	if app.Url != "" && app.Port != 0 {
+	if app.HasIngress() && app.HasService() {
 		var ingress networkingv1.Ingress
 
 		ingress, err = resources.CreateOkctlIngress(app)
@@ -96,7 +94,7 @@ func GenerateApplicationBase(app kaex.Application, iacRepoURL, relativeApplicati
 
 		kustomization.AddResource("ingress.yaml")
 
-		applicationBase.Ingress, err = resources.ResourceAsBytes(ingress)
+		applicationBase.Ingress, err = resourceAsBytes(ingress)
 		if err != nil {
 			return applicationBase, err
 		}
@@ -109,14 +107,14 @@ func GenerateApplicationBase(app kaex.Application, iacRepoURL, relativeApplicati
 
 	kustomization.AddResource("deployment.yaml")
 
-	applicationBase.Deployment, err = resources.ResourceAsBytes(deployment)
+	applicationBase.Deployment, err = resourceAsBytes(deployment)
 	if err != nil {
 		return applicationBase, err
 	}
 
 	argoApp := resources.CreateArgoApp(app, iacRepoURL, relativeApplicationOverlayDir)
 
-	applicationBase.ArgoApplication, err = resources.ResourceAsBytes(argoApp)
+	applicationBase.ArgoApplication, err = resourceAsBytes(argoApp)
 	if err != nil {
 		return applicationBase, err
 	}

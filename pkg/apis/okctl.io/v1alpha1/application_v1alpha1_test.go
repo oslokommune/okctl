@@ -124,6 +124,21 @@ func TestApplicationValidation(t *testing.T) {
 
 			expectFail: false,
 		},
+		{
+			name: "Should not allow slash in image name",
+
+			withApplication: func() Application {
+				app := generateValidApplication()
+
+				app.Image.URI = ""
+				app.Image.Name = "a/b"
+
+				return app
+			},
+
+			expectFail:    true,
+			expectedError: "bla bla lolz",
+		},
 	}
 
 	for _, tc := range testCases {

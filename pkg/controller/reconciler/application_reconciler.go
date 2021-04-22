@@ -52,6 +52,18 @@ func (a *applicationReconciler) Reconcile(node *resourcetree.ResourceNode) (Reco
 			return ReconcilationResult{}, fmt.Errorf("retrieving Github information")
 		}
 
+		// TODO: application reconciler must get container repository and use URI from it
+		// something something:
+		if a.commonMetadata.ApplicationDeclaration.Image.HasName() {
+			repo, err := a.handlers.ContainerRepository.GetContainerRepository(a.commonMetadata.ApplicationDeclaration.Image.Name)
+			if err != nil {
+				return ReconcilationResult{}, fmt.Errorf("getting container repository: %w", err)
+			}
+
+			repoURI := repo.URI()
+			a.commonMetadata.ApplicationDeclaration.Image.URI = repoURI.String() // TODO: string? or somettihnhg else
+		}
+
 		err = a.client.ScaffoldApplication(a.commonMetadata.Ctx, &client.ScaffoldApplicationOpts{
 			OutputDir:        a.commonMetadata.Declaration.Github.OutputPath,
 			ID:               &a.commonMetadata.ClusterID,

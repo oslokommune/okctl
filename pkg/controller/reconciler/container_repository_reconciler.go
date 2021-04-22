@@ -34,7 +34,34 @@ func (c *containerRepositoryReconciler) SetStateHandlers(handlers *clientCore.St
 func (c *containerRepositoryReconciler) Reconcile(node *resourcetree.ResourceNode) (ReconcilationResult, error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		// TODO Implement this
+		fmt.Println("CREATING CONTAINER REPO")
+		if !c.commonMetadata.ApplicationDeclaration.Image.HasName() {
+			return ReconcilationResult{}, nil
+		}
+
+		_, err := c.handlers.ContainerRepository.GetContainerRepository(c.commonMetadata.ApplicationDeclaration.Image.Name + clustername something) // TODO use contains or something.. what is stackname...
+		// aha see StackName: cfn.NewStackNamer().ContainerRepository(opts.ImageName, opts.ClusterID.ClusterName),
+		// in service_container_repository_client.go
+		// todo adjust this
+
+		// wip comment: err != nil means not found
+		if err != nil { // TODO: How do we detect difference in actual error and not found?
+			createdRepo, err := c.client.CreateContainerRepository(c.commonMetadata.Ctx, client.CreateContainerRepositoryOpts{
+				ClusterID: c.commonMetadata.ClusterID,
+				ImageName: c.commonMetadata.ApplicationDeclaration.Image.Name,
+			})
+			if err != nil {
+				return ReconcilationResult{}, fmt.Errorf("creating container repository: %w", err)
+			}
+
+			err = c.handlers.ContainerRepository.SaveContainerRepository(createdRepo)
+			if err != nil {
+			    return ReconcilationResult{}, fmt.Errorf("saving container repository: %w", err)
+			}
+		}
+
+		return ReconcilationResult{}, nil
+
 	case resourcetree.ResourceNodeStateAbsent:
 		err := c.client.DeleteContainerRepository(c.commonMetadata.Ctx, client.DeleteContainerRepositoryOpts{
 			ClusterID: c.commonMetadata.ClusterID,

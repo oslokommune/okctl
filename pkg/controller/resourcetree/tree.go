@@ -63,6 +63,8 @@ const (
 	ResourceNodeTypeCleanupSG ResourceNodeType = "cleanup-sg"
 	// ResourceNodeTypeServiceQuota represents a service quota check
 	ResourceNodeTypeServiceQuota ResourceNodeType = "service-quota"
+	// ResourceNodeTypeContainerRepository represents a container repository
+	ResourceNodeTypeContainerRepository ResourceNodeType = "container-repository"
 )
 
 // String representation of the ResourceNodeType

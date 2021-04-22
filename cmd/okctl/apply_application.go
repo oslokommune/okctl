@@ -79,6 +79,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 			reconciliationManager := reconciler.NewCompositeReconciler(spin,
 				reconciler.NewApplicationReconciler(services.ApplicationService),
+				reconciler.NewContainerRepositoryReconciler(services.ContainerRepository),
 			)
 
 			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{

@@ -81,6 +81,49 @@ func TestApplicationValidation(t *testing.T) {
 
 			expectFail: false,
 		},
+		{
+			name: "Should not allow both image URI and name",
+
+			withApplication: func() Application {
+				app := generateValidApplication()
+
+				app.Image.URI = "012345678912.dkr.ecr.eu-west-1.amazonaws.com/cluster-test-testapp"
+				app.Image.Name = "somename"
+
+				return app
+			},
+
+			expectFail:    true,
+			expectedError: "image: name and uri are mutually exclusive, remove one of them.",
+		},
+		{
+			name: "Should allow image URI only",
+
+			withApplication: func() Application {
+				app := generateValidApplication()
+
+				app.Image.URI = "012345678912.dkr.ecr.eu-west-1.amazonaws.com/cluster-test-testapp"
+				app.Image.Name = ""
+
+				return app
+			},
+
+			expectFail: false,
+		},
+		{
+			name: "Should allow image name only",
+
+			withApplication: func() Application {
+				app := generateValidApplication()
+
+				app.Image.URI = ""
+				app.Image.Name = "somename"
+
+				return app
+			},
+
+			expectFail: false,
+		},
 	}
 
 	for _, tc := range testCases {

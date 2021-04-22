@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"fmt"
+	"github.com/mishudark/errors"
 	"net/url"
 	"regexp"
 
@@ -47,6 +48,18 @@ func (a Application) Validate() error {
 	return validation.ValidateStruct(&a,
 		validation.Field(&a.Metadata, validation.Required),
 		validation.Field(&a.Image, validation.Required),
+		validation.Field(&a.Image, validation.By(func(value interface{}) error {
+			image, ok := value.(ApplicationImage)
+			if !ok {
+				return errors.New("casting to ApplicationImage")
+			}
+
+			if image.HasName() && image.HasURI() {
+				return errors.New("name and uri are mutually exclusive, remove one of them")
+			}
+
+			return nil
+		})),
 		validation.Field(&a.ImagePullSecret, is.Subdomain),
 		validation.Field(&a.Port, validation.Min(minimumPossiblePort), validation.Max(maximumPossiblePort)),
 		validation.Field(&a.Replicas, validation.Min(minimumPossibleReplicas)),
@@ -87,11 +100,19 @@ type ApplicationImage struct {
 	URI  string `json:"uri"`
 }
 
+func (a ApplicationImage) HasName() bool {
+	return len(a.Name) > 0
+}
+
+func (a ApplicationImage) HasURI() bool {
+	return len(a.URI) > 0
+}
+
 // Validate ensures ApplicationImage contains the right information
 func (a ApplicationImage) Validate() error {
 	return validation.ValidateStruct(&a,
 		validation.Field(&a.Name, is.Subdomain),
-		validation.Field(&a.URI), // TODO: exclusive OR
+		validation.Field(&a.URI),
 	)
 }
 

@@ -32,6 +32,7 @@ type applyApplicationOpts struct {
 func (o applyApplicationOpts) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.File, validation.Required),
+		validation.Field(&o.Application),
 	)
 }
 

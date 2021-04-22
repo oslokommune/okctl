@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/commands"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
@@ -30,8 +32,8 @@ metadata:
   # The Kubernetes namespace where your app will live
   namespace: okctl
 
-images:
-  - uri: docker.pkg.github.com/my-org/my-repo/my-package:0.0.1
+image:
+  uri: docker.pkg.github.com/my-org/my-repo/my-package:0.0.1
 
 # The URL your app should be available on
 # Change to something other than https to disable configuring TLS
@@ -81,7 +83,11 @@ func TestNewApplicationService(t *testing.T) {
 		clientFilesystem.NewApplicationStore(mockPaths, &aferoFs),
 	)
 
-	application, err := commands.InferApplicationFromStdinOrFile(nil, testInputBuffer, &aferoFs, "-")
+	cluster := v1alpha1.Cluster{
+		ClusterRootDomain: "kjoremiljo.oslo.systems",
+	}
+
+	application, err := commands.InferApplicationFromStdinOrFile(cluster, testInputBuffer, &aferoFs, "-")
 	assert.NilError(t, err)
 
 	clusterName := "test"

@@ -7,14 +7,12 @@ import (
 )
 
 func generateValidApplication() Application {
-	app := NewApplication()
+	app := NewApplication(Cluster{})
 
 	app.Metadata.Name = "test-app"
 	app.Metadata.Namespace = "test"
 
-	app.Images = append(app.Images, ApplicationImage{
-		URI: "testimage:latest",
-	})
+	app.Image.URI = "testimage:latest"
 	app.ImagePullSecret = "sometoken"
 
 	app.SubDomain = "testapp"
@@ -50,7 +48,7 @@ func TestApplicationValidation(t *testing.T) {
 			withApplication: func() Application {
 				app := generateValidApplication()
 
-				app.Images[0].URI = "postgres"
+				app.Image.URI = "postgres"
 
 				return app
 			},
@@ -63,7 +61,7 @@ func TestApplicationValidation(t *testing.T) {
 			withApplication: func() Application {
 				app := generateValidApplication()
 
-				app.Images[0].URI = "ghcr.io/oslokommune/test-app"
+				app.Image.URI = "ghcr.io/oslokommune/test-app"
 
 				return app
 			},
@@ -76,7 +74,7 @@ func TestApplicationValidation(t *testing.T) {
 			withApplication: func() Application {
 				app := generateValidApplication()
 
-				app.Images[0].URI = "012345678912.dkr.ecr.eu-west-1.amazonaws.com/cluster-test-testapp"
+				app.Image.URI = "012345678912.dkr.ecr.eu-west-1.amazonaws.com/cluster-test-testapp"
 
 				return app
 			},

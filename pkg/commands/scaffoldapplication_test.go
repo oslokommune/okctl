@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"github.com/spf13/afero"
 
 	"github.com/sebdah/goldie/v2"
@@ -42,10 +44,14 @@ func TestApplicationDeclarationScaffold(t *testing.T) {
 func TestEnsureValidDefaultApplicationTemplate(t *testing.T) {
 	var buf bytes.Buffer
 
+	cluster := v1alpha1.Cluster{
+		ClusterRootDomain: "okctl.io",
+	}
+
 	err := ScaffoldApplicationDeclaration(&buf, ScaffoldApplicationOpts{})
 	assert.NoError(t, err)
 
-	application, err := InferApplicationFromStdinOrFile(&buf, &afero.Afero{}, "-")
+	application, err := InferApplicationFromStdinOrFile(cluster, &buf, &afero.Afero{}, "-")
 	assert.NoError(t, err)
 
 	err = application.Validate()

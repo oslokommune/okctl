@@ -1,8 +1,6 @@
 package resources
 
 import (
-	"fmt"
-
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -60,7 +58,7 @@ func createContainers(app v1alpha1.Application) []corev1.Container {
 
 	containers := []corev1.Container{{
 		Name:         app.Metadata.Name,
-		Image:        fmt.Sprintf("%s:%s", app.Image, app.Version),
+		Image:        app.Image.URI,
 		Env:          envVars,
 		VolumeMounts: volumeMounts,
 	}}

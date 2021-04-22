@@ -35,11 +35,12 @@ metadata:
   # The Kubernetes namespace where your app will live
   namespace: my-namespace
 
-# A collection of images required to run the application.
-image: docker.pkg.github.com/my-org/my-repo/my-package
-
-# The version of your app which is available as an image
-version: 0.0.1
+# A Docker image defining the application.
+image: 
+  # uri defines where the image can be pulled from
+  uri: karthequian/helloworld:latest
+  # name defines the name of the image to make available in an ECR repository
+  #name: my-app
 
 # The subdomain of the URL your app should be available on
 # Example in a cluster with {{ .PrimaryHostedZone }} as root cluster URL (as defined by primary DNS zone in the
@@ -54,7 +55,7 @@ subDomain: my-app
 # The port your app listens on
 # Comment this out to avoid setting up a service (required if url is specified)
 #
-port: 3000
+port: 80
 
 # How many replicas of your application should we scaffold
 #replicas: 3 # 1 by default

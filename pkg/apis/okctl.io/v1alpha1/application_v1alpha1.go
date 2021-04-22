@@ -27,7 +27,7 @@ type Application struct {
 
 	Metadata ApplicationMeta `json:"metadata"`
 
-	Images []ApplicationImage `json:"images"`
+	Image ApplicationImage `json:"image"`
 
 	ImagePullSecret string `json:"ImagePullSecret"`
 	SubDomain       string `json:"subDomain"`
@@ -46,7 +46,7 @@ type Application struct {
 func (a Application) Validate() error {
 	return validation.ValidateStruct(&a,
 		validation.Field(&a.Metadata, validation.Required),
-		validation.Field(&a.Images, validation.Required, validation.Length(1, 0)),
+		validation.Field(&a.Image, validation.Required),
 		validation.Field(&a.ImagePullSecret, is.Subdomain),
 		validation.Field(&a.Port, validation.Min(minimumPossiblePort), validation.Max(maximumPossiblePort)),
 		validation.Field(&a.Replicas, validation.Min(minimumPossibleReplicas)),
@@ -81,6 +81,7 @@ func ApplicationTypeMeta() metav1.TypeMeta {
 	}
 }
 
+// ApplicationImage defines which Docker image the application should use
 type ApplicationImage struct {
 	Name string `json:"name"`
 	URI  string `json:"uri"`
@@ -90,7 +91,7 @@ type ApplicationImage struct {
 func (a ApplicationImage) Validate() error {
 	return validation.ValidateStruct(&a,
 		validation.Field(&a.Name, is.Subdomain),
-		validation.Field(&a.URI),
+		validation.Field(&a.URI), // TODO: exclusive OR
 	)
 }
 
@@ -104,16 +105,21 @@ func (a Application) HasService() bool {
 	return a.Port > 0
 }
 
+// Url returns the URL where the application is made available
 func (a Application) Url() (url.URL, error) {
 	tmpUrl, err := url.Parse(fmt.Sprintf("%s.%s", a.SubDomain, a.cluster.ClusterRootDomain))
-	return *tmpUrl, err
+	if err != nil {
+		return url.URL{}, fmt.Errorf("parsing application URL: %w", err)
+	}
+
+	return *tmpUrl, nil
 }
 
 // NewApplication returns an initialized application definition
 func NewApplication(cluster Cluster) Application {
 	return Application{
 		TypeMeta: ApplicationTypeMeta(),
-		Images:   []ApplicationImage{},
+		Image:    ApplicationImage{},
 		cluster:  cluster,
 	}
 }

@@ -145,8 +145,8 @@ func CreateResourceDependencyTree() (root *resourcetree.ResourceNode) {
 func CreateApplicationResourceDependencyTree() (root *resourcetree.ResourceNode) {
 	root = createNode(nil, resourcetree.ResourceNodeTypeGroup)
 
-	ecrNode := createNode(root, resourcetree.ResourceNodeTypeContainerRepository)
-	createNode(ecrNode, resourcetree.ResourceNodeTypeApplication)
+	containerRepositoryNode := createNode(root, resourcetree.ResourceNodeTypeContainerRepository)
+	createNode(containerRepositoryNode, resourcetree.ResourceNodeTypeApplication)
 
 	return root
 }

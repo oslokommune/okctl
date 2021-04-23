@@ -21,15 +21,42 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// SynchronizeApplication knows how to discover differences between desired and actual state and rectify them
-func SynchronizeApplication(reconcilerManager reconciler.Reconciler, tree *resourcetree.ResourceNode) error {
-	tree.ApplyFunction(setAllToPresent, tree)
+// SynchronizeApplicationOpts contains references necessary to synchronize an application
+type SynchronizeApplicationOpts struct {
+	ReconciliationManager reconciler.Reconciler
+	Application           v1alpha1.Application
 
-	return controller.HandleNode(reconcilerManager, tree)
+	Tree *resourcetree.ResourceNode
 }
 
-func setAllToPresent(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
-	receiver.State = resourcetree.ResourceNodeStatePresent
+// SynchronizeApplication knows how to discover differences between desired and actual state and rectify them
+func SynchronizeApplication(opts SynchronizeApplicationOpts) error {
+	desiredResourceOpts := identifyDesiredResources(opts.Application.Image)
+
+	opts.Tree.ApplyFunction(applyDesiredState(desiredResourceOpts), opts.Tree)
+
+	return controller.HandleNode(opts.ReconciliationManager, opts.Tree)
+}
+
+type desiredResources struct {
+	ContainerRepository bool
+}
+
+func identifyDesiredResources(image v1alpha1.ApplicationImage) desiredResources {
+	return desiredResources{
+		ContainerRepository: image.HasName(),
+	}
+}
+
+func applyDesiredState(opts desiredResources) resourcetree.ApplyFn {
+	return func(receiver *resourcetree.ResourceNode, target *resourcetree.ResourceNode) {
+		switch receiver.Type {
+		case resourcetree.ResourceNodeTypeContainerRepository:
+			receiver.State = controller.BoolToState(opts.ContainerRepository)
+		case resourcetree.ResourceNodeTypeApplication:
+			receiver.State = resourcetree.ResourceNodeStatePresent
+		}
+	}
 }
 
 // InferApplicationFromStdinOrFile returns an okctl application based on input. The function will parse input either

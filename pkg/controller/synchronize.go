@@ -18,10 +18,12 @@ import (
 )
 
 // SynchronizeOpts contains the necessary information that Synchronize() needs to do its work
+// nolint: maligned
 type SynchronizeOpts struct {
-	ID    api.ID
-	Debug bool
-	Out   io.Writer
+	ID        api.ID
+	Debug     bool
+	Out       io.Writer
+	DeleteAll bool
 
 	ClusterDeclaration    *v1alpha1.Cluster
 	ReconciliationManager reconciler.Reconciler
@@ -40,9 +42,19 @@ func Synchronize(opts *SynchronizeOpts) error {
 	}
 
 	desiredTree.ApplyFunction(applyDeclaration(opts.ClusterDeclaration), &resourcetree.ResourceNode{})
+
+	if opts.DeleteAll {
+		desiredTree.ApplyFunction(setStateAbsent(), &resourcetree.ResourceNode{})
+	}
+
 	currentStateTree.ApplyFunction(applyExistingState(existingResources), &resourcetree.ResourceNode{})
 
 	diffTree.ApplyFunction(applyDeclaration(opts.ClusterDeclaration), &resourcetree.ResourceNode{})
+
+	if opts.DeleteAll {
+		diffTree.ApplyFunction(setStateAbsent(), &resourcetree.ResourceNode{})
+	}
+
 	diffTree.ApplyFunction(applyCurrentState, currentStateTree)
 
 	if opts.Debug {
@@ -51,23 +63,59 @@ func Synchronize(opts *SynchronizeOpts) error {
 		_, _ = fmt.Fprintf(opts.Out, "Present resources in difference tree (what should be generated): \n%s\n\n", diffTree.String())
 	}
 
+	if opts.DeleteAll {
+		return HandleNodeReverse(opts.ReconciliationManager, diffTree)
+	}
+
 	return HandleNode(opts.ReconciliationManager, diffTree)
+}
+
+// HandleNodeReverse starts evaluating the nodes from the
+// leaves to the root of the tree
+//goland:noinspection GoNilness
+func HandleNodeReverse(reconcilerManager reconciler.Reconciler, currentNode *resourcetree.ResourceNode) (err error) {
+	for _, node := range currentNode.Children {
+		err = HandleNodeReverse(reconcilerManager, node)
+	}
+
+	result := reconciler.ReconcilationResult{
+		Requeue:      true,
+		RequeueAfter: 0 * time.Second,
+	}
+
+	for requeues := 0; result.Requeue; requeues++ {
+		if requeues == constant.DefaultMaxReconciliationRequeues {
+			return fmt.Errorf("maximum allowed reconciliation requeues reached: %w", err)
+		}
+
+		time.Sleep(result.RequeueAfter)
+
+		result, err = reconcilerManager.Reconcile(currentNode)
+		if err != nil && !result.Requeue {
+			return fmt.Errorf("reconciling node (%s): %w", resourcetree.ResourceNodeTypeToString(currentNode.Type), err)
+		}
+	}
+
+	return nil
 }
 
 // HandleNode knows how to run Reconcile() on every node of a ResourceNode tree
 //goland:noinspection GoNilness
 func HandleNode(reconcilerManager reconciler.Reconciler, currentNode *resourcetree.ResourceNode) (err error) {
-	reconciliationResult := reconciler.ReconcilationResult{Requeue: true, RequeueAfter: 0 * time.Second}
+	result := reconciler.ReconcilationResult{
+		Requeue:      true,
+		RequeueAfter: 0 * time.Second,
+	}
 
-	for requeues := 0; reconciliationResult.Requeue; requeues++ {
+	for requeues := 0; result.Requeue; requeues++ {
 		if requeues == constant.DefaultMaxReconciliationRequeues {
 			return fmt.Errorf("maximum allowed reconciliation requeues reached: %w", err)
 		}
 
-		time.Sleep(reconciliationResult.RequeueAfter)
+		time.Sleep(result.RequeueAfter)
 
-		reconciliationResult, err = reconcilerManager.Reconcile(currentNode)
-		if err != nil && !reconciliationResult.Requeue {
+		result, err = reconcilerManager.Reconcile(currentNode)
+		if err != nil && !result.Requeue {
 			return fmt.Errorf("reconciling node (%s): %w", resourcetree.ResourceNodeTypeToString(currentNode.Type), err)
 		}
 	}
@@ -171,6 +219,13 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 		case resourcetree.ResourceNodeTypePostgres:
 			receiver.State = boolToState(existingResources.hasPostgres)
 		}
+	}
+}
+
+// setStateAbsent sets the state as absent
+func setStateAbsent() resourcetree.ApplyFn {
+	return func(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
+		receiver.State = resourcetree.ResourceNodeStateAbsent
 	}
 }
 

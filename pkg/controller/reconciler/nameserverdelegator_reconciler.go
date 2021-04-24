@@ -5,7 +5,6 @@ import (
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
-	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
@@ -53,7 +52,8 @@ func (z *nameserverDelegationReconciler) Reconcile(node *resourcetree.ResourceNo
 			return result, fmt.Errorf("handling nameservers: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		return result, errors.New("deletion of the hosted zone delegation is not implemented")
+		// Should create a PR for removing the delegation.
+		return result, nil
 	}
 
 	return result, nil

@@ -139,6 +139,23 @@ func (c *componentState) GetPostgresDatabase(stackName string) (*client.Postgres
 	return db.Convert(), nil
 }
 
+func (c *componentState) GetPostgresDatabases() ([]*client.PostgresDatabase, error) {
+	var dbs []*PostgresDatabase
+
+	err := c.node.All(&dbs)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := make([]*client.PostgresDatabase, len(dbs))
+
+	for i, db := range dbs {
+		ret[i] = db.Convert()
+	}
+
+	return ret, nil
+}
+
 // NewComponentState returns an initialised state client
 func NewComponentState(node stormpkg.Node) client.ComponentState {
 	return &componentState{

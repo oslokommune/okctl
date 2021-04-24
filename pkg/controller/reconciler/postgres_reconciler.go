@@ -70,7 +70,26 @@ func (z *postgresReconciler) Reconcile(node *resourcetree.ResourceNode) (result 
 			}
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		return result, fmt.Errorf("not implemented")
+		vpc, err := z.stateHandlers.Vpc.GetVpc(
+			cfn.NewStackNamer().Vpc(z.commonMetadata.Declaration.Metadata.Name),
+		)
+		if err != nil {
+			return result, fmt.Errorf("getting vpc: %w", err)
+		}
+
+		for _, db := range z.commonMetadata.Declaration.Databases.Postgres {
+			err := z.client.DeletePostgresDatabase(z.commonMetadata.Ctx, client.DeletePostgresDatabaseOpts{
+				ID:              z.commonMetadata.ClusterID,
+				ApplicationName: db.Name,
+				Namespace:       db.Namespace,
+				VpcID:           vpc.VpcID,
+			})
+			if err != nil {
+				return result, fmt.Errorf("deleting database: %s, got: %w", db.Name, err)
+			}
+		}
+
+		return result, nil
 	}
 
 	return result, nil

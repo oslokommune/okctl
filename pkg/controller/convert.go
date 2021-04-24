@@ -56,6 +56,12 @@ func IdentifyResourcePresence(id api.ID, handlers *clientCore.StateHandlers) (Ex
 		return ExistingResources{}, err
 	}
 
+	// FIXME: Need to check if these DBs are already created or not
+	dbs, err := handlers.Component.GetPostgresDatabases()
+	if err != nil {
+		return ExistingResources{}, err
+	}
+
 	return ExistingResources{
 		hasPrimaryHostedZone:                  !isNotFound(handlers.Domain.GetPrimaryHostedZone()),
 		hasVPC:                                !isNotFound(handlers.Vpc.GetVpc(cfn.NewStackNamer().Vpc(id.ClusterName))),
@@ -74,7 +80,7 @@ func IdentifyResourcePresence(id api.ID, handlers *clientCore.StateHandlers) (Ex
 		hasDelegatedHostedZoneNameservers:     hz != nil && hz.IsDelegated,
 		hasDelegatedHostedZoneNameserversTest: false,
 		hasUsers:                              false, // For now we will always check if there are missing users
-		hasPostgres:                           false, // For now we will always check if there are missing postgres databases
+		hasPostgres:                           len(dbs) > 0,
 	}, nil
 }
 
@@ -90,8 +96,10 @@ func CreateResourceDependencyTree() (root *resourcetree.ResourceNode) {
 	createNode(primaryHostedZoneNode, resourcetree.ResourceNodeTypeNameserverDelegator)
 
 	vpcNode = createNode(primaryHostedZoneNode, resourcetree.ResourceNodeTypeVPC)
+	createNode(vpcNode, resourcetree.ResourceNodeTypeCleanupSG)
 
 	clusterNode = createNode(vpcNode, resourcetree.ResourceNodeTypeCluster)
+	createNode(clusterNode, resourcetree.ResourceNodeTypeCleanupALB)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalSecrets)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeAutoscaler)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeBlockstorage)

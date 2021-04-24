@@ -144,7 +144,7 @@ func (r *Runner) Delete(stackName string) error {
 }
 
 // CreateIfNotExists creates a cloud formation stack if none exists from before
-func (r *Runner) CreateIfNotExists(stackName string, template []byte, capabilities []string, timeout int64) error {
+func (r *Runner) CreateIfNotExists(clusterName, stackName string, template []byte, capabilities []string, timeout int64) error {
 	yes, err := r.existsAndReady(stackName)
 	if err != nil {
 		return err
@@ -169,6 +169,14 @@ func (r *Runner) CreateIfNotExists(stackName string, template []byte, capabiliti
 			{
 				Key:   aws.String(v1alpha1.OkctlCommitTag),
 				Value: aws.String(v.ShortCommit),
+			},
+			{
+				Key:   aws.String(v1alpha1.OkctlManagedTag),
+				Value: aws.String("true"),
+			},
+			{
+				Key:   aws.String(v1alpha1.OkctlClusterNameTag),
+				Value: aws.String(clusterName),
 			},
 		},
 	}

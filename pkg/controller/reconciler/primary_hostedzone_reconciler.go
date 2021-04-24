@@ -6,7 +6,6 @@ import (
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
 	"github.com/miekg/dns"
-	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
@@ -47,7 +46,20 @@ func (z *zoneReconciler) Reconcile(node *resourcetree.ResourceNode) (result Reco
 			return result, fmt.Errorf("creating hosted zone: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		return result, errors.New("deletion of the hosted zone resource is not implemented")
+		hz, err := z.stateHandlers.Domain.GetPrimaryHostedZone()
+		if err != nil {
+			return result, fmt.Errorf("getting primary hosted zone: %w", err)
+		}
+
+		err = z.client.DeletePrimaryHostedZone(z.commonMetadata.Ctx, client.DeletePrimaryHostedZoneOpts{
+			ID:           z.commonMetadata.ClusterID,
+			HostedZoneID: hz.HostedZoneID,
+		})
+		if err != nil {
+			return result, fmt.Errorf("deleting primary hosted zone: %w", err)
+		}
+
+		return result, nil
 	}
 
 	return result, nil

@@ -108,10 +108,11 @@ func (s *manifestService) CreateNamespace(_ context.Context, opts api.CreateName
 	}
 
 	m := &client.KubernetesManifest{
-		ID:      opts.ID,
-		Name:    opts.Namespace,
-		Type:    client.ManifestTypeNamespace,
-		Content: ns.Manifest,
+		ID:        opts.ID,
+		Name:      opts.Namespace,
+		Namespace: opts.Namespace,
+		Type:      client.ManifestTypeNamespace,
+		Content:   ns.Manifest,
 	}
 
 	err = s.state.SaveKubernetesManifests(m)

@@ -36,7 +36,7 @@ func (c *vpcCloudProvider) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
 
 	r := cfn.NewRunner(c.provider)
 
-	err = r.CreateIfNotExists(stackName, template, nil, defaultTimeOut)
+	err = r.CreateIfNotExists(opts.ID.ClusterName, stackName, template, nil, defaultTimeOut)
 	if err != nil {
 		return nil, fmt.Errorf("creating vpc stack: %w", err)
 	}

@@ -155,6 +155,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			vpcProvisioned := vpc != nil
 
+			// This should be a reconciler, e.g., a root node
 			err = servicequota.CheckQuotas(
 				servicequota.NewVpcCheck(vpcProvisioned, constant.DefaultRequiredVpcs, o.CloudProvider),
 				servicequota.NewEipCheck(vpcProvisioned, constant.DefaultRequiredEpis, o.CloudProvider),
@@ -195,6 +196,8 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				reconciler.NewNameserverDelegatedTestReconciler(services.Domain),
 				reconciler.NewUsersReconciler(services.IdentityManager),
 				reconciler.NewPostgresReconciler(services.Component),
+				reconciler.NewCleanupALBReconciler(o.CloudProvider),
+				reconciler.NewCleanupSGReconciler(o.CloudProvider),
 			)
 
 			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{

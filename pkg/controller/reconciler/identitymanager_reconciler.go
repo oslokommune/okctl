@@ -63,7 +63,12 @@ func (z *identityManagerReconciler) Reconcile(node *resourcetree.ResourceNode) (
 			return result, fmt.Errorf("creating identity manager resource: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		return result, errors.New("deleting identity manager resource is not implemented")
+		err := z.client.DeleteIdentityPool(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
+		if err != nil {
+			return result, fmt.Errorf("deleting identity manager: %w", err)
+		}
+
+		return result, nil
 	}
 
 	return result, nil

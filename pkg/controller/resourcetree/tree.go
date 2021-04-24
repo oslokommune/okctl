@@ -55,6 +55,10 @@ const (
 	ResourceNodeTypePostgres
 	// ResourceNodeTypeApplication represents an okctl application resoure
 	ResourceNodeTypeApplication
+	// ResourceNodeTypeCleanupALB represents a cleanup of ALBs
+	ResourceNodeTypeCleanupALB
+	// ResourceNodeTypeCleanupSG represents a cleanup of SecurityGroups
+	ResourceNodeTypeCleanupSG
 )
 
 // ResourceNodeTypeToString knows how to convert a Resource Node type to a human readable string
@@ -99,6 +103,10 @@ func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
 		return "Users"
 	case ResourceNodeTypePostgres:
 		return "Postgres"
+	case ResourceNodeTypeCleanupALB:
+		return "Cleanup ALBs"
+	case ResourceNodeTypeCleanupSG:
+		return "Cleanup SGs"
 	default:
 		return "N/A"
 	}
@@ -127,10 +135,6 @@ type CommonMetadata struct {
 	Declaration            *v1alpha1.Cluster
 	ApplicationDeclaration v1alpha1.Application
 }
-
-// StateRefreshFn is a function that attempts to retrieve state potentially can only be retrieved at runtime. E.g.:
-// state that can only exist after an external resource has been created
-type StateRefreshFn func(node *ResourceNode)
 
 // ResourceNode represents a component of the cluster and its dependencies
 type ResourceNode struct {

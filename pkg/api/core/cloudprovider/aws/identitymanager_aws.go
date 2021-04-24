@@ -49,7 +49,7 @@ func (s *identityManagerCloudProvider) CreateIdentityPoolClient(opts api.CreateI
 
 	r := cfn.NewRunner(s.provider)
 
-	err = r.CreateIfNotExists(stackName, template, nil, defaultTimeOut)
+	err = r.CreateIfNotExists(opts.ID.ClusterName, stackName, template, nil, defaultTimeOut)
 	if err != nil {
 		return nil, fmt.Errorf("creating identity pool client cloud formation stack: %w", err)
 	}
@@ -115,7 +115,7 @@ func (s *identityManagerCloudProvider) CreateIdentityPool(certificateARN string,
 
 	r := cfn.NewRunner(s.provider)
 
-	err = r.CreateIfNotExists(stackName, template, nil, defaultTimeOut)
+	err = r.CreateIfNotExists(opts.ID.ClusterName, stackName, template, nil, defaultTimeOut)
 	if err != nil {
 		return nil, fmt.Errorf("creating identity pool cloud formation stack: %w", err)
 	}
@@ -134,7 +134,7 @@ func (s *identityManagerCloudProvider) CreateIdentityPool(certificateARN string,
 
 	aliasStackName := cfn.NewStackNamer().AliasRecordSet(opts.ID.ClusterName, slug.Make(d.UserPoolDomain))
 
-	err = r.CreateIfNotExists(aliasStackName, aliasTemplate, nil, defaultTimeOut)
+	err = r.CreateIfNotExists(opts.ID.ClusterName, aliasStackName, aliasTemplate, nil, defaultTimeOut)
 	if err != nil {
 		return nil, fmt.Errorf("creating alias cloud formation stack: %w", err)
 	}
@@ -185,7 +185,7 @@ func (s *identityManagerCloudProvider) CreateIdentityPoolUser(opts api.CreateIde
 
 	r := cfn.NewRunner(s.provider)
 
-	err = r.CreateIfNotExists(stackName, template, nil, defaultTimeOut)
+	err = r.CreateIfNotExists(opts.ID.ClusterName, stackName, template, nil, defaultTimeOut)
 	if err != nil {
 		return nil, fmt.Errorf("creating identity pool user cloud formation stack: %w", err)
 	}

@@ -22,6 +22,7 @@ type CreatePostgresDatabaseOpts struct {
 type DeletePostgresDatabaseOpts struct {
 	ID              api.ID
 	ApplicationName string
+	Namespace       string
 	VpcID           string
 }
 
@@ -75,4 +76,5 @@ type ComponentState interface {
 	SavePostgresDatabase(database *PostgresDatabase) error
 	RemovePostgresDatabase(stackName string) error
 	GetPostgresDatabase(stackName string) (*PostgresDatabase, error)
+	GetPostgresDatabases() ([]*PostgresDatabase, error)
 }

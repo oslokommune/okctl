@@ -26,6 +26,7 @@ func (c *componentCloudProvider) CreateS3Bucket(opts *api.CreateS3BucketOpts) (*
 	r := cfn.NewRunner(c.provider)
 
 	err = r.CreateIfNotExists(
+		opts.ID.ClusterName,
 		opts.StackName,
 		template,
 		nil,
@@ -93,6 +94,7 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 	r := cfn.NewRunner(c.provider)
 
 	err = r.CreateIfNotExists(
+		opts.ID.ClusterName,
 		opts.StackName,
 		template,
 		[]string{cfn.CapabilityNamedIam, cfn.CapabilityAutoExpand},

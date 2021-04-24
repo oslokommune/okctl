@@ -3,19 +3,17 @@
 package cleanup
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
-	"github.com/oslokommune/okctl/pkg/version"
 )
 
 // DeleteDanglingALBs will delete any remaining ALBs in a vpc
 func DeleteDanglingALBs(provider v1alpha1.CloudProvider, vpcID string) error {
-	balancers, err := provider.ELBV2().DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
-		Marker:   nil,
-		PageSize: nil,
-	})
+	balancers, err := provider.ELBV2().DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{})
 	if err != nil {
 		return err
 	}
@@ -23,8 +21,7 @@ func DeleteDanglingALBs(provider v1alpha1.CloudProvider, vpcID string) error {
 	loadBalancers := balancers.LoadBalancers
 
 	for _, balancer := range loadBalancers {
-		balancerVPC := *balancer.VpcId
-		if vpcID == balancerVPC {
+		if vpcID == *balancer.VpcId {
 			arn := *balancer.LoadBalancerArn
 
 			_, err := provider.ELBV2().DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
@@ -50,9 +47,9 @@ func DeleteDanglingSecurityGroups(provider v1alpha1.CloudProvider, vpcID string)
 				},
 			},
 			{
-				Name: aws.String("tag:alpha.okctl.io/okctl-version"),
+				Name: aws.String(fmt.Sprintf("tag:%s", v1alpha1.OkctlManagedTag)),
 				Values: []*string{
-					aws.String(version.GetVersionInfo().Version),
+					aws.String("true"),
 				},
 			},
 		},

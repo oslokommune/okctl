@@ -1,16 +1,16 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 
-	"github.com/asdine/storm/v3"
+	"github.com/oslokommune/okctl/pkg/controller"
+	"github.com/oslokommune/okctl/pkg/controller/reconciler"
+	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/oslokommune/okctl/pkg/context"
-
-	"github.com/oslokommune/okctl/pkg/client"
-
-	"github.com/oslokommune/okctl/pkg/api/core/cleanup"
 
 	"github.com/AlecAivazis/survey/v2"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -20,8 +20,7 @@ import (
 )
 
 const (
-	deleteClusterArgs    = 0
-	deleteHostedZoneFlag = "i-know-what-i-am-doing-delete-hosted-zone-and-records"
+	deleteClusterArgs = 0
 )
 
 func buildDeleteCommand(o *okctl.Okctl) *cobra.Command {
@@ -33,7 +32,6 @@ func buildDeleteCommand(o *okctl.Okctl) *cobra.Command {
 	deleteClusterCommand := buildDeleteClusterCommand(o)
 	cmd.AddCommand(deleteClusterCommand)
 	cmd.AddCommand(buildDeletePostgresCommand(o))
-	deleteClusterCommand.Flags().String(deleteHostedZoneFlag, "false", "Delete hosted zone")
 
 	return cmd
 }
@@ -91,137 +89,81 @@ including VPC, this is a highly destructive operation.`,
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			var spinnerWriter io.Writer
+			if opts.DisableSpinner {
+				spinnerWriter = ioutil.Discard
+			} else {
+				spinnerWriter = o.Err
+			}
+
+			spin, err := spinner.New("synchronizing", spinnerWriter)
+			if err != nil {
+				return fmt.Errorf("error creating spinner: %w", err)
+			}
+
 			id := api.ID{
 				Region:       opts.Region,
 				AWSAccountID: opts.AWSAccountID,
 				ClusterName:  opts.ClusterName,
 			}
 
-			delzones, _ := cmd.Flags().GetString(deleteHostedZoneFlag)
+			handlers := o.StateHandlers(o.StateNodes())
 
-			ready, err := checkifReady(id.ClusterName, o, opts.Confirm)
+			services, err := o.ClientServices(handlers)
+			if err != nil {
+				return fmt.Errorf("error getting services: %w", err)
+			}
+
+			reconciliationManager := reconciler.NewCompositeReconciler(spin,
+				reconciler.NewArgocdReconciler(services.ArgoCD, services.Github),
+				reconciler.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService),
+				reconciler.NewAutoscalerReconciler(services.Autoscaler),
+				reconciler.NewKubePrometheusStackReconciler(services.Monitoring),
+				reconciler.NewLokiReconciler(services.Monitoring),
+				reconciler.NewPromtailReconciler(services.Monitoring),
+				reconciler.NewTempoReconciler(services.Monitoring),
+				reconciler.NewBlockstorageReconciler(services.Blockstorage),
+				reconciler.NewClusterReconciler(services.Cluster),
+				reconciler.NewExternalDNSReconciler(services.ExternalDNS),
+				reconciler.NewExternalSecretsReconciler(services.ExternalSecrets),
+				reconciler.NewIdentityManagerReconciler(services.IdentityManager),
+				reconciler.NewVPCReconciler(services.Vpc),
+				reconciler.NewZoneReconciler(services.Domain),
+				reconciler.NewNameserverDelegationReconciler(services.NameserverHandler),
+				reconciler.NewNameserverDelegatedTestReconciler(services.Domain),
+				reconciler.NewUsersReconciler(services.IdentityManager),
+				reconciler.NewPostgresReconciler(services.Component),
+				reconciler.NewCleanupALBReconciler(o.CloudProvider),
+				reconciler.NewCleanupSGReconciler(o.CloudProvider),
+			)
+
+			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{
+				Ctx:         o.Ctx,
+				Out:         o.Out,
+				ClusterID:   id,
+				Declaration: o.Declaration,
+			})
+
+			reconciliationManager.SetStateHandlers(handlers)
+
+			synchronizeOpts := &controller.SynchronizeOpts{
+				Debug:                 o.Debug,
+				Out:                   o.Out,
+				DeleteAll:             true,
+				ID:                    id,
+				ClusterDeclaration:    o.Declaration,
+				ReconciliationManager: reconciliationManager,
+				StateHandlers:         handlers,
+			}
+
+			ready, err := checkIfReady(id.ClusterName, o, opts.Confirm)
 			if err != nil || !ready {
 				return err
 			}
 
-			userDir, err := o.GetUserDataDir()
+			err = controller.Synchronize(synchronizeOpts)
 			if err != nil {
-				return fmt.Errorf("getting user data: %w", err)
-			}
-
-			services, err := o.ClientServices(o.StateHandlers(o.StateNodes()))
-			if err != nil {
-				return fmt.Errorf("creating client services: %w", err)
-			}
-
-			formatErr := o.ErrorFormatter(fmt.Sprintf("delete cluster %s", opts.ClusterName), userDir)
-
-			domain, err := services.Domain.GetPrimaryHostedZone(o.Ctx)
-			if err != nil {
-				return formatErr(err)
-			}
-
-			err = services.Monitoring.DeleteTempo(o.Ctx, id)
-			if err != nil {
-				return formatErr(err)
-			}
-
-			err = services.Monitoring.DeletePromtail(o.Ctx, id)
-			if err != nil {
-				return formatErr(err)
-			}
-
-			err = services.Monitoring.DeleteLoki(o.Ctx, id)
-			if err != nil {
-				return formatErr(err)
-			}
-
-			err = services.Monitoring.DeleteKubePromStack(o.Ctx, client.DeleteKubePromStackOpts{
-				ID:     id,
-				Domain: domain.Domain,
-			})
-			if err != nil {
-				return formatErr(err)
-			}
-
-			err = services.ArgoCD.DeleteArgoCD(o.Ctx, client.DeleteArgoCDOpts{
-				ID: id,
-			})
-			if err != nil {
-				return formatErr(err)
-			}
-
-			if delzones == "true" {
-				err = services.Domain.DeletePrimaryHostedZone(o.Ctx, client.DeletePrimaryHostedZoneOpts{
-					ID: id,
-				})
-				if err != nil {
-					return formatErr(err)
-				}
-			}
-
-			err = services.IdentityManager.DeleteIdentityPool(o.Ctx, id)
-			if err != nil {
-				return formatErr(err)
-			}
-
-			err = services.AWSLoadBalancerControllerService.DeleteAWSLoadBalancerController(o.Ctx, id)
-			if err != nil {
-				return formatErr(err)
-			}
-
-			err = services.ExternalSecrets.DeleteExternalSecrets(o.Ctx, id)
-			if err != nil {
-				return formatErr(err)
-			}
-
-			err = services.ExternalDNS.DeleteExternalDNS(o.Ctx, id)
-			if err != nil {
-				return formatErr(err)
-			}
-
-			err = services.Autoscaler.DeleteAutoscaler(o.Ctx, id)
-			if err != nil {
-				return formatErr(err)
-			}
-
-			err = services.Blockstorage.DeleteBlockstorage(o.Ctx, id)
-			if err != nil {
-				return formatErr(err)
-			}
-
-			vpc, err := services.Vpc.GetVPC(o.Ctx, id)
-			if err != nil && !errors.Is(err, storm.ErrNotFound) {
-				return formatErr(err)
-			}
-
-			if vpc != nil {
-				err = cleanup.DeleteDanglingALBs(o.CloudProvider, vpc.VpcID)
-				if err != nil {
-					return formatErr(err)
-				}
-			}
-
-			err = services.Cluster.DeleteCluster(o.Ctx, client.ClusterDeleteOpts{
-				ID:                 id,
-				FargateProfileName: "fp-default",
-			})
-			if err != nil {
-				return formatErr(err)
-			}
-
-			if vpc != nil {
-				err = cleanup.DeleteDanglingSecurityGroups(o.CloudProvider, vpc.VpcID)
-				if err != nil {
-					return formatErr(err)
-				}
-			}
-
-			err = services.Vpc.DeleteVpc(o.Ctx, client.DeleteVpcOpts{
-				ID: id,
-			})
-			if err != nil {
-				return formatErr(err)
+				return fmt.Errorf("synchronizing declaration with state: %w", err)
 			}
 
 			return nil
@@ -251,15 +193,25 @@ including VPC, this is a highly destructive operation.`,
 			context.GithubCredentialsTypeToken,
 		),
 	)
-
-	flags.BoolVar(&opts.DisableSpinner, "no-spinner", false, "disables progress spinner")
-	flags.BoolVarP(&opts.Confirm, "confirm", "y", false, "confirm all choices")
+	flags.BoolVar(
+		&opts.DisableSpinner,
+		"no-spinner",
+		false,
+		"disables progress spinner",
+	)
+	flags.BoolVarP(
+		&opts.Confirm,
+		"confirm",
+		"y",
+		false,
+		"confirm all choices",
+	)
 
 	return cmd
 }
 
-func checkifReady(clusterName string, o *okctl.Okctl, preconfirmed bool) (bool, error) {
-	if preconfirmed {
+func checkIfReady(clusterName string, o *okctl.Okctl, preConfirmed bool) (bool, error) {
+	if preConfirmed {
 		return true, nil
 	}
 

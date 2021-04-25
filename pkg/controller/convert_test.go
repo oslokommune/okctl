@@ -21,6 +21,15 @@ func TestTreeCreators(t *testing.T) {
 			name: "Should produce equal trees when all is enabled",
 			declaration: func() *v1alpha1.Cluster {
 				declaration := v1alpha1.NewCluster()
+				declaration.Databases = &v1alpha1.ClusterDatabases{
+					Postgres: []v1alpha1.ClusterDatabasesPostgres{
+						{
+							Name:      "test",
+							User:      "test",
+							Namespace: "test",
+						},
+					},
+				}
 
 				return &declaration
 			},
@@ -42,6 +51,14 @@ func TestTreeCreators(t *testing.T) {
 				hasVPC:                                true,
 				hasDelegatedHostedZoneNameservers:     true,
 				hasDelegatedHostedZoneNameserversTest: false,
+				hasUsers:                              false,
+				hasPostgres: map[string]*v1alpha1.ClusterDatabasesPostgres{
+					"test": {
+						Name:      "test",
+						User:      "test",
+						Namespace: "test",
+					},
+				},
 			},
 		},
 		{

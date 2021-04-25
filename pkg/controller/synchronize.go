@@ -92,7 +92,7 @@ func HandleNodeReverse(reconcilerManager reconciler.Reconciler, currentNode *res
 
 		result, err = reconcilerManager.Reconcile(currentNode)
 		if err != nil && !result.Requeue {
-			return fmt.Errorf("reconciling node (%s): %w", resourcetree.ResourceNodeTypeToString(currentNode.Type), err)
+			return fmt.Errorf("reconciling node (%s): %w", currentNode.Type.String(), err)
 		}
 	}
 
@@ -116,7 +116,7 @@ func HandleNode(reconcilerManager reconciler.Reconciler, currentNode *resourcetr
 
 		result, err = reconcilerManager.Reconcile(currentNode)
 		if err != nil && !result.Requeue {
-			return fmt.Errorf("reconciling node (%s): %w", resourcetree.ResourceNodeTypeToString(currentNode.Type), err)
+			return fmt.Errorf("reconciling node (%s): %w", currentNode.Type.String(), err)
 		}
 	}
 
@@ -173,17 +173,22 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 		case resourcetree.ResourceNodeTypePostgres:
 			if declaration.Databases != nil {
 				for _, db := range declaration.Databases.Postgres {
-					node := createNode(desiredTreeNode, resourcetree.ResourceNodeTypePostgresInstance)
+					node := createNode(
+						desiredTreeNode,
+						resourcetree.ResourceNodeType(fmt.Sprintf("%s-%s", resourcetree.ResourceNodeTypePostgresInstance, db.Name)),
+					)
 					node.Data = &reconciler.PostgresReconcilerState{
 						DB: db,
 					}
 				}
 			}
+
+			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
 		}
 	}
 }
 
-// nolint: gocyclo
+// nolint: gocyclo funlen
 func applyExistingState(existingResources ExistingResources) resourcetree.ApplyFn {
 	return func(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
 		switch receiver.Type {
@@ -237,11 +242,18 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 						continue NextDb
 					}
 				}
+
+				node := createNode(
+					receiver,
+					resourcetree.ResourceNodeType(fmt.Sprintf("%s-%s", resourcetree.ResourceNodeTypePostgresInstance, existingDB.Name)),
+				)
+				node.Data = &reconciler.PostgresReconcilerState{
+					DB: *existingDB,
+				}
+				node.State = resourcetree.ResourceNodeStatePresent
 			}
 
-			// Didn't find the existing db in the declared ones, so delete it
-			node := createNode(receiver, resourcetree.ResourceNodeTypePostgresInstance)
-			node.State = resourcetree.ResourceNodeStateAbsent
+			receiver.State = resourcetree.ResourceNodeStatePresent
 		}
 	}
 }
@@ -256,6 +268,10 @@ func setStateAbsent() resourcetree.ApplyFn {
 // applyCurrentState knows how to apply the current state on a desired state ResourceNode tree to produce a diff that
 // knows which resources to create, and which resources is already existing
 func applyCurrentState(receiver *resourcetree.ResourceNode, target *resourcetree.ResourceNode) {
+	if target == nil {
+		return
+	}
+
 	if receiver.State == target.State {
 		receiver.State = resourcetree.ResourceNodeStateNoop
 	}

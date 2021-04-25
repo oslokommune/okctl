@@ -43,7 +43,7 @@ func (z *postgresReconciler) SetStateHandlers(handlers *clientCore.StateHandlers
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
 func (z *postgresReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
-	data, ok := node.Data.(PostgresReconcilerState)
+	data, ok := node.Data.(*PostgresReconcilerState)
 	if !ok {
 		return result, fmt.Errorf("getting postgres data")
 	}

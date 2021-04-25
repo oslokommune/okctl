@@ -56,7 +56,9 @@ func (c *compositeReconciler) SetStateHandlers(handlers *clientCore.StateHandler
 
 // NewCompositeReconciler initializes a compositeReconciler
 func NewCompositeReconciler(spin spinner.Spinner, reconcilers ...Reconciler) Reconciler {
-	reconcilerMap := map[resourcetree.ResourceNodeType]Reconciler{resourcetree.ResourceNodeTypeGroup: &NoopReconciler{}}
+	reconcilerMap := map[resourcetree.ResourceNodeType]Reconciler{
+		resourcetree.ResourceNodeTypeGroup: &NoopReconciler{},
+	}
 
 	for _, reconciler := range reconcilers {
 		reconcilerMap[reconciler.NodeType()] = reconciler

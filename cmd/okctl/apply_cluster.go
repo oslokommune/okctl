@@ -160,6 +160,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				servicequota.NewVpcCheck(vpcProvisioned, constant.DefaultRequiredVpcs, o.CloudProvider),
 				servicequota.NewEipCheck(vpcProvisioned, constant.DefaultRequiredEpis, o.CloudProvider),
 				servicequota.NewIgwCheck(vpcProvisioned, constant.DefaultRequiredIgws, o.CloudProvider),
+				servicequota.NewFargateCheck(constant.DefaultRequiredFargateOnDemandPods, o.CloudProvider),
 			)
 			if err != nil {
 				return fmt.Errorf("checking service quotas: %w", err)
@@ -198,6 +199,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				reconciler.NewPostgresReconciler(services.Component),
 				reconciler.NewCleanupALBReconciler(o.CloudProvider),
 				reconciler.NewCleanupSGReconciler(o.CloudProvider),
+				&reconciler.PostgresGroupReconciler{},
 			)
 
 			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{

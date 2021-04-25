@@ -3,6 +3,8 @@ package controller
 import (
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/helm/charts/externalsecrets"
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/autoscaler"
@@ -42,7 +44,7 @@ type ExistingResources struct {
 	hasDelegatedHostedZoneNameservers     bool
 	hasDelegatedHostedZoneNameserversTest bool
 	hasUsers                              bool
-	hasPostgres                           bool
+	hasPostgres                           map[string]*v1alpha1.ClusterDatabasesPostgres
 }
 
 func isNotFound(_ interface{}, err error) bool {
@@ -56,10 +58,19 @@ func IdentifyResourcePresence(id api.ID, handlers *clientCore.StateHandlers) (Ex
 		return ExistingResources{}, err
 	}
 
-	// FIXME: Need to check if these DBs are already created or not
 	dbs, err := handlers.Component.GetPostgresDatabases()
 	if err != nil {
-		return ExistingResources{}, err
+		return ExistingResources{}, nil
+	}
+
+	haveDBs := map[string]*v1alpha1.ClusterDatabasesPostgres{}
+
+	for _, db := range dbs {
+		haveDBs[db.ApplicationName] = &v1alpha1.ClusterDatabasesPostgres{
+			Name:      db.ApplicationName,
+			User:      db.UserName,
+			Namespace: db.Namespace,
+		}
 	}
 
 	return ExistingResources{
@@ -80,7 +91,7 @@ func IdentifyResourcePresence(id api.ID, handlers *clientCore.StateHandlers) (Ex
 		hasDelegatedHostedZoneNameservers:     hz != nil && hz.IsDelegated,
 		hasDelegatedHostedZoneNameserversTest: false,
 		hasUsers:                              false, // For now we will always check if there are missing users
-		hasPostgres:                           len(dbs) > 0,
+		hasPostgres:                           haveDBs,
 	}, nil
 }
 

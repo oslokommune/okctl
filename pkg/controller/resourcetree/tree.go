@@ -53,7 +53,9 @@ const (
 	ResourceNodeTypeUsers
 	// ResourceNodeTypePostgres represents the postgres databases we want to add to the cluster
 	ResourceNodeTypePostgres
-	// ResourceNodeTypeApplication represents an okctl application resoure
+	// ResourceNodeTypePostgresInstance represents a postgres instance
+	ResourceNodeTypePostgresInstance
+	// ResourceNodeTypeApplication represents an okctl application resource
 	ResourceNodeTypeApplication
 	// ResourceNodeTypeCleanupALB represents a cleanup of ALBs
 	ResourceNodeTypeCleanupALB
@@ -103,6 +105,8 @@ func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
 		return "Users"
 	case ResourceNodeTypePostgres:
 		return "Postgres"
+	case ResourceNodeTypePostgresInstance:
+		return "Postgres Instance"
 	case ResourceNodeTypeCleanupALB:
 		return "Cleanup ALBs"
 	case ResourceNodeTypeCleanupSG:
@@ -140,6 +144,7 @@ type CommonMetadata struct {
 type ResourceNode struct {
 	Type     ResourceNodeType
 	State    ResourceNodeState
+	Data     interface{}
 	Children []*ResourceNode
 }
 

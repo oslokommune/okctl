@@ -169,10 +169,13 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 		case resourcetree.ResourceNodeTypeUsers:
 			desiredTreeNode.State = boolToState(len(declaration.Users) > 0)
 		case resourcetree.ResourceNodeTypePostgres:
-			desiredTreeNode.State = boolToState(false)
-
 			if declaration.Databases != nil {
-				desiredTreeNode.State = boolToState(len(declaration.Databases.Postgres) > 0)
+				for _, db := range declaration.Databases.Postgres {
+					node := createNode(desiredTreeNode, resourcetree.ResourceNodeTypePostgresInstance)
+					node.Data = &reconciler.PostgresReconcilerState{
+						DB: db,
+					}
+				}
 			}
 		}
 	}
@@ -217,7 +220,24 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 		case resourcetree.ResourceNodeTypeUsers:
 			receiver.State = boolToState(existingResources.hasUsers)
 		case resourcetree.ResourceNodeTypePostgres:
-			receiver.State = boolToState(existingResources.hasPostgres)
+		NextDb:
+			for _, existingDB := range existingResources.hasPostgres {
+				for _, declaredDB := range receiver.Children {
+					data, ok := declaredDB.Data.(reconciler.PostgresReconcilerState)
+					if !ok {
+						panic("could not cast to database state")
+					}
+
+					if data.DB.Name == existingDB.Name {
+						declaredDB.State = resourcetree.ResourceNodeStatePresent
+						continue NextDb
+					}
+				}
+			}
+
+			// Didn't find the existing db in the declared ones, so delete it
+			node := createNode(receiver, resourcetree.ResourceNodeTypePostgresInstance)
+			node.State = resourcetree.ResourceNodeStateAbsent
 		}
 	}
 }

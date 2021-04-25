@@ -61,6 +61,8 @@ const (
 	ResourceNodeTypeCleanupALB
 	// ResourceNodeTypeCleanupSG represents a cleanup of SecurityGroups
 	ResourceNodeTypeCleanupSG
+	// ResourceNodeTypeServiceQuota represents a service quota check
+	ResourceNodeTypeServiceQuota
 )
 
 // ResourceNodeTypeToString knows how to convert a Resource Node type to a human readable string
@@ -111,6 +113,8 @@ func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
 		return "Cleanup ALBs"
 	case ResourceNodeTypeCleanupSG:
 		return "Cleanup SGs"
+	case ResourceNodeTypeServiceQuota:
+		return "Service Quota"
 	default:
 		return "N/A"
 	}

@@ -136,6 +136,7 @@ including VPC, this is a highly destructive operation.`,
 				reconciler.NewCleanupALBReconciler(o.CloudProvider),
 				reconciler.NewCleanupSGReconciler(o.CloudProvider),
 				&reconciler.PostgresGroupReconciler{},
+				reconciler.NewServiceQuotaReconciler(o.CloudProvider),
 			)
 
 			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{

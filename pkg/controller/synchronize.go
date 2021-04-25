@@ -135,6 +135,8 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 	return func(desiredTreeNode *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
 		switch desiredTreeNode.Type {
 		// Mandatory
+		case resourcetree.ResourceNodeTypeServiceQuota:
+			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
 		case resourcetree.ResourceNodeTypeZone:
 			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
 		case resourcetree.ResourceNodeTypeNameserverDelegator:
@@ -186,6 +188,8 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 	return func(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
 		switch receiver.Type {
 		// Mandatory
+		case resourcetree.ResourceNodeTypeServiceQuota:
+			receiver.State = boolToState(existingResources.hasServiceQuotaCheck)
 		case resourcetree.ResourceNodeTypeZone:
 			receiver.State = boolToState(existingResources.hasPrimaryHostedZone)
 		case resourcetree.ResourceNodeTypeNameserverDelegator:

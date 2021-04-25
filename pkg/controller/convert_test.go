@@ -25,6 +25,7 @@ func TestTreeCreators(t *testing.T) {
 				return &declaration
 			},
 			existingServices: ExistingResources{
+				hasServiceQuotaCheck:                  true,
 				hasAWSLoadBalancerController:          true,
 				hasCluster:                            true,
 				hasExternalDNS:                        true,
@@ -52,6 +53,7 @@ func TestTreeCreators(t *testing.T) {
 				return &declaration
 			},
 			existingServices: ExistingResources{
+				hasServiceQuotaCheck:                  true,
 				hasAWSLoadBalancerController:          true,
 				hasCluster:                            true,
 				hasExternalDNS:                        false,
@@ -68,6 +70,8 @@ func TestTreeCreators(t *testing.T) {
 				hasVPC:                                true,
 				hasDelegatedHostedZoneNameservers:     true,
 				hasDelegatedHostedZoneNameserversTest: false,
+				hasUsers:                              false,
+				hasPostgres:                           nil,
 			},
 		},
 	}

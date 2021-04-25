@@ -27,6 +27,7 @@ import (
 
 // ExistingResources contains information about what services already exists in a cluster
 type ExistingResources struct {
+	hasServiceQuotaCheck                  bool
 	hasAWSLoadBalancerController          bool
 	hasCluster                            bool
 	hasExternalDNS                        bool
@@ -90,6 +91,7 @@ func IdentifyResourcePresence(id api.ID, handlers *clientCore.StateHandlers) (Ex
 		hasArgoCD:                             !isNotFound(handlers.ArgoCD.GetArgoCD()),
 		hasDelegatedHostedZoneNameservers:     hz != nil && hz.IsDelegated,
 		hasDelegatedHostedZoneNameserversTest: false,
+		hasServiceQuotaCheck:                  false,
 		hasUsers:                              false, // For now we will always check if there are missing users
 		hasPostgres:                           haveDBs,
 	}, nil
@@ -97,7 +99,7 @@ func IdentifyResourcePresence(id api.ID, handlers *clientCore.StateHandlers) (Ex
 
 // CreateResourceDependencyTree creates a tree
 func CreateResourceDependencyTree() (root *resourcetree.ResourceNode) {
-	root = createNode(nil, resourcetree.ResourceNodeTypeGroup)
+	root = createNode(nil, resourcetree.ResourceNodeTypeServiceQuota)
 
 	var vpcNode,
 		clusterNode,

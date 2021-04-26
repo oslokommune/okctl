@@ -3,8 +3,6 @@
 package cleanup
 
 import (
-	"fmt"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -37,7 +35,7 @@ func DeleteDanglingALBs(provider v1alpha1.CloudProvider, vpcID string) error {
 }
 
 // DeleteDanglingSecurityGroups will remove any remaining security groups in a vpc
-func DeleteDanglingSecurityGroups(provider v1alpha1.CloudProvider, vpcID string) error {
+func DeleteDanglingSecurityGroups(clusterName string, provider v1alpha1.CloudProvider, vpcID string) error {
 	groups, err := provider.EC2().DescribeSecurityGroups(&ec2.DescribeSecurityGroupsInput{
 		Filters: []*ec2.Filter{
 			{
@@ -47,9 +45,9 @@ func DeleteDanglingSecurityGroups(provider v1alpha1.CloudProvider, vpcID string)
 				},
 			},
 			{
-				Name: aws.String(fmt.Sprintf("tag:%s", v1alpha1.OkctlManagedTag)),
+				Name: aws.String("tag:elbv2.k8s.aws/cluster"),
 				Values: []*string{
-					aws.String("true"),
+					aws.String(clusterName),
 				},
 			},
 		},

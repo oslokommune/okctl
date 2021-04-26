@@ -47,7 +47,7 @@ func (z *cleanupSGReconciler) Reconcile(node *resourcetree.ResourceNode) (result
 			return result, fmt.Errorf("getting vpc: %w", err)
 		}
 
-		err = cleanup.DeleteDanglingSecurityGroups(z.provider, vpc.VpcID)
+		err = cleanup.DeleteDanglingSecurityGroups(z.commonMetadata.Declaration.Metadata.Name, z.provider, vpc.VpcID)
 		if err != nil {
 			return result, fmt.Errorf("cleaning up SGs: %w", err)
 		}

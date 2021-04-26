@@ -31,28 +31,20 @@ type SynchronizeApplicationOpts struct {
 
 // SynchronizeApplication knows how to discover differences between desired and actual state and rectify them
 func SynchronizeApplication(opts SynchronizeApplicationOpts) error {
-	desiredResourceOpts := identifyDesiredResources(opts.Application.Image)
-
-	opts.Tree.ApplyFunction(applyDesiredState(desiredResourceOpts), opts.Tree)
+	opts.Tree.ApplyFunction(applyDesiredState(opts.Application.Image), opts.Tree)
 
 	return controller.HandleNode(opts.ReconciliationManager, opts.Tree)
 }
 
-type desiredResources struct {
-	ContainerRepository bool
-}
-
-func identifyDesiredResources(image v1alpha1.ApplicationImage) desiredResources {
-	return desiredResources{
-		ContainerRepository: image.HasName(),
-	}
-}
-
-func applyDesiredState(opts desiredResources) resourcetree.ApplyFn {
+func applyDesiredState(image v1alpha1.ApplicationImage) resourcetree.ApplyFn {
 	return func(receiver *resourcetree.ResourceNode, target *resourcetree.ResourceNode) {
 		switch receiver.Type {
 		case resourcetree.ResourceNodeTypeContainerRepository:
-			receiver.State = controller.BoolToState(opts.ContainerRepository)
+			if image.HasName() {
+				receiver.State = resourcetree.ResourceNodeStatePresent
+			} else {
+				receiver.State = resourcetree.ResourceNodeStateNoop
+			}
 		case resourcetree.ResourceNodeTypeApplication:
 			receiver.State = resourcetree.ResourceNodeStatePresent
 		}

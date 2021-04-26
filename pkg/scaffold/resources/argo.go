@@ -18,12 +18,12 @@ func generateDefaultArgoApp() argo.Application {
 		},
 		Spec: argo.ApplicationSpec{
 			Source: argo.ApplicationSource{
-				RepoURL:        "git@github.com:<organization>/<infrastructure as code repository URL>", // TODO: Remove placeholder
+				RepoURL:        "",
 				TargetRevision: "HEAD",
 			},
 			Destination: argo.ApplicationDestination{
 				Server:    "https://kubernetes.default.svc",
-				Namespace: "<namespace your app should run in>", // TODO: Remove placeholder
+				Namespace: "default",
 			},
 			Project: "default",
 			SyncPolicy: &argo.SyncPolicy{

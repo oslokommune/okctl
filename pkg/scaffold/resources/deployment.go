@@ -14,12 +14,6 @@ func CreateOkctlDeployment(app v1alpha1.Application) appsv1.Deployment {
 	deployment.ObjectMeta.Name = app.Metadata.Name
 	deployment.ObjectMeta.Namespace = app.Metadata.Namespace
 
-	if app.Replicas == 0 {
-		// TODO: default value should be put in default pvc creator. ensure default works
-		// User should be able to specify 0 replicas if it makes sense for them
-		app.Replicas = 1
-	}
-
 	deployment.Spec.Replicas = &app.Replicas
 
 	deployment.Spec.Selector.MatchLabels = map[string]string{
@@ -43,6 +37,8 @@ func CreateOkctlDeployment(app v1alpha1.Application) appsv1.Deployment {
 }
 
 func generateDefaultDeployment() appsv1.Deployment {
+	replicas := int32(1)
+
 	return appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
@@ -50,7 +46,7 @@ func generateDefaultDeployment() appsv1.Deployment {
 		},
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: nil,
+			Replicas: &replicas,
 			Selector: &metav1.LabelSelector{},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{

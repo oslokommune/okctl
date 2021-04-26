@@ -139,7 +139,7 @@ func TestApplicationValidation(t *testing.T) {
 			},
 
 			expectFail:    true,
-			expectedError: "bla bla lolz",
+			expectedError: "image: (name: must be a valid subdomain.).",
 		},
 	}
 

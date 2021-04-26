@@ -29,7 +29,7 @@ func CreateOkctlIngress(app v1alpha1.Application) (networkingv1.Ingress, error) 
 			Service: &networkingv1.IngressServiceBackend{
 				Name: "ssl-redirect",
 				Port: networkingv1.ServiceBackendPort{
-					Name: "use-annotation", // TODO: Test
+					Name: "use-annotation",
 				},
 			},
 		},

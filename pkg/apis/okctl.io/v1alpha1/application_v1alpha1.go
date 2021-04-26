@@ -21,7 +21,11 @@ const (
 	minimumPossiblePort     = 1
 	maximumPossiblePort     = 65535
 	minimumPossibleReplicas = 0
+
+	defaultReplicas = 1
 )
+
+var imageURITester = regexp.MustCompile(`[a-z0-9]+(?:[.:/_-]{1,2}[a-z0-9]+)*`)
 
 // Application represents an application that can be deployed with okctl
 type Application struct {
@@ -115,7 +119,7 @@ func (a ApplicationImage) HasURI() bool {
 func (a ApplicationImage) Validate() error {
 	return validation.ValidateStruct(&a,
 		validation.Field(&a.Name, is.Subdomain),
-		validation.Field(&a.URI),
+		validation.Field(&a.URI, validation.Match(imageURITester)),
 	)
 }
 
@@ -144,6 +148,7 @@ func NewApplication(cluster Cluster) Application {
 	return Application{
 		TypeMeta: ApplicationTypeMeta(),
 		Image:    ApplicationImage{},
+		Replicas: defaultReplicas,
 		cluster:  cluster,
 	}
 }

@@ -41,19 +41,16 @@ func (a *applicationReconciler) Reconcile(node *resourcetree.ResourceNode) (Reco
 			return ReconcilationResult{}, fmt.Errorf("getting primary hosted zone: %w", err)
 		}
 
-		gh, err := a.handlers.Github.GetGithubRepository(
-			fmt.Sprintf(
-				"%s/%s",
-				a.commonMetadata.Declaration.Github.Organisation,
-				a.commonMetadata.Declaration.Github.Repository,
-			),
+		repoID := fmt.Sprintf("%s/%s",
+			a.commonMetadata.Declaration.Github.Organisation,
+			a.commonMetadata.Declaration.Github.Repository,
 		)
+
+		gh, err := a.handlers.Github.GetGithubRepository(repoID)
 		if err != nil {
 			return ReconcilationResult{}, fmt.Errorf("retrieving Github information")
 		}
 
-		// TODO: application reconciler must get container repository and use URI from it
-		// something something:
 		if a.commonMetadata.ApplicationDeclaration.Image.HasName() {
 			repo, err := a.handlers.ContainerRepository.GetContainerRepository(a.commonMetadata.ApplicationDeclaration.Image.Name)
 			if err != nil {
@@ -61,7 +58,7 @@ func (a *applicationReconciler) Reconcile(node *resourcetree.ResourceNode) (Reco
 			}
 
 			repoURI := repo.URI()
-			a.commonMetadata.ApplicationDeclaration.Image.URI = repoURI.String() // TODO: string? or somettihnhg else
+			a.commonMetadata.ApplicationDeclaration.Image.URI = repoURI.String()
 		}
 
 		err = a.client.ScaffoldApplication(a.commonMetadata.Ctx, &client.ScaffoldApplicationOpts{

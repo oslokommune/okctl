@@ -1,7 +1,10 @@
 package reconciler
 
 import (
+	"errors"
 	"fmt"
+
+	"github.com/asdine/storm/v3"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
@@ -48,6 +51,11 @@ func (z *zoneReconciler) Reconcile(node *resourcetree.ResourceNode) (result Reco
 	case resourcetree.ResourceNodeStateAbsent:
 		hz, err := z.stateHandlers.Domain.GetPrimaryHostedZone()
 		if err != nil {
+			// Already removed, moving on
+			if errors.Is(err, storm.ErrNotFound) {
+				return result, nil
+			}
+
 			return result, fmt.Errorf("getting primary hosted zone: %w", err)
 		}
 

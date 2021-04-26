@@ -136,7 +136,7 @@ func (d *domainState) GetPrimaryHostedZone() (*client.HostedZone, error) {
 		}
 	}
 
-	return nil, err
+	return nil, stormpkg.ErrNotFound
 }
 
 // NewDomainState returns an initialised state store

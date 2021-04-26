@@ -19,7 +19,7 @@ type KubernetesManifest struct {
 	Name      string `storm:"unique"`
 	Namespace string
 	Type      string
-	Content   []byte
+	Content   string
 }
 
 // NewKubernetesManifest constructs a storm compatible KubernetesManifest
@@ -30,7 +30,7 @@ func NewKubernetesManifest(m *client.KubernetesManifest, meta Metadata) *Kuberne
 		Name:      m.Name,
 		Namespace: m.Namespace,
 		Type:      m.Type.String(),
-		Content:   m.Content,
+		Content:   string(m.Content),
 	}
 }
 
@@ -41,7 +41,7 @@ func (m *KubernetesManifest) Convert() *client.KubernetesManifest {
 		Name:      m.Name,
 		Namespace: m.Namespace,
 		Type:      client.ManifestType(m.Type),
-		Content:   m.Content,
+		Content:   []byte(m.Content),
 	}
 }
 

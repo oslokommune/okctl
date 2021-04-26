@@ -17,7 +17,7 @@ type Vpc struct {
 
 	ID                       ID
 	StackName                string `storm:"unique"`
-	CloudFormationTemplate   []byte
+	CloudFormationTemplate   string
 	VpcID                    string
 	Cidr                     string
 	PublicSubnets            []VpcSubnet
@@ -32,7 +32,7 @@ func NewVpc(v *client.Vpc, meta Metadata) *Vpc {
 		Metadata:               meta,
 		ID:                     NewID(v.ID),
 		StackName:              v.StackName,
-		CloudFormationTemplate: v.CloudFormationTemplate,
+		CloudFormationTemplate: string(v.CloudFormationTemplate),
 		VpcID:                  v.VpcID,
 		Cidr:                   v.Cidr,
 		PublicSubnets: func() (subs []VpcSubnet) {
@@ -65,7 +65,7 @@ func (v *Vpc) Convert() *client.Vpc {
 	return &client.Vpc{
 		ID:                     v.ID.Convert(),
 		StackName:              v.StackName,
-		CloudFormationTemplate: v.CloudFormationTemplate,
+		CloudFormationTemplate: []byte(v.CloudFormationTemplate),
 		VpcID:                  v.VpcID,
 		Cidr:                   v.Cidr,
 		PublicSubnets: func() (subs []client.VpcSubnet) {

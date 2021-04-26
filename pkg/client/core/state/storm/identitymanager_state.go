@@ -20,7 +20,7 @@ type IdentityPool struct {
 	AuthDomain              string
 	HostedZoneID            string
 	StackName               string `storm:"unique"`
-	CloudFormationTemplates []byte
+	CloudFormationTemplates string
 	Certificate             *Certificate
 	RecordSetAlias          *RecordSetAlias
 }
@@ -34,7 +34,7 @@ func NewIdentityPool(p *client.IdentityPool, meta, certMeta Metadata) *IdentityP
 		AuthDomain:              p.AuthDomain,
 		HostedZoneID:            p.HostedZoneID,
 		StackName:               p.StackName,
-		CloudFormationTemplates: p.CloudFormationTemplates,
+		CloudFormationTemplates: string(p.CloudFormationTemplates),
 		Certificate:             NewCertificate(p.Certificate, certMeta),
 		RecordSetAlias:          NewRecordSetAlias(p.RecordSetAlias),
 	}
@@ -48,7 +48,7 @@ func (p *IdentityPool) Convert() *client.IdentityPool {
 		AuthDomain:              p.AuthDomain,
 		HostedZoneID:            p.HostedZoneID,
 		StackName:               p.StackName,
-		CloudFormationTemplates: p.CloudFormationTemplates,
+		CloudFormationTemplates: []byte(p.CloudFormationTemplates),
 		Certificate:             p.Certificate.Convert(),
 		RecordSetAlias:          p.RecordSetAlias.Convert(),
 	}
@@ -59,7 +59,7 @@ type RecordSetAlias struct {
 	AliasDomain            string
 	AliasHostedZones       string
 	StackName              string
-	CloudFormationTemplate []byte
+	CloudFormationTemplate string
 }
 
 // NewRecordSetAlias returns a storm compatible RecordSetAlias
@@ -68,7 +68,7 @@ func NewRecordSetAlias(a *client.RecordSetAlias) *RecordSetAlias {
 		AliasDomain:            a.AliasDomain,
 		AliasHostedZones:       a.AliasHostedZones,
 		StackName:              a.StackName,
-		CloudFormationTemplate: a.CloudFormationTemplate,
+		CloudFormationTemplate: string(a.CloudFormationTemplate),
 	}
 }
 
@@ -78,7 +78,7 @@ func (a *RecordSetAlias) Convert() *client.RecordSetAlias {
 		AliasDomain:            a.AliasDomain,
 		AliasHostedZones:       a.AliasHostedZones,
 		StackName:              a.StackName,
-		CloudFormationTemplate: a.CloudFormationTemplate,
+		CloudFormationTemplate: []byte(a.CloudFormationTemplate),
 	}
 }
 
@@ -93,7 +93,7 @@ type IdentityPoolClient struct {
 	ClientID                string
 	ClientSecret            string
 	StackName               string `storm:"unique,index"`
-	CloudFormationTemplates []byte
+	CloudFormationTemplates string
 }
 
 // NewIdentityPoolClient returns a storm compatible IdentityPoolClient
@@ -107,7 +107,7 @@ func NewIdentityPoolClient(c *client.IdentityPoolClient, meta Metadata) *Identit
 		ClientID:                c.ClientID,
 		ClientSecret:            c.ClientSecret,
 		StackName:               c.StackName,
-		CloudFormationTemplates: c.CloudFormationTemplates,
+		CloudFormationTemplates: string(c.CloudFormationTemplates),
 	}
 }
 
@@ -121,7 +121,7 @@ func (c *IdentityPoolClient) Convert() *client.IdentityPoolClient {
 		ClientID:                c.ClientID,
 		ClientSecret:            c.ClientSecret,
 		StackName:               c.StackName,
-		CloudFormationTemplates: c.CloudFormationTemplates,
+		CloudFormationTemplates: []byte(c.CloudFormationTemplates),
 	}
 }
 
@@ -133,7 +133,7 @@ type IdentityPoolUser struct {
 	Email                  string
 	UserPoolID             string
 	StackName              string `storm:"unique,index"`
-	CloudFormationTemplate []byte
+	CloudFormationTemplate string
 }
 
 // NewIdentityPoolUser returns a storm compatible IdentityPoolUser
@@ -144,7 +144,7 @@ func NewIdentityPoolUser(u *client.IdentityPoolUser, meta Metadata) *IdentityPoo
 		Email:                  u.Email,
 		UserPoolID:             u.UserPoolID,
 		StackName:              u.StackName,
-		CloudFormationTemplate: u.CloudFormationTemplate,
+		CloudFormationTemplate: string(u.CloudFormationTemplate),
 	}
 }
 
@@ -155,7 +155,7 @@ func (u *IdentityPoolUser) Convert() *client.IdentityPoolUser {
 		Email:                  u.Email,
 		UserPoolID:             u.UserPoolID,
 		StackName:              u.StackName,
-		CloudFormationTemplate: u.CloudFormationTemplate,
+		CloudFormationTemplate: []byte(u.CloudFormationTemplate),
 	}
 }
 

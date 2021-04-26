@@ -25,7 +25,7 @@ type HostedZone struct {
 	HostedZoneID           string
 	NameServers            []string
 	StackName              string
-	CloudFormationTemplate []byte
+	CloudFormationTemplate string
 }
 
 // NewHostedZone constructs a storm compatible HostedZone
@@ -41,7 +41,7 @@ func NewHostedZone(hz *client.HostedZone, meta Metadata) *HostedZone {
 		HostedZoneID:           hz.HostedZoneID,
 		NameServers:            hz.NameServers,
 		StackName:              hz.StackName,
-		CloudFormationTemplate: hz.CloudFormationTemplate,
+		CloudFormationTemplate: string(hz.CloudFormationTemplate),
 	}
 }
 
@@ -57,7 +57,7 @@ func (hz *HostedZone) Convert() *client.HostedZone {
 		HostedZoneID:           hz.HostedZoneID,
 		NameServers:            hz.NameServers,
 		StackName:              hz.StackName,
-		CloudFormationTemplate: hz.CloudFormationTemplate,
+		CloudFormationTemplate: []byte(hz.CloudFormationTemplate),
 	}
 }
 

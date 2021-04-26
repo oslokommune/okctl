@@ -18,7 +18,7 @@ type ManagedPolicy struct {
 	ID                     ID
 	StackName              string `storm:"unique"`
 	PolicyARN              string
-	CloudFormationTemplate []byte
+	CloudFormationTemplate string
 }
 
 // NewManagedPolicy returns a storm compatible ManagedPolicy
@@ -28,7 +28,7 @@ func NewManagedPolicy(p *client.ManagedPolicy, meta Metadata) *ManagedPolicy {
 		ID:                     NewID(p.ID),
 		StackName:              p.StackName,
 		PolicyARN:              p.PolicyARN,
-		CloudFormationTemplate: p.CloudFormationTemplate,
+		CloudFormationTemplate: string(p.CloudFormationTemplate),
 	}
 }
 
@@ -38,7 +38,7 @@ func (p *ManagedPolicy) Convert() *client.ManagedPolicy {
 		ID:                     p.ID.Convert(),
 		StackName:              p.StackName,
 		PolicyARN:              p.PolicyARN,
-		CloudFormationTemplate: p.CloudFormationTemplate,
+		CloudFormationTemplate: []byte(p.CloudFormationTemplate),
 	}
 }
 

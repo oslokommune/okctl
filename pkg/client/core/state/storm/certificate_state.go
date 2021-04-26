@@ -21,7 +21,7 @@ type Certificate struct {
 	HostedZoneID           string
 	ARN                    string
 	StackName              string
-	CloudFormationTemplate []byte
+	CloudFormationTemplate string
 }
 
 // NewCertificate constructs a storm compatible  Certificate
@@ -34,7 +34,7 @@ func NewCertificate(c *client.Certificate, meta Metadata) *Certificate {
 		HostedZoneID:           c.HostedZoneID,
 		ARN:                    c.ARN,
 		StackName:              c.StackName,
-		CloudFormationTemplate: c.CloudFormationTemplate,
+		CloudFormationTemplate: string(c.CloudFormationTemplate),
 	}
 }
 
@@ -47,7 +47,7 @@ func (c *Certificate) Convert() *client.Certificate {
 		HostedZoneID:           c.HostedZoneID,
 		ARN:                    c.ARN,
 		StackName:              c.StackName,
-		CloudFormationTemplate: c.CloudFormationTemplate,
+		CloudFormationTemplate: []byte(c.CloudFormationTemplate),
 	}
 }
 

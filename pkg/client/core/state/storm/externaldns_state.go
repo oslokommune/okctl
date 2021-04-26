@@ -40,26 +40,38 @@ type ExternalDNSKube struct {
 	ID           ID
 	HostedZoneID string
 	DomainFilter string
-	Manifests    map[string][]byte
+	Manifests    map[string]string
 }
 
 // NewExternalDNSKube returns storm compatible state
 func NewExternalDNSKube(k *client.ExternalDNSKube) *ExternalDNSKube {
+	manifests := map[string]string{}
+
+	for key, v := range k.Manifests {
+		manifests[key] = string(v)
+	}
+
 	return &ExternalDNSKube{
 		ID:           NewID(k.ID),
 		HostedZoneID: k.HostedZoneID,
 		DomainFilter: k.DomainFilter,
-		Manifests:    k.Manifests,
+		Manifests:    manifests,
 	}
 }
 
 // Convert to client.ExternalDNSKube
 func (k *ExternalDNSKube) Convert() *client.ExternalDNSKube {
+	manifests := map[string][]byte{}
+
+	for key, v := range k.Manifests {
+		manifests[key] = []byte(v)
+	}
+
 	return &client.ExternalDNSKube{
 		ID:           k.ID.Convert(),
 		HostedZoneID: k.HostedZoneID,
 		DomainFilter: k.DomainFilter,
-		Manifests:    k.Manifests,
+		Manifests:    manifests,
 	}
 }
 

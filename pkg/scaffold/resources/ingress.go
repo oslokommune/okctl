@@ -24,7 +24,8 @@ func CreateOkctlIngress(app v1alpha1.Application) (networkingv1.Ingress, error) 
 		`{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}`
 
 	redirectPath := networkingv1.HTTPIngressPath{
-		Path: "/*",
+		PathType: pathTypePointer(networkingv1.PathTypePrefix),
+		Path:     "/*",
 		Backend: networkingv1.IngressBackend{
 			Service: &networkingv1.IngressServiceBackend{
 				Name: "ssl-redirect",
@@ -38,6 +39,10 @@ func CreateOkctlIngress(app v1alpha1.Application) (networkingv1.Ingress, error) 
 	ingress.Spec.Rules[0].HTTP.Paths = append([]networkingv1.HTTPIngressPath{redirectPath}, ingress.Spec.Rules[0].HTTP.Paths...)
 
 	return ingress, nil
+}
+
+func pathTypePointer(p networkingv1.PathType) *networkingv1.PathType {
+	return &p
 }
 
 func generateDefaultIngress() networkingv1.Ingress {
@@ -73,7 +78,8 @@ func createGenericIngress(app v1alpha1.Application) (networkingv1.Ingress, error
 			IngressRuleValue: networkingv1.IngressRuleValue{
 				HTTP: &networkingv1.HTTPIngressRuleValue{
 					Paths: []networkingv1.HTTPIngressPath{{
-						Path: "/",
+						PathType: pathTypePointer(networkingv1.PathTypePrefix),
+						Path:     "/",
 						Backend: networkingv1.IngressBackend{
 							Service: &networkingv1.IngressServiceBackend{
 								Name: app.Metadata.Name,

@@ -72,18 +72,18 @@ const (
 	DefaultGithubOrg                  = "oslokommune"
 	DefaultGithubFullName             = "oslokommune/okctl-iac"
 	DefaultGithubURL                  = "git@github.com:oslokommune/okctl-iac"
+	DefaultImage                      = "my-image"
 
-	StackNameHostedZone          = "okctl-staging-oslo-systems-HostedZone"
-	StackNameCertificate         = "okctl-staging-oslo-systems-Certificate"
-	StackNameManagedPolicy       = "okctl-staging-ManagedPolicy"
-	StackNameIdentityPool        = "okctl-staging-IdentityPool"
-	StackNameIdentityPoolClient  = "okctl-staging-IdentityPoolClient"
-	StackNameIdentityPoolUser    = "okctl-staging-bobthebuilder-IdentityPoolUser"
-	StackNameRecordSetAlias      = "okctl-staging-RecordSetAlias"
-	StackNameVpc                 = "okctl-staging-Vpc"
-	StackNamePostgresDatabase    = "okctl-staging-backend-PostgresDatabase"
-	StackNameRotaterBucket       = "okctl-staging-Rotater"
-	StackNameContainerRepository = "okctl-staging-Container"
+	StackNameHostedZone         = "okctl-staging-oslo-systems-HostedZone"
+	StackNameCertificate        = "okctl-staging-oslo-systems-Certificate"
+	StackNameManagedPolicy      = "okctl-staging-ManagedPolicy"
+	StackNameIdentityPool       = "okctl-staging-IdentityPool"
+	StackNameIdentityPoolClient = "okctl-staging-IdentityPoolClient"
+	StackNameIdentityPoolUser   = "okctl-staging-bobthebuilder-IdentityPoolUser"
+	StackNameRecordSetAlias     = "okctl-staging-RecordSetAlias"
+	StackNameVpc                = "okctl-staging-Vpc"
+	StackNamePostgresDatabase   = "okctl-staging-backend-PostgresDatabase"
+	StackNameRotaterBucket      = "okctl-staging-Rotater"
 )
 
 // nolint: golint gochecknoglobals
@@ -514,7 +514,7 @@ func ContainerRepository() *client.ContainerRepository {
 	return &client.ContainerRepository{
 		ClusterID:              ID(),
 		ImageName:              "my-image",
-		StackName:              StackNameContainerRepository,
+		StackName:              DefaultImage,
 		CloudFormationTemplate: string(CloudFormationTemplate()),
 	}
 }

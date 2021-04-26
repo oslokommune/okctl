@@ -58,10 +58,10 @@ func (c *containerRepositoryState) SaveContainerRepository(repository *client.Co
 	return c.node.Save(NewContainerRepository(repository, existing.Metadata))
 }
 
-func (c *containerRepositoryState) RemoveContainerRepository(stackName string) error {
+func (c *containerRepositoryState) RemoveContainerRepository(imageName string) error {
 	r := &ContainerRepository{}
 
-	err := c.node.One("StackName", stackName, r)
+	err := c.node.One("ImageName", imageName, r)
 	if err != nil {
 		if errors.Is(err, stormpkg.ErrNotFound) {
 			return nil
@@ -73,8 +73,8 @@ func (c *containerRepositoryState) RemoveContainerRepository(stackName string) e
 	return c.node.DeleteStruct(r)
 }
 
-func (c *containerRepositoryState) GetContainerRepository(stackName string) (*client.ContainerRepository, error) {
-	r, err := c.getContainerRepository(stackName)
+func (c *containerRepositoryState) GetContainerRepository(imageName string) (*client.ContainerRepository, error) {
+	r, err := c.getContainerRepository(imageName)
 	if err != nil {
 		return nil, err
 	}
@@ -82,10 +82,10 @@ func (c *containerRepositoryState) GetContainerRepository(stackName string) (*cl
 	return r.Convert(), nil
 }
 
-func (c *containerRepositoryState) getContainerRepository(stackName string) (*ContainerRepository, error) {
+func (c *containerRepositoryState) getContainerRepository(imageName string) (*ContainerRepository, error) {
 	r := &ContainerRepository{}
 
-	err := c.node.One("StackName", stackName, r)
+	err := c.node.One("ImageName", imageName, r)
 	if err != nil {
 		return nil, err
 	}

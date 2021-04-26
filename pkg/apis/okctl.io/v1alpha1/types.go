@@ -8,6 +8,8 @@ import (
 const (
 	// RegionEuWest1 defines the AWS region
 	RegionEuWest1 = "eu-west-1"
+	// RegionEuCentral1 defines the AWS region
+	RegionEuCentral1 = "eu-central-1"
 	// OkPrincipalARNPattern defines what the Oslo kommune principal ARN for KeyCloak looks like
 	// https://docs.aws.amazon.com/IAM/latest/UserGuide/intro-structure.html#intro-structure-principal
 	OkPrincipalARNPattern = "arn:aws:iam::%s:saml-provider/keycloak"
@@ -28,6 +30,7 @@ const (
 func SupportedRegions() []string {
 	return []string{
 		RegionEuWest1,
+		RegionEuCentral1,
 	}
 }
 
@@ -51,6 +54,12 @@ func SupportedAvailabilityZones(region string) ([]string, error) {
 			"eu-west-1a",
 			"eu-west-1b",
 			"eu-west-1c",
+		}, nil
+	case RegionEuCentral1:
+		return []string{
+			"eu-central-1a",
+			"eu-central-1b",
+			"eu-central-1c",
 		}, nil
 	default:
 		return nil, fmt.Errorf("region: %s is not supported", region)

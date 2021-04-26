@@ -38,6 +38,13 @@ func TestHelmStateScenario(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, mock.Helm(), m)
 
+	m.Chart.Namespace = "fake8"
+	err = state.SaveHelmRelease(m)
+	assert.NoError(t, err)
+
+	err = state.RemoveHelmRelease(mock.DefaultHelmReleaseName)
+	assert.NoError(t, err)
+
 	err = state.RemoveHelmRelease(mock.DefaultHelmReleaseName)
 	assert.NoError(t, err)
 

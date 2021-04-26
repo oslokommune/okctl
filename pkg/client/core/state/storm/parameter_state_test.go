@@ -38,6 +38,13 @@ func TestParameterStateScenario(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, mock.SecretParameter(""), m)
 
+	m.Path = "fake13"
+	err = state.SaveSecret(m)
+	assert.NoError(t, err)
+
+	err = state.RemoveSecret(mock.DefaultSecretParameterName)
+	assert.NoError(t, err)
+
 	err = state.RemoveSecret(mock.DefaultSecretParameterName)
 	assert.NoError(t, err)
 

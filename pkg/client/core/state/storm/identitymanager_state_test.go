@@ -38,6 +38,13 @@ func TestIdentityPoolStateScenario(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, mock.IdentityPool(), m)
 
+	m.UserPoolID = "fake16"
+	err = state.SaveIdentityPool(m)
+	assert.NoError(t, err)
+
+	err = state.RemoveIdentityPool(mock.StackNameIdentityPool)
+	assert.NoError(t, err)
+
 	err = state.RemoveIdentityPool(mock.StackNameIdentityPool)
 	assert.NoError(t, err)
 
@@ -65,6 +72,16 @@ func TestIdentityPoolClientStateScenario(t *testing.T) {
 	err = state.SaveIdentityPoolClient(mock.IdentityPoolClient())
 	assert.NoError(t, err)
 
+	m, err := state.GetIdentityPoolClient(mock.StackNameIdentityPoolClient)
+	assert.NoError(t, err)
+
+	m.ClientID = "fake15"
+	err = state.SaveIdentityPoolClient(m)
+	assert.NoError(t, err)
+
+	err = state.RemoveIdentityPoolClient(mock.StackNameIdentityPoolClient)
+	assert.NoError(t, err)
+
 	err = state.RemoveIdentityPoolClient(mock.StackNameIdentityPoolClient)
 	assert.NoError(t, err)
 
@@ -90,6 +107,20 @@ func TestIdentityPoolUserStateScenario(t *testing.T) {
 	state := storm.NewIdentityManager(db)
 
 	err = state.SaveIdentityPoolUser(mock.IdentityPoolUser())
+	assert.NoError(t, err)
+
+	m, err := state.GetIdentityPoolUser(mock.StackNameIdentityPoolUser)
+	assert.NoError(t, err)
+	assert.Equal(t, mock.IdentityPoolUser(), m)
+
+	m.UserPoolID = "fake9"
+	err = state.SaveIdentityPoolUser(m)
+	assert.NoError(t, err)
+
+	err = state.RemoveIdentityPoolUser(mock.StackNameIdentityPoolUser)
+	assert.NoError(t, err)
+
+	err = state.RemoveIdentityPoolUser(mock.StackNameIdentityPoolUser)
 	assert.NoError(t, err)
 
 	err = db.Close()

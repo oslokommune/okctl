@@ -38,6 +38,13 @@ func TestCertificateStateScenario(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, mock.Certificate(), hz)
 
+	hz.HostedZoneID = "fake2"
+	err = state.SaveCertificate(hz)
+	assert.NoError(t, err)
+
+	err = state.RemoveCertificate(mock.DefaultDomain)
+	assert.NoError(t, err)
+
 	err = state.RemoveCertificate(mock.DefaultDomain)
 	assert.NoError(t, err)
 

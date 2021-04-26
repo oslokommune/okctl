@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -76,10 +77,30 @@ func (k *ExternalDNSKube) Convert() *client.ExternalDNSKube {
 }
 
 func (e *externalDNSState) SaveExternalDNS(dns *client.ExternalDNS) error {
-	return e.node.Save(NewExternalDNS(dns, NewMetadata()))
+	existing, err := e.getExternalDNS()
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return e.node.Save(NewExternalDNS(dns, NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return e.node.Save(NewExternalDNS(dns, existing.Metadata))
 }
 
 func (e *externalDNSState) GetExternalDNS() (*client.ExternalDNS, error) {
+	ex, err := e.getExternalDNS()
+	if err != nil {
+		return nil, err
+	}
+
+	return ex.Convert(), nil
+}
+
+func (e *externalDNSState) getExternalDNS() (*ExternalDNS, error) {
 	ex := &ExternalDNS{}
 
 	err := e.node.One("Name", "external-dns", ex)
@@ -87,7 +108,7 @@ func (e *externalDNSState) GetExternalDNS() (*client.ExternalDNS, error) {
 		return nil, err
 	}
 
-	return ex.Convert(), nil
+	return ex, nil
 }
 
 func (e *externalDNSState) RemoveExternalDNS() error {

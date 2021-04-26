@@ -49,6 +49,13 @@ func TestArgoCDStateScenario(t *testing.T) {
 
 	assert.Equal(t, a, m)
 
+	a.ArgoURL = "fake1"
+	err = state.SaveArgoCD(a)
+	assert.NoError(t, err)
+
+	err = state.RemoveArgoCD()
+	assert.NoError(t, err)
+
 	err = state.RemoveArgoCD()
 	assert.NoError(t, err)
 

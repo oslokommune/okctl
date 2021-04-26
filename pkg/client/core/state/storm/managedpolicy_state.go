@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -43,10 +44,30 @@ func (p *ManagedPolicy) Convert() *client.ManagedPolicy {
 }
 
 func (m *managedPolicyState) SavePolicy(policy *client.ManagedPolicy) error {
-	return m.node.Save(NewManagedPolicy(policy, NewMetadata()))
+	existing, err := m.getPolicy(policy.StackName)
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return m.node.Save(NewManagedPolicy(policy, NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return m.node.Save(NewManagedPolicy(policy, existing.Metadata))
 }
 
 func (m *managedPolicyState) GetPolicy(stackName string) (*client.ManagedPolicy, error) {
+	p, err := m.getPolicy(stackName)
+	if err != nil {
+		return nil, err
+	}
+
+	return p.Convert(), nil
+}
+
+func (m *managedPolicyState) getPolicy(stackName string) (*ManagedPolicy, error) {
 	p := &ManagedPolicy{}
 
 	err := m.node.One("StackName", stackName, p)
@@ -54,7 +75,7 @@ func (m *managedPolicyState) GetPolicy(stackName string) (*client.ManagedPolicy,
 		return nil, err
 	}
 
-	return p.Convert(), nil
+	return p, nil
 }
 
 func (m *managedPolicyState) RemovePolicy(stackName string) error {

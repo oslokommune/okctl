@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
@@ -41,10 +42,30 @@ func (c *Cluster) Convert() *client.Cluster {
 }
 
 func (c *clusterState) SaveCluster(cluster *client.Cluster) error {
-	return c.node.Save(NewCluster(cluster, NewMetadata()))
+	existing, err := c.getCluster(cluster.Name)
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return c.node.Save(NewCluster(cluster, NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return c.node.Save(NewCluster(cluster, existing.Metadata))
 }
 
 func (c *clusterState) GetCluster(name string) (*client.Cluster, error) {
+	cluster, err := c.getCluster(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return cluster.Convert(), nil
+}
+
+func (c *clusterState) getCluster(name string) (*Cluster, error) {
 	cluster := &Cluster{}
 
 	err := c.node.One("Name", name, cluster)
@@ -52,7 +73,7 @@ func (c *clusterState) GetCluster(name string) (*client.Cluster, error) {
 		return nil, err
 	}
 
-	return cluster.Convert(), nil
+	return cluster, nil
 }
 
 func (c *clusterState) RemoveCluster(name string) error {

@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -110,7 +111,18 @@ func (b *S3Bucket) Convert() *client.S3Bucket {
 }
 
 func (c *componentState) SavePostgresDatabase(database *client.PostgresDatabase) error {
-	return c.node.Save(NewPostgresDatabase(database, NewMetadata()))
+	existing, err := c.getPostgresDatabase(database.StackName)
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return c.node.Save(NewPostgresDatabase(database, NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return c.node.Save(NewPostgresDatabase(database, existing.Metadata))
 }
 
 func (c *componentState) RemovePostgresDatabase(stackName string) error {
@@ -129,6 +141,15 @@ func (c *componentState) RemovePostgresDatabase(stackName string) error {
 }
 
 func (c *componentState) GetPostgresDatabase(stackName string) (*client.PostgresDatabase, error) {
+	db, err := c.getPostgresDatabase(stackName)
+	if err != nil {
+		return nil, err
+	}
+
+	return db.Convert(), nil
+}
+
+func (c *componentState) getPostgresDatabase(stackName string) (*PostgresDatabase, error) {
 	db := &PostgresDatabase{}
 
 	err := c.node.One("StackName", stackName, db)
@@ -136,7 +157,7 @@ func (c *componentState) GetPostgresDatabase(stackName string) (*client.Postgres
 		return nil, err
 	}
 
-	return db.Convert(), nil
+	return db, nil
 }
 
 func (c *componentState) GetPostgresDatabases() ([]*client.PostgresDatabase, error) {

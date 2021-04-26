@@ -44,6 +44,13 @@ func TestPostgresStateScenario(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, []*client.PostgresDatabase{mock.PostgresDatabase()}, all)
 
+	m.UserName = "fake3"
+	err = state.SavePostgresDatabase(m)
+	assert.NoError(t, err)
+
+	err = state.RemovePostgresDatabase(mock.StackNamePostgresDatabase)
+	assert.NoError(t, err)
+
 	err = state.RemovePostgresDatabase(mock.StackNamePostgresDatabase)
 	assert.NoError(t, err)
 

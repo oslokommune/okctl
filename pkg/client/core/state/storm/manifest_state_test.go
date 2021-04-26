@@ -38,6 +38,13 @@ func TestManifestStateScenario(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, mock.KubernetesManifest(), m)
 
+	m.Namespace = "fake11"
+	err = state.SaveKubernetesManifests(m)
+	assert.NoError(t, err)
+
+	err = state.RemoveKubernetesManifests(mock.DefaultManifestName)
+	assert.NoError(t, err)
+
 	err = state.RemoveKubernetesManifests(mock.DefaultManifestName)
 	assert.NoError(t, err)
 

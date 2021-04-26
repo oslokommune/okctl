@@ -38,6 +38,13 @@ func TestManagedPolicyStateScenario(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, mock.ManagedPolicy(), m)
 
+	m.PolicyARN = "fake10"
+	err = state.SavePolicy(m)
+	assert.NoError(t, err)
+
+	err = state.RemovePolicy(mock.StackNameManagedPolicy)
+	assert.NoError(t, err)
+
 	err = state.RemovePolicy(mock.StackNameManagedPolicy)
 	assert.NoError(t, err)
 

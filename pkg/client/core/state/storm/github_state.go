@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -108,7 +109,18 @@ func (s *GithubSecret) Convert() *client.GithubSecret {
 }
 
 func (g *githubState) SaveGithubRepository(repository *client.GithubRepository) error {
-	return g.node.Save(NewGithubRepository(repository, NewMetadata()))
+	existing, err := g.getGithubRepository(repository.FullName)
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return g.node.Save(NewGithubRepository(repository, NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return g.node.Save(NewGithubRepository(repository, existing.Metadata))
 }
 
 func (g *githubState) RemoveGithubRepository(fullName string) error {
@@ -127,6 +139,15 @@ func (g *githubState) RemoveGithubRepository(fullName string) error {
 }
 
 func (g *githubState) GetGithubRepository(fullName string) (*client.GithubRepository, error) {
+	r, err := g.getGithubRepository(fullName)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Convert(), nil
+}
+
+func (g *githubState) getGithubRepository(fullName string) (*GithubRepository, error) {
 	r := &GithubRepository{}
 
 	err := g.node.One("FullName", fullName, r)
@@ -134,7 +155,7 @@ func (g *githubState) GetGithubRepository(fullName string) (*client.GithubReposi
 		return nil, err
 	}
 
-	return r.Convert(), nil
+	return r, nil
 }
 
 // NewGithubState returns an initialised state client

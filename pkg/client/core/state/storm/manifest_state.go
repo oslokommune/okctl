@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -46,10 +47,30 @@ func (m *KubernetesManifest) Convert() *client.KubernetesManifest {
 }
 
 func (s *manifestState) SaveKubernetesManifests(manifest *client.KubernetesManifest) error {
-	return s.node.Save(NewKubernetesManifest(manifest, NewMetadata()))
+	existing, err := s.getKubernetesManifests(manifest.Name)
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return s.node.Save(NewKubernetesManifest(manifest, NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return s.node.Save(NewKubernetesManifest(manifest, existing.Metadata))
 }
 
 func (s *manifestState) GetKubernetesManifests(name string) (*client.KubernetesManifest, error) {
+	m, err := s.getKubernetesManifests(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return m.Convert(), nil
+}
+
+func (s *manifestState) getKubernetesManifests(name string) (*KubernetesManifest, error) {
 	m := &KubernetesManifest{}
 
 	err := s.node.One("Name", name, m)
@@ -57,7 +78,7 @@ func (s *manifestState) GetKubernetesManifests(name string) (*client.KubernetesM
 		return nil, err
 	}
 
-	return m.Convert(), nil
+	return m, nil
 }
 
 func (s *manifestState) RemoveKubernetesManifests(name string) error {

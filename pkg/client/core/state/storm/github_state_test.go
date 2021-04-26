@@ -38,6 +38,13 @@ func TestGithubRepositoryStateScenario(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, mock.GithubRepository(), m)
 
+	m.Repository = "fake7"
+	err = state.SaveGithubRepository(m)
+	assert.NoError(t, err)
+
+	err = state.RemoveGithubRepository(mock.DefaultGithubFullName)
+	assert.NoError(t, err)
+
 	err = state.RemoveGithubRepository(mock.DefaultGithubFullName)
 	assert.NoError(t, err)
 

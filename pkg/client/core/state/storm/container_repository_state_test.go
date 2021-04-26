@@ -38,6 +38,13 @@ func TestContainerRepositoryStateScenario(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, mock.ContainerRepository(), m)
 
+	m.ImageName = "fake4"
+	err = state.SaveContainerRepository(m)
+	assert.NoError(t, err)
+
+	err = state.RemoveContainerRepository(mock.StackNameContainerRepository)
+	assert.NoError(t, err)
+
 	err = state.RemoveContainerRepository(mock.StackNameContainerRepository)
 	assert.NoError(t, err)
 

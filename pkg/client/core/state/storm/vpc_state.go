@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -119,10 +120,30 @@ func (s *VpcSubnet) Convert() client.VpcSubnet {
 }
 
 func (v *vpcState) SaveVpc(vpc *client.Vpc) error {
-	return v.node.Save(NewVpc(vpc, NewMetadata()))
+	existing, err := v.getVpc(vpc.StackName)
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return v.node.Save(NewVpc(vpc, NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return v.node.Save(NewVpc(vpc, existing.Metadata))
 }
 
 func (v *vpcState) GetVpc(stackName string) (*client.Vpc, error) {
+	vpc, err := v.getVpc(stackName)
+	if err != nil {
+		return nil, err
+	}
+
+	return vpc.Convert(), nil
+}
+
+func (v *vpcState) getVpc(stackName string) (*Vpc, error) {
 	vpc := &Vpc{}
 
 	err := v.node.One("StackName", stackName, vpc)
@@ -130,7 +151,7 @@ func (v *vpcState) GetVpc(stackName string) (*client.Vpc, error) {
 		return nil, err
 	}
 
-	return vpc.Convert(), nil
+	return vpc, nil
 }
 
 func (v *vpcState) RemoveVpc(stackName string) error {

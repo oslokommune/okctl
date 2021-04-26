@@ -57,8 +57,8 @@ func (a *applicationReconciler) Reconcile(node *resourcetree.ResourceNode) (Reco
 				return ReconcilationResult{}, fmt.Errorf("getting container repository: %w", err)
 			}
 
-			repoURI := repo.URI()
-			a.commonMetadata.ApplicationDeclaration.Image.URI = repoURI.String()
+			a.commonMetadata.ApplicationDeclaration.Image.Name = ""
+			a.commonMetadata.ApplicationDeclaration.Image.URI = repo.URI()
 		}
 
 		err = a.client.ScaffoldApplication(a.commonMetadata.Ctx, &client.ScaffoldApplicationOpts{

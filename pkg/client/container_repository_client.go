@@ -3,8 +3,6 @@ package client
 import (
 	"context"
 	"fmt"
-	"net/url"
-
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
@@ -48,10 +46,9 @@ type ContainerRepositoryState interface {
 }
 
 // URI returns the URI where the image can be pulled and pushed
-func (c ContainerRepository) URI() url.URL {
-	return url.URL{
-		Scheme: "https",
-		Host:   fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", c.ClusterID.AWSAccountID, c.ClusterID.Region),
-		Path:   fmt.Sprintf("%s-%s", c.ClusterID.ClusterName, c.ImageName),
-	}
+func (c ContainerRepository) URI() string {
+	return fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com/%s",
+		c.ClusterID.AWSAccountID,
+		c.ClusterID.Region,
+		c.ImageName)
 }

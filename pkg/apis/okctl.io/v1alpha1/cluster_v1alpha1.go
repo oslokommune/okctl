@@ -57,6 +57,10 @@ type Cluster struct {
 	// Databases is an optional list of databases
 	// +optional
 	Databases *ClusterDatabases `json:"databases,omitempty"`
+
+	// Experimental is an optional section for testing
+	// +optional
+	Experimental *ClusterExperimental `json:"experimental,omitempty"`
 }
 
 // Validate calls each members Validate function
@@ -73,6 +77,7 @@ func (c Cluster) Validate() error {
 		validation.Field(&c.Integrations),
 		validation.Field(&c.Users),
 		validation.Field(&c.Databases),
+		validation.Field(&c.Experimental),
 	)
 }
 
@@ -290,6 +295,14 @@ func (c ClusterDatabasesPostgres) Validate() error {
 	)
 }
 
+// ClusterExperimental contains experimental fields
+type ClusterExperimental struct {
+	// AutomatizeZoneDelegation will automatically merge the delegation
+	// pull requests when set to true
+	// +optional
+	AutomatizeZoneDelegation bool `json:"automatizeZoneDelegation"`
+}
+
 // ClusterTypeMeta returns an initialised TypeMeta object
 // for a Cluster
 func ClusterTypeMeta() metav1.TypeMeta {
@@ -330,6 +343,9 @@ func NewCluster() Cluster {
 			Blockstorage:              true,
 			Cognito:                   true,
 			ArgoCD:                    true,
+		},
+		Experimental: &ClusterExperimental{
+			AutomatizeZoneDelegation: false,
 		},
 	}
 }

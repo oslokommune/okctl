@@ -8,13 +8,38 @@ import (
 )
 
 // CreateOkctlDeployment creates a deployment customized for okctl
-func CreateOkctlDeployment(app v1alpha1.Application) (appsv1.Deployment, error) {
-	deployment, err := createDeployment(app)
-	if err != nil {
-		return appsv1.Deployment{}, err
+func CreateOkctlDeployment(app v1alpha1.Application) appsv1.Deployment {
+	deployment := generateDefaultDeployment()
+
+	deployment.ObjectMeta.Name = app.Metadata.Name
+	deployment.ObjectMeta.Namespace = app.Metadata.Namespace
+
+	if app.Replicas == 0 {
+		// TODO: default value should be put in default pvc creator. ensure default works
+		// User should be able to specify 0 replicas if it makes sense for them
+		app.Replicas = 1
 	}
 
-	return deployment, nil
+	deployment.Spec.Replicas = &app.Replicas
+
+	deployment.Spec.Selector.MatchLabels = map[string]string{
+		"app": app.Metadata.Name,
+	}
+
+	if app.ImagePullSecret != "" {
+		deployment.Spec.Template.Spec.ImagePullSecrets = []corev1.LocalObjectReference{
+			{Name: app.ImagePullSecret},
+		}
+	}
+
+	deployment.Spec.Template.ObjectMeta.Labels = map[string]string{
+		"app": app.Metadata.Name,
+	}
+
+	deployment.Spec.Template.Spec.Volumes = createVolumes(app)
+	deployment.Spec.Template.Spec.Containers = createContainers(app)
+
+	return deployment
 }
 
 func generateDefaultDeployment() appsv1.Deployment {
@@ -41,16 +66,23 @@ func generateDefaultDeployment() appsv1.Deployment {
 }
 
 func createContainers(app v1alpha1.Application) []corev1.Container {
-	var envVars []corev1.EnvVar
+	var (
+		envVars  = make([]corev1.EnvVar, len(app.Environment))
+		envCount = 0
+	)
+
 	for key, value := range app.Environment {
-		envVars = append(envVars, corev1.EnvVar{Name: key, Value: value})
+		envVars[envCount] = corev1.EnvVar{Name: key, Value: value}
+
+		envCount++
 	}
 
 	volumeMounts := make([]corev1.VolumeMount, len(app.Volumes))
+
 	for index, volume := range app.Volumes {
 		for path := range volume {
 			volumeMounts[index] = corev1.VolumeMount{
-				Name:      CreatePVCName(app, path),
+				Name:      createPVCName(app, path),
 				MountPath: path,
 			}
 		}
@@ -72,10 +104,10 @@ func createVolumes(app v1alpha1.Application) []corev1.Volume {
 	for index, volume := range app.Volumes {
 		for path := range volume {
 			volumes[index] = corev1.Volume{
-				Name: CreatePVCName(app, path),
+				Name: createPVCName(app, path),
 				VolumeSource: corev1.VolumeSource{
 					PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-						ClaimName: CreatePVCName(app, path),
+						ClaimName: createPVCName(app, path),
 					},
 				},
 			}
@@ -85,35 +117,4 @@ func createVolumes(app v1alpha1.Application) []corev1.Volume {
 	}
 
 	return volumes
-}
-
-func createDeployment(app v1alpha1.Application) (appsv1.Deployment, error) {
-	deployment := generateDefaultDeployment()
-
-	deployment.ObjectMeta.Name = app.Metadata.Name
-	deployment.ObjectMeta.Namespace = app.Metadata.Namespace
-
-	if app.Replicas == 0 {
-		app.Replicas = 1
-	}
-	deployment.Spec.Replicas = &app.Replicas
-
-	deployment.Spec.Selector.MatchLabels = map[string]string{
-		"app": app.Metadata.Name,
-	}
-
-	if app.ImagePullSecret != "" {
-		deployment.Spec.Template.Spec.ImagePullSecrets = []corev1.LocalObjectReference{
-			{Name: app.ImagePullSecret},
-		}
-	}
-
-	deployment.Spec.Template.ObjectMeta.Labels = map[string]string{
-		"app": app.Metadata.Name,
-	}
-
-	deployment.Spec.Template.Spec.Volumes = createVolumes(app)
-	deployment.Spec.Template.Spec.Containers = createContainers(app)
-
-	return deployment, nil
 }

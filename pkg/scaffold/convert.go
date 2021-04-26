@@ -1,4 +1,4 @@
-// Package resources knows how to produce and handle Kubernetes resource
+// Package scaffold knows how to turn an okctl application into Kubernetes and ArgoCD resources
 package scaffold
 
 import (
@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	emptyMatcher, _  = regexp.Compile("^.*: (null|{})$")
-	statusMatcher, _ = regexp.Compile("^\\s*?status*:$")
+	emptyMatcher  = regexp.MustCompile(`^.*: (null|{})$`)
+	statusMatcher = regexp.MustCompile(`^\s*?status*:$`)
 )
 
 // volumesAsBytes knows how to convert a Kubernetes PersistentVolumeClaim to a byte array
@@ -87,6 +87,7 @@ func cleanResources(buf bytes.Buffer) ([]byte, error) {
 	}
 
 	var result bytes.Buffer
+
 	for _, item := range strings.Split(string(content), "\n") {
 		if !emptyMatcher.MatchString(item) && !statusMatcher.MatchString(item) {
 			result.Write([]byte(item + "\n"))

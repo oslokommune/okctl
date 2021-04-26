@@ -6,6 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const ecrTestURI = "012345678912.dkr.ecr.eu-west-1.amazonaws.com/cluster-test-testapp"
+
 func generateValidApplication() Application {
 	app := NewApplication(Cluster{})
 
@@ -74,7 +76,7 @@ func TestApplicationValidation(t *testing.T) {
 			withApplication: func() Application {
 				app := generateValidApplication()
 
-				app.Image.URI = "012345678912.dkr.ecr.eu-west-1.amazonaws.com/cluster-test-testapp"
+				app.Image.URI = ecrTestURI
 
 				return app
 			},
@@ -87,7 +89,7 @@ func TestApplicationValidation(t *testing.T) {
 			withApplication: func() Application {
 				app := generateValidApplication()
 
-				app.Image.URI = "012345678912.dkr.ecr.eu-west-1.amazonaws.com/cluster-test-testapp"
+				app.Image.URI = ecrTestURI
 				app.Image.Name = "somename"
 
 				return app
@@ -102,7 +104,7 @@ func TestApplicationValidation(t *testing.T) {
 			withApplication: func() Application {
 				app := generateValidApplication()
 
-				app.Image.URI = "012345678912.dkr.ecr.eu-west-1.amazonaws.com/cluster-test-testapp"
+				app.Image.URI = ecrTestURI
 				app.Image.Name = ""
 
 				return app

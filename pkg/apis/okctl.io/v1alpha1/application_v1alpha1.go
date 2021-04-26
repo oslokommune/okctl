@@ -2,9 +2,10 @@ package v1alpha1
 
 import (
 	"fmt"
-	"github.com/mishudark/errors"
 	"net/url"
 	"regexp"
+
+	"github.com/mishudark/errors"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
@@ -100,10 +101,12 @@ type ApplicationImage struct {
 	URI  string `json:"uri"`
 }
 
+// HasName determines if the image has a name
 func (a ApplicationImage) HasName() bool {
 	return len(a.Name) > 0
 }
 
+// HasURI determines if the image has an URI
 func (a ApplicationImage) HasURI() bool {
 	return len(a.URI) > 0
 }
@@ -126,14 +129,14 @@ func (a Application) HasService() bool {
 	return a.Port > 0
 }
 
-// Url returns the URL where the application is made available
-func (a Application) Url() (url.URL, error) {
-	tmpUrl, err := url.Parse(fmt.Sprintf("%s.%s", a.SubDomain, a.cluster.ClusterRootDomain))
+// URL returns the URL where the application is made available
+func (a Application) URL() (url.URL, error) {
+	tmpURL, err := url.Parse(fmt.Sprintf("%s.%s", a.SubDomain, a.cluster.ClusterRootDomain))
 	if err != nil {
 		return url.URL{}, fmt.Errorf("parsing application URL: %w", err)
 	}
 
-	return *tmpUrl, nil
+	return *tmpURL, nil
 }
 
 // NewApplication returns an initialized application definition

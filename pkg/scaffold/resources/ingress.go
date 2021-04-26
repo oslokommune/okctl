@@ -57,7 +57,7 @@ func generateDefaultIngress() networkingv1.Ingress {
 }
 
 func createGenericIngress(app v1alpha1.Application) (networkingv1.Ingress, error) {
-	hostUrl, err := app.Url()
+	hostURL, err := app.URL()
 	if err != nil {
 		return networkingv1.Ingress{}, fmt.Errorf("getting application URL: %w", err)
 	}
@@ -69,7 +69,7 @@ func createGenericIngress(app v1alpha1.Application) (networkingv1.Ingress, error
 
 	ingress.Spec.Rules = []networkingv1.IngressRule{
 		{
-			Host: hostUrl.Host,
+			Host: hostURL.Host,
 			IngressRuleValue: networkingv1.IngressRuleValue{
 				HTTP: &networkingv1.HTTPIngressRuleValue{
 					Paths: []networkingv1.HTTPIngressPath{{
@@ -78,7 +78,7 @@ func createGenericIngress(app v1alpha1.Application) (networkingv1.Ingress, error
 							Service: &networkingv1.IngressServiceBackend{
 								Name: app.Metadata.Name,
 								Port: networkingv1.ServiceBackendPort{
-									Number: 80,
+									Number: defaultServiceListeningPort,
 								},
 							},
 						},

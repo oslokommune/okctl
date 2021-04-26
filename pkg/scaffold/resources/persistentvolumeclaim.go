@@ -32,20 +32,22 @@ func CreateOkctlVolume(app v1alpha1.Application, volume map[string]string) (core
 func createPersistentVolume(app v1alpha1.Application, path string, size string) (corev1.PersistentVolumeClaim, error) {
 	volume := generateDefaultPVC()
 
-	volume.ObjectMeta.Name = CreatePVCName(app, path)
+	volume.ObjectMeta.Name = createPVCName(app, path)
 	volume.ObjectMeta.Namespace = app.Metadata.Namespace
 
 	capacity, err := createStorageRequest(size)
 	if err != nil {
 		return corev1.PersistentVolumeClaim{}, err
 	}
+
 	volume.Spec.Resources.Requests = capacity
 
 	return volume, nil
 }
 
-func CreatePVCName(app v1alpha1.Application, path string) string {
-	cleanPath := strings.Replace(path, "/", "", -1)
+// createPVCName turns a path into a valid name
+func createPVCName(app v1alpha1.Application, path string) string {
+	cleanPath := strings.ReplaceAll(path, "/", "")
 
 	return fmt.Sprintf("%s-%s", app.Metadata.Name, cleanPath)
 }
@@ -71,13 +73,13 @@ func generateDefaultPVC() corev1.PersistentVolumeClaim {
 }
 
 func createStorageRequest(requestSize string) (corev1.ResourceList, error) {
-	quantity, err := resource.ParseQuantity("1Gi")
-	if requestSize != "" {
-		quantity, err = resource.ParseQuantity(requestSize)
+	if requestSize == "" {
+		requestSize = "1Gi"
+	}
 
-		if err != nil {
-			return nil, err
-		}
+	quantity, err := resource.ParseQuantity(requestSize)
+	if err != nil {
+		return nil, err
 	}
 
 	return corev1.ResourceList{

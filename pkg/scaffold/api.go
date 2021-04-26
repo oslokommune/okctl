@@ -70,12 +70,7 @@ func GenerateApplicationBase(app v1alpha1.Application, iacRepoURL, relativeAppli
 	}
 
 	if app.HasService() {
-		var service v1.Service
-
-		service, err = resources.CreateOkctlService(app)
-		if err != nil {
-			return applicationBase, fmt.Errorf("creating service resource: %w", err)
-		}
+		service := resources.CreateOkctlService(app)
 
 		kustomization.AddResource("service.yaml")
 
@@ -101,10 +96,7 @@ func GenerateApplicationBase(app v1alpha1.Application, iacRepoURL, relativeAppli
 		}
 	}
 
-	deployment, err := resources.CreateOkctlDeployment(app)
-	if err != nil {
-		return applicationBase, err
-	}
+	deployment := resources.CreateOkctlDeployment(app)
 
 	kustomization.AddResource("deployment.yaml")
 

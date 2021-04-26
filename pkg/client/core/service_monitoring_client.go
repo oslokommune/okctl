@@ -393,7 +393,7 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 
 	err = s.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
 		ID:        opts.ID,
-		Namespace: constant.DefaultFargateObservabilityNamespace,
+		Namespace: constant.DefaultMonitoringNamespace,
 	})
 	if err != nil {
 		return err

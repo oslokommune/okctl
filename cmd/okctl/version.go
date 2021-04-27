@@ -18,7 +18,7 @@ func buildVersionCommand(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			_, err := fmt.Fprint(o.Out, version.String())
+			_, err := fmt.Fprint(o.Out, version.String()+"\n")
 			return err
 		},
 	}

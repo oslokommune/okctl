@@ -3,6 +3,8 @@ package core
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/go-git/go-billy/v5/memfs"
 
 	"github.com/oslokommune/okctl/pkg/git"
@@ -21,9 +23,14 @@ func (s *nsRecordDelegationService) RevokeDomainDelegation(opts client.RevokeDom
 		return err
 	}
 
+	workingDir := git.DefaultWorkingDir
+	if contains(opts.Labels, constant.DefaultAutomaticPullRequestMergeLabel) {
+		workingDir = git.DefaultAutoWorkingDir
+	}
+
 	delegator := git.NewNameserverDelegator(
 		true,
-		git.DefaultWorkingDir,
+		workingDir,
 		git.RepositoryStagerClone(git.DefaultRepositoryURL()),
 		memfs.New(),
 	)
@@ -57,16 +64,21 @@ func (s *nsRecordDelegationService) InitiateDomainDelegation(opts client.Initiat
 		return err
 	}
 
+	workingDir := git.DefaultWorkingDir
+	if contains(opts.Labels, constant.DefaultAutomaticPullRequestMergeLabel) {
+		workingDir = git.DefaultAutoWorkingDir
+	}
+
 	delegator := git.NewNameserverDelegator(
 		true,
-		git.DefaultWorkingDir,
+		workingDir,
 		git.RepositoryStagerClone(git.DefaultRepositoryURL()),
 		memfs.New(),
 	)
 
 	result, err := delegator.CreateDelegation(opts.PrimaryHostedZoneFQDN, opts.Nameservers, false)
 	if err != nil {
-		return fmt.Errorf("initiating dns zone delegation: %w", err)
+		return err
 	}
 
 	if result.ModifiedRepository {
@@ -85,6 +97,17 @@ func (s *nsRecordDelegationService) InitiateDomainDelegation(opts client.Initiat
 	}
 
 	return nil
+}
+
+// from: https://stackoverflow.com/questions/10485743/contains-method-for-a-slice
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+
+	return false
 }
 
 // NewNameserverHandlerService initializes a new NSRecordDelegationService

@@ -25,7 +25,9 @@ import (
 const (
 	// DefaultWorkingDir represents the default working directory
 	DefaultWorkingDir = "infrastructure/production/dns/oslo.systems/auto_applied_subdomains"
-	randomChars       = 4
+	// DefaultAutoWorkingDir represents the default auto working directory
+	DefaultAutoWorkingDir = "infrastructure/production/dns/oslo.systems/auto_applied_subdomains/auto"
+	randomChars           = 4
 )
 
 // DefaultRepositoryURL represents the default repository URL
@@ -120,6 +122,11 @@ func (n *NameserverDelegator) CreateDelegation(fqdn string, nameservers []string
 		return nil, fmt.Errorf("chrooting into relevant directory: %w", err)
 	}
 
+	workTree, err := n.checkout(branch, repository)
+	if err != nil {
+		return nil, fmt.Errorf("checking out new branch: %w", err)
+	}
+
 	file, err := fs.Create(fileName)
 	if err != nil {
 		return nil, fmt.Errorf("creating temporary file: %w", err)
@@ -130,11 +137,6 @@ func (n *NameserverDelegator) CreateDelegation(fqdn string, nameservers []string
 	_, err = file.Write(record)
 	if err != nil {
 		return nil, fmt.Errorf("writing to temporary file: %w", err)
-	}
-
-	workTree, err := n.checkout(branch, repository)
-	if err != nil {
-		return nil, fmt.Errorf("checking out new branch: %w", err)
 	}
 
 	filePath := path.Join(n.workingDir, fileName)
@@ -217,9 +219,12 @@ func (*NameserverDelegator) commitRevokeRecord(fqdn string, workTree *git.Worktr
 }
 
 func (*NameserverDelegator) push(branchName string, repository *git.Repository) error {
+	b := plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", branchName))
+
 	err := repository.Push(&git.PushOptions{
+		RemoteName: "origin",
 		RefSpecs: []config.RefSpec{
-			config.RefSpec(fmt.Sprintf("HEAD:refs/heads/%s", branchName)),
+			config.RefSpec(b + ":" + b),
 		},
 	})
 	if err != nil {

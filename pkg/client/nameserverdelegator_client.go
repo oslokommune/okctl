@@ -32,7 +32,7 @@ func (o InitiateDomainDelegationOpts) Validate() error {
 			validation.Each(is.DNSName),
 			validation.Length(numExpectedNameServers, numExpectedNameServers),
 		),
-		validation.Field(&o.Labels, validation.In(constant.DefaultAutomaticPullRequestMergeLabel)),
+		validation.Field(&o.Labels, validation.Each(validation.In(constant.DefaultAutomaticPullRequestMergeLabel))),
 	)
 }
 
@@ -49,7 +49,7 @@ func (o RevokeDomainDelegationOpts) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.ClusterID, validation.Required),
 		validation.Field(&o.PrimaryHostedZoneFQDN, validation.Required, is.DNSName),
-		validation.Field(&o.Labels, validation.In(constant.DefaultAutomaticPullRequestMergeLabel)),
+		validation.Field(&o.Labels, validation.Each(validation.In(constant.DefaultAutomaticPullRequestMergeLabel))),
 	)
 }
 

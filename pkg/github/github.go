@@ -172,9 +172,11 @@ func (g *Github) CreatePullRequest(r *PullRequest) error {
 		return fmt.Errorf("creating github pull request: %w", err)
 	}
 
-	_, _, err = g.Client.Issues.AddLabelsToIssue(g.Ctx, r.Organisation, r.Repository, pr.GetNumber(), r.Labels)
-	if err != nil {
-		return fmt.Errorf("adding labels to pull request: %w", err)
+	if len(r.Labels) > 0 {
+		_, _, err = g.Client.Issues.AddLabelsToIssue(g.Ctx, r.Organisation, r.Repository, pr.GetNumber(), r.Labels)
+		if err != nil {
+			return fmt.Errorf("adding labels to pull request: %w", err)
+		}
 	}
 
 	return nil

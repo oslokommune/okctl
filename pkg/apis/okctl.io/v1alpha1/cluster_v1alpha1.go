@@ -71,6 +71,12 @@ func (c Cluster) Validate() error {
 			is.LowerCase,
 			is.DNSName.Error(fmt.Sprintf("invalid domain name: '%s'", c.ClusterRootDomain)),
 		),
+		validation.Field(&c.ClusterRootDomain,
+			validation.When(
+				c.Experimental != nil && c.Experimental.AutomatizeZoneDelegation,
+				validation.Match(regexp.MustCompile("^(.*).auto.oslo.systems$")).Error("with automatizeZoneDelegation enabled, must end with auto.oslo.systems"),
+			),
+		),
 		validation.Field(&c.Metadata),
 		validation.Field(&c.Github),
 		validation.Field(&c.VPC),
@@ -301,6 +307,11 @@ type ClusterExperimental struct {
 	// pull requests when set to true
 	// +optional
 	AutomatizeZoneDelegation bool `json:"automatizeZoneDelegation"`
+}
+
+// Validate the content of cluster experimental
+func (e ClusterExperimental) Validate() error {
+	return nil
 }
 
 // ClusterTypeMeta returns an initialised TypeMeta object

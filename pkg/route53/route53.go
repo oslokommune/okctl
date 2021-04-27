@@ -95,6 +95,10 @@ func (r *Route53) DeleteHostedZoneRecordSets(hostedZoneID string) (*route.Change
 		}
 	}
 
+	if len(changes) == 0 {
+		return nil, nil
+	}
+
 	request := &route.ChangeResourceRecordSetsInput{
 		ChangeBatch: &route.ChangeBatch{
 			Changes: changes,

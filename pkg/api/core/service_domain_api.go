@@ -11,7 +11,7 @@ type domainService struct {
 	cloudProvider api.DomainCloudProvider
 }
 
-func (d *domainService) DeleteHostedZone(ctx context.Context, opts api.DeleteHostedZoneOpts) error {
+func (d *domainService) DeleteHostedZone(_ context.Context, opts api.DeleteHostedZoneOpts) error {
 	err := opts.Validate()
 	if err != nil {
 		return errors.E(err, "failed to validate inputs")

@@ -1,4 +1,3 @@
-// Package git implements some git helpers
 package git
 
 import (

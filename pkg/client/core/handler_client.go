@@ -57,7 +57,7 @@ type Services struct {
 	ExternalSecrets                  client.ExternalSecretsService
 	Github                           client.GithubService
 	Manifest                         client.ManifestService
-	NameserverHandler                client.NameserverRecordDelegationService
+	NameserverHandler                client.NSRecordDelegationService
 	Parameter                        client.ParameterService
 	Vpc                              client.VPCService
 	IdentityManager                  client.IdentityManagerService

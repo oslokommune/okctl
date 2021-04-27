@@ -115,7 +115,5 @@ const (
 	DefaultClusterCIDR     = "192.168.0.0/20"
 	DefaultOutputDirectory = "infrastructure"
 
-	DefaultContainerRepositoryBaseDir            = "container-repository"
-	DefaultContainerRepositoryOutputFile         = "repository-output.json"
-	DefaultContainerRepositoryCloudFormationFile = "repository-cf.yaml"
+	DefaultAutomaticPullRequestMergeLabel = "automerge"
 )

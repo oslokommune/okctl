@@ -2,6 +2,7 @@ package reconciler
 
 import (
 	"fmt"
+	"strings"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
@@ -23,7 +24,7 @@ func (c *compositeReconciler) NodeType() resourcetree.ResourceNodeType {
 
 // Reconcile knows what reconciler to use for the provided ResourceNode
 func (c *compositeReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
-	err = c.spinner.Start(resourcetree.ResourceNodeTypeToString(node.Type))
+	err = c.spinner.Start(node.Type.String())
 	if err != nil {
 		return result, fmt.Errorf("starting subspinner: %w", err)
 	}
@@ -32,12 +33,18 @@ func (c *compositeReconciler) Reconcile(node *resourcetree.ResourceNode) (result
 		_ = c.spinner.Stop()
 	}()
 
-	_, ok := c.reconcilers[node.Type]
-	if !ok {
-		return result, fmt.Errorf("no reconciler for type exists: %s", resourcetree.ResourceNodeTypeToString(node.Type))
+	t := node.Type
+
+	if strings.HasPrefix(t.String(), resourcetree.ResourceNodeTypePostgresInstance.String()) {
+		t = resourcetree.ResourceNodeTypePostgresInstance
 	}
 
-	return c.reconcilers[node.Type].Reconcile(node)
+	_, ok := c.reconcilers[t]
+	if !ok {
+		return result, fmt.Errorf("no reconciler for type exists: %s", node.Type.String())
+	}
+
+	return c.reconcilers[t].Reconcile(node)
 }
 
 // SetCommonMetadata sets commonMetadata for all reconcilers
@@ -56,7 +63,9 @@ func (c *compositeReconciler) SetStateHandlers(handlers *clientCore.StateHandler
 
 // NewCompositeReconciler initializes a compositeReconciler
 func NewCompositeReconciler(spin spinner.Spinner, reconcilers ...Reconciler) Reconciler {
-	reconcilerMap := map[resourcetree.ResourceNodeType]Reconciler{resourcetree.ResourceNodeTypeGroup: &NoopReconciler{}}
+	reconcilerMap := map[resourcetree.ResourceNodeType]Reconciler{
+		resourcetree.ResourceNodeTypeGroup: &NoopReconciler{},
+	}
 
 	for _, reconciler := range reconcilers {
 		reconcilerMap[reconciler.NodeType()] = reconciler

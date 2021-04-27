@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/client"
+
 	"github.com/oslokommune/okctl/pkg/client/mock"
 
 	stormpkg "github.com/asdine/storm/v3"
@@ -37,6 +39,17 @@ func TestPostgresStateScenario(t *testing.T) {
 	m, err := state.GetPostgresDatabase(mock.StackNamePostgresDatabase)
 	assert.NoError(t, err)
 	assert.Equal(t, mock.PostgresDatabase(), m)
+
+	all, err := state.GetPostgresDatabases()
+	assert.NoError(t, err)
+	assert.Equal(t, []*client.PostgresDatabase{mock.PostgresDatabase()}, all)
+
+	m.UserName = "fake3"
+	err = state.SavePostgresDatabase(m)
+	assert.NoError(t, err)
+
+	err = state.RemovePostgresDatabase(mock.StackNamePostgresDatabase)
+	assert.NoError(t, err)
 
 	err = state.RemovePostgresDatabase(mock.StackNamePostgresDatabase)
 	assert.NoError(t, err)

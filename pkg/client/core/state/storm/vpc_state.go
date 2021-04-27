@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -17,7 +18,7 @@ type Vpc struct {
 
 	ID                       ID
 	StackName                string `storm:"unique"`
-	CloudFormationTemplate   []byte
+	CloudFormationTemplate   string
 	VpcID                    string
 	Cidr                     string
 	PublicSubnets            []VpcSubnet
@@ -32,7 +33,7 @@ func NewVpc(v *client.Vpc, meta Metadata) *Vpc {
 		Metadata:               meta,
 		ID:                     NewID(v.ID),
 		StackName:              v.StackName,
-		CloudFormationTemplate: v.CloudFormationTemplate,
+		CloudFormationTemplate: string(v.CloudFormationTemplate),
 		VpcID:                  v.VpcID,
 		Cidr:                   v.Cidr,
 		PublicSubnets: func() (subs []VpcSubnet) {
@@ -65,7 +66,7 @@ func (v *Vpc) Convert() *client.Vpc {
 	return &client.Vpc{
 		ID:                     v.ID.Convert(),
 		StackName:              v.StackName,
-		CloudFormationTemplate: v.CloudFormationTemplate,
+		CloudFormationTemplate: []byte(v.CloudFormationTemplate),
 		VpcID:                  v.VpcID,
 		Cidr:                   v.Cidr,
 		PublicSubnets: func() (subs []client.VpcSubnet) {
@@ -119,10 +120,30 @@ func (s *VpcSubnet) Convert() client.VpcSubnet {
 }
 
 func (v *vpcState) SaveVpc(vpc *client.Vpc) error {
-	return v.node.Save(NewVpc(vpc, NewMetadata()))
+	existing, err := v.getVpc(vpc.StackName)
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return v.node.Save(NewVpc(vpc, NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return v.node.Save(NewVpc(vpc, existing.Metadata))
 }
 
 func (v *vpcState) GetVpc(stackName string) (*client.Vpc, error) {
+	vpc, err := v.getVpc(stackName)
+	if err != nil {
+		return nil, err
+	}
+
+	return vpc.Convert(), nil
+}
+
+func (v *vpcState) getVpc(stackName string) (*Vpc, error) {
 	vpc := &Vpc{}
 
 	err := v.node.One("StackName", stackName, vpc)
@@ -130,7 +151,7 @@ func (v *vpcState) GetVpc(stackName string) (*client.Vpc, error) {
 		return nil, err
 	}
 
-	return vpc.Convert(), nil
+	return vpc, nil
 }
 
 func (v *vpcState) RemoveVpc(stackName string) error {

@@ -115,7 +115,9 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 	}
 
 	_, err = c.manifest.CreateExternalSecret(ctx, client.CreateExternalSecretOpts{
-		ID: opts.ID,
+		ID:        opts.ID,
+		Name:      adminSecretName(opts.ApplicationName),
+		Namespace: opts.Namespace,
 		Manifest: api.Manifest{
 			Name:      adminSecretName(opts.ApplicationName),
 			Namespace: opts.Namespace,
@@ -241,9 +243,10 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 	}
 
 	err = c.manifest.DeleteExternalSecret(ctx, client.DeleteExternalSecretOpts{
-		ID: opts.ID,
+		ID:   opts.ID,
+		Name: adminSecretName(opts.ApplicationName),
 		Secrets: map[string]string{
-			pgConfigMapName(opts.ApplicationName): db.Namespace,
+			adminSecretName(opts.ApplicationName): db.Namespace,
 		},
 	})
 	if err != nil {
@@ -266,6 +269,14 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 	err = c.api.DeleteS3Bucket(api.DeleteS3BucketOpts{
 		ID:        opts.ID,
 		StackName: cfn.NewStackNamer().S3Bucket(opts.ApplicationName, opts.ID.ClusterName),
+	})
+	if err != nil {
+		return err
+	}
+
+	err = c.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
+		ID:        opts.ID,
+		Namespace: opts.Namespace,
 	})
 	if err != nil {
 		return err

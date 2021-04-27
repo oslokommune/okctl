@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -69,7 +70,18 @@ func (s *KubePromStack) Convert() *client.KubePromStack {
 }
 
 func (m *monitoringState) SaveKubePromStack(stack *client.KubePromStack) error {
-	return m.node.Save(NewKubePromStack(stack, NewMetadata()))
+	existing, err := m.getKubePromStack()
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return m.node.Save(NewKubePromStack(stack, NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return m.node.Save(NewKubePromStack(stack, existing.Metadata))
 }
 
 func (m *monitoringState) RemoveKubePromStack() error {
@@ -88,6 +100,15 @@ func (m *monitoringState) RemoveKubePromStack() error {
 }
 
 func (m *monitoringState) GetKubePromStack() (*client.KubePromStack, error) {
+	s, err := m.getKubePromStack()
+	if err != nil {
+		return nil, err
+	}
+
+	return s.Convert(), nil
+}
+
+func (m *monitoringState) getKubePromStack() (*KubePromStack, error) {
 	s := &KubePromStack{}
 
 	err := m.node.One("Name", "kubepromstack", s)
@@ -95,7 +116,7 @@ func (m *monitoringState) GetKubePromStack() (*client.KubePromStack, error) {
 		return nil, err
 	}
 
-	return s.Convert(), nil
+	return s, nil
 }
 
 // NewMonitoringState returns an initialised state client

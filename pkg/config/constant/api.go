@@ -103,6 +103,9 @@ const (
 	// DefaultRequiredIgws number of internet gateways required for cluster creation
 	DefaultRequiredIgws = 1
 
+	// DefaultRequiredFargateOnDemandPods is the minimum number of fargate pods that should be available
+	DefaultRequiredFargateOnDemandPods = 50
+
 	DefaultNameserverRecordTTL = 300
 
 	// DefaultMaxReconciliationRequeues defines the maximum allowed times a reconciliation can be requeued
@@ -112,7 +115,5 @@ const (
 	DefaultClusterCIDR     = "192.168.0.0/20"
 	DefaultOutputDirectory = "infrastructure"
 
-	DefaultContainerRepositoryBaseDir            = "container-repository"
-	DefaultContainerRepositoryOutputFile         = "repository-output.json"
-	DefaultContainerRepositoryCloudFormationFile = "repository-cf.yaml"
+	DefaultAutomaticPullRequestMergeLabel = "automerge"
 )

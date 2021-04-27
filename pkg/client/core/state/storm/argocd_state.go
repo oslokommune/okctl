@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -45,13 +46,33 @@ func (a *ArgoCD) Convert() *client.ArgoCD {
 }
 
 func (a *argoCDState) SaveArgoCD(cd *client.ArgoCD) error {
-	return a.node.Save(NewArgoCD(cd, NewMetadata()))
+	existing, err := a.getArgoCD()
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return a.node.Save(NewArgoCD(cd, NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return a.node.Save(NewArgoCD(cd, existing.Metadata))
 }
 
-func (a *argoCDState) GetArgoCD() (*client.ArgoCD, error) {
+func (a *argoCDState) getArgoCD() (*ArgoCD, error) {
 	cd := &ArgoCD{}
 
 	err := a.node.One("Name", "argocd", cd)
+	if err != nil {
+		return nil, err
+	}
+
+	return cd, nil
+}
+
+func (a *argoCDState) GetArgoCD() (*client.ArgoCD, error) {
+	cd, err := a.getArgoCD()
 	if err != nil {
 		return nil, err
 	}

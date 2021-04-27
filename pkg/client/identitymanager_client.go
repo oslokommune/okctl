@@ -120,6 +120,9 @@ type IdentityManagerState interface {
 	RemoveIdentityPool(stackName string) error
 	GetIdentityPool(stackName string) (*IdentityPool, error)
 	SaveIdentityPoolClient(client *IdentityPoolClient) error
+	GetIdentityPoolClient(stackName string) (*IdentityPoolClient, error)
 	RemoveIdentityPoolClient(stackName string) error
 	SaveIdentityPoolUser(user *IdentityPoolUser) error
+	GetIdentityPoolUser(stackName string) (*IdentityPoolUser, error)
+	RemoveIdentityPoolUser(stackName string) error
 }

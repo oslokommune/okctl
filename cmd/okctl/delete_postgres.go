@@ -12,6 +12,7 @@ import (
 type deletePostgresOpts struct {
 	ID              api.ID
 	ApplicationName string
+	Namespace       string
 	VpcID           string
 }
 
@@ -20,6 +21,7 @@ func (o *deletePostgresOpts) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.ApplicationName, validation.Required),
+		validation.Field(&o.Namespace, validation.Required),
 		validation.Field(&o.VpcID, validation.Required),
 	)
 }
@@ -42,6 +44,12 @@ func buildDeletePostgresCommand(o *okctl.Okctl) *cobra.Command {
 			opts.ID.AWSAccountID = o.Declaration.Metadata.AccountID
 			opts.ID.Region = o.Declaration.Metadata.Region
 			opts.ID.ClusterName = o.Declaration.Metadata.Name
+
+			for _, db := range o.Declaration.Databases.Postgres {
+				if db.Name == opts.ApplicationName {
+					opts.Namespace = db.Namespace
+				}
+			}
 
 			vpc, err := o.StateHandlers(o.StateNodes()).Vpc.GetVpc(
 				cfn.NewStackNamer().Vpc(o.Declaration.Metadata.Name),
@@ -67,6 +75,7 @@ func buildDeletePostgresCommand(o *okctl.Okctl) *cobra.Command {
 
 			err = services.Component.DeletePostgresDatabase(o.Ctx, client.DeletePostgresDatabaseOpts{
 				ID:              opts.ID,
+				Namespace:       opts.Namespace,
 				ApplicationName: opts.ApplicationName,
 				VpcID:           opts.VpcID,
 			})

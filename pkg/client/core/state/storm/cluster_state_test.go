@@ -38,6 +38,13 @@ func TestClusterStateScenario(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, mock.Cluster(), m)
 
+	m.Config = nil
+	err = state.SaveCluster(m)
+	assert.NoError(t, err)
+
+	err = state.RemoveCluster(mock.DefaultClusterName)
+	assert.NoError(t, err)
+
 	err = state.RemoveCluster(mock.DefaultClusterName)
 	assert.NoError(t, err)
 

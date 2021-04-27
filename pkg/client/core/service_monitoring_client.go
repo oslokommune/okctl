@@ -308,7 +308,8 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 	}
 
 	err = s.manifest.DeleteExternalSecret(ctx, client.DeleteExternalSecretOpts{
-		ID: opts.ID,
+		ID:   opts.ID,
+		Name: secretsCfgName,
 		Secrets: map[string]string{
 			secretsCfgName: constant.DefaultMonitoringNamespace,
 		},
@@ -370,6 +371,29 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 	err = s.policy.DeletePolicy(ctx, client.DeletePolicyOpts{
 		ID:        opts.ID,
 		StackName: cfn.NewStackNamer().FargateCloudwatch(opts.ID.ClusterName),
+	})
+	if err != nil {
+		return err
+	}
+
+	err = s.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
+		ID:        opts.ID,
+		Name:      cloudwatchDatasourceConfigMapName,
+		Namespace: constant.DefaultMonitoringNamespace,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = s.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
+		ID:        opts.ID,
+		Name:      "aws-logging",
+		Namespace: constant.DefaultFargateObservabilityNamespace,
+	})
+
+	err = s.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
+		ID:        opts.ID,
+		Namespace: constant.DefaultMonitoringNamespace,
 	})
 	if err != nil {
 		return err
@@ -494,7 +518,9 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 	}
 
 	manifest, err := s.manifest.CreateExternalSecret(ctx, client.CreateExternalSecretOpts{
-		ID: opts.ID,
+		ID:        opts.ID,
+		Name:      secretsCfgName,
+		Namespace: constant.DefaultMonitoringNamespace,
 		Manifest: api.Manifest{
 			Name:      secretsCfgName,
 			Namespace: constant.DefaultMonitoringNamespace,

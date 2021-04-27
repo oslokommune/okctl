@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	"github.com/aws/aws-sdk-go/service/cloudformation/cloudformationiface"
 	"github.com/aws/aws-sdk-go/service/cloudfront/cloudfrontiface"
+	"github.com/aws/aws-sdk-go/service/cloudwatch/cloudwatchiface"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/aws/aws-sdk-go/service/eks/eksiface"
@@ -30,6 +31,7 @@ type CloudProvider interface {
 	CloudFront() cloudfrontiface.CloudFrontAPI
 	CognitoIdentityProvider() cognitoidentityprovideriface.CognitoIdentityProviderAPI
 	CloudFormation() cloudformationiface.CloudFormationAPI
+	CloudWatch() cloudwatchiface.CloudWatchAPI
 	Region() string
 	PrincipalARN() string
 }

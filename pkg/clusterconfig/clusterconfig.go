@@ -62,8 +62,10 @@ func (a *Args) build() *v1alpha5.ClusterConfig {
 			Region:  a.Region,
 			Version: a.Version,
 			Tags: map[string]string{
-				v1alpha1.OkctlVersionTag: v.Version,
-				v1alpha1.OkctlCommitTag:  v.ShortCommit,
+				v1alpha1.OkctlVersionTag:     v.Version,
+				v1alpha1.OkctlCommitTag:      v.ShortCommit,
+				v1alpha1.OkctlManagedTag:     "true",
+				v1alpha1.OkctlClusterNameTag: a.ClusterName,
 			},
 		},
 		IAM: v1alpha5.ClusterIAM{
@@ -200,8 +202,10 @@ func (a *ServiceAccountArgs) build() *v1alpha5.ClusterConfig {
 			Name:   a.ClusterName,
 			Region: a.Region,
 			Tags: map[string]string{
-				v1alpha1.OkctlVersionTag: v.Version,
-				v1alpha1.OkctlCommitTag:  v.ShortCommit,
+				v1alpha1.OkctlVersionTag:     v.Version,
+				v1alpha1.OkctlCommitTag:      v.ShortCommit,
+				v1alpha1.OkctlManagedTag:     "true",
+				v1alpha1.OkctlClusterNameTag: a.ClusterName,
 			},
 		},
 		IAM: v1alpha5.ClusterIAM{

@@ -7,7 +7,6 @@ import (
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
 	"github.com/logrusorgru/aurora"
-	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 	"github.com/oslokommune/okctl/pkg/domain"
@@ -70,7 +69,8 @@ func (n *nameserversDelegatedTestReconciler) Reconcile(node *resourcetree.Resour
 			return result, fmt.Errorf("setting hosted zone delegation status: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		return result, errors.New("removing nameservers delegated test is not implemented")
+		// Nothing to do on absent
+		return result, nil
 	}
 
 	return result, nil

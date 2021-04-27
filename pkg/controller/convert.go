@@ -3,6 +3,8 @@ package controller
 import (
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/helm/charts/externalsecrets"
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/autoscaler"
@@ -25,6 +27,7 @@ import (
 
 // ExistingResources contains information about what services already exists in a cluster
 type ExistingResources struct {
+	hasServiceQuotaCheck                  bool
 	hasAWSLoadBalancerController          bool
 	hasCluster                            bool
 	hasExternalDNS                        bool
@@ -42,7 +45,7 @@ type ExistingResources struct {
 	hasDelegatedHostedZoneNameservers     bool
 	hasDelegatedHostedZoneNameserversTest bool
 	hasUsers                              bool
-	hasPostgres                           bool
+	hasPostgres                           map[string]*v1alpha1.ClusterDatabasesPostgres
 }
 
 func isNotFound(_ interface{}, err error) bool {
@@ -54,6 +57,21 @@ func IdentifyResourcePresence(id api.ID, handlers *clientCore.StateHandlers) (Ex
 	hz, err := handlers.Domain.GetPrimaryHostedZone()
 	if err != nil && !errors.Is(err, storm.ErrNotFound) {
 		return ExistingResources{}, err
+	}
+
+	dbs, err := handlers.Component.GetPostgresDatabases()
+	if err != nil {
+		return ExistingResources{}, nil
+	}
+
+	haveDBs := map[string]*v1alpha1.ClusterDatabasesPostgres{}
+
+	for _, db := range dbs {
+		haveDBs[db.ApplicationName] = &v1alpha1.ClusterDatabasesPostgres{
+			Name:      db.ApplicationName,
+			User:      db.UserName,
+			Namespace: db.Namespace,
+		}
 	}
 
 	return ExistingResources{
@@ -73,14 +91,15 @@ func IdentifyResourcePresence(id api.ID, handlers *clientCore.StateHandlers) (Ex
 		hasArgoCD:                             !isNotFound(handlers.ArgoCD.GetArgoCD()),
 		hasDelegatedHostedZoneNameservers:     hz != nil && hz.IsDelegated,
 		hasDelegatedHostedZoneNameserversTest: false,
+		hasServiceQuotaCheck:                  false,
 		hasUsers:                              false, // For now we will always check if there are missing users
-		hasPostgres:                           false, // For now we will always check if there are missing postgres databases
+		hasPostgres:                           haveDBs,
 	}, nil
 }
 
 // CreateResourceDependencyTree creates a tree
 func CreateResourceDependencyTree() (root *resourcetree.ResourceNode) {
-	root = createNode(nil, resourcetree.ResourceNodeTypeGroup)
+	root = createNode(nil, resourcetree.ResourceNodeTypeServiceQuota)
 
 	var vpcNode,
 		clusterNode,
@@ -90,8 +109,10 @@ func CreateResourceDependencyTree() (root *resourcetree.ResourceNode) {
 	createNode(primaryHostedZoneNode, resourcetree.ResourceNodeTypeNameserverDelegator)
 
 	vpcNode = createNode(primaryHostedZoneNode, resourcetree.ResourceNodeTypeVPC)
+	createNode(vpcNode, resourcetree.ResourceNodeTypeCleanupSG)
 
 	clusterNode = createNode(vpcNode, resourcetree.ResourceNodeTypeCluster)
+	createNode(clusterNode, resourcetree.ResourceNodeTypeCleanupALB)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeExternalSecrets)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeAutoscaler)
 	createNode(clusterNode, resourcetree.ResourceNodeTypeBlockstorage)

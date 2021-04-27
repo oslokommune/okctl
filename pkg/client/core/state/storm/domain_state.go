@@ -25,7 +25,7 @@ type HostedZone struct {
 	HostedZoneID           string
 	NameServers            []string
 	StackName              string
-	CloudFormationTemplate []byte
+	CloudFormationTemplate string
 }
 
 // NewHostedZone constructs a storm compatible HostedZone
@@ -41,7 +41,7 @@ func NewHostedZone(hz *client.HostedZone, meta Metadata) *HostedZone {
 		HostedZoneID:           hz.HostedZoneID,
 		NameServers:            hz.NameServers,
 		StackName:              hz.StackName,
-		CloudFormationTemplate: hz.CloudFormationTemplate,
+		CloudFormationTemplate: string(hz.CloudFormationTemplate),
 	}
 }
 
@@ -57,26 +57,27 @@ func (hz *HostedZone) Convert() *client.HostedZone {
 		HostedZoneID:           hz.HostedZoneID,
 		NameServers:            hz.NameServers,
 		StackName:              hz.StackName,
-		CloudFormationTemplate: hz.CloudFormationTemplate,
+		CloudFormationTemplate: []byte(hz.CloudFormationTemplate),
 	}
 }
 
 func (d *domainState) SaveHostedZone(hz *client.HostedZone) error {
-	return d.node.Save(NewHostedZone(hz, NewMetadata()))
-}
-
-func (d *domainState) UpdateHostedZone(zone *client.HostedZone) error {
-	hz := &HostedZone{}
-
-	err := d.node.One("Domain", zone.Domain, hz)
-	if err != nil {
+	existing, err := d.getHostedZone(hz.Domain)
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
 		return err
 	}
 
-	updated := NewHostedZone(zone, hz.Metadata)
-	updated.UpdatedAt = time.Now()
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return d.node.Save(NewHostedZone(hz, NewMetadata()))
+	}
 
-	return d.node.Save(updated)
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return d.node.Save(NewHostedZone(hz, existing.Metadata))
+}
+
+func (d *domainState) UpdateHostedZone(zone *client.HostedZone) error {
+	return d.SaveHostedZone(zone)
 }
 
 func (d *domainState) RemoveHostedZone(domain string) error {
@@ -95,6 +96,15 @@ func (d *domainState) RemoveHostedZone(domain string) error {
 }
 
 func (d *domainState) GetHostedZone(domain string) (*client.HostedZone, error) {
+	hz, err := d.getHostedZone(domain)
+	if err != nil {
+		return nil, err
+	}
+
+	return hz.Convert(), nil
+}
+
+func (d *domainState) getHostedZone(domain string) (*HostedZone, error) {
 	hz := &HostedZone{}
 
 	err := d.node.One("Domain", domain, hz)
@@ -102,7 +112,7 @@ func (d *domainState) GetHostedZone(domain string) (*client.HostedZone, error) {
 		return nil, err
 	}
 
-	return hz.Convert(), nil
+	return hz, nil
 }
 
 func (d *domainState) GetHostedZones() ([]*client.HostedZone, error) {
@@ -136,7 +146,7 @@ func (d *domainState) GetPrimaryHostedZone() (*client.HostedZone, error) {
 		}
 	}
 
-	return nil, err
+	return nil, stormpkg.ErrNotFound
 }
 
 // NewDomainState returns an initialised state store

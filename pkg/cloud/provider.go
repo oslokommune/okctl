@@ -4,6 +4,10 @@ package cloud
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/service/cloudwatch"
+
+	"github.com/aws/aws-sdk-go/service/cloudwatch/cloudwatchiface"
+
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 
 	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
@@ -87,6 +91,7 @@ func NewFromSession(region, principalARN string, sess *session.Session) (*Provid
 	services.r53 = route53.New(sess)
 	services.cip = cognitoidentityprovider.New(sess)
 	services.cf = cloudfront.New(sess)
+	services.cw = cloudwatch.New(sess)
 
 	return p, nil
 }
@@ -143,9 +148,15 @@ type Services struct {
 	r53   route53iface.Route53API
 	cip   cognitoidentityprovideriface.CognitoIdentityProviderAPI
 	cf    cloudfrontiface.CloudFrontAPI
+	cw    cloudwatchiface.CloudWatchAPI
 
 	region       string
 	principalARN string
+}
+
+// CloudWatch returns an interface to the CloudWatch API
+func (s *Services) CloudWatch() cloudwatchiface.CloudWatchAPI {
+	return s.cw
 }
 
 // SecretsManager returns an interface to the SecretsManager API

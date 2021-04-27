@@ -87,6 +87,35 @@ func TestValidateCluster(t *testing.T) {
 			},
 			expectError: "clusterRootDomain: invalid domain name: 'hel lo.oslo.systems'.",
 		},
+		{
+			// This happens when the user doesn't provide a clusterRootDomain
+			name: "Should fail if clusterRootDomain doesn't end with auto.oslo.systems and automerge enabled",
+			withCluster: func() v1alpha1.Cluster {
+				c := newPassingCluster()
+
+				c.ClusterRootDomain = "hello.oslo.systems"
+				c.Experimental = &v1alpha1.ClusterExperimental{
+					AutomatizeZoneDelegation: true,
+				}
+
+				return c
+			},
+			expectError: "clusterRootDomain: with automatizeZoneDelegation enabled, must end with auto.oslo.systems.",
+		},
+		{
+			// This happens when the user doesn't provide a clusterRootDomain
+			name: "Should succeed if clusterRootDomain ends with auto.oslo.systems and automerge enabled",
+			withCluster: func() v1alpha1.Cluster {
+				c := newPassingCluster()
+
+				c.ClusterRootDomain = "hello.auto.oslo.systems"
+				c.Experimental = &v1alpha1.ClusterExperimental{
+					AutomatizeZoneDelegation: true,
+				}
+
+				return c
+			},
+		},
 	}
 
 	for _, tc := range testCases {

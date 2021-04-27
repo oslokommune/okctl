@@ -24,6 +24,7 @@ func (c *containerRepositoryCloudProvider) CreateContainerRepository(opts *api.C
 	r := cfn.NewRunner(c.provider)
 
 	err = r.CreateIfNotExists(
+		opts.ClusterID.ClusterName,
 		opts.StackName,
 		template,
 		nil,

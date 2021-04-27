@@ -54,7 +54,7 @@ func (d *domain) CreateHostedZone(opts api.CreateHostedZoneOpts) (*api.HostedZon
 
 	r := cfn.NewRunner(d.provider)
 
-	err = r.CreateIfNotExists(stackName, template, nil, defaultTimeOut)
+	err = r.CreateIfNotExists(opts.ID.ClusterName, stackName, template, nil, defaultTimeOut)
 	if err != nil {
 		return nil, errors.E(err, "failed to create cloud formation template")
 	}

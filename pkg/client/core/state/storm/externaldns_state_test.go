@@ -38,6 +38,13 @@ func TestExternalDNSStateScenario(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, mock.ExternalDNS(), m)
 
+	m.Kube.HostedZoneID = "fake6"
+	err = state.SaveExternalDNS(m)
+	assert.NoError(t, err)
+
+	err = state.RemoveExternalDNS()
+	assert.NoError(t, err)
+
 	err = state.RemoveExternalDNS()
 	assert.NoError(t, err)
 

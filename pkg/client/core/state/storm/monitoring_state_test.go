@@ -46,6 +46,13 @@ func TestKubePromStackStateScenario(t *testing.T) {
 
 	assert.Equal(t, a, m)
 
+	a.ClientID = "fake12"
+	err = state.SaveKubePromStack(a)
+	assert.NoError(t, err)
+
+	err = state.RemoveKubePromStack()
+	assert.NoError(t, err)
+
 	err = state.RemoveKubePromStack()
 	assert.NoError(t, err)
 

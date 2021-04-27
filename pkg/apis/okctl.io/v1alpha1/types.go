@@ -22,6 +22,10 @@ const (
 	OkctlVersionTag = "alpha.okctl.io/okctl-version"
 	// OkctlCommitTag defines the git commit hash used to provision the given resources
 	OkctlCommitTag = "alpha.okctl.io/okctl-commit"
+	// OkctlManagedTag defines if this resource is managed by okctl
+	OkctlManagedTag = "alpha.okctl.io/managed"
+	// OkctlClusterNameTag defines the name of the cluster
+	OkctlClusterNameTag = "alpha.okctl.io/cluster-name"
 )
 
 // SupportedRegions returns the supported regions on AWS

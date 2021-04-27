@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -44,7 +45,18 @@ func (h *Helm) Convert() *client.Helm {
 }
 
 func (h *helmState) SaveHelmRelease(helm *client.Helm) error {
-	return h.node.Save(NewHelm(helm, NewMetadata()))
+	existing, err := h.getHelmRelease(helm.Chart.ReleaseName)
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return h.node.Save(NewHelm(helm, NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return h.node.Save(NewHelm(helm, existing.Metadata))
 }
 
 func (h *helmState) RemoveHelmRelease(releaseName string) error {
@@ -63,6 +75,15 @@ func (h *helmState) RemoveHelmRelease(releaseName string) error {
 }
 
 func (h *helmState) GetHelmRelease(releaseName string) (*client.Helm, error) {
+	r, err := h.getHelmRelease(releaseName)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Convert(), nil
+}
+
+func (h *helmState) getHelmRelease(releaseName string) (*Helm, error) {
 	r := &Helm{}
 
 	err := h.node.One("ReleaseName", releaseName, r)
@@ -70,7 +91,7 @@ func (h *helmState) GetHelmRelease(releaseName string) (*client.Helm, error) {
 		return nil, err
 	}
 
-	return r.Convert(), nil
+	return r, nil
 }
 
 // NewHelmState returns an initialised helm state

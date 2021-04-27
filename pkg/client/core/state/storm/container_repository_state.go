@@ -1,6 +1,9 @@
 package storm
 
 import (
+	"errors"
+	"time"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -41,7 +44,18 @@ func (r *ContainerRepository) Convert() *client.ContainerRepository {
 }
 
 func (c *containerRepositoryState) SaveContainerRepository(repository *client.ContainerRepository) error {
-	return c.node.Save(NewContainerRepository(repository, NewMetadata()))
+	existing, err := c.getContainerRepository(repository.StackName)
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return c.node.Save(NewContainerRepository(repository, NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return c.node.Save(NewContainerRepository(repository, existing.Metadata))
 }
 
 func (c *containerRepositoryState) RemoveContainerRepository(stackName string) error {
@@ -49,6 +63,10 @@ func (c *containerRepositoryState) RemoveContainerRepository(stackName string) e
 
 	err := c.node.One("StackName", stackName, r)
 	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 
@@ -56,6 +74,15 @@ func (c *containerRepositoryState) RemoveContainerRepository(stackName string) e
 }
 
 func (c *containerRepositoryState) GetContainerRepository(stackName string) (*client.ContainerRepository, error) {
+	r, err := c.getContainerRepository(stackName)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Convert(), nil
+}
+
+func (c *containerRepositoryState) getContainerRepository(stackName string) (*ContainerRepository, error) {
 	r := &ContainerRepository{}
 
 	err := c.node.One("StackName", stackName, r)
@@ -63,7 +90,7 @@ func (c *containerRepositoryState) GetContainerRepository(stackName string) (*cl
 		return nil, err
 	}
 
-	return r.Convert(), nil
+	return r, nil
 }
 
 // NewContainerRepositoryState returns an initialised state client

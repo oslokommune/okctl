@@ -31,8 +31,11 @@ const (
 	argoClientSecretName = "argocd/client_secret"
 	argoSecretKeyName    = "argocd/secret_key"
 	argoPurpose          = "argocd"
+	argoPrivateKeyName   = "argocd-privatekey"
+	argoSecretName       = "argocd-secret"
 )
 
+// nolint: funlen
 func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgoCDOpts) error {
 	cd, err := s.state.GetArgoCD()
 	if err != nil {
@@ -60,6 +63,19 @@ func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgo
 	})
 	if err != nil {
 		return err
+	}
+
+	for _, name := range []string{argoSecretName, argoPrivateKeyName} {
+		err = s.manifest.DeleteExternalSecret(ctx, client.DeleteExternalSecretOpts{
+			ID:   opts.ID,
+			Name: name,
+			Secrets: map[string]string{
+				name: constant.DefaultArgoCDNamespace,
+			},
+		})
+		if err != nil {
+			return err
+		}
 	}
 
 	err = s.cert.DeleteCertificate(ctx, client.DeleteCertificateOpts{
@@ -144,14 +160,14 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		return nil, fmt.Errorf("creating Argo secret key: %w", err)
 	}
 
-	privateKeyName := "argocd-privatekey"
 	privateKeyDataName := "ssh-private-key"
 
 	priv, err := s.manifest.CreateExternalSecret(ctx, client.CreateExternalSecretOpts{
 		ID:        opts.ID,
+		Name:      argoPrivateKeyName,
 		Namespace: constant.DefaultArgoCDNamespace,
 		Manifest: api.Manifest{
-			Name:      privateKeyName,
+			Name:      argoPrivateKeyName,
 			Namespace: constant.DefaultArgoCDNamespace,
 			Backend:   api.BackendTypeParameterStore,
 			Annotations: map[string]string{
@@ -175,6 +191,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 
 	sec, err := s.manifest.CreateExternalSecret(ctx, client.CreateExternalSecretOpts{
 		ID:        opts.ID,
+		Name:      argoSecretName,
 		Namespace: constant.DefaultArgoCDNamespace,
 		Manifest: api.Manifest{
 			Name:      "argocd-secret",
@@ -214,7 +231,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		UserPoolID:           opts.UserPoolID,
 		RepoURL:              opts.Repository.GitURL,
 		RepoName:             opts.Repository.Repository,
-		PrivateKeySecretName: privateKeyName,
+		PrivateKeySecretName: argoPrivateKeyName,
 		PrivateKeySecretKey:  privateKeyDataName,
 	}))
 

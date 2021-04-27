@@ -16,6 +16,7 @@ func (m *managedPolicy) CreatePolicy(opts api.CreatePolicyOpts) (*api.ManagedPol
 	r := cfn.NewRunner(m.provider)
 
 	err := r.CreateIfNotExists(
+		opts.ID.ClusterName,
 		opts.StackName,
 		opts.CloudFormationTemplate,
 		[]string{cfn.CapabilityNamedIam},

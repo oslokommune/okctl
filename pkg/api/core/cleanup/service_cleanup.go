@@ -7,15 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
-	"github.com/oslokommune/okctl/pkg/version"
 )
 
 // DeleteDanglingALBs will delete any remaining ALBs in a vpc
 func DeleteDanglingALBs(provider v1alpha1.CloudProvider, vpcID string) error {
-	balancers, err := provider.ELBV2().DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
-		Marker:   nil,
-		PageSize: nil,
-	})
+	balancers, err := provider.ELBV2().DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{})
 	if err != nil {
 		return err
 	}
@@ -23,8 +19,7 @@ func DeleteDanglingALBs(provider v1alpha1.CloudProvider, vpcID string) error {
 	loadBalancers := balancers.LoadBalancers
 
 	for _, balancer := range loadBalancers {
-		balancerVPC := *balancer.VpcId
-		if vpcID == balancerVPC {
+		if vpcID == *balancer.VpcId {
 			arn := *balancer.LoadBalancerArn
 
 			_, err := provider.ELBV2().DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
@@ -40,7 +35,7 @@ func DeleteDanglingALBs(provider v1alpha1.CloudProvider, vpcID string) error {
 }
 
 // DeleteDanglingSecurityGroups will remove any remaining security groups in a vpc
-func DeleteDanglingSecurityGroups(provider v1alpha1.CloudProvider, vpcID string) error {
+func DeleteDanglingSecurityGroups(clusterName string, provider v1alpha1.CloudProvider, vpcID string) error {
 	groups, err := provider.EC2().DescribeSecurityGroups(&ec2.DescribeSecurityGroupsInput{
 		Filters: []*ec2.Filter{
 			{
@@ -50,9 +45,9 @@ func DeleteDanglingSecurityGroups(provider v1alpha1.CloudProvider, vpcID string)
 				},
 			},
 			{
-				Name: aws.String("tag:alpha.okctl.io/okctl-version"),
+				Name: aws.String("tag:elbv2.k8s.aws/cluster"),
 				Values: []*string{
-					aws.String(version.GetVersionInfo().Version),
+					aws.String(clusterName),
 				},
 			},
 		},

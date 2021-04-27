@@ -3,9 +3,10 @@ package reconciler
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
-	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
@@ -17,7 +18,7 @@ type nameserverDelegationReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 	stateHandlers  *clientCore.StateHandlers
 
-	client client.NameserverRecordDelegationService
+	client client.NSRecordDelegationService
 }
 
 // NodeType returns the relevant ResourceNodeType for this reconciler
@@ -37,30 +38,46 @@ func (z *nameserverDelegationReconciler) SetStateHandlers(handlers *clientCore.S
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
 func (z *nameserverDelegationReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
+	hz, err := z.stateHandlers.Domain.GetPrimaryHostedZone()
+	if err != nil {
+		return result, fmt.Errorf("getting primary hosted zone: %w", err)
+	}
+
+	var labels []string
+
+	if z.commonMetadata.Declaration.Experimental != nil {
+		if z.commonMetadata.Declaration.Experimental.AutomatizeZoneDelegation {
+			labels = append(labels, constant.DefaultAutomaticPullRequestMergeLabel)
+		}
+	}
+
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		hz, err := z.stateHandlers.Domain.GetPrimaryHostedZone()
-		if err != nil {
-			return result, fmt.Errorf("getting primary hosted zone: %w", err)
-		}
-
-		_, err = z.client.CreateNameserverRecordDelegationRequest(&client.CreateNameserverDelegationRequestOpts{
+		err = z.client.InitiateDomainDelegation(client.InitiateDomainDelegationOpts{
 			ClusterID:             z.commonMetadata.ClusterID,
 			PrimaryHostedZoneFQDN: hz.FQDN,
 			Nameservers:           hz.NameServers,
+			Labels:                labels,
 		})
 		if err != nil {
-			return result, fmt.Errorf("handling nameservers: %w", err)
+			return result, fmt.Errorf("initiating dns zone delegation: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		return result, errors.New("deletion of the hosted zone delegation is not implemented")
+		err = z.client.RevokeDomainDelegation(client.RevokeDomainDelegationOpts{
+			ClusterID:             z.commonMetadata.ClusterID,
+			PrimaryHostedZoneFQDN: hz.FQDN,
+			Labels:                labels,
+		})
+		if err != nil {
+			return result, fmt.Errorf("revoking dns zone delegation: %w", err)
+		}
 	}
 
 	return result, nil
 }
 
 // NewNameserverDelegationReconciler creates a new reconciler for the nameserver record delegation resource
-func NewNameserverDelegationReconciler(client client.NameserverRecordDelegationService) Reconciler {
+func NewNameserverDelegationReconciler(client client.NSRecordDelegationService) Reconciler {
 	return &nameserverDelegationReconciler{
 		client: client,
 	}

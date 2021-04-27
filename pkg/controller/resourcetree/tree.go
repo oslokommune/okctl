@@ -12,96 +12,62 @@ import (
 )
 
 // ResourceNodeType defines what type of resource a ResourceNode represents
-type ResourceNodeType int
+type ResourceNodeType string
 
 const (
 	// ResourceNodeTypeGroup represents a node that has no actions associated with it. For now, only the root node
-	ResourceNodeTypeGroup ResourceNodeType = iota
+	ResourceNodeTypeGroup ResourceNodeType = "group"
 	// ResourceNodeTypeZone represents a HostedZone resource
-	ResourceNodeTypeZone
+	ResourceNodeTypeZone ResourceNodeType = "hosted-zone"
 	// ResourceNodeTypeVPC represents a VPC resource
-	ResourceNodeTypeVPC
+	ResourceNodeTypeVPC ResourceNodeType = "vpc"
 	// ResourceNodeTypeCluster represents a EKS cluster resource
-	ResourceNodeTypeCluster
+	ResourceNodeTypeCluster ResourceNodeType = "cluster"
 	// ResourceNodeTypeExternalSecrets represents an External Secrets resource
-	ResourceNodeTypeExternalSecrets
+	ResourceNodeTypeExternalSecrets ResourceNodeType = "external-secrets"
 	// ResourceNodeTypeAutoscaler represents an autoscaler resource
-	ResourceNodeTypeAutoscaler
+	ResourceNodeTypeAutoscaler ResourceNodeType = "autoscaler"
 	// ResourceNodeTypeBlockstorage represents a blockstorage resource
-	ResourceNodeTypeBlockstorage
+	ResourceNodeTypeBlockstorage ResourceNodeType = "blockstorage"
 	// ResourceNodeTypeKubePromStack represents a kubernetes-prometheus-stack resource
-	ResourceNodeTypeKubePromStack
+	ResourceNodeTypeKubePromStack ResourceNodeType = "kubernetes-prometheus-stack"
 	// ResourceNodeTypeLoki represents a loki resource
-	ResourceNodeTypeLoki
+	ResourceNodeTypeLoki ResourceNodeType = "loki"
 	// ResourceNodeTypePromtail represents a promtail deployment
-	ResourceNodeTypePromtail
+	ResourceNodeTypePromtail ResourceNodeType = "promtail"
 	// ResourceNodeTypeTempo represents a Tempo deployment
-	ResourceNodeTypeTempo
+	ResourceNodeTypeTempo ResourceNodeType = "tempo"
 	// ResourceNodeTypeAWSLoadBalancerController represents an AWS load balancer controller resource
-	ResourceNodeTypeAWSLoadBalancerController
+	ResourceNodeTypeAWSLoadBalancerController ResourceNodeType = "aws-load-balancer-controller"
 	// ResourceNodeTypeExternalDNS represents an External DNS resource
-	ResourceNodeTypeExternalDNS
+	ResourceNodeTypeExternalDNS ResourceNodeType = "external-dns"
 	// ResourceNodeTypeIdentityManager represents a Identity Manager resource
-	ResourceNodeTypeIdentityManager
+	ResourceNodeTypeIdentityManager ResourceNodeType = "identity-manager"
 	// ResourceNodeTypeArgoCD represents an ArgoCD resource
-	ResourceNodeTypeArgoCD
+	ResourceNodeTypeArgoCD ResourceNodeType = "argocd"
 	// ResourceNodeTypeNameserverDelegator represents delegation of nameservers for a HostedZone
-	ResourceNodeTypeNameserverDelegator
+	ResourceNodeTypeNameserverDelegator ResourceNodeType = "nameserver-delegator"
 	// ResourceNodeTypeNameserversDelegatedTest represents testing if nameservers has been successfully delegated
-	ResourceNodeTypeNameserversDelegatedTest
+	ResourceNodeTypeNameserversDelegatedTest ResourceNodeType = "nameserver-delegator-test"
 	// ResourceNodeTypeUsers represents the users we want to add to the cognito user pool
-	ResourceNodeTypeUsers
+	ResourceNodeTypeUsers ResourceNodeType = "users"
 	// ResourceNodeTypePostgres represents the postgres databases we want to add to the cluster
-	ResourceNodeTypePostgres
-	// ResourceNodeTypeApplication represents an okctl application resoure
-	ResourceNodeTypeApplication
+	ResourceNodeTypePostgres ResourceNodeType = "postgres"
+	// ResourceNodeTypePostgresInstance represents a postgres instance
+	ResourceNodeTypePostgresInstance ResourceNodeType = "postgres-instance"
+	// ResourceNodeTypeApplication represents an okctl application resource
+	ResourceNodeTypeApplication ResourceNodeType = "application"
+	// ResourceNodeTypeCleanupALB represents a cleanup of ALBs
+	ResourceNodeTypeCleanupALB ResourceNodeType = "cleanup-alb"
+	// ResourceNodeTypeCleanupSG represents a cleanup of SecurityGroups
+	ResourceNodeTypeCleanupSG ResourceNodeType = "cleanup-sg"
+	// ResourceNodeTypeServiceQuota represents a service quota check
+	ResourceNodeTypeServiceQuota ResourceNodeType = "service-quota"
 )
 
-// ResourceNodeTypeToString knows how to convert a Resource Node type to a human readable string
-// nolint: gocyclo funlen
-func ResourceNodeTypeToString(nodeType ResourceNodeType) string {
-	switch nodeType {
-	case ResourceNodeTypeGroup:
-		return "Group"
-	case ResourceNodeTypeZone:
-		return "Hosted Zone"
-	case ResourceNodeTypeVPC:
-		return "VPC"
-	case ResourceNodeTypeCluster:
-		return "K8s Cluster"
-	case ResourceNodeTypeExternalSecrets:
-		return "External Secrets"
-	case ResourceNodeTypeAutoscaler:
-		return "Autoscaler"
-	case ResourceNodeTypeKubePromStack:
-		return "KubePromStack"
-	case ResourceNodeTypeLoki:
-		return "Loki"
-	case ResourceNodeTypePromtail:
-		return "Promtail"
-	case ResourceNodeTypeTempo:
-		return "Tempo"
-	case ResourceNodeTypeBlockstorage:
-		return "Blockstorage"
-	case ResourceNodeTypeAWSLoadBalancerController:
-		return "AWS Load Balancer Controller"
-	case ResourceNodeTypeExternalDNS:
-		return "External DNS"
-	case ResourceNodeTypeIdentityManager:
-		return "Identity Manager"
-	case ResourceNodeTypeArgoCD:
-		return "ArgoCD controller"
-	case ResourceNodeTypeNameserverDelegator:
-		return "Nameserver Delegation"
-	case ResourceNodeTypeNameserversDelegatedTest:
-		return "Nameservers Delegated Test"
-	case ResourceNodeTypeUsers:
-		return "Users"
-	case ResourceNodeTypePostgres:
-		return "Postgres"
-	default:
-		return "N/A"
-	}
+// String representation of the ResourceNodeType
+func (t ResourceNodeType) String() string {
+	return string(t)
 }
 
 // ResourceNodeState defines what state the resource is in, used to infer what action to take
@@ -128,14 +94,11 @@ type CommonMetadata struct {
 	ApplicationDeclaration v1alpha1.Application
 }
 
-// StateRefreshFn is a function that attempts to retrieve state potentially can only be retrieved at runtime. E.g.:
-// state that can only exist after an external resource has been created
-type StateRefreshFn func(node *ResourceNode)
-
 // ResourceNode represents a component of the cluster and its dependencies
 type ResourceNode struct {
 	Type     ResourceNodeType
 	State    ResourceNodeState
+	Data     interface{}
 	Children []*ResourceNode
 }
 
@@ -172,7 +135,7 @@ func (node *ResourceNode) treeViewGenerator(writer io.Writer, tabs int) {
 		result += "\t"
 	}
 
-	result += "- " + ResourceNodeTypeToString(node.Type) + "\n"
+	result += "- " + node.Type.String() + "\n"
 
 	if node.State == ResourceNodeStatePresent {
 		_, _ = writer.Write([]byte(result))

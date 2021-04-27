@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -40,34 +41,66 @@ type ExternalDNSKube struct {
 	ID           ID
 	HostedZoneID string
 	DomainFilter string
-	Manifests    map[string][]byte
+	Manifests    map[string]string
 }
 
 // NewExternalDNSKube returns storm compatible state
 func NewExternalDNSKube(k *client.ExternalDNSKube) *ExternalDNSKube {
+	manifests := map[string]string{}
+
+	for key, v := range k.Manifests {
+		manifests[key] = string(v)
+	}
+
 	return &ExternalDNSKube{
 		ID:           NewID(k.ID),
 		HostedZoneID: k.HostedZoneID,
 		DomainFilter: k.DomainFilter,
-		Manifests:    k.Manifests,
+		Manifests:    manifests,
 	}
 }
 
 // Convert to client.ExternalDNSKube
 func (k *ExternalDNSKube) Convert() *client.ExternalDNSKube {
+	manifests := map[string][]byte{}
+
+	for key, v := range k.Manifests {
+		manifests[key] = []byte(v)
+	}
+
 	return &client.ExternalDNSKube{
 		ID:           k.ID.Convert(),
 		HostedZoneID: k.HostedZoneID,
 		DomainFilter: k.DomainFilter,
-		Manifests:    k.Manifests,
+		Manifests:    manifests,
 	}
 }
 
 func (e *externalDNSState) SaveExternalDNS(dns *client.ExternalDNS) error {
-	return e.node.Save(NewExternalDNS(dns, NewMetadata()))
+	existing, err := e.getExternalDNS()
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return e.node.Save(NewExternalDNS(dns, NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return e.node.Save(NewExternalDNS(dns, existing.Metadata))
 }
 
 func (e *externalDNSState) GetExternalDNS() (*client.ExternalDNS, error) {
+	ex, err := e.getExternalDNS()
+	if err != nil {
+		return nil, err
+	}
+
+	return ex.Convert(), nil
+}
+
+func (e *externalDNSState) getExternalDNS() (*ExternalDNS, error) {
 	ex := &ExternalDNS{}
 
 	err := e.node.One("Name", "external-dns", ex)
@@ -75,7 +108,7 @@ func (e *externalDNSState) GetExternalDNS() (*client.ExternalDNS, error) {
 		return nil, err
 	}
 
-	return ex.Convert(), nil
+	return ex, nil
 }
 
 func (e *externalDNSState) RemoveExternalDNS() error {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -14,10 +13,7 @@ import (
 
 	"github.com/asdine/storm/v3"
 
-	"github.com/oslokommune/okctl/pkg/cfn"
-
 	"github.com/oslokommune/okctl/pkg/config/constant"
-	"github.com/oslokommune/okctl/pkg/servicequota"
 
 	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/context"
@@ -147,23 +143,6 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				spinnerWriter = o.Err
 			}
 
-			vpc, err := o.StateHandlers(o.StateNodes()).
-				Vpc.GetVpc(cfn.NewStackNamer().Vpc(o.Declaration.Metadata.Name))
-			if err != nil && !errors.Is(err, storm.ErrNotFound) {
-				return err
-			}
-
-			vpcProvisioned := vpc != nil
-
-			err = servicequota.CheckQuotas(
-				servicequota.NewVpcCheck(vpcProvisioned, constant.DefaultRequiredVpcs, o.CloudProvider),
-				servicequota.NewEipCheck(vpcProvisioned, constant.DefaultRequiredEpis, o.CloudProvider),
-				servicequota.NewIgwCheck(vpcProvisioned, constant.DefaultRequiredIgws, o.CloudProvider),
-			)
-			if err != nil {
-				return fmt.Errorf("checking service quotas: %w", err)
-			}
-
 			spin, err := spinner.New("synchronizing", spinnerWriter)
 			if err != nil {
 				return fmt.Errorf("error creating spinner: %w", err)
@@ -195,6 +174,10 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				reconciler.NewNameserverDelegatedTestReconciler(services.Domain),
 				reconciler.NewUsersReconciler(services.IdentityManager),
 				reconciler.NewPostgresReconciler(services.Component),
+				reconciler.NewCleanupALBReconciler(o.CloudProvider),
+				reconciler.NewCleanupSGReconciler(o.CloudProvider),
+				&reconciler.PostgresGroupReconciler{},
+				reconciler.NewServiceQuotaReconciler(o.CloudProvider),
 			)
 
 			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{

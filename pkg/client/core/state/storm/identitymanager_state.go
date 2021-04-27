@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -20,7 +21,7 @@ type IdentityPool struct {
 	AuthDomain              string
 	HostedZoneID            string
 	StackName               string `storm:"unique"`
-	CloudFormationTemplates []byte
+	CloudFormationTemplates string
 	Certificate             *Certificate
 	RecordSetAlias          *RecordSetAlias
 }
@@ -34,7 +35,7 @@ func NewIdentityPool(p *client.IdentityPool, meta, certMeta Metadata) *IdentityP
 		AuthDomain:              p.AuthDomain,
 		HostedZoneID:            p.HostedZoneID,
 		StackName:               p.StackName,
-		CloudFormationTemplates: p.CloudFormationTemplates,
+		CloudFormationTemplates: string(p.CloudFormationTemplates),
 		Certificate:             NewCertificate(p.Certificate, certMeta),
 		RecordSetAlias:          NewRecordSetAlias(p.RecordSetAlias),
 	}
@@ -48,7 +49,7 @@ func (p *IdentityPool) Convert() *client.IdentityPool {
 		AuthDomain:              p.AuthDomain,
 		HostedZoneID:            p.HostedZoneID,
 		StackName:               p.StackName,
-		CloudFormationTemplates: p.CloudFormationTemplates,
+		CloudFormationTemplates: []byte(p.CloudFormationTemplates),
 		Certificate:             p.Certificate.Convert(),
 		RecordSetAlias:          p.RecordSetAlias.Convert(),
 	}
@@ -59,7 +60,7 @@ type RecordSetAlias struct {
 	AliasDomain            string
 	AliasHostedZones       string
 	StackName              string
-	CloudFormationTemplate []byte
+	CloudFormationTemplate string
 }
 
 // NewRecordSetAlias returns a storm compatible RecordSetAlias
@@ -68,7 +69,7 @@ func NewRecordSetAlias(a *client.RecordSetAlias) *RecordSetAlias {
 		AliasDomain:            a.AliasDomain,
 		AliasHostedZones:       a.AliasHostedZones,
 		StackName:              a.StackName,
-		CloudFormationTemplate: a.CloudFormationTemplate,
+		CloudFormationTemplate: string(a.CloudFormationTemplate),
 	}
 }
 
@@ -78,7 +79,7 @@ func (a *RecordSetAlias) Convert() *client.RecordSetAlias {
 		AliasDomain:            a.AliasDomain,
 		AliasHostedZones:       a.AliasHostedZones,
 		StackName:              a.StackName,
-		CloudFormationTemplate: a.CloudFormationTemplate,
+		CloudFormationTemplate: []byte(a.CloudFormationTemplate),
 	}
 }
 
@@ -93,7 +94,7 @@ type IdentityPoolClient struct {
 	ClientID                string
 	ClientSecret            string
 	StackName               string `storm:"unique,index"`
-	CloudFormationTemplates []byte
+	CloudFormationTemplates string
 }
 
 // NewIdentityPoolClient returns a storm compatible IdentityPoolClient
@@ -107,7 +108,7 @@ func NewIdentityPoolClient(c *client.IdentityPoolClient, meta Metadata) *Identit
 		ClientID:                c.ClientID,
 		ClientSecret:            c.ClientSecret,
 		StackName:               c.StackName,
-		CloudFormationTemplates: c.CloudFormationTemplates,
+		CloudFormationTemplates: string(c.CloudFormationTemplates),
 	}
 }
 
@@ -121,7 +122,7 @@ func (c *IdentityPoolClient) Convert() *client.IdentityPoolClient {
 		ClientID:                c.ClientID,
 		ClientSecret:            c.ClientSecret,
 		StackName:               c.StackName,
-		CloudFormationTemplates: c.CloudFormationTemplates,
+		CloudFormationTemplates: []byte(c.CloudFormationTemplates),
 	}
 }
 
@@ -133,7 +134,7 @@ type IdentityPoolUser struct {
 	Email                  string
 	UserPoolID             string
 	StackName              string `storm:"unique,index"`
-	CloudFormationTemplate []byte
+	CloudFormationTemplate string
 }
 
 // NewIdentityPoolUser returns a storm compatible IdentityPoolUser
@@ -144,7 +145,7 @@ func NewIdentityPoolUser(u *client.IdentityPoolUser, meta Metadata) *IdentityPoo
 		Email:                  u.Email,
 		UserPoolID:             u.UserPoolID,
 		StackName:              u.StackName,
-		CloudFormationTemplate: u.CloudFormationTemplate,
+		CloudFormationTemplate: string(u.CloudFormationTemplate),
 	}
 }
 
@@ -155,12 +156,24 @@ func (u *IdentityPoolUser) Convert() *client.IdentityPoolUser {
 		Email:                  u.Email,
 		UserPoolID:             u.UserPoolID,
 		StackName:              u.StackName,
-		CloudFormationTemplate: u.CloudFormationTemplate,
+		CloudFormationTemplate: []byte(u.CloudFormationTemplate),
 	}
 }
 
 func (s *identityManagerState) SaveIdentityPool(pool *client.IdentityPool) error {
-	return s.node.Save(NewIdentityPool(pool, NewMetadata(), NewMetadata()))
+	existing, err := s.getIdentityPool(pool.StackName)
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return s.node.Save(NewIdentityPool(pool, NewMetadata(), NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+	existing.Certificate.Metadata.UpdatedAt = time.Now()
+
+	return s.node.Save(NewIdentityPool(pool, existing.Metadata, existing.Certificate.Metadata))
 }
 
 func (s *identityManagerState) RemoveIdentityPool(stackName string) error {
@@ -179,9 +192,7 @@ func (s *identityManagerState) RemoveIdentityPool(stackName string) error {
 }
 
 func (s *identityManagerState) GetIdentityPool(stackName string) (*client.IdentityPool, error) {
-	p := &IdentityPool{}
-
-	err := s.node.One("StackName", stackName, p)
+	p, err := s.getIdentityPool(stackName)
 	if err != nil {
 		return nil, err
 	}
@@ -189,8 +200,50 @@ func (s *identityManagerState) GetIdentityPool(stackName string) (*client.Identi
 	return p.Convert(), nil
 }
 
+func (s *identityManagerState) getIdentityPool(stackName string) (*IdentityPool, error) {
+	p := &IdentityPool{}
+
+	err := s.node.One("StackName", stackName, p)
+	if err != nil {
+		return nil, err
+	}
+
+	return p, nil
+}
+
 func (s *identityManagerState) SaveIdentityPoolClient(client *client.IdentityPoolClient) error {
-	return s.node.Save(NewIdentityPoolClient(client, NewMetadata()))
+	existing, err := s.getIdentityPoolClient(client.StackName)
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return s.node.Save(NewIdentityPoolClient(client, NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return s.node.Save(NewIdentityPoolClient(client, existing.Metadata))
+}
+
+func (s *identityManagerState) GetIdentityPoolClient(stackName string) (*client.IdentityPoolClient, error) {
+	p, err := s.getIdentityPoolClient(stackName)
+	if err != nil {
+		return nil, err
+	}
+
+	return p.Convert(), nil
+}
+
+func (s *identityManagerState) getIdentityPoolClient(stackName string) (*IdentityPoolClient, error) {
+	p := &IdentityPoolClient{}
+
+	err := s.node.One("StackName", stackName, p)
+	if err != nil {
+		return nil, err
+	}
+
+	return p, nil
 }
 
 func (s *identityManagerState) RemoveIdentityPoolClient(stackName string) error {
@@ -198,6 +251,45 @@ func (s *identityManagerState) RemoveIdentityPoolClient(stackName string) error 
 
 	err := s.node.One("StackName", stackName, p)
 	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
+		return err
+	}
+
+	return s.node.DeleteStruct(p)
+}
+
+func (s *identityManagerState) GetIdentityPoolUser(stackName string) (*client.IdentityPoolUser, error) {
+	u, err := s.getIdentityPoolUser(stackName)
+	if err != nil {
+		return nil, err
+	}
+
+	return u.Convert(), nil
+}
+
+func (s *identityManagerState) getIdentityPoolUser(stackName string) (*IdentityPoolUser, error) {
+	u := &IdentityPoolUser{}
+
+	err := s.node.One("StackName", stackName, u)
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
+}
+
+func (s *identityManagerState) RemoveIdentityPoolUser(stackName string) error {
+	p := &IdentityPoolUser{}
+
+	err := s.node.One("StackName", stackName, p)
+	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return nil
+		}
+
 		return err
 	}
 
@@ -205,7 +297,18 @@ func (s *identityManagerState) RemoveIdentityPoolClient(stackName string) error 
 }
 
 func (s *identityManagerState) SaveIdentityPoolUser(user *client.IdentityPoolUser) error {
-	return s.node.Save(NewIdentityPoolUser(user, NewMetadata()))
+	existing, err := s.getIdentityPoolUser(user.StackName)
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return s.node.Save(NewIdentityPoolUser(user, NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return s.node.Save(NewIdentityPoolUser(user, existing.Metadata))
 }
 
 // NewIdentityManager returns an initialised state

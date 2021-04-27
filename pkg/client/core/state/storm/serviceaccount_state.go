@@ -45,7 +45,18 @@ type serviceAccountState struct {
 }
 
 func (s *serviceAccountState) SaveServiceAccount(account *client.ServiceAccount) error {
-	return s.node.Save(NewServiceAccount(account, NewMetadata()))
+	existing, err := s.getServiceAccount(account.Name)
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return s.node.Save(NewServiceAccount(account, NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return s.node.Save(NewServiceAccount(account, existing.Metadata))
 }
 
 func (s *serviceAccountState) RemoveServiceAccount(name string) error {
@@ -64,9 +75,7 @@ func (s *serviceAccountState) RemoveServiceAccount(name string) error {
 }
 
 func (s *serviceAccountState) GetServiceAccount(name string) (*client.ServiceAccount, error) {
-	sa := &ServiceAccount{}
-
-	err := s.node.One("Name", name, sa)
+	sa, err := s.getServiceAccount(name)
 	if err != nil {
 		return nil, err
 	}
@@ -74,18 +83,19 @@ func (s *serviceAccountState) GetServiceAccount(name string) (*client.ServiceAcc
 	return sa.Convert(), nil
 }
 
-func (s *serviceAccountState) UpdateServiceAccount(account *client.ServiceAccount) error {
+func (s *serviceAccountState) getServiceAccount(name string) (*ServiceAccount, error) {
 	sa := &ServiceAccount{}
 
-	err := s.node.One("Name", account.Name, sa)
+	err := s.node.One("Name", name, sa)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	updated := NewServiceAccount(account, sa.Metadata)
-	updated.UpdatedAt = time.Now()
+	return sa, nil
+}
 
-	return s.node.Save(updated)
+func (s *serviceAccountState) UpdateServiceAccount(account *client.ServiceAccount) error {
+	return s.SaveServiceAccount(account)
 }
 
 // NewServiceAccountState returns an initialised state store

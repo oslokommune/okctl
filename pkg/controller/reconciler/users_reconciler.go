@@ -55,7 +55,8 @@ func (z *usersReconciler) Reconcile(node *resourcetree.ResourceNode) (result Rec
 			}
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		return result, fmt.Errorf("not implemented")
+		// We need to implement delete of individual users
+		return result, nil
 	}
 
 	return result, nil

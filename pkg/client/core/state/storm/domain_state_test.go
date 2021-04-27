@@ -48,6 +48,13 @@ func TestDomainStateScenario(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, []*client.HostedZone{hz}, hzs)
 
+	hz.FQDN = "fake5"
+	err = state.SaveHostedZone(hz)
+	assert.NoError(t, err)
+
+	err = state.RemoveHostedZone(mock.DefaultDomain)
+	assert.NoError(t, err)
+
 	err = state.RemoveHostedZone(mock.DefaultDomain)
 	assert.NoError(t, err)
 

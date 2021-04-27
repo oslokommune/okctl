@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -18,7 +19,7 @@ type ManagedPolicy struct {
 	ID                     ID
 	StackName              string `storm:"unique"`
 	PolicyARN              string
-	CloudFormationTemplate []byte
+	CloudFormationTemplate string
 }
 
 // NewManagedPolicy returns a storm compatible ManagedPolicy
@@ -28,7 +29,7 @@ func NewManagedPolicy(p *client.ManagedPolicy, meta Metadata) *ManagedPolicy {
 		ID:                     NewID(p.ID),
 		StackName:              p.StackName,
 		PolicyARN:              p.PolicyARN,
-		CloudFormationTemplate: p.CloudFormationTemplate,
+		CloudFormationTemplate: string(p.CloudFormationTemplate),
 	}
 }
 
@@ -38,15 +39,35 @@ func (p *ManagedPolicy) Convert() *client.ManagedPolicy {
 		ID:                     p.ID.Convert(),
 		StackName:              p.StackName,
 		PolicyARN:              p.PolicyARN,
-		CloudFormationTemplate: p.CloudFormationTemplate,
+		CloudFormationTemplate: []byte(p.CloudFormationTemplate),
 	}
 }
 
 func (m *managedPolicyState) SavePolicy(policy *client.ManagedPolicy) error {
-	return m.node.Save(NewManagedPolicy(policy, NewMetadata()))
+	existing, err := m.getPolicy(policy.StackName)
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return m.node.Save(NewManagedPolicy(policy, NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return m.node.Save(NewManagedPolicy(policy, existing.Metadata))
 }
 
 func (m *managedPolicyState) GetPolicy(stackName string) (*client.ManagedPolicy, error) {
+	p, err := m.getPolicy(stackName)
+	if err != nil {
+		return nil, err
+	}
+
+	return p.Convert(), nil
+}
+
+func (m *managedPolicyState) getPolicy(stackName string) (*ManagedPolicy, error) {
 	p := &ManagedPolicy{}
 
 	err := m.node.One("StackName", stackName, p)
@@ -54,7 +75,7 @@ func (m *managedPolicyState) GetPolicy(stackName string) (*client.ManagedPolicy,
 		return nil, err
 	}
 
-	return p.Convert(), nil
+	return p, nil
 }
 
 func (m *managedPolicyState) RemovePolicy(stackName string) error {

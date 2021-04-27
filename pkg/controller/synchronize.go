@@ -18,10 +18,12 @@ import (
 )
 
 // SynchronizeOpts contains the necessary information that Synchronize() needs to do its work
+// nolint: maligned
 type SynchronizeOpts struct {
-	ID    api.ID
-	Debug bool
-	Out   io.Writer
+	ID        api.ID
+	Debug     bool
+	Out       io.Writer
+	DeleteAll bool
 
 	ClusterDeclaration    *v1alpha1.Cluster
 	ReconciliationManager reconciler.Reconciler
@@ -40,9 +42,19 @@ func Synchronize(opts *SynchronizeOpts) error {
 	}
 
 	desiredTree.ApplyFunction(applyDeclaration(opts.ClusterDeclaration), &resourcetree.ResourceNode{})
+
+	if opts.DeleteAll {
+		desiredTree.ApplyFunction(setStateAbsent(), &resourcetree.ResourceNode{})
+	}
+
 	currentStateTree.ApplyFunction(applyExistingState(existingResources), &resourcetree.ResourceNode{})
 
 	diffTree.ApplyFunction(applyDeclaration(opts.ClusterDeclaration), &resourcetree.ResourceNode{})
+
+	if opts.DeleteAll {
+		diffTree.ApplyFunction(setStateAbsent(), &resourcetree.ResourceNode{})
+	}
+
 	diffTree.ApplyFunction(applyCurrentState, currentStateTree)
 
 	if opts.Debug {
@@ -51,24 +63,60 @@ func Synchronize(opts *SynchronizeOpts) error {
 		_, _ = fmt.Fprintf(opts.Out, "Present resources in difference tree (what should be generated): \n%s\n\n", diffTree.String())
 	}
 
+	if opts.DeleteAll {
+		return HandleNodeReverse(opts.ReconciliationManager, diffTree)
+	}
+
 	return HandleNode(opts.ReconciliationManager, diffTree)
+}
+
+// HandleNodeReverse starts evaluating the nodes from the
+// leaves to the root of the tree
+//goland:noinspection GoNilness
+func HandleNodeReverse(reconcilerManager reconciler.Reconciler, currentNode *resourcetree.ResourceNode) (err error) {
+	for _, node := range currentNode.Children {
+		err = HandleNodeReverse(reconcilerManager, node)
+	}
+
+	result := reconciler.ReconcilationResult{
+		Requeue:      true,
+		RequeueAfter: 0 * time.Second,
+	}
+
+	for requeues := 0; result.Requeue; requeues++ {
+		if requeues == constant.DefaultMaxReconciliationRequeues {
+			return fmt.Errorf("maximum allowed reconciliation requeues reached: %w", err)
+		}
+
+		time.Sleep(result.RequeueAfter)
+
+		result, err = reconcilerManager.Reconcile(currentNode)
+		if err != nil && !result.Requeue {
+			return fmt.Errorf("reconciling node (%s): %w", currentNode.Type.String(), err)
+		}
+	}
+
+	return nil
 }
 
 // HandleNode knows how to run Reconcile() on every node of a ResourceNode tree
 //goland:noinspection GoNilness
 func HandleNode(reconcilerManager reconciler.Reconciler, currentNode *resourcetree.ResourceNode) (err error) {
-	reconciliationResult := reconciler.ReconcilationResult{Requeue: true, RequeueAfter: 0 * time.Second}
+	result := reconciler.ReconcilationResult{
+		Requeue:      true,
+		RequeueAfter: 0 * time.Second,
+	}
 
-	for requeues := 0; reconciliationResult.Requeue; requeues++ {
+	for requeues := 0; result.Requeue; requeues++ {
 		if requeues == constant.DefaultMaxReconciliationRequeues {
 			return fmt.Errorf("maximum allowed reconciliation requeues reached: %w", err)
 		}
 
-		time.Sleep(reconciliationResult.RequeueAfter)
+		time.Sleep(result.RequeueAfter)
 
-		reconciliationResult, err = reconcilerManager.Reconcile(currentNode)
-		if err != nil && !reconciliationResult.Requeue {
-			return fmt.Errorf("reconciling node (%s): %w", resourcetree.ResourceNodeTypeToString(currentNode.Type), err)
+		result, err = reconcilerManager.Reconcile(currentNode)
+		if err != nil && !result.Requeue {
+			return fmt.Errorf("reconciling node (%s): %w", currentNode.Type.String(), err)
 		}
 	}
 
@@ -87,6 +135,8 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 	return func(desiredTreeNode *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
 		switch desiredTreeNode.Type {
 		// Mandatory
+		case resourcetree.ResourceNodeTypeServiceQuota:
+			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
 		case resourcetree.ResourceNodeTypeZone:
 			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
 		case resourcetree.ResourceNodeTypeNameserverDelegator:
@@ -121,20 +171,30 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 		case resourcetree.ResourceNodeTypeUsers:
 			desiredTreeNode.State = boolToState(len(declaration.Users) > 0)
 		case resourcetree.ResourceNodeTypePostgres:
-			desiredTreeNode.State = boolToState(false)
-
 			if declaration.Databases != nil {
-				desiredTreeNode.State = boolToState(len(declaration.Databases.Postgres) > 0)
+				for _, db := range declaration.Databases.Postgres {
+					node := createNode(
+						desiredTreeNode,
+						resourcetree.ResourceNodeType(fmt.Sprintf("%s-%s", resourcetree.ResourceNodeTypePostgresInstance, db.Name)),
+					)
+					node.Data = &reconciler.PostgresReconcilerState{
+						DB: db,
+					}
+				}
 			}
+
+			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
 		}
 	}
 }
 
-// nolint: gocyclo
+// nolint: gocyclo funlen
 func applyExistingState(existingResources ExistingResources) resourcetree.ApplyFn {
 	return func(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
 		switch receiver.Type {
 		// Mandatory
+		case resourcetree.ResourceNodeTypeServiceQuota:
+			receiver.State = boolToState(existingResources.hasServiceQuotaCheck)
 		case resourcetree.ResourceNodeTypeZone:
 			receiver.State = boolToState(existingResources.hasPrimaryHostedZone)
 		case resourcetree.ResourceNodeTypeNameserverDelegator:
@@ -169,14 +229,49 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 		case resourcetree.ResourceNodeTypeUsers:
 			receiver.State = boolToState(existingResources.hasUsers)
 		case resourcetree.ResourceNodeTypePostgres:
-			receiver.State = boolToState(existingResources.hasPostgres)
+		NextDb:
+			for _, existingDB := range existingResources.hasPostgres {
+				for _, declaredDB := range receiver.Children {
+					data, ok := declaredDB.Data.(reconciler.PostgresReconcilerState)
+					if !ok {
+						panic("could not cast to database state")
+					}
+
+					if data.DB.Name == existingDB.Name {
+						declaredDB.State = resourcetree.ResourceNodeStatePresent
+						continue NextDb
+					}
+				}
+
+				node := createNode(
+					receiver,
+					resourcetree.ResourceNodeType(fmt.Sprintf("%s-%s", resourcetree.ResourceNodeTypePostgresInstance, existingDB.Name)),
+				)
+				node.Data = &reconciler.PostgresReconcilerState{
+					DB: *existingDB,
+				}
+				node.State = resourcetree.ResourceNodeStatePresent
+			}
+
+			receiver.State = resourcetree.ResourceNodeStatePresent
 		}
+	}
+}
+
+// setStateAbsent sets the state as absent
+func setStateAbsent() resourcetree.ApplyFn {
+	return func(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
+		receiver.State = resourcetree.ResourceNodeStateAbsent
 	}
 }
 
 // applyCurrentState knows how to apply the current state on a desired state ResourceNode tree to produce a diff that
 // knows which resources to create, and which resources is already existing
 func applyCurrentState(receiver *resourcetree.ResourceNode, target *resourcetree.ResourceNode) {
+	if target == nil {
+		return
+	}
+
 	if receiver.State == target.State {
 		receiver.State = resourcetree.ResourceNodeStateNoop
 	}

@@ -2,43 +2,64 @@ package client
 
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 )
 
-// NameserverRecord defines necessary information required to request a nameserver delegation
-type NameserverRecord struct {
-	FQDN        string
-	Nameservers []string
-}
+const (
+	numExpectedNameServers = 4
+)
 
-// Validate ensures a NameserverRecord contains required information
-func (n NameserverRecord) Validate() error {
-	return validation.ValidateStruct(&n,
-		validation.Field(&n.FQDN, validation.Required),
-		validation.Field(&n.Nameservers, validation.Length(1, 0)),
-	)
-}
-
-// CreateNameserverDelegationRequestOpts contains the required information a NameserverRecordDelegationService needs to do create a delegation
-// request
-type CreateNameserverDelegationRequestOpts struct {
+// InitiateDomainDelegationOpts contains required inputs for creating a
+// DNS zone delegation
+type InitiateDomainDelegationOpts struct {
 	ClusterID api.ID
 
 	PrimaryHostedZoneFQDN string
 	Nameservers           []string
+	Labels                []string
 }
 
-/*NameserverRecordDelegationService defines required functionality for requesting a nameserver delegation record in
-the top level domain.
-
-If a team wants 'team.oslo.systems', okctl will create that domain which will get its own nameservers assigned.
-The top level domain 'oslo.systems' then needs to delegate DNS inquiries for 'team.oslo.systems' to the assigned
-nameservers. This is the delegation this service should handle.
-*/
-type NameserverRecordDelegationService interface {
-	// CreateNameserverRecordDelegationRequest creates a request for a NS record in the top level domain
-	CreateNameserverRecordDelegationRequest(opts *CreateNameserverDelegationRequestOpts) (record *NameserverRecord, err error)
+// Validate the provided inputs
+func (o InitiateDomainDelegationOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ClusterID, validation.Required),
+		validation.Field(&o.PrimaryHostedZoneFQDN, validation.Required, is.DNSName),
+		validation.Field(
+			&o.Nameservers,
+			validation.Required,
+			validation.Each(is.DNSName),
+			validation.Length(numExpectedNameServers, numExpectedNameServers),
+		),
+		validation.Field(&o.Labels, validation.Each(validation.In(constant.DefaultAutomaticPullRequestMergeLabel))),
+	)
 }
 
-// HostedZoneDelegationSetter defines a function used to set a hosted zone as delegated in state and store
-type HostedZoneDelegationSetter func(domain string, isDelegated bool) error
+// RevokeDomainDelegationOpts contains required inputs for removing
+// a DNS Zone delegation
+type RevokeDomainDelegationOpts struct {
+	ClusterID             api.ID
+	PrimaryHostedZoneFQDN string
+	Labels                []string
+}
+
+// Validate the inputs
+func (o RevokeDomainDelegationOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ClusterID, validation.Required),
+		validation.Field(&o.PrimaryHostedZoneFQDN, validation.Required, is.DNSName),
+		validation.Field(&o.Labels, validation.Each(validation.In(constant.DefaultAutomaticPullRequestMergeLabel))),
+	)
+}
+
+// NSRecordDelegationService defines required functionality for requesting a nameserver delegation record in
+// the top level domain.
+//
+// If a team wants 'team.oslo.systems', okctl will create that domain which will get its own nameservers assigned.
+// The top level domain 'oslo.systems' then needs to delegate DNS inquiries for 'team.oslo.systems' to the assigned
+// nameservers. This is the delegation this service should handle.
+type NSRecordDelegationService interface {
+	InitiateDomainDelegation(opts InitiateDomainDelegationOpts) error
+	RevokeDomainDelegation(opts RevokeDomainDelegationOpts) error
+}

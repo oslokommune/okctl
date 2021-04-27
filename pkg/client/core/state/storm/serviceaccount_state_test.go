@@ -42,6 +42,13 @@ func TestServiceAccountStateScenario(t *testing.T) {
 	err = state.UpdateServiceAccount(sa)
 	assert.NoError(t, err)
 
+	sa.PolicyArn = "fake14"
+	err = state.SaveServiceAccount(sa)
+	assert.NoError(t, err)
+
+	err = state.RemoveServiceAccount(mock.DefaultServiceAccountName)
+	assert.NoError(t, err)
+
 	err = state.RemoveServiceAccount(mock.DefaultServiceAccountName)
 	assert.NoError(t, err)
 

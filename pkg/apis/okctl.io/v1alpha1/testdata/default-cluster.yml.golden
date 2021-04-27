@@ -1,5 +1,7 @@
 apiVersion: okctl.io/v1alpha1
 clusterRootDomain: okctl-stage.oslo.systems
+experimental:
+  automatizeZoneDelegation: false
 github:
   organisation: oslokommune
   outputPath: infrastructure

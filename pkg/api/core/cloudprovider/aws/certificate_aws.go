@@ -44,7 +44,7 @@ func (c *certificate) CreateCertificate(opts api.CreateCertificateOpts) (*api.Ce
 
 	r := cfn.NewRunner(c.provider)
 
-	err = r.CreateIfNotExists(stackName, template, nil, defaultTimeOut)
+	err = r.CreateIfNotExists(opts.ID.ClusterName, stackName, template, nil, defaultTimeOut)
 	if err != nil {
 		return nil, fmt.Errorf("applying cloudformation template: %w", err)
 	}

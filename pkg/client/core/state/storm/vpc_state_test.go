@@ -38,6 +38,13 @@ func TestVpcStateScenario(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, mock.Vpc(), m)
 
+	m.VpcID = "fake"
+	err = state.SaveVpc(m)
+	assert.NoError(t, err)
+
+	err = state.RemoveVpc(mock.StackNameVpc)
+	assert.NoError(t, err)
+
 	err = state.RemoveVpc(mock.StackNameVpc)
 	assert.NoError(t, err)
 

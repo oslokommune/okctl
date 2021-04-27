@@ -42,8 +42,8 @@ type ContainerRepositoryAPI interface {
 // ContainerRepositoryState updates the state
 type ContainerRepositoryState interface {
 	SaveContainerRepository(repository *ContainerRepository) error
-	RemoveContainerRepository(stackName string) error
-	GetContainerRepository(stackName string) (*ContainerRepository, error)
+	RemoveContainerRepository(imageName string) error
+	GetContainerRepository(imageName string) (*ContainerRepository, error)
 }
 
 // URI returns the URI where the image can be pulled and pushed

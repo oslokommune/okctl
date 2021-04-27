@@ -1,7 +1,9 @@
 package reconciler
 
 import (
+	"errors"
 	"fmt"
+	stormpkg "github.com/asdine/storm/v3"
 
 	"github.com/oslokommune/okctl/pkg/client"
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
@@ -35,12 +37,19 @@ func (c *containerRepositoryReconciler) SetStateHandlers(handlers *clientCore.St
 func (c *containerRepositoryReconciler) Reconcile(node *resourcetree.ResourceNode) (ReconcilationResult, error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err := c.client.CreateContainerRepository(c.commonMetadata.Ctx, client.CreateContainerRepositoryOpts{
-			ClusterID: c.commonMetadata.ClusterID,
-			ImageName: c.commonMetadata.ApplicationDeclaration.Image.Name,
-		})
-		if err != nil {
-			return ReconcilationResult{}, fmt.Errorf("creating container repository: %w", err)
+		_, err := c.handlers.ContainerRepository.GetContainerRepository(c.commonMetadata.ApplicationDeclaration.Image.Name)
+		if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+			return ReconcilationResult{}, fmt.Errorf("getting container repository: %w", err)
+		}
+
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			_, err := c.client.CreateContainerRepository(c.commonMetadata.Ctx, client.CreateContainerRepositoryOpts{
+				ClusterID: c.commonMetadata.ClusterID,
+				ImageName: c.commonMetadata.ApplicationDeclaration.Image.Name,
+			})
+			if err != nil {
+				return ReconcilationResult{}, fmt.Errorf("creating container repository: %w", err)
+			}
 		}
 
 		return ReconcilationResult{}, nil

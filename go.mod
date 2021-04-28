@@ -16,6 +16,7 @@ require (
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/aws/aws-sdk-go v1.38.26
+	github.com/aws/aws-sdk-go-v2 v0.18.0
 	github.com/awslabs/goformation/v4 v4.19.1
 	github.com/beevik/etree v1.1.0
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869

@@ -57,7 +57,9 @@ func (n *nameserversDelegatedTestReconciler) Reconcile(node *resourcetree.Resour
 			result.Requeue = true
 			result.RequeueAfter = defaultTestingIntervalMinutes
 
-			return result, nil
+			_, _ = fmt.Fprintf(n.commonMetadata.Out, "failed to validate nameservers: %s", err)
+
+			return result, fmt.Errorf("validating nameservers: %w", err)
 		}
 
 		err = n.domainService.SetHostedZoneDelegation(

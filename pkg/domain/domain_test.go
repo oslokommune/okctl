@@ -101,6 +101,16 @@ func TestHasNameServers(t *testing.T) {
 			},
 		},
 		{
+			name:   "Nameservers that aren't fqdns should work",
+			domain: "test.oslo.systems",
+			ns: []string{
+				"ns-1322.awsdns-37.org",
+				"ns-612.awsdns-12.net",
+				"ns-327.awsdns-40.com",
+				"ns-1706.awsdns-21.co.uk",
+			},
+		},
+		{
 			name:   "Should work with partial matches",
 			domain: "test.oslo.systems",
 			ns: []string{
@@ -126,7 +136,7 @@ func TestHasNameServers(t *testing.T) {
 				"d",
 			},
 			expectErr: true,
-			expect:    "nameservers do not match, expected: [a b c d], but got: [ns-1322.awsdns-37.org. ns-1706.awsdns-21.co.uk. ns-327.awsdns-40.com. ns-612.awsdns-12.net.]",
+			expect:    "nameservers do not match, expected: [a. b. c. d.], but got: [ns-1322.awsdns-37.org. ns-1706.awsdns-21.co.uk. ns-327.awsdns-40.com. ns-612.awsdns-12.net.]",
 		},
 		{
 			name:      "Should fail",

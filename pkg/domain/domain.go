@@ -175,6 +175,10 @@ func ShouldHaveNameServers(domain string, expectedNameservers []string) error {
 		return err
 	}
 
+	for i, ns := range expectedNameservers {
+		expectedNameservers[i] = dns.Fqdn(ns)
+	}
+
 	if len(nameservers) == 0 {
 		return fmt.Errorf("unable to get NS records for domain '%s', does not appear to be delegated yet", domain)
 	}

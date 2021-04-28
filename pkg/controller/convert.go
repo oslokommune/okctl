@@ -44,6 +44,8 @@ type ExistingResources struct {
 	hasVPC                                bool
 	hasDelegatedHostedZoneNameservers     bool
 	hasDelegatedHostedZoneNameserversTest bool
+	hasCleanupSG                          bool
+	hasCleanupALB                         bool
 	hasUsers                              bool
 	hasPostgres                           map[string]*v1alpha1.ClusterDatabasesPostgres
 }
@@ -75,23 +77,25 @@ func IdentifyResourcePresence(id api.ID, handlers *clientCore.StateHandlers) (Ex
 	}
 
 	return ExistingResources{
-		hasPrimaryHostedZone:                  !isNotFound(handlers.Domain.GetPrimaryHostedZone()),
-		hasVPC:                                !isNotFound(handlers.Vpc.GetVpc(cfn.NewStackNamer().Vpc(id.ClusterName))),
+		hasServiceQuotaCheck:                  false,
+		hasAWSLoadBalancerController:          !isNotFound(handlers.Helm.GetHelmRelease(awslbc.New(nil).ReleaseName)),
 		hasCluster:                            !isNotFound(handlers.Cluster.GetCluster(id.ClusterName)),
+		hasExternalDNS:                        !isNotFound(handlers.ExternalDNS.GetExternalDNS()),
 		hasExternalSecrets:                    !isNotFound(handlers.Helm.GetHelmRelease(externalsecrets.ExternalSecrets(nil).ReleaseName)),
 		hasAutoscaler:                         !isNotFound(handlers.Helm.GetHelmRelease(autoscaler.New(nil).ReleaseName)),
+		hasBlockstorage:                       !isNotFound(handlers.Helm.GetHelmRelease(blockstorage.New(nil).ReleaseName)),
 		hasKubePromStack:                      !isNotFound(handlers.Helm.GetHelmRelease(kubepromstack.New(0*time.Second, nil).ReleaseName)),
 		hasLoki:                               !isNotFound(handlers.Helm.GetHelmRelease(lokipkg.New(nil).ReleaseName)),
 		hasPromtail:                           !isNotFound(handlers.Helm.GetHelmRelease(promtail.New(nil).ReleaseName)),
 		hasTempo:                              !isNotFound(handlers.Helm.GetHelmRelease(tempo.New(nil).ReleaseName)),
-		hasBlockstorage:                       !isNotFound(handlers.Helm.GetHelmRelease(blockstorage.New(nil).ReleaseName)),
-		hasAWSLoadBalancerController:          !isNotFound(handlers.Helm.GetHelmRelease(awslbc.New(nil).ReleaseName)),
-		hasExternalDNS:                        !isNotFound(handlers.ExternalDNS.GetExternalDNS()),
 		hasIdentityManager:                    !isNotFound(handlers.IdentityManager.GetIdentityPool(cfn.NewStackNamer().IdentityPool(id.ClusterName))),
 		hasArgoCD:                             !isNotFound(handlers.ArgoCD.GetArgoCD()),
+		hasPrimaryHostedZone:                  !isNotFound(handlers.Domain.GetPrimaryHostedZone()),
+		hasVPC:                                !isNotFound(handlers.Vpc.GetVpc(cfn.NewStackNamer().Vpc(id.ClusterName))),
 		hasDelegatedHostedZoneNameservers:     hz != nil && hz.IsDelegated,
 		hasDelegatedHostedZoneNameserversTest: false,
-		hasServiceQuotaCheck:                  false,
+		hasCleanupSG:                          false,
+		hasCleanupALB:                         false,
 		hasUsers:                              false, // For now we will always check if there are missing users
 		hasPostgres:                           haveDBs,
 	}, nil

@@ -1,8 +1,8 @@
 package resources
 
 import (
-	kaex "github.com/oslokommune/kaex/pkg/api"
 	argo "github.com/oslokommune/okctl/internal/third_party/argoproj/argo-cd/pkg/apis/application/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -18,12 +18,12 @@ func generateDefaultArgoApp() argo.Application {
 		},
 		Spec: argo.ApplicationSpec{
 			Source: argo.ApplicationSource{
-				RepoURL:        "git@github.com:<organization>/<infrastructure as code repository URL>",
+				RepoURL:        "",
 				TargetRevision: "HEAD",
 			},
 			Destination: argo.ApplicationDestination{
 				Server:    "https://kubernetes.default.svc",
-				Namespace: "<namespace your app should run in>",
+				Namespace: "default",
 			},
 			Project: "default",
 			SyncPolicy: &argo.SyncPolicy{
@@ -37,13 +37,13 @@ func generateDefaultArgoApp() argo.Application {
 }
 
 // CreateArgoApp creates an ArgoCD definition customized for okctl
-func CreateArgoApp(app kaex.Application, sourceRepositoryURL string, sourceRepositoryPath string) argo.Application {
+func CreateArgoApp(app v1alpha1.Application, sourceRepositoryURL string, sourceRepositoryPath string) argo.Application {
 	argoApp := generateDefaultArgoApp()
 
-	argoApp.ObjectMeta.Name = app.Name
+	argoApp.ObjectMeta.Name = app.Metadata.Name
 
-	if app.Namespace != "" {
-		argoApp.Spec.Destination.Namespace = app.Namespace
+	if app.Metadata.Namespace != "" {
+		argoApp.Spec.Destination.Namespace = app.Metadata.Namespace
 	}
 
 	argoApp.Spec.Source.Path = sourceRepositoryPath

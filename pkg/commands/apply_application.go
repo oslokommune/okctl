@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"github.com/logrusorgru/aurora/v3"
+
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/controller"
@@ -21,24 +23,43 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// SynchronizeApplication knows how to discover differences between desired and actual state and rectify them
-func SynchronizeApplication(reconcilerManager reconciler.Reconciler, tree *resourcetree.ResourceNode) error {
-	tree.ApplyFunction(setAllToPresent, tree)
+// SynchronizeApplicationOpts contains references necessary to synchronize an application
+type SynchronizeApplicationOpts struct {
+	ReconciliationManager reconciler.Reconciler
+	Application           v1alpha1.Application
 
-	return controller.HandleNode(reconcilerManager, tree)
+	Tree *resourcetree.ResourceNode
 }
 
-func setAllToPresent(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
-	receiver.State = resourcetree.ResourceNodeStatePresent
+// SynchronizeApplication knows how to discover differences between desired and actual state and rectify them
+func SynchronizeApplication(opts SynchronizeApplicationOpts) error {
+	opts.Tree.ApplyFunction(applyDesiredState(opts.Application.Image), opts.Tree)
+
+	return controller.HandleNode(opts.ReconciliationManager, opts.Tree)
+}
+
+func applyDesiredState(image v1alpha1.ApplicationImage) resourcetree.ApplyFn {
+	return func(receiver *resourcetree.ResourceNode, target *resourcetree.ResourceNode) {
+		switch receiver.Type {
+		case resourcetree.ResourceNodeTypeContainerRepository:
+			if image.HasName() {
+				receiver.State = resourcetree.ResourceNodeStatePresent
+			} else {
+				receiver.State = resourcetree.ResourceNodeStateNoop
+			}
+		case resourcetree.ResourceNodeTypeApplication:
+			receiver.State = resourcetree.ResourceNodeStatePresent
+		}
+	}
 }
 
 // InferApplicationFromStdinOrFile returns an okctl application based on input. The function will parse input either
 // from the reader or from the fs based on if path is a path or if it is "-". "-" represents stdin
-func InferApplicationFromStdinOrFile(stdin io.Reader, fs *afero.Afero, path string) (v1alpha1.Application, error) {
+func InferApplicationFromStdinOrFile(declaration v1alpha1.Cluster, stdin io.Reader, fs *afero.Afero, path string) (v1alpha1.Application, error) {
 	var (
 		err         error
 		inputReader io.Reader
-		app         = v1alpha1.NewApplication()
+		app         = v1alpha1.NewApplication(declaration)
 	)
 
 	switch path {
@@ -66,36 +87,52 @@ func InferApplicationFromStdinOrFile(stdin io.Reader, fs *afero.Afero, path stri
 	return app, nil
 }
 
+// ApplyApplicationSuccessMessageOpts contains the values for customizing the apply application success message
+type ApplyApplicationSuccessMessageOpts struct {
+	ApplicationName           string
+	OptionalDockerTagPushStep string
+	OptionalDockerImageURI    string
+	KubectlApplyArgoCmd       string
+}
+
+const applyApplicationSuccessMessage = `
+	Successfully scaffolded {{ .ApplicationName }}
+	To deploy your application:
+		- Commit and push the changes done by okctl{{ .OptionalDockerTagPushStep }}
+		- Run {{ .KubectlApplyArgoCmd }}
+
+    If using an ingress, it can take up to five minutes for the routing to configure
+`
+
 // WriteApplyApplicationSuccessMessage produces a relevant message for successfully reconciling an application
-func WriteApplyApplicationSuccessMessage(writer io.Writer, applicationName, outputDir string) error {
+func WriteApplyApplicationSuccessMessage(writer io.Writer, application v1alpha1.Application, outputDir string) error {
 	argoCDResourcePath := path.Join(
 		outputDir,
 		constant.DefaultApplicationsOutputDir,
-		applicationName,
+		application.Metadata.Name,
 		"argocd-application.yaml",
 	)
 
-	templateString := `
-	Successfully scaffolded {{ .ApplicationName }}
-	To deploy your application:
-		1. Commit and push the changes done by okctl
-		2. Run kubectl apply -f {{ .ArgoCDResourcePath }}
-	If using an ingress, it can take up to five minutes for the routing to configure
-`
+	optionalDockerTagPushStep := ""
 
-	tmpl, err := template.New("t").Parse(templateString)
+	if application.Image.HasName() {
+		optionalDockerTagPushStep = `
+        - Tag and push a docker image to your container repository. See instructions on
+          https://okctl.io/help/docker-registry/#push-a-docker-image-to-the-amazon-elastic-container-registry-ecr`
+	}
+
+	tmpl, err := template.New("t").Parse(applyApplicationSuccessMessage)
 	if err != nil {
 		return err
 	}
 
 	var tmplBuffer bytes.Buffer
 
-	err = tmpl.Execute(&tmplBuffer, struct {
-		ApplicationName    string
-		ArgoCDResourcePath string
-	}{
-		ApplicationName:    applicationName,
-		ArgoCDResourcePath: argoCDResourcePath,
+	err = tmpl.Execute(&tmplBuffer, ApplyApplicationSuccessMessageOpts{
+		ApplicationName:           application.Metadata.Name,
+		OptionalDockerTagPushStep: optionalDockerTagPushStep,
+		OptionalDockerImageURI:    application.Image.URI,
+		KubectlApplyArgoCmd:       aurora.Green(fmt.Sprintf("kubectl apply -f %s", argoCDResourcePath)).String(),
 	})
 	if err != nil {
 		return err

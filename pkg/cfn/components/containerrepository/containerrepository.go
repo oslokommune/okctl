@@ -3,6 +3,7 @@
 package containerrepository
 
 import (
+	ecr2 "github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/ecr"
 	"github.com/oslokommune/okctl/pkg/cfn"
@@ -37,10 +38,14 @@ type ContainerRepository struct {
 
 // Resource returns the cloud formation resource
 func (c *ContainerRepository) Resource() cloudformation.Resource {
+	imageScanConfigurationOn := ImageScanConfigurationOn
+
 	return &ecr.Repository{
-		ImageScanningConfiguration: ImageScanConfigurationOn,
-		ImageTagMutability:         TagMutabilityConfigurationImmutable,
-		RepositoryName:             c.ImageName,
+		ImageScanningConfiguration: ecr2.ImageScanningConfiguration{
+			ScanOnPush: &imageScanConfigurationOn,
+		},
+		ImageTagMutability: TagMutabilityConfigurationImmutable,
+		RepositoryName:     c.ImageName,
 	}
 }
 

@@ -32,6 +32,7 @@ type applyApplicationOpts struct {
 func (o applyApplicationOpts) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.File, validation.Required),
+		validation.Field(&o.Application),
 	)
 }
 
@@ -55,7 +56,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				ClusterName:  o.Declaration.Metadata.Name,
 			}
 
-			opts.Application, err = commands.InferApplicationFromStdinOrFile(o.In, o.FileSystem, opts.File)
+			opts.Application, err = commands.InferApplicationFromStdinOrFile(*o.Declaration, o.In, o.FileSystem, opts.File)
 			if err != nil {
 				return fmt.Errorf("inferring application from stdin or file: %w", err)
 			}
@@ -79,6 +80,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 			reconciliationManager := reconciler.NewCompositeReconciler(spin,
 				reconciler.NewApplicationReconciler(services.ApplicationService),
+				reconciler.NewContainerRepositoryReconciler(services.ContainerRepository),
 			)
 
 			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{
@@ -93,14 +95,18 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 			dependencyTree := controller.CreateApplicationResourceDependencyTree()
 
-			err = commands.SynchronizeApplication(reconciliationManager, dependencyTree)
+			err = commands.SynchronizeApplication(commands.SynchronizeApplicationOpts{
+				ReconciliationManager: reconciliationManager,
+				Application:           opts.Application,
+				Tree:                  dependencyTree,
+			})
 			if err != nil {
 				return fmt.Errorf("synchronizing application: %w", err)
 			}
 
 			return commands.WriteApplyApplicationSuccessMessage(
 				o.Out,
-				opts.Application.Metadata.Name,
+				opts.Application,
 				o.Declaration.Github.OutputPath,
 			)
 		},

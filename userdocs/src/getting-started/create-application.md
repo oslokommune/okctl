@@ -20,25 +20,31 @@ declaration to resources understood by Kubernetes and ArgoCD.
 To scaffold an application.yaml template, run the following command:
 
 ```bash
-okctl scaffold application ENV
+# Syntax
+okctl --cluster-declaration=<relevant cluster.yaml> scaffold application
+
+# Example
+okctl --cluster-declaration=cluster.yaml scaffold application > application.yaml
 ```
 
-This creates an application declaration in ./application.yaml.
+This creates an application declaration in application.yaml.
 
 After configuring the application.yaml file, you turn it into Kubernetes and ArgoCD resources by running:
 
 ```bash
-okctl apply application ENV -f application.yaml
+# Syntax
+okctl --cluster-declaration=<relevant cluster.yaml> apply application -f <relevant application.yaml>
+
+# Example
+okctl --cluster-declaration=cluster.yaml apply application -f application.yaml
 ```
 
-This command will create the following content in the ./infrastructure folder:
+This command will create the following content in the infrastructure folder:
 
-1. `./infrastructure/applications/APP-NAME/base`
+1. `infrastructure/applications/APP-NAME/base`
     * Contains Kubernetes resources common for your application regardless of environment
-2. `./infrastructure/applications/APP-NAME/overlays`
+2. `infrastructure/applications/APP-NAME/overlays`
     * Contains (Kustomize) patches containing environment specific adjustments to the common resources.
-3. `./infrastructure/<env>/certificates/APP-URL`
-    * The certificate declaration for the URL specified in the application.yaml.
 
 After that, the following manual steps remain:
 
@@ -56,7 +62,7 @@ This is only needed if the namespace you specified in the application declaratio
 3. Apply the ArgoCD resource to the cluster:
 
 ```
-kubectl apply -f ./infrastructure/applications/<app-name>/argocd-application.yaml
+kubectl apply -f infrastructure/applications/<app-name>/argocd-application.yaml
 ```
 
 The application.yaml declaration is used as an alternative to a wizard or numerous command flags. After running 

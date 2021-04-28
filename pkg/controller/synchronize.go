@@ -153,29 +153,29 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
 		// Integrations
 		case resourcetree.ResourceNodeTypeAutoscaler:
-			desiredTreeNode.State = boolToState(declaration.Integrations.Autoscaler)
+			desiredTreeNode.State = BoolToState(declaration.Integrations.Autoscaler)
 		case resourcetree.ResourceNodeTypeAWSLoadBalancerController:
-			desiredTreeNode.State = boolToState(declaration.Integrations.AWSLoadBalancerController)
+			desiredTreeNode.State = BoolToState(declaration.Integrations.AWSLoadBalancerController)
 		case resourcetree.ResourceNodeTypeBlockstorage:
-			desiredTreeNode.State = boolToState(declaration.Integrations.Blockstorage)
+			desiredTreeNode.State = BoolToState(declaration.Integrations.Blockstorage)
 		case resourcetree.ResourceNodeTypeExternalDNS:
-			desiredTreeNode.State = boolToState(declaration.Integrations.ExternalDNS)
+			desiredTreeNode.State = BoolToState(declaration.Integrations.ExternalDNS)
 		case resourcetree.ResourceNodeTypeExternalSecrets:
-			desiredTreeNode.State = boolToState(declaration.Integrations.ExternalSecrets)
+			desiredTreeNode.State = BoolToState(declaration.Integrations.ExternalSecrets)
 		case resourcetree.ResourceNodeTypeIdentityManager:
-			desiredTreeNode.State = boolToState(declaration.Integrations.Cognito)
+			desiredTreeNode.State = BoolToState(declaration.Integrations.Cognito)
 		case resourcetree.ResourceNodeTypeKubePromStack:
-			desiredTreeNode.State = boolToState(declaration.Integrations.KubePromStack)
+			desiredTreeNode.State = BoolToState(declaration.Integrations.KubePromStack)
 		case resourcetree.ResourceNodeTypeLoki:
-			desiredTreeNode.State = boolToState(declaration.Integrations.Loki)
+			desiredTreeNode.State = BoolToState(declaration.Integrations.Loki)
 		case resourcetree.ResourceNodeTypePromtail:
-			desiredTreeNode.State = boolToState(declaration.Integrations.Promtail)
+			desiredTreeNode.State = BoolToState(declaration.Integrations.Promtail)
 		case resourcetree.ResourceNodeTypeTempo:
-			desiredTreeNode.State = boolToState(declaration.Integrations.Tempo)
+			desiredTreeNode.State = BoolToState(declaration.Integrations.Tempo)
 		case resourcetree.ResourceNodeTypeArgoCD:
-			desiredTreeNode.State = boolToState(declaration.Integrations.ArgoCD)
+			desiredTreeNode.State = BoolToState(declaration.Integrations.ArgoCD)
 		case resourcetree.ResourceNodeTypeUsers:
-			desiredTreeNode.State = boolToState(len(declaration.Users) > 0)
+			desiredTreeNode.State = BoolToState(len(declaration.Users) > 0)
 		case resourcetree.ResourceNodeTypePostgres:
 			if declaration.Databases != nil {
 				for _, db := range declaration.Databases.Postgres {
@@ -200,46 +200,46 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 		switch receiver.Type {
 		// Mandatory
 		case resourcetree.ResourceNodeTypeServiceQuota:
-			receiver.State = boolToState(existingResources.hasServiceQuotaCheck)
+			receiver.State = BoolToState(existingResources.hasServiceQuotaCheck)
 		case resourcetree.ResourceNodeTypeZone:
-			receiver.State = boolToState(existingResources.hasPrimaryHostedZone)
+			receiver.State = BoolToState(existingResources.hasPrimaryHostedZone)
 		case resourcetree.ResourceNodeTypeNameserverDelegator:
-			receiver.State = boolToState(existingResources.hasDelegatedHostedZoneNameservers)
+			receiver.State = BoolToState(existingResources.hasDelegatedHostedZoneNameservers)
 		case resourcetree.ResourceNodeTypeNameserversDelegatedTest:
-			receiver.State = boolToState(existingResources.hasDelegatedHostedZoneNameserversTest)
+			receiver.State = BoolToState(existingResources.hasDelegatedHostedZoneNameserversTest)
 		case resourcetree.ResourceNodeTypeCleanupALB:
-			receiver.State = boolToState(existingResources.hasCleanupALB)
+			receiver.State = BoolToState(existingResources.hasCleanupALB)
 		case resourcetree.ResourceNodeTypeCleanupSG:
-			receiver.State = boolToState(existingResources.hasCleanupSG)
+			receiver.State = BoolToState(existingResources.hasCleanupSG)
 		case resourcetree.ResourceNodeTypeVPC:
-			receiver.State = boolToState(existingResources.hasVPC)
+			receiver.State = BoolToState(existingResources.hasVPC)
 		case resourcetree.ResourceNodeTypeCluster:
-			receiver.State = boolToState(existingResources.hasCluster)
+			receiver.State = BoolToState(existingResources.hasCluster)
 		// Integrations
 		case resourcetree.ResourceNodeTypeAutoscaler:
-			receiver.State = boolToState(existingResources.hasAutoscaler)
+			receiver.State = BoolToState(existingResources.hasAutoscaler)
 		case resourcetree.ResourceNodeTypeAWSLoadBalancerController:
-			receiver.State = boolToState(existingResources.hasAWSLoadBalancerController)
+			receiver.State = BoolToState(existingResources.hasAWSLoadBalancerController)
 		case resourcetree.ResourceNodeTypeBlockstorage:
-			receiver.State = boolToState(existingResources.hasBlockstorage)
+			receiver.State = BoolToState(existingResources.hasBlockstorage)
 		case resourcetree.ResourceNodeTypeExternalDNS:
-			receiver.State = boolToState(existingResources.hasExternalDNS)
+			receiver.State = BoolToState(existingResources.hasExternalDNS)
 		case resourcetree.ResourceNodeTypeExternalSecrets:
-			receiver.State = boolToState(existingResources.hasExternalSecrets)
+			receiver.State = BoolToState(existingResources.hasExternalSecrets)
 		case resourcetree.ResourceNodeTypeIdentityManager:
-			receiver.State = boolToState(existingResources.hasIdentityManager)
+			receiver.State = BoolToState(existingResources.hasIdentityManager)
 		case resourcetree.ResourceNodeTypeKubePromStack:
-			receiver.State = boolToState(existingResources.hasKubePromStack)
+			receiver.State = BoolToState(existingResources.hasKubePromStack)
 		case resourcetree.ResourceNodeTypeLoki:
-			receiver.State = boolToState(existingResources.hasLoki)
+			receiver.State = BoolToState(existingResources.hasLoki)
 		case resourcetree.ResourceNodeTypePromtail:
-			receiver.State = boolToState(existingResources.hasPromtail)
+			receiver.State = BoolToState(existingResources.hasPromtail)
 		case resourcetree.ResourceNodeTypeTempo:
-			receiver.State = boolToState(existingResources.hasTempo)
+			receiver.State = BoolToState(existingResources.hasTempo)
 		case resourcetree.ResourceNodeTypeArgoCD:
-			receiver.State = boolToState(existingResources.hasArgoCD)
+			receiver.State = BoolToState(existingResources.hasArgoCD)
 		case resourcetree.ResourceNodeTypeUsers:
-			receiver.State = boolToState(existingResources.hasUsers)
+			receiver.State = BoolToState(existingResources.hasUsers)
 		case resourcetree.ResourceNodeTypePostgres:
 		NextDb:
 			for _, existingDB := range existingResources.hasPostgres {
@@ -289,8 +289,8 @@ func applyCurrentState(receiver *resourcetree.ResourceNode, target *resourcetree
 	}
 }
 
-// boolToState converts a boolean to a resourcetree.ResourceNodeState
-func boolToState(present bool) resourcetree.ResourceNodeState {
+// BoolToState converts a boolean to a resourcetree.ResourceNodeState
+func BoolToState(present bool) resourcetree.ResourceNodeState {
 	if present {
 		return resourcetree.ResourceNodeStatePresent
 	}

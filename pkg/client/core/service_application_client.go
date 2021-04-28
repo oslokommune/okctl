@@ -5,11 +5,8 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
-
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
-	kaex "github.com/oslokommune/kaex/pkg/api"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/scaffold"
@@ -42,15 +39,10 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 		return err
 	}
 
-	okctlApp := opts.Application
-
-	// See function comment
-	app := okctlApplicationToKaexApplication(opts.Application, opts.HostedZoneDomain)
-
-	relativeApplicationDir := path.Join(opts.OutputDir, constant.DefaultApplicationsOutputDir, okctlApp.Metadata.Name)
+	relativeApplicationDir := path.Join(opts.OutputDir, constant.DefaultApplicationsOutputDir, opts.Application.Metadata.Name)
 	relativeArgoCDSourcePath := path.Join(relativeApplicationDir, constant.DefaultApplicationOverlayDir, opts.ID.ClusterName)
 
-	base, err := scaffold.GenerateApplicationBase(*app, opts.IACRepoURL, relativeArgoCDSourcePath)
+	base, err := scaffold.GenerateApplicationBase(opts.Application, opts.IACRepoURL, relativeArgoCDSourcePath)
 	if err != nil {
 		return fmt.Errorf("creating a new application deployment: %w", err)
 	}
@@ -71,7 +63,7 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 	}
 
 	applicationScaffold := &client.ScaffoldedApplication{
-		ApplicationName:      app.Name,
+		ApplicationName:      opts.Application.Metadata.Name,
 		ClusterName:          opts.ID.ClusterName,
 		BaseKustomization:    base.Kustomization,
 		Deployment:           base.Deployment,
@@ -102,23 +94,4 @@ func NewApplicationService(
 		cert:  cert,
 		store: store,
 	}
-}
-
-// I'm assuming we'll be making enough customizations down the line to have our own okctlApplication, but for now
-// mapping it to a Kaex application works fine
-func okctlApplicationToKaexApplication(okctlApp v1alpha1.Application, primaryHostedZoneDomain string) (kaexApp *kaex.Application) {
-	kaexApp = &kaex.Application{
-		Name:            okctlApp.Metadata.Name,
-		Namespace:       okctlApp.Metadata.Namespace,
-		Image:           okctlApp.Image,
-		Version:         okctlApp.Version,
-		ImagePullSecret: okctlApp.ImagePullSecret,
-		Url:             fmt.Sprintf("%s.%s", okctlApp.SubDomain, primaryHostedZoneDomain),
-		Port:            okctlApp.Port,
-		Replicas:        okctlApp.Replicas,
-		Environment:     okctlApp.Environment,
-		Volumes:         okctlApp.Volumes,
-	}
-
-	return kaexApp
 }

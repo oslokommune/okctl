@@ -6,14 +6,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const ecrTestURI = "012345678912.dkr.ecr.eu-west-1.amazonaws.com/cluster-test-testapp"
+
 func generateValidApplication() Application {
-	app := NewApplication()
+	app := NewApplication(Cluster{})
 
 	app.Metadata.Name = "test-app"
 	app.Metadata.Namespace = "test"
 
-	app.Image = "testimage"
-	app.Version = "latest"
+	app.Image.URI = "testimage:latest"
 	app.ImagePullSecret = "sometoken"
 
 	app.SubDomain = "testapp"
@@ -49,7 +50,7 @@ func TestApplicationValidation(t *testing.T) {
 			withApplication: func() Application {
 				app := generateValidApplication()
 
-				app.Image = "postgres"
+				app.Image.URI = "postgres"
 
 				return app
 			},
@@ -62,7 +63,7 @@ func TestApplicationValidation(t *testing.T) {
 			withApplication: func() Application {
 				app := generateValidApplication()
 
-				app.Image = "ghcr.io/oslokommune/test-app"
+				app.Image.URI = "ghcr.io/oslokommune/test-app"
 
 				return app
 			},
@@ -75,12 +76,70 @@ func TestApplicationValidation(t *testing.T) {
 			withApplication: func() Application {
 				app := generateValidApplication()
 
-				app.Image = "012345678912.dkr.ecr.eu-west-1.amazonaws.com/cluster-test-testapp"
+				app.Image.URI = ecrTestURI
 
 				return app
 			},
 
 			expectFail: false,
+		},
+		{
+			name: "Should not allow both image URI and name",
+
+			withApplication: func() Application {
+				app := generateValidApplication()
+
+				app.Image.URI = ecrTestURI
+				app.Image.Name = "somename"
+
+				return app
+			},
+
+			expectFail:    true,
+			expectedError: "image: name and uri are mutually exclusive, remove one of them.",
+		},
+		{
+			name: "Should allow image URI only",
+
+			withApplication: func() Application {
+				app := generateValidApplication()
+
+				app.Image.URI = ecrTestURI
+				app.Image.Name = ""
+
+				return app
+			},
+
+			expectFail: false,
+		},
+		{
+			name: "Should allow image name only",
+
+			withApplication: func() Application {
+				app := generateValidApplication()
+
+				app.Image.URI = ""
+				app.Image.Name = "somename"
+
+				return app
+			},
+
+			expectFail: false,
+		},
+		{
+			name: "Should not allow slash in image name",
+
+			withApplication: func() Application {
+				app := generateValidApplication()
+
+				app.Image.URI = ""
+				app.Image.Name = "a/b"
+
+				return app
+			},
+
+			expectFail:    true,
+			expectedError: "image: (name: must be a valid subdomain.).",
 		},
 	}
 
@@ -91,7 +150,7 @@ func TestApplicationValidation(t *testing.T) {
 			err := tc.withApplication().Validate()
 
 			if !tc.expectFail {
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 			} else {
 				assert.NotNil(t, err)
 				assert.Equal(t, tc.expectedError, err.Error())

@@ -1,0 +1,9 @@
+
+	Successfully scaffolded my-app
+	To deploy your application:
+		- Commit and push the changes done by okctl
+        - Tag and push a docker image to your container repository. See instructions on
+          https://okctl.io/help/docker-registry/#push-a-docker-image-to-the-amazon-elastic-container-registry-ecr
+		- Run [32mkubectl apply -f infrastructure/applications/my-app/argocd-application.yaml[0m
+
+    If using an ingress, it can take up to five minutes for the routing to configure

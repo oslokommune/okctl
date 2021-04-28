@@ -34,7 +34,7 @@ func TestContainerRepositoryStateScenario(t *testing.T) {
 	err = state.SaveContainerRepository(mock.ContainerRepository())
 	assert.NoError(t, err)
 
-	m, err := state.GetContainerRepository(mock.StackNameContainerRepository)
+	m, err := state.GetContainerRepository(mock.DefaultImage)
 	assert.NoError(t, err)
 	assert.Equal(t, mock.ContainerRepository(), m)
 
@@ -42,10 +42,10 @@ func TestContainerRepositoryStateScenario(t *testing.T) {
 	err = state.SaveContainerRepository(m)
 	assert.NoError(t, err)
 
-	err = state.RemoveContainerRepository(mock.StackNameContainerRepository)
+	err = state.RemoveContainerRepository(mock.DefaultImage)
 	assert.NoError(t, err)
 
-	err = state.RemoveContainerRepository(mock.StackNameContainerRepository)
+	err = state.RemoveContainerRepository(mock.DefaultImage)
 	assert.NoError(t, err)
 
 	err = db.Close()

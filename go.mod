@@ -16,6 +16,7 @@ require (
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/aws/aws-sdk-go v1.38.26
+	github.com/aws/aws-sdk-go-v2 v0.18.0
 	github.com/awslabs/goformation/v4 v4.19.1
 	github.com/beevik/etree v1.1.0
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
@@ -45,8 +46,10 @@ require (
 	github.com/gofrs/flock v0.8.0
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/gogo/googleapis v1.4.0 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.5.5
 	github.com/google/go-github/v32 v32.1.0
+	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/handlers v1.4.2 // indirect
 	github.com/gosimple/slug v1.9.0
@@ -69,7 +72,6 @@ require (
 	github.com/moby/sys/mount v0.2.0 // indirect
 	github.com/opencontainers/selinux v1.8.0 // indirect
 	github.com/ory/dockertest v3.3.5+incompatible
-	github.com/oslokommune/kaex v0.1.7
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
@@ -95,6 +97,7 @@ require (
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/oauth2 v0.0.0-20210201163806-010130855d6c
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
+	golang.org/x/text v0.3.5 // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20210204154452-deb828366460 // indirect
@@ -109,6 +112,7 @@ require (
 	k8s.io/apimachinery v0.20.5
 	k8s.io/cli-runtime v0.20.5
 	k8s.io/client-go v0.20.5
+	k8s.io/klog/v2 v2.5.0 // indirect
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009 // indirect
 	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/aws-iam-authenticator v0.5.2

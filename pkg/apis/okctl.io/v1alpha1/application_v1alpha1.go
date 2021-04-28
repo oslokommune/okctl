@@ -1,7 +1,11 @@
 package v1alpha1
 
 import (
+	"fmt"
+	"net/url"
 	"regexp"
+
+	"github.com/mishudark/errors"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
@@ -17,7 +21,11 @@ const (
 	minimumPossiblePort     = 1
 	maximumPossiblePort     = 65535
 	minimumPossibleReplicas = 0
+
+	defaultReplicas = 1
 )
+
+var imageURITester = regexp.MustCompile(`[a-z0-9]+(?:[.:/_-]{1,2}[a-z0-9]+)*`)
 
 // Application represents an application that can be deployed with okctl
 type Application struct {
@@ -25,24 +33,38 @@ type Application struct {
 
 	Metadata ApplicationMeta `json:"metadata"`
 
-	Image           string `json:"image"`
-	Version         string `json:"version"`
+	Image ApplicationImage `json:"image"`
+
 	ImagePullSecret string `json:"ImagePullSecret"`
+	SubDomain       string `json:"subDomain"`
 
-	SubDomain string `json:"subDomain"`
-	Port      int32  `json:"port"`
-
+	Port     int32 `json:"port"`
 	Replicas int32 `json:"replicas"`
 
-	Environment map[string]string   `json:"environment"`
-	Volumes     []map[string]string `json:"volumes"`
+	Environment map[string]string `json:"environment"`
+
+	Volumes []map[string]string `json:"volumes"`
+
+	cluster Cluster
 }
 
 // Validate ensures Application contains the right information
 func (a Application) Validate() error {
 	return validation.ValidateStruct(&a,
 		validation.Field(&a.Metadata, validation.Required),
-		validation.Field(&a.Image),
+		validation.Field(&a.Image, validation.Required),
+		validation.Field(&a.Image, validation.By(func(value interface{}) error {
+			image, ok := value.(ApplicationImage)
+			if !ok {
+				return errors.New("casting to ApplicationImage")
+			}
+
+			if image.HasName() && image.HasURI() {
+				return errors.New("name and uri are mutually exclusive, remove one of them")
+			}
+
+			return nil
+		})),
 		validation.Field(&a.ImagePullSecret, is.Subdomain),
 		validation.Field(&a.Port, validation.Min(minimumPossiblePort), validation.Max(maximumPossiblePort)),
 		validation.Field(&a.Replicas, validation.Min(minimumPossibleReplicas)),
@@ -77,6 +99,30 @@ func ApplicationTypeMeta() metav1.TypeMeta {
 	}
 }
 
+// ApplicationImage defines which Docker image the application should use
+type ApplicationImage struct {
+	Name string `json:"name"`
+	URI  string `json:"uri"`
+}
+
+// HasName determines if the image has a name
+func (a ApplicationImage) HasName() bool {
+	return len(a.Name) > 0
+}
+
+// HasURI determines if the image has an URI
+func (a ApplicationImage) HasURI() bool {
+	return len(a.URI) > 0
+}
+
+// Validate ensures ApplicationImage contains the right information
+func (a ApplicationImage) Validate() error {
+	return validation.ValidateStruct(&a,
+		validation.Field(&a.Name, is.Subdomain),
+		validation.Field(&a.URI, validation.Match(imageURITester)),
+	)
+}
+
 // HasIngress returns true if the application has an ingress
 func (a Application) HasIngress() bool {
 	return a.SubDomain != ""
@@ -87,9 +133,22 @@ func (a Application) HasService() bool {
 	return a.Port > 0
 }
 
+// URL returns the URL where the application is made available
+func (a Application) URL() (url.URL, error) {
+	tmpURL, err := url.Parse(fmt.Sprintf("%s.%s", a.SubDomain, a.cluster.ClusterRootDomain))
+	if err != nil {
+		return url.URL{}, fmt.Errorf("parsing application URL: %w", err)
+	}
+
+	return *tmpURL, nil
+}
+
 // NewApplication returns an initialized application definition
-func NewApplication() Application {
+func NewApplication(cluster Cluster) Application {
 	return Application{
 		TypeMeta: ApplicationTypeMeta(),
+		Image:    ApplicationImage{},
+		Replicas: defaultReplicas,
+		cluster:  cluster,
 	}
 }

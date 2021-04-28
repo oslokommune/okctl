@@ -15,7 +15,7 @@ okctl venv myenv
 ```
 
 which will
-* run a sub shell with the environment variables from `okctl show credentials` already set.
+* run a subshell with the environment variables from `okctl show credentials` already set.
 * set a command prompt like this (example):
 
 ```bash
@@ -37,7 +37,7 @@ This command prompt can be turned off or configured, see below.
 | OKCTL_PS1                 | *not set* | If set, `venv` will use this as the PS1 in the executed subshell.      |
 | OKCTL_SHELL               | true      | Override which shell to run. For instance `/bin/sh`.                   |
 
-Any occurence `%env` in `OKCTL_PS1` will be replaced by the okctl environment. This makes it possible to get the okctl
+Any occurrence `%env` in `OKCTL_PS1` will be replaced by the okctl environment. This makes it possible to get the okctl
 environment in your custom OKCTL_PS1. A use case for this can be when combining with the `venv_ps1` built-in:
 
 ```bash

@@ -6,7 +6,7 @@
 Your team member needs the following privileges
 
 1. Access to the AWS account where the cluster runs
-1. They need access to the IAC repo on Github that you run `okctl` in
+1. They need access to the IAC repo on GitHub that you run `okctl` in
 
 ### Run `kubectl` commands
 

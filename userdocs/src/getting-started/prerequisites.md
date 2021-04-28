@@ -9,7 +9,7 @@ Make sure you have your own GPG key. To list existing keys, run `gpg --list-keys
 
 If you don't have any keys, create a new one with `gpg --gen-key`
 
-## 2. Create a new github repository
+## 2. Create a new GitHub repository
 
 Go to github.com/oslokommune and create a new **private** git repository.
 

@@ -23,10 +23,10 @@ brew install oslokommune/tap/okctl
 The following is a guide for how to create an environment that contains the elements described in
 [Compare and contrast](#compare-and-contrast).
 
-### 1. Create a new github repository
+### 1. Create a new GitHub repository
 
-Go to github.com/oslokommune and create a new private git repository. No credentials will be stored in this
-repository, but it's more a general safety measure.
+Go to [github.com/oslokommune](https://github.com/oslokommune) and create a new private git repository. No credentials are stored in this
+repository, we want it private as a precaution until we are certain it is safe to have it set as public.
 
 :information_source: This repository will be used by okctl to store infrastructure-as-code, which means files containing
 various configuration for your up-and-coming cluster.
@@ -34,7 +34,6 @@ various configuration for your up-and-coming cluster.
 Now, run:
 
 ```bash
-
 # Clone the repository you just made
 $ git clone git@github.com:oslokommune/<the new repository>.git
 $ cd <the new repository>
@@ -42,11 +41,11 @@ $ cd <the new repository>
 
 ### 2. Create a cluster
 
-A "cluster" is a Kubernetes cluster in an environment as described in [Compare and contrast](#compare-and-contrast).
+A "cluster" is a [Kubernetes](https://kubernetes.io) cluster with many addons and integrations, creating a production grade environment as described in [Functionality](#functionality).
 
 You will soon be running `okctl apply cluster`, which will ask you for the following information:
 
-* Username and password: This is your Oslo Kommune AD organization username (oooXXXXX) and its password.
+* Username and password: This is your Oslo Kommune AD organization username (e.g., oooXXXXX) and its password.
 * Multi factor token (MFA): The same one you use to login to
 [AWS](https://login.oslo.kommune.no/auth/realms/AD/protocol/saml/clients/amazon-aws). If you haven't set up MFA yet, you
 can do that [here](https://login.oslo.kommune.no/auth/realms/AD/account/totp).
@@ -56,11 +55,10 @@ after logging in to [AWS](https://login.oslo.kommune.no/auth/realms/AD/protocol/
 ![okctl](userdocs/src/img/aws-account-id.png)
 
 ```bash
-
 # Scaffold a cluster. Format:
-# okctl scaffold cluster -f cluster.yaml
+okctl scaffold cluster -f cluster.yaml
 # <edit cluster.yaml>
-# okctl apply cluster -f cluster.yaml
+okctl apply cluster -f cluster.yaml
 ```
 
 Follow the instructions.
@@ -96,34 +94,34 @@ $ okctl venv -c cluster.yaml
 $ okctl delete cluster -c cluster.yaml
 ```
 
-## Roadmap
+## Functionality
 
-We have a cluster up and running, and we are currently working on building a seamless experience on top of this cluster with integrations for common functionality:
+The core cluster is up and running, and we are currently working on building a seamless experience on top of this cluster with integrations for common functionality:
 
 ### Core cluster
 
 - [x] [ExternalSecrets](https://external-secrets.github.io/kubernetes-external-secrets/) for storing secrets securely
-- [x] [AWS ALB Ingress Controller](https://github.com/kubernetes-sigs/aws-alb-ingress-controller) creates load balancers for incoming traffic
+- [x] [AWS Load Balancer Controller](https://github.com/kubernetes-sigs/aws-load-balancer-controller) creates load balancers for incoming traffic
 - [x] [ExternalDNS](https://github.com/kubernetes-sigs/external-dns) ensures humane DNS hostnames 
 - [x] [Autoscaler](https://github.com/kubernetes/autoscaler/) for adjusting the size of pods and nodes
 - [x] [Argo CD](https://github.com/argoproj/argo-cd) gives us continuous delivery
 - [x] [Kubernetes Prometheus](https://github.com/prometheus-operator/kube-prometheus) for prometheus and grafana
 - [x] [Amazon Elastic Block Store (EBS) CSI driver](https://github.com/kubernetes-sigs/aws-ebs-csi-driver/) for block storage
-- [x] [Loki](https://github.com/grafana/loki) for consuming logs
+- [x] [Loki](https://github.com/grafana/loki) for processing logs
 - [x] [Tempo](https://grafana.com/oss/tempo/) for processing traces
+- [x] [Promtail](https://grafana.com/docs/loki/latest/clients/promtail/) for collecting logs
 
 ### Application lifecycle
 
 - [x] [Postgres](https://aws.amazon.com/rds/postgresql/) for creating and integrating a postgres database with your application
-- [ ] [Amazon Elastic Container Registry](https://aws.amazon.com/ecr/) for creating and assisting with the publication of container images for use in the cluster
+- [x] [Amazon Elastic Container Registry](https://aws.amazon.com/ecr/) for creating and assisting with the publication of container images for use in the cluster
 - [ ] Reference application that demonstrates how to use the cluster and its integrations
-
 
 ## Compare and contrast
 
-`okctl` intended purpose is to be an opinionated solver of infrastructure problems, this includes setting up CI/CD pipelines et al.
+The intended purpose of `okctl` is to be an opinionated solver of infrastructure problems, this includes setting up CI/CD pipelines et al.
 
-The purpose of this table is not to determine what tool is better or worse, but rather how these tools compare to `okctl` with the problem they are trying to solve.
+The following table is not present to determine what tool is better or worse, but rather how these tools compare to `okctl` and the problems we are focused on solving.
 
 | | okctl | [eksctl](https://eksctl.io) | [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) | [serverless.tf](https://serverless.tf) | 
 |---|---|---|---|---|

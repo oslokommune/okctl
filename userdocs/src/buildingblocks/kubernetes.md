@@ -5,7 +5,7 @@
 Kubernetes is [highly configurable and extensible](https://kubernetes.io/docs/concepts/extend-kubernetes/). We make use of this fact with `okctl` and bind our Kubernetes cluster setup tighter together with AWS. We do this by deploying a variety of applications into the cluster to manage various aspects of an application setup for us.
 
 - [Kubernetes External Secrets](#kubernetes-external-secrets)
-- [AWS ALB Ingress Controller](#aws-alb-ingress-controller)
+- [AWS Load Balancer Controller](#aws-load-balancer-controller)
 - [ExternalDNS](#externaldns)
 - [Cluster Autoscaler](#cluster-autoscaler)
 - [Kubernetes Prometheus](#kubernetes-prometheus)
@@ -78,12 +78,9 @@ spec:
 
 ### AWS Load Balancer Controller
 
-[AWS Load Balancer Controller](https://github.com/kubernetes-sigs/aws-load-balancer-controller) 
+[AWS Load Balancer Controller](https://github.com/kubernetes-sigs/aws-load-balancer-controller) satisfies the Kubernetes [ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) resources by provisioning [Application Load Balancers](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html) (ALB). An ALB  functions at the application layer, the seventh layer of the Open Systems Interconnection (OSI) model. After the load balancer receives a request, it evaluates the listener rules in priority order determining which rule to apply, and then selects a target from the target group for the rule action. We use ALBs, among other things, to route traffic from the internet into a [pod](https://kubernetes.io/docs/concepts/workloads/pods/) (container).
 
-
-satisfies the Kubernetes [ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) resources by provisioning [Application Load Balancers](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html) (ALB). An ALB  functions at the application layer, the seventh layer of the Open Systems Interconnection (OSI) model. After the load balancer receives a request, it evaluates the listener rules in priority order to determine which rule to apply, and then selects a target from the target group for the rule action. We use ALBs, among other things, to route traffic from the internet into a [pod](https://kubernetes.io/docs/concepts/workloads/pods/) (container).
-
-We have configured AWS Load Balancer Controller to work with a cluster, which means that a user doesn't have to manage the life-cycle of an ALB outside of their cluster. Instead, one can attach [annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) to the ingress object and have the [controller create these for one](https://kubernetes-sigs.github.io/aws-alb-ingress-controller/guide/controller/config/).
+We have configured AWS Load Balancer Controller to work with a cluster, which means that a user doesn't have to manage the life-cycle of an ALB outside their cluster. Instead, one can attach [annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) to the ingress object and have the [controller create these for one](https://kubernetes-sigs.github.io/aws-alb-ingress-controller/guide/controller/config/).
 
 #### Example
 

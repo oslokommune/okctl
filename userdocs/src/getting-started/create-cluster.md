@@ -158,7 +158,7 @@ That's it. Sit back and enjoy or go do something else while `okctl` does its thi
 
 ### Device authentication flow
 
-For `okctl` to be able to interact with Github on your behalf, `okctl` needs do something called the
+For `okctl` to be able to interact with GitHub on your behalf, `okctl` needs do something called the
 `Device Authentication flow`. 
 
 In the beginning of the cluster creation process, `okctl` will ask you to enter a code in

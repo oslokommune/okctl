@@ -89,6 +89,18 @@ spec:
 
 In the `SecurityGroupPolicy` manifest, one can select which Pods should be associated with the security group by using the `podSelector` or `serviceAccountSelector`. Either will match on labels associated with the service accounts or pods in question.
 
+**Note:** Until we have fixed this in okctl, you need to do the following:
+
+1. Disable TCP early demux by running the following command:
+
+```bash
+kubectl patch daemonset aws-node \
+    -n kube-system \
+    -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
+```
+
+2. Allow traffic from the `ClusterSharedNodeSecurityGroup` to the `Outgoing` postgres security group on the port your `healthcheck` is running on in the pod
+
 ### Security groups for Pods and Fargate
 
 Per now, it is not possible to associate security groups with pods running in fargate, this is on the roadmap however, the following [issue](https://github.com/aws/containers-roadmap/issues/625) is tracking the progress.

@@ -1,4 +1,4 @@
-`okctl` relies on services in AWS and Github to provide its functionality. In the following sections we describe some of the core services we use from the cloud provider.
+`okctl` relies on services in AWS and GitHub to provide its functionality. In the following sections we describe some core services we use from the cloud provider.
 
 ## Cloud components
 
@@ -20,10 +20,15 @@ Cloud providers offer a vast array of functionality for:
 - [Route53](#aws-route53-route53) for DNS
 - [Certificate Manager](#aws-certificate-manager-acm) for issuing SSL/TLS certificates for secure communication
 - [Systems Manager Parameter Store](#aws-systems-manager-amazon-ssm-parameter-store) for storing secrets
+- [RDS Postgresql](https://aws.amazon.com/rds/postgresql/) providing a relational database
+- [Secrets Manager](https://aws.amazon.com/secrets-manager/) for storing rotatable secrets
+- [Cognito](https://aws.amazon.com/cognito/) for authentication and authorisation
+
+This isn't an exhaustive list of integrations, but gives some idea of the types of services we integrate with.
 
 ### Amazon Web Services (AWS)
 
-With `okctl` we use [AWS](https://aws.amazon.com/) as our cloud operator; there is no particular reason for preferring AWS over other cloud vendors, such as [Microsoft Azure](https://azure.microsoft.com/) or [Google Cloud](https://cloud.google.com/). In Oslo kommune, we can use any of these, but there are a number of teams that have greater experience with AWS.
+With `okctl` we use [AWS](https://aws.amazon.com/) as our cloud operator; there is no particular reason for preferring AWS to other cloud vendors, such as [Microsoft Azure](https://azure.microsoft.com/) or [Google Cloud](https://cloud.google.com/). In Oslo kommune, we can use any of these, but there are a number of teams that have greater experience with AWS.
 
 ### Virtual Private Cloud (VPC)
 
@@ -38,7 +43,7 @@ K8s is an open-source system for automating deployment, scaling, and management 
 
 ### AWS Route53 (Route53)
 
-[AWS Route53](https://aws.amazon.com/route53/) (Route53) is a highly available and scalable [Domain Name System](https://en.wikipedia.org/wiki/Domain_Name_System) (DNS) web service. It is designed to give developers and businesses an extremely reliable and cost effective way to route end users to Internet applications by translating names like www.example.com into the numeric IP addresses like 192.0.2.1 that computers use to connect to each other.
+[AWS Route53](https://aws.amazon.com/route53/) (Route53) is a highly available and scalable [Domain Name System](https://en.wikipedia.org/wiki/Domain_Name_System) (DNS) web service. It is designed to give developers and businesses an extremely reliable and cost-effective way to route end users to Internet applications by translating names like www.example.com into the numeric IP addresses like 192.0.2.1 that computers use to connect to each other.
 
 ```bash
 dig test.oslo.systems NS +short

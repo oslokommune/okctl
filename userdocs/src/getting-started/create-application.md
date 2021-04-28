@@ -78,7 +78,7 @@ there is no longer any point to keep it around. Feel free to delete it.
 This section describes what happens behind the scenes in the process described above. You can skip this entirely, it's
 just for educational purposes.
 
-This demonstrates how you can use Argo CD in conjunction with some of the other components we have installed in the base cluster. In your git repository, save the following definitions under a directory, e.g, `{git_root}/deployment/2048/`.
+This demonstrates how you can use Argo CD in conjunction with some other components we have installed in the base cluster. In your git repository, save the following definitions under a directory, e.g, `{git_root}/deployment/2048/`.
 
 **NB:** Remember to change the values in brackets `{...}` so they match your cluster setup.
 

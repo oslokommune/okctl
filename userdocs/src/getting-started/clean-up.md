@@ -37,7 +37,7 @@ and possible remedies.
 
 The following applies if you can access your cluster with `kubectl`.
 
-Delete everything in all namespaces except `kube-system`. In `kube-system`, some of the core components, such as 
+Delete everything in all namespaces except `kube-system`. In `kube-system`, some core components, such as 
 `AWS load balancer controller` are running. These controllers create AWS resources on your behalf. By removing all 
 resources from all namespaces, we allow these services to clean up themselves.
 
@@ -66,7 +66,7 @@ If you are not able to access the cluster with `kubectl`, you can delete the fol
 * EC2 -> Load Balancers -> Delete any load balancers with tags matching the name of your cluster (try the filter
 tag:elbv2.k8s.aws/cluster : mycluster-myenv)
 
-* EC2 -> Auto Scaling Groups -> Delete any auto scaling groups with a name matching your cluster
+* EC2 -> Auto Scaling Groups -> Delete any auto-scaling groups with a name matching your cluster
 
 
 ### Remove Fargate Profile
@@ -78,7 +78,7 @@ profile.
 ### Remove generated route53 records
 
 Log in to the AWS console for your account, the go to `route 53` and select the relevant hosted zone. The only two
-records that should remain so that Cloud Formation is able to delete it is the SOA record and the NS record.
+records that should remain so that Cloud Formation is able to delete it is the SOA record, and the NS record.
 
 ### Delete the cloud formation stacks in reverse order
 
@@ -99,7 +99,7 @@ secrets.
 
 ### Remove deploy key(s) in IAC repository
 
-Log in to Github, open your IAC repository, choose `Settings > Deploy keys`. Delete any unused keys here.
+Log in to GitHub, open your IAC repository, choose `Settings > Deploy keys`. Delete any unused keys here.
 
 ### Clean up infrastructure-as-code(IAC) repository
 

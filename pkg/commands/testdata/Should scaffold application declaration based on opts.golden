@@ -7,11 +7,12 @@ metadata:
   # The Kubernetes namespace where your app will live
   namespace: my-namespace
 
-# A Docker image defining the application.
+# The Docker image containing the application. image.uri and image.name is mutually exclusive. Either specify the URI or
+# define a name of an ECR repository for which okctl will create for you.
 image: 
   # uri defines where the image can be pulled from
-  uri: karthequian/helloworld:latest
-  # name defines the name of the image to make available in an ECR repository
+  uri: gcr.io/google-containers/echoserver:1.10
+  # name defines the name of an ECR repository to create
   #name: my-app
 
 # The subdomain of the URL your app should be available on
@@ -27,7 +28,7 @@ subDomain: my-app
 # The port your app listens on
 # Comment this out to avoid setting up a service (required if url is specified)
 #
-port: 80
+port: 8080
 
 # How many replicas of your application should we scaffold
 #replicas: 3 # 1 by default

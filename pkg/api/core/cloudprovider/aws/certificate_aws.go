@@ -11,6 +11,10 @@ import (
 	"github.com/oslokommune/okctl/pkg/cognito"
 )
 
+const (
+	certificateTimeout = 15
+)
+
 type certificate struct {
 	provider v1alpha1.CloudProvider
 }
@@ -44,7 +48,7 @@ func (c *certificate) CreateCertificate(opts api.CreateCertificateOpts) (*api.Ce
 
 	r := cfn.NewRunner(c.provider)
 
-	err = r.CreateIfNotExists(opts.ID.ClusterName, stackName, template, nil, defaultTimeOut)
+	err = r.CreateIfNotExists(opts.ID.ClusterName, stackName, template, nil, certificateTimeout)
 	if err != nil {
 		return nil, fmt.Errorf("applying cloudformation template: %w", err)
 	}

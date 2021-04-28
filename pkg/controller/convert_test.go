@@ -50,7 +50,9 @@ func TestTreeCreators(t *testing.T) {
 				hasPrimaryHostedZone:                  true,
 				hasVPC:                                true,
 				hasDelegatedHostedZoneNameservers:     true,
-				hasDelegatedHostedZoneNameserversTest: false,
+				hasDelegatedHostedZoneNameserversTest: true,
+				hasCleanupSG:                          true,
+				hasCleanupALB:                         true,
 				hasUsers:                              false,
 				hasPostgres: map[string]*v1alpha1.ClusterDatabasesPostgres{
 					"test": {
@@ -86,7 +88,9 @@ func TestTreeCreators(t *testing.T) {
 				hasPrimaryHostedZone:                  true,
 				hasVPC:                                true,
 				hasDelegatedHostedZoneNameservers:     true,
-				hasDelegatedHostedZoneNameserversTest: false,
+				hasDelegatedHostedZoneNameserversTest: true,
+				hasCleanupSG:                          true,
+				hasCleanupALB:                         true,
 				hasUsers:                              false,
 				hasPostgres:                           nil,
 			},

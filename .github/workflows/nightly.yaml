@@ -70,7 +70,7 @@ jobs:
         uses: pat-s/always-upload-cache@v2.1.3
         with:
           path: infra/nightly-test/state.db
-          key: ${{ runner.os }}-state-db-v2
+          key: ${{ runner.os }}-state-db-v3
 
       - name: Create cluster
         run: dist/linux_linux_amd64/okctl apply cluster --github-credentials-type token --aws-credentials-type access-key --no-spinner --file nightly-cfg.yaml

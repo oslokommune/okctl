@@ -1,5 +1,5 @@
 run:
-  deadline: 5m
+  timeout: 10m
 
 linters:
   disable-all: true

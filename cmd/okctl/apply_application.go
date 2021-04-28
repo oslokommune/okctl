@@ -106,7 +106,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 			return commands.WriteApplyApplicationSuccessMessage(
 				o.Out,
-				opts.Application.Metadata.Name,
+				opts.Application,
 				o.Declaration.Github.OutputPath,
 			)
 		},

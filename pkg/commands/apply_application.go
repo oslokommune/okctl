@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"github.com/logrusorgru/aurora/v3"
+
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/controller"
@@ -85,36 +87,52 @@ func InferApplicationFromStdinOrFile(declaration v1alpha1.Cluster, stdin io.Read
 	return app, nil
 }
 
+// ApplyApplicationSuccessMessageOpts contains the values for customizing the apply application success message
+type ApplyApplicationSuccessMessageOpts struct {
+	ApplicationName           string
+	OptionalDockerTagPushStep string
+	OptionalDockerImageURI    string
+	KubectlApplyArgoCmd       string
+}
+
+const applyApplicationSuccessMessage = `
+	Successfully scaffolded {{ .ApplicationName }}
+	To deploy your application:
+		- Commit and push the changes done by okctl{{ .OptionalDockerTagPushStep }}
+		- Run {{ .KubectlApplyArgoCmd }}
+
+    If using an ingress, it can take up to five minutes for the routing to configure
+`
+
 // WriteApplyApplicationSuccessMessage produces a relevant message for successfully reconciling an application
-func WriteApplyApplicationSuccessMessage(writer io.Writer, applicationName, outputDir string) error {
+func WriteApplyApplicationSuccessMessage(writer io.Writer, application v1alpha1.Application, outputDir string) error {
 	argoCDResourcePath := path.Join(
 		outputDir,
 		constant.DefaultApplicationsOutputDir,
-		applicationName,
+		application.Metadata.Name,
 		"argocd-application.yaml",
 	)
 
-	templateString := `
-	Successfully scaffolded {{ .ApplicationName }}
-	To deploy your application:
-		1. Commit and push the changes done by okctl
-		2. Run kubectl apply -f {{ .ArgoCDResourcePath }}
-	If using an ingress, it can take up to five minutes for the routing to configure
-`
+	optionalDockerTagPushStep := ""
 
-	tmpl, err := template.New("t").Parse(templateString)
+	if application.Image.HasName() {
+		optionalDockerTagPushStep = `
+        - Tag and push a docker image to your container repository. See instructions on
+          https://okctl.io/help/docker-registry/#push-a-docker-image-to-the-amazon-elastic-container-registry-ecr`
+	}
+
+	tmpl, err := template.New("t").Parse(applyApplicationSuccessMessage)
 	if err != nil {
 		return err
 	}
 
 	var tmplBuffer bytes.Buffer
 
-	err = tmpl.Execute(&tmplBuffer, struct {
-		ApplicationName    string
-		ArgoCDResourcePath string
-	}{
-		ApplicationName:    applicationName,
-		ArgoCDResourcePath: argoCDResourcePath,
+	err = tmpl.Execute(&tmplBuffer, ApplyApplicationSuccessMessageOpts{
+		ApplicationName:           application.Metadata.Name,
+		OptionalDockerTagPushStep: optionalDockerTagPushStep,
+		OptionalDockerImageURI:    application.Image.URI,
+		KubectlApplyArgoCmd:       aurora.Green(fmt.Sprintf("kubectl apply -f %s", argoCDResourcePath)).String(),
 	})
 	if err != nil {
 		return err

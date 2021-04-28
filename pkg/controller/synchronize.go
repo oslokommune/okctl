@@ -141,6 +141,8 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
 		case resourcetree.ResourceNodeTypeNameserverDelegator:
 			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
+		case resourcetree.ResourceNodeTypeNameserversDelegatedTest:
+			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
 		case resourcetree.ResourceNodeTypeVPC:
 			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
 		case resourcetree.ResourceNodeTypeCluster:
@@ -199,6 +201,8 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 			receiver.State = boolToState(existingResources.hasPrimaryHostedZone)
 		case resourcetree.ResourceNodeTypeNameserverDelegator:
 			receiver.State = boolToState(existingResources.hasDelegatedHostedZoneNameservers)
+		case resourcetree.ResourceNodeTypeNameserversDelegatedTest:
+			receiver.State = boolToState(existingResources.hasDelegatedHostedZoneNameserversTest)
 		case resourcetree.ResourceNodeTypeVPC:
 			receiver.State = boolToState(existingResources.hasVPC)
 		case resourcetree.ResourceNodeTypeCluster:

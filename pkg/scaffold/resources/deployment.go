@@ -54,7 +54,8 @@ func generateDefaultDeployment() appsv1.Deployment {
 					Annotations: nil,
 				},
 				Spec: corev1.PodSpec{
-					Volumes: nil,
+					DNSPolicy: corev1.DNSDefault,
+					Volumes:   nil,
 				},
 			},
 		},

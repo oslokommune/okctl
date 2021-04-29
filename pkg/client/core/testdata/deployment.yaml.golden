@@ -19,6 +19,7 @@ spec:
         volumeMounts:
         - mountPath: /path/to/mount/volume
           name: my-app-pathtomountvolume
+      dnsPolicy: Default
       volumes:
       - name: my-app-pathtomountvolume
         persistentVolumeClaim:

@@ -6,6 +6,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/elbv2"
+
+	"github.com/aws/aws-sdk-go/service/elbv2/elbv2iface"
+
+	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/aws/aws-sdk-go/service/acm/acmiface"
+
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
 
@@ -64,6 +71,12 @@ const (
 	DefaultCloudFrontDistributionARN = "arn:::::/distribution/FHH78FAKE"
 	// DefaultFargateProfilePodExecutionRoleARN is the default name of the pod execution role
 	DefaultFargateProfilePodExecutionRoleARN = "arn:aws:iam::123456789012:role/fargatePodExecutionRole-GHEFFAKE"
+	// DefaultListenerARN represents a listener arn
+	DefaultListenerARN = "arn:aws:elasticloadbalancing:eu-west-1:123456789012:listener/app/d65FAKE/3f633e2FAKE/cb0f5FAKE"
+	// DefaultLoadBalancerARN represents a load balancer arn
+	DefaultLoadBalancerARN = "arn:aws:elasticloadbalancing:eu-west-1:123456789012:loadbalancer/app/vbhe933FAKE/145afFAKE"
+	// DefaultCertificateARN represents a certificate arn
+	DefaultCertificateARN = "arn:aws:acm:eu-west-1:123456789012:certificate/123456789012-1234-1234-1234-12345678"
 )
 
 // DefaultCredentials returns a mocked set of aws credentials
@@ -363,6 +376,36 @@ func (p *CloudProvider) DescribeStackEventsSuccess() *CloudProvider {
 	return p
 }
 
+// ACMAPI mocks the ACMAPI interface
+type ACMAPI struct {
+	acmiface.ACMAPI
+
+	DescribeCertificateFn func(*acm.DescribeCertificateInput) (*acm.DescribeCertificateOutput, error)
+}
+
+// DescribeCertificate mocks the invocation
+func (a *ACMAPI) DescribeCertificate(input *acm.DescribeCertificateInput) (*acm.DescribeCertificateOutput, error) {
+	return a.DescribeCertificateFn(input)
+}
+
+// ELBv2API mocks the ELBv2 API
+type ELBv2API struct {
+	elbv2iface.ELBV2API
+
+	DescribeListenersFn func(*elbv2.DescribeListenersInput) (*elbv2.DescribeListenersOutput, error)
+	DeleteListenerFn    func(*elbv2.DeleteListenerInput) (*elbv2.DeleteListenerOutput, error)
+}
+
+// DeleteListener returns the mocked invocation
+func (a *ELBv2API) DeleteListener(input *elbv2.DeleteListenerInput) (*elbv2.DeleteListenerOutput, error) {
+	return a.DeleteListenerFn(input)
+}
+
+// DescribeListeners returns the mocked invocation
+func (a *ELBv2API) DescribeListeners(input *elbv2.DescribeListenersInput) (*elbv2.DescribeListenersOutput, error) {
+	return a.DescribeListenersFn(input)
+}
+
 // DeleteStackSuccess sets a success response on the mocked DeleteStack function
 func (p *CloudProvider) DeleteStackSuccess() *CloudProvider {
 	p.CFAPI.DeleteStackFn = func(input *cloudformation.DeleteStackInput) (*cloudformation.DeleteStackOutput, error) {
@@ -448,6 +491,8 @@ type CloudProvider struct {
 	CFRONTAPI *CFRONTAPI
 	CIPAPI    *CIPAPI
 	SQAPI     *SQAPI
+	ACMAPI    *ACMAPI
+	ELBv2API  *ELBv2API
 }
 
 // SecretsManager returns the mocked SecretsManager API
@@ -500,6 +545,16 @@ func (p *CloudProvider) CloudFront() cloudfrontiface.CloudFrontAPI {
 	return p.CFRONTAPI
 }
 
+// ACM returns the mocked ACM API
+func (p *CloudProvider) ACM() acmiface.ACMAPI {
+	return p.ACMAPI
+}
+
+// ELBV2 returns the mocked AWS ELBv2 API
+func (p *CloudProvider) ELBV2() elbv2iface.ELBV2API {
+	return p.ELBv2API
+}
+
 // PrincipalARN mocks the principal arn
 func (p *CloudProvider) PrincipalARN() string {
 	return "arn:::::/someuser"
@@ -518,6 +573,8 @@ func NewCloudProvider() *CloudProvider {
 		CFRONTAPI: &CFRONTAPI{},
 		CIPAPI:    &CIPAPI{},
 		SQAPI:     &SQAPI{},
+		ACMAPI:    &ACMAPI{},
+		ELBv2API:  &ELBv2API{},
 	}
 }
 
@@ -659,6 +716,37 @@ func NewGoodCloudProvider() *CloudProvider {
 				return &secretsmanager.CancelRotateSecretOutput{}, nil
 			},
 		},
+		ACMAPI: &ACMAPI{
+			DescribeCertificateFn: func(*acm.DescribeCertificateInput) (*acm.DescribeCertificateOutput, error) {
+				return &acm.DescribeCertificateOutput{
+					Certificate: &acm.CertificateDetail{
+						CertificateArn: aws.String(DefaultCertificateARN),
+						InUseBy: []*string{
+							aws.String(DefaultLoadBalancerARN),
+						},
+					},
+				}, nil
+			},
+		},
+		ELBv2API: &ELBv2API{
+			DescribeListenersFn: func(*elbv2.DescribeListenersInput) (*elbv2.DescribeListenersOutput, error) {
+				return &elbv2.DescribeListenersOutput{
+					Listeners: []*elbv2.Listener{
+						{
+							Certificates: []*elbv2.Certificate{
+								{
+									CertificateArn: aws.String(DefaultCertificateARN),
+								},
+							},
+							ListenerArn: aws.String(DefaultListenerARN),
+						},
+					},
+				}, nil
+			},
+			DeleteListenerFn: func(*elbv2.DeleteListenerInput) (*elbv2.DeleteListenerOutput, error) {
+				return &elbv2.DeleteListenerOutput{}, nil
+			},
+		},
 	}
 }
 
@@ -698,6 +786,19 @@ func NewBadCloudProvider() *CloudProvider {
 				return nil, errBad
 			},
 			CancelRotateSecretFn: func(*secretsmanager.CancelRotateSecretInput) (*secretsmanager.CancelRotateSecretOutput, error) {
+				return nil, errBad
+			},
+		},
+		ACMAPI: &ACMAPI{
+			DescribeCertificateFn: func(*acm.DescribeCertificateInput) (*acm.DescribeCertificateOutput, error) {
+				return nil, errBad
+			},
+		},
+		ELBv2API: &ELBv2API{
+			DescribeListenersFn: func(*elbv2.DescribeListenersInput) (*elbv2.DescribeListenersOutput, error) {
+				return nil, errBad
+			},
+			DeleteListenerFn: func(*elbv2.DeleteListenerInput) (*elbv2.DeleteListenerOutput, error) {
 				return nil, errBad
 			},
 		},

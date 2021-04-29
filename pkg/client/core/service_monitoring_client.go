@@ -333,8 +333,9 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 	}
 
 	err = s.cert.DeleteCertificate(ctx, client.DeleteCertificateOpts{
-		ID:     opts.ID,
-		Domain: grafanaDomain(opts.Domain),
+		ID:             opts.ID,
+		Domain:         grafanaDomain(opts.Domain),
+		CertificateARN: stack.CertificateARN,
 	})
 	if err != nil {
 		return err

@@ -40,8 +40,9 @@ func (o CreateCertificateOpts) Validate() error {
 
 // DeleteCertificateOpts contains input required to delete a certificate
 type DeleteCertificateOpts struct {
-	ID     api.ID
-	Domain string
+	ID             api.ID
+	Domain         string
+	CertificateARN string
 }
 
 // Validate the deletion request inputs
@@ -49,6 +50,7 @@ func (o DeleteCertificateOpts) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.Domain, validation.Required),
+		validation.Field(&o.CertificateARN, validation.Required),
 	)
 }
 

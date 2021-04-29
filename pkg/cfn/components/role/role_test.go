@@ -16,6 +16,7 @@ func TestNew(t *testing.T) {
 			Golden: "role.json",
 			Content: role.New(
 				"myIAMRole",
+				"myIAMRole",
 				v1alpha1.PermissionsBoundaryARN("123456789012"),
 				[]string{"arn:::policy/some-policy"},
 				policydocument.PolicyDocument{

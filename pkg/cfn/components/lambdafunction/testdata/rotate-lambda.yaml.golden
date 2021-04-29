@@ -14,10 +14,10 @@ Resources:
       Code:
         S3Bucket: mybucket
         S3Key: mykey
+      Description: RDS Postgres Rotater
       Environment:
         Variables:
           SECRETS_MANAGER_ENDPOINT: eyAiRm46OlNlbGVjdCI6IFsgJ1x4MDAnLCAgImV5QWlSbTQ2T2tkbGRFRjBkQ0lnT2lCYklDSnRlVlpRUTBWdVpIQnZhVzUwSWl3Z0lrUnVjMFZ1ZEhKcFpYTWlJRjBnZlE9PSIgXSB9
-      FunctionName: myrotater-Rotater
       Handler: lambda_function.lambda_handler
       Role:
         Fn::GetAtt:

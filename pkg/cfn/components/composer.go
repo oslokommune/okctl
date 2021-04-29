@@ -1346,8 +1346,13 @@ const (
 	awsLambdaBasicExecutionRole     = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 )
 
-// NameResource returns the resource name
-func (c *RDSPostgresComposer) NameResource(resource string) string {
+// CloudFormationResourceName returns the CF logical name
+func (c *RDSPostgresComposer) CloudFormationResourceName(resource string) string {
+	return resource
+}
+
+// PhysicalName returns the name of the resource
+func (c *RDSPostgresComposer) PhysicalName(resource string) string {
 	return fmt.Sprintf("%s%s%s", c.ApplicationDBName, c.ClusterName, resource)
 }
 
@@ -1360,7 +1365,8 @@ func (c *RDSPostgresComposer) AdminSecretFriendlyName() string {
 // nolint: funlen
 func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 	monitoringRole := role.New(
-		c.NameResource("RDSPGMonitoringRole"),
+		c.PhysicalName("RDSPGMonitoringRole"),
+		c.CloudFormationResourceName("RDSPGMonitoringRole"),
 		v1alpha1.PermissionsBoundaryARN(c.AWSAccountID),
 		[]string{amazonRDSEnhancedMonitoringRole},
 		policydocument.PolicyDocument{
@@ -1392,50 +1398,54 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 		"max_connections":            "100",
 	}
 	parameterGroup := dbparametergroup.New(
-		c.NameResource("RDSPGParamGroup"),
+		c.CloudFormationResourceName("RDSPGParamGroup"),
 		params,
 	)
 
 	admin := secret.NewRDSInstanceSecret(
-		c.NameResource("RDSInstanceAdmin"),
+		c.CloudFormationResourceName("RDSInstanceAdmin"),
 		c.AdminSecretFriendlyName(),
 		c.UserName,
 	)
 
 	lambdaSG := securitygroup.NewLambdaFunctionOutgoing(
-		c.NameResource("RDSPGOutgoingSG"),
+		c.PhysicalName("RDSPGOutgoingSG"),
+		c.CloudFormationResourceName("RDSPGOutgoingSG"),
 		c.VpcID,
 		c.VPCDBSubnetCIDRs,
 	)
 
 	secretsManagerIncoming := securitygroup.NewRDSPGSMVPCEndpointIncoming(
-		c.NameResource("RDSPGSMVPCEndpointSG"),
+		c.PhysicalName("RDSPGSMVPCEndpointSG"),
+		c.CloudFormationResourceName("RDSPGSMVPCEndpointSG"),
 		c.VpcID,
 		lambdaSG,
 	)
 
 	sme := vpcendpoint.NewSecretsManager(
-		c.NameResource("RDSPGSMVPCEndpoint"),
+		c.CloudFormationResourceName("RDSPGSMVPCEndpoint"),
 		secretsManagerIncoming,
 		c.VpcID,
 		c.VPCDBSubnetIDs,
 	)
 
 	outgoing := securitygroup.NewPostgresOutgoing(
-		c.NameResource("RDSPostgresOutgoing"),
+		c.PhysicalName("RDSPostgresOutgoing"),
+		c.CloudFormationResourceName("RDSPostgresOutgoing"),
 		c.VpcID,
 		c.VPCDBSubnetCIDRs,
 	)
 
 	incoming := securitygroup.NewPostgresIncoming(
-		c.NameResource("RDSPostgresIncoming"),
+		c.PhysicalName("RDSPostgresIncoming"),
+		c.CloudFormationResourceName("RDSPostgresIncoming"),
 		c.VpcID,
 		outgoing,
 		lambdaSG,
 	)
 
 	postgres := dbinstance.New(
-		c.NameResource("RDSPostgres"),
+		c.CloudFormationResourceName("RDSPostgres"),
 		fmt.Sprintf("%s-%s", c.ClusterName, c.ApplicationDBName),
 		c.ApplicationDBName,
 		c.DBSubnetGroupName,
@@ -1446,7 +1456,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 	)
 
 	attachment := secrettargetattachment.NewRDSDBInstance(
-		c.NameResource("SecretTargetAttachment"),
+		c.CloudFormationResourceName("SecretTargetAttachment"),
 		admin,
 		postgres,
 	)
@@ -1454,7 +1464,8 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 	// Based on the following content:
 	// https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets-required-permissions.html
 	lambdaRole := role.New(
-		c.NameResource("RDSPGRotaterRole"),
+		c.PhysicalName("RDSPGRotaterRole"),
+		c.CloudFormationResourceName("RDSPGRotaterRole"),
 		v1alpha1.PermissionsBoundaryARN(c.AWSAccountID),
 		[]string{awsLambdaBasicExecutionRole},
 		policydocument.PolicyDocument{
@@ -1472,7 +1483,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 			},
 		},
 		map[string]interface{}{
-			c.NameResource("RDSPGRotaterPolicy"): policydocument.PolicyDocument{
+			c.PhysicalName("RDSPGRotaterPolicy"): policydocument.PolicyDocument{
 				Version: policydocument.Version,
 				Statement: []policydocument.StatementEntry{
 					{
@@ -1501,7 +1512,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 	)
 
 	lambdaFunction := lambdafunction.NewRotateLambda(
-		c.NameResource("RDSPGRotater"),
+		c.CloudFormationResourceName("RDSPGRotater"),
 		c.Bucket,
 		c.Key,
 		lambdaRole,
@@ -1511,9 +1522,9 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 	)
 
 	lambdaManagedPolicy := managedpolicy.New(
-		c.NameResource("RDSPGRotaterPolicy"),
-		c.NameResource("RDSPGRotaterPolicy"),
-		c.NameResource("RDSPGRotaterPolicy"),
+		c.CloudFormationResourceName("RDSPGRotaterPolicy"),
+		c.PhysicalName("RDSPGRotaterPolicy"),
+		c.CloudFormationResourceName("RDSPGRotaterPolicy"),
 		policydocument.PolicyDocument{
 			Version: policydocument.Version,
 			Statement: []policydocument.StatementEntry{
@@ -1530,7 +1541,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 					},
 					Condition: map[policydocument.ConditionOperatorType]map[string]string{
 						policydocument.ConditionOperatorTypeStringEquals: {
-							"secretsmanager:resource/AllowRotationLambdaArn": cloudformation.GetAtt(c.NameResource("RDSPGRotater"), "Arn"),
+							"secretsmanager:resource/AllowRotationLambdaArn": cloudformation.GetAtt(c.CloudFormationResourceName("RDSPGRotater"), "Arn"),
 						},
 					},
 				},
@@ -1539,7 +1550,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 	)
 
 	lambdaPermission := lambdapermission.NewRotateLambdaPermission(
-		c.NameResource("RDSPGRotaterPermission"),
+		c.CloudFormationResourceName("RDSPGRotaterPermission"),
 		lambdaFunction,
 	)
 

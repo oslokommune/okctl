@@ -6,15 +6,12 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
-	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
-
 	"github.com/logrusorgru/aurora/v3"
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
 	"github.com/oslokommune/okctl/pkg/commands"
 
 	"github.com/oslokommune/okctl/pkg/kubeconfig"
-	"sigs.k8s.io/yaml"
 
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
@@ -51,7 +48,6 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 			}
 
 			okctlEnvironment, err = commands.GetOkctlEnvironment(o)
-
 			if err != nil {
 				return err
 			}
@@ -67,18 +63,6 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 					return err
 				}
 			}
-
-			outputDir, err := o.GetRepoOutputDir()
-			if err != nil {
-				return err
-			}
-
-			appDir, err := o.GetUserDataDir()
-			if err != nil {
-				return err
-			}
-
-			kubeConfig := path.Join(appDir, constant.DefaultCredentialsDirName, okctlEnvironment.ClusterName, constant.DefaultClusterKubeConfig)
 
 			k, err := o.BinariesProvider.Kubectl(kubectl.Version)
 			if err != nil {
@@ -115,29 +99,31 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			data, err := o.FileSystem.ReadFile(path.Join(outputDir, constant.DefaultClusterBaseDir, constant.DefaultClusterConfig))
+			handlers := o.StateHandlers(o.StateNodes())
+
+			cluster, err := handlers.Cluster.GetCluster(o.Declaration.Metadata.Name)
 			if err != nil {
 				return err
 			}
 
-			clusterConfig := &v1alpha5.ClusterConfig{}
+			cfg, err := kubeconfig.New(cluster.Config, o.CloudProvider).Get()
+			if err != nil {
+				return fmt.Errorf("creating kubconfig: %w", err)
+			}
 
-			err = yaml.Unmarshal(data, clusterConfig)
+			data, err := cfg.Bytes()
 			if err != nil {
 				return err
 			}
 
-			cfg, err := kubeconfig.New(clusterConfig, o.CloudProvider).Get()
+			appDir, err := o.GetUserDataDir()
 			if err != nil {
 				return err
 			}
 
-			data, err = cfg.Bytes()
-			if err != nil {
-				return err
-			}
+			kubeConfigFile := path.Join(appDir, constant.DefaultCredentialsDirName, okctlEnvironment.ClusterName, constant.DefaultClusterKubeConfig)
 
-			err = o.FileSystem.WriteFile(kubeConfig, data, 0o644)
+			err = o.FileSystem.WriteFile(kubeConfigFile, data, 0o644)
 			if err != nil {
 				return err
 			}

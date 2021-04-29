@@ -44,8 +44,6 @@ type ExistingResources struct {
 	hasVPC                                bool
 	hasDelegatedHostedZoneNameservers     bool
 	hasDelegatedHostedZoneNameserversTest bool
-	hasCleanupSG                          bool
-	hasCleanupALB                         bool
 	hasUsers                              bool
 	hasPostgres                           map[string]*v1alpha1.ClusterDatabasesPostgres
 }
@@ -94,8 +92,6 @@ func IdentifyResourcePresence(id api.ID, handlers *clientCore.StateHandlers) (Ex
 		hasVPC:                                !isNotFound(handlers.Vpc.GetVpc(cfn.NewStackNamer().Vpc(id.ClusterName))),
 		hasDelegatedHostedZoneNameservers:     hz != nil && hz.IsDelegated,
 		hasDelegatedHostedZoneNameserversTest: false,
-		hasCleanupSG:                          false,
-		hasCleanupALB:                         false,
 		hasUsers:                              false, // For now we will always check if there are missing users
 		hasPostgres:                           haveDBs,
 	}, nil

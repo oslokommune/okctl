@@ -57,6 +57,10 @@ func Synchronize(opts *SynchronizeOpts) error {
 
 	diffTree.ApplyFunction(applyCurrentState, currentStateTree)
 
+	if opts.DeleteAll {
+		diffTree.ApplyFunction(setStateForCleanup(resourcetree.ResourceNodeStateAbsent), &resourcetree.ResourceNode{})
+	}
+
 	if opts.Debug {
 		_, _ = fmt.Fprintf(opts.Out, "Present resources in desired tree (what is desired): \n%s\n\n", desiredTree.String())
 		_, _ = fmt.Fprintf(opts.Out, "Present resources in current state tree (what is currently): \n%s\n\n", currentStateTree.String())
@@ -144,9 +148,9 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 		case resourcetree.ResourceNodeTypeNameserversDelegatedTest:
 			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
 		case resourcetree.ResourceNodeTypeCleanupALB:
-			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
+			desiredTreeNode.State = resourcetree.ResourceNodeStateNoop
 		case resourcetree.ResourceNodeTypeCleanupSG:
-			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
+			desiredTreeNode.State = resourcetree.ResourceNodeStateNoop
 		case resourcetree.ResourceNodeTypeVPC:
 			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
 		case resourcetree.ResourceNodeTypeCluster:
@@ -208,9 +212,9 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 		case resourcetree.ResourceNodeTypeNameserversDelegatedTest:
 			receiver.State = BoolToState(existingResources.hasDelegatedHostedZoneNameserversTest)
 		case resourcetree.ResourceNodeTypeCleanupALB:
-			receiver.State = BoolToState(existingResources.hasCleanupALB)
+			receiver.State = resourcetree.ResourceNodeStateNoop
 		case resourcetree.ResourceNodeTypeCleanupSG:
-			receiver.State = BoolToState(existingResources.hasCleanupSG)
+			receiver.State = resourcetree.ResourceNodeStateNoop
 		case resourcetree.ResourceNodeTypeVPC:
 			receiver.State = BoolToState(existingResources.hasVPC)
 		case resourcetree.ResourceNodeTypeCluster:
@@ -274,6 +278,15 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 func setStateAbsent() resourcetree.ApplyFn {
 	return func(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
 		receiver.State = resourcetree.ResourceNodeStateAbsent
+	}
+}
+
+// setStateForCleanup sets the state for cleanup
+func setStateForCleanup(desired resourcetree.ResourceNodeState) resourcetree.ApplyFn {
+	return func(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
+		if receiver.Type == resourcetree.ResourceNodeTypeCleanupSG || receiver.Type == resourcetree.ResourceNodeTypeCleanupALB {
+			receiver.State = desired
+		}
 	}
 }
 

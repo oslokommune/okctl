@@ -22,8 +22,9 @@ func (s *identityManagerService) DeleteIdentityPool(_ context.Context, opts api.
 	}
 
 	err = s.cert.DeleteCertificate(api.DeleteCertificateOpts{
-		ID:     opts.ID,
-		Domain: opts.Domain,
+		ID:             opts.ID,
+		Domain:         opts.Domain,
+		CertificateARN: opts.CertificateARN,
 	})
 	if err != nil {
 		return errors.E(err, "deleting an identity pool certificate", errors.Internal)

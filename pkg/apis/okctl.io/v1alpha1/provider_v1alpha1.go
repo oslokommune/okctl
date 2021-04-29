@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"github.com/aws/aws-sdk-go/service/acm/acmiface"
 	"github.com/aws/aws-sdk-go/service/cloudformation/cloudformationiface"
 	"github.com/aws/aws-sdk-go/service/cloudfront/cloudfrontiface"
 	"github.com/aws/aws-sdk-go/service/cloudwatch/cloudwatchiface"
@@ -32,6 +33,7 @@ type CloudProvider interface {
 	CognitoIdentityProvider() cognitoidentityprovideriface.CognitoIdentityProviderAPI
 	CloudFormation() cloudformationiface.CloudFormationAPI
 	CloudWatch() cloudwatchiface.CloudWatchAPI
+	ACM() acmiface.ACMAPI
 	Region() string
 	PrincipalARN() string
 }

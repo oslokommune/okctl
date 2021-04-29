@@ -4,6 +4,10 @@ package cloud
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/service/acm"
+
+	"github.com/aws/aws-sdk-go/service/acm/acmiface"
+
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 
 	"github.com/aws/aws-sdk-go/service/cloudwatch/cloudwatchiface"
@@ -92,6 +96,7 @@ func NewFromSession(region, principalARN string, sess *session.Session) (*Provid
 	services.cip = cognitoidentityprovider.New(sess)
 	services.cf = cloudfront.New(sess)
 	services.cw = cloudwatch.New(sess)
+	services.acm = acm.New(sess)
 
 	return p, nil
 }
@@ -149,6 +154,7 @@ type Services struct {
 	cip   cognitoidentityprovideriface.CognitoIdentityProviderAPI
 	cf    cloudfrontiface.CloudFrontAPI
 	cw    cloudwatchiface.CloudWatchAPI
+	acm   acmiface.ACMAPI
 
 	region       string
 	principalARN string
@@ -212,6 +218,11 @@ func (s *Services) EKS() eksiface.EKSAPI {
 // ELBV2 returns an interface to the AWS ELBV2 API
 func (s *Services) ELBV2() elbv2iface.ELBV2API {
 	return s.elbv2
+}
+
+// ACM returns an interface to the AWS ACM API
+func (s *Services) ACM() acmiface.ACMAPI {
+	return s.acm
 }
 
 // CloudFormation returns an interface to the AWS CloudFormation API

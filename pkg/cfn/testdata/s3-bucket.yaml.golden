@@ -1,13 +1,13 @@
 AWSTemplateFormatVersion: 2010-09-09
 Outputs:
-  myBucketclusterdevS3Bucket:
+  S3Bucket:
     Export:
       Name:
-        Fn::Sub: ${AWS::StackName}-myBucketclusterdevS3Bucket
+        Fn::Sub: ${AWS::StackName}-S3Bucket
     Value:
-      Ref: myBucketclusterdevS3Bucket
+      Ref: S3Bucket
 Resources:
-  myBucketclusterdevS3Bucket:
+  S3Bucket:
     Properties:
       AccessControl: BucketOwnerFullControl
       BucketName: myBucket

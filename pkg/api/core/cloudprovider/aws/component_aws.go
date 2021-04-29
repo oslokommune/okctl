@@ -16,7 +16,7 @@ type componentCloudProvider struct {
 }
 
 func (c *componentCloudProvider) CreateS3Bucket(opts *api.CreateS3BucketOpts) (*api.S3Bucket, error) {
-	composition := components.NewS3BucketComposer(opts.Name, opts.ID.ClusterName)
+	composition := components.NewS3BucketComposer(opts.Name, "S3Bucket")
 
 	template, err := cfn.New(composition).Build()
 	if err != nil {

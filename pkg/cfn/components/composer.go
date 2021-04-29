@@ -1585,13 +1585,13 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 // S3BucketComposer contains the state required for creating
 // the AWS S3 bucket
 type S3BucketComposer struct {
-	BucketName  string
-	ClusterName string
+	BucketName   string
+	ResourceName string
 }
 
 // ResourceBucketNameOutput returns the name of the resource
 func (s *S3BucketComposer) ResourceBucketNameOutput() string {
-	return fmt.Sprintf("%s%sS3Bucket", s.BucketName, strings.ReplaceAll(s.ClusterName, "-", ""))
+	return s.ResourceName
 }
 
 // Compose returns the outputs and resources
@@ -1608,10 +1608,10 @@ func (s *S3BucketComposer) Compose() (*cfn.Composition, error) {
 }
 
 // NewS3BucketComposer returns an initialised AWS S3 bucket composer
-func NewS3BucketComposer(bucketName, clusterName string) *S3BucketComposer {
+func NewS3BucketComposer(bucketName, resourceName string) *S3BucketComposer {
 	return &S3BucketComposer{
-		BucketName:  bucketName,
-		ClusterName: clusterName,
+		BucketName:   bucketName,
+		ResourceName: resourceName,
 	}
 }
 

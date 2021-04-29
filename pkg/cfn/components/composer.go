@@ -1580,7 +1580,7 @@ type S3BucketComposer struct {
 
 // ResourceBucketNameOutput returns the name of the resource
 func (s *S3BucketComposer) ResourceBucketNameOutput() string {
-	return fmt.Sprintf("%s%sS3Bucket", s.BucketName, s.ClusterName)
+	return fmt.Sprintf("%s%sS3Bucket", s.BucketName, strings.ReplaceAll(s.ClusterName, "-", ""))
 }
 
 // Compose returns the outputs and resources

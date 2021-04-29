@@ -14,7 +14,6 @@ import (
 
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/lambda"
-	"github.com/gosimple/slug"
 )
 
 // LambdaFunction contains all the required state for creating a Lambda Function
@@ -25,7 +24,7 @@ type LambdaFunction struct {
 
 // Opts contains the configurable options
 type Opts struct {
-	FunctionName    string
+	Description     string
 	Handler         string
 	Runtime         string
 	Bucket          string
@@ -50,11 +49,11 @@ func (l *LambdaFunction) Resource() cloudformation.Resource {
 		Environment: &lambda.Function_Environment{
 			Variables: l.Opts.Env,
 		},
-		FunctionName: l.Opts.FunctionName,
-		Handler:      l.Opts.Handler,
-		Role:         cloudformation.GetAtt(l.Opts.Role.Name(), "Arn"),
-		Runtime:      "python3.8",
-		Timeout:      timeoutInSeconds,
+		Description: l.Opts.Description,
+		Handler:     l.Opts.Handler,
+		Role:        cloudformation.GetAtt(l.Opts.Role.Name(), "Arn"),
+		Runtime:     "python3.8",
+		Timeout:     timeoutInSeconds,
 		VpcConfig: &lambda.Function_VpcConfig{
 			SecurityGroupIds: []string{
 				cloudformation.GetAtt(l.Opts.SecurityGroupID.Name(), "GroupId"),
@@ -96,12 +95,12 @@ func NewRotateLambda(
 	secretsManagerVPCEndpoint cfn.Namer,
 ) *LambdaFunction {
 	return New(resourceName, Opts{
-		FunctionName: fmt.Sprintf("%s-Rotater", slug.Make(resourceName)),
-		Handler:      "lambda_function.lambda_handler",
-		Runtime:      "python3.7",
-		Bucket:       bucket,
-		Key:          key,
-		Role:         role,
+		Description: "RDS Postgres Rotater",
+		Handler:     "lambda_function.lambda_handler",
+		Runtime:     "python3.7",
+		Bucket:      bucket,
+		Key:         key,
+		Role:        role,
 		Env: map[string]string{
 			"SECRETS_MANAGER_ENDPOINT": cloudformation.Select(
 				0,
@@ -115,10 +114,10 @@ func NewRotateLambda(
 
 // PatchRotateLambda patches the rotater lambda
 // nolint: lll
-func PatchRotateLambda(lambdaFunctionName, secretsManagerVPCEndpointName string, template []byte) ([]byte, error) {
+func PatchRotateLambda(lambdaResourceName, secretsManagerVPCEndpointName string, template []byte) ([]byte, error) {
 	patchJSON, err := patchpkg.New().Add(patchpkg.Operation{
 		Type: patchpkg.OperationTypeReplace,
-		Path: fmt.Sprintf("/Resources/%s/Properties/Environment/Variables/SECRETS_MANAGER_ENDPOINT", lambdaFunctionName),
+		Path: fmt.Sprintf("/Resources/%s/Properties/Environment/Variables/SECRETS_MANAGER_ENDPOINT", lambdaResourceName),
 		Value: &patchpkg.Inline{Data: []byte(
 			fmt.Sprintf(`{"Fn::Join":["/",["https:/",{"Fn::Select":["1",{"Fn::Split":[":",{"Fn::Select":["0",{"Fn::GetAtt":["%s","DnsEntries"]}]}]}]}]]}`, secretsManagerVPCEndpointName),
 		)},

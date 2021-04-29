@@ -1,71 +1,71 @@
 AWSTemplateFormatVersion: 2010-09-09
 Outputs:
-  okctlclusterRDSInstanceAdmin:
+  RDSInstanceAdmin:
     Export:
       Name:
-        Fn::Sub: ${AWS::StackName}-okctlclusterRDSInstanceAdmin
+        Fn::Sub: ${AWS::StackName}-RDSInstanceAdmin
     Value:
-      Ref: okctlclusterRDSInstanceAdmin
-  okctlclusterRDSPGRotater:
+      Ref: RDSInstanceAdmin
+  RDSPGRotater:
     Export:
       Name:
-        Fn::Sub: ${AWS::StackName}-okctlclusterRDSPGRotater
+        Fn::Sub: ${AWS::StackName}-RDSPGRotater
     Value:
       Fn::GetAtt:
-      - okctlclusterRDSPGRotater
+      - RDSPGRotater
       - Arn
-  okctlclusterRDSPGRotaterPolicy:
+  RDSPGRotaterPolicy:
     Export:
       Name:
-        Fn::Sub: ${AWS::StackName}-okctlclusterRDSPGRotaterPolicy
+        Fn::Sub: ${AWS::StackName}-RDSPGRotaterPolicy
     Value:
-      Ref: okctlclusterRDSPGRotaterPolicy
-  okctlclusterRDSPGRotaterRoleArn:
+      Ref: RDSPGRotaterPolicy
+  RDSPGRotaterRoleArn:
     Export:
       Name:
-        Fn::Sub: ${AWS::StackName}-okctlclusterRDSPGRotaterRoleArn
+        Fn::Sub: ${AWS::StackName}-RDSPGRotaterRoleArn
     Value:
       Fn::GetAtt:
-      - okctlclusterRDSPGRotaterRole
+      - RDSPGRotaterRole
       - Arn
-  okctlclusterRDSPostgres:
+  RDSPostgres:
     Export:
       Name:
-        Fn::Sub: ${AWS::StackName}-okctlclusterRDSPostgres
+        Fn::Sub: ${AWS::StackName}-RDSPostgres
     Value:
-      Ref: okctlclusterRDSPostgres
-  okctlclusterRDSPostgresEndpointAddress:
+      Ref: RDSPostgres
+  RDSPostgresEndpointAddress:
     Export:
       Name:
-        Fn::Sub: ${AWS::StackName}-okctlclusterRDSPostgresEndpointAddress
+        Fn::Sub: ${AWS::StackName}-RDSPostgresEndpointAddress
     Value:
       Fn::GetAtt:
-      - okctlclusterRDSPostgres
+      - RDSPostgres
       - Endpoint.Address
-  okctlclusterRDSPostgresEndpointPort:
+  RDSPostgresEndpointPort:
     Export:
       Name:
-        Fn::Sub: ${AWS::StackName}-okctlclusterRDSPostgresEndpointPort
+        Fn::Sub: ${AWS::StackName}-RDSPostgresEndpointPort
     Value:
       Fn::GetAtt:
-      - okctlclusterRDSPostgres
+      - RDSPostgres
       - Endpoint.Port
-  okctlclusterRDSPostgresOutgoing:
+  RDSPostgresOutgoing:
     Export:
       Name:
-        Fn::Sub: ${AWS::StackName}-okctlclusterRDSPostgresOutgoing
+        Fn::Sub: ${AWS::StackName}-RDSPostgresOutgoing
     Value:
-      Ref: okctlclusterRDSPostgresOutgoing
-  okctlclusterRDSPostgresOutgoingGroupId:
+      Ref: RDSPostgresOutgoing
+  RDSPostgresOutgoingGroupId:
     Export:
       Name:
-        Fn::Sub: ${AWS::StackName}-okctlclusterRDSPostgresOutgoingGroupId
+        Fn::Sub: ${AWS::StackName}-RDSPostgresOutgoingGroupId
     Value:
       Fn::GetAtt:
-      - okctlclusterRDSPostgresOutgoing
+      - RDSPostgresOutgoing
       - GroupId
 Resources:
-  okctlclusterRDSInstanceAdmin:
+  RDSInstanceAdmin:
     Properties:
       GenerateSecretString:
         ExcludePunctuation: true
@@ -75,7 +75,7 @@ Resources:
         SecretStringTemplate: '{"username": "admin"}'
       Name: /okctl/cluster/postgres_admin
     Type: AWS::SecretsManager::Secret
-  okctlclusterRDSPGMonitoringRole:
+  RDSPGMonitoringRole:
     Properties:
       AssumeRolePolicyDocument:
         Statement:
@@ -91,7 +91,7 @@ Resources:
       PermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
       RoleName: okctlclusterRDSPGMonitoringRole
     Type: AWS::IAM::Role
-  okctlclusterRDSPGOutgoingSG:
+  RDSPGOutgoingSG:
     Properties:
       GroupDescription: Rotater lambda function outgoing Security Group
       GroupName: okctlclusterRDSPGOutgoingSG
@@ -114,7 +114,7 @@ Resources:
         ToPort: 5432
       VpcId: vpcid-w9ufe
     Type: AWS::EC2::SecurityGroup
-  okctlclusterRDSPGParamGroup:
+  RDSPGParamGroup:
     Properties:
       Description: Postgres 13 property group
       Family: postgres13
@@ -127,41 +127,41 @@ Resources:
         pg_stat_statements.track: all
         shared_preload_libraries: pg_stat_statements
     Type: AWS::RDS::DBParameterGroup
-  okctlclusterRDSPGRotater:
+  RDSPGRotater:
     Properties:
       Code: {}
+      Description: RDS Postgres Rotater
       Environment:
         Variables:
-          SECRETS_MANAGER_ENDPOINT: eyAiRm46OlNlbGVjdCI6IFsgJ1x4MDAnLCAgImV5QWlSbTQ2T2tkbGRFRjBkQ0lnT2lCYklDSnZhMk4wYkdOc2RYTjBaWEpTUkZOUVIxTk5WbEJEUlc1a2NHOXBiblFpTENBaVJHNXpSVzUwY21sbGN5SWdYU0I5IiBdIH0=
-      FunctionName: okctlclusterrdspgrotater-Rotater
+          SECRETS_MANAGER_ENDPOINT: eyAiRm46OlNlbGVjdCI6IFsgJ1x4MDAnLCAgImV5QWlSbTQ2T2tkbGRFRjBkQ0lnT2lCYklDSlNSRk5RUjFOTlZsQkRSVzVrY0c5cGJuUWlMQ0FpUkc1elJXNTBjbWxsY3lJZ1hTQjkiIF0gfQ==
       Handler: lambda_function.lambda_handler
       Role:
         Fn::GetAtt:
-        - okctlclusterRDSPGRotaterRole
+        - RDSPGRotaterRole
         - Arn
       Runtime: python3.8
       Timeout: 30
       VpcConfig:
         SecurityGroupIds:
         - Fn::GetAtt:
-          - okctlclusterRDSPGOutgoingSG
+          - RDSPGOutgoingSG
           - GroupId
         SubnetIds:
         - dbsubnetid-123okf
         - dbsubnetid-fjeo338
     Type: AWS::Lambda::Function
-  okctlclusterRDSPGRotaterPermission:
+  RDSPGRotaterPermission:
     Properties:
       Action: lambda:InvokeFunction
       FunctionName:
         Fn::GetAtt:
-        - okctlclusterRDSPGRotater
+        - RDSPGRotater
         - Arn
       Principal: secretsmanager.amazonaws.com
     Type: AWS::Lambda::Permission
-  okctlclusterRDSPGRotaterPolicy:
+  RDSPGRotaterPolicy:
     Properties:
-      Description: okctlclusterRDSPGRotaterPolicy
+      Description: RDSPGRotaterPolicy
       ManagedPolicyName: okctlclusterRDSPGRotaterPolicy
       PolicyDocument:
         Statement:
@@ -174,14 +174,14 @@ Resources:
             StringEquals:
               secretsmanager:resource/AllowRotationLambdaArn:
                 Fn::GetAtt:
-                - okctlclusterRDSPGRotater
+                - RDSPGRotater
                 - Arn
           Effect: Allow
           Resource:
           - '*'
         Version: 2012-10-17
     Type: AWS::IAM::ManagedPolicy
-  okctlclusterRDSPGRotaterRole:
+  RDSPGRotaterRole:
     Properties:
       AssumeRolePolicyDocument:
         Statement:
@@ -214,11 +214,11 @@ Resources:
         PolicyName: okctlclusterRDSPGRotaterPolicy
       RoleName: okctlclusterRDSPGRotaterRole
     Type: AWS::IAM::Role
-  okctlclusterRDSPGSMVPCEndpoint:
+  RDSPGSMVPCEndpoint:
     Properties:
       SecurityGroupIds:
       - Fn::GetAtt:
-        - okctlclusterRDSPGSMVPCEndpointSG
+        - RDSPGSMVPCEndpointSG
         - GroupId
       ServiceName:
         Fn::Sub: com.amazonaws.${AWS::Region}.secretsmanager
@@ -228,7 +228,7 @@ Resources:
       VpcEndpointType: Interface
       VpcId: vpcid-w9ufe
     Type: AWS::EC2::VPCEndpoint
-  okctlclusterRDSPGSMVPCEndpointSG:
+  RDSPGSMVPCEndpointSG:
     Properties:
       GroupDescription: SecretsManager VPC Endpoint incoming
       GroupName: okctlclusterRDSPGSMVPCEndpointSG
@@ -237,15 +237,15 @@ Resources:
         IpProtocol: tcp
         SourceSecurityGroupId:
           Fn::GetAtt:
-          - okctlclusterRDSPGOutgoingSG
+          - RDSPGOutgoingSG
           - GroupId
         ToPort: 443
       VpcId: vpcid-w9ufe
     Type: AWS::EC2::SecurityGroup
-  okctlclusterRDSPostgres:
+  RDSPostgres:
     DependsOn:
-    - okctlclusterRDSPGParamGroup
-    - okctlclusterRDSPGMonitoringRole
+    - RDSPGParamGroup
+    - RDSPGMonitoringRole
     Properties:
       AllocatedStorage: "20"
       AutoMinorVersionUpgrade: true
@@ -255,7 +255,7 @@ Resources:
       DBInstanceIdentifier: cluster-okctl
       DBName: okctl
       DBParameterGroupName:
-        Ref: okctlclusterRDSPGParamGroup
+        Ref: RDSPGParamGroup
       DBSubnetGroupName: myDBSubnetGroupName
       DeleteAutomatedBackups: true
       EnableCloudwatchLogsExports:
@@ -265,14 +265,14 @@ Resources:
       Engine: postgres
       EngineVersion: "13.1"
       MasterUserPassword:
-        Fn::Sub: '{{resolve:secretsmanager:${okctlclusterRDSInstanceAdmin}::password}}'
+        Fn::Sub: '{{resolve:secretsmanager:${RDSInstanceAdmin}::password}}'
       MasterUsername:
-        Fn::Sub: '{{resolve:secretsmanager:${okctlclusterRDSInstanceAdmin}::username}}'
+        Fn::Sub: '{{resolve:secretsmanager:${RDSInstanceAdmin}::username}}'
       MaxAllocatedStorage: 100
       MonitoringInterval: 10
       MonitoringRoleArn:
         Fn::GetAtt:
-        - okctlclusterRDSPGMonitoringRole
+        - RDSPGMonitoringRole
         - Arn
       MultiAZ: true
       PerformanceInsightsRetentionPeriod: 7
@@ -284,10 +284,10 @@ Resources:
       UseDefaultProcessorFeatures: true
       VPCSecurityGroups:
       - Fn::GetAtt:
-        - okctlclusterRDSPostgresIncoming
+        - RDSPostgresIncoming
         - GroupId
     Type: AWS::RDS::DBInstance
-  okctlclusterRDSPostgresIncoming:
+  RDSPostgresIncoming:
     Properties:
       GroupDescription: RDS Postgres Incoming Security Group
       GroupName: okctlclusterRDSPostgresIncoming
@@ -296,19 +296,19 @@ Resources:
         IpProtocol: tcp
         SourceSecurityGroupId:
           Fn::GetAtt:
-          - okctlclusterRDSPostgresOutgoing
+          - RDSPostgresOutgoing
           - GroupId
         ToPort: 5432
       - FromPort: 5432
         IpProtocol: tcp
         SourceSecurityGroupId:
           Fn::GetAtt:
-          - okctlclusterRDSPGOutgoingSG
+          - RDSPGOutgoingSG
           - GroupId
         ToPort: 5432
       VpcId: vpcid-w9ufe
     Type: AWS::EC2::SecurityGroup
-  okctlclusterRDSPostgresOutgoing:
+  RDSPostgresOutgoing:
     Properties:
       GroupDescription: RDS Postgres Outgoing Security Group
       GroupName: okctlclusterRDSPostgresOutgoing
@@ -323,11 +323,11 @@ Resources:
         ToPort: 5432
       VpcId: vpcid-w9ufe
     Type: AWS::EC2::SecurityGroup
-  okctlclusterSecretTargetAttachment:
+  SecretTargetAttachment:
     Properties:
       SecretId:
-        Ref: okctlclusterRDSInstanceAdmin
+        Ref: RDSInstanceAdmin
       TargetId:
-        Ref: okctlclusterRDSPostgres
+        Ref: RDSPostgres
       TargetType: AWS::RDS::DBInstance
     Type: AWS::SecretsManager::SecretTargetAttachment

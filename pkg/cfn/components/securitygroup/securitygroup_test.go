@@ -14,6 +14,7 @@ func TestNew(t *testing.T) {
 			Golden: "postgres-incoming-sg.json",
 			Content: securitygroup.NewPostgresIncoming(
 				"myIncomingPG",
+				"myIncomingPG",
 				"vpcid-r3ufh3",
 				tstr.NewNameReferencer("mySourceSecurityGroup"),
 			),
@@ -22,6 +23,7 @@ func TestNew(t *testing.T) {
 			Name:   "PostgresOutgoing",
 			Golden: "postgres-outgoing-sg.json",
 			Content: securitygroup.NewPostgresOutgoing(
+				"myIncomingPG",
 				"myIncomingPG",
 				"vpcid-wof03ef3",
 				[]string{"192.168.1.0/20", "192.168.2.0/20"},

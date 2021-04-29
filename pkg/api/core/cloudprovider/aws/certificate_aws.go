@@ -35,7 +35,7 @@ func (c *certificate) DeleteCognitoCertificate(opts api.DeleteCognitoCertificate
 }
 
 func (c *certificate) DeleteCertificate(opts api.DeleteCertificateOpts) error {
-	err := cleaner.New(c.provider).RemoveThingsThatAreUsingCertificate(opts.CertificateARN)
+	err := cleaner.New(c.provider).RemoveThingsUsingCertForDomain(opts.Domain)
 	if err != nil {
 		return fmt.Errorf("removing usages of certificate: %w", err)
 	}

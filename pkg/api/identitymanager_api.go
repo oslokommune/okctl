@@ -61,10 +61,9 @@ type CreateIdentityPoolUserOpts struct {
 
 // DeleteIdentityPoolOpts input
 type DeleteIdentityPoolOpts struct {
-	ID             ID
-	UserPoolID     string
-	Domain         string
-	CertificateARN string
+	ID         ID
+	UserPoolID string
+	Domain     string
 }
 
 // DeleteIdentityPoolClientOpts contains the required inputs

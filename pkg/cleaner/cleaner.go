@@ -2,6 +2,8 @@
 package cleaner
 
 import (
+	"errors"
+
 	"github.com/oslokommune/okctl/pkg/acmapi"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	arnpkg "github.com/oslokommune/okctl/pkg/arn"
@@ -20,6 +22,21 @@ func New(provider v1alpha1.CloudProvider) *Cleaner {
 		elbv2:  elbv2api.New(provider),
 		acmapi: acmapi.New(provider),
 	}
+}
+
+// RemoveThingsUsingCertForDomain removes things using certificate after finding cert
+// for domain
+func (c *Cleaner) RemoveThingsUsingCertForDomain(domain string) error {
+	certificateARN, err := c.acmapi.CertificateARNForDomain(domain)
+	if err != nil {
+		if errors.Is(err, acmapi.ErrNotFound) {
+			return nil
+		}
+
+		return err
+	}
+
+	return c.RemoveThingsThatAreUsingCertificate(certificateARN)
 }
 
 // RemoveThingsThatAreUsingCertificate removes usages of a certificate

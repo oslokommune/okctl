@@ -30,9 +30,8 @@ func (s *certificateService) DeleteCognitoCertificate(_ context.Context, opts cl
 
 func (s *certificateService) DeleteCertificate(_ context.Context, opts client.DeleteCertificateOpts) error {
 	err := s.api.DeleteCertificate(api.DeleteCertificateOpts{
-		ID:             opts.ID,
-		Domain:         opts.Domain,
-		CertificateARN: opts.CertificateARN,
+		ID:     opts.ID,
+		Domain: opts.Domain,
 	})
 	if err != nil {
 		return err

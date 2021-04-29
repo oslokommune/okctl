@@ -54,10 +54,9 @@ func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, id api.
 	}
 
 	err = s.api.DeleteIdentityPool(api.DeleteIdentityPoolOpts{
-		ID:             id,
-		UserPoolID:     pool.UserPoolID,
-		Domain:         pool.AuthDomain,
-		CertificateARN: pool.Certificate.ARN,
+		ID:         id,
+		UserPoolID: pool.UserPoolID,
+		Domain:     pool.AuthDomain,
 	})
 	if err != nil {
 		return err

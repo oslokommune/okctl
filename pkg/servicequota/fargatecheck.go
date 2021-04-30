@@ -90,8 +90,12 @@ func (e *FargateCheck) CheckAvailability() (*Result, error) {
 	}
 
 	quota := int(*q.Quota.Value)
-	count := int(*data.Datapoints[0].Maximum)
-	available := quota - count
+	available := quota
+
+	if data.Datapoints != nil {
+		count := int(*data.Datapoints[0].Maximum)
+		available = quota - count
+	}
 
 	return &Result{
 		Required:    e.required,

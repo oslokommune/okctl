@@ -79,6 +79,16 @@ const (
 	DefaultCertificateARN = "arn:aws:acm:eu-west-1:123456789012:certificate/123456789012-1234-1234-1234-12345678"
 	// DefaultDomain is the default domain
 	DefaultDomain = "test.oslo.systems"
+	// DefaultClusterName is the default cluster name
+	DefaultClusterName = "test"
+	// DefaultTargetGroupARN is the default target group arn
+	DefaultTargetGroupARN = "arn:aws:elasticloadbalancing:eu-west-1:123456789012:targetgroup/sfihef303FAKE/69b3FAKE"
+	// DefaultVpcID is the default vpc id
+	DefaultVpcID = "ih0fj2f03vpcFAKE"
+	// DefaultSecurityGroupID is the default security group id
+	DefaultSecurityGroupID = "sg-dyf9uf03FAKE"
+	// DefaultSecurityGroupName is the default security group name
+	DefaultSecurityGroupName = "myCoolSG"
 )
 
 // DefaultCredentials returns a mocked set of aws credentials
@@ -193,6 +203,12 @@ type EC2API struct {
 	DescribeSecurityGroupsFn        func(*ec2.DescribeSecurityGroupsInput) (*ec2.DescribeSecurityGroupsOutput, error)
 	AuthorizeSecurityGroupIngressFn func(*ec2.AuthorizeSecurityGroupIngressInput) (*ec2.AuthorizeSecurityGroupIngressOutput, error)
 	RevokeSecurityGroupIngressFn    func(*ec2.RevokeSecurityGroupIngressInput) (*ec2.RevokeSecurityGroupIngressOutput, error)
+	DeleteSecurityGroupFn           func(*ec2.DeleteSecurityGroupInput) (*ec2.DeleteSecurityGroupOutput, error)
+}
+
+// DeleteSecurityGroup returns mocked invocation
+func (a *EC2API) DeleteSecurityGroup(input *ec2.DeleteSecurityGroupInput) (*ec2.DeleteSecurityGroupOutput, error) {
+	return a.DeleteSecurityGroupFn(input)
 }
 
 // DescribeSubnets invokes the mocked response
@@ -400,8 +416,38 @@ func (a *ACMAPI) DescribeCertificate(input *acm.DescribeCertificateInput) (*acm.
 type ELBv2API struct {
 	elbv2iface.ELBV2API
 
-	DescribeListenersFn func(*elbv2.DescribeListenersInput) (*elbv2.DescribeListenersOutput, error)
-	DeleteListenerFn    func(*elbv2.DeleteListenerInput) (*elbv2.DeleteListenerOutput, error)
+	DescribeListenersFn     func(*elbv2.DescribeListenersInput) (*elbv2.DescribeListenersOutput, error)
+	DeleteListenerFn        func(*elbv2.DeleteListenerInput) (*elbv2.DeleteListenerOutput, error)
+	DescribeTargetGroupsFn  func(*elbv2.DescribeTargetGroupsInput) (*elbv2.DescribeTargetGroupsOutput, error)
+	DescribeTagsFn          func(*elbv2.DescribeTagsInput) (*elbv2.DescribeTagsOutput, error)
+	DeleteTargetGroupFn     func(*elbv2.DeleteTargetGroupInput) (*elbv2.DeleteTargetGroupOutput, error)
+	DescribeLoadBalancersFn func(*elbv2.DescribeLoadBalancersInput) (*elbv2.DescribeLoadBalancersOutput, error)
+	DeleteLoadBalancerFn    func(*elbv2.DeleteLoadBalancerInput) (*elbv2.DeleteLoadBalancerOutput, error)
+}
+
+// DeleteLoadBalancer returns mocked invocation
+func (a *ELBv2API) DeleteLoadBalancer(input *elbv2.DeleteLoadBalancerInput) (*elbv2.DeleteLoadBalancerOutput, error) {
+	return a.DeleteLoadBalancerFn(input)
+}
+
+// DescribeLoadBalancers returns mocked invocation
+func (a *ELBv2API) DescribeLoadBalancers(input *elbv2.DescribeLoadBalancersInput) (*elbv2.DescribeLoadBalancersOutput, error) {
+	return a.DescribeLoadBalancersFn(input)
+}
+
+// DeleteTargetGroup returns mocked invocation
+func (a *ELBv2API) DeleteTargetGroup(input *elbv2.DeleteTargetGroupInput) (*elbv2.DeleteTargetGroupOutput, error) {
+	return a.DeleteTargetGroupFn(input)
+}
+
+// DescribeTags returns mocked invocation
+func (a *ELBv2API) DescribeTags(input *elbv2.DescribeTagsInput) (*elbv2.DescribeTagsOutput, error) {
+	return a.DescribeTagsFn(input)
+}
+
+// DescribeTargetGroups returns mocked invocation
+func (a *ELBv2API) DescribeTargetGroups(input *elbv2.DescribeTargetGroupsInput) (*elbv2.DescribeTargetGroupsOutput, error) {
+	return a.DescribeTargetGroupsFn(input)
 }
 
 // DeleteListener returns the mocked invocation
@@ -591,6 +637,7 @@ func NewCloudProvider() *CloudProvider {
 func NewGoodCloudProvider() *CloudProvider {
 	return &CloudProvider{
 		EC2API: &EC2API{
+			EC2API: nil,
 			DescribeSubnetsFn: func(*ec2.DescribeSubnetsInput) (*ec2.DescribeSubnetsOutput, error) {
 				return &ec2.DescribeSubnetsOutput{
 					Subnets: Subnets(),
@@ -616,6 +663,22 @@ func NewGoodCloudProvider() *CloudProvider {
 						{},
 					},
 				}, nil
+			},
+			DescribeSecurityGroupsFn: func(*ec2.DescribeSecurityGroupsInput) (*ec2.DescribeSecurityGroupsOutput, error) {
+				return &ec2.DescribeSecurityGroupsOutput{
+					SecurityGroups: []*ec2.SecurityGroup{
+						{
+							GroupId:   aws.String(DefaultSecurityGroupID),
+							GroupName: aws.String(DefaultSecurityGroupName),
+							VpcId:     aws.String(DefaultVpcID),
+						},
+					},
+				}, nil
+			},
+			AuthorizeSecurityGroupIngressFn: nil,
+			RevokeSecurityGroupIngressFn:    nil,
+			DeleteSecurityGroupFn: func(*ec2.DeleteSecurityGroupInput) (*ec2.DeleteSecurityGroupOutput, error) {
+				return &ec2.DeleteSecurityGroupOutput{}, nil
 			},
 		},
 		EKSAPI: &EKSAPI{
@@ -765,6 +828,45 @@ func NewGoodCloudProvider() *CloudProvider {
 			DeleteListenerFn: func(*elbv2.DeleteListenerInput) (*elbv2.DeleteListenerOutput, error) {
 				return &elbv2.DeleteListenerOutput{}, nil
 			},
+			DescribeTargetGroupsFn: func(*elbv2.DescribeTargetGroupsInput) (*elbv2.DescribeTargetGroupsOutput, error) {
+				return &elbv2.DescribeTargetGroupsOutput{
+					TargetGroups: []*elbv2.TargetGroup{
+						{
+							TargetGroupArn: aws.String(DefaultTargetGroupARN),
+						},
+					},
+				}, nil
+			},
+			DescribeTagsFn: func(*elbv2.DescribeTagsInput) (*elbv2.DescribeTagsOutput, error) {
+				return &elbv2.DescribeTagsOutput{
+					TagDescriptions: []*elbv2.TagDescription{
+						{
+							Tags: []*elbv2.Tag{
+								{
+									Key:   aws.String("tag:elbv2.k8s.aws/cluster"),
+									Value: aws.String(DefaultClusterName),
+								},
+							},
+						},
+					},
+				}, nil
+			},
+			DeleteTargetGroupFn: func(*elbv2.DeleteTargetGroupInput) (*elbv2.DeleteTargetGroupOutput, error) {
+				return &elbv2.DeleteTargetGroupOutput{}, nil
+			},
+			DescribeLoadBalancersFn: func(*elbv2.DescribeLoadBalancersInput) (*elbv2.DescribeLoadBalancersOutput, error) {
+				return &elbv2.DescribeLoadBalancersOutput{
+					LoadBalancers: []*elbv2.LoadBalancer{
+						{
+							LoadBalancerArn: aws.String(DefaultLoadBalancerARN),
+							VpcId:           aws.String(DefaultVpcID),
+						},
+					},
+				}, nil
+			},
+			DeleteLoadBalancerFn: func(*elbv2.DeleteLoadBalancerInput) (*elbv2.DeleteLoadBalancerOutput, error) {
+				return &elbv2.DeleteLoadBalancerOutput{}, nil
+			},
 		},
 	}
 }
@@ -772,10 +874,22 @@ func NewGoodCloudProvider() *CloudProvider {
 var errBad = fmt.Errorf("something bad")
 
 // NewBadCloudProvider returns a mocked cloud provider with failure set on all
+// nolint: funlen
 func NewBadCloudProvider() *CloudProvider {
 	return &CloudProvider{
 		EC2API: &EC2API{
 			DescribeSubnetsFn: func(*ec2.DescribeSubnetsInput) (*ec2.DescribeSubnetsOutput, error) {
+				return nil, errBad
+			},
+			DescribeAddressesFn:        nil,
+			DescribeInternetGatewaysFn: nil,
+			DescribeVpcsFn:             nil,
+			DescribeSecurityGroupsFn: func(*ec2.DescribeSecurityGroupsInput) (*ec2.DescribeSecurityGroupsOutput, error) {
+				return nil, errBad
+			},
+			AuthorizeSecurityGroupIngressFn: nil,
+			RevokeSecurityGroupIngressFn:    nil,
+			DeleteSecurityGroupFn: func(*ec2.DeleteSecurityGroupInput) (*ec2.DeleteSecurityGroupOutput, error) {
 				return nil, errBad
 			},
 		},
@@ -821,6 +935,21 @@ func NewBadCloudProvider() *CloudProvider {
 				return nil, errBad
 			},
 			DeleteListenerFn: func(*elbv2.DeleteListenerInput) (*elbv2.DeleteListenerOutput, error) {
+				return nil, errBad
+			},
+			DescribeTargetGroupsFn: func(*elbv2.DescribeTargetGroupsInput) (*elbv2.DescribeTargetGroupsOutput, error) {
+				return nil, errBad
+			},
+			DescribeTagsFn: func(*elbv2.DescribeTagsInput) (*elbv2.DescribeTagsOutput, error) {
+				return nil, errBad
+			},
+			DeleteTargetGroupFn: func(*elbv2.DeleteTargetGroupInput) (*elbv2.DeleteTargetGroupOutput, error) {
+				return nil, errBad
+			},
+			DescribeLoadBalancersFn: func(*elbv2.DescribeLoadBalancersInput) (*elbv2.DescribeLoadBalancersOutput, error) {
+				return nil, errBad
+			},
+			DeleteLoadBalancerFn: func(*elbv2.DeleteLoadBalancerInput) (*elbv2.DeleteLoadBalancerOutput, error) {
 				return nil, errBad
 			},
 		},

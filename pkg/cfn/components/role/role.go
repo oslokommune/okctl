@@ -12,6 +12,7 @@ import (
 
 // Role stores the state for a cloud formation iam role
 type Role struct {
+	RoleName                 string
 	StoredName               string
 	PermissionsBoundary      string
 	ManagedPolicyARNs        []string
@@ -40,7 +41,7 @@ func (r *Role) Resource() cloudformation.Resource {
 		AssumeRolePolicyDocument: r.AssumeRolePolicyDocument,
 		ManagedPolicyArns:        r.ManagedPolicyARNs,
 		PermissionsBoundary:      r.PermissionsBoundary,
-		RoleName:                 r.Name(),
+		RoleName:                 r.RoleName,
 	}
 
 	for policy, document := range r.Policies {
@@ -56,12 +57,13 @@ func (r *Role) Resource() cloudformation.Resource {
 // New returns an initialised IAM role
 // - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html
 func New(
-	resourceName, permissionsBoundary string,
+	roleName, resourceName, permissionsBoundary string,
 	managedPolicyARNs []string,
 	assumeRolePolicyDocument interface{},
 	policies map[string]interface{},
 ) *Role {
 	return &Role{
+		RoleName:                 roleName,
 		StoredName:               resourceName,
 		PermissionsBoundary:      permissionsBoundary,
 		ManagedPolicyARNs:        managedPolicyARNs,

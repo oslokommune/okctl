@@ -3,6 +3,8 @@ package aws
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/cleaner"
+
 	"github.com/gosimple/slug"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -33,6 +35,11 @@ func (c *certificate) DeleteCognitoCertificate(opts api.DeleteCognitoCertificate
 }
 
 func (c *certificate) DeleteCertificate(opts api.DeleteCertificateOpts) error {
+	err := cleaner.New(c.provider).RemoveThingsUsingCertForDomain(opts.Domain)
+	if err != nil {
+		return fmt.Errorf("removing usages of certificate: %w", err)
+	}
+
 	return cfn.NewRunner(c.provider).Delete(cfn.NewStackNamer().Certificate(opts.ID.ClusterName, slug.Make(opts.Domain)))
 }
 

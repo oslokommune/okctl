@@ -1,14 +1,14 @@
 AWSTemplateFormatVersion: 2010-09-09
 Outputs:
-  myS3Bucket:
+  myResource:
     Export:
       Name:
-        Fn::Sub: ${AWS::StackName}-myS3Bucket
+        Fn::Sub: ${AWS::StackName}-myResource
     Value:
-      Ref: myS3Bucket
+      Ref: myResource
 Resources:
-  myS3Bucket:
+  myResource:
     Properties:
       AccessControl: BucketOwnerFullControl
-      BucketName: lambda-code
+      BucketName: my-Bucket
     Type: AWS::S3::Bucket

@@ -47,7 +47,7 @@ const (
 // NewPostgresOutgoing returns an initialised security group
 // that allows outgoing traffic from the pod or node to the
 // postgres subnets on the postgres port
-func NewPostgresOutgoing(resourceName, vpcID string, cidrs []string) *SecurityGroup {
+func NewPostgresOutgoing(groupName, resourceName, vpcID string, cidrs []string) *SecurityGroup {
 	egresses := make([]ec2.SecurityGroup_Egress, len(cidrs))
 
 	for i, cidr := range cidrs {
@@ -63,7 +63,7 @@ func NewPostgresOutgoing(resourceName, vpcID string, cidrs []string) *SecurityGr
 		StoredName: resourceName,
 		Group: &ec2.SecurityGroup{
 			GroupDescription:    "RDS Postgres Outgoing Security Group",
-			GroupName:           resourceName,
+			GroupName:           groupName,
 			SecurityGroupEgress: egresses,
 			VpcId:               vpcID,
 		},
@@ -72,7 +72,7 @@ func NewPostgresOutgoing(resourceName, vpcID string, cidrs []string) *SecurityGr
 
 // NewPostgresIncoming returns an initialised security group that
 // allows incoming traffic to the postgres database instance
-func NewPostgresIncoming(resourceName, vpcID string, sources ...cfn.Namer) *SecurityGroup {
+func NewPostgresIncoming(groupName, resourceName, vpcID string, sources ...cfn.Namer) *SecurityGroup {
 	ingresses := make([]ec2.SecurityGroup_Ingress, len(sources))
 
 	for i, source := range sources {
@@ -88,7 +88,7 @@ func NewPostgresIncoming(resourceName, vpcID string, sources ...cfn.Namer) *Secu
 		StoredName: resourceName,
 		Group: &ec2.SecurityGroup{
 			GroupDescription:     "RDS Postgres Incoming Security Group",
-			GroupName:            resourceName,
+			GroupName:            groupName,
 			SecurityGroupIngress: ingresses,
 			VpcId:                vpcID,
 		},
@@ -96,12 +96,12 @@ func NewPostgresIncoming(resourceName, vpcID string, sources ...cfn.Namer) *Secu
 }
 
 // NewRDSPGSMVPCEndpointIncoming allows incoming traffic to the VPC SM endpoint
-func NewRDSPGSMVPCEndpointIncoming(resourceName, vpcID string, source cfn.Namer) *SecurityGroup {
+func NewRDSPGSMVPCEndpointIncoming(groupName, resourceName, vpcID string, source cfn.Namer) *SecurityGroup {
 	return &SecurityGroup{
 		StoredName: resourceName,
 		Group: &ec2.SecurityGroup{
 			GroupDescription: "SecretsManager VPC Endpoint incoming",
-			GroupName:        resourceName,
+			GroupName:        groupName,
 			SecurityGroupIngress: []ec2.SecurityGroup_Ingress{
 				{
 					FromPort:              httpsPort,
@@ -117,7 +117,7 @@ func NewRDSPGSMVPCEndpointIncoming(resourceName, vpcID string, source cfn.Namer)
 
 // NewLambdaFunctionOutgoing allows the lambda function to communicate on the correct
 // ports and cidrs
-func NewLambdaFunctionOutgoing(resourceName, vpcID string, cidrs []string) *SecurityGroup {
+func NewLambdaFunctionOutgoing(groupName, resourceName, vpcID string, cidrs []string) *SecurityGroup {
 	egresses := []ec2.SecurityGroup_Egress{}
 
 	for _, cidr := range cidrs {
@@ -135,7 +135,7 @@ func NewLambdaFunctionOutgoing(resourceName, vpcID string, cidrs []string) *Secu
 		StoredName: resourceName,
 		Group: &ec2.SecurityGroup{
 			GroupDescription:    "Rotater lambda function outgoing Security Group",
-			GroupName:           resourceName,
+			GroupName:           groupName,
 			SecurityGroupEgress: egresses,
 			VpcId:               vpcID,
 		},

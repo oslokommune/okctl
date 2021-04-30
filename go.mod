@@ -15,7 +15,7 @@ require (
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/asdine/storm/v3 v3.2.1
-	github.com/aws/aws-sdk-go v1.38.26
+	github.com/aws/aws-sdk-go v1.38.28
 	github.com/aws/aws-sdk-go-v2 v0.18.0
 	github.com/awslabs/goformation/v4 v4.19.1
 	github.com/beevik/etree v1.1.0
@@ -115,6 +115,6 @@ require (
 	k8s.io/klog/v2 v2.5.0 // indirect
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009 // indirect
 	rsc.io/letsencrypt v0.0.3 // indirect
-	sigs.k8s.io/aws-iam-authenticator v0.5.2
+	sigs.k8s.io/aws-iam-authenticator v0.5.3
 	sigs.k8s.io/yaml v1.2.0
 )

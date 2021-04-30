@@ -77,6 +77,8 @@ const (
 	DefaultLoadBalancerARN = "arn:aws:elasticloadbalancing:eu-west-1:123456789012:loadbalancer/app/vbhe933FAKE/145afFAKE"
 	// DefaultCertificateARN represents a certificate arn
 	DefaultCertificateARN = "arn:aws:acm:eu-west-1:123456789012:certificate/123456789012-1234-1234-1234-12345678"
+	// DefaultDomain is the default domain
+	DefaultDomain = "test.oslo.systems"
 )
 
 // DefaultCredentials returns a mocked set of aws credentials
@@ -381,6 +383,12 @@ type ACMAPI struct {
 	acmiface.ACMAPI
 
 	DescribeCertificateFn func(*acm.DescribeCertificateInput) (*acm.DescribeCertificateOutput, error)
+	ListCertificatesFn    func(*acm.ListCertificatesInput) (*acm.ListCertificatesOutput, error)
+}
+
+// ListCertificates returns mocked invocation
+func (a *ACMAPI) ListCertificates(input *acm.ListCertificatesInput) (*acm.ListCertificatesOutput, error) {
+	return a.ListCertificatesFn(input)
 }
 
 // DescribeCertificate mocks the invocation
@@ -727,6 +735,17 @@ func NewGoodCloudProvider() *CloudProvider {
 					},
 				}, nil
 			},
+			ListCertificatesFn: func(*acm.ListCertificatesInput) (*acm.ListCertificatesOutput, error) {
+				return &acm.ListCertificatesOutput{
+					CertificateSummaryList: []*acm.CertificateSummary{
+						{
+							CertificateArn: aws.String(DefaultCertificateARN),
+							DomainName:     aws.String(DefaultDomain),
+						},
+					},
+					NextToken: nil,
+				}, nil
+			},
 		},
 		ELBv2API: &ELBv2API{
 			DescribeListenersFn: func(*elbv2.DescribeListenersInput) (*elbv2.DescribeListenersOutput, error) {
@@ -791,6 +810,9 @@ func NewBadCloudProvider() *CloudProvider {
 		},
 		ACMAPI: &ACMAPI{
 			DescribeCertificateFn: func(*acm.DescribeCertificateInput) (*acm.DescribeCertificateOutput, error) {
+				return nil, errBad
+			},
+			ListCertificatesFn: func(*acm.ListCertificatesInput) (*acm.ListCertificatesOutput, error) {
 				return nil, errBad
 			},
 		},

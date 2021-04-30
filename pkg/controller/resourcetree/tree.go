@@ -137,9 +137,20 @@ func (node *ResourceNode) treeViewGenerator(writer io.Writer, tabs int) {
 		result += "\t"
 	}
 
-	result += "- " + node.Type.String() + "\n"
+	result += "- " + node.Type.String()
 
 	if node.State == ResourceNodeStatePresent {
+		result += " (add)" + "\n"
+		_, _ = writer.Write([]byte(result))
+	}
+
+	if node.State == ResourceNodeStateAbsent {
+		result += " (remove)" + "\n"
+		_, _ = writer.Write([]byte(result))
+	}
+
+	if node.State == ResourceNodeStateNoop {
+		result += " (noop)" + "\n"
 		_, _ = writer.Write([]byte(result))
 	}
 

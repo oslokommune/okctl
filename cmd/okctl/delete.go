@@ -163,7 +163,7 @@ including VPC, this is a highly destructive operation.`,
 				return err
 			}
 
-			err = controller.Synchronize(synchronizeOpts)
+			err = controller.DeleteCluster(synchronizeOpts)
 			if err != nil {
 				return fmt.Errorf("synchronizing declaration with state: %w", err)
 			}

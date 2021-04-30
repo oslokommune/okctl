@@ -30,6 +30,19 @@ type SynchronizeOpts struct {
 	StateHandlers         *clientCore.StateHandlers
 }
 
+// DeleteCluster sets all resources to absent and initiates a reversed order reconciliation
+func DeleteCluster(opts *SynchronizeOpts) error {
+	desiredTree := CreateResourceDependencyTree()
+
+	desiredTree.ApplyFunction(setStateAbsent(), &resourcetree.ResourceNode{})
+
+	if opts.Debug {
+		_, _ = fmt.Fprintf(opts.Out, "Resources to be deleted: \n%s\n\n", desiredTree.String())
+	}
+
+	return HandleNodeReverse(opts.ReconciliationManager, desiredTree)
+}
+
 // Synchronize knows how to discover differences between desired and actual state and rectify them
 func Synchronize(opts *SynchronizeOpts) error {
 	desiredTree := CreateResourceDependencyTree()
@@ -43,28 +56,15 @@ func Synchronize(opts *SynchronizeOpts) error {
 
 	desiredTree.ApplyFunction(applyDeclaration(opts.ClusterDeclaration), &resourcetree.ResourceNode{})
 
-	if opts.DeleteAll {
-		desiredTree.ApplyFunction(setStateAbsent(), &resourcetree.ResourceNode{})
-	}
-
 	currentStateTree.ApplyFunction(applyExistingState(existingResources), &resourcetree.ResourceNode{})
 
 	diffTree.ApplyFunction(applyDeclaration(opts.ClusterDeclaration), &resourcetree.ResourceNode{})
-
-	if opts.DeleteAll {
-		diffTree.ApplyFunction(setStateAbsent(), &resourcetree.ResourceNode{})
-	}
-
 	diffTree.ApplyFunction(applyCurrentState, currentStateTree)
 
 	if opts.Debug {
 		_, _ = fmt.Fprintf(opts.Out, "Present resources in desired tree (what is desired): \n%s\n\n", desiredTree.String())
 		_, _ = fmt.Fprintf(opts.Out, "Present resources in current state tree (what is currently): \n%s\n\n", currentStateTree.String())
 		_, _ = fmt.Fprintf(opts.Out, "Present resources in difference tree (what should be generated): \n%s\n\n", diffTree.String())
-	}
-
-	if opts.DeleteAll {
-		return HandleNodeReverse(opts.ReconciliationManager, diffTree)
 	}
 
 	return HandleNode(opts.ReconciliationManager, diffTree)
@@ -144,9 +144,9 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 		case resourcetree.ResourceNodeTypeNameserversDelegatedTest:
 			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
 		case resourcetree.ResourceNodeTypeCleanupALB:
-			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
+			desiredTreeNode.State = resourcetree.ResourceNodeStateNoop
 		case resourcetree.ResourceNodeTypeCleanupSG:
-			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
+			desiredTreeNode.State = resourcetree.ResourceNodeStateNoop
 		case resourcetree.ResourceNodeTypeVPC:
 			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
 		case resourcetree.ResourceNodeTypeCluster:
@@ -208,9 +208,9 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 		case resourcetree.ResourceNodeTypeNameserversDelegatedTest:
 			receiver.State = BoolToState(existingResources.hasDelegatedHostedZoneNameserversTest)
 		case resourcetree.ResourceNodeTypeCleanupALB:
-			receiver.State = BoolToState(existingResources.hasCleanupALB)
+			receiver.State = resourcetree.ResourceNodeStateNoop
 		case resourcetree.ResourceNodeTypeCleanupSG:
-			receiver.State = BoolToState(existingResources.hasCleanupSG)
+			receiver.State = resourcetree.ResourceNodeStateNoop
 		case resourcetree.ResourceNodeTypeVPC:
 			receiver.State = BoolToState(existingResources.hasVPC)
 		case resourcetree.ResourceNodeTypeCluster:

@@ -30,6 +30,19 @@ type SynchronizeOpts struct {
 	StateHandlers         *clientCore.StateHandlers
 }
 
+// DeleteCluster sets all resources to absent and initiates a reversed order reconciliation
+func DeleteCluster(opts *SynchronizeOpts) error {
+	desiredTree := CreateResourceDependencyTree()
+
+	desiredTree.ApplyFunction(setStateAbsent(), &resourcetree.ResourceNode{})
+
+	if opts.Debug {
+		_, _ = fmt.Fprintf(opts.Out, "Resources to be deleted: \n%s\n\n", desiredTree.String())
+	}
+
+	return HandleNodeReverse(opts.ReconciliationManager, desiredTree)
+}
+
 // Synchronize knows how to discover differences between desired and actual state and rectify them
 func Synchronize(opts *SynchronizeOpts) error {
 	desiredTree := CreateResourceDependencyTree()
@@ -43,32 +56,15 @@ func Synchronize(opts *SynchronizeOpts) error {
 
 	desiredTree.ApplyFunction(applyDeclaration(opts.ClusterDeclaration), &resourcetree.ResourceNode{})
 
-	if opts.DeleteAll {
-		desiredTree.ApplyFunction(setStateAbsent(), &resourcetree.ResourceNode{})
-	}
-
 	currentStateTree.ApplyFunction(applyExistingState(existingResources), &resourcetree.ResourceNode{})
 
 	diffTree.ApplyFunction(applyDeclaration(opts.ClusterDeclaration), &resourcetree.ResourceNode{})
-
-	if opts.DeleteAll {
-		diffTree.ApplyFunction(setStateAbsent(), &resourcetree.ResourceNode{})
-	}
-
 	diffTree.ApplyFunction(applyCurrentState, currentStateTree)
-
-	if opts.DeleteAll {
-		diffTree.ApplyFunction(setStateForCleanup(resourcetree.ResourceNodeStateAbsent), &resourcetree.ResourceNode{})
-	}
 
 	if opts.Debug {
 		_, _ = fmt.Fprintf(opts.Out, "Present resources in desired tree (what is desired): \n%s\n\n", desiredTree.String())
 		_, _ = fmt.Fprintf(opts.Out, "Present resources in current state tree (what is currently): \n%s\n\n", currentStateTree.String())
 		_, _ = fmt.Fprintf(opts.Out, "Present resources in difference tree (what should be generated): \n%s\n\n", diffTree.String())
-	}
-
-	if opts.DeleteAll {
-		return HandleNodeReverse(opts.ReconciliationManager, diffTree)
 	}
 
 	return HandleNode(opts.ReconciliationManager, diffTree)
@@ -278,15 +274,6 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 func setStateAbsent() resourcetree.ApplyFn {
 	return func(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
 		receiver.State = resourcetree.ResourceNodeStateAbsent
-	}
-}
-
-// setStateForCleanup sets the state for cleanup
-func setStateForCleanup(desired resourcetree.ResourceNodeState) resourcetree.ApplyFn {
-	return func(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
-		if receiver.Type == resourcetree.ResourceNodeTypeCleanupSG || receiver.Type == resourcetree.ResourceNodeTypeCleanupALB {
-			receiver.State = desired
-		}
 	}
 }
 

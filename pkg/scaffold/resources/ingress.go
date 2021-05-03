@@ -44,7 +44,7 @@ func generateDefaultIngress() networkingv1beta1.Ingress {
 	return networkingv1beta1.Ingress{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Ingress",
-			APIVersion: "networking.k8s.io/v1",
+			APIVersion: "networking.k8s.io/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      map[string]string{},

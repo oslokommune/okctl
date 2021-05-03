@@ -13,7 +13,7 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/scaffold/resources"
 	v1 "k8s.io/api/core/v1"
-	networkingv1 "k8s.io/api/networking/v1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	"sigs.k8s.io/yaml"
 )
 
@@ -81,7 +81,7 @@ func GenerateApplicationBase(app v1alpha1.Application, iacRepoURL, relativeAppli
 	}
 
 	if app.HasIngress() && app.HasService() {
-		var ingress networkingv1.Ingress
+		var ingress networkingv1beta1.Ingress
 
 		ingress, err = resources.CreateOkctlIngress(app)
 		if err != nil {

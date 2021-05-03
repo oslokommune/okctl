@@ -14,19 +14,13 @@ spec:
   - http:
       paths:
       - backend:
-          service:
-            name: ssl-redirect
-            port:
-              name: use-annotation
+          serviceName: ssl-redirect
+          servicePort: use-annotation
         path: /*
-        pathType: Prefix
       - backend:
-          service:
-            name: my-app
-            port:
-              number: 80
+          serviceName: my-app
+          servicePort: 80
         path: /*
-        pathType: Prefix
 
 ---
 

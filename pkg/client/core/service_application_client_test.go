@@ -79,7 +79,7 @@ func TestNewApplicationService(t *testing.T) {
 	}
 
 	service := core.NewApplicationService(
-		mockCertService{},
+		&mockCertService{},
 		clientFilesystem.NewApplicationStore(mockPaths, &aferoFs),
 	)
 
@@ -121,6 +121,81 @@ func TestNewApplicationService(t *testing.T) {
 	g.Assert(t, "ingress-patch.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationOverlayDir, clusterName, "ingress-patch.json")))
 }
 
+// nolint: funlen
+func TestCertificateCreation(t *testing.T) {
+	testCases := []struct {
+		name string
+
+		withApplication   func() v1alpha1.Application
+		expectCreateCount int
+	}{
+		{
+			name: "Should request certificate upon subDomain specification",
+
+			withApplication: func() v1alpha1.Application {
+				app := createValidApplication()
+
+				app.SubDomain = "dummyapp"
+
+				return app
+			},
+
+			expectCreateCount: 1,
+		},
+		{
+			name: "Should not request certificate when subDomain is not specified",
+
+			withApplication: func() v1alpha1.Application {
+				app := createValidApplication()
+
+				app.SubDomain = ""
+
+				return app
+			},
+
+			expectCreateCount: 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			certService := &mockCertService{CreateCounter: 0}
+
+			service := core.NewApplicationService(
+				certService,
+				clientFilesystem.NewApplicationStore(clientFilesystem.Paths{}, &afero.Afero{Fs: afero.NewMemMapFs()}),
+			)
+
+			err := service.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
+				OutputDir: "infrastructure",
+				ID: &api.ID{
+					Region:       "azeroth",
+					AWSAccountID: "012345678912",
+					ClusterName:  "dummy-dev",
+				},
+				HostedZoneID:     "somedummyid",
+				HostedZoneDomain: "okctl.io",
+				IACRepoURL:       "dummyurl",
+				Application:      tc.withApplication(),
+			})
+
+			assert.NilError(t, err)
+			assert.Equal(t, tc.expectCreateCount, certService.CreateCounter)
+		})
+	}
+}
+
+func createValidApplication() v1alpha1.Application {
+	app := v1alpha1.NewApplication(v1alpha1.NewCluster())
+
+	app.Metadata.Name = "dummy-app"
+	app.Metadata.Namespace = "dummyns"
+
+	return app
+}
+
 func readFile(t *testing.T, fs *afero.Afero, path string) []byte {
 	result, err := fs.ReadFile(path)
 	assert.NilError(t, err)
@@ -128,17 +203,21 @@ func readFile(t *testing.T, fs *afero.Afero, path string) []byte {
 	return result
 }
 
-type mockCertService struct{}
+type mockCertService struct {
+	CreateCounter int
+}
 
-func (m mockCertService) DeleteCertificate(_ context.Context, _ client.DeleteCertificateOpts) error {
+func (m *mockCertService) DeleteCertificate(_ context.Context, _ client.DeleteCertificateOpts) error {
 	return nil
 }
 
-func (m mockCertService) DeleteCognitoCertificate(_ context.Context, _ client.DeleteCognitoCertificateOpts) error {
+func (m *mockCertService) DeleteCognitoCertificate(_ context.Context, _ client.DeleteCognitoCertificateOpts) error {
 	return nil
 }
 
-func (m mockCertService) CreateCertificate(_ context.Context, _ client.CreateCertificateOpts) (*client.Certificate, error) {
+func (m *mockCertService) CreateCertificate(_ context.Context, _ client.CreateCertificateOpts) (*client.Certificate, error) {
+	m.CreateCounter++
+
 	return &client.Certificate{
 		ARN: "arn:which:isnt:an:arn",
 	}, nil

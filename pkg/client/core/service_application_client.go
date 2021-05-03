@@ -47,14 +47,18 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 		return fmt.Errorf("creating a new application deployment: %w", err)
 	}
 
-	certArn, err := s.createCertificate(
-		ctx,
-		opts.ID,
-		opts.HostedZoneID,
-		fmt.Sprintf("%s.%s", opts.Application.SubDomain, opts.HostedZoneDomain),
-	)
-	if err != nil {
-		return fmt.Errorf("create certificate: %w", err)
+	certArn := ""
+
+	if opts.Application.HasIngress() {
+		certArn, err = s.createCertificate(
+			ctx,
+			opts.ID,
+			opts.HostedZoneID,
+			fmt.Sprintf("%s.%s", opts.Application.SubDomain, opts.HostedZoneDomain),
+		)
+		if err != nil {
+			return fmt.Errorf("create certificate: %w", err)
+		}
 	}
 
 	overlay, err := scaffold.GenerateApplicationOverlay(opts.Application, opts.HostedZoneDomain, certArn)

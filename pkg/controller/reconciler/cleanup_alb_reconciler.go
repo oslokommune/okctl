@@ -3,7 +3,8 @@ package reconciler
 import (
 	"fmt"
 
-	"github.com/oslokommune/okctl/pkg/api/core/cleanup"
+	"github.com/oslokommune/okctl/pkg/cleaner"
+
 	"github.com/oslokommune/okctl/pkg/cfn"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -47,9 +48,16 @@ func (z *cleanupALBReconciler) Reconcile(node *resourcetree.ResourceNode) (resul
 			return result, fmt.Errorf("getting vpc: %w", err)
 		}
 
-		err = cleanup.DeleteDanglingALBs(z.provider, vpc.VpcID)
+		clean := cleaner.New(z.provider)
+
+		err = clean.DeleteDanglingALBs(vpc.VpcID)
 		if err != nil {
 			return result, fmt.Errorf("cleaning up ALBs: %w", err)
+		}
+
+		err = clean.DeleteDanglingTargetGroups(z.commonMetadata.ClusterID.ClusterName)
+		if err != nil {
+			return result, fmt.Errorf("cleaning target groups: %w", err)
 		}
 	}
 

@@ -39,7 +39,7 @@ metadata:
 # define a name of an ECR repository for which okctl will create for you.
 image: 
   # uri defines where the image can be pulled from
-  uri: gcr.io/google-containers/echoserver:1.10
+  uri: ghcr.io/oslokommune/okctl-hello:v0.0.1
   # name defines the name of an ECR repository to create
   #name: my-app
 
@@ -56,7 +56,7 @@ subDomain: my-app
 # The port your app listens on
 # Comment this out to avoid setting up a service (required if url is specified)
 #
-port: 8080
+port: 3000
 
 # How many replicas of your application should we scaffold
 #replicas: 3 # 1 by default

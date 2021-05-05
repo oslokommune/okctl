@@ -1,7 +1,6 @@
 package git_test
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -32,9 +31,8 @@ func TestWithExternalRepository(t *testing.T) {
 		},
 	}
 
-	result, err := runner.UpdateRepository(changeSet)
+	_, err := runner.UpdateRepository(changeSet)
 	assert.NoError(t, err)
-	fmt.Println(result)
 
 	changeSet.CommitMessage = "removing some data"
 	changeSet.Actions = []git.ActionFn{
@@ -42,7 +40,6 @@ func TestWithExternalRepository(t *testing.T) {
 	}
 	changeSet.FileSystem = memfs.New()
 
-	result, err = runner.UpdateRepository(changeSet)
+	_, err = runner.UpdateRepository(changeSet)
 	assert.NoError(t, err)
-	fmt.Println(result)
 }

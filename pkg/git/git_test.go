@@ -4,34 +4,42 @@ import (
 	"os"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/github"
+
+	"github.com/go-git/go-billy/v5/memfs"
+
 	"github.com/oslokommune/okctl/pkg/git"
+
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGithubRemotes(t *testing.T) {
-	if os.Getenv("CI") == "true" {
-		t.Skip("Skipping the github remotes test in CI")
+func TestWithExternalRepository(t *testing.T) {
+	if os.Getenv("CI") != "" {
+		t.Skip("skipping test in CI environment")
 	}
 
-	testCases := []struct {
-		name   string
-		path   string
-		expect string
-	}{
-		{
-			name:   "Should work",
-			path:   "../..",
-			expect: "oslokommune/okctl",
+	runner := git.New()
+
+	changeSet := &git.ChangeSet{
+		Stager:        git.RepositoryStagerClone(git.RepositoryURL(github.DefaultOrg, "okctl-repository-test")),
+		Branch:        "my-branch",
+		PushToRemote:  true,
+		FileSystem:    memfs.New(),
+		CommitMessage: "adding some data",
+		Actions: []git.ActionFn{
+			git.AddFile("", "my.file", []byte("some nice data")),
 		},
 	}
 
-	for _, tc := range testCases {
-		tc := tc
+	_, err := runner.UpdateRepository(changeSet)
+	assert.NoError(t, err)
 
-		t.Run(tc.name, func(t *testing.T) {
-			got, err := git.GithubRepoFullName("oslokommune", tc.path)
-			assert.NoError(t, err)
-			assert.Equal(t, tc.expect, got)
-		})
+	changeSet.CommitMessage = "removing some data"
+	changeSet.Actions = []git.ActionFn{
+		git.RemoveFile("", "my.file"),
 	}
+	changeSet.FileSystem = memfs.New()
+
+	_, err = runner.UpdateRepository(changeSet)
+	assert.NoError(t, err)
 }

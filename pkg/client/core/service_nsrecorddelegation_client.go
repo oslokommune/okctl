@@ -3,9 +3,9 @@ package core
 import (
 	"fmt"
 
-	"github.com/oslokommune/okctl/pkg/config/constant"
+	"github.com/oslokommune/okctl/pkg/git/nameserver"
 
-	"github.com/go-git/go-billy/v5/memfs"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/git"
 
@@ -23,19 +23,17 @@ func (s *nsRecordDelegationService) RevokeDomainDelegation(opts client.RevokeDom
 		return err
 	}
 
-	workingDir := git.DefaultWorkingDir
+	workingDir := nameserver.DefaultWorkingDir
 	if contains(opts.Labels, constant.DefaultAutomaticPullRequestMergeLabel) {
-		workingDir = git.DefaultAutoWorkingDir
+		workingDir = nameserver.DefaultAutoWorkingDir
 	}
 
-	delegator := git.NewNameserverDelegator(
-		true,
-		workingDir,
-		git.RepositoryStagerClone(git.DefaultRepositoryURL()),
-		memfs.New(),
-	)
+	runner := git.New()
 
-	result, err := delegator.RevokeDelegation(opts.PrimaryHostedZoneFQDN, false)
+	result, err := runner.UpdateRepository(
+		nameserver.NewDelegator(true).
+			Revoke(opts.PrimaryHostedZoneFQDN, workingDir),
+	)
 	if err != nil {
 		return fmt.Errorf("revoking dns zone delegation: %w", err)
 	}
@@ -64,19 +62,17 @@ func (s *nsRecordDelegationService) InitiateDomainDelegation(opts client.Initiat
 		return err
 	}
 
-	workingDir := git.DefaultWorkingDir
+	workingDir := nameserver.DefaultWorkingDir
 	if contains(opts.Labels, constant.DefaultAutomaticPullRequestMergeLabel) {
-		workingDir = git.DefaultAutoWorkingDir
+		workingDir = nameserver.DefaultAutoWorkingDir
 	}
 
-	delegator := git.NewNameserverDelegator(
-		true,
-		workingDir,
-		git.RepositoryStagerClone(git.DefaultRepositoryURL()),
-		memfs.New(),
-	)
+	runner := git.New()
 
-	result, err := delegator.CreateDelegation(opts.PrimaryHostedZoneFQDN, opts.Nameservers, false)
+	result, err := runner.UpdateRepository(
+		nameserver.NewDelegator(true).
+			Assign(opts.PrimaryHostedZoneFQDN, opts.Nameservers, workingDir),
+	)
 	if err != nil {
 		return err
 	}

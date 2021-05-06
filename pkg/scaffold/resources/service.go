@@ -7,7 +7,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-const defaultServiceListeningPort = 80
+const (
+	defaultServiceListeningPort     = 80
+	defaultServiceListeningPortName = "main"
+)
 
 // CreateOkctlService creates a service customized for okctl
 func CreateOkctlService(app v1alpha1.Application) corev1.Service {
@@ -15,14 +18,15 @@ func CreateOkctlService(app v1alpha1.Application) corev1.Service {
 
 	service.ObjectMeta.Name = app.Metadata.Name
 	service.ObjectMeta.Namespace = app.Metadata.Namespace
+	service.ObjectMeta.Labels = map[string]string{"app": app.Metadata.Name}
 
-	service.Spec.Selector = map[string]string{
-		"app": app.Metadata.Name,
-	}
+	service.Spec.Selector = map[string]string{"app": app.Metadata.Name}
 
-	service.Spec.Ports[0].TargetPort = intstr.IntOrString{
-		IntVal: app.Port,
-	}
+	service.Spec.Ports = []corev1.ServicePort{{
+		Port:       defaultServiceListeningPort,
+		TargetPort: intstr.IntOrString{IntVal: app.Port},
+		Name:       defaultServiceListeningPortName,
+	}}
 
 	service.Spec.Type = "NodePort"
 
@@ -37,7 +41,7 @@ func generateDefaultService() corev1.Service {
 		},
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{{Port: defaultServiceListeningPort}},
+			Ports: []corev1.ServicePort{},
 			Type:  "ClusterIP",
 		},
 	}

@@ -39,7 +39,7 @@ metadata:
 # define a name of an ECR repository for which okctl will create for you.
 image: 
   # uri defines where the image can be pulled from
-  uri: ghcr.io/oslokommune/okctl-hello:v0.0.1
+  uri: ghcr.io/oslokommune/okctl-hello:v0.0.3
   # name defines the name of an ECR repository to create
   #name: my-app
 

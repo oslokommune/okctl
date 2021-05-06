@@ -35,7 +35,7 @@ type SynchronizeApplicationOpts struct {
 func SynchronizeApplication(opts SynchronizeApplicationOpts) error {
 	opts.Tree.ApplyFunction(applyDesiredState(opts.Application.Image), opts.Tree)
 
-	return controller.HandleNode(opts.ReconciliationManager, opts.Tree)
+	return controller.Process(opts.ReconciliationManager, controller.FlattenTree(opts.Tree, []*resourcetree.ResourceNode{}))
 }
 
 func applyDesiredState(image v1alpha1.ApplicationImage) resourcetree.ApplyFn {

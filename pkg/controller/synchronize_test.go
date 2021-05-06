@@ -3,6 +3,8 @@ package controller
 import (
 	"testing"
 
+	"github.com/sebdah/goldie/v2"
+
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
 	"github.com/mishudark/errors"
@@ -100,7 +102,7 @@ func TestHandleNode(t *testing.T) {
 
 			node := &resourcetree.ResourceNode{}
 
-			err := HandleNode(dummy, node)
+			err := Process(dummy, FlattenTree(node, []*resourcetree.ResourceNode{}))
 			if tc.expectErr {
 				assert.NotNil(t, err)
 			} else {
@@ -141,7 +143,7 @@ func TestReceivedErrorAfterRequeues(t *testing.T) {
 		expectError                error
 	}{
 		{
-			name: "Should break out of HandleNode immediately when requeue is false",
+			name: "Should break out of Process immediately when requeue is false",
 
 			withResults: []reconciler.ReconcilationResult{{Requeue: false}},
 
@@ -149,7 +151,7 @@ func TestReceivedErrorAfterRequeues(t *testing.T) {
 			expectError:                errors.New("reconciling node (group): dummy err"),
 		},
 		{
-			name: "Should break out of HandleNode after second reconciliation when requeues are true, false",
+			name: "Should break out of Process after second reconciliation when requeues are true, false",
 
 			withResults: []reconciler.ReconcilationResult{{Requeue: true}, {Requeue: false}},
 
@@ -164,11 +166,28 @@ func TestReceivedErrorAfterRequeues(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &mockAlwaysErrorReconciler{ReconciliationResult: tc.withResults}
 
-			err := HandleNode(r, &resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeGroup})
+			err := Process(r, FlattenTree(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeGroup}, []*resourcetree.ResourceNode{}))
 			assert.NotNil(t, err)
 
 			assert.Equal(t, tc.expectErrorAfterIterations, r.iteration)
 			assert.Equal(t, tc.expectError.Error(), err.Error())
 		})
 	}
+}
+
+func TestOrderTree(t *testing.T) {
+	tree := CreateResourceDependencyTree()
+
+	order := FlattenTree(tree, []*resourcetree.ResourceNode{})
+	reverse := FlattenTreeReverse(tree, []*resourcetree.ResourceNode{})
+
+	g := goldie.New(t)
+
+	g.AssertJson(t, "tree-order.json", struct {
+		Normal  []*resourcetree.ResourceNode
+		Reverse []*resourcetree.ResourceNode
+	}{
+		order,
+		reverse,
+	})
 }

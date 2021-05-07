@@ -22,8 +22,7 @@ type RepositoryStagerFn func(fs billy.Filesystem) (*git.Repository, error)
 
 // Git contains the state required for
 // working with a git repository
-type Git struct {
-}
+type Git struct{}
 
 // Result contains data about the created content
 type Result struct {

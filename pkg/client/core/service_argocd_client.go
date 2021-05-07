@@ -251,7 +251,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		Values:         values,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("creating Helm release for ArgoCD: %w", err)
+		return nil, fmt.Errorf("creating Helm release: %w", err)
 	}
 
 	argo := &client.ArgoCD{

@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
@@ -19,7 +20,7 @@ func (s *helmService) CreateHelmRelease(_ context.Context, opts api.CreateHelmRe
 
 	h, err := s.run.CreateHelmRelease(opts)
 	if err != nil {
-		return nil, errors.E(err, "creating helm release", errors.Internal)
+		return nil, errors.E(err, fmt.Sprintf("creating helm release (%s): ", opts.ReleaseName), errors.Internal)
 	}
 
 	return h, nil

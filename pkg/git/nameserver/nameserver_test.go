@@ -2,7 +2,6 @@ package nameserver_test
 
 import (
 	"math/rand"
-	"os"
 	"testing"
 	"time"
 
@@ -41,9 +40,7 @@ const layout = "2006-Jan-02"
 
 // nolint: funlen
 func TestNameserverDelegatorCreate(t *testing.T) {
-	if os.Getenv("CI") != "" {
-		t.Skip("skipping test in CI environment")
-	}
+	t.Skip("skipping test")
 
 	tm, err := time.Parse(layout, "2014-Feb-04")
 	assert.NoError(t, err)

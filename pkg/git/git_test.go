@@ -1,7 +1,6 @@
 package git_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/oslokommune/okctl/pkg/github"
@@ -14,9 +13,7 @@ import (
 )
 
 func TestWithExternalRepository(t *testing.T) {
-	if os.Getenv("CI") != "" {
-		t.Skip("skipping test in CI environment")
-	}
+	t.Skip("skipping test")
 
 	runner := git.New()
 

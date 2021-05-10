@@ -38,7 +38,7 @@ jobs:
         with:
           msg: |
             Automatically generated preview of PR:
-            [Linux](https://okctl-pr-preview.s3-eu-west-1.amazonaws.com/${{ env.BRANCH }}/dist/linux_linux_amd64/okctl)
-            [Darwin](https://okctl-pr-preview.s3-eu-west-1.amazonaws.com/${{ env.BRANCH }}/dist/darwin_darwin_amd64/okctl)
-            [Checksums](https://okctl-pr-preview.s3-eu-west-1.amazonaws.com/${{ env.BRANCH }}/dist/okctl_checksums.txt)
+            [Linux](https://okctl-pr-preview.s3-eu-west-1.amazonaws.com/${{ env.BRANCH }}/linux_linux_amd64/okctl)
+            [Darwin](https://okctl-pr-preview.s3-eu-west-1.amazonaws.com/${{ env.BRANCH }}/darwin_darwin_amd64/okctl)
+            [Checksums](https://okctl-pr-preview.s3-eu-west-1.amazonaws.com/${{ env.BRANCH }}/okctl_checksums.txt)
           check_for_duplicate_msg: true

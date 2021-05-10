@@ -141,6 +141,58 @@ func TestApplicationValidation(t *testing.T) {
 			expectFail:    true,
 			expectedError: "image: (name: must be a valid subdomain.).",
 		},
+		{
+			name: "Should allow empty path in Promtheus path",
+
+			withApplication: func() Application {
+				app := generateValidApplication()
+
+				app.Prometheus.Path = ""
+
+				return app
+			},
+
+			expectFail: false,
+		},
+		{
+			name: "Should allow index path in Promtheus path",
+
+			withApplication: func() Application {
+				app := generateValidApplication()
+
+				app.Prometheus.Path = "/"
+
+				return app
+			},
+
+			expectFail: false,
+		},
+		{
+			name: "Should allow single level path in Promtheus path",
+
+			withApplication: func() Application {
+				app := generateValidApplication()
+
+				app.Prometheus.Path = "/metrics"
+
+				return app
+			},
+
+			expectFail: false,
+		},
+		{
+			name: "Should allow multiple level path in Promtheus path",
+
+			withApplication: func() Application {
+				app := generateValidApplication()
+
+				app.Prometheus.Path = "/prometheus/metrics"
+
+				return app
+			},
+
+			expectFail: false,
+		},
 	}
 
 	for _, tc := range testCases {

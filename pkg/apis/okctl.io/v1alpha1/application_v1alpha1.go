@@ -25,7 +25,10 @@ const (
 	defaultReplicas = 1
 )
 
-var imageURITester = regexp.MustCompile(`[a-z0-9]+(?:[.:/_-]{1,2}[a-z0-9]+)*`)
+var (
+	imageURITester = regexp.MustCompile(`[a-z0-9]+(?:[.:/_-]{1,2}[a-z0-9]+)*`)
+	urlPathTester  = regexp.MustCompile(`(/[0-9a-z\-._~%!$&'()*+,;=:@/])+`)
+)
 
 // Application represents an application that can be deployed with okctl
 type Application struct {
@@ -40,6 +43,8 @@ type Application struct {
 
 	Port     int32 `json:"port"`
 	Replicas int32 `json:"replicas"`
+
+	Prometheus ApplicationPrometheus `json:"prometheus"`
 
 	Environment map[string]string `json:"environment"`
 
@@ -123,6 +128,18 @@ func (a ApplicationImage) Validate() error {
 	)
 }
 
+// ApplicationPrometheus contains necessary data regarding Prometheus integration
+type ApplicationPrometheus struct {
+	Path string
+}
+
+// Validate ensures ApplicationPrometheus contains the right information
+func (a ApplicationPrometheus) Validate() error {
+	return validation.ValidateStruct(&a,
+		validation.Field(&a.Path, validation.Match(urlPathTester)),
+	)
+}
+
 // HasIngress returns true if the application has an ingress
 func (a Application) HasIngress() bool {
 	return a.SubDomain != ""
@@ -131,6 +148,11 @@ func (a Application) HasIngress() bool {
 // HasService returns true if the application has a service
 func (a Application) HasService() bool {
 	return a.Port > 0
+}
+
+// HasPrometheus returns true if the application requires a Prometheus integration
+func (a Application) HasPrometheus() bool {
+	return a.Prometheus.Path != ""
 }
 
 // URL returns the URL where the application is made available

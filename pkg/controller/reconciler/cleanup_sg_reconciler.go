@@ -3,6 +3,8 @@ package reconciler
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/cfn"
+
 	"github.com/oslokommune/okctl/pkg/cleaner"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -41,7 +43,12 @@ func (z *cleanupSGReconciler) Reconcile(node *resourcetree.ResourceNode) (result
 		// Nothing to do for present
 		return result, nil
 	case resourcetree.ResourceNodeStateAbsent:
-		err = cleaner.New(z.provider).DeleteDanglingSecurityGroups(z.commonMetadata.Declaration.Metadata.Name)
+		vpc, err := z.stateHandlers.Vpc.GetVpc(cfn.NewStackNamer().Vpc(z.commonMetadata.Declaration.Metadata.Name))
+		if err != nil {
+			return result, fmt.Errorf("getting vpc: %w", err)
+		}
+
+		err = cleaner.New(z.provider).DeleteDanglingSecurityGroups(vpc.VpcID)
 		if err != nil {
 			return result, fmt.Errorf("cleaning up SGs: %w", err)
 		}

@@ -132,7 +132,6 @@ The following table is not present to determine what tool is better or worse, bu
 |Sets up monitoring|✅|❌|❌|❌|
 
 ## Inspiration
-
 We have begged, borrowed and stolen various ideas from the following CLIs:
 
 - https://github.com/deislabs/porter

@@ -23,6 +23,7 @@ import (
 type forwardPostgresOpts struct {
 	ID              api.ID
 	ApplicationName string
+	DatabaseName    string
 	Namespace       string
 	ConfigMapName   string
 	SecretName      string
@@ -51,7 +52,15 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "postgres",
 		Short: "Forward to the given postgres database",
-		Args:  cobra.ExactArgs(0), // nolint: gomnd
+		Long: `This sets up PgBouncer in the Kubernetes cluster, which
+makes it possible to operate on a Postgres database running 
+on AWS via a local port.
+
+Be very mindful if using this functionality with a production
+cluster. If you issue the wrong commands you can potentially
+delete important data.
+`,
+		Args: cobra.ExactArgs(0), // nolint: gomnd
 		PreRunE: func(_ *cobra.Command, _ []string) error {
 			err := o.Initialise()
 			if err != nil {
@@ -138,6 +147,7 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 
 			client := pgbouncer.New(&pgbouncer.Config{
 				Name:                  app,
+				Database:              opts.DatabaseName,
 				Namespace:             opts.Namespace,
 				Username:              opts.Username,
 				Password:              strings.TrimSpace(string(password)),
@@ -177,7 +187,14 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 		"name",
 		"n",
 		"",
-		"The name of the database to forward to",
+		"The name of the database instance to forward to",
+	)
+
+	flags.StringVarP(&opts.DatabaseName,
+		"database",
+		"d",
+		"",
+		"The name of the internal database name to use",
 	)
 
 	flags.StringVarP(&opts.Username,

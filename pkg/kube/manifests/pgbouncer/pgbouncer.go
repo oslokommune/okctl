@@ -57,6 +57,7 @@ type PgBouncer struct {
 // Config contains all the required inputs
 type Config struct {
 	Name                  string
+	Database              string
 	Namespace             string
 	Username              string
 	Password              string
@@ -86,6 +87,7 @@ func New(config *Config) *PgBouncer {
 
 	pod := Pod(
 		config.Name,
+		config.Database,
 		config.Namespace,
 		secret.Name,
 		config.DBParamsConfigmapName,
@@ -301,7 +303,7 @@ func Secret(name, namespace, username, secret string) *v1.Secret {
 // - https://github.com/edoburu/docker-pgbouncer
 // nolint: funlen
 func Pod(
-	name, namespace, pgBouncerSecret, dbParamsConfigMap, dbParamsSecret string,
+	name, database, namespace, pgBouncerSecret, dbParamsConfigMap, dbParamsSecret string,
 	labels map[string]string,
 	listenPort int32,
 ) *v1.Pod {
@@ -312,6 +314,26 @@ func Pod(
 	var mode int32 = 0o666
 
 	optional := false
+
+	db := v1.EnvVar{
+		Name: "DB_NAME",
+		ValueFrom: &v1.EnvVarSource{
+			ConfigMapKeyRef: &v1.ConfigMapKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: dbParamsConfigMap,
+				},
+				Key:      "PGDATABASE",
+				Optional: &optional,
+			},
+		},
+	}
+
+	if len(database) > 0 {
+		db = v1.EnvVar{
+			Name:  "DB_NAME",
+			Value: database,
+		}
+	}
 
 	return &v1.Pod{
 		TypeMeta: metav1.TypeMeta{
@@ -416,18 +438,6 @@ func Pod(
 							},
 						},
 						{
-							Name: "DB_NAME",
-							ValueFrom: &v1.EnvVarSource{
-								ConfigMapKeyRef: &v1.ConfigMapKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: dbParamsConfigMap,
-									},
-									Key:      "PGDATABASE",
-									Optional: &optional,
-								},
-							},
-						},
-						{
 							Name: "DB_PORT",
 							ValueFrom: &v1.EnvVarSource{
 								ConfigMapKeyRef: &v1.ConfigMapKeySelector{
@@ -439,6 +449,7 @@ func Pod(
 								},
 							},
 						},
+						db,
 					},
 				},
 			},

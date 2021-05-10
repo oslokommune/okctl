@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    label: value
+  name: myBouncer
+  namespace: test
+spec:
+  containers:
+  - env:
+    - name: LISTEN_PORT
+      value: "5432"
+    - name: DB_USER
+      valueFrom:
+        secretKeyRef:
+          key: PGUSER
+          name: paramsSecret
+          optional: false
+    - name: DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          key: PGPASSWORD
+          name: paramsSecret
+          optional: false
+    - name: DB_HOST
+      valueFrom:
+        configMapKeyRef:
+          key: PGHOST
+          name: paramsConfigMap
+          optional: false
+    - name: DB_PORT
+      valueFrom:
+        configMapKeyRef:
+          key: PGPORT
+          name: paramsConfigMap
+          optional: false
+    - name: DB_NAME
+      valueFrom:
+        configMapKeyRef:
+          key: PGDATABASE
+          name: paramsConfigMap
+          optional: false
+    image: edoburu/pgbouncer:1.15.0
+    name: pgbouncer
+    resources: {}
+    volumeMounts:
+    - mountPath: /etc/pgbouncer/
+      name: pgbouncer
+  dnsPolicy: Default
+  initContainers:
+  - command:
+    - /bin/sh
+    - -c
+    - cp /pgbouncer/userlist.txt /etc/pgbouncer/ && chown 70:70 /etc/pgbouncer/userlist.txt
+    image: busybox:1.28
+    name: copy-ro-config
+    resources: {}
+    volumeMounts:
+    - mountPath: /pgbouncer/
+      name: config-volume
+    - mountPath: /etc/pgbouncer/
+      name: pgbouncer
+  terminationGracePeriodSeconds: 30
+  volumes:
+  - name: config-volume
+    secret:
+      defaultMode: 438
+      optional: false
+      secretName: someSecret
+  - emptyDir: {}
+    name: pgbouncer
+status: {}

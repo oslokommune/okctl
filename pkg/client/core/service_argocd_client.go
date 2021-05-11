@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/asdine/storm/v3"
 
@@ -33,6 +34,7 @@ const (
 	argoPurpose          = "argocd"
 	argoPrivateKeyName   = "argocd-privatekey"
 	argoSecretName       = "argocd-secret"
+	argoChartTimeout     = 15 * time.Minute
 )
 
 // nolint: funlen
@@ -46,12 +48,10 @@ func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgo
 		return err
 	}
 
-	chart := argocd.New(nil)
-
 	err = s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
 		ID:          opts.ID,
-		ReleaseName: chart.ReleaseName,
-		Namespace:   chart.Namespace,
+		ReleaseName: argocd.ReleaseName,
+		Namespace:   argocd.Namespace,
 	})
 	if err != nil {
 		return err
@@ -233,7 +233,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		RepoName:             opts.Repository.Repository,
 		PrivateKeySecretName: argoPrivateKeyName,
 		PrivateKeySecretKey:  privateKeyDataName,
-	}))
+	}), argoChartTimeout)
 
 	values, err := chart.ValuesYAML()
 	if err != nil {

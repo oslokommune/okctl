@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/helm/charts/externalsecrets"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -53,12 +55,10 @@ func (s *externalSecretsService) DeleteExternalSecrets(ctx context.Context, id a
 		return err
 	}
 
-	ch := externalsecrets.ExternalSecrets(nil)
-
 	err = s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
 		ID:          id,
-		ReleaseName: ch.ReleaseName,
-		Namespace:   ch.Namespace,
+		ReleaseName: externalsecrets.ReleaseName,
+		Namespace:   externalsecrets.Namespace,
 	})
 	if err != nil {
 		return err
@@ -113,7 +113,7 @@ func (s *externalSecretsService) CreateExternalSecrets(ctx context.Context, opts
 		return nil, err
 	}
 
-	ch := externalsecrets.ExternalSecrets(externalsecrets.DefaultExternalSecretsValues())
+	ch := externalsecrets.New(externalsecrets.DefaultExternalSecretsValues(), constant.DefaultChartApplyTimeout)
 
 	values, err := ch.ValuesYAML()
 	if err != nil {

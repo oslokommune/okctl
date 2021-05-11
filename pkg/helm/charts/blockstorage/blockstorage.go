@@ -10,16 +10,23 @@ import (
 	"github.com/oslokommune/okctl/pkg/helm"
 )
 
+const (
+	// ReleaseName is the name of the release
+	ReleaseName = "aws-ebs-csi-driver"
+	// Namespace is the default namespace
+	Namespace = "kube-system"
+)
+
 // New returns an initialised Helm chart for installing aws-ebs-csi-driver
-func New(values *Values) *helm.Chart {
+func New(values *Values, timeout time.Duration) *helm.Chart {
 	return &helm.Chart{
 		RepositoryName: "aws-ebs-csi-driver",
 		RepositoryURL:  "https://kubernetes-sigs.github.io/aws-ebs-csi-driver",
-		ReleaseName:    "aws-ebs-csi-driver",
+		ReleaseName:    ReleaseName,
 		Version:        "0.9.6",
 		Chart:          "aws-ebs-csi-driver",
-		Namespace:      "kube-system",
-		Timeout:        5 * time.Minute, // nolint: gomnd
+		Namespace:      Namespace,
+		Timeout:        timeout,
 		Values:         values,
 	}
 }

@@ -160,7 +160,7 @@ func TestHelm(t *testing.T) {
 				RepoName:             "test",
 				PrivateKeySecretName: "argocd-test-oslokommune-private-key",
 				PrivateKeySecretKey:  "ssh-private-key",
-			})),
+			}), constant.DefaultChartApplyTimeout),
 			expect:    nil,
 			expectErr: false,
 		},

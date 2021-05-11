@@ -3,6 +3,8 @@ package core // nolint: dupl
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/helm/charts/awslbc"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -52,12 +54,10 @@ func (s *awsLoadBalancerControllerService) DeleteAWSLoadBalancerController(ctx c
 		return err
 	}
 
-	ch := awslbc.New(nil)
-
 	err = s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
 		ID:          id,
-		ReleaseName: ch.ReleaseName,
-		Namespace:   ch.Namespace,
+		ReleaseName: awslbc.ReleaseName,
+		Namespace:   awslbc.Namespace,
 	})
 	if err != nil {
 		return err
@@ -112,7 +112,10 @@ func (s *awsLoadBalancerControllerService) CreateAWSLoadBalancerController(ctx c
 		return nil, err
 	}
 
-	ch := awslbc.New(awslbc.NewDefaultValues(opts.ID.ClusterName, opts.VPCID, opts.ID.Region))
+	ch := awslbc.New(
+		awslbc.NewDefaultValues(opts.ID.ClusterName, opts.VPCID, opts.ID.Region),
+		constant.DefaultChartApplyTimeout,
+	)
 
 	values, err := ch.ValuesYAML()
 	if err != nil {

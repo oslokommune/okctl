@@ -61,6 +61,8 @@ const (
 	lokiDatasourceConfigMapName       = "loki-datasource"
 	tempoDatasourceConfigMapName      = "tempo-datasource"
 	cloudwatchDatasourceConfigMapName = "cloudwatch-datasource"
+
+	kubepromChartTimeout = 15 * time.Minute
 )
 
 func grafanaDomain(baseDomain string) string {
@@ -77,12 +79,10 @@ func (s *monitoringService) DeleteTempo(ctx context.Context, id api.ID) error {
 		return err
 	}
 
-	chart := tempo.New(nil)
-
 	err = s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
 		ID:          id,
-		ReleaseName: chart.ReleaseName,
-		Namespace:   chart.Namespace,
+		ReleaseName: tempo.ReleaseName,
+		Namespace:   tempo.Namespace,
 	})
 	if err != nil {
 		return err
@@ -93,7 +93,7 @@ func (s *monitoringService) DeleteTempo(ctx context.Context, id api.ID) error {
 
 // nolint: funlen
 func (s *monitoringService) CreateTempo(ctx context.Context, id api.ID) (*client.Helm, error) {
-	chart := tempo.New(tempo.NewDefaultValues())
+	chart := tempo.New(tempo.NewDefaultValues(), constant.DefaultChartApplyTimeout)
 
 	values, err := chart.ValuesYAML()
 	if err != nil {
@@ -152,12 +152,10 @@ func (s *monitoringService) CreateTempo(ctx context.Context, id api.ID) (*client
 }
 
 func (s *monitoringService) DeletePromtail(ctx context.Context, id api.ID) error {
-	chart := promtail.New(nil)
-
 	err := s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
 		ID:          id,
-		ReleaseName: chart.ReleaseName,
-		Namespace:   chart.Namespace,
+		ReleaseName: promtail.ReleaseName,
+		Namespace:   promtail.Namespace,
 	})
 	if err != nil {
 		return err
@@ -167,7 +165,7 @@ func (s *monitoringService) DeletePromtail(ctx context.Context, id api.ID) error
 }
 
 func (s *monitoringService) CreatePromtail(ctx context.Context, id api.ID) (*client.Helm, error) {
-	chart := promtail.New(promtail.NewDefaultValues())
+	chart := promtail.New(promtail.NewDefaultValues(), constant.DefaultChartApplyTimeout)
 
 	values, err := chart.ValuesYAML()
 	if err != nil {
@@ -192,8 +190,6 @@ func (s *monitoringService) CreatePromtail(ctx context.Context, id api.ID) (*cli
 }
 
 func (s *monitoringService) DeleteLoki(ctx context.Context, id api.ID) error {
-	chart := loki.New(nil)
-
 	err := s.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
 		ID:        id,
 		Name:      lokiDatasourceConfigMapName,
@@ -205,8 +201,8 @@ func (s *monitoringService) DeleteLoki(ctx context.Context, id api.ID) error {
 
 	err = s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
 		ID:          id,
-		ReleaseName: chart.ReleaseName,
-		Namespace:   chart.Namespace,
+		ReleaseName: loki.ReleaseName,
+		Namespace:   loki.Namespace,
 	})
 	if err != nil {
 		return err
@@ -217,7 +213,7 @@ func (s *monitoringService) DeleteLoki(ctx context.Context, id api.ID) error {
 
 // nolint: funlen
 func (s *monitoringService) CreateLoki(ctx context.Context, id api.ID) (*client.Helm, error) {
-	chart := loki.New(loki.NewDefaultValues())
+	chart := loki.New(loki.NewDefaultValues(), constant.DefaultChartApplyTimeout)
 
 	values, err := chart.ValuesYAML()
 	if err != nil {
@@ -296,12 +292,10 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 		return err
 	}
 
-	chart := kubepromstack.New(0*time.Second, nil)
-
 	err = s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
 		ID:          opts.ID,
-		ReleaseName: chart.ReleaseName,
-		Namespace:   chart.Namespace,
+		ReleaseName: kubepromstack.ReleaseName,
+		Namespace:   kubepromstack.Namespace,
 	})
 	if err != nil {
 		return err
@@ -549,7 +543,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 		return nil, err
 	}
 
-	chart := kubepromstack.New(10*time.Minute, &kubepromstack.Values{ // nolint: gomnd
+	chart := kubepromstack.New(&kubepromstack.Values{ // nolint: gomnd
 		GrafanaServiceAccountName:          constant.DefaultGrafanaCloudWatchDatasourceName,
 		GrafanaCertificateARN:              cert.ARN,
 		GrafanaHostname:                    cert.Domain,
@@ -560,7 +554,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 		SecretsGrafanaOauthClientSecretKey: clientSecret.Name,
 		SecretsGrafanaAdminUserKey:         adminUser.Name,
 		SecretsGrafanaAdminPassKey:         adminPass.Name,
-	})
+	}, kubepromChartTimeout)
 
 	values, err := chart.ValuesYAML()
 	if err != nil {

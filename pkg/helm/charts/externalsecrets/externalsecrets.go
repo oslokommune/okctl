@@ -8,6 +8,13 @@ import (
 	"github.com/oslokommune/okctl/pkg/helm"
 )
 
+const (
+	// ReleaseName is the name of the release
+	ReleaseName = "external-secrets"
+	// Namespace is the default namespace
+	Namespace = "kube-system"
+)
+
 // Values maps up the values.yaml file
 // nolint: maligned
 type Values struct {
@@ -86,17 +93,17 @@ type ServiceMonitor struct {
 	Namespace string `yaml:"namespace"`
 }
 
-// ExternalSecrets returns an initialised external secrets chart
+// New returns an initialised external secrets chart
 // - https://github.com/external-secrets/kubernetes-external-secrets/blob/master/charts/kubernetes-external-secrets/README.md
-func ExternalSecrets(values interface{}) *helm.Chart {
+func New(values interface{}, timeout time.Duration) *helm.Chart {
 	return &helm.Chart{
 		RepositoryName: "external-secrets",
 		RepositoryURL:  "https://external-secrets.github.io/kubernetes-external-secrets/",
-		ReleaseName:    "external-secrets",
+		ReleaseName:    ReleaseName,
 		Version:        "6.4.0",
 		Chart:          "kubernetes-external-secrets",
-		Namespace:      "kube-system",
-		Timeout:        5 * time.Minute, // nolint: gomnd
+		Namespace:      Namespace,
+		Timeout:        timeout,
 		Values:         values,
 	}
 }

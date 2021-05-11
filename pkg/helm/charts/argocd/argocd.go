@@ -10,16 +10,23 @@ import (
 	"github.com/oslokommune/okctl/pkg/helm"
 )
 
+const (
+	// ReleaseName is the name of the release
+	ReleaseName = "argocd"
+	// Namespace is the default namespace
+	Namespace = "argocd"
+)
+
 // New returns an initialised Helm chart
-func New(values *Values) *helm.Chart {
+func New(values *Values, timeout time.Duration) *helm.Chart {
 	return &helm.Chart{
 		RepositoryName: "argo",
 		RepositoryURL:  "https://argoproj.github.io/argo-helm",
-		ReleaseName:    "argocd",
+		ReleaseName:    ReleaseName,
 		Version:        "2.6.2",
 		Chart:          "argo-cd",
-		Namespace:      "argocd",
-		Timeout:        5 * time.Minute, // nolint: gomnd
+		Namespace:      Namespace,
+		Timeout:        timeout,
 		Values:         values,
 	}
 }

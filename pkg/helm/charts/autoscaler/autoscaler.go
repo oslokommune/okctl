@@ -10,16 +10,23 @@ import (
 	"github.com/oslokommune/okctl/pkg/helm"
 )
 
+const (
+	// ReleaseName is the name of the release
+	ReleaseName = "cluster-autoscaler"
+	// Namespace is the default namespace
+	Namespace = "kube-system"
+)
+
 // New returns an initialised Helm chart for installing cluster-autoscaler
-func New(values *Values) *helm.Chart {
+func New(values *Values, timeout time.Duration) *helm.Chart {
 	return &helm.Chart{
 		RepositoryName: "autoscaler",
 		RepositoryURL:  "https://kubernetes.github.io/autoscaler",
-		ReleaseName:    "cluster-autoscaler",
+		ReleaseName:    ReleaseName,
 		Version:        "9.4.0",
 		Chart:          "cluster-autoscaler",
-		Namespace:      "kube-system",
-		Timeout:        5 * time.Minute, // nolint: gomnd
+		Namespace:      Namespace,
+		Timeout:        timeout,
 		Values:         values,
 	}
 }

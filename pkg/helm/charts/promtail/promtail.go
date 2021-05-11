@@ -5,22 +5,28 @@ package promtail
 import (
 	"bytes"
 	"text/template"
-
-	"github.com/oslokommune/okctl/pkg/config/constant"
+	"time"
 
 	"github.com/oslokommune/okctl/pkg/helm"
 )
 
+const (
+	// ReleaseName is the name of the release
+	ReleaseName = "promtail"
+	// Namespace is the default namespace
+	Namespace = "monitoring"
+)
+
 // New returns an initialised Helm chart for installing cluster-promtail
-func New(values *Values) *helm.Chart {
+func New(values *Values, timeout time.Duration) *helm.Chart {
 	return &helm.Chart{
 		RepositoryName: "grafana",
 		RepositoryURL:  "https://grafana.github.io/helm-charts",
-		ReleaseName:    "promtail",
+		ReleaseName:    ReleaseName,
 		Version:        "3.1.0",
 		Chart:          "promtail",
-		Namespace:      "monitoring",
-		Timeout:        constant.DefaultChartApplyTimeout,
+		Namespace:      Namespace,
+		Timeout:        timeout,
 		Values:         values,
 	}
 }

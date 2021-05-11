@@ -4,6 +4,8 @@ package elbv2api
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws/awserr"
+
 	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -34,6 +36,15 @@ func (a *ELBv2API) GetListenersForLoadBalancer(loadbalancerARN string) ([]*elbv2
 			Marker:          marker,
 		})
 		if err != nil {
+			if aerr, ok := err.(awserr.Error); ok {
+				switch aerr.Code() {
+				case elbv2.ErrCodeLoadBalancerNotFoundException:
+					// If the load balancer doesn't exist, not much
+					// point in continuing..
+					break
+				}
+			}
+
 			return nil, fmt.Errorf("describing listeners: %w", err)
 		}
 

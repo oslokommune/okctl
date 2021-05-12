@@ -74,6 +74,7 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 		Service:              base.Service,
 		Ingress:              base.Ingress,
 		Volume:               base.Volumes,
+		ServiceMonitor:       base.ServiceMonitor,
 		OverlayKustomization: overlay.Kustomization,
 		ArgoCDResource:       base.ArgoApplication,
 		IngressPatch:         overlay.IngressPatch,

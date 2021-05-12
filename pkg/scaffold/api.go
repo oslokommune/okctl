@@ -15,17 +15,22 @@ import (
 	v1 "k8s.io/api/core/v1"
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	"sigs.k8s.io/yaml"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
+
+const defaultMainServicePortName = "main"
 
 // ApplicationBase contains the content of the Kubernetes resource files
 type ApplicationBase struct {
 	Kustomization   []byte
 	ArgoApplication []byte
 
-	Deployment []byte
-	Ingress    []byte
-	Service    []byte
-	Volumes    []byte
+	Deployment     []byte
+	Ingress        []byte
+	Service        []byte
+	Volumes        []byte
+	ServiceMonitor []byte
 }
 
 // NewApplicationBase returns an initialized ApplicationBase struct
@@ -70,7 +75,7 @@ func GenerateApplicationBase(app v1alpha1.Application, iacRepoURL, relativeAppli
 	}
 
 	if app.HasService() {
-		service := resources.CreateOkctlService(app)
+		service := resources.CreateOkctlService(app, defaultMainServicePortName)
 
 		kustomization.AddResource("service.yaml")
 
@@ -91,6 +96,19 @@ func GenerateApplicationBase(app v1alpha1.Application, iacRepoURL, relativeAppli
 		kustomization.AddResource("ingress.yaml")
 
 		applicationBase.Ingress, err = resourceAsBytes(ingress)
+		if err != nil {
+			return applicationBase, err
+		}
+	}
+
+	if app.HasPrometheus() {
+		var monitor monitoringv1.ServiceMonitor
+
+		monitor = resources.CreateServiceMonitor(app, defaultMainServicePortName)
+
+		kustomization.AddResource("service-monitor.yaml")
+
+		applicationBase.ServiceMonitor, err = resourceAsBytes(monitor)
 		if err != nil {
 			return applicationBase, err
 		}

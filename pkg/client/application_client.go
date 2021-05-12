@@ -47,6 +47,7 @@ type ScaffoldedApplication struct {
 	IngressPatch         []byte
 	ServicePatch         []byte
 	DeploymentPatch      []byte
+	ServiceMonitor       []byte
 }
 
 // ApplicationService applies the scaffolding API and produces the requested resources

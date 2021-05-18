@@ -1,4 +1,3 @@
-// nolint: dupl golint
 package core
 
 import (

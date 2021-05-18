@@ -185,7 +185,7 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 	}
 }
 
-// nolint: gocyclo funlen
+//nolint:gocyclo,funlen
 func applyExistingState(existingResources ExistingResources) resourcetree.ApplyFn {
 	return func(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
 		switch receiver.Type {

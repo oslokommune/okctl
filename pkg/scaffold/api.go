@@ -41,7 +41,7 @@ func NewApplicationBase() ApplicationBase {
 }
 
 // GenerateApplicationBase converts an Application to Kustomize base files
-// nolint: funlen gocyclo
+//nolint:funlen,gocyclo
 func GenerateApplicationBase(app v1alpha1.Application, iacRepoURL, relativeApplicationOverlayDir string) (ApplicationBase, error) {
 	var (
 		err             error

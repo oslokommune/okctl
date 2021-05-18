@@ -15,7 +15,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/clusterconfig"
 )
 
-// nolint: golint gosec
+//nolint:golint,gosec
 const (
 	DefaultRegion                     = "eu-west-1"
 	DefaultAWSAccountID               = "123456789012"
@@ -86,7 +86,7 @@ const (
 	StackNameRotaterBucket      = "okctl-staging-Rotater"
 )
 
-// nolint: golint gochecknoglobals
+//nolint:golint,gochecknoglobals
 var (
 	DefaultServiceAccountLabels = map[string]string{
 		"aws-usage": "cluster-ops",

@@ -32,7 +32,7 @@ func buildShowCommand(o *okctl.Okctl) *cobra.Command {
 	return cmd
 }
 
-// nolint: funlen gocognit
+//nolint:funlen,gocognit
 func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 	okctlEnvironment := commands.OkctlEnvironment{}
 

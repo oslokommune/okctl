@@ -39,7 +39,7 @@ func loadUserData(o *okctl.Okctl, cmd *cobra.Command) error {
 	return o.LoadUserData()
 }
 
-// nolint: funlen
+//nolint:funlen,govet
 func buildRootCommand() *cobra.Command {
 	var outputFormat, declarationPath string
 

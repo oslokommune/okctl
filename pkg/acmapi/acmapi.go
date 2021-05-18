@@ -46,7 +46,7 @@ func (a *ACMAPI) InUseBy(certificateARN string) ([]string, error) {
 
 // CertificateARNForDomain returns the certificate arn for the domain
 func (a *ACMAPI) CertificateARNForDomain(domain string) (string, error) {
-	var nextToken *string = nil
+	var nextToken *string
 
 	for {
 		certs, err := a.provider.ACM().ListCertificates(&acm.ListCertificatesInput{

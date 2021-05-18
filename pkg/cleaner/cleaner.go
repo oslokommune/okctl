@@ -137,7 +137,7 @@ func (c *Cleaner) DeleteDanglingSecurityGroups(vpcID string) error {
 
 // DeleteDanglingTargetGroups deletes dangling target groups in vpc
 func (c *Cleaner) DeleteDanglingTargetGroups(clusterName string) error {
-	var marker *string = nil
+	var marker *string
 
 	var all []*elbv2.TargetGroup
 

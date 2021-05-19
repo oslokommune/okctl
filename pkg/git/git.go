@@ -45,7 +45,7 @@ type ChangeSet struct {
 }
 
 // UpdateRepository applies the change set
-// nolint: funlen gocyclo
+//nolint:funlen,gocyclo
 func (n *Git) UpdateRepository(c *ChangeSet) (*Result, error) {
 	r, err := c.Stager(c.FileSystem)
 	if err != nil {

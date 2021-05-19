@@ -316,7 +316,7 @@ func (h *Helm) findRelease(releaseName string, config *action.Configuration) (*r
 // though we have not implemented all the functionality found there
 // Some details to consider about CRDs:
 // - https://helm.sh/docs/chart_best_practices/custom_resource_definitions/#some-caveats-and-explanations
-// nolint: funlen gocyclo
+//nolint:funlen,gocyclo,gocognit
 func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Release, error) {
 	envs := h.config.Envs()
 	envs["HELM_NAMESPACE"] = cfg.Namespace

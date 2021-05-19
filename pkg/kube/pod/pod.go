@@ -50,7 +50,7 @@ func New(ctx context.Context, logger *logrus.Logger, timeout time.Duration, clie
 }
 
 // WaitFor the desired state or return an error
-// nolint: gocyclo gocognit
+//nolint:gocyclo,gocognit,funlen
 func (p *Pod) WaitFor(state State, pod *v1.Pod) error {
 	status := pod.Status
 

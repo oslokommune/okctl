@@ -77,31 +77,31 @@ GOFUMPT        := $(GOBIN)/gofumpt
 $(GOLANGCILINT):
 	# To bump, simply change the version at the end to the desired version. The git sha here points to the newest commit
 	# of the install script verified by our team located here: https://github.com/golangci/golangci-lint/blob/master/install.sh
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/b90551cdf9c6214075f2a40d1b5595c6b41ffff0/install.sh | sh -s -- -b ${GOBIN} v1.32.2
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/b90551cdf9c6214075f2a40d1b5595c6b41ffff0/install.sh | sh -s -- -b ${GOBIN} v1.40.1
 
 $(GOIMPORTS):
-	$(GO) get -u golang.org/x/tools/cmd/goimports
+	$(GO) install golang.org/x/tools/cmd/goimports@latest
 
 $(GOCOVMERGE):
-	$(GO) get -u github.com/wadey/gocovmerge
+	$(GO) install github.com/wadey/gocovmerge@latest
 
 $(GOCOVXML):
-	$(GO) get -u github.com/AlekSi/gocov-xml
+	$(GO) install github.com/AlekSi/gocov-xml@latest
 
 $(GOCOV):
-	$(GO) get -u github.com/axw/gocov/gocov
+	$(GO) install github.com/axw/gocov/gocov@v1.0.0
 
 $(RICHGO):
-	$(GO) get -u github.com/kyoh86/richgo
+	$(GO) install github.com/kyoh86/richgo@v0.3.6
 
 $(MAKEDOC):
-	$(GO) get -u github.com/paulbes/makedoc
+	$(GO) install github.com/paulbes/makedoc@latest
 
 $(STATIK):
-	$(GO) get -u github.com/rakyll/statik
+	$(GO) install github.com/rakyll/statik@v0.1.7
 
 $(GOFUMPT):
-	$(GO) get -u mvdan.cc/gofumpt
+	$(GO) install mvdan.cc/gofumpt@v0.1.1
 
 GO := $(shell command -v go 2> /dev/null)
 ifndef GO

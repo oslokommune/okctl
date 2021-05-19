@@ -52,7 +52,7 @@ const (
 	postgresRotaterLambdaKey = "rotate-postgres-single.zip"
 )
 
-// nolint: funlen gocyclo
+//nolint:funlen,gocyclo
 func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts client.CreatePostgresDatabaseOpts) (*client.PostgresDatabase, error) {
 	bucketName, err := rotaterBucketName(opts.ID.ClusterName, opts.ApplicationName)
 	if err != nil {

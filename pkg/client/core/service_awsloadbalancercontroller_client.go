@@ -66,7 +66,7 @@ func (s *awsLoadBalancerControllerService) DeleteAWSLoadBalancerController(ctx c
 	return nil
 }
 
-// nolint: lll funlen
+//nolint:lll,funlen
 func (s *awsLoadBalancerControllerService) CreateAWSLoadBalancerController(ctx context.Context, opts client.CreateAWSLoadBalancerControllerOpts) (*client.AWSLoadBalancerController, error) {
 	b := cfn.New(
 		components.NewAWSLoadBalancerControllerComposer(

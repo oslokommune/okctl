@@ -41,7 +41,7 @@ type ValuesOpts struct {
 }
 
 // NewDefaultValues returns the default values for the chart
-// nolint: gomnd funlen lll
+//nolint:gomnd,funlen,lll
 func NewDefaultValues(opts ValuesOpts) *Values {
 	return &Values{
 		InstallCRDs: false,

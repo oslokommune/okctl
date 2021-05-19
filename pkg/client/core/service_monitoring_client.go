@@ -275,7 +275,7 @@ func (s *monitoringService) CreateLoki(ctx context.Context, id api.ID) (*client.
 	return c, nil
 }
 
-// nolint: funlen gocyclo
+//nolint:funlen,gocyclo
 func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client.DeleteKubePromStackOpts) error {
 	stack, err := s.state.GetKubePromStack()
 	if err != nil {
@@ -390,6 +390,9 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 		Name:      "aws-logging",
 		Namespace: constant.DefaultFargateObservabilityNamespace,
 	})
+	if err != nil {
+		return err
+	}
 
 	err = s.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
 		ID:        opts.ID,

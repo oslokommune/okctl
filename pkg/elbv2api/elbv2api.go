@@ -26,7 +26,7 @@ func New(provider v1alpha1.CloudProvider) *ELBv2API {
 
 // GetListenersForLoadBalancer returns the listeners associated with a load balancer
 func (a *ELBv2API) GetListenersForLoadBalancer(loadbalancerARN string) ([]*elbv2.Listener, error) {
-	var marker *string = nil
+	var marker *string
 
 	var all []*elbv2.Listener
 

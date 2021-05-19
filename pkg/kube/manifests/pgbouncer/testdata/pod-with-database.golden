@@ -29,18 +29,14 @@ spec:
           key: PGHOST
           name: paramsConfigMap
           optional: false
-    - name: DB_NAME
-      valueFrom:
-        configMapKeyRef:
-          key: PGDATABASE
-          name: paramsConfigMap
-          optional: false
     - name: DB_PORT
       valueFrom:
         configMapKeyRef:
           key: PGPORT
           name: paramsConfigMap
           optional: false
+    - name: DB_NAME
+      value: myDatabase
     image: edoburu/pgbouncer:1.15.0
     name: pgbouncer
     resources: {}

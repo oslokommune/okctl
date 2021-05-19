@@ -15,9 +15,23 @@ func TestResources(t *testing.T) {
 		resource interface{}
 	}{
 		{
-			name: "pod",
+			name: "default-pod",
 			resource: pgbouncer.Pod(
 				"myBouncer",
+				"",
+				"test",
+				"someSecret",
+				"paramsConfigMap",
+				"paramsSecret",
+				map[string]string{"label": "value"},
+				5432,
+			),
+		},
+		{
+			name: "pod-with-database",
+			resource: pgbouncer.Pod(
+				"myBouncer",
+				"myDatabase",
 				"test",
 				"someSecret",
 				"paramsConfigMap",

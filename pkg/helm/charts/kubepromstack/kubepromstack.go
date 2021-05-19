@@ -10,16 +10,23 @@ import (
 	"github.com/oslokommune/okctl/pkg/helm"
 )
 
+const (
+	// ReleaseName is the name of the release
+	ReleaseName = "kube-prometheus-stack"
+	// Namespace is the default namespace
+	Namespace = "monitoring"
+)
+
 // New returns an initialised helm chart:
 // - https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
-func New(timeout time.Duration, values *Values) *helm.Chart {
+func New(values *Values, timeout time.Duration) *helm.Chart {
 	return &helm.Chart{
 		RepositoryName: "prometheus-community",
 		RepositoryURL:  "https://prometheus-community.github.io/helm-charts",
-		ReleaseName:    "kube-prometheus-stack",
+		ReleaseName:    ReleaseName,
 		Version:        "13.9.1",
 		Chart:          "kube-prometheus-stack",
-		Namespace:      "monitoring",
+		Namespace:      Namespace,
 		Timeout:        timeout,
 		Values:         values,
 	}

@@ -1,8 +1,6 @@
 package controller
 
 import (
-	"time"
-
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/externalsecrets"
@@ -76,16 +74,16 @@ func IdentifyResourcePresence(id api.ID, handlers *clientCore.StateHandlers) (Ex
 
 	return ExistingResources{
 		hasServiceQuotaCheck:                  false,
-		hasAWSLoadBalancerController:          !isNotFound(handlers.Helm.GetHelmRelease(awslbc.New(nil).ReleaseName)),
+		hasAWSLoadBalancerController:          !isNotFound(handlers.Helm.GetHelmRelease(awslbc.ReleaseName)),
 		hasCluster:                            !isNotFound(handlers.Cluster.GetCluster(id.ClusterName)),
 		hasExternalDNS:                        !isNotFound(handlers.ExternalDNS.GetExternalDNS()),
-		hasExternalSecrets:                    !isNotFound(handlers.Helm.GetHelmRelease(externalsecrets.ExternalSecrets(nil).ReleaseName)),
-		hasAutoscaler:                         !isNotFound(handlers.Helm.GetHelmRelease(autoscaler.New(nil).ReleaseName)),
-		hasBlockstorage:                       !isNotFound(handlers.Helm.GetHelmRelease(blockstorage.New(nil).ReleaseName)),
-		hasKubePromStack:                      !isNotFound(handlers.Helm.GetHelmRelease(kubepromstack.New(0*time.Second, nil).ReleaseName)),
-		hasLoki:                               !isNotFound(handlers.Helm.GetHelmRelease(lokipkg.New(nil).ReleaseName)),
-		hasPromtail:                           !isNotFound(handlers.Helm.GetHelmRelease(promtail.New(nil).ReleaseName)),
-		hasTempo:                              !isNotFound(handlers.Helm.GetHelmRelease(tempo.New(nil).ReleaseName)),
+		hasExternalSecrets:                    !isNotFound(handlers.Helm.GetHelmRelease(externalsecrets.ReleaseName)),
+		hasAutoscaler:                         !isNotFound(handlers.Helm.GetHelmRelease(autoscaler.ReleaseName)),
+		hasBlockstorage:                       !isNotFound(handlers.Helm.GetHelmRelease(blockstorage.ReleaseName)),
+		hasKubePromStack:                      !isNotFound(handlers.Helm.GetHelmRelease(kubepromstack.ReleaseName)),
+		hasLoki:                               !isNotFound(handlers.Helm.GetHelmRelease(lokipkg.ReleaseName)),
+		hasPromtail:                           !isNotFound(handlers.Helm.GetHelmRelease(promtail.ReleaseName)),
+		hasTempo:                              !isNotFound(handlers.Helm.GetHelmRelease(tempo.ReleaseName)),
 		hasIdentityManager:                    !isNotFound(handlers.IdentityManager.GetIdentityPool(cfn.NewStackNamer().IdentityPool(id.ClusterName))),
 		hasArgoCD:                             !isNotFound(handlers.ArgoCD.GetArgoCD()),
 		hasPrimaryHostedZone:                  !isNotFound(handlers.Domain.GetPrimaryHostedZone()),

@@ -10,16 +10,23 @@ import (
 	"github.com/oslokommune/okctl/pkg/helm"
 )
 
+const (
+	// ReleaseName is the name of the release
+	ReleaseName = "aws-load-balancer-controller"
+	// Namespace is the default namespace
+	Namespace = "kube-system"
+)
+
 // New returns an initialised Helm chart for installing aws-alb-ingress-controller
-func New(values *Values) *helm.Chart {
+func New(values *Values, timeout time.Duration) *helm.Chart {
 	return &helm.Chart{
 		RepositoryName: "eks",
 		RepositoryURL:  "https://aws.github.io/eks-charts",
-		ReleaseName:    "aws-load-balancer-controller",
+		ReleaseName:    ReleaseName,
 		Version:        "1.1.3",
 		Chart:          "aws-load-balancer-controller",
-		Namespace:      "kube-system",
-		Timeout:        5 * time.Minute, // nolint: gomnd
+		Namespace:      Namespace,
+		Timeout:        timeout,
 		Values:         values,
 	}
 }

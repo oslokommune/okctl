@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/cfn"
 	"github.com/oslokommune/okctl/pkg/cfn/components"
 
@@ -53,12 +55,10 @@ func (s *autoscalerService) DeleteAutoscaler(ctx context.Context, id api.ID) err
 		return err
 	}
 
-	chart := autoscaler.New(nil)
-
 	err = s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
 		ID:          id,
-		ReleaseName: chart.ReleaseName,
-		Namespace:   chart.Namespace,
+		ReleaseName: autoscaler.ReleaseName,
+		Namespace:   autoscaler.Namespace,
 	})
 	if err != nil {
 		return err
@@ -111,7 +111,10 @@ func (s *autoscalerService) CreateAutoscaler(ctx context.Context, opts client.Cr
 		return nil, err
 	}
 
-	ch := autoscaler.New(autoscaler.NewDefaultValues(opts.ID.Region, opts.ID.ClusterName, "autoscaler"))
+	ch := autoscaler.New(
+		autoscaler.NewDefaultValues(opts.ID.Region, opts.ID.ClusterName, "autoscaler"),
+		constant.DefaultChartApplyTimeout,
+	)
 
 	values, err := ch.ValuesYAML()
 	if err != nil {

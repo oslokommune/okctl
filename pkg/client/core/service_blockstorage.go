@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/cfn"
 	"github.com/oslokommune/okctl/pkg/cfn/components"
 
@@ -24,12 +26,10 @@ type blockstorageService struct {
 }
 
 func (s *blockstorageService) DeleteBlockstorage(ctx context.Context, id api.ID) error {
-	chart := blockstorage.New(nil)
-
 	err := s.helm.DeleteHelmRelease(ctx, client.DeleteHelmReleaseOpts{
 		ID:          id,
-		ReleaseName: chart.ReleaseName,
-		Namespace:   chart.Namespace,
+		ReleaseName: blockstorage.ReleaseName,
+		Namespace:   blockstorage.Namespace,
 	})
 	if err != nil {
 		return err
@@ -112,7 +112,10 @@ func (s *blockstorageService) CreateBlockstorage(ctx context.Context, opts clien
 		return nil, err
 	}
 
-	ch := blockstorage.New(blockstorage.NewDefaultValues(opts.ID.Region, opts.ID.ClusterName, "blockstorage"))
+	ch := blockstorage.New(
+		blockstorage.NewDefaultValues(opts.ID.Region, opts.ID.ClusterName, "blockstorage"),
+		constant.DefaultChartApplyTimeout,
+	)
 
 	values, err := ch.ValuesYAML()
 	if err != nil {

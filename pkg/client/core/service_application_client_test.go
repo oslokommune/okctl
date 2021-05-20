@@ -44,6 +44,10 @@ subDomain: okctl
 # Comment this out to avoid setting up a service (required if url is specified)
 port: 3000
 
+# Enable prometheus scraping of metrics
+prometheus:
+  path: /metrics
+
 # How many replicas of your application should we scaffold
 #replicas: 3 # 1 by default
 
@@ -107,18 +111,21 @@ func TestNewApplicationService(t *testing.T) {
 
 	g := goldie.New(t)
 
-	g.Assert(t, "argocd-application.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", "argocd-application.yaml")))
-	g.Assert(t, "kustomization-base.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "kustomization.yaml")))
-	g.Assert(t, "deployment.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "deployment.yaml")))
-	g.Assert(t, "volumes.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "volumes.yaml")))
-	g.Assert(t, "ingress.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "ingress.yaml")))
-	g.Assert(t, "service.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationBaseDir, "service.yaml")))
+	appDir := filepath.Join(mockPaths.BaseDir, application.Metadata.Name)
+	appBaseDir := filepath.Join(appDir, constant.DefaultApplicationBaseDir)
+	appOverlayDir := filepath.Join(appDir, constant.DefaultApplicationOverlayDir, clusterName)
 
-	g.Assert(t,
-		"kustomization-overlay.yaml",
-		readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationOverlayDir, clusterName, "kustomization.yaml")),
-	)
-	g.Assert(t, "ingress-patch.yaml", readFile(t, &aferoFs, filepath.Join(mockPaths.BaseDir, "my-app", constant.DefaultApplicationOverlayDir, clusterName, "ingress-patch.json")))
+	g.Assert(t, "argocd-application.yaml", readFile(t, &aferoFs, filepath.Join(appDir, "argocd-application.yaml")))
+
+	g.Assert(t, "kustomization-base.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "kustomization.yaml")))
+	g.Assert(t, "deployment.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "deployment.yaml")))
+	g.Assert(t, "volumes.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "volumes.yaml")))
+	g.Assert(t, "ingress.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "ingress.yaml")))
+	g.Assert(t, "service.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "service.yaml")))
+	g.Assert(t, "service-monitor.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "service-monitor.yaml")))
+
+	g.Assert(t, "kustomization-overlay.yaml", readFile(t, &aferoFs, filepath.Join(appOverlayDir, "kustomization.yaml")))
+	g.Assert(t, "ingress-patch.yaml", readFile(t, &aferoFs, filepath.Join(appOverlayDir, "ingress-patch.json")))
 }
 
 // nolint: funlen

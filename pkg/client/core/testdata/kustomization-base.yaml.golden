@@ -2,4 +2,5 @@ resources:
 - volumes.yaml
 - service.yaml
 - ingress.yaml
+- service-monitor.yaml
 - deployment.yaml

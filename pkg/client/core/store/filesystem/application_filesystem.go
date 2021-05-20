@@ -39,6 +39,7 @@ func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplica
 	addOperationIfNotEmpty(operations, "volumes.yaml", application.Volume)
 	addOperationIfNotEmpty(operations, "ingress.yaml", application.Ingress)
 	addOperationIfNotEmpty(operations, "service.yaml", application.Service)
+	addOperationIfNotEmpty(operations, "service-monitor.yaml", application.ServiceMonitor)
 	addOperationIfNotEmpty(operations, "kustomization.yaml", application.BaseKustomization)
 
 	operations.AlterStore(store.SetBaseDir(path.Join(absoluteApplicationDir, relativeApplicationOverlayDir)))

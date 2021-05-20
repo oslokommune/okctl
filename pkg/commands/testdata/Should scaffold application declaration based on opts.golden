@@ -30,6 +30,10 @@ subDomain: my-app
 #
 port: 3000
 
+# Enable prometheus scraping of metrics
+#prometheus:
+#  path: /metrics
+
 # How many replicas of your application should we scaffold
 #replicas: 3 # 1 by default
 

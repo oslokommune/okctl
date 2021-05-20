@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: my-app
+  name: my-app
+  namespace: okctl
+spec:
+  endpoints:
+  - bearerTokenSecret:
+      key: ""
+    path: /metrics
+    port: main
+  selector:
+    matchLabels:
+      app: my-app
+
+---
+

@@ -402,6 +402,13 @@ func Pod(
 							Value: fmt.Sprintf("%d", listenPort),
 						},
 						{
+							// Default is 100, which is way more than needed.
+							// Also, for some reason, pgbouncer has been observed to create a lot of connections,
+							// which starves the actual application for connections.
+							Name:  "MAX_CLIENT_CONN",
+							Value: fmt.Sprintf("%d", 5),
+						},
+						{
 							Name: "DB_USER",
 							ValueFrom: &v1.EnvVarSource{
 								SecretKeyRef: &v1.SecretKeySelector{

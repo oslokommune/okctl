@@ -27,6 +27,19 @@ We integrate [Prometheus](https://prometheus.io) into the cluster by using [kube
 
 The full list of available [CustomResourceDefinitions](https://github.com/prometheus-operator/prometheus-operator#customresourcedefinitions) provides a good overview of the capabilities provided by this operator. 
 
+#### Configuring Prometheus with application.yaml
+
+To enable Prometheus scraping with an `application.yaml`, uncomment the following lines and run `okctl apply application`
+
+```yaml
+kind: Application
+...
+prometheus:
+  path: /metrics
+```
+
+#### Configuring Prometheus manually
+
 For setting up monitoring of your application, we recommend reading [this guide](https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/getting-started.md). The most relevant part is the setup of the `ServiceMonitor`:
 
 ```yaml

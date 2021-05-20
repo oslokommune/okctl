@@ -5,11 +5,12 @@ import (
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
+	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type domainState struct {
-	node stormpkg.Node
+	node breeze.Client
 }
 
 // HostedZone contains storm compatible state
@@ -150,7 +151,7 @@ func (d *domainState) GetPrimaryHostedZone() (*client.HostedZone, error) {
 }
 
 // NewDomainState returns an initialised state store
-func NewDomainState(db stormpkg.Node) client.DomainState {
+func NewDomainState(db breeze.Client) client.DomainState {
 	return &domainState{
 		node: db,
 	}

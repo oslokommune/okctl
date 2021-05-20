@@ -4,12 +4,14 @@ import (
 	"errors"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/breeze"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type argoCDState struct {
-	node stormpkg.Node
+	node breeze.Client
 }
 
 // ArgoCD contains state about an argo cd deployment
@@ -96,7 +98,7 @@ func (a *argoCDState) RemoveArgoCD() error {
 }
 
 // NewArgoCDState returns an initialised state client
-func NewArgoCDState(node stormpkg.Node) client.ArgoCDState {
+func NewArgoCDState(node breeze.Client) client.ArgoCDState {
 	return &argoCDState{
 		node: node,
 	}

@@ -5,11 +5,12 @@ import (
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
+	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type vpcState struct {
-	node stormpkg.Node
+	node breeze.Client
 }
 
 // Vpc contains storm compatible state
@@ -170,7 +171,7 @@ func (v *vpcState) RemoveVpc(stackName string) error {
 }
 
 // NewVpcState returns an initialised state client
-func NewVpcState(node stormpkg.Node) client.VPCState {
+func NewVpcState(node breeze.Client) client.VPCState {
 	return &vpcState{
 		node: node,
 	}

@@ -5,11 +5,12 @@ import (
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
+	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type externalDNSState struct {
-	node stormpkg.Node
+	node breeze.Client
 }
 
 // ExternalDNS contains storm compatible state
@@ -127,7 +128,7 @@ func (e *externalDNSState) RemoveExternalDNS() error {
 }
 
 // NewExternalDNSState returns an initialised state
-func NewExternalDNSState(node stormpkg.Node) client.ExternalDNSState {
+func NewExternalDNSState(node breeze.Client) client.ExternalDNSState {
 	return &externalDNSState{
 		node: node,
 	}

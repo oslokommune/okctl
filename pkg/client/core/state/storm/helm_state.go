@@ -4,6 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/breeze"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/helm"
@@ -11,7 +13,7 @@ import (
 )
 
 type helmState struct {
-	node stormpkg.Node
+	node breeze.Client
 }
 
 // Helm contains storm compatible state
@@ -95,7 +97,7 @@ func (h *helmState) getHelmRelease(releaseName string) (*Helm, error) {
 }
 
 // NewHelmState returns an initialised helm state
-func NewHelmState(node stormpkg.Node) client.HelmState {
+func NewHelmState(node breeze.Client) client.HelmState {
 	return &helmState{
 		node: node,
 	}

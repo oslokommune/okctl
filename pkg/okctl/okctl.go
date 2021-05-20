@@ -12,9 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/asdine/storm/v3/codec/json"
-
-	stormpkg "github.com/asdine/storm/v3"
+	"github.com/oslokommune/okctl/pkg/breeze"
 
 	"github.com/oslokommune/okctl/pkg/client/core/state/storm"
 
@@ -64,7 +62,7 @@ type Okctl struct {
 	BinariesProvider    binaries.Provider
 	CredentialsProvider credentials.Provider
 
-	StormDB *stormpkg.DB
+	DB breeze.Client
 
 	restClient      *rest.HTTPClient
 	kubeConfigStore api.KubeConfigStore
@@ -121,22 +119,22 @@ $ cat %s
 // StateNodes returns the initialised state nodes
 func (o *Okctl) StateNodes() *clientCore.StateNodes {
 	return &clientCore.StateNodes{
-		ArgoCD:              o.StormDB.From(constant.DefaultStormNodeArgoCD),
-		Certificate:         o.StormDB.From(constant.DefaultStormNodeCertificates),
-		Cluster:             o.StormDB.From(constant.DefaultStormNodeCluster),
-		Domain:              o.StormDB.From(constant.DefaultStormNodeDomains),
-		ExternalDNS:         o.StormDB.From(constant.DefaultStormNodeExternalDNS),
-		Github:              o.StormDB.From(constant.DefaultStormNodeGithub),
-		Manifest:            o.StormDB.From(constant.DefaultStormNodeKubernetesManifest),
-		Parameter:           o.StormDB.From(constant.DefaultStormNodeParameter),
-		Vpc:                 o.StormDB.From(constant.DefaultStormNodeVpc),
-		IdentityManager:     o.StormDB.From(constant.DefaultStormNodeIdentityManager),
-		Monitoring:          o.StormDB.From(constant.DefaultStormNodeMonitoring),
-		Component:           o.StormDB.From(constant.DefaultStormNodeComponent),
-		Helm:                o.StormDB.From(constant.DefaultStormNodeHelm),
-		ManagedPolicy:       o.StormDB.From(constant.DefaultStormNodeManagedPolicy),
-		ServiceAccount:      o.StormDB.From(constant.DefaultStormNodeServiceAccount),
-		ContainerRepository: o.StormDB.From(constant.DefaultStormNodeContainerRepository),
+		ArgoCD:              o.DB.From(constant.DefaultStormNodeArgoCD),
+		Certificate:         o.DB.From(constant.DefaultStormNodeCertificates),
+		Cluster:             o.DB.From(constant.DefaultStormNodeCluster),
+		Domain:              o.DB.From(constant.DefaultStormNodeDomains),
+		ExternalDNS:         o.DB.From(constant.DefaultStormNodeExternalDNS),
+		Github:              o.DB.From(constant.DefaultStormNodeGithub),
+		Manifest:            o.DB.From(constant.DefaultStormNodeKubernetesManifest),
+		Parameter:           o.DB.From(constant.DefaultStormNodeParameter),
+		Vpc:                 o.DB.From(constant.DefaultStormNodeVpc),
+		IdentityManager:     o.DB.From(constant.DefaultStormNodeIdentityManager),
+		Monitoring:          o.DB.From(constant.DefaultStormNodeMonitoring),
+		Component:           o.DB.From(constant.DefaultStormNodeComponent),
+		Helm:                o.DB.From(constant.DefaultStormNodeHelm),
+		ManagedPolicy:       o.DB.From(constant.DefaultStormNodeManagedPolicy),
+		ServiceAccount:      o.DB.From(constant.DefaultStormNodeServiceAccount),
+		ContainerRepository: o.DB.From(constant.DefaultStormNodeContainerRepository),
 	}
 }
 
@@ -371,7 +369,7 @@ func (o *Okctl) initialise() error {
 		return err
 	}
 
-	err = o.initialiseStorm()
+	err = o.initialiseBreeze()
 	if err != nil {
 		return err
 	}
@@ -563,18 +561,15 @@ func (o *Okctl) waitForServer() error {
 	}
 }
 
-func (o *Okctl) initialiseStorm() error {
+func (o *Okctl) initialiseBreeze() error {
 	outputDir, err := o.GetRepoOutputDir()
 	if err != nil {
 		return err
 	}
 
-	s, err := stormpkg.Open(path.Join(outputDir, constant.DefaultStormDBName), stormpkg.Codec(json.Codec))
-	if err != nil {
-		return fmt.Errorf("loading state database: %w", err)
-	}
+	db := breeze.New(path.Join(outputDir, constant.DefaultStormDBName))
 
-	o.StormDB = s
+	o.DB = db
 
 	return nil
 }

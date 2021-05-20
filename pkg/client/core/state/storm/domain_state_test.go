@@ -6,12 +6,11 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client"
 
 	"github.com/oslokommune/okctl/pkg/client/mock"
 
-	stormpkg "github.com/asdine/storm/v3"
-	"github.com/asdine/storm/v3/codec/json"
 	"github.com/oslokommune/okctl/pkg/client/core/state/storm"
 	"github.com/stretchr/testify/assert"
 )
@@ -25,8 +24,7 @@ func TestDomainStateScenario(t *testing.T) {
 		assert.NoError(t, err)
 	}()
 
-	db, err := stormpkg.Open(filepath.Join(dir, "storm.db"), stormpkg.Codec(json.Codec))
-	assert.NoError(t, err)
+	db := breeze.New(filepath.Join(dir, "storm.db"))
 
 	err = db.Init(&storm.HostedZone{})
 	assert.NoError(t, err)
@@ -56,8 +54,5 @@ func TestDomainStateScenario(t *testing.T) {
 	assert.NoError(t, err)
 
 	err = state.RemoveHostedZone(mock.DefaultDomain)
-	assert.NoError(t, err)
-
-	err = db.Close()
 	assert.NoError(t, err)
 }

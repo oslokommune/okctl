@@ -1,28 +1,28 @@
 package core
 
 import (
-	stormpkg "github.com/asdine/storm/v3"
+	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 // StateNodes contains all state storage nodes
 type StateNodes struct {
-	ArgoCD              stormpkg.Node
-	Certificate         stormpkg.Node
-	Cluster             stormpkg.Node
-	Domain              stormpkg.Node
-	ExternalDNS         stormpkg.Node
-	Github              stormpkg.Node
-	Manifest            stormpkg.Node
-	Parameter           stormpkg.Node
-	Vpc                 stormpkg.Node
-	IdentityManager     stormpkg.Node
-	Monitoring          stormpkg.Node
-	Component           stormpkg.Node
-	Helm                stormpkg.Node
-	ManagedPolicy       stormpkg.Node
-	ServiceAccount      stormpkg.Node
-	ContainerRepository stormpkg.Node
+	ArgoCD              breeze.Client
+	Certificate         breeze.Client
+	Cluster             breeze.Client
+	Domain              breeze.Client
+	ExternalDNS         breeze.Client
+	Github              breeze.Client
+	Manifest            breeze.Client
+	Parameter           breeze.Client
+	Vpc                 breeze.Client
+	IdentityManager     breeze.Client
+	Monitoring          breeze.Client
+	Component           breeze.Client
+	Helm                breeze.Client
+	ManagedPolicy       breeze.Client
+	ServiceAccount      breeze.Client
+	ContainerRepository breeze.Client
 }
 
 // StateHandlers contains the state handlers

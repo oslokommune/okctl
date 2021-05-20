@@ -5,11 +5,12 @@ import (
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
+	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type identityManagerState struct {
-	node stormpkg.Node
+	node breeze.Client
 }
 
 // IdentityPool contains storm compatible state
@@ -312,7 +313,7 @@ func (s *identityManagerState) SaveIdentityPoolUser(user *client.IdentityPoolUse
 }
 
 // NewIdentityManager returns an initialised state
-func NewIdentityManager(node stormpkg.Node) client.IdentityManagerState {
+func NewIdentityManager(node breeze.Client) client.IdentityManagerState {
 	return &identityManagerState{
 		node: node,
 	}

@@ -15,8 +15,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	"sigs.k8s.io/yaml"
-
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 const defaultMainServicePortName = "main"
@@ -102,9 +100,7 @@ func GenerateApplicationBase(app v1alpha1.Application, iacRepoURL, relativeAppli
 	}
 
 	if app.HasPrometheus() {
-		var monitor monitoringv1.ServiceMonitor
-
-		monitor = resources.CreateServiceMonitor(app, defaultMainServicePortName)
+		monitor := resources.CreateServiceMonitor(app, defaultMainServicePortName)
 
 		kustomization.AddResource("service-monitor.yaml")
 

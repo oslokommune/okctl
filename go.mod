@@ -17,7 +17,7 @@ require (
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/aws/aws-sdk-go v1.38.36
 	github.com/aws/aws-sdk-go-v2 v0.18.0
-	github.com/awslabs/goformation/v4 v4.19.1
+	github.com/awslabs/goformation/v4 v4.19.2
 	github.com/beevik/etree v1.1.0
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/bshuster-repo/logrus-logstash-hook v1.0.0 // indirect

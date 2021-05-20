@@ -147,8 +147,8 @@ github.com/aws/aws-sdk-go v1.38.36 h1:MiqzQY/IOFTX/jmGse7ThafD0eyOC4TrCLv2KY1v+b
 github.com/aws/aws-sdk-go v1.38.36/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/aws/aws-sdk-go-v2 v0.18.0 h1:qZ+woO4SamnH/eEbjM2IDLhRNwIwND/RQyVlBLp3Jqg=
 github.com/aws/aws-sdk-go-v2 v0.18.0/go.mod h1:JWVYvqSMppoMJC0x5wdwiImzgXTI9FuZwxzkQq9wy+g=
-github.com/awslabs/goformation/v4 v4.19.1 h1:xqCDM4+gtkUNmxe1xP3LyH0X7EDMBR4HR1bqHUiMB7o=
-github.com/awslabs/goformation/v4 v4.19.1/go.mod h1:ygNqNsr904Q/Jan2A6ZKw9ewZWDTL9zlclZx2JzZhlM=
+github.com/awslabs/goformation/v4 v4.19.2 h1:MKCu/VBCMOiR+26poJw1xMxHgtzCTtazVK/Ee8XMqHs=
+github.com/awslabs/goformation/v4 v4.19.2/go.mod h1:ygNqNsr904Q/Jan2A6ZKw9ewZWDTL9zlclZx2JzZhlM=
 github.com/beevik/etree v1.1.0 h1:T0xke/WvNtMoCqgzPhkX2r4rjY3GDZFi+FjpRZY2Jbs=
 github.com/beevik/etree v1.1.0/go.mod h1:r8Aw8JqVegEf0w2fDnATrX9VpkMcyFeM0FhwO62wh+A=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=

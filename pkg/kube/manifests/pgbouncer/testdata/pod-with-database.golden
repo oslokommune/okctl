@@ -11,6 +11,8 @@ spec:
   - env:
     - name: LISTEN_PORT
       value: "5432"
+    - name: MAX_CLIENT_CONN
+      value: "5"
     - name: DB_USER
       valueFrom:
         secretKeyRef:

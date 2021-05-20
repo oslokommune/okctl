@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
@@ -113,7 +114,7 @@ func (s *externalSecretsService) CreateExternalSecrets(ctx context.Context, opts
 		return nil, err
 	}
 
-	ch := externalsecrets.New(externalsecrets.DefaultExternalSecretsValues(), constant.DefaultChartApplyTimeout)
+	ch := externalsecrets.New(externalsecrets.NewDefaultValues(opts.ID.Region), constant.DefaultChartApplyTimeout)
 
 	values, err := ch.ValuesYAML()
 	if err != nil {
@@ -131,7 +132,7 @@ func (s *externalSecretsService) CreateExternalSecrets(ctx context.Context, opts
 		Values:         values,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("helm release: %w", err)
 	}
 
 	return &client.ExternalSecrets{

@@ -6,7 +6,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/helm/charts/externalsecrets"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v3"
 )
 
 func TestDefaultExternalSecretsValues(t *testing.T) {
@@ -17,7 +16,7 @@ func TestDefaultExternalSecretsValues(t *testing.T) {
 	}{
 		{
 			name:   "External secrets value are valid",
-			values: externalsecrets.DefaultExternalSecretsValues(),
+			values: externalsecrets.NewDefaultValues("eu-west-1"),
 			golden: "external-secrets-values.yml",
 		},
 	}
@@ -26,11 +25,11 @@ func TestDefaultExternalSecretsValues(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			b, err := yaml.Marshal(tc.values)
+			got, err := tc.values.RawYAML()
 			assert.NoError(t, err)
 
 			g := goldie.New(t)
-			g.Assert(t, tc.golden, b)
+			g.Assert(t, tc.golden, got)
 		})
 	}
 }

@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/config"
+
 	"github.com/oslokommune/okctl/pkg/cfn"
 	"github.com/oslokommune/okctl/pkg/cfn/components"
 	"github.com/oslokommune/okctl/pkg/cloud"
@@ -104,6 +106,8 @@ Resources:
         application/json: '{"errors":[{"message":$context.error.messageString}]}'`
 
 func TestTemplates(t *testing.T) {
+	config.SkipUnlessIntegration(t)
+
 	s := integration.NewLocalstack()
 	err := s.Create(3 * time.Minute)
 	assert.NoError(t, err)

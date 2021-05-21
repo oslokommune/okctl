@@ -30,6 +30,7 @@ func (a *ELBv2API) GetListenersForLoadBalancer(loadbalancerARN string) ([]*elbv2
 
 	var all []*elbv2.Listener
 
+DESCRIBE:
 	for {
 		listeners, err := a.provider.ELBV2().DescribeListeners(&elbv2.DescribeListenersInput{
 			LoadBalancerArn: aws.String(loadbalancerARN),
@@ -41,7 +42,7 @@ func (a *ELBv2API) GetListenersForLoadBalancer(loadbalancerARN string) ([]*elbv2
 				case elbv2.ErrCodeLoadBalancerNotFoundException:
 					// If the load balancer doesn't exist, not much
 					// point in continuing..
-					break
+					break DESCRIBE
 				}
 			}
 

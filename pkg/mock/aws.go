@@ -614,6 +614,15 @@ func (p *CloudProvider) PrincipalARN() string {
 	return "arn:::::/someuser"
 }
 
+// DescribeListenersResponse returns the provided values
+func (p *CloudProvider) DescribeListenersResponse(output *elbv2.DescribeListenersOutput, err error) *CloudProvider {
+	p.ELBv2API.DescribeListenersFn = func(*elbv2.DescribeListenersInput) (*elbv2.DescribeListenersOutput, error) {
+		return output, err
+	}
+
+	return p
+}
+
 // NewCloudProvider returns a mocked cloud provider with no mocks sets
 func NewCloudProvider() *CloudProvider {
 	return &CloudProvider{

@@ -1,7 +1,10 @@
 package elbv2api_test
 
 import (
+	"errors"
 	"testing"
+
+	"github.com/aws/aws-sdk-go/aws/awserr"
 
 	"github.com/oslokommune/okctl/pkg/elbv2api"
 	"github.com/stretchr/testify/assert"
@@ -23,7 +26,6 @@ func TestELBv2API_GetListenersForLoadBalancer(t *testing.T) {
 		expect    interface{}
 		expectErr bool
 	}{
-		// What a stupid test
 		{
 			name:     "Should work",
 			provider: mock.NewGoodCloudProvider(),
@@ -38,6 +40,14 @@ func TestELBv2API_GetListenersForLoadBalancer(t *testing.T) {
 					ListenerArn: aws.String(mock.DefaultListenerARN),
 				},
 			},
+			expectErr: false,
+		},
+		{
+			name: "Should ignore lb not found",
+			provider: mock.NewGoodCloudProvider().
+				DescribeListenersResponse(nil, awserr.New(elbv2.ErrCodeLoadBalancerNotFoundException, "", errors.New("something"))),
+			arn:       mock.DefaultLoadBalancerARN,
+			expect:    []*elbv2.Listener(nil),
 			expectErr: false,
 		},
 		{

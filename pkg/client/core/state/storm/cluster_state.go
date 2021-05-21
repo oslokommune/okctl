@@ -6,11 +6,12 @@ import (
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
+	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type clusterState struct {
-	node stormpkg.Node
+	node breeze.Client
 }
 
 // Cluster contains storm compatible state
@@ -92,7 +93,7 @@ func (c *clusterState) RemoveCluster(name string) error {
 }
 
 // NewClusterState returns an initialised state client
-func NewClusterState(node stormpkg.Node) client.ClusterState {
+func NewClusterState(node breeze.Client) client.ClusterState {
 	return &clusterState{
 		node: node,
 	}

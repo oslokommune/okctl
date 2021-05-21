@@ -5,11 +5,12 @@ import (
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
+	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type containerRepositoryState struct {
-	node stormpkg.Node
+	node breeze.Client
 }
 
 // ContainerRepository contains storm compatible state
@@ -94,7 +95,7 @@ func (c *containerRepositoryState) getContainerRepository(imageName string) (*Co
 }
 
 // NewContainerRepositoryState returns an initialised state client
-func NewContainerRepositoryState(node stormpkg.Node) client.ContainerRepositoryState {
+func NewContainerRepositoryState(node breeze.Client) client.ContainerRepositoryState {
 	return &containerRepositoryState{
 		node: node,
 	}

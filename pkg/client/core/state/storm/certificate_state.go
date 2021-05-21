@@ -4,12 +4,14 @@ import (
 	"errors"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/breeze"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type certificateState struct {
-	node stormpkg.Node
+	node breeze.Client
 }
 
 // Certificate contains storm compatible state
@@ -103,7 +105,7 @@ func (c *certificateState) RemoveCertificate(domain string) error {
 }
 
 // NewCertificateState returns an initialised state store
-func NewCertificateState(node stormpkg.Node) client.CertificateState {
+func NewCertificateState(node breeze.Client) client.CertificateState {
 	return &certificateState{
 		node: node,
 	}

@@ -5,11 +5,12 @@ import (
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
+	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type monitoringState struct {
-	node stormpkg.Node
+	node breeze.Client
 }
 
 // KubePromStack contains storm compatible state
@@ -120,7 +121,7 @@ func (m *monitoringState) getKubePromStack() (*KubePromStack, error) {
 }
 
 // NewMonitoringState returns an initialised state client
-func NewMonitoringState(node stormpkg.Node) client.MonitoringState {
+func NewMonitoringState(node breeze.Client) client.MonitoringState {
 	return &monitoringState{
 		node: node,
 	}

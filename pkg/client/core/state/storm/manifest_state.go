@@ -5,11 +5,12 @@ import (
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
+	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type manifestState struct {
-	node stormpkg.Node
+	node breeze.Client
 }
 
 // KubernetesManifest contains storm compatible state
@@ -97,7 +98,7 @@ func (s *manifestState) RemoveKubernetesManifests(name string) error {
 }
 
 // NewManifestState returns an initialised manifest state
-func NewManifestState(node stormpkg.Node) client.ManifestState {
+func NewManifestState(node breeze.Client) client.ManifestState {
 	return &manifestState{
 		node: node,
 	}

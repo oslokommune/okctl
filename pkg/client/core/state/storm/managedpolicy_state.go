@@ -5,11 +5,12 @@ import (
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
+	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type managedPolicyState struct {
-	node stormpkg.Node
+	node breeze.Client
 }
 
 // ManagedPolicy contains storm compatible state
@@ -94,7 +95,7 @@ func (m *managedPolicyState) RemovePolicy(stackName string) error {
 }
 
 // NewManagedPolicyState returns an initialised managed policy state
-func NewManagedPolicyState(node stormpkg.Node) client.ManagedPolicyState {
+func NewManagedPolicyState(node breeze.Client) client.ManagedPolicyState {
 	return &managedPolicyState{
 		node: node,
 	}

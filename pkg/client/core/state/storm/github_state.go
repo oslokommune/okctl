@@ -5,11 +5,12 @@ import (
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
+	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type githubState struct {
-	node stormpkg.Node
+	node breeze.Client
 }
 
 // GithubRepository contains storm compatible state
@@ -159,7 +160,7 @@ func (g *githubState) getGithubRepository(fullName string) (*GithubRepository, e
 }
 
 // NewGithubState returns an initialised state client
-func NewGithubState(node stormpkg.Node) client.GithubState {
+func NewGithubState(node breeze.Client) client.GithubState {
 	return &githubState{
 		node: node,
 	}

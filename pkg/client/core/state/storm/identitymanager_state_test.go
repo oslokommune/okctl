@@ -6,10 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client/mock"
 
-	stormpkg "github.com/asdine/storm/v3"
-	"github.com/asdine/storm/v3/codec/json"
 	"github.com/oslokommune/okctl/pkg/client/core/state/storm"
 	"github.com/stretchr/testify/assert"
 )
@@ -23,8 +22,7 @@ func TestIdentityPoolStateScenario(t *testing.T) {
 		assert.NoError(t, err)
 	}()
 
-	db, err := stormpkg.Open(filepath.Join(dir, "storm.db"), stormpkg.Codec(json.Codec))
-	assert.NoError(t, err)
+	db := breeze.New(filepath.Join(dir, "storm.db"))
 
 	err = db.Init(&storm.IdentityPool{})
 	assert.NoError(t, err)
@@ -47,9 +45,6 @@ func TestIdentityPoolStateScenario(t *testing.T) {
 
 	err = state.RemoveIdentityPool(mock.StackNameIdentityPool)
 	assert.NoError(t, err)
-
-	err = db.Close()
-	assert.NoError(t, err)
 }
 
 func TestIdentityPoolClientStateScenario(t *testing.T) {
@@ -61,8 +56,7 @@ func TestIdentityPoolClientStateScenario(t *testing.T) {
 		assert.NoError(t, err)
 	}()
 
-	db, err := stormpkg.Open(filepath.Join(dir, "storm.db"), stormpkg.Codec(json.Codec))
-	assert.NoError(t, err)
+	db := breeze.New(filepath.Join(dir, "storm.db"))
 
 	err = db.Init(&storm.IdentityPoolClient{})
 	assert.NoError(t, err)
@@ -84,9 +78,6 @@ func TestIdentityPoolClientStateScenario(t *testing.T) {
 
 	err = state.RemoveIdentityPoolClient(mock.StackNameIdentityPoolClient)
 	assert.NoError(t, err)
-
-	err = db.Close()
-	assert.NoError(t, err)
 }
 
 func TestIdentityPoolUserStateScenario(t *testing.T) {
@@ -98,8 +89,7 @@ func TestIdentityPoolUserStateScenario(t *testing.T) {
 		assert.NoError(t, err)
 	}()
 
-	db, err := stormpkg.Open(filepath.Join(dir, "storm.db"), stormpkg.Codec(json.Codec))
-	assert.NoError(t, err)
+	db := breeze.New(filepath.Join(dir, "storm.db"))
 
 	err = db.Init(&storm.IdentityPoolUser{})
 	assert.NoError(t, err)
@@ -121,8 +111,5 @@ func TestIdentityPoolUserStateScenario(t *testing.T) {
 	assert.NoError(t, err)
 
 	err = state.RemoveIdentityPoolUser(mock.StackNameIdentityPoolUser)
-	assert.NoError(t, err)
-
-	err = db.Close()
 	assert.NoError(t, err)
 }

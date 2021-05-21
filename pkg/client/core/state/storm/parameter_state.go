@@ -5,11 +5,12 @@ import (
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
+	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type parameterState struct {
-	node stormpkg.Node
+	node breeze.Client
 }
 
 // SecretParameter contains storm compatible state
@@ -95,7 +96,7 @@ func (p *parameterState) RemoveSecret(name string) error {
 }
 
 // NewParameterState returns an initialised state
-func NewParameterState(node stormpkg.Node) client.ParameterState {
+func NewParameterState(node breeze.Client) client.ParameterState {
 	return &parameterState{
 		node: node,
 	}

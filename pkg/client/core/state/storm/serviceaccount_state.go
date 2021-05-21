@@ -6,6 +6,7 @@ import (
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
+	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
@@ -41,7 +42,7 @@ func (sa *ServiceAccount) Convert() *client.ServiceAccount {
 }
 
 type serviceAccountState struct {
-	node stormpkg.Node
+	node breeze.Client
 }
 
 func (s *serviceAccountState) SaveServiceAccount(account *client.ServiceAccount) error {
@@ -99,7 +100,7 @@ func (s *serviceAccountState) UpdateServiceAccount(account *client.ServiceAccoun
 }
 
 // NewServiceAccountState returns an initialised state store
-func NewServiceAccountState(node stormpkg.Node) client.ServiceAccountState {
+func NewServiceAccountState(node breeze.Client) client.ServiceAccountState {
 	return &serviceAccountState{
 		node: node,
 	}

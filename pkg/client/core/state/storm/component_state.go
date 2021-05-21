@@ -5,11 +5,12 @@ import (
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
+	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
 type componentState struct {
-	node stormpkg.Node
+	node breeze.Client
 }
 
 // PostgresDatabase contains storm compatible state
@@ -178,7 +179,7 @@ func (c *componentState) GetPostgresDatabases() ([]*client.PostgresDatabase, err
 }
 
 // NewComponentState returns an initialised state client
-func NewComponentState(node stormpkg.Node) client.ComponentState {
+func NewComponentState(node breeze.Client) client.ComponentState {
 	return &componentState{
 		node: node,
 	}

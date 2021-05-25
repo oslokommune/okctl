@@ -104,11 +104,11 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("synchronizing application: %w", err)
 			}
 
-			return commands.WriteApplyApplicationSuccessMessage(
-				o.Out,
-				opts.Application,
-				o.Declaration.Github.OutputPath,
-			)
+			return commands.WriteApplyApplicationSuccessMessage(commands.WriteApplyApplicationSucessMessageOpts{
+				Out:         o.Out,
+				Application: opts.Application,
+				Cluster:     *o.Declaration,
+			})
 		},
 	}
 

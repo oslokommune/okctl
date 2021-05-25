@@ -42,7 +42,18 @@ func TestApplyApplicationSuccessMessage(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual bytes.Buffer
 
-			err := WriteApplyApplicationSuccessMessage(&actual, tc.application, "infrastructure")
+			err := WriteApplyApplicationSuccessMessage(WriteApplyApplicationSucessMessageOpts{
+				Out:         &actual,
+				Application: tc.application,
+				Cluster: v1alpha1.Cluster{
+					Metadata: v1alpha1.ClusterMeta{
+						Name: "test-cluster",
+					},
+					Github: v1alpha1.ClusterGithub{
+						OutputPath: "infrastructure",
+					},
+				},
+			})
 			assert.NoError(t, err)
 
 			g := goldie.New(t)

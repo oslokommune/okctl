@@ -90,6 +90,8 @@ const (
 	DefaultApplicationBaseDir = "base"
 	// DefaultApplicationOverlayDir is where the directory where application overlay files reside
 	DefaultApplicationOverlayDir = "overlays"
+	// DefaultDeploymentPatchFilename defines the filename of the deployment patch
+	DefaultDeploymentPatchFilename = "deployment-patch.json"
 	// DefaultIngressPatchFilename defines the filename of the ingress patch
 	DefaultIngressPatchFilename = "ingress-patch.json"
 

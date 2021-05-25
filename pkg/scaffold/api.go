@@ -144,48 +144,22 @@ func GenerateApplicationOverlay(application v1alpha1.Application, hostedZoneDoma
 	kustomization := resources.NewKustomization()
 	kustomization.AddResource("../../base")
 
+	deploymentPatchResult, err := createDeploymentPatch(application.Image.URI)
+	if err != nil {
+		return ApplicationOverlay{}, fmt.Errorf("creating deployment patch: %w", err)
+	}
+
+	overlay.DeploymentPatch = deploymentPatchResult.Content
+	kustomization.AddPatch(deploymentPatchResult.PatchReference)
+
 	if application.HasIngress() {
-		ingressPatch := jsonpatch.New()
-
-		host := fmt.Sprintf("%s.%s", application.SubDomain, hostedZoneDomain)
-
-		ingressPatch.Add(
-			jsonpatch.Operation{
-				Type:  jsonpatch.OperationTypeAdd,
-				Path:  "/metadata/annotations/alb.ingress.kubernetes.io~1certificate-arn",
-				Value: certARN,
-			},
-			jsonpatch.Operation{
-				Type:  jsonpatch.OperationTypeAdd,
-				Path:  "/spec/rules/0/host",
-				Value: host,
-			},
-			jsonpatch.Operation{
-				Type:  jsonpatch.OperationTypeAdd,
-				Path:  "/spec/tls",
-				Value: []string{},
-			},
-			jsonpatch.Operation{
-				Type:  jsonpatch.OperationTypeAdd,
-				Path:  "/spec/tls/0",
-				Value: map[string]string{},
-			},
-			jsonpatch.Operation{
-				Type:  jsonpatch.OperationTypeAdd,
-				Path:  "/spec/tls/0/hosts",
-				Value: []string{host},
-			},
-		)
-
-		overlay.IngressPatch, err = json.Marshal(ingressPatch)
+		result, err := createIngressPatch(application.SubDomain, hostedZoneDomain, certARN)
 		if err != nil {
-			return overlay, fmt.Errorf("marshalling ingress patch: %w", err)
+			return ApplicationOverlay{}, fmt.Errorf("creating ingress patch: %w", err)
 		}
 
-		kustomization.AddPatch(resources.PatchReference{
-			Path:   constant.DefaultIngressPatchFilename,
-			Target: resources.PatchTarget{Kind: "Ingress"},
-		})
+		overlay.IngressPatch = result.Content
+		kustomization.AddPatch(result.PatchReference)
 	}
 
 	overlay.Kustomization, err = yaml.Marshal(kustomization)
@@ -194,4 +168,79 @@ func GenerateApplicationOverlay(application v1alpha1.Application, hostedZoneDoma
 	}
 
 	return overlay, nil
+}
+
+type patchCreationResult struct {
+	Content        []byte
+	PatchReference resources.PatchReference
+}
+
+func createDeploymentPatch(imageURI string) (patchCreationResult, error) {
+	patch := jsonpatch.New()
+
+	patch.Add(jsonpatch.Operation{
+		Type:  jsonpatch.OperationTypeAdd,
+		Path:  "/spec/template/spec/containers/0/image",
+		Value: imageURI,
+	})
+
+	content, err := json.Marshal(patch)
+	if err != nil {
+		return patchCreationResult{}, fmt.Errorf("marshalling ingress patch: %w", err)
+	}
+
+	return patchCreationResult{
+		Content: content,
+		PatchReference: resources.PatchReference{
+			Path:   constant.DefaultDeploymentPatchFilename,
+			Target: resources.PatchTarget{Kind: "Deployment"},
+		},
+	}, nil
+}
+
+func createIngressPatch(subDomain, domain, certArn string) (patchCreationResult, error) {
+	patch := jsonpatch.New()
+
+	host := fmt.Sprintf("%s.%s", subDomain, domain)
+
+	patch.Add(
+		jsonpatch.Operation{
+			Type:  jsonpatch.OperationTypeAdd,
+			Path:  "/metadata/annotations/alb.ingress.kubernetes.io~1certificate-arn",
+			Value: certArn,
+		},
+		jsonpatch.Operation{
+			Type:  jsonpatch.OperationTypeAdd,
+			Path:  "/spec/rules/0/host",
+			Value: host,
+		},
+		jsonpatch.Operation{
+			Type:  jsonpatch.OperationTypeAdd,
+			Path:  "/spec/tls",
+			Value: []string{},
+		},
+		jsonpatch.Operation{
+			Type:  jsonpatch.OperationTypeAdd,
+			Path:  "/spec/tls/0",
+			Value: map[string]string{},
+		},
+		jsonpatch.Operation{
+			Type:  jsonpatch.OperationTypeAdd,
+			Path:  "/spec/tls/0/hosts",
+			Value: []string{host},
+		},
+	)
+
+	content, err := json.Marshal(patch)
+	if err != nil {
+		return patchCreationResult{}, fmt.Errorf("marshalling ingress patch: %w", err)
+	}
+
+	return patchCreationResult{
+		Content: content,
+		PatchReference: resources.PatchReference{
+			Path:   constant.DefaultIngressPatchFilename,
+			Target: resources.PatchTarget{Kind: "Ingress"},
+		},
+	}, nil
 }

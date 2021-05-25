@@ -1,4 +1,7 @@
 patches:
+- path: deployment-patch.json
+  target:
+    kind: Deployment
 - path: ingress-patch.json
   target:
     kind: Ingress

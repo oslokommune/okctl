@@ -123,6 +123,7 @@ func TestNewApplicationService(t *testing.T) {
 	g.Assert(t, "service-monitor.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "service-monitor.yaml")))
 
 	g.Assert(t, "kustomization-overlay.yaml", readFile(t, &aferoFs, filepath.Join(appOverlayDir, "kustomization.yaml")))
+	g.Assert(t, "deployment-patch.yaml", readFile(t, &aferoFs, filepath.Join(appOverlayDir, "deployment-patch.json")))
 	g.Assert(t, "ingress-patch.yaml", readFile(t, &aferoFs, filepath.Join(appOverlayDir, "ingress-patch.json")))
 	g.Assert(t, "argocd-application.yaml", readFile(t, &aferoFs, filepath.Join(appOverlayDir, "argocd-application.yaml")))
 }

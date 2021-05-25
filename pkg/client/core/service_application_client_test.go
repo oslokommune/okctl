@@ -115,8 +115,6 @@ func TestNewApplicationService(t *testing.T) {
 	appBaseDir := filepath.Join(appDir, constant.DefaultApplicationBaseDir)
 	appOverlayDir := filepath.Join(appDir, constant.DefaultApplicationOverlayDir, clusterName)
 
-	g.Assert(t, "argocd-application.yaml", readFile(t, &aferoFs, filepath.Join(appDir, "argocd-application.yaml")))
-
 	g.Assert(t, "kustomization-base.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "kustomization.yaml")))
 	g.Assert(t, "deployment.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "deployment.yaml")))
 	g.Assert(t, "volumes.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "volumes.yaml")))
@@ -126,6 +124,7 @@ func TestNewApplicationService(t *testing.T) {
 
 	g.Assert(t, "kustomization-overlay.yaml", readFile(t, &aferoFs, filepath.Join(appOverlayDir, "kustomization.yaml")))
 	g.Assert(t, "ingress-patch.yaml", readFile(t, &aferoFs, filepath.Join(appOverlayDir, "ingress-patch.json")))
+	g.Assert(t, "argocd-application.yaml", readFile(t, &aferoFs, filepath.Join(appOverlayDir, "argocd-application.yaml")))
 }
 
 // nolint: funlen

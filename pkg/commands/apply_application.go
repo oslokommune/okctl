@@ -104,18 +104,28 @@ const applyApplicationSuccessMessage = `
     If using an ingress, it can take up to five minutes for the routing to configure
 `
 
+// WriteApplyApplicationSucessMessageOpts contains necessary information to compile and write a success message
+type WriteApplyApplicationSucessMessageOpts struct {
+	Out io.Writer
+
+	Application v1alpha1.Application
+	Cluster     v1alpha1.Cluster
+}
+
 // WriteApplyApplicationSuccessMessage produces a relevant message for successfully reconciling an application
-func WriteApplyApplicationSuccessMessage(writer io.Writer, application v1alpha1.Application, outputDir string) error {
+func WriteApplyApplicationSuccessMessage(opts WriteApplyApplicationSucessMessageOpts) error {
 	argoCDResourcePath := path.Join(
-		outputDir,
+		opts.Cluster.Github.OutputPath,
 		constant.DefaultApplicationsOutputDir,
-		application.Metadata.Name,
+		opts.Application.Metadata.Name,
+		constant.DefaultApplicationOverlayDir,
+		opts.Cluster.Metadata.Name,
 		"argocd-application.yaml",
 	)
 
 	optionalDockerTagPushStep := ""
 
-	if application.Image.HasName() {
+	if opts.Application.Image.HasName() {
 		optionalDockerTagPushStep = `
         - Tag and push a docker image to your container repository. See instructions on
           https://okctl.io/help/docker-registry/#push-a-docker-image-to-the-amazon-elastic-container-registry-ecr`
@@ -129,16 +139,16 @@ func WriteApplyApplicationSuccessMessage(writer io.Writer, application v1alpha1.
 	var tmplBuffer bytes.Buffer
 
 	err = tmpl.Execute(&tmplBuffer, ApplyApplicationSuccessMessageOpts{
-		ApplicationName:           application.Metadata.Name,
+		ApplicationName:           opts.Application.Metadata.Name,
 		OptionalDockerTagPushStep: optionalDockerTagPushStep,
-		OptionalDockerImageURI:    application.Image.URI,
+		OptionalDockerImageURI:    opts.Application.Image.URI,
 		KubectlApplyArgoCmd:       aurora.Green(fmt.Sprintf("kubectl apply -f %s", argoCDResourcePath)).String(),
 	})
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprint(writer, tmplBuffer.String())
+	fmt.Fprint(opts.Out, tmplBuffer.String())
 
 	return nil
 }

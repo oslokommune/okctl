@@ -62,7 +62,7 @@ This is only needed if the namespace you specified in the application declaratio
 3. Apply the ArgoCD resource to the cluster:
 
 ```
-kubectl apply -f infrastructure/applications/<app-name>/argocd-application.yaml
+kubectl apply -f infrastructure/applications/<app-name>/overlays/<cluster name>/argocd-application.yaml
 ```
 
 The application.yaml declaration is used as an alternative to a wizard or numerous command flags. After running 

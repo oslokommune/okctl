@@ -32,7 +32,6 @@ func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplica
 	relativeApplicationOverlayDir := path.Join(constant.DefaultApplicationOverlayDir, application.ClusterName)
 
 	operations := store.NewFileSystem(absoluteApplicationDir, s.fs)
-	addOperationIfNotEmpty(operations, "argocd-application.yaml", application.ArgoCDResource)
 
 	operations.AlterStore(store.SetBaseDir(path.Join(absoluteApplicationDir, relativeApplicationBaseDir)))
 	addOperationIfNotEmpty(operations, "deployment.yaml", application.Deployment)
@@ -45,6 +44,7 @@ func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplica
 	operations.AlterStore(store.SetBaseDir(path.Join(absoluteApplicationDir, relativeApplicationOverlayDir)))
 	addOperationIfNotEmpty(operations, "kustomization.yaml", application.OverlayKustomization)
 	addOperationIfNotEmpty(operations, constant.DefaultIngressPatchFilename, application.IngressPatch)
+	addOperationIfNotEmpty(operations, "argocd-application.yaml", application.ArgoCDResource)
 
 	report, err := operations.Do()
 	if err != nil {

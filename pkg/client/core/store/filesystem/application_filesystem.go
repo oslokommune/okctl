@@ -43,6 +43,7 @@ func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplica
 
 	operations.AlterStore(store.SetBaseDir(path.Join(absoluteApplicationDir, relativeApplicationOverlayDir)))
 	addOperationIfNotEmpty(operations, "kustomization.yaml", application.OverlayKustomization)
+	addOperationIfNotEmpty(operations, constant.DefaultDeploymentPatchFilename, application.DeploymentPatch)
 	addOperationIfNotEmpty(operations, constant.DefaultIngressPatchFilename, application.IngressPatch)
 	addOperationIfNotEmpty(operations, "argocd-application.yaml", application.ArgoCDResource)
 

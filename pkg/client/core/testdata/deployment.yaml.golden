@@ -14,8 +14,7 @@ spec:
         app: my-app
     spec:
       containers:
-      - image: docker.pkg.github.com/my-org/my-repo/my-package:0.0.1
-        name: my-app
+      - name: my-app
         volumeMounts:
         - mountPath: /path/to/mount/volume
           name: my-app-pathtomountvolume

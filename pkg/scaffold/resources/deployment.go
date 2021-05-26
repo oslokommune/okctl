@@ -87,7 +87,6 @@ func createContainers(app v1alpha1.Application) []corev1.Container {
 
 	containers := []corev1.Container{{
 		Name:         app.Metadata.Name,
-		Image:        app.Image.URI,
 		Env:          envVars,
 		VolumeMounts: volumeMounts,
 	}}

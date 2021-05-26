@@ -145,26 +145,27 @@ lint: $(GOLANGCILINT)
 	$(GOLANGCILINT) run
 
 ## Testing
+ifdef CI
+export INTEGRATION_TESTS=true
+endif
+
 TIMEOUT  = 10m
 TESTPKGS = $(shell env GO111MODULE=on $(GO) list -f \
             '{{ if or .TestGoFiles .XTestGoFiles }}{{ .ImportPath }}{{ end }}' \
             $(PKGS))
-TEST_TARGETS := test-default test-bench test-short test-verbose test-race check-ci
+TEST_TARGETS := test-default test-bench test-short test-verbose test-race integration
 test-bench:   ARGS=-run=__absolutelynothing__ -bench=.
 test-short:   ARGS=-short
 test-verbose: ARGS=-v
 test-race:    ARGS=-race
-check-ci: 	  ENV_VARS=INTEGRATION_TESTS=true
+integration:  export INTEGRATION_TESTS=true
 $(TEST_TARGETS): test
 check test tests: fmt lint $(RICHGO)
-	$(ENV_VARS) $(GO) test -timeout $(TIMEOUT) $(ARGS) $(TESTPKGS) | tee >(RICHGO_FORCE_COLOR=1 $(RICHGO) testfilter); \
+	$(GO) test -timeout $(TIMEOUT) $(ARGS) $(TESTPKGS) | tee >(RICHGO_FORCE_COLOR=1 $(RICHGO) testfilter); \
 		test $${PIPESTATUS[0]} -eq 0
 
 test-update:
 	$(GO) test ./... -update
-
-integration:
-	$(GO) test -tags=integration ./...
 
 COVERAGE_MODE    = atomic
 COVERAGE_PROFILE = $(COVERAGE_DIR)/profile.out

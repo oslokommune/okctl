@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/config"
+
 	"github.com/oslokommune/okctl/pkg/integration"
 	"github.com/oslokommune/okctl/pkg/kube"
 	"github.com/oslokommune/okctl/pkg/kube/manifests/externaldns"
@@ -51,9 +53,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestExternalDNS(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping external dns kube integration tests in short mode")
-	}
+	config.SkipUnlessIntegration(t)
 
 	dir, err := ioutil.TempDir("", "externalDNS")
 	assert.NoError(t, err)

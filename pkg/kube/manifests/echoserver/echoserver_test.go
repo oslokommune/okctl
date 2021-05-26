@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/config"
+
 	"github.com/oslokommune/okctl/pkg/integration"
 	"github.com/oslokommune/okctl/pkg/kube"
 	"github.com/oslokommune/okctl/pkg/kube/manifests/echoserver"
@@ -15,9 +17,7 @@ import (
 )
 
 func TestEchoServer(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping echoserver kube integration tests in short mode")
-	}
+	config.SkipUnlessIntegration(t)
 
 	dir, err := ioutil.TempDir("", "echoserver")
 	assert.NoError(t, err)

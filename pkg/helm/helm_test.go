@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/config"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/argocd"
@@ -69,9 +71,7 @@ func TestHelm(t *testing.T) {
 		t.Skip("Skipping testing in CI environment, as this test is flaky here.")
 	}
 
-	if testing.Short() {
-		t.Skip("skipping helm integration tests in short mode")
-	}
+	config.SkipUnlessIntegration(t)
 
 	dir, err := ioutil.TempDir("", "testHelm")
 	assert.NoError(t, err)

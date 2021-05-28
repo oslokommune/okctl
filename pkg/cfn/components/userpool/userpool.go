@@ -93,7 +93,7 @@ func (p *UserPool) Resource() cloudformation.Resource {
 				MinimumLength:                 minPasswordLength,
 				RequireLowercase:              true,
 				RequireNumbers:                true,
-				RequireSymbols:                true,
+				RequireSymbols:                false,
 				RequireUppercase:              true,
 				TemporaryPasswordValidityDays: temporaryPasswordValidityDays,
 			},

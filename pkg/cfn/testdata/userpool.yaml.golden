@@ -65,7 +65,6 @@ Resources:
           MinimumLength: 8
           RequireLowercase: true
           RequireNumbers: true
-          RequireSymbols: true
           RequireUppercase: true
           TemporaryPasswordValidityDays: 7
       Schema:

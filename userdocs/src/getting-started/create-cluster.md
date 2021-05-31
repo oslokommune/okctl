@@ -1,3 +1,6 @@
+The following is a guide for how to create an environment that contains the elements described in
+[Compare and contrast](/#compare-and-contrast).
+
 To create a cluster using the declarative approach:
 
 1. Create a declaration and edit it to suit your needs

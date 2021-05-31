@@ -6,7 +6,6 @@ To create a cluster using the declarative approach:
 1. Create a declaration and edit it to suit your needs
 2. Apply the declaration
 
-
 ## Commands
 
 To scaffold a cluster declaration, run the following:
@@ -189,8 +188,8 @@ environment variables to be used to authenticate:
 * `AWS_ACCESS_KEY_ID`
 * `AWS_SECRET_ACCESS_KEY`
 
-Example
 ```shell
+# Example
 export AWS_ACCESS_KEY_ID=myid
 export AWS_SECRET_ACCESS_KEY=mykey
 
@@ -206,8 +205,8 @@ environment variable to be used to authenticate:
 
 * `GITHUB_TOKEN`
 
-Example
 ```shell
+# Example
 export GITHUB_TOKEN=mytoken
 
 okctl apply cluster --github-credentials-type token -f cluster.yaml
@@ -248,6 +247,6 @@ It will be the part after the `/`.
 
 <span style="display:block;text-align:center">![okctl](../img/team.png)</span>
 
-## Any other attribute
+### Any other attribute
 
 If you don't know what it does, default is probably fine.

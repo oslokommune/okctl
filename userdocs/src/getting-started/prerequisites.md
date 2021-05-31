@@ -1,14 +1,12 @@
 The following prerequisites are required to initiate and complete the cluster creation process.
 
-## Ensure the following requirements
-
-### GPG key
+## GPG key
 
 Make sure you have your own GPG key. To list existing keys, run `gpg --list-keys`
 
 If you don't have any keys, create a new one with `gpg --gen-key`
 
-### Create a new GitHub repository
+## Create a new GitHub repository
 
 Go to github.com/oslokommune and create a new **private** git repository.
 
@@ -24,7 +22,7 @@ git clone git@github.com:oslokommune/<the new repository>.git
 cd <the new repository>
 ```
 
-### Prepare information for cluster creation
+## Prepare information for cluster creation
 
 :information_source: A "cluster" is a Kubernetes cluster in an environment as described in [Compare and contrast](/#compare-and-contrast).
 

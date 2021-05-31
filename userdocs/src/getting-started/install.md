@@ -1,7 +1,7 @@
-To download the latest release, make sure you have the required pre-requisites. Then run the command matching your
-operating system.
-
 ## Prerequisites
+
+To download the latest release, make sure you have the required [prerequisites](/getting-started/prerequisites/). Then run the command matching your
+operating system.
 
 ## Linux
 
@@ -11,10 +11,6 @@ sudo mv /tmp/okctl /usr/local/bin
 ```
 
 ## macOS
-
-### Prerequisites
-
-### Installation
 
 ```bash
 brew tap oslokommune/tap

@@ -1,3 +1,5 @@
+The following prerequisites are required to initiate and complete the cluster creation process.
+
 ## Ensure the following requirements
 
 ### GPG key

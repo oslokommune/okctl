@@ -28,6 +28,7 @@ type Githuber interface {
 	CreateDeployKey(org, repository, title, publicKey string) (*Key, error)
 	DeleteDeployKey(org, repository string, id int64) error
 	CreatePullRequest(r *PullRequest) error
+	ListReleases(owner, repo string) ([]*RepositoryRelease, error)
 }
 
 // Github contains the state for interacting with the github API
@@ -47,6 +48,10 @@ type Team = github.Team
 
 // Key shadows github.Key
 type Key = github.Key
+
+type RepositoryRelease = github.RepositoryRelease
+
+type ReleaseAsset = github.ReleaseAsset
 
 // New returns an initialised github API client
 func New(ctx context.Context, auth githubAuth.Authenticator) (*Github, error) {
@@ -180,6 +185,34 @@ func (g *Github) CreatePullRequest(r *PullRequest) error {
 	}
 
 	return nil
+}
+
+const ListReleasesPageSize = 100
+
+func (g *Github) ListReleases(owner, repo string) ([]*RepositoryRelease, error) {
+	opts := &github.ListOptions{
+		PerPage: ListReleasesPageSize,
+	}
+
+	var allReleases []*RepositoryRelease
+
+	for {
+		// Documentation: https://docs.github.com/en/rest/reference/repos#list-release-assets
+		releases, response, err := g.Client.Repositories.ListReleases(g.Ctx, owner, repo, opts)
+		if err != nil {
+			return nil, fmt.Errorf("listing github releases: %w", err)
+		}
+
+		allReleases = append(allReleases, releases...)
+
+		if response.NextPage == 0 {
+			break
+		}
+
+		opts.Page = response.NextPage
+	}
+
+	return allReleases, nil
 }
 
 // BoolPtr returns a pointer to the bool

@@ -1,0 +1,49 @@
+package upgrade
+
+import (
+	"fmt"
+	"strings"
+)
+
+type okctlUpgradeFile struct {
+	filename  string
+	version   string
+	os        string
+	arch      string
+	extension string
+}
+
+// parseOkctlUpgradeFilename converts a string like 'okctl-upgrade_0.0.63_Darwin_amd64.tar.gz' to a okctlUpgradeFile
+// struct.
+func parseOkctlUpgradeFilename(filename string) (okctlUpgradeFile, error) {
+	filenameParts := strings.Split(filename, "_")
+	if len(filenameParts) != 4 {
+		return okctlUpgradeFile{}, fmt.Errorf(
+			"expected 4 substrings when splitting on underscore (_), got %d in string '%s'",
+			len(filenameParts), filenameParts,
+		)
+	}
+
+	version := filenameParts[1]          // 0.0.63
+	os := filenameParts[2]               // Darwin
+	archAndExtension := filenameParts[3] // amd64.tar.gz
+
+	archAndExtensionParts := strings.Split(archAndExtension, ".")
+	if len(archAndExtensionParts) < 2 {
+		return okctlUpgradeFile{}, fmt.Errorf(
+			"expected at least 2 substrings when splitting on dot (.), got %d in string '%s'",
+			len(archAndExtensionParts), filenameParts,
+		)
+	}
+
+	arch := archAndExtensionParts[0]            // amd64
+	extension := archAndExtension[len(arch)+1:] // tar.gz
+
+	return okctlUpgradeFile{
+		filename:  filename,
+		version:   version,
+		os:        os,
+		arch:      arch,
+		extension: extension,
+	}, nil
+}

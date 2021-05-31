@@ -1,8 +1,3 @@
-## Prerequisites
-
-To download the latest release, make sure you have the required [prerequisites](/getting-started/prerequisites/). Then run the command matching your
-operating system.
-
 ## Linux
 
 ```bash

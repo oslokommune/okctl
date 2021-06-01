@@ -18,7 +18,7 @@ Bash:
 
 	# To load completions for each session, execute once:
 	# Linux:
-	$ okctl completion bash > /etc/bash_completion.d/okctl
+	$ sudo sh -c 'okctl completion bash > /etc/bash_completion.d/okctl'
 	# macOS:
 	$ okctl completion bash > /usr/local/etc/bash_completion.d/okctl
 

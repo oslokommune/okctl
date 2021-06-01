@@ -112,11 +112,11 @@ In the `SecurityGroupPolicy` manifest, one can select which Pods should be assoc
 
 1. Disable TCP early demux by running the following command:
 
-```bash
-kubectl patch daemonset aws-node \
-    -n kube-system \
-    -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
-```
+    ```bash
+    kubectl patch daemonset aws-node \
+        -n kube-system \
+        -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
+    ```
 
 2. Allow traffic from the `ClusterSharedNodeSecurityGroup` to the `Outgoing` postgres security group on the port your `healthcheck` is running on in the pod
 

@@ -4,13 +4,11 @@ During testing, or maybe when a project has come to an end - there might be a ne
 ## Delete a cluster
 
 ```bash
-# Delete an okctl cluster. Format:
-# okctl delete cluster <environment name>
-#
-# <cluster name>     must equal the environment name used for cluster creation.
-#
+# Usage
+okctl --cluster-declaration <path to cluster declaration> delete cluster
+
 # Example:
-okctl delete cluster test
+okctl --cluster-declaration cluster-yaml delete cluster
 ```
 
 ### Delete hosted zone
@@ -18,7 +16,11 @@ okctl delete cluster test
 If you want to remove your cluster's primary hosted zone, use
 
 ```bash
-okctl delete cluster <environment name> --i-know-what-i-am-doing-delete-hosted-zone-and-records true 
+# Usage
+okctl --cluster-declaration <path to cluster declaration> delete cluster --i-know-what-i-am-doing-delete-hosted-zone-and-records true 
+
+# Example
+okctl --cluster-declaration cluster.yaml delete cluster --i-know-what-i-am-doing-delete-hosted-zone-and-records true 
 ```
 
 Note: When deleting the hosted zone, you are deleting your NS record. The NS record contains a
@@ -105,11 +107,9 @@ Log in to GitHub, open your IAC repository, choose `Settings > Deploy keys`. Del
 
 The following paths reside in the top level directory of your infrastructure-as-code repository:
 
-1. Delete the entry for the cluster in `.okctl.yml`.
-1. Delete the directory `infrastructure/<environment name>`.
+1. Delete the directory `infrastructure/<cluster name>`.
 
-If the cluster you are deleting is the last one in this IAC repository, you can delete both the `.okctl.yml` file and
-the `infrastructure` directory.
+If the cluster you are deleting is the last one in this IAC repository, you can delete the `infrastructure` directory.
 
 ### List all AWS resources created by `okctl`
 

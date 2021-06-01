@@ -8,25 +8,8 @@ During testing, or maybe when a project has come to an end - there might be a ne
 okctl --cluster-declaration <path to cluster declaration> delete cluster
 
 # Example:
-okctl --cluster-declaration cluster-yaml delete cluster
+okctl --cluster-declaration cluster.yaml delete cluster
 ```
-
-### Delete hosted zone
-
-If you want to remove your cluster's primary hosted zone, use
-
-```bash
-# Usage
-okctl --cluster-declaration <path to cluster declaration> delete cluster --i-know-what-i-am-doing-delete-hosted-zone-and-records true 
-
-# Example
-okctl --cluster-declaration cluster.yaml delete cluster --i-know-what-i-am-doing-delete-hosted-zone-and-records true 
-```
-
-Note: When deleting the hosted zone, you are deleting your NS record. The NS record contains a
-a TTL setting which determines how long cache resolvers cache your NS record. If the TTL is 15
-minutes, you should wait 15 minutes before creating a new cluster - if you're using the same
-domain name.
 
 ## Delete a cluster manually
 

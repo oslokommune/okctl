@@ -14,6 +14,6 @@ brew tap oslokommune/tap
 brew install oslokommune/tap/okctl
 ```
 
-## Enable Shell autocompletion
+## Enable shell autocompletion
 
 To get autocompletion in your shell working run `okctl completion -h` and follow the steps for your preferred shell.

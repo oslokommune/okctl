@@ -16,7 +16,7 @@ require (
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/aws/aws-sdk-go v1.38.52
 	github.com/aws/aws-sdk-go-v2 v0.18.0
-	github.com/awslabs/goformation/v4 v4.19.3
+	github.com/awslabs/goformation/v4 v4.19.4
 	github.com/beevik/etree v1.1.0
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/bshuster-repo/logrus-logstash-hook v1.0.0 // indirect
@@ -92,7 +92,6 @@ require (
 	go.opencensus.io v0.22.6 // indirect
 	golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b
 	golang.org/x/oauth2 v0.0.0-20210201163806-010130855d6c
-	golang.org/x/text v0.3.5 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20210204154452-deb828366460 // indirect
 	google.golang.org/grpc v1.35.0 // indirect

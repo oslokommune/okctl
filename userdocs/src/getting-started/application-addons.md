@@ -58,13 +58,21 @@ If you want to attach to the database from intellij or some other IDE, you can d
 ```bash
 # Usage
 ## Generate a password for the pgBouncer user
-uuidgen > my-password-file
+uuidgen | sed 's/-//g' > <path to store password file>
 ## Forward traffic from localhost:5432 to the pgBouncer
-okctl --cluster-declaration <path to cluster declaration> forward postgres -name <database server name> --username <pgBouncer username> --password-file my-password-file
+okctl forward postgres \
+  --cluster-declaration <path to cluster declaration> \
+  --name <database server name> \
+  --username <pgBouncer username> \
+  --password-file <path to store password file>
 
 # Example
-uuidgen > password.secret
-okctl --cluster-declaration cluster.yaml forward postgres -name pgtest --username bob --password-file password.secret
+uuidgen | sed 's/-//g' > password.secret
+okctl forward postgres \
+  --cluster-declaration cluster.yaml \
+  --name pgtest \
+  --username bob \
+  --password-file password.secret
 ```
 
 By default this will use the postgres default port of `5432`, but you can change this to what you want.

@@ -48,6 +48,48 @@ func TestMarshalCluster(t *testing.T) {
 	}
 }
 
+func TestValidations(t *testing.T) {
+	testCases := []struct {
+		name      string
+		with      v1alpha1.Cluster
+		expectErr string
+	}{
+		{
+			name: "Should not trigger KM302",
+			with: func() v1alpha1.Cluster {
+				c := newCluster(
+					"test",
+					"okctl.io",
+					"oslokommune",
+					"okctl",
+					"012345678912",
+				)
+
+				c.VPC = &v1alpha1.ClusterVPC{
+					CIDR:             "192.168.0.0/20",
+					HighAvailability: false,
+				}
+
+				return c
+			}(),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.with.Validate()
+
+			if tc.expectErr == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.Equal(t, tc.expectErr, err)
+			}
+		})
+	}
+}
+
 func newCluster(name, rootDomain, githubOrganization, githubRepository, awsAccountID string) v1alpha1.Cluster {
 	c := v1alpha1.NewCluster()
 	c.Metadata.Name = name

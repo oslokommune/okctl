@@ -139,7 +139,7 @@ type ClusterVPC struct {
 func (c ClusterVPC) Validate() error {
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.CIDR, validation.Required),
-		validation.Field(&c.HighAvailability, validation.Required),
+		validation.Field(&c.HighAvailability, validation.In(true, false)),
 	)
 }
 

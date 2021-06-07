@@ -6,6 +6,8 @@ import (
 	"io"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
+
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
@@ -13,7 +15,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
-	"github.com/oslokommune/okctl/pkg/controller/reconciler"
+	clusterrec "github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 )
 
@@ -26,7 +28,7 @@ type SynchronizeOpts struct {
 	DeleteAll bool
 
 	ClusterDeclaration    *v1alpha1.Cluster
-	ReconciliationManager reconciler.Reconciler
+	ReconciliationManager reconciliation.Reconciler
 	State                 *clientCore.StateHandlers
 }
 
@@ -97,9 +99,9 @@ func FlattenTreeReverse(current *resourcetree.ResourceNode, order []*resourcetre
 
 // Process knows how to run Reconcile() on every node of a ResourceNode tree
 //goland:noinspection GoNilness
-func Process(reconcilerManager reconciler.Reconciler, state *clientCore.StateHandlers, order []*resourcetree.ResourceNode) (err error) {
+func Process(reconcilerManager reconciliation.Reconciler, state *clientCore.StateHandlers, order []*resourcetree.ResourceNode) (err error) {
 	for _, node := range order {
-		result := reconciler.ReconcilationResult{
+		result := reconciliation.Result{
 			Requeue:      true,
 			RequeueAfter: 0 * time.Second,
 		}
@@ -174,7 +176,7 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 						desiredTreeNode,
 						resourcetree.ResourceNodeType(fmt.Sprintf("%s-%s", resourcetree.ResourceNodeTypePostgresInstance, db.Name)),
 					)
-					node.Data = &reconciler.PostgresReconcilerState{
+					node.Data = &clusterrec.PostgresReconcilerState{
 						DB: db,
 					}
 				}
@@ -235,7 +237,7 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 		NextDb:
 			for _, existingDB := range existingResources.hasPostgres {
 				for _, declaredDB := range receiver.Children {
-					data, ok := declaredDB.Data.(reconciler.PostgresReconcilerState)
+					data, ok := declaredDB.Data.(clusterrec.PostgresReconcilerState)
 					if !ok {
 						panic("could not cast to database state")
 					}
@@ -250,7 +252,7 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 					receiver,
 					resourcetree.ResourceNodeType(fmt.Sprintf("%s-%s", resourcetree.ResourceNodeTypePostgresInstance, existingDB.Name)),
 				)
-				node.Data = &reconciler.PostgresReconcilerState{
+				node.Data = &clusterrec.PostgresReconcilerState{
 					DB: *existingDB,
 				}
 				node.State = resourcetree.ResourceNodeStatePresent

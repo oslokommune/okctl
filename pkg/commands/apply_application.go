@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
+
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
 	"github.com/logrusorgru/aurora/v3"
@@ -16,7 +18,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/controller"
-	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
@@ -27,7 +28,7 @@ import (
 
 // SynchronizeApplicationOpts contains references necessary to synchronize an application
 type SynchronizeApplicationOpts struct {
-	ReconciliationManager reconciler.Reconciler
+	ReconciliationManager reconciliation.Reconciler
 	Application           v1alpha1.Application
 
 	Tree  *resourcetree.ResourceNode

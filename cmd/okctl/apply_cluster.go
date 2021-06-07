@@ -9,6 +9,8 @@ import (
 	"path"
 	"syscall"
 
+	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
+
 	"github.com/asdine/storm/v3/codec/json"
 
 	"github.com/asdine/storm/v3"
@@ -25,7 +27,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/config/load"
 	"github.com/oslokommune/okctl/pkg/controller"
-	"github.com/oslokommune/okctl/pkg/controller/reconciler"
+	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/spinner"
@@ -155,29 +157,29 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("error getting services: %w", err)
 			}
 
-			reconciliationManager := reconciler.NewCompositeReconciler(spin,
-				reconciler.NewArgocdReconciler(services.ArgoCD, services.Github),
-				reconciler.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService),
-				reconciler.NewAutoscalerReconciler(services.Autoscaler),
-				reconciler.NewKubePrometheusStackReconciler(services.Monitoring),
-				reconciler.NewLokiReconciler(services.Monitoring),
-				reconciler.NewPromtailReconciler(services.Monitoring),
-				reconciler.NewTempoReconciler(services.Monitoring),
-				reconciler.NewBlockstorageReconciler(services.Blockstorage),
-				reconciler.NewClusterReconciler(services.Cluster),
-				reconciler.NewExternalDNSReconciler(services.ExternalDNS),
-				reconciler.NewExternalSecretsReconciler(services.ExternalSecrets),
-				reconciler.NewIdentityManagerReconciler(services.IdentityManager),
-				reconciler.NewVPCReconciler(services.Vpc),
-				reconciler.NewZoneReconciler(services.Domain),
-				reconciler.NewNameserverDelegationReconciler(services.NameserverHandler),
-				reconciler.NewNameserverDelegatedTestReconciler(services.Domain),
-				reconciler.NewUsersReconciler(services.IdentityManager),
-				reconciler.NewPostgresReconciler(services.Component),
-				reconciler.NewCleanupALBReconciler(o.CloudProvider),
-				reconciler.NewCleanupSGReconciler(o.CloudProvider),
-				&reconciler.PostgresGroupReconciler{},
-				reconciler.NewServiceQuotaReconciler(o.CloudProvider),
+			reconciliationManager := common.NewCompositeReconciler(spin,
+				reconciliation.NewArgocdReconciler(services.ArgoCD, services.Github),
+				reconciliation.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService),
+				reconciliation.NewAutoscalerReconciler(services.Autoscaler),
+				reconciliation.NewKubePrometheusStackReconciler(services.Monitoring),
+				reconciliation.NewLokiReconciler(services.Monitoring),
+				reconciliation.NewPromtailReconciler(services.Monitoring),
+				reconciliation.NewTempoReconciler(services.Monitoring),
+				reconciliation.NewBlockstorageReconciler(services.Blockstorage),
+				reconciliation.NewClusterReconciler(services.Cluster),
+				reconciliation.NewExternalDNSReconciler(services.ExternalDNS),
+				reconciliation.NewExternalSecretsReconciler(services.ExternalSecrets),
+				reconciliation.NewIdentityManagerReconciler(services.IdentityManager),
+				reconciliation.NewVPCReconciler(services.Vpc),
+				reconciliation.NewZoneReconciler(services.Domain),
+				reconciliation.NewNameserverDelegationReconciler(services.NameserverHandler),
+				reconciliation.NewNameserverDelegatedTestReconciler(services.Domain),
+				reconciliation.NewUsersReconciler(services.IdentityManager),
+				reconciliation.NewPostgresReconciler(services.Component),
+				reconciliation.NewCleanupALBReconciler(o.CloudProvider),
+				reconciliation.NewCleanupSGReconciler(o.CloudProvider),
+				&reconciliation.PostgresGroupReconciler{},
+				reconciliation.NewServiceQuotaReconciler(o.CloudProvider),
 			)
 
 			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{

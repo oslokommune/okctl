@@ -3,6 +3,8 @@ package controller
 import (
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
+
 	"github.com/sebdah/goldie/v2"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
@@ -11,14 +13,13 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
-	"github.com/oslokommune/okctl/pkg/controller/reconciler"
 	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
 	"github.com/stretchr/testify/assert"
 )
 
 type dummyReconciler struct {
 	ReconcileCounter     int
-	ReconciliationResult []reconciler.ReconcilationResult
+	ReconciliationResult []reconciliation.Result
 }
 
 func (d *dummyReconciler) NodeType() resourcetree.ResourceNodeType {
@@ -26,7 +27,7 @@ func (d *dummyReconciler) NodeType() resourcetree.ResourceNodeType {
 }
 func (d *dummyReconciler) SetCommonMetadata(_ *resourcetree.CommonMetadata) {}
 
-func (d *dummyReconciler) Reconcile(_ *resourcetree.ResourceNode, _ *clientCore.StateHandlers) (reconciler.ReconcilationResult, error) {
+func (d *dummyReconciler) Reconcile(_ *resourcetree.ResourceNode, _ *clientCore.StateHandlers) (reconciliation.Result, error) {
 	d.ReconcileCounter++
 
 	return d.ReconciliationResult[d.ReconcileCounter-1], nil
@@ -44,14 +45,14 @@ func (d *dummyReconciler) Reconcile(_ *resourcetree.ResourceNode, _ *clientCore.
 // 	{Requeue: true},
 //  {Requeue: false},
 // }
-func createRequeues(numberOfRequeues int) []reconciler.ReconcilationResult {
-	requeues := make([]reconciler.ReconcilationResult, numberOfRequeues+1)
+func createRequeues(numberOfRequeues int) []reconciliation.Result {
+	requeues := make([]reconciliation.Result, numberOfRequeues+1)
 
 	for i := range requeues {
-		requeues[i] = reconciler.ReconcilationResult{Requeue: true}
+		requeues[i] = reconciliation.Result{Requeue: true}
 	}
 
-	requeues[numberOfRequeues] = reconciler.ReconcilationResult{Requeue: false}
+	requeues[numberOfRequeues] = reconciliation.Result{Requeue: false}
 
 	return requeues
 }
@@ -114,14 +115,14 @@ func TestHandleNode(t *testing.T) {
 
 type mockAlwaysErrorReconciler struct {
 	iteration            int
-	ReconciliationResult []reconciler.ReconcilationResult
+	ReconciliationResult []reconciliation.Result
 }
 
 func (m *mockAlwaysErrorReconciler) NodeType() resourcetree.ResourceNodeType {
 	return resourcetree.ResourceNodeTypeGroup
 }
 
-func (m *mockAlwaysErrorReconciler) Reconcile(_ *resourcetree.ResourceNode, _ *clientCore.StateHandlers) (reconciler.ReconcilationResult, error) {
+func (m *mockAlwaysErrorReconciler) Reconcile(_ *resourcetree.ResourceNode, _ *clientCore.StateHandlers) (reconciliation.Result, error) {
 	m.iteration++
 
 	return m.ReconciliationResult[m.iteration-1], errors.New("dummy err")
@@ -133,7 +134,7 @@ func TestReceivedErrorAfterRequeues(t *testing.T) {
 	testCases := []struct {
 		name string
 
-		withResults []reconciler.ReconcilationResult
+		withResults []reconciliation.Result
 
 		expectErrorAfterIterations int
 		expectError                error
@@ -141,7 +142,7 @@ func TestReceivedErrorAfterRequeues(t *testing.T) {
 		{
 			name: "Should break out of Process immediately when requeue is false",
 
-			withResults: []reconciler.ReconcilationResult{{Requeue: false}},
+			withResults: []reconciliation.Result{{Requeue: false}},
 
 			expectErrorAfterIterations: 1,
 			expectError:                errors.New("reconciling node (group): dummy err"),
@@ -149,7 +150,7 @@ func TestReceivedErrorAfterRequeues(t *testing.T) {
 		{
 			name: "Should break out of Process after second reconciliation when requeues are true, false",
 
-			withResults: []reconciler.ReconcilationResult{{Requeue: true}, {Requeue: false}},
+			withResults: []reconciliation.Result{{Requeue: true}, {Requeue: false}},
 
 			expectErrorAfterIterations: 2,
 			expectError:                errors.New("reconciling node (group): dummy err"),

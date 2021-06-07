@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"text/template"
 
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
+
 	"github.com/logrusorgru/aurora/v3"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -28,14 +30,15 @@ type SynchronizeApplicationOpts struct {
 	ReconciliationManager reconciler.Reconciler
 	Application           v1alpha1.Application
 
-	Tree *resourcetree.ResourceNode
+	Tree  *resourcetree.ResourceNode
+	State *clientCore.StateHandlers
 }
 
 // SynchronizeApplication knows how to discover differences between desired and actual state and rectify them
 func SynchronizeApplication(opts SynchronizeApplicationOpts) error {
 	opts.Tree.ApplyFunction(applyDesiredState(opts.Application.Image), opts.Tree)
 
-	return controller.Process(opts.ReconciliationManager, controller.FlattenTree(opts.Tree, []*resourcetree.ResourceNode{}))
+	return controller.Process(opts.ReconciliationManager, opts.State, controller.FlattenTree(opts.Tree, []*resourcetree.ResourceNode{}))
 }
 
 func applyDesiredState(image v1alpha1.ApplicationImage) resourcetree.ApplyFn {

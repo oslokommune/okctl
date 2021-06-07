@@ -14,7 +14,6 @@ import (
 // externalDNSReconciler contains service and metadata for the relevant resource
 type externalDNSReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
-	stateHandlers  *clientCore.StateHandlers
 
 	client client.ExternalDNSService
 }
@@ -29,16 +28,11 @@ func (z *externalDNSReconciler) SetCommonMetadata(metadata *resourcetree.CommonM
 	z.commonMetadata = metadata
 }
 
-// SetStateHandlers sets the state handlers
-func (z *externalDNSReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
-	z.stateHandlers = handlers
-}
-
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *externalDNSReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
+func (z *externalDNSReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		hz, err := z.stateHandlers.Domain.GetPrimaryHostedZone()
+		hz, err := state.Domain.GetPrimaryHostedZone()
 		if err != nil {
 			return result, fmt.Errorf("getting primary hosted zone: %w", err)
 		}

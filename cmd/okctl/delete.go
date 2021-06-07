@@ -146,8 +146,6 @@ including VPC, this is a highly destructive operation.`,
 				Declaration: o.Declaration,
 			})
 
-			reconciliationManager.SetStateHandlers(handlers)
-
 			synchronizeOpts := &controller.SynchronizeOpts{
 				Debug:                 o.Debug,
 				Out:                   o.Out,
@@ -155,7 +153,7 @@ including VPC, this is a highly destructive operation.`,
 				ID:                    id,
 				ClusterDeclaration:    o.Declaration,
 				ReconciliationManager: reconciliationManager,
-				StateHandlers:         handlers,
+				State:                 handlers,
 			}
 
 			ready, err := checkIfReady(id.ClusterName, o, opts.Confirm)

@@ -13,7 +13,6 @@ import (
 
 type kubePrometheusStackReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
-	stateHandlers  *clientCore.StateHandlers
 
 	client client.MonitoringService
 }
@@ -28,21 +27,16 @@ func (z *kubePrometheusStackReconciler) SetCommonMetadata(metadata *resourcetree
 	z.commonMetadata = metadata
 }
 
-// SetStateHandlers sets the state handlers
-func (z *kubePrometheusStackReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
-	z.stateHandlers = handlers
-}
-
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *kubePrometheusStackReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
+func (z *kubePrometheusStackReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		hz, err := z.stateHandlers.Domain.GetPrimaryHostedZone()
+		hz, err := state.Domain.GetPrimaryHostedZone()
 		if err != nil {
 			return result, fmt.Errorf("getting primary hosted zone: %w", err)
 		}
 
-		im, err := z.stateHandlers.IdentityManager.GetIdentityPool(
+		im, err := state.IdentityManager.GetIdentityPool(
 			cfn.NewStackNamer().IdentityPool(z.commonMetadata.Declaration.Metadata.Name),
 		)
 		if err != nil {

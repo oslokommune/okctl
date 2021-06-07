@@ -11,7 +11,6 @@ import (
 
 type lokiReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
-	stateHandlers  *clientCore.StateHandlers
 
 	client client.MonitoringService
 }
@@ -26,13 +25,8 @@ func (z *lokiReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata
 	z.commonMetadata = metadata
 }
 
-// SetStateHandlers sets the state handlers
-func (z *lokiReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
-	z.stateHandlers = handlers
-}
-
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *lokiReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
+func (z *lokiReconciler) Reconcile(node *resourcetree.ResourceNode, _ *clientCore.StateHandlers) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err = z.client.CreateLoki(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)

@@ -16,7 +16,6 @@ import (
 
 type cleanupSGReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
-	stateHandlers  *clientCore.StateHandlers
 
 	provider v1alpha1.CloudProvider
 }
@@ -31,19 +30,14 @@ func (z *cleanupSGReconciler) SetCommonMetadata(metadata *resourcetree.CommonMet
 	z.commonMetadata = metadata
 }
 
-// SetStateHandlers sets the state handlers
-func (z *cleanupSGReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
-	z.stateHandlers = handlers
-}
-
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *cleanupSGReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
+func (z *cleanupSGReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		// Nothing to do for present
 		return result, nil
 	case resourcetree.ResourceNodeStateAbsent:
-		vpc, err := z.stateHandlers.Vpc.GetVpc(cfn.NewStackNamer().Vpc(z.commonMetadata.Declaration.Metadata.Name))
+		vpc, err := state.Vpc.GetVpc(cfn.NewStackNamer().Vpc(z.commonMetadata.Declaration.Metadata.Name))
 		if err != nil {
 			return result, fmt.Errorf("getting vpc: %w", err)
 		}

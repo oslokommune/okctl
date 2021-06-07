@@ -27,7 +27,7 @@ type SynchronizeOpts struct {
 
 	ClusterDeclaration    *v1alpha1.Cluster
 	ReconciliationManager reconciler.Reconciler
-	StateHandlers         *clientCore.StateHandlers
+	State                 *clientCore.StateHandlers
 }
 
 // DeleteCluster sets all resources to absent and initiates a reversed order reconciliation
@@ -40,7 +40,7 @@ func DeleteCluster(opts *SynchronizeOpts) error {
 		_, _ = fmt.Fprintf(opts.Out, "Resources to be deleted: \n%s\n\n", desiredTree.String())
 	}
 
-	return Process(opts.ReconciliationManager, FlattenTreeReverse(desiredTree, []*resourcetree.ResourceNode{}))
+	return Process(opts.ReconciliationManager, opts.State, FlattenTreeReverse(desiredTree, []*resourcetree.ResourceNode{}))
 }
 
 // Synchronize knows how to discover differences between desired and actual state and rectify them
@@ -49,7 +49,7 @@ func Synchronize(opts *SynchronizeOpts) error {
 	currentStateTree := CreateResourceDependencyTree()
 	diffTree := CreateResourceDependencyTree()
 
-	existingResources, err := IdentifyResourcePresence(opts.ID, opts.StateHandlers)
+	existingResources, err := IdentifyResourcePresence(opts.ID, opts.State)
 	if err != nil {
 		return fmt.Errorf("getting existing integrations: %w", err)
 	}
@@ -67,7 +67,7 @@ func Synchronize(opts *SynchronizeOpts) error {
 		_, _ = fmt.Fprintf(opts.Out, "Present resources in difference tree (what should be generated): \n%s\n\n", diffTree.String())
 	}
 
-	return Process(opts.ReconciliationManager, FlattenTree(diffTree, []*resourcetree.ResourceNode{}))
+	return Process(opts.ReconciliationManager, opts.State, FlattenTree(diffTree, []*resourcetree.ResourceNode{}))
 }
 
 // FlattenTree flattens the tree to an execution order
@@ -97,7 +97,7 @@ func FlattenTreeReverse(current *resourcetree.ResourceNode, order []*resourcetre
 
 // Process knows how to run Reconcile() on every node of a ResourceNode tree
 //goland:noinspection GoNilness
-func Process(reconcilerManager reconciler.Reconciler, order []*resourcetree.ResourceNode) (err error) {
+func Process(reconcilerManager reconciler.Reconciler, state *clientCore.StateHandlers, order []*resourcetree.ResourceNode) (err error) {
 	for _, node := range order {
 		result := reconciler.ReconcilationResult{
 			Requeue:      true,
@@ -111,7 +111,7 @@ func Process(reconcilerManager reconciler.Reconciler, order []*resourcetree.Reso
 
 			time.Sleep(result.RequeueAfter)
 
-			result, err = reconcilerManager.Reconcile(node)
+			result, err = reconcilerManager.Reconcile(node, state)
 			if err != nil && !result.Requeue {
 				return fmt.Errorf("reconciling node (%s): %w", node.Type.String(), err)
 			}

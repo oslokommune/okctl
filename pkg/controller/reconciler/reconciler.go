@@ -21,9 +21,7 @@ type ReconcilationResult struct {
 type Reconciler interface {
 	NodeType() resourcetree.ResourceNodeType
 	// Reconcile knows how to do what is necessary to ensure the desired state is achieved
-	Reconcile(*resourcetree.ResourceNode) (ReconcilationResult, error)
+	Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (ReconcilationResult, error)
 	// SetCommonMetadata knows how to store metadata needed by the reconciler for later use
 	SetCommonMetadata(metadata *resourcetree.CommonMetadata)
-	// SetStateHandlers knows how to set the state handlers needed by the reconciler
-	SetStateHandlers(handlers *clientCore.StateHandlers)
 }

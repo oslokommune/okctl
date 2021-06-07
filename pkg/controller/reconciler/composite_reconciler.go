@@ -23,7 +23,7 @@ func (c *compositeReconciler) NodeType() resourcetree.ResourceNodeType {
 }
 
 // Reconcile knows what reconciler to use for the provided ResourceNode
-func (c *compositeReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
+func (c *compositeReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result ReconcilationResult, err error) {
 	err = c.spinner.Start(node.Type.String())
 	if err != nil {
 		return result, fmt.Errorf("starting subspinner: %w", err)
@@ -44,20 +44,13 @@ func (c *compositeReconciler) Reconcile(node *resourcetree.ResourceNode) (result
 		return result, fmt.Errorf("no reconciler for type exists: %s", node.Type.String())
 	}
 
-	return c.reconcilers[t].Reconcile(node)
+	return c.reconcilers[t].Reconcile(node, state)
 }
 
 // SetCommonMetadata sets commonMetadata for all reconcilers
 func (c *compositeReconciler) SetCommonMetadata(commonMetadata *resourcetree.CommonMetadata) {
 	for _, reconciler := range c.reconcilers {
 		reconciler.SetCommonMetadata(commonMetadata)
-	}
-}
-
-// SetStateHandlers sets state handlers for all reconcilers
-func (c *compositeReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
-	for _, reconciler := range c.reconcilers {
-		reconciler.SetStateHandlers(handlers)
 	}
 }
 

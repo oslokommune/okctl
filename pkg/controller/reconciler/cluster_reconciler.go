@@ -17,8 +17,7 @@ import (
 type clusterReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
 
-	stateHandlers *clientCore.StateHandlers
-	client        client.ClusterService
+	client client.ClusterService
 }
 
 // NodeType returns the relevant ResourceNodeType for this reconciler
@@ -31,16 +30,11 @@ func (z *clusterReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetad
 	z.commonMetadata = metadata
 }
 
-// SetStateHandlers sets the state handlers
-func (z *clusterReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
-	z.stateHandlers = handlers
-}
-
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *clusterReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
+func (z *clusterReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		vpc, err := z.stateHandlers.Vpc.GetVpc(
+		vpc, err := state.Vpc.GetVpc(
 			cfn.NewStackNamer().Vpc(z.commonMetadata.Declaration.Metadata.Name),
 		)
 		if err != nil {

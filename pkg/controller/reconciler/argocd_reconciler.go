@@ -23,7 +23,6 @@ func (z *argocdReconciler) NodeType() resourcetree.ResourceNodeType {
 // argocdReconciler contains service and metadata for the relevant resource
 type argocdReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
-	stateHandlers  *clientCore.StateHandlers
 
 	argocdClient client.ArgoCDService
 	githubClient client.GithubService
@@ -34,10 +33,6 @@ func (z *argocdReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetada
 	z.commonMetadata = metadata
 }
 
-func (z *argocdReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
-	z.stateHandlers = handlers
-}
-
 /*
 Reconcile knows how to do what is necessary to ensure the desired state is achieved
 Dependent on:
@@ -46,7 +41,7 @@ Dependent on:
 - Primary hosted Zone
 */
 // nolint: funlen
-func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
+func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		repo, err := z.githubClient.CreateGithubRepository(z.commonMetadata.Ctx, client.CreateGithubRepositoryOpts{
@@ -59,12 +54,12 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode) (result Re
 			return result, fmt.Errorf("fetching deploy key: %w", err)
 		}
 
-		hz, err := z.stateHandlers.Domain.GetPrimaryHostedZone()
+		hz, err := state.Domain.GetPrimaryHostedZone()
 		if err != nil {
 			return result, fmt.Errorf("getting primary hosted zone: %w", err)
 		}
 
-		im, err := z.stateHandlers.IdentityManager.GetIdentityPool(
+		im, err := state.IdentityManager.GetIdentityPool(
 			cfn.NewStackNamer().IdentityPool(z.commonMetadata.Declaration.Metadata.Name),
 		)
 		if err != nil {

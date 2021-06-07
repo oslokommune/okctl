@@ -9,10 +9,6 @@ import (
 // reconcilers
 type NoopReconciler struct{}
 
-// SetStateHandlers sets the state handlers
-func (receiver *NoopReconciler) SetStateHandlers(_ *clientCore.StateHandlers) {
-}
-
 // NodeType returns the relevant ResourceNodeType for this reconciler
 func (receiver *NoopReconciler) NodeType() resourcetree.ResourceNodeType {
 	return resourcetree.ResourceNodeTypeGroup
@@ -25,6 +21,6 @@ func (receiver *NoopReconciler) SetCommonMetadata(_ *resourcetree.CommonMetadata
 }
 
 // Reconcile knows how to create, update and delete the relevant resource
-func (receiver *NoopReconciler) Reconcile(_ *resourcetree.ResourceNode) (ReconcilationResult, error) {
+func (receiver *NoopReconciler) Reconcile(_ *resourcetree.ResourceNode, _ *clientCore.StateHandlers) (ReconcilationResult, error) {
 	return ReconcilationResult{Requeue: false}, nil
 }

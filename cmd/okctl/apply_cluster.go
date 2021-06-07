@@ -187,15 +187,13 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				Declaration: opts.Declaration,
 			})
 
-			reconciliationManager.SetStateHandlers(handlers)
-
 			synchronizeOpts := &controller.SynchronizeOpts{
 				Debug:                 o.Debug,
 				Out:                   o.Out,
 				ID:                    id,
 				ClusterDeclaration:    opts.Declaration,
 				ReconciliationManager: reconciliationManager,
-				StateHandlers:         handlers,
+				State:                 handlers,
 			}
 
 			err = controller.Synchronize(synchronizeOpts)

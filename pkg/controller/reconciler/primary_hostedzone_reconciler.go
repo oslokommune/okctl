@@ -16,7 +16,6 @@ import (
 // zoneReconciler contains service and metadata for the relevant resource
 type zoneReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
-	stateHandlers  *clientCore.StateHandlers
 
 	client client.DomainService
 }
@@ -31,13 +30,8 @@ func (z *zoneReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata
 	z.commonMetadata = metadata
 }
 
-// SetStateHandlers sets the state handlers
-func (z *zoneReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
-	z.stateHandlers = handlers
-}
-
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *zoneReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
+func (z *zoneReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err = z.client.CreatePrimaryHostedZone(z.commonMetadata.Ctx, client.CreatePrimaryHostedZoneOpts{
@@ -49,7 +43,7 @@ func (z *zoneReconciler) Reconcile(node *resourcetree.ResourceNode) (result Reco
 			return result, fmt.Errorf("creating hosted zone: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		hz, err := z.stateHandlers.Domain.GetPrimaryHostedZone()
+		hz, err := state.Domain.GetPrimaryHostedZone()
 		if err != nil {
 			// Already removed, moving on
 			if errors.Is(err, storm.ErrNotFound) {

@@ -9,10 +9,6 @@ import (
 // reconcilers
 type PostgresGroupReconciler struct{}
 
-// SetStateHandlers sets the state handlers
-func (receiver *PostgresGroupReconciler) SetStateHandlers(_ *clientCore.StateHandlers) {
-}
-
 // NodeType returns the relevant ResourceNodeType for this reconciler
 func (receiver *PostgresGroupReconciler) NodeType() resourcetree.ResourceNodeType {
 	return resourcetree.ResourceNodeTypePostgres
@@ -25,7 +21,7 @@ func (receiver *PostgresGroupReconciler) SetCommonMetadata(_ *resourcetree.Commo
 }
 
 // Reconcile knows how to create, update and delete the relevant resource
-func (receiver *PostgresGroupReconciler) Reconcile(_ *resourcetree.ResourceNode) (ReconcilationResult, error) {
+func (receiver *PostgresGroupReconciler) Reconcile(_ *resourcetree.ResourceNode, _ *clientCore.StateHandlers) (ReconcilationResult, error) {
 	return ReconcilationResult{
 		Requeue: false,
 	}, nil

@@ -26,9 +26,7 @@ func (d *dummyReconciler) NodeType() resourcetree.ResourceNodeType {
 }
 func (d *dummyReconciler) SetCommonMetadata(_ *resourcetree.CommonMetadata) {}
 
-func (d *dummyReconciler) SetStateHandlers(_ *clientCore.StateHandlers) {}
-
-func (d *dummyReconciler) Reconcile(_ *resourcetree.ResourceNode) (reconciler.ReconcilationResult, error) {
+func (d *dummyReconciler) Reconcile(_ *resourcetree.ResourceNode, _ *clientCore.StateHandlers) (reconciler.ReconcilationResult, error) {
 	d.ReconcileCounter++
 
 	return d.ReconciliationResult[d.ReconcileCounter-1], nil
@@ -102,7 +100,7 @@ func TestHandleNode(t *testing.T) {
 
 			node := &resourcetree.ResourceNode{}
 
-			err := Process(dummy, FlattenTree(node, []*resourcetree.ResourceNode{}))
+			err := Process(dummy, nil, FlattenTree(node, []*resourcetree.ResourceNode{}))
 			if tc.expectErr {
 				assert.NotNil(t, err)
 			} else {
@@ -123,15 +121,13 @@ func (m *mockAlwaysErrorReconciler) NodeType() resourcetree.ResourceNodeType {
 	return resourcetree.ResourceNodeTypeGroup
 }
 
-func (m *mockAlwaysErrorReconciler) Reconcile(_ *resourcetree.ResourceNode) (reconciler.ReconcilationResult, error) {
+func (m *mockAlwaysErrorReconciler) Reconcile(_ *resourcetree.ResourceNode, _ *clientCore.StateHandlers) (reconciler.ReconcilationResult, error) {
 	m.iteration++
 
 	return m.ReconciliationResult[m.iteration-1], errors.New("dummy err")
 }
 
 func (m *mockAlwaysErrorReconciler) SetCommonMetadata(_ *resourcetree.CommonMetadata) {}
-
-func (m *mockAlwaysErrorReconciler) SetStateHandlers(_ *clientCore.StateHandlers) {}
 
 func TestReceivedErrorAfterRequeues(t *testing.T) {
 	testCases := []struct {
@@ -166,7 +162,7 @@ func TestReceivedErrorAfterRequeues(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &mockAlwaysErrorReconciler{ReconciliationResult: tc.withResults}
 
-			err := Process(r, FlattenTree(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeGroup}, []*resourcetree.ResourceNode{}))
+			err := Process(r, nil, FlattenTree(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeGroup}, []*resourcetree.ResourceNode{}))
 			assert.NotNil(t, err)
 
 			assert.Equal(t, tc.expectErrorAfterIterations, r.iteration)

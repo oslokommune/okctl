@@ -18,7 +18,6 @@ func (z *awsLoadBalancerControllerReconciler) NodeType() resourcetree.ResourceNo
 // albIngressReconciler contains service and metadata for the relevant resource
 type awsLoadBalancerControllerReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
-	stateHandlers  *clientCore.StateHandlers
 	client         client.AWSLoadBalancerControllerService
 }
 
@@ -27,16 +26,11 @@ func (z *awsLoadBalancerControllerReconciler) SetCommonMetadata(metadata *resour
 	z.commonMetadata = metadata
 }
 
-// SetStateHandlers sets the state handlers
-func (z *awsLoadBalancerControllerReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
-	z.stateHandlers = handlers
-}
-
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *awsLoadBalancerControllerReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
+func (z *awsLoadBalancerControllerReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		vpc, err := z.stateHandlers.Vpc.GetVpc(
+		vpc, err := state.Vpc.GetVpc(
 			cfn.NewStackNamer().Vpc(z.commonMetadata.Declaration.Metadata.Name),
 		)
 		if err != nil {

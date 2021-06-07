@@ -21,7 +21,6 @@ type PostgresReconcilerState struct {
 
 type postgresReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
-	stateHandlers  *clientCore.StateHandlers
 
 	client client.ComponentService
 }
@@ -36,13 +35,8 @@ func (z *postgresReconciler) SetCommonMetadata(metadata *resourcetree.CommonMeta
 	z.commonMetadata = metadata
 }
 
-// SetStateHandlers sets the state handlers
-func (z *postgresReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
-	z.stateHandlers = handlers
-}
-
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *postgresReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
+func (z *postgresReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result ReconcilationResult, err error) {
 	data, ok := node.Data.(*PostgresReconcilerState)
 	if !ok {
 		return result, fmt.Errorf("getting postgres data")
@@ -50,7 +44,7 @@ func (z *postgresReconciler) Reconcile(node *resourcetree.ResourceNode) (result 
 
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		vpc, err := z.stateHandlers.Vpc.GetVpc(
+		vpc, err := state.Vpc.GetVpc(
 			cfn.NewStackNamer().Vpc(z.commonMetadata.Declaration.Metadata.Name),
 		)
 		if err != nil {
@@ -79,7 +73,7 @@ func (z *postgresReconciler) Reconcile(node *resourcetree.ResourceNode) (result 
 			return result, fmt.Errorf("creating postgres database: %w", err)
 		}
 	case resourcetree.ResourceNodeStateAbsent:
-		vpc, err := z.stateHandlers.Vpc.GetVpc(
+		vpc, err := state.Vpc.GetVpc(
 			cfn.NewStackNamer().Vpc(z.commonMetadata.Declaration.Metadata.Name),
 		)
 		if err != nil {

@@ -14,7 +14,6 @@ import (
 // containerRepositoryReconciler contains service and metadata for the relevant resource
 type containerRepositoryReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
-	handlers       *clientCore.StateHandlers
 
 	client client.ContainerRepositoryService
 }
@@ -29,16 +28,11 @@ func (c *containerRepositoryReconciler) SetCommonMetadata(metadata *resourcetree
 	c.commonMetadata = metadata
 }
 
-// SetStateHandlers sets the state handlers
-func (c *containerRepositoryReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
-	c.handlers = handlers
-}
-
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (c *containerRepositoryReconciler) Reconcile(node *resourcetree.ResourceNode) (ReconcilationResult, error) {
+func (c *containerRepositoryReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (ReconcilationResult, error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		_, err := c.handlers.ContainerRepository.GetContainerRepository(c.commonMetadata.ApplicationDeclaration.Image.Name)
+		_, err := state.ContainerRepository.GetContainerRepository(c.commonMetadata.ApplicationDeclaration.Image.Name)
 		if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
 			return ReconcilationResult{}, fmt.Errorf("getting container repository: %w", err)
 		}

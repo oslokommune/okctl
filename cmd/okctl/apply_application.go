@@ -91,14 +91,13 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				ApplicationDeclaration: opts.Application,
 			})
 
-			reconciliationManager.SetStateHandlers(handlers)
-
 			dependencyTree := controller.CreateApplicationResourceDependencyTree()
 
 			err = commands.SynchronizeApplication(commands.SynchronizeApplicationOpts{
 				ReconciliationManager: reconciliationManager,
 				Application:           opts.Application,
 				Tree:                  dependencyTree,
+				State:                 handlers,
 			})
 			if err != nil {
 				return fmt.Errorf("synchronizing application: %w", err)

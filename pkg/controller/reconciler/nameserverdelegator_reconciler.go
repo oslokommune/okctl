@@ -16,7 +16,6 @@ import (
 // that the delegation has happened.
 type nameserverDelegationReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
-	stateHandlers  *clientCore.StateHandlers
 
 	client client.NSRecordDelegationService
 }
@@ -31,14 +30,9 @@ func (z *nameserverDelegationReconciler) SetCommonMetadata(metadata *resourcetre
 	z.commonMetadata = metadata
 }
 
-// SetStateHandlers sets the state handlers
-func (z *nameserverDelegationReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
-	z.stateHandlers = handlers
-}
-
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *nameserverDelegationReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
-	hz, err := z.stateHandlers.Domain.GetPrimaryHostedZone()
+func (z *nameserverDelegationReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result ReconcilationResult, err error) {
+	hz, err := state.Domain.GetPrimaryHostedZone()
 	if err != nil {
 		return result, fmt.Errorf("getting primary hosted zone: %w", err)
 	}

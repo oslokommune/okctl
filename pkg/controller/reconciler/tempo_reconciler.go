@@ -11,7 +11,6 @@ import (
 
 type tempoReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
-	stateHandlers  *clientCore.StateHandlers
 
 	client client.MonitoringService
 }
@@ -26,13 +25,8 @@ func (z *tempoReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadat
 	z.commonMetadata = metadata
 }
 
-// SetStateHandlers sets the state handlers
-func (z *tempoReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
-	z.stateHandlers = handlers
-}
-
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *tempoReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
+func (z *tempoReconciler) Reconcile(node *resourcetree.ResourceNode, _ *clientCore.StateHandlers) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, err = z.client.CreateTempo(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)

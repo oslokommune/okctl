@@ -16,7 +16,6 @@ const defaultTestingIntervalMinutes = 5 * time.Minute
 
 type nameserversDelegatedTestReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
-	stateHandlers  *clientCore.StateHandlers
 
 	domainService client.DomainService
 }
@@ -31,13 +30,8 @@ func (n *nameserversDelegatedTestReconciler) SetCommonMetadata(metadata *resourc
 	n.commonMetadata = metadata
 }
 
-// SetStateHandlers sets the state handlers
-func (n *nameserversDelegatedTestReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
-	n.stateHandlers = handlers
-}
-
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (n *nameserversDelegatedTestReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
+func (n *nameserversDelegatedTestReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
 		_, _ = fmt.Fprintf(
@@ -47,7 +41,7 @@ func (n *nameserversDelegatedTestReconciler) Reconcile(node *resourcetree.Resour
 			aurora.Bold("#kjøremiljø-support"),
 		)
 
-		hz, err := n.stateHandlers.Domain.GetPrimaryHostedZone()
+		hz, err := state.Domain.GetPrimaryHostedZone()
 		if err != nil {
 			return result, fmt.Errorf("getting primary hosted zone: %w", err)
 		}

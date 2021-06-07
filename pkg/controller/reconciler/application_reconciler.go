@@ -12,7 +12,6 @@ import (
 // applicationReconciler contains service and metadata for the relevant resource
 type applicationReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
-	handlers       *clientCore.StateHandlers
 
 	client client.ApplicationService
 }
@@ -27,16 +26,11 @@ func (a *applicationReconciler) SetCommonMetadata(metadata *resourcetree.CommonM
 	a.commonMetadata = metadata
 }
 
-// SetStateHandlers sets the state handlers
-func (a *applicationReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
-	a.handlers = handlers
-}
-
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (a *applicationReconciler) Reconcile(node *resourcetree.ResourceNode) (ReconcilationResult, error) {
+func (a *applicationReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (ReconcilationResult, error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		hz, err := a.handlers.Domain.GetPrimaryHostedZone()
+		hz, err := state.Domain.GetPrimaryHostedZone()
 		if err != nil {
 			return ReconcilationResult{}, fmt.Errorf("getting primary hosted zone: %w", err)
 		}
@@ -46,13 +40,13 @@ func (a *applicationReconciler) Reconcile(node *resourcetree.ResourceNode) (Reco
 			a.commonMetadata.Declaration.Github.Repository,
 		)
 
-		gh, err := a.handlers.Github.GetGithubRepository(repoID)
+		gh, err := state.Github.GetGithubRepository(repoID)
 		if err != nil {
 			return ReconcilationResult{}, fmt.Errorf("retrieving Github information")
 		}
 
 		if a.commonMetadata.ApplicationDeclaration.Image.HasName() {
-			repo, err := a.handlers.ContainerRepository.GetContainerRepository(a.commonMetadata.ApplicationDeclaration.Image.Name)
+			repo, err := state.ContainerRepository.GetContainerRepository(a.commonMetadata.ApplicationDeclaration.Image.Name)
 			if err != nil {
 				return ReconcilationResult{}, fmt.Errorf("getting container repository: %w", err)
 			}

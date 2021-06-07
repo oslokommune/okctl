@@ -16,14 +16,8 @@ import (
 // ServiceQuotaReconciler handles reconciliation for service quotas
 type ServiceQuotaReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
-	stateHandlers  *clientCore.StateHandlers
 
 	provider v1alpha1.CloudProvider
-}
-
-// SetStateHandlers sets the state handlers
-func (r *ServiceQuotaReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
-	r.stateHandlers = handlers
 }
 
 // NodeType returns the relevant ResourceNodeType for this reconciler
@@ -38,11 +32,10 @@ func (r *ServiceQuotaReconciler) SetCommonMetadata(meta *resourcetree.CommonMeta
 }
 
 // Reconcile knows how to create, update and delete the relevant resource
-func (r *ServiceQuotaReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
+func (r *ServiceQuotaReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		vpc, err := r.stateHandlers.
-			Vpc.GetVpc(cfn.NewStackNamer().Vpc(r.commonMetadata.Declaration.Metadata.Name))
+		vpc, err := state.Vpc.GetVpc(cfn.NewStackNamer().Vpc(r.commonMetadata.Declaration.Metadata.Name))
 		if err != nil && !errors.Is(err, storm.ErrNotFound) {
 			return result, fmt.Errorf("getting vpc: %w", err)
 		}

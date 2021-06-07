@@ -13,7 +13,6 @@ import (
 
 type usersReconciler struct {
 	commonMetadata *resourcetree.CommonMetadata
-	stateHandlers  *clientCore.StateHandlers
 
 	client client.IdentityManagerService
 }
@@ -28,16 +27,11 @@ func (z *usersReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadat
 	z.commonMetadata = metadata
 }
 
-// SetStateHandlers sets the state handlers
-func (z *usersReconciler) SetStateHandlers(handlers *clientCore.StateHandlers) {
-	z.stateHandlers = handlers
-}
-
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *usersReconciler) Reconcile(node *resourcetree.ResourceNode) (result ReconcilationResult, err error) {
+func (z *usersReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result ReconcilationResult, err error) {
 	switch node.State {
 	case resourcetree.ResourceNodeStatePresent:
-		im, err := z.stateHandlers.IdentityManager.GetIdentityPool(
+		im, err := state.IdentityManager.GetIdentityPool(
 			cfn.NewStackNamer().IdentityPool(z.commonMetadata.Declaration.Metadata.Name),
 		)
 		if err != nil {

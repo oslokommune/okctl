@@ -168,13 +168,25 @@ func (node *ResourceNode) String() string {
 }
 
 // ApplyFn is a kind of function we can run on all the nodes in a ResourceNode tree with the ApplyFunction() function
-type ApplyFn func(receiver *ResourceNode, target *ResourceNode)
+type ApplyFn func(receiver *ResourceNode)
 
-// ApplyFunction will use the supplied ApplyFn on all the nodes in the receiver tree, with an equal node from the target
-// tree
-func (node *ResourceNode) ApplyFunction(fn ApplyFn, targetTree *ResourceNode) {
+// ApplyFnWithTarget is a kind of function we can run on all the nodes in a ResourceNode tree with the ApplyFunction() function
+type ApplyFnWithTarget func(receiver *ResourceNode, target *ResourceNode)
+
+// ApplyFunction will use the supplied ApplyFn on all the nodes in the receiver tree
+func (node *ResourceNode) ApplyFunction(fn ApplyFn) {
 	for _, child := range node.Children {
-		child.ApplyFunction(fn, targetTree)
+		child.ApplyFunction(fn)
+	}
+
+	fn(node)
+}
+
+// ApplyFunctionWithTarget will use the supplied ApplyFnWithTarget on all the nodes in the receiver tree, with an equal
+// node from the target tree
+func (node *ResourceNode) ApplyFunctionWithTarget(fn ApplyFnWithTarget, targetTree *ResourceNode) {
+	for _, child := range node.Children {
+		child.ApplyFunctionWithTarget(fn, targetTree)
 	}
 
 	targetNode := targetTree.GetNode(node)

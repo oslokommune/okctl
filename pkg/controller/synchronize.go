@@ -36,7 +36,7 @@ type SynchronizeOpts struct {
 func DeleteCluster(opts *SynchronizeOpts) error {
 	desiredTree := CreateResourceDependencyTree()
 
-	desiredTree.ApplyFunction(setStateAbsent(), &resourcetree.ResourceNode{})
+	desiredTree.ApplyFunction(setAllNodesAbsent)
 
 	if opts.Debug {
 		_, _ = fmt.Fprintf(opts.Out, "Resources to be deleted: \n%s\n\n", desiredTree.String())
@@ -56,12 +56,12 @@ func Synchronize(opts *SynchronizeOpts) error {
 		return fmt.Errorf("getting existing integrations: %w", err)
 	}
 
-	desiredTree.ApplyFunction(applyDeclaration(opts.ClusterDeclaration), &resourcetree.ResourceNode{})
+	desiredTree.ApplyFunction(applyDeclaration(opts.ClusterDeclaration))
 
-	currentStateTree.ApplyFunction(applyExistingState(existingResources), &resourcetree.ResourceNode{})
+	currentStateTree.ApplyFunction(applyExistingState(existingResources))
 
-	diffTree.ApplyFunction(applyDeclaration(opts.ClusterDeclaration), &resourcetree.ResourceNode{})
-	diffTree.ApplyFunction(applyCurrentState, currentStateTree)
+	diffTree.ApplyFunction(applyDeclaration(opts.ClusterDeclaration))
+	diffTree.ApplyFunctionWithTarget(applyCurrentState, currentStateTree)
 
 	if opts.Debug {
 		_, _ = fmt.Fprintf(opts.Out, "Present resources in desired tree (what is desired): \n%s\n\n", desiredTree.String())
@@ -125,7 +125,7 @@ func Process(reconcilerManager reconciliation.Reconciler, state *clientCore.Stat
 
 // nolint: gocyclo
 func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
-	return func(desiredTreeNode *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
+	return func(desiredTreeNode *resourcetree.ResourceNode) {
 		switch desiredTreeNode.Type {
 		// Mandatory
 		case resourcetree.ResourceNodeTypeServiceQuota:
@@ -189,7 +189,7 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 
 //nolint:gocyclo,funlen
 func applyExistingState(existingResources ExistingResources) resourcetree.ApplyFn {
-	return func(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
+	return func(receiver *resourcetree.ResourceNode) {
 		switch receiver.Type {
 		// Mandatory
 		case resourcetree.ResourceNodeTypeServiceQuota:
@@ -263,11 +263,9 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 	}
 }
 
-// setStateAbsent sets the state as absent
-func setStateAbsent() resourcetree.ApplyFn {
-	return func(receiver *resourcetree.ResourceNode, _ *resourcetree.ResourceNode) {
-		receiver.State = resourcetree.ResourceNodeStateAbsent
-	}
+// setAllNodesAbsent sets the state as absent
+func setAllNodesAbsent(receiver *resourcetree.ResourceNode) {
+	receiver.State = resourcetree.ResourceNodeStateAbsent
 }
 
 // applyCurrentState knows how to apply the current state on a desired state ResourceNode tree to produce a diff that

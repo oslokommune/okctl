@@ -95,7 +95,7 @@ func TestResourceNode_ApplyFunction(t *testing.T) {
 			currentStateTree := tc.generateTargetTree()
 
 			numberOfCalls := 0
-			desiredTree.ApplyFunction(func(receiver *resourcetree.ResourceNode, target *resourcetree.ResourceNode) {
+			desiredTree.ApplyFunctionWithTarget(func(receiver *resourcetree.ResourceNode, target *resourcetree.ResourceNode) {
 				numberOfCalls += 1
 			}, currentStateTree)
 

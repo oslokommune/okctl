@@ -98,10 +98,10 @@ func TestTreeCreators(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 			desiredTree := CreateResourceDependencyTree()
-			desiredTree.ApplyFunction(applyDeclaration(tc.declaration()), &resourcetree.ResourceNode{})
+			desiredTree.ApplyFunction(applyDeclaration(tc.declaration()))
 
 			currentStateTree := CreateResourceDependencyTree()
-			currentStateTree.ApplyFunction(applyExistingState(tc.existingServices), &resourcetree.ResourceNode{})
+			currentStateTree.ApplyFunction(applyExistingState(tc.existingServices))
 
 			assert.Equal(t, desiredTree.String(), currentStateTree.String())
 		})

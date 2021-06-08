@@ -151,15 +151,15 @@ type LoaderFn func(cfg *config.Config, v *viper.Viper) error
 // UserDataFromFlagsEnvConfigDefaults returns the default behavior for loading
 // application state
 func UserDataFromFlagsEnvConfigDefaults(cmd *cobra.Command, notFoundFn DataNotFoundFn) config.DataLoaderFn {
-	return buildUserDataLoader(
-		loadDefaultUserData,
-		loadStoredUserData(notFoundFn),
+	return BuildUserDataLoader(
+		LoadDefaultUserData,
+		LoadStoredUserData(notFoundFn),
 		loadEnvUserData,
 		loadFlagsUserData(cmd),
 	)
 }
 
-func loadDefaultUserData(_ *config.Config, v *viper.Viper) error {
+func LoadDefaultUserData(_ *config.Config, v *viper.Viper) error {
 	b, err := yaml.Marshal(state.NewUser())
 	if err != nil {
 		return err
@@ -177,7 +177,7 @@ func loadDefaultUserData(_ *config.Config, v *viper.Viper) error {
 	return nil
 }
 
-func loadStoredUserData(notFoundFn DataNotFoundFn) LoaderFn {
+func LoadStoredUserData(notFoundFn DataNotFoundFn) LoaderFn {
 	return func(cfg *config.Config, v *viper.Viper) error {
 		configPath, err := cfg.GetUserDataDir()
 		if err != nil {
@@ -249,7 +249,7 @@ func updateKnownBinaries(cfg *config.Config) {
 	cfg.UserState.Binaries = append(cfg.UserState.Binaries, update...)
 }
 
-func buildUserDataLoader(loaders ...LoaderFn) config.DataLoaderFn {
+func BuildUserDataLoader(loaders ...LoaderFn) config.DataLoaderFn { // todo EXPOrt
 	return func(cfg *config.Config) error {
 		var err error
 

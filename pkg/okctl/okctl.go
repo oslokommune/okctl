@@ -80,11 +80,6 @@ func New() *Okctl {
 	}
 }
 
-// Binaries returns the application binaries
-func (o *Okctl) Binaries() []state.Binary {
-	return o.UserState.Binaries
-}
-
 // Host returns the host information
 func (o *Okctl) Host() state.Host {
 	return o.UserState.Host
@@ -312,10 +307,13 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		o.CloudProvider,
 	)
 
+	binaryService := clientCore.NewBinaryService(o.Config)
+
 	services := &clientCore.Services{
 		AWSLoadBalancerControllerService: awsLoadBalancerControllerService,
 		ArgoCD:                           argocdService,
 		ApplicationService:               applicationService,
+		BinaryService:                    binaryService,
 		Certificate:                      certificateService,
 		Cluster:                          clusterService,
 		Domain:                           domainService,
@@ -601,12 +599,25 @@ func (o *Okctl) newBinariesProvider() error {
 		return err
 	}
 
+	// TODO: Flytt ut av herfra. binaries provider bør ta imot en ferdig initialisert service. Eller? Finn ut
+	handlers := o.StateHandlers(o.StateNodes())
+
+	services, err := o.ClientServices(handlers)
+	if err != nil {
+		return fmt.Errorf("getting client services: %w", err)
+	}
+
+	// Not needed, binaryservice uses config as state
+	//for _, binary := range o.UserState.Binaries {
+	//	err = services.BinaryService.Add(binary)
+	//}
+
 	fetcher, err := fetch.New(
 		o.Err,
 		o.Logger,
 		true,
 		o.Host(),
-		o.Binaries(),
+		services.BinaryService,
 		storage.NewFileSystemStorage(userDataDir),
 	)
 	if err != nil {

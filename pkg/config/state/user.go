@@ -1,6 +1,7 @@
 package state
 
 import (
+	"fmt"
 	"regexp"
 	"runtime"
 
@@ -56,6 +57,15 @@ type Binary struct {
 	URLPattern string
 	Archive    Archive
 	Checksums  []Checksum
+	Preload    bool // TODO remove this if not needed
+}
+
+func (b Binary) Id() string {
+	return BinaryId(b.Name, b.Version)
+}
+
+func BinaryId(binaryName, binaryVersion string) string {
+	return fmt.Sprintf("%s-%s", binaryName, binaryVersion)
 }
 
 // Archive represents the compression type

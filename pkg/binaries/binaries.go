@@ -20,6 +20,7 @@ type Provider interface {
 	Eksctl(version string) (*eksctl.Eksctl, error)
 	Kubectl(version string) (*kubectl.Kubectl, error)
 	AwsIamAuthenticator(version string) (*awsiamauthenticator.AwsIamAuthenticator, error)
+	OkctlMigration(migration string) interface{} // TODO
 }
 
 type provider struct {
@@ -31,6 +32,12 @@ type provider struct {
 	eksctl              map[string]*eksctl.Eksctl
 	kubectl             map[string]*kubectl.Kubectl
 	awsIamAuthenticator map[string]*awsiamauthenticator.AwsIamAuthenticator
+}
+
+func (p *provider) OkctlMigration(migration string) interface{} {
+	// TODO: Implement fethcing
+	//p.fetcher.Add(migration something)
+	return nil
 }
 
 // AwsIamAuthenticator returns an aws-iam-authenticator cli wrapper for running commands

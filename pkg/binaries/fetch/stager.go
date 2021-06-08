@@ -3,6 +3,7 @@ package fetch
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/client"
 	"io"
 	"path"
 	"strings"
@@ -99,19 +100,20 @@ type Processor struct {
 	Host           state.Host
 	Store          storage.Storer
 	Preload        bool
-	Binaries       []state.Binary
+	BinaryService  client.BinaryService
 	LoadedBinaries map[string]*Stager
 	Logger         *logrus.Logger
 	Progress       io.Writer
 }
 
 // New returns a provider that knows how to fetch binaries via https
-func New(progress io.Writer, logger *logrus.Logger, preload bool, host state.Host, binaries []state.Binary, store storage.Storer) (*Processor, error) {
+//func New(progress io.Writer, logger *logrus.Logger, preload bool, host state.Host, binaries []state.Binary, store storage.Storer) (*Processor, error) {
+func New(progress io.Writer, logger *logrus.Logger, preload bool, host state.Host, binaryService client.BinaryService, store storage.Storer) (*Processor, error) {
 	p := &Processor{
 		Host:           host,
 		Store:          store,
 		Preload:        preload,
-		Binaries:       binaries,
+		BinaryService:  binaryService,
 		LoadedBinaries: map[string]*Stager{},
 		Logger:         logger,
 		Progress:       progress,
@@ -157,9 +159,10 @@ func (s *Processor) Stager(baseDir string, bufferSize int64, binary state.Binary
 	return stager, nil
 }
 
+// TODO: Rename to PrepareAndLoad
 // prepareAndLoad a set of stagers
 func (s *Processor) prepareAndLoad() (*Processor, error) {
-	for _, binary := range s.Binaries {
+	for _, binary := range s.BinaryService.List() {
 		binaryBaseDir := path.Join("binaries", binary.Name, binary.Version, s.Host.Os, s.Host.Arch)
 		binaryPath := path.Join(binaryBaseDir, binary.Name)
 
@@ -171,7 +174,7 @@ func (s *Processor) prepareAndLoad() (*Processor, error) {
 		if exists {
 			s.Logger.Debugf("binary already exists: %s (%s)", binary.Name, binary.Version)
 
-			s.LoadedBinaries[binaryIndex(binary.Name, binary.Version)] = &Stager{
+			s.LoadedBinaries[binary.Id()] = &Stager{
 				BinaryPath: s.Store.Abs(binaryPath),
 			}
 
@@ -206,7 +209,7 @@ func (s *Processor) prepareAndLoad() (*Processor, error) {
 
 		stager.BinaryPath = s.Store.Abs(binaryPath)
 
-		s.LoadedBinaries[binaryIndex(binary.Name, binary.Version)] = stager
+		s.LoadedBinaries[binary.Id()] = stager
 	}
 
 	return s, nil
@@ -214,7 +217,7 @@ func (s *Processor) prepareAndLoad() (*Processor, error) {
 
 // Fetch attempts to download and verify the binary
 func (s *Processor) Fetch(name, version string) (string, error) {
-	binary, hasKey := s.LoadedBinaries[binaryIndex(name, version)]
+	binary, hasKey := s.LoadedBinaries[state.BinaryId(name, version)]
 	if !hasKey {
 		return "", fmt.Errorf("could not find configuration for binary: %s, with version: %s", name, version)
 	}
@@ -245,8 +248,4 @@ func replaceVars(content string, vars map[string]string) string {
 	}
 
 	return content
-}
-
-func binaryIndex(name, version string) string {
-	return fmt.Sprintf("%s-%s", name, version)
 }

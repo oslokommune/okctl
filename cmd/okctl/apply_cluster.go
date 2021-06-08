@@ -9,6 +9,8 @@ import (
 	"path"
 	"syscall"
 
+	"github.com/oslokommune/okctl/pkg/controller/cluster"
+
 	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
 
 	"github.com/asdine/storm/v3/codec/json"
@@ -26,7 +28,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/config/load"
-	"github.com/oslokommune/okctl/pkg/controller"
 	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -189,7 +190,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				Declaration: opts.Declaration,
 			})
 
-			synchronizeOpts := &controller.SynchronizeOpts{
+			synchronizeOpts := &cluster.SynchronizeOpts{
 				Debug:                 o.Debug,
 				Out:                   o.Out,
 				ID:                    id,
@@ -198,7 +199,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				State:                 handlers,
 			}
 
-			err = controller.Synchronize(synchronizeOpts)
+			err = cluster.Synchronize(synchronizeOpts)
 			if err != nil {
 				return fmt.Errorf("synchronizing declaration with state: %w", err)
 			}

@@ -1,4 +1,4 @@
-package controller
+package common
 
 import (
 	"testing"
@@ -172,8 +172,20 @@ func TestReceivedErrorAfterRequeues(t *testing.T) {
 	}
 }
 
+func createResourceDependencyTree() *resourcetree.ResourceNode {
+	root := resourcetree.NewNode(resourcetree.ResourceNodeTypeGroup)
+
+	firstDependency := resourcetree.NewNode("test-type1")
+	root.AppendChild(firstDependency)
+
+	secondDependency := resourcetree.NewNode("test-type2")
+	firstDependency.AppendChild(secondDependency)
+
+	return root
+}
+
 func TestOrderTree(t *testing.T) {
-	tree := CreateResourceDependencyTree()
+	tree := createResourceDependencyTree()
 
 	order := FlattenTree(tree, []*resourcetree.ResourceNode{})
 	reverse := FlattenTreeReverse(tree, []*resourcetree.ResourceNode{})

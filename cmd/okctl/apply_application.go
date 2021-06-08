@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/controller/application"
+
 	"github.com/oslokommune/okctl/pkg/controller/application/reconciliation"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -12,7 +14,6 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/controller"
 	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -93,7 +94,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				ApplicationDeclaration: opts.Application,
 			})
 
-			dependencyTree := controller.CreateApplicationResourceDependencyTree()
+			dependencyTree := application.CreateResourceDependencyTree()
 
 			err = commands.SynchronizeApplication(commands.SynchronizeApplicationOpts{
 				ReconciliationManager: reconciliationManager,

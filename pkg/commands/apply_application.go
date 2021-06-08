@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"github.com/oslokommune/okctl/pkg/controller/common"
+
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
@@ -17,7 +19,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
-	"github.com/oslokommune/okctl/pkg/controller"
 	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
@@ -39,7 +40,7 @@ type SynchronizeApplicationOpts struct {
 func SynchronizeApplication(opts SynchronizeApplicationOpts) error {
 	opts.Tree.ApplyFunction(applyDesiredState(opts.Application.Image))
 
-	return controller.Process(opts.ReconciliationManager, opts.State, controller.FlattenTree(opts.Tree, []*resourcetree.ResourceNode{}))
+	return common.Process(opts.ReconciliationManager, opts.State, common.FlattenTree(opts.Tree, []*resourcetree.ResourceNode{}))
 }
 
 func applyDesiredState(image v1alpha1.ApplicationImage) resourcetree.ApplyFn {

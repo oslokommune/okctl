@@ -167,6 +167,23 @@ func (node *ResourceNode) String() string {
 	return buf.String()
 }
 
+// AppendChild adds a child node to the node
+func (node *ResourceNode) AppendChild(children ...*ResourceNode) {
+	node.Children = append(node.Children, children...)
+}
+
+// NewNode creates a node of the certain type
+func NewNode(nodeType ResourceNodeType) (child *ResourceNode) {
+	child = &ResourceNode{
+		Type:     nodeType,
+		Children: make([]*ResourceNode, 0),
+	}
+
+	child.State = ResourceNodeStatePresent
+
+	return child
+}
+
 // ApplyFn is a kind of function we can run on all the nodes in a ResourceNode tree with the ApplyFunction() function
 type ApplyFn func(receiver *ResourceNode)
 

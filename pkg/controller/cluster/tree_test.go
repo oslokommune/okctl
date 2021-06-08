@@ -1,4 +1,4 @@
-package controller
+package cluster
 
 import (
 	"testing"

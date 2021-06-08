@@ -5,10 +5,11 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/oslokommune/okctl/pkg/controller/cluster"
+
 	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
 	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 
-	"github.com/oslokommune/okctl/pkg/controller"
 	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 	"github.com/oslokommune/okctl/pkg/spinner"
 
@@ -148,7 +149,7 @@ including VPC, this is a highly destructive operation.`,
 				Declaration: o.Declaration,
 			})
 
-			synchronizeOpts := &controller.SynchronizeOpts{
+			synchronizeOpts := &cluster.SynchronizeOpts{
 				Debug:                 o.Debug,
 				Out:                   o.Out,
 				DeleteAll:             true,
@@ -163,7 +164,7 @@ including VPC, this is a highly destructive operation.`,
 				return err
 			}
 
-			err = controller.DeleteCluster(synchronizeOpts)
+			err = cluster.DeleteCluster(synchronizeOpts)
 			if err != nil {
 				return fmt.Errorf("synchronizing declaration with state: %w", err)
 			}

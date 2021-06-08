@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/github"
 
 	stormpkg "github.com/asdine/storm/v3"
 
@@ -79,6 +80,10 @@ func (s *githubService) CreateGithubRepository(_ context.Context, opts client.Cr
 	}
 
 	return repo, nil
+}
+
+func (s *githubService) ListReleases(owner, repo string) ([]*github.RepositoryRelease, error) {
+	return s.api.ListReleases(owner, repo)
 }
 
 // NewGithubService returns an initialised service

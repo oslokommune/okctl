@@ -2,6 +2,7 @@ package github_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -30,10 +31,15 @@ func TestGithubRepositories(t *testing.T) {
 		{
 			name: "Should work",
 			github: func() *github.Github {
-				gh, err := github.New(context.Background(), githubAuth.New(githubAuth.NewInMemoryPersister(), &http.Client{}, githubAuth.NewAuthStatic(&githubAuth.Credentials{
-					AccessToken: "meh",
-					Type:        githubAuth.CredentialsTypePersonalAccessToken,
-				})))
+				gh, err := github.New(
+					context.Background(),
+					githubAuth.New(
+						githubAuth.NewInMemoryPersister(),
+						&http.Client{},
+						githubAuth.NewAuthStatic(&githubAuth.Credentials{
+							AccessToken: "meh",
+							Type:        githubAuth.CredentialsTypePersonalAccessToken,
+						})))
 				assert.NoError(t, err)
 
 				return gh
@@ -187,6 +193,88 @@ func TestGithubDeleteDeployKey(t *testing.T) {
 
 			err := tc.github.DeleteDeployKey(github.DefaultOrg, "myRepo", 56782)
 			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestGithubListReleases(t *testing.T) {
+	createReleases := func(count int) []*ghPkg.RepositoryRelease {
+		var releases []*ghPkg.RepositoryRelease
+
+		for i := 0; i < count; i++ {
+			id := int64(i)
+			name := fmt.Sprintf("someRelease-%d", i)
+
+			assetID := int64(100 + i)
+			assetURL := fmt.Sprintf("https://api.github.com/repos/oslokommune/okctl-upgrade/releases/assets/%d", 1000+i)
+			assetName := fmt.Sprintf("my-binary-%d", i)
+
+			releases = append(releases, &ghPkg.RepositoryRelease{
+				ID:   &id,
+				Name: &name,
+				Assets: []*ghPkg.ReleaseAsset{
+					{
+						ID:   &assetID,
+						URL:  &assetURL,
+						Name: &assetName,
+					},
+				},
+			})
+		}
+
+		return releases
+	}
+
+	releases := createReleases(github.ListReleasesPageSize + 1) // + 1 so we get to test that pagination works
+
+	testCases := []struct {
+		name   string
+		github *github.Github
+	}{
+		{
+			name: "Should list releases in a repository",
+			github: func() *github.Github {
+				gh, err := github.New(
+					context.Background(),
+					githubAuth.New(
+						githubAuth.NewInMemoryPersister(),
+						&http.Client{},
+						githubAuth.NewAuthStatic(
+							&githubAuth.Credentials{
+								AccessToken: "meh",
+								Type:        githubAuth.CredentialsTypePersonalAccessToken,
+							})))
+				assert.NoError(t, err)
+
+				return gh
+			}(),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			// Given
+			defer gock.Off()
+
+			gock.New(tc.github.Client.BaseURL.String()).
+				Get("/repos/oslokommune/myRepo/releases").
+				MatchParam("per_page", fmt.Sprintf("%d", github.ListReleasesPageSize)).
+				Reply(http.StatusOK).
+				JSON(releases)
+
+			// When
+			releasesActual, err := tc.github.ListReleases("oslokommune", "myRepo")
+
+			// Then
+			assert.NoError(t, err)
+
+			assert.Equal(t, len(releases), len(releasesActual))
+
+			for i := 0; i < len(releases); i++ {
+				assert.Equal(t, releases[i], releasesActual[i])
+			}
 		})
 	}
 }

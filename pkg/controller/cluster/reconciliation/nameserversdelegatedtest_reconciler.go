@@ -10,32 +10,32 @@ import (
 
 	"github.com/logrusorgru/aurora"
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 	"github.com/oslokommune/okctl/pkg/domain"
 )
 
 const defaultTestingIntervalMinutes = 5 * time.Minute
 
 type nameserversDelegatedTestReconciler struct {
-	commonMetadata *resourcetree.CommonMetadata
+	commonMetadata *reconciliation.CommonMetadata
 
 	domainService client.DomainService
 }
 
-// NodeType returns the relevant ResourceNodeType for this reconciler
-func (n *nameserversDelegatedTestReconciler) NodeType() resourcetree.ResourceNodeType {
-	return resourcetree.ResourceNodeTypeNameserversDelegatedTest
+// NodeType returns the relevant NodeType for this reconciler
+func (n *nameserversDelegatedTestReconciler) NodeType() dependencytree.NodeType {
+	return dependencytree.NodeTypeNameserversDelegatedTest
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (n *nameserversDelegatedTestReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (n *nameserversDelegatedTestReconciler) SetCommonMetadata(metadata *reconciliation.CommonMetadata) {
 	n.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (n *nameserversDelegatedTestReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result reconciliation.Result, err error) {
+func (n *nameserversDelegatedTestReconciler) Reconcile(node *dependencytree.Node, state *clientCore.StateHandlers) (result reconciliation.Result, err error) {
 	switch node.State {
-	case resourcetree.ResourceNodeStatePresent:
+	case dependencytree.NodeStatePresent:
 		_, _ = fmt.Fprintf(
 			n.commonMetadata.Out,
 			delegationRequestMessage,
@@ -66,7 +66,7 @@ func (n *nameserversDelegatedTestReconciler) Reconcile(node *resourcetree.Resour
 		if err != nil {
 			return result, fmt.Errorf("setting hosted zone delegation status: %w", err)
 		}
-	case resourcetree.ResourceNodeStateAbsent:
+	case dependencytree.NodeStateAbsent:
 		// Nothing to do on absent
 		return result, nil
 	}

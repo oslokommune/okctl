@@ -29,7 +29,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/config/load"
 	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/spinner"
 	"github.com/spf13/cobra"
@@ -183,7 +182,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				reconciliation.NewServiceQuotaReconciler(o.CloudProvider),
 			)
 
-			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{
+			reconciliationManager.SetCommonMetadata(&common.CommonMetadata{
 				Ctx:         o.Ctx,
 				Out:         o.Out,
 				ClusterID:   id,

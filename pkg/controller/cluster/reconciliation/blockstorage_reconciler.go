@@ -7,35 +7,35 @@ import (
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 )
 
 // blockstorageReconciler contains service and metadata for the relevant resource
 type blockstorageReconciler struct {
-	commonMetadata *resourcetree.CommonMetadata
+	commonMetadata *reconciliation.CommonMetadata
 
 	client client.BlockstorageService
 }
 
-// NodeType returns the relevant ResourceNodeType for this reconciler
-func (z *blockstorageReconciler) NodeType() resourcetree.ResourceNodeType {
-	return resourcetree.ResourceNodeTypeBlockstorage
+// NodeType returns the relevant NodeType for this reconciler
+func (z *blockstorageReconciler) NodeType() dependencytree.NodeType {
+	return dependencytree.NodeTypeBlockstorage
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *blockstorageReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *blockstorageReconciler) SetCommonMetadata(metadata *reconciliation.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *blockstorageReconciler) Reconcile(node *resourcetree.ResourceNode, _ *clientCore.StateHandlers) (result reconciliation.Result, err error) {
+func (z *blockstorageReconciler) Reconcile(node *dependencytree.Node, _ *clientCore.StateHandlers) (result reconciliation.Result, err error) {
 	switch node.State {
-	case resourcetree.ResourceNodeStatePresent:
+	case dependencytree.NodeStatePresent:
 		_, err = z.client.CreateBlockstorage(z.commonMetadata.Ctx, client.CreateBlockstorageOpts{ID: z.commonMetadata.ClusterID})
 		if err != nil {
 			return result, fmt.Errorf("creating blockstorage: %w", err)
 		}
-	case resourcetree.ResourceNodeStateAbsent:
+	case dependencytree.NodeStateAbsent:
 		err = z.client.DeleteBlockstorage(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
 			return result, fmt.Errorf("deleting blockstorage: %w", err)

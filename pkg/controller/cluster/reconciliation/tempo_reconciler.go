@@ -7,34 +7,34 @@ import (
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 )
 
 type tempoReconciler struct {
-	commonMetadata *resourcetree.CommonMetadata
+	commonMetadata *reconciliation.CommonMetadata
 
 	client client.MonitoringService
 }
 
-// NodeType returns the relevant ResourceNodeType for this reconciler
-func (z *tempoReconciler) NodeType() resourcetree.ResourceNodeType {
-	return resourcetree.ResourceNodeTypeTempo
+// NodeType returns the relevant NodeType for this reconciler
+func (z *tempoReconciler) NodeType() dependencytree.NodeType {
+	return dependencytree.NodeTypeTempo
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *tempoReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *tempoReconciler) SetCommonMetadata(metadata *reconciliation.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *tempoReconciler) Reconcile(node *resourcetree.ResourceNode, _ *clientCore.StateHandlers) (result reconciliation.Result, err error) {
+func (z *tempoReconciler) Reconcile(node *dependencytree.Node, _ *clientCore.StateHandlers) (result reconciliation.Result, err error) {
 	switch node.State {
-	case resourcetree.ResourceNodeStatePresent:
+	case dependencytree.NodeStatePresent:
 		_, err = z.client.CreateTempo(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
 			return result, fmt.Errorf("creating tempo: %w", err)
 		}
-	case resourcetree.ResourceNodeStateAbsent:
+	case dependencytree.NodeStateAbsent:
 		err = z.client.DeleteTempo(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
 			return result, fmt.Errorf("deleting tempo: %w", err)

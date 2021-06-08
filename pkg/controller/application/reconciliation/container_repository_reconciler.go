@@ -9,30 +9,30 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/client"
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 )
 
 // containerRepositoryReconciler contains service and metadata for the relevant resource
 type containerRepositoryReconciler struct {
-	commonMetadata *resourcetree.CommonMetadata
+	commonMetadata *reconciliation.CommonMetadata
 
 	client client.ContainerRepositoryService
 }
 
-// NodeType returns the relevant ResourceNodeType for this reconciler
-func (c *containerRepositoryReconciler) NodeType() resourcetree.ResourceNodeType {
-	return resourcetree.ResourceNodeTypeContainerRepository
+// NodeType returns the relevant NodeType for this reconciler
+func (c *containerRepositoryReconciler) NodeType() dependencytree.NodeType {
+	return dependencytree.NodeTypeContainerRepository
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (c *containerRepositoryReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (c *containerRepositoryReconciler) SetCommonMetadata(metadata *reconciliation.CommonMetadata) {
 	c.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (c *containerRepositoryReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (reconciliation.Result, error) {
+func (c *containerRepositoryReconciler) Reconcile(node *dependencytree.Node, state *clientCore.StateHandlers) (reconciliation.Result, error) {
 	switch node.State {
-	case resourcetree.ResourceNodeStatePresent:
+	case dependencytree.NodeStatePresent:
 		_, err := state.ContainerRepository.GetContainerRepository(c.commonMetadata.ApplicationDeclaration.Image.Name)
 		if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
 			return reconciliation.Result{}, fmt.Errorf("getting container repository: %w", err)
@@ -50,7 +50,7 @@ func (c *containerRepositoryReconciler) Reconcile(node *resourcetree.ResourceNod
 
 		return reconciliation.Result{}, nil
 
-	case resourcetree.ResourceNodeStateAbsent:
+	case dependencytree.NodeStateAbsent:
 		err := c.client.DeleteContainerRepository(c.commonMetadata.Ctx, client.DeleteContainerRepositoryOpts{
 			ClusterID: c.commonMetadata.ClusterID,
 			ImageName: c.commonMetadata.ApplicationDeclaration.Image.Name,

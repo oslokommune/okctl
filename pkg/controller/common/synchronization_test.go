@@ -13,7 +13,7 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,12 +22,12 @@ type dummyReconciler struct {
 	ReconciliationResult []reconciliation.Result
 }
 
-func (d *dummyReconciler) NodeType() resourcetree.ResourceNodeType {
-	return resourcetree.ResourceNodeTypeGroup
+func (d *dummyReconciler) NodeType() dependencytree.NodeType {
+	return dependencytree.NodeTypeGroup
 }
-func (d *dummyReconciler) SetCommonMetadata(_ *resourcetree.CommonMetadata) {}
+func (d *dummyReconciler) SetCommonMetadata(_ *reconciliation.CommonMetadata) {}
 
-func (d *dummyReconciler) Reconcile(_ *resourcetree.ResourceNode, _ *clientCore.StateHandlers) (reconciliation.Result, error) {
+func (d *dummyReconciler) Reconcile(_ *dependencytree.Node, _ *clientCore.StateHandlers) (reconciliation.Result, error) {
 	d.ReconcileCounter++
 
 	return d.ReconciliationResult[d.ReconcileCounter-1], nil
@@ -99,9 +99,9 @@ func TestHandleNode(t *testing.T) {
 				ReconciliationResult: createRequeues(tc.withNumberOfRequeues),
 			}
 
-			node := &resourcetree.ResourceNode{}
+			node := &dependencytree.Node{}
 
-			err := Process(dummy, nil, FlattenTree(node, []*resourcetree.ResourceNode{}))
+			err := Process(dummy, nil, FlattenTree(node, []*dependencytree.Node{}))
 			if tc.expectErr {
 				assert.NotNil(t, err)
 			} else {
@@ -118,17 +118,17 @@ type mockAlwaysErrorReconciler struct {
 	ReconciliationResult []reconciliation.Result
 }
 
-func (m *mockAlwaysErrorReconciler) NodeType() resourcetree.ResourceNodeType {
-	return resourcetree.ResourceNodeTypeGroup
+func (m *mockAlwaysErrorReconciler) NodeType() dependencytree.NodeType {
+	return dependencytree.NodeTypeGroup
 }
 
-func (m *mockAlwaysErrorReconciler) Reconcile(_ *resourcetree.ResourceNode, _ *clientCore.StateHandlers) (reconciliation.Result, error) {
+func (m *mockAlwaysErrorReconciler) Reconcile(_ *dependencytree.Node, _ *clientCore.StateHandlers) (reconciliation.Result, error) {
 	m.iteration++
 
 	return m.ReconciliationResult[m.iteration-1], errors.New("dummy err")
 }
 
-func (m *mockAlwaysErrorReconciler) SetCommonMetadata(_ *resourcetree.CommonMetadata) {}
+func (m *mockAlwaysErrorReconciler) SetCommonMetadata(_ *reconciliation.CommonMetadata) {}
 
 func TestReceivedErrorAfterRequeues(t *testing.T) {
 	testCases := []struct {
@@ -163,7 +163,7 @@ func TestReceivedErrorAfterRequeues(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &mockAlwaysErrorReconciler{ReconciliationResult: tc.withResults}
 
-			err := Process(r, nil, FlattenTree(&resourcetree.ResourceNode{Type: resourcetree.ResourceNodeTypeGroup}, []*resourcetree.ResourceNode{}))
+			err := Process(r, nil, FlattenTree(&dependencytree.Node{Type: dependencytree.NodeTypeGroup}, []*dependencytree.Node{}))
 			assert.NotNil(t, err)
 
 			assert.Equal(t, tc.expectErrorAfterIterations, r.iteration)
@@ -172,13 +172,13 @@ func TestReceivedErrorAfterRequeues(t *testing.T) {
 	}
 }
 
-func createResourceDependencyTree() *resourcetree.ResourceNode {
-	root := resourcetree.NewNode(resourcetree.ResourceNodeTypeGroup)
+func createResourceDependencyTree() *dependencytree.Node {
+	root := dependencytree.NewNode(dependencytree.NodeTypeGroup)
 
-	firstDependency := resourcetree.NewNode("test-type1")
+	firstDependency := dependencytree.NewNode("test-type1")
 	root.AppendChild(firstDependency)
 
-	secondDependency := resourcetree.NewNode("test-type2")
+	secondDependency := dependencytree.NewNode("test-type2")
 	firstDependency.AppendChild(secondDependency)
 
 	return root
@@ -187,14 +187,14 @@ func createResourceDependencyTree() *resourcetree.ResourceNode {
 func TestOrderTree(t *testing.T) {
 	tree := createResourceDependencyTree()
 
-	order := FlattenTree(tree, []*resourcetree.ResourceNode{})
-	reverse := FlattenTreeReverse(tree, []*resourcetree.ResourceNode{})
+	order := FlattenTree(tree, []*dependencytree.Node{})
+	reverse := FlattenTreeReverse(tree, []*dependencytree.Node{})
 
 	g := goldie.New(t)
 
 	g.AssertJson(t, "tree-order.json", struct {
-		Normal  []*resourcetree.ResourceNode
-		Reverse []*resourcetree.ResourceNode
+		Normal  []*dependencytree.Node
+		Reverse []*dependencytree.Node
 	}{
 		order,
 		reverse,

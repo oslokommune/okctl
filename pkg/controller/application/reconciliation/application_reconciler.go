@@ -6,31 +6,31 @@ import (
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/client"
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 )
 
 // applicationReconciler contains service and metadata for the relevant resource
 type applicationReconciler struct {
-	commonMetadata *resourcetree.CommonMetadata
+	commonMetadata *reconciliation.CommonMetadata
 
 	client client.ApplicationService
 }
 
-// NodeType returns the relevant ResourceNodeType for this reconciler
-func (a *applicationReconciler) NodeType() resourcetree.ResourceNodeType {
-	return resourcetree.ResourceNodeTypeApplication
+// NodeType returns the relevant NodeType for this reconciler
+func (a *applicationReconciler) NodeType() dependencytree.NodeType {
+	return dependencytree.NodeTypeApplication
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (a *applicationReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (a *applicationReconciler) SetCommonMetadata(metadata *reconciliation.CommonMetadata) {
 	a.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (a *applicationReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (reconciliation.Result, error) {
+func (a *applicationReconciler) Reconcile(node *dependencytree.Node, state *clientCore.StateHandlers) (reconciliation.Result, error) {
 	switch node.State {
-	case resourcetree.ResourceNodeStatePresent:
+	case dependencytree.NodeStatePresent:
 		hz, err := state.Domain.GetPrimaryHostedZone()
 		if err != nil {
 			return reconciliation.Result{}, fmt.Errorf("getting primary hosted zone: %w", err)
@@ -67,7 +67,7 @@ func (a *applicationReconciler) Reconcile(node *resourcetree.ResourceNode, state
 		if err != nil {
 			return reconciliation.Result{}, err
 		}
-	case resourcetree.ResourceNodeStateAbsent:
+	case dependencytree.NodeStateAbsent:
 		return reconciliation.Result{}, errors.New("deletion of applications is not implemented")
 	}
 

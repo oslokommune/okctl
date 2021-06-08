@@ -15,7 +15,6 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
 	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
@@ -86,7 +85,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				reconciliation.NewContainerRepositoryReconciler(services.ContainerRepository),
 			)
 
-			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{
+			reconciliationManager.SetCommonMetadata(&common.CommonMetadata{
 				Ctx:                    o.Ctx,
 				Out:                    o.Out,
 				ClusterID:              opts.ClusterID,

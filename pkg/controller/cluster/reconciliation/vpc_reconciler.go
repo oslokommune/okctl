@@ -7,30 +7,30 @@ import (
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 )
 
 // vpcReconciler contains service and metadata for the relevant resource
 type vpcReconciler struct {
-	commonMetadata *resourcetree.CommonMetadata
+	commonMetadata *reconciliation.CommonMetadata
 
 	client client.VPCService
 }
 
-// NodeType returns the relevant ResourceNodeType for this reconciler
-func (z *vpcReconciler) NodeType() resourcetree.ResourceNodeType {
-	return resourcetree.ResourceNodeTypeVPC
+// NodeType returns the relevant NodeType for this reconciler
+func (z *vpcReconciler) NodeType() dependencytree.NodeType {
+	return dependencytree.NodeTypeVPC
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *vpcReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *vpcReconciler) SetCommonMetadata(metadata *reconciliation.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *vpcReconciler) Reconcile(node *resourcetree.ResourceNode, _ *clientCore.StateHandlers) (result reconciliation.Result, err error) {
+func (z *vpcReconciler) Reconcile(node *dependencytree.Node, _ *clientCore.StateHandlers) (result reconciliation.Result, err error) {
 	switch node.State {
-	case resourcetree.ResourceNodeStatePresent:
+	case dependencytree.NodeStatePresent:
 		_, err = z.client.CreateVpc(z.commonMetadata.Ctx, client.CreateVpcOpts{
 			ID:      z.commonMetadata.ClusterID,
 			Cidr:    z.commonMetadata.Declaration.VPC.CIDR,
@@ -39,7 +39,7 @@ func (z *vpcReconciler) Reconcile(node *resourcetree.ResourceNode, _ *clientCore
 		if err != nil {
 			return result, fmt.Errorf("creating vpc: %w", err)
 		}
-	case resourcetree.ResourceNodeStateAbsent:
+	case dependencytree.NodeStateAbsent:
 		err = z.client.DeleteVpc(z.commonMetadata.Ctx, client.DeleteVpcOpts{ID: z.commonMetadata.ClusterID})
 		if err != nil {
 			return result, fmt.Errorf("deleting vpc: %w", err)

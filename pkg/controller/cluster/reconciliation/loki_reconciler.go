@@ -7,34 +7,34 @@ import (
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 )
 
 type lokiReconciler struct {
-	commonMetadata *resourcetree.CommonMetadata
+	commonMetadata *reconciliation.CommonMetadata
 
 	client client.MonitoringService
 }
 
-// NodeType returns the relevant ResourceNodeType for this reconciler
-func (z *lokiReconciler) NodeType() resourcetree.ResourceNodeType {
-	return resourcetree.ResourceNodeTypeLoki
+// NodeType returns the relevant NodeType for this reconciler
+func (z *lokiReconciler) NodeType() dependencytree.NodeType {
+	return dependencytree.NodeTypeLoki
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *lokiReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *lokiReconciler) SetCommonMetadata(metadata *reconciliation.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *lokiReconciler) Reconcile(node *resourcetree.ResourceNode, _ *clientCore.StateHandlers) (result reconciliation.Result, err error) {
+func (z *lokiReconciler) Reconcile(node *dependencytree.Node, _ *clientCore.StateHandlers) (result reconciliation.Result, err error) {
 	switch node.State {
-	case resourcetree.ResourceNodeStatePresent:
+	case dependencytree.NodeStatePresent:
 		_, err = z.client.CreateLoki(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
 			return result, fmt.Errorf("creating Loki: %w", err)
 		}
-	case resourcetree.ResourceNodeStateAbsent:
+	case dependencytree.NodeStateAbsent:
 		err = z.client.DeleteLoki(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
 			return result, fmt.Errorf("deleting Loki: %w", err)

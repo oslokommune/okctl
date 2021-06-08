@@ -19,7 +19,7 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 	"github.com/spf13/afero"
@@ -32,7 +32,7 @@ type SynchronizeApplicationOpts struct {
 	ReconciliationManager reconciliation.Reconciler
 	Application           v1alpha1.Application
 
-	Tree  *resourcetree.ResourceNode
+	Tree  *dependencytree.Node
 	State *clientCore.StateHandlers
 }
 
@@ -40,20 +40,20 @@ type SynchronizeApplicationOpts struct {
 func SynchronizeApplication(opts SynchronizeApplicationOpts) error {
 	opts.Tree.ApplyFunction(applyDesiredState(opts.Application.Image))
 
-	return common.Process(opts.ReconciliationManager, opts.State, common.FlattenTree(opts.Tree, []*resourcetree.ResourceNode{}))
+	return common.Process(opts.ReconciliationManager, opts.State, common.FlattenTree(opts.Tree, []*dependencytree.Node{}))
 }
 
-func applyDesiredState(image v1alpha1.ApplicationImage) resourcetree.ApplyFn {
-	return func(receiver *resourcetree.ResourceNode) {
+func applyDesiredState(image v1alpha1.ApplicationImage) dependencytree.ApplyFn {
+	return func(receiver *dependencytree.Node) {
 		switch receiver.Type {
-		case resourcetree.ResourceNodeTypeContainerRepository:
+		case dependencytree.NodeTypeContainerRepository:
 			if image.HasName() {
-				receiver.State = resourcetree.ResourceNodeStatePresent
+				receiver.State = dependencytree.NodeStatePresent
 			} else {
-				receiver.State = resourcetree.ResourceNodeStateNoop
+				receiver.State = dependencytree.NodeStateNoop
 			}
-		case resourcetree.ResourceNodeTypeApplication:
-			receiver.State = resourcetree.ResourceNodeStatePresent
+		case dependencytree.NodeTypeApplication:
+			receiver.State = dependencytree.NodeStatePresent
 		}
 	}
 }

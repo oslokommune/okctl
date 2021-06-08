@@ -9,8 +9,8 @@ import (
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 	clusterrec "github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
 	"github.com/oslokommune/okctl/pkg/controller/common"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 )
 
 // SynchronizeOpts contains the necessary information that Synchronize() needs to do its work
@@ -36,7 +36,7 @@ func DeleteCluster(opts *SynchronizeOpts) error {
 		_, _ = fmt.Fprintf(opts.Out, "Resources to be deleted: \n%s\n\n", desiredTree.String())
 	}
 
-	return common.Process(opts.ReconciliationManager, opts.State, common.FlattenTreeReverse(desiredTree, []*resourcetree.ResourceNode{}))
+	return common.Process(opts.ReconciliationManager, opts.State, common.FlattenTreeReverse(desiredTree, []*dependencytree.Node{}))
 }
 
 // Synchronize knows how to discover differences between desired and actual state and rectify them
@@ -63,60 +63,60 @@ func Synchronize(opts *SynchronizeOpts) error {
 		_, _ = fmt.Fprintf(opts.Out, "Present resources in difference tree (what should be generated): \n%s\n\n", diffTree.String())
 	}
 
-	return common.Process(opts.ReconciliationManager, opts.State, common.FlattenTree(diffTree, []*resourcetree.ResourceNode{}))
+	return common.Process(opts.ReconciliationManager, opts.State, common.FlattenTree(diffTree, []*dependencytree.Node{}))
 }
 
 //nolint:gocyclo,funlen
-func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
-	return func(desiredTreeNode *resourcetree.ResourceNode) {
+func applyDeclaration(declaration *v1alpha1.Cluster) dependencytree.ApplyFn {
+	return func(desiredTreeNode *dependencytree.Node) {
 		switch desiredTreeNode.Type {
 		// Mandatory
-		case resourcetree.ResourceNodeTypeServiceQuota:
-			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
-		case resourcetree.ResourceNodeTypeZone:
-			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
-		case resourcetree.ResourceNodeTypeNameserverDelegator:
-			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
-		case resourcetree.ResourceNodeTypeNameserversDelegatedTest:
-			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
-		case resourcetree.ResourceNodeTypeCleanupALB:
-			desiredTreeNode.State = resourcetree.ResourceNodeStateNoop
-		case resourcetree.ResourceNodeTypeCleanupSG:
-			desiredTreeNode.State = resourcetree.ResourceNodeStateNoop
-		case resourcetree.ResourceNodeTypeVPC:
-			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
-		case resourcetree.ResourceNodeTypeCluster:
-			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
+		case dependencytree.NodeTypeServiceQuota:
+			desiredTreeNode.State = dependencytree.NodeStatePresent
+		case dependencytree.NodeTypeZone:
+			desiredTreeNode.State = dependencytree.NodeStatePresent
+		case dependencytree.NodeTypeNameserverDelegator:
+			desiredTreeNode.State = dependencytree.NodeStatePresent
+		case dependencytree.NodeTypeNameserversDelegatedTest:
+			desiredTreeNode.State = dependencytree.NodeStatePresent
+		case dependencytree.NodeTypeCleanupALB:
+			desiredTreeNode.State = dependencytree.NodeStateNoop
+		case dependencytree.NodeTypeCleanupSG:
+			desiredTreeNode.State = dependencytree.NodeStateNoop
+		case dependencytree.NodeTypeVPC:
+			desiredTreeNode.State = dependencytree.NodeStatePresent
+		case dependencytree.NodeTypeCluster:
+			desiredTreeNode.State = dependencytree.NodeStatePresent
 		// Integrations
-		case resourcetree.ResourceNodeTypeAutoscaler:
+		case dependencytree.NodeTypeAutoscaler:
 			desiredTreeNode.State = common.BoolToState(declaration.Integrations.Autoscaler)
-		case resourcetree.ResourceNodeTypeAWSLoadBalancerController:
+		case dependencytree.NodeTypeAWSLoadBalancerController:
 			desiredTreeNode.State = common.BoolToState(declaration.Integrations.AWSLoadBalancerController)
-		case resourcetree.ResourceNodeTypeBlockstorage:
+		case dependencytree.NodeTypeBlockstorage:
 			desiredTreeNode.State = common.BoolToState(declaration.Integrations.Blockstorage)
-		case resourcetree.ResourceNodeTypeExternalDNS:
+		case dependencytree.NodeTypeExternalDNS:
 			desiredTreeNode.State = common.BoolToState(declaration.Integrations.ExternalDNS)
-		case resourcetree.ResourceNodeTypeExternalSecrets:
+		case dependencytree.NodeTypeExternalSecrets:
 			desiredTreeNode.State = common.BoolToState(declaration.Integrations.ExternalSecrets)
-		case resourcetree.ResourceNodeTypeIdentityManager:
+		case dependencytree.NodeTypeIdentityManager:
 			desiredTreeNode.State = common.BoolToState(declaration.Integrations.Cognito)
-		case resourcetree.ResourceNodeTypeKubePromStack:
+		case dependencytree.NodeTypeKubePromStack:
 			desiredTreeNode.State = common.BoolToState(declaration.Integrations.KubePromStack)
-		case resourcetree.ResourceNodeTypeLoki:
+		case dependencytree.NodeTypeLoki:
 			desiredTreeNode.State = common.BoolToState(declaration.Integrations.Loki)
-		case resourcetree.ResourceNodeTypePromtail:
+		case dependencytree.NodeTypePromtail:
 			desiredTreeNode.State = common.BoolToState(declaration.Integrations.Promtail)
-		case resourcetree.ResourceNodeTypeTempo:
+		case dependencytree.NodeTypeTempo:
 			desiredTreeNode.State = common.BoolToState(declaration.Integrations.Tempo)
-		case resourcetree.ResourceNodeTypeArgoCD:
+		case dependencytree.NodeTypeArgoCD:
 			desiredTreeNode.State = common.BoolToState(declaration.Integrations.ArgoCD)
-		case resourcetree.ResourceNodeTypeUsers:
+		case dependencytree.NodeTypeUsers:
 			desiredTreeNode.State = common.BoolToState(len(declaration.Users) > 0)
-		case resourcetree.ResourceNodeTypePostgres:
+		case dependencytree.NodeTypePostgres:
 			if declaration.Databases != nil {
 				for _, db := range declaration.Databases.Postgres {
-					node := resourcetree.NewNode(
-						resourcetree.ResourceNodeType(fmt.Sprintf("%s-%s", resourcetree.ResourceNodeTypePostgresInstance, db.Name)),
+					node := dependencytree.NewNode(
+						dependencytree.NodeType(fmt.Sprintf("%s-%s", dependencytree.NodeTypePostgresInstance, db.Name)),
 					)
 					desiredTreeNode.AppendChild(node)
 
@@ -126,58 +126,58 @@ func applyDeclaration(declaration *v1alpha1.Cluster) resourcetree.ApplyFn {
 				}
 			}
 
-			desiredTreeNode.State = resourcetree.ResourceNodeStatePresent
+			desiredTreeNode.State = dependencytree.NodeStatePresent
 		}
 	}
 }
 
 //nolint:gocyclo,funlen
-func applyExistingState(existingResources ExistingResources) resourcetree.ApplyFn {
-	return func(receiver *resourcetree.ResourceNode) {
+func applyExistingState(existingResources ExistingResources) dependencytree.ApplyFn {
+	return func(receiver *dependencytree.Node) {
 		switch receiver.Type {
 		// Mandatory
-		case resourcetree.ResourceNodeTypeServiceQuota:
+		case dependencytree.NodeTypeServiceQuota:
 			receiver.State = common.BoolToState(existingResources.hasServiceQuotaCheck)
-		case resourcetree.ResourceNodeTypeZone:
+		case dependencytree.NodeTypeZone:
 			receiver.State = common.BoolToState(existingResources.hasPrimaryHostedZone)
-		case resourcetree.ResourceNodeTypeNameserverDelegator:
+		case dependencytree.NodeTypeNameserverDelegator:
 			receiver.State = common.BoolToState(existingResources.hasDelegatedHostedZoneNameservers)
-		case resourcetree.ResourceNodeTypeNameserversDelegatedTest:
+		case dependencytree.NodeTypeNameserversDelegatedTest:
 			receiver.State = common.BoolToState(existingResources.hasDelegatedHostedZoneNameserversTest)
-		case resourcetree.ResourceNodeTypeCleanupALB:
-			receiver.State = resourcetree.ResourceNodeStateNoop
-		case resourcetree.ResourceNodeTypeCleanupSG:
-			receiver.State = resourcetree.ResourceNodeStateNoop
-		case resourcetree.ResourceNodeTypeVPC:
+		case dependencytree.NodeTypeCleanupALB:
+			receiver.State = dependencytree.NodeStateNoop
+		case dependencytree.NodeTypeCleanupSG:
+			receiver.State = dependencytree.NodeStateNoop
+		case dependencytree.NodeTypeVPC:
 			receiver.State = common.BoolToState(existingResources.hasVPC)
-		case resourcetree.ResourceNodeTypeCluster:
+		case dependencytree.NodeTypeCluster:
 			receiver.State = common.BoolToState(existingResources.hasCluster)
 		// Integrations
-		case resourcetree.ResourceNodeTypeAutoscaler:
+		case dependencytree.NodeTypeAutoscaler:
 			receiver.State = common.BoolToState(existingResources.hasAutoscaler)
-		case resourcetree.ResourceNodeTypeAWSLoadBalancerController:
+		case dependencytree.NodeTypeAWSLoadBalancerController:
 			receiver.State = common.BoolToState(existingResources.hasAWSLoadBalancerController)
-		case resourcetree.ResourceNodeTypeBlockstorage:
+		case dependencytree.NodeTypeBlockstorage:
 			receiver.State = common.BoolToState(existingResources.hasBlockstorage)
-		case resourcetree.ResourceNodeTypeExternalDNS:
+		case dependencytree.NodeTypeExternalDNS:
 			receiver.State = common.BoolToState(existingResources.hasExternalDNS)
-		case resourcetree.ResourceNodeTypeExternalSecrets:
+		case dependencytree.NodeTypeExternalSecrets:
 			receiver.State = common.BoolToState(existingResources.hasExternalSecrets)
-		case resourcetree.ResourceNodeTypeIdentityManager:
+		case dependencytree.NodeTypeIdentityManager:
 			receiver.State = common.BoolToState(existingResources.hasIdentityManager)
-		case resourcetree.ResourceNodeTypeKubePromStack:
+		case dependencytree.NodeTypeKubePromStack:
 			receiver.State = common.BoolToState(existingResources.hasKubePromStack)
-		case resourcetree.ResourceNodeTypeLoki:
+		case dependencytree.NodeTypeLoki:
 			receiver.State = common.BoolToState(existingResources.hasLoki)
-		case resourcetree.ResourceNodeTypePromtail:
+		case dependencytree.NodeTypePromtail:
 			receiver.State = common.BoolToState(existingResources.hasPromtail)
-		case resourcetree.ResourceNodeTypeTempo:
+		case dependencytree.NodeTypeTempo:
 			receiver.State = common.BoolToState(existingResources.hasTempo)
-		case resourcetree.ResourceNodeTypeArgoCD:
+		case dependencytree.NodeTypeArgoCD:
 			receiver.State = common.BoolToState(existingResources.hasArgoCD)
-		case resourcetree.ResourceNodeTypeUsers:
+		case dependencytree.NodeTypeUsers:
 			receiver.State = common.BoolToState(existingResources.hasUsers)
-		case resourcetree.ResourceNodeTypePostgres:
+		case dependencytree.NodeTypePostgres:
 		NextDb:
 			for _, existingDB := range existingResources.hasPostgres {
 				for _, declaredDB := range receiver.Children {
@@ -187,34 +187,34 @@ func applyExistingState(existingResources ExistingResources) resourcetree.ApplyF
 					}
 
 					if data.DB.Name == existingDB.Name {
-						declaredDB.State = resourcetree.ResourceNodeStatePresent
+						declaredDB.State = dependencytree.NodeStatePresent
 						continue NextDb
 					}
 				}
 
-				node := resourcetree.NewNode(
-					resourcetree.ResourceNodeType(fmt.Sprintf("%s-%s", resourcetree.ResourceNodeTypePostgresInstance, existingDB.Name)),
+				node := dependencytree.NewNode(
+					dependencytree.NodeType(fmt.Sprintf("%s-%s", dependencytree.NodeTypePostgresInstance, existingDB.Name)),
 				)
 				receiver.AppendChild(node)
 				node.Data = &clusterrec.PostgresReconcilerState{
 					DB: *existingDB,
 				}
-				node.State = resourcetree.ResourceNodeStatePresent
+				node.State = dependencytree.NodeStatePresent
 			}
 
-			receiver.State = resourcetree.ResourceNodeStatePresent
+			receiver.State = dependencytree.NodeStatePresent
 		}
 	}
 }
 
-// applyCurrentState knows how to apply the current state on a desired state ResourceNode tree to produce a diff that
+// applyCurrentState knows how to apply the current state on a desired state Node tree to produce a diff that
 // knows which resources to create, and which resources is already existing
-func applyCurrentState(receiver *resourcetree.ResourceNode, target *resourcetree.ResourceNode) {
+func applyCurrentState(receiver *dependencytree.Node, target *dependencytree.Node) {
 	if target == nil {
 		return
 	}
 
 	if receiver.State == target.State {
-		receiver.State = resourcetree.ResourceNodeStateNoop
+		receiver.State = dependencytree.NodeStateNoop
 	}
 }

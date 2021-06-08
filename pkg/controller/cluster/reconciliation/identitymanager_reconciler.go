@@ -9,23 +9,23 @@ import (
 	"github.com/miekg/dns"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 )
 
 // identityManagerReconciler contains service and metadata for the relevant resource
 type identityManagerReconciler struct {
-	commonMetadata *resourcetree.CommonMetadata
+	commonMetadata *reconciliation.CommonMetadata
 
 	client client.IdentityManagerService
 }
 
-// NodeType returns the relevant ResourceNodeType for this reconciler
-func (z *identityManagerReconciler) NodeType() resourcetree.ResourceNodeType {
-	return resourcetree.ResourceNodeTypeIdentityManager
+// NodeType returns the relevant NodeType for this reconciler
+func (z *identityManagerReconciler) NodeType() dependencytree.NodeType {
+	return dependencytree.NodeTypeIdentityManager
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *identityManagerReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *identityManagerReconciler) SetCommonMetadata(metadata *reconciliation.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
@@ -35,9 +35,9 @@ Requires:
 - Hosted Zone
 - Nameservers setup
 */
-func (z *identityManagerReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result reconciliation.Result, err error) {
+func (z *identityManagerReconciler) Reconcile(node *dependencytree.Node, state *clientCore.StateHandlers) (result reconciliation.Result, err error) {
 	switch node.State {
-	case resourcetree.ResourceNodeStatePresent:
+	case dependencytree.NodeStatePresent:
 		authDomain := fmt.Sprintf("auth.%s", z.commonMetadata.Declaration.ClusterRootDomain)
 		authFQDN := dns.Fqdn(authDomain)
 
@@ -57,7 +57,7 @@ func (z *identityManagerReconciler) Reconcile(node *resourcetree.ResourceNode, s
 
 			return result, fmt.Errorf("creating identity manager resource: %w", err)
 		}
-	case resourcetree.ResourceNodeStateAbsent:
+	case dependencytree.NodeStateAbsent:
 		err := z.client.DeleteIdentityPool(z.commonMetadata.Ctx, z.commonMetadata.ClusterID)
 		if err != nil {
 			return result, fmt.Errorf("deleting identity manager: %w", err)

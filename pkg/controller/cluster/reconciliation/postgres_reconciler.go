@@ -11,7 +11,7 @@ import (
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 )
 
 // PostgresReconcilerState contains the required state for
@@ -21,30 +21,30 @@ type PostgresReconcilerState struct {
 }
 
 type postgresReconciler struct {
-	commonMetadata *resourcetree.CommonMetadata
+	commonMetadata *reconciliation.CommonMetadata
 
 	client client.ComponentService
 }
 
 // NodeType returns the resource node type
-func (z *postgresReconciler) NodeType() resourcetree.ResourceNodeType {
-	return resourcetree.ResourceNodeTypePostgresInstance
+func (z *postgresReconciler) NodeType() dependencytree.NodeType {
+	return dependencytree.NodeTypePostgresInstance
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *postgresReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *postgresReconciler) SetCommonMetadata(metadata *reconciliation.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *postgresReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result reconciliation.Result, err error) {
+func (z *postgresReconciler) Reconcile(node *dependencytree.Node, state *clientCore.StateHandlers) (result reconciliation.Result, err error) {
 	data, ok := node.Data.(*PostgresReconcilerState)
 	if !ok {
 		return result, fmt.Errorf("getting postgres data")
 	}
 
 	switch node.State {
-	case resourcetree.ResourceNodeStatePresent:
+	case dependencytree.NodeStatePresent:
 		vpc, err := state.Vpc.GetVpc(
 			cfn.NewStackNamer().Vpc(z.commonMetadata.Declaration.Metadata.Name),
 		)
@@ -73,7 +73,7 @@ func (z *postgresReconciler) Reconcile(node *resourcetree.ResourceNode, state *c
 		if err != nil {
 			return result, fmt.Errorf("creating postgres database: %w", err)
 		}
-	case resourcetree.ResourceNodeStateAbsent:
+	case dependencytree.NodeStateAbsent:
 		vpc, err := state.Vpc.GetVpc(
 			cfn.NewStackNamer().Vpc(z.commonMetadata.Declaration.Metadata.Name),
 		)

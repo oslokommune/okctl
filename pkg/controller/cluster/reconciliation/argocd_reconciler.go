@@ -14,24 +14,24 @@ import (
 
 	"github.com/miekg/dns"
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 )
 
-// NodeType returns the relevant ResourceNodeType for this reconciler
-func (z *argocdReconciler) NodeType() resourcetree.ResourceNodeType {
-	return resourcetree.ResourceNodeTypeArgoCD
+// NodeType returns the relevant NodeType for this reconciler
+func (z *argocdReconciler) NodeType() dependencytree.NodeType {
+	return dependencytree.NodeTypeArgoCD
 }
 
 // argocdReconciler contains service and metadata for the relevant resource
 type argocdReconciler struct {
-	commonMetadata *resourcetree.CommonMetadata
+	commonMetadata *reconciliation.CommonMetadata
 
 	argocdClient client.ArgoCDService
 	githubClient client.GithubService
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *argocdReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *argocdReconciler) SetCommonMetadata(metadata *reconciliation.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
@@ -43,9 +43,9 @@ Dependent on:
 - Primary hosted Zone
 */
 // nolint: funlen
-func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result reconciliation.Result, err error) {
+func (z *argocdReconciler) Reconcile(node *dependencytree.Node, state *clientCore.StateHandlers) (result reconciliation.Result, err error) {
 	switch node.State {
-	case resourcetree.ResourceNodeStatePresent:
+	case dependencytree.NodeStatePresent:
 		repo, err := z.githubClient.CreateGithubRepository(z.commonMetadata.Ctx, client.CreateGithubRepositoryOpts{
 			ID:           z.commonMetadata.ClusterID,
 			Host:         constant.DefaultGithubHost,
@@ -93,7 +93,7 @@ func (z *argocdReconciler) Reconcile(node *resourcetree.ResourceNode, state *cli
 
 			return result, fmt.Errorf("creating argocd: %w", err)
 		}
-	case resourcetree.ResourceNodeStateAbsent:
+	case dependencytree.NodeStateAbsent:
 		err := z.argocdClient.DeleteArgoCD(z.commonMetadata.Ctx, client.DeleteArgoCDOpts{
 			ID: z.commonMetadata.ClusterID,
 		})

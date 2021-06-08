@@ -3,7 +3,7 @@ package cluster
 import (
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 
 	"github.com/bmizerany/assert"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -109,8 +109,8 @@ func TestTreeCreators(t *testing.T) {
 }
 
 // Disclaimer: hasDependency only checks one level
-func hasDependency(tree *resourcetree.ResourceNode, target resourcetree.ResourceNodeType, potentialDependency resourcetree.ResourceNodeType) bool {
-	dependencyNode := tree.GetNode(&resourcetree.ResourceNode{Type: potentialDependency})
+func hasDependency(tree *dependencytree.Node, target dependencytree.NodeType, potentialDependency dependencytree.NodeType) bool {
+	dependencyNode := tree.GetNode(&dependencytree.Node{Type: potentialDependency})
 
 	for _, child := range dependencyNode.Children {
 		if child.Type == target {
@@ -125,25 +125,25 @@ func TestEnsureRelations(t *testing.T) {
 	testCases := []struct {
 		name string
 
-		with resourcetree.ResourceNodeType
+		with dependencytree.NodeType
 
-		expectDependencies []resourcetree.ResourceNodeType
+		expectDependencies []dependencytree.NodeType
 		expectFail         bool
 	}{
 		{
 			name: "Sanity check: hosted zone should not be dependent on cluster",
 
-			with: resourcetree.ResourceNodeTypeZone,
+			with: dependencytree.NodeTypeZone,
 
-			expectDependencies: []resourcetree.ResourceNodeType{resourcetree.ResourceNodeTypeCluster},
+			expectDependencies: []dependencytree.NodeType{dependencytree.NodeTypeCluster},
 			expectFail:         true,
 		},
 		{
 			name: "KubePromStack has the correct relations",
 
-			with: resourcetree.ResourceNodeTypeKubePromStack,
+			with: dependencytree.NodeTypeKubePromStack,
 
-			expectDependencies: []resourcetree.ResourceNodeType{resourcetree.ResourceNodeTypeIdentityManager},
+			expectDependencies: []dependencytree.NodeType{dependencytree.NodeTypeIdentityManager},
 		},
 	}
 

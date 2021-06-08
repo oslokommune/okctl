@@ -6,12 +6,12 @@ import (
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/config/constant"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 )
 
 // FlattenTree flattens the tree to an execution order
-func FlattenTree(current *resourcetree.ResourceNode, order []*resourcetree.ResourceNode) []*resourcetree.ResourceNode {
+func FlattenTree(current *dependencytree.Node, order []*dependencytree.Node) []*dependencytree.Node {
 	cpy := *current
 	cpy.Children = nil
 
@@ -25,7 +25,7 @@ func FlattenTree(current *resourcetree.ResourceNode, order []*resourcetree.Resou
 }
 
 // FlattenTreeReverse flattens the tree to a reverse execution order
-func FlattenTreeReverse(current *resourcetree.ResourceNode, order []*resourcetree.ResourceNode) []*resourcetree.ResourceNode {
+func FlattenTreeReverse(current *dependencytree.Node, order []*dependencytree.Node) []*dependencytree.Node {
 	order = FlattenTree(current, order)
 
 	for i, j := 0, len(order)-1; i < j; i, j = i+1, j-1 {
@@ -35,9 +35,9 @@ func FlattenTreeReverse(current *resourcetree.ResourceNode, order []*resourcetre
 	return order
 }
 
-// Process knows how to run Reconcile() on every node of a ResourceNode tree
+// Process knows how to run Reconcile() on every node of a Node tree
 //goland:noinspection GoNilness
-func Process(reconcilerManager reconciliation.Reconciler, state *clientCore.StateHandlers, order []*resourcetree.ResourceNode) (err error) {
+func Process(reconcilerManager reconciliation.Reconciler, state *clientCore.StateHandlers, order []*dependencytree.Node) (err error) {
 	for _, node := range order {
 		result := reconciliation.Result{
 			Requeue:      true,

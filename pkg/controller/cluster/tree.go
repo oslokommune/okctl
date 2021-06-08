@@ -1,60 +1,60 @@
 package cluster
 
-import "github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
+import "github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 
 // CreateResourceDependencyTree creates a tree
-func CreateResourceDependencyTree() *resourcetree.ResourceNode {
-	root := resourcetree.NewNode(resourcetree.ResourceNodeTypeServiceQuota)
+func CreateResourceDependencyTree() *dependencytree.Node {
+	root := dependencytree.NewNode(dependencytree.NodeTypeServiceQuota)
 
-	primaryHostedZoneNode := resourcetree.NewNode(resourcetree.ResourceNodeTypeZone)
+	primaryHostedZoneNode := dependencytree.NewNode(dependencytree.NodeTypeZone)
 	root.AppendChild(primaryHostedZoneNode)
 
-	nameserverDelegationNode := resourcetree.NewNode(resourcetree.ResourceNodeTypeNameserverDelegator)
+	nameserverDelegationNode := dependencytree.NewNode(dependencytree.NodeTypeNameserverDelegator)
 	primaryHostedZoneNode.AppendChild(nameserverDelegationNode)
 
-	vpcNode := resourcetree.NewNode(resourcetree.ResourceNodeTypeVPC)
+	vpcNode := dependencytree.NewNode(dependencytree.NodeTypeVPC)
 	primaryHostedZoneNode.AppendChild(vpcNode)
 
-	cleanupSGNode := resourcetree.NewNode(resourcetree.ResourceNodeTypeCleanupSG)
+	cleanupSGNode := dependencytree.NewNode(dependencytree.NodeTypeCleanupSG)
 	vpcNode.AppendChild(cleanupSGNode)
 
-	clusterNode := resourcetree.NewNode(resourcetree.ResourceNodeTypeCluster)
+	clusterNode := dependencytree.NewNode(dependencytree.NodeTypeCluster)
 	vpcNode.AppendChild(clusterNode)
 
 	clusterNode.AppendChild(
-		resourcetree.NewNode(resourcetree.ResourceNodeTypeCleanupALB),
-		resourcetree.NewNode(resourcetree.ResourceNodeTypeExternalSecrets),
-		resourcetree.NewNode(resourcetree.ResourceNodeTypeAutoscaler),
-		resourcetree.NewNode(resourcetree.ResourceNodeTypeBlockstorage),
-		resourcetree.NewNode(resourcetree.ResourceNodeTypeAWSLoadBalancerController),
-		resourcetree.NewNode(resourcetree.ResourceNodeTypeExternalDNS),
-		resourcetree.NewNode(resourcetree.ResourceNodeTypePostgres),
+		dependencytree.NewNode(dependencytree.NodeTypeCleanupALB),
+		dependencytree.NewNode(dependencytree.NodeTypeExternalSecrets),
+		dependencytree.NewNode(dependencytree.NodeTypeAutoscaler),
+		dependencytree.NewNode(dependencytree.NodeTypeBlockstorage),
+		dependencytree.NewNode(dependencytree.NodeTypeAWSLoadBalancerController),
+		dependencytree.NewNode(dependencytree.NodeTypeExternalDNS),
+		dependencytree.NewNode(dependencytree.NodeTypePostgres),
 	)
 
 	// All resources that requires SSL / a certificate needs the delegatedNameserversConfirmedNode as a dependency
-	delegatedNameserversConfirmedNode := resourcetree.NewNode(resourcetree.ResourceNodeTypeNameserversDelegatedTest)
+	delegatedNameserversConfirmedNode := dependencytree.NewNode(dependencytree.NodeTypeNameserversDelegatedTest)
 	clusterNode.AppendChild(delegatedNameserversConfirmedNode)
 
-	identityProviderNode := resourcetree.NewNode(resourcetree.ResourceNodeTypeIdentityManager)
+	identityProviderNode := dependencytree.NewNode(dependencytree.NodeTypeIdentityManager)
 	delegatedNameserversConfirmedNode.AppendChild(identityProviderNode)
 
 	identityProviderNode.AppendChild(
-		resourcetree.NewNode(resourcetree.ResourceNodeTypeArgoCD),
-		resourcetree.NewNode(resourcetree.ResourceNodeTypeUsers),
+		dependencytree.NewNode(dependencytree.NodeTypeArgoCD),
+		dependencytree.NewNode(dependencytree.NodeTypeUsers),
 	)
 
-	kubePromStack := resourcetree.NewNode(resourcetree.ResourceNodeTypeKubePromStack)
+	kubePromStack := dependencytree.NewNode(dependencytree.NodeTypeKubePromStack)
 	identityProviderNode.AppendChild(kubePromStack)
 
 	// This is not strictly required, but to a large extent it doesn't make much sense to setup Loki before
 	// we have setup grafana.
-	loki := resourcetree.NewNode(resourcetree.ResourceNodeTypeLoki)
+	loki := dependencytree.NewNode(dependencytree.NodeTypeLoki)
 	// Similarly, it doesn't make sense to install promtail without loki
-	loki.AppendChild(resourcetree.NewNode(resourcetree.ResourceNodeTypePromtail))
+	loki.AppendChild(dependencytree.NewNode(dependencytree.NodeTypePromtail))
 
 	kubePromStack.AppendChild(
 		loki,
-		resourcetree.NewNode(resourcetree.ResourceNodeTypeTempo),
+		dependencytree.NewNode(dependencytree.NodeTypeTempo),
 	)
 
 	return root

@@ -9,29 +9,29 @@ import (
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 )
 
 type usersReconciler struct {
-	commonMetadata *resourcetree.CommonMetadata
+	commonMetadata *reconciliation.CommonMetadata
 
 	client client.IdentityManagerService
 }
 
 // NodeType returns the resource node type
-func (z *usersReconciler) NodeType() resourcetree.ResourceNodeType {
-	return resourcetree.ResourceNodeTypeUsers
+func (z *usersReconciler) NodeType() dependencytree.NodeType {
+	return dependencytree.NodeTypeUsers
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *usersReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *usersReconciler) SetCommonMetadata(metadata *reconciliation.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *usersReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result reconciliation.Result, err error) {
+func (z *usersReconciler) Reconcile(node *dependencytree.Node, state *clientCore.StateHandlers) (result reconciliation.Result, err error) {
 	switch node.State {
-	case resourcetree.ResourceNodeStatePresent:
+	case dependencytree.NodeStatePresent:
 		im, err := state.IdentityManager.GetIdentityPool(
 			cfn.NewStackNamer().IdentityPool(z.commonMetadata.Declaration.Metadata.Name),
 		)
@@ -49,7 +49,7 @@ func (z *usersReconciler) Reconcile(node *resourcetree.ResourceNode, state *clie
 				return result, fmt.Errorf("creating user: %w", err)
 			}
 		}
-	case resourcetree.ResourceNodeStateAbsent:
+	case dependencytree.NodeStateAbsent:
 		// We need to implement delete of individual users
 		return result, nil
 	}

@@ -12,32 +12,32 @@ import (
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 )
 
 type cleanupSGReconciler struct {
-	commonMetadata *resourcetree.CommonMetadata
+	commonMetadata *reconciliation.CommonMetadata
 
 	provider v1alpha1.CloudProvider
 }
 
-// NodeType returns the relevant ResourceNodeType for this reconciler
-func (z *cleanupSGReconciler) NodeType() resourcetree.ResourceNodeType {
-	return resourcetree.ResourceNodeTypeCleanupSG
+// NodeType returns the relevant NodeType for this reconciler
+func (z *cleanupSGReconciler) NodeType() dependencytree.NodeType {
+	return dependencytree.NodeTypeCleanupSG
 }
 
 // SetCommonMetadata saves common metadata for use in Reconcile()
-func (z *cleanupSGReconciler) SetCommonMetadata(metadata *resourcetree.CommonMetadata) {
+func (z *cleanupSGReconciler) SetCommonMetadata(metadata *reconciliation.CommonMetadata) {
 	z.commonMetadata = metadata
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (z *cleanupSGReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result reconciliation.Result, err error) {
+func (z *cleanupSGReconciler) Reconcile(node *dependencytree.Node, state *clientCore.StateHandlers) (result reconciliation.Result, err error) {
 	switch node.State {
-	case resourcetree.ResourceNodeStatePresent:
+	case dependencytree.NodeStatePresent:
 		// Nothing to do for present
 		return result, nil
-	case resourcetree.ResourceNodeStateAbsent:
+	case dependencytree.NodeStateAbsent:
 		vpc, err := state.Vpc.GetVpc(cfn.NewStackNamer().Vpc(z.commonMetadata.Declaration.Metadata.Name))
 		if err != nil {
 			return result, fmt.Errorf("getting vpc: %w", err)

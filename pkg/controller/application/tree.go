@@ -1,13 +1,13 @@
 package application
 
-import "github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
+import "github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 
 // CreateResourceDependencyTree creates a dependency tree for applications
-func CreateResourceDependencyTree() *resourcetree.ResourceNode {
-	root := resourcetree.NewNode(resourcetree.ResourceNodeTypeGroup)
+func CreateResourceDependencyTree() *dependencytree.Node {
+	root := dependencytree.NewNode(dependencytree.NodeTypeGroup)
 
-	containerRepositoryNode := resourcetree.NewNode(resourcetree.ResourceNodeTypeContainerRepository)
-	containerRepositoryNode.AppendChild(resourcetree.NewNode(resourcetree.ResourceNodeTypeApplication))
+	containerRepositoryNode := dependencytree.NewNode(dependencytree.NodeTypeContainerRepository)
+	containerRepositoryNode.AppendChild(dependencytree.NewNode(dependencytree.NodeTypeApplication))
 
 	root.AppendChild(containerRepositoryNode)
 

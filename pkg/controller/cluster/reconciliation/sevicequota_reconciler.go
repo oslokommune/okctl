@@ -8,34 +8,34 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn"
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/config/constant"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 	"github.com/oslokommune/okctl/pkg/servicequota"
 	"github.com/pkg/errors"
 )
 
 // serviceQuotaReconciler handles reconciliation for service quotas
 type serviceQuotaReconciler struct {
-	commonMetadata *resourcetree.CommonMetadata
+	commonMetadata *reconciliation.CommonMetadata
 
 	provider v1alpha1.CloudProvider
 }
 
-// NodeType returns the relevant ResourceNodeType for this reconciler
-func (r *serviceQuotaReconciler) NodeType() resourcetree.ResourceNodeType {
-	return resourcetree.ResourceNodeTypeServiceQuota
+// NodeType returns the relevant NodeType for this reconciler
+func (r *serviceQuotaReconciler) NodeType() dependencytree.NodeType {
+	return dependencytree.NodeTypeServiceQuota
 }
 
 // SetCommonMetadata knows how to store common metadata on the reconciler. This should do nothing if common metadata is
 // not needed
-func (r *serviceQuotaReconciler) SetCommonMetadata(meta *resourcetree.CommonMetadata) {
+func (r *serviceQuotaReconciler) SetCommonMetadata(meta *reconciliation.CommonMetadata) {
 	r.commonMetadata = meta
 }
 
 // Reconcile knows how to create, update and delete the relevant resource
-func (r *serviceQuotaReconciler) Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (result reconciliation.Result, err error) {
+func (r *serviceQuotaReconciler) Reconcile(node *dependencytree.Node, state *clientCore.StateHandlers) (result reconciliation.Result, err error) {
 	switch node.State {
-	case resourcetree.ResourceNodeStatePresent:
+	case dependencytree.NodeStatePresent:
 		vpc, err := state.Vpc.GetVpc(cfn.NewStackNamer().Vpc(r.commonMetadata.Declaration.Metadata.Name))
 		if err != nil && !errors.Is(err, storm.ErrNotFound) {
 			return result, fmt.Errorf("getting vpc: %w", err)
@@ -53,7 +53,7 @@ func (r *serviceQuotaReconciler) Reconcile(node *resourcetree.ResourceNode, stat
 		if err != nil {
 			return result, fmt.Errorf("checking service quotas: %w", err)
 		}
-	case resourcetree.ResourceNodeStateAbsent:
+	case dependencytree.NodeStateAbsent:
 		return result, nil
 	}
 

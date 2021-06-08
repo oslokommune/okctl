@@ -10,7 +10,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
 	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/oslokommune/okctl/pkg/context"
@@ -142,7 +141,7 @@ including VPC, this is a highly destructive operation.`,
 				reconciliation.NewServiceQuotaReconciler(o.CloudProvider),
 			)
 
-			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{
+			reconciliationManager.SetCommonMetadata(&common.CommonMetadata{
 				Ctx:         o.Ctx,
 				Out:         o.Out,
 				ClusterID:   id,

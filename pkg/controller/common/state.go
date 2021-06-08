@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/asdine/storm/v3"
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 )
 
 // IsNotFound determines if an error is of the type storm ErrNotFound
@@ -13,15 +13,15 @@ func IsNotFound(_ interface{}, err error) bool {
 }
 
 // SetAllNodesAbsent sets the state as absent
-func SetAllNodesAbsent(receiver *resourcetree.ResourceNode) {
-	receiver.State = resourcetree.ResourceNodeStateAbsent
+func SetAllNodesAbsent(receiver *dependencytree.Node) {
+	receiver.State = dependencytree.NodeStateAbsent
 }
 
-// BoolToState converts a boolean to a resourcetree.ResourceNodeState
-func BoolToState(present bool) resourcetree.ResourceNodeState {
+// BoolToState converts a boolean to a dependencytree.NodeState
+func BoolToState(present bool) dependencytree.NodeState {
 	if present {
-		return resourcetree.ResourceNodeStatePresent
+		return dependencytree.NodeStatePresent
 	}
 
-	return resourcetree.ResourceNodeStateAbsent
+	return dependencytree.NodeStateAbsent
 }

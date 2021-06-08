@@ -1,11 +1,16 @@
 package reconciliation
 
 import (
+	"context"
+	"io"
 	"time"
+
+	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
-	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 )
 
 // Result contains information about the result of a Reconcile() call
@@ -16,11 +21,22 @@ type Result struct {
 	RequeueAfter time.Duration
 }
 
+// CommonMetadata represents metadata required by most if not all operations on services
+type CommonMetadata struct {
+	Ctx context.Context
+
+	Out io.Writer
+
+	ClusterID              api.ID
+	Declaration            *v1alpha1.Cluster
+	ApplicationDeclaration v1alpha1.Application
+}
+
 // Reconciler defines functions needed for the controller to use a reconciler
 type Reconciler interface {
-	NodeType() resourcetree.ResourceNodeType
+	NodeType() dependencytree.NodeType
 	// Reconcile knows how to do what is necessary to ensure the desired state is achieved
-	Reconcile(node *resourcetree.ResourceNode, state *clientCore.StateHandlers) (Result, error)
+	Reconcile(node *dependencytree.Node, state *clientCore.StateHandlers) (Result, error)
 	// SetCommonMetadata knows how to store metadata needed by the reconciler for later use
-	SetCommonMetadata(metadata *resourcetree.CommonMetadata)
+	SetCommonMetadata(metadata *CommonMetadata)
 }

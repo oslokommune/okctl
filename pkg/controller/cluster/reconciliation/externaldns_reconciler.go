@@ -9,7 +9,7 @@ import (
 	"github.com/mishudark/errors"
 
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 )
 
 // externalDNSReconciler contains service and metadata for the relevant resource

@@ -11,7 +11,7 @@ import (
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 )
 
 // PostgresReconcilerState contains the required state for

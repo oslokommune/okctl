@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/bmizerany/assert"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 )
 
 // nolint funlen

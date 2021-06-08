@@ -9,7 +9,7 @@ import (
 	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 
 	"github.com/oslokommune/okctl/pkg/controller"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/oslokommune/okctl/pkg/context"

@@ -16,7 +16,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	clusterrec "github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 )
 
 // SynchronizeOpts contains the necessary information that Synchronize() needs to do its work

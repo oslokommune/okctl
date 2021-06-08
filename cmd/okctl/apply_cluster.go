@@ -28,7 +28,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/config/load"
 	"github.com/oslokommune/okctl/pkg/controller"
 	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/spinner"
 	"github.com/spf13/cobra"

@@ -11,7 +11,7 @@ import (
 
 	"github.com/miekg/dns"
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 )
 
 // zoneReconciler contains service and metadata for the relevant resource

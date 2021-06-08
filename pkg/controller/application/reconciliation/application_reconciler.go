@@ -7,7 +7,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/client"
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 )
 
 // applicationReconciler contains service and metadata for the relevant resource

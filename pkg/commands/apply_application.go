@@ -18,7 +18,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/controller"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 	"github.com/spf13/afero"

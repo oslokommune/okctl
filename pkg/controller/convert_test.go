@@ -3,7 +3,7 @@ package controller
 import (
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 
 	"github.com/bmizerany/assert"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"

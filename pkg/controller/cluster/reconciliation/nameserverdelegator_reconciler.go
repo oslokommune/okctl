@@ -9,7 +9,7 @@ import (
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 )
 
 // nameserverDelegationReconciler handles creation (later edit and deletion) of nameserver delegation resources.

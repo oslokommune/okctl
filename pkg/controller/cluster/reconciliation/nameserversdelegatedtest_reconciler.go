@@ -10,7 +10,7 @@ import (
 
 	"github.com/logrusorgru/aurora"
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 	"github.com/oslokommune/okctl/pkg/domain"
 )
 

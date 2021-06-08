@@ -7,7 +7,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 )
 
 type promtailReconciler struct {

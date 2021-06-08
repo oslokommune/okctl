@@ -2,7 +2,7 @@ package reconciliation
 
 import (
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 )
 
 // NoopReconciler handles reconciliation for dummy nodes (e.g. the root node) and acts as a template for other

@@ -14,7 +14,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/controller"
 	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )

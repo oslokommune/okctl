@@ -6,7 +6,7 @@ import (
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/resourcetree"
 	"github.com/oslokommune/okctl/pkg/spinner"
 )
 

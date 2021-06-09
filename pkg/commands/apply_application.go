@@ -9,13 +9,17 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"github.com/oslokommune/okctl/pkg/controller/common"
+
+	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
+
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
+
 	"github.com/logrusorgru/aurora/v3"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
-	"github.com/oslokommune/okctl/pkg/controller"
-	"github.com/oslokommune/okctl/pkg/controller/reconciler"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 	"github.com/spf13/afero"
@@ -25,30 +29,31 @@ import (
 
 // SynchronizeApplicationOpts contains references necessary to synchronize an application
 type SynchronizeApplicationOpts struct {
-	ReconciliationManager reconciler.Reconciler
+	ReconciliationManager reconciliation.Reconciler
 	Application           v1alpha1.Application
 
-	Tree *resourcetree.ResourceNode
+	Tree  *dependencytree.Node
+	State *clientCore.StateHandlers
 }
 
 // SynchronizeApplication knows how to discover differences between desired and actual state and rectify them
 func SynchronizeApplication(opts SynchronizeApplicationOpts) error {
-	opts.Tree.ApplyFunction(applyDesiredState(opts.Application.Image), opts.Tree)
+	opts.Tree.ApplyFunction(applyDesiredState(opts.Application.Image))
 
-	return controller.Process(opts.ReconciliationManager, controller.FlattenTree(opts.Tree, []*resourcetree.ResourceNode{}))
+	return common.Process(opts.ReconciliationManager, opts.State, common.FlattenTree(opts.Tree, []*dependencytree.Node{}))
 }
 
-func applyDesiredState(image v1alpha1.ApplicationImage) resourcetree.ApplyFn {
-	return func(receiver *resourcetree.ResourceNode, target *resourcetree.ResourceNode) {
+func applyDesiredState(image v1alpha1.ApplicationImage) dependencytree.ApplyFn {
+	return func(receiver *dependencytree.Node) {
 		switch receiver.Type {
-		case resourcetree.ResourceNodeTypeContainerRepository:
+		case dependencytree.NodeTypeContainerRepository:
 			if image.HasName() {
-				receiver.State = resourcetree.ResourceNodeStatePresent
+				receiver.State = dependencytree.NodeStatePresent
 			} else {
-				receiver.State = resourcetree.ResourceNodeStateNoop
+				receiver.State = dependencytree.NodeStateNoop
 			}
-		case resourcetree.ResourceNodeTypeApplication:
-			receiver.State = resourcetree.ResourceNodeStatePresent
+		case dependencytree.NodeTypeApplication:
+			receiver.State = dependencytree.NodeStatePresent
 		}
 	}
 }

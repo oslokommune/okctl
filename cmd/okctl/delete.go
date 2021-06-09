@@ -5,9 +5,11 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/oslokommune/okctl/pkg/controller"
-	"github.com/oslokommune/okctl/pkg/controller/reconciler"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/cluster"
+
+	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
+	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
+
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/oslokommune/okctl/pkg/context"
@@ -114,48 +116,46 @@ including VPC, this is a highly destructive operation.`,
 				return fmt.Errorf("error getting services: %w", err)
 			}
 
-			reconciliationManager := reconciler.NewCompositeReconciler(spin,
-				reconciler.NewArgocdReconciler(services.ArgoCD, services.Github),
-				reconciler.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService),
-				reconciler.NewAutoscalerReconciler(services.Autoscaler),
-				reconciler.NewKubePrometheusStackReconciler(services.Monitoring),
-				reconciler.NewLokiReconciler(services.Monitoring),
-				reconciler.NewPromtailReconciler(services.Monitoring),
-				reconciler.NewTempoReconciler(services.Monitoring),
-				reconciler.NewBlockstorageReconciler(services.Blockstorage),
-				reconciler.NewClusterReconciler(services.Cluster),
-				reconciler.NewExternalDNSReconciler(services.ExternalDNS),
-				reconciler.NewExternalSecretsReconciler(services.ExternalSecrets),
-				reconciler.NewIdentityManagerReconciler(services.IdentityManager),
-				reconciler.NewVPCReconciler(services.Vpc),
-				reconciler.NewZoneReconciler(services.Domain),
-				reconciler.NewNameserverDelegationReconciler(services.NameserverHandler),
-				reconciler.NewNameserverDelegatedTestReconciler(services.Domain),
-				reconciler.NewUsersReconciler(services.IdentityManager),
-				reconciler.NewPostgresReconciler(services.Component),
-				reconciler.NewCleanupALBReconciler(o.CloudProvider),
-				reconciler.NewCleanupSGReconciler(o.CloudProvider),
-				&reconciler.PostgresGroupReconciler{},
-				reconciler.NewServiceQuotaReconciler(o.CloudProvider),
+			reconciliationManager := common.NewCompositeReconciler(spin,
+				reconciliation.NewArgocdReconciler(services.ArgoCD, services.Github),
+				reconciliation.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService),
+				reconciliation.NewAutoscalerReconciler(services.Autoscaler),
+				reconciliation.NewKubePrometheusStackReconciler(services.Monitoring),
+				reconciliation.NewLokiReconciler(services.Monitoring),
+				reconciliation.NewPromtailReconciler(services.Monitoring),
+				reconciliation.NewTempoReconciler(services.Monitoring),
+				reconciliation.NewBlockstorageReconciler(services.Blockstorage),
+				reconciliation.NewClusterReconciler(services.Cluster),
+				reconciliation.NewExternalDNSReconciler(services.ExternalDNS),
+				reconciliation.NewExternalSecretsReconciler(services.ExternalSecrets),
+				reconciliation.NewIdentityManagerReconciler(services.IdentityManager),
+				reconciliation.NewVPCReconciler(services.Vpc),
+				reconciliation.NewZoneReconciler(services.Domain),
+				reconciliation.NewNameserverDelegationReconciler(services.NameserverHandler),
+				reconciliation.NewNameserverDelegatedTestReconciler(services.Domain),
+				reconciliation.NewUsersReconciler(services.IdentityManager),
+				reconciliation.NewPostgresReconciler(services.Component),
+				reconciliation.NewCleanupALBReconciler(o.CloudProvider),
+				reconciliation.NewCleanupSGReconciler(o.CloudProvider),
+				&reconciliation.PostgresGroupReconciler{},
+				reconciliation.NewServiceQuotaReconciler(o.CloudProvider),
 			)
 
-			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{
+			reconciliationManager.SetCommonMetadata(&common.CommonMetadata{
 				Ctx:         o.Ctx,
 				Out:         o.Out,
 				ClusterID:   id,
 				Declaration: o.Declaration,
 			})
 
-			reconciliationManager.SetStateHandlers(handlers)
-
-			synchronizeOpts := &controller.SynchronizeOpts{
+			synchronizeOpts := &cluster.SynchronizeOpts{
 				Debug:                 o.Debug,
 				Out:                   o.Out,
 				DeleteAll:             true,
 				ID:                    id,
 				ClusterDeclaration:    o.Declaration,
 				ReconciliationManager: reconciliationManager,
-				StateHandlers:         handlers,
+				State:                 handlers,
 			}
 
 			ready, err := checkIfReady(id.ClusterName, o, opts.Confirm)
@@ -163,7 +163,7 @@ including VPC, this is a highly destructive operation.`,
 				return err
 			}
 
-			err = controller.DeleteCluster(synchronizeOpts)
+			err = cluster.DeleteCluster(synchronizeOpts)
 			if err != nil {
 				return fmt.Errorf("synchronizing declaration with state: %w", err)
 			}

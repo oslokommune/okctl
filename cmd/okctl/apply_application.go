@@ -3,6 +3,10 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/controller/application"
+
+	"github.com/oslokommune/okctl/pkg/controller/application/reconciliation"
+
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/commands"
@@ -10,9 +14,7 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/controller"
-	"github.com/oslokommune/okctl/pkg/controller/reconciler"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
@@ -78,12 +80,12 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("error creating spinner: %w", err)
 			}
 
-			reconciliationManager := reconciler.NewCompositeReconciler(spin,
-				reconciler.NewApplicationReconciler(services.ApplicationService),
-				reconciler.NewContainerRepositoryReconciler(services.ContainerRepository),
+			reconciliationManager := common.NewCompositeReconciler(spin,
+				reconciliation.NewApplicationReconciler(services.ApplicationService),
+				reconciliation.NewContainerRepositoryReconciler(services.ContainerRepository),
 			)
 
-			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{
+			reconciliationManager.SetCommonMetadata(&common.CommonMetadata{
 				Ctx:                    o.Ctx,
 				Out:                    o.Out,
 				ClusterID:              opts.ClusterID,
@@ -91,14 +93,13 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				ApplicationDeclaration: opts.Application,
 			})
 
-			reconciliationManager.SetStateHandlers(handlers)
-
-			dependencyTree := controller.CreateApplicationResourceDependencyTree()
+			dependencyTree := application.CreateResourceDependencyTree()
 
 			err = commands.SynchronizeApplication(commands.SynchronizeApplicationOpts{
 				ReconciliationManager: reconciliationManager,
 				Application:           opts.Application,
 				Tree:                  dependencyTree,
+				State:                 handlers,
 			})
 			if err != nil {
 				return fmt.Errorf("synchronizing application: %w", err)

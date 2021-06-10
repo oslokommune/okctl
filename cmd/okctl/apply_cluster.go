@@ -20,7 +20,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/commands"
-	"github.com/oslokommune/okctl/pkg/context"
 
 	"github.com/logrusorgru/aurora"
 
@@ -35,11 +34,9 @@ import (
 )
 
 type applyClusterOpts struct {
-	AWSCredentialsType    string
-	GithubCredentialsType string
-	DisableSpinner        bool
-	File                  string
-	Declaration           *v1alpha1.Cluster
+	DisableSpinner bool
+	File           string
+	Declaration    *v1alpha1.Cluster
 }
 
 // Validate ensures the applyClusterOpts contains the right information
@@ -72,9 +69,6 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
-			o.AWSCredentialsType = opts.AWSCredentialsType
-			o.GithubCredentialsType = opts.GithubCredentialsType
-
 			opts.Declaration, err = commands.InferClusterFromStdinOrFile(o.In, opts.File)
 			if err != nil {
 				return fmt.Errorf("inferring cluster: %w", err)
@@ -218,31 +212,11 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 	flags := cmd.Flags()
 
-	flags.StringVarP(&opts.AWSCredentialsType,
-		"aws-credentials-type",
-		"a",
-		context.AWSCredentialsTypeSAML,
-		fmt.Sprintf(
-			"The form of authentication to use for AWS. Possible values: [%s,%s]",
-			context.AWSCredentialsTypeSAML,
-			context.AWSCredentialsTypeAccessKey,
-		),
-	)
 	flags.StringVarP(&opts.File,
 		"file",
 		"f",
 		"",
 		usageApplyClusterFile,
-	)
-	flags.StringVarP(&opts.GithubCredentialsType,
-		"github-credentials-type",
-		"g",
-		context.GithubCredentialsTypeDeviceAuthentication,
-		fmt.Sprintf(
-			"The form of authentication to use for Github. Possible values: [%s,%s]",
-			context.GithubCredentialsTypeDeviceAuthentication,
-			context.GithubCredentialsTypeToken,
-		),
 	)
 	flags.BoolVar(&opts.DisableSpinner,
 		"no-spinner",

@@ -14,7 +14,7 @@ require (
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/asdine/storm/v3 v3.2.1
-	github.com/aws/aws-sdk-go v1.38.58
+	github.com/aws/aws-sdk-go v1.38.59
 	github.com/awslabs/goformation/v4 v4.19.5
 	github.com/beevik/etree v1.1.0
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869

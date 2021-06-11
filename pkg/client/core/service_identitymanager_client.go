@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gosimple/slug"
+
 	"github.com/oslokommune/okctl/pkg/cfn"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -99,6 +101,31 @@ func (s *identityManagerService) CreateIdentityPoolUser(_ context.Context, opts 
 	}
 
 	return user, nil
+}
+
+func (s *identityManagerService) DeleteIdentityPoolUser(_ context.Context, opts client.DeleteIdentityPoolUserOpts) error {
+	err := opts.Validate()
+	if err != nil {
+		return err
+	}
+
+	err = s.api.DeleteIdentityPoolUser(api.DeleteIdentityPoolUserOpts{
+		ClusterID: opts.ClusterID,
+		UserEmail: opts.UserEmail,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = s.state.RemoveIdentityPoolUser(cfn.NewStackNamer().IdentityPoolUser(
+		opts.ClusterID.ClusterName,
+		slug.Make(opts.UserEmail),
+	))
+	if err != nil {
+		return fmt.Errorf("reomving identity pool user from state: %w", err)
+	}
+
+	return nil
 }
 
 func (s *identityManagerService) CreateIdentityPoolClient(_ context.Context, opts client.CreateIdentityPoolClientOpts) (*client.IdentityPoolClient, error) {

@@ -10,28 +10,20 @@ import (
 
 // IgwCheck is used to check if you have enough Internet Gateways
 type IgwCheck struct {
-	provider      v1alpha1.CloudProvider
-	required      int
-	isProvisioned bool
+	provider v1alpha1.CloudProvider
+	required int
 }
 
 // NewIgwCheck makes a new instance of check for Internet Gateways
-func NewIgwCheck(isProvisioned bool, required int, provider v1alpha1.CloudProvider) *IgwCheck {
+func NewIgwCheck(required int, provider v1alpha1.CloudProvider) *IgwCheck {
 	return &IgwCheck{
-		provider:      provider,
-		required:      required,
-		isProvisioned: isProvisioned,
+		provider: provider,
+		required: required,
 	}
 }
 
 // CheckAvailability determines if you will be able to make required Internet Gateway(s)
 func (i *IgwCheck) CheckAvailability() (*Result, error) {
-	if i.isProvisioned {
-		return &Result{
-			IsProvisioned: true,
-		}, nil
-	}
-
 	quotas, err := i.provider.ServiceQuotas().GetServiceQuota(&servicequotas.GetServiceQuotaInput{
 		QuotaCode:   aws.String("L-A4707A72"),
 		ServiceCode: aws.String("vpc"),

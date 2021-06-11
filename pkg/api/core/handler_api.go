@@ -31,6 +31,7 @@ type Endpoints struct {
 	CreateIdentityPoolUser          endpoint.Endpoint
 	DeleteIdentityPool              endpoint.Endpoint
 	DeleteIdentityPoolClient        endpoint.Endpoint
+	DeleteIdentityPoolUser          endpoint.Endpoint
 	DeleteCertificate               endpoint.Endpoint
 	DeleteNamespace                 endpoint.Endpoint
 	DeleteCognitoCertificate        endpoint.Endpoint
@@ -41,6 +42,7 @@ type Endpoints struct {
 	ScaleDeployment                 endpoint.Endpoint
 	CreateHelmRelease               endpoint.Endpoint
 	DeleteHelmRelease               endpoint.Endpoint
+	GetHelmRelease                  endpoint.Endpoint
 	CreatePolicy                    endpoint.Endpoint
 	DeletePolicy                    endpoint.Endpoint
 	CreateServiceAccount            endpoint.Endpoint
@@ -75,6 +77,7 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateIdentityPoolUser:          makeCreateIdentityPoolUser(s.IdentityManager),
 		DeleteIdentityPool:              makeDeleteIdentityPoolEndpoint(s.IdentityManager),
 		DeleteIdentityPoolClient:        makeDeleteIdentityPoolClientEndpoint(s.IdentityManager),
+		DeleteIdentityPoolUser:          makeDeleteIdentityPoolUserEndpoint(s.IdentityManager),
 		DeleteCertificate:               makeDeleteCertificateEndpoint(s.Certificate),
 		DeleteNamespace:                 makeDeleteNamespaceEndpoint(s.Kube),
 		DeleteCognitoCertificate:        makeDeleteCognitoCertificateEndpoint(s.Certificate),
@@ -85,6 +88,7 @@ func MakeEndpoints(s Services) Endpoints {
 		ScaleDeployment:                 makeScaleDeployment(s.Kube),
 		CreateHelmRelease:               makeCreateHelmRelease(s.Helm),
 		DeleteHelmRelease:               makeDeleteHelmRelease(s.Helm),
+		GetHelmRelease:                  makeGetHelmRelease(s.Helm),
 		CreatePolicy:                    makeCreatePolicyEndpoint(s.ManagedPolicy),
 		DeletePolicy:                    makeDeletePolicyEndpoint(s.ManagedPolicy),
 		CreateServiceAccount:            makeCreateServiceAccountEndpoint(s.ServiceAccount),
@@ -117,6 +121,7 @@ type Handlers struct {
 	CreateIdentityPoolUser          http.Handler
 	DeleteIdentityPool              http.Handler
 	DeleteIdentityPoolClient        http.Handler
+	DeleteIdentityPoolUser          http.Handler
 	DeleteCertificate               http.Handler
 	DeleteNamespace                 http.Handler
 	DeleteCognitoCertificate        http.Handler
@@ -127,6 +132,7 @@ type Handlers struct {
 	ScaleDeployment                 http.Handler
 	CreateHelmRelease               http.Handler
 	DeleteHelmRelease               http.Handler
+	GetHelmRelease                  http.Handler
 	CreatePolicy                    http.Handler
 	DeletePolicy                    http.Handler
 	CreateServiceAccount            http.Handler
@@ -187,6 +193,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateIdentityPoolUser:          newServer(endpoints.CreateIdentityPoolUser, decodeCreateIdentityPoolUser),
 		DeleteIdentityPool:              newServer(endpoints.DeleteIdentityPool, decodeDeleteIdentityPool),
 		DeleteIdentityPoolClient:        newServer(endpoints.DeleteIdentityPoolClient, decodeDeleteIdentityPoolClient),
+		DeleteIdentityPoolUser:          newServer(endpoints.DeleteIdentityPoolUser, decodeDeleteIdentityPoolUser),
 		DeleteCertificate:               newServer(endpoints.DeleteCertificate, decodeDeleteCertificate),
 		DeleteNamespace:                 newServer(endpoints.DeleteNamespace, decodeDeleteNamespace),
 		DeleteCognitoCertificate:        newServer(endpoints.DeleteCognitoCertificate, decodeDeleteCognitoCertificate),
@@ -197,6 +204,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		ScaleDeployment:                 newServer(endpoints.ScaleDeployment, decodeScaleDeployment),
 		CreateHelmRelease:               newServer(endpoints.CreateHelmRelease, decodeCreateHelmRelease),
 		DeleteHelmRelease:               newServer(endpoints.DeleteHelmRelease, decodeDeleteHelmRelease),
+		GetHelmRelease:                  newServer(endpoints.GetHelmRelease, decodeGetHelmRelease),
 		CreatePolicy:                    newServer(endpoints.CreatePolicy, decodeStructRequest(&api.CreatePolicyOpts{})),
 		DeletePolicy:                    newServer(endpoints.DeletePolicy, decodeStructRequest(&api.DeletePolicyOpts{})),
 		CreateServiceAccount:            newServer(endpoints.CreateServiceAccount, decodeStructRequest(&api.CreateServiceAccountOpts{})),
@@ -235,6 +243,7 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		})
 		r.Route("/helm", func(r chi.Router) {
 			r.Route("/releases", func(r chi.Router) {
+				r.Method(http.MethodGet, "/", handlers.GetHelmRelease)
 				r.Method(http.MethodPost, "/", handlers.CreateHelmRelease)
 				r.Method(http.MethodDelete, "/", handlers.DeleteHelmRelease)
 			})
@@ -291,6 +300,7 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 				})
 				r.Route("/users", func(r chi.Router) {
 					r.Method(http.MethodPost, "/", handlers.CreateIdentityPoolUser)
+					r.Method(http.MethodDelete, "/", handlers.DeleteIdentityPoolUser)
 				})
 			})
 		})
@@ -384,6 +394,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateIdentityPoolUser:          logmd.Logging(logger, "create", identityManagerTag, identityPoolTag, identityPoolUserTag)(endpoints.CreateIdentityPoolUser),
 			DeleteIdentityPool:              logmd.Logging(logger, "delete", identityManagerTag, identityPoolTag)(endpoints.DeleteIdentityPool),
 			DeleteIdentityPoolClient:        logmd.Logging(logger, "delete", identityManagerTag, identityPoolClientTag)(endpoints.DeleteIdentityPoolClient),
+			DeleteIdentityPoolUser:          logmd.Logging(logger, "delete", identityManagerTag, identityPoolTag, identityPoolUserTag)(endpoints.DeleteIdentityPoolUser),
 			DeleteCertificate:               logmd.Logging(logger, "delete", certificateTag)(endpoints.DeleteCertificate),
 			DeleteNamespace:                 logmd.Logging(logger, "delete", kubeTag, namespaceTag)(endpoints.DeleteNamespace),
 			DeleteCognitoCertificate:        logmd.Logging(logger, "delete", certificateTag, cognitoTag)(endpoints.DeleteCognitoCertificate),
@@ -394,6 +405,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			ScaleDeployment:                 logmd.Logging(logger, "create", kubeTag, scaleTag)(endpoints.ScaleDeployment),
 			CreateHelmRelease:               logmd.Logging(logger, "create", helmTag, releasesTag)(endpoints.CreateHelmRelease),
 			DeleteHelmRelease:               logmd.Logging(logger, "delete", helmTag, releasesTag)(endpoints.DeleteHelmRelease),
+			GetHelmRelease:                  logmd.Logging(logger, "get", helmTag, releasesTag)(endpoints.GetHelmRelease),
 			CreatePolicy:                    logmd.Logging(logger, "create", managedPoliciesTag)(endpoints.CreatePolicy),
 			DeletePolicy:                    logmd.Logging(logger, "delete", managedPoliciesTag)(endpoints.DeletePolicy),
 			CreateServiceAccount:            logmd.Logging(logger, "create", serviceAccountsTag)(endpoints.CreateServiceAccount),

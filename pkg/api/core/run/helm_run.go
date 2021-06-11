@@ -3,6 +3,8 @@ package run
 import (
 	"fmt"
 
+	merrors "github.com/mishudark/errors"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -43,6 +45,36 @@ func (r *helmRun) DeleteHelmRelease(opts api.DeleteHelmReleaseOpts) error {
 	}
 
 	return nil
+}
+
+func (r *helmRun) GetHelmRelease(opts api.GetHelmReleaseOpts) (*api.Helm, error) {
+	kubeConf, err := r.kubeConfigStore.GetKubeConfig(opts.ClusterID.ClusterName)
+	if err != nil {
+		return nil, fmt.Errorf("getting kubeconfig: %w", err)
+	}
+
+	release, err := r.helm.Find(kubeConf.Path, &helm.FindConfig{
+		ReleaseName: opts.ReleaseName,
+		Namespace:   opts.Namespace,
+		Timeout:     constant.DefaultChartFindTimeout,
+	})
+	if err != nil {
+		return nil, merrors.E(err, "finding release")
+	}
+
+	return &api.Helm{
+		ID:      opts.ClusterID,
+		Release: release,
+		Chart: &helm.Chart{
+			RepositoryName: release.Chart.Name(),
+			RepositoryURL:  "n/a",
+			ReleaseName:    release.Name,
+			Version:        release.Chart.Metadata.Version,
+			Chart:          "n/a",
+			Namespace:      release.Namespace,
+			Values:         release.Chart.Values,
+		},
+	}, nil
 }
 
 func (r *helmRun) createHelmChart(id api.ID, chart *helm.Chart) (*api.Helm, error) {

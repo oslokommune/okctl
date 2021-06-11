@@ -1,43 +1,44 @@
 package reconciliation
 
 import (
+	"context"
 	"fmt"
 	"time"
+
+	"github.com/oslokommune/okctl/pkg/client"
 
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 
 	"github.com/logrusorgru/aurora"
-	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 	"github.com/oslokommune/okctl/pkg/domain"
 )
 
-const defaultTestingIntervalMinutes = 5 * time.Minute
+const (
+	defaultTestingIntervalMinutes                = 5 * time.Minute
+	nameserversDelegatedTestReconcilerIdentifier = "nameserver delegation verification"
+)
 
 type nameserversDelegatedTestReconciler struct {
-	commonMetadata *reconciliation.CommonMetadata
-
 	domainService client.DomainService
 }
 
-// NodeType returns the relevant NodeType for this reconciler
-func (n *nameserversDelegatedTestReconciler) NodeType() dependencytree.NodeType {
-	return dependencytree.NodeTypeNameserversDelegatedTest
-}
-
-// SetCommonMetadata saves common metadata for use in Reconcile()
-func (n *nameserversDelegatedTestReconciler) SetCommonMetadata(metadata *reconciliation.CommonMetadata) {
-	n.commonMetadata = metadata
-}
-
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
-func (n *nameserversDelegatedTestReconciler) Reconcile(node *dependencytree.Node, state *clientCore.StateHandlers) (result reconciliation.Result, err error) {
-	switch node.State {
-	case dependencytree.NodeStatePresent:
+func (n *nameserversDelegatedTestReconciler) Reconcile(
+	ctx context.Context,
+	meta reconciliation.Metadata,
+	state *clientCore.StateHandlers,
+) (reconciliation.Result, error) {
+	action, err := n.determineAction(meta, state)
+	if err != nil {
+		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+	}
+
+	switch action {
+	case reconciliation.ActionCreate:
 		_, _ = fmt.Fprintf(
-			n.commonMetadata.Out,
+			meta.Out,
 			delegationRequestMessage,
 			aurora.Green("nameserver delegation request"),
 			aurora.Bold("#kjøremiljø-support"),
@@ -45,33 +46,93 @@ func (n *nameserversDelegatedTestReconciler) Reconcile(node *dependencytree.Node
 
 		hz, err := state.Domain.GetPrimaryHostedZone()
 		if err != nil {
-			return result, fmt.Errorf("getting primary hosted zone: %w", err)
+			return reconciliation.Result{}, fmt.Errorf("getting primary hosted zone: %w", err)
 		}
 
 		err = domain.ShouldHaveNameServers(hz.FQDN, hz.NameServers)
 		if err != nil {
-			result.Requeue = true
-			result.RequeueAfter = defaultTestingIntervalMinutes
+			_, _ = fmt.Fprintf(meta.Out, "failed to validate nameservers: %s", err)
 
-			_, _ = fmt.Fprintf(n.commonMetadata.Out, "failed to validate nameservers: %s", err)
-
-			return result, fmt.Errorf("validating nameservers: %w", err)
+			return reconciliation.Result{
+				Requeue:      true,
+				RequeueAfter: defaultTestingIntervalMinutes,
+			}, fmt.Errorf("validating nameservers: %w", err)
 		}
 
-		err = n.domainService.SetHostedZoneDelegation(
-			n.commonMetadata.Ctx,
-			n.commonMetadata.Declaration.ClusterRootDomain,
-			true,
-		)
+		err = n.domainService.SetHostedZoneDelegation(ctx, meta.ClusterDeclaration.ClusterRootDomain, true)
 		if err != nil {
-			return result, fmt.Errorf("setting hosted zone delegation status: %w", err)
+			return reconciliation.Result{}, fmt.Errorf("setting hosted zone delegation status: %w", err)
 		}
-	case dependencytree.NodeStateAbsent:
-		// Nothing to do on absent
-		return result, nil
+
+		return reconciliation.Result{Requeue: false}, nil
+	case reconciliation.ActionDelete:
+		return reconciliation.Result{Requeue: false}, nil
+	case reconciliation.ActionWait:
+		return reconciliation.Result{Requeue: true}, nil
+	case reconciliation.ActionNoop:
+		return reconciliation.Result{Requeue: false}, nil
 	}
 
-	return result, nil
+	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+}
+
+func (n *nameserversDelegatedTestReconciler) determineAction(meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Action, error) {
+	userIndication := reconciliation.DetermineUserIndication(meta, true)
+
+	delegationTest := reconciliation.GeneratePrimaryDomainDelegationTest(state)
+
+	switch userIndication {
+	case reconciliation.ActionCreate:
+		dependenciesReady, err := reconciliation.AssertDependencyExistence(true,
+			reconciliation.GenerateClusterExistenceTest(state, meta.ClusterDeclaration.Metadata.Name),
+			state.Domain.HasPrimaryHostedZone,
+		)
+		if err != nil {
+			return reconciliation.ActionNoop, fmt.Errorf("testing dependencies: %w", err)
+		}
+
+		if !dependenciesReady {
+			return reconciliation.ActionWait, nil
+		}
+
+		isDelegated, err := delegationTest()
+		if err != nil {
+			return reconciliation.ActionNoop, fmt.Errorf("checking primary hosted zone delegation state: %w", err)
+		}
+
+		if isDelegated {
+			return reconciliation.ActionNoop, nil
+		}
+
+		return reconciliation.ActionCreate, nil
+	case reconciliation.ActionDelete:
+		primaryHZExists, err := state.Domain.HasPrimaryHostedZone()
+		if err != nil {
+			return reconciliation.ActionNoop, fmt.Errorf("checking domain existence: %w", err)
+		}
+
+		if !primaryHZExists {
+			return reconciliation.ActionNoop, nil
+		}
+
+		isDelegated, err := delegationTest()
+		if err != nil {
+			return reconciliation.ActionNoop, fmt.Errorf("checking primary hosted zone delegation state: %w", err)
+		}
+
+		if !isDelegated {
+			return reconciliation.ActionNoop, nil
+		}
+
+		return reconciliation.ActionDelete, nil
+	}
+
+	return reconciliation.ActionNoop, reconciliation.ErrIndecisive
+}
+
+// String returns the identifier for this reconciler
+func (n *nameserversDelegatedTestReconciler) String() string {
+	return nameserversDelegatedTestReconcilerIdentifier
 }
 
 // NewNameserverDelegatedTestReconciler creates a new reconciler for the nameserver record delegation test resource

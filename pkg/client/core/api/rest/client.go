@@ -39,6 +39,11 @@ func (c *HTTPClient) DoPost(endpoint string, body interface{}, into interface{})
 	return c.Do(http.MethodPost, endpoint, body, into)
 }
 
+// DoGet sends a GET request to the given endpoint
+func (c *HTTPClient) DoGet(endpoint string, body interface{}, into interface{}) error {
+	return c.Do(http.MethodGet, endpoint, body, into)
+}
+
 // DoDelete sends a DELETE request to the given endpoint
 func (c *HTTPClient) DoDelete(endpoint string, body interface{}) error {
 	return c.Do(http.MethodDelete, endpoint, body, nil)

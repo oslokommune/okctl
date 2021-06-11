@@ -32,6 +32,17 @@ func (s *identityManagerCloudProvider) DeleteIdentityPoolClient(opts api.DeleteI
 	return nil
 }
 
+func (s *identityManagerCloudProvider) DeleteIdentityPoolUser(opts api.DeleteIdentityPoolUserOpts) error {
+	err := cfn.NewRunner(s.provider).Delete(cfn.NewStackNamer().IdentityPoolUser(
+		opts.ClusterID.ClusterName, slug.Make(opts.UserEmail),
+	))
+	if err != nil {
+		return fmt.Errorf("deleting identity pool user: %w", err)
+	}
+
+	return nil
+}
+
 func (s *identityManagerCloudProvider) CreateIdentityPoolClient(opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
 	b := cfn.New(components.NewUserPoolClient(
 		opts.Purpose,

@@ -66,6 +66,8 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				os.Exit(1)
 			}()
 
+			enableServiceUserAuthentication(o)
+
 			return nil
 		},
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {

@@ -54,6 +54,23 @@ func (h *helmService) DeleteHelmRelease(_ context.Context, opts client.DeleteHel
 	return h.state.RemoveHelmRelease(opts.ReleaseName)
 }
 
+func (h *helmService) GetHelmRelease(_ context.Context, opts client.GetHelmReleaseOpts) (*client.Helm, error) {
+	release, err := h.api.GetHelmRelease(api.GetHelmReleaseOpts{
+		ClusterID:   opts.ClusterID,
+		ReleaseName: opts.ReleaseName,
+		Namespace:   opts.Namespace,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &client.Helm{
+		ID:      release.ID,
+		Release: release.Release,
+		Chart:   release.Chart,
+	}, nil
+}
+
 // NewHelmService returns an initialised helm service
 func NewHelmService(api client.HelmAPI, state client.HelmState) client.HelmService {
 	return &helmService{

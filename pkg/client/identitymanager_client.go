@@ -96,6 +96,20 @@ func (o CreateIdentityPoolUserOpts) Validate() error {
 	)
 }
 
+// DeleteIdentityPoolUserOpts contains required data for deleting a user pool user
+type DeleteIdentityPoolUserOpts struct {
+	ClusterID api.ID
+	UserEmail string
+}
+
+// Validate the inputs
+func (o DeleteIdentityPoolUserOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ClusterID, validation.Required),
+		validation.Field(&o.UserEmail, validation.Required),
+	)
+}
+
 // IdentityManagerService orchestrates the creation of an identity pool
 type IdentityManagerService interface {
 	CreateIdentityPool(ctx context.Context, opts CreateIdentityPoolOpts) (*IdentityPool, error)
@@ -103,6 +117,7 @@ type IdentityManagerService interface {
 	CreateIdentityPoolClient(ctx context.Context, opts CreateIdentityPoolClientOpts) (*IdentityPoolClient, error)
 	DeleteIdentityPoolClient(ctx context.Context, opts DeleteIdentityPoolClientOpts) error
 	CreateIdentityPoolUser(ctx context.Context, opts CreateIdentityPoolUserOpts) (*IdentityPoolUser, error)
+	DeleteIdentityPoolUser(ctx context.Context, opts DeleteIdentityPoolUserOpts) error
 }
 
 // IdentityManagerAPI invokes the API calls for creating an identity pool
@@ -112,6 +127,7 @@ type IdentityManagerAPI interface {
 	CreateIdentityPoolClient(opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error)
 	DeleteIdentityPoolClient(opts api.DeleteIdentityPoolClientOpts) error
 	CreateIdentityPoolUser(opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error)
+	DeleteIdentityPoolUser(opts api.DeleteIdentityPoolUserOpts) error
 }
 
 // IdentityManagerState implements the state layer
@@ -119,10 +135,12 @@ type IdentityManagerState interface {
 	SaveIdentityPool(pool *IdentityPool) error
 	RemoveIdentityPool(stackName string) error
 	GetIdentityPool(stackName string) (*IdentityPool, error)
+	HasIdentityPool() (bool, error)
 	SaveIdentityPoolClient(client *IdentityPoolClient) error
 	GetIdentityPoolClient(stackName string) (*IdentityPoolClient, error)
 	RemoveIdentityPoolClient(stackName string) error
 	SaveIdentityPoolUser(user *IdentityPoolUser) error
 	GetIdentityPoolUser(stackName string) (*IdentityPoolUser, error)
 	RemoveIdentityPoolUser(stackName string) error
+	GetIdentityPoolUsers() ([]IdentityPoolUser, error)
 }

@@ -150,6 +150,19 @@ func (d *domainState) GetPrimaryHostedZone() (*client.HostedZone, error) {
 	return nil, stormpkg.ErrNotFound
 }
 
+func (d *domainState) HasPrimaryHostedZone() (bool, error) {
+	_, err := d.GetPrimaryHostedZone()
+	if err == nil {
+		return true, nil
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return false, nil
+	}
+
+	return false, err
+}
+
 // NewDomainState returns an initialised state store
 func NewDomainState(db breeze.Client) client.DomainState {
 	return &domainState{

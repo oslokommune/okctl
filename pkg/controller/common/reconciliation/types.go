@@ -5,12 +5,11 @@ import (
 	"io"
 	"time"
 
-	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/pkg/errors"
+
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
-
-	"github.com/oslokommune/okctl/pkg/controller/common/dependencytree"
 )
 
 // Result contains information about the result of a Reconcile() call
@@ -21,22 +20,41 @@ type Result struct {
 	RequeueAfter time.Duration
 }
 
-// CommonMetadata represents metadata required by most if not all operations on services
-type CommonMetadata struct {
-	Ctx context.Context
+// Action represents actions a Reconciler can take
+type Action string
 
+const (
+	// ActionCreate indicates creation
+	ActionCreate = "create"
+	// ActionDelete indicates deletion
+	ActionDelete = "delete"
+	// ActionNoop indicates no necessary action
+	ActionNoop = "noop"
+	// ActionWait indicates the need to wait
+	ActionWait = "wait"
+)
+
+// Metadata represents metadata required by most if not all operations on services
+type Metadata struct {
 	Out io.Writer
 
-	ClusterID              api.ID
-	Declaration            *v1alpha1.Cluster
+	ClusterDeclaration     *v1alpha1.Cluster
 	ApplicationDeclaration v1alpha1.Application
+
+	Purge bool
 }
 
 // Reconciler defines functions needed for the controller to use a reconciler
 type Reconciler interface {
-	NodeType() dependencytree.NodeType
 	// Reconcile knows how to do what is necessary to ensure the desired state is achieved
-	Reconcile(node *dependencytree.Node, state *clientCore.StateHandlers) (Result, error)
-	// SetCommonMetadata knows how to store metadata needed by the reconciler for later use
-	SetCommonMetadata(metadata *CommonMetadata)
+	Reconcile(ctx context.Context, meta Metadata, state *clientCore.StateHandlers) (Result, error)
+	// String returns a name that describes the Reconciler
+	String() string
 }
+
+var (
+	// ErrMaximumReconciliationRequeues represents the reconciler trying a single reconciler too many times
+	ErrMaximumReconciliationRequeues = errors.New("max reconciliation requeues reached")
+	// ErrIndecisive represents the situation where the reconciler can't figure out what to do
+	ErrIndecisive = errors.New("indecisive")
+)

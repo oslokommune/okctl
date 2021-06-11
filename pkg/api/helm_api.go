@@ -61,14 +61,33 @@ func (o DeleteHelmReleaseOpts) Validate() error {
 	)
 }
 
+// GetHelmReleaseOpts contains the required inputs for
+// finding a Helm release in the Kubernetes cluster
+type GetHelmReleaseOpts struct {
+	ClusterID   ID
+	ReleaseName string
+	Namespace   string
+}
+
+// Validate the provided inputs
+func (o GetHelmReleaseOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ClusterID, validation.Required),
+		validation.Field(&o.ReleaseName, validation.Required),
+		validation.Field(&o.Namespace, validation.Required),
+	)
+}
+
 // HelmService defines the service layer interface
 type HelmService interface {
 	CreateHelmRelease(ctx context.Context, opts CreateHelmReleaseOpts) (*Helm, error)
 	DeleteHelmRelease(ctx context.Context, opts DeleteHelmReleaseOpts) error
+	GetHelmRelease(ctx context.Context, opts GetHelmReleaseOpts) (*Helm, error)
 }
 
 // HelmRun defines the runner layer
 type HelmRun interface {
 	CreateHelmRelease(opts CreateHelmReleaseOpts) (*Helm, error)
 	DeleteHelmRelease(opts DeleteHelmReleaseOpts) error
+	GetHelmRelease(opts GetHelmReleaseOpts) (*Helm, error)
 }

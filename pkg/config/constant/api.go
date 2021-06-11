@@ -32,6 +32,7 @@ const (
 
 	DefaultChartApplyTimeout  = 5 * time.Minute
 	DefaultChartRemoveTimeout = 5 * time.Minute
+	DefaultChartFindTimeout   = 1 * time.Minute
 
 	DefaultAwsRegion                       = "eu-west-1"
 	DefaultGithubHost                      = "git@github.com"
@@ -39,6 +40,7 @@ const (
 	DefaultFargateObservabilityNamespace   = "aws-observability"
 	DefaultArgoCDNamespace                 = "argocd"
 	DefaultMonitoringNamespace             = "monitoring"
+	DefaultSystemNamespace                 = "kube-system"
 	DefaultKubePrometheusStackGrafanaName  = "kube-prometheus-stack-grafana"
 	DefaultGrafanaCloudWatchDatasourceName = "cloudwatch-datasource"
 
@@ -112,6 +114,8 @@ const (
 
 	// DefaultMaxReconciliationRequeues defines the maximum allowed times a reconciliation can be requeued
 	DefaultMaxReconciliationRequeues = 3
+	// DefaultReconciliationLoopDelayDuration defines the default delay between each reconciliation
+	DefaultReconciliationLoopDelayDuration = 1 * time.Second
 
 	// DefaultClusterCIDR defines the default CIDR to use when creating cluster VPCs
 	DefaultClusterCIDR     = "192.168.0.0/20"

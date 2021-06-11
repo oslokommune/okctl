@@ -18,6 +18,7 @@ type ContainerRepository struct {
 	Metadata `storm:"inline"`
 
 	ClusterID              ID
+	ApplicationName        string
 	ImageName              string
 	StackName              string `storm:"unique"`
 	CloudFormationTemplate string
@@ -28,6 +29,7 @@ func NewContainerRepository(r *client.ContainerRepository, meta Metadata) *Conta
 	return &ContainerRepository{
 		Metadata:               meta,
 		ClusterID:              NewID(r.ClusterID),
+		ApplicationName:        r.ApplicationName,
 		ImageName:              r.ImageName,
 		StackName:              r.StackName,
 		CloudFormationTemplate: r.CloudFormationTemplate,
@@ -39,6 +41,7 @@ func (r *ContainerRepository) Convert() *client.ContainerRepository {
 	return &client.ContainerRepository{
 		ClusterID:              r.ClusterID.Convert(),
 		ImageName:              r.ImageName,
+		ApplicationName:        r.ApplicationName,
 		StackName:              r.StackName,
 		CloudFormationTemplate: r.CloudFormationTemplate,
 	}
@@ -92,6 +95,30 @@ func (c *containerRepositoryState) getContainerRepository(imageName string) (*Co
 	}
 
 	return r, nil
+}
+
+func (c *containerRepositoryState) GetContainerRepositoryFromApplication(applicationName string) (*client.ContainerRepository, error) {
+	r := &ContainerRepository{}
+
+	err := c.node.One("ApplicationName", applicationName, r)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Convert(), nil
+}
+
+func (c *containerRepositoryState) ApplicationHasImage(applicationName string) (bool, error) {
+	_, err := c.GetContainerRepositoryFromApplication(applicationName)
+	if err == nil {
+		return true, nil
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return false, nil
+	}
+
+	return false, err
 }
 
 // NewContainerRepositoryState returns an initialised state client

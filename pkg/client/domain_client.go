@@ -56,4 +56,5 @@ type DomainState interface {
 	GetHostedZone(domain string) (*HostedZone, error)
 	GetPrimaryHostedZone() (*HostedZone, error)
 	GetHostedZones() ([]*HostedZone, error)
+	HasPrimaryHostedZone() (bool, error)
 }

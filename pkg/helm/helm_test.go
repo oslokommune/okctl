@@ -211,6 +211,14 @@ func TestHelm(t *testing.T) {
 				}
 			}
 
+			foundRelease, err := tc.helm.Find(kubeConfPath, &helm.FindConfig{
+				ReleaseName: cfg.ReleaseName,
+				Namespace:   cfg.Namespace,
+				Timeout:     tc.chart.Timeout,
+			})
+			assert.NoError(t, err)
+			assert.NotNil(t, foundRelease)
+
 			err = tc.helm.Delete(kubeConfPath, tc.chart.DeleteConfig())
 			assert.NoError(t, err)
 

@@ -50,6 +50,10 @@ func TestKM196(t *testing.T) {
 
 type mockHelm struct{}
 
+func (m mockHelm) GetHelmRelease(context.Context, client.GetHelmReleaseOpts) (*client.Helm, error) {
+	return nil, nil
+}
+
 func (m mockHelm) CreateHelmRelease(context.Context, client.CreateHelmReleaseOpts) (*client.Helm, error) {
 	return nil, nil
 }
@@ -75,6 +79,10 @@ func (m mockState) GetKubePromStack() (*client.KubePromStack, error) {
 	}, nil
 }
 
+func (m mockState) HasKubePromStack() (bool, error) {
+	return true, nil
+}
+
 type mockCertService struct{}
 
 func (m mockCertService) CreateCertificate(_ context.Context, _ client.CreateCertificateOpts) (*client.Certificate, error) {
@@ -90,6 +98,14 @@ func (m mockCertService) DeleteCognitoCertificate(_ context.Context, _ client.De
 }
 
 type mockIdentityManagerService struct{}
+
+func (m mockIdentityManagerService) DeleteIdentityPoolUser(_ context.Context, _ client.DeleteIdentityPoolUserOpts) error {
+	panic("implement me")
+}
+
+func (m mockIdentityManagerService) HasIdentityPool(_ api.ID) (bool, error) {
+	panic("implement me")
+}
 
 func (m mockIdentityManagerService) CreateIdentityPool(_ context.Context, _ client.CreateIdentityPoolOpts) (*client.IdentityPool, error) {
 	panic("implement me")

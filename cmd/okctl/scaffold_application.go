@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/commands"
 
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -18,18 +20,17 @@ func buildScaffoldApplicationCommand(o *okctl.Okctl) *cobra.Command {
 		Short: "Scaffold an application template",
 		Long:  "Scaffolds an application.yaml template which can be used to produce necessary Kubernetes and ArgoCD resources",
 		Args:  cobra.ExactArgs(requiredArgumentsForCreateApplicationCommand),
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			err := o.Initialise()
-			if err != nil {
-				return err
-			}
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if declarationPath != "" {
+				clusterDeclaration, err := commands.InferClusterFromStdinOrFile(o.In, declarationPath)
+				if err != nil {
+					return fmt.Errorf("inferring cluster declaration: %w", err)
+				}
 
-			hostedZone, err := o.StateHandlers(o.StateNodes()).Domain.GetPrimaryHostedZone()
-			if err != nil {
-				return err
+				opts.PrimaryHostedZone = clusterDeclaration.ClusterRootDomain
+			} else {
+				opts.PrimaryHostedZone = "okctl.io"
 			}
-
-			opts.PrimaryHostedZone = hostedZone.Domain
 
 			return nil
 		},

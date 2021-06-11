@@ -42,7 +42,7 @@ func loadUserData(o *okctl.Okctl, cmd *cobra.Command) error {
 
 //nolint:funlen,govet
 func buildRootCommand() *cobra.Command {
-	var outputFormat, declarationPath, awsCredentialsType, githubCredentialsType string
+	var outputFormat, declarationPath string
 
 	o := okctl.New()
 
@@ -62,8 +62,7 @@ being captured. Together with slack and slick.`,
 				return nil
 			}
 
-			o.AWSCredentialsType = awsCredentialsType
-			o.GithubCredentialsType = githubCredentialsType
+			enableServiceUserAuthentication(o)
 
 			var err error
 

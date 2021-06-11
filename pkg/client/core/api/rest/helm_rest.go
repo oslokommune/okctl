@@ -12,6 +12,11 @@ type helmAPI struct {
 	client *HTTPClient
 }
 
+func (h *helmAPI) GetHelmRelease(opts api.GetHelmReleaseOpts) (*api.Helm, error) {
+	into := &api.Helm{}
+	return into, h.client.DoGet(TargetHelmReleases, &opts, into)
+}
+
 func (h *helmAPI) CreateHelmRelease(opts api.CreateHelmReleaseOpts) (*api.Helm, error) {
 	into := &api.Helm{}
 	return into, h.client.DoPost(TargetHelmReleases, &opts, into)

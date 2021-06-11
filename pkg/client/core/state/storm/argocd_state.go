@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/oslokommune/okctl/pkg/breeze"
@@ -80,6 +81,19 @@ func (a *argoCDState) GetArgoCD() (*client.ArgoCD, error) {
 	}
 
 	return cd.Convert(), nil
+}
+
+func (a *argoCDState) HasArgoCD() (bool, error) {
+	_, err := a.GetArgoCD()
+	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return false, nil
+		}
+
+		return false, fmt.Errorf("querying state: %w", err)
+	}
+
+	return true, nil
 }
 
 func (a *argoCDState) RemoveArgoCD() error {

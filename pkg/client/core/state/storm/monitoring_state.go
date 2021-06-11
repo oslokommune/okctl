@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
@@ -118,6 +119,19 @@ func (m *monitoringState) getKubePromStack() (*KubePromStack, error) {
 	}
 
 	return s, nil
+}
+
+func (m *monitoringState) HasKubePromStack() (bool, error) {
+	_, err := m.getKubePromStack()
+	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return false, nil
+		}
+
+		return false, fmt.Errorf("querying state: %w", err)
+	}
+
+	return true, nil
 }
 
 // NewMonitoringState returns an initialised state client

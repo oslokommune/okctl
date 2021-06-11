@@ -50,6 +50,15 @@ func (s *identityManagerService) CreateIdentityPoolUser(_ context.Context, opts 
 	return user, nil
 }
 
+func (s *identityManagerService) DeleteIdentityPoolUser(_ context.Context, opts api.DeleteIdentityPoolUserOpts) error {
+	err := s.provider.DeleteIdentityPoolUser(opts)
+	if err != nil {
+		return errors.E(err, "deleting identity pool user", errors.Internal)
+	}
+
+	return nil
+}
+
 func (s *identityManagerService) CreateIdentityPoolClient(_ context.Context, opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
 	client, err := s.provider.CreateIdentityPoolClient(opts)
 	if err != nil {

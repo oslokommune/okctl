@@ -9,8 +9,9 @@ import (
 
 // CreateContainerRepositoryOpts contains necessary information to create a container repository
 type CreateContainerRepositoryOpts struct {
-	ClusterID api.ID
-	ImageName string
+	ClusterID       api.ID
+	ImageName       string
+	ApplicationName string
 }
 
 // DeleteContainerRepositoryOpts contains necessary information to delete a container repository
@@ -25,6 +26,7 @@ type ContainerRepository struct {
 	ImageName              string
 	StackName              string
 	CloudFormationTemplate string
+	ApplicationName        string
 }
 
 // ContainerRepositoryService orchestrates the creation of various services
@@ -44,6 +46,8 @@ type ContainerRepositoryState interface {
 	SaveContainerRepository(repository *ContainerRepository) error
 	RemoveContainerRepository(imageName string) error
 	GetContainerRepository(imageName string) (*ContainerRepository, error)
+	GetContainerRepositoryFromApplication(applicationName string) (*ContainerRepository, error)
+	ApplicationHasImage(applicationName string) (bool, error)
 }
 
 // URI returns the URI where the image can be pulled and pushed

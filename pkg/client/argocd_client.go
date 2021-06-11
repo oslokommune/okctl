@@ -50,5 +50,6 @@ type ArgoCDService interface {
 type ArgoCDState interface {
 	SaveArgoCD(cd *ArgoCD) error
 	GetArgoCD() (*ArgoCD, error)
+	HasArgoCD() (bool, error)
 	RemoveArgoCD() error
 }

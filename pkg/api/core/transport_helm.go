@@ -29,3 +29,14 @@ func decodeDeleteHelmRelease(_ context.Context, r *http.Request) (interface{}, e
 
 	return opts, nil
 }
+
+func decodeGetHelmRelease(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.GetHelmReleaseOpts
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}

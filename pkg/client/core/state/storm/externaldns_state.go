@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
@@ -125,6 +126,19 @@ func (e *externalDNSState) RemoveExternalDNS() error {
 	}
 
 	return e.node.DeleteStruct(ex)
+}
+
+func (e *externalDNSState) HasExternalDNS() (bool, error) {
+	_, err := e.getExternalDNS()
+	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return false, nil
+		}
+
+		return false, fmt.Errorf("querying state: %w", err)
+	}
+
+	return true, nil
 }
 
 // NewExternalDNSState returns an initialised state

@@ -29,6 +29,10 @@ func (a *identityManagerAPI) CreateIdentityPoolUser(opts api.CreateIdentityPoolU
 	return into, a.client.DoPost(TargetIdentityPoolUsers, &opts, into)
 }
 
+func (a *identityManagerAPI) DeleteIdentityPoolUser(opts api.DeleteIdentityPoolUserOpts) error {
+	return a.client.DoDelete(TargetIdentityPoolUsers, &opts)
+}
+
 func (a *identityManagerAPI) CreateIdentityPoolClient(opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
 	into := &api.IdentityPoolClient{}
 	return into, a.client.DoPost(TargetIdentityPoolClient, &opts, into)

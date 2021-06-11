@@ -179,6 +179,11 @@ type ClusterGithub struct {
 	OutputPath string `json:"outputPath"`
 }
 
+// Path returns the Github repository URL path
+func (c ClusterGithub) Path() string {
+	return fmt.Sprintf("%s/%s", c.Organisation, c.Repository)
+}
+
 // Validate returns an error if ClusterGithub is missing required information
 func (c ClusterGithub) Validate() error {
 	return validation.ValidateStruct(&c,
@@ -356,6 +361,7 @@ func NewCluster() Cluster {
 			Cognito:                   true,
 			ArgoCD:                    true,
 		},
+		Databases: &ClusterDatabases{},
 		Experimental: &ClusterExperimental{
 			AutomatizeZoneDelegation: false,
 		},

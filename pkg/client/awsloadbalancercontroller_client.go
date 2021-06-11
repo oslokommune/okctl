@@ -25,3 +25,8 @@ type AWSLoadBalancerControllerService interface {
 	CreateAWSLoadBalancerController(ctx context.Context, opts CreateAWSLoadBalancerControllerOpts) (*AWSLoadBalancerController, error)
 	DeleteAWSLoadBalancerController(ctx context.Context, id api.ID) error
 }
+
+// AWSLoadBalancerControllerState defines the state layer
+type AWSLoadBalancerControllerState interface {
+	HasAWSLoadBalancerController() (bool, error)
+}

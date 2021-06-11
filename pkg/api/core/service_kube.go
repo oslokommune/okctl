@@ -4,6 +4,7 @@ import (
 	"context"
 	stderrors "errors"
 	"fmt"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/util/wait"
 
@@ -37,7 +38,13 @@ func (k *kubeService) ScaleDeployment(_ context.Context, opts api.ScaleDeploymen
 
 	err = k.run.ScaleDeployment(opts)
 	if err != nil {
-		return errors.E(err, "scaling deployment", errors.Internal)
+		kind := errors.Internal
+
+		if strings.Contains(err.Error(), fmt.Sprintf("\"%s\" not found", opts.Name)) {
+			kind = errors.NotExist
+		}
+
+		return errors.E(err, "scaling deployment", kind)
 	}
 
 	return nil

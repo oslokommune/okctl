@@ -40,6 +40,26 @@ func (s *helmService) DeleteHelmRelease(_ context.Context, opts api.DeleteHelmRe
 	return nil
 }
 
+func (s *helmService) GetHelmRelease(_ context.Context, opts api.GetHelmReleaseOpts) (*api.Helm, error) {
+	err := opts.Validate()
+	if err != nil {
+		return nil, errors.E(err, "validating input options", errors.Invalid)
+	}
+
+	release, err := s.run.GetHelmRelease(opts)
+	if err != nil {
+		kind := errors.Internal
+
+		if errors.IsKind(err, errors.NotExist) {
+			kind = errors.NotExist
+		}
+
+		return nil, errors.E(err, fmt.Sprintf("getting helm release (%s): ", opts.ReleaseName), kind)
+	}
+
+	return release, nil
+}
+
 // NewHelmService returns an initialised helm service
 func NewHelmService(run api.HelmRun) api.HelmService {
 	return &helmService{

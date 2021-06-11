@@ -4,6 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/cfn"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -153,6 +155,19 @@ func (v *vpcState) getVpc(stackName string) (*Vpc, error) {
 	}
 
 	return vpc, nil
+}
+
+func (v *vpcState) HasVPC(clusterName string) (bool, error) {
+	_, err := v.GetVpc(cfn.NewStackNamer().Vpc(clusterName))
+	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
 }
 
 func (v *vpcState) RemoveVpc(stackName string) error {

@@ -21,6 +21,10 @@ func TestKM203(t *testing.T) {
 
 type mockIdentityManagerCloudProvider struct{}
 
+func (m mockIdentityManagerCloudProvider) DeleteIdentityPoolUser(_ api.DeleteIdentityPoolUserOpts) error {
+	panic("implement me")
+}
+
 func (m mockIdentityManagerCloudProvider) CreateIdentityPool(_ string, _ api.CreateIdentityPoolOpts) (*api.IdentityPool, error) {
 	panic("implement me")
 }

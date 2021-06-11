@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mishudark/errors"
+
 	"github.com/oslokommune/okctl/pkg/iamapi"
 
 	"github.com/oslokommune/okctl/pkg/eksapi"
@@ -144,6 +146,10 @@ func (s *monitoringService) CreateTempo(ctx context.Context, id api.ID) (*client
 			Replicas:  replicas,
 		})
 		if err != nil {
+			if errors.IsKind(err, errors.NotExist) {
+				break
+			}
+
 			return nil, err
 		}
 	}
@@ -264,6 +270,10 @@ func (s *monitoringService) CreateLoki(ctx context.Context, id api.ID) (*client.
 			Replicas:  replicas,
 		})
 		if err != nil {
+			if errors.IsKind(err, errors.NotExist) {
+				break
+			}
+
 			return nil, err
 		}
 	}
@@ -383,14 +393,6 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 		ID:        opts.ID,
 		Name:      "aws-logging",
 		Namespace: constant.DefaultFargateObservabilityNamespace,
-	})
-	if err != nil {
-		return err
-	}
-
-	err = s.manifest.DeleteNamespace(ctx, api.DeleteNamespaceOpts{
-		ID:        opts.ID,
-		Namespace: constant.DefaultMonitoringNamespace,
 	})
 	if err != nil {
 		return err

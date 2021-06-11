@@ -40,9 +40,11 @@ func loadUserData(o *okctl.Okctl, cmd *cobra.Command) error {
 	return o.LoadUserData()
 }
 
+var declarationPath string //nolint:gochecknoglobals
+
 //nolint:funlen,govet
 func buildRootCommand() *cobra.Command {
-	var outputFormat, declarationPath string
+	var outputFormat string
 
 	o := okctl.New()
 

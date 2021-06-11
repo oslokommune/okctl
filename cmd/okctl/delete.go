@@ -12,8 +12,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/spinner"
 
-	"github.com/oslokommune/okctl/pkg/context"
-
 	"github.com/AlecAivazis/survey/v2"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/api"
@@ -71,9 +69,6 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 including VPC, this is a highly destructive operation.`,
 		Args: cobra.ExactArgs(deleteClusterArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			o.AWSCredentialsType = opts.AWSCredentialsType
-			o.GithubCredentialsType = opts.GithubCredentialsType
-
 			err := o.Initialise()
 			if err != nil {
 				return fmt.Errorf("initialising: %w", err)
@@ -174,27 +169,6 @@ including VPC, this is a highly destructive operation.`,
 
 	flags := cmd.Flags()
 
-	flags.StringVarP(&opts.AWSCredentialsType,
-		"aws-credentials-type",
-		"a",
-		context.AWSCredentialsTypeSAML,
-		fmt.Sprintf(
-			"The form of authentication to use for AWS. Possible values: [%s,%s]",
-			context.AWSCredentialsTypeSAML,
-			context.AWSCredentialsTypeAccessKey,
-		),
-	)
-	flags.StringVarP(
-		&opts.GithubCredentialsType,
-		"github-credentials-type",
-		"g",
-		context.GithubCredentialsTypeDeviceAuthentication,
-		fmt.Sprintf(
-			"The form of authentication to use for Github. Possible values: [%s,%s]",
-			context.GithubCredentialsTypeDeviceAuthentication,
-			context.GithubCredentialsTypeToken,
-		),
-	)
 	flags.BoolVar(
 		&opts.DisableSpinner,
 		"no-spinner",

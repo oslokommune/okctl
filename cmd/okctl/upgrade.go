@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/oslokommune/okctl/pkg/okctl"
+	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/oslokommune/okctl/pkg/upgrade"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 )
 
 func buildUpgradeCommand(o *okctl.Okctl) *cobra.Command {
@@ -29,11 +31,27 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				return err
 			}
 
+			out := ioutil.Discard
+			if o.Debug {
+				out = o.Err
+			}
+
+			userDataDir, err := o.GetUserDataDir()
+			if err != nil {
+				return err
+			}
+
+			fetcherOpts := upgrade.FetcherOpts{
+				Host:  o.Host(),
+				Store: storage.NewFileSystemStorage(userDataDir),
+			}
+
 			upgrader := upgrade.NewUpgrader(
+				o.Logger,
+				out,
 				services.Github,
-				services.BinaryService,
-				o.BinariesProvider,
 				upgrade.NewGithubReleaseParser(upgrade.NewChecksumDownloader()),
+				fetcherOpts,
 			)
 
 			err = upgrader.Run()

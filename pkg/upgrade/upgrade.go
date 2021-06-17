@@ -2,9 +2,12 @@ package upgrade
 
 import (
 	"fmt"
-	binariesPkg "github.com/oslokommune/okctl/pkg/binaries"
+	"github.com/oslokommune/okctl/pkg/binaries/fetch"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/config/state"
+	"github.com/oslokommune/okctl/pkg/storage"
+	"github.com/sirupsen/logrus"
+	"io"
 )
 
 /*
@@ -120,10 +123,11 @@ How to require a specific version:
 */
 
 type Upgrader struct {
+	progress            io.Writer
+	logger              *logrus.Logger
 	githubService       client.GithubService
-	binaryService       client.BinaryService
-	binariesProvider    binariesPkg.Provider
 	githubReleaseParser GithubReleaseParser
+	fetcherOpts         FetcherOpts
 }
 
 //
@@ -182,6 +186,8 @@ func (u Upgrader) Run() error {
 
 	// Run resulting migrations, and store that they have been run
 
+	var binaries []state.Binary
+
 	for _, upgradeBinary := range upgradeBinaries {
 		URLPattern := fmt.Sprintf(
 			"https://github.com/oslokommune/okctl-okctlUpgrade/releases/download/%s/okctl-upgrade_%s_#{os}_#{arch}",
@@ -199,25 +205,30 @@ func (u Upgrader) Run() error {
 				Target: upgradeBinary.name,
 			},
 			Checksums: upgradeBinary.checksums,
-			Preload:   true,
 		}
 
-		err = u.binaryService.Add(binary)
-		if err != nil {
-			return fmt.Errorf("adding binary %s: %w", binary.Id(), err)
-		}
+		binaries = append(binaries, binary)
 	}
 
 	// Download binaries
-	err = u.binariesProvider.ReloadBinaries()
+	fetcher, err := fetch.New(
+		u.progress,
+		u.logger,
+		true,
+		u.fetcherOpts.Host,
+		binaries,
+		u.fetcherOpts.Store,
+	)
 	if err != nil {
-		return fmt.Errorf("loading binaries: %w", err)
+		return fmt.Errorf("creating upgrade binaries fetcher: %w", err)
 	}
+
+	binaryProvider := newUpgradeBinaryProvider(u.logger, u.progress, fetcher)
 
 	// TODO verify that binary for current os and arch is run
 
 	for _, binary := range upgradeBinaries {
-		upgradeBinary, err := u.binariesProvider.OkctlUpgrade(binary.version)
+		upgradeBinary, err := binaryProvider.OkctlUpgrade(binary.version)
 		if err != nil {
 			return fmt.Errorf("getting okctl upgrade binary: %w", err)
 		}
@@ -229,16 +240,23 @@ func (u Upgrader) Run() error {
 	return nil
 }
 
+type FetcherOpts struct {
+	Host  state.Host
+	Store storage.Storer
+}
+
 func NewUpgrader(
+	logger *logrus.Logger,
+	progress io.Writer,
 	githubService client.GithubService,
-	binaryService client.BinaryService,
-	binariesProvider binariesPkg.Provider,
 	githubReleaseParser GithubReleaseParser,
+	fetcherOpts FetcherOpts,
 ) Upgrader {
 	return Upgrader{
+		progress:            progress,
+		logger:              logger,
 		githubService:       githubService,
-		binaryService:       binaryService,
-		binariesProvider:    binariesProvider,
 		githubReleaseParser: githubReleaseParser,
+		fetcherOpts:         fetcherOpts,
 	}
 }

@@ -427,7 +427,7 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 				if err := man.Update(); err != nil {
 					return nil, fmt.Errorf("updating local charts directory: %w", err)
 				}
-				// Load the chart with the updated Chart.lock file.
+				// Reload the chart with the updated Chart.lock file.
 				if chart, err = loader.Load(cp); err != nil {
 					return nil, errors.Wrap(err, "failed reloading chart after repo update")
 				}

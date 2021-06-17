@@ -51,6 +51,8 @@ type Key = github.Key
 
 type RepositoryRelease = github.RepositoryRelease
 
+type ReleaseAsset = github.ReleaseAsset
+
 // New returns an initialised github API client
 func New(ctx context.Context, auth githubAuth.Authenticator) (*Github, error) {
 	credentials, err := auth.Raw()

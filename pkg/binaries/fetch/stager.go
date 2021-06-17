@@ -22,6 +22,9 @@ import (
 // and returning a path to its location
 type Provider interface {
 	Fetch(name, version string) (string, error)
+
+	// Load attempts to pre-fetch all known binaries if possible
+	Load() error
 }
 
 // Stager stores the state required for fetching and verifying a binary
@@ -119,7 +122,12 @@ func New(progress io.Writer, logger *logrus.Logger, preload bool, host state.Hos
 		Progress:       progress,
 	}
 
-	return p.prepareAndLoad()
+	err := p.Load()
+	if err != nil {
+		return nil, fmt.Errorf("loading: %w", err)
+	}
+
+	return p, nil
 }
 
 // Stager returns a configured stager
@@ -159,16 +167,15 @@ func (s *Processor) Stager(baseDir string, bufferSize int64, binary state.Binary
 	return stager, nil
 }
 
-// TODO: Rename to PrepareAndLoad
-// prepareAndLoad a set of stagers
-func (s *Processor) prepareAndLoad() (*Processor, error) {
+// Load a set of stagers
+func (s *Processor) Load() error {
 	for _, binary := range s.BinaryService.List() {
 		binaryBaseDir := path.Join("binaries", binary.Name, binary.Version, s.Host.Os, s.Host.Arch)
 		binaryPath := path.Join(binaryBaseDir, binary.Name)
 
 		exists, err := s.Store.Exists(binaryPath)
 		if err != nil {
-			return nil, errors.E(err, "failed to determine if binary exists", errors.IO)
+			return errors.E(err, "failed to determine if binary exists", errors.IO)
 		}
 
 		if exists {
@@ -183,12 +190,12 @@ func (s *Processor) prepareAndLoad() (*Processor, error) {
 
 		bufferSize, err := humanize.ParseBytes(binary.BufferSize)
 		if err != nil {
-			return nil, errors.E(err, "failed to parse buffer size", errors.Invalid)
+			return errors.E(err, "failed to parse buffer size", errors.Invalid)
 		}
 
 		stager, err := s.Stager(binaryBaseDir, int64(bufferSize), binary)
 		if err != nil {
-			return nil, errors.E(err, "failed to create stager", errors.Invalid)
+			return errors.E(err, "failed to create stager", errors.Invalid)
 		}
 
 		if s.Preload {
@@ -196,14 +203,14 @@ func (s *Processor) prepareAndLoad() (*Processor, error) {
 
 			_, err := fmt.Fprintln(s.Progress, msg)
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			s.Logger.Debugln(msg)
 
 			err = errors.E(stager.Fetch(), "failed to preload binaries", errors.IO)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		}
 
@@ -212,7 +219,7 @@ func (s *Processor) prepareAndLoad() (*Processor, error) {
 		s.LoadedBinaries[binary.Id()] = stager
 	}
 
-	return s, nil
+	return nil
 }
 
 // Fetch attempts to download and verify the binary

@@ -3,7 +3,7 @@ package binaries
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/binaries/run/okctlupgade"
+	"github.com/oslokommune/okctl/pkg/binaries/run/okctlupgrade"
 	"io"
 
 	"github.com/sirupsen/logrus"
@@ -22,7 +22,7 @@ type Provider interface {
 	Eksctl(version string) (*eksctl.Eksctl, error)
 	Kubectl(version string) (*kubectl.Kubectl, error)
 	AwsIamAuthenticator(version string) (*awsiamauthenticator.AwsIamAuthenticator, error)
-	OkctlUpgrade(version string) (*okctlupgade.OkctlUpgrade, error)
+	OkctlUpgrade(version string) (*okctlupgrade.OkctlUpgrade, error)
 	ReloadBinaries() error
 }
 
@@ -35,7 +35,7 @@ type provider struct {
 	eksctl              map[string]*eksctl.Eksctl
 	kubectl             map[string]*kubectl.Kubectl
 	awsIamAuthenticator map[string]*awsiamauthenticator.AwsIamAuthenticator
-	okctlUpgrade        map[string]*okctlupgade.OkctlUpgrade
+	okctlUpgrade        map[string]*okctlupgrade.OkctlUpgrade
 }
 
 // AwsIamAuthenticator returns an aws-iam-authenticator cli wrapper for running commands
@@ -92,18 +92,18 @@ func (p *provider) Eksctl(version string) (*eksctl.Eksctl, error) {
 }
 
 // OkctlUpgrade returns an okctl upgrade wrapper. The given version is the version of the okctl upgrade to run.
-func (p *provider) OkctlUpgrade(version string) (*okctlupgade.OkctlUpgrade, error) {
+func (p *provider) OkctlUpgrade(version string) (*okctlupgrade.OkctlUpgrade, error) {
 	_, ok := p.okctlUpgrade[version]
 
 	if !ok {
-		binaryName := fmt.Sprintf("okctl-upgrade_%s", version)
+		binaryName := fmt.Sprintf(okctlupgrade.BinaryNameFormat, version)
 
 		binaryPath, err := p.fetcher.Fetch(binaryName, version)
 		if err != nil {
 			return nil, err
 		}
 
-		p.okctlUpgrade[version] = okctlupgade.New(binaryPath)
+		p.okctlUpgrade[version] = okctlupgrade.New(binaryPath)
 	}
 
 	return p.okctlUpgrade[version], nil

@@ -1,12 +1,5 @@
 package upgrade
 
-import (
-	"github.com/oslokommune/okctl/pkg/github"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-)
-
 // Test cases:
 // Given these releases, ..., then these binaries should be run
 
@@ -20,7 +13,7 @@ import (
 
 // Separer domenelogikk og applikasjonslogikk. Tester for applogikk kjører også logikk for domene.
 // Use gock for api mocking?
-
+/*
 func TestRunMigrations(t *testing.T) {
 	testCases := []struct {
 		name string
@@ -32,7 +25,7 @@ func TestRunMigrations(t *testing.T) {
 		expectMigrationsToBeRun      []string // TODO: or upgrade?
 	}{
 		{
-			name: "Should run an upgrade",
+			name: "Should run an okctlUpgrade",
 			withUpgradeGithubReleases: []*github.RepositoryRelease{
 				{
 					TagName: github.StringPtr("0.0.63"),
@@ -41,7 +34,7 @@ func TestRunMigrations(t *testing.T) {
 						{
 							Name:               github.StringPtr("okctl_upgrade-0.0.63_Darwin_amd64.tar.gz"),
 							ContentType:        github.StringPtr("application/gzip"),
-							BrowserDownloadURL: github.StringPtr("https://github.com/oslokommune/okctl-upgrade/releases/download/0.0.63/okctl_upgrade-0.0.63_Darwin_amd64.tar.gz"),
+							BrowserDownloadURL: github.StringPtr("https://github.com/oslokommune/okctl-okctlUpgrade/releases/download/0.0.63/okctl_upgrade-0.0.63_Darwin_amd64.tar.gz"),
 						},
 					},
 				},
@@ -70,3 +63,4 @@ func TestRunMigrations(t *testing.T) {
 		})
 	}
 }
+*/

@@ -36,8 +36,8 @@ func parseOkctlUpgradeFilename(filename string) (okctlUpgradeFile, error) {
 		)
 	}
 
-	arch := archAndExtensionParts[0] // amd64
-	extension := archAndExtension[len(arch)+1:]
+	arch := archAndExtensionParts[0]            // amd64
+	extension := archAndExtension[len(arch)+1:] // tar.gz
 
 	return okctlUpgradeFile{
 		filename:  filename,

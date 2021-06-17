@@ -11,7 +11,7 @@ type binaryService struct {
 	config *config.Config
 }
 
-func (b binaryService) Add(binary state.Binary) error {
+func (b *binaryService) Add(binary state.Binary) error {
 	b.config.UserState.Binaries = append(b.config.UserState.Binaries, binary)
 
 	err := b.config.WriteCurrentUserData()
@@ -22,7 +22,7 @@ func (b binaryService) Add(binary state.Binary) error {
 	return nil
 }
 
-func (b binaryService) Remove(binary state.Binary) error {
+func (b *binaryService) Remove(binary state.Binary) error {
 	b2, err := b.removeOne(b.config.UserState.Binaries, binary)
 	if err != nil {
 		return fmt.Errorf("removing from user state binaries: %w", err)
@@ -38,7 +38,7 @@ func (b binaryService) Remove(binary state.Binary) error {
 	return nil
 }
 
-func (b binaryService) removeOne(slice []state.Binary, binaryToRemove state.Binary) ([]state.Binary, error) {
+func (b *binaryService) removeOne(slice []state.Binary, binaryToRemove state.Binary) ([]state.Binary, error) {
 	for i, binary := range slice {
 		if binary.Id() == binaryToRemove.Id() {
 			return append(slice[:i], slice[i+1:]...), nil
@@ -48,12 +48,12 @@ func (b binaryService) removeOne(slice []state.Binary, binaryToRemove state.Bina
 	return nil, fmt.Errorf(fmt.Sprintf("binary %s not found", binaryToRemove.Id()))
 }
 
-func (b binaryService) List() []state.Binary {
+func (b *binaryService) List() []state.Binary {
 	return b.config.UserState.Binaries
 }
 
 func NewBinaryService(config *config.Config) client.BinaryService {
-	return binaryService{
+	return &binaryService{
 		config: config,
 	}
 }

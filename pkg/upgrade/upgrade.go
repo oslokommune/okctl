@@ -1,13 +1,10 @@
 package upgrade
 
 import (
-	"errors"
 	"fmt"
 	binariesPkg "github.com/oslokommune/okctl/pkg/binaries"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/config/state"
-	"github.com/oslokommune/okctl/pkg/github"
-	"strings"
 )
 
 /*
@@ -22,7 +19,6 @@ USE DOMAIN DRIVEN DESIGN FOR MIGRATION CALCULATION LOGIC
 	"assets": [
 		"browser_download_url":  "https://github.com/oslokommune/okctl-upgrade/releases/download/1_0.0.64/okctl-upgrade-1-0.0.63"
 	],
-	"body" // TODO nice to have, add later
 }
 
 - Fjern de som ikke har asset.state == "uploaded"
@@ -124,26 +120,35 @@ How to require a specific version:
 */
 
 type Upgrader struct {
-	githubService    client.GithubService
-	binaryService    client.BinaryService
-	binariesProvider binariesPkg.Provider
-	checksumFetcher  checksumFetcher
+	githubService       client.GithubService
+	binaryService       client.BinaryService
+	binariesProvider    binariesPkg.Provider
+	githubReleaseParser GithubReleaseParser
 }
 
-type upgradeBinary struct {
-	filename                 string
-	filenameWithoutExtension string
-	version                  string
-	checksums                []state.Checksum
+//
+//type okctlUpgradeBinary struct {
+//	filenameWithoutExtension string
+//	version                  string
+//	checksums                []state.Checksum
+//}
+
+// upgrade is an okctl upgrade. A example file name for an upgrade is 'okctl-upgrade_0.0.63_Darwin_amd64.tar.gz'.
+//
+// The semantics of the meaning of the file name and how upgrades are supposed to be run, is explained at
+// https://github.com/oslokommune/okctl-upgrade
+type okctlUpgradeBinary struct {
+	name          string
+	fileExtension string
+	version       string
+	checksums     []state.Checksum
 }
 
 func (u Upgrader) Run() error {
-	releases, err := u.githubService.ListReleases("oslokommune", "okctl-upgrade")
+	releases, err := u.githubService.ListReleases("oslokommune", "okctl-okctlUpgrade")
 	if err != nil {
 		return fmt.Errorf("listing github releases: %w", err)
 	}
-
-	// TODO take care of linux vs mac, amd64 vs x86 somewhere
 
 	// [x] Last ned liste av releases
 	// [ ] Filtrer
@@ -151,19 +156,22 @@ func (u Upgrader) Run() error {
 	// [ ] Kjør
 
 	// Convert to upgrades
-	upgradeBinaries, err := u.parseUpgradeBinaries(releases)
+	upgradeBinaries, err := u.githubReleaseParser.toUpgradeBinaries(releases)
 	if err != nil {
-		return fmt.Errorf("parsing upgrade binaries: %w", err)
+		return fmt.Errorf("parsing okctlUpgrade binaries: %w", err)
 	}
 
-	// Remove too new upgrades (semver compare)
-	upgradeBinaries = u.removeTooNewMigrations(upgradeBinaries)
+	// TODO consider parsing to okctlUpgrade, that contains UpgradeBinary.
 
-	// Remove upgrades that are earlier than than or equal to original cluster version
-	upgradeBinaries = u.removeTooOldUpgrades(upgradeBinaries)
-
-	// Remove already applied upgrades (from state.db)
-	upgradeBinaries = u.removeAlreadyAppliedUpgrades(upgradeBinaries)
+	// TODO implement filtering after testing actual functionality
+	//// Remove too new upgrades (semver compare)
+	//upgradeBinaries = u.removeTooNewMigrations(upgradeBinaries)
+	//
+	//// Remove upgrades that are earlier than than or equal to original cluster version
+	//upgradeBinaries = u.removeTooOldUpgrades(upgradeBinaries)
+	//
+	//// Remove already applied upgrades (from state.db)
+	//upgradeBinaries = u.removeAlreadyAppliedUpgrades(upgradeBinaries)
 
 	// Downlod upgrade binaries
 	// Runs binaries. Saves that they have been run. Handles errors.
@@ -174,23 +182,23 @@ func (u Upgrader) Run() error {
 
 	// Run resulting migrations, and store that they have been run
 
-	for _, ub := range upgradeBinaries {
+	for _, upgradeBinary := range upgradeBinaries {
 		URLPattern := fmt.Sprintf(
-			"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_#{os}_#{arch}",
-			ub.version,
-			ub.version,
+			"https://github.com/oslokommune/okctl-okctlUpgrade/releases/download/%s/okctl-upgrade_%s_#{os}_#{arch}",
+			upgradeBinary.version,
+			upgradeBinary.version,
 		)
 
 		binary := state.Binary{
-			Name:       ub.filenameWithoutExtension,
-			Version:    ub.version,
+			Name:       upgradeBinary.name,
+			Version:    upgradeBinary.version,
 			BufferSize: "300mb",
 			URLPattern: URLPattern,
 			Archive: state.Archive{
-				Type:   ".tar.gz",
-				Target: ub.filenameWithoutExtension,
+				Type:   upgradeBinary.fileExtension,
+				Target: upgradeBinary.name,
 			},
-			Checksums: ub.checksums,
+			Checksums: upgradeBinary.checksums,
 			Preload:   true,
 		}
 
@@ -207,7 +215,11 @@ func (u Upgrader) Run() error {
 	}
 
 	for _, binary := range upgradeBinaries {
-		upgradeBinary := u.binariesProvider.OkctlUpgrade(binary.GitReleaseTag)
+		upgradeBinary, err := u.binariesProvider.OkctlUpgrade(binary.version)
+		if err != nil {
+			return fmt.Errorf("getting okctl upgrade binary: %w", err)
+		}
+
 		// something something, binary runner or something. See eksctl.go.
 		upgradeBinary.Run()
 	}
@@ -215,69 +227,16 @@ func (u Upgrader) Run() error {
 	return nil
 }
 
-func (u Upgrader) parseUpgradeBinaries(releases []*github.RepositoryRelease) ([]upgradeBinary, error) {
-	var binaries []upgradeBinary
-
-	for _, release := range releases {
-		err := u.validateRelease(release)
-		if err != nil {
-			return nil, fmt.Errorf("validating release: %w", err)
-		}
-
-		checksums, err := u.checksumFetcher.getFor(release)
-		if err != nil {
-			return nil, fmt.Errorf("fetching checksum: %w", err)
-		}
-
-		binaries = append(binaries, upgradeBinary{
-			filenameWithoutExtension: "",
-			version:                  *release.TagName,
-			checksums:                checksums,
-		})
-	}
-
-	return binaries, nil
-}
-
-func (u Upgrader) validateRelease(release *github.RepositoryRelease) error {
-	if release.Name == nil || len(*release.Name) == 0 {
-		return fmt.Errorf("release ID '%d' name must be non-empty", *release.ID)
-	}
-
-	if release.TagName == nil {
-		return fmt.Errorf("release '%s' tag name must be non-empty", *release.Name)
-	}
-
-	if len(release.Assets) < 2 {
-		return fmt.Errorf("release '%s' must have at least two assets (binary and checksum) ", *release.Name)
-	}
-
-	for _, asset := range release.Assets {
-		parts := strings.Split(*asset.BrowserDownloadURL, "/")
-		if len(parts) == 0 {
-			return fmt.Errorf("expected at least 1 '/' in browser download URL %s", *asset.BrowserDownloadURL)
-		}
-
-		filename := parts[len(parts)-1]
-
-		upgradeFile, err := parseOkctlUpgradeFilename(filename)
-		if err != nil {
-			return fmt.Errorf("cannot parse okctl upgrade filename '%s': %w", filename, err)
-		}
-
-		if upgradeFile.version != *release.TagName {
-			return fmt.Errorf("expected upgrade file '%s' version to equal tag name '%s'", upgradeFile.version, *release.TagName)
-		}
-	}
-
-	return nil
-}
-
-func NewUpgrader(githubService client.GithubService, binaryService client.BinaryService, binariesProvider binariesPkg.Provider, checksumFetcher checksumFetcher) Upgrader {
+func NewUpgrader(
+	githubService client.GithubService,
+	binaryService client.BinaryService,
+	binariesProvider binariesPkg.Provider,
+	githubReleaseParser GithubReleaseParser,
+) Upgrader {
 	return Upgrader{
-		githubService:    githubService,
-		binaryService:    binaryService,
-		binariesProvider: binariesProvider,
-		checksumFetcher:  checksumFetcher,
+		githubService:       githubService,
+		binaryService:       binaryService,
+		binariesProvider:    binariesProvider,
+		githubReleaseParser: githubReleaseParser,
 	}
 }

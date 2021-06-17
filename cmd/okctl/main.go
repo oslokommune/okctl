@@ -113,6 +113,7 @@ being captured. Together with slack and slick.`,
 	cmd.AddCommand(buildAttachCommand(o))
 	cmd.AddCommand(buildForwardCommand(o))
 	cmd.AddCommand(buildVersionCommand(o))
+	cmd.AddCommand(buildUpgradeCommand(o))
 
 	f := cmd.Flags()
 	f.StringVarP(&outputFormat, "output", "o", "text",

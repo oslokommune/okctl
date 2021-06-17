@@ -15,6 +15,11 @@ func buildUpgradeCommand(o *okctl.Okctl) *cobra.Command {
 to the current version of okctl. Example of such resources are helm charts, okctl cluster and application declarations,
 binaries used by okctl (kubectl, etc), and internal state.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			err := o.Initialise()
+			if err != nil {
+				return err
+			}
+
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
@@ -24,7 +29,12 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				return err
 			}
 
-			upgrader := upgrade.NewUpgrader(services.Github, services.BinaryService, o.BinariesProvider)
+			upgrader := upgrade.NewUpgrader(
+				services.Github,
+				services.BinaryService,
+				o.BinariesProvider,
+				upgrade.NewGithubReleaseParser(upgrade.NewChecksumDownloader()),
+			)
 
 			err = upgrader.Run()
 			if err != nil {

@@ -2,6 +2,8 @@ package fetch_test
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/oslokommune/okctl/pkg/client"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -120,7 +122,9 @@ func TestProcessor(t *testing.T) {
 		{
 			name: "Should work",
 			processor: func() *fetch.Processor {
-				p, err := fetch.New(ioutil.Discard, logger, false, host, binaries, storage.NewEphemeralStorage())
+				binaryService := newMockBinaryService(binaries)
+
+				p, err := fetch.New(ioutil.Discard, logger, false, host, binaryService, storage.NewEphemeralStorage())
 				assert.NoError(t, err)
 				return p
 			}(),
@@ -149,5 +153,34 @@ func TestProcessor(t *testing.T) {
 				assert.Equal(t, tc.expect, got)
 			}
 		})
+	}
+}
+
+type mockBinaryService struct {
+	binaries []state.Binary
+}
+
+func (m *mockBinaryService) Add(binary state.Binary) error {
+	m.binaries = append(m.binaries)
+	return nil
+}
+
+func (m *mockBinaryService) Remove(binaryToRemove state.Binary) error {
+	for i, binary := range m.binaries {
+		if binary.Id() == binaryToRemove.Id() {
+			m.binaries = append(m.binaries[:i], m.binaries[i+1:]...)
+		}
+	}
+
+	return fmt.Errorf(fmt.Sprintf("binary %s not found", binaryToRemove.Id()))
+}
+
+func (m *mockBinaryService) List() []state.Binary {
+	return m.binaries
+}
+
+func newMockBinaryService(binaries []state.Binary) client.BinaryService {
+	return &mockBinaryService{
+		binaries: binaries,
 	}
 }

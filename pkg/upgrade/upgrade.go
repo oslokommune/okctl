@@ -214,6 +214,8 @@ func (u Upgrader) Run() error {
 		return fmt.Errorf("loading binaries: %w", err)
 	}
 
+	// TODO verify that binary for current os and arch is run
+
 	for _, binary := range upgradeBinaries {
 		upgradeBinary, err := u.binariesProvider.OkctlUpgrade(binary.version)
 		if err != nil {

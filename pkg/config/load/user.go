@@ -249,7 +249,7 @@ func updateKnownBinaries(cfg *config.Config) {
 	cfg.UserState.Binaries = append(cfg.UserState.Binaries, update...)
 }
 
-func BuildUserDataLoader(loaders ...LoaderFn) config.DataLoaderFn { // todo EXPOrt
+func BuildUserDataLoader(loaders ...LoaderFn) config.DataLoaderFn {
 	return func(cfg *config.Config) error {
 		var err error
 

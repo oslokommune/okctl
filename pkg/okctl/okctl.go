@@ -607,11 +607,6 @@ func (o *Okctl) newBinariesProvider() error {
 		return fmt.Errorf("getting client services: %w", err)
 	}
 
-	// Not needed, binaryservice uses config as state
-	//for _, binary := range o.UserState.Binaries {
-	//	err = services.BinaryService.Add(binary)
-	//}
-
 	fetcher, err := fetch.New(
 		o.Err,
 		o.Logger,

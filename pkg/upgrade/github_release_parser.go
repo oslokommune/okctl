@@ -103,7 +103,7 @@ func (g GithubReleaseParser) validateUpgradeBinaryAsset(asset *ghPkg.ReleaseAsse
 
 	upgradeFile, err := parseOkctlUpgradeFilename(upgradeBinaryFilename)
 	if err != nil {
-		return fmt.Errorf("cannot parse okctl okctlUpgrade filename '%s': %w", upgradeBinaryFilename, err)
+		return fmt.Errorf("cannot parse upgrade filename '%s': %w", upgradeBinaryFilename, err)
 	}
 
 	if upgradeFile.version != releaseUpgradeVersion {

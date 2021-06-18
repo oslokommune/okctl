@@ -200,7 +200,7 @@ func (g *Github) ListReleases(owner, repo string) ([]*RepositoryRelease, error) 
 		// Documentation: https://docs.github.com/en/rest/reference/repos#list-release-assets
 		releases, response, err := g.Client.Repositories.ListReleases(g.Ctx, owner, repo, opts)
 		if err != nil {
-			return nil, fmt.Errorf("listing github releases: %w", err)
+			return nil, fmt.Errorf("listing releases: %w", err)
 		}
 
 		allReleases = append(allReleases, releases...)

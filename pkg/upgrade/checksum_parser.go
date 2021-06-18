@@ -18,7 +18,7 @@ func parseChecksums(checksumBytes []byte) ([]state.Checksum, error) {
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		parts := strings.Split(line, " ")
+		parts := strings.Fields(line)
 		if len(parts) != 2 {
 			return nil, fmt.Errorf(
 				"expected 2 substrings when splitting digest line on whitespace ( ), got %d in string '%s'",
@@ -36,7 +36,7 @@ func parseChecksums(checksumBytes []byte) ([]state.Checksum, error) {
 
 		ugradeFile, err := parseOkctlUpgradeFilename(filename)
 		if err != nil {
-			return nil, fmt.Errorf("parsing okctl okctlUpgrade filename: %w", err)
+			return nil, fmt.Errorf("parsing upgrade filename: %w", err)
 		}
 
 		// TODO REMOVE

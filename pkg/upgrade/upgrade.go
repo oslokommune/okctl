@@ -149,7 +149,7 @@ type okctlUpgradeBinary struct {
 }
 
 func (u Upgrader) Run() error {
-	releases, err := u.githubService.ListReleases("oslokommune", "okctl-okctlUpgrade")
+	releases, err := u.githubService.ListReleases("oslokommune", "okctl-upgrade")
 	if err != nil {
 		return fmt.Errorf("listing github releases: %w", err)
 	}
@@ -162,7 +162,7 @@ func (u Upgrader) Run() error {
 	// Convert to upgrades
 	upgradeBinaries, err := u.githubReleaseParser.toUpgradeBinaries(releases)
 	if err != nil {
-		return fmt.Errorf("parsing okctlUpgrade binaries: %w", err)
+		return fmt.Errorf("parsing upgrade binaries: %w", err)
 	}
 
 	// TODO consider parsing to okctlUpgrade, that contains UpgradeBinary.
@@ -190,7 +190,7 @@ func (u Upgrader) Run() error {
 
 	for _, upgradeBinary := range upgradeBinaries {
 		URLPattern := fmt.Sprintf(
-			"https://github.com/oslokommune/okctl-okctlUpgrade/releases/download/%s/okctl-upgrade_%s_#{os}_#{arch}",
+			"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_#{os}_#{arch}.tar.gz",
 			upgradeBinary.version,
 			upgradeBinary.version,
 		)

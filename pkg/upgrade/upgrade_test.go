@@ -25,7 +25,7 @@ func TestRunMigrations(t *testing.T) {
 		expectMigrationsToBeRun      []string // TODO: or upgrade?
 	}{
 		{
-			name: "Should run an okctlUpgrade",
+			name: "Should run an upgrade",
 			withUpgradeGithubReleases: []*github.RepositoryRelease{
 				{
 					TagName: github.StringPtr("0.0.63"),

@@ -181,10 +181,7 @@ func applyExistingState(existingResources ExistingResources) dependencytree.Appl
 		NextDb:
 			for _, existingDB := range existingResources.hasPostgres {
 				for _, declaredDB := range receiver.Children {
-					data, ok := declaredDB.Data.(clusterrec.PostgresReconcilerState)
-					if !ok {
-						panic("could not cast to database state")
-					}
+					data := declaredDB.Data.(*clusterrec.PostgresReconcilerState)
 
 					if data.DB.Name == existingDB.Name {
 						declaredDB.State = dependencytree.NodeStatePresent

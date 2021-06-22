@@ -231,7 +231,8 @@ func checksumsFor(h state.Host, cs []state.Checksum) map[digest.Type]string {
 	out := map[digest.Type]string{}
 
 	for _, c := range cs {
-		if c.Arch == h.Arch && c.Os == h.Os {
+		if strings.ToLower(c.Arch) == strings.ToLower(h.Arch) &&
+			strings.ToLower(c.Os) == strings.ToLower(h.Os) {
 			out[digest.Type(c.Type)] = c.Digest
 		}
 	}

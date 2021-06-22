@@ -181,7 +181,7 @@ func (u Upgrader) Run() error {
 	var binaries []state.Binary
 
 	if u.Debug {
-		_, _ = fmt.Fprintf(u.Out, "Found %d upgrades\n", len(upgradeBinaries))
+		_, _ = fmt.Fprintf(u.Out, "Found %d upgrade(s)\n", len(upgradeBinaries))
 	}
 
 	for _, upgradeBinary := range upgradeBinaries {
@@ -233,7 +233,7 @@ func (u Upgrader) Run() error {
 		upgradeBinary.Debug(u.Debug)
 
 		if u.Debug {
-			_, _ = fmt.Fprintf(u.Out, "Running upgrade: %s", binary.version)
+			_, _ = fmt.Fprintf(u.Out, "Running upgrade: %s\n", binary.version)
 		}
 
 		_, err = upgradeBinary.Run()

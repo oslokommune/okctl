@@ -10,6 +10,7 @@ import (
 )
 
 type upgradeBinaryProvider struct {
+	repoDir  string
 	progress io.Writer
 	fetcher  fetch.Provider
 	logger   *logrus.Logger
@@ -18,11 +19,13 @@ type upgradeBinaryProvider struct {
 }
 
 func newUpgradeBinaryProvider(
+	repoDir string,
 	logger *logrus.Logger,
 	progress io.Writer,
 	fetcher fetch.Provider,
 ) upgradeBinaryProvider {
 	return upgradeBinaryProvider{
+		repoDir:      repoDir,
 		progress:     progress,
 		fetcher:      fetcher,
 		logger:       logger,
@@ -42,7 +45,7 @@ func (p *upgradeBinaryProvider) OkctlUpgrade(version string) (*okctlupgrade.Okct
 			return nil, err
 		}
 
-		p.okctlUpgrade[version] = okctlupgrade.New(p.logger, p.progress, binaryPath, run.Cmd())
+		p.okctlUpgrade[version] = okctlupgrade.New(p.repoDir, p.progress, p.logger, binaryPath, run.Cmd())
 	}
 
 	return p.okctlUpgrade[version], nil

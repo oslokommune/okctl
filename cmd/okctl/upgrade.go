@@ -40,18 +40,25 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				return err
 			}
 
+			repoDir, err := o.GetHomeDir()
+			if err != nil {
+				return err
+			}
+
 			fetcherOpts := upgrade.FetcherOpts{
 				Host:  o.Host(),
 				Store: storage.NewFileSystemStorage(userDataDir),
 			}
 
-			upgrader = upgrade.NewUpgrader(
-				o.Logger,
-				out,
-				services.Github,
-				upgrade.NewGithubReleaseParser(upgrade.NewChecksumDownloader()),
-				fetcherOpts,
-			)
+			upgrader = upgrade.New(upgrade.Opts{
+				Debug:               o.Debug,
+				RepoDir:             repoDir,
+				Logger:              o.Logger,
+				Out:                 out,
+				GithubService:       services.Github,
+				GithubReleaseParser: upgrade.NewGithubReleaseParser(upgrade.NewChecksumDownloader()),
+				FetcherOpts:         fetcherOpts,
+			})
 
 			return nil
 		},

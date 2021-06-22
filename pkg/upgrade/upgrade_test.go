@@ -51,7 +51,7 @@ func TestRunMigrations(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Given
 			githubServiceMock := NewGithubServiceMock(tc.withUpgradeGithubReleases)
-			upgrader := NewUpgrader(githubServiceMock, nil)
+			upgrader := New(githubServiceMock, nil)
 
 			// When
 			err := upgrader.Run()

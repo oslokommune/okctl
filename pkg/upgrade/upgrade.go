@@ -122,14 +122,6 @@ How to require a specific version:
 			apply cluster requires minimum upgrade version: 5-0.0.63 [or just 5]
 */
 
-type Upgrader struct {
-	progress            io.Writer
-	logger              *logrus.Logger
-	githubService       client.GithubService
-	githubReleaseParser GithubReleaseParser
-	fetcherOpts         FetcherOpts
-}
-
 //
 //type okctlUpgradeBinary struct {
 //	filenameWithoutExtension string
@@ -149,7 +141,7 @@ type okctlUpgradeBinary struct {
 }
 
 func (u Upgrader) Run() error {
-	releases, err := u.githubService.ListReleases("oslokommune", "okctl-upgrade")
+	releases, err := u.GithubService.ListReleases("oslokommune", "okctl-upgrade")
 	if err != nil {
 		return fmt.Errorf("listing github releases: %w", err)
 	}
@@ -160,7 +152,7 @@ func (u Upgrader) Run() error {
 	// [ ] Kjør
 
 	// Convert to upgrades
-	upgradeBinaries, err := u.githubReleaseParser.toUpgradeBinaries(releases)
+	upgradeBinaries, err := u.GithubReleaseParser.toUpgradeBinaries(releases)
 	if err != nil {
 		return fmt.Errorf("parsing upgrade binaries: %w", err)
 	}
@@ -188,6 +180,10 @@ func (u Upgrader) Run() error {
 
 	var binaries []state.Binary
 
+	if u.Debug {
+		_, _ = fmt.Fprintf(u.Out, "Found %d upgrades\n", len(upgradeBinaries))
+	}
+
 	for _, upgradeBinary := range upgradeBinaries {
 		URLPattern := fmt.Sprintf(
 			"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_#{os}_#{arch}.tar.gz",
@@ -212,19 +208,20 @@ func (u Upgrader) Run() error {
 
 	// Download binaries
 	fetcher, err := fetch.New(
-		u.progress,
-		u.logger,
+		u.Out,
+		u.Logger,
 		true,
-		u.fetcherOpts.Host,
+		u.FetcherOpts.Host,
 		binaries,
-		u.fetcherOpts.Store,
+		u.FetcherOpts.Store,
 	)
 	if err != nil {
 		return fmt.Errorf("creating upgrade binaries fetcher: %w", err)
 	}
 
-	binaryProvider := newUpgradeBinaryProvider(u.logger, u.progress, fetcher)
+	binaryProvider := newUpgradeBinaryProvider(u.RepoDir, u.Logger, u.Out, fetcher)
 
+	// TODO store binaries to conf.yaml
 	// TODO verify that binary for current os and arch is run
 
 	for _, binary := range upgradeBinaries {
@@ -233,8 +230,17 @@ func (u Upgrader) Run() error {
 			return fmt.Errorf("getting okctl upgrade binary: %w", err)
 		}
 
-		// something something, binary runner or something. See eksctl.go.
-		upgradeBinary.Run()
+		upgradeBinary.Debug(u.Debug)
+
+		if u.Debug {
+			_, _ = fmt.Fprintf(u.Out, "Running upgrade: %s", binary.version)
+		}
+
+		_, err = upgradeBinary.Run()
+		if err != nil {
+			return fmt.Errorf("running upgrade binary %s: %w", binary.version, err)
+		}
+
 	}
 
 	return nil
@@ -245,18 +251,22 @@ type FetcherOpts struct {
 	Store storage.Storer
 }
 
-func NewUpgrader(
-	logger *logrus.Logger,
-	progress io.Writer,
-	githubService client.GithubService,
-	githubReleaseParser GithubReleaseParser,
-	fetcherOpts FetcherOpts,
-) Upgrader {
+type Opts struct {
+	Debug               bool
+	Logger              *logrus.Logger
+	Out                 io.Writer
+	RepoDir             string
+	GithubService       client.GithubService
+	GithubReleaseParser GithubReleaseParser
+	FetcherOpts         FetcherOpts
+}
+
+type Upgrader struct {
+	Opts
+}
+
+func New(opts Opts) Upgrader {
 	return Upgrader{
-		progress:            progress,
-		logger:              logger,
-		githubService:       githubService,
-		githubReleaseParser: githubReleaseParser,
-		fetcherOpts:         fetcherOpts,
+		Opts: opts,
 	}
 }

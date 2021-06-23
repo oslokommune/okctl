@@ -83,24 +83,21 @@ func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 
 	var buff bytes.Buffer
 
-	multi := io.MultiReader(stdoutIn, stderrIn)
-	out := io.MultiWriter(progress, &buff)
-	scanner := bufio.NewScanner(multi)
+	multiReader := io.MultiReader(stdoutIn, stderrIn)
+	multiWriter := io.MultiWriter(progress, &buff)
 
 	err = cmd.Start()
 	if err != nil {
 		return nil, err
 	}
 
-	for scanner.Scan() {
-		s := scanner.Text()
+	_, err = io.Copy(multiWriter, multiReader)
 
-		_, err = io.Copy(out, strings.NewReader(s))
-		if err != nil {
-			return nil, err
-		}
+	if r.Logger != nil {
+		scanner := bufio.NewScanner(multiReader)
 
-		if r.Logger != nil {
+		for scanner.Scan() {
+			s := scanner.Text()
 			r.Logger.Info(s)
 		}
 	}

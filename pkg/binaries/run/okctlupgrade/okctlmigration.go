@@ -3,6 +3,7 @@ package okctlupgrade
 import (
 	"fmt"
 	"github.com/oslokommune/okctl/pkg/binaries/run"
+	"github.com/oslokommune/okctl/pkg/context"
 	"github.com/sirupsen/logrus"
 	"io"
 )
@@ -49,7 +50,12 @@ func (u *OkctlUpgrade) Run() ([]byte, error) {
 
 	var args []string
 
-	return runner.Run(u.progress, args)
+	output, err := runner.Run(u.progress, args)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, err
 }
 
 // Debug sets whether we should increase log output from eksctl,
@@ -62,8 +68,9 @@ func (u *OkctlUpgrade) runner() (run.Runner, error) {
 	var envs []string
 
 	if u.doDebug {
-		envs = append(envs, "OKCTL_DEBUG=true")
+		envs = append(envs, fmt.Sprintf("%s=true", context.DefaultDebugEnv))
 	}
 
-	return run.New(u.logger, u.repoDir, u.binaryPath, envs, u.cmdFn), nil
+	return run.New(nil, u.repoDir, u.binaryPath, envs, u.cmdFn), nil
+	//return run.New(u.logger, u.repoDir, u.binaryPath, envs, u.cmdFn), nil
 }

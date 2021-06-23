@@ -1,6 +1,7 @@
 package run_test
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -100,6 +101,47 @@ func TestRun(t *testing.T) {
 	}
 }
 
+func TestRunCmdOutput(t *testing.T) {
+	testCases := []struct {
+		name        string
+		run         *run.Run
+		output      string
+		expectError bool
+	}{
+		{
+			name:   "Should get output from command stdout",
+			output: "Hello!",
+			run: func() *run.Run {
+				cmdFn := fakeExecCommandSuccess()
+
+				return run.New(
+					nil,
+					"working_dir",
+					"binary_path",
+					[]string{},
+					cmdFn)
+			}(),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			var progress bytes.Buffer
+
+			out, err := tc.run.Run(&progress, []string{tc.output})
+			assert.NoError(t, err)
+
+			expectedOutput := "wd=working_dir, path=binary_path, env=, args=" + tc.output
+
+			assert.Equal(t, expectedOutput, string(out))
+
+			expectedProgess := []byte(expectedOutput)
+			assert.Equal(t, expectedProgess, progress.Bytes())
+		})
+	}
+}
+
 func TestRunProcessSuccess(t *testing.T) {
 	if os.Getenv("GO_TEST_PROCESS") != "1" {
 		return
@@ -114,6 +156,7 @@ func TestRunProcessSuccess(t *testing.T) {
 // simply call TestRunProcessSuccess rather than the command it is provided. It will
 // also pass through the command and its arguments as an argument to TestRunProcessSuccess
 // https://jamiethompson.me/posts/Unit-Testing-Exec-Command-In-Golang/
+// Test with
 func fakeExecCommandSuccess() run.CmdFn {
 	return func(workingDir, path string, env, args []string) *exec.Cmd {
 		cs := []string{

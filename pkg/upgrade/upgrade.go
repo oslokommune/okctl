@@ -166,7 +166,7 @@ func (u Upgrader) Run() error {
 	//// Remove upgrades that are earlier than than or equal to original cluster version
 	//upgradeBinaries = u.removeTooOldUpgrades(upgradeBinaries)
 	//
-	//// Remove already applied upgrades (from state.db)
+	//// Remove already applied upgrades (from state.db). TODO: Consider letting upgrades edit state.db instead of okctl upgrade.
 	//upgradeBinaries = u.removeAlreadyAppliedUpgrades(upgradeBinaries)
 
 	// Downlod upgrade binaries
@@ -221,8 +221,9 @@ func (u Upgrader) Run() error {
 
 	binaryProvider := newUpgradeBinaryProvider(u.RepoDir, u.Logger, u.Out, fetcher)
 
-	// TODO store binaries to conf.yaml
+	// TODO store binaries to conf.yaml? Hm maybe not needed really
 	// TODO verify that binary for current os and arch is run
+	// TODO decide how to store the fact that an upgrade has been run. In upgradebinary or here?
 
 	for _, binary := range upgradeBinaries {
 		upgradeBinary, err := binaryProvider.OkctlUpgrade(binary.version)
@@ -233,7 +234,7 @@ func (u Upgrader) Run() error {
 		upgradeBinary.Debug(u.Debug)
 
 		if u.Debug {
-			_, _ = fmt.Fprintf(u.Out, "Running upgrade: %s\n", binary.version)
+			_, _ = fmt.Fprintf(u.Out, "--- Running upgrade: %s ---\n", binary.version)
 		}
 
 		_, err = upgradeBinary.Run()

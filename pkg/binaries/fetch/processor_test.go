@@ -111,7 +111,7 @@ func TestProcessor(t *testing.T) {
 		preload     bool
 		expectError bool
 		name        string
-		processor   *fetch.Processor
+		processor   fetch.Provider
 		binary      string
 		version     string
 		preFn       func()
@@ -119,7 +119,7 @@ func TestProcessor(t *testing.T) {
 	}{
 		{
 			name: "Should work",
-			processor: func() *fetch.Processor {
+			processor: func() fetch.Provider {
 				p, err := fetch.New(ioutil.Discard, logger, false, host, binaries, storage.NewEphemeralStorage())
 				assert.NoError(t, err)
 				return p

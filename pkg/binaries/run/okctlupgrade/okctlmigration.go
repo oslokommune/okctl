@@ -1,11 +1,13 @@
+// Package okctlupgrade knows how to run an okctl upgrade
 package okctlupgrade
 
 import (
 	"fmt"
+	"io"
+
 	"github.com/oslokommune/okctl/pkg/binaries/run"
 	"github.com/oslokommune/okctl/pkg/context"
 	"github.com/sirupsen/logrus"
-	"io"
 )
 
 const (
@@ -40,13 +42,11 @@ func New(
 	}
 }
 
+// Run runs the okctl upgrade binary
 func (u *OkctlUpgrade) Run() ([]byte, error) {
 	var err error
 
-	runner, err := u.runner()
-	if err != nil {
-		return nil, fmt.Errorf("getting runner: %w", err)
-	}
+	runner := u.runner()
 
 	var args []string
 
@@ -64,13 +64,13 @@ func (u *OkctlUpgrade) Debug(enable bool) {
 	u.doDebug = enable
 }
 
-func (u *OkctlUpgrade) runner() (run.Runner, error) {
+func (u *OkctlUpgrade) runner() run.Runner {
 	var envs []string
 
 	if u.doDebug {
 		envs = append(envs, fmt.Sprintf("%s=true", context.DefaultDebugEnv))
 	}
 
-	return run.New(nil, u.repoDir, u.binaryPath, envs, u.cmdFn), nil
-	//return run.New(u.logger, u.repoDir, u.binaryPath, envs, u.cmdFn), nil
+	// return run.New(u.logger, u.repoDir, u.binaryPath, envs, u.cmdFn), nil
+	return run.New(nil, u.repoDir, u.binaryPath, envs, u.cmdFn)
 }

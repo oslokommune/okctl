@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/github"
 
 	stormpkg "github.com/asdine/storm/v3"

@@ -13,11 +13,16 @@ type okctlUpgradeFile struct {
 	extension string
 }
 
+const (
+	expectedSubstringsInOkctlUpgradeFilename    = 4
+	expectedMinimumSubstringsInArchAndExtension = 2
+)
+
 // parseOkctlUpgradeFilename converts a string like 'okctl-upgrade_0.0.63_Darwin_amd64.tar.gz' to a okctlUpgradeFile
 // struct.
 func parseOkctlUpgradeFilename(filename string) (okctlUpgradeFile, error) {
 	filenameParts := strings.Split(filename, "_")
-	if len(filenameParts) != 4 {
+	if len(filenameParts) != expectedSubstringsInOkctlUpgradeFilename {
 		return okctlUpgradeFile{}, fmt.Errorf(
 			"expected 4 substrings when splitting on underscore (_), got %d in string '%s'",
 			len(filenameParts), filenameParts,
@@ -29,10 +34,10 @@ func parseOkctlUpgradeFilename(filename string) (okctlUpgradeFile, error) {
 	archAndExtension := filenameParts[3] // amd64.tar.gz
 
 	archAndExtensionParts := strings.Split(archAndExtension, ".")
-	if len(archAndExtensionParts) < 2 {
+	if len(archAndExtensionParts) < expectedMinimumSubstringsInArchAndExtension {
 		return okctlUpgradeFile{}, fmt.Errorf(
-			"expected at least 2 substrings when splitting on dot (.), got %d in string '%s'",
-			len(archAndExtensionParts), filenameParts,
+			"expected at least %d substrings when splitting on dot (.), got %d in string '%s'",
+			expectedMinimumSubstringsInArchAndExtension, len(archAndExtensionParts), filenameParts,
 		)
 	}
 

@@ -2,11 +2,12 @@ package upgrade
 
 import (
 	"fmt"
+	"io"
+
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
 	"github.com/oslokommune/okctl/pkg/binaries/run"
 	"github.com/oslokommune/okctl/pkg/binaries/run/okctlupgrade"
 	"github.com/sirupsen/logrus"
-	"io"
 )
 
 type upgradeBinaryProvider struct {

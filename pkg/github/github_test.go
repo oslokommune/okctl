@@ -198,33 +198,6 @@ func TestGithubDeleteDeployKey(t *testing.T) {
 }
 
 func TestGithubListReleases(t *testing.T) {
-	createReleases := func(count int) []*ghPkg.RepositoryRelease {
-		var releases []*ghPkg.RepositoryRelease
-
-		for i := 0; i < count; i++ {
-			id := int64(i)
-			name := fmt.Sprintf("someRelease-%d", i)
-
-			assetID := int64(100 + i)
-			assetURL := fmt.Sprintf("https://api.github.com/repos/oslokommune/okctl-upgrade/releases/assets/%d", 1000+i)
-			assetName := fmt.Sprintf("my-binary-%d", i)
-
-			releases = append(releases, &ghPkg.RepositoryRelease{
-				ID:   &id,
-				Name: &name,
-				Assets: []*ghPkg.ReleaseAsset{
-					{
-						ID:   &assetID,
-						URL:  &assetURL,
-						Name: &assetName,
-					},
-				},
-			})
-		}
-
-		return releases
-	}
-
 	releases := createReleases(github.ListReleasesPageSize + 1) // + 1 so we get to test that pagination works
 
 	testCases := []struct {
@@ -277,4 +250,31 @@ func TestGithubListReleases(t *testing.T) {
 			}
 		})
 	}
+}
+
+func createReleases(count int) []*ghPkg.RepositoryRelease {
+	var releases []*ghPkg.RepositoryRelease
+
+	for i := 0; i < count; i++ {
+		id := int64(i)
+		name := fmt.Sprintf("someRelease-%d", i)
+
+		assetID := int64(100 + i)
+		assetURL := fmt.Sprintf("https://api.github.com/repos/oslokommune/okctl-upgrade/releases/assets/%d", 1000+i)
+		assetName := fmt.Sprintf("my-binary-%d", i)
+
+		releases = append(releases, &ghPkg.RepositoryRelease{
+			ID:   &id,
+			Name: &name,
+			Assets: []*ghPkg.ReleaseAsset{
+				{
+					ID:   &assetID,
+					URL:  &assetURL,
+					Name: &assetName,
+				},
+			},
+		})
+	}
+
+	return releases
 }

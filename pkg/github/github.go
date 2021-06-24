@@ -49,8 +49,10 @@ type Team = github.Team
 // Key shadows github.Key
 type Key = github.Key
 
+// RepositoryRelease shadows github.RepositoryRelease
 type RepositoryRelease = github.RepositoryRelease
 
+// ReleaseAsset shadows github.ReleaseAsset
 type ReleaseAsset = github.ReleaseAsset
 
 // New returns an initialised github API client
@@ -187,8 +189,10 @@ func (g *Github) CreatePullRequest(r *PullRequest) error {
 	return nil
 }
 
+// ListReleasesPageSize is the number of releases to fetch per page
 const ListReleasesPageSize = 100
 
+// ListReleases lists the given repository's releases
 func (g *Github) ListReleases(owner, repo string) ([]*RepositoryRelease, error) {
 	opts := &github.ListOptions{
 		PerPage: ListReleasesPageSize,

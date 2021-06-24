@@ -2,13 +2,14 @@ package upgrade
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/github"
 	"io"
 	"net/http"
+
+	"github.com/oslokommune/okctl/pkg/github"
 )
 
-type ChecksumDownloader struct {
-}
+// ChecksumDownloader knows how to download the checksums for a github release asset
+type ChecksumDownloader struct{}
 
 func (c ChecksumDownloader) download(checksumAsset *github.ReleaseAsset) ([]byte, error) {
 	response, err := http.Get(*checksumAsset.BrowserDownloadURL)
@@ -16,8 +17,8 @@ func (c ChecksumDownloader) download(checksumAsset *github.ReleaseAsset) ([]byte
 		return nil, fmt.Errorf("http get URL: %s. %w", *checksumAsset.BrowserDownloadURL, err)
 	}
 
-	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("http get URL returned non-200. URL: %s. Status: %s. Body: %s",
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("http call did not return status OK. URL: %s. Status: %s. Body: %s",
 			*checksumAsset.BrowserDownloadURL,
 			response.Status,
 			response.Body,
@@ -26,7 +27,7 @@ func (c ChecksumDownloader) download(checksumAsset *github.ReleaseAsset) ([]byte
 
 	checksumsTxt, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("reading reponse body: %w", err)
+		return nil, fmt.Errorf("reading response body: %w", err)
 	}
 
 	err = response.Body.Close()
@@ -37,6 +38,7 @@ func (c ChecksumDownloader) download(checksumAsset *github.ReleaseAsset) ([]byte
 	return checksumsTxt, nil
 }
 
+// NewChecksumDownloader returns a new ChecksumDownloader
 func NewChecksumDownloader() ChecksumDownloader {
 	return ChecksumDownloader{}
 }

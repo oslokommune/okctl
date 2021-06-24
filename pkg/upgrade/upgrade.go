@@ -1,13 +1,15 @@
+// Package upgrade knows how to upgrade okctl
 package upgrade
 
 import (
 	"fmt"
+	"io"
+
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/sirupsen/logrus"
-	"io"
 )
 
 /*
@@ -123,11 +125,11 @@ How to require a specific version:
 */
 
 //
-//type okctlUpgradeBinary struct {
-//	filenameWithoutExtension string
-//	version                  string
-//	checksums                []state.Checksum
-//}
+// type okctlUpgradeBinary struct {
+// 	filenameWithoutExtension string
+// 	version                  string
+// 	checksums                []state.Checksum
+// }
 
 // upgrade is an okctl upgrade. A example file name for an upgrade is 'okctl-upgrade_0.0.63_Darwin_amd64.tar.gz'.
 //
@@ -140,6 +142,10 @@ type okctlUpgradeBinary struct {
 	checksums     []state.Checksum
 }
 
+// Run upgrades okctl
+//nolint:funlen
+//nolint:godox
+// TODO remove these two
 func (u Upgrader) Run() error {
 	releases, err := u.GithubService.ListReleases("oslokommune", "okctl-upgrade")
 	if err != nil {
@@ -157,28 +163,28 @@ func (u Upgrader) Run() error {
 		return fmt.Errorf("parsing upgrade binaries: %w", err)
 	}
 
-	// TODO consider parsing to okctlUpgrade, that contains UpgradeBinary.
+	//nolint:godox    // TODO consider parsing to okctlUpgrade, that contains UpgradeBinary.
 
-	// TODO implement filtering after testing actual functionality
-	//// Remove too new upgrades (semver compare)
-	//upgradeBinaries = u.removeTooNewMigrations(upgradeBinaries)
+	//nolint:godox    // TODO implement filtering after testing actual functionality
+	// // Remove too new upgrades (semver compare)
+	// upgradeBinaries = u.removeTooNewMigrations(upgradeBinaries)
 	//
-	//// Remove upgrades that are earlier than than or equal to original cluster version
-	//upgradeBinaries = u.removeTooOldUpgrades(upgradeBinaries)
+	// // Remove upgrades that are earlier than than or equal to original cluster version
+	// upgradeBinaries = u.removeTooOldUpgrades(upgradeBinaries)
 	//
-	//// Remove already applied upgrades (from state.db). TODO: Consider letting upgrades edit state.db instead of okctl upgrade.
-	//upgradeBinaries = u.removeAlreadyAppliedUpgrades(upgradeBinaries)
+	// // Remove already applied upgrades (from state.db). TODO: Consider letting upgrades edit state.db instead of okctl upgrade.
+	// upgradeBinaries = u.removeAlreadyAppliedUpgrades(upgradeBinaries)
 
 	// Downlod upgrade binaries
 	// Runs binaries. Saves that they have been run. Handles errors.
-	//migrator := u.newMigrator(binaryRunner, state, migrations)
-	//migrator.Run()
+	// migrator := u.newMigrator(binaryRunner, state, migrations)
+	// migrator.Run()
 
 	// Verify checksum
 
 	// Run resulting migrations, and store that they have been run
 
-	var binaries []state.Binary
+	binaries := make([]state.Binary, len(upgradeBinaries))
 
 	if u.Debug {
 		_, _ = fmt.Fprintf(u.Out, "Found %d upgrade(s)\n", len(upgradeBinaries))
@@ -221,9 +227,9 @@ func (u Upgrader) Run() error {
 
 	binaryProvider := newUpgradeBinaryProvider(u.RepoDir, u.Logger, u.Out, fetcher)
 
-	// TODO store binaries to conf.yaml? Hm maybe not needed really
-	// TODO verify that binary for current os and arch is run
-	// TODO decide how to store the fact that an upgrade has been run. In upgradebinary or here?
+	//nolint:godox    // TODO store binaries to conf.yaml? Hm maybe not needed really
+	//nolint:godox    // TODO verify that binary for current os and arch is run
+	//nolint:godox    // TODO decide how to store the fact that an upgrade has been run. In upgradebinary or here?
 
 	for _, binary := range upgradeBinaries {
 		upgradeBinary, err := binaryProvider.OkctlUpgrade(binary.version)
@@ -241,17 +247,18 @@ func (u Upgrader) Run() error {
 		if err != nil {
 			return fmt.Errorf("running upgrade binary %s: %w", binary.version, err)
 		}
-
 	}
 
 	return nil
 }
 
+// FetcherOpts contains data needed to initialize a fetch.Provider
 type FetcherOpts struct {
 	Host  state.Host
 	Store storage.Storer
 }
 
+// Opts contains all data needed to initialize an Upgrader
 type Opts struct {
 	Debug               bool
 	Logger              *logrus.Logger
@@ -262,10 +269,12 @@ type Opts struct {
 	FetcherOpts         FetcherOpts
 }
 
+// Upgrader knows how to upgrade okctl
 type Upgrader struct {
 	Opts
 }
 
+// New returns a new Upgrader
 func New(opts Opts) Upgrader {
 	return Upgrader{
 		Opts: opts,

@@ -2,13 +2,15 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/oslokommune/okctl/pkg/upgrade"
 	"github.com/spf13/cobra"
-	"io/ioutil"
 )
 
+//nolint:funlen
 func buildUpgradeCommand(o *okctl.Okctl) *cobra.Command {
 	var upgrader upgrade.Upgrader
 

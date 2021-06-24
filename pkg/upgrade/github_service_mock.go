@@ -2,6 +2,7 @@ package upgrade
 
 import (
 	"context"
+
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/github"
 )
@@ -22,6 +23,7 @@ func (g githubServiceMock) ListReleases(owner, repo string) ([]*github.Repositor
 	panic("implement me")
 }
 
+// NewGithubServiceMock returns a new client.GithubService
 func NewGithubServiceMock(releases []*github.RepositoryRelease) client.GithubService {
 	return githubServiceMock{
 		releases: releases,

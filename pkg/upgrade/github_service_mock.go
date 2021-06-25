@@ -20,7 +20,7 @@ func (g githubServiceMock) DeleteGithubRepository(ctx context.Context, opts clie
 }
 
 func (g githubServiceMock) ListReleases(owner, repo string) ([]*github.RepositoryRelease, error) {
-	panic("implement me")
+	return g.releases, nil
 }
 
 // NewGithubServiceMock returns a new client.GithubService

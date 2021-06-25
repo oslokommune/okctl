@@ -16,7 +16,7 @@ type GithubReleaseParser struct {
 }
 
 func (g GithubReleaseParser) toUpgradeBinaries(releases []*github.RepositoryRelease) ([]okctlUpgradeBinary, error) {
-	upgrades := make([]okctlUpgradeBinary, len(releases))
+	upgrades := make([]okctlUpgradeBinary, 0, len(releases))
 
 	for _, release := range releases {
 		upgrade, err := g.parseRelease(release)

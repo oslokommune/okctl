@@ -1,12 +1,16 @@
 package upgrade
 
-/*
 import (
 	"bytes"
 	"fmt"
+	"github.com/jarcoal/httpmock"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/require"
+	"io/ioutil"
+	"net/http"
+	"strings"
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/binaries/fetch"
 	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/github"
 	"github.com/oslokommune/okctl/pkg/storage"
@@ -28,28 +32,6 @@ import (
 // Use gock for api mocking?
 
 func TestRunMigrations(t *testing.T) {
-	var releases []*github.RepositoryRelease
-
-	createGithubReleases := func(versions ...string) []*github.RepositoryRelease {
-		for _, version := range versions {
-
-			release := &github.RepositoryRelease{
-				TagName: &version,
-				Name:    &version,
-				Assets: []*github.ReleaseAsset{
-					{
-						Name:        github.StringPtr(fmt.Sprintf("okctl_upgrade-%s_Darwin_amd64.tar.gz", version)),
-						ContentType: github.StringPtr("application/gzip"),
-						BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
-							"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl_upgrade-%s_Darwin_amd64.tar.gz", version)),
-					},
-				},
-			}
-
-			releases = append(releases, release)
-		}
-	}
-
 	testCases := []struct {
 		name string
 
@@ -57,15 +39,25 @@ func TestRunMigrations(t *testing.T) {
 		withOriginalOkctlVersion     string
 		withOkctlVersion             string
 		withAlreadyAppliedMigrations []string // TODO: or upgrade?
+		withHost                     state.Host
+		withBinariesFolder           string
 		expectMigrationsToBeRun      []string // TODO: or upgrade?
 	}{
 		{
-			name:                         "Should run an upgrade",
-			withUpgradeGithubReleases:    createGithubReleases("0.0.63"),
-			withOriginalOkctlVersion:     "0.0.62",
-			withOkctlVersion:             "0.0.62",
+			name: "Should run an upgrade",
+			withUpgradeGithubReleases: createGithubReleases(state.Host{
+				Os:   "Linux",
+				Arch: "amd64",
+			}, "0.0.61"),
+			withOriginalOkctlVersion:     "0.0.60",
+			withOkctlVersion:             "0.0.60",
 			withAlreadyAppliedMigrations: []string{},
-			expectMigrationsToBeRun:      []string{"0.0.63"},
+			withHost: state.Host{
+				Os:   "linux",
+				Arch: "amd64",
+			},
+			withBinariesFolder:      "0.0.61",
+			expectMigrationsToBeRun: []string{"0.0.61"},
 		},
 	}
 
@@ -74,26 +66,31 @@ func TestRunMigrations(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Given
 			var buffer bytes.Buffer
-			githubServiceMock := NewGithubServiceMock(tc.withUpgradeGithubReleases)
+			githubService := NewGithubServiceMock(tc.withUpgradeGithubReleases)
 
 			upgrader := New(Opts{
 				Debug:               false,
-				Logger:              nil,
+				Logger:              logrus.StandardLogger(),
 				Out:                 &buffer,
 				RepoDir:             "",
-				GithubService:       nil,
-				GithubReleaseParser: GithubReleaseParser{},
+				GithubService:       githubService,
+				GithubReleaseParser: NewGithubReleaseParser(NewChecksumDownloader()),
 				FetcherOpts: FetcherOpts{
-					Host: state.Host{
-						Os:   "linux",
-						Arch: "amd64",
-					},
+					Host:  tc.withHost,
 					Store: storage.NewEphemeralStorage(),
 				},
 			})
 
+			var err error
+
+			err = mockHTTPResponse(tc.withBinariesFolder, tc.withUpgradeGithubReleases)
+			require.NoError(t, err)
+
+			httpmock.Activate()
+			defer httpmock.DeactivateAndReset()
+
 			// When
-			err := upgrader.Run()
+			err = upgrader.Run()
 
 			// Then
 			assert.NoError(t, err)
@@ -102,4 +99,70 @@ func TestRunMigrations(t *testing.T) {
 		})
 	}
 }
-*/
+
+func createGithubReleases(host state.Host, versions ...string) []*github.RepositoryRelease {
+	releases := make([]*github.RepositoryRelease, 0, len(versions))
+
+	for i, version := range versions {
+		release := &github.RepositoryRelease{
+			TagName: &versions[i],
+			Name:    &versions[i],
+			Assets: []*github.ReleaseAsset{
+				{
+					Name:        github.StringPtr("okctl-upgrade-checksums.txt"),
+					ContentType: github.StringPtr("text/plain"),
+					BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
+						"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade-checksums.txt", version)),
+				},
+				{
+					Name:        github.StringPtr(fmt.Sprintf("okctl_upgrade-%s_%s_%s.tar.gz", host.Os, host.Arch, version)),
+					ContentType: github.StringPtr("application/gzip"),
+					BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
+						"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz", version, version, host.Os, host.Arch)),
+				},
+			},
+		}
+
+		releases = append(releases, release)
+	}
+
+	return releases
+}
+
+func mockHTTPResponse(folder string, releases []*github.RepositoryRelease) error {
+	for _, release := range releases {
+		for _, asset := range release.Assets {
+			assetFilename := getAssetFilename(*asset.BrowserDownloadURL)
+			//if assetFilename != "okctl-upgrade-checksums.txt" {
+			//	continue
+			//}
+
+			data, err := readBytesFromFile(fmt.Sprintf(`testdata/%s/%s`, folder, assetFilename))
+			if err != nil {
+				return err
+			}
+
+			fmt.Println("Creating responder for: " + *asset.BrowserDownloadURL)
+
+			responder := httpmock.NewBytesResponder(http.StatusOK, data)
+			httpmock.RegisterResponder(http.MethodGet, *asset.BrowserDownloadURL, responder)
+		}
+	}
+
+	return nil
+}
+
+func getAssetFilename(url string) string {
+	split := strings.Split(url, "/")
+	return split[len(split)-1]
+}
+
+func readBytesFromFile(file string) ([]byte, error) {
+	//nolint: gosec
+	b, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
+}

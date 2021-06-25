@@ -142,10 +142,14 @@ type okctlUpgradeBinary struct {
 	checksums     []state.Checksum
 }
 
+// https://github.com/oslokommune/okctl-upgrade/releases/download/0.0.61/okctl-upgrade_0.0.61_linux_amd64.tar.gz
+//const TestUrl = "https://github.com/oslokommune/okctl-upgrade/releases/download/0.0.61/okctl-upgrade_0.0.61_Linux_amd64.tar.gz"
+const TestUrl = "https://github.com/oslokommune/okctl-upgrade/releases/download/0.0.61/okctl-upgrade_0.0.61_Linux_amd64.tar.gz"
+
 // Run upgrades okctl
 //nolint:funlen
 //nolint:godox
-// TODO remove these two
+// TODO remove those linters above
 func (u Upgrader) Run() error {
 	releases, err := u.GithubService.ListReleases("oslokommune", "okctl-upgrade")
 	if err != nil {
@@ -184,13 +188,19 @@ func (u Upgrader) Run() error {
 
 	// Run resulting migrations, and store that they have been run
 
-	binaries := make([]state.Binary, len(upgradeBinaries))
+	binaries := make([]state.Binary, 0, len(upgradeBinaries))
 
 	if u.Debug {
 		_, _ = fmt.Fprintf(u.Out, "Found %d upgrade(s)\n", len(upgradeBinaries))
 	}
 
 	for _, upgradeBinary := range upgradeBinaries {
+		//URLPattern := TestUrl
+		//URLPattern := "https://github.com/a.a"
+		//URLPattern := "https://github.com/oslokommune/okctl-upgrade/releases/download/a"
+		//URLPattern := "https://github.com/oslokommune/okctl-upgrade/releases/download/0.0.61/okctl-upgrade_0.0.61_Linux_amd64.tar.gz"
+		//URLPattern := "https://github.com/oslokommune/okctl-upgrade/releases/download/0.0.61/okctl-upgrade_0.0.61_#{os}_#{arch}.tar.gz"
+
 		URLPattern := fmt.Sprintf(
 			"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_#{os}_#{arch}.tar.gz",
 			upgradeBinary.version,

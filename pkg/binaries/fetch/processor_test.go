@@ -151,3 +151,9 @@ func TestProcessor(t *testing.T) {
 		})
 	}
 }
+
+func TestProcessorURLNaming(t *testing.T) {
+	assert.Equal(t, "Darwin", fetch.ExpectedReleaseAssetNamingConvention("darwin"))
+	assert.Equal(t, "Darwin", fetch.ExpectedReleaseAssetNamingConvention("dARWIN"))
+	assert.Equal(t, "", fetch.ExpectedReleaseAssetNamingConvention(""))
+}

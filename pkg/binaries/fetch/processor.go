@@ -72,7 +72,7 @@ func (s *Processor) Stager(baseDir string, bufferSize int64, binary state.Binary
 		NewEphemeralStorage(),
 		NewHTTPFetcher(
 			replaceVars(binary.URLPattern, map[string]string{
-				"#{os}":   s.Host.Os,
+				"#{os}":   ExpectedReleaseAssetNamingConvention(s.Host.Os),
 				"#{arch}": s.Host.Arch,
 				"#{ver}":  binary.Version,
 			}),
@@ -84,6 +84,20 @@ func (s *Processor) Stager(baseDir string, bufferSize int64, binary state.Binary
 	)
 
 	return stager, nil
+}
+
+// ExpectedReleaseAssetNamingConvention returns the given string with first character
+// upper case, the rest lower case. Example:
+//
+// ExpectedReleaseAssetNamingConvention("darwin") // Returns "Darwin".
+//
+// We expect downloadable github release assets to be on the form "Darwin", not "darwin".
+func ExpectedReleaseAssetNamingConvention(os string) string {
+	if len(os) > 0 {
+		return strings.ToUpper(os[0:1]) + strings.ToLower(os[1:])
+	}
+
+	return os
 }
 
 // prepareAndLoad a set of stagers

@@ -58,7 +58,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				Logger:              o.Logger,
 				Out:                 out,
 				GithubService:       services.Github,
-				GithubReleaseParser: upgrade.NewGithubReleaseParser(upgrade.NewChecksumDownloader()),
+				ChecksumDownloader:  upgrade.NewChecksumDownloader(),
 				FetcherOpts:         fetcherOpts,
 			})
 

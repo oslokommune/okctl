@@ -3,14 +3,15 @@ package upgrade
 import (
 	"bytes"
 	"fmt"
-	"github.com/jarcoal/httpmock"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
 	"path"
 	"strings"
 	"testing"
+
+	"github.com/jarcoal/httpmock"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/require"
 
 	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/github"
@@ -20,17 +21,19 @@ import (
 
 // Test cases:
 // Given these releases, ..., then these binaries should be run
-
 // Should run a upgrade
 // Should not run already applied migrations
 // Should run migrations up to the current okctl version
-// TODO: Failure situations?
+// Failure situations
+// Verify invalid digests in okctl-upgrade.txt
+//
+// I okctl-upgrade-checksuyms.txt, endre filnavn. Da bør man få feil at ting ikke matcher. Får noe annet unyttig.
 
-// TODO Vurder: Muligens dette bør være test i binaries provider: Should download if not exists...? Spørs hva som må
-// gjøres i binaries provider
-
-// Separer domenelogikk og applikasjonslogikk. Tester for applogikk kjører også logikk for domene.
-// Use gock for api mocking?
+// Vurder: (Egen migrator test?)
+// withOriginalOkctlVersion     string
+// withOkctlVersion             string
+// withAlreadyAppliedMigrations []string
+// expectMigrationsToBeRun      []string
 
 func TestRunMigrations(t *testing.T) {
 	testCases := []struct {
@@ -39,10 +42,6 @@ func TestRunMigrations(t *testing.T) {
 		withUpgradeGithubReleases []*github.RepositoryRelease
 		withHost                  state.Host
 		withTestDataFolder        string
-		//withOriginalOkctlVersion     string
-		//withOkctlVersion             string
-		//withAlreadyAppliedMigrations []string // TODO: or upgrade?
-		//expectMigrationsToBeRun      []string // TODO: or upgrade?
 	}{
 		{
 			name: "Should run an upgrade",
@@ -55,10 +54,10 @@ func TestRunMigrations(t *testing.T) {
 				Arch: "amd64",
 			},
 			withTestDataFolder: "0.0.61",
-			//withOriginalOkctlVersion:     "0.0.60",
-			//withOkctlVersion:             "0.0.60",
-			//withAlreadyAppliedMigrations: []string{},
-			//expectMigrationsToBeRun: []string{"0.0.61"},
+			// withOriginalOkctlVersion:     "0.0.60",
+			// withOkctlVersion:             "0.0.60",
+			// withAlreadyAppliedMigrations: []string{},
+			// expectMigrationsToBeRun: []string{"0.0.61"},
 		},
 	}
 
@@ -85,7 +84,7 @@ func TestRunMigrations(t *testing.T) {
 				Out:                 &buffer,
 				RepositoryDirectory: repoAbsoluteDir,
 				GithubService:       githubService,
-				GithubReleaseParser: NewGithubReleaseParser(NewChecksumDownloader()),
+				ChecksumDownloader:  NewChecksumDownloader(),
 				FetcherOpts: FetcherOpts{
 					Host:  tc.withHost,
 					Store: tmpStore,
@@ -112,9 +111,6 @@ func TestRunMigrations(t *testing.T) {
 		})
 	}
 }
-
-// TODO: I okctl-upgrade-checksuyms.txt, endre digest. Da funker testen!
-// TODO: I okctl-upgrade-checksuyms.txt, endre filnavn. Da bør man få feil at ting ikke matcher. Får noe annet unyttig.
 
 func createGithubReleases(host state.Host, versions ...string) []*github.RepositoryRelease {
 	releases := make([]*github.RepositoryRelease, 0, len(versions))

@@ -16,7 +16,7 @@ type upgradeBinaryProvider struct {
 	fetcher  fetch.Provider
 	logger   *logrus.Logger
 
-	okctlUpgrade map[string]*okctlupgrade.OkctlUpgrade
+	okctlUpgrades map[string]*okctlupgrade.OkctlUpgrade
 }
 
 func newUpgradeBinaryProvider(
@@ -26,17 +26,16 @@ func newUpgradeBinaryProvider(
 	fetcher fetch.Provider,
 ) upgradeBinaryProvider {
 	return upgradeBinaryProvider{
-		repoDir:      repoDir,
-		progress:     progress,
-		fetcher:      fetcher,
-		logger:       logger,
-		okctlUpgrade: map[string]*okctlupgrade.OkctlUpgrade{},
+		repoDir:       repoDir,
+		progress:      progress,
+		fetcher:       fetcher,
+		logger:        logger,
+		okctlUpgrades: map[string]*okctlupgrade.OkctlUpgrade{},
 	}
 }
 
-// OkctlUpgrade returns an okctl upgrade wrapper. The given version is the version of the okctl upgrade to run.
-func (p *upgradeBinaryProvider) OkctlUpgrade(version string) (*okctlupgrade.OkctlUpgrade, error) {
-	_, ok := p.okctlUpgrade[version]
+func (p *upgradeBinaryProvider) okctlUpgrade(version string) (*okctlupgrade.OkctlUpgrade, error) {
+	_, ok := p.okctlUpgrades[version]
 
 	if !ok {
 		binaryName := fmt.Sprintf(okctlupgrade.BinaryNameFormat, version)
@@ -46,8 +45,8 @@ func (p *upgradeBinaryProvider) OkctlUpgrade(version string) (*okctlupgrade.Okct
 			return nil, err
 		}
 
-		p.okctlUpgrade[version] = okctlupgrade.New(p.repoDir, p.progress, p.logger, binaryPath, run.Cmd())
+		p.okctlUpgrades[version] = okctlupgrade.New(p.repoDir, p.progress, p.logger, binaryPath, run.Cmd())
 	}
 
-	return p.okctlUpgrade[version], nil
+	return p.okctlUpgrades[version], nil
 }

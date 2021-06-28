@@ -1,11 +1,12 @@
 package fetch_test
 
 import (
+	"strings"
+	"testing"
+
 	"github.com/oslokommune/okctl/pkg/binaries/digest"
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
 	"github.com/stretchr/testify/assert"
-	"strings"
-	"testing"
 )
 
 func TestVerifer(t *testing.T) {

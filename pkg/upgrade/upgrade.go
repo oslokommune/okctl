@@ -21,13 +21,13 @@ type okctlUpgradeBinary struct {
 
 // Run upgrades okctl
 func (u Upgrader) Run() error {
-	releases, err := u.GithubService.ListReleases("oslokommune", "okctl-upgrade")
+	releases, err := u.githubService.ListReleases("oslokommune", "okctl-upgrade")
 	if err != nil {
 		return fmt.Errorf("listing github releases: %w", err)
 	}
 
 	// Convert to upgrades
-	upgradeBinaries, err := u.GithubReleaseParser.toUpgradeBinaries(releases)
+	upgradeBinaries, err := u.githubReleaseParser.toUpgradeBinaries(releases)
 	if err != nil {
 		return fmt.Errorf("parsing upgrade binaries: %w", err)
 	}
@@ -36,8 +36,8 @@ func (u Upgrader) Run() error {
 
 	binaries := make([]state.Binary, 0, len(upgradeBinaries))
 
-	if u.Debug {
-		_, _ = fmt.Fprintf(u.Out, "Found %d upgrade(s)\n", len(upgradeBinaries))
+	if u.debug {
+		_, _ = fmt.Fprintf(u.out, "Found %d upgrade(s)\n", len(upgradeBinaries))
 	}
 
 	for _, upgradeBinary := range upgradeBinaries {
@@ -64,29 +64,29 @@ func (u Upgrader) Run() error {
 
 	// Download binaries
 	fetcher, err := fetch.New(
-		u.Out,
-		u.Logger,
+		u.out,
+		u.logger,
 		true,
-		u.FetcherOpts.Host,
+		u.fetcherOpts.Host,
 		binaries,
-		u.FetcherOpts.Store,
+		u.fetcherOpts.Store,
 	)
 	if err != nil {
 		return fmt.Errorf("creating upgrade binaries fetcher: %w", err)
 	}
 
-	binaryProvider := newUpgradeBinaryProvider(u.RepositoryDirectory, u.Logger, u.Out, fetcher)
+	binaryProvider := newUpgradeBinaryProvider(u.repositoryDirectory, u.logger, u.out, fetcher)
 
 	for _, binary := range upgradeBinaries {
-		upgradeBinary, err := binaryProvider.OkctlUpgrade(binary.version)
+		upgradeBinary, err := binaryProvider.okctlUpgrade(binary.version)
 		if err != nil {
 			return fmt.Errorf("getting okctl upgrade binary: %w", err)
 		}
 
-		upgradeBinary.Debug(u.Debug)
+		upgradeBinary.Debug(u.debug)
 
-		if u.Debug {
-			_, _ = fmt.Fprintf(u.Out, "--- Running upgrade: %s ---\n", binary.version)
+		if u.debug {
+			_, _ = fmt.Fprintf(u.out, "--- Running upgrade: %s ---\n", binary.version)
 		}
 
 		_, err = upgradeBinary.Run()
@@ -114,18 +114,30 @@ type Opts struct {
 	Out                 io.Writer
 	RepositoryDirectory string
 	GithubService       client.GithubService
-	GithubReleaseParser GithubReleaseParser
+	ChecksumDownloader  ChecksumDownloader
 	FetcherOpts         FetcherOpts
 }
 
 // Upgrader knows how to upgrade okctl
 type Upgrader struct {
-	Opts
+	debug               bool
+	logger              *logrus.Logger
+	out                 io.Writer
+	repositoryDirectory string
+	githubService       client.GithubService
+	githubReleaseParser GithubReleaseParser
+	fetcherOpts         FetcherOpts
 }
 
 // New returns a new Upgrader
 func New(opts Opts) Upgrader {
 	return Upgrader{
-		Opts: opts,
+		debug:               opts.Debug,
+		logger:              opts.Logger,
+		out:                 opts.Out,
+		repositoryDirectory: opts.RepositoryDirectory,
+		githubService:       opts.GithubService,
+		githubReleaseParser: NewGithubReleaseParser(opts.ChecksumDownloader),
+		fetcherOpts:         opts.FetcherOpts,
 	}
 }

@@ -83,7 +83,7 @@ func TestRunMigrations(t *testing.T) {
 				Debug:               false,
 				Logger:              logrus.StandardLogger(),
 				Out:                 &buffer,
-				RepoDir:             repoAbsoluteDir,
+				RepositoryDirectory: repoAbsoluteDir,
 				GithubService:       githubService,
 				GithubReleaseParser: NewGithubReleaseParser(NewChecksumDownloader()),
 				FetcherOpts: FetcherOpts{

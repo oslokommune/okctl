@@ -54,7 +54,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 
 			upgrader = upgrade.New(upgrade.Opts{
 				Debug:               o.Debug,
-				RepoDir:             repoDir,
+				RepositoryDirectory: repoDir,
 				Logger:              o.Logger,
 				Out:                 out,
 				GithubService:       services.Github,

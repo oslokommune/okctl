@@ -1,3 +1,0 @@
-#!/usr/bin/env sh
-echo This is a test upgrade. We create a file so we can verify that this upgrade was run.
-touch okctl_upgrade_0.0.61_ran_successfully

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	digestPkg "github.com/oslokommune/okctl/pkg/binaries/digest"
 	"regexp"
 	"strings"
 
@@ -46,7 +47,7 @@ func parseChecksums(checksumBytes []byte) ([]state.Checksum, error) {
 		checksum := state.Checksum{
 			Os:     ugradeFile.os,
 			Arch:   ugradeFile.arch,
-			Type:   ugradeFile.extension,
+			Type:   string(digestPkg.TypeSHA256),
 			Digest: digest,
 		}
 

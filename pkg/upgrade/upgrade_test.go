@@ -36,13 +36,13 @@ func TestRunMigrations(t *testing.T) {
 	testCases := []struct {
 		name string
 
-		withUpgradeGithubReleases    []*github.RepositoryRelease
-		withOriginalOkctlVersion     string
-		withOkctlVersion             string
-		withAlreadyAppliedMigrations []string // TODO: or upgrade?
-		withHost                     state.Host
-		withBinariesFolder           string
-		expectMigrationsToBeRun      []string // TODO: or upgrade?
+		withUpgradeGithubReleases []*github.RepositoryRelease
+		withHost                  state.Host
+		withTestDataFolder        string
+		//withOriginalOkctlVersion     string
+		//withOkctlVersion             string
+		//withAlreadyAppliedMigrations []string // TODO: or upgrade?
+		//expectMigrationsToBeRun      []string // TODO: or upgrade?
 	}{
 		{
 			name: "Should run an upgrade",
@@ -50,15 +50,15 @@ func TestRunMigrations(t *testing.T) {
 				Os:   "Linux",
 				Arch: "amd64",
 			}, "0.0.61"),
-			withOriginalOkctlVersion:     "0.0.60",
-			withOkctlVersion:             "0.0.60",
-			withAlreadyAppliedMigrations: []string{},
 			withHost: state.Host{
 				Os:   "linux",
 				Arch: "amd64",
 			},
-			withBinariesFolder:      "0.0.61",
-			expectMigrationsToBeRun: []string{"0.0.61"},
+			withTestDataFolder: "0.0.61",
+			//withOriginalOkctlVersion:     "0.0.60",
+			//withOkctlVersion:             "0.0.60",
+			//withAlreadyAppliedMigrations: []string{},
+			//expectMigrationsToBeRun: []string{"0.0.61"},
 		},
 	}
 
@@ -73,15 +73,17 @@ func TestRunMigrations(t *testing.T) {
 			tmpStore, err := storage.NewTemporaryStorage()
 			assert.NoError(t, err)
 
-			repoDir := path.Join(tmpStore.BasePath, "my-iac-repo")
-			err = tmpStore.MkdirAll("my-iac-repo")
+			repoDir := "my-iac-repo"
+			repoAbsoluteDir := path.Join(tmpStore.BasePath, repoDir)
+
+			err = tmpStore.MkdirAll(repoDir)
 			assert.NoError(t, err)
 
 			upgrader := New(Opts{
 				Debug:               false,
 				Logger:              logrus.StandardLogger(),
 				Out:                 &buffer,
-				RepoDir:             repoDir,
+				RepoDir:             repoAbsoluteDir,
 				GithubService:       githubService,
 				GithubReleaseParser: NewGithubReleaseParser(NewChecksumDownloader()),
 				FetcherOpts: FetcherOpts{
@@ -90,7 +92,7 @@ func TestRunMigrations(t *testing.T) {
 				},
 			})
 
-			err = mockHTTPResponse(tc.withBinariesFolder, tc.withUpgradeGithubReleases)
+			err = mockHTTPResponse(tc.withTestDataFolder, tc.withUpgradeGithubReleases)
 			require.NoError(t, err)
 
 			httpmock.Activate()
@@ -102,7 +104,11 @@ func TestRunMigrations(t *testing.T) {
 			// Then
 			assert.NoError(t, err)
 
-			// TODO: Assert that the mock binary runner has ran the upgrade executables we expect
+			upgradeRan, err := tmpStore.Exists(path.Join(repoDir, "okctl_upgrade_0.0.61_ran_successfully"))
+			assert.NoError(t, err)
+
+			assert.True(t, upgradeRan, "the upgrade should have produced a file, but no file was found")
+			fmt.Println(tmpStore.BasePath)
 		})
 	}
 }
@@ -148,8 +154,6 @@ func mockHTTPResponse(folder string, releases []*github.RepositoryRelease) error
 			if err != nil {
 				return err
 			}
-
-			fmt.Println("Creating responder for: " + *asset.BrowserDownloadURL)
 
 			responder := httpmock.NewBytesResponder(http.StatusOK, data)
 			httpmock.RegisterResponder(http.MethodGet, *asset.BrowserDownloadURL, responder)

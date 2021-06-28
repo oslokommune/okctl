@@ -71,6 +71,5 @@ func (u *OkctlUpgrade) runner() run.Runner {
 		envs = append(envs, fmt.Sprintf("%s=true", context.DefaultDebugEnv))
 	}
 
-	// return run.New(u.logger, u.repoDir, u.binaryPath, envs, u.cmdFn), nil
 	return run.New(nil, u.repoDir, u.binaryPath, envs, u.cmdFn)
 }

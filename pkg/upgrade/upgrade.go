@@ -200,7 +200,6 @@ func (u Upgrader) Run() error {
 		//URLPattern := "https://github.com/oslokommune/okctl-upgrade/releases/download/a"
 		//URLPattern := "https://github.com/oslokommune/okctl-upgrade/releases/download/0.0.61/okctl-upgrade_0.0.61_Linux_amd64.tar.gz"
 		//URLPattern := "https://github.com/oslokommune/okctl-upgrade/releases/download/0.0.61/okctl-upgrade_0.0.61_#{os}_#{arch}.tar.gz"
-
 		URLPattern := fmt.Sprintf(
 			"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_#{os}_#{arch}.tar.gz",
 			upgradeBinary.version,

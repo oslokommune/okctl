@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
+	"path"
 	"strings"
 	"testing"
 
@@ -66,22 +67,28 @@ func TestRunMigrations(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Given
 			var buffer bytes.Buffer
+			var err error
 			githubService := NewGithubServiceMock(tc.withUpgradeGithubReleases)
+
+			tmpStore, err := storage.NewTemporaryStorage()
+			assert.NoError(t, err)
+
+			repoDir := path.Join(tmpStore.BasePath, "my-iac-repo")
+			err = tmpStore.MkdirAll("my-iac-repo")
+			assert.NoError(t, err)
 
 			upgrader := New(Opts{
 				Debug:               false,
 				Logger:              logrus.StandardLogger(),
 				Out:                 &buffer,
-				RepoDir:             "",
+				RepoDir:             repoDir,
 				GithubService:       githubService,
 				GithubReleaseParser: NewGithubReleaseParser(NewChecksumDownloader()),
 				FetcherOpts: FetcherOpts{
 					Host:  tc.withHost,
-					Store: storage.NewEphemeralStorage(),
+					Store: tmpStore,
 				},
 			})
-
-			var err error
 
 			err = mockHTTPResponse(tc.withBinariesFolder, tc.withUpgradeGithubReleases)
 			require.NoError(t, err)
@@ -99,6 +106,9 @@ func TestRunMigrations(t *testing.T) {
 		})
 	}
 }
+
+// TODO: I okctl-upgrade-checksuyms.txt, endre digest. Da funker testen!
+// TODO: I okctl-upgrade-checksuyms.txt, endre filnavn. Da bør man få feil at ting ikke matcher. Får noe annet unyttig.
 
 func createGithubReleases(host state.Host, versions ...string) []*github.RepositoryRelease {
 	releases := make([]*github.RepositoryRelease, 0, len(versions))
@@ -133,9 +143,6 @@ func mockHTTPResponse(folder string, releases []*github.RepositoryRelease) error
 	for _, release := range releases {
 		for _, asset := range release.Assets {
 			assetFilename := getAssetFilename(*asset.BrowserDownloadURL)
-			//if assetFilename != "okctl-upgrade-checksums.txt" {
-			//	continue
-			//}
 
 			data, err := readBytesFromFile(fmt.Sprintf(`testdata/%s/%s`, folder, assetFilename))
 			if err != nil {

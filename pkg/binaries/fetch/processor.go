@@ -67,6 +67,10 @@ func (s *Processor) Stager(baseDir string, bufferSize int64, binary state.Binary
 		return nil, err
 	}
 
+	ver := NewVerifier(
+		checksumsFor(s.Host, binary.Checksums),
+	)
+
 	stager := NewStager(
 		binaryWriter,
 		NewEphemeralStorage(),
@@ -77,9 +81,7 @@ func (s *Processor) Stager(baseDir string, bufferSize int64, binary state.Binary
 				"#{ver}":  binary.Version,
 			}),
 		),
-		NewVerifier(
-			checksumsFor(s.Host, binary.Checksums),
-		),
+		ver,
 		d,
 	)
 

@@ -19,22 +19,26 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Test cases:
-// Given these releases, ..., then these binaries should be run
-// Should run a upgrade
-// Should not run already applied migrations
-// Should run migrations up to the current okctl version
-// Failure situations
-// Verify invalid digests in okctl-upgrade.txt
-//
-// I okctl-upgrade-checksuyms.txt, endre filnavn. Da bør man få feil at ting ikke matcher. Får noe annet unyttig.
-
 // Vurder: (Egen migrator test?)
 // withOriginalOkctlVersion     string
 // withOkctlVersion             string
 // withAlreadyAppliedMigrations []string
 // expectMigrationsToBeRun      []string
 
+// Test cases
+// ------------------------------------------------
+// Given these releases, ..., then these binaries should be run
+// Should run a upgrade
+// Should not run already applied migrations
+// Should run migrations up to the current okctl version
+
+// Should run Darwin upgrades
+
+// Failure situations
+// 		Verify invalid digests in okctl-upgrade.txt
+//
+// I okctl-upgrade-checksuyms.txt, endre filnavn. Da bør man få feil at ting ikke matcher. Får noe annet unyttig.
+// ------------------------------------------------
 func TestRunUpgrades(t *testing.T) {
 	testCases := []struct {
 		name string
@@ -42,6 +46,8 @@ func TestRunUpgrades(t *testing.T) {
 		withGithubReleases                []*github.RepositoryRelease
 		withGithubReleaseAssetsFromFolder string
 		withHost                          state.Host
+		expectedBinariesRun               []string
+		expectedErrorContains             string
 	}{
 		{
 			name: "Should run an upgrade",
@@ -53,6 +59,22 @@ func TestRunUpgrades(t *testing.T) {
 				Os:   "linux",
 				Arch: "amd64",
 			},
+			expectedBinariesRun: []string{"0.0.61"},
+		},
+		{
+			name: "Should detect if binary's digest doesn't match the expected digest",
+			withGithubReleases: createGithubReleases(
+				state.Host{Os: "Linux", Arch: "amd64"},
+				[]string{"0.0.61"}),
+			withGithubReleaseAssetsFromFolder: "invalid_digest",
+			withHost: state.Host{
+				Os:   "linux",
+				Arch: "amd64",
+			},
+			expectedBinariesRun: []string{},
+			expectedErrorContains: "failed to verify binary signature: verification failed, hash mismatch, " +
+				"got: 83bae1d215407ff3715063a621afa9138d2b15392d930e6377ed4a6058fea0ba, " +
+				"expected: a3bae1d215407ff3715063a621afa9138d2b15392d930e6377ed4a6058fea0ba",
 		},
 	}
 
@@ -95,13 +117,19 @@ func TestRunUpgrades(t *testing.T) {
 			err = upgrader.Run()
 
 			// Then
-			assert.NoError(t, err)
+			if len(tc.expectedErrorContains) > 0 {
+				//goland:noinspection GoNilness
+				assert.Contains(t, err.Error(), tc.expectedErrorContains)
+			} else {
+				assert.NoError(t, err)
+			}
 
-			upgradeRan, err := tmpStore.Exists(path.Join(repoDir, "okctl_upgrade_0.0.61_ran_successfully"))
-			assert.NoError(t, err)
+			for _, version := range tc.expectedBinariesRun {
+				upgradeRan, err := tmpStore.Exists(path.Join(repoDir, fmt.Sprintf("okctl_upgrade_%s_ran_successfully", version)))
+				assert.NoError(t, err)
 
-			assert.True(t, upgradeRan, "the upgrade should have produced a file, but no file was found")
-			fmt.Println(tmpStore.BasePath)
+				assert.True(t, upgradeRan, "the upgrade should have produced a file, but no file was found")
+			}
 		})
 	}
 }

@@ -5,9 +5,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	digestPkg "github.com/oslokommune/okctl/pkg/binaries/digest"
 	"regexp"
 	"strings"
+
+	digestPkg "github.com/oslokommune/okctl/pkg/binaries/digest"
 
 	ghPkg "github.com/google/go-github/v32/github"
 	"github.com/oslokommune/okctl/pkg/binaries/run/okctlupgrade"

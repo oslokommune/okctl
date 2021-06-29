@@ -34,6 +34,63 @@ func (u Upgrader) Run() error {
 
 	// DO: Filter
 
+	err = u.runBinaries(upgradeBinaries)
+	if err != nil {
+		return fmt.Errorf("running binaries: %w", err)
+	}
+
+	// DO: Store that upgrades have been run.
+	// DO: Consider letting upgrades edit state.db instead of okctl upgrade.
+
+	return nil
+}
+
+func (u Upgrader) runBinaries(upgradeBinaries []okctlUpgradeBinary) error {
+	binaryProvider, err := u.createBinaryProvider(upgradeBinaries)
+	if err != nil {
+		return fmt.Errorf("creating binary provider: %w", err)
+	}
+
+	for _, binary := range upgradeBinaries {
+		binaryRunner, err := binaryProvider.okctlUpgrade(binary.version)
+		if err != nil {
+			return fmt.Errorf("getting okctl upgrade binary: %w", err)
+		}
+
+		binaryRunner.Debug(u.debug)
+
+		_, _ = fmt.Fprintf(u.out, "--- Running upgrade: %s ---\n", binary.version)
+
+		_, err = binaryRunner.Run()
+		if err != nil {
+			return fmt.Errorf("running upgrade binary %s: %w", binary.version, err)
+		}
+	}
+
+	return nil
+}
+
+func (u Upgrader) createBinaryProvider(upgradeBinaries []okctlUpgradeBinary) (upgradeBinaryProvider, error) {
+	binaries := u.toStateBinaries(upgradeBinaries)
+
+	fetcher, err := fetch.New(
+		u.out,
+		u.logger,
+		true,
+		u.fetcherOpts.Host,
+		binaries,
+		u.fetcherOpts.Store,
+	)
+	if err != nil {
+		return upgradeBinaryProvider{}, fmt.Errorf("creating upgrade binaries fetcher: %w", err)
+	}
+
+	binaryProvider := newUpgradeBinaryProvider(u.repositoryDirectory, u.logger, u.out, fetcher)
+
+	return binaryProvider, nil
+}
+
+func (u Upgrader) toStateBinaries(upgradeBinaries []okctlUpgradeBinary) []state.Binary {
 	binaries := make([]state.Binary, 0, len(upgradeBinaries))
 
 	if u.debug {
@@ -62,43 +119,7 @@ func (u Upgrader) Run() error {
 		binaries = append(binaries, binary)
 	}
 
-	// Download binaries
-	fetcher, err := fetch.New(
-		u.out,
-		u.logger,
-		true,
-		u.fetcherOpts.Host,
-		binaries,
-		u.fetcherOpts.Store,
-	)
-	if err != nil {
-		return fmt.Errorf("creating upgrade binaries fetcher: %w", err)
-	}
-
-	binaryProvider := newUpgradeBinaryProvider(u.repositoryDirectory, u.logger, u.out, fetcher)
-
-	for _, binary := range upgradeBinaries {
-		upgradeBinary, err := binaryProvider.okctlUpgrade(binary.version)
-		if err != nil {
-			return fmt.Errorf("getting okctl upgrade binary: %w", err)
-		}
-
-		upgradeBinary.Debug(u.debug)
-
-		if u.debug {
-			_, _ = fmt.Fprintf(u.out, "--- Running upgrade: %s ---\n", binary.version)
-		}
-
-		_, err = upgradeBinary.Run()
-		if err != nil {
-			return fmt.Errorf("running upgrade binary %s: %w", binary.version, err)
-		}
-	}
-
-	// DO: Store that upgrades have been run.
-	// DO: Consider letting upgrades edit state.db instead of okctl upgrade.
-
-	return nil
+	return binaries
 }
 
 // FetcherOpts contains data needed to initialize a fetch.Provider

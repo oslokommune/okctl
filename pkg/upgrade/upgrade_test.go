@@ -35,29 +35,24 @@ import (
 // withAlreadyAppliedMigrations []string
 // expectMigrationsToBeRun      []string
 
-func TestRunMigrations(t *testing.T) {
+func TestRunUpgrades(t *testing.T) {
 	testCases := []struct {
 		name string
 
-		withUpgradeGithubReleases []*github.RepositoryRelease
-		withHost                  state.Host
-		withTestDataFolder        string
+		withGithubReleases                []*github.RepositoryRelease
+		withGithubReleaseAssetsFromFolder string
+		withHost                          state.Host
 	}{
 		{
 			name: "Should run an upgrade",
-			withUpgradeGithubReleases: createGithubReleases(state.Host{
-				Os:   "Linux",
-				Arch: "amd64",
-			}, "0.0.61"),
+			withGithubReleases: createGithubReleases(
+				state.Host{Os: "Linux", Arch: "amd64"},
+				[]string{"0.0.61"}),
+			withGithubReleaseAssetsFromFolder: "0.0.61",
 			withHost: state.Host{
 				Os:   "linux",
 				Arch: "amd64",
 			},
-			withTestDataFolder: "0.0.61",
-			// withOriginalOkctlVersion:     "0.0.60",
-			// withOkctlVersion:             "0.0.60",
-			// withAlreadyAppliedMigrations: []string{},
-			// expectMigrationsToBeRun: []string{"0.0.61"},
 		},
 	}
 
@@ -67,13 +62,12 @@ func TestRunMigrations(t *testing.T) {
 			// Given
 			var buffer bytes.Buffer
 			var err error
-			githubService := NewGithubServiceMock(tc.withUpgradeGithubReleases)
 
 			tmpStore, err := storage.NewTemporaryStorage()
 			assert.NoError(t, err)
 
 			repoDir := "my-iac-repo"
-			repoAbsoluteDir := path.Join(tmpStore.BasePath, repoDir)
+			repositoryAbsoluteDir := path.Join(tmpStore.BasePath, repoDir)
 
 			err = tmpStore.MkdirAll(repoDir)
 			assert.NoError(t, err)
@@ -82,8 +76,8 @@ func TestRunMigrations(t *testing.T) {
 				Debug:               false,
 				Logger:              logrus.StandardLogger(),
 				Out:                 &buffer,
-				RepositoryDirectory: repoAbsoluteDir,
-				GithubService:       githubService,
+				RepositoryDirectory: repositoryAbsoluteDir,
+				GithubService:       NewGithubServiceMock(tc.withGithubReleases),
 				ChecksumDownloader:  NewChecksumDownloader(),
 				FetcherOpts: FetcherOpts{
 					Host:  tc.withHost,
@@ -91,7 +85,7 @@ func TestRunMigrations(t *testing.T) {
 				},
 			})
 
-			err = mockHTTPResponse(tc.withTestDataFolder, tc.withUpgradeGithubReleases)
+			err = mockHTTPResponse(tc.withGithubReleaseAssetsFromFolder, tc.withGithubReleases)
 			require.NoError(t, err)
 
 			httpmock.Activate()
@@ -112,7 +106,7 @@ func TestRunMigrations(t *testing.T) {
 	}
 }
 
-func createGithubReleases(host state.Host, versions ...string) []*github.RepositoryRelease {
+func createGithubReleases(host state.Host, versions []string) []*github.RepositoryRelease {
 	releases := make([]*github.RepositoryRelease, 0, len(versions))
 
 	for i, version := range versions {

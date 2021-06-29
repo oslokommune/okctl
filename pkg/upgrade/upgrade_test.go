@@ -35,7 +35,7 @@ import (
 // Should not run already applied migrations
 // Should run migrations up to the current okctl version
 
-// Failure situations
+// Lots of failure situations
 //
 // I okctl-upgrade-checksuyms.txt, endre filnavn. Da bør man få feil at ting ikke matcher. Får noe annet unyttig.
 // ------------------------------------------------
@@ -189,6 +189,7 @@ func TestRunUpgrades(t *testing.T) {
 	}
 }
 
+//nolint:unparam
 func createGithubReleases(os string, arch string, versions []string) []*github.RepositoryRelease {
 	releases := make([]*github.RepositoryRelease, 0, len(versions))
 	os = capitalizeFirst(os)

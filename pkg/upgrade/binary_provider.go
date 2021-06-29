@@ -19,21 +19,6 @@ type upgradeBinaryProvider struct {
 	okctlUpgrades map[string]*okctlupgrade.OkctlUpgrade
 }
 
-func newUpgradeBinaryProvider(
-	repoDir string,
-	logger *logrus.Logger,
-	progress io.Writer,
-	fetcher fetch.Provider,
-) upgradeBinaryProvider {
-	return upgradeBinaryProvider{
-		repoDir:       repoDir,
-		progress:      progress,
-		fetcher:       fetcher,
-		logger:        logger,
-		okctlUpgrades: map[string]*okctlupgrade.OkctlUpgrade{},
-	}
-}
-
 func (p *upgradeBinaryProvider) okctlUpgrade(version string) (*okctlupgrade.OkctlUpgrade, error) {
 	_, ok := p.okctlUpgrades[version]
 
@@ -49,4 +34,19 @@ func (p *upgradeBinaryProvider) okctlUpgrade(version string) (*okctlupgrade.Okct
 	}
 
 	return p.okctlUpgrades[version], nil
+}
+
+func newUpgradeBinaryProvider(
+	repoDir string,
+	logger *logrus.Logger,
+	progress io.Writer,
+	fetcher fetch.Provider,
+) upgradeBinaryProvider {
+	return upgradeBinaryProvider{
+		repoDir:       repoDir,
+		progress:      progress,
+		fetcher:       fetcher,
+		logger:        logger,
+		okctlUpgrades: map[string]*okctlupgrade.OkctlUpgrade{},
+	}
 }

@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/osarch"
+
 	"github.com/jarcoal/httpmock"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
@@ -39,6 +41,8 @@ import (
 //
 // I okctl-upgrade-checksuyms.txt, endre filnavn. Da bør man få feil at ting ikke matcher. Får noe annet unyttig.
 // ------------------------------------------------
+
+//nolint:funlen
 func TestRunUpgrades(t *testing.T) {
 	testCases := []struct {
 		name string
@@ -50,26 +54,32 @@ func TestRunUpgrades(t *testing.T) {
 		expectedErrorContains             string
 	}{
 		{
-			name: "Should run an upgrade",
-			withGithubReleases: createGithubReleases(
-				state.Host{Os: "Linux", Arch: "amd64"},
-				[]string{"0.0.61"}),
+			name:                              "Should run a Linux upgrade",
+			withGithubReleases:                createGithubReleases(osarch.Linux, osarch.Amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: "0.0.61",
 			withHost: state.Host{
-				Os:   "linux",
-				Arch: "amd64",
+				Os:   osarch.Linux,
+				Arch: osarch.Amd64,
 			},
 			expectedBinariesRun: []string{"0.0.61"},
 		},
 		{
-			name: "Should detect if binary's digest doesn't match the expected digest",
-			withGithubReleases: createGithubReleases(
-				state.Host{Os: "Linux", Arch: "amd64"},
-				[]string{"0.0.61"}),
+			name:                              "Should run a Darwin upgrade",
+			withGithubReleases:                createGithubReleases(osarch.Darwin, osarch.Amd64, []string{"0.0.61"}),
+			withGithubReleaseAssetsFromFolder: "0.0.61",
+			withHost: state.Host{
+				Os:   osarch.Linux,
+				Arch: osarch.Amd64,
+			},
+			expectedBinariesRun: []string{"0.0.61"},
+		},
+		{
+			name:                              "Should detect if binary's digest doesn't match the expected digest",
+			withGithubReleases:                createGithubReleases(osarch.Linux, osarch.Amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: "invalid_digest",
 			withHost: state.Host{
-				Os:   "linux",
-				Arch: "amd64",
+				Os:   osarch.Linux,
+				Arch: osarch.Amd64,
 			},
 			expectedBinariesRun: []string{},
 			expectedErrorContains: "failed to verify binary signature: verification failed, hash mismatch, " +
@@ -134,8 +144,9 @@ func TestRunUpgrades(t *testing.T) {
 	}
 }
 
-func createGithubReleases(host state.Host, versions []string) []*github.RepositoryRelease {
+func createGithubReleases(os string, arch string, versions []string) []*github.RepositoryRelease {
 	releases := make([]*github.RepositoryRelease, 0, len(versions))
+	os = capitalizeFirst(os)
 
 	for i, version := range versions {
 		release := &github.RepositoryRelease{
@@ -149,10 +160,10 @@ func createGithubReleases(host state.Host, versions []string) []*github.Reposito
 						"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade-checksums.txt", version)),
 				},
 				{
-					Name:        github.StringPtr(fmt.Sprintf("okctl_upgrade-%s_%s_%s.tar.gz", host.Os, host.Arch, version)),
+					Name:        github.StringPtr(fmt.Sprintf("okctl_upgrade-%s_%s_%s.tar.gz", os, arch, version)),
 					ContentType: github.StringPtr("application/gzip"),
 					BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
-						"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz", version, version, host.Os, host.Arch)),
+						"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz", version, version, os, arch)),
 				},
 			},
 		}
@@ -161,6 +172,10 @@ func createGithubReleases(host state.Host, versions []string) []*github.Reposito
 	}
 
 	return releases
+}
+
+func capitalizeFirst(os string) string {
+	return strings.ToUpper(os[0:1]) + os[1:]
 }
 
 func mockHTTPResponse(folder string, releases []*github.RepositoryRelease) error {

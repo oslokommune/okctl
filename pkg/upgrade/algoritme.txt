@@ -1,41 +1,27 @@
+Upgrades
+    0.0.61
+    0.0.62
+    0.0.62_a
+    0.0.63
+    0.0.63_a
+    0.0.64
+    0.0.65
 
-How to do upgrade - long version
-
-USE DOMAIN DRIVEN DESIGN FOR MIGRATION CALCULATION LOGIC
-
-- [API-call] get all releases from okctl-upgrade repo. ->
-{
-	"tag_name": "1-0.0.63",
-	"assets": [
-		"browser_download_url":  "https://github.com/oslokommune/okctl-upgrade/releases/download/1_0.0.64/okctl-upgrade-1-0.0.63"
-	],
-}
-
-- Fjern de som ikke har asset.state == "uploaded"
-	- Kast error dersom fil ikke finnes? Tjaa. Test hva som skjer dersom fil ikke finnes.
-
-- Parse into struct
-Migration {
-	Index 			int,
-	Filename		string,
-	Version			SemverVersion
-
-}
-	->
-		0.0.61
-		0.0.62
-		0.0.62_a
-		0.0.63
-		0.0.63_a
-		0.0.64
-		0.0.65
-
-		Betydning: x-<okctl version> - Migrasjon som kjøres for å komme seg til <okctl version>. Så for å komme seg til
-			versjon 0.0.62, må man kjøre 0.0.61 og 0.0.62.
+Algorithm:
+    - remove applied upgrades
+        if state.db states that upgrade has been run, remove it
+	- remove too old upgrades
+	    if upgrade version <= originalOkctlClusterVersion, remove it
+    - remove too new upgrades (all upgrades having version number higher than current okctl version (semver compare))
+        if upgrade version > okctlVersion, remove it
+    - for each resulting upgrade
+        run it
+        mark that the upgrade has been run
 
 - [okctl-call]
 	get current okctl version - 0.0.62
 	okctl apply was run with 0.0.62.
+	-> originalOkctlClusterVersion = 0.0.62
 
 - [state-call] find already applied migrations (from state.db)
 	if empty
@@ -45,65 +31,128 @@ Migration {
 			0.0.62_a
 
 - calculate which migrations to run
-	- remove too new migrations
-		0.0.61
-		0.0.62
-		0.0.62_a
-	- remove too old migrations
-		logic: okctl original version = 0.0.62, current = 0.0.62. if (migrationVersion <= okctlOriginalVersion) continue / skip;
-		(empty)
 	- remove applied
-		(empty)
+	    Result:
+            0.0.61
+            0.0.62
+            0.0.62_a
+            0.0.63
+            0.0.63_a
+            0.0.64
+            0.0.65
+	- remove too old migrations
+        Result:
+            0.0.63
+            0.0.63_a
+            0.0.64
+            0.0.65
+	- remove too new migrations
+	    Result:
+	        (empty)
 
-	since okctl version is 0.0.62, and we have applied all migrations up to 0.0.62, we're done.
+User downloads okctl 0.0.64
 
-- user downloads okctl 0.0.64
-
-- [state-call] find already applied migrations (from state.db)7
-			0.0.61
-			0.0.62
-			0.0.62_a
--
+- [state-call] find already applied migrations (from state.db)
+    Result:
+        (empty)
 
 - calculate which migrations to run
-	- get list of all migrations
-		(see list above)
-    - remove too new migrations (all upgrades having version number higher than current okctl version (semver compare))
-		0.0.61
-		0.0.62
-		0.0.62_a
-		0.0.63
-		0.0.63_a
-		0.0.64
+	- remove already applied migrations (originalOkctlClusterVersion = 0.0.62)
+        0.0.61
+        0.0.62
+        0.0.62_a
+        0.0.63
+        0.0.63_a
+        0.0.64
+        0.0.65
 	- remove too old migrations
-	- remove already applied migrations
+        0.0.63
+        0.0.63_a
+        0.0.64
+        0.0.65
+    - remove too new migrations (all upgrades having version number higher than current okctl version (semver compare))
 		0.0.63
 		0.0.63_a
 		0.0.64
 
-- [okctl-call binaries-provider] Download upgrade binaries for migrations to run
-	->	okctl-upgrade_4-0.0.63_linux_amd64
-		okctl-upgrade_5-0.0.63_linux_amd64
-		okctl-upgrade_6-0.0.64_linux_amd64
+User runs okctl upgrade again immediately
+	- get list of all migrations
+        0.0.61
+        0.0.62
+        0.0.62_a
+        0.0.63
+        0.0.63_a
+        0.0.64
+        0.0.65
+	- remove already applied migrations
+        0.0.61
+        0.0.62
+        0.0.62_a
+        0.0.65
+	- remove too old migrations
+        0.0.65
+    - remove too new migrations (all upgrades having version number higher than current okctl version (semver compare))
+        (empty)
 
-- Verify checksum
+We upload a new upgrade hotfix: 0.0.62_patch_stuff
+	- get list of all migrations
+        0.0.61
+        0.0.62
+        0.0.62_a
+        0.0.62_patch_stuff
+        0.0.63
+        0.0.63_a
+        0.0.64
+        0.0.65
+	- remove already applied migrations
+        0.0.61
+        0.0.62
+        0.0.62_a
+        0.0.62_patch_stuff
+        0.0.65
+	- remove too old migrations
+        0.0.65
+    - remove too new migrations (all upgrades having version number higher than current okctl version (semver compare))
+        (empty)
 
-- [shell-call] run resulting migrations
+We upload a new upgrade hotfix: 0.0.63_patch_argocd
+	- get list of all migrations
+        0.0.61
+        0.0.62
+        0.0.62_a
+        0.0.62_patch_stuff
+        0.0.63
+        0.0.63_a
+        0.0.63_patch_argocd
+        0.0.64
+        0.0.65
+	- remove already applied migrations
+        0.0.61
+        0.0.62
+        0.0.62_a
+        0.0.62_patch_stuff
+        0.0.63_patch_argocd
+        0.0.65
+	- remove too old migrations
+        0.0.63_patch_argocd
+        0.0.65
+    - remove too new migrations (all upgrades having version number higher than current okctl version (semver compare))
+        0.0.63_patch_argocd
 
-	- If exit code 0, update upgrade state: Ran OK.
-	- If exit code > 0, update upgrade state: Ran not-OK.
-		Write result to state. MigrationResult struct or something.
+okctl version = 0.0.64
+originalOkctlClusterVersion = 0.0.62
 
 
 How to require a specific version:
-- Feks: okctl 0.64: apply cluster: sjekkom upgrade state indexOfLatestAppliedMigration >= 5.
-	If OK, continue apply cluster.
-	If not OK, write error message:
-		Some okctl resources are out of date. You need to:
-			upgrade your okctl resources by running 'okctl upgrade'. To see what this will do, run
-			'okctl upgrade --dry-run'.
+- Feks: okctl 0.0.66: apply cluster:
+    okctlClusterVersion: nyeste oppgraderingsbinær som er kjørt (feks 0.0.63 eller 0.0.64_a)
 
-			Or, if you don't want to upgrade at this time, download a previous version of okctl and try again.
+    okctlClusterVersion = 0.0.62. Apply cluster forventer at upgrade binærer
+        0.0.63 og 0.0.64, men ikke nødvendigvis 0.0.65 og 0.0.66, de er urelaterte. Da kan apply cluster kjøre en sjekk:
+            if okctlClusterVersion < 0.0.64: show message to user and abort:
 
-		Technical details:
-			apply cluster requires minimum upgrade version: 5-0.0.63 [or just 5]
+                You are running okctl 0.0.66, but your okctl cluster is running 0.0.62. apply cluster requirees
+                minimum version 0.0.64. To upgrade run:
+                    okctl upgrade # to upgrade your okctl cluster to the latest version (0.0.66)
+                    or
+                    okctl upgrade --to 0.0.64 # to upgrade your okctl cluster to 0.0.64

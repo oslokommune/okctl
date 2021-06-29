@@ -50,7 +50,7 @@ func TestRunUpgrades(t *testing.T) {
 		withGithubReleases                []*github.RepositoryRelease
 		withGithubReleaseAssetsFromFolder string
 		withHost                          state.Host
-		expectedBinariesRun               []string
+		expectedBinaryVersionsRun         []string
 		expectedErrorContains             string
 	}{
 		{
@@ -61,7 +61,7 @@ func TestRunUpgrades(t *testing.T) {
 				Os:   osarch.Linux,
 				Arch: osarch.Amd64,
 			},
-			expectedBinariesRun: []string{"0.0.61"},
+			expectedBinaryVersionsRun: []string{"0.0.61"},
 		},
 		{
 			name:                              "Should run a Darwin upgrade",
@@ -71,7 +71,7 @@ func TestRunUpgrades(t *testing.T) {
 				Os:   osarch.Darwin,
 				Arch: osarch.Amd64,
 			},
-			expectedBinariesRun: []string{"0.0.61"},
+			expectedBinaryVersionsRun: []string{"0.0.61"},
 		},
 		{
 			name:                              "Should detect if binary's digest doesn't match the expected digest",
@@ -81,7 +81,7 @@ func TestRunUpgrades(t *testing.T) {
 				Os:   osarch.Linux,
 				Arch: osarch.Amd64,
 			},
-			expectedBinariesRun: []string{},
+			expectedBinaryVersionsRun: []string{},
 			expectedErrorContains: "failed to verify binary signature: verification failed, hash mismatch, " +
 				"got: 83bae1d215407ff3715063a621afa9138d2b15392d930e6377ed4a6058fea0ba, " +
 				"expected: a3bae1d215407ff3715063a621afa9138d2b15392d930e6377ed4a6058fea0ba",
@@ -134,7 +134,7 @@ func TestRunUpgrades(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			for _, version := range tc.expectedBinariesRun {
+			for _, version := range tc.expectedBinaryVersionsRun {
 				expectedFilepath := path.Join(repoDir, fmt.Sprintf(
 					"okctl-upgrade_%s_%s_%s_ran_successfully",
 					version,

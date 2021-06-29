@@ -68,7 +68,7 @@ func TestRunUpgrades(t *testing.T) {
 			withGithubReleases:                createGithubReleases(osarch.Darwin, osarch.Amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: "0.0.61",
 			withHost: state.Host{
-				Os:   osarch.Linux,
+				Os:   osarch.Darwin,
 				Arch: osarch.Amd64,
 			},
 			expectedBinariesRun: []string{"0.0.61"},
@@ -135,10 +135,18 @@ func TestRunUpgrades(t *testing.T) {
 			}
 
 			for _, version := range tc.expectedBinariesRun {
-				upgradeRan, err := tmpStore.Exists(path.Join(repoDir, fmt.Sprintf("okctl_upgrade_%s_ran_successfully", version)))
+				expectedFilepath := path.Join(repoDir, fmt.Sprintf(
+					"okctl-upgrade_%s_%s_%s_ran_successfully",
+					version,
+					capitalizeFirst(tc.withHost.Os),
+					tc.withHost.Arch),
+				)
+				upgradeRan, err := tmpStore.Exists(expectedFilepath)
 				assert.NoError(t, err)
 
-				assert.True(t, upgradeRan, "the upgrade should have produced a file, but no file was found")
+				assert.True(t, upgradeRan, fmt.Sprintf(
+					"the upgrade should have produced the file %s, but no file was found",
+					path.Join(tmpStore.BasePath, expectedFilepath)))
 			}
 		})
 	}
@@ -175,7 +183,7 @@ func createGithubReleases(os string, arch string, versions []string) []*github.R
 }
 
 func capitalizeFirst(os string) string {
-	return strings.ToUpper(os[0:1]) + os[1:]
+	return strings.ToUpper(os[0:1]) + strings.ToLower(os[1:])
 }
 
 func mockHTTPResponse(folder string, releases []*github.RepositoryRelease) error {

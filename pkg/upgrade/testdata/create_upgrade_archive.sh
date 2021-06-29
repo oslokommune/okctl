@@ -32,10 +32,10 @@ EOF
 
   ARCHIVE_FILE=okctl-upgrade_${VER}_${OS}_${ARCH}.tar.gz
   tar czf "$ARCHIVE_FILE" "$UPGRADE_FILE"
-
-  DIGEST_FILE=okctl-upgrade-checksums.txt
-  sha256sum "$ARCHIVE_FILE" >> "$DIGEST_FILE"
 done
+
+DIGEST_FILE=okctl-upgrade-checksums.txt
+sha256sum *.tar.gz > "$DIGEST_FILE"
 
 
 rm $UPGRADE_FILE

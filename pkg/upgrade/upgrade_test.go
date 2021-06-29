@@ -3,6 +3,7 @@ package upgrade
 import (
 	"bytes"
 	"fmt"
+	"github.com/sebdah/goldie/v2"
 	"io/ioutil"
 	"net/http"
 	"path"
@@ -34,10 +35,7 @@ import (
 // Should not run already applied migrations
 // Should run migrations up to the current okctl version
 
-// Should run Darwin upgrades
-
 // Failure situations
-// 		Verify invalid digests in okctl-upgrade.txt
 //
 // I okctl-upgrade-checksuyms.txt, endre filnavn. Da bør man få feil at ting ikke matcher. Får noe annet unyttig.
 // ------------------------------------------------
@@ -50,9 +48,19 @@ func TestRunUpgrades(t *testing.T) {
 		withGithubReleases                []*github.RepositoryRelease
 		withGithubReleaseAssetsFromFolder string
 		withHost                          state.Host
-		expectedBinaryVersionsRun         []string
-		expectedErrorContains             string
+		expectBinaryVersionsRun           []string
+		expectErrorContains               string
+		expectedStdOutGolden              bool
 	}{
+		{
+			name:               "Should run zero upgrades",
+			withGithubReleases: []*github.RepositoryRelease{},
+			withHost: state.Host{
+				Os:   osarch.Linux,
+				Arch: osarch.Amd64,
+			},
+			expectBinaryVersionsRun: []string{},
+		},
 		{
 			name:                              "Should run a Linux upgrade",
 			withGithubReleases:                createGithubReleases(osarch.Linux, osarch.Amd64, []string{"0.0.61"}),
@@ -61,7 +69,7 @@ func TestRunUpgrades(t *testing.T) {
 				Os:   osarch.Linux,
 				Arch: osarch.Amd64,
 			},
-			expectedBinaryVersionsRun: []string{"0.0.61"},
+			expectBinaryVersionsRun: []string{"0.0.61"},
 		},
 		{
 			name:                              "Should run a Darwin upgrade",
@@ -71,7 +79,7 @@ func TestRunUpgrades(t *testing.T) {
 				Os:   osarch.Darwin,
 				Arch: osarch.Amd64,
 			},
-			expectedBinaryVersionsRun: []string{"0.0.61"},
+			expectBinaryVersionsRun: []string{"0.0.61"},
 		},
 		{
 			name:                              "Should detect if binary's digest doesn't match the expected digest",
@@ -81,10 +89,32 @@ func TestRunUpgrades(t *testing.T) {
 				Os:   osarch.Linux,
 				Arch: osarch.Amd64,
 			},
-			expectedBinaryVersionsRun: []string{},
-			expectedErrorContains: "failed to verify binary signature: verification failed, hash mismatch, " +
+			expectBinaryVersionsRun: []string{},
+			expectErrorContains: "failed to verify binary signature: verification failed, hash mismatch, " +
 				"got: 83bae1d215407ff3715063a621afa9138d2b15392d930e6377ed4a6058fea0ba, " +
 				"expected: a3bae1d215407ff3715063a621afa9138d2b15392d930e6377ed4a6058fea0ba",
+		},
+		{
+			name:                              "Should print upgrade's stdout to stdout",
+			withGithubReleases:                createGithubReleases(osarch.Linux, osarch.Amd64, []string{"0.0.61"}),
+			withGithubReleaseAssetsFromFolder: "0.0.61",
+			withHost: state.Host{
+				Os:   osarch.Linux,
+				Arch: osarch.Amd64,
+			},
+			expectedStdOutGolden:    true,
+			expectBinaryVersionsRun: []string{"0.0.61"},
+		},
+		{
+			name:                              "Should return exit status if upgrade crashes",
+			withGithubReleases:                createGithubReleases(osarch.Linux, osarch.Amd64, []string{"0.0.58"}),
+			withGithubReleaseAssetsFromFolder: "upgrade_crashes",
+			withHost: state.Host{
+				Os:   osarch.Linux,
+				Arch: osarch.Amd64,
+			},
+			expectBinaryVersionsRun: []string{},
+			expectErrorContains:     "exit status 1",
 		},
 	}
 
@@ -127,14 +157,14 @@ func TestRunUpgrades(t *testing.T) {
 			err = upgrader.Run()
 
 			// Then
-			if len(tc.expectedErrorContains) > 0 {
+			if len(tc.expectErrorContains) > 0 {
 				//goland:noinspection GoNilness
-				assert.Contains(t, err.Error(), tc.expectedErrorContains)
+				assert.Contains(t, err.Error(), tc.expectErrorContains)
 			} else {
 				assert.NoError(t, err)
 			}
 
-			for _, version := range tc.expectedBinaryVersionsRun {
+			for _, version := range tc.expectBinaryVersionsRun {
 				expectedFilepath := path.Join(repoDir, fmt.Sprintf(
 					"okctl-upgrade_%s_%s_%s_ran_successfully",
 					version,
@@ -148,6 +178,13 @@ func TestRunUpgrades(t *testing.T) {
 					"the upgrade should have produced the file %s, but no file was found",
 					path.Join(tmpStore.BasePath, expectedFilepath)))
 			}
+
+			if tc.expectedStdOutGolden {
+				g := goldie.New(t)
+				g.Assert(t, tc.name, buffer.Bytes())
+			}
+
+			t.Log(buffer.String())
 		})
 	}
 }

@@ -1,0 +1,4 @@
+preloading missing binary: okctl-upgrade_0.0.61 (0.0.61)
+--- Running upgrade: 0.0.61 ---
+Upgrading ArgoCD
+Done!

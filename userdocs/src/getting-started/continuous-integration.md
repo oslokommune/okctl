@@ -53,9 +53,10 @@ https://github.com/oslokommune/okctl-kotlin-app-template/settings/environments
 Use templates found here: https://github.com/oslokommune/okctl-kotlin-app-template/tree/main/.github/workflows
 
 You need to edit the following:
-* jobs -> docker-build-push -> steps[0] -> with -> aws-region (if you run somewhere else than Ireland)
-* jobs -> docker-build-push -> steps[1] -> env -> ECR_REPOSITORY (name of your ecr_repositroy, i.e. kotlin-test-app)
-* jobs -> update-tag -> steps[0] -> with -> repository (your iac-repository, i.e oslokommune/okctl-template-iac)
-* jobs -> update-tag -> steps[0] -> env -> CONTAINER_NAME (name of the container, i.e kotlin-test-app)
-* jobs -> update-tag -> steps[0] -> env -> DEPLOYMENT_YAML_FILE (location of overlay deployment patch file: i.e infrastructure/applications/kotlin-test-app/overlays/okctl-template-dev/deployment-patch.json)
+
+* jobs -> docker-build-push -> steps[0] -> with -> aws-region `if you run somewhere else than Ireland`
+* jobs -> docker-build-push -> steps[1] -> env -> ECR_REPOSITORY `name of your ecr_repositroy, i.e. kotlin-test-app`
+* jobs -> update-tag -> steps[0] -> with -> repository `your iac-repository, i.e oslokommune/okctl-template-iac`
+* jobs -> update-tag -> steps[0] -> env -> CONTAINER_NAME `name of the container, i.e kotlin-test-app`
+* jobs -> update-tag -> steps[0] -> env -> DEPLOYMENT_YAML_FILE `location of overlay deployment patch file: i.e infrastructure/applications/kotlin-test-app/overlays/okctl-template-dev/deployment-patch.json`
 

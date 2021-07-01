@@ -41,6 +41,17 @@ func decodeCreateIdentityPoolUser(_ context.Context, r *http.Request) (interface
 	return opts, nil
 }
 
+func decodeDeleteIdentityPoolUser(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.DeleteIdentityPoolUserOpts
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}
+
 func decodeDeleteIdentityPool(_ context.Context, r *http.Request) (interface{}, error) {
 	var opts api.DeleteIdentityPoolOpts
 

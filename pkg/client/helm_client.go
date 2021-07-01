@@ -62,16 +62,35 @@ func (o DeleteHelmReleaseOpts) Validate() error {
 	)
 }
 
+// GetHelmReleaseOpts contains the required inputs for
+// getting a Helm release from the Kubernetes cluster
+type GetHelmReleaseOpts struct {
+	ClusterID   api.ID
+	ReleaseName string
+	Namespace   string
+}
+
+// Validate the provided inputs
+func (o GetHelmReleaseOpts) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.ClusterID, validation.Required),
+		validation.Field(&o.ReleaseName, validation.Required),
+		validation.Field(&o.Namespace, validation.Required),
+	)
+}
+
 // HelmService provides functionality for interacting with helm chart lifecycle
 type HelmService interface {
 	CreateHelmRelease(ctx context.Context, opts CreateHelmReleaseOpts) (*Helm, error)
 	DeleteHelmRelease(ctx context.Context, opts DeleteHelmReleaseOpts) error
+	GetHelmRelease(ctx context.Context, opts GetHelmReleaseOpts) (*Helm, error)
 }
 
 // HelmAPI provides the invocation layer
 type HelmAPI interface {
 	CreateHelmRelease(opts api.CreateHelmReleaseOpts) (*api.Helm, error)
 	DeleteHelmRelease(opts api.DeleteHelmReleaseOpts) error
+	GetHelmRelease(opts api.GetHelmReleaseOpts) (*api.Helm, error)
 }
 
 // HelmState provides the persistence layer

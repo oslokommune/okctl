@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
@@ -64,6 +65,19 @@ func (c *clusterState) GetCluster(name string) (*client.Cluster, error) {
 	}
 
 	return cluster.Convert(), nil
+}
+
+func (c *clusterState) HasCluster(name string) (bool, error) {
+	_, err := c.getCluster(name)
+	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return false, nil
+		}
+
+		return false, fmt.Errorf("querying state for cluster data: %w", err)
+	}
+
+	return true, nil
 }
 
 func (c *clusterState) getCluster(name string) (*Cluster, error) {

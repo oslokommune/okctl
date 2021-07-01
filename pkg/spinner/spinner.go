@@ -5,7 +5,6 @@ import (
 	"io"
 	"time"
 
-	"github.com/hako/durafmt"
 	"github.com/theckman/yacspin"
 )
 
@@ -22,9 +21,10 @@ type Spinner interface {
 
 // spinner contains state for the spinner
 type spinner struct {
-	spinner *yacspin.Spinner
-	parent  *spinner
-	exit    chan struct{}
+	spinner   *yacspin.Spinner
+	parent    *spinner
+	exit      chan struct{}
+	component string
 }
 
 // New creates a new spinner
@@ -49,6 +49,10 @@ func New(suffix string, out io.Writer) (Spinner, error) {
 	}, nil
 }
 
+func (s *spinner) String() string {
+	return s.component
+}
+
 func (s *spinner) isChild() bool {
 	return s.parent != nil
 }
@@ -62,17 +66,23 @@ func (s *spinner) SubSpinner() Spinner {
 }
 
 func (s *spinner) Start(component string) error {
+	s.component = component
+
 	if s.isChild() {
+		s.spinner.Message(fmt.Sprintf("%s %s", s.parent.component, s.component))
+
 		return nil
 	}
 
-	s.timer(component)
+	s.spinner.Message(s.component)
 
 	return s.spinner.Start()
 }
 
 func (s *spinner) Stop() error {
 	if s.isChild() {
+		s.spinner.Message(s.parent.component)
+
 		return nil
 	}
 
@@ -89,52 +99,4 @@ func (s *spinner) Pause() error {
 
 func (s *spinner) Unpause() error {
 	return s.spinner.Unpause()
-}
-
-// Timer creates and associates a timer with the spinner
-func (s *spinner) timer(component string) {
-	exit := make(chan struct{})
-
-	go func(ch chan struct{}, start time.Time) {
-		ticker := time.NewTicker(1 * time.Second)
-		defer ticker.Stop()
-
-		for {
-			select {
-			case <-ch:
-				return
-			case <-ticker.C:
-				s.spinner.Message(component + " (elapsed: " + durafmt.Parse(time.Since(start)).LimitFirstN(2).String() + ")") // nolint: gomnd
-			}
-		}
-	}(exit, time.Now())
-
-	s.exit = exit
-}
-
-type noopSpinner struct{}
-
-func (n noopSpinner) Start(_ string) error {
-	return nil
-}
-
-func (n noopSpinner) Stop() error {
-	return nil
-}
-
-func (n noopSpinner) Pause() error {
-	return nil
-}
-
-func (n noopSpinner) Unpause() error {
-	return nil
-}
-
-func (n noopSpinner) SubSpinner() Spinner {
-	return n
-}
-
-// NewNoopSpinner returns a noop spinner (a spinner that doesn't do anything)
-func NewNoopSpinner() Spinner {
-	return &noopSpinner{}
 }

@@ -9,8 +9,6 @@ import (
 	"path"
 	"syscall"
 
-	"github.com/oslokommune/okctl/pkg/controller/cluster"
-
 	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
 
 	"github.com/asdine/storm/v3/codec/json"
@@ -24,7 +22,6 @@ import (
 	"github.com/logrusorgru/aurora"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/config/load"
 	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
@@ -49,8 +46,6 @@ func (o *applyClusterOpts) Validate() error {
 // nolint funlen
 func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := applyClusterOpts{}
-
-	var id api.ID
 
 	cmd := &cobra.Command{
 		Use:     "cluster -f declaration_file",
@@ -125,12 +120,6 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("initializing okctl: %w", err)
 			}
 
-			id = api.ID{
-				Region:       opts.Declaration.Metadata.Region,
-				AWSAccountID: opts.Declaration.Metadata.AccountID,
-				ClusterName:  opts.Declaration.Metadata.Name,
-			}
-
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, _ []string) (err error) {
@@ -141,60 +130,48 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				spinnerWriter = o.Err
 			}
 
-			spin, err := spinner.New("synchronizing", spinnerWriter)
+			spin, err := spinner.New("applying cluster", spinnerWriter)
 			if err != nil {
 				return fmt.Errorf("error creating spinner: %w", err)
 			}
 
-			handlers := o.StateHandlers(o.StateNodes())
+			state := o.StateHandlers(o.StateNodes())
 
-			services, err := o.ClientServices(handlers)
+			services, err := o.ClientServices(state)
 			if err != nil {
 				return fmt.Errorf("error getting services: %w", err)
 			}
 
-			reconciliationManager := common.NewCompositeReconciler(spin,
-				reconciliation.NewArgocdReconciler(services.ArgoCD, services.Github),
-				reconciliation.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService),
+			schedulerOpts := common.SchedulerOpts{
+				Out:                             o.Out,
+				Spinner:                         spin,
+				ReconciliationLoopDelayFunction: common.DefaultDelayFunction,
+				ClusterDeclaration:              *o.Declaration,
+			}
+
+			scheduler := common.NewScheduler(schedulerOpts,
+				reconciliation.NewZoneReconciler(services.Domain),
+				reconciliation.NewVPCReconciler(services.Vpc, o.CloudProvider),
+				reconciliation.NewNameserverDelegationReconciler(services.NameserverHandler),
+				reconciliation.NewClusterReconciler(services.Cluster, o.CloudProvider),
 				reconciliation.NewAutoscalerReconciler(services.Autoscaler),
-				reconciliation.NewKubePrometheusStackReconciler(services.Monitoring),
+				reconciliation.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService),
+				reconciliation.NewBlockstorageReconciler(services.Blockstorage),
+				reconciliation.NewExternalDNSReconciler(services.ExternalDNS),
+				reconciliation.NewExternalSecretsReconciler(services.ExternalSecrets),
+				reconciliation.NewNameserverDelegatedTestReconciler(services.Domain),
+				reconciliation.NewIdentityManagerReconciler(services.IdentityManager),
+				reconciliation.NewArgocdReconciler(services.ArgoCD, services.Github),
 				reconciliation.NewLokiReconciler(services.Monitoring),
 				reconciliation.NewPromtailReconciler(services.Monitoring),
 				reconciliation.NewTempoReconciler(services.Monitoring),
-				reconciliation.NewBlockstorageReconciler(services.Blockstorage),
-				reconciliation.NewClusterReconciler(services.Cluster),
-				reconciliation.NewExternalDNSReconciler(services.ExternalDNS),
-				reconciliation.NewExternalSecretsReconciler(services.ExternalSecrets),
-				reconciliation.NewIdentityManagerReconciler(services.IdentityManager),
-				reconciliation.NewVPCReconciler(services.Vpc),
-				reconciliation.NewZoneReconciler(services.Domain),
-				reconciliation.NewNameserverDelegationReconciler(services.NameserverHandler),
-				reconciliation.NewNameserverDelegatedTestReconciler(services.Domain),
+				reconciliation.NewKubePrometheusStackReconciler(services.Monitoring),
 				reconciliation.NewUsersReconciler(services.IdentityManager),
 				reconciliation.NewPostgresReconciler(services.Component),
-				reconciliation.NewCleanupALBReconciler(o.CloudProvider),
 				reconciliation.NewCleanupSGReconciler(o.CloudProvider),
-				&reconciliation.PostgresGroupReconciler{},
-				reconciliation.NewServiceQuotaReconciler(o.CloudProvider),
 			)
 
-			reconciliationManager.SetCommonMetadata(&common.CommonMetadata{
-				Ctx:         o.Ctx,
-				Out:         o.Out,
-				ClusterID:   id,
-				Declaration: opts.Declaration,
-			})
-
-			synchronizeOpts := &cluster.SynchronizeOpts{
-				Debug:                 o.Debug,
-				Out:                   o.Out,
-				ID:                    id,
-				ClusterDeclaration:    opts.Declaration,
-				ReconciliationManager: reconciliationManager,
-				State:                 handlers,
-			}
-
-			err = cluster.Synchronize(synchronizeOpts)
+			_, err = scheduler.Run(o.Ctx, state)
 			if err != nil {
 				return fmt.Errorf("synchronizing declaration with state: %w", err)
 			}
@@ -203,7 +180,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			_, _ = fmt.Fprintln(o.Out,
 				fmt.Sprintf(
 					"\nTo access your cluster, run %s to activate the environment for your cluster",
-					aurora.Green(fmt.Sprintf("okctl venv %s", id.ClusterName)),
+					aurora.Green(fmt.Sprintf("okctl venv -c %s", opts.File)),
 				),
 			)
 			_, _ = fmt.Fprintln(o.Out, fmt.Sprintf("Your cluster should then be available with %s", aurora.Green("kubectl")))

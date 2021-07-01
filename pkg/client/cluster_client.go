@@ -48,4 +48,5 @@ type ClusterState interface {
 	SaveCluster(cluster *Cluster) error
 	GetCluster(name string) (*Cluster, error)
 	RemoveCluster(name string) error
+	HasCluster(name string) (bool, error)
 }

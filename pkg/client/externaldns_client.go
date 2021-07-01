@@ -44,4 +44,5 @@ type ExternalDNSState interface {
 	SaveExternalDNS(dns *ExternalDNS) error
 	GetExternalDNS() (*ExternalDNS, error)
 	RemoveExternalDNS() error
+	HasExternalDNS() (bool, error)
 }

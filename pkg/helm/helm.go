@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	merrors "github.com/mishudark/errors"
+
 	"helm.sh/helm/v3/pkg/downloader"
 
 	"gopkg.in/yaml.v3"
@@ -62,12 +64,18 @@ type Deleter interface {
 	Delete(kubeConfigPath string, cfg *DeleteConfig) error
 }
 
+// Finder defines the interface for finding a released helm chart
+type Finder interface {
+	Find(kubeConfigPath string, cfg *FindConfig) (*release.Release, error)
+}
+
 // Helmer defines all available helm operations
 type Helmer interface {
 	RepoAdder
 	RepoUpdater
 	Installer
 	Deleter
+	Finder
 }
 
 // Helm stores all state required for running helm tasks
@@ -275,6 +283,16 @@ type InstallConfig struct {
 	Timeout time.Duration
 }
 
+// FindConfig defines the variables that must be set to find a chart
+type FindConfig struct {
+	// ReleaseName is the name given to the release in Kubernetes
+	ReleaseName string
+	// Namespace is the namespace the release will be looked for in
+	Namespace string
+	// Timeout determines how long we will wait for the location to succeed
+	Timeout time.Duration
+}
+
 // ValuesMap returns the values
 func (c *InstallConfig) ValuesMap() (map[string]interface{}, error) {
 	var values map[string]interface{}
@@ -290,6 +308,54 @@ func (c *InstallConfig) ValuesMap() (map[string]interface{}, error) {
 // RepoChart returns the [repo]/[chart] string
 func (c *InstallConfig) RepoChart() string {
 	return fmt.Sprintf("%s/%s", c.Repo, c.Chart)
+}
+
+// Find returns an existing helm release from the cluster
+func (h *Helm) Find(kubeConfigPath string, cfg *FindConfig) (*release.Release, error) {
+	envs := h.config.Envs()
+	envs["HELM_NAMESPACE"] = cfg.Namespace
+	envs["KUBECONFIG"] = kubeConfigPath
+
+	awsEnvs, err := h.auth.AsEnv()
+	if err != nil {
+		return nil, fmt.Errorf("getting authentication details as environment: %w", err)
+	}
+
+	for k, v := range SplitEnv(awsEnvs) {
+		envs[k] = v
+	}
+
+	restoreFn, err := EstablishEnv(envs)
+
+	defer func() {
+		err = restoreFn()
+	}()
+
+	if err != nil {
+		return nil, fmt.Errorf("establishing environment: %w", err)
+	}
+
+	settings := cli.New()
+
+	actionConfig := new(action.Configuration)
+
+	debug := func(format string, v ...interface{}) {
+		if h.config.Debug {
+			_, _ = fmt.Fprintf(h.config.DebugOutput, format, v...)
+		}
+	}
+
+	restClient := &genericclioptions.ConfigFlags{
+		KubeConfig: &kubeConfigPath,
+		Namespace:  &cfg.Namespace,
+	}
+
+	err = actionConfig.Init(restClient, settings.Namespace(), DefaultHelmDriver, debug)
+	if err != nil {
+		return nil, fmt.Errorf("initializing action configuration: %w", err)
+	}
+
+	return h.findRelease(cfg.ReleaseName, actionConfig)
 }
 
 func (h *Helm) findRelease(releaseName string, config *action.Configuration) (*release.Release, error) {
@@ -309,7 +375,7 @@ func (h *Helm) findRelease(releaseName string, config *action.Configuration) (*r
 		}
 	}
 
-	return nil, nil
+	return nil, merrors.E(errors.New("release not found"), merrors.NotExist)
 }
 
 // Install a chart, comparable to: https://helm.sh/docs/helm/helm_install/
@@ -362,7 +428,7 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 	}
 
 	rel, err := h.findRelease(cfg.ReleaseName, actionConfig)
-	if err != nil {
+	if err != nil && !merrors.IsKind(err, merrors.NotExist) {
 		return nil, fmt.Errorf("finding release: %w", err)
 	}
 
@@ -519,7 +585,7 @@ func (h *Helm) Delete(kubeConfigPath string, cfg *DeleteConfig) error {
 	}
 
 	rel, err := h.findRelease(cfg.ReleaseName, actionConfig)
-	if err != nil {
+	if err != nil && merrors.IsKind(err, merrors.NotExist) {
 		return err
 	}
 

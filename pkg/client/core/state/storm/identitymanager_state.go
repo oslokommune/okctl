@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
@@ -212,6 +213,17 @@ func (s *identityManagerState) getIdentityPool(stackName string) (*IdentityPool,
 	return p, nil
 }
 
+func (s *identityManagerState) HasIdentityPool() (bool, error) {
+	pools := make([]IdentityPool, 0)
+
+	err := s.node.All(&pools)
+	if err != nil {
+		return false, fmt.Errorf("querying state: %w", err)
+	}
+
+	return len(pools) > 0, nil
+}
+
 func (s *identityManagerState) SaveIdentityPoolClient(client *client.IdentityPoolClient) error {
 	existing, err := s.getIdentityPoolClient(client.StackName)
 	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
@@ -280,6 +292,31 @@ func (s *identityManagerState) getIdentityPoolUser(stackName string) (*IdentityP
 	}
 
 	return u, nil
+}
+
+func (s *identityManagerState) GetIdentityPoolUsers() ([]client.IdentityPoolUser, error) {
+	users, err := s.getIdentityPoolUsers()
+	if err != nil {
+		return nil, fmt.Errorf("querying state: %w", err)
+	}
+
+	result := make([]client.IdentityPoolUser, len(users))
+	for index, user := range users {
+		result[index] = *user.Convert()
+	}
+
+	return result, nil
+}
+
+func (s *identityManagerState) getIdentityPoolUsers() ([]IdentityPoolUser, error) {
+	users := make([]IdentityPoolUser, 0)
+
+	err := s.node.All(&users)
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
 func (s *identityManagerState) RemoveIdentityPoolUser(stackName string) error {

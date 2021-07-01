@@ -23,3 +23,8 @@ type ExternalSecretsService interface {
 	CreateExternalSecrets(ctx context.Context, opts CreateExternalSecretsOpts) (*ExternalSecrets, error)
 	DeleteExternalSecrets(ctx context.Context, id api.ID) error
 }
+
+// ExternalSecretsState defines the state layer
+type ExternalSecretsState interface {
+	HasExternalSecrets() (bool, error)
+}

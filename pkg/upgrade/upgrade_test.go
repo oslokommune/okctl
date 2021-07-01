@@ -34,11 +34,18 @@ import (
 // Should run a upgrade
 // Should not run already applied migrations
 // Should run migrations up to the current okctl version
+// Should run hotfixes in order
 
+// Should verify digest before running
 // Lots of failure situations
 //
-// I okctl-upgrade-checksuyms.txt, endre filnavn. Da bør man få feil at ting ikke matcher. Får noe annet unyttig.
+// I okctl-upgrade-checksums.txt, endre filnavn. Da bør man få feil at ting ikke matcher. Får noe annet unyttig.
 // ------------------------------------------------
+
+// Valg: La binæren selv oppdatere state at den er kjørt. Men bruke en pakke fra okctl. Da kan okctl selv bruke denne
+// pakken.
+
+// upgrade --dry-run ?
 
 //nolint:funlen
 func TestRunUpgrades(t *testing.T) {
@@ -53,43 +60,31 @@ func TestRunUpgrades(t *testing.T) {
 		expectedStdOutGolden              bool
 	}{
 		{
-			name:               "Should run zero upgrades",
-			withGithubReleases: []*github.RepositoryRelease{},
-			withHost: state.Host{
-				Os:   osarch.Linux,
-				Arch: osarch.Amd64,
-			},
+			name:                    "Should run zero upgrades",
+			withGithubReleases:      []*github.RepositoryRelease{},
+			withHost:                state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
 			expectBinaryVersionsRun: []string{},
 		},
 		{
 			name:                              "Should run a Linux upgrade",
 			withGithubReleases:                createGithubReleases(osarch.Linux, osarch.Amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: "0.0.61",
-			withHost: state.Host{
-				Os:   osarch.Linux,
-				Arch: osarch.Amd64,
-			},
-			expectBinaryVersionsRun: []string{"0.0.61"},
+			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			expectBinaryVersionsRun:           []string{"0.0.61"},
 		},
 		{
 			name:                              "Should run a Darwin upgrade",
 			withGithubReleases:                createGithubReleases(osarch.Darwin, osarch.Amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: "0.0.61",
-			withHost: state.Host{
-				Os:   osarch.Darwin,
-				Arch: osarch.Amd64,
-			},
-			expectBinaryVersionsRun: []string{"0.0.61"},
+			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			expectBinaryVersionsRun:           []string{"0.0.61"},
 		},
 		{
 			name:                              "Should detect if binary's digest doesn't match the expected digest",
 			withGithubReleases:                createGithubReleases(osarch.Linux, osarch.Amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: "invalid_digest",
-			withHost: state.Host{
-				Os:   osarch.Linux,
-				Arch: osarch.Amd64,
-			},
-			expectBinaryVersionsRun: []string{},
+			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			expectBinaryVersionsRun:           []string{},
 			expectErrorContains: "failed to verify binary signature: verification failed, hash mismatch, " +
 				"got: 83bae1d215407ff3715063a621afa9138d2b15392d930e6377ed4a6058fea0ba, " +
 				"expected: a3bae1d215407ff3715063a621afa9138d2b15392d930e6377ed4a6058fea0ba",
@@ -98,23 +93,17 @@ func TestRunUpgrades(t *testing.T) {
 			name:                              "Should print upgrade's stdout to stdout",
 			withGithubReleases:                createGithubReleases(osarch.Linux, osarch.Amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: "0.0.61",
-			withHost: state.Host{
-				Os:   osarch.Linux,
-				Arch: osarch.Amd64,
-			},
-			expectedStdOutGolden:    true,
-			expectBinaryVersionsRun: []string{"0.0.61"},
+			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			expectedStdOutGolden:              true,
+			expectBinaryVersionsRun:           []string{"0.0.61"},
 		},
 		{
 			name:                              "Should return exit status if upgrade crashes",
 			withGithubReleases:                createGithubReleases(osarch.Linux, osarch.Amd64, []string{"0.0.58"}),
 			withGithubReleaseAssetsFromFolder: "upgrade_crashes",
-			withHost: state.Host{
-				Os:   osarch.Linux,
-				Arch: osarch.Amd64,
-			},
-			expectBinaryVersionsRun: []string{},
-			expectErrorContains:     "exit status 1",
+			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			expectBinaryVersionsRun:           []string{},
+			expectErrorContains:               "exit status 1",
 		},
 	}
 

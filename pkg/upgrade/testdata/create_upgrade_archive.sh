@@ -27,6 +27,7 @@ for OS in {Linux,Darwin} ; do
   cat <<EOF > "$UPGRADE_FILE"
 #!/usr/bin/env sh
 # This is a test upgrade. We create a file so we can verify that this upgrade was run.
+echo This is upgrade file for okctl-upgrade_${VER}_${OS}_${ARCH}
 touch ${VERIFICATITON_FILE}
 EOF
 

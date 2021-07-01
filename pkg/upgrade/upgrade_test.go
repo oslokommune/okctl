@@ -68,14 +68,14 @@ func TestRunUpgrades(t *testing.T) {
 		{
 			name:                              "Should run a Linux upgrade",
 			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
-			withGithubReleaseAssetsFromFolder: "0.0.61",
+			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
 			expectBinaryVersionsRun:           []string{"0.0.61"},
 		},
 		{
 			name:                              "Should run a Darwin upgrade",
 			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
-			withGithubReleaseAssetsFromFolder: "0.0.61",
+			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Darwin, Arch: osarch.Amd64},
 			expectBinaryVersionsRun:           []string{"0.0.61"},
 		},
@@ -92,7 +92,7 @@ func TestRunUpgrades(t *testing.T) {
 		{
 			name:                              "Should print upgrade's stdout to stdout",
 			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
-			withGithubReleaseAssetsFromFolder: "0.0.61",
+			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
 			expectedStdOutGolden:              true,
 			expectBinaryVersionsRun:           []string{"0.0.61"},
@@ -106,13 +106,11 @@ func TestRunUpgrades(t *testing.T) {
 			expectErrorContains:               "exit status 1",
 		},
 		{
-			name: "Should run two upgrades",
-			withGithubReleases: createGithubReleases([]string{osarch.Linux}, osarch.Amd64,
-				[]string{"0.0.61", "0.0.62"},
-			),
-			withGithubReleaseAssetsFromFolder: "0.0.61",
+			name:                              "Should run two upgrades",
+			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62"}),
+			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
-			expectBinaryVersionsRun:           []string{"0.0.61"},
+			expectBinaryVersionsRun:           []string{"0.0.61", "0.0.62"},
 		},
 	}
 
@@ -230,12 +228,14 @@ func capitalizeFirst(os string) string {
 	return strings.ToUpper(os[0:1]) + strings.ToLower(os[1:])
 }
 
-func mockHTTPResponse(folder string, releases []*github.RepositoryRelease) error {
+func mockHTTPResponse(baseFolder string, releases []*github.RepositoryRelease) error {
 	for _, release := range releases {
+		versionFolder := *release.TagName
+
 		for _, asset := range release.Assets {
 			assetFilename := getAssetFilename(*asset.BrowserDownloadURL)
 
-			data, err := readBytesFromFile(fmt.Sprintf(`testdata/%s/%s`, folder, assetFilename))
+			data, err := readBytesFromFile(fmt.Sprintf(`testdata/%s/%s/%s`, baseFolder, versionFolder, assetFilename))
 			if err != nil {
 				return err
 			}

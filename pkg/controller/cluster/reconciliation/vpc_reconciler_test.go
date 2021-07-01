@@ -20,12 +20,14 @@ import (
 func TestVPCReconciler(t *testing.T) {
 	// Componentflag is ignored and always true for the VPC
 	testCases := []struct {
-		name                      string
-		withPurge                 bool
-		withComponentExists       bool
-		expectCreations           int
-		expectDeletions           int
-		withDeleteDependenciesMet bool
+		name                string
+		withPurge           bool
+		withComponentExists bool
+		expectCreations     int
+		expectDeletions     int
+		withClusterExists   bool
+		expectRequeue       bool
+		withDatabases       bool
 	}{
 		{
 			name:                "Should noop when existing",
@@ -41,20 +43,29 @@ func TestVPCReconciler(t *testing.T) {
 			expectDeletions:     0,
 		},
 		{
-			name:                      "Should delete when purge and existing",
-			withPurge:                 true,
-			withComponentExists:       true,
-			withDeleteDependenciesMet: true,
-			expectCreations:           0,
-			expectDeletions:           1,
+			name:                "Should delete when purge and existing",
+			withPurge:           true,
+			withComponentExists: true,
+			expectCreations:     0,
+			expectDeletions:     1,
 		},
 		{
-			name:                      "Should noop when purge, existing and cluster exists",
-			withPurge:                 true,
-			withComponentExists:       true,
-			withDeleteDependenciesMet: false,
-			expectCreations:           0,
-			expectDeletions:           0,
+			name:                "Should noop when purge, existing and cluster exists",
+			withPurge:           true,
+			withComponentExists: true,
+			withClusterExists:   true,
+			expectCreations:     0,
+			expectDeletions:     0,
+			expectRequeue:       true,
+		},
+		{
+			name:                "Should wait when purge, existing and database(s) exist",
+			withPurge:           true,
+			withComponentExists: true,
+			withDatabases:       true,
+			expectCreations:     0,
+			expectDeletions:     0,
+			expectRequeue:       true,
 		},
 	}
 
@@ -70,9 +81,17 @@ func TestVPCReconciler(t *testing.T) {
 				CIDR: constant.DefaultClusterCIDR,
 			}
 
+			databases := make([]*client.PostgresDatabase, 0)
+
+			if tc.withDatabases {
+				databases = append(databases, &client.PostgresDatabase{ApplicationName: "dummy-db"})
+				databases = append(databases, &client.PostgresDatabase{ApplicationName: "another-db"})
+			}
+
 			state := &clientCore.StateHandlers{
-				Cluster: &mockClusterState{exists: !tc.withDeleteDependenciesMet},
-				Vpc:     &mockVPCState{exists: tc.withComponentExists},
+				Cluster:   &mockClusterState{exists: tc.withClusterExists},
+				Vpc:       &mockVPCState{exists: tc.withComponentExists},
+				Component: &mockComponentState{databases: databases},
 			}
 
 			reconciler := NewVPCReconciler(
@@ -83,11 +102,12 @@ func TestVPCReconciler(t *testing.T) {
 				createHappyServiceQuotaCloudProvider(),
 			)
 
-			_, err := reconciler.Reconcile(context.Background(), meta, state)
+			result, err := reconciler.Reconcile(context.Background(), meta, state)
 			assert.NoError(t, err)
 
 			assert.Equal(t, tc.expectCreations, creations, "creations")
 			assert.Equal(t, tc.expectDeletions, deletions, "deletions")
+			assert.Equal(t, tc.expectRequeue, result.Requeue)
 		})
 	}
 }

@@ -86,6 +86,7 @@ func (z *vpcReconciler) determineAction(meta reconciliation.Metadata, state *cli
 	case reconciliation.ActionDelete:
 		dependenciesReady, err := reconciliation.AssertDependencyExistence(false,
 			reconciliation.GenerateClusterExistenceTest(state, meta.ClusterDeclaration.Metadata.Name),
+			generatePostgresDBExistenceTest(state),
 		)
 		if err != nil {
 			return reconciliation.ActionNoop, fmt.Errorf("checking dependencies: %w", err)
@@ -103,6 +104,17 @@ func (z *vpcReconciler) determineAction(meta reconciliation.Metadata, state *cli
 	}
 
 	return reconciliation.ActionNoop, reconciliation.ErrIndecisive
+}
+
+func generatePostgresDBExistenceTest(state *clientCore.StateHandlers) func() (bool, error) {
+	return func() (bool, error) {
+		dbs, err := state.Component.GetPostgresDatabases()
+		if err != nil {
+			return false, fmt.Errorf("checking postgres databases state: %w", err)
+		}
+
+		return len(dbs) != 0, nil
+	}
 }
 
 // String returns the identifier for this reconciler

@@ -106,11 +106,11 @@ func TestRunUpgrades(t *testing.T) {
 			expectErrorContains:               "exit status 1",
 		},
 		{
-			name:                              "Should run two upgrades",
-			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62"}),
+			name:                              "Should run multiple upgrades",
+			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62", "0.0.64"}),
 			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
-			expectBinaryVersionsRun:           []string{"0.0.61", "0.0.62"},
+			expectBinaryVersionsRun:           []string{"0.0.61", "0.0.62", "0.0.64"},
 		},
 	}
 
@@ -161,18 +161,26 @@ func TestRunUpgrades(t *testing.T) {
 			}
 
 			for _, version := range tc.expectBinaryVersionsRun {
-				expectedFilepath := path.Join(repoDir, fmt.Sprintf(
+				// The upgrade binaries we use are actually bash scripts which outputs a file, that we use for
+				// verification that the upgrades have been run as expected.
+				expectedOutputFile := path.Join(repoDir, fmt.Sprintf(
 					"okctl-upgrade_%s_%s_%s_ran_successfully",
 					version,
 					capitalizeFirst(tc.withHost.Os),
 					tc.withHost.Arch),
 				)
-				upgradeRan, err := tmpStore.Exists(expectedFilepath)
+
+				upgradeRan, err := tmpStore.Exists(expectedOutputFile)
 				assert.NoError(t, err)
 
 				assert.True(t, upgradeRan, fmt.Sprintf(
 					"the upgrade should have produced the file %s, but no file was found",
-					path.Join(tmpStore.BasePath, expectedFilepath)))
+					path.Join(tmpStore.BasePath, expectedOutputFile)))
+
+				upgradeRunCount, err := getExpectedRunCount(tmpStore, expectedOutputFile)
+				assert.NoError(t, err)
+
+				assert.Equal(t, "1", upgradeRunCount)
 			}
 
 			if tc.expectedStdOutGolden {
@@ -261,4 +269,13 @@ func readBytesFromFile(file string) ([]byte, error) {
 	}
 
 	return b, nil
+}
+
+func getExpectedRunCount(tmpStore *storage.TemporaryStorage, expectedOutputFile string) (string, error) {
+	upgradeOutputBytes, err := tmpStore.ReadAll(expectedOutputFile)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.Trim(string(upgradeOutputBytes), "\n"), nil
 }

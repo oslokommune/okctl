@@ -67,21 +67,21 @@ func TestRunUpgrades(t *testing.T) {
 		},
 		{
 			name:                              "Should run a Linux upgrade",
-			withGithubReleases:                createGithubReleases(osarch.Linux, osarch.Amd64, []string{"0.0.61"}),
+			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: "0.0.61",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
 			expectBinaryVersionsRun:           []string{"0.0.61"},
 		},
 		{
 			name:                              "Should run a Darwin upgrade",
-			withGithubReleases:                createGithubReleases(osarch.Darwin, osarch.Amd64, []string{"0.0.61"}),
+			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: "0.0.61",
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withHost:                          state.Host{Os: osarch.Darwin, Arch: osarch.Amd64},
 			expectBinaryVersionsRun:           []string{"0.0.61"},
 		},
 		{
 			name:                              "Should detect if binary's digest doesn't match the expected digest",
-			withGithubReleases:                createGithubReleases(osarch.Linux, osarch.Amd64, []string{"0.0.61"}),
+			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: "invalid_digest",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
 			expectBinaryVersionsRun:           []string{},
@@ -91,7 +91,7 @@ func TestRunUpgrades(t *testing.T) {
 		},
 		{
 			name:                              "Should print upgrade's stdout to stdout",
-			withGithubReleases:                createGithubReleases(osarch.Linux, osarch.Amd64, []string{"0.0.61"}),
+			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: "0.0.61",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
 			expectedStdOutGolden:              true,
@@ -99,11 +99,20 @@ func TestRunUpgrades(t *testing.T) {
 		},
 		{
 			name:                              "Should return exit status if upgrade crashes",
-			withGithubReleases:                createGithubReleases(osarch.Linux, osarch.Amd64, []string{"0.0.58"}),
+			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.58"}),
 			withGithubReleaseAssetsFromFolder: "upgrade_crashes",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
 			expectBinaryVersionsRun:           []string{},
 			expectErrorContains:               "exit status 1",
+		},
+		{
+			name: "Should run two upgrades",
+			withGithubReleases: createGithubReleases([]string{osarch.Linux}, osarch.Amd64,
+				[]string{"0.0.61", "0.0.62"},
+			),
+			withGithubReleaseAssetsFromFolder: "0.0.61",
+			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			expectBinaryVersionsRun:           []string{"0.0.61"},
 		},
 	}
 
@@ -179,28 +188,36 @@ func TestRunUpgrades(t *testing.T) {
 }
 
 //nolint:unparam
-func createGithubReleases(os string, arch string, versions []string) []*github.RepositoryRelease {
+func createGithubReleases(oses []string, arch string, versions []string) []*github.RepositoryRelease {
 	releases := make([]*github.RepositoryRelease, 0, len(versions))
-	os = capitalizeFirst(os)
 
 	for i, version := range versions {
+		assets := make([]*github.ReleaseAsset, 0, len(oses)+1)
+
+		for _, os := range oses {
+			os = capitalizeFirst(os)
+
+			asset := &github.ReleaseAsset{
+				Name:        github.StringPtr(fmt.Sprintf("okctl_upgrade-%s_%s_%s.tar.gz", os, arch, version)),
+				ContentType: github.StringPtr("application/gzip"),
+				BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
+					"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz", version, version, os, arch)),
+			}
+
+			assets = append(assets, asset)
+		}
+
+		assets = append(assets, &github.ReleaseAsset{
+			Name:        github.StringPtr("okctl-upgrade-checksums.txt"),
+			ContentType: github.StringPtr("text/plain"),
+			BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
+				"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade-checksums.txt", version)),
+		})
+
 		release := &github.RepositoryRelease{
 			TagName: &versions[i],
 			Name:    &versions[i],
-			Assets: []*github.ReleaseAsset{
-				{
-					Name:        github.StringPtr("okctl-upgrade-checksums.txt"),
-					ContentType: github.StringPtr("text/plain"),
-					BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
-						"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade-checksums.txt", version)),
-				},
-				{
-					Name:        github.StringPtr(fmt.Sprintf("okctl_upgrade-%s_%s_%s.tar.gz", os, arch, version)),
-					ContentType: github.StringPtr("application/gzip"),
-					BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
-						"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz", version, version, os, arch)),
-				},
-			},
+			Assets:  assets,
 		}
 
 		releases = append(releases, release)

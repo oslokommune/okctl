@@ -35,8 +35,9 @@ import (
 // ------------------------------------------------
 // x Given these releases, ..., then these binaries should be run
 // x Should run a upgrade
-// -> Should not run already applied upgrades - custom: Må kjøre upgrade flere ganger. Assert: each binary was run once
-// Should run upgrades up to the current okctl version - sjekk binaries that ran
+// x Should not run already applied upgrades - custom: Må kjøre upgrade flere ganger. Assert: each binary was run once
+// -> Should run upgrades up to the current okctl version - sjekk binaries that ran
+//    See: // "DO: Remove file verification" , should be easier to do verifications.
 // Should not run too old upgrades - sjekk binaries that ran
 // Should run hotfixes in order - sjekk binaries that ran
 // Should run a hotfix even if it is older than the last applied upgrade.
@@ -57,12 +58,12 @@ func TestRunUpgrades(t *testing.T) {
 		withGithubReleases                []*github.RepositoryRelease
 		withGithubReleaseAssetsFromFolder string
 		withHost                          state.Host
-		expectBinaryVersionsRunOnce       []string
-		expectErrorContains               string
-		expectedStdOutGolden              bool
 		// withOriginalOkctlVersion          string // DO
-		withOkctlVersion string
-		withTestRun      func(t *testing.T, defaultOpts Opts) error
+		withOkctlVersion            string
+		withTestRun                 func(t *testing.T, defaultOpts Opts) error
+		expectBinaryVersionsRunOnce []string
+		expectErrorContains         string
+		expectedStdOutGolden        bool
 	}{
 		{
 			name:                        "Should run zero upgrades",
@@ -116,7 +117,6 @@ func TestRunUpgrades(t *testing.T) {
 			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.61", "0.0.62", "0.0.64"},
-			withOkctlVersion:                  "0.0.65", // DO
 		},
 		{
 			name:                              "Should not run already run upgrades",
@@ -137,6 +137,14 @@ func TestRunUpgrades(t *testing.T) {
 				return nil
 			},
 			expectBinaryVersionsRunOnce: []string{"0.0.61", "0.0.62", "0.0.64"},
+		},
+		{
+			name:                              "Should run upgrades with version up to and including current okclt version",
+			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62", "0.0.64"}),
+			withGithubReleaseAssetsFromFolder: "working",
+			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withOkctlVersion:                  "0.0.62",
+			expectBinaryVersionsRunOnce:       []string{"0.0.61", "0.0.62"},
 		},
 	}
 
@@ -215,6 +223,9 @@ func TestRunUpgrades(t *testing.T) {
 				assert.NoError(t, err)
 
 				assert.Equalf(t, "1", upgradeRunCount, "version %s ran %s times", version, upgradeRunCount)
+
+				// DO: Remove file verification above, use output buffer instead. Makes for easier mocking as well.
+
 			}
 
 			if tc.expectedStdOutGolden {

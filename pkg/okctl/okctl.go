@@ -135,6 +135,7 @@ func (o *Okctl) StateNodes() *clientCore.StateNodes {
 		ManagedPolicy:       o.DB.From(constant.DefaultStormNodeManagedPolicy),
 		ServiceAccount:      o.DB.From(constant.DefaultStormNodeServiceAccount),
 		ContainerRepository: o.DB.From(constant.DefaultStormNodeContainerRepository),
+		Upgrade:             o.DB.From(constant.DefaultStormNodeUpgrade),
 	}
 }
 
@@ -157,6 +158,7 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 		Monitoring:          storm.NewMonitoringState(nodes.Monitoring),
 		ArgoCD:              storm.NewArgoCDState(nodes.ArgoCD),
 		ContainerRepository: storm.NewContainerRepositoryState(nodes.ContainerRepository),
+		Upgrade:             storm.NewUpgradeState(nodes.Upgrade),
 	}
 }
 

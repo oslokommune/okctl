@@ -76,6 +76,7 @@ const (
 	DefaultStormNodeManagedPolicy             = "managedpolicy"
 	DefaultStormNodeServiceAccount            = "serviceaccount"
 	DefaultStormNodeContainerRepository       = "containers"
+	DefaultStormNodeUpgrade                   = "upgrade"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"

@@ -23,6 +23,7 @@ type StateNodes struct {
 	ManagedPolicy       breeze.Client
 	ServiceAccount      breeze.Client
 	ContainerRepository breeze.Client
+	Upgrade             breeze.Client
 }
 
 // StateHandlers contains the state handlers
@@ -43,6 +44,7 @@ type StateHandlers struct {
 	Monitoring          client.MonitoringState
 	ArgoCD              client.ArgoCDState
 	ContainerRepository client.ContainerRepositoryState
+	Upgrade             client.UpgradeState
 }
 
 // Services contains all client-side services

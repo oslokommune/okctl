@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/api"
+
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/config/state"
@@ -12,35 +14,55 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// okctlUpgradeBinary contains metadata for an upgrade that can be run to upgrade okctl to some specific version.
+// Note that okctlUpgradeBinary represents multiple binaries, one for each combination of OS and architecture, see
+// comment for field checksums.
 type okctlUpgradeBinary struct {
-	name          string
+	// name follows the format of okctlupgrade.BinaryNameFormat
+	name string
+	// fileExtension can be for instance "tar.gz"
 	fileExtension string
-	version       string
-	checksums     []state.Checksum
+	// version is the upgrade version, for instance "0.0.56" or "0.0.56_some_hotfix"
+	version string
+	// checksum is a list of checksums, one for every combination of host OS and architecture that exists for this
+	// binary, for instance Linux-amd64
+	checksums []state.Checksum
+}
+
+func (b okctlUpgradeBinary) String() string {
+	return b.name
 }
 
 // Run upgrades okctl
 func (u Upgrader) Run() error {
+	// Fetch
 	releases, err := u.githubService.ListReleases("oslokommune", "okctl-upgrade")
 	if err != nil {
 		return fmt.Errorf("listing github releases: %w", err)
 	}
 
-	// Convert to upgrades
 	upgradeBinaries, err := u.githubReleaseParser.toUpgradeBinaries(releases)
 	if err != nil {
 		return fmt.Errorf("parsing upgrade binaries: %w", err)
 	}
 
-	// DO: Filter
+	// Filter
+	upgradeBinaries, err = u.filter.get(upgradeBinaries)
+	if err != nil {
+		return fmt.Errorf("filtering upgrades: %w", err)
+	}
 
+	// Run
 	err = u.runBinaries(upgradeBinaries)
 	if err != nil {
 		return fmt.Errorf("running binaries: %w", err)
 	}
 
-	// DO: Store that upgrades have been run.
-	// DO: Consider letting upgrades edit state.db instead of okctl upgrade.
+	// Update state
+	err = u.filter.markAsRun(upgradeBinaries)
+	if err != nil {
+		return fmt.Errorf("marking upgrades as run: %w", err)
+	}
 
 	return nil
 }
@@ -137,6 +159,9 @@ type Opts struct {
 	GithubService       client.GithubService
 	ChecksumDownloader  ChecksumDownloader
 	FetcherOpts         FetcherOpts
+	OkctlVersion        string
+	State               client.UpgradeState
+	ClusterID           api.ID
 }
 
 // Upgrader knows how to upgrade okctl
@@ -148,6 +173,8 @@ type Upgrader struct {
 	githubService       client.GithubService
 	githubReleaseParser GithubReleaseParser
 	fetcherOpts         FetcherOpts
+	okctlVersion        string
+	filter              filter
 }
 
 // New returns a new Upgrader
@@ -160,5 +187,7 @@ func New(opts Opts) Upgrader {
 		githubService:       opts.GithubService,
 		githubReleaseParser: NewGithubReleaseParser(opts.ChecksumDownloader),
 		fetcherOpts:         opts.FetcherOpts,
+		okctlVersion:        opts.OkctlVersion,
+		filter:              newFilter(opts.State, opts.ClusterID),
 	}
 }

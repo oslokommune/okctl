@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/version"
+
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/storage"
 	"github.com/oslokommune/okctl/pkg/upgrade"
@@ -26,8 +29,9 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				return err
 			}
 
-			handlers := o.StateHandlers(o.StateNodes())
-			services, err := o.ClientServices(handlers)
+			stateHandlers := o.StateHandlers(o.StateNodes())
+
+			services, err := o.ClientServices(stateHandlers)
 			if err != nil {
 				return err
 			}
@@ -54,12 +58,19 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 
 			upgrader = upgrade.New(upgrade.Opts{
 				Debug:               o.Debug,
-				RepositoryDirectory: repoDir,
 				Logger:              o.Logger,
 				Out:                 out,
+				RepositoryDirectory: repoDir,
 				GithubService:       services.Github,
 				ChecksumDownloader:  upgrade.NewChecksumDownloader(),
 				FetcherOpts:         fetcherOpts,
+				OkctlVersion:        version.String(),
+				State:               stateHandlers.Upgrade,
+				ClusterID: api.ID{
+					Region:       o.Declaration.Metadata.Region,
+					AWSAccountID: o.Declaration.Metadata.AccountID,
+					ClusterName:  o.Declaration.Metadata.Name,
+				},
 			})
 
 			return nil

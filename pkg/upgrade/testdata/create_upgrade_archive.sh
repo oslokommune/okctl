@@ -29,19 +29,12 @@ cd "$VER" || exit 1
 
 for OS in {Linux,Darwin} ; do
   UPGRADE_FILE=okctl-upgrade_${VER}
-  VERIFICATITON_FILE=okctl-upgrade_${VER}_${OS}_${ARCH}_ran_successfully
 
   cat <<EOF > "$UPGRADE_FILE"
 #!/usr/bin/env sh
 
 # This is a test upgrade. We create a file so we can verify that this upgrade was run.
 echo This is upgrade file for okctl-upgrade_${VER}_${OS}_${ARCH}
-
-touch ${VERIFICATITON_FILE}
-COUNTER=\$(cat "${VERIFICATITON_FILE}")
-COUNTER=\$(( COUNTER + 1 ))
-echo \$COUNTER > ${VERIFICATITON_FILE}
-
 EOF
 
   ARCHIVE_FILE=okctl-upgrade_${VER}_${OS}_${ARCH}.tar.gz

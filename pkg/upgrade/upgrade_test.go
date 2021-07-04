@@ -326,15 +326,6 @@ func readBytesFromFile(file string) ([]byte, error) {
 	return b, nil
 }
 
-func getRunCountForUpgrade(tmpStore *storage.TemporaryStorage, expectedOutputFile string) (string, error) {
-	upgradeOutputBytes, err := tmpStore.ReadAll(expectedOutputFile)
-	if err != nil {
-		return "", err
-	}
-
-	return strings.Trim(string(upgradeOutputBytes), "\n"), nil
-}
-
 type upgradeStateMock struct {
 	upgrades map[string]*client.Upgrade
 }

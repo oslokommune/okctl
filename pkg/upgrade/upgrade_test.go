@@ -39,6 +39,7 @@ import (
 // x Should not run already applied upgrades - custom: Må kjøre upgrade flere ganger. Assert: each binary was run once
 // -> Should run upgrades up to the current okctl version - sjekk binaries that ran
 //    See: // "DO: Remove file verification" , should be easier to do verifications.
+// Should run hot fixes in correct order
 // Should detect if release has invalid tag name or assets (must support hot fixes)
 // Should not run too old upgrades - sjekk binaries that ran
 // Should run hotfixes in order - sjekk binaries that ran

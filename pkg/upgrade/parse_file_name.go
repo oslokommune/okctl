@@ -18,7 +18,7 @@ const (
 	expectedMinimumSubstringsInArchAndExtension = 2
 )
 
-// parseOkctlUpgradeFilename converts a string like 'okctl-upgrade_0.0.63_Darwin_amd64.tar.gz' to a okctlUpgradeFile
+// parseOkctlUpgradeFilename converts a string like 'okctl-upgrade_0.0.63_Darwin_amd64.tar.gz' to an okctlUpgradeFile
 // struct.
 func parseOkctlUpgradeFilename(filename string) (okctlUpgradeFile, error) {
 	filenameParts := strings.Split(filename, "_")

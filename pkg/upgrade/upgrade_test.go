@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"path"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -38,10 +39,11 @@ import (
 // x Should not run already applied upgrades - custom: Må kjøre upgrade flere ganger. Assert: each binary was run once
 // -> Should run upgrades up to the current okctl version - sjekk binaries that ran
 //    See: // "DO: Remove file verification" , should be easier to do verifications.
+// Should detect if release has invalid tag name or assets (must support hot fixes)
 // Should not run too old upgrades - sjekk binaries that ran
 // Should run hotfixes in order - sjekk binaries that ran
 // Should run a hotfix even if it is older than the last applied upgrade.
-//   Så hvis upgrade bumper 0.0.65, og det kommer en hotfix 0.0.63_my_hotfix, så skal den fortsatt kjøres. - custom sjekk
+//   Så hvis upgrade bumper 0.0.65, og det kommer en hotfix 0.0.63_my-hotfix, så skal den fortsatt kjøres. - custom sjekk
 
 // Should verify digest before running
 // Lots of failure situations
@@ -63,8 +65,32 @@ func TestRunUpgrades(t *testing.T) {
 		withTestRun                 func(t *testing.T, defaultOpts Opts) error
 		expectBinaryVersionsRunOnce []string
 		expectErrorContains         string
-		expectedStdOutGolden        bool
 	}{
+		{
+			name:                              "Should detect if binary's digest doesn't match the expected digest",
+			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
+			withGithubReleaseAssetsFromFolder: "invalid_digest",
+			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			expectBinaryVersionsRunOnce:       []string{},
+			expectErrorContains: "failed to verify binary signature: verification failed, hash mismatch, " +
+				"got: 83bae1d215407ff3715063a621afa9138d2b15392d930e6377ed4a6058fea0ba, " +
+				"expected: a3bae1d215407ff3715063a621afa9138d2b15392d930e6377ed4a6058fea0ba",
+		},
+		{
+			name:                              "Should print upgrade's stdout to stdout",
+			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
+			withGithubReleaseAssetsFromFolder: "working",
+			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
+		},
+		{
+			name:                              "Should return exit status if upgrade crashes",
+			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.58"}),
+			withGithubReleaseAssetsFromFolder: "upgrade_crashes",
+			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			expectBinaryVersionsRunOnce:       []string{},
+			expectErrorContains:               "exit status 1",
+		},
 		{
 			name:                        "Should run zero upgrades",
 			withGithubReleases:          []*github.RepositoryRelease{},
@@ -84,32 +110,6 @@ func TestRunUpgrades(t *testing.T) {
 			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Darwin, Arch: osarch.Amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
-		},
-		{
-			name:                              "Should detect if binary's digest doesn't match the expected digest",
-			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
-			withGithubReleaseAssetsFromFolder: "invalid_digest",
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
-			expectBinaryVersionsRunOnce:       []string{},
-			expectErrorContains: "failed to verify binary signature: verification failed, hash mismatch, " +
-				"got: 83bae1d215407ff3715063a621afa9138d2b15392d930e6377ed4a6058fea0ba, " +
-				"expected: a3bae1d215407ff3715063a621afa9138d2b15392d930e6377ed4a6058fea0ba",
-		},
-		{
-			name:                              "Should print upgrade's stdout to stdout",
-			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
-			withGithubReleaseAssetsFromFolder: "working",
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
-			expectedStdOutGolden:              true,
-			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
-		},
-		{
-			name:                              "Should return exit status if upgrade crashes",
-			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.58"}),
-			withGithubReleaseAssetsFromFolder: "upgrade_crashes",
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
-			expectBinaryVersionsRunOnce:       []string{},
-			expectErrorContains:               "exit status 1",
 		},
 		{
 			name:                              "Should run multiple upgrades",
@@ -139,7 +139,7 @@ func TestRunUpgrades(t *testing.T) {
 			expectBinaryVersionsRunOnce: []string{"0.0.61", "0.0.62", "0.0.64"},
 		},
 		{
-			name:                              "Should run upgrades with version up to and including current okclt version",
+			name:                              "Should run upgrades with version up to and including current okctl version, but no newer",
 			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62", "0.0.64"}),
 			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
@@ -152,7 +152,7 @@ func TestRunUpgrades(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			// Given
-			var buffer bytes.Buffer
+			var stdOutBuffer bytes.Buffer
 			var err error
 
 			tmpStore, err := storage.NewTemporaryStorage()
@@ -173,7 +173,7 @@ func TestRunUpgrades(t *testing.T) {
 			defaultOpts := Opts{
 				Debug:               false,
 				Logger:              logrus.StandardLogger(),
-				Out:                 &buffer,
+				Out:                 &stdOutBuffer,
 				RepositoryDirectory: repositoryAbsoluteDir,
 				GithubService:       NewGithubServiceMock(tc.withGithubReleases),
 				ChecksumDownloader:  NewChecksumDownloader(),
@@ -202,38 +202,33 @@ func TestRunUpgrades(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			for _, version := range tc.expectBinaryVersionsRunOnce {
-				// The upgrade binaries we use are actually bash scripts which outputs a file, that we use for
-				// verification that the upgrades have been run as expected.
-				expectedOutputFile := path.Join(repoDir, fmt.Sprintf(
-					"okctl-upgrade_%s_%s_%s_ran_successfully",
-					version,
-					capitalizeFirst(tc.withHost.Os),
-					tc.withHost.Arch),
+			stdOut := stdOutBuffer.String()
+			expectedUpgradesRun := make([]string, 0, len(tc.expectBinaryVersionsRunOnce))
+
+			for _, binaryVersion := range tc.expectBinaryVersionsRunOnce {
+				expectedUpgradesRun = append(expectedUpgradesRun,
+					fmt.Sprintf("okctl-upgrade_%s_%s_%s",
+						binaryVersion,
+						capitalizeFirst(tc.withHost.Os),
+						tc.withHost.Arch,
+					),
 				)
-
-				upgradeRan, err := tmpStore.Exists(expectedOutputFile)
-				assert.NoError(t, err)
-
-				assert.True(t, upgradeRan, fmt.Sprintf(
-					"the upgrade should have produced the file %s, but no file was found",
-					path.Join(tmpStore.BasePath, expectedOutputFile)))
-
-				upgradeRunCount, err := getRunCountForUpgrade(tmpStore, expectedOutputFile)
-				assert.NoError(t, err)
-
-				assert.Equalf(t, "1", upgradeRunCount, "version %s ran %s times", version, upgradeRunCount)
-
-				// DO: Remove file verification above, use output buffer instead. Makes for easier mocking as well.
-
 			}
 
-			if tc.expectedStdOutGolden {
-				g := goldie.New(t)
-				g.Assert(t, tc.name, buffer.Bytes())
+			re := regexp.MustCompile(`This is upgrade file for (okctl-upgrade.*)`)
+			found := re.FindAllStringSubmatch(stdOut, -1)
+			upgradesRun := make([]string, 0)
+
+			for _, match := range found {
+				upgradesRun = append(upgradesRun, match[1])
 			}
 
-			t.Log(buffer.String())
+			assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
+
+			g := goldie.New(t)
+			g.Assert(t, tc.name, stdOutBuffer.Bytes())
+
+			t.Log(stdOutBuffer.String())
 		})
 	}
 }
@@ -277,6 +272,8 @@ func createGithubReleases(oses []string, arch string, versions []string) []*gith
 	return releases
 }
 
+// capitalizeFirst converts for instance "linux" to "Linux". We use this because we expect github release assets for
+// upgrades to be named this way.
 func capitalizeFirst(os string) string {
 	return strings.ToUpper(os[0:1]) + strings.ToLower(os[1:])
 }

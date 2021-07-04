@@ -37,7 +37,7 @@ import (
 // x Given these releases, ..., then these binaries should be run
 // x Should run a upgrade
 // x Should not run already applied upgrades - custom: Må kjøre upgrade flere ganger. Assert: each binary was run once
-// -> Should run upgrades up to the current okctl version - sjekk binaries that ran
+// -> Should run upgrades up to the current okctl version, but no newer - sjekk binaries that ran
 //    See: // "DO: Remove file verification" , should be easier to do verifications.
 // Should run hot fixes in correct order
 // Should detect if release has invalid tag name or assets (must support hot fixes)
@@ -50,6 +50,8 @@ import (
 // Lots of failure situations
 
 // I okctl-upgrade-checksums.txt, endre filnavn. Da bør man få feil at ting ikke matcher. Får noe annet unyttig.
+
+// Refaktorer: Bruker Sprintf med %s-%s-%s mange steder. Bør være ett sted.
 
 // upgrade --dry-run ?
 
@@ -203,27 +205,8 @@ func TestRunUpgrades(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			stdOut := stdOutBuffer.String()
-			expectedUpgradesRun := make([]string, 0, len(tc.expectBinaryVersionsRunOnce))
-
-			for _, binaryVersion := range tc.expectBinaryVersionsRunOnce {
-				expectedUpgradesRun = append(expectedUpgradesRun,
-					fmt.Sprintf("okctl-upgrade_%s_%s_%s",
-						binaryVersion,
-						capitalizeFirst(tc.withHost.Os),
-						tc.withHost.Arch,
-					),
-				)
-			}
-
-			re := regexp.MustCompile(`This is upgrade file for (okctl-upgrade.*)`)
-			found := re.FindAllStringSubmatch(stdOut, -1)
-			upgradesRun := make([]string, 0)
-
-			for _, match := range found {
-				upgradesRun = append(upgradesRun, match[1])
-			}
-
+			expectedUpgradesRun := getExpectedUpgradesRun(tc.expectBinaryVersionsRunOnce, tc.withHost)
+			upgradesRun := getActualUpgradesRun(stdOutBuffer)
 			assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
 
 			g := goldie.New(t)
@@ -232,6 +215,35 @@ func TestRunUpgrades(t *testing.T) {
 			t.Log(stdOutBuffer.String())
 		})
 	}
+}
+
+func getExpectedUpgradesRun(expectBinaryVersionsRunOnce []string, withHost state.Host) []string {
+	expectedUpgradesRun := make([]string, 0, len(expectBinaryVersionsRunOnce))
+
+	for _, binaryVersion := range expectBinaryVersionsRunOnce {
+		expectedUpgradesRun = append(expectedUpgradesRun,
+			fmt.Sprintf("okctl-upgrade_%s_%s_%s",
+				binaryVersion,
+				capitalizeFirst(withHost.Os),
+				withHost.Arch,
+			),
+		)
+	}
+
+	return expectedUpgradesRun
+}
+
+func getActualUpgradesRun(stdOutBuffer bytes.Buffer) []string {
+	stdOut := stdOutBuffer.String()
+	re := regexp.MustCompile(`This is upgrade file for (okctl-upgrade.*)`)
+	found := re.FindAllStringSubmatch(stdOut, -1)
+	upgradesRun := make([]string, 0)
+
+	for _, match := range found {
+		upgradesRun = append(upgradesRun, match[1])
+	}
+
+	return upgradesRun
 }
 
 //nolint:unparam

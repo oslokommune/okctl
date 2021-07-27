@@ -21,14 +21,9 @@ require (
 	github.com/bshuster-repo/logrus-logstash-hook v1.0.0 // indirect
 	github.com/bugsnag/bugsnag-go v1.5.3 // indirect
 	github.com/bugsnag/panicwrap v1.2.0 // indirect
-	github.com/containerd/cgroups v0.0.0-20210114181951-8a68de567b68 // indirect
-	github.com/containerd/containerd v1.4.4
-	github.com/containerd/fifo v0.0.0-20210129194248-f8e8fdba47ef // indirect
-	github.com/containerd/ttrpc v1.0.2 // indirect
-	github.com/containerd/typeurl v1.0.1 // indirect
+	github.com/containerd/containerd v1.5.4
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v20.10.3+incompatible // indirect
-	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/evanphx/json-patch/v5 v5.5.0
 	github.com/fatih/color v1.9.0 // indirect
@@ -41,7 +36,6 @@ require (
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/gofrs/flock v0.8.0
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
-	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/google/go-cmp v0.5.6
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/gofuzz v1.2.0 // indirect
@@ -61,7 +55,6 @@ require (
 	github.com/mishudark/errors v0.0.0-20210318113247-bd4e9ef2fc74
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/moby/sys/mount v0.2.0 // indirect
-	github.com/opencontainers/selinux v1.8.0 // indirect
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
@@ -79,7 +72,6 @@ require (
 	github.com/spf13/viper v1.8.0
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.7.0
-	github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635 // indirect
 	github.com/theckman/yacspin v0.8.0
 	github.com/yvasiyarov/go-metrics v0.0.0-20150112132944-c25f46c4b940 // indirect
 	github.com/yvasiyarov/gorelic v0.0.7 // indirect

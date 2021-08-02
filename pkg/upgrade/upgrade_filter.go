@@ -10,9 +10,10 @@ import (
 )
 
 type filter struct {
-	state        client.UpgradeState
-	clusterID    api.ID
-	okctlVersion string
+	state                client.UpgradeState
+	clusterID            api.ID
+	okctlVersion         string
+	originalOkctlVersion string
 }
 
 func (f filter) get(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinary, error) {
@@ -26,6 +27,11 @@ func (f filter) get(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinary, error)
 	binaries, err = f.removeTooNew(binaries)
 	if err != nil {
 		return nil, fmt.Errorf("removing too new upgrade binaries: %w", err)
+	}
+
+	binaries, err = f.removeTooOld(binaries)
+	if err != nil {
+		return nil, fmt.Errorf("removing too old upgrade binaries: %w", err)
 	}
 
 	return binaries, nil
@@ -69,15 +75,15 @@ func (f filter) hasBinaryRun(binary okctlUpgradeBinary) (bool, error) {
 func (f filter) removeTooNew(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinary, error) {
 	var versionIsEqualOrLess []okctlUpgradeBinary
 
+	okctlSemver, err := semver.NewVersion(f.okctlVersion)
+	if err != nil {
+		return nil, fmt.Errorf("could not create semver from okctl version '%s': %w", f.okctlVersion, err)
+	}
+
 	for _, binary := range binaries {
 		binarySemver, err := semver.NewVersion(binary.version)
 		if err != nil {
 			return nil, fmt.Errorf("could not create semver from upgrade binary version '%s': %w", binary.version, err)
-		}
-
-		okctlSemver, err := semver.NewVersion(f.okctlVersion)
-		if err != nil {
-			return nil, fmt.Errorf("could not create semver from okctl version '%s': %w", f.okctlVersion, err)
 		}
 
 		if binarySemver.Equal(okctlSemver) || binarySemver.LessThan(okctlSemver) {
@@ -86,6 +92,28 @@ func (f filter) removeTooNew(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinar
 	}
 
 	return versionIsEqualOrLess, nil
+}
+
+func (f filter) removeTooOld(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinary, error) {
+	var versionIsNewThanOriginalOkctlVersion []okctlUpgradeBinary
+
+	originalOkctlSemver, err := semver.NewVersion(f.originalOkctlVersion)
+	if err != nil {
+		return nil, fmt.Errorf("could not create semver from original okctl version '%s': %w", f.originalOkctlVersion, err)
+	}
+
+	for _, binary := range binaries {
+		binarySemver, err := semver.NewVersion(binary.version)
+		if err != nil {
+			return nil, fmt.Errorf("could not create semver from upgrade binary version '%s': %w", binary.version, err)
+		}
+
+		if binarySemver.GreaterThan(originalOkctlSemver) {
+			versionIsNewThanOriginalOkctlVersion = append(versionIsNewThanOriginalOkctlVersion, binary)
+		}
+	}
+
+	return versionIsNewThanOriginalOkctlVersion, nil
 }
 
 func (f filter) markAsRun(binaries []okctlUpgradeBinary) error {
@@ -104,10 +132,11 @@ func (f filter) markAsRun(binaries []okctlUpgradeBinary) error {
 	return nil
 }
 
-func newFilter(state client.UpgradeState, clusterID api.ID, okctlVersion string) filter {
+func newFilter(state client.UpgradeState, clusterID api.ID, okctlVersion string, originalOkctlVersion string) filter {
 	return filter{
-		state:        state,
-		clusterID:    clusterID,
-		okctlVersion: okctlVersion,
+		state:                state,
+		clusterID:            clusterID,
+		okctlVersion:         okctlVersion,
+		originalOkctlVersion: originalOkctlVersion,
 	}
 }

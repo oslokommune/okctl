@@ -173,7 +173,6 @@ type Upgrader struct {
 	githubService       client.GithubService
 	githubReleaseParser GithubReleaseParser
 	fetcherOpts         FetcherOpts
-	okctlVersion        string
 	filter              filter
 }
 
@@ -187,7 +186,6 @@ func New(opts Opts) Upgrader {
 		githubService:       opts.GithubService,
 		githubReleaseParser: NewGithubReleaseParser(opts.ChecksumDownloader),
 		fetcherOpts:         opts.FetcherOpts,
-		okctlVersion:        opts.OkctlVersion,
-		filter:              newFilter(opts.State, opts.ClusterID),
+		filter:              newFilter(opts.State, opts.ClusterID, opts.OkctlVersion),
 	}
 }

@@ -58,19 +58,19 @@ import (
 //nolint:funlen
 func TestRunUpgrades(t *testing.T) {
 	testCases := []struct {
-		name string
-
+		name                              string
+		withOkctlVersion                  string
 		withGithubReleases                []*github.RepositoryRelease
 		withGithubReleaseAssetsFromFolder string
 		withHost                          state.Host
 		// withOriginalOkctlVersion          string // DO
-		withOkctlVersion            string
 		withTestRun                 func(t *testing.T, defaultOpts Opts) error
 		expectBinaryVersionsRunOnce []string
 		expectErrorContains         string
 	}{
 		{
 			name:                              "Should detect if binary's digest doesn't match the expected digest",
+			withOkctlVersion:                  "0.0.61",
 			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: "invalid_digest",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
@@ -81,6 +81,7 @@ func TestRunUpgrades(t *testing.T) {
 		},
 		{
 			name:                              "Should print upgrade's stdout to stdout",
+			withOkctlVersion:                  "0.0.61",
 			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
@@ -88,6 +89,7 @@ func TestRunUpgrades(t *testing.T) {
 		},
 		{
 			name:                              "Should return exit status if upgrade crashes",
+			withOkctlVersion:                  "0.0.58",
 			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.58"}),
 			withGithubReleaseAssetsFromFolder: "upgrade_crashes",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
@@ -96,12 +98,14 @@ func TestRunUpgrades(t *testing.T) {
 		},
 		{
 			name:                        "Should run zero upgrades",
+			withOkctlVersion:            "0.0.60",
 			withGithubReleases:          []*github.RepositoryRelease{},
 			withHost:                    state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
 			expectBinaryVersionsRunOnce: []string{},
 		},
 		{
 			name:                              "Should run a Linux upgrade",
+			withOkctlVersion:                  "0.0.61",
 			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
@@ -109,6 +113,7 @@ func TestRunUpgrades(t *testing.T) {
 		},
 		{
 			name:                              "Should run a Darwin upgrade",
+			withOkctlVersion:                  "0.0.61",
 			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Darwin, Arch: osarch.Amd64},
@@ -116,13 +121,15 @@ func TestRunUpgrades(t *testing.T) {
 		},
 		{
 			name:                              "Should run multiple upgrades",
+			withOkctlVersion:                  "0.0.64",
 			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62", "0.0.64"}),
 			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.61", "0.0.62", "0.0.64"},
 		},
 		{
-			name:                              "Should not run already run upgrades",
+			name:                              "Should run upgrades once",
+			withOkctlVersion:                  "0.0.64",
 			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62", "0.0.64"}),
 			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
@@ -143,11 +150,11 @@ func TestRunUpgrades(t *testing.T) {
 		},
 		{
 			name:                              "Should run upgrades with version up to and including current okctl version, but no newer",
-			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62", "0.0.64"}),
+			withOkctlVersion:                  "0.0.63",
+			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.62", "0.0.63", "0.0.64"}),
 			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
-			withOkctlVersion:                  "0.0.62",
-			expectBinaryVersionsRunOnce:       []string{"0.0.61", "0.0.62"},
+			expectBinaryVersionsRunOnce:       []string{"0.0.62", "0.0.63"},
 		},
 	}
 
@@ -184,7 +191,7 @@ func TestRunUpgrades(t *testing.T) {
 					Host:  tc.withHost,
 					Store: tmpStore,
 				},
-				OkctlVersion: "TODO", // DO
+				OkctlVersion: tc.withOkctlVersion,
 				State:        mockUpgradeState(),
 				ClusterID:    api.ID{},
 			}
@@ -200,6 +207,7 @@ func TestRunUpgrades(t *testing.T) {
 			// Then
 			if len(tc.expectErrorContains) > 0 {
 				//goland:noinspection GoNilness
+				assert.NotNil(t, err)
 				assert.Contains(t, err.Error(), tc.expectErrorContains)
 			} else {
 				assert.NoError(t, err)

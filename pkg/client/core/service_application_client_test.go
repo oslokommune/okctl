@@ -116,6 +116,7 @@ func TestNewApplicationService(t *testing.T) {
 	appOverlayDir := filepath.Join(appDir, constant.DefaultApplicationOverlayDir, clusterName)
 
 	g.Assert(t, "kustomization-base.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "kustomization.yaml")))
+	g.Assert(t, "namespace.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "namespace.yaml")))
 	g.Assert(t, "deployment.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "deployment.yaml")))
 	g.Assert(t, "volumes.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "volumes.yaml")))
 	g.Assert(t, "ingress.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "ingress.yaml")))

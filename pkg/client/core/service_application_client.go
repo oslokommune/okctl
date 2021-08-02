@@ -70,6 +70,7 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 		ApplicationName:      opts.Application.Metadata.Name,
 		ClusterName:          opts.ID.ClusterName,
 		BaseKustomization:    base.Kustomization,
+		Namespace:            base.Namespace,
 		Deployment:           base.Deployment,
 		Service:              base.Service,
 		Ingress:              base.Ingress,

@@ -34,6 +34,7 @@ func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplica
 	operations := store.NewFileSystem(absoluteApplicationDir, s.fs)
 
 	operations.AlterStore(store.SetBaseDir(path.Join(absoluteApplicationDir, relativeApplicationBaseDir)))
+	addOperationIfNotEmpty(operations, "namespace.yaml", application.Namespace)
 	addOperationIfNotEmpty(operations, "deployment.yaml", application.Deployment)
 	addOperationIfNotEmpty(operations, "volumes.yaml", application.Volume)
 	addOperationIfNotEmpty(operations, "ingress.yaml", application.Ingress)

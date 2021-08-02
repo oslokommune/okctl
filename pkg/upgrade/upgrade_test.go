@@ -151,10 +151,11 @@ func TestRunUpgrades(t *testing.T) {
 		{
 			name:                              "Should run upgrades with version up to and including current okctl version, but no newer",
 			withOkctlVersion:                  "0.0.63",
-			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.62", "0.0.63", "0.0.64"}),
+			withOriginalOkctlVersion:          "0.0.50",
+			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62", "0.0.63", "0.0.64"}),
 			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
-			expectBinaryVersionsRunOnce:       []string{"0.0.62", "0.0.63"},
+			expectBinaryVersionsRunOnce:       []string{"0.0.61", "0.0.62", "0.0.63"},
 		},
 	}
 

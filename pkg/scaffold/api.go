@@ -24,6 +24,7 @@ type ApplicationBase struct {
 	Kustomization   []byte
 	ArgoApplication []byte
 
+	Namespace      []byte
 	Deployment     []byte
 	Ingress        []byte
 	Service        []byte
@@ -36,6 +37,7 @@ func NewApplicationBase() ApplicationBase {
 	return ApplicationBase{
 		Kustomization:   []byte(""),
 		ArgoApplication: []byte(""),
+		Namespace:       []byte(""),
 		Deployment:      []byte(""),
 		Ingress:         []byte(""),
 		Service:         []byte(""),
@@ -108,6 +110,15 @@ func GenerateApplicationBase(app v1alpha1.Application, iacRepoURL, relativeAppli
 		if err != nil {
 			return applicationBase, err
 		}
+	}
+
+	namespace := resources.CreateNamespace(app)
+
+	kustomization.AddResource("namespace.yaml")
+
+	applicationBase.Namespace, err = resourceAsBytes(namespace)
+	if err != nil {
+		return applicationBase, err
 	}
 
 	deployment := resources.CreateOkctlDeployment(app)

@@ -43,6 +43,7 @@ type ScaffoldedApplication struct {
 
 	OverlayKustomization []byte
 	Service              []byte
+	Namespace            []byte
 	Deployment           []byte
 	IngressPatch         []byte
 	ServicePatch         []byte

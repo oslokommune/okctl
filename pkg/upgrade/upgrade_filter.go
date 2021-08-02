@@ -43,7 +43,7 @@ func (f filter) removeAlreadyExecuted(binaries []okctlUpgradeBinary) ([]okctlUpg
 	for _, binary := range binaries {
 		hasBinaryExecuted, err := f.hasBinaryRun(binary)
 		if err != nil {
-			return nil, fmt.Errorf("checking if binary '%s' has run: %w", binary.version, err)
+			return nil, fmt.Errorf("checking if binary '%s' has run: %w", binary, err)
 		}
 
 		if !hasBinaryExecuted {
@@ -55,7 +55,7 @@ func (f filter) removeAlreadyExecuted(binaries []okctlUpgradeBinary) ([]okctlUpg
 }
 
 func (f filter) hasBinaryRun(binary okctlUpgradeBinary) (bool, error) {
-	_, err := f.state.GetUpgrade(binary.version)
+	_, err := f.state.GetUpgrade(binary.RawVersion())
 	if err != nil {
 		if !errors.Is(err, client.ErrUpgradeNotFound) {
 			return false, err
@@ -81,12 +81,7 @@ func (f filter) removeTooNew(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinar
 	}
 
 	for _, binary := range binaries {
-		binarySemver, err := semver.NewVersion(binary.version)
-		if err != nil {
-			return nil, fmt.Errorf("could not create semver from upgrade binary version '%s': %w", binary.version, err)
-		}
-
-		if binarySemver.Equal(okctlSemver) || binarySemver.LessThan(okctlSemver) {
+		if binary.SemverVersion().Equal(okctlSemver) || binary.SemverVersion().LessThan(okctlSemver) {
 			versionIsEqualOrLess = append(versionIsEqualOrLess, binary)
 		}
 	}
@@ -94,6 +89,13 @@ func (f filter) removeTooNew(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinar
 	return versionIsEqualOrLess, nil
 }
 
+// removeTooOld removes binaries with versions below original okctl version.
+//
+// If we make a cluster with okctl 0.0.62, we should never run upgrade binaries that are meant
+// to upgrade older versions of the cluster up to 0.0.62. This is because there is no need to run those
+// upgrades, as a fresh okctl cluster already is up-to-date. So if we have an upgrade-binary-0.0.60, which
+// means "upgrade cluster and attached resources to support okctl version 0.0.60", we don't need to run this
+// upgrade binary.
 func (f filter) removeTooOld(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinary, error) {
 	var versionIsNewThanOriginalOkctlVersion []okctlUpgradeBinary
 
@@ -103,12 +105,7 @@ func (f filter) removeTooOld(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinar
 	}
 
 	for _, binary := range binaries {
-		binarySemver, err := semver.NewVersion(binary.version)
-		if err != nil {
-			return nil, fmt.Errorf("could not create semver from upgrade binary version '%s': %w", binary.version, err)
-		}
-
-		if binarySemver.GreaterThan(originalOkctlSemver) {
+		if binary.SemverVersion().GreaterThan(originalOkctlSemver) {
 			versionIsNewThanOriginalOkctlVersion = append(versionIsNewThanOriginalOkctlVersion, binary)
 		}
 	}
@@ -120,7 +117,7 @@ func (f filter) markAsRun(binaries []okctlUpgradeBinary) error {
 	for _, binary := range binaries {
 		u := &client.Upgrade{
 			ID:      f.clusterID,
-			Version: binary.version,
+			Version: binary.RawVersion(),
 		}
 
 		err := f.state.SaveUpgrade(u)

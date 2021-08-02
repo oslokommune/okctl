@@ -11,7 +11,6 @@ import (
 	digestPkg "github.com/oslokommune/okctl/pkg/binaries/digest"
 
 	ghPkg "github.com/google/go-github/v32/github"
-	"github.com/oslokommune/okctl/pkg/binaries/run/okctlupgrade"
 	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/github"
 )
@@ -57,7 +56,6 @@ func (g GithubReleaseParser) parseRelease(release *github.RepositoryRelease) (ok
 	}
 
 	releaseUpgradeVersion := *release.TagName
-	binaryName := fmt.Sprintf(okctlupgrade.BinaryNameFormat, releaseUpgradeVersion)
 
 	var binaryChecksums []state.Checksum
 
@@ -90,12 +88,12 @@ func (g GithubReleaseParser) parseRelease(release *github.RepositoryRelease) (ok
 			"could not find checksum asset for release %s (assets: %s)", *release.Name, assetNames)
 	}
 
-	return okctlUpgradeBinary{
-		name:          binaryName,
-		fileExtension: ".tar.gz",
-		version:       releaseUpgradeVersion,
-		checksums:     binaryChecksums,
-	}, nil
+	binaryVersion, err := newVersion(releaseUpgradeVersion)
+	if err != nil {
+		return okctlUpgradeBinary{}, fmt.Errorf("creating version: %w", err)
+	}
+
+	return newOkctlUpgradeBinary(binaryVersion, binaryChecksums), nil
 }
 
 func (g GithubReleaseParser) fetchChecksums(asset *ghPkg.ReleaseAsset) ([]state.Checksum, error) {

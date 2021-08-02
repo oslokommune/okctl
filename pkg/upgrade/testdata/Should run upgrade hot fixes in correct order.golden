@@ -1,0 +1,18 @@
+preloading missing binary: okctl-upgrade_0.0.61 (0.0.61)
+preloading missing binary: okctl-upgrade_0.0.62 (0.0.62)
+preloading missing binary: okctl-upgrade_0.0.62.a (0.0.62.a)
+preloading missing binary: okctl-upgrade_0.0.62.b (0.0.62.b)
+preloading missing binary: okctl-upgrade_0.0.63 (0.0.63)
+preloading missing binary: okctl-upgrade_0.0.63.a (0.0.63.a)
+--- Running upgrade: okctl-upgrade_0.0.61 ---
+This is upgrade file for okctl-upgrade_0.0.61_Linux_amd64
+--- Running upgrade: okctl-upgrade_0.0.62 ---
+This is upgrade file for okctl-upgrade_0.0.62_Linux_amd64
+--- Running upgrade: okctl-upgrade_0.0.62.a ---
+This is upgrade file for okctl-upgrade_0.0.62.a_Linux_amd64
+--- Running upgrade: okctl-upgrade_0.0.62.b ---
+This is upgrade file for okctl-upgrade_0.0.62.b_Linux_amd64
+--- Running upgrade: okctl-upgrade_0.0.63 ---
+This is upgrade file for okctl-upgrade_0.0.63_Linux_amd64
+--- Running upgrade: okctl-upgrade_0.0.63.a ---
+This is upgrade file for okctl-upgrade_0.0.63.a_Linux_amd64

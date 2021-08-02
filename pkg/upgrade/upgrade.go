@@ -4,10 +4,12 @@ package upgrade
 import (
 	"fmt"
 	"io"
+	"sort"
 
+	semverPkg "github.com/Masterminds/semver"
 	"github.com/oslokommune/okctl/pkg/api"
-
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
+	"github.com/oslokommune/okctl/pkg/binaries/run/okctlupgrade"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/storage"
@@ -15,22 +17,45 @@ import (
 )
 
 // okctlUpgradeBinary contains metadata for an upgrade that can be run to upgrade okctl to some specific version.
-// Note that okctlUpgradeBinary represents multiple binaries, one for each combination of OS and architecture, see
+// Note that an okctlUpgradeBinary represents multiple binaries, one for each combination of OS and architecture, see
 // comment for field checksums.
 type okctlUpgradeBinary struct {
-	// name follows the format of okctlupgrade.BinaryNameFormat
-	name string
 	// fileExtension can be for instance "tar.gz"
 	fileExtension string
 	// version is the upgrade version, for instance "0.0.56" or "0.0.56_some_hotfix"
-	version string
+	version upgradeBinaryVersion
 	// checksum is a list of checksums, one for every combination of host OS and architecture that exists for this
 	// binary, for instance Linux-amd64
 	checksums []state.Checksum
 }
 
 func (b okctlUpgradeBinary) String() string {
-	return b.name
+	return b.BinaryName()
+}
+
+// BinaryName returns a string with a version, for instance "okctl-upgrade_0.0.56"
+func (b okctlUpgradeBinary) BinaryName() string {
+	return fmt.Sprintf(okctlupgrade.BinaryNameFormat, b.RawVersion())
+}
+
+func (b okctlUpgradeBinary) RawVersion() string {
+	return b.version.raw
+}
+
+func (b okctlUpgradeBinary) SemverVersion() *semverPkg.Version {
+	return b.version.semver
+}
+
+func (b okctlUpgradeBinary) HotfixVersion() string {
+	return b.version.hotfix
+}
+
+func newOkctlUpgradeBinary(version upgradeBinaryVersion, checksums []state.Checksum) okctlUpgradeBinary {
+	return okctlUpgradeBinary{
+		fileExtension: ".tar.gz",
+		version:       version,
+		checksums:     checksums,
+	}
 }
 
 // Run upgrades okctl
@@ -49,13 +74,16 @@ func (u Upgrader) Run() error {
 	// Filter
 	upgradeBinaries, err = u.filter.get(upgradeBinaries)
 	if err != nil {
-		return fmt.Errorf("filtering upgrades: %w", err)
+		return fmt.Errorf("filtering upgrade binaries: %w", err)
 	}
+
+	// Sort
+	u.sort(upgradeBinaries)
 
 	// Run
 	err = u.runBinaries(upgradeBinaries)
 	if err != nil {
-		return fmt.Errorf("running binaries: %w", err)
+		return fmt.Errorf("running upgrade binaries: %w", err)
 	}
 
 	// Update state
@@ -67,6 +95,21 @@ func (u Upgrader) Run() error {
 	return nil
 }
 
+func (u Upgrader) sort(upgradeBinaries []okctlUpgradeBinary) {
+	sort.SliceStable(upgradeBinaries, func(i, j int) bool {
+		if upgradeBinaries[i].version.semver.LessThan(upgradeBinaries[j].version.semver) {
+			return true
+		}
+
+		if upgradeBinaries[i].version.semver.GreaterThan(upgradeBinaries[j].version.semver) {
+			return false
+		}
+
+		// semvers are equal, order on hotfix
+		return upgradeBinaries[i].version.hotfix < upgradeBinaries[j].version.hotfix
+	})
+}
+
 func (u Upgrader) runBinaries(upgradeBinaries []okctlUpgradeBinary) error {
 	binaryProvider, err := u.createBinaryProvider(upgradeBinaries)
 	if err != nil {
@@ -74,18 +117,18 @@ func (u Upgrader) runBinaries(upgradeBinaries []okctlUpgradeBinary) error {
 	}
 
 	for _, binary := range upgradeBinaries {
-		binaryRunner, err := binaryProvider.okctlUpgrade(binary.version)
+		binaryRunner, err := binaryProvider.okctlUpgrade(binary.RawVersion())
 		if err != nil {
 			return fmt.Errorf("getting okctl upgrade binary: %w", err)
 		}
 
 		binaryRunner.Debug(u.debug)
 
-		_, _ = fmt.Fprintf(u.out, "--- Running upgrade: %s ---\n", binary.version)
+		_, _ = fmt.Fprintf(u.out, "--- Running upgrade: %s ---\n", binary)
 
 		_, err = binaryRunner.Run()
 		if err != nil {
-			return fmt.Errorf("running upgrade binary %s: %w", binary.version, err)
+			return fmt.Errorf("running upgrade binary %s: %w", binary, err)
 		}
 	}
 
@@ -122,18 +165,18 @@ func (u Upgrader) toStateBinaries(upgradeBinaries []okctlUpgradeBinary) []state.
 	for _, upgradeBinary := range upgradeBinaries {
 		URLPattern := fmt.Sprintf(
 			"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_#{os}_#{arch}.tar.gz",
-			upgradeBinary.version,
-			upgradeBinary.version,
+			upgradeBinary.RawVersion(),
+			upgradeBinary.RawVersion(),
 		)
 
 		binary := state.Binary{
-			Name:       upgradeBinary.name,
-			Version:    upgradeBinary.version,
+			Name:       upgradeBinary.BinaryName(),
+			Version:    upgradeBinary.RawVersion(),
 			BufferSize: "300mb",
 			URLPattern: URLPattern,
 			Archive: state.Archive{
 				Type:   upgradeBinary.fileExtension,
-				Target: upgradeBinary.name,
+				Target: upgradeBinary.BinaryName(),
 			},
 			Checksums: upgradeBinary.checksums,
 		}

@@ -39,8 +39,8 @@ import (
 // x Should not run already applied upgrades - custom: Må kjøre upgrade flere ganger. Assert: each binary was run once
 // x Should run upgrades up to the current okctl version, but no newer
 // ?   See: // "DO: Remove file verification" , should be easier to do verifications.
-// --> Should not run too old upgrades
-// Should run hot fixes in correct order
+// x Should not run too old upgrades
+// -> Should run hot fixes in correct order
 // Should run hotfixes in order - sjekk binaries that ran
 // Should run a hotfix even if it is older than the last applied upgrade.
 //   Så hvis upgrade bumper 0.0.65, og det kommer en hotfix 0.0.63_my-hotfix, så skal den fortsatt kjøres. - custom sjekk
@@ -166,11 +166,7 @@ func TestRunUpgrades(t *testing.T) {
 			expectBinaryVersionsRunOnce:       []string{"0.0.61", "0.0.62", "0.0.63"},
 		},
 		{
-			// Explanation: If we make a cluster with okctl 0.0.62, we should never run upgrade binaries that are meant
-			// to upgrade older versions of the cluster up to 0.0.62. This is because there is no need to run those
-			// upgrades, as a fresh okctl cluster already is up-to-date. So if we have an upgrade-binary-0.0.60, which
-			// means "upgrade cluster and attached resources to support okctl version 0.0.60", we don't need to run this
-			// upgrade binary.
+
 			name:                              "Should not run upgrades that are older than the first installed okctl version",
 			withOkctlVersion:                  "0.0.64",
 			withOriginalOkctlVersion:          "0.0.62",
@@ -178,6 +174,16 @@ func TestRunUpgrades(t *testing.T) {
 			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.63", "0.0.64"},
+		},
+		{
+			name:                     "Should run upgrade hot fixes in correct order",
+			withOkctlVersion:         "0.0.64",
+			withOriginalOkctlVersion: "0.0.50",
+			withGithubReleases: createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64,
+				[]string{"0.0.63.a", "0.0.62", "0.0.62.b", "0.0.61", "0.0.62.a", "0.0.63"}),
+			withGithubReleaseAssetsFromFolder: "working",
+			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			expectBinaryVersionsRunOnce:       []string{"0.0.61", "0.0.62", "0.0.62.a", "0.0.62.b", "0.0.63", "0.0.63.a"},
 		},
 	}
 
@@ -312,6 +318,11 @@ func createGithubReleases(oses []string, arch string, versions []string) []*gith
 		}
 
 		releases = append(releases, release)
+	}
+
+	// reverse slice to make sure sorting of upgrade binaries work
+	for i, j := 0, len(releases)-1; i < j; i, j = i+1, j-1 {
+		releases[i], releases[j] = releases[j], releases[i]
 	}
 
 	return releases

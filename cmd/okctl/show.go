@@ -47,7 +47,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			okctlEnvironment, err = commands.GetOkctlEnvironment(o)
+			okctlEnvironment, err = commands.GetOkctlEnvironment(o, declarationPath)
 			if err != nil {
 				return err
 			}

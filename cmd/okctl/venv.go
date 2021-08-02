@@ -101,7 +101,7 @@ func venvPreRunE(o *okctl.Okctl) (commands.OkctlEnvironment, error) {
 		return commands.OkctlEnvironment{}, err
 	}
 
-	okctlEnvironment, err := commands.GetOkctlEnvironment(o)
+	okctlEnvironment, err := commands.GetOkctlEnvironment(o, declarationPath)
 	if err != nil {
 		return commands.OkctlEnvironment{}, err
 	}

@@ -22,7 +22,7 @@ require (
 	github.com/bugsnag/bugsnag-go v1.5.3 // indirect
 	github.com/bugsnag/panicwrap v1.2.0 // indirect
 	github.com/containerd/cgroups v0.0.0-20210114181951-8a68de567b68 // indirect
-	github.com/containerd/containerd v1.4.4
+	github.com/containerd/containerd v1.4.8
 	github.com/containerd/fifo v0.0.0-20210129194248-f8e8fdba47ef // indirect
 	github.com/containerd/ttrpc v1.0.2 // indirect
 	github.com/containerd/typeurl v1.0.1 // indirect
@@ -45,7 +45,7 @@ require (
 	github.com/google/go-cmp v0.5.6
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/google/uuid v1.2.0
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/handlers v1.4.2 // indirect
 	github.com/gosimple/slug v1.9.0
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
@@ -65,7 +65,7 @@ require (
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.48.1
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.49.0
 	github.com/rancher/k3d/v3 v3.4.0
 	github.com/rogpeppe/go-internal v1.6.1 // indirect
 	github.com/sanity-io/litter v1.5.0
@@ -91,7 +91,7 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gotest.tools v2.2.0+incompatible
-	helm.sh/helm/v3 v3.6.2
+	helm.sh/helm/v3 v3.6.3
 	k8s.io/api v0.21.2
 	k8s.io/apimachinery v0.21.2
 	k8s.io/cli-runtime v0.21.2

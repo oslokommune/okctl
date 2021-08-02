@@ -18,6 +18,8 @@ okctl venv -c cluster.yaml
 
 which will
 * run a subshell with the environment variables from `okctl show credentials` already set.
+* Set the OKCTL_CLUSTER_DECLARATION environment variable. This allows you to omit the `--cluster-declaration` flag when
+  running context dependent operations like `apply application`
 * set a command prompt like this (example):
 
 ```bash

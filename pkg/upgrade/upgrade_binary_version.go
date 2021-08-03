@@ -21,7 +21,7 @@ type upgradeBinaryVersion struct {
 	hotfix string
 }
 
-// newUpgradeBinaryVersion parses a given version and returns an instance of upgradeBinaryVersion or
+// parseUpgradeBinaryVersion parses a given version and returns an instance of upgradeBinaryVersion or
 // an error if unable to parse the version.
 //
 // Valid input examples:
@@ -29,7 +29,7 @@ type upgradeBinaryVersion struct {
 // 0.0.56
 //
 // 0.0.56.some-hotfix
-func newUpgradeBinaryVersion(text string) (upgradeBinaryVersion, error) {
+func parseUpgradeBinaryVersion(text string) (upgradeBinaryVersion, error) {
 	var semver *semverPkg.Version
 
 	var err error
@@ -41,14 +41,16 @@ func newUpgradeBinaryVersion(text string) (upgradeBinaryVersion, error) {
 	case len(parts) == dotCountForRegularSemver:
 		semver, err = semverPkg.NewVersion(text)
 		if err != nil {
-			return upgradeBinaryVersion{}, fmt.Errorf("parsing semantic version: %w", err)
+			return upgradeBinaryVersion{}, fmt.Errorf(
+				"parsing to semantic version from '%s': %w", text, err)
 		}
 	case len(parts) == dotCountForSemverWithHotfix:
 		semverString := strings.Join(parts[0:3], ".")
 
 		semver, err = semverPkg.NewVersion(semverString)
 		if err != nil {
-			return upgradeBinaryVersion{}, fmt.Errorf("parsing semantic hotfix version: %w", err)
+			return upgradeBinaryVersion{}, fmt.Errorf(
+				"parsing to semantic with hotfix version from '%s': %w", text, err)
 		}
 
 		hotfix = parts[3]

@@ -78,6 +78,7 @@ func (u Upgrader) runBinaries(upgradeBinaries []okctlUpgradeBinary) error {
 func (u Upgrader) createBinaryProvider(upgradeBinaries []okctlUpgradeBinary) (upgradeBinaryProvider, error) {
 	binaries := u.toStateBinaries(upgradeBinaries)
 
+	// fetch.New downloads binaries that are missing
 	fetcher, err := fetch.New(
 		u.out,
 		u.logger,

@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/sebdah/goldie/v2"
@@ -17,12 +19,10 @@ import (
 	"github.com/oslokommune/okctl/pkg/osarch"
 
 	"github.com/jarcoal/httpmock"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/require"
-
 	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/github"
 	"github.com/oslokommune/okctl/pkg/storage"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -43,9 +43,10 @@ import (
 // x Should run hot fixes in correct order
 // x Should run a hotfix even if it is older than the last applied upgrade.
 //     Så hvis upgrade bumper 0.0.65, og det kommer en hotfix 0.0.63_my-hotfix, så skal den fortsatt kjøres. - custom sjekk
+// Må støtte OriginalOkctlVersion
 
 // Failure situations
-// Should detect if release has invalid tag name or assets (must support hot fixes)
+// x Should detect if release has invalid tag name or assets (must support hot fixes)
 // Should verify digest before running
 // Lots of failure situations
 // I okctl-upgrade-checksums.txt, endre filnavn. Da bør man få feil at ting ikke matcher. Får noe annet unyttig.
@@ -137,17 +138,24 @@ func TestRunUpgrades(t *testing.T) {
 			name:                              "Should run upgrades once",
 			withOkctlVersion:                  "0.0.64",
 			withOriginalOkctlVersion:          "0.0.50",
-			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62", "0.0.64"}),
 			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
 			withTestRun: func(t *testing.T, defaultOpts Opts) {
+				// Given
+				mockHTTPResponse(t, "working", createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62", "0.0.64"}))
+				defer httpmock.DeactivateAndReset()
+
+				// When
 				upgrader := New(defaultOpts)
 
+				// Then
 				err := upgrader.Run()
 				assert.NoError(t, err)
 
+				// When
 				upgrader = New(defaultOpts)
 
+				// Then
 				err = upgrader.Run()
 				assert.NoError(t, err)
 			},
@@ -183,53 +191,118 @@ func TestRunUpgrades(t *testing.T) {
 			expectBinaryVersionsRunOnce:       []string{"0.0.61", "0.0.62", "0.0.62.a", "0.0.62.b", "0.0.63", "0.0.63.a"},
 		},
 		{
-			name:                     "Should run a hotfix even if it is older than the last applied upgrade",
-			withOkctlVersion:         "0.0.63",
-			withOriginalOkctlVersion: "0.0.50",
-			withGithubReleases: createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64,
-				[]string{"0.0.61", "0.0.62", "0.0.62.a", "0.0.62.b", "0.0.63", "0.0.63.a", "0.0.64"}),
+			name:                              "Should run a hotfix even if it is older than the last applied upgrade",
+			withOkctlVersion:                  "0.0.63",
+			withOriginalOkctlVersion:          "0.0.50",
 			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
 			withTestRun: func(t *testing.T, defaultOpts Opts) {
-				// When running upgrade first time
-				var stdOutBuffer1 bytes.Buffer
-				githubReleases1 := []string{"0.0.61", "0.0.62", "0.0.63"}
-				defaultOpts.GithubService = NewGithubServiceMock(createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64,
-					githubReleases1))
-				defaultOpts.Out = &stdOutBuffer1
+				// Given settings for first upgrade
+				githubReleaseVersions := []string{"0.0.61", "0.0.62", "0.0.63"}
+				githubReleases := createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, githubReleaseVersions)
+				mockHTTPResponse(t, "working", githubReleases)
+				defaultOpts.GithubService = NewGithubServiceMock(githubReleases)
+
+				stdOutBuffer := new(bytes.Buffer)
+				defaultOpts.Out = stdOutBuffer
+
 				upgrader := New(defaultOpts)
 
+				// When running upgrade first time
 				err := upgrader.Run()
-				assert.NoError(t, err)
 
 				// Then
-				expectedUpgradesRun := getExpectedUpgradesRun(githubReleases1, state.Host{Os: osarch.Linux, Arch: osarch.Amd64})
-				upgradesRun := getActualUpgradesRun(stdOutBuffer1)
+				t.Log(stdOutBuffer.String())
+
+				assert.NoError(t, err)
+
+				expectedUpgradesRun := getExpectedUpgradesRun(githubReleaseVersions, state.Host{Os: osarch.Linux, Arch: osarch.Amd64})
+				upgradesRun := getActualUpgradesRun(stdOutBuffer)
 				assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
 
 				g := goldie.New(t)
-				g.Assert(t, "Should run a hotfix even if it is older than the last applied upgrade_run1", stdOutBuffer1.Bytes())
+				g.Assert(t, "Should run a hotfix even if it is older than the last applied upgrade_run1", stdOutBuffer.Bytes())
 
-				// When running upgrade second time
-				var stdOutBuffer2 bytes.Buffer
-				defaultOpts.GithubService = NewGithubServiceMock(createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64,
-					[]string{"0.0.61", "0.0.62", "0.0.62.a", "0.0.62.b", "0.0.63", "0.0.63.a", "0.0.64"}))
-				defaultOpts.Out = &stdOutBuffer2
+				httpmock.DeactivateAndReset()
+
+				// Given settings for second upgrade
+				githubReleaseVersions = []string{"0.0.61", "0.0.62", "0.0.62.a", "0.0.62.b", "0.0.63", "0.0.63.a", "0.0.64"}
+				githubReleases = createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, githubReleaseVersions)
+				mockHTTPResponse(t, "working", githubReleases)
+				defer httpmock.DeactivateAndReset()
+				defaultOpts.GithubService = NewGithubServiceMock(githubReleases)
+
+				stdOutBuffer = new(bytes.Buffer)
+				defaultOpts.Out = stdOutBuffer
+
 				upgrader = New(defaultOpts)
 
+				// When running upgrade second time
 				err = upgrader.Run()
-				assert.NoError(t, err)
-
-				t.Log(stdOutBuffer2.String())
 
 				// Then
+				t.Log(stdOutBuffer.String())
+
+				assert.NoError(t, err)
+
 				expectedUpgradesRun2 := getExpectedUpgradesRun([]string{"0.0.62.a", "0.0.62.b", "0.0.63.a"}, state.Host{Os: osarch.Linux, Arch: osarch.Amd64})
-				upgradesRun2 := getActualUpgradesRun(stdOutBuffer2)
+				upgradesRun2 := getActualUpgradesRun(stdOutBuffer)
 				assert.Equal(t, expectedUpgradesRun2, upgradesRun2, "Unexpected upgrades were run")
 
-				g.Assert(t, "Should run a hotfix even if it is older than the last applied upgrade_run2", stdOutBuffer2.Bytes())
+				g.Assert(t, "Should run a hotfix even if it is older than the last applied upgrade_run2", stdOutBuffer.Bytes())
+			},
+		},
+		{
+			name:                     "Should return error if github release isn't valid",
+			withOkctlVersion:         "0.0.61",
+			withOriginalOkctlVersion: "0.0.50",
+			withGithubReleases: []*github.RepositoryRelease{
+				{
+					ID: github.Int64Ptr(123),
+				},
+			},
+			withGithubReleaseAssetsFromFolder: "working",
+			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withTestRun: func(t *testing.T, defaultOpts Opts) {
+				upgrader := New(defaultOpts)
 
-				t.Log(stdOutBuffer2.String())
+				err := upgrader.Run()
+
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(),
+					"parsing upgrade binaries: validating release: assets: release 'ID: 123' must have at "+
+						"least 2 assets (binary and checksum) ; name: cannot be blank; tag_name: cannot be blank.",
+				)
+			},
+		},
+		{
+			name:                     "Should return error if github release assets don't include checksum",
+			withOkctlVersion:         "0.0.64",
+			withOriginalOkctlVersion: "0.0.50",
+			withGithubReleases: []*github.RepositoryRelease{
+				{
+					ID:      github.Int64Ptr(123),
+					TagName: github.StringPtr("0.0.61"),
+					Name:    github.StringPtr("0.0.61"),
+					Assets: []*github.ReleaseAsset{
+						createGihubReleaseAssetBinary(osarch.Linux, osarch.Amd64, "0.0.61"),
+						createGihubReleaseAssetBinary(osarch.Darwin, osarch.Amd64, "0.0.61"),
+					},
+				},
+			},
+			withGithubReleaseAssetsFromFolder: "working",
+			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withTestRun: func(t *testing.T, defaultOpts Opts) {
+				upgrader := New(defaultOpts)
+
+				err := upgrader.Run()
+
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(),
+					"parsing upgrade binaries: validating release: could not find checksum asset for "+
+						"release 0.0.61 (assets: okctl_upgrade-linux_amd64_0.0.61.tar.gz,"+
+						"okctl_upgrade-darwin_amd64_0.0.61.tar.gz)",
+				)
 			},
 		},
 	}
@@ -238,8 +311,9 @@ func TestRunUpgrades(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			// Given
-			var stdOutBuffer bytes.Buffer
 			var err error
+
+			stdOutBuffer := new(bytes.Buffer)
 
 			tmpStore, err := storage.NewTemporaryStorage()
 			assert.NoError(t, err)
@@ -250,16 +324,10 @@ func TestRunUpgrades(t *testing.T) {
 			err = tmpStore.MkdirAll(repoDir)
 			assert.NoError(t, err)
 
-			err = mockHTTPResponse(tc.withGithubReleaseAssetsFromFolder, tc.withGithubReleases)
-			require.NoError(t, err)
-
-			httpmock.Activate()
-			defer httpmock.DeactivateAndReset()
-
 			defaultOpts := Opts{
 				Debug:               false,
 				Logger:              logrus.StandardLogger(),
-				Out:                 &stdOutBuffer,
+				Out:                 stdOutBuffer,
 				RepositoryDirectory: repositoryAbsoluteDir,
 				GithubService:       NewGithubServiceMock(tc.withGithubReleases),
 				ChecksumDownloader:  NewChecksumDownloader(),
@@ -279,17 +347,22 @@ func TestRunUpgrades(t *testing.T) {
 				return
 			}
 
+			mockHTTPResponse(t, tc.withGithubReleaseAssetsFromFolder, tc.withGithubReleases)
+			defer httpmock.DeactivateAndReset()
+
 			upgrader := New(defaultOpts)
 			err = upgrader.Run()
 
+			t.Log(stdOutBuffer.String())
+
 			// Then
 			if len(tc.expectErrorContains) > 0 {
-				//goland:noinspection GoNilness
-				assert.NotNil(t, err)
+				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tc.expectErrorContains)
-			} else {
-				assert.NoError(t, err)
+				return
 			}
+
+			assert.NoError(t, err)
 
 			expectedUpgradesRun := getExpectedUpgradesRun(tc.expectBinaryVersionsRunOnce, tc.withHost)
 			upgradesRun := getActualUpgradesRun(stdOutBuffer)
@@ -297,10 +370,18 @@ func TestRunUpgrades(t *testing.T) {
 
 			g := goldie.New(t)
 			g.Assert(t, tc.name, stdOutBuffer.Bytes())
-
-			t.Log(stdOutBuffer.String())
 		})
 	}
+}
+
+func mockHTTPResponse(t *testing.T, folder string, releases []*github.RepositoryRelease) {
+	err := registerHTTPResponse(
+		folder,
+		releases,
+	)
+	require.NoError(t, err)
+
+	httpmock.Activate()
 }
 
 func getExpectedUpgradesRun(expectBinaryVersionsRunOnce []string, withHost state.Host) []string {
@@ -319,7 +400,7 @@ func getExpectedUpgradesRun(expectBinaryVersionsRunOnce []string, withHost state
 	return expectedUpgradesRun
 }
 
-func getActualUpgradesRun(stdOutBuffer bytes.Buffer) []string {
+func getActualUpgradesRun(stdOutBuffer *bytes.Buffer) []string {
 	stdOut := stdOutBuffer.String()
 	re := regexp.MustCompile(`This is upgrade file for (okctl-upgrade.*)`)
 	found := re.FindAllStringSubmatch(stdOut, -1)
@@ -332,6 +413,15 @@ func getActualUpgradesRun(stdOutBuffer bytes.Buffer) []string {
 	return upgradesRun
 }
 
+func createGihubReleaseAssetBinary(os, arch, version string) *github.ReleaseAsset {
+	return &github.ReleaseAsset{
+		Name:        github.StringPtr(fmt.Sprintf("okctl_upgrade-%s_%s_%s.tar.gz", os, arch, version)),
+		ContentType: github.StringPtr("application/gzip"),
+		BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
+			"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz", version, version, os, arch)),
+	}
+}
+
 //nolint:unparam
 func createGithubReleases(oses []string, arch string, versions []string) []*github.RepositoryRelease {
 	releases := make([]*github.RepositoryRelease, 0, len(versions))
@@ -342,13 +432,7 @@ func createGithubReleases(oses []string, arch string, versions []string) []*gith
 		for _, os := range oses {
 			os = capitalizeFirst(os)
 
-			asset := &github.ReleaseAsset{
-				Name:        github.StringPtr(fmt.Sprintf("okctl_upgrade-%s_%s_%s.tar.gz", os, arch, version)),
-				ContentType: github.StringPtr("application/gzip"),
-				BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
-					"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz", version, version, os, arch)),
-			}
-
+			asset := createGihubReleaseAssetBinary(os, arch, version)
 			assets = append(assets, asset)
 		}
 
@@ -360,6 +444,7 @@ func createGithubReleases(oses []string, arch string, versions []string) []*gith
 		})
 
 		release := &github.RepositoryRelease{
+			ID:      github.Int64Ptr(int64(i + 1)),
 			TagName: &versions[i],
 			Name:    &versions[i],
 			Assets:  assets,
@@ -382,7 +467,7 @@ func capitalizeFirst(os string) string {
 	return strings.ToUpper(os[0:1]) + strings.ToLower(os[1:])
 }
 
-func mockHTTPResponse(baseFolder string, releases []*github.RepositoryRelease) error {
+func registerHTTPResponse(baseFolder string, releases []*github.RepositoryRelease) error {
 	for _, release := range releases {
 		versionFolder := *release.TagName
 

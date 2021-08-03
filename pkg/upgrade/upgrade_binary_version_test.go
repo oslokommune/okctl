@@ -7,12 +7,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestName(t *testing.T) {
+//nolint:funlen
+func TestParseUpgradeBinaryVersion(t *testing.T) {
 	testCases := []struct {
-		name        string
-		version     string
-		assert      func(t *testing.T, version upgradeBinaryVersion)
-		expectError bool
+		name                string
+		version             string
+		assert              func(t *testing.T, version upgradeBinaryVersion)
+		expectErrorContains string
 	}{
 		{
 			name:    "Should parse regular version",
@@ -43,19 +44,30 @@ func TestName(t *testing.T) {
 			},
 		},
 		{
-			name:        "Should return error for invalid input",
-			version:     "0.0.1.some.hotfix",
-			expectError: true,
+			name:                "Should return error for invalid semantic version",
+			version:             "0.0.a",
+			expectErrorContains: "parsing to semantic version from '0.0.a'",
+		},
+		{
+			name:                "Should return error for hotfix version",
+			version:             "0.0.a.some-hotfix",
+			expectErrorContains: "parsing to semantic with hotfix version from '0.0.a.some-hotfix'",
+		},
+		{
+			name:                "Should return error for too many dots",
+			version:             "0.0.1.some.hotfix",
+			expectErrorContains: "not a valid version: 0.0.1.some.hotfix",
 		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			version, err := newUpgradeBinaryVersion(tc.version)
+			version, err := parseUpgradeBinaryVersion(tc.version)
 
-			if tc.expectError {
+			if len(tc.expectErrorContains) > 0 {
 				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectErrorContains)
 			} else {
 				assert.NoError(t, err)
 				tc.assert(t, version)

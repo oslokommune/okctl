@@ -45,7 +45,7 @@ func createUpgradeBinaries(t *testing.T, versions []string) []okctlUpgradeBinary
 	binaries := make([]okctlUpgradeBinary, 0, len(versions))
 
 	for _, versionString := range versions {
-		version, err := newUpgradeBinaryVersion(versionString)
+		version, err := parseUpgradeBinaryVersion(versionString)
 		assert.NoError(t, err)
 
 		b := newOkctlUpgradeBinary(version, nil)

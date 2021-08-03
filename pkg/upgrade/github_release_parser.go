@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"strings"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+
 	digestPkg "github.com/oslokommune/okctl/pkg/binaries/digest"
 
 	ghPkg "github.com/google/go-github/v32/github"
@@ -39,27 +41,45 @@ func (g GithubReleaseParser) toUpgradeBinaries(releases []*github.RepositoryRele
 
 const expectedMinimumAssetsForAGithubRelease = 2
 
+func (g GithubReleaseParser) validateRelease(r *github.RepositoryRelease) error {
+	return validation.ValidateStruct(r,
+		validation.Field(&r.ID, validation.Required),
+		validation.Field(&r.Name, validation.Required),
+		validation.Field(&r.TagName, validation.Required),
+		validation.Field(&r.Assets, validation.By(func(value interface{}) error {
+			assets := value.([]*github.ReleaseAsset)
+			if len(assets) < expectedMinimumAssetsForAGithubRelease {
+				releaseIdentifier := ""
+				if r.Name == nil {
+					if r.ID == nil {
+						releaseIdentifier = "(unknown)"
+					} else {
+						releaseIdentifier = fmt.Sprintf("ID: %d", *r.ID)
+					}
+				} else {
+					releaseIdentifier = *r.Name
+				}
+
+				return fmt.Errorf(
+					"release '%s' must have at least %d assets (binary and checksum) ",
+					releaseIdentifier,
+					expectedMinimumAssetsForAGithubRelease)
+			}
+
+			return nil
+		})),
+	)
+}
+
 func (g GithubReleaseParser) parseRelease(release *github.RepositoryRelease) (okctlUpgradeBinary, error) {
-	if release.Name == nil || len(*release.Name) == 0 {
-		return okctlUpgradeBinary{}, fmt.Errorf("release ID '%d' name must be non-empty", *release.ID)
-	}
-
-	if release.TagName == nil {
-		return okctlUpgradeBinary{}, fmt.Errorf("release '%s' tag name must be non-empty", *release.Name)
-	}
-
-	if len(release.Assets) < expectedMinimumAssetsForAGithubRelease {
-		return okctlUpgradeBinary{}, fmt.Errorf(
-			"release '%s' must have at least %d assets (binary and checksum) ",
-			*release.Name,
-			expectedMinimumAssetsForAGithubRelease)
+	err := g.validateRelease(release)
+	if err != nil {
+		return okctlUpgradeBinary{}, err
 	}
 
 	releaseUpgradeVersion := *release.TagName
 
 	var binaryChecksums []state.Checksum
-
-	var err error
 
 	for _, asset := range release.Assets {
 		if *asset.Name == "okctl-upgrade-checksums.txt" {
@@ -88,9 +108,9 @@ func (g GithubReleaseParser) parseRelease(release *github.RepositoryRelease) (ok
 			"could not find checksum asset for release %s (assets: %s)", *release.Name, assetNames)
 	}
 
-	binaryVersion, err := newUpgradeBinaryVersion(releaseUpgradeVersion)
+	binaryVersion, err := parseUpgradeBinaryVersion(releaseUpgradeVersion)
 	if err != nil {
-		return okctlUpgradeBinary{}, fmt.Errorf("creating version: %w", err)
+		return okctlUpgradeBinary{}, fmt.Errorf("parsing upgrade version: %w", err)
 	}
 
 	return newOkctlUpgradeBinary(binaryVersion, binaryChecksums), nil

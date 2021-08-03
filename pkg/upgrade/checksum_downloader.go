@@ -1,6 +1,7 @@
 package upgrade
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -18,11 +19,7 @@ func (c ChecksumDownloader) download(checksumAsset *github.ReleaseAsset) ([]byte
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("http call did not return status OK. URL: %s. Status: %s. Body: %s",
-			*checksumAsset.BrowserDownloadURL,
-			response.Status,
-			response.Body,
-		)
+		return c.statusNotOkError(checksumAsset, response)
 	}
 
 	checksumsTxt, err := io.ReadAll(response.Body)
@@ -36,6 +33,27 @@ func (c ChecksumDownloader) download(checksumAsset *github.ReleaseAsset) ([]byte
 	}
 
 	return checksumsTxt, nil
+}
+
+func (c ChecksumDownloader) statusNotOkError(checksumAsset *github.ReleaseAsset, response *http.Response) ([]byte, error) {
+	var err error
+
+	var buf bytes.Buffer
+
+	var body string
+
+	_, err = buf.ReadFrom(response.Body)
+	if err == nil {
+		body = buf.String()
+	} else {
+		body = "(could not read body)"
+	}
+
+	return nil, fmt.Errorf("http call did not return status OK. URL: %s. Status: %s. Body: %s",
+		*checksumAsset.BrowserDownloadURL,
+		response.Status,
+		body,
+	)
 }
 
 // NewChecksumDownloader returns a new ChecksumDownloader

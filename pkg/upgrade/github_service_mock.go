@@ -11,14 +11,15 @@ type githubServiceMock struct {
 	releases []*github.RepositoryRelease
 }
 
-func (g githubServiceMock) CreateGithubRepository(ctx context.Context, opts client.CreateGithubRepositoryOpts) (*client.GithubRepository, error) {
-	panic("implement me")
+func (g githubServiceMock) CreateGithubRepository(context.Context, client.CreateGithubRepositoryOpts) (*client.GithubRepository, error) {
+	panic("not needed by mock")
 }
 
-func (g githubServiceMock) DeleteGithubRepository(ctx context.Context, opts client.DeleteGithubRepositoryOpts) error {
-	panic("implement me")
+func (g githubServiceMock) DeleteGithubRepository(context.Context, client.DeleteGithubRepositoryOpts) error {
+	panic("not needed by mock")
 }
 
+//goland:noinspection GoUnusedParameter
 func (g githubServiceMock) ListReleases(owner, repo string) ([]*github.RepositoryRelease, error) {
 	return g.releases, nil
 }

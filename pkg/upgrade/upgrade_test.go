@@ -35,19 +35,19 @@ import (
 // Test cases
 // ------------------------------------------------
 // x Given these releases, ..., then these binaries should be run
-// x Should run a upgrade
+// x Should run an upgrade
 // x Should not run already applied upgrades - custom: Må kjøre upgrade flere ganger. Assert: each binary was run once
 // x Should run upgrades up to the current okctl version, but no newer
 // ?   See: // "DO: Remove file verification" , should be easier to do verifications.
 // x Should not run too old upgrades
 // x Should run hot fixes in correct order
-// -> Should run a hotfix even if it is older than the last applied upgrade.
-//   Så hvis upgrade bumper 0.0.65, og det kommer en hotfix 0.0.63_my-hotfix, så skal den fortsatt kjøres. - custom sjekk
-// Should detect if release has invalid tag name or assets (must support hot fixes)
+// x Should run a hotfix even if it is older than the last applied upgrade.
+//     Så hvis upgrade bumper 0.0.65, og det kommer en hotfix 0.0.63_my-hotfix, så skal den fortsatt kjøres. - custom sjekk
 
+// Failure situations
+// Should detect if release has invalid tag name or assets (must support hot fixes)
 // Should verify digest before running
 // Lots of failure situations
-
 // I okctl-upgrade-checksums.txt, endre filnavn. Da bør man få feil at ting ikke matcher. Får noe annet unyttig.
 
 // Refaktorer: Bruker Sprintf med %s-%s-%s mange steder. Bør være ett sted.

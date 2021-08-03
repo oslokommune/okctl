@@ -2,6 +2,7 @@ package upgrade
 
 import (
 	"fmt"
+	sortPkg "sort"
 
 	semverPkg "github.com/Masterminds/semver"
 	"github.com/oslokommune/okctl/pkg/binaries/run/okctlupgrade"
@@ -40,6 +41,21 @@ func (b okctlUpgradeBinary) SemverVersion() *semverPkg.Version {
 
 func (b okctlUpgradeBinary) HotfixVersion() string {
 	return b.version.hotfix
+}
+
+func sort(upgradeBinaries []okctlUpgradeBinary) {
+	sortPkg.SliceStable(upgradeBinaries, func(i, j int) bool {
+		if upgradeBinaries[i].SemverVersion().LessThan(upgradeBinaries[j].SemverVersion()) {
+			return true
+		}
+
+		if upgradeBinaries[i].SemverVersion().GreaterThan(upgradeBinaries[j].SemverVersion()) {
+			return false
+		}
+
+		// semvers are equal, order on hotfix
+		return upgradeBinaries[i].HotfixVersion() < upgradeBinaries[j].HotfixVersion()
+	})
 }
 
 func newOkctlUpgradeBinary(version upgradeBinaryVersion, checksums []state.Checksum) okctlUpgradeBinary {

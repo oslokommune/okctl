@@ -43,7 +43,7 @@ func TestName(t *testing.T) {
 			},
 		},
 		{
-			name:        "Should return error for invalid inputr",
+			name:        "Should return error for invalid input",
 			version:     "0.0.1.some.hotfix",
 			expectError: true,
 		},

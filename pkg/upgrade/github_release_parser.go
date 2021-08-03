@@ -88,7 +88,7 @@ func (g GithubReleaseParser) parseRelease(release *github.RepositoryRelease) (ok
 			"could not find checksum asset for release %s (assets: %s)", *release.Name, assetNames)
 	}
 
-	binaryVersion, err := newVersion(releaseUpgradeVersion)
+	binaryVersion, err := newUpgradeBinaryVersion(releaseUpgradeVersion)
 	if err != nil {
 		return okctlUpgradeBinary{}, fmt.Errorf("creating version: %w", err)
 	}

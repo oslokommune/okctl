@@ -40,9 +40,8 @@ import (
 // x Should run upgrades up to the current okctl version, but no newer
 // ?   See: // "DO: Remove file verification" , should be easier to do verifications.
 // x Should not run too old upgrades
-// -> Should run hot fixes in correct order
-// Should run hotfixes in order - sjekk binaries that ran
-// Should run a hotfix even if it is older than the last applied upgrade.
+// x Should run hot fixes in correct order
+// -> Should run a hotfix even if it is older than the last applied upgrade.
 //   Så hvis upgrade bumper 0.0.65, og det kommer en hotfix 0.0.63_my-hotfix, så skal den fortsatt kjøres. - custom sjekk
 // Should detect if release has invalid tag name or assets (must support hot fixes)
 
@@ -64,7 +63,7 @@ func TestRunUpgrades(t *testing.T) {
 		withGithubReleases                []*github.RepositoryRelease
 		withGithubReleaseAssetsFromFolder string
 		withHost                          state.Host
-		withTestRun                       func(t *testing.T, defaultOpts Opts) error
+		withTestRun                       func(t *testing.T, defaultOpts Opts)
 		expectBinaryVersionsRunOnce       []string
 		expectErrorContains               string
 	}{
@@ -141,7 +140,7 @@ func TestRunUpgrades(t *testing.T) {
 			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62", "0.0.64"}),
 			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
-			withTestRun: func(t *testing.T, defaultOpts Opts) error {
+			withTestRun: func(t *testing.T, defaultOpts Opts) {
 				upgrader := New(defaultOpts)
 
 				err := upgrader.Run()
@@ -151,8 +150,6 @@ func TestRunUpgrades(t *testing.T) {
 
 				err = upgrader.Run()
 				assert.NoError(t, err)
-
-				return nil
 			},
 			expectBinaryVersionsRunOnce: []string{"0.0.61", "0.0.62", "0.0.64"},
 		},
@@ -184,6 +181,56 @@ func TestRunUpgrades(t *testing.T) {
 			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.61", "0.0.62", "0.0.62.a", "0.0.62.b", "0.0.63", "0.0.63.a"},
+		},
+		{
+			name:                     "Should run a hotfix even if it is older than the last applied upgrade",
+			withOkctlVersion:         "0.0.63",
+			withOriginalOkctlVersion: "0.0.50",
+			withGithubReleases: createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64,
+				[]string{"0.0.61", "0.0.62", "0.0.62.a", "0.0.62.b", "0.0.63", "0.0.63.a", "0.0.64"}),
+			withGithubReleaseAssetsFromFolder: "working",
+			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withTestRun: func(t *testing.T, defaultOpts Opts) {
+				// When running upgrade first time
+				var stdOutBuffer1 bytes.Buffer
+				githubReleases1 := []string{"0.0.61", "0.0.62", "0.0.63"}
+				defaultOpts.GithubService = NewGithubServiceMock(createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64,
+					githubReleases1))
+				defaultOpts.Out = &stdOutBuffer1
+				upgrader := New(defaultOpts)
+
+				err := upgrader.Run()
+				assert.NoError(t, err)
+
+				// Then
+				expectedUpgradesRun := getExpectedUpgradesRun(githubReleases1, state.Host{Os: osarch.Linux, Arch: osarch.Amd64})
+				upgradesRun := getActualUpgradesRun(stdOutBuffer1)
+				assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
+
+				g := goldie.New(t)
+				g.Assert(t, "Should run a hotfix even if it is older than the last applied upgrade_run1", stdOutBuffer1.Bytes())
+
+				// When running upgrade second time
+				var stdOutBuffer2 bytes.Buffer
+				defaultOpts.GithubService = NewGithubServiceMock(createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64,
+					[]string{"0.0.61", "0.0.62", "0.0.62.a", "0.0.62.b", "0.0.63", "0.0.63.a", "0.0.64"}))
+				defaultOpts.Out = &stdOutBuffer2
+				upgrader = New(defaultOpts)
+
+				err = upgrader.Run()
+				assert.NoError(t, err)
+
+				t.Log(stdOutBuffer2.String())
+
+				// Then
+				expectedUpgradesRun2 := getExpectedUpgradesRun([]string{"0.0.62.a", "0.0.62.b", "0.0.63.a"}, state.Host{Os: osarch.Linux, Arch: osarch.Amd64})
+				upgradesRun2 := getActualUpgradesRun(stdOutBuffer2)
+				assert.Equal(t, expectedUpgradesRun2, upgradesRun2, "Unexpected upgrades were run")
+
+				g.Assert(t, "Should run a hotfix even if it is older than the last applied upgrade_run2", stdOutBuffer2.Bytes())
+
+				t.Log(stdOutBuffer2.String())
+			},
 		},
 	}
 
@@ -227,12 +274,13 @@ func TestRunUpgrades(t *testing.T) {
 			}
 
 			// When
-			if tc.withTestRun == nil {
-				upgrader := New(defaultOpts)
-				err = upgrader.Run()
-			} else {
-				err = tc.withTestRun(t, defaultOpts)
+			if tc.withTestRun != nil {
+				tc.withTestRun(t, defaultOpts)
+				return
 			}
+
+			upgrader := New(defaultOpts)
+			err = upgrader.Run()
 
 			// Then
 			if len(tc.expectErrorContains) > 0 {

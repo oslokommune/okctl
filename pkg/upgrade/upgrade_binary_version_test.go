@@ -52,7 +52,7 @@ func TestName(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			version, err := newVersion(tc.version)
+			version, err := newUpgradeBinaryVersion(tc.version)
 
 			if tc.expectError {
 				assert.Error(t, err)

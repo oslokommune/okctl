@@ -21,7 +21,7 @@ type upgradeBinaryVersion struct {
 	hotfix string
 }
 
-// newVersion parses a given version and returns an instance of upgradeBinaryVersion or
+// newUpgradeBinaryVersion parses a given version and returns an instance of upgradeBinaryVersion or
 // an error if unable to parse the version.
 //
 // Valid input examples:
@@ -29,7 +29,7 @@ type upgradeBinaryVersion struct {
 // 0.0.56
 //
 // 0.0.56.some-hotfix
-func newVersion(text string) (upgradeBinaryVersion, error) {
+func newUpgradeBinaryVersion(text string) (upgradeBinaryVersion, error) {
 	var semver *semverPkg.Version
 
 	var err error

@@ -4,7 +4,6 @@ package upgrade
 import (
 	"fmt"
 	"io"
-	"sort"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
@@ -33,8 +32,8 @@ func (u Upgrader) Run() error {
 		return fmt.Errorf("filtering upgrade binaries: %w", err)
 	}
 
-	// Sort
-	u.sort(upgradeBinaries)
+	// Sort, i.e. determine execution order
+	sort(upgradeBinaries)
 
 	// Run
 	err = u.runBinaries(upgradeBinaries)
@@ -49,21 +48,6 @@ func (u Upgrader) Run() error {
 	}
 
 	return nil
-}
-
-func (u Upgrader) sort(upgradeBinaries []okctlUpgradeBinary) {
-	sort.SliceStable(upgradeBinaries, func(i, j int) bool {
-		if upgradeBinaries[i].version.semver.LessThan(upgradeBinaries[j].version.semver) {
-			return true
-		}
-
-		if upgradeBinaries[i].version.semver.GreaterThan(upgradeBinaries[j].version.semver) {
-			return false
-		}
-
-		// semvers are equal, order on hotfix
-		return upgradeBinaries[i].version.hotfix < upgradeBinaries[j].version.hotfix
-	})
 }
 
 func (u Upgrader) runBinaries(upgradeBinaries []okctlUpgradeBinary) error {

@@ -2,6 +2,7 @@ package upgrade
 
 import (
 	"fmt"
+
 	semverPkg "github.com/Masterminds/semver"
 	"github.com/oslokommune/okctl/pkg/binaries/run/okctlupgrade"
 	"github.com/oslokommune/okctl/pkg/config/state"

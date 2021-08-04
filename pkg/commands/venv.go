@@ -181,3 +181,28 @@ func toMap(slice []string) map[string]string {
 
 	return m
 }
+
+func toSlice(m map[string]string) []string {
+	result := make([]string, len(m))
+	index := 0
+
+	for key, val := range m {
+		result[index] = fmt.Sprintf("%s=%s", key, val)
+
+		index++
+	}
+
+	return result
+}
+
+// CleanOsEnvVars ensures blacklisted variables are removed from the list
+func CleanOsEnvVars(environ []string) []string {
+	keyBlacklist := []string{fmt.Sprintf("%s_%s", constant.EnvPrefix, constant.EnvClusterDeclaration)}
+	cleanedVars := toMap(environ)
+
+	for _, blacklistedKey := range keyBlacklist {
+		delete(cleanedVars, blacklistedKey)
+	}
+
+	return toSlice(cleanedVars)
+}

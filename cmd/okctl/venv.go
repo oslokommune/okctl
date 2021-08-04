@@ -158,7 +158,7 @@ func createVenvOpts(host state.Host, okctlEnvironment commands.OkctlEnvironment)
 	}
 
 	okctlEnvVars := commands.GetOkctlEnvVars(okctlEnvironment)
-	envVars := commands.MergeEnvVars(os.Environ(), okctlEnvVars)
+	envVars := commands.MergeEnvVars(commands.CleanOsEnvVars(os.Environ()), okctlEnvVars)
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {

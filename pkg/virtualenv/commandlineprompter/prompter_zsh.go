@@ -2,10 +2,13 @@ package commandlineprompter
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/oslokommune/okctl/pkg/storage"
 )
+
+var reClusterDeclarationExport = regexp.MustCompile("export OKCTL_CLUSTER_DECLARATION.*")
 
 type zshPrompter struct {
 	userHomeDirStorage storage.Storer
@@ -72,7 +75,14 @@ func (p *zshPrompter) createZshrcContents() (string, error) {
 	}
 
 	if zshrcExists {
-		zshrcBuilder.WriteString("source ~/.zshrc\n\n")
+		zshrcFileContents, err := p.userHomeDirStorage.ReadAll(".zshrc")
+		if err != nil {
+			return "", fmt.Errorf("reading existing .zshrc content: %w", err)
+		}
+
+		cleanedContent := reClusterDeclarationExport.ReplaceAll(zshrcFileContents, []byte(""))
+
+		zshrcBuilder.Write(cleanedContent)
 	}
 
 	zshrcBuilder.WriteString(`setopt PROMPT_SUBST

@@ -181,16 +181,29 @@ func TestRunUpgrades(t *testing.T) {
 			expectBinaryVersionsRunOnce:       []string{"0.0.63", "0.0.64"},
 		},
 		{
-			name:                     "Should run upgrade hot fixes in correct order",
-			withOkctlVersion:         "0.0.64",
+			name:                     "Should run upgrade hot fixes, and in correct order",
+			withOkctlVersion:         "0.0.63",
 			withOriginalOkctlVersion: "0.0.50",
 			withGithubReleases: createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64,
-				[]string{"0.0.63.a", "0.0.62", "0.0.62.b", "0.0.61", "0.0.62.a", "0.0.63"}),
+				[]string{"0.0.63.a", "0.0.62", "0.0.62.b", "0.0.61", "0.0.62.a", "0.0.64.a", "0.0.63"}),
 			withGithubReleaseAssetsFromFolder: "working",
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.61", "0.0.62", "0.0.62.a", "0.0.62.b", "0.0.63", "0.0.63.a"},
 		},
 		{
+			name:                     "Should not run upgrades, including hot fixes, that are older than the first installed okctl version",
+			withOkctlVersion:         "0.0.63",
+			withOriginalOkctlVersion: "0.0.62",
+			withGithubReleases: createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64,
+				[]string{"0.0.62", "0.0.62.a", "0.0.62.b", "0.0.63", "0.0.63.a", "0.0.64.a"}),
+			withGithubReleaseAssetsFromFolder: "working",
+			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			expectBinaryVersionsRunOnce:       []string{"0.0.63", "0.0.63.a"},
+		},
+		{
+			// Explanation: The whole point of hotfixes are that you may be in the situation where okctl already has
+			// upgraded you to version 0.0.63. But then we discover that we made an error in the upgrade for 0.0.62.
+			// So we make a hotfix "0.0.62.a" which will be run even though you already upgraded to 0.0.63.
 			name:                              "Should run a hotfix even if it is older than the last applied upgrade",
 			withOkctlVersion:                  "0.0.63",
 			withOriginalOkctlVersion:          "0.0.50",
@@ -518,6 +531,15 @@ func (u upgradeStateMock) GetUpgrade(version string) (*client.Upgrade, error) {
 	}
 
 	return upgrade, nil
+}
+
+//goland:noinspection GoUnusedParameter
+func (u upgradeStateMock) SaveOriginalOkctlVersionIfNotExists(originalOkctlVersion *client.OriginalOkctlVersion) error {
+	panic("implement me")
+}
+
+func (u upgradeStateMock) GetOriginalOkctlVersion() (*client.OriginalOkctlVersion, error) {
+	panic("implement me")
 }
 
 func mockUpgradeState() client.UpgradeState {

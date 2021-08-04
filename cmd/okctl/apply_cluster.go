@@ -9,6 +9,9 @@ import (
 	"path"
 	"syscall"
 
+	"github.com/oslokommune/okctl/pkg/client"
+	"github.com/oslokommune/okctl/pkg/version"
+
 	"github.com/asdine/storm/v3/codec/json"
 
 	"github.com/asdine/storm/v3"
@@ -201,6 +204,14 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			err = controller.Synchronize(synchronizeOpts)
 			if err != nil {
 				return fmt.Errorf("synchronizing declaration with state: %w", err)
+			}
+
+			err = handlers.Upgrade.SaveOriginalOkctlVersionIfNotExists(&client.OriginalOkctlVersion{
+				ID:    id,
+				Value: version.String(),
+			})
+			if err != nil {
+				return fmt.Errorf("saving original okctl version. Upgrades will not work. Details: %w", err)
 			}
 
 			_, _ = fmt.Fprintln(o.Out, "\nYour cluster is up to date.")

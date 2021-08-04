@@ -158,7 +158,7 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 		Monitoring:          storm.NewMonitoringState(nodes.Monitoring),
 		ArgoCD:              storm.NewArgoCDState(nodes.ArgoCD),
 		ContainerRepository: storm.NewContainerRepositoryState(nodes.ContainerRepository),
-		Upgrade:             storm.NewUpgradeState(nodes.Upgrade),
+		Upgrade:             storm.NewUpgradesState(nodes.Upgrade),
 	}
 }
 

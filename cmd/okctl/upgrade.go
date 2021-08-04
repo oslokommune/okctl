@@ -56,16 +56,22 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				Store: storage.NewFileSystemStorage(userDataDir),
 			}
 
+			originalOkctlVersion, err := stateHandlers.Upgrade.GetOriginalOkctlVersion()
+			if err != nil {
+				return fmt.Errorf("getting original okctl version: %w", err)
+			}
+
 			upgrader = upgrade.New(upgrade.Opts{
-				Debug:               o.Debug,
-				Logger:              o.Logger,
-				Out:                 out,
-				RepositoryDirectory: repoDir,
-				GithubService:       services.Github,
-				ChecksumDownloader:  upgrade.NewChecksumDownloader(),
-				FetcherOpts:         fetcherOpts,
-				OkctlVersion:        version.String(),
-				State:               stateHandlers.Upgrade,
+				Debug:                o.Debug,
+				Logger:               o.Logger,
+				Out:                  out,
+				RepositoryDirectory:  repoDir,
+				GithubService:        services.Github,
+				ChecksumDownloader:   upgrade.NewChecksumDownloader(),
+				FetcherOpts:          fetcherOpts,
+				OkctlVersion:         version.String(),
+				OriginalOkctlVersion: originalOkctlVersion.Value,
+				State:                stateHandlers.Upgrade,
 				ClusterID: api.ID{
 					Region:       o.Declaration.Metadata.Region,
 					AWSAccountID: o.Declaration.Metadata.AccountID,

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	merrors "github.com/mishudark/errors"
+
 	v1 "github.com/oslokommune/okctl/pkg/kube/externalsecret/api/types/v1"
 
 	"github.com/oslokommune/okctl/pkg/kube/manifests/scale"
@@ -272,9 +274,9 @@ func (k *kubeRun) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKube
 		return nil, fmt.Errorf("failed to apply kubernets manifests: %w", err)
 	}
 
-	err = client.Watch(resources, 2*time.Minute) // nolint: gomnd
+	err = client.Watch(resources, 4*time.Minute) // nolint: gomnd
 	if err != nil {
-		return nil, fmt.Errorf("failed while waiting for resources to be created: %w", err)
+		return nil, merrors.E(err, "failed while waiting for resources to be created", merrors.Timeout)
 	}
 
 	deployment, err := yaml.Marshal(ext.DeploymentManifest())

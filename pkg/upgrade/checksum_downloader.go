@@ -10,9 +10,15 @@ import (
 )
 
 // ChecksumDownloader knows how to download the checksums for a github release asset
-type ChecksumDownloader struct{}
+type ChecksumDownloader interface {
+	Download(checksumAsset *github.ReleaseAsset) ([]byte, error)
+}
 
-func (c ChecksumDownloader) download(checksumAsset *github.ReleaseAsset) ([]byte, error) {
+// ChecksumHTTPDownloader knows how to download the checksums for a github release asset through HTTP
+type ChecksumHTTPDownloader struct{}
+
+// Download downloads the given checksum asset1
+func (c ChecksumHTTPDownloader) Download(checksumAsset *github.ReleaseAsset) ([]byte, error) {
 	response, err := http.Get(*checksumAsset.BrowserDownloadURL)
 	if err != nil {
 		return nil, fmt.Errorf("http get URL: %s. %w", *checksumAsset.BrowserDownloadURL, err)
@@ -35,7 +41,7 @@ func (c ChecksumDownloader) download(checksumAsset *github.ReleaseAsset) ([]byte
 	return checksumsTxt, nil
 }
 
-func (c ChecksumDownloader) statusNotOkError(checksumAsset *github.ReleaseAsset, response *http.Response) ([]byte, error) {
+func (c ChecksumHTTPDownloader) statusNotOkError(checksumAsset *github.ReleaseAsset, response *http.Response) ([]byte, error) {
 	var err error
 
 	var buf bytes.Buffer
@@ -56,7 +62,7 @@ func (c ChecksumDownloader) statusNotOkError(checksumAsset *github.ReleaseAsset,
 	)
 }
 
-// NewChecksumDownloader returns a new ChecksumDownloader
-func NewChecksumDownloader() ChecksumDownloader {
-	return ChecksumDownloader{}
+// NewChecksumDownloader returns a new ChecksumHTTPDownloader
+func NewChecksumDownloader() ChecksumHTTPDownloader {
+	return ChecksumHTTPDownloader{}
 }

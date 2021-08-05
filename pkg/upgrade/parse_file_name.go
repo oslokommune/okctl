@@ -25,7 +25,7 @@ func parseOkctlUpgradeFilename(filename string) (okctlUpgradeFile, error) {
 	if len(filenameParts) != expectedSubstringsInOkctlUpgradeFilename {
 		return okctlUpgradeFile{}, fmt.Errorf(
 			"expected 4 substrings when splitting on underscore (_), got %d in string '%s'",
-			len(filenameParts), filenameParts,
+			len(filenameParts), filename,
 		)
 	}
 
@@ -37,7 +37,7 @@ func parseOkctlUpgradeFilename(filename string) (okctlUpgradeFile, error) {
 	if len(archAndExtensionParts) < expectedMinimumSubstringsInArchAndExtension {
 		return okctlUpgradeFile{}, fmt.Errorf(
 			"expected at least %d substrings when splitting on dot (.), got %d in string '%s'",
-			expectedMinimumSubstringsInArchAndExtension, len(archAndExtensionParts), filenameParts,
+			expectedMinimumSubstringsInArchAndExtension, len(archAndExtensionParts), filename,
 		)
 	}
 

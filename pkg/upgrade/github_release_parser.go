@@ -17,12 +17,15 @@ import (
 	"github.com/oslokommune/okctl/pkg/github"
 )
 
-// GithubReleaseParser parses github releases
+const (
+	expectedSubStringsInLineInDigestFile = 2
+	upgradeChecksumsTxt                  = "okctl-upgrade-checksums.txt"
+)
+
+// GithubReleaseParser parses Github releases
 type GithubReleaseParser struct {
 	checksumDownloader ChecksumDownloader
 }
-
-const expectedSubStringsGithubReleaseDigestFile = 2
 
 func (g GithubReleaseParser) toUpgradeBinaries(releases []*github.RepositoryRelease) ([]okctlUpgradeBinary, error) {
 	upgrades := make([]okctlUpgradeBinary, 0, len(releases))
@@ -41,36 +44,6 @@ func (g GithubReleaseParser) toUpgradeBinaries(releases []*github.RepositoryRele
 
 const expectedMinimumAssetsForAGithubRelease = 2
 
-func (g GithubReleaseParser) validateRelease(r *github.RepositoryRelease) error {
-	return validation.ValidateStruct(r,
-		validation.Field(&r.ID, validation.Required),
-		validation.Field(&r.Name, validation.Required),
-		validation.Field(&r.TagName, validation.Required),
-		validation.Field(&r.Assets, validation.By(func(value interface{}) error {
-			assets := value.([]*github.ReleaseAsset)
-			if len(assets) < expectedMinimumAssetsForAGithubRelease {
-				releaseIdentifier := ""
-				if r.Name == nil {
-					if r.ID == nil {
-						releaseIdentifier = "(unknown)"
-					} else {
-						releaseIdentifier = fmt.Sprintf("ID: %d", *r.ID)
-					}
-				} else {
-					releaseIdentifier = *r.Name
-				}
-
-				return fmt.Errorf(
-					"release '%s' must have at least %d assets (binary and checksum) ",
-					releaseIdentifier,
-					expectedMinimumAssetsForAGithubRelease)
-			}
-
-			return nil
-		})),
-	)
-}
-
 func (g GithubReleaseParser) parseRelease(release *github.RepositoryRelease) (okctlUpgradeBinary, error) {
 	err := g.validateRelease(release)
 	if err != nil {
@@ -82,7 +55,7 @@ func (g GithubReleaseParser) parseRelease(release *github.RepositoryRelease) (ok
 	var binaryChecksums []state.Checksum
 
 	for _, asset := range release.Assets {
-		if *asset.Name == "okctl-upgrade-checksums.txt" {
+		if *asset.Name == upgradeChecksumsTxt {
 			binaryChecksums, err = g.fetchChecksums(asset)
 			if err != nil {
 				return okctlUpgradeBinary{}, fmt.Errorf("fetching checksums: %w", err)
@@ -116,8 +89,38 @@ func (g GithubReleaseParser) parseRelease(release *github.RepositoryRelease) (ok
 	return newOkctlUpgradeBinary(binaryVersion, binaryChecksums), nil
 }
 
+func (g GithubReleaseParser) validateRelease(r *github.RepositoryRelease) error {
+	return validation.ValidateStruct(r,
+		validation.Field(&r.ID, validation.Required),
+		validation.Field(&r.Name, validation.Required),
+		validation.Field(&r.TagName, validation.Required),
+		validation.Field(&r.Assets, validation.By(func(value interface{}) error {
+			assets := value.([]*github.ReleaseAsset)
+			if len(assets) < expectedMinimumAssetsForAGithubRelease {
+				releaseIdentifier := ""
+				if r.Name == nil {
+					if r.ID == nil {
+						releaseIdentifier = "(unknown)"
+					} else {
+						releaseIdentifier = fmt.Sprintf("ID: %d", *r.ID)
+					}
+				} else {
+					releaseIdentifier = *r.Name
+				}
+
+				return fmt.Errorf(
+					"release '%s' must have at least %d assets (binary and checksum)",
+					releaseIdentifier,
+					expectedMinimumAssetsForAGithubRelease)
+			}
+
+			return nil
+		})),
+	)
+}
+
 func (g GithubReleaseParser) fetchChecksums(asset *ghPkg.ReleaseAsset) ([]state.Checksum, error) {
-	checksumsAsBytes, err := g.checksumDownloader.download(asset)
+	checksumsAsBytes, err := g.checksumDownloader.Download(asset)
 	if err != nil {
 		return nil, fmt.Errorf("downloading checksum file: %w", err)
 	}
@@ -140,10 +143,10 @@ func (g GithubReleaseParser) parseChecksums(checksumBytes []byte) ([]state.Check
 		line := scanner.Text()
 
 		parts := strings.Fields(line)
-		if len(parts) != expectedSubStringsGithubReleaseDigestFile {
+		if len(parts) != expectedSubStringsInLineInDigestFile {
 			return nil, fmt.Errorf(
-				"expected %d substrings when splitting digest line on whitespace ( ), got %d in string '%s'",
-				expectedSubStringsGithubReleaseDigestFile, len(parts), line,
+				"expected %d substrings when splitting digest line on whitespace, got %d in string '%s'",
+				expectedSubStringsInLineInDigestFile, len(parts), line,
 			)
 		}
 
@@ -201,7 +204,8 @@ func (g GithubReleaseParser) validateUpgradeBinaryAsset(asset *ghPkg.ReleaseAsse
 	}
 
 	if upgradeFile.version != releaseUpgradeVersion {
-		return fmt.Errorf("expected okctl upgrade binary version '%s' to equal release upgrade version '%s'",
+		return fmt.Errorf(
+			"expected okctl upgrade binary version '%s' to equal release upgrade version (i.e. tag) '%s'",
 			upgradeFile.version, releaseUpgradeVersion)
 	}
 

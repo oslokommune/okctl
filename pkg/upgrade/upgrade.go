@@ -141,7 +141,7 @@ type Opts struct {
 	Out                  io.Writer
 	RepositoryDirectory  string
 	GithubService        client.GithubService
-	ChecksumDownloader   ChecksumDownloader
+	ChecksumDownloader   ChecksumHTTPDownloader
 	FetcherOpts          FetcherOpts
 	OkctlVersion         string
 	OriginalOkctlVersion string

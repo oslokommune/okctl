@@ -49,7 +49,6 @@ require (
 	github.com/gorilla/handlers v1.4.2 // indirect
 	github.com/gosimple/slug v1.10.0
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
-	github.com/hako/durafmt v0.0.0-20200710122514-c0fb7b4da026
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/jarcoal/httpmock v1.0.8
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
@@ -92,11 +91,10 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gotest.tools v2.2.0+incompatible
 	helm.sh/helm/v3 v3.6.3
-	k8s.io/api v0.21.2
-	k8s.io/apimachinery v0.21.2
-	k8s.io/cli-runtime v0.21.2
-	k8s.io/client-go v0.21.2
-	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009 // indirect
+	k8s.io/api v0.22.0
+	k8s.io/apimachinery v0.22.0
+	k8s.io/cli-runtime v0.22.0
+	k8s.io/client-go v0.22.0
 	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/aws-iam-authenticator v0.5.3
 	sigs.k8s.io/yaml v1.2.0

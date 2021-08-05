@@ -24,6 +24,7 @@ type OkctlEnvironment struct {
 	Debug                  bool
 	KubectlBinaryDir       string
 	AwsIamAuthenticatorDir string
+	ClusterDeclarationPath string
 }
 
 // Validate the inputs
@@ -39,7 +40,7 @@ func (o *OkctlEnvironment) Validate() error {
 }
 
 // GetOkctlEnvironment returns data needed to connect to an okctl cluster
-func GetOkctlEnvironment(o *okctl.Okctl) (OkctlEnvironment, error) {
+func GetOkctlEnvironment(o *okctl.Okctl, clusterDeclarationPath string) (OkctlEnvironment, error) {
 	userDataDir, err := o.GetUserDataDir()
 	if err != nil {
 		return OkctlEnvironment{}, err
@@ -55,6 +56,11 @@ func GetOkctlEnvironment(o *okctl.Okctl) (OkctlEnvironment, error) {
 		return OkctlEnvironment{}, err
 	}
 
+	absoluteClusterDeclarationPath, err := ensureAbsolutePath(clusterDeclarationPath)
+	if err != nil {
+		return OkctlEnvironment{}, fmt.Errorf("ensuring absolute declaration path: %w", err)
+	}
+
 	opts := OkctlEnvironment{
 		Region:                 o.Declaration.Metadata.Region,
 		AWSAccountID:           o.Declaration.Metadata.AccountID,
@@ -63,6 +69,7 @@ func GetOkctlEnvironment(o *okctl.Okctl) (OkctlEnvironment, error) {
 		Debug:                  o.Debug,
 		KubectlBinaryDir:       path.Dir(k.BinaryPath),
 		AwsIamAuthenticatorDir: path.Dir(a.BinaryPath),
+		ClusterDeclarationPath: absoluteClusterDeclarationPath,
 	}
 
 	err = opts.Validate()
@@ -71,6 +78,19 @@ func GetOkctlEnvironment(o *okctl.Okctl) (OkctlEnvironment, error) {
 	}
 
 	return opts, nil
+}
+
+func ensureAbsolutePath(declarationPath string) (string, error) {
+	if path.IsAbs(declarationPath) {
+		return declarationPath, nil
+	}
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("getting current directory: %w", err)
+	}
+
+	return path.Join(cwd, declarationPath), nil
 }
 
 // GetOkctlEnvVars converts an okctl environment to a map with environmental variables
@@ -100,9 +120,12 @@ func GetOkctlEnvVars(opts OkctlEnvironment) map[string]string {
 		envMap[k] = v
 	}
 
+	clusterDeclarationKey := fmt.Sprintf("%s_%s", constant.EnvPrefix, constant.EnvClusterDeclaration)
+
 	envMap["AWS_CONFIG_FILE"] = awsConfig
 	envMap["AWS_SHARED_CREDENTIALS_FILE"] = awsCredentials
 	envMap["AWS_PROFILE"] = "default"
+	envMap[clusterDeclarationKey] = opts.ClusterDeclarationPath
 	envMap["KUBECONFIG"] = kubeConfig
 	envMap["PATH"] = getPathWithOkctlBinaries(opts)
 
@@ -157,4 +180,29 @@ func toMap(slice []string) map[string]string {
 	}
 
 	return m
+}
+
+func toSlice(m map[string]string) []string {
+	result := make([]string, len(m))
+	index := 0
+
+	for key, val := range m {
+		result[index] = fmt.Sprintf("%s=%s", key, val)
+
+		index++
+	}
+
+	return result
+}
+
+// CleanOsEnvVars ensures blacklisted variables are removed from the list
+func CleanOsEnvVars(environ []string) []string {
+	keyBlacklist := []string{fmt.Sprintf("%s_%s", constant.EnvPrefix, constant.EnvClusterDeclaration)}
+	cleanedVars := toMap(environ)
+
+	for _, blacklistedKey := range keyBlacklist {
+		delete(cleanedVars, blacklistedKey)
+	}
+
+	return toSlice(cleanedVars)
 }

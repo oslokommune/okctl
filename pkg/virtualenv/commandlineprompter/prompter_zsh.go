@@ -2,10 +2,15 @@ package commandlineprompter
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/oslokommune/okctl/pkg/storage"
 )
+
+const zshrcFilename = ".zshrc"
+
+var reClusterDeclarationExport = regexp.MustCompile("export OKCTL_CLUSTER_DECLARATION.*")
 
 type zshPrompter struct {
 	userHomeDirStorage storage.Storer
@@ -45,7 +50,7 @@ func (p *zshPrompter) CreatePrompt() (CommandLinePrompt, error) {
 }
 
 func (p *zshPrompter) writeZshrcFile() (string, error) {
-	zshrcTmpFile, err := p.tmpStorer.Create(".", ".zshrc", 0o644)
+	zshrcTmpFile, err := p.tmpStorer.Create(".", zshrcFilename, 0o644)
 	if err != nil {
 		return "", fmt.Errorf("could not create temporary .zshrc file: %w", err)
 	}
@@ -66,13 +71,20 @@ func (p *zshPrompter) writeZshrcFile() (string, error) {
 func (p *zshPrompter) createZshrcContents() (string, error) {
 	zshrcBuilder := strings.Builder{}
 
-	zshrcExists, err := p.userHomeDirStorage.Exists(".zshrc")
+	zshrcExists, err := p.userHomeDirStorage.Exists(zshrcFilename)
 	if err != nil {
 		return "", fmt.Errorf("could not check if temporary .zshrc file exists: %w", err)
 	}
 
 	if zshrcExists {
-		zshrcBuilder.WriteString("source ~/.zshrc\n\n")
+		zshrcFileContents, err := p.userHomeDirStorage.ReadAll(zshrcFilename)
+		if err != nil {
+			return "", fmt.Errorf("reading existing .zshrc content: %w", err)
+		}
+
+		cleanedContent := reClusterDeclarationExport.ReplaceAll(zshrcFileContents, []byte(""))
+
+		zshrcBuilder.Write(cleanedContent)
 	}
 
 	zshrcBuilder.WriteString(`setopt PROMPT_SUBST

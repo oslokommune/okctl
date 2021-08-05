@@ -91,7 +91,7 @@ func TestRun(t *testing.T) {
 				return r
 			}(),
 			args:                []string{"binary_args"},
-			expectErrorContains: "got error: exit status 1",
+			expectErrorContains: "got: exit status 1",
 		},
 	}
 

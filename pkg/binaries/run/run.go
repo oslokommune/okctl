@@ -107,7 +107,7 @@ func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 
 	err = cmd.Wait()
 	if err != nil {
-		return buff.Bytes(), fmt.Errorf("executing command: %s, got error: %w", cmd.Path, err)
+		return buff.Bytes(), fmt.Errorf("executing command: %s, got: %w", buff.Bytes(), err)
 	}
 
 	return buff.Bytes(), nil

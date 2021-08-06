@@ -3,18 +3,12 @@ package upgrade
 import (
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/Masterminds/semver"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 )
-
-type filter struct {
-	state                client.UpgradeState
-	clusterID            api.ID
-	okctlVersion         string
-	originalOkctlVersion string
-}
 
 func (f filter) get(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinary, error) {
 	var err error
@@ -129,11 +123,11 @@ func (f filter) markAsRun(binaries []okctlUpgradeBinary) error {
 	return nil
 }
 
-func newFilter(state client.UpgradeState, clusterID api.ID, okctlVersion string, originalOkctlVersion string) filter {
-	return filter{
-		state:                state,
-		clusterID:            clusterID,
-		okctlVersion:         okctlVersion,
-		originalOkctlVersion: originalOkctlVersion,
-	}
+type filter struct {
+	debug                bool
+	out                  io.Writer
+	state                client.UpgradeState
+	clusterID            api.ID
+	okctlVersion         string
+	originalOkctlVersion string
 }

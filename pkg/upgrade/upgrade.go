@@ -4,6 +4,7 @@ package upgrade
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
@@ -26,6 +27,8 @@ func (u Upgrader) Run() error {
 		return fmt.Errorf("parsing upgrade binaries: %w", err)
 	}
 
+	printIfDebug(u.debug, u.out, "Found %d upgrade(s):", upgradeBinaries)
+
 	// Filter
 	upgradeBinaries, err = u.filter.get(upgradeBinaries)
 	if err != nil {
@@ -34,6 +37,7 @@ func (u Upgrader) Run() error {
 
 	// Sort, i.e. determine execution order
 	sort(upgradeBinaries)
+	printIfDebug(u.debug, u.out, "Found %d applicable upgrade(s):", upgradeBinaries)
 
 	// Run
 	err = u.runBinaries(upgradeBinaries)
@@ -99,10 +103,6 @@ func (u Upgrader) createBinaryProvider(upgradeBinaries []okctlUpgradeBinary) (up
 func (u Upgrader) toStateBinaries(upgradeBinaries []okctlUpgradeBinary) []state.Binary {
 	binaries := make([]state.Binary, 0, len(upgradeBinaries))
 
-	if u.debug {
-		_, _ = fmt.Fprintf(u.out, "Found %d upgrade(s)\n", len(upgradeBinaries))
-	}
-
 	for _, upgradeBinary := range upgradeBinaries {
 		URLPattern := fmt.Sprintf(
 			"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_#{os}_#{arch}.tar.gz",
@@ -126,6 +126,21 @@ func (u Upgrader) toStateBinaries(upgradeBinaries []okctlUpgradeBinary) []state.
 	}
 
 	return binaries
+}
+
+func printIfDebug(debug bool, out io.Writer, text string, upgradeBinaries []okctlUpgradeBinary) {
+	if debug {
+		binaries := make([]string, 0)
+		for _, binary := range upgradeBinaries {
+			binaries = append(binaries, binary.RawVersion())
+		}
+
+		joinedBinariesTxt := strings.Join(binaries, ", ")
+
+		_, _ = fmt.Fprintf(out, text+"\n", len(upgradeBinaries))
+		_, _ = fmt.Fprintln(out, joinedBinariesTxt)
+		_, _ = fmt.Fprintln(out, "")
+	}
 }
 
 // FetcherOpts contains data needed to initialize a fetch.Provider
@@ -171,6 +186,13 @@ func New(opts Opts) Upgrader {
 		githubService:       opts.GithubService,
 		githubReleaseParser: NewGithubReleaseParser(opts.ChecksumDownloader),
 		fetcherOpts:         opts.FetcherOpts,
-		filter:              newFilter(opts.State, opts.ClusterID, opts.OkctlVersion, opts.OriginalOkctlVersion),
+		filter: filter{
+			debug:                opts.Debug,
+			out:                  opts.Out,
+			state:                opts.State,
+			clusterID:            opts.ClusterID,
+			okctlVersion:         opts.OkctlVersion,
+			originalOkctlVersion: opts.OriginalOkctlVersion,
+		},
 	}
 }

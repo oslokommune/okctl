@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/version"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/signal"
 	"path"
 	"syscall"
+
+	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/api"
 

@@ -169,7 +169,7 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 		AWSLoadBalancerController: direct.NewAWSLoadBalancerState(o.Declaration.Metadata, helmClient),
 		Blockstorage:              direct.NewBlockstorageState(o.Declaration.Metadata, helmClient),
 		ExternalSecrets:           direct.NewExternalSecretsState(o.Declaration.Metadata, helmClient),
-		Upgrade:             storm.NewUpgradesState(nodes.Upgrade),
+		Upgrade:                   storm.NewUpgradesState(nodes.Upgrade),
 	}
 }
 

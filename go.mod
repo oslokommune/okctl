@@ -9,9 +9,7 @@ replace github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.
 require (
 	github.com/99designs/keyring v1.1.6
 	github.com/AlecAivazis/survey/v2 v2.2.15
-	github.com/AlecAivazis/survey/v2 v2.2.12
 	github.com/Masterminds/semver v1.5.0
-	github.com/Microsoft/hcsshim v0.8.14 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d // indirect
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
@@ -52,7 +50,6 @@ require (
 	github.com/gorilla/handlers v1.4.2 // indirect
 	github.com/gosimple/slug v1.10.0
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
-	github.com/hako/durafmt v0.0.0-20200710122514-c0fb7b4da026
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/jarcoal/httpmock v1.0.8
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect

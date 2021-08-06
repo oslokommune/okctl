@@ -9,6 +9,8 @@ import (
 	"path"
 	"syscall"
 
+	"github.com/oslokommune/okctl/pkg/api"
+
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/version"
 
@@ -179,8 +181,12 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("synchronizing declaration with state: %w", err)
 			}
 
-			err = handlers.Upgrade.SaveOriginalOkctlVersionIfNotExists(&client.OriginalOkctlVersion{
-				ID:    id,
+			err = state.Upgrade.SaveOriginalOkctlVersionIfNotExists(&client.OriginalOkctlVersion{
+				ID: api.ID{
+					Region:       opts.Declaration.Metadata.Region,
+					AWSAccountID: opts.Declaration.Metadata.AccountID,
+					ClusterName:  opts.Declaration.Metadata.Name,
+				},
 				Value: version.String(),
 			})
 			if err != nil {

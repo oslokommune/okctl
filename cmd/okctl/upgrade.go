@@ -69,7 +69,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				GithubService:        services.Github,
 				ChecksumDownloader:   upgrade.NewChecksumDownloader(),
 				FetcherOpts:          fetcherOpts,
-				OkctlVersion:         version.String(),
+				OkctlVersion:         version.GetVersionInfo().Version,
 				OriginalOkctlVersion: originalOkctlVersion.Value,
 				State:                stateHandlers.Upgrade,
 				ClusterID: api.ID{

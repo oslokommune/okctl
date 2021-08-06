@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/version"
 	"io"
 	"io/ioutil"
 	"os"
@@ -12,8 +13,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/version"
-
 	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
 
 	"github.com/asdine/storm/v3/codec/json"
@@ -187,7 +186,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 					AWSAccountID: opts.Declaration.Metadata.AccountID,
 					ClusterName:  opts.Declaration.Metadata.Name,
 				},
-				Value: version.String(),
+				Value: version.GetVersionInfo().Version,
 			})
 			if err != nil {
 				return fmt.Errorf("saving original okctl version. Upgrades will not work. Details: %w", err)

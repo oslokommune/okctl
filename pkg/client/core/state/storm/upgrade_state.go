@@ -86,20 +86,24 @@ func (u *upgradesState) getUpgrade(version string) (*Upgrade, error) {
 	return upgrade, nil
 }
 
+const originalVersionValue = "OriginalOkctlVersion"
+
 // OriginalOkctlVersion contains state about the original installed version of okctl
 type OriginalOkctlVersion struct {
 	Metadata `storm:"inline"`
 
-	ID                   ID
-	OriginalOkctlVersion string
+	ID    ID
+	Value string
+	Key   string
 }
 
 // NewUpgrade returns storm compatible state
 func newOriginalOkctlVersion(o *client.OriginalOkctlVersion, meta Metadata) *OriginalOkctlVersion {
 	return &OriginalOkctlVersion{
-		Metadata:             meta,
-		ID:                   NewID(o.ID),
-		OriginalOkctlVersion: o.Value,
+		Metadata: meta,
+		ID:       NewID(o.ID),
+		Value:    o.Value,
+		Key:      originalVersionValue,
 	}
 }
 
@@ -107,7 +111,7 @@ func newOriginalOkctlVersion(o *client.OriginalOkctlVersion, meta Metadata) *Ori
 func (o *OriginalOkctlVersion) Convert() *client.OriginalOkctlVersion {
 	return &client.OriginalOkctlVersion{
 		ID:    o.ID.Convert(),
-		Value: o.OriginalOkctlVersion,
+		Value: o.Value,
 	}
 }
 
@@ -142,7 +146,7 @@ func (u *upgradesState) GetOriginalOkctlVersion() (*client.OriginalOkctlVersion,
 func (u *upgradesState) getOriginalOkctlVersion() (*OriginalOkctlVersion, error) {
 	originalOkctlVersion := &OriginalOkctlVersion{}
 
-	err := u.node.One("OriginalOkctlVersion", "Value", originalOkctlVersion)
+	err := u.node.One("Key", originalVersionValue, originalOkctlVersion)
 	if err != nil {
 		return nil, err
 	}

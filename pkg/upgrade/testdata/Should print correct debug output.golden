@@ -1,0 +1,21 @@
+Found 4 upgrade(s):
+0.0.64, 0.0.63, 0.0.62, 0.0.61
+
+4 remaining upgrades after removing already executed:
+0.0.64, 0.0.63, 0.0.62, 0.0.61
+
+3 remaining upgrades after removing too new upgrades:
+0.0.63, 0.0.62, 0.0.61
+
+2 remaining upgrades after removing too old upgrades:
+0.0.63, 0.0.62
+
+Found 2 applicable upgrade(s):
+0.0.62, 0.0.63
+
+preloading missing binary: okctl-upgrade_0.0.62 (0.0.62)
+preloading missing binary: okctl-upgrade_0.0.63 (0.0.63)
+--- Running upgrade: okctl-upgrade_0.0.62 ---
+This is upgrade file for okctl-upgrade_0.0.62_Linux_amd64
+--- Running upgrade: okctl-upgrade_0.0.63 ---
+This is upgrade file for okctl-upgrade_0.0.63_Linux_amd64

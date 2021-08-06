@@ -58,6 +58,7 @@ const folderWorking = "working"
 
 type TestCase struct {
 	name                              string
+	withDebug                         bool
 	withOkctlVersion                  string
 	withOriginalOkctlVersion          string
 	withGithubReleases                []*github.RepositoryRelease
@@ -181,7 +182,6 @@ func TestRunUpgrades(t *testing.T) {
 			expectBinaryVersionsRunOnce:       []string{"0.0.61", "0.0.62", "0.0.63"},
 		},
 		{
-
 			name:                              "Should not run upgrades that are older than the first installed okctl version",
 			withOkctlVersion:                  "0.0.64",
 			withOriginalOkctlVersion:          "0.0.62",
@@ -189,6 +189,16 @@ func TestRunUpgrades(t *testing.T) {
 			withGithubReleaseAssetsFromFolder: folderWorking,
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.63", "0.0.64"},
+		},
+		{
+			name:                              "Should print correct debug output",
+			withDebug:                         true,
+			withOkctlVersion:                  "0.0.63",
+			withOriginalOkctlVersion:          "0.0.61",
+			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62", "0.0.63", "0.0.64"}),
+			withGithubReleaseAssetsFromFolder: folderWorking,
+			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			expectBinaryVersionsRunOnce:       []string{"0.0.62", "0.0.63"},
 		},
 		{
 			name:                     "Should run upgrade hot fixes, and in correct order",
@@ -391,7 +401,7 @@ func TestRunUpgrades(t *testing.T) {
 
 			defaultOpts := TestOpts{
 				Opts: Opts{
-					Debug:               false,
+					Debug:               tc.withDebug,
 					Logger:              logrus.StandardLogger(),
 					Out:                 stdOutBuffer,
 					RepositoryDirectory: repositoryAbsoluteDir,

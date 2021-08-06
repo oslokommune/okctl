@@ -10,28 +10,20 @@ import (
 
 // VpcCheck is used to check if you have enough vpcs
 type VpcCheck struct {
-	provider      v1alpha1.CloudProvider
-	required      int
-	isProvisioned bool
+	provider v1alpha1.CloudProvider
+	required int
 }
 
 // NewVpcCheck make a new instance of check for VPCs
-func NewVpcCheck(isProvisioned bool, required int, provider v1alpha1.CloudProvider) *VpcCheck {
+func NewVpcCheck(required int, provider v1alpha1.CloudProvider) *VpcCheck {
 	return &VpcCheck{
-		provider:      provider,
-		required:      required,
-		isProvisioned: isProvisioned,
+		provider: provider,
+		required: required,
 	}
 }
 
 // CheckAvailability determines if you will be able to make required Virtual Private Cloud(s)
 func (v *VpcCheck) CheckAvailability() (*Result, error) {
-	if v.isProvisioned {
-		return &Result{
-			IsProvisioned: true,
-		}, nil
-	}
-
 	q, err := v.provider.ServiceQuotas().GetServiceQuota(&servicequotas.GetServiceQuotaInput{
 		QuotaCode:   aws.String("L-F678F1CE"),
 		ServiceCode: aws.String("vpc"),

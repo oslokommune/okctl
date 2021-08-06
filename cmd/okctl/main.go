@@ -14,6 +14,7 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/api/core"
 	"github.com/oslokommune/okctl/pkg/config/load"
+	"github.com/oslokommune/okctl/pkg/context"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
@@ -39,9 +40,11 @@ func loadUserData(o *okctl.Okctl, cmd *cobra.Command) error {
 	return o.LoadUserData()
 }
 
+var declarationPath string //nolint:gochecknoglobals
+
 //nolint:funlen,govet
 func buildRootCommand() *cobra.Command {
-	var outputFormat, declarationPath string
+	var outputFormat string
 
 	o := okctl.New()
 
@@ -60,6 +63,8 @@ being captured. Together with slack and slick.`,
 			if cmd.Name() == cobra.ShellCompRequestCmd {
 				return nil
 			}
+
+			enableServiceUserAuthentication(o)
 
 			var err error
 
@@ -124,6 +129,26 @@ being captured. Together with slack and slick.`,
 		"c",
 		os.Getenv(fmt.Sprintf("%s_%s", constant.EnvPrefix, constant.EnvClusterDeclaration)),
 		"The cluster declaration you want to use",
+	)
+	cmd.PersistentFlags().StringVarP(&awsCredentialsType,
+		"aws-credentials-type",
+		"a",
+		context.AWSCredentialsTypeSAML,
+		fmt.Sprintf(
+			"The form of authentication to use for AWS. Possible values: [%s,%s]",
+			context.AWSCredentialsTypeSAML,
+			context.AWSCredentialsTypeAccessKey,
+		),
+	)
+	cmd.PersistentFlags().StringVarP(&githubCredentialsType,
+		"github-credentials-type",
+		"g",
+		context.GithubCredentialsTypeDeviceAuthentication,
+		fmt.Sprintf(
+			"The form of authentication to use for Github. Possible values: [%s,%s]",
+			context.GithubCredentialsTypeDeviceAuthentication,
+			context.GithubCredentialsTypeToken,
+		),
 	)
 
 	return cmd

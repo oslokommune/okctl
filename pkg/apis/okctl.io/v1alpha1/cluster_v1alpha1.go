@@ -139,7 +139,7 @@ type ClusterVPC struct {
 func (c ClusterVPC) Validate() error {
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.CIDR, validation.Required),
-		validation.Field(&c.HighAvailability, validation.Required),
+		validation.Field(&c.HighAvailability, validation.In(true, false)),
 	)
 }
 
@@ -177,6 +177,11 @@ type ClusterGithub struct {
 	// OutputPath is a path from the root of the org/repository where
 	// we can store generated output files
 	OutputPath string `json:"outputPath"`
+}
+
+// Path returns the Github repository URL path
+func (c ClusterGithub) Path() string {
+	return fmt.Sprintf("%s/%s", c.Organisation, c.Repository)
 }
 
 // Validate returns an error if ClusterGithub is missing required information
@@ -356,6 +361,7 @@ func NewCluster() Cluster {
 			Cognito:                   true,
 			ArgoCD:                    true,
 		},
+		Databases: &ClusterDatabases{},
 		Experimental: &ClusterExperimental{
 			AutomatizeZoneDelegation: false,
 		},

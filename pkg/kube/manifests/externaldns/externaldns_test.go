@@ -55,6 +55,10 @@ func TestNew(t *testing.T) {
 func TestExternalDNS(t *testing.T) {
 	config.SkipUnlessIntegration(t)
 
+	if os.Getenv("CI") != "" {
+		t.Skip("Skipping testing in CI environment, as this test is flaky here.")
+	}
+
 	dir, err := ioutil.TempDir("", "externalDNS")
 	assert.NoError(t, err)
 

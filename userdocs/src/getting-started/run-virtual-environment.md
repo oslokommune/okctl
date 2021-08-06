@@ -1,21 +1,25 @@
-# Venv
-
 When running `okctl show credentials`, you'll get a bunch of environment variables that need to be set for you to
 access the cluster. To be able to set these quickly in a new terminal, you could do something like
 
 ```bash
-okctl show credentials myenv > ~/.okctl/binaries/venv-myenv
+okctl show credentials -c cluster.yaml > ~/.okctl/binaries/venv-myenv
 echo "alias activate-myenv='source ~/.okctl/binaries/venv-myenv' >> ~/.bash_aliases"
 ```
 
 However, a simpler solution is to just run
 
 ```bash
-okctl venv myenv
+# Usage
+okctl venv -c <path to cluster declaration>
+
+# Example
+okctl venv -c cluster.yaml
 ```
 
 which will
 * run a subshell with the environment variables from `okctl show credentials` already set.
+* Set the OKCTL_CLUSTER_DECLARATION environment variable. This allows you to omit the `--cluster-declaration` flag when
+  running context dependent operations like `apply application`
 * set a command prompt like this (example):
 
 ```bash

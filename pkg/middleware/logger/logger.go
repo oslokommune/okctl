@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	merrors "github.com/mishudark/errors"
+
 	"github.com/go-kit/kit/endpoint"
 	"github.com/sanity-io/litter"
 	"github.com/sirupsen/logrus"
@@ -65,7 +67,7 @@ func (l *logging) ProcessRequest(next endpoint.Endpoint) endpoint.Endpoint {
 
 // ProcessResponse handles logging of the response
 func (l *logging) ProcessResponse(err error, response interface{}, begin time.Time) {
-	if err != nil {
+	if err != nil && !merrors.IsKind(err, merrors.NotExist) {
 		l.log.Errorf("processing request: %s", err.Error())
 	}
 

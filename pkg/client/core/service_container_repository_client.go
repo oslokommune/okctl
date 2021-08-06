@@ -33,6 +33,7 @@ func (c *containerRepositoryService) CreateContainerRepository(_ context.Context
 		ClusterID:              repository.ClusterID,
 		ImageName:              repository.Name,
 		StackName:              repository.StackName,
+		ApplicationName:        opts.ApplicationName,
 		CloudFormationTemplate: repository.CloudFormationTemplate,
 	}
 

@@ -28,23 +28,30 @@ type StateNodes struct {
 
 // StateHandlers contains the state handlers
 type StateHandlers struct {
-	Helm                client.HelmState
-	ManagedPolicy       client.ManagedPolicyState
-	ServiceAccount      client.ServiceAccountState
-	Certificate         client.CertificateState
-	IdentityManager     client.IdentityManagerState
-	Github              client.GithubState
-	Manifest            client.ManifestState
-	Vpc                 client.VPCState
-	Parameter           client.ParameterState
-	Domain              client.DomainState
-	ExternalDNS         client.ExternalDNSState
-	Cluster             client.ClusterState
-	Component           client.ComponentState
-	Monitoring          client.MonitoringState
-	ArgoCD              client.ArgoCDState
-	ContainerRepository client.ContainerRepositoryState
-	Upgrade             client.UpgradeState
+	Helm                      client.HelmState
+	ManagedPolicy             client.ManagedPolicyState
+	ServiceAccount            client.ServiceAccountState
+	Certificate               client.CertificateState
+	IdentityManager           client.IdentityManagerState
+	Github                    client.GithubState
+	Manifest                  client.ManifestState
+	Vpc                       client.VPCState
+	Parameter                 client.ParameterState
+	Domain                    client.DomainState
+	ExternalDNS               client.ExternalDNSState
+	Cluster                   client.ClusterState
+	Component                 client.ComponentState
+	Monitoring                client.MonitoringState
+	ArgoCD                    client.ArgoCDState
+	ContainerRepository       client.ContainerRepositoryState
+	Loki                      client.LokiState
+	Promtail                  client.PromtailState
+	Tempo                     client.TempoState
+	Autoscaler                client.AutoscalerState
+	AWSLoadBalancerController client.AWSLoadBalancerControllerState
+	Blockstorage              client.BlockstorageState
+	ExternalSecrets           client.ExternalSecretsState
+	Upgrade                   client.UpgradeState
 }
 
 // Services contains all client-side services

@@ -1,10 +1,16 @@
 // Package mock provides mocks
 package mock
 
+import "C"
+
 import (
 	"encoding/base64"
 	"fmt"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/service/cloudwatch"
+	"github.com/aws/aws-sdk-go/service/cloudwatch/cloudwatchiface"
 
 	"github.com/aws/aws-sdk-go/service/elbv2"
 
@@ -323,6 +329,640 @@ func (a *CIPAPI) DescribeUserPoolDomain(input *cognitoidentityprovider.DescribeU
 	return a.DescribeUserPoolDomainFn(input)
 }
 
+type CWAPI struct {
+	GetMetricsStatisticsFn func(input *cloudwatch.GetMetricStatisticsInput) (*cloudwatch.GetMetricStatisticsOutput, error)
+}
+
+// DeleteAlarms returns a mocked response
+func (c *CWAPI) DeleteAlarms(_ *cloudwatch.DeleteAlarmsInput) (*cloudwatch.DeleteAlarmsOutput, error) {
+	panic("implement me")
+}
+
+// DeleteAlarmsWithContext returns a mocked response
+func (c *CWAPI) DeleteAlarmsWithContext(_ aws.Context, _ *cloudwatch.DeleteAlarmsInput, _ ...request.Option) (*cloudwatch.DeleteAlarmsOutput, error) {
+	panic("implement me")
+}
+
+// DeleteAlarmsRequest returns a mocked response
+func (c *CWAPI) DeleteAlarmsRequest(_ *cloudwatch.DeleteAlarmsInput) (*request.Request, *cloudwatch.DeleteAlarmsOutput) {
+	panic("implement me")
+}
+
+// DeleteAnomalyDetector returns a mocked response
+func (c *CWAPI) DeleteAnomalyDetector(_ *cloudwatch.DeleteAnomalyDetectorInput) (*cloudwatch.DeleteAnomalyDetectorOutput, error) {
+	panic("implement me")
+}
+
+// DeleteAnomalyDetectorWithContext returns a mocked response
+func (c *CWAPI) DeleteAnomalyDetectorWithContext(_ aws.Context, _ *cloudwatch.DeleteAnomalyDetectorInput, _ ...request.Option) (*cloudwatch.DeleteAnomalyDetectorOutput, error) {
+	panic("implement me")
+}
+
+// DeleteAnomalyDetectorRequest returns a mocked response
+func (c *CWAPI) DeleteAnomalyDetectorRequest(_ *cloudwatch.DeleteAnomalyDetectorInput) (*request.Request, *cloudwatch.DeleteAnomalyDetectorOutput) {
+	panic("implement me")
+}
+
+// DeleteDashboards returns a mocked response
+func (c *CWAPI) DeleteDashboards(_ *cloudwatch.DeleteDashboardsInput) (*cloudwatch.DeleteDashboardsOutput, error) {
+	panic("implement me")
+}
+
+// DeleteDashboardsWithContext returns a mocked response
+func (c *CWAPI) DeleteDashboardsWithContext(_ aws.Context, _ *cloudwatch.DeleteDashboardsInput, _ ...request.Option) (*cloudwatch.DeleteDashboardsOutput, error) {
+	panic("implement me")
+}
+
+// DeleteDashboardsRequest returns a mocked response
+func (c *CWAPI) DeleteDashboardsRequest(_ *cloudwatch.DeleteDashboardsInput) (*request.Request, *cloudwatch.DeleteDashboardsOutput) {
+	panic("implement me")
+}
+
+// DeleteInsightRules returns a mocked response
+func (c *CWAPI) DeleteInsightRules(_ *cloudwatch.DeleteInsightRulesInput) (*cloudwatch.DeleteInsightRulesOutput, error) {
+	panic("implement me")
+}
+
+// DeleteInsightRulesWithContext returns a mocked response
+func (c *CWAPI) DeleteInsightRulesWithContext(_ aws.Context, _ *cloudwatch.DeleteInsightRulesInput, _ ...request.Option) (*cloudwatch.DeleteInsightRulesOutput, error) {
+	panic("implement me")
+}
+
+// DeleteInsightRulesRequest returns a mocked response
+func (c *CWAPI) DeleteInsightRulesRequest(_ *cloudwatch.DeleteInsightRulesInput) (*request.Request, *cloudwatch.DeleteInsightRulesOutput) {
+	panic("implement me")
+}
+
+// DeleteMetricStream returns a mocked response
+func (c *CWAPI) DeleteMetricStream(_ *cloudwatch.DeleteMetricStreamInput) (*cloudwatch.DeleteMetricStreamOutput, error) {
+	panic("implement me")
+}
+
+// DeleteMetricStreamWithContext returns a mocked response
+func (c *CWAPI) DeleteMetricStreamWithContext(_ aws.Context, _ *cloudwatch.DeleteMetricStreamInput, _ ...request.Option) (*cloudwatch.DeleteMetricStreamOutput, error) {
+	panic("implement me")
+}
+
+// DeleteMetricStreamRequest returns a mocked response
+func (c *CWAPI) DeleteMetricStreamRequest(_ *cloudwatch.DeleteMetricStreamInput) (*request.Request, *cloudwatch.DeleteMetricStreamOutput) {
+	panic("implement me")
+}
+
+// DescribeAlarmHistory returns a mocked response
+func (c *CWAPI) DescribeAlarmHistory(_ *cloudwatch.DescribeAlarmHistoryInput) (*cloudwatch.DescribeAlarmHistoryOutput, error) {
+	panic("implement me")
+}
+
+// DescribeAlarmHistoryWithContext returns a mocked response
+func (c *CWAPI) DescribeAlarmHistoryWithContext(_ aws.Context, _ *cloudwatch.DescribeAlarmHistoryInput, _ ...request.Option) (*cloudwatch.DescribeAlarmHistoryOutput, error) {
+	panic("implement me")
+}
+
+// DescribeAlarmHistoryRequest returns a mocked response
+func (c *CWAPI) DescribeAlarmHistoryRequest(_ *cloudwatch.DescribeAlarmHistoryInput) (*request.Request, *cloudwatch.DescribeAlarmHistoryOutput) {
+	panic("implement me")
+}
+
+// DescribeAlarmHistoryPages returns a mocked response
+func (c *CWAPI) DescribeAlarmHistoryPages(_ *cloudwatch.DescribeAlarmHistoryInput, _ func(*cloudwatch.DescribeAlarmHistoryOutput, bool) bool) error {
+	panic("implement me")
+}
+
+// DescribeAlarmHistoryPagesWithContext returns a mocked response
+func (c *CWAPI) DescribeAlarmHistoryPagesWithContext(_ aws.Context, _ *cloudwatch.DescribeAlarmHistoryInput, _ func(*cloudwatch.DescribeAlarmHistoryOutput, bool) bool, _ ...request.Option) error {
+	panic("implement me")
+}
+
+// DescribeAlarms returns a mocked response
+func (c *CWAPI) DescribeAlarms(_ *cloudwatch.DescribeAlarmsInput) (*cloudwatch.DescribeAlarmsOutput, error) {
+	panic("implement me")
+}
+
+// DescribeAlarmsWithContext returns a mocked response
+func (c *CWAPI) DescribeAlarmsWithContext(_ aws.Context, _ *cloudwatch.DescribeAlarmsInput, _ ...request.Option) (*cloudwatch.DescribeAlarmsOutput, error) {
+	panic("implement me")
+}
+
+// DescribeAlarmsRequest returns a mocked response
+func (c *CWAPI) DescribeAlarmsRequest(_ *cloudwatch.DescribeAlarmsInput) (*request.Request, *cloudwatch.DescribeAlarmsOutput) {
+	panic("implement me")
+}
+
+// DescribeAlarmsPages returns a mocked response
+func (c *CWAPI) DescribeAlarmsPages(_ *cloudwatch.DescribeAlarmsInput, _ func(*cloudwatch.DescribeAlarmsOutput, bool) bool) error {
+	panic("implement me")
+}
+
+// DescribeAlarmsPagesWithContext returns a mocked response
+func (c *CWAPI) DescribeAlarmsPagesWithContext(_ aws.Context, _ *cloudwatch.DescribeAlarmsInput, _ func(*cloudwatch.DescribeAlarmsOutput, bool) bool, _ ...request.Option) error {
+	panic("implement me")
+}
+
+// DescribeAlarmsForMetric returns a mocked response
+func (c *CWAPI) DescribeAlarmsForMetric(_ *cloudwatch.DescribeAlarmsForMetricInput) (*cloudwatch.DescribeAlarmsForMetricOutput, error) {
+	panic("implement me")
+}
+
+// DescribeAlarmsForMetricWithContext returns a mocked response
+func (c *CWAPI) DescribeAlarmsForMetricWithContext(_ aws.Context, _ *cloudwatch.DescribeAlarmsForMetricInput, _ ...request.Option) (*cloudwatch.DescribeAlarmsForMetricOutput, error) {
+	panic("implement me")
+}
+
+// DescribeAlarmsForMetricRequest returns a mocked response
+func (c *CWAPI) DescribeAlarmsForMetricRequest(_ *cloudwatch.DescribeAlarmsForMetricInput) (*request.Request, *cloudwatch.DescribeAlarmsForMetricOutput) {
+	panic("implement me")
+}
+
+// DescribeAnomalyDetectors returns a mocked response
+func (c *CWAPI) DescribeAnomalyDetectors(_ *cloudwatch.DescribeAnomalyDetectorsInput) (*cloudwatch.DescribeAnomalyDetectorsOutput, error) {
+	panic("implement me")
+}
+
+// DescribeAnomalyDetectorsWithContext returns a mocked response
+func (c *CWAPI) DescribeAnomalyDetectorsWithContext(_ aws.Context, _ *cloudwatch.DescribeAnomalyDetectorsInput, _ ...request.Option) (*cloudwatch.DescribeAnomalyDetectorsOutput, error) {
+	panic("implement me")
+}
+
+// DescribeAnomalyDetectorsRequest returns a mocked response
+func (c *CWAPI) DescribeAnomalyDetectorsRequest(_ *cloudwatch.DescribeAnomalyDetectorsInput) (*request.Request, *cloudwatch.DescribeAnomalyDetectorsOutput) {
+	panic("implement me")
+}
+
+// DescribeInsightRules returns a mocked response
+func (c *CWAPI) DescribeInsightRules(_ *cloudwatch.DescribeInsightRulesInput) (*cloudwatch.DescribeInsightRulesOutput, error) {
+	panic("implement me")
+}
+
+// DescribeInsightRulesWithContext returns a mocked response
+func (c *CWAPI) DescribeInsightRulesWithContext(_ aws.Context, _ *cloudwatch.DescribeInsightRulesInput, _ ...request.Option) (*cloudwatch.DescribeInsightRulesOutput, error) {
+	panic("implement me")
+}
+
+// DescribeInsightRulesRequest returns a mocked response
+func (c *CWAPI) DescribeInsightRulesRequest(_ *cloudwatch.DescribeInsightRulesInput) (*request.Request, *cloudwatch.DescribeInsightRulesOutput) {
+	panic("implement me")
+}
+
+// DescribeInsightRulesPages returns a mocked response
+func (c *CWAPI) DescribeInsightRulesPages(_ *cloudwatch.DescribeInsightRulesInput, _ func(*cloudwatch.DescribeInsightRulesOutput, bool) bool) error {
+	panic("implement me")
+}
+
+// DescribeInsightRulesPagesWithContext returns a mocked response
+func (c *CWAPI) DescribeInsightRulesPagesWithContext(_ aws.Context, _ *cloudwatch.DescribeInsightRulesInput, _ func(*cloudwatch.DescribeInsightRulesOutput, bool) bool, _ ...request.Option) error {
+	panic("implement me")
+}
+
+// DisableAlarmActions returns a mocked response
+func (c *CWAPI) DisableAlarmActions(_ *cloudwatch.DisableAlarmActionsInput) (*cloudwatch.DisableAlarmActionsOutput, error) {
+	panic("implement me")
+}
+
+// DisableAlarmActionsWithContext returns a mocked response
+func (c *CWAPI) DisableAlarmActionsWithContext(_ aws.Context, _ *cloudwatch.DisableAlarmActionsInput, _ ...request.Option) (*cloudwatch.DisableAlarmActionsOutput, error) {
+	panic("implement me")
+}
+
+// DisableAlarmActionsRequest returns a mocked response
+func (c *CWAPI) DisableAlarmActionsRequest(_ *cloudwatch.DisableAlarmActionsInput) (*request.Request, *cloudwatch.DisableAlarmActionsOutput) {
+	panic("implement me")
+}
+
+// DisableInsightRules returns a mocked response
+func (c *CWAPI) DisableInsightRules(_ *cloudwatch.DisableInsightRulesInput) (*cloudwatch.DisableInsightRulesOutput, error) {
+	panic("implement me")
+}
+
+// DisableInsightRulesWithContext returns a mocked response
+func (c *CWAPI) DisableInsightRulesWithContext(_ aws.Context, _ *cloudwatch.DisableInsightRulesInput, _ ...request.Option) (*cloudwatch.DisableInsightRulesOutput, error) {
+	panic("implement me")
+}
+
+// DisableInsightRulesRequest returns a mocked response
+func (c *CWAPI) DisableInsightRulesRequest(_ *cloudwatch.DisableInsightRulesInput) (*request.Request, *cloudwatch.DisableInsightRulesOutput) {
+	panic("implement me")
+}
+
+// EnableAlarmActions returns a mocked response
+func (c *CWAPI) EnableAlarmActions(_ *cloudwatch.EnableAlarmActionsInput) (*cloudwatch.EnableAlarmActionsOutput, error) {
+	panic("implement me")
+}
+
+// EnableAlarmActionsWithContext returns a mocked response
+func (c *CWAPI) EnableAlarmActionsWithContext(_ aws.Context, _ *cloudwatch.EnableAlarmActionsInput, _ ...request.Option) (*cloudwatch.EnableAlarmActionsOutput, error) {
+	panic("implement me")
+}
+
+// EnableAlarmActionsRequest returns a mocked response
+func (c *CWAPI) EnableAlarmActionsRequest(_ *cloudwatch.EnableAlarmActionsInput) (*request.Request, *cloudwatch.EnableAlarmActionsOutput) {
+	panic("implement me")
+}
+
+// EnableInsightRules returns a mocked response
+func (c *CWAPI) EnableInsightRules(_ *cloudwatch.EnableInsightRulesInput) (*cloudwatch.EnableInsightRulesOutput, error) {
+	panic("implement me")
+}
+
+// EnableInsightRulesWithContext returns a mocked response
+func (c *CWAPI) EnableInsightRulesWithContext(_ aws.Context, _ *cloudwatch.EnableInsightRulesInput, _ ...request.Option) (*cloudwatch.EnableInsightRulesOutput, error) {
+	panic("implement me")
+}
+
+// EnableInsightRulesRequest returns a mocked response
+func (c *CWAPI) EnableInsightRulesRequest(_ *cloudwatch.EnableInsightRulesInput) (*request.Request, *cloudwatch.EnableInsightRulesOutput) {
+	panic("implement me")
+}
+
+// GetDashboard returns a mocked response
+func (c *CWAPI) GetDashboard(_ *cloudwatch.GetDashboardInput) (*cloudwatch.GetDashboardOutput, error) {
+	panic("implement me")
+}
+
+// GetDashboardWithContext returns a mocked response
+func (c *CWAPI) GetDashboardWithContext(_ aws.Context, _ *cloudwatch.GetDashboardInput, _ ...request.Option) (*cloudwatch.GetDashboardOutput, error) {
+	panic("implement me")
+}
+
+// GetDashboardRequest returns a mocked response
+func (c *CWAPI) GetDashboardRequest(_ *cloudwatch.GetDashboardInput) (*request.Request, *cloudwatch.GetDashboardOutput) {
+	panic("implement me")
+}
+
+// GetInsightRuleReport returns a mocked response
+func (c *CWAPI) GetInsightRuleReport(_ *cloudwatch.GetInsightRuleReportInput) (*cloudwatch.GetInsightRuleReportOutput, error) {
+	panic("implement me")
+}
+
+// GetInsightRuleReportWithContext returns a mocked response
+func (c *CWAPI) GetInsightRuleReportWithContext(_ aws.Context, _ *cloudwatch.GetInsightRuleReportInput, _ ...request.Option) (*cloudwatch.GetInsightRuleReportOutput, error) {
+	panic("implement me")
+}
+
+// GetInsightRuleReportRequest returns a mocked response
+func (c *CWAPI) GetInsightRuleReportRequest(_ *cloudwatch.GetInsightRuleReportInput) (*request.Request, *cloudwatch.GetInsightRuleReportOutput) {
+	panic("implement me")
+}
+
+// GetMetricData returns a mocked response
+func (c *CWAPI) GetMetricData(_ *cloudwatch.GetMetricDataInput) (*cloudwatch.GetMetricDataOutput, error) {
+	panic("implement me")
+}
+
+// GetMetricDataWithContext returns a mocked response
+func (c *CWAPI) GetMetricDataWithContext(_ aws.Context, _ *cloudwatch.GetMetricDataInput, _ ...request.Option) (*cloudwatch.GetMetricDataOutput, error) {
+	panic("implement me")
+}
+
+// GetMetricDataRequest returns a mocked response
+func (c *CWAPI) GetMetricDataRequest(_ *cloudwatch.GetMetricDataInput) (*request.Request, *cloudwatch.GetMetricDataOutput) {
+	panic("implement me")
+}
+
+// GetMetricDataPages returns a mocked response
+func (c *CWAPI) GetMetricDataPages(_ *cloudwatch.GetMetricDataInput, _ func(*cloudwatch.GetMetricDataOutput, bool) bool) error {
+	panic("implement me")
+}
+
+// GetMetricDataPagesWithContext returns a mocked response
+func (c *CWAPI) GetMetricDataPagesWithContext(_ aws.Context, _ *cloudwatch.GetMetricDataInput, _ func(*cloudwatch.GetMetricDataOutput, bool) bool, _ ...request.Option) error {
+	panic("implement me")
+}
+
+// GetMetricStatistics returns a mocked response
+func (c *CWAPI) GetMetricStatistics(input *cloudwatch.GetMetricStatisticsInput) (*cloudwatch.GetMetricStatisticsOutput, error) {
+	return c.GetMetricsStatisticsFn(input)
+}
+
+// GetMetricStatisticsWithContext returns a mocked response
+func (c *CWAPI) GetMetricStatisticsWithContext(_ aws.Context, _ *cloudwatch.GetMetricStatisticsInput, _ ...request.Option) (*cloudwatch.GetMetricStatisticsOutput, error) {
+	panic("implement me")
+}
+
+// GetMetricStatisticsRequest returns a mocked response
+func (c *CWAPI) GetMetricStatisticsRequest(_ *cloudwatch.GetMetricStatisticsInput) (*request.Request, *cloudwatch.GetMetricStatisticsOutput) {
+	panic("implement me")
+}
+
+// GetMetricStream returns a mocked response
+func (c *CWAPI) GetMetricStream(_ *cloudwatch.GetMetricStreamInput) (*cloudwatch.GetMetricStreamOutput, error) {
+	panic("implement me")
+}
+
+// GetMetricStreamWithContext returns a mocked response
+func (c *CWAPI) GetMetricStreamWithContext(_ aws.Context, _ *cloudwatch.GetMetricStreamInput, _ ...request.Option) (*cloudwatch.GetMetricStreamOutput, error) {
+	panic("implement me")
+}
+
+// GetMetricStreamRequest returns a mocked response
+func (c *CWAPI) GetMetricStreamRequest(_ *cloudwatch.GetMetricStreamInput) (*request.Request, *cloudwatch.GetMetricStreamOutput) {
+	panic("implement me")
+}
+
+// GetMetricWidgetImage returns a mocked response
+func (c *CWAPI) GetMetricWidgetImage(_ *cloudwatch.GetMetricWidgetImageInput) (*cloudwatch.GetMetricWidgetImageOutput, error) {
+	panic("implement me")
+}
+
+// GetMetricWidgetImageWithContext returns a mocked response
+func (c *CWAPI) GetMetricWidgetImageWithContext(_ aws.Context, _ *cloudwatch.GetMetricWidgetImageInput, _ ...request.Option) (*cloudwatch.GetMetricWidgetImageOutput, error) {
+	panic("implement me")
+}
+
+// GetMetricWidgetImageRequest returns a mocked response
+func (c *CWAPI) GetMetricWidgetImageRequest(_ *cloudwatch.GetMetricWidgetImageInput) (*request.Request, *cloudwatch.GetMetricWidgetImageOutput) {
+	panic("implement me")
+}
+
+// ListDashboards returns a mocked response
+func (c *CWAPI) ListDashboards(_ *cloudwatch.ListDashboardsInput) (*cloudwatch.ListDashboardsOutput, error) {
+	panic("implement me")
+}
+
+// ListDashboardsWithContext returns a mocked response
+func (c *CWAPI) ListDashboardsWithContext(_ aws.Context, _ *cloudwatch.ListDashboardsInput, _ ...request.Option) (*cloudwatch.ListDashboardsOutput, error) {
+	panic("implement me")
+}
+
+// ListDashboardsRequest returns a mocked response
+func (c *CWAPI) ListDashboardsRequest(_ *cloudwatch.ListDashboardsInput) (*request.Request, *cloudwatch.ListDashboardsOutput) {
+	panic("implement me")
+}
+
+// ListDashboardsPages returns a mocked response
+func (c *CWAPI) ListDashboardsPages(_ *cloudwatch.ListDashboardsInput, _ func(*cloudwatch.ListDashboardsOutput, bool) bool) error {
+	panic("implement me")
+}
+
+// ListDashboardsPagesWithContext returns a mocked response
+func (c *CWAPI) ListDashboardsPagesWithContext(_ aws.Context, _ *cloudwatch.ListDashboardsInput, _ func(*cloudwatch.ListDashboardsOutput, bool) bool, _ ...request.Option) error {
+	panic("implement me")
+}
+
+// ListMetricStreams returns a mocked response
+func (c *CWAPI) ListMetricStreams(_ *cloudwatch.ListMetricStreamsInput) (*cloudwatch.ListMetricStreamsOutput, error) {
+	panic("implement me")
+}
+
+// ListMetricStreamsWithContext returns a mocked response
+func (c *CWAPI) ListMetricStreamsWithContext(_ aws.Context, _ *cloudwatch.ListMetricStreamsInput, _ ...request.Option) (*cloudwatch.ListMetricStreamsOutput, error) {
+	panic("implement me")
+}
+
+// ListMetricStreamsRequest returns a mocked response
+func (c *CWAPI) ListMetricStreamsRequest(_ *cloudwatch.ListMetricStreamsInput) (*request.Request, *cloudwatch.ListMetricStreamsOutput) {
+	panic("implement me")
+}
+
+// ListMetricStreamsPages returns a mocked response
+func (c *CWAPI) ListMetricStreamsPages(_ *cloudwatch.ListMetricStreamsInput, _ func(*cloudwatch.ListMetricStreamsOutput, bool) bool) error {
+	panic("implement me")
+}
+
+// ListMetricStreamsPagesWithContext returns a mocked response
+func (c *CWAPI) ListMetricStreamsPagesWithContext(_ aws.Context, _ *cloudwatch.ListMetricStreamsInput, _ func(*cloudwatch.ListMetricStreamsOutput, bool) bool, _ ...request.Option) error {
+	panic("implement me")
+}
+
+// ListMetrics returns a mocked response
+func (c *CWAPI) ListMetrics(_ *cloudwatch.ListMetricsInput) (*cloudwatch.ListMetricsOutput, error) {
+	panic("implement me")
+}
+
+// ListMetricsWithContext returns a mocked response
+func (c *CWAPI) ListMetricsWithContext(_ aws.Context, _ *cloudwatch.ListMetricsInput, _ ...request.Option) (*cloudwatch.ListMetricsOutput, error) {
+	panic("implement me")
+}
+
+// ListMetricsRequest returns a mocked response
+func (c *CWAPI) ListMetricsRequest(_ *cloudwatch.ListMetricsInput) (*request.Request, *cloudwatch.ListMetricsOutput) {
+	panic("implement me")
+}
+
+// ListMetricsPages returns a mocked response
+func (c *CWAPI) ListMetricsPages(_ *cloudwatch.ListMetricsInput, _ func(*cloudwatch.ListMetricsOutput, bool) bool) error {
+	panic("implement me")
+}
+
+// ListMetricsPagesWithContext returns a mocked response
+func (c *CWAPI) ListMetricsPagesWithContext(_ aws.Context, _ *cloudwatch.ListMetricsInput, _ func(*cloudwatch.ListMetricsOutput, bool) bool, _ ...request.Option) error {
+	panic("implement me")
+}
+
+// ListTagsForResource returns a mocked response
+func (c *CWAPI) ListTagsForResource(_ *cloudwatch.ListTagsForResourceInput) (*cloudwatch.ListTagsForResourceOutput, error) {
+	panic("implement me")
+}
+
+// ListTagsForResourceWithContext returns a mocked response
+func (c *CWAPI) ListTagsForResourceWithContext(_ aws.Context, _ *cloudwatch.ListTagsForResourceInput, _ ...request.Option) (*cloudwatch.ListTagsForResourceOutput, error) {
+	panic("implement me")
+}
+
+// ListTagsForResourceRequest returns a mocked response
+func (c *CWAPI) ListTagsForResourceRequest(_ *cloudwatch.ListTagsForResourceInput) (*request.Request, *cloudwatch.ListTagsForResourceOutput) {
+	panic("implement me")
+}
+
+// PutAnomalyDetector returns a mocked response
+func (c *CWAPI) PutAnomalyDetector(_ *cloudwatch.PutAnomalyDetectorInput) (*cloudwatch.PutAnomalyDetectorOutput, error) {
+	panic("implement me")
+}
+
+// PutAnomalyDetectorWithContext returns a mocked response
+func (c *CWAPI) PutAnomalyDetectorWithContext(_ aws.Context, _ *cloudwatch.PutAnomalyDetectorInput, _ ...request.Option) (*cloudwatch.PutAnomalyDetectorOutput, error) {
+	panic("implement me")
+}
+
+// PutAnomalyDetectorRequest returns a mocked response
+func (c *CWAPI) PutAnomalyDetectorRequest(_ *cloudwatch.PutAnomalyDetectorInput) (*request.Request, *cloudwatch.PutAnomalyDetectorOutput) {
+	panic("implement me")
+}
+
+// PutCompositeAlarm returns a mocked response
+func (c *CWAPI) PutCompositeAlarm(_ *cloudwatch.PutCompositeAlarmInput) (*cloudwatch.PutCompositeAlarmOutput, error) {
+	panic("implement me")
+}
+
+// PutCompositeAlarmWithContext returns a mocked response
+func (c *CWAPI) PutCompositeAlarmWithContext(_ aws.Context, _ *cloudwatch.PutCompositeAlarmInput, _ ...request.Option) (*cloudwatch.PutCompositeAlarmOutput, error) {
+	panic("implement me")
+}
+
+// PutCompositeAlarmRequest returns a mocked response
+func (c *CWAPI) PutCompositeAlarmRequest(_ *cloudwatch.PutCompositeAlarmInput) (*request.Request, *cloudwatch.PutCompositeAlarmOutput) {
+	panic("implement me")
+}
+
+// PutDashboard returns a mocked response
+func (c *CWAPI) PutDashboard(_ *cloudwatch.PutDashboardInput) (*cloudwatch.PutDashboardOutput, error) {
+	panic("implement me")
+}
+
+// PutDashboardWithContext returns a mocked response
+func (c *CWAPI) PutDashboardWithContext(_ aws.Context, _ *cloudwatch.PutDashboardInput, _ ...request.Option) (*cloudwatch.PutDashboardOutput, error) {
+	panic("implement me")
+}
+
+// PutDashboardRequest returns a mocked response
+func (c *CWAPI) PutDashboardRequest(_ *cloudwatch.PutDashboardInput) (*request.Request, *cloudwatch.PutDashboardOutput) {
+	panic("implement me")
+}
+
+// PutInsightRule returns a mocked response
+func (c *CWAPI) PutInsightRule(_ *cloudwatch.PutInsightRuleInput) (*cloudwatch.PutInsightRuleOutput, error) {
+	panic("implement me")
+}
+
+// PutInsightRuleWithContext returns a mocked response
+func (c *CWAPI) PutInsightRuleWithContext(_ aws.Context, _ *cloudwatch.PutInsightRuleInput, _ ...request.Option) (*cloudwatch.PutInsightRuleOutput, error) {
+	panic("implement me")
+}
+
+// PutInsightRuleRequest returns a mocked response
+func (c *CWAPI) PutInsightRuleRequest(_ *cloudwatch.PutInsightRuleInput) (*request.Request, *cloudwatch.PutInsightRuleOutput) {
+	panic("implement me")
+}
+
+// PutMetricAlarm returns a mocked response
+func (c *CWAPI) PutMetricAlarm(_ *cloudwatch.PutMetricAlarmInput) (*cloudwatch.PutMetricAlarmOutput, error) {
+	panic("implement me")
+}
+
+// PutMetricAlarmWithContext returns a mocked response
+func (c *CWAPI) PutMetricAlarmWithContext(_ aws.Context, _ *cloudwatch.PutMetricAlarmInput, _ ...request.Option) (*cloudwatch.PutMetricAlarmOutput, error) {
+	panic("implement me")
+}
+
+// PutMetricAlarmRequest returns a mocked response
+func (c *CWAPI) PutMetricAlarmRequest(_ *cloudwatch.PutMetricAlarmInput) (*request.Request, *cloudwatch.PutMetricAlarmOutput) {
+	panic("implement me")
+}
+
+// PutMetricData returns a mocked response
+func (c *CWAPI) PutMetricData(_ *cloudwatch.PutMetricDataInput) (*cloudwatch.PutMetricDataOutput, error) {
+	panic("implement me")
+}
+
+// PutMetricDataWithContext returns a mocked response
+func (c *CWAPI) PutMetricDataWithContext(_ aws.Context, _ *cloudwatch.PutMetricDataInput, _ ...request.Option) (*cloudwatch.PutMetricDataOutput, error) {
+	panic("implement me")
+}
+
+// PutMetricDataRequest returns a mocked response
+func (c *CWAPI) PutMetricDataRequest(_ *cloudwatch.PutMetricDataInput) (*request.Request, *cloudwatch.PutMetricDataOutput) {
+	panic("implement me")
+}
+
+// PutMetricStream returns a mocked response
+func (c *CWAPI) PutMetricStream(_ *cloudwatch.PutMetricStreamInput) (*cloudwatch.PutMetricStreamOutput, error) {
+	panic("implement me")
+}
+
+// PutMetricStreamWithContext returns a mocked response
+func (c *CWAPI) PutMetricStreamWithContext(_ aws.Context, _ *cloudwatch.PutMetricStreamInput, _ ...request.Option) (*cloudwatch.PutMetricStreamOutput, error) {
+	panic("implement me")
+}
+
+// PutMetricStreamRequest returns a mocked response
+func (c *CWAPI) PutMetricStreamRequest(_ *cloudwatch.PutMetricStreamInput) (*request.Request, *cloudwatch.PutMetricStreamOutput) {
+	panic("implement me")
+}
+
+// SetAlarmState returns a mocked response
+func (c *CWAPI) SetAlarmState(_ *cloudwatch.SetAlarmStateInput) (*cloudwatch.SetAlarmStateOutput, error) {
+	panic("implement me")
+}
+
+// SetAlarmStateWithContext returns a mocked response
+func (c *CWAPI) SetAlarmStateWithContext(_ aws.Context, _ *cloudwatch.SetAlarmStateInput, _ ...request.Option) (*cloudwatch.SetAlarmStateOutput, error) {
+	panic("implement me")
+}
+
+// SetAlarmStateRequest returns a mocked response
+func (c *CWAPI) SetAlarmStateRequest(_ *cloudwatch.SetAlarmStateInput) (*request.Request, *cloudwatch.SetAlarmStateOutput) {
+	panic("implement me")
+}
+
+// StartMetricStreams returns a mocked response
+func (c *CWAPI) StartMetricStreams(_ *cloudwatch.StartMetricStreamsInput) (*cloudwatch.StartMetricStreamsOutput, error) {
+	panic("implement me")
+}
+
+// StartMetricStreamsWithContext returns a mocked response
+func (c *CWAPI) StartMetricStreamsWithContext(_ aws.Context, _ *cloudwatch.StartMetricStreamsInput, _ ...request.Option) (*cloudwatch.StartMetricStreamsOutput, error) {
+	panic("implement me")
+}
+
+// StartMetricStreamsRequest returns a mocked response
+func (c *CWAPI) StartMetricStreamsRequest(_ *cloudwatch.StartMetricStreamsInput) (*request.Request, *cloudwatch.StartMetricStreamsOutput) {
+	panic("implement me")
+}
+
+// StopMetricStreams returns a mocked response
+func (c *CWAPI) StopMetricStreams(_ *cloudwatch.StopMetricStreamsInput) (*cloudwatch.StopMetricStreamsOutput, error) {
+	panic("implement me")
+}
+
+// StopMetricStreamsWithContext returns a mocked response
+func (c *CWAPI) StopMetricStreamsWithContext(_ aws.Context, _ *cloudwatch.StopMetricStreamsInput, _ ...request.Option) (*cloudwatch.StopMetricStreamsOutput, error) {
+	panic("implement me")
+}
+
+// StopMetricStreamsRequest returns a mocked response
+func (c *CWAPI) StopMetricStreamsRequest(_ *cloudwatch.StopMetricStreamsInput) (*request.Request, *cloudwatch.StopMetricStreamsOutput) {
+	panic("implement me")
+}
+
+// TagResource returns a mocked response
+func (c *CWAPI) TagResource(_ *cloudwatch.TagResourceInput) (*cloudwatch.TagResourceOutput, error) {
+	panic("implement me")
+}
+
+// TagResourceWithContext returns a mocked response
+func (c *CWAPI) TagResourceWithContext(_ aws.Context, _ *cloudwatch.TagResourceInput, _ ...request.Option) (*cloudwatch.TagResourceOutput, error) {
+	panic("implement me")
+}
+
+// TagResourceRequest returns a mocked response
+func (c *CWAPI) TagResourceRequest(_ *cloudwatch.TagResourceInput) (*request.Request, *cloudwatch.TagResourceOutput) {
+	panic("implement me")
+}
+
+// UntagResource returns a mocked response
+func (c *CWAPI) UntagResource(_ *cloudwatch.UntagResourceInput) (*cloudwatch.UntagResourceOutput, error) {
+	panic("implement me")
+}
+
+// UntagResourceWithContext returns a mocked response
+func (c *CWAPI) UntagResourceWithContext(_ aws.Context, _ *cloudwatch.UntagResourceInput, _ ...request.Option) (*cloudwatch.UntagResourceOutput, error) {
+	panic("implement me")
+}
+
+// UntagResourceRequest returns a mocked response
+func (c *CWAPI) UntagResourceRequest(_ *cloudwatch.UntagResourceInput) (*request.Request, *cloudwatch.UntagResourceOutput) {
+	panic("implement me")
+}
+
+// WaitUntilAlarmExists returns a mocked response
+func (c *CWAPI) WaitUntilAlarmExists(_ *cloudwatch.DescribeAlarmsInput) error {
+	panic("implement me")
+}
+
+// WaitUntilAlarmExistsWithContext returns a mocked response
+func (c *CWAPI) WaitUntilAlarmExistsWithContext(_ aws.Context, _ *cloudwatch.DescribeAlarmsInput, _ ...request.WaiterOption) error {
+	panic("implement me")
+}
+
+// WaitUntilCompositeAlarmExists returns a mocked response
+func (c *CWAPI) WaitUntilCompositeAlarmExists(_ *cloudwatch.DescribeAlarmsInput) error {
+	panic("implement me")
+}
+
+// WaitUntilCompositeAlarmExistsWithContext returns a mocked response
+func (c *CWAPI) WaitUntilCompositeAlarmExistsWithContext(_ aws.Context, _ *cloudwatch.DescribeAlarmsInput, _ ...request.WaiterOption) error {
+	panic("implement me")
+}
+
 // IAMAPI mocks the IAM API
 type IAMAPI struct {
 	iamiface.IAMAPI
@@ -547,6 +1187,7 @@ type CloudProvider struct {
 	SQAPI     *SQAPI
 	ACMAPI    *ACMAPI
 	ELBv2API  *ELBv2API
+	CWAPI     *CWAPI
 }
 
 // SecretsManager returns the mocked SecretsManager API
@@ -572,6 +1213,11 @@ func (p *CloudProvider) ServiceQuotas() servicequotasiface.ServiceQuotasAPI {
 // CloudFormation returns the mocked CF API
 func (p *CloudProvider) CloudFormation() cloudformationiface.CloudFormationAPI {
 	return p.CFAPI
+}
+
+// CloudWatch returns the mocked CW API
+func (p *CloudProvider) CloudWatch() cloudwatchiface.CloudWatchAPI {
+	return p.CWAPI
 }
 
 // EC2 returns the mocked EC2 API
@@ -638,6 +1284,7 @@ func NewCloudProvider() *CloudProvider {
 		SQAPI:     &SQAPI{},
 		ACMAPI:    &ACMAPI{},
 		ELBv2API:  &ELBv2API{},
+		CWAPI:     &CWAPI{},
 	}
 }
 
@@ -875,6 +1522,11 @@ func NewGoodCloudProvider() *CloudProvider {
 			},
 			DeleteLoadBalancerFn: func(*elbv2.DeleteLoadBalancerInput) (*elbv2.DeleteLoadBalancerOutput, error) {
 				return &elbv2.DeleteLoadBalancerOutput{}, nil
+			},
+		},
+		CWAPI: &CWAPI{
+			GetMetricsStatisticsFn: func(input *cloudwatch.GetMetricStatisticsInput) (*cloudwatch.GetMetricStatisticsOutput, error) {
+				return &cloudwatch.GetMetricStatisticsOutput{}, nil
 			},
 		},
 	}

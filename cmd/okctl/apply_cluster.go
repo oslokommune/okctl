@@ -12,6 +12,8 @@ import (
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/version"
 
+	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
+
 	"github.com/asdine/storm/v3/codec/json"
 
 	"github.com/asdine/storm/v3"
@@ -19,28 +21,22 @@ import (
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/commands"
-	"github.com/oslokommune/okctl/pkg/context"
 
 	"github.com/logrusorgru/aurora"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/config/load"
-	"github.com/oslokommune/okctl/pkg/controller"
-	"github.com/oslokommune/okctl/pkg/controller/reconciler"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/spinner"
 	"github.com/spf13/cobra"
 )
 
 type applyClusterOpts struct {
-	AWSCredentialsType    string
-	GithubCredentialsType string
-	DisableSpinner        bool
-	File                  string
-	Declaration           *v1alpha1.Cluster
+	DisableSpinner bool
+	File           string
+	Declaration    *v1alpha1.Cluster
 }
 
 // Validate ensures the applyClusterOpts contains the right information
@@ -53,8 +49,6 @@ func (o *applyClusterOpts) Validate() error {
 // nolint funlen
 func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := applyClusterOpts{}
-
-	var id api.ID
 
 	cmd := &cobra.Command{
 		Use:     "cluster -f declaration_file",
@@ -70,12 +64,11 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				os.Exit(1)
 			}()
 
+			enableServiceUserAuthentication(o)
+
 			return nil
 		},
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
-			o.AWSCredentialsType = opts.AWSCredentialsType
-			o.GithubCredentialsType = opts.GithubCredentialsType
-
 			opts.Declaration, err = commands.InferClusterFromStdinOrFile(o.In, opts.File)
 			if err != nil {
 				return fmt.Errorf("inferring cluster: %w", err)
@@ -130,12 +123,6 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("initializing okctl: %w", err)
 			}
 
-			id = api.ID{
-				Region:       opts.Declaration.Metadata.Region,
-				AWSAccountID: opts.Declaration.Metadata.AccountID,
-				ClusterName:  opts.Declaration.Metadata.Name,
-			}
-
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, _ []string) (err error) {
@@ -146,62 +133,48 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				spinnerWriter = o.Err
 			}
 
-			spin, err := spinner.New("synchronizing", spinnerWriter)
+			spin, err := spinner.New("applying cluster", spinnerWriter)
 			if err != nil {
 				return fmt.Errorf("error creating spinner: %w", err)
 			}
 
-			handlers := o.StateHandlers(o.StateNodes())
+			state := o.StateHandlers(o.StateNodes())
 
-			services, err := o.ClientServices(handlers)
+			services, err := o.ClientServices(state)
 			if err != nil {
 				return fmt.Errorf("error getting services: %w", err)
 			}
 
-			reconciliationManager := reconciler.NewCompositeReconciler(spin,
-				reconciler.NewArgocdReconciler(services.ArgoCD, services.Github),
-				reconciler.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService),
-				reconciler.NewAutoscalerReconciler(services.Autoscaler),
-				reconciler.NewKubePrometheusStackReconciler(services.Monitoring),
-				reconciler.NewLokiReconciler(services.Monitoring),
-				reconciler.NewPromtailReconciler(services.Monitoring),
-				reconciler.NewTempoReconciler(services.Monitoring),
-				reconciler.NewBlockstorageReconciler(services.Blockstorage),
-				reconciler.NewClusterReconciler(services.Cluster),
-				reconciler.NewExternalDNSReconciler(services.ExternalDNS),
-				reconciler.NewExternalSecretsReconciler(services.ExternalSecrets),
-				reconciler.NewIdentityManagerReconciler(services.IdentityManager),
-				reconciler.NewVPCReconciler(services.Vpc),
-				reconciler.NewZoneReconciler(services.Domain),
-				reconciler.NewNameserverDelegationReconciler(services.NameserverHandler),
-				reconciler.NewNameserverDelegatedTestReconciler(services.Domain),
-				reconciler.NewUsersReconciler(services.IdentityManager),
-				reconciler.NewPostgresReconciler(services.Component),
-				reconciler.NewCleanupALBReconciler(o.CloudProvider),
-				reconciler.NewCleanupSGReconciler(o.CloudProvider),
-				&reconciler.PostgresGroupReconciler{},
-				reconciler.NewServiceQuotaReconciler(o.CloudProvider),
-			)
-
-			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{
-				Ctx:         o.Ctx,
-				Out:         o.Out,
-				ClusterID:   id,
-				Declaration: opts.Declaration,
-			})
-
-			reconciliationManager.SetStateHandlers(handlers)
-
-			synchronizeOpts := &controller.SynchronizeOpts{
-				Debug:                 o.Debug,
-				Out:                   o.Out,
-				ID:                    id,
-				ClusterDeclaration:    opts.Declaration,
-				ReconciliationManager: reconciliationManager,
-				StateHandlers:         handlers,
+			schedulerOpts := common.SchedulerOpts{
+				Out:                             o.Out,
+				Spinner:                         spin,
+				ReconciliationLoopDelayFunction: common.DefaultDelayFunction,
+				ClusterDeclaration:              *o.Declaration,
 			}
 
-			err = controller.Synchronize(synchronizeOpts)
+			scheduler := common.NewScheduler(schedulerOpts,
+				reconciliation.NewZoneReconciler(services.Domain),
+				reconciliation.NewVPCReconciler(services.Vpc, o.CloudProvider),
+				reconciliation.NewNameserverDelegationReconciler(services.NameserverHandler),
+				reconciliation.NewClusterReconciler(services.Cluster, o.CloudProvider),
+				reconciliation.NewAutoscalerReconciler(services.Autoscaler),
+				reconciliation.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService),
+				reconciliation.NewBlockstorageReconciler(services.Blockstorage),
+				reconciliation.NewExternalDNSReconciler(services.ExternalDNS),
+				reconciliation.NewExternalSecretsReconciler(services.ExternalSecrets),
+				reconciliation.NewNameserverDelegatedTestReconciler(services.Domain),
+				reconciliation.NewIdentityManagerReconciler(services.IdentityManager),
+				reconciliation.NewArgocdReconciler(services.ArgoCD, services.Github),
+				reconciliation.NewLokiReconciler(services.Monitoring),
+				reconciliation.NewPromtailReconciler(services.Monitoring),
+				reconciliation.NewTempoReconciler(services.Monitoring),
+				reconciliation.NewKubePrometheusStackReconciler(services.Monitoring),
+				reconciliation.NewUsersReconciler(services.IdentityManager),
+				reconciliation.NewPostgresReconciler(services.Component),
+				reconciliation.NewCleanupSGReconciler(o.CloudProvider),
+			)
+
+			_, err = scheduler.Run(o.Ctx, state)
 			if err != nil {
 				return fmt.Errorf("synchronizing declaration with state: %w", err)
 			}
@@ -218,7 +191,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			_, _ = fmt.Fprintln(o.Out,
 				fmt.Sprintf(
 					"\nTo access your cluster, run %s to activate the environment for your cluster",
-					aurora.Green(fmt.Sprintf("okctl venv %s", id.ClusterName)),
+					aurora.Green(fmt.Sprintf("okctl venv -c %s", opts.File)),
 				),
 			)
 			_, _ = fmt.Fprintln(o.Out, fmt.Sprintf("Your cluster should then be available with %s", aurora.Green("kubectl")))
@@ -229,31 +202,11 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 	flags := cmd.Flags()
 
-	flags.StringVarP(&opts.AWSCredentialsType,
-		"aws-credentials-type",
-		"a",
-		context.AWSCredentialsTypeSAML,
-		fmt.Sprintf(
-			"The form of authentication to use for AWS. Possible values: [%s,%s]",
-			context.AWSCredentialsTypeSAML,
-			context.AWSCredentialsTypeAccessKey,
-		),
-	)
 	flags.StringVarP(&opts.File,
 		"file",
 		"f",
 		"",
 		usageApplyClusterFile,
-	)
-	flags.StringVarP(&opts.GithubCredentialsType,
-		"github-credentials-type",
-		"g",
-		context.GithubCredentialsTypeDeviceAuthentication,
-		fmt.Sprintf(
-			"The form of authentication to use for Github. Possible values: [%s,%s]",
-			context.GithubCredentialsTypeDeviceAuthentication,
-			context.GithubCredentialsTypeToken,
-		),
 	)
 	flags.BoolVar(&opts.DisableSpinner,
 		"no-spinner",

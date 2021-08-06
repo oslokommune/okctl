@@ -101,7 +101,7 @@ func venvPreRunE(o *okctl.Okctl) (commands.OkctlEnvironment, error) {
 		return commands.OkctlEnvironment{}, err
 	}
 
-	okctlEnvironment, err := commands.GetOkctlEnvironment(o)
+	okctlEnvironment, err := commands.GetOkctlEnvironment(o, declarationPath)
 	if err != nil {
 		return commands.OkctlEnvironment{}, err
 	}
@@ -158,7 +158,7 @@ func createVenvOpts(host state.Host, okctlEnvironment commands.OkctlEnvironment)
 	}
 
 	okctlEnvVars := commands.GetOkctlEnvVars(okctlEnvironment)
-	envVars := commands.MergeEnvVars(os.Environ(), okctlEnvVars)
+	envVars := commands.MergeEnvVars(commands.CleanOsEnvVars(os.Environ()), okctlEnvVars)
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {

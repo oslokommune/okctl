@@ -23,3 +23,8 @@ type BlockstorageService interface {
 	CreateBlockstorage(ctx context.Context, opts CreateBlockstorageOpts) (*Blockstorage, error)
 	DeleteBlockstorage(ctx context.Context, id api.ID) error
 }
+
+// BlockstorageState defines the state layer
+type BlockstorageState interface {
+	HasBlockstorage() (bool, error)
+}

@@ -23,3 +23,8 @@ type AutoscalerService interface {
 	CreateAutoscaler(ctx context.Context, opts CreateAutoscalerOpts) (*Autoscaler, error)
 	DeleteAutoscaler(ctx context.Context, id api.ID) error
 }
+
+// AutoscalerState knows how to store and retrieve information about the Autoscaler
+type AutoscalerState interface {
+	HasAutoscaler() (bool, error)
+}

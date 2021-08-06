@@ -5,16 +5,12 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/oslokommune/okctl/pkg/controller"
-	"github.com/oslokommune/okctl/pkg/controller/reconciler"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
+	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
+
 	"github.com/oslokommune/okctl/pkg/spinner"
 
-	"github.com/oslokommune/okctl/pkg/context"
-
 	"github.com/AlecAivazis/survey/v2"
-	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
@@ -43,19 +39,6 @@ type DeleteClusterOpts struct {
 
 	DisableSpinner bool
 	Confirm        bool
-
-	Region       string
-	AWSAccountID string
-	ClusterName  string
-}
-
-// Validate the inputs
-func (o *DeleteClusterOpts) Validate() error {
-	return validation.ValidateStruct(o,
-		validation.Field(&o.AWSAccountID, validation.Required),
-		validation.Field(&o.Region, validation.Required),
-		validation.Field(&o.ClusterName, validation.Required),
-	)
 }
 
 // nolint: gocyclo, funlen, gocognit
@@ -69,21 +52,9 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 including VPC, this is a highly destructive operation.`,
 		Args: cobra.ExactArgs(deleteClusterArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			o.AWSCredentialsType = opts.AWSCredentialsType
-			o.GithubCredentialsType = opts.GithubCredentialsType
-
 			err := o.Initialise()
 			if err != nil {
 				return fmt.Errorf("initialising: %w", err)
-			}
-
-			opts.Region = o.Declaration.Metadata.Region
-			opts.AWSAccountID = o.Declaration.Metadata.AccountID
-			opts.ClusterName = o.Declaration.Metadata.Name
-
-			err = opts.Validate()
-			if err != nil {
-				return err
 			}
 
 			return nil
@@ -96,74 +67,54 @@ including VPC, this is a highly destructive operation.`,
 				spinnerWriter = o.Err
 			}
 
-			spin, err := spinner.New("synchronizing", spinnerWriter)
+			spin, err := spinner.New("deleting cluster", spinnerWriter)
 			if err != nil {
 				return fmt.Errorf("error creating spinner: %w", err)
 			}
 
-			id := api.ID{
-				Region:       opts.Region,
-				AWSAccountID: opts.AWSAccountID,
-				ClusterName:  opts.ClusterName,
-			}
+			state := o.StateHandlers(o.StateNodes())
 
-			handlers := o.StateHandlers(o.StateNodes())
-
-			services, err := o.ClientServices(handlers)
+			services, err := o.ClientServices(state)
 			if err != nil {
 				return fmt.Errorf("error getting services: %w", err)
 			}
 
-			reconciliationManager := reconciler.NewCompositeReconciler(spin,
-				reconciler.NewArgocdReconciler(services.ArgoCD, services.Github),
-				reconciler.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService),
-				reconciler.NewAutoscalerReconciler(services.Autoscaler),
-				reconciler.NewKubePrometheusStackReconciler(services.Monitoring),
-				reconciler.NewLokiReconciler(services.Monitoring),
-				reconciler.NewPromtailReconciler(services.Monitoring),
-				reconciler.NewTempoReconciler(services.Monitoring),
-				reconciler.NewBlockstorageReconciler(services.Blockstorage),
-				reconciler.NewClusterReconciler(services.Cluster),
-				reconciler.NewExternalDNSReconciler(services.ExternalDNS),
-				reconciler.NewExternalSecretsReconciler(services.ExternalSecrets),
-				reconciler.NewIdentityManagerReconciler(services.IdentityManager),
-				reconciler.NewVPCReconciler(services.Vpc),
-				reconciler.NewZoneReconciler(services.Domain),
-				reconciler.NewNameserverDelegationReconciler(services.NameserverHandler),
-				reconciler.NewNameserverDelegatedTestReconciler(services.Domain),
-				reconciler.NewUsersReconciler(services.IdentityManager),
-				reconciler.NewPostgresReconciler(services.Component),
-				reconciler.NewCleanupALBReconciler(o.CloudProvider),
-				reconciler.NewCleanupSGReconciler(o.CloudProvider),
-				&reconciler.PostgresGroupReconciler{},
-				reconciler.NewServiceQuotaReconciler(o.CloudProvider),
-			)
-
-			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{
-				Ctx:         o.Ctx,
-				Out:         o.Out,
-				ClusterID:   id,
-				Declaration: o.Declaration,
-			})
-
-			reconciliationManager.SetStateHandlers(handlers)
-
-			synchronizeOpts := &controller.SynchronizeOpts{
-				Debug:                 o.Debug,
-				Out:                   o.Out,
-				DeleteAll:             true,
-				ID:                    id,
-				ClusterDeclaration:    o.Declaration,
-				ReconciliationManager: reconciliationManager,
-				StateHandlers:         handlers,
+			schedulerOpts := common.SchedulerOpts{
+				Out:                             o.Out,
+				Spinner:                         spin,
+				PurgeFlag:                       true,
+				ReconciliationLoopDelayFunction: common.DefaultDelayFunction,
+				ClusterDeclaration:              *o.Declaration,
 			}
 
-			ready, err := checkIfReady(id.ClusterName, o, opts.Confirm)
+			scheduler := common.NewScheduler(schedulerOpts,
+				reconciliation.NewZoneReconciler(services.Domain),
+				reconciliation.NewVPCReconciler(services.Vpc, o.CloudProvider),
+				reconciliation.NewNameserverDelegationReconciler(services.NameserverHandler),
+				reconciliation.NewClusterReconciler(services.Cluster, o.CloudProvider),
+				reconciliation.NewAutoscalerReconciler(services.Autoscaler),
+				reconciliation.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService),
+				reconciliation.NewBlockstorageReconciler(services.Blockstorage),
+				reconciliation.NewExternalDNSReconciler(services.ExternalDNS),
+				reconciliation.NewExternalSecretsReconciler(services.ExternalSecrets),
+				reconciliation.NewNameserverDelegatedTestReconciler(services.Domain),
+				reconciliation.NewIdentityManagerReconciler(services.IdentityManager),
+				reconciliation.NewArgocdReconciler(services.ArgoCD, services.Github),
+				reconciliation.NewLokiReconciler(services.Monitoring),
+				reconciliation.NewPromtailReconciler(services.Monitoring),
+				reconciliation.NewTempoReconciler(services.Monitoring),
+				reconciliation.NewKubePrometheusStackReconciler(services.Monitoring),
+				reconciliation.NewUsersReconciler(services.IdentityManager),
+				reconciliation.NewPostgresReconciler(services.Component),
+				reconciliation.NewCleanupSGReconciler(o.CloudProvider),
+			)
+
+			ready, err := checkIfReady(o.Declaration.Metadata.Name, o, opts.Confirm)
 			if err != nil || !ready {
 				return err
 			}
 
-			err = controller.DeleteCluster(synchronizeOpts)
+			_, err = scheduler.Run(o.Ctx, state)
 			if err != nil {
 				return fmt.Errorf("synchronizing declaration with state: %w", err)
 			}
@@ -174,27 +125,6 @@ including VPC, this is a highly destructive operation.`,
 
 	flags := cmd.Flags()
 
-	flags.StringVarP(&opts.AWSCredentialsType,
-		"aws-credentials-type",
-		"a",
-		context.AWSCredentialsTypeSAML,
-		fmt.Sprintf(
-			"The form of authentication to use for AWS. Possible values: [%s,%s]",
-			context.AWSCredentialsTypeSAML,
-			context.AWSCredentialsTypeAccessKey,
-		),
-	)
-	flags.StringVarP(
-		&opts.GithubCredentialsType,
-		"github-credentials-type",
-		"g",
-		context.GithubCredentialsTypeDeviceAuthentication,
-		fmt.Sprintf(
-			"The form of authentication to use for Github. Possible values: [%s,%s]",
-			context.GithubCredentialsTypeDeviceAuthentication,
-			context.GithubCredentialsTypeToken,
-		),
-	)
 	flags.BoolVar(
 		&opts.DisableSpinner,
 		"no-spinner",

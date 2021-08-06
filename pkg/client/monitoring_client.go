@@ -58,4 +58,5 @@ type MonitoringState interface {
 	SaveKubePromStack(stack *KubePromStack) error
 	RemoveKubePromStack() error
 	GetKubePromStack() (*KubePromStack, error)
+	HasKubePromStack() (bool, error)
 }

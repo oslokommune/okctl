@@ -3,16 +3,15 @@ package main
 import (
 	"fmt"
 
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
-
-	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/spinner"
 
+	"github.com/oslokommune/okctl/pkg/controller/application/reconciliation"
+
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/controller"
-	"github.com/oslokommune/okctl/pkg/controller/reconciler"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
+	"github.com/oslokommune/okctl/pkg/commands"
+	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
@@ -24,7 +23,6 @@ const requiredApplyApplicationArguments = 0
 type applyApplicationOpts struct {
 	File string
 
-	ClusterID   api.ID
 	Application v1alpha1.Application
 }
 
@@ -50,12 +48,6 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			opts.ClusterID = api.ID{
-				Region:       o.Declaration.Metadata.Region,
-				AWSAccountID: o.Declaration.Metadata.AccountID,
-				ClusterName:  o.Declaration.Metadata.Name,
-			}
-
 			opts.Application, err = commands.InferApplicationFromStdinOrFile(*o.Declaration, o.In, o.FileSystem, opts.File)
 			if err != nil {
 				return fmt.Errorf("inferring application from stdin or file: %w", err)
@@ -69,39 +61,31 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("failed validating options: %w", err)
 			}
 
-			handlers := o.StateHandlers(o.StateNodes())
+			state := o.StateHandlers(o.StateNodes())
 
-			services, _ := o.ClientServices(handlers)
+			services, _ := o.ClientServices(state)
 
-			spin, err := spinner.New("synchronizing", o.Err)
+			spin, err := spinner.New("applying application", o.Err)
 			if err != nil {
 				return fmt.Errorf("error creating spinner: %w", err)
 			}
 
-			reconciliationManager := reconciler.NewCompositeReconciler(spin,
-				reconciler.NewApplicationReconciler(services.ApplicationService),
-				reconciler.NewContainerRepositoryReconciler(services.ContainerRepository),
+			schedulerOpts := common.SchedulerOpts{
+				Out:                             o.Out,
+				Spinner:                         spin,
+				ReconciliationLoopDelayFunction: common.DefaultDelayFunction,
+				ClusterDeclaration:              *o.Declaration,
+				ApplicationDeclaration:          opts.Application,
+			}
+
+			scheduler := common.NewScheduler(schedulerOpts,
+				reconciliation.NewApplicationReconciler(services.ApplicationService),
+				reconciliation.NewContainerRepositoryReconciler(services.ContainerRepository),
 			)
 
-			reconciliationManager.SetCommonMetadata(&resourcetree.CommonMetadata{
-				Ctx:                    o.Ctx,
-				Out:                    o.Out,
-				ClusterID:              opts.ClusterID,
-				Declaration:            o.Declaration,
-				ApplicationDeclaration: opts.Application,
-			})
-
-			reconciliationManager.SetStateHandlers(handlers)
-
-			dependencyTree := controller.CreateApplicationResourceDependencyTree()
-
-			err = commands.SynchronizeApplication(commands.SynchronizeApplicationOpts{
-				ReconciliationManager: reconciliationManager,
-				Application:           opts.Application,
-				Tree:                  dependencyTree,
-			})
+			_, err = scheduler.Run(o.Ctx, state)
 			if err != nil {
-				return fmt.Errorf("synchronizing application: %w", err)
+				return fmt.Errorf("reconciling application: %w", err)
 			}
 
 			return commands.WriteApplyApplicationSuccessMessage(commands.WriteApplyApplicationSucessMessageOpts{

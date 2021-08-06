@@ -22,7 +22,7 @@ jobs:
       - name: Build
         run: make release-local
 
-      - uses: webfactory/ssh-agent@v0.5.2
+      - uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_SECRET_KEY }}
 
@@ -83,7 +83,7 @@ jobs:
 
       - name: Notify
         if: ${{ always() }}
-        uses: rtCamp/action-slack-notify@v2.1.3
+        uses: rtCamp/action-slack-notify@v2.2.0
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_KJOREMILJO }}
           SLACK_USERNAME: okctl-bot

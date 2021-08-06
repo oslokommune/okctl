@@ -13,45 +13,11 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
-	"github.com/oslokommune/okctl/pkg/controller"
-	"github.com/oslokommune/okctl/pkg/controller/reconciler"
-	"github.com/oslokommune/okctl/pkg/controller/resourcetree"
-
 	"github.com/oslokommune/okctl/pkg/config/constant"
 	"github.com/spf13/afero"
 
 	"sigs.k8s.io/yaml"
 )
-
-// SynchronizeApplicationOpts contains references necessary to synchronize an application
-type SynchronizeApplicationOpts struct {
-	ReconciliationManager reconciler.Reconciler
-	Application           v1alpha1.Application
-
-	Tree *resourcetree.ResourceNode
-}
-
-// SynchronizeApplication knows how to discover differences between desired and actual state and rectify them
-func SynchronizeApplication(opts SynchronizeApplicationOpts) error {
-	opts.Tree.ApplyFunction(applyDesiredState(opts.Application.Image), opts.Tree)
-
-	return controller.Process(opts.ReconciliationManager, controller.FlattenTree(opts.Tree, []*resourcetree.ResourceNode{}))
-}
-
-func applyDesiredState(image v1alpha1.ApplicationImage) resourcetree.ApplyFn {
-	return func(receiver *resourcetree.ResourceNode, target *resourcetree.ResourceNode) {
-		switch receiver.Type {
-		case resourcetree.ResourceNodeTypeContainerRepository:
-			if image.HasName() {
-				receiver.State = resourcetree.ResourceNodeStatePresent
-			} else {
-				receiver.State = resourcetree.ResourceNodeStateNoop
-			}
-		case resourcetree.ResourceNodeTypeApplication:
-			receiver.State = resourcetree.ResourceNodeStatePresent
-		}
-	}
-}
 
 // InferApplicationFromStdinOrFile returns an okctl application based on input. The function will parse input either
 // from the reader or from the fs based on if path is a path or if it is "-". "-" represents stdin

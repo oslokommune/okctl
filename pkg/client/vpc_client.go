@@ -67,4 +67,5 @@ type VPCState interface {
 	SaveVpc(vpc *Vpc) error
 	GetVpc(stackName string) (*Vpc, error)
 	RemoveVpc(stackName string) error
+	HasVPC(clusterName string) (bool, error)
 }

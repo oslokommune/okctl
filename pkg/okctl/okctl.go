@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/client/core/state/direct"
+
 	"github.com/oslokommune/okctl/pkg/breeze"
 
 	"github.com/oslokommune/okctl/pkg/client/core/state/storm"
@@ -141,23 +143,32 @@ func (o *Okctl) StateNodes() *clientCore.StateNodes {
 
 // StateHandlers returns the initialised state handlers
 func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHandlers {
+	helmClient := rest.NewHelmAPI(o.restClient)
+
 	return &clientCore.StateHandlers{
-		Helm:                storm.NewHelmState(nodes.Helm),
-		ManagedPolicy:       storm.NewManagedPolicyState(nodes.ManagedPolicy),
-		ServiceAccount:      storm.NewServiceAccountState(nodes.ServiceAccount),
-		Certificate:         storm.NewCertificateState(nodes.Certificate),
-		IdentityManager:     storm.NewIdentityManager(nodes.IdentityManager),
-		Github:              storm.NewGithubState(nodes.Github),
-		Manifest:            storm.NewManifestState(nodes.Manifest),
-		Vpc:                 storm.NewVpcState(nodes.Vpc),
-		Parameter:           storm.NewParameterState(nodes.Parameter),
-		Domain:              storm.NewDomainState(nodes.Domain),
-		ExternalDNS:         storm.NewExternalDNSState(nodes.ExternalDNS),
-		Cluster:             storm.NewClusterState(nodes.Cluster),
-		Component:           storm.NewComponentState(nodes.Component),
-		Monitoring:          storm.NewMonitoringState(nodes.Monitoring),
-		ArgoCD:              storm.NewArgoCDState(nodes.ArgoCD),
-		ContainerRepository: storm.NewContainerRepositoryState(nodes.ContainerRepository),
+		Helm:                      storm.NewHelmState(nodes.Helm),
+		ManagedPolicy:             storm.NewManagedPolicyState(nodes.ManagedPolicy),
+		ServiceAccount:            storm.NewServiceAccountState(nodes.ServiceAccount),
+		Certificate:               storm.NewCertificateState(nodes.Certificate),
+		IdentityManager:           storm.NewIdentityManager(nodes.IdentityManager),
+		Github:                    storm.NewGithubState(nodes.Github),
+		Manifest:                  storm.NewManifestState(nodes.Manifest),
+		Vpc:                       storm.NewVpcState(nodes.Vpc),
+		Parameter:                 storm.NewParameterState(nodes.Parameter),
+		Domain:                    storm.NewDomainState(nodes.Domain),
+		ExternalDNS:               storm.NewExternalDNSState(nodes.ExternalDNS),
+		Cluster:                   storm.NewClusterState(nodes.Cluster),
+		Component:                 storm.NewComponentState(nodes.Component),
+		Monitoring:                storm.NewMonitoringState(nodes.Monitoring),
+		ArgoCD:                    storm.NewArgoCDState(nodes.ArgoCD),
+		ContainerRepository:       storm.NewContainerRepositoryState(nodes.ContainerRepository),
+		Loki:                      direct.NewLokiState(o.Declaration.Metadata, helmClient),
+		Promtail:                  direct.NewPromtailState(o.Declaration.Metadata, helmClient),
+		Tempo:                     direct.NewTempoState(o.Declaration.Metadata, helmClient),
+		Autoscaler:                direct.NewAutoscalerState(o.Declaration.Metadata, helmClient),
+		AWSLoadBalancerController: direct.NewAWSLoadBalancerState(o.Declaration.Metadata, helmClient),
+		Blockstorage:              direct.NewBlockstorageState(o.Declaration.Metadata, helmClient),
+		ExternalSecrets:           direct.NewExternalSecretsState(o.Declaration.Metadata, helmClient),
 		Upgrade:             storm.NewUpgradesState(nodes.Upgrade),
 	}
 }

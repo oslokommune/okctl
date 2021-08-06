@@ -13,10 +13,11 @@ be making changes to the Kubernetes and ArgoCD resources from that point on.
 2. We apply the application declaration to the infrastructure as code repository, which converts the application
 declaration to resources understood by Kubernetes and ArgoCD.
 
-## Commands
+## Deploy an application
 
 :information_source: If you need information on how to make your Docker images available in the cluster, see [Running a Docker image in your cluster](/help/docker-registry)
 
+### Scaffold the application declaration
 To scaffold an application.yaml template, run the following command:
 
 ```bash
@@ -30,6 +31,8 @@ okctl --cluster-declaration=cluster.yaml scaffold application > application.yaml
 This creates an application declaration in application.yaml.
 
 After configuring the application.yaml file, you turn it into Kubernetes and ArgoCD resources by running:
+
+### Apply the application declaration
 
 ```bash
 # Syntax
@@ -48,23 +51,15 @@ This command will create the following content in the infrastructure folder:
 
 After that, the following manual steps remain:
 
-1. (optional) Create the namespace you specified in the application declaration(application.yaml), i.e.:
+1. Commit and push the changes done by `okctl apply application` to your infrastructure as code repository remote making
+   them accessible for ArgoCD.
 
-```bash
-kubectl create namespace <name of namespace>
-```
+2. Apply the ArgoCD resource to the cluster:
 
-This is only needed if the namespace you specified in the application declaration is not pre-existing.
-
-2. Commit and push the changes done by `okctl apply application` to your infrastructure as code repository remote 
-   accessible for ArgoCD.
-
-3. Apply the ArgoCD resource to the cluster:
-
-```
-kubectl apply -f infrastructure/applications/<app-name>/overlays/<cluster name>/argocd-application.yaml
-```
-
+    ```
+    kubectl apply -f infrastructure/applications/<app-name>/overlays/<cluster name>/argocd-application.yaml
+    ```
+   
 The application.yaml declaration is used as an alternative to a wizard or numerous command flags. After running 
 
 ```shell

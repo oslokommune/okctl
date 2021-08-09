@@ -18,7 +18,7 @@ nav:
       - 7. Monitoring your cluster and applications: getting-started/monitoring.md
       - 8. Application addons: getting-started/application-addons.md
       - 9. Continuous integration: getting-started/continuous-integration.md
-      - 10. Delete cluster: getting-started/clean-up.md
+      - 10. Delete cluster: getting-started/delete-cluster.md
   - Building blocks:
     - buildingblocks/cloud.md
     - buildingblocks/github.md

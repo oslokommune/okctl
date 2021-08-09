@@ -26,34 +26,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Vurder: (Egen migrator test?)
-// withOriginalOkctlVersion     string
-// withOkctlVersion             string
-// withAlreadyAppliedMigrations []string // HM kanskje ikke
-// expectMigrationsToBeRun      []string
-
-// Test cases
-// ------------------------------------------------
-// x Given these releases, ..., then these binaries should be run
-// x Should run an upgrade
-// x Should not run already applied upgrades - custom: Må kjøre upgrade flere ganger. Assert: each binary was run once
-// x Should run upgrades up to the current okctl version, but no newer
-// ?   See: // "DO: Remove file verification" , should be easier to do verifications.
-// x Should not run too old upgrades
-// x Should run hot fixes in correct order
-// x Should run a hotfix even if it is older than the last applied upgrade.
-//     Så hvis upgrade bumper 0.0.65, og det kommer en hotfix 0.0.63_my-hotfix, så skal den fortsatt kjøres. - custom sjekk
-// x Må støtte OriginalOkctlVersion
-
-// Failure situations
-// x Should detect if release has invalid tag name or assets (must support hot fixes)
-// - Should verify digest before running. Trengs ikke, veldig sjelden man laster ned og kjører senere.
-// I okctl-upgrade-checksums.txt, endre filnavn. Da bør man få feil at ting ikke matcher. Får noe annet unyttig. - unit test
-// Other?
-
-// Refaktorer: Bruker Sprintf med %s-%s-%s mange steder. Bør være ett sted.
-
-// upgrade --dry-run ?
 const folderWorking = "working"
 
 type TestCase struct {

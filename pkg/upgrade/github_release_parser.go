@@ -18,8 +18,10 @@ import (
 )
 
 const (
+	// ChecksumsTxt contains the file name of the checksum file asset in a Github release
+	ChecksumsTxt = "okctl-upgrade-checksums.txt"
+
 	expectedSubStringsInLineInDigestFile = 2
-	upgradeChecksumsTxt                  = "okctl-upgrade-checksums.txt"
 )
 
 // GithubReleaseParser parses Github releases
@@ -27,7 +29,8 @@ type GithubReleaseParser struct {
 	checksumDownloader ChecksumDownloader
 }
 
-func (g GithubReleaseParser) toUpgradeBinaries(releases []*github.RepositoryRelease) ([]okctlUpgradeBinary, error) {
+// ToUpgradeBinaries converts the provided github releases to okctl upgrade binaries
+func (g GithubReleaseParser) ToUpgradeBinaries(releases []*github.RepositoryRelease) ([]okctlUpgradeBinary, error) {
 	upgrades := make([]okctlUpgradeBinary, 0, len(releases))
 
 	for _, release := range releases {
@@ -55,7 +58,7 @@ func (g GithubReleaseParser) parseRelease(release *github.RepositoryRelease) (ok
 	var binaryChecksums []state.Checksum
 
 	for _, asset := range release.Assets {
-		if *asset.Name == upgradeChecksumsTxt {
+		if *asset.Name == ChecksumsTxt {
 			binaryChecksums, err = g.fetchChecksums(asset)
 			if err != nil {
 				return okctlUpgradeBinary{}, fmt.Errorf("fetching checksums: %w", err)

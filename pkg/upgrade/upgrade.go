@@ -22,7 +22,7 @@ func (u Upgrader) Run() error {
 		return fmt.Errorf("listing github releases: %w", err)
 	}
 
-	upgradeBinaries, err := u.githubReleaseParser.toUpgradeBinaries(releases)
+	upgradeBinaries, err := u.githubReleaseParser.ToUpgradeBinaries(releases)
 	if err != nil {
 		return fmt.Errorf("parsing upgrade binaries: %w", err)
 	}

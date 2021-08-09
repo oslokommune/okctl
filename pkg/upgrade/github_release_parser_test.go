@@ -1,8 +1,10 @@
-package upgrade
+package upgrade_test
 
 import (
 	"fmt"
 	"testing"
+
+	"github.com/oslokommune/okctl/pkg/upgrade"
 
 	"github.com/oslokommune/okctl/pkg/github"
 	"github.com/oslokommune/okctl/pkg/osarch"
@@ -21,7 +23,7 @@ func TestGithubReleaseParser(t *testing.T) {
 		{
 			name:         "Should work when everything is OK",
 			releases:     createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
-			checksumFile: fmt.Sprintf("%s/0.0.61/%s", folderWorking, upgradeChecksumsTxt),
+			checksumFile: fmt.Sprintf("%s/0.0.61/%s", folderWorking, upgrade.ChecksumsTxt),
 		},
 		{
 			name: "Should return unknown release name in error message for at least 2 assets",
@@ -113,10 +115,10 @@ func TestGithubReleaseParser(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			parser := NewGithubReleaseParser(NewMockChecksumDownloader(checksumFileContents))
+			parser := upgrade.NewGithubReleaseParser(NewMockChecksumDownloader(checksumFileContents))
 
 			// When
-			_, err = parser.toUpgradeBinaries(tc.releases)
+			_, err = parser.ToUpgradeBinaries(tc.releases)
 
 			// Then
 			if len(tc.expectError) > 0 {
@@ -138,7 +140,7 @@ func (m MockChecksumDownloader) Download(checksumAsset *github.ReleaseAsset) ([]
 	return m.checksumFileContents, nil
 }
 
-func NewMockChecksumDownloader(checksumDownloadResult []byte) ChecksumDownloader {
+func NewMockChecksumDownloader(checksumDownloadResult []byte) upgrade.ChecksumDownloader {
 	return MockChecksumDownloader{
 		checksumFileContents: checksumDownloadResult,
 	}

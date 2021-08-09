@@ -1,16 +1,12 @@
-package upgrade
+package upgrade_test
 
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"path"
 	"regexp"
 	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -22,6 +18,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/github"
 	"github.com/oslokommune/okctl/pkg/storage"
+	"github.com/oslokommune/okctl/pkg/upgrade"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -36,7 +33,7 @@ type TestCase struct {
 	withGithubReleases                []*github.RepositoryRelease
 	withGithubReleaseAssetsFromFolder string
 	withHost                          state.Host
-	withTestRun                       func(t *testing.T, tc TestCase, defaultOpts TestOpts)
+	withTestRun                       func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts)
 	expectBinaryVersionsRunOnce       []string
 	expectErrorContains               string
 }
@@ -117,11 +114,11 @@ func TestRunUpgrades(t *testing.T) {
 			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62", "0.0.64"}),
 			withGithubReleaseAssetsFromFolder: folderWorking,
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
-			withTestRun: func(t *testing.T, tc TestCase, defaultOpts TestOpts) {
+			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
 				// Given
 				mockHTTPResponse(t, folderWorking, tc.withGithubReleases)
 				defer httpmock.DeactivateAndReset()
-				upgrader := New(defaultOpts.Opts)
+				upgrader := upgrade.New(defaultOpts.Opts)
 
 				// When
 				err := upgrader.Run()
@@ -201,18 +198,18 @@ func TestRunUpgrades(t *testing.T) {
 			withOriginalOkctlVersion:          "0.0.50",
 			withGithubReleaseAssetsFromFolder: folderWorking,
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
-			withTestRun: func(t *testing.T, tc TestCase, defaultOpts TestOpts) {
+			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
 				// Given settings for first upgrade
 				githubReleaseVersions := []string{"0.0.61", "0.0.62", "0.0.63"}
 				githubReleases := createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, githubReleaseVersions)
 
 				mockHTTPResponse(t, folderWorking, githubReleases)
-				defaultOpts.GithubService = NewGithubServiceMock(githubReleases)
+				defaultOpts.GithubService = newGithubServiceMock(githubReleases)
 
 				stdOutBuffer := new(bytes.Buffer)
 				defaultOpts.Out = stdOutBuffer
 
-				upgrader := New(defaultOpts.Opts)
+				upgrader := upgrade.New(defaultOpts.Opts)
 
 				// When running upgrade first time
 				err := upgrader.Run()
@@ -237,12 +234,12 @@ func TestRunUpgrades(t *testing.T) {
 
 				mockHTTPResponse(t, folderWorking, githubReleases)
 				defer httpmock.DeactivateAndReset()
-				defaultOpts.GithubService = NewGithubServiceMock(githubReleases)
+				defaultOpts.GithubService = newGithubServiceMock(githubReleases)
 
 				stdOutBuffer = new(bytes.Buffer)
 				defaultOpts.Out = stdOutBuffer
 
-				upgrader = New(defaultOpts.Opts)
+				upgrader = upgrade.New(defaultOpts.Opts)
 
 				// When running upgrade second time
 				err = upgrader.Run()
@@ -270,8 +267,8 @@ func TestRunUpgrades(t *testing.T) {
 			},
 			withGithubReleaseAssetsFromFolder: folderWorking,
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
-			withTestRun: func(t *testing.T, tc TestCase, defaultOpts TestOpts) {
-				upgrader := New(defaultOpts.Opts)
+			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
+				upgrader := upgrade.New(defaultOpts.Opts)
 
 				err := upgrader.Run()
 
@@ -299,8 +296,8 @@ func TestRunUpgrades(t *testing.T) {
 			},
 			withGithubReleaseAssetsFromFolder: folderWorking,
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
-			withTestRun: func(t *testing.T, tc TestCase, defaultOpts TestOpts) {
-				upgrader := New(defaultOpts.Opts)
+			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
+				upgrader := upgrade.New(defaultOpts.Opts)
 
 				err := upgrader.Run()
 
@@ -339,8 +336,8 @@ func TestRunUpgrades(t *testing.T) {
 			},
 			withGithubReleaseAssetsFromFolder: folderWorking,
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
-			withTestRun: func(t *testing.T, tc TestCase, defaultOpts TestOpts) {
-				upgrader := New(defaultOpts.Opts)
+			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
+				upgrader := upgrade.New(defaultOpts.Opts)
 
 				err := upgrader.Run()
 
@@ -371,15 +368,15 @@ func TestRunUpgrades(t *testing.T) {
 			err = tmpStore.MkdirAll(repoDir)
 			assert.NoError(t, err)
 
-			defaultOpts := TestOpts{
-				Opts: Opts{
+			defaultOpts := DefaultTestOpts{
+				Opts: upgrade.Opts{
 					Debug:               tc.withDebug,
 					Logger:              logrus.StandardLogger(),
 					Out:                 stdOutBuffer,
 					RepositoryDirectory: repositoryAbsoluteDir,
-					GithubService:       NewGithubServiceMock(tc.withGithubReleases),
-					ChecksumDownloader:  NewChecksumDownloader(),
-					FetcherOpts: FetcherOpts{
+					GithubService:       newGithubServiceMock(tc.withGithubReleases),
+					ChecksumDownloader:  upgrade.NewChecksumDownloader(),
+					FetcherOpts: upgrade.FetcherOpts{
 						Host:  tc.withHost,
 						Store: tmpStore,
 					},
@@ -400,7 +397,7 @@ func TestRunUpgrades(t *testing.T) {
 			mockHTTPResponse(t, tc.withGithubReleaseAssetsFromFolder, tc.withGithubReleases)
 			defer httpmock.DeactivateAndReset()
 
-			upgrader := New(defaultOpts.Opts)
+			upgrader := upgrade.New(defaultOpts.Opts)
 			err = upgrader.Run()
 
 			t.Log(stdOutBuffer.String())
@@ -424,19 +421,9 @@ func TestRunUpgrades(t *testing.T) {
 	}
 }
 
-type TestOpts struct {
-	Opts
+type DefaultTestOpts struct {
+	upgrade.Opts
 	StdOutBuffer *bytes.Buffer
-}
-
-func mockHTTPResponse(t *testing.T, folder string, releases []*github.RepositoryRelease) {
-	err := registerHTTPResponse(
-		folder,
-		releases,
-	)
-	require.NoError(t, err)
-
-	httpmock.Activate()
 }
 
 func getExpectedUpgradesRun(expectBinaryVersionsRunOnce []string, withHost state.Host) []string {
@@ -468,15 +455,6 @@ func getActualUpgradesRun(stdOutBuffer *bytes.Buffer) []string {
 	return upgradesRun
 }
 
-func createGihubReleaseAssetBinary(os, arch, version string) *github.ReleaseAsset {
-	return &github.ReleaseAsset{
-		Name:        github.StringPtr(fmt.Sprintf("okctl_upgrade-%s_%s_%s.tar.gz", os, arch, version)),
-		ContentType: github.StringPtr("application/gzip"),
-		BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
-			"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz", version, version, os, arch)),
-	}
-}
-
 //nolint:unparam
 func createGithubReleases(oses []string, arch string, versions []string) []*github.RepositoryRelease {
 	releases := make([]*github.RepositoryRelease, 0, len(versions))
@@ -492,7 +470,7 @@ func createGithubReleases(oses []string, arch string, versions []string) []*gith
 		}
 
 		assets = append(assets, &github.ReleaseAsset{
-			Name:        github.StringPtr(upgradeChecksumsTxt),
+			Name:        github.StringPtr(upgrade.ChecksumsTxt),
 			ContentType: github.StringPtr("text/plain"),
 			BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
 				"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade-checksums.txt", version)),
@@ -516,71 +494,45 @@ func createGithubReleases(oses []string, arch string, versions []string) []*gith
 	return releases
 }
 
+func createGihubReleaseAssetBinary(os, arch, version string) *github.ReleaseAsset {
+	return &github.ReleaseAsset{
+		Name:        github.StringPtr(fmt.Sprintf("okctl_upgrade-%s_%s_%s.tar.gz", os, arch, version)),
+		ContentType: github.StringPtr("application/gzip"),
+		BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
+			"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz", version, version, os, arch)),
+	}
+}
+
 // capitalizeFirst converts for instance "linux" to "Linux". We use this because we expect github release assets for
 // upgrades to be named this way.
 func capitalizeFirst(os string) string {
 	return strings.ToUpper(os[0:1]) + strings.ToLower(os[1:])
 }
 
-func registerHTTPResponse(baseFolder string, releases []*github.RepositoryRelease) error {
-	for _, release := range releases {
-		versionFolder := *release.TagName
-
-		for _, asset := range release.Assets {
-			assetFilename := getAssetFilename(*asset.BrowserDownloadURL)
-
-			data, err := readBytesFromFile(fmt.Sprintf("testdata/%s/%s/%s", baseFolder, versionFolder, assetFilename))
-			if err != nil {
-				return err
-			}
-
-			responder := httpmock.NewBytesResponder(http.StatusOK, data)
-			httpmock.RegisterResponder(http.MethodGet, *asset.BrowserDownloadURL, responder)
-		}
-	}
-
-	return nil
-}
-
-func getAssetFilename(url string) string {
-	split := strings.Split(url, "/")
-	return split[len(split)-1]
-}
-
-func readBytesFromFile(file string) ([]byte, error) {
-	//nolint: gosec
-	b, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil, err
-	}
-
-	return b, nil
-}
-
 type upgradeStateMock struct {
 	upgrades map[string]*client.Upgrade
 }
 
-func (u upgradeStateMock) SaveUpgrade(upgrade *client.Upgrade) error {
-	u.upgrades[upgrade.Version] = upgrade
+func (m upgradeStateMock) SaveUpgrade(upgrade *client.Upgrade) error {
+	m.upgrades[upgrade.Version] = upgrade
 	return nil
 }
 
-func (u upgradeStateMock) GetUpgrade(version string) (*client.Upgrade, error) {
-	upgrade, ok := u.upgrades[version]
+func (m upgradeStateMock) GetUpgrade(version string) (*client.Upgrade, error) {
+	u, ok := m.upgrades[version]
 	if !ok {
 		return nil, client.ErrUpgradeNotFound
 	}
 
-	return upgrade, nil
+	return u, nil
 }
 
 //goland:noinspection GoUnusedParameter
-func (u upgradeStateMock) SaveOriginalOkctlVersionIfNotExists(originalOkctlVersion *client.OriginalOkctlVersion) error {
+func (m upgradeStateMock) SaveOriginalOkctlVersionIfNotExists(originalOkctlVersion *client.OriginalOkctlVersion) error {
 	panic("implement me")
 }
 
-func (u upgradeStateMock) GetOriginalOkctlVersion() (*client.OriginalOkctlVersion, error) {
+func (m upgradeStateMock) GetOriginalOkctlVersion() (*client.OriginalOkctlVersion, error) {
 	panic("implement me")
 }
 

@@ -1,4 +1,4 @@
-package upgrade
+package upgrade_test
 
 import (
 	"context"
@@ -25,7 +25,7 @@ func (g githubServiceMock) ListReleases(owner, repo string) ([]*github.Repositor
 }
 
 // NewGithubServiceMock returns a new client.GithubService
-func NewGithubServiceMock(releases []*github.RepositoryRelease) client.GithubService {
+func newGithubServiceMock(releases []*github.RepositoryRelease) client.GithubService {
 	return githubServiceMock{
 		releases: releases,
 	}

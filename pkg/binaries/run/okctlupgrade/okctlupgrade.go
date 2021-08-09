@@ -58,9 +58,9 @@ func (u *OkctlUpgrade) Run() ([]byte, error) {
 	return output, err
 }
 
-// Debug sets whether we should increase log output from eksctl,
+// SetDebug sets whether we should increase log output from eksctl,
 // the default behavior is off
-func (u *OkctlUpgrade) Debug(enable bool) {
+func (u *OkctlUpgrade) SetDebug(enable bool) {
 	u.doDebug = enable
 }
 

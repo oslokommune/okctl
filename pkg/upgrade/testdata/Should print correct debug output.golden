@@ -1,14 +1,14 @@
 Found 4 upgrade(s):
-0.0.64, 0.0.63, 0.0.62, 0.0.61
+0.0.61, 0.0.62, 0.0.63, 0.0.64
 
 4 remaining upgrades after removing already executed:
-0.0.64, 0.0.63, 0.0.62, 0.0.61
+0.0.61, 0.0.62, 0.0.63, 0.0.64
 
 3 remaining upgrades after removing too new upgrades:
-0.0.63, 0.0.62, 0.0.61
+0.0.61, 0.0.62, 0.0.63
 
 2 remaining upgrades after removing too old upgrades:
-0.0.63, 0.0.62
+0.0.62, 0.0.63
 
 Found 2 applicable upgrade(s):
 0.0.62, 0.0.63

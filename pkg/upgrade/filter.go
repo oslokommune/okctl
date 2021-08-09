@@ -113,17 +113,15 @@ func (f filter) removeTooOld(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinar
 	return versionIsNewThanOriginalOkctlVersion, nil
 }
 
-func (f filter) markAsRun(binaries []okctlUpgradeBinary) error {
-	for _, binary := range binaries {
-		u := &client.Upgrade{
-			ID:      f.clusterID,
-			Version: binary.RawVersion(),
-		}
+func (f filter) markAsRun(binary okctlUpgradeBinary) error {
+	u := &client.Upgrade{
+		ID:      f.clusterID,
+		Version: binary.RawVersion(),
+	}
 
-		err := f.state.SaveUpgrade(u)
-		if err != nil {
-			return fmt.Errorf("saving upgrade %s: %w", u.Version, err)
-		}
+	err := f.state.SaveUpgrade(u)
+	if err != nil {
+		return fmt.Errorf("saving upgrade %s: %w", u.Version, err)
 	}
 
 	return nil

@@ -25,6 +25,8 @@ import (
 
 const folderWorking = "working"
 
+const folderCrashing = "upgrade_crashes"
+
 type TestCase struct {
 	name                              string
 	withDebug                         bool
@@ -67,7 +69,7 @@ func TestRunUpgrades(t *testing.T) {
 			withOkctlVersion:                  "0.0.58",
 			withOriginalOkctlVersion:          "0.0.50",
 			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.58"}),
-			withGithubReleaseAssetsFromFolder: "upgrade_crashes",
+			withGithubReleaseAssetsFromFolder: folderCrashing,
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
 			expectBinaryVersionsRunOnce:       []string{},
 			expectErrorContains:               "exit status 1",
@@ -116,7 +118,7 @@ func TestRunUpgrades(t *testing.T) {
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
 			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
 				// Given
-				mockHTTPResponse(t, folderWorking, tc.withGithubReleases)
+				mockHTTPResponsesForGithubReleases(t, folderWorking, tc.withGithubReleases)
 				defer httpmock.DeactivateAndReset()
 				upgrader := upgrade.New(defaultOpts.Opts)
 
@@ -203,11 +205,13 @@ func TestRunUpgrades(t *testing.T) {
 				githubReleaseVersions := []string{"0.0.61", "0.0.62", "0.0.63"}
 				githubReleases := createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, githubReleaseVersions)
 
-				mockHTTPResponse(t, folderWorking, githubReleases)
 				defaultOpts.GithubService = newGithubServiceMock(githubReleases)
 
+				mockHTTPResponsesForGithubReleases(t, folderWorking, githubReleases)
+				defer httpmock.DeactivateAndReset()
+
 				stdOutBuffer := new(bytes.Buffer)
-				defaultOpts.Out = stdOutBuffer
+				defaultOpts.setStdOut(stdOutBuffer)
 
 				upgrader := upgrade.New(defaultOpts.Opts)
 
@@ -215,9 +219,8 @@ func TestRunUpgrades(t *testing.T) {
 				err := upgrader.Run()
 
 				// Then
-				t.Log(stdOutBuffer.String())
-
 				assert.NoError(t, err)
+				t.Log(stdOutBuffer.String())
 
 				expectedUpgradesRun := getExpectedUpgradesRun(githubReleaseVersions, state.Host{Os: osarch.Linux, Arch: osarch.Amd64})
 				upgradesRun := getActualUpgradesRun(stdOutBuffer)
@@ -232,12 +235,12 @@ func TestRunUpgrades(t *testing.T) {
 				githubReleaseVersions = []string{"0.0.61", "0.0.62", "0.0.62.a", "0.0.62.b", "0.0.63", "0.0.63.a", "0.0.64"}
 				githubReleases = createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, githubReleaseVersions)
 
-				mockHTTPResponse(t, folderWorking, githubReleases)
-				defer httpmock.DeactivateAndReset()
 				defaultOpts.GithubService = newGithubServiceMock(githubReleases)
 
+				mockHTTPResponsesForGithubReleases(t, folderWorking, githubReleases)
+
 				stdOutBuffer = new(bytes.Buffer)
-				defaultOpts.Out = stdOutBuffer
+				defaultOpts.setStdOut(stdOutBuffer)
 
 				upgrader = upgrade.New(defaultOpts.Opts)
 
@@ -349,6 +352,81 @@ func TestRunUpgrades(t *testing.T) {
 				)
 			},
 		},
+		{
+			// In case we accidentally publish an upgrade binary that crashes, the solution is to delete it and replace
+			// with a hotfix.
+			name:                     "Should support replacing an erroneous upgrade binary with a hotfix",
+			withOkctlVersion:         "0.0.65",
+			withOriginalOkctlVersion: "0.0.50",
+			withHost:                 state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
+				// Given configuration for first run
+				githubReleaseVersions := []string{"0.0.61", "0.0.62", "0.0.63"}
+				githubReleases := createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, githubReleaseVersions)
+
+				defaultOpts.GithubService = newGithubServiceMock(githubReleases)
+
+				mockHTTPResponseForGithubRelease(t, path.Join(folderWorking, "0.0.61"), githubReleases[0])
+				mockHTTPResponseForGithubRelease(t, path.Join(folderCrashing, "0.0.62"), githubReleases[1])
+				mockHTTPResponseForGithubRelease(t, path.Join(folderWorking, "0.0.63"), githubReleases[2])
+				httpmock.Activate()
+				defer httpmock.DeactivateAndReset()
+
+				stdOutBuffer := new(bytes.Buffer)
+				defaultOpts.setStdOut(stdOutBuffer)
+
+				upgrader := upgrade.New(defaultOpts.Opts)
+
+				// When 0.0.61 runs OK and 0.0.62 fails
+				err := upgrader.Run()
+
+				// Then
+				t.Log(defaultOpts.StdOutBuffer.String())
+
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "It will crash")
+
+				expectedUpgradesRun := getExpectedUpgradesRun([]string{"0.0.61", "0.0.62"}, state.Host{Os: osarch.Linux, Arch: osarch.Amd64})
+				upgradesRun := getActualUpgradesRun(defaultOpts.StdOutBuffer)
+				assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
+
+				g := goldie.New(t)
+				g.Assert(t, tc.name+"_run1", defaultOpts.StdOutBuffer.Bytes())
+
+				httpmock.DeactivateAndReset()
+
+				// Given configuration for second run
+				githubReleaseVersions = []string{"0.0.61", "0.0.62.a", "0.0.63"}
+				githubReleases = createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, githubReleaseVersions)
+
+				defaultOpts.GithubService = newGithubServiceMock(githubReleases)
+
+				mockHTTPResponseForGithubRelease(t, path.Join(folderWorking, "0.0.61"), githubReleases[0])
+				mockHTTPResponseForGithubRelease(t, path.Join(folderWorking, "0.0.62.a"), githubReleases[1])
+				mockHTTPResponseForGithubRelease(t, path.Join(folderWorking, "0.0.63"), githubReleases[2])
+				httpmock.Activate()
+				defer httpmock.DeactivateAndReset()
+
+				stdOutBuffer = new(bytes.Buffer)
+				defaultOpts.setStdOut(stdOutBuffer)
+
+				upgrader = upgrade.New(defaultOpts.Opts)
+
+				// When
+				err = upgrader.Run()
+
+				// Then
+				t.Log(defaultOpts.StdOutBuffer.String())
+
+				assert.NoError(t, err)
+
+				expectedUpgradesRun = getExpectedUpgradesRun([]string{"0.0.62.a", "0.0.63"}, state.Host{Os: osarch.Linux, Arch: osarch.Amd64})
+				upgradesRun = getActualUpgradesRun(defaultOpts.StdOutBuffer)
+				assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
+
+				g.Assert(t, tc.name+"_run2", defaultOpts.StdOutBuffer.Bytes())
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -394,7 +472,7 @@ func TestRunUpgrades(t *testing.T) {
 				return
 			}
 
-			mockHTTPResponse(t, tc.withGithubReleaseAssetsFromFolder, tc.withGithubReleases)
+			mockHTTPResponsesForGithubReleases(t, tc.withGithubReleaseAssetsFromFolder, tc.withGithubReleases)
 			defer httpmock.DeactivateAndReset()
 
 			upgrader := upgrade.New(defaultOpts.Opts)
@@ -424,6 +502,11 @@ func TestRunUpgrades(t *testing.T) {
 type DefaultTestOpts struct {
 	upgrade.Opts
 	StdOutBuffer *bytes.Buffer
+}
+
+func (o *DefaultTestOpts) setStdOut(stdOut *bytes.Buffer) {
+	o.StdOutBuffer = stdOut
+	o.Out = stdOut
 }
 
 func getExpectedUpgradesRun(expectBinaryVersionsRunOnce []string, withHost state.Host) []string {
@@ -484,11 +567,6 @@ func createGithubReleases(oses []string, arch string, versions []string) []*gith
 		}
 
 		releases = append(releases, release)
-	}
-
-	// reverse slice to make sure sorting of upgrade binaries work
-	for i, j := 0, len(releases)-1; i < j; i, j = i+1, j-1 {
-		releases[i], releases[j] = releases[j], releases[i]
 	}
 
 	return releases

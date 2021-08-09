@@ -45,12 +45,6 @@ func (u Upgrader) Run() error {
 		return fmt.Errorf("running upgrade binaries: %w", err)
 	}
 
-	// Update state
-	err = u.filter.markAsRun(upgradeBinaries)
-	if err != nil {
-		return fmt.Errorf("marking upgrades as run: %w", err)
-	}
-
 	return nil
 }
 
@@ -61,18 +55,25 @@ func (u Upgrader) runBinaries(upgradeBinaries []okctlUpgradeBinary) error {
 	}
 
 	for _, binary := range upgradeBinaries {
+		// Get
 		binaryRunner, err := binaryProvider.okctlUpgrade(binary.RawVersion())
 		if err != nil {
 			return fmt.Errorf("getting okctl upgrade binary: %w", err)
 		}
 
-		binaryRunner.Debug(u.debug)
+		binaryRunner.SetDebug(u.debug)
 
 		_, _ = fmt.Fprintf(u.out, "--- Running upgrade: %s ---\n", binary)
 
 		_, err = binaryRunner.Run()
 		if err != nil {
+			_, _ = fmt.Fprintf(u.out, "--- Upgrade failed: %s ---\n", binary)
 			return fmt.Errorf("running upgrade binary %s: %w", binary, err)
+		}
+
+		err = u.filter.markAsRun(binary)
+		if err != nil {
+			return fmt.Errorf("marking upgrades as run: %w", err)
 		}
 	}
 

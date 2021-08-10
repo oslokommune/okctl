@@ -3,6 +3,7 @@ package upgrade
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/github"
 	"io"
 	"strings"
 
@@ -17,7 +18,7 @@ import (
 // Run upgrades okctl
 func (u Upgrader) Run() error {
 	// Fetch
-	releases, err := u.githubService.ListReleases("oslokommune", "okctl-upgrade")
+	releases, err := u.githubService.ListReleases(github.DefaultOrg, "okctl-upgrade")
 	if err != nil {
 		return fmt.Errorf("listing github releases: %w", err)
 	}

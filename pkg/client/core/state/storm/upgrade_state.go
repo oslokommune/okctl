@@ -61,20 +61,6 @@ func (u *upgradesState) SaveUpgrade(upgrade *client.Upgrade) error {
 	return u.node.Save(newUpgrade(upgrade, existing.Metadata))
 }
 
-// GetUpgrade returns the upgrade with the given version, or an error if it doesn't exist
-func (u *upgradesState) GetUpgrade(version string) (*client.Upgrade, error) {
-	upgrade, err := u.getUpgrade(version)
-	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
-		return nil, err
-	}
-
-	if errors.Is(err, stormpkg.ErrNotFound) {
-		return nil, client.ErrUpgradeNotFound
-	}
-
-	return upgrade.Convert(), nil
-}
-
 func (u *upgradesState) getUpgrade(version string) (*Upgrade, error) {
 	upgrade := &Upgrade{}
 
@@ -84,6 +70,23 @@ func (u *upgradesState) getUpgrade(version string) (*Upgrade, error) {
 	}
 
 	return upgrade, nil
+}
+
+// GetUpgrades returns all upgrades, or an error
+func (u *upgradesState) GetUpgrades() ([]*client.Upgrade, error) {
+	var upgrades []*Upgrade
+
+	err := u.node.All(&upgrades)
+	if err != nil {
+		return nil, err
+	}
+
+	clientUpgrades := make([]*client.Upgrade, len(upgrades))
+	for i, upgrade := range upgrades {
+		clientUpgrades[i] = upgrade.Convert()
+	}
+
+	return clientUpgrades, nil
 }
 
 const originalVersionValue = "OriginalOkctlVersion"

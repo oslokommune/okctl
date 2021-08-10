@@ -3,9 +3,10 @@ package upgrade
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/github"
 	"io"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/github"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
@@ -31,7 +32,12 @@ func (u Upgrader) Run() error {
 	printUpgradesIfDebug(u.debug, u.out, "Found %d upgrade(s):", upgradeBinaries)
 
 	// Filter
-	upgradeBinaries, err = u.filter.get(upgradeBinaries)
+	alreadyExecuted, err := u.getAlreadyExecutedBinaries()
+	if err != nil {
+		return fmt.Errorf("getting already executed binaries: %w", err)
+	}
+
+	upgradeBinaries, err = u.filter.get(upgradeBinaries, alreadyExecuted)
 	if err != nil {
 		return fmt.Errorf("filtering upgrade binaries: %w", err)
 	}
@@ -52,6 +58,21 @@ func (u Upgrader) Run() error {
 	}
 
 	return nil
+}
+
+func (u Upgrader) getAlreadyExecutedBinaries() (map[string]bool, error) {
+	alreadyExecutedSlice, err := u.state.GetUpgrades()
+	if err != nil {
+		return nil, fmt.Errorf("getting upgrades: %w", err)
+	}
+
+	alreadyExecuted := make(map[string]bool)
+
+	for _, upgrade := range alreadyExecutedSlice {
+		alreadyExecuted[upgrade.Version] = true
+	}
+
+	return alreadyExecuted, nil
 }
 
 func (u Upgrader) runBinaries(upgradeBinaries []okctlUpgradeBinary) error {
@@ -77,7 +98,7 @@ func (u Upgrader) runBinaries(upgradeBinaries []okctlUpgradeBinary) error {
 			return fmt.Errorf("running upgrade binary %s: %w", binary, err)
 		}
 
-		err = u.filter.markAsRun(binary)
+		err = u.markAsRun(binary)
 		if err != nil {
 			return fmt.Errorf("marking upgrades as run: %w", err)
 		}
@@ -135,6 +156,20 @@ func (u Upgrader) toStateBinaries(upgradeBinaries []okctlUpgradeBinary) []state.
 	return binaries
 }
 
+func (u Upgrader) markAsRun(binary okctlUpgradeBinary) error {
+	clientUpgrade := &client.Upgrade{
+		ID:      u.clusterID,
+		Version: binary.RawVersion(),
+	}
+
+	err := u.state.SaveUpgrade(clientUpgrade)
+	if err != nil {
+		return fmt.Errorf("saving upgrade %s: %w", clientUpgrade.Version, err)
+	}
+
+	return nil
+}
+
 func printUpgradesIfDebug(debug bool, out io.Writer, text string, upgradeBinaries []okctlUpgradeBinary) {
 	if debug {
 		printUpgrades(out, text, upgradeBinaries)
@@ -180,6 +215,8 @@ type Upgrader struct {
 	debug               bool
 	logger              *logrus.Logger
 	out                 io.Writer
+	clusterID           api.ID
+	state               client.UpgradeState
 	repositoryDirectory string
 	githubService       client.GithubService
 	githubReleaseParser GithubReleaseParser
@@ -193,6 +230,8 @@ func New(opts Opts) Upgrader {
 		debug:               opts.Debug,
 		logger:              opts.Logger,
 		out:                 opts.Out,
+		clusterID:           opts.ClusterID,
+		state:               opts.State,
 		repositoryDirectory: opts.RepositoryDirectory,
 		githubService:       opts.GithubService,
 		githubReleaseParser: NewGithubReleaseParser(opts.ChecksumDownloader),
@@ -200,8 +239,6 @@ func New(opts Opts) Upgrader {
 		filter: filter{
 			debug:                opts.Debug,
 			out:                  opts.Out,
-			state:                opts.State,
-			clusterID:            opts.ClusterID,
 			okctlVersion:         opts.OkctlVersion,
 			originalOkctlVersion: opts.OriginalOkctlVersion,
 		},

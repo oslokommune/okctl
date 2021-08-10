@@ -617,6 +617,19 @@ type upgradeStateMock struct {
 	upgrades map[string]*client.Upgrade
 }
 
+func (m upgradeStateMock) GetUpgrades() ([]*client.Upgrade, error) {
+	upgrades := make([]*client.Upgrade, len(m.upgrades))
+
+	i := 0
+
+	for _, u := range m.upgrades {
+		upgrades[i] = u
+		i++
+	}
+
+	return upgrades, nil
+}
+
 func (m upgradeStateMock) SaveUpgrade(upgrade *client.Upgrade) error {
 	m.upgrades[upgrade.Version] = upgrade
 	return nil

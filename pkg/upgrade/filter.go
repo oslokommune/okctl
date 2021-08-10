@@ -1,22 +1,16 @@
 package upgrade
 
 import (
-	"errors"
 	"fmt"
 	"io"
 
 	"github.com/Masterminds/semver"
-	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/client"
 )
 
-func (f filter) get(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinary, error) {
+func (f filter) get(binaries []okctlUpgradeBinary, alreadyExecuted map[string]bool) ([]okctlUpgradeBinary, error) {
 	var err error
 
-	binaries, err = f.removeAlreadyExecuted(binaries)
-	if err != nil {
-		return nil, fmt.Errorf("removing already executed upgrade binaries: %w", err)
-	}
+	binaries = f.removeAlreadyExecuted(binaries, alreadyExecuted)
 
 	printUpgradesIfDebug(f.debug, f.out, "%d remaining upgrades after removing already executed:", binaries)
 
@@ -37,36 +31,18 @@ func (f filter) get(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinary, error)
 	return binaries, nil
 }
 
-func (f filter) removeAlreadyExecuted(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinary, error) {
+func (f filter) removeAlreadyExecuted(binaries []okctlUpgradeBinary, alreadyExecuted map[string]bool) []okctlUpgradeBinary {
 	var notExecuted []okctlUpgradeBinary
 
 	for _, binary := range binaries {
-		hasBinaryExecuted, err := f.hasBinaryRun(binary)
-		if err != nil {
-			return nil, fmt.Errorf("checking if binary '%s' has run: %w", binary, err)
-		}
+		_, hasBinaryExecuted := alreadyExecuted[binary.RawVersion()]
 
 		if !hasBinaryExecuted {
 			notExecuted = append(notExecuted, binary)
 		}
 	}
 
-	return notExecuted, nil
-}
-
-func (f filter) hasBinaryRun(binary okctlUpgradeBinary) (bool, error) {
-	_, err := f.state.GetUpgrade(binary.RawVersion())
-	if err != nil {
-		if !errors.Is(err, client.ErrUpgradeNotFound) {
-			return false, err
-		}
-
-		if errors.Is(err, client.ErrUpgradeNotFound) {
-			return false, nil
-		}
-	}
-
-	return true, nil
+	return notExecuted
 }
 
 // removeTooNew removes binaries that are too new for the current okctl version. For instance, if okctl is on version
@@ -113,25 +89,9 @@ func (f filter) removeTooOld(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinar
 	return versionIsNewThanOriginalOkctlVersion, nil
 }
 
-func (f filter) markAsRun(binary okctlUpgradeBinary) error {
-	u := &client.Upgrade{
-		ID:      f.clusterID,
-		Version: binary.RawVersion(),
-	}
-
-	err := f.state.SaveUpgrade(u)
-	if err != nil {
-		return fmt.Errorf("saving upgrade %s: %w", u.Version, err)
-	}
-
-	return nil
-}
-
 type filter struct {
 	debug                bool
 	out                  io.Writer
-	state                client.UpgradeState
-	clusterID            api.ID
 	okctlVersion         string
 	originalOkctlVersion string
 }

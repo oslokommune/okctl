@@ -27,7 +27,7 @@ type OriginalOkctlVersion struct {
 // UpgradeState updates the state
 type UpgradeState interface {
 	SaveUpgrade(upgrade *Upgrade) error
-	GetUpgrade(version string) (*Upgrade, error)
+	GetUpgrades() ([]*Upgrade, error)
 	SaveOriginalOkctlVersionIfNotExists(originalOkctlVersion *OriginalOkctlVersion) error
 	GetOriginalOkctlVersion() (*OriginalOkctlVersion, error)
 }

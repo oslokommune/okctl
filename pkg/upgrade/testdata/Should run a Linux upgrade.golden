@@ -1,3 +1,6 @@
+Found 1 applicable upgrade(s):
+0.0.61
+
 preloading missing binary: okctl-upgrade_0.0.61 (0.0.61)
 --- Running upgrade: okctl-upgrade_0.0.61 ---
 This is upgrade file for okctl-upgrade_0.0.61_Linux_amd64

@@ -2,7 +2,7 @@ package version
 
 // Version of okctl
 // nolint: gochecknoglobals
-var Version = "dev"
+var Version = "0.0.60"
 
 // ShortCommit hash
 // nolint: gochecknoglobals

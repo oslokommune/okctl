@@ -18,21 +18,21 @@ func (f filter) get(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinary, error)
 		return nil, fmt.Errorf("removing already executed upgrade binaries: %w", err)
 	}
 
-	printIfDebug(f.debug, f.out, "%d remaining upgrades after removing already executed:", binaries)
+	printUpgradesIfDebug(f.debug, f.out, "%d remaining upgrades after removing already executed:", binaries)
 
 	binaries, err = f.removeTooNew(binaries)
 	if err != nil {
 		return nil, fmt.Errorf("removing too new upgrade binaries: %w", err)
 	}
 
-	printIfDebug(f.debug, f.out, "%d remaining upgrades after removing too new upgrades:", binaries)
+	printUpgradesIfDebug(f.debug, f.out, "%d remaining upgrades after removing too new upgrades:", binaries)
 
 	binaries, err = f.removeTooOld(binaries)
 	if err != nil {
 		return nil, fmt.Errorf("removing too old upgrade binaries: %w", err)
 	}
 
-	printIfDebug(f.debug, f.out, "%d remaining upgrades after removing too old upgrades:", binaries)
+	printUpgradesIfDebug(f.debug, f.out, "%d remaining upgrades after removing too old upgrades:", binaries)
 
 	return binaries, nil
 }

@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/version"
 
@@ -37,7 +35,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				return err
 			}
 
-			out := ioutil.Discard
+			out := o.Out
 			if o.Debug {
 				out = o.Err
 			}

@@ -27,7 +27,7 @@ func (u Upgrader) Run() error {
 		return fmt.Errorf("parsing upgrade binaries: %w", err)
 	}
 
-	printIfDebug(u.debug, u.out, "Found %d upgrade(s):", upgradeBinaries)
+	printUpgradesIfDebug(u.debug, u.out, "Found %d upgrade(s):", upgradeBinaries)
 
 	// Filter
 	upgradeBinaries, err = u.filter.get(upgradeBinaries)
@@ -37,9 +37,14 @@ func (u Upgrader) Run() error {
 
 	// Sort, i.e. determine execution order
 	sort(upgradeBinaries)
-	printIfDebug(u.debug, u.out, "Found %d applicable upgrade(s):", upgradeBinaries)
 
 	// Run
+	if len(upgradeBinaries) > 0 {
+		printUpgrades(u.out, "Found %d applicable upgrade(s):", upgradeBinaries)
+	} else {
+		_, _ = fmt.Fprintln(u.out, "Did not find any applicable upgrades.")
+	}
+
 	err = u.runBinaries(upgradeBinaries)
 	if err != nil {
 		return fmt.Errorf("running upgrade binaries: %w", err)
@@ -129,19 +134,23 @@ func (u Upgrader) toStateBinaries(upgradeBinaries []okctlUpgradeBinary) []state.
 	return binaries
 }
 
-func printIfDebug(debug bool, out io.Writer, text string, upgradeBinaries []okctlUpgradeBinary) {
+func printUpgradesIfDebug(debug bool, out io.Writer, text string, upgradeBinaries []okctlUpgradeBinary) {
 	if debug {
-		binaries := make([]string, 0)
-		for _, binary := range upgradeBinaries {
-			binaries = append(binaries, binary.RawVersion())
-		}
-
-		joinedBinariesTxt := strings.Join(binaries, ", ")
-
-		_, _ = fmt.Fprintf(out, text+"\n", len(upgradeBinaries))
-		_, _ = fmt.Fprintln(out, joinedBinariesTxt)
-		_, _ = fmt.Fprintln(out, "")
+		printUpgrades(out, text, upgradeBinaries)
 	}
+}
+
+func printUpgrades(out io.Writer, text string, upgradeBinaries []okctlUpgradeBinary) {
+	binaries := make([]string, 0)
+	for _, binary := range upgradeBinaries {
+		binaries = append(binaries, binary.RawVersion())
+	}
+
+	joinedBinariesTxt := strings.Join(binaries, ", ")
+
+	_, _ = fmt.Fprintf(out, text+"\n", len(upgradeBinaries))
+	_, _ = fmt.Fprintln(out, joinedBinariesTxt)
+	_, _ = fmt.Fprintln(out, "")
 }
 
 // FetcherOpts contains data needed to initialize a fetch.Provider

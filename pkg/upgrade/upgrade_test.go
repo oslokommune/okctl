@@ -116,17 +116,19 @@ func TestRunUpgrades(t *testing.T) {
 			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62", "0.0.64"}),
 			withGithubReleaseAssetsFromFolder: folderWorking,
 			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			expectBinaryVersionsRunOnce:       []string{"0.0.61", "0.0.62", "0.0.64"},
 			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
 				// Given
 				mockHTTPResponsesForGithubReleases(t, folderWorking, tc.withGithubReleases)
 				defer httpmock.DeactivateAndReset()
+
+				stdOutBuffer := new(bytes.Buffer)
+				defaultOpts.setStdOut(stdOutBuffer)
+
 				upgrader := upgrade.New(defaultOpts.Opts)
 
-				// When
+				// When running first time
 				err := upgrader.Run()
-				assert.NoError(t, err)
-
-				err = upgrader.Run()
 				assert.NoError(t, err)
 
 				// Then
@@ -139,9 +141,31 @@ func TestRunUpgrades(t *testing.T) {
 				assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
 
 				g := goldie.New(t)
-				g.Assert(t, tc.name, defaultOpts.StdOutBuffer.Bytes())
+				g.Assert(t, tc.name+"_run1", defaultOpts.StdOutBuffer.Bytes())
+
+				err = upgrader.Run()
+				assert.NoError(t, err)
+
+				// Given
+				stdOutBuffer = new(bytes.Buffer)
+				defaultOpts.setStdOut(stdOutBuffer)
+
+				upgrader = upgrade.New(defaultOpts.Opts)
+
+				// When running second time
+				err = upgrader.Run()
+
+				// Then
+				t.Log(defaultOpts.StdOutBuffer.String())
+
+				assert.NoError(t, err)
+
+				expectedUpgradesRun = getExpectedUpgradesRun([]string{}, state.Host{Os: osarch.Linux, Arch: osarch.Amd64})
+				upgradesRun = getActualUpgradesRun(defaultOpts.StdOutBuffer)
+				assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
+
+				g.Assert(t, tc.name+"_run2", defaultOpts.StdOutBuffer.Bytes())
 			},
-			expectBinaryVersionsRunOnce: []string{"0.0.61", "0.0.62", "0.0.64"},
 		},
 		{
 			name:                              "Should run upgrades with version up to and including current okctl version, but no newer",

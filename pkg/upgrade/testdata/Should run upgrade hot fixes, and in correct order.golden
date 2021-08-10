@@ -1,3 +1,6 @@
+Found 6 applicable upgrade(s):
+0.0.61, 0.0.62, 0.0.62.a, 0.0.62.b, 0.0.63, 0.0.63.a
+
 preloading missing binary: okctl-upgrade_0.0.61 (0.0.61)
 preloading missing binary: okctl-upgrade_0.0.62 (0.0.62)
 preloading missing binary: okctl-upgrade_0.0.62.a (0.0.62.a)

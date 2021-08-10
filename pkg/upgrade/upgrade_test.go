@@ -12,8 +12,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/sebdah/goldie/v2"
 
-	"github.com/oslokommune/okctl/pkg/osarch"
-
 	"github.com/jarcoal/httpmock"
 	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/github"
@@ -23,9 +21,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const folderWorking = "working"
-
-const folderCrashing = "upgrade_crashes"
+const (
+	folderWorking  = "working"
+	folderCrashing = "upgrade_crashes"
+	linux          = "linux"
+	darwin         = "darwin"
+	amd64          = "amd64"
+)
 
 type TestCase struct {
 	name                              string
@@ -47,9 +49,9 @@ func TestRunUpgrades(t *testing.T) {
 			name:                              "Should detect if binary's digest doesn't match the expected digest",
 			withOkctlVersion:                  "0.0.61",
 			withOriginalOkctlVersion:          "0.0.50",
-			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: "invalid_digest",
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withHost:                          state.Host{Os: linux, Arch: amd64},
 			expectBinaryVersionsRunOnce:       []string{},
 			expectErrorContains: "failed to verify binary signature: verification failed, hash mismatch, " +
 				"got: 83bae1d215407ff3715063a621afa9138d2b15392d930e6377ed4a6058fea0ba, " +
@@ -59,18 +61,18 @@ func TestRunUpgrades(t *testing.T) {
 			name:                              "Should print upgrade's stdout to stdout",
 			withOkctlVersion:                  "0.0.61",
 			withOriginalOkctlVersion:          "0.0.50",
-			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: folderWorking,
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withHost:                          state.Host{Os: linux, Arch: amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
 		},
 		{
 			name:                              "Should return exit status if upgrade crashes",
 			withOkctlVersion:                  "0.0.58",
 			withOriginalOkctlVersion:          "0.0.50",
-			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.58"}),
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.58"}),
 			withGithubReleaseAssetsFromFolder: folderCrashing,
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withHost:                          state.Host{Os: linux, Arch: amd64},
 			expectBinaryVersionsRunOnce:       []string{},
 			expectErrorContains:               "exit status 1",
 		},
@@ -79,43 +81,43 @@ func TestRunUpgrades(t *testing.T) {
 			withOkctlVersion:            "0.0.60",
 			withOriginalOkctlVersion:    "0.0.50",
 			withGithubReleases:          []*github.RepositoryRelease{},
-			withHost:                    state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withHost:                    state.Host{Os: linux, Arch: amd64},
 			expectBinaryVersionsRunOnce: []string{},
 		},
 		{
 			name:                              "Should run a Linux upgrade",
 			withOkctlVersion:                  "0.0.61",
 			withOriginalOkctlVersion:          "0.0.50",
-			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: folderWorking,
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withHost:                          state.Host{Os: linux, Arch: amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
 		},
 		{
 			name:                              "Should run a Darwin upgrade",
 			withOkctlVersion:                  "0.0.61",
 			withOriginalOkctlVersion:          "0.0.50",
-			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61"}),
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: folderWorking,
-			withHost:                          state.Host{Os: osarch.Darwin, Arch: osarch.Amd64},
+			withHost:                          state.Host{Os: darwin, Arch: amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
 		},
 		{
 			name:                              "Should run multiple upgrades",
 			withOkctlVersion:                  "0.0.64",
 			withOriginalOkctlVersion:          "0.0.50",
-			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62", "0.0.64"}),
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61", "0.0.62", "0.0.64"}),
 			withGithubReleaseAssetsFromFolder: folderWorking,
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withHost:                          state.Host{Os: linux, Arch: amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.61", "0.0.62", "0.0.64"},
 		},
 		{
 			name:                              "Should run upgrades once",
 			withOkctlVersion:                  "0.0.64",
 			withOriginalOkctlVersion:          "0.0.50",
-			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62", "0.0.64"}),
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61", "0.0.62", "0.0.64"}),
 			withGithubReleaseAssetsFromFolder: folderWorking,
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withHost:                          state.Host{Os: linux, Arch: amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.61", "0.0.62", "0.0.64"},
 			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
 				// Given
@@ -136,7 +138,7 @@ func TestRunUpgrades(t *testing.T) {
 
 				assert.NoError(t, err)
 
-				expectedUpgradesRun := getExpectedUpgradesRun(tc.expectBinaryVersionsRunOnce, state.Host{Os: osarch.Linux, Arch: osarch.Amd64})
+				expectedUpgradesRun := getExpectedUpgradesRun(tc.expectBinaryVersionsRunOnce, state.Host{Os: linux, Arch: amd64})
 				upgradesRun := getActualUpgradesRun(defaultOpts.StdOutBuffer)
 				assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
 
@@ -160,7 +162,7 @@ func TestRunUpgrades(t *testing.T) {
 
 				assert.NoError(t, err)
 
-				expectedUpgradesRun = getExpectedUpgradesRun([]string{}, state.Host{Os: osarch.Linux, Arch: osarch.Amd64})
+				expectedUpgradesRun = getExpectedUpgradesRun([]string{}, state.Host{Os: linux, Arch: amd64})
 				upgradesRun = getActualUpgradesRun(defaultOpts.StdOutBuffer)
 				assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
 
@@ -171,18 +173,18 @@ func TestRunUpgrades(t *testing.T) {
 			name:                              "Should run upgrades with version up to and including current okctl version, but no newer",
 			withOkctlVersion:                  "0.0.63",
 			withOriginalOkctlVersion:          "0.0.50",
-			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62", "0.0.63", "0.0.64"}),
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61", "0.0.62", "0.0.63", "0.0.64"}),
 			withGithubReleaseAssetsFromFolder: folderWorking,
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withHost:                          state.Host{Os: linux, Arch: amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.61", "0.0.62", "0.0.63"},
 		},
 		{
 			name:                              "Should not run upgrades that are older than the first installed okctl version",
 			withOkctlVersion:                  "0.0.64",
 			withOriginalOkctlVersion:          "0.0.62",
-			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62", "0.0.63", "0.0.64"}),
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61", "0.0.62", "0.0.63", "0.0.64"}),
 			withGithubReleaseAssetsFromFolder: folderWorking,
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withHost:                          state.Host{Os: linux, Arch: amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.63", "0.0.64"},
 		},
 		{
@@ -190,29 +192,29 @@ func TestRunUpgrades(t *testing.T) {
 			withDebug:                         true,
 			withOkctlVersion:                  "0.0.63",
 			withOriginalOkctlVersion:          "0.0.61",
-			withGithubReleases:                createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, []string{"0.0.61", "0.0.62", "0.0.63", "0.0.64"}),
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61", "0.0.62", "0.0.63", "0.0.64"}),
 			withGithubReleaseAssetsFromFolder: folderWorking,
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withHost:                          state.Host{Os: linux, Arch: amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.62", "0.0.63"},
 		},
 		{
 			name:                     "Should run upgrade hot fixes, and in correct order",
 			withOkctlVersion:         "0.0.63",
 			withOriginalOkctlVersion: "0.0.50",
-			withGithubReleases: createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64,
+			withGithubReleases: createGithubReleases([]string{linux, darwin}, amd64,
 				[]string{"0.0.63.a", "0.0.62", "0.0.62.b", "0.0.61", "0.0.62.a", "0.0.64.a", "0.0.63"}),
 			withGithubReleaseAssetsFromFolder: folderWorking,
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withHost:                          state.Host{Os: linux, Arch: amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.61", "0.0.62", "0.0.62.a", "0.0.62.b", "0.0.63", "0.0.63.a"},
 		},
 		{
 			name:                     "Should not run upgrades, including hot fixes, that are older than the first installed okctl version",
 			withOkctlVersion:         "0.0.63",
 			withOriginalOkctlVersion: "0.0.62",
-			withGithubReleases: createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64,
+			withGithubReleases: createGithubReleases([]string{linux, darwin}, amd64,
 				[]string{"0.0.62", "0.0.62.a", "0.0.62.b", "0.0.63", "0.0.63.a", "0.0.64.a"}),
 			withGithubReleaseAssetsFromFolder: folderWorking,
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withHost:                          state.Host{Os: linux, Arch: amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.63", "0.0.63.a"},
 		},
 		{
@@ -223,11 +225,11 @@ func TestRunUpgrades(t *testing.T) {
 			withOkctlVersion:                  "0.0.63",
 			withOriginalOkctlVersion:          "0.0.50",
 			withGithubReleaseAssetsFromFolder: folderWorking,
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withHost:                          state.Host{Os: linux, Arch: amd64},
 			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
 				// Given settings for first upgrade
 				githubReleaseVersions := []string{"0.0.61", "0.0.62", "0.0.63"}
-				githubReleases := createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, githubReleaseVersions)
+				githubReleases := createGithubReleases([]string{linux, darwin}, amd64, githubReleaseVersions)
 
 				defaultOpts.GithubService = newGithubServiceMock(githubReleases)
 
@@ -246,7 +248,7 @@ func TestRunUpgrades(t *testing.T) {
 				assert.NoError(t, err)
 				t.Log(stdOutBuffer.String())
 
-				expectedUpgradesRun := getExpectedUpgradesRun(githubReleaseVersions, state.Host{Os: osarch.Linux, Arch: osarch.Amd64})
+				expectedUpgradesRun := getExpectedUpgradesRun(githubReleaseVersions, state.Host{Os: linux, Arch: amd64})
 				upgradesRun := getActualUpgradesRun(stdOutBuffer)
 				assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
 
@@ -257,7 +259,7 @@ func TestRunUpgrades(t *testing.T) {
 
 				// Given settings for second upgrade
 				githubReleaseVersions = []string{"0.0.61", "0.0.62", "0.0.62.a", "0.0.62.b", "0.0.63", "0.0.63.a", "0.0.64"}
-				githubReleases = createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, githubReleaseVersions)
+				githubReleases = createGithubReleases([]string{linux, darwin}, amd64, githubReleaseVersions)
 
 				defaultOpts.GithubService = newGithubServiceMock(githubReleases)
 
@@ -276,7 +278,7 @@ func TestRunUpgrades(t *testing.T) {
 
 				assert.NoError(t, err)
 
-				expectedUpgradesRun = getExpectedUpgradesRun([]string{"0.0.62.a", "0.0.62.b", "0.0.63.a"}, state.Host{Os: osarch.Linux, Arch: osarch.Amd64})
+				expectedUpgradesRun = getExpectedUpgradesRun([]string{"0.0.62.a", "0.0.62.b", "0.0.63.a"}, state.Host{Os: linux, Arch: amd64})
 				upgradesRun = getActualUpgradesRun(stdOutBuffer)
 				assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
 
@@ -293,7 +295,7 @@ func TestRunUpgrades(t *testing.T) {
 				},
 			},
 			withGithubReleaseAssetsFromFolder: folderWorking,
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withHost:                          state.Host{Os: linux, Arch: amd64},
 			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
 				upgrader := upgrade.New(defaultOpts.Opts)
 
@@ -316,13 +318,13 @@ func TestRunUpgrades(t *testing.T) {
 					TagName: github.StringPtr("0.0.61"),
 					Name:    github.StringPtr("0.0.61"),
 					Assets: []*github.ReleaseAsset{
-						createGihubReleaseAssetBinary(osarch.Linux, osarch.Amd64, "0.0.61"),
-						createGihubReleaseAssetBinary(osarch.Darwin, osarch.Amd64, "0.0.61"),
+						createGihubReleaseAssetBinary(linux, amd64, "0.0.61"),
+						createGihubReleaseAssetBinary(darwin, amd64, "0.0.61"),
 					},
 				},
 			},
 			withGithubReleaseAssetsFromFolder: folderWorking,
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withHost:                          state.Host{Os: linux, Arch: amd64},
 			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
 				upgrader := upgrade.New(defaultOpts.Opts)
 
@@ -350,19 +352,19 @@ func TestRunUpgrades(t *testing.T) {
 							Name: github.StringPtr("okctl_upgrade-linux_amd64_0.0.61.tar.gz"),
 							BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
 								"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz",
-								"0.0.61", "0.0.61", osarch.Linux, osarch.Amd64)),
+								"0.0.61", "0.0.61", linux, amd64)),
 						},
 						{
 							Name: github.StringPtr("okctl_upgrade-darwin_amd64_0.0.61.tar.gz"),
 							BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
 								"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz",
-								"0.0.61", "0.0.61", osarch.Darwin, osarch.Amd64)),
+								"0.0.61", "0.0.61", darwin, amd64)),
 						},
 					},
 				},
 			},
 			withGithubReleaseAssetsFromFolder: folderWorking,
-			withHost:                          state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withHost:                          state.Host{Os: linux, Arch: amd64},
 			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
 				upgrader := upgrade.New(defaultOpts.Opts)
 
@@ -382,11 +384,11 @@ func TestRunUpgrades(t *testing.T) {
 			name:                     "Should support replacing an erroneous upgrade binary with a hotfix",
 			withOkctlVersion:         "0.0.65",
 			withOriginalOkctlVersion: "0.0.50",
-			withHost:                 state.Host{Os: osarch.Linux, Arch: osarch.Amd64},
+			withHost:                 state.Host{Os: linux, Arch: amd64},
 			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
 				// Given configuration for first run
 				githubReleaseVersions := []string{"0.0.61", "0.0.62", "0.0.63"}
-				githubReleases := createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, githubReleaseVersions)
+				githubReleases := createGithubReleases([]string{linux, darwin}, amd64, githubReleaseVersions)
 
 				defaultOpts.GithubService = newGithubServiceMock(githubReleases)
 
@@ -410,7 +412,7 @@ func TestRunUpgrades(t *testing.T) {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), "It will crash")
 
-				expectedUpgradesRun := getExpectedUpgradesRun([]string{"0.0.61", "0.0.62"}, state.Host{Os: osarch.Linux, Arch: osarch.Amd64})
+				expectedUpgradesRun := getExpectedUpgradesRun([]string{"0.0.61", "0.0.62"}, state.Host{Os: linux, Arch: amd64})
 				upgradesRun := getActualUpgradesRun(defaultOpts.StdOutBuffer)
 				assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
 
@@ -421,7 +423,7 @@ func TestRunUpgrades(t *testing.T) {
 
 				// Given configuration for second run
 				githubReleaseVersions = []string{"0.0.61", "0.0.62.a", "0.0.63"}
-				githubReleases = createGithubReleases([]string{osarch.Linux, osarch.Darwin}, osarch.Amd64, githubReleaseVersions)
+				githubReleases = createGithubReleases([]string{linux, darwin}, amd64, githubReleaseVersions)
 
 				defaultOpts.GithubService = newGithubServiceMock(githubReleases)
 
@@ -444,7 +446,7 @@ func TestRunUpgrades(t *testing.T) {
 
 				assert.NoError(t, err)
 
-				expectedUpgradesRun = getExpectedUpgradesRun([]string{"0.0.62.a", "0.0.63"}, state.Host{Os: osarch.Linux, Arch: osarch.Amd64})
+				expectedUpgradesRun = getExpectedUpgradesRun([]string{"0.0.62.a", "0.0.63"}, state.Host{Os: linux, Arch: amd64})
 				upgradesRun = getActualUpgradesRun(defaultOpts.StdOutBuffer)
 				assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
 

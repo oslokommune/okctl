@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/version"
 

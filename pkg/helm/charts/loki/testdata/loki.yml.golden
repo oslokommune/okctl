@@ -172,13 +172,13 @@ readinessProbe:
 
 replicas: 1
 
-resources: {}
-# limits:
-#   cpu: 200m
-#   memory: 256Mi
-# requests:
-#   cpu: 100m
-#   memory: 128Mi
+resources:
+  requests:
+    cpu: 500m
+    memory: 750Mi
+  limits:
+    cpu: 1000m
+    memory: 1000Mi
 
 securityContext:
   fsGroup: 10001

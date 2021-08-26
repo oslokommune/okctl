@@ -14,6 +14,10 @@ brew tap oslokommune/tap
 brew install oslokommune/tap/okctl
 ```
 
+## Install on Windows
+
+To be fixed.
+
 ## Enable shell autocompletion
 
 To get autocompletion in your shell working run `okctl completion -h` and follow the steps for your preferred shell.

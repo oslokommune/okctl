@@ -614,10 +614,11 @@ func capitalizeFirst(os string) string {
 }
 
 type upgradeStateMock struct {
-	upgrades map[string]*client.Upgrade
+	upgrades        map[string]*client.Upgrade
+	originalVersion string
 }
 
-func (m upgradeStateMock) GetUpgrades() ([]*client.Upgrade, error) {
+func (m *upgradeStateMock) GetUpgrades() ([]*client.Upgrade, error) {
 	upgrades := make([]*client.Upgrade, len(m.upgrades))
 
 	i := 0
@@ -630,12 +631,12 @@ func (m upgradeStateMock) GetUpgrades() ([]*client.Upgrade, error) {
 	return upgrades, nil
 }
 
-func (m upgradeStateMock) SaveUpgrade(upgrade *client.Upgrade) error {
+func (m *upgradeStateMock) SaveUpgrade(upgrade *client.Upgrade) error {
 	m.upgrades[upgrade.Version] = upgrade
 	return nil
 }
 
-func (m upgradeStateMock) GetUpgrade(version string) (*client.Upgrade, error) {
+func (m *upgradeStateMock) GetUpgrade(version string) (*client.Upgrade, error) {
 	u, ok := m.upgrades[version]
 	if !ok {
 		return nil, client.ErrUpgradeNotFound
@@ -644,13 +645,22 @@ func (m upgradeStateMock) GetUpgrade(version string) (*client.Upgrade, error) {
 	return u, nil
 }
 
-//goland:noinspection GoUnusedParameter
-func (m upgradeStateMock) SaveOriginalOkctlVersionIfNotExists(originalOkctlVersion *client.OriginalOkctlVersion) error {
-	panic("implement me")
+func (m *upgradeStateMock) SaveOriginalOkctlVersionIfNotExists(originalOkctlVersion *client.OriginalOkctlVersion) error {
+	if len(m.originalVersion) == 0 {
+		m.originalVersion = originalOkctlVersion.Value
+	}
+
+	return nil
 }
 
-func (m upgradeStateMock) GetOriginalOkctlVersion() (*client.OriginalOkctlVersion, error) {
-	panic("implement me")
+func (m *upgradeStateMock) GetOriginalOkctlVersion() (*client.OriginalOkctlVersion, error) {
+	if len(m.originalVersion) == 0 {
+		return nil, client.ErrOriginalOkctlVersionNotFound
+	}
+
+	return &client.OriginalOkctlVersion{
+		Value: m.originalVersion,
+	}, nil
 }
 
 func mockUpgradeState() client.UpgradeState {

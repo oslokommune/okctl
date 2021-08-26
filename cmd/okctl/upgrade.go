@@ -16,6 +16,8 @@ import (
 func buildUpgradeCommand(o *okctl.Okctl) *cobra.Command {
 	var upgrader upgrade.Upgrader
 
+	var originalVersionSaver upgrade.OriginalVersionSaver
+
 	cmd := &cobra.Command{
 		Use:   "upgrade",
 		Short: "Upgrades okctl managed resources to the current version of okctl",
@@ -53,6 +55,24 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 			fetcherOpts := upgrade.FetcherOpts{
 				Host:  o.Host(),
 				Store: storage.NewFileSystemStorage(userDataDir),
+			}
+
+			originalVersionSaver, err = upgrade.NewOriginalVersionSaver(
+				api.ID{
+					Region:       o.Declaration.Metadata.Region,
+					AWSAccountID: o.Declaration.Metadata.AccountID,
+					ClusterName:  o.Declaration.Metadata.Name,
+				},
+				stateHandlers.Upgrade,
+				stateHandlers.Cluster,
+			)
+			if err != nil {
+				return fmt.Errorf("creating version saver: %w", err)
+			}
+
+			err = originalVersionSaver.SaveOriginalOkctlVersionIfNotExists()
+			if err != nil {
+				return fmt.Errorf(upgrade.SaveErrorMessage, err)
 			}
 
 			originalOkctlVersion, err := stateHandlers.Upgrade.GetOriginalOkctlVersion()

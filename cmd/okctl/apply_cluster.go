@@ -9,11 +9,10 @@ import (
 	"path"
 	"syscall"
 
-	"github.com/oslokommune/okctl/pkg/version"
+	"github.com/oslokommune/okctl/pkg/upgrade"
 
 	"github.com/oslokommune/okctl/pkg/api"
 
-	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
 
 	"github.com/asdine/storm/v3/codec/json"
@@ -51,6 +50,7 @@ func (o *applyClusterOpts) Validate() error {
 // nolint funlen
 func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := applyClusterOpts{}
+	var originalVersionSaver upgrade.OriginalVersionSaver
 
 	cmd := &cobra.Command{
 		Use:     "cluster -f declaration_file",
@@ -125,6 +125,21 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("initializing okctl: %w", err)
 			}
 
+			state := o.StateHandlers(o.StateNodes())
+
+			originalVersionSaver, err = upgrade.NewOriginalVersionSaver(
+				api.ID{
+					Region:       opts.Declaration.Metadata.Region,
+					AWSAccountID: opts.Declaration.Metadata.AccountID,
+					ClusterName:  opts.Declaration.Metadata.Name,
+				},
+				state.Upgrade,
+				state.Cluster,
+			)
+			if err != nil {
+				return fmt.Errorf("creating version saver: %w", err)
+			}
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, _ []string) (err error) {
@@ -181,16 +196,9 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("synchronizing declaration with state: %w", err)
 			}
 
-			err = state.Upgrade.SaveOriginalOkctlVersionIfNotExists(&client.OriginalOkctlVersion{
-				ID: api.ID{
-					Region:       opts.Declaration.Metadata.Region,
-					AWSAccountID: opts.Declaration.Metadata.AccountID,
-					ClusterName:  opts.Declaration.Metadata.Name,
-				},
-				Value: version.GetVersionInfo().Version,
-			})
+			err = originalVersionSaver.SaveOriginalOkctlVersionIfNotExists()
 			if err != nil {
-				return fmt.Errorf("saving original okctl version. Upgrades will not work. Details: %w", err)
+				return fmt.Errorf(upgrade.SaveErrorMessage, err)
 			}
 
 			_, _ = fmt.Fprintln(o.Out, "\nYour cluster is up to date.")

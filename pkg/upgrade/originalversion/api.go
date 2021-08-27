@@ -18,8 +18,8 @@ type Saver struct {
 	clusterState client.ClusterState
 }
 
-// SaveErrorMessage contains the error messsage to return if saving original version fails
-const SaveErrorMessage = "saving original version. Your cluster will not work as expected. Please" +
+// SaveErrorMessage contains the error messsage to return if saving original cluster version fails
+const SaveErrorMessage = "saving original cluster version. Your cluster will not work as expected. Please" +
 	" retry and see if this error goes away. If it does, everything is okay. If not, contact the" +
 	" developers to address this issue. Error details: %w"
 
@@ -39,7 +39,7 @@ const SaveErrorMessage = "saving original version. Your cluster will not work as
 func (o Saver) SaveOriginalClusterVersionIfNotExists() error {
 	_, err := o.upgradeState.GetOriginalClusterVersion()
 	if err != nil && !errors.Is(err, client.ErrOriginalClusterVersionNotFound) {
-		return fmt.Errorf("getting original okctl version: %w", err)
+		return fmt.Errorf("getting original cluster version: %w", err)
 	}
 
 	if errors.Is(err, client.ErrOriginalClusterVersionNotFound) {
@@ -65,7 +65,7 @@ func (o Saver) SaveOriginalClusterVersionIfNotExists() error {
 func (o Saver) getClusterStateVersion() (*semver.Version, error) {
 	cluster, err := o.clusterState.GetCluster(o.clusterID.ClusterName)
 	if err != nil {
-		return nil, fmt.Errorf("getting cluster '%s': %w", o.clusterID.ClusterName, err)
+		return nil, fmt.Errorf("getting cluster version tag: %w", err)
 	}
 
 	clusterStateVersionString, ok := cluster.Config.Metadata.Tags[v1alpha1.OkctlVersionTag]

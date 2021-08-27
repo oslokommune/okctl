@@ -197,17 +197,17 @@ type FetcherOpts struct {
 
 // Opts contains all data needed to create an Upgrader
 type Opts struct {
-	Debug                bool
-	Logger               *logrus.Logger
-	Out                  io.Writer
-	RepositoryDirectory  string
-	GithubService        client.GithubService
-	ChecksumDownloader   ChecksumHTTPDownloader
-	FetcherOpts          FetcherOpts
-	OkctlVersion         string
-	OriginalOkctlVersion string
-	State                client.UpgradeState
-	ClusterID            api.ID
+	Debug                  bool
+	Logger                 *logrus.Logger
+	Out                    io.Writer
+	RepositoryDirectory    string
+	GithubService          client.GithubService
+	ChecksumDownloader     ChecksumHTTPDownloader
+	FetcherOpts            FetcherOpts
+	OkctlVersion           string
+	OriginalClusterVersion string
+	State                  client.UpgradeState
+	ClusterID              api.ID
 }
 
 // Upgrader knows how to upgrade okctl
@@ -237,10 +237,10 @@ func New(opts Opts) Upgrader {
 		githubReleaseParser: NewGithubReleaseParser(opts.ChecksumDownloader),
 		fetcherOpts:         opts.FetcherOpts,
 		filter: filter{
-			debug:                opts.Debug,
-			out:                  opts.Out,
-			okctlVersion:         opts.OkctlVersion,
-			originalOkctlVersion: opts.OriginalOkctlVersion,
+			debug:                  opts.Debug,
+			out:                    opts.Out,
+			okctlVersion:           opts.OkctlVersion,
+			originalClusterVersion: opts.OriginalClusterVersion,
 		},
 	}
 }

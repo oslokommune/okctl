@@ -93,27 +93,27 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				return fmt.Errorf("creating original version saver: %w", err)
 			}
 
-			err = originalVersionSaver.SaveOriginalOkctlVersionIfNotExists()
+			err = originalVersionSaver.SaveOriginalClusterVersionIfNotExists()
 			if err != nil {
 				return fmt.Errorf(originalversion.SaveErrorMessage, err)
 			}
 
-			originalOkctlVersion, err := stateHandlers.Upgrade.GetOriginalClusterVersion()
+			originalClusterVersion, err := stateHandlers.Upgrade.GetOriginalClusterVersion()
 			if err != nil {
 				return fmt.Errorf("getting original okctl version: %w", err)
 			}
 
 			upgrader = upgrade.New(upgrade.Opts{
-				Debug:                o.Debug,
-				Logger:               o.Logger,
-				Out:                  out,
-				RepositoryDirectory:  repoDir,
-				GithubService:        services.Github,
-				ChecksumDownloader:   upgrade.NewChecksumDownloader(),
-				FetcherOpts:          fetcherOpts,
-				OkctlVersion:         version.GetVersionInfo().Version,
-				OriginalOkctlVersion: originalOkctlVersion.Value,
-				State:                stateHandlers.Upgrade,
+				Debug:                  o.Debug,
+				Logger:                 o.Logger,
+				Out:                    out,
+				RepositoryDirectory:    repoDir,
+				GithubService:          services.Github,
+				ChecksumDownloader:     upgrade.NewChecksumDownloader(),
+				FetcherOpts:            fetcherOpts,
+				OkctlVersion:           version.GetVersionInfo().Version,
+				OriginalClusterVersion: originalClusterVersion.Value,
+				State:                  stateHandlers.Upgrade,
 				ClusterID: api.ID{
 					Region:       o.Declaration.Metadata.Region,
 					AWSAccountID: o.Declaration.Metadata.AccountID,

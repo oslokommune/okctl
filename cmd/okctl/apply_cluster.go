@@ -218,7 +218,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("synchronizing declaration with state: %w", err)
 			}
 
-			err = originalVersionSaver.SaveOriginalOkctlVersionIfNotExists()
+			err = originalVersionSaver.SaveOriginalClusterVersionIfNotExists()
 			if err != nil {
 				return fmt.Errorf(originalversion.SaveErrorMessage, err)
 			}

@@ -23,7 +23,7 @@ const SaveErrorMessage = "saving original version. Your cluster will not work as
 	" retry and see if this error goes away. If it does, everything is okay. If not, contact the" +
 	" developers to address this issue. Error details: %w"
 
-// SaveOriginalOkctlVersionIfNotExists stores the version of okctl first used to apply a cluster
+// SaveOriginalClusterVersionIfNotExists stores the version of okctl first used to apply a cluster
 // Ideally, we want to store just version.GetVersionInfo().Version if it's missing. However, this can cause
 // problems. Let's say we release the upgrade functionality in version 0.0.60. A user might have a cluster made
 // with version 0.0.50. They then wait until 0.0.70 to download a new version of okctl, and then runs apply
@@ -36,7 +36,7 @@ const SaveErrorMessage = "saving original version. Your cluster will not work as
 // we can simplify this logic to just use version.GetVersionInfo().Version and ignore the cluster tag version.
 // To check if users has run this code, just check all users' cluster's state, and see if
 // upgrade/OriginalClusterVersion has been set or not. If it's set, it means this code has been run.
-func (o Saver) SaveOriginalOkctlVersionIfNotExists() error {
+func (o Saver) SaveOriginalClusterVersionIfNotExists() error {
 	_, err := o.upgradeState.GetOriginalClusterVersion()
 	if err != nil && !errors.Is(err, client.ErrOriginalClusterVersionNotFound) {
 		return fmt.Errorf("getting original okctl version: %w", err)

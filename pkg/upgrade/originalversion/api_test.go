@@ -43,7 +43,7 @@ func TestOriginalVersionSaver(t *testing.T) {
 			require.NoError(t, err)
 
 			// When
-			err = saver.SaveOriginalOkctlVersionIfNotExists()
+			err = saver.SaveOriginalClusterVersionIfNotExists()
 
 			// Then
 			require.NoError(t, err)

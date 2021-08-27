@@ -65,7 +65,7 @@ func (f filter) removeTooNew(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinar
 	return versionIsEqualOrLess, nil
 }
 
-// removeTooOld removes binaries with versions below original okctl version.
+// removeTooOld removes binaries with versions below original clster version.
 //
 // If we make a cluster with okctl 0.0.62, we should never run upgrade binaries that are meant
 // to upgrade older versions of the cluster up to 0.0.62. This is because there is no need to run those
@@ -73,25 +73,25 @@ func (f filter) removeTooNew(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinar
 // means "upgrade cluster and attached resources to support okctl version 0.0.60", we don't need to run this
 // upgrade binary.
 func (f filter) removeTooOld(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinary, error) {
-	var versionIsNewThanOriginalOkctlVersion []okctlUpgradeBinary
+	var versionIsNewThanOriginalClusterVersion []okctlUpgradeBinary
 
-	originalOkctlSemver, err := semver.NewVersion(f.originalOkctlVersion)
+	originalClusterSemver, err := semver.NewVersion(f.originalClusterVersion)
 	if err != nil {
-		return nil, fmt.Errorf("could not create semver from original okctl version '%s': %w", f.originalOkctlVersion, err)
+		return nil, fmt.Errorf("could not create semver from original okctl version '%s': %w", f.originalClusterVersion, err)
 	}
 
 	for _, binary := range binaries {
-		if binary.SemverVersion().GreaterThan(originalOkctlSemver) {
-			versionIsNewThanOriginalOkctlVersion = append(versionIsNewThanOriginalOkctlVersion, binary)
+		if binary.SemverVersion().GreaterThan(originalClusterSemver) {
+			versionIsNewThanOriginalClusterVersion = append(versionIsNewThanOriginalClusterVersion, binary)
 		}
 	}
 
-	return versionIsNewThanOriginalOkctlVersion, nil
+	return versionIsNewThanOriginalClusterVersion, nil
 }
 
 type filter struct {
-	debug                bool
-	out                  io.Writer
-	okctlVersion         string
-	originalOkctlVersion string
+	debug                  bool
+	out                    io.Writer
+	okctlVersion           string
+	originalClusterVersion string
 }

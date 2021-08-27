@@ -35,9 +35,9 @@ func (m *upgradeStateMock) GetUpgrade(version string) (*client.Upgrade, error) {
 	return u, nil
 }
 
-func (m *upgradeStateMock) SaveOriginalClusterVersionIfNotExists(originalOkctlVersion *client.OriginalClusterVersion) error {
+func (m *upgradeStateMock) SaveOriginalClusterVersionIfNotExists(originalClusterVersion *client.OriginalClusterVersion) error {
 	if len(m.originalVersion) == 0 {
-		m.originalVersion = originalOkctlVersion.Value
+		m.originalVersion = originalClusterVersion.Value
 	}
 
 	return nil

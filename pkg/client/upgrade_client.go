@@ -39,7 +39,7 @@ type ClusterVersion struct {
 type UpgradeState interface {
 	SaveUpgrade(upgrade *Upgrade) error
 	GetUpgrades() ([]*Upgrade, error)
-	SaveOriginalClusterVersionIfNotExists(originalOkctlVersion *OriginalClusterVersion) error
+	SaveOriginalClusterVersionIfNotExists(originalClusterVersion *OriginalClusterVersion) error
 	GetOriginalClusterVersion() (*OriginalClusterVersion, error)
 	SaveClusterVersionInfo(version *ClusterVersion) error
 	GetClusterVersionInfo() (*ClusterVersion, error)

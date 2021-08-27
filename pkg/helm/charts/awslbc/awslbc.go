@@ -53,7 +53,16 @@ func NewDefaultValues(clusterName, vpcID, region string) *Values {
 			Tag:        "v2.1.1",
 			PullPolicy: "IfNotPresent",
 		},
-		Resources: Resources{},
+		Resources: resources{
+			Limits: resourceEntry{
+				CPU:    "200m",
+				Memory: "256Mi",
+			},
+			Requests: resourceEntry{
+				CPU:    "100m",
+				Memory: "128Mi",
+			},
+		},
 		PodSecurityContext: PodSecurityContext{
 			FsGroup: 65534, // nolint: gomnd
 		},
@@ -92,7 +101,7 @@ type Values struct {
 	PodSecurityContext                        PodSecurityContext  `yaml:"podSecurityContext"`
 	SecurityContext                           SecurityContext     `yaml:"securityContext"`
 	TerminationGracePeriodSeconds             int                 `yaml:"terminationGracePeriodSeconds"`
-	Resources                                 Resources           `yaml:"resources"`
+	Resources                                 resources           `yaml:"resources"`
 	PriorityClassName                         string              `yaml:"priorityClassName"`
 	NodeSelector                              NodeSelector        `yaml:"nodeSelector"`
 	Tolerations                               []interface{}       `yaml:"tolerations"`
@@ -159,8 +168,15 @@ type SecurityContext struct {
 	AllowPrivilegeEscalation bool `yaml:"allowPrivilegeEscalation"`
 }
 
-// Resources ...
-type Resources struct{}
+type resources struct {
+	Limits   resourceEntry `yaml:"limits"`
+	Requests resourceEntry `yaml:"requests"`
+}
+
+type resourceEntry struct {
+	CPU    string `yaml:"cpu"`
+	Memory string `yaml:"memory"`
+}
 
 // NodeSelector ...
 type NodeSelector struct{}

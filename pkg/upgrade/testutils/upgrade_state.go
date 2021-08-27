@@ -35,7 +35,7 @@ func (m *upgradeStateMock) GetUpgrade(version string) (*client.Upgrade, error) {
 	return u, nil
 }
 
-func (m *upgradeStateMock) SaveOriginalOkctlVersionIfNotExists(originalOkctlVersion *client.OriginalOkctlVersion) error {
+func (m *upgradeStateMock) SaveOriginalClusterVersionIfNotExists(originalOkctlVersion *client.OriginalClusterVersion) error {
 	if len(m.originalVersion) == 0 {
 		m.originalVersion = originalOkctlVersion.Value
 	}
@@ -43,12 +43,12 @@ func (m *upgradeStateMock) SaveOriginalOkctlVersionIfNotExists(originalOkctlVers
 	return nil
 }
 
-func (m *upgradeStateMock) GetOriginalOkctlVersion() (*client.OriginalOkctlVersion, error) {
+func (m *upgradeStateMock) GetOriginalClusterVersion() (*client.OriginalClusterVersion, error) {
 	if len(m.originalVersion) == 0 {
-		return nil, client.ErrOriginalOkctlVersionNotFound
+		return nil, client.ErrOriginalClusterVersionNotFound
 	}
 
-	return &client.OriginalOkctlVersion{
+	return &client.OriginalClusterVersion{
 		Value: m.originalVersion,
 	}, nil
 }

@@ -48,7 +48,7 @@ func TestOriginalVersionSaver(t *testing.T) {
 			// Then
 			require.NoError(t, err)
 
-			savedVersion, err := upgradeState.GetOriginalOkctlVersion()
+			savedVersion, err := upgradeState.GetOriginalClusterVersion()
 			assert.NoError(t, err)
 
 			assert.Equal(t, tc.expectedSavedVersion, savedVersion.Value)

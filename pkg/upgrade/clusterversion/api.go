@@ -9,7 +9,7 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/version"
+	versionPkg "github.com/oslokommune/okctl/pkg/version"
 )
 
 // ValidateBinaryVsClusterVersion returns an error if binary version is less than cluster version
@@ -49,8 +49,21 @@ func (c ClusterVersioner) validateBinaryVsClusterVersion(binaryVersion *semver.V
 }
 
 // SaveClusterVersion saves the provided version
-func (c ClusterVersioner) SaveClusterVersion(version version.Info) error {
-	err := c.upgradeState.SaveClusterVersionInfo(&client.ClusterVersion{
+func (c ClusterVersioner) SaveClusterVersion(version versionPkg.Info) error {
+	didUpdateVersion := false
+
+	existing, err := c.upgradeState.GetClusterVersionInfo()
+	if err != nil && !errors.Is(err, client.ErrClusterVersionNotFound) {
+		return fmt.Errorf("getting cluster version info: %w", err)
+	}
+
+	if err != nil && errors.Is(err, client.ErrClusterVersionNotFound) {
+		didUpdateVersion = true
+	} else if version.Version != existing.Value.Version {
+		didUpdateVersion = true
+	}
+
+	err = c.upgradeState.SaveClusterVersionInfo(&client.ClusterVersion{
 		ID:    c.clusterID,
 		Value: version,
 	})
@@ -58,12 +71,17 @@ func (c ClusterVersioner) SaveClusterVersion(version version.Info) error {
 		return fmt.Errorf("saving cluster version: %w", err)
 	}
 
-	_, _ = fmt.Fprintf(c.out, "Cluster version is now: %s\n", version.Version)
+	if didUpdateVersion {
+		_, _ = fmt.Fprintf(c.out, "Cluster version is now: %s\n", version.Version)
+	}
 
 	return nil
 }
 
-// ClusterVersioner knows how to save and get cluster version
+// ClusterVersioner knows how to enforce correct version of the okctl binary versus the cluster version.
+// The intention is that we want to enforce that no users of a cluster are trying to run 'upgrade' or 'apply cluster'
+// with an outdated version of the okctl binary, that is, a version that is older than the cluster version.
+// The cluster version should be set to the current version whenever we run 'upgrade' or 'apply cluster'.
 type ClusterVersioner struct {
 	out          io.Writer
 	clusterID    api.ID

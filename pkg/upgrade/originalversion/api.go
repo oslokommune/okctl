@@ -35,14 +35,14 @@ const SaveErrorMessage = "saving original version. Your cluster will not work as
 // When we're sure all users has run this code, i.e. stored original okctl version in the correct place,
 // we can simplify this logic to just use version.GetVersionInfo().Version and ignore the cluster tag version.
 // To check if users has run this code, just check all users' cluster's state, and see if
-// upgrade/OriginalOkctlVersion has been set or not. If it's set, it means this code has been run.
+// upgrade/OriginalClusterVersion has been set or not. If it's set, it means this code has been run.
 func (o Saver) SaveOriginalOkctlVersionIfNotExists() error {
-	_, err := o.upgradeState.GetOriginalOkctlVersion()
-	if err != nil && !errors.Is(err, client.ErrOriginalOkctlVersionNotFound) {
+	_, err := o.upgradeState.GetOriginalClusterVersion()
+	if err != nil && !errors.Is(err, client.ErrOriginalClusterVersionNotFound) {
 		return fmt.Errorf("getting original okctl version: %w", err)
 	}
 
-	if errors.Is(err, client.ErrOriginalOkctlVersionNotFound) {
+	if errors.Is(err, client.ErrOriginalClusterVersionNotFound) {
 		var versionToSave *semver.Version
 
 		clusterStateVersion, err := o.getClusterStateVersion()
@@ -50,7 +50,7 @@ func (o Saver) SaveOriginalOkctlVersionIfNotExists() error {
 			return fmt.Errorf("getting cluster state version: %w", err)
 		}
 
-		err = o.upgradeState.SaveOriginalOkctlVersionIfNotExists(&client.OriginalOkctlVersion{
+		err = o.upgradeState.SaveOriginalClusterVersionIfNotExists(&client.OriginalClusterVersion{
 			ID:    o.clusterID,
 			Value: clusterStateVersion.String(),
 		})

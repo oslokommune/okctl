@@ -99,10 +99,10 @@ func (u *upgradesState) GetUpgrades() ([]*client.Upgrade, error) {
 // Original version
 //
 
-const originalVersionValue = "OriginalOkctlVersion"
+const originalVersionValue = "OriginalClusterVersion"
 
-// OriginalOkctlVersion contains state about the original installed version of okctl
-type OriginalOkctlVersion struct {
+// OriginalClusterVersion contains state about the first cluster version installed
+type OriginalClusterVersion struct {
 	Metadata `storm:"inline"`
 
 	ID    ID
@@ -110,8 +110,8 @@ type OriginalOkctlVersion struct {
 	Key   string
 }
 
-func newOriginalOkctlVersion(o *client.OriginalOkctlVersion, meta Metadata) *OriginalOkctlVersion {
-	return &OriginalOkctlVersion{
+func newOriginalClusterVersion(o *client.OriginalClusterVersion, meta Metadata) *OriginalClusterVersion {
+	return &OriginalClusterVersion{
 		Metadata: meta,
 		ID:       NewID(o.ID),
 		Value:    o.Value,
@@ -120,50 +120,50 @@ func newOriginalOkctlVersion(o *client.OriginalOkctlVersion, meta Metadata) *Ori
 }
 
 // Convert to client.Upgrade
-func (o *OriginalOkctlVersion) Convert() *client.OriginalOkctlVersion {
-	return &client.OriginalOkctlVersion{
+func (o *OriginalClusterVersion) Convert() *client.OriginalClusterVersion {
+	return &client.OriginalClusterVersion{
 		ID:    o.ID.Convert(),
 		Value: o.Value,
 	}
 }
 
-// SaveOriginalOkctlVersionIfNotExists saves the original version if it hasn't been saved before
-func (u *upgradesState) SaveOriginalOkctlVersionIfNotExists(originalOkctlVersion *client.OriginalOkctlVersion) error {
-	_, err := u.getOriginalOkctlVersion()
+// SaveOriginalClusterVersionIfNotExists saves the original version if it hasn't been saved before
+func (u *upgradesState) SaveOriginalClusterVersionIfNotExists(originalClusterVersion *client.OriginalClusterVersion) error {
+	_, err := u.getOriginalClusterVersion()
 	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
 		return err
 	}
 
 	if errors.Is(err, stormpkg.ErrNotFound) {
-		return u.node.Save(newOriginalOkctlVersion(originalOkctlVersion, NewMetadata()))
+		return u.node.Save(newOriginalClusterVersion(originalClusterVersion, NewMetadata()))
 	}
 
 	return nil
 }
 
-// GetOriginalOkctlVersion returns the original version, or an error if it doesn't exist
-func (u *upgradesState) GetOriginalOkctlVersion() (*client.OriginalOkctlVersion, error) {
-	originalVersion, err := u.getOriginalOkctlVersion()
+// GetOriginalClusterVersion returns the original version, or an error if it doesn't exist
+func (u *upgradesState) GetOriginalClusterVersion() (*client.OriginalClusterVersion, error) {
+	originalVersion, err := u.getOriginalClusterVersion()
 	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
 		return nil, err
 	}
 
 	if errors.Is(err, stormpkg.ErrNotFound) {
-		return nil, client.ErrOriginalOkctlVersionNotFound
+		return nil, client.ErrOriginalClusterVersionNotFound
 	}
 
 	return originalVersion.Convert(), nil
 }
 
-func (u *upgradesState) getOriginalOkctlVersion() (*OriginalOkctlVersion, error) {
-	originalOkctlVersion := &OriginalOkctlVersion{}
+func (u *upgradesState) getOriginalClusterVersion() (*OriginalClusterVersion, error) {
+	originalClusterVersion := &OriginalClusterVersion{}
 
-	err := u.node.One("Key", originalVersionValue, originalOkctlVersion)
+	err := u.node.One("Key", originalVersionValue, originalClusterVersion)
 	if err != nil {
 		return nil, err
 	}
 
-	return originalOkctlVersion, nil
+	return originalClusterVersion, nil
 }
 
 //
@@ -190,7 +190,7 @@ func (o *ClusterVersion) Convert() *client.ClusterVersion {
 }
 
 func (u *upgradesState) GetClusterVersionInfo() (*client.ClusterVersion, error) {
-	clusterVersion, err := u.getClusterVersion()
+	clusterVersion, err := u.getClusterVersionInfo()
 	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func (u *upgradesState) GetClusterVersionInfo() (*client.ClusterVersion, error) 
 	return clusterVersion.Convert(), nil
 }
 
-func (u *upgradesState) getClusterVersion() (*ClusterVersion, error) {
+func (u *upgradesState) getClusterVersionInfo() (*ClusterVersion, error) {
 	clusterVersion := &ClusterVersion{}
 
 	err := u.node.One("Key", clusterVersionValue, clusterVersion)
@@ -223,7 +223,18 @@ func newClusterVersion(o *client.ClusterVersion, meta Metadata) *ClusterVersion 
 }
 
 func (u *upgradesState) SaveClusterVersionInfo(version *client.ClusterVersion) error {
-	return u.node.Save(newClusterVersion(version, NewMetadata()))
+	existing, err := u.getClusterVersionInfo()
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return u.node.Save(newClusterVersion(version, NewMetadata()))
+	}
+
+	existing.Metadata.UpdatedAt = time.Now()
+
+	return u.node.Save(newClusterVersion(version, existing.Metadata))
 }
 
 // NewUpgradesState returns an initialised state client

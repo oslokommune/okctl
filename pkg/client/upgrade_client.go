@@ -11,8 +11,8 @@ import (
 // ErrUpgradeNotFound is returned when an upgrade is not found in state
 var ErrUpgradeNotFound = errors.New("not found")
 
-// ErrOriginalOkctlVersionNotFound is returned when the original okctl version is not found in state
-var ErrOriginalOkctlVersionNotFound = errors.New("not found")
+// ErrOriginalClusterVersionNotFound is returned when the original okctl version is not found in state
+var ErrOriginalClusterVersionNotFound = errors.New("not found")
 
 // ErrClusterVersionNotFound is returned when the cluster version is not found in state
 var ErrClusterVersionNotFound = errors.New("not found")
@@ -23,8 +23,8 @@ type Upgrade struct {
 	Version string
 }
 
-// OriginalOkctlVersion contains state about the original okctl version installed
-type OriginalOkctlVersion struct {
+// OriginalClusterVersion contains state about the original okctl version installed
+type OriginalClusterVersion struct {
 	ID    api.ID
 	Value string
 }
@@ -39,8 +39,8 @@ type ClusterVersion struct {
 type UpgradeState interface {
 	SaveUpgrade(upgrade *Upgrade) error
 	GetUpgrades() ([]*Upgrade, error)
-	SaveOriginalOkctlVersionIfNotExists(originalOkctlVersion *OriginalOkctlVersion) error
-	GetOriginalOkctlVersion() (*OriginalOkctlVersion, error)
+	SaveOriginalClusterVersionIfNotExists(originalOkctlVersion *OriginalClusterVersion) error
+	GetOriginalClusterVersion() (*OriginalClusterVersion, error)
 	SaveClusterVersionInfo(version *ClusterVersion) error
 	GetClusterVersionInfo() (*ClusterVersion, error)
 }

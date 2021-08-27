@@ -98,7 +98,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				return fmt.Errorf(originalversion.SaveErrorMessage, err)
 			}
 
-			originalOkctlVersion, err := stateHandlers.Upgrade.GetOriginalOkctlVersion()
+			originalOkctlVersion, err := stateHandlers.Upgrade.GetOriginalClusterVersion()
 			if err != nil {
 				return fmt.Errorf("getting original okctl version: %w", err)
 			}

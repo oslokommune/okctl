@@ -9,6 +9,9 @@ import (
 	"path"
 	"syscall"
 
+	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
+	"github.com/oslokommune/okctl/pkg/version"
+
 	"github.com/oslokommune/okctl/pkg/upgrade/originalversion"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -51,6 +54,8 @@ func (o *applyClusterOpts) Validate() error {
 func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := applyClusterOpts{}
 	var originalVersionSaver originalversion.Saver
+
+	var clusterVersioner clusterversion.ClusterVersioner
 
 	cmd := &cobra.Command{
 		Use:     "cluster -f declaration_file",
@@ -127,6 +132,23 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			state := o.StateHandlers(o.StateNodes())
 
+			// Cluster version
+			clusterVersioner = clusterversion.New(
+				o.Out,
+				api.ID{
+					Region:       opts.Declaration.Metadata.Region,
+					AWSAccountID: opts.Declaration.Metadata.AccountID,
+					ClusterName:  opts.Declaration.Metadata.Name,
+				},
+				state.Upgrade,
+			)
+
+			err = clusterVersioner.ValidateBinaryVsClusterVersion(version.GetVersionInfo().Version)
+			if err != nil {
+				return fmt.Errorf(commands.ValidateBinaryVsClusterVersionError, err)
+			}
+
+			// Original version
 			originalVersionSaver, err = originalversion.New(
 				api.ID{
 					Region:       opts.Declaration.Metadata.Region,
@@ -137,7 +159,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				state.Cluster,
 			)
 			if err != nil {
-				return fmt.Errorf("creating version saver: %w", err)
+				return fmt.Errorf("creating original version saver: %w", err)
 			}
 
 			return nil
@@ -199,6 +221,11 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			err = originalVersionSaver.SaveOriginalOkctlVersionIfNotExists()
 			if err != nil {
 				return fmt.Errorf(originalversion.SaveErrorMessage, err)
+			}
+
+			err = clusterVersioner.SaveClusterVersion(version.GetVersionInfo())
+			if err != nil {
+				return fmt.Errorf(commands.SaveClusterVersionError, err)
 			}
 
 			_, _ = fmt.Fprintln(o.Out, "\nYour cluster is up to date.")

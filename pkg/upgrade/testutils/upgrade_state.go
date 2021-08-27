@@ -53,6 +53,15 @@ func (m *upgradeStateMock) GetOriginalOkctlVersion() (*client.OriginalOkctlVersi
 	}, nil
 }
 
+//goland:noinspection GoUnusedParameter
+func (m *upgradeStateMock) SaveClusterVersionInfo(version *client.ClusterVersion) error {
+	panic("implement me")
+}
+
+func (m *upgradeStateMock) GetClusterVersionInfo() (*client.ClusterVersion, error) {
+	panic("implement me")
+}
+
 // MockUpgradeState returns a mocked upgrade state
 func MockUpgradeState() client.UpgradeState {
 	return &upgradeStateMock{

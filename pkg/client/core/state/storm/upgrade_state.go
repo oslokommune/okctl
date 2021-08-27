@@ -4,10 +4,16 @@ import (
 	"errors"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/version"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client"
 )
+
+//
+// Upgrades
+//
 
 type upgradesState struct {
 	node breeze.Client
@@ -89,6 +95,10 @@ func (u *upgradesState) GetUpgrades() ([]*client.Upgrade, error) {
 	return clientUpgrades, nil
 }
 
+//
+// Original version
+//
+
 const originalVersionValue = "OriginalOkctlVersion"
 
 // OriginalOkctlVersion contains state about the original installed version of okctl
@@ -100,7 +110,6 @@ type OriginalOkctlVersion struct {
 	Key   string
 }
 
-// NewUpgrade returns storm compatible state
 func newOriginalOkctlVersion(o *client.OriginalOkctlVersion, meta Metadata) *OriginalOkctlVersion {
 	return &OriginalOkctlVersion{
 		Metadata: meta,
@@ -155,6 +164,66 @@ func (u *upgradesState) getOriginalOkctlVersion() (*OriginalOkctlVersion, error)
 	}
 
 	return originalOkctlVersion, nil
+}
+
+//
+// Cluster version
+//
+
+const clusterVersionValue = "ClusterVersion"
+
+// ClusterVersion contains state about the cluster version
+type ClusterVersion struct {
+	Metadata `storm:"inline"`
+
+	ID    ID
+	Value version.Info
+	Key   string
+}
+
+// Convert to client.Upgrade
+func (o *ClusterVersion) Convert() *client.ClusterVersion {
+	return &client.ClusterVersion{
+		ID:    o.ID.Convert(),
+		Value: o.Value,
+	}
+}
+
+func (u *upgradesState) GetClusterVersionInfo() (*client.ClusterVersion, error) {
+	clusterVersion, err := u.getClusterVersion()
+	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
+		return nil, err
+	}
+
+	if errors.Is(err, stormpkg.ErrNotFound) {
+		return nil, client.ErrClusterVersionNotFound
+	}
+
+	return clusterVersion.Convert(), nil
+}
+
+func (u *upgradesState) getClusterVersion() (*ClusterVersion, error) {
+	clusterVersion := &ClusterVersion{}
+
+	err := u.node.One("Key", clusterVersionValue, clusterVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	return clusterVersion, nil
+}
+
+func newClusterVersion(o *client.ClusterVersion, meta Metadata) *ClusterVersion {
+	return &ClusterVersion{
+		Metadata: meta,
+		ID:       NewID(o.ID),
+		Value:    o.Value,
+		Key:      clusterVersionValue,
+	}
+}
+
+func (u *upgradesState) SaveClusterVersionInfo(version *client.ClusterVersion) error {
+	return u.node.Save(newClusterVersion(version, NewMetadata()))
 }
 
 // NewUpgradesState returns an initialised state client

@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/commands"
+	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/upgrade/originalversion"
 	"github.com/oslokommune/okctl/pkg/version"
@@ -18,6 +21,8 @@ func buildUpgradeCommand(o *okctl.Okctl) *cobra.Command {
 	var upgrader upgrade.Upgrader
 
 	var originalVersionSaver originalversion.Saver
+
+	var clusterVersioner clusterversion.ClusterVersioner
 
 	cmd := &cobra.Command{
 		Use:   "upgrade",
@@ -58,6 +63,23 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				Store: storage.NewFileSystemStorage(userDataDir),
 			}
 
+			// Cluster version
+			clusterVersioner = clusterversion.New(
+				out,
+				api.ID{
+					Region:       o.Declaration.Metadata.Region,
+					AWSAccountID: o.Declaration.Metadata.AccountID,
+					ClusterName:  o.Declaration.Metadata.Name,
+				},
+				stateHandlers.Upgrade,
+			)
+
+			err = clusterVersioner.ValidateBinaryVsClusterVersion(version.GetVersionInfo().Version)
+			if err != nil {
+				return fmt.Errorf(commands.ValidateBinaryVsClusterVersionError, err)
+			}
+
+			// Original version
 			originalVersionSaver, err = originalversion.New(
 				api.ID{
 					Region:       o.Declaration.Metadata.Region,
@@ -68,7 +90,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				stateHandlers.Cluster,
 			)
 			if err != nil {
-				return fmt.Errorf("creating version saver: %w", err)
+				return fmt.Errorf("creating original version saver: %w", err)
 			}
 
 			err = originalVersionSaver.SaveOriginalOkctlVersionIfNotExists()
@@ -105,6 +127,11 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 			err := upgrader.Run()
 			if err != nil {
 				return fmt.Errorf("upgrading: %w", err)
+			}
+
+			err = clusterVersioner.SaveClusterVersion(version.GetVersionInfo())
+			if err != nil {
+				return fmt.Errorf(commands.SaveClusterVersionError, err)
 			}
 
 			return nil

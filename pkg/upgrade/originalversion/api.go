@@ -1,4 +1,5 @@
-package upgrade
+// Package originalversion knows how to save the original version of a cluster
+package originalversion
 
 import (
 	"errors"
@@ -10,8 +11,8 @@ import (
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
-// OriginalVersionSaver stores the version of okctl first used to apply a cluster
-type OriginalVersionSaver struct {
+// Saver stores the version of okctl first used to apply a cluster
+type Saver struct {
 	clusterID    api.ID
 	upgradeState client.UpgradeState
 	clusterState client.ClusterState
@@ -35,7 +36,7 @@ const SaveErrorMessage = "saving original version. Your cluster will not work as
 // we can simplify this logic to just use version.GetVersionInfo().Version and ignore the cluster tag version.
 // To check if users has run this code, just check all users' cluster's state, and see if
 // upgrade/OriginalOkctlVersion has been set or not. If it's set, it means this code has been run.
-func (o OriginalVersionSaver) SaveOriginalOkctlVersionIfNotExists() error {
+func (o Saver) SaveOriginalOkctlVersionIfNotExists() error {
 	_, err := o.upgradeState.GetOriginalOkctlVersion()
 	if err != nil && !errors.Is(err, client.ErrOriginalOkctlVersionNotFound) {
 		return fmt.Errorf("getting original okctl version: %w", err)
@@ -61,7 +62,7 @@ func (o OriginalVersionSaver) SaveOriginalOkctlVersionIfNotExists() error {
 	return nil
 }
 
-func (o OriginalVersionSaver) getClusterStateVersion() (*semver.Version, error) {
+func (o Saver) getClusterStateVersion() (*semver.Version, error) {
 	cluster, err := o.clusterState.GetCluster(o.clusterID.ClusterName)
 	if err != nil {
 		return nil, fmt.Errorf("getting cluster '%s': %w", o.clusterID.ClusterName, err)
@@ -80,13 +81,13 @@ func (o OriginalVersionSaver) getClusterStateVersion() (*semver.Version, error) 
 	return clusterStateVersion, nil
 }
 
-// NewOriginalVersionSaver returns a OriginalVersionSaver
-func NewOriginalVersionSaver(
+// New returns a Saver
+func New(
 	clusterID api.ID,
 	upgradeState client.UpgradeState,
 	clusterState client.ClusterState,
-) (OriginalVersionSaver, error) {
-	return OriginalVersionSaver{
+) (Saver, error) {
+	return Saver{
 		clusterID:    clusterID,
 		upgradeState: upgradeState,
 		clusterState: clusterState,

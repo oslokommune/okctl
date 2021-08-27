@@ -9,7 +9,7 @@ import (
 	"path"
 	"syscall"
 
-	"github.com/oslokommune/okctl/pkg/upgrade"
+	"github.com/oslokommune/okctl/pkg/upgrade/originalversion"
 
 	"github.com/oslokommune/okctl/pkg/api"
 
@@ -50,7 +50,7 @@ func (o *applyClusterOpts) Validate() error {
 // nolint funlen
 func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := applyClusterOpts{}
-	var originalVersionSaver upgrade.OriginalVersionSaver
+	var originalVersionSaver originalversion.Saver
 
 	cmd := &cobra.Command{
 		Use:     "cluster -f declaration_file",
@@ -127,7 +127,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			state := o.StateHandlers(o.StateNodes())
 
-			originalVersionSaver, err = upgrade.NewOriginalVersionSaver(
+			originalVersionSaver, err = originalversion.New(
 				api.ID{
 					Region:       opts.Declaration.Metadata.Region,
 					AWSAccountID: opts.Declaration.Metadata.AccountID,
@@ -198,7 +198,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			err = originalVersionSaver.SaveOriginalOkctlVersionIfNotExists()
 			if err != nil {
-				return fmt.Errorf(upgrade.SaveErrorMessage, err)
+				return fmt.Errorf(originalversion.SaveErrorMessage, err)
 			}
 
 			_, _ = fmt.Fprintln(o.Out, "\nYour cluster is up to date.")

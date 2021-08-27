@@ -8,8 +8,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/upgrade/testutils"
+
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/sebdah/goldie/v2"
 
 	"github.com/jarcoal/httpmock"
@@ -486,7 +487,7 @@ func TestRunUpgrades(t *testing.T) {
 					},
 					OkctlVersion:         tc.withOkctlVersion,
 					OriginalOkctlVersion: tc.withOriginalOkctlVersion,
-					State:                mockUpgradeState(),
+					State:                testutils.MockUpgradeState(),
 					ClusterID:            api.ID{},
 				},
 				StdOutBuffer: stdOutBuffer,
@@ -611,60 +612,4 @@ func createGihubReleaseAssetBinary(os, arch, version string) *github.ReleaseAsse
 // upgrades to be named this way.
 func capitalizeFirst(os string) string {
 	return strings.ToUpper(os[0:1]) + strings.ToLower(os[1:])
-}
-
-type upgradeStateMock struct {
-	upgrades        map[string]*client.Upgrade
-	originalVersion string
-}
-
-func (m *upgradeStateMock) GetUpgrades() ([]*client.Upgrade, error) {
-	upgrades := make([]*client.Upgrade, len(m.upgrades))
-
-	i := 0
-
-	for _, u := range m.upgrades {
-		upgrades[i] = u
-		i++
-	}
-
-	return upgrades, nil
-}
-
-func (m *upgradeStateMock) SaveUpgrade(upgrade *client.Upgrade) error {
-	m.upgrades[upgrade.Version] = upgrade
-	return nil
-}
-
-func (m *upgradeStateMock) GetUpgrade(version string) (*client.Upgrade, error) {
-	u, ok := m.upgrades[version]
-	if !ok {
-		return nil, client.ErrUpgradeNotFound
-	}
-
-	return u, nil
-}
-
-func (m *upgradeStateMock) SaveOriginalOkctlVersionIfNotExists(originalOkctlVersion *client.OriginalOkctlVersion) error {
-	if len(m.originalVersion) == 0 {
-		m.originalVersion = originalOkctlVersion.Value
-	}
-
-	return nil
-}
-
-func (m *upgradeStateMock) GetOriginalOkctlVersion() (*client.OriginalOkctlVersion, error) {
-	if len(m.originalVersion) == 0 {
-		return nil, client.ErrOriginalOkctlVersionNotFound
-	}
-
-	return &client.OriginalOkctlVersion{
-		Value: m.originalVersion,
-	}, nil
-}
-
-func mockUpgradeState() client.UpgradeState {
-	return &upgradeStateMock{
-		upgrades: make(map[string]*client.Upgrade),
-	}
 }

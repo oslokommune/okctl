@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/upgrade/originalversion"
 	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -16,7 +17,7 @@ import (
 func buildUpgradeCommand(o *okctl.Okctl) *cobra.Command {
 	var upgrader upgrade.Upgrader
 
-	var originalVersionSaver upgrade.OriginalVersionSaver
+	var originalVersionSaver originalversion.Saver
 
 	cmd := &cobra.Command{
 		Use:   "upgrade",
@@ -57,7 +58,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				Store: storage.NewFileSystemStorage(userDataDir),
 			}
 
-			originalVersionSaver, err = upgrade.NewOriginalVersionSaver(
+			originalVersionSaver, err = originalversion.New(
 				api.ID{
 					Region:       o.Declaration.Metadata.Region,
 					AWSAccountID: o.Declaration.Metadata.AccountID,
@@ -72,7 +73,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 
 			err = originalVersionSaver.SaveOriginalOkctlVersionIfNotExists()
 			if err != nil {
-				return fmt.Errorf(upgrade.SaveErrorMessage, err)
+				return fmt.Errorf(originalversion.SaveErrorMessage, err)
 			}
 
 			originalOkctlVersion, err := stateHandlers.Upgrade.GetOriginalOkctlVersion()

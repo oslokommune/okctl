@@ -1,13 +1,15 @@
-package upgrade_test
+package originalversion_test
 
 import (
 	"testing"
+
+	"github.com/oslokommune/okctl/pkg/upgrade/originalversion"
+	"github.com/oslokommune/okctl/pkg/upgrade/testutils"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/upgrade"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -30,10 +32,10 @@ func TestOriginalVersionSaver(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			// Given
-			upgradeState := mockUpgradeState()
+			upgradeState := testutils.MockUpgradeState()
 			clusterState := mockClusterState(tc.existingClusterVersion)
 
-			saver, err := upgrade.NewOriginalVersionSaver(
+			saver, err := originalversion.New(
 				api.ID{ClusterName: "my-cluster"},
 				upgradeState,
 				clusterState,

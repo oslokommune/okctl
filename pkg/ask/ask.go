@@ -52,7 +52,7 @@ func (a *Ask) Username() (string, error) {
 	if a.spinner != nil {
 		err := a.spinner.Pause()
 		if err != nil {
-			return "", fmt.Errorf("stopping spinner: %w", err)
+			return "", fmt.Errorf(constant.StopSpinnerError, err)
 		}
 
 		defer func() {
@@ -112,7 +112,7 @@ func (a *Ask) RepositoryConfig() (*RepositoryConfig, error) {
 	if a.spinner != nil {
 		err := a.spinner.Pause()
 		if err != nil {
-			return nil, fmt.Errorf("stopping spinner: %w", err)
+			return nil, fmt.Errorf(constant.StopSpinnerError, err)
 		}
 
 		defer func() {
@@ -122,7 +122,7 @@ func (a *Ask) RepositoryConfig() (*RepositoryConfig, error) {
 
 	err := survey.Ask(qs, &answers)
 	if err != nil {
-		return nil, fmt.Errorf("getting repository config: %w", err)
+		return nil, fmt.Errorf(constant.GetRepositoryConfigError, err)
 	}
 
 	return &RepositoryConfig{

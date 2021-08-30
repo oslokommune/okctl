@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"regexp"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/mishudark/errors"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -90,7 +92,7 @@ func (a ApplicationMeta) Validate() error {
 	return validation.ValidateStruct(&a,
 		validation.Field(&a.Name,
 			validation.Required,
-			validation.Match(regexp.MustCompile("^[a-zA-Z-]{3,64}$")).Error("must consist of 3-64 characters (a-z, A-Z, -)")),
+			validation.Match(regexp.MustCompile("^[a-zA-Z-]{3,64}$")).Error(constant.NamespaceValidation)),
 		validation.Field(&a.Namespace, validation.Required, is.Subdomain),
 	)
 }
@@ -159,7 +161,7 @@ func (a Application) HasPrometheus() bool {
 func (a Application) URL() (url.URL, error) {
 	tmpURL, err := url.Parse(fmt.Sprintf("%s.%s", a.SubDomain, a.cluster.ClusterRootDomain))
 	if err != nil {
-		return url.URL{}, fmt.Errorf("parsing application URL: %w", err)
+		return url.URL{}, fmt.Errorf(constant.ApplicationUrlParseError, err)
 	}
 
 	return *tmpURL, nil

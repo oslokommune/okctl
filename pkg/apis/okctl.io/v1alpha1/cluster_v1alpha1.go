@@ -74,7 +74,7 @@ func (c Cluster) Validate() error {
 		validation.Field(&c.ClusterRootDomain,
 			validation.When(
 				c.Experimental != nil && c.Experimental.AutomatizeZoneDelegation,
-				validation.Match(regexp.MustCompile("^(.*).auto.oslo.systems$")).Error("with automatizeZoneDelegation enabled, must end with auto.oslo.systems"),
+				validation.Match(regexp.MustCompile("^(.*).auto.oslo.systems$")).Error(constant.ClusterRootDomainValidation),
 			),
 		),
 		validation.Field(&c.Metadata),
@@ -107,9 +107,9 @@ func (receiver ClusterMeta) Validate() error {
 	return validation.ValidateStruct(&receiver,
 		validation.Field(&receiver.Name,
 			validation.Required,
-			validation.Match(regexp.MustCompile("^[a-zA-Z-]{3,64}$")).Error("must consist of 3-64 characters (a-z, A-Z, -)")),
+			validation.Match(regexp.MustCompile("^[a-zA-Z-]{3,64}$")).Error(constant.ClusterNameValidation)),
 		validation.Field(&receiver.Region, validation.Required, validation.In("eu-west-1", "eu-central-1", "eu-north-1").
-			Error("for now, only \"eu-west-1\", \"eu-central-1\" and \"eu-north-1\" are supported")),
+			Error(constant.ClusterSupportedRegionsValidation)),
 		validation.Field(&receiver.AccountID, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{12}$")).Error("must consist of 12 digits")),
 	)
 }

@@ -29,7 +29,7 @@ type argocdReconciler struct {
 func (z *argocdReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (result reconciliation.Result, err error) {
 	action, err := z.determineAction(meta, state)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	switch action {
@@ -40,7 +40,7 @@ func (z *argocdReconciler) Reconcile(ctx context.Context, meta reconciliation.Me
 			ID: reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata),
 		})
 		if err != nil {
-			return result, fmt.Errorf("deleting argocd: %w", err)
+			return result, fmt.Errorf(constant.DeleteArgoCdError, err)
 		}
 
 		err = z.githubClient.DeleteGithubRepository(ctx, client.DeleteGithubRepositoryOpts{
@@ -49,7 +49,7 @@ func (z *argocdReconciler) Reconcile(ctx context.Context, meta reconciliation.Me
 			Name:         meta.ClusterDeclaration.Github.Repository,
 		})
 		if err != nil {
-			return result, fmt.Errorf("deleting github repository: %w", err)
+			return result, fmt.Errorf(constant.DeleteGithubRepoError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -59,7 +59,7 @@ func (z *argocdReconciler) Reconcile(ctx context.Context, meta reconciliation.Me
 		return reconciliation.Result{Requeue: false}, nil
 	}
 
-	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+	return reconciliation.Result{}, fmt.Errorf(constant.ActionNotImplementedError, string(action))
 }
 
 func (z *argocdReconciler) createArgoCD(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
@@ -70,19 +70,19 @@ func (z *argocdReconciler) createArgoCD(ctx context.Context, meta reconciliation
 		Name:         meta.ClusterDeclaration.Github.Repository,
 	})
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("fetching deploy key: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.FetchDeployKeyError, err)
 	}
 
 	hz, err := state.Domain.GetPrimaryHostedZone()
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("getting primary hosted zone: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.GetPrimaryHostedZoneError, err)
 	}
 
 	im, err := state.IdentityManager.GetIdentityPool(
 		cfn.NewStackNamer().IdentityPool(meta.ClusterDeclaration.Metadata.Name),
 	)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("getting identity pool: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.GetIdentityPoolError, err)
 	}
 
 	_, err = z.argocdClient.CreateArgoCD(ctx, client.CreateArgoCDOpts{
@@ -100,12 +100,12 @@ func (z *argocdReconciler) createArgoCD(ctx context.Context, meta reconciliation
 		// nolint: godox
 		// TODO: Need to identify the correct error
 		if strings.Contains(strings.ToLower(err.Error()), "timeout") {
-			fmt.Println(meta.Out, fmt.Errorf("got ArgoCD timeout: %w", err).Error())
+			fmt.Println(meta.Out, fmt.Errorf(constant.GetArgoCdTimeoutError, err).Error())
 
 			return reconciliation.Result{Requeue: true}, nil
 		}
 
-		return reconciliation.Result{}, fmt.Errorf("creating argocd: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.CreateaArgoCdError, err)
 	}
 
 	return reconciliation.Result{Requeue: false}, nil
@@ -116,7 +116,7 @@ func (z *argocdReconciler) determineAction(meta reconciliation.Metadata, state *
 
 	componentExists, err := state.ArgoCD.HasArgoCD()
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf("acquiring ArgoCD existence: %w", err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfArgoCdExistsError, err)
 	}
 
 	switch userIndication {
@@ -131,7 +131,7 @@ func (z *argocdReconciler) determineAction(meta reconciliation.Metadata, state *
 			state.IdentityManager.HasIdentityPool,
 		)
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking dependencies: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckDependenciesError, err)
 		}
 
 		if !dependenciesReady {

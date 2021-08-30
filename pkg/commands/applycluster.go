@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"sigs.k8s.io/yaml"
 )
@@ -25,7 +27,7 @@ func InferClusterFromStdinOrFile(stdin io.Reader, path string) (*v1alpha1.Cluste
 	default:
 		inputReader, err = os.Open(filepath.Clean(path))
 		if err != nil {
-			return nil, fmt.Errorf("unable to read file: %w", err)
+			return nil, fmt.Errorf(constant.ReadFileError, err)
 		}
 	}
 
@@ -38,12 +40,12 @@ func InferClusterFromStdinOrFile(stdin io.Reader, path string) (*v1alpha1.Cluste
 
 	_, err = io.Copy(&buffer, inputReader)
 	if err != nil {
-		return nil, fmt.Errorf("copying reader data: %w", err)
+		return nil, fmt.Errorf(constant.CopyReaderDataError, err)
 	}
 
 	err = yaml.Unmarshal(buffer.Bytes(), &cluster)
 	if err != nil {
-		return nil, fmt.Errorf("unmarshalling buffer: %w", err)
+		return nil, fmt.Errorf(constant.UnmarshalBufferError, err)
 	}
 
 	return &cluster, nil

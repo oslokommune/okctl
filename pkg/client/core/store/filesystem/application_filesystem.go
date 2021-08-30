@@ -50,7 +50,7 @@ func (s *applicationStore) SaveApplication(application *client.ScaffoldedApplica
 
 	report, err := operations.Do()
 	if err != nil {
-		return nil, fmt.Errorf("storing application resources: %w", err)
+		return nil, fmt.Errorf(constant.ErrorStoringAppResources, err)
 	}
 
 	return report, nil
@@ -62,7 +62,7 @@ func (s *applicationStore) RemoveApplication(applicationName string) (*store.Rep
 		Remove("").
 		Do()
 	if err != nil {
-		return nil, fmt.Errorf("removing application: %w", err)
+		return nil, fmt.Errorf(constant.ErrorRemovingApp, err)
 	}
 
 	return report, err

@@ -3,6 +3,7 @@ package storm
 import (
 	"errors"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"time"
 
 	"github.com/oslokommune/okctl/pkg/breeze"
@@ -90,7 +91,7 @@ func (a *argoCDState) HasArgoCD() (bool, error) {
 			return false, nil
 		}
 
-		return false, fmt.Errorf("querying state: %w", err)
+		return false, fmt.Errorf(constant.QueryStateError, err)
 	}
 
 	return true, nil

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/cfn"
 
@@ -53,7 +54,7 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 				GetPostgresDatabase(cfn.NewStackNamer().
 					RDSPostgres(opts.ApplicationName, o.Declaration.Metadata.Name))
 			if err != nil {
-				return fmt.Errorf("finding postgres database: %w", err)
+				return fmt.Errorf(constant.LocatePostgresDatabaseError, err)
 			}
 
 			opts.ID.AWSAccountID = o.Declaration.Metadata.AccountID
@@ -66,7 +67,7 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 
 			err = opts.Validate()
 			if err != nil {
-				return fmt.Errorf("validating inputs: %w", err)
+				return fmt.Errorf(constant.ValidateInputsError, err)
 			}
 
 			return nil
@@ -80,13 +81,13 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 			).
 				Get()
 			if err != nil {
-				return fmt.Errorf("building kubeconfig: %w", err)
+				return fmt.Errorf(constant.BuildKubeconfigError, err)
 			}
 
 			// Ensure that ENABLE_POD_ENI is true
 			err = awsnode.New(clientSet).EnablePodENI()
 			if err != nil {
-				return fmt.Errorf("enabling pod eni: %w", err)
+				return fmt.Errorf(constant.EnablePodEniError, err)
 			}
 
 			app := fmt.Sprintf("%s-psqlclient-%s", opts.ApplicationName, o.UserState.User.Username)
@@ -109,7 +110,7 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 
 			_, err = policyClient.Create()
 			if err != nil {
-				return fmt.Errorf("creating security group policy: %w", err)
+				return fmt.Errorf(constant.CreateSecurityGroupPolicyError, err)
 			}
 
 			defer func() {
@@ -132,7 +133,7 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 
 			pod, err := client.Create()
 			if err != nil {
-				return fmt.Errorf("creating pod: %w", err)
+				return fmt.Errorf(constant.CreatePodError, err)
 			}
 
 			defer func() {
@@ -141,12 +142,12 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 
 			err = client.Watch(pod)
 			if err != nil {
-				return fmt.Errorf("watching pod: %w", err)
+				return fmt.Errorf(constant.WatchPodError, err)
 			}
 
 			err = client.Attach()
 			if err != nil {
-				return fmt.Errorf("attaching to pod: %w", err)
+				return fmt.Errorf(constant.AttachPodError, err)
 			}
 
 			_, err = fmt.Fprintf(o.Err, "cleaning up postgres attach to: %s, please wait for okctl to exit on its own", app)

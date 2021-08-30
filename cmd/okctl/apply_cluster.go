@@ -68,17 +68,17 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
 			opts.Declaration, err = commands.InferClusterFromStdinOrFile(o.In, opts.File)
 			if err != nil {
-				return fmt.Errorf("inferring cluster: %w", err)
+				return fmt.Errorf(constant.InferClusterError, err)
 			}
 
 			err = opts.Declaration.Validate()
 			if err != nil {
-				return fmt.Errorf("validating cluster declaration: %w", err)
+				return fmt.Errorf(constant.ValidateClusterDeclarationError, err)
 			}
 
 			err = loadNoUserInputUserData(o, cmd)
 			if err != nil {
-				return fmt.Errorf("loading application data: %w", err)
+				return fmt.Errorf(constant.LoadApplicationDataError, err)
 			}
 
 			o.Declaration = opts.Declaration
@@ -117,7 +117,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			err = o.Initialise()
 			if err != nil {
-				return fmt.Errorf("initializing okctl: %w", err)
+				return fmt.Errorf(constant.InitializeOkctlError, err)
 			}
 
 			return nil
@@ -132,14 +132,14 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			spin, err := spinner.New("applying cluster", spinnerWriter)
 			if err != nil {
-				return fmt.Errorf("error creating spinner: %w", err)
+				return fmt.Errorf(constant.SpinnerCreationError, err)
 			}
 
 			state := o.StateHandlers(o.StateNodes())
 
 			services, err := o.ClientServices(state)
 			if err != nil {
-				return fmt.Errorf("error getting services: %w", err)
+				return fmt.Errorf(constant.GetServicesError, err)
 			}
 
 			schedulerOpts := common.SchedulerOpts{
@@ -173,7 +173,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			_, err = scheduler.Run(o.Ctx, state)
 			if err != nil {
-				return fmt.Errorf("synchronizing declaration with state: %w", err)
+				return fmt.Errorf(constant.SyncDeclarationWithStateError, err)
 			}
 
 			_, _ = fmt.Fprintln(o.Out, "\nYour cluster is up to date.")

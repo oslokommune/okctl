@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/oslokommune/okctl/pkg/controller/application/reconciliation"
@@ -50,7 +52,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 			opts.Application, err = commands.InferApplicationFromStdinOrFile(*o.Declaration, o.In, o.FileSystem, opts.File)
 			if err != nil {
-				return fmt.Errorf("inferring application from stdin or file: %w", err)
+				return fmt.Errorf(constant.InferApplicationError, err)
 			}
 
 			return nil
@@ -58,7 +60,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			err := opts.Validate()
 			if err != nil {
-				return fmt.Errorf("failed validating options: %w", err)
+				return fmt.Errorf(constant.OptionValidationerror, err)
 			}
 
 			state := o.StateHandlers(o.StateNodes())
@@ -67,7 +69,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 			spin, err := spinner.New("applying application", o.Err)
 			if err != nil {
-				return fmt.Errorf("error creating spinner: %w", err)
+				return fmt.Errorf(constant.SpinnerCreationError, err)
 			}
 
 			schedulerOpts := common.SchedulerOpts{
@@ -85,7 +87,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 			_, err = scheduler.Run(o.Ctx, state)
 			if err != nil {
-				return fmt.Errorf("reconciling application: %w", err)
+				return fmt.Errorf(constant.ReconcileApplicationError, err)
 			}
 
 			return commands.WriteApplyApplicationSuccessMessage(commands.WriteApplyApplicationSucessMessageOpts{

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
@@ -22,38 +24,38 @@ type applicationReconciler struct {
 func (a *applicationReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
 	action, err := a.determineAction(meta, state)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	switch action {
 	case reconciliation.ActionCreate:
 		return a.createApplication(ctx, meta, state)
 	case reconciliation.ActionDelete:
-		return reconciliation.Result{}, errors.New("deletion of applications is not implemented")
+		return reconciliation.Result{}, errors.New(constant.DeleteNotImplementedError)
 	case reconciliation.ActionWait:
 		return reconciliation.Result{Requeue: true}, nil
 	case reconciliation.ActionNoop:
 		return reconciliation.Result{Requeue: false}, nil
 	}
 
-	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+	return reconciliation.Result{}, fmt.Errorf(constant.ActionNotImplementedError, string(action))
 }
 
 func (a *applicationReconciler) createApplication(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
 	hz, err := state.Domain.GetPrimaryHostedZone()
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("getting primary hosted zone: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.GetPrimaryHostedZoneError, err)
 	}
 
 	gh, err := state.Github.GetGithubRepository(meta.ClusterDeclaration.Github.Path())
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("retrieving Github information")
+		return reconciliation.Result{}, fmt.Errorf(constant.GetGithubInfoError)
 	}
 
 	if meta.ApplicationDeclaration.Image.HasName() {
 		repo, err := state.ContainerRepository.GetContainerRepository(meta.ApplicationDeclaration.Image.Name)
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("getting container repository: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.GetContainerRepoError, err)
 		}
 
 		meta.ApplicationDeclaration.Image.Name = ""
@@ -84,7 +86,7 @@ func (a *applicationReconciler) determineAction(meta reconciliation.Metadata, st
 	case reconciliation.ActionCreate:
 		dependenciesReady, err := a.hasCreateDependenciesMet(meta, state)
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("acquiring dependency state: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.GetDependencyStateError, err)
 		}
 
 		if !dependenciesReady {
@@ -106,7 +108,7 @@ func (a *applicationReconciler) hasCreateDependenciesMet(meta reconciliation.Met
 			return false, nil
 		}
 	} else {
-		return false, fmt.Errorf("determining existence of primary hosted zone for %s: %w", a.String(), err)
+		return false, fmt.Errorf(constant.DeterminePrimaryHostedZoneError, a.String(), err)
 	}
 
 	if _, err := state.Github.GetGithubRepository(meta.ClusterDeclaration.Github.Path()); err == nil {
@@ -114,13 +116,13 @@ func (a *applicationReconciler) hasCreateDependenciesMet(meta reconciliation.Met
 			return false, nil
 		}
 	} else {
-		return false, fmt.Errorf("determining existence of a Github repository for %s: %w", a.String(), err)
+		return false, fmt.Errorf(constant.DetermineGithubRepoError, a.String(), err)
 	}
 
 	if meta.ApplicationDeclaration.Image.HasName() {
 		exists, err := state.ContainerRepository.ApplicationHasImage(meta.ApplicationDeclaration.Metadata.Name)
 		if err != nil {
-			return false, fmt.Errorf("determining existence of a ECR repository: %w", err)
+			return false, fmt.Errorf(constant.DetermineExistsEcrRepoError, err)
 		}
 
 		if !exists {

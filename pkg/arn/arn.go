@@ -3,6 +3,7 @@ package arn
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"strings"
 
 	arnpkg "github.com/aws/aws-sdk-go/aws/arn"
@@ -34,12 +35,12 @@ const (
 // Parse and validate the provided ARN
 func Parse(arn string) (*arnpkg.ARN, error) {
 	if !arnpkg.IsARN(arn) {
-		return nil, fmt.Errorf("not a valid arn: %s", arn)
+		return nil, fmt.Errorf(constant.InvalidArnError, arn)
 	}
 
 	a, err := arnpkg.Parse(arn)
 	if err != nil {
-		return nil, fmt.Errorf("parsing arn: %w", err)
+		return nil, fmt.Errorf(constant.ParseArnError, err)
 	}
 
 	return &a, nil

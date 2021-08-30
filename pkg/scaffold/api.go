@@ -59,7 +59,7 @@ func GenerateApplicationBase(app v1alpha1.Application, iacRepoURL, relativeAppli
 	for index := range app.Volumes {
 		pvc, err := resources.CreateOkctlVolume(app, app.Volumes[index])
 		if err != nil {
-			return applicationBase, fmt.Errorf("creating PersistentVolumeClaim resource: %w", err)
+			return applicationBase, fmt.Errorf(constant.CreatePresistantVolumeClaimResourceError, err)
 		}
 
 		volumes[index] = &pvc
@@ -157,7 +157,7 @@ func GenerateApplicationOverlay(application v1alpha1.Application, hostedZoneDoma
 
 	deploymentPatchResult, err := createDeploymentPatch(application.Image.URI)
 	if err != nil {
-		return ApplicationOverlay{}, fmt.Errorf("creating deployment patch: %w", err)
+		return ApplicationOverlay{}, fmt.Errorf(constant.CreateDeploymentPatchError, err)
 	}
 
 	overlay.DeploymentPatch = deploymentPatchResult.Content
@@ -166,7 +166,7 @@ func GenerateApplicationOverlay(application v1alpha1.Application, hostedZoneDoma
 	if application.HasIngress() {
 		result, err := createIngressPatch(application.SubDomain, hostedZoneDomain, certARN)
 		if err != nil {
-			return ApplicationOverlay{}, fmt.Errorf("creating ingress patch: %w", err)
+			return ApplicationOverlay{}, fmt.Errorf(constant.CreateIngressPatchError, err)
 		}
 
 		overlay.IngressPatch = result.Content
@@ -175,7 +175,7 @@ func GenerateApplicationOverlay(application v1alpha1.Application, hostedZoneDoma
 
 	overlay.Kustomization, err = yaml.Marshal(kustomization)
 	if err != nil {
-		return overlay, fmt.Errorf("marshalling kustomization: %w", err)
+		return overlay, fmt.Errorf(constant.MarshalKustomizationError, err)
 	}
 
 	return overlay, nil
@@ -197,7 +197,7 @@ func createDeploymentPatch(imageURI string) (patchCreationResult, error) {
 
 	content, err := json.Marshal(patch)
 	if err != nil {
-		return patchCreationResult{}, fmt.Errorf("marshalling ingress patch: %w", err)
+		return patchCreationResult{}, fmt.Errorf(constant.MarshalIngressPatchError, err)
 	}
 
 	return patchCreationResult{
@@ -244,7 +244,7 @@ func createIngressPatch(subDomain, domain, certArn string) (patchCreationResult,
 
 	content, err := json.Marshal(patch)
 	if err != nil {
-		return patchCreationResult{}, fmt.Errorf("marshalling ingress patch: %w", err)
+		return patchCreationResult{}, fmt.Errorf(constant.MarshalIngressPatchError, err)
 	}
 
 	return patchCreationResult{

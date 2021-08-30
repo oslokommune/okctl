@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
@@ -21,7 +22,7 @@ const autoscalerReconcilerIdentifier = "autoscaler"
 func (z *autoscalerReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
 	action, err := z.determineAction(ctx, meta, state)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	switch action {
@@ -30,7 +31,7 @@ func (z *autoscalerReconciler) Reconcile(ctx context.Context, meta reconciliatio
 			ID: reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata),
 		})
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("creating autoscaler: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.CreateAutoScalerError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -40,7 +41,7 @@ func (z *autoscalerReconciler) Reconcile(ctx context.Context, meta reconciliatio
 			reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata),
 		)
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("deleting autoscaler: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.DeleteAutoScalerError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -50,7 +51,7 @@ func (z *autoscalerReconciler) Reconcile(ctx context.Context, meta reconciliatio
 		return reconciliation.Result{Requeue: false}, nil
 	}
 
-	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+	return reconciliation.Result{}, fmt.Errorf(constant.ActionNotImplementedError, string(action))
 }
 
 func (z *autoscalerReconciler) determineAction(_ context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Action, error) {
@@ -58,14 +59,14 @@ func (z *autoscalerReconciler) determineAction(_ context.Context, meta reconcili
 
 	clusterExists, err := state.Cluster.HasCluster(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf("acquiring cluster existence: %w", err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfClusterExistsError, err)
 	}
 
 	autoscalerExists := false
 	if clusterExists {
 		autoscalerExists, err = state.Autoscaler.HasAutoscaler()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("acquiring autoscaler existence: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfAutoScalerExistsError, err)
 		}
 	}
 

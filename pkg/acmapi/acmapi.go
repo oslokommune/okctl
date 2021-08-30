@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -32,7 +34,7 @@ func (a *ACMAPI) InUseBy(certificateARN string) ([]string, error) {
 		CertificateArn: aws.String(certificateARN),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("describing certificate: %w", err)
+		return nil, fmt.Errorf(constant.ErrorDescribingCert, err)
 	}
 
 	inUseBy := make([]string, len(cert.Certificate.InUseBy))

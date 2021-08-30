@@ -34,7 +34,7 @@ func InferApplicationFromStdinOrFile(declaration v1alpha1.Cluster, stdin io.Read
 	default:
 		inputReader, err = fs.Open(filepath.Clean(path))
 		if err != nil {
-			return app, fmt.Errorf("opening application file: %w", err)
+			return app, fmt.Errorf(constant.OpeningApplicationFileError, err)
 		}
 	}
 
@@ -42,12 +42,12 @@ func InferApplicationFromStdinOrFile(declaration v1alpha1.Cluster, stdin io.Read
 
 	buf, err = ioutil.ReadAll(inputReader)
 	if err != nil {
-		return app, fmt.Errorf("reading application file: %w", err)
+		return app, fmt.Errorf(constant.ReadingApplicationFileError, err)
 	}
 
 	err = yaml.Unmarshal(buf, &app)
 	if err != nil {
-		return app, fmt.Errorf("parsing application yaml: %w", err)
+		return app, fmt.Errorf(constant.ParisingApplicationYamlError, err)
 	}
 
 	return app, nil

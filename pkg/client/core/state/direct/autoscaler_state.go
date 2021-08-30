@@ -2,6 +2,7 @@ package direct
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"time"
 
 	"github.com/mishudark/errors"
@@ -36,7 +37,7 @@ func (a autoscalerState) HasAutoscaler() (bool, error) {
 			return false, nil
 		}
 
-		return false, fmt.Errorf("getting Helm release: %w", err)
+		return false, fmt.Errorf(constant.GetHelmReleaseError, err)
 	}
 
 	return true, nil

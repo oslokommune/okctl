@@ -4,6 +4,8 @@ import (
 	"regexp"
 	"runtime"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/google/uuid"
@@ -42,7 +44,7 @@ func (u UserInfo) Validate() error {
 		),
 		validation.Field(&u.Username,
 			validation.Required,
-			validation.Match(regexp.MustCompile("^[a-z]{3}[0-9]{6}$")).Error("username must be in the form: yyyXXXXXX (y = letter, x = digit)"),
+			validation.Match(regexp.MustCompile("^[a-z]{3}[0-9]{6}$")).Error(constant.UserNameValidation),
 		),
 	)
 }

@@ -4,6 +4,7 @@ package aws
 import (
 	"bytes"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"path"
 	"regexp"
 	"strings"
@@ -161,7 +162,7 @@ func (a *Auth) Resolve() (*Credentials, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("no valid credentials: %s", strings.Join(accumulatedErrors, ", "))
+	return nil, fmt.Errorf(constant.NoValidCredentialsError, strings.Join(accumulatedErrors, ", "))
 }
 
 // New returns an AWS credentials provider, it will attempt to retrieve valid credentials
@@ -295,7 +296,7 @@ func (a *AuthSAML) Validate() error {
 func (a *AuthSAML) Retrieve() (*Credentials, error) {
 	err := a.PopulateFn(a)
 	if err != nil {
-		return nil, fmt.Errorf("populating required fields: %w", err)
+		return nil, fmt.Errorf(constant.PopulateRequiredFieldsError, err)
 	}
 
 	samlAssertion, err := a.Scraper.Scrape(a.Username, a.Password, a.MFAToken)
@@ -304,19 +305,19 @@ func (a *AuthSAML) Retrieve() (*Credentials, error) {
 	}
 
 	if len(samlAssertion) == 0 {
-		return nil, fmt.Errorf("empty SAML assertion")
+		return nil, fmt.Errorf(constant.SamlAssertionEmptyError)
 	}
 
 	err = saml.VerifyAssertion(v1alpha1.RoleARN(a.AwsAccountID), []byte(samlAssertion))
 	if err != nil {
-		return nil, fmt.Errorf("verifying saml: %w", err)
+		return nil, fmt.Errorf(constant.VerifySamlError, err)
 	}
 
 	sess, err := session.NewSession(&aws.Config{
 		Region: &a.Region,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("creating AWS STS session: %w", err)
+		return nil, fmt.Errorf(constant.CreateAwsStsSessionError, err)
 	}
 
 	svc := a.ProviderFn(sess)
@@ -328,7 +329,7 @@ func (a *AuthSAML) Retrieve() (*Credentials, error) {
 		SAMLAssertion:   aws.String(samlAssertion),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("retrieving STS credentials using SAML: %w", err)
+		return nil, fmt.Errorf(constant.RetrieveStsCretentialsWithSamlError, err)
 	}
 
 	return &Credentials{
@@ -642,7 +643,7 @@ func (n *InMemoryPersister) Save(credentials *Credentials) error {
 // Get the credentials from memory
 func (n *InMemoryPersister) Get() (*Credentials, error) {
 	if n.creds == nil {
-		return nil, fmt.Errorf("no credentials available")
+		return nil, fmt.Errorf(constant.NoCredentialsAvailableError)
 	}
 
 	return n.creds, nil

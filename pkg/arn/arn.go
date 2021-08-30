@@ -3,8 +3,9 @@ package arn
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	arnpkg "github.com/aws/aws-sdk-go/aws/arn"
 )

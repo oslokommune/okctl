@@ -4,11 +4,12 @@ package aws
 import (
 	"bytes"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"path"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/credentials/aws/saml"
 

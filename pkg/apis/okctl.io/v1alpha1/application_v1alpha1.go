@@ -161,7 +161,7 @@ func (a Application) HasPrometheus() bool {
 func (a Application) URL() (url.URL, error) {
 	tmpURL, err := url.Parse(fmt.Sprintf("%s.%s", a.SubDomain, a.cluster.ClusterRootDomain))
 	if err != nil {
-		return url.URL{}, fmt.Errorf(constant.ApplicationUrlParseError, err)
+		return url.URL{}, fmt.Errorf(constant.ApplicationURLParseError, err)
 	}
 
 	return *tmpURL, nil

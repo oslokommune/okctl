@@ -3,8 +3,9 @@ package storm
 import (
 	"errors"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"time"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/breeze"
 

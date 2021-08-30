@@ -25,6 +25,6 @@ func (i ID) Validate() error {
 	return validation.ValidateStruct(&i,
 		validation.Field(&i.Region, validation.Required),
 		validation.Field(&i.ClusterName, validation.Required, validation.Length(clusterMinLength, clusterMaxLength)),
-		validation.Field(&i.AWSAccountID, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{12}$")).Error(constant.AwsAccountIdValidation)),
+		validation.Field(&i.AWSAccountID, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{12}$")).Error(constant.AwsAccountIDValidation)),
 	)
 }

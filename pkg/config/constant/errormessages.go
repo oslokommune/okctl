@@ -7,7 +7,7 @@ const (
 	BuildRestClientError = "building rest client: %w"
 
 	NamespaceValidation               = "must consist of 3-64 characters (a-z, A-Z, -)"
-	AwsAccountIdValidation            = "must consist of 12 digits"
+	AwsAccountIDValidation            = "must consist of 12 digits"
 	ClusterRootDomainValidation       = "with automatizeZoneDelegation enabled, must end with auto.oslo.systems"
 	ClusterNameValidation             = "must consist of 3-64 characters (a-z, A-Z, -)"
 	ClusterSupportedRegionsValidation = "for now, only \"eu-west-1\", \"eu-central-1\" and \"eu-north-1\" are supported"
@@ -31,7 +31,7 @@ const (
 	DeterminePrimaryHostedZoneError = "determining existence of primary hosted zone for %s: %w"
 	DetermineGithubRepoError        = "determining existence of a Github repository for %s: %w"
 	DetermineExistsEcrRepoError     = "determining existence of a ECR repository: %w"
-	ApplicationUrlParseError        = "parsing application URL: %w"
+	ApplicationURLParseError        = "parsing application URL: %w"
 
 	InferApplicationError     = "inferring application from stdin or file: %w"
 	OptionValidationerror     = "failed validating options: %w"
@@ -69,7 +69,7 @@ const (
 
 	FetchDeployKeyError = "fetching deploy key: %w"
 
-	GetIdentityPoolError = "getting identity pool: %w"
+	GetIdentityPoolError  = "getting identity pool: %w"
 	GetArgoCdTimeoutError = "got ArgoCD timeout: %w"
 
 	CreateaArgoCdError = "creating argocd: %w"
@@ -81,7 +81,7 @@ const (
 	QueryStateError = "querying state: %w"
 
 	InvalidArnError = "not a valid arn: %s"
-	ParseArnError = "parsing arn: %w"
+	ParseArnError   = "parsing arn: %w"
 
 	StopSpinnerError = "stopping spinner: %w"
 
@@ -98,14 +98,14 @@ const (
 	CreateSecurityGroupPolicyError = "creating security group policy: %w"
 
 	CreatePodError = "creating pod: %w"
-	WatchPodError = "watching pod: %w"
+	WatchPodError  = "watching pod: %w"
 
 	AttachPodError = "attaching to pod: %w"
 
 	CreateAutoScalerError = "creating autoscaler: %w"
 	DeleteAutoScalerError = "deleting autoscaler: %w"
 
-	CheckIfClusterExistsError = "acquiring cluster existence: %w"
+	CheckIfClusterExistsError    = "acquiring cluster existence: %w"
 	CheckIfAutoScalerExistsError = "acquiring autoscaler existence: %w"
 
 	GetHelmReleaseError = "getting Helm release: %w"
@@ -115,12 +115,11 @@ const (
 	PopulateRequiredFieldsError = "populating required fields: %w"
 
 	SamlAssertionEmptyError = "empty SAML assertion"
-	VerifySamlError = "verifying saml: %w"
+	VerifySamlError         = "verifying saml: %w"
 
 	CreateAwsStsSessionError = "creating AWS STS session: %w"
 
 	RetrieveStsCretentialsWithSamlError = "retrieving STS credentials using SAML: %w"
 
 	NoCredentialsAvailableError = "no credentials available"
-
 )

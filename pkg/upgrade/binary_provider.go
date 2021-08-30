@@ -16,11 +16,11 @@ type upgradeBinaryProvider struct {
 	fetcher  fetch.Provider
 	logger   *logrus.Logger
 
-	okctlUpgrades map[string]*okctlupgrade.OkctlUpgrade
+	binaryRunners map[string]*okctlupgrade.BinaryRunner
 }
 
-func (p *upgradeBinaryProvider) okctlUpgrade(version string) (*okctlupgrade.OkctlUpgrade, error) {
-	_, ok := p.okctlUpgrades[version]
+func (p *upgradeBinaryProvider) okctlUpgradeRunner(version string) (*okctlupgrade.BinaryRunner, error) {
+	_, ok := p.binaryRunners[version]
 
 	if !ok {
 		binaryName := fmt.Sprintf(okctlupgrade.BinaryNameFormat, version)
@@ -30,10 +30,10 @@ func (p *upgradeBinaryProvider) okctlUpgrade(version string) (*okctlupgrade.Okct
 			return nil, err
 		}
 
-		p.okctlUpgrades[version] = okctlupgrade.New(p.repoDir, p.progress, p.logger, binaryPath, run.Cmd())
+		p.binaryRunners[version] = okctlupgrade.New(p.repoDir, p.progress, p.logger, binaryPath, run.Cmd())
 	}
 
-	return p.okctlUpgrades[version], nil
+	return p.binaryRunners[version], nil
 }
 
 func newUpgradeBinaryProvider(
@@ -47,6 +47,6 @@ func newUpgradeBinaryProvider(
 		progress:      progress,
 		fetcher:       fetcher,
 		logger:        logger,
-		okctlUpgrades: map[string]*okctlupgrade.OkctlUpgrade{},
+		binaryRunners: map[string]*okctlupgrade.BinaryRunner{},
 	}
 }

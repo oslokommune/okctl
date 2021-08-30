@@ -15,8 +15,8 @@ const (
 	BinaryNameFormat = "okctl-upgrade_%s"
 )
 
-// OkctlUpgrade stores state for running the cli
-type OkctlUpgrade struct {
+// BinaryRunner stores state for running the cli
+type BinaryRunner struct {
 	doDebug    bool
 	repoDir    string
 	progress   io.Writer
@@ -32,8 +32,8 @@ func New(
 	logger *logrus.Logger,
 	binaryPath string,
 	cmdFn run.CmdFn,
-) *OkctlUpgrade {
-	return &OkctlUpgrade{
+) *BinaryRunner {
+	return &BinaryRunner{
 		repoDir:    repoDir,
 		progress:   progress,
 		logger:     logger,
@@ -43,7 +43,7 @@ func New(
 }
 
 // Run runs the okctl upgrade binary
-func (u *OkctlUpgrade) Run() ([]byte, error) {
+func (u *BinaryRunner) Run() ([]byte, error) {
 	var err error
 
 	runner := u.runner()
@@ -60,11 +60,11 @@ func (u *OkctlUpgrade) Run() ([]byte, error) {
 
 // SetDebug sets whether we should increase log output from eksctl,
 // the default behavior is off
-func (u *OkctlUpgrade) SetDebug(enable bool) {
+func (u *BinaryRunner) SetDebug(enable bool) {
 	u.doDebug = enable
 }
 
-func (u *OkctlUpgrade) runner() run.Runner {
+func (u *BinaryRunner) runner() run.Runner {
 	var envs []string
 
 	if u.doDebug {

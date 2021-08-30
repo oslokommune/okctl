@@ -40,9 +40,9 @@ func (c ClusterVersioner) ValidateBinaryVsClusterVersion(binaryVersionString str
 
 func (c ClusterVersioner) validateBinaryVsClusterVersion(binaryVersion *semver.Version, clusterVersion *semver.Version) error {
 	if binaryVersion.LessThan(clusterVersion) {
-		return fmt.Errorf("okctl binary version '%s' cannot be less than cluster version '%s'. This can cause"+
-			" incompatibility errors. Get a newer version of okctl and try again",
-			binaryVersion.String(), clusterVersion.String())
+		return fmt.Errorf("okctl binary version %s cannot be less than cluster version %s."+
+			" Get okctl version %s or later and try again",
+			binaryVersion.String(), clusterVersion.String(), clusterVersion.String())
 	}
 
 	return nil
@@ -72,7 +72,8 @@ func (c ClusterVersioner) SaveClusterVersion(version versionPkg.Info) error {
 	}
 
 	if didUpdateVersion {
-		_, _ = fmt.Fprintf(c.out, "Cluster version is now: %s\n", version.Version)
+		_, _ = fmt.Fprintf(c.out,
+			"Cluster version is now: %s. Remember to commit and push changes with git.\n", version.Version)
 	}
 
 	return nil

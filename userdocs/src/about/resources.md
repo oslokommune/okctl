@@ -21,5 +21,5 @@ The following shows how relations between the different resources
 The following shows how relations between the different resources
 
 <div style="display: flex;">
-    <img alt="resource dependencies" src="/img/resource_dependencies.png">
+    <img alt="Kubernetes components" src="/img/Kubernetes_components.png">
 </div>

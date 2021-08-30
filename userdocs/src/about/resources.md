@@ -15,3 +15,11 @@ The following shows how relations between the different resources
 <div style="display: flex;">
     <img alt="resource dependencies" src="/img/resource_dependencies.png">
 </div>
+
+## Kubernetes installed compontents
+
+The following shows how relations between the different resources
+
+<div style="display: flex;">
+    <img alt="resource dependencies" src="/img/resource_dependencies.png">
+</div>

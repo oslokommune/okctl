@@ -4,6 +4,7 @@ package hostedzone
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -49,7 +50,7 @@ func (c *Client) UndelegatedZonesInHostedZones(hostedZoneID string, fn NameServe
 			StartRecordType: aws.String("NS"),
 		})
 		if err != nil {
-			return nil, fmt.Errorf("getting records for hosted zone: %w", err)
+			return nil, fmt.Errorf(constant.GetRecordsForHostedZoneError, err)
 		}
 
 		for _, record := range res.ResourceRecordSets {
@@ -65,7 +66,7 @@ func (c *Client) UndelegatedZonesInHostedZones(hostedZoneID string, fn NameServe
 
 			gotNameServers, err := fn(*record.Name)
 			if err != nil && !strings.Contains(err.Error(), "Name servers refused query (lame delegation?)") {
-				return nil, fmt.Errorf("getting nameservers from DNS lookup: %w", err)
+				return nil, fmt.Errorf(constant.GetNameServersForDNSLookup, err)
 			}
 
 			missing := compare(expectedNameServers, gotNameServers)

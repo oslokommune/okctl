@@ -4,6 +4,7 @@ package iamapi
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -39,7 +40,7 @@ func (i *IAMAPI) AttachRolePolicy(policyARN, roleARN string) error {
 		RoleName:  aws.String(friendlyName),
 	})
 	if err != nil {
-		return fmt.Errorf("attaching policy to role: %w", err)
+		return fmt.Errorf(constant.AttachPolicyToRoleError, err)
 	}
 
 	return nil
@@ -65,7 +66,7 @@ func (i *IAMAPI) DetachRolePolicy(policyARN, roleARN string) error {
 			return nil
 		}
 
-		return fmt.Errorf("detaching policy from role: %w", err)
+		return fmt.Errorf(constant.DetachPolicyFromRoleError, err)
 	}
 
 	return nil
@@ -76,7 +77,7 @@ func (i *IAMAPI) DetachRolePolicy(policyARN, roleARN string) error {
 func RoleFriendlyName(roleARN string) (string, error) {
 	a, err := arn.Parse(roleARN)
 	if err != nil {
-		return "", fmt.Errorf("getting role friendly name: %w", err)
+		return "", fmt.Errorf(constant.GetRoleFriendlyNameError, err)
 	}
 
 	return strings.TrimPrefix(a.Resource, "role/"), nil

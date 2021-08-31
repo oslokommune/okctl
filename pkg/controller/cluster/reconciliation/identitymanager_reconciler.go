@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
@@ -28,7 +29,7 @@ Requires:
 func (z *identityManagerReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
 	action, err := z.determineAction(meta, state)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	switch action {
@@ -38,7 +39,7 @@ func (z *identityManagerReconciler) Reconcile(ctx context.Context, meta reconcil
 
 		hz, err := state.Domain.GetPrimaryHostedZone()
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("getting primary hosted zone: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.GetPrimaryHostedZoneError, err)
 		}
 
 		_, err = z.client.CreateIdentityPool(ctx, client.CreateIdentityPoolOpts{
@@ -52,7 +53,7 @@ func (z *identityManagerReconciler) Reconcile(ctx context.Context, meta reconcil
 				return reconciliation.Result{Requeue: true}, nil
 			}
 
-			return reconciliation.Result{}, fmt.Errorf("creating identity manager resource: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.CreateIdentityMangerResourceError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -61,7 +62,7 @@ func (z *identityManagerReconciler) Reconcile(ctx context.Context, meta reconcil
 			ctx, reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata),
 		)
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("deleting identity manager: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.DeleteIdentityManagerError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -71,7 +72,7 @@ func (z *identityManagerReconciler) Reconcile(ctx context.Context, meta reconcil
 		return reconciliation.Result{Requeue: false}, nil
 	}
 
-	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+	return reconciliation.Result{}, fmt.Errorf(constant.ActionNotImplementedError, string(action))
 }
 
 func (z *identityManagerReconciler) hasCreateDependenciesMet(meta reconciliation.Metadata, state *clientCore.StateHandlers) (bool, error) {
@@ -81,7 +82,7 @@ func (z *identityManagerReconciler) hasCreateDependenciesMet(meta reconciliation
 		state.Domain.HasPrimaryHostedZone,
 	)
 	if err != nil {
-		return false, fmt.Errorf("checking dependency existence: %w", err)
+		return false, fmt.Errorf(constant.CheckIfDependencyExistsError, err)
 	}
 
 	if !dependenciesReady {
@@ -96,14 +97,14 @@ func (z *identityManagerReconciler) determineAction(meta reconciliation.Metadata
 
 	componentExists, err := state.IdentityManager.HasIdentityPool()
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf("acquiring Identity Pool existence: %w", err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfIdentityPoolExistsError, err)
 	}
 
 	switch userIndication {
 	case reconciliation.ActionCreate:
 		dependenciesReady, err := z.hasCreateDependenciesMet(meta, state)
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking dependencies: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckDependenciesError, err)
 		}
 
 		if !dependenciesReady {
@@ -118,7 +119,7 @@ func (z *identityManagerReconciler) determineAction(meta reconciliation.Metadata
 	case reconciliation.ActionDelete:
 		clusterExists, err := state.Cluster.HasCluster(meta.ClusterDeclaration.Metadata.Name)
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("acquiring cluster existence: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfClusterExistsError, err)
 		}
 
 		if !clusterExists || !componentExists {

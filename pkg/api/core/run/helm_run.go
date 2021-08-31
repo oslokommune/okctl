@@ -32,7 +32,7 @@ func (r *helmRun) CreateHelmRelease(opts api.CreateHelmReleaseOpts) (*api.Helm, 
 func (r *helmRun) DeleteHelmRelease(opts api.DeleteHelmReleaseOpts) error {
 	kubeConf, err := r.kubeConfigStore.GetKubeConfig(opts.ID.ClusterName)
 	if err != nil {
-		return fmt.Errorf("getting kubeconfig: %w", err)
+		return fmt.Errorf(constant.GetKubeConfigError, err)
 	}
 
 	err = r.helm.Delete(kubeConf.Path, &helm.DeleteConfig{
@@ -41,7 +41,7 @@ func (r *helmRun) DeleteHelmRelease(opts api.DeleteHelmReleaseOpts) error {
 		Timeout:     constant.DefaultChartRemoveTimeout,
 	})
 	if err != nil {
-		return fmt.Errorf("removing chart: %w", err)
+		return fmt.Errorf(constant.RemoveChartError, err)
 	}
 
 	return nil
@@ -50,7 +50,7 @@ func (r *helmRun) DeleteHelmRelease(opts api.DeleteHelmReleaseOpts) error {
 func (r *helmRun) GetHelmRelease(opts api.GetHelmReleaseOpts) (*api.Helm, error) {
 	kubeConf, err := r.kubeConfigStore.GetKubeConfig(opts.ClusterID.ClusterName)
 	if err != nil {
-		return nil, fmt.Errorf("getting kubeconfig: %w", err)
+		return nil, fmt.Errorf(constant.GetKubeConfigError, err)
 	}
 
 	release, err := r.helm.Find(kubeConf.Path, &helm.FindConfig{
@@ -80,27 +80,27 @@ func (r *helmRun) GetHelmRelease(opts api.GetHelmReleaseOpts) (*api.Helm, error)
 func (r *helmRun) createHelmChart(id api.ID, chart *helm.Chart) (*api.Helm, error) {
 	err := r.helm.RepoAdd(chart.RepositoryName, chart.RepositoryURL)
 	if err != nil {
-		return nil, fmt.Errorf("adding repository: %w", err)
+		return nil, fmt.Errorf(constant.AddRepositoryError, err)
 	}
 
 	err = r.helm.RepoUpdate()
 	if err != nil {
-		return nil, fmt.Errorf("updating repository: %w", err)
+		return nil, fmt.Errorf(constant.UpdateRepositoryError, err)
 	}
 
 	cfg, err := chart.InstallConfig()
 	if err != nil {
-		return nil, fmt.Errorf("creating install config: %w", err)
+		return nil, fmt.Errorf(constant.CreateInstallConfigError, err)
 	}
 
 	kubeConf, err := r.kubeConfigStore.GetKubeConfig(id.ClusterName)
 	if err != nil {
-		return nil, fmt.Errorf("getting kubeconfig: %w", err)
+		return nil, fmt.Errorf(constant.GetKubeConfigError, err)
 	}
 
 	release, err := r.helm.Install(kubeConf.Path, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("installing chart: %w", err)
+		return nil, fmt.Errorf(constant.InstallChartError, err)
 	}
 
 	return &api.Helm{

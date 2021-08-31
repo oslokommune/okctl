@@ -385,4 +385,43 @@ const (
 	ChartNotInstallableError            = "chart: %s is not installable"
 	CreateLockError                     = "failed to create lock: %s"
 	MarshallToYamlError                 = "marshalling values struct to yaml: %w"
+
+	GetKubeConfigError = "getting kubeconfig: %w"
+	RemoveChartError = "removing chart: %w"
+	AddRepositoryError = "adding repository: %w"
+	UpdateRepositoryError = "updating repository: %w"
+	CreateInstallConfigError = "creating install config: %w"
+	InstallChartError = "installing chart: %w"
+
+	GetRecordsForHostedZoneError = "getting records for hosted zone: %w"
+	GetNameServersForDNSLookup = "getting nameservers from DNS lookup: %w"
+
+	AttachPolicyToRoleError = "attaching policy to role: %w"
+	DetachPolicyFromRoleError = "detaching policy from role: %w"
+	GetRoleFriendlyNameError = "getting role friendly name: %w"
+
+	DeleteIdentityPoolClientError                    = "deleting identity pool client: %w"
+	DeleteIdentityPoolUserError                      = "deleting identity pool user: %w"
+	BuildIdentityPoolClietTemplateError              = "building identity pool client template: %w"
+	CreateIdentityPoolClientCloudFormationStackError = "creating identity pool client cloud formation stack: %w"
+	RetrieveIdentityPoolClientOutputsError           = "retrieving identity pool client outputs: %w"
+	RetrieveClientSecretError                        = "retrieving client secret: %w"
+	DeleteAliasRecordFromIdentityPoolError           = "deleting alias record set for identity pool: %w"
+	DeleteIdentityPoolError                          = "deleting identity pool: %w"
+	BuildIdentityPoolFromCloudFormationTemplateError = "building identity pool cloud formation template: %w"
+	CreateIdentityPoolCloudFormationStackError = "creating identity pool cloud formation stack: %w"
+	GetCloudFrontAuthDomainInfoError = "getting cloudfront auth domain info: %w"
+	BuildAliasCloudFormationTemplateError = "building alias cloud formation template: %w"
+	CreateAliasCloudFormationStackError = "creating alias cloud formation stack: %w"
+	RetrieveIdentityPoolOutputsError = "retrieving identity pool outputs: %w"
+	BuildIdentityPoolUserCloudFormationTemplateError = "building identity pool user cloud formation template: %w"
+	CreateIdentityPoolUserCloudFormationStackError = "creating identity pool user cloud formation stack: %w"
+
+	CreateIdentityMangerResourceError = "creating identity manager resource: %w"
+	DeleteIdentityManagerError        = "deleting identity manager: %w"
+	CheckIfDependencyExistsError      = "checking dependency existence: %w"
+	CheckIfIdentityPoolExistsError    = "acquiring Identity Pool existence: %w"
+
+
+
 )

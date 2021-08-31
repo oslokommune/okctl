@@ -3,6 +3,7 @@ package storm
 import (
 	"errors"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
@@ -218,7 +219,7 @@ func (s *identityManagerState) HasIdentityPool() (bool, error) {
 
 	err := s.node.All(&pools)
 	if err != nil {
-		return false, fmt.Errorf("querying state: %w", err)
+		return false, fmt.Errorf(constant.QueryStateError, err)
 	}
 
 	return len(pools) > 0, nil
@@ -297,7 +298,7 @@ func (s *identityManagerState) getIdentityPoolUser(stackName string) (*IdentityP
 func (s *identityManagerState) GetIdentityPoolUsers() ([]client.IdentityPoolUser, error) {
 	users, err := s.getIdentityPoolUsers()
 	if err != nil {
-		return nil, fmt.Errorf("querying state: %w", err)
+		return nil, fmt.Errorf(constant.QueryStateError, err)
 	}
 
 	result := make([]client.IdentityPoolUser, len(users))

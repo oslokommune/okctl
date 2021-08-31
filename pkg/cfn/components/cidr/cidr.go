@@ -5,6 +5,7 @@ package cidr
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"math"
 	"net"
 	"strings"
@@ -57,13 +58,13 @@ func New(from string, requiredHosts uint64, validRanges []string) (*Cidr, error)
 	// Ensure that it is a ipv4 CIDR
 	v4addr := addr.To4()
 	if v4addr == nil {
-		return nil, fmt.Errorf("cidr (%s) is not of type IPv4", network.String())
+		return nil, fmt.Errorf(constant.CdirNotIpv4Error, network.String())
 	}
 
 	// Ensure that the address space is large enough
 	availableHosts := cidrpkg.AddressCount(network)
 	if availableHosts < requiredHosts {
-		return nil, fmt.Errorf("address space of cidr (%s) is less than required: %d < %d", network.String(), availableHosts, requiredHosts)
+		return nil, fmt.Errorf(constant.CdirAddressSpaceError, network.String(), availableHosts, requiredHosts)
 	}
 
 	// Ensure that the provided cidr falls within a valid range
@@ -87,7 +88,7 @@ func New(from string, requiredHosts uint64, validRanges []string) (*Cidr, error)
 	}
 
 	if !isValid {
-		return nil, fmt.Errorf("provided cidr (%s) is not in the legal ranges: %s", network.String(), strings.Join(PrivateCidrRanges(), ", "))
+		return nil, fmt.Errorf(constant.CdirNotInLegalRangeError, network.String(), strings.Join(PrivateCidrRanges(), ", "))
 	}
 
 	return &Cidr{

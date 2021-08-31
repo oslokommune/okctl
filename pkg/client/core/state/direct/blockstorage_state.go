@@ -37,7 +37,7 @@ func (b blockstorageState) HasBlockstorage() (bool, error) {
 			return false, nil
 		}
 
-		return false, fmt.Errorf("acquiring Helm release: %w", err)
+		return false, fmt.Errorf(constant.GetHelmError, err)
 	}
 
 	return true, nil

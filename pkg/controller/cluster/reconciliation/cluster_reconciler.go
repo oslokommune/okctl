@@ -31,14 +31,14 @@ const clusterReconcilerIdentifier = "kubernetes cluster"
 func (z *clusterReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
 	action, err := z.determineAction(meta, state)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	switch action {
 	case reconciliation.ActionCreate:
 		vpc, err := state.Vpc.GetVpc(cfn.NewStackNamer().Vpc(meta.ClusterDeclaration.Metadata.Name))
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("getting vpc: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.GetVpcError, err)
 		}
 
 		_, err = z.client.CreateCluster(ctx, client.ClusterCreateOpts{
@@ -50,7 +50,7 @@ func (z *clusterReconciler) Reconcile(ctx context.Context, meta reconciliation.M
 			VpcPublicSubnets:  vpc.PublicSubnets,
 		})
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("creating cluster: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.CreateClusterError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -59,12 +59,12 @@ func (z *clusterReconciler) Reconcile(ctx context.Context, meta reconciliation.M
 			ID: reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata),
 		})
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("deleting cluster: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.DeleteClusterError, err)
 		}
 
 		err = z.cleanUpDanglers(meta, state)
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("cleaning up dangling ALBs: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.DeleteDanglingALBError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -74,7 +74,7 @@ func (z *clusterReconciler) Reconcile(ctx context.Context, meta reconciliation.M
 		return reconciliation.Result{}, nil
 	}
 
-	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+	return reconciliation.Result{}, fmt.Errorf(constant.ActionNotImplementedError, string(action))
 }
 
 func (z *clusterReconciler) determineAction(meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Action, error) {
@@ -82,7 +82,7 @@ func (z *clusterReconciler) determineAction(meta reconciliation.Metadata, state 
 
 	componentExists, err := state.Cluster.HasCluster(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf("checking cluster existence: %w", err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfClusterExistsError, err)
 	}
 
 	switch userIndication {
@@ -93,7 +93,7 @@ func (z *clusterReconciler) determineAction(meta reconciliation.Metadata, state 
 
 		dependenciesReady, err := z.hasCreateDependenciesMet(meta, state)
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking for dependency ready status: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckDepedencyReadyError, err)
 		}
 
 		if !dependenciesReady {
@@ -108,7 +108,7 @@ func (z *clusterReconciler) determineAction(meta reconciliation.Metadata, state 
 
 		dependenciesReady, err := z.hasDeleteDependenciesMet(state)
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking for dependency ready status: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckDepedencyReadyError, err)
 		}
 
 		if !dependenciesReady {
@@ -124,19 +124,19 @@ func (z *clusterReconciler) determineAction(meta reconciliation.Metadata, state 
 func (z *clusterReconciler) cleanUpDanglers(meta reconciliation.Metadata, state *clientCore.StateHandlers) error {
 	vpc, err := state.Vpc.GetVpc(cfn.NewStackNamer().Vpc(meta.ClusterDeclaration.Metadata.Name))
 	if err != nil {
-		return fmt.Errorf("getting vpc: %w", err)
+		return fmt.Errorf(constant.GetVpcError, err)
 	}
 
 	clean := cleaner.New(z.cloudProvider)
 
 	err = clean.DeleteDanglingALBs(vpc.VpcID)
 	if err != nil {
-		return fmt.Errorf("cleaning up ALBs: %w", err)
+		return fmt.Errorf(constant.CleanUpALBError, err)
 	}
 
 	err = clean.DeleteDanglingTargetGroups(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return fmt.Errorf("cleaning target groups: %w", err)
+		return fmt.Errorf(constant.CleanUpTragetGroupError, err)
 	}
 
 	return nil
@@ -145,14 +145,14 @@ func (z *clusterReconciler) cleanUpDanglers(meta reconciliation.Metadata, state 
 func (z *clusterReconciler) hasCreateDependenciesMet(meta reconciliation.Metadata, state *clientCore.StateHandlers) (bool, error) {
 	hasVPC, err := state.Vpc.HasVPC(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return false, fmt.Errorf("acquiring VPC state: %w", err)
+		return false, fmt.Errorf(constant.GetVPCStateError, err)
 	}
 
 	err = servicequota.CheckQuotas(
 		servicequota.NewFargateCheck(constant.DefaultRequiredFargateOnDemandPods, z.cloudProvider),
 	)
 	if err != nil {
-		return false, fmt.Errorf("checking service quotas: %w", err)
+		return false, fmt.Errorf(constant.CheckServiceQuotasError, err)
 	}
 
 	return hasVPC, nil
@@ -172,7 +172,7 @@ func (z *clusterReconciler) hasDeleteDependenciesMet(state *clientCore.StateHand
 		state.Tempo.HasTempo,
 	)
 	if err != nil {
-		return false, fmt.Errorf("asserting existence: %w", err)
+		return false, fmt.Errorf(constant.AssertExistenceError, err)
 	}
 
 	return ok, nil

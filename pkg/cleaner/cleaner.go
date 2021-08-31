@@ -4,6 +4,7 @@ package cleaner
 import (
 	"errors"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -84,7 +85,7 @@ func (c *Cleaner) RemoveThingsThatAreUsingCertificate(certificateARN string) err
 func (c *Cleaner) DeleteDanglingALBs(vpcID string) error {
 	balancers, err := c.provider.ELBV2().DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{})
 	if err != nil {
-		return fmt.Errorf("listing load balancers: %w", err)
+		return fmt.Errorf(constant.ListLoadBalancersError, err)
 	}
 
 	loadBalancers := balancers.LoadBalancers
@@ -97,7 +98,7 @@ func (c *Cleaner) DeleteDanglingALBs(vpcID string) error {
 				LoadBalancerArn: &arn,
 			})
 			if err != nil {
-				return fmt.Errorf("deleting load balancer: %w", err)
+				return fmt.Errorf(constant.DeleteLoadBalancerError, err)
 			}
 		}
 	}
@@ -118,7 +119,7 @@ func (c *Cleaner) DeleteDanglingSecurityGroups(vpcID string) error {
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("listing security groups for vpc: %w", err)
+		return fmt.Errorf(constant.ListSecurityGroupsError, err)
 	}
 
 	for _, group := range groups.SecurityGroups {
@@ -127,7 +128,7 @@ func (c *Cleaner) DeleteDanglingSecurityGroups(vpcID string) error {
 				GroupId: group.GroupId,
 			})
 			if err != nil {
-				return fmt.Errorf("deleting security group: %w", err)
+				return fmt.Errorf(constant.DeleteSecurityGroupError, err)
 			}
 		}
 	}
@@ -146,7 +147,7 @@ func (c *Cleaner) DeleteDanglingTargetGroups(clusterName string) error {
 			Marker: marker,
 		})
 		if err != nil {
-			return fmt.Errorf("listing target groups: %w", err)
+			return fmt.Errorf(constant.ListingTargetGroupsError, err)
 		}
 
 		all = append(all, groups.TargetGroups...)
@@ -168,7 +169,7 @@ NextTargetGroup:
 			},
 		})
 		if err != nil {
-			return fmt.Errorf("describing tags for target group: %w", err)
+			return fmt.Errorf(constant.DescribeTargetGroupsError, err)
 		}
 
 		for _, desc := range tags.TagDescriptions {
@@ -186,7 +187,7 @@ NextTargetGroup:
 			TargetGroupArn: aws.String(targetGroupARN),
 		})
 		if err != nil {
-			return fmt.Errorf("removing target group: %w", err)
+			return fmt.Errorf(constant.RemovingTargetGrupError, err)
 		}
 	}
 

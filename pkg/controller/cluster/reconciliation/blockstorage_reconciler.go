@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
@@ -26,7 +27,7 @@ func (z *blockstorageReconciler) String() string {
 func (z *blockstorageReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (result reconciliation.Result, err error) {
 	action, err := z.determineAction(ctx, meta, state)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	switch action {
@@ -35,7 +36,7 @@ func (z *blockstorageReconciler) Reconcile(ctx context.Context, meta reconciliat
 			ID: reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata),
 		})
 		if err != nil {
-			return result, fmt.Errorf("creating blockstorage: %w", err)
+			return result, fmt.Errorf(constant.CreateBlockStorageError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -45,7 +46,7 @@ func (z *blockstorageReconciler) Reconcile(ctx context.Context, meta reconciliat
 			reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata),
 		)
 		if err != nil {
-			return result, fmt.Errorf("deleting blockstorage: %w", err)
+			return result, fmt.Errorf(constant.DeleteBlockStorageError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -55,7 +56,7 @@ func (z *blockstorageReconciler) Reconcile(ctx context.Context, meta reconciliat
 		return reconciliation.Result{Requeue: false}, nil
 	}
 
-	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+	return reconciliation.Result{}, fmt.Errorf(constant.ActionNotImplementedError, string(action))
 }
 
 func (z *blockstorageReconciler) determineAction(_ context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Action, error) {
@@ -63,14 +64,14 @@ func (z *blockstorageReconciler) determineAction(_ context.Context, meta reconci
 
 	clusterExists, err := state.Cluster.HasCluster(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf("acquiring cluster existence: %w", err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfClusterExistsError, err)
 	}
 
 	componentExists := false
 	if clusterExists {
 		componentExists, err = state.Blockstorage.HasBlockstorage()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("acquiring AWS Load Balancer Controller existence: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfAWSLoadBalancerExistsError, err)
 		}
 	}
 

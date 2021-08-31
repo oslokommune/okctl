@@ -3,6 +3,7 @@ package run
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/kubeconfig"
 
@@ -32,17 +33,17 @@ type clusterRun struct {
 func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, error) {
 	a, err := c.provider.AwsIamAuthenticator(awsiamauthenticator.Version)
 	if err != nil {
-		return nil, fmt.Errorf("retrieving aws-iam-authenticator binary: %w", err)
+		return nil, fmt.Errorf(constant.GetAwsIamAuthBinaryError, err)
 	}
 
 	k, err := c.provider.Kubectl(kubectl.Version)
 	if err != nil {
-		return nil, fmt.Errorf("retrieving kubectl binary: %w", err)
+		return nil, fmt.Errorf(constant.GetKubectlBinaryError, err)
 	}
 
 	cli, err := c.provider.Eksctl(eksctl.Version)
 	if err != nil {
-		return nil, fmt.Errorf("retrieving eksctl binary: %w", err)
+		return nil, fmt.Errorf(constant.GetEksctlBinaryError, err)
 	}
 
 	cfg, err := clusterconfig.New(&clusterconfig.Args{
@@ -69,7 +70,7 @@ func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, er
 
 	exists, err := cli.HasCluster(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("if cluster exists: %w", err)
+		return nil, fmt.Errorf(constant.CheckIfClusterExistsError, err)
 	}
 
 	cluster := &api.Cluster{
@@ -83,7 +84,7 @@ func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, er
 
 	_, err = cli.CreateCluster(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("creating the cluster: %w", err)
+		return nil, fmt.Errorf(constant.CreateClusterError, err)
 	}
 
 	kubeConf, err := kubeconfig.New(cfg, c.cloud).Get()
@@ -103,7 +104,7 @@ func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, er
 func (c *clusterRun) DeleteCluster(opts api.ClusterDeleteOpts) error {
 	cli, err := c.provider.Eksctl(eksctl.Version)
 	if err != nil {
-		return fmt.Errorf("failed to retrieve eksctl binary: %w", err)
+		return fmt.Errorf(constant.GetEksctlBinaryError, err)
 	}
 
 	// We want to continue even if delete fargate profiles fails,
@@ -115,7 +116,7 @@ func (c *clusterRun) DeleteCluster(opts api.ClusterDeleteOpts) error {
 
 	_, err = cli.DeleteCluster(opts.ID.ClusterName)
 	if err != nil {
-		return fmt.Errorf("failed to delete cluster: %w", err)
+		return fmt.Errorf(constant.FailedToDeleteClusterError, err)
 	}
 
 	return nil

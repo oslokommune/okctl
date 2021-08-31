@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/cfn"
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
@@ -26,14 +27,14 @@ func (z *awsLoadBalancerControllerReconciler) Reconcile(
 ) (reconciliation.Result, error) {
 	action, err := z.determineAction(ctx, meta, state)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	switch action {
 	case reconciliation.ActionCreate:
 		vpc, err := state.Vpc.GetVpc(cfn.NewStackNamer().Vpc(meta.ClusterDeclaration.Metadata.Name))
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("getting vpc: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.GetVpcError, err)
 		}
 
 		_, err = z.client.CreateAWSLoadBalancerController(ctx, client.CreateAWSLoadBalancerControllerOpts{
@@ -41,7 +42,7 @@ func (z *awsLoadBalancerControllerReconciler) Reconcile(
 			VPCID: vpc.VpcID,
 		})
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("creating aws load balancer controller: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.CreateAWSLoadBalancerControllerError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -51,7 +52,7 @@ func (z *awsLoadBalancerControllerReconciler) Reconcile(
 			reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata),
 		)
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("deleting aws load balancer controller: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.DeleteAWSLoadBalancerControllerError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -61,7 +62,7 @@ func (z *awsLoadBalancerControllerReconciler) Reconcile(
 		return reconciliation.Result{Requeue: false}, nil
 	}
 
-	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+	return reconciliation.Result{}, fmt.Errorf(constant.ActionNotImplementedError, string(action))
 }
 
 func (z *awsLoadBalancerControllerReconciler) determineAction(
@@ -76,14 +77,14 @@ func (z *awsLoadBalancerControllerReconciler) determineAction(
 
 	clusterExists, err := state.Cluster.HasCluster(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf("acquiring cluster existence: %w", err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfClusterExistsError, err)
 	}
 
 	awsLoadBalancerControllerExists := false
 	if clusterExists {
 		awsLoadBalancerControllerExists, err = state.AWSLoadBalancerController.HasAWSLoadBalancerController()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("acquiring AWS Load Balancer Controller existence: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfAWSLoadBalancerExistsError, err)
 		}
 	}
 
@@ -108,7 +109,7 @@ func (z *awsLoadBalancerControllerReconciler) determineAction(
 			state.Monitoring.HasKubePromStack,
 		)
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking deletion dependencies: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckDeleteDependenciesError, err)
 		}
 
 		if !dependenciesReady {

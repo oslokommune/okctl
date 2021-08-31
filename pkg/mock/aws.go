@@ -6,6 +6,7 @@ import "C"
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -1126,7 +1127,7 @@ func (p *CloudProvider) DescribeStacksEmpty() *CloudProvider {
 		return nil, awserr.New(
 			"ValidationError",
 			fmt.Sprintf("Stack with id %s does not exist", DefaultStackName),
-			fmt.Errorf("something"),
+			fmt.Errorf(constant.AwsSomethingError),
 		)
 	})
 
@@ -1532,7 +1533,7 @@ func NewGoodCloudProvider() *CloudProvider {
 	}
 }
 
-var errBad = fmt.Errorf("something bad")
+var errBad = fmt.Errorf(constant.AwsSomethingBadError)
 
 // NewBadCloudProvider returns a mocked cloud provider with failure set on all
 // nolint: funlen

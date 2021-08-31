@@ -4,6 +4,7 @@ package mock
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
 
@@ -56,7 +57,7 @@ const (
 )
 
 // ErrBad just defines a mocked error
-var ErrBad = fmt.Errorf("something bad")
+var ErrBad = fmt.Errorf(constant.AwsSomethingBadError)
 
 // DefaultKubeConfig returns an initialised kubeconfig
 func DefaultKubeConfig() *api.KubeConfig {

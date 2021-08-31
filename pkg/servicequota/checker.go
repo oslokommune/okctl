@@ -3,6 +3,7 @@ package servicequota
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 )
 
 // Checker defines what we need to know about a service quota
@@ -32,7 +33,7 @@ func CheckQuotas(checks ...Checker) error {
 		}
 
 		if !r.HasCapacity {
-			return fmt.Errorf("%s: required %d, but only have %d available", r.Description, r.Required, r.Available)
+			return fmt.Errorf(constant.HasCapacityError, r.Description, r.Required, r.Available)
 		}
 	}
 

@@ -122,4 +122,79 @@ const (
 	RetrieveStsCretentialsWithSamlError = "retrieving STS credentials using SAML: %w"
 
 	NoCredentialsAvailableError = "no credentials available"
+
+	AwsSomethingError = "something"
+	AwsSomethingBadError = "something bad"
+
+	GetHelmError = "getting helm release: %w"
+	GetVpcError = "getting vpc: %w"
+
+	CreateAWSLoadBalancerControllerError = "creating aws load balancer controller: %w"
+	DeleteAWSLoadBalancerControllerError = "deleting aws load balancer controller: %w"
+
+	CheckIfAWSLoadBalancerExistsError = "acquiring AWS Load Balancer Controller existence: %w"
+	CheckDeleteDependenciesError = "checking deletion dependencies: %w"
+
+	CreateBlockStorageError = "creating blockstorage: %w"
+	DeleteBlockStorageError = "deleting blockstorage: %w"
+	LoadStateDatabaseError = "loading state database: %w"
+
+	OutputExistsError = "already have output with name: %s"
+	ResourceExistsError = "already have resource with name: %s"
+	RemoveCertificateUsagesError = "removing usages of certificate: %w"
+
+	BuildCloudFormationTemplateError = "building cloudformation template: %w"
+	ApplyCloudformationTemplateError = "applying cloudformation template: %w"
+
+	ProcessOutputsError = "processing outputs: %w"
+
+	HasCapacityError = "%s: required %d, but only have %d available"
+
+	CdirNotIpv4Error = "cidr (%s) is not of type IPv4"
+	CdirAddressSpaceError = "address space of cidr (%s) is less than required: %d < %d"
+	CdirNotInLegalRangeError = "provided cidr (%s) is not in the legal ranges: %s"
+
+	ListLoadBalancersError = "listing load balancers: %w"
+	DeleteLoadBalancerError = "deleting load balancer: %w"
+
+	ListSecurityGroupsError = "listing security groups for vpc: %w"
+	DeleteSecurityGroupError = "deleting security group: %w"
+	ListingTargetGroupsError = "listing target groups: %w"
+	DescribeTargetGroupsError = "describing tags for target group: %w"
+	RemovingTargetGrupError = "removing target group: %w"
+
+	CheckIfVpcExistsError = "checking VPC existence: %w"
+	FailedToWriteDebugOutputError = "failed to write debug output: %w"
+
+	FailedToMarshalDataError   = "failed to marshal data for"
+	FailedToCreateRequestError = "failed to create request for"
+	RequestFailedForError = "request failed for"
+	ResponseFailedForError = "failed to read response for"
+	FailedTowriteDebugOutputError = "failed to write debug output: %w"
+	FailedToParseResponseError  ="failed to parse response: %w"
+	FailedToWriteProgressForError = "failed to write progress for"
+
+	UnmarshalOnServerSideError = "unmarshalling error from server side: %w: %s"
+	ValidateDeserializedError = "validating deserialized error with content %s: %w"
+
+	CreateClusterError = "creating cluster: %w"
+	DeleteClusterError = "deleting cluster: %w"
+
+	DeleteDanglingALBError = "cleaning up dangling ALBs: %w"
+	CheckDepedencyReadyError = "checking for dependency ready status: %w"
+	CleanUpALBError = "cleaning up ALBs: %w"
+	CleanUpTragetGroupError = "cleaning target groups: %w"
+
+	GetVPCStateError = "acquiring VPC state: %w"
+
+	CheckServiceQuotasError = "checking service quotas: %w"
+
+	AssertExistenceError = "asserting existence: %w"
+
+	GetAwsIamAuthBinaryError = "retrieving aws-iam-authenticator binary: %w"
+	GetKubectlBinaryError = "retrieving kubectl binary: %w"
+	GetEksctlBinaryError = "retrieving eksctl binary: %w"
+
+	FailedToDeleteClusterError = "failed to delete cluster: %w"
+
 )

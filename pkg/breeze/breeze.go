@@ -2,6 +2,7 @@ package breeze
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/asdine/storm/v3/index"
 
@@ -132,7 +133,7 @@ func (b Breeze) DeleteStruct(data interface{}) error {
 func (b Breeze) open() (*storm.DB, storm.Node, error) {
 	db, err := storm.Open(b.path, storm.Codec(json.Codec))
 	if err != nil {
-		return nil, nil, fmt.Errorf("loading state database: %w", err)
+		return nil, nil, fmt.Errorf(constant.LoadStateDatabaseError, err)
 	}
 
 	if b.addend != nil {

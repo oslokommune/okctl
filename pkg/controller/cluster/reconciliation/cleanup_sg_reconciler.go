@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/cfn"
 	"github.com/oslokommune/okctl/pkg/cleaner"
@@ -28,7 +29,7 @@ func (z *cleanupSGReconciler) Reconcile(_ context.Context, meta reconciliation.M
 
 	clusterExists, err := state.Cluster.HasCluster(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("checking cluster existence: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.CheckIfClusterExistsError, err)
 	}
 
 	if clusterExists {
@@ -37,7 +38,7 @@ func (z *cleanupSGReconciler) Reconcile(_ context.Context, meta reconciliation.M
 
 	vpcExists, err := state.Vpc.HasVPC(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("checking VPC existence: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.CheckIfVpcExistsError, err)
 	}
 
 	if !vpcExists {
@@ -46,12 +47,12 @@ func (z *cleanupSGReconciler) Reconcile(_ context.Context, meta reconciliation.M
 
 	vpc, err := state.Vpc.GetVpc(cfn.NewStackNamer().Vpc(meta.ClusterDeclaration.Metadata.Name))
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("getting vpc: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.GetVpcError, err)
 	}
 
 	err = cleaner.New(z.provider).DeleteDanglingSecurityGroups(vpc.VpcID)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("cleaning up SGs: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.DeleteSecurityGroupError, err)
 	}
 
 	return reconciliation.Result{}, nil

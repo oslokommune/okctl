@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -55,30 +56,30 @@ func (c *HTTPClient) Do(method, endpoint string, body interface{}, into interfac
 	if c.Debug {
 		_, err := fmt.Fprintf(c.Progress, "client (method: %s, endpoint: %s) starting request: %s", method, endpoint, litter.Sdump(body))
 		if err != nil {
-			return fmt.Errorf("failed to write debug output: %w", err)
+			return fmt.Errorf(constant.FailedToWriteDebugOutputError, err)
 		}
 	}
 
 	data, err := json.Marshal(body)
 	if err != nil {
-		return fmt.Errorf("%s: %w", pretty("failed to marshal data for", method, endpoint), err)
+		return fmt.Errorf("%s: %w", pretty(constant.FailedToMarshalDataError, method, endpoint), err)
 	}
 
 	req, err := http.NewRequest(method, fmt.Sprintf("%s%s", c.BaseURL, endpoint), bytes.NewReader(data))
 	if err != nil {
-		return fmt.Errorf("%s: %w", pretty("failed to create request for", method, endpoint), err)
+		return fmt.Errorf("%s: %w", pretty(constant.FailedToCreateRequestError, method, endpoint), err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.Client.Do(req)
 	if err != nil {
-		return fmt.Errorf("%s: %w", pretty("request failed for", method, endpoint), err)
+		return fmt.Errorf("%s: %w", pretty(constant.RequestFailedForError, method, endpoint), err)
 	}
 
 	out, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("%s: %w", pretty("failed to read response for", method, endpoint), err)
+		return fmt.Errorf("%s: %w", pretty(constant.ResponseFailedForError, method, endpoint), err)
 	}
 
 	if resp.StatusCode >= 400 { // nolint: gomnd
@@ -95,18 +96,18 @@ func (c *HTTPClient) Do(method, endpoint string, body interface{}, into interfac
 			if c.Debug {
 				_, err = fmt.Fprintf(c.Progress, "client (method: %s, endpoint: %s) received data: %s", method, endpoint, out)
 				if err != nil {
-					return fmt.Errorf("failed to write debug output: %w", err)
+					return fmt.Errorf(constant.FailedTowriteDebugOutputError, err)
 				}
 			}
 
-			return fmt.Errorf("failed to parse response: %w", err)
+			return fmt.Errorf(constant.FailedToParseResponseError, err)
 		}
 	}
 
 	if c.Debug {
 		_, err = io.Copy(c.Progress, strings.NewReader(string(out)))
 		if err != nil {
-			return fmt.Errorf("%s: %w", pretty("failed to write progress for", method, endpoint), err)
+			return fmt.Errorf("%s: %w", pretty(constant.FailedToWriteProgressForError, method, endpoint), err)
 		}
 	}
 
@@ -137,13 +138,13 @@ func deserializeErrorPayload(jsonContent []byte) error {
 	err := json.Unmarshal(jsonContent, &data)
 	if err != nil {
 		return errors.E(
-			fmt.Errorf("unmarshalling error from server side: %w: %s", err, string(jsonContent)),
+			fmt.Errorf(constant.UnmarshalOnServerSideError, err, string(jsonContent)),
 			errors.Internal)
 	}
 
 	if err = data.Validate(); err != nil {
 		return errors.E(
-			fmt.Errorf("validating deserialized error with content %s: %w", string(jsonContent), err),
+			fmt.Errorf(constant.ValidateDeserializedError, string(jsonContent), err),
 			errors.Unmarshal,
 		)
 	}

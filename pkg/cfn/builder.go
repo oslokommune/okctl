@@ -2,6 +2,7 @@ package cfn
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/awslabs/goformation/v4/cloudformation"
 )
@@ -47,7 +48,7 @@ func (b *Builder) Build() ([]byte, error) {
 	for _, output := range c.Outputs {
 		for key, value := range output.NamedOutputs() {
 			if _, hasKey := b.template.Outputs[key]; hasKey {
-				return nil, fmt.Errorf("already have output with name: %s", key)
+				return nil, fmt.Errorf(constant.OutputExistsError, key)
 			}
 
 			b.template.Outputs[key] = value
@@ -56,7 +57,7 @@ func (b *Builder) Build() ([]byte, error) {
 
 	for _, resource := range c.Resources {
 		if _, hasKey := b.template.Resources[resource.Name()]; hasKey {
-			return nil, fmt.Errorf("already have resource with name: %s", resource.Name())
+			return nil, fmt.Errorf(constant.ResourceExistsError, resource.Name())
 		}
 
 		b.template.Resources[resource.Name()] = resource.Resource()

@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/cleaner"
 
@@ -37,7 +38,7 @@ func (c *certificate) DeleteCognitoCertificate(opts api.DeleteCognitoCertificate
 func (c *certificate) DeleteCertificate(opts api.DeleteCertificateOpts) error {
 	err := cleaner.New(c.provider).RemoveThingsUsingCertForDomain(opts.Domain)
 	if err != nil {
-		return fmt.Errorf("removing usages of certificate: %w", err)
+		return fmt.Errorf(constant.RemoveCertificateUsagesError, err)
 	}
 
 	return cfn.NewRunner(c.provider).Delete(cfn.NewStackNamer().Certificate(opts.ID.ClusterName, slug.Make(opts.Domain)))
@@ -50,14 +51,14 @@ func (c *certificate) CreateCertificate(opts api.CreateCertificateOpts) (*api.Ce
 
 	template, err := b.Build()
 	if err != nil {
-		return nil, fmt.Errorf("building cloudformation template: %w", err)
+		return nil, fmt.Errorf(constant.BuildCloudFormationTemplateError, err)
 	}
 
 	r := cfn.NewRunner(c.provider)
 
 	err = r.CreateIfNotExists(opts.ID.ClusterName, stackName, template, nil, certificateTimeout)
 	if err != nil {
-		return nil, fmt.Errorf("applying cloudformation template: %w", err)
+		return nil, fmt.Errorf(constant.ApplyCloudformationTemplateError, err)
 	}
 
 	p := &api.Certificate{
@@ -73,7 +74,7 @@ func (c *certificate) CreateCertificate(opts api.CreateCertificateOpts) (*api.Ce
 		"PublicCertificate": cfn.String(&p.CertificateARN),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("processing outputs: %w", err)
+		return nil, fmt.Errorf(constant.ProcessOutputsError, err)
 	}
 
 	return p, nil

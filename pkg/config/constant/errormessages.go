@@ -282,5 +282,52 @@ const (
 
 	CheckIfDNSControllerExistsError = "acquiring DNS controller existence: %w"
 
+	CreateExternalSecretSetError = "creating external secrets client set: %w"
+
+	ListExternalSecretsError = "listing external secrets in %s: %w"
+	GetExternalSecretsError = "getting external secret %s in %s: %w"
+
+	CreateExternalSecretsError = "creating external secrets: %w"
+	DeleteExternalSecretsError = "deleting external secrets: %w"
+
+	CheckIfSecretsControllerExistsError = "acquiring secrets controller existence: %w"
+
+
+	GetFargateOnDemanPodsQuotasError = "getting fargate on-demand pods quotas: %w"
+	GetFargetOnDemandPodUtilization = "getting fargate on-demand pods utilization: %w"
+
+	PkgURLValidationError = "a valid pkgURL must begin https://, got: %s"
+	DownloadFailedError = "failed to download file at: %s"
+	BadStatusDownloadError = "bad status: %s, failed download of: %s"
+	EmptyDownloadError = "downloaded file was size: 0, for url: %s"
+
+	FileSystemCastError = "could not cast implemenation to *fileSystem"
+	StructNotFoundError = "failed to retrieve struct: no such name '%s'"
+	ProcessStructError = "failed to process struct: %w"
+	PostProcessDataError = "failed to postprocess data: %w"
+
+	FileExistsError = "file exists: %w"
+	UnknownOptionError = "unknown option: %s"
+	ApplyAlterationError = "failed to apply alteration %s: %w"
+	PreProcessDataError = "failed to preprocess data: %w"
+
+	StoreBytesError = "failed to store bytes: %w"
+
+	CheckIfFileExistsError        = "failed to determine if file exists: %w"
+	CannotOverwriteFileError      = "file '%s' exists and overwrite is disabled"
+	CreateDirectoriesError        = "failed to create directories: %w"
+	CheckIfDirectoryExistsError   = "failed to determine if directory exists: %w"
+	CannotOverwriteDirectoryError = "directory does not exist '%s' and create directories disabled"
+	ProcessUnkownOpreationError   = "cannot process unknown operation option: %v"
+
+	WriteToFileError = "failed to write file: %w"
+	RemoveFileError = "failed to remove file: %w"
+
+	RemoveDirectoryError = "failed to remove directory: %w"
+
+	FileSystemTaskCastError = "failed to cast task to *fileSystemTask"
+	ProcessTaskError = "failed to process task %s(%s): %w"
+
+	StartPortForwardingError = "starting port forwarding: %w"
 
 )

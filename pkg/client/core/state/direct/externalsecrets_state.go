@@ -37,7 +37,7 @@ func (e externalSecretsState) HasExternalSecrets() (bool, error) {
 			return false, nil
 		}
 
-		return false, fmt.Errorf("acquiring Helm release: %w", err)
+		return false, fmt.Errorf(constant.GetHelmReleaseError, err)
 	}
 
 	return true, nil

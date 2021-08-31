@@ -24,6 +24,7 @@ package forward
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"net/http"
 	"net/url"
@@ -119,7 +120,7 @@ func (f *Forward) portForwardToPod(listenPort int32, pod *v1.Pod) error {
 		f.stream.ErrOut,
 	)
 	if err != nil {
-		return fmt.Errorf("starting port forwarding: %w", err)
+		return fmt.Errorf(constant.StartPortForwardingError, err)
 	}
 
 	return fw.ForwardPorts()

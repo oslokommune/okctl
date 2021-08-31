@@ -4,6 +4,7 @@ package externalsecret
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	typesv1 "github.com/oslokommune/okctl/pkg/kube/externalsecret/api/types/v1"
 
@@ -36,19 +37,19 @@ func New(name, namespace string, manifest *typesv1.ExternalSecret) *ExternalSecr
 func (a *ExternalSecret) CreateSecret(_ kubernetes.Interface, config *rest.Config) (interface{}, error) {
 	clientSet, err := clientv1.NewForConfig(config)
 	if err != nil {
-		return nil, fmt.Errorf("creating external secrets client set: %w", err)
+		return nil, fmt.Errorf(constant.CreateExternalSecretSetError, err)
 	}
 
 	externalSecrets, err := clientSet.ExternalSecrets(a.Namespace).List(a.Ctx, metav1.ListOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("listing external secrets in %s: %w", a.Namespace, err)
+		return nil, fmt.Errorf(constant.ListExternalSecretsError, a.Namespace, err)
 	}
 
 	for _, es := range externalSecrets.Items {
 		if es.Name == a.Name {
 			got, err := clientSet.ExternalSecrets(a.Namespace).Get(a.Ctx, es.Name, metav1.GetOptions{})
 			if err != nil {
-				return nil, fmt.Errorf("getting external secret %s in %s: %w", es.Name, es.Namespace, err)
+				return nil, fmt.Errorf(constant.GetExternalSecretsError, es.Name, es.Namespace, err)
 			}
 
 			return got, nil
@@ -62,12 +63,12 @@ func (a *ExternalSecret) CreateSecret(_ kubernetes.Interface, config *rest.Confi
 func (a *ExternalSecret) DeleteSecret(_ kubernetes.Interface, config *rest.Config) (interface{}, error) {
 	clientSet, err := clientv1.NewForConfig(config)
 	if err != nil {
-		return nil, fmt.Errorf("creating external secrets client set: %w", err)
+		return nil, fmt.Errorf(constant.CreateExternalSecretSetError, err)
 	}
 
 	externalSecrets, err := clientSet.ExternalSecrets(a.Namespace).List(a.Ctx, metav1.ListOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("listing external secrets in %s: %w", a.Namespace, err)
+		return nil, fmt.Errorf(constant.ListExternalSecretsError, a.Namespace, err)
 	}
 
 	deletePolicy := metav1.DeletePropagationForeground

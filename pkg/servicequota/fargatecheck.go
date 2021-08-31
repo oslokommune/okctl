@@ -2,6 +2,7 @@ package servicequota
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
@@ -37,7 +38,7 @@ func (e *FargateCheck) CheckAvailability() (*Result, error) {
 		ServiceCode: aws.String("fargate"),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("getting fargate on-demand pods quotas: %w", err)
+		return nil, fmt.Errorf(constant.GetFargateOnDemanPodsQuotasError, err)
 	}
 
 	now := time.Now()
@@ -86,7 +87,7 @@ func (e *FargateCheck) CheckAvailability() (*Result, error) {
 		},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("getting fargate on-demand pods utilisation: %w", err)
+		return nil, fmt.Errorf(constant.GetFargetOnDemandPodUtilization, err)
 	}
 
 	quota := int(*q.Quota.Value)

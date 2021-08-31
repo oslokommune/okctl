@@ -3,6 +3,7 @@ package fetch
 import (
 	"bytes"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"net/http"
 	"net/url"
@@ -49,7 +50,7 @@ func (f *httpFetcher) Fetch(w io.Writer) (int64, error) {
 	}
 
 	if u.Scheme != "https" {
-		return 0, fmt.Errorf("a valid pkgURL must begin https://, got: %s", f.url)
+		return 0, fmt.Errorf(constant.PkgURLValidationError, f.url)
 	}
 
 	resp, err := http.Get(f.url)
@@ -58,7 +59,7 @@ func (f *httpFetcher) Fetch(w io.Writer) (int64, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf("failed to download file at: %s", f.url)
+		return 0, fmt.Errorf(constant.DownloadFailedError, f.url)
 	}
 
 	defer func() {
@@ -66,7 +67,7 @@ func (f *httpFetcher) Fetch(w io.Writer) (int64, error) {
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf("bad status: %s, failed download of: %s", resp.Status, f.url)
+		return 0, fmt.Errorf(constant.BadStatusDownloadError, resp.Status, f.url)
 	}
 
 	n, err := io.Copy(w, resp.Body)
@@ -75,7 +76,7 @@ func (f *httpFetcher) Fetch(w io.Writer) (int64, error) {
 	}
 
 	if n == 0 {
-		return 0, fmt.Errorf("downloaded file was size: 0, for url: %s", f.url)
+		return 0, fmt.Errorf(constant.EmptyDownloadError, f.url)
 	}
 
 	return n, nil

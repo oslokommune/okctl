@@ -3,6 +3,7 @@ package store
 import (
 	"container/list"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"os"
 	"path"
 	"strings"
@@ -132,7 +133,7 @@ func SetBaseDir(baseDir string) Alterer {
 func (f *fileSystemSetBaseDir) Alter(implementation interface{}) error {
 	to, ok := implementation.(*fileSystem)
 	if !ok {
-		return fmt.Errorf("could not cast implemenation to *fileSystem")
+		return fmt.Errorf(constant.FileSystemCastError)
 	}
 
 	to.BaseDir = f.baseDir
@@ -163,12 +164,12 @@ func (f *fileSystem) processGetStruct(name string, process ProcessGetStruct) *fi
 	work.Fn = func() error {
 		data, hasKey := f.report.Data[name]
 		if !hasKey {
-			return fmt.Errorf("failed to retrieve struct: no such name '%s'", name)
+			return fmt.Errorf(constant.StructNotFoundError, name)
 		}
 
 		err := process(data, f)
 		if err != nil {
-			return fmt.Errorf("failed to process struct: %w", err)
+			return fmt.Errorf(constant.ProcessStructError, err)
 		}
 
 		return nil
@@ -214,12 +215,12 @@ func (f *fileSystem) getStruct(name string, into interface{}, postProcessor Post
 
 		err := w.Fn()
 		if err != nil {
-			return fmt.Errorf("failed to read file: %w", err)
+			return fmt.Errorf(constant.ReadFileError, err)
 		}
 
 		_, err = postProcessor.PostProcess(into, w.Bytes)
 		if err != nil {
-			return fmt.Errorf("failed to postprocess data: %w", err)
+			return fmt.Errorf(constant.PostProcessDataError, err)
 		}
 
 		work.Path = w.Path
@@ -252,7 +253,7 @@ func (f *fileSystem) getBytes(name string, callback GetBytesCallback, options ..
 			case []byte:
 				exists, err := f.fs.Exists(path.Join(f.BaseDir, name))
 				if err != nil {
-					return fmt.Errorf("file exists: %w", err)
+					return fmt.Errorf(constant.FileExistsError, err)
 				}
 
 				if !exists {
@@ -262,13 +263,13 @@ func (f *fileSystem) getBytes(name string, callback GetBytesCallback, options ..
 					}
 				}
 			default:
-				return fmt.Errorf("unknown option: %s", o)
+				return fmt.Errorf(constant.UnknownOptionError, o)
 			}
 		}
 
 		data, err := f.fs.ReadFile(path.Join(f.BaseDir, name))
 		if err != nil {
-			return fmt.Errorf("failed to read file: %w", err)
+			return fmt.Errorf(constant.ReadFileError, err)
 		}
 
 		if callback != nil {
@@ -322,7 +323,7 @@ func (f *fileSystem) alterStore(alterers ...Alterer) *fileSystemWork {
 		for _, a := range alterers {
 			err := a.Alter(f)
 			if err != nil {
-				return fmt.Errorf("failed to apply alteration %s: %w", a.Type(), err)
+				return fmt.Errorf(constant.ApplyAlterationError, a.Type(), err)
 			}
 		}
 
@@ -349,14 +350,14 @@ func (f *fileSystem) storeStruct(name string, data interface{}, preProcessor Pre
 	work.Fn = func() error {
 		d, err := preProcessor.PreProcess(data)
 		if err != nil {
-			return fmt.Errorf("failed to preprocess data: %w", err)
+			return fmt.Errorf(constant.PreProcessDataError, err)
 		}
 
 		w := f.storeBytes(name, d.Data, options...)
 
 		err = w.Fn()
 		if err != nil {
-			return fmt.Errorf("failed to store bytes: %w", err)
+			return fmt.Errorf(constant.StoreBytesError, err)
 		}
 
 		work.Path = w.Path
@@ -384,28 +385,28 @@ func (f *fileSystem) storeBytes(name string, data []byte, options ...OperationOp
 		if !f.OverwriteExisting {
 			exists, err := f.fs.Exists(path.Join(f.BaseDir, name))
 			if err != nil {
-				return fmt.Errorf("failed to determine if file exists: %w", err)
+				return fmt.Errorf(constant.CheckIfFileExistsError, err)
 			}
 
 			if exists {
-				return fmt.Errorf("file '%s' exists and overwrite is disabled", path.Join(f.BaseDir, name))
+				return fmt.Errorf(constant.CannotOverwriteFileError, path.Join(f.BaseDir, name))
 			}
 		}
 
 		if f.CreateDirectories {
 			err := f.fs.MkdirAll(f.BaseDir, 0o744)
 			if err != nil {
-				return fmt.Errorf("failed to create directories: %w", err)
+				return fmt.Errorf(constant.CreateDirectoriesError, err)
 			}
 		}
 
 		exists, err := f.fs.DirExists(f.BaseDir)
 		if err != nil {
-			return fmt.Errorf("failed to determine if directory exists: %w", err)
+			return fmt.Errorf(constant.CheckIfDirectoryExistsError, err)
 		}
 
 		if !exists {
-			return fmt.Errorf("directory does not exist '%s' and create directories disabled", f.BaseDir)
+			return fmt.Errorf(constant.CannotOverwriteDirectoryError, f.BaseDir)
 		}
 
 		var fileMode os.FileMode = 0o644
@@ -415,13 +416,13 @@ func (f *fileSystem) storeBytes(name string, data []byte, options ...OperationOp
 			case os.FileMode:
 				fileMode = o
 			default:
-				return fmt.Errorf("cannot process unknown operation option: %v", o)
+				return fmt.Errorf(constant.ProcessUnkownOpreationError, o)
 			}
 		}
 
 		err = f.fs.WriteFile(path.Join(f.BaseDir, name), data, fileMode)
 		if err != nil {
-			return fmt.Errorf("failed to write file: %w", err)
+			return fmt.Errorf(constant.WriteToFileError, err)
 		}
 
 		work.Path = path.Join(f.BaseDir, name)
@@ -458,7 +459,7 @@ func (f *fileSystem) remove(name string, _ ...OperationOption) *fileSystemWork {
 	work.Fn = func() error {
 		exists, err := f.fs.Exists(path.Join(f.BaseDir, name))
 		if err != nil {
-			return fmt.Errorf("failed to determine if file exists: %w", err)
+			return fmt.Errorf(constant.CheckIfFileExistsError, err)
 		}
 
 		work.Path = path.Join(f.BaseDir, name)
@@ -469,7 +470,7 @@ func (f *fileSystem) remove(name string, _ ...OperationOption) *fileSystemWork {
 
 		err = f.fs.Remove(path.Join(f.BaseDir, name))
 		if err != nil {
-			return fmt.Errorf("failed to remove file: %w", err)
+			return fmt.Errorf(constant.RemoveFileError, err)
 		}
 
 		return nil
@@ -484,7 +485,7 @@ func (f *fileSystem) removeDir(name string, _ ...OperationOption) *fileSystemWor
 	work.Fn = func() error {
 		exists, err := f.fs.Exists(path.Join(f.BaseDir, name))
 		if err != nil {
-			return fmt.Errorf("failed to determine if directory exists: %w", err)
+			return fmt.Errorf(constant.CheckIfDirectoryExistsError, err)
 		}
 
 		work.Path = path.Join(f.BaseDir, name)
@@ -506,7 +507,7 @@ func (f *fileSystem) removeDir(name string, _ ...OperationOption) *fileSystemWor
 		if isDir && isEmpty {
 			err = f.fs.Remove(path.Join(f.BaseDir, name))
 			if err != nil {
-				return fmt.Errorf("failed to remove directory: %w", err)
+				return fmt.Errorf(constant.RemoveDirectoryError, err)
 			}
 		}
 
@@ -522,12 +523,12 @@ func (f *fileSystem) Do() (*Report, error) {
 	for e := f.tasks.Front(); e != nil; e = e.Next() {
 		task, ok := e.Value.(*fileSystemTask)
 		if !ok {
-			return nil, fmt.Errorf("failed to cast task to *fileSystemTask")
+			return nil, fmt.Errorf(constant.FileSystemTaskCastError)
 		}
 
 		err := task.Work.Fn()
 		if err != nil {
-			return nil, fmt.Errorf("failed to process task %s(%s): %w", task.Type, task.Name, err)
+			return nil, fmt.Errorf(constant.ProcessTaskError, task.Type, task.Name, err)
 		}
 
 		switch task.Work.ReadType {

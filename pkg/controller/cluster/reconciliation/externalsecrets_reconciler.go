@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
@@ -21,7 +22,7 @@ type externalSecretsReconciler struct {
 func (z *externalSecretsReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
 	action, err := z.determineAction(ctx, meta, state)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	switch action {
@@ -30,7 +31,7 @@ func (z *externalSecretsReconciler) Reconcile(ctx context.Context, meta reconcil
 			ID: reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata),
 		})
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("creating external secrets: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.CreateExternalSecretsError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -40,7 +41,7 @@ func (z *externalSecretsReconciler) Reconcile(ctx context.Context, meta reconcil
 			reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata),
 		)
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("deleting external secrets: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.DeleteExternalSecretsError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -50,7 +51,7 @@ func (z *externalSecretsReconciler) Reconcile(ctx context.Context, meta reconcil
 		return reconciliation.Result{Requeue: false}, nil
 	}
 
-	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+	return reconciliation.Result{}, fmt.Errorf(constant.ActionNotImplementedError, string(action))
 }
 
 func (z *externalSecretsReconciler) determineAction(_ context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Action, error) {
@@ -58,14 +59,14 @@ func (z *externalSecretsReconciler) determineAction(_ context.Context, meta reco
 
 	clusterExists, err := state.Cluster.HasCluster(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf("acquiring cluster existence: %w", err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfClusterExistsError, err)
 	}
 
 	componentExists := false
 	if clusterExists {
 		componentExists, err = state.ExternalSecrets.HasExternalSecrets()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("acquiring secrets controller existence: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfSecretsControllerExistsError, err)
 		}
 	}
 

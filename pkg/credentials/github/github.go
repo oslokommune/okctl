@@ -4,6 +4,7 @@ package github
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"net/http"
 	"os"
 	"strings"
@@ -136,7 +137,7 @@ func AreValid(credentials *Credentials, client HTTPClient) error {
 
 	r, err := http.NewRequest(http.MethodGet, apiURL, nil)
 	if err != nil {
-		return fmt.Errorf("failed to build token verification request: %w", err)
+		return fmt.Errorf(constant.BuildTokenVerificationRequestError, err)
 	}
 
 	r.Header.Add("Accept", "application/vnd.github.v3+json")
@@ -144,7 +145,7 @@ func AreValid(credentials *Credentials, client HTTPClient) error {
 
 	resp, err := client.Do(r)
 	if err != nil {
-		return fmt.Errorf("failed to send token verification request: %w", err)
+		return fmt.Errorf(constant.SendTokenVerificationRequestError, err)
 	}
 
 	defer func() {
@@ -152,7 +153,7 @@ func AreValid(credentials *Credentials, client HTTPClient) error {
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("HTTP error %v (%v) when requesting token validation",
+		return fmt.Errorf(constant.ValidationHTTPError,
 			resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
 
@@ -196,7 +197,7 @@ func (a *Auth) Resolve() (*Credentials, error) {
 
 				accumulatedErrors = append(
 					accumulatedErrors,
-					fmt.Errorf("authenticator[%d]: invalid credentials, because: %w", i, err).Error(),
+					fmt.Errorf(constant.InvalidAuthenticatorCredentilasError, i, err).Error(),
 				)
 
 				continue
@@ -206,7 +207,7 @@ func (a *Auth) Resolve() (*Credentials, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("no valid credentials: %s", strings.Join(accumulatedErrors, ", "))
+	return nil, fmt.Errorf(constant.NoValidCredentialsError, strings.Join(accumulatedErrors, ", "))
 }
 
 // New returns an initialised github authenticator
@@ -293,17 +294,17 @@ func (a *AuthDeviceFlow) Retrieve() (*Credentials, error) {
 
 	dcr, err := oauth2device.RequestDeviceCode(client, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve device code: %w", err)
+		return nil, fmt.Errorf(constant.RecieveDeviceCodeError, err)
 	}
 
 	err = a.Survey(dcr.VerificationURI, dcr.UserCode)
 	if err != nil {
-		return nil, fmt.Errorf("survey failed: %w", err)
+		return nil, fmt.Errorf(constant.SurveyFailedError, err)
 	}
 
 	accessToken, err := oauth2device.WaitForDeviceAuthorization(client, cfg, dcr)
 	if err != nil {
-		return nil, fmt.Errorf("failed getting device authorization: %w", err)
+		return nil, fmt.Errorf(constant.DeviceAuthorizationError, err)
 	}
 
 	a.Credentials = &Credentials{
@@ -328,7 +329,7 @@ func (a *AuthDeviceFlow) Survey(verificationURI, userCode string) error {
 
 	err := survey.AskOne(prompt, &ready)
 	if err != nil {
-		return fmt.Errorf("user was not ready to continue: %w", err)
+		return fmt.Errorf(constant.UserNotReadyError, err)
 	}
 
 	_ = browser.OpenURL(verificationURI)
@@ -393,7 +394,7 @@ func (k *KeyringPersister) Save(credentials *Credentials) error {
 
 	data, err := json.Marshal(s)
 	if err != nil {
-		return fmt.Errorf("failed to serialise credentials")
+		return fmt.Errorf(constant.SerializeCredentialsError)
 	}
 
 	return k.keyring.Store(keyring.KeyTypeGithubToken, string(data))
@@ -410,7 +411,7 @@ func (k *KeyringPersister) Get() (*Credentials, error) {
 
 	err = json.Unmarshal([]byte(v), &data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to deserialise credentials")
+		return nil, fmt.Errorf(constant.SerializeCredentialsError)
 	}
 
 	return &Credentials{
@@ -444,7 +445,7 @@ func (i *InMemoryPersister) Get() (*Credentials, error) {
 		return i.Credentials, nil
 	}
 
-	return nil, fmt.Errorf("no credentials exist")
+	return nil, fmt.Errorf(constant.MissingCredentialsError)
 }
 
 // NewInMemoryPersister returns an initialised in memory persister

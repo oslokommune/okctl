@@ -4,6 +4,7 @@ package github
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/google/go-github/v32/github"
 	githubAuth "github.com/oslokommune/okctl/pkg/credentials/github"
@@ -52,7 +53,7 @@ type Key = github.Key
 func New(ctx context.Context, auth githubAuth.Authenticator) (*Github, error) {
 	credentials, err := auth.Raw()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get github credentials: %w", err)
+		return nil, fmt.Errorf(constant.GetGithubCredentialsError, err)
 	}
 
 	client := github.NewClient(
@@ -82,7 +83,7 @@ func (g *Github) Teams(org string) ([]*Team, error) {
 	for {
 		teams, resp, err := g.Client.Teams.ListTeams(g.Ctx, org, opts)
 		if err != nil {
-			return nil, fmt.Errorf("failed to retrieve teams: %w", err)
+			return nil, fmt.Errorf(constant.GetGithubTeamsError, err)
 		}
 
 		allTeams = append(allTeams, teams...)
@@ -110,7 +111,7 @@ func (g *Github) Repositories(org string) ([]*Repository, error) {
 	for {
 		repos, resp, err := g.Client.Repositories.ListByOrg(g.Ctx, org, opts)
 		if err != nil {
-			return nil, fmt.Errorf("failed to retrieve repositories: %w", err)
+			return nil, fmt.Errorf(constant.GetGithubRepositoriesError, err)
 		}
 
 		allRepos = append(allRepos, repos...)
@@ -133,7 +134,7 @@ func (g *Github) CreateDeployKey(org, repository, title, publicKey string) (*Key
 		ReadOnly: BoolPtr(true),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("creating deploy key: %w", err)
+		return nil, fmt.Errorf(constant.CreateDeployKeyError, err)
 	}
 
 	return key, nil
@@ -143,7 +144,7 @@ func (g *Github) CreateDeployKey(org, repository, title, publicKey string) (*Key
 func (g *Github) DeleteDeployKey(org, repository string, identifier int64) error {
 	_, err := g.Client.Repositories.DeleteKey(g.Ctx, org, repository, identifier)
 	if err != nil {
-		return fmt.Errorf("deleting deploy key: %w", err)
+		return fmt.Errorf(constant.DeleteDeployKeyError, err)
 	}
 
 	return nil
@@ -169,13 +170,13 @@ func (g *Github) CreatePullRequest(r *PullRequest) error {
 		Body:  StringPtr(r.Body),
 	})
 	if err != nil {
-		return fmt.Errorf("creating github pull request: %w", err)
+		return fmt.Errorf(constant.CreateGithubPullRequestError, err)
 	}
 
 	if len(r.Labels) > 0 {
 		_, _, err = g.Client.Issues.AddLabelsToIssue(g.Ctx, r.Organisation, r.Repository, pr.GetNumber(), r.Labels)
 		if err != nil {
-			return fmt.Errorf("adding labels to pull request: %w", err)
+			return fmt.Errorf(constant.AddLabelToPullRequestError, err)
 		}
 	}
 

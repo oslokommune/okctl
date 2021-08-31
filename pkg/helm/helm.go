@@ -6,6 +6,7 @@ package helm
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"os"
 	"path/filepath"
@@ -318,7 +319,7 @@ func (h *Helm) Find(kubeConfigPath string, cfg *FindConfig) (*release.Release, e
 
 	awsEnvs, err := h.auth.AsEnv()
 	if err != nil {
-		return nil, fmt.Errorf("getting authentication details as environment: %w", err)
+		return nil, fmt.Errorf(constant.GetAuthenticationDetailsError, err)
 	}
 
 	for k, v := range SplitEnv(awsEnvs) {
@@ -332,7 +333,7 @@ func (h *Helm) Find(kubeConfigPath string, cfg *FindConfig) (*release.Release, e
 	}()
 
 	if err != nil {
-		return nil, fmt.Errorf("establishing environment: %w", err)
+		return nil, fmt.Errorf(constant.EstablishEnvironmentError, err)
 	}
 
 	settings := cli.New()
@@ -352,7 +353,7 @@ func (h *Helm) Find(kubeConfigPath string, cfg *FindConfig) (*release.Release, e
 
 	err = actionConfig.Init(restClient, settings.Namespace(), DefaultHelmDriver, debug)
 	if err != nil {
-		return nil, fmt.Errorf("initializing action configuration: %w", err)
+		return nil, fmt.Errorf(constant.InitializeActionConfirgurationError, err)
 	}
 
 	return h.findRelease(cfg.ReleaseName, actionConfig)
@@ -390,7 +391,7 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 
 	awsEnvs, err := h.auth.AsEnv()
 	if err != nil {
-		return nil, fmt.Errorf("getting authentication details as environment: %w", err)
+		return nil, fmt.Errorf(constant.GetAuthenticationDetailsError, err)
 	}
 
 	for k, v := range SplitEnv(awsEnvs) {
@@ -404,7 +405,7 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 	}()
 
 	if err != nil {
-		return nil, fmt.Errorf("establishing environment: %w", err)
+		return nil, fmt.Errorf(constant.EstablishEnvironmentError, err)
 	}
 
 	settings := cli.New()
@@ -424,12 +425,12 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 
 	err = actionConfig.Init(restClient, settings.Namespace(), DefaultHelmDriver, debug)
 	if err != nil {
-		return nil, fmt.Errorf("initializing action configuration: %w", err)
+		return nil, fmt.Errorf(constant.InitializeActionConfirgurationError, err)
 	}
 
 	rel, err := h.findRelease(cfg.ReleaseName, actionConfig)
 	if err != nil && !merrors.IsKind(err, merrors.NotExist) {
-		return nil, fmt.Errorf("finding release: %w", err)
+		return nil, fmt.Errorf(constant.FindReleaseError, err)
 	}
 
 	if rel != nil {
@@ -439,7 +440,7 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 		case release.StatusUninstalled:
 			break
 		case release.StatusFailed, release.StatusUninstalling, release.StatusUnknown:
-			return nil, fmt.Errorf("release is in state: %s, cannot continue", rel.Info.Status)
+			return nil, fmt.Errorf(constant.BadReleaseStateError, rel.Info.Status)
 		}
 	}
 
@@ -461,17 +462,17 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 
 	cp, err := client.ChartPathOptions.LocateChart(cfg.RepoChart(), settings)
 	if err != nil {
-		return nil, fmt.Errorf("locating chart: %w", err)
+		return nil, fmt.Errorf(constant.LocateChartError, err)
 	}
 
 	chart, err := loader.Load(cp)
 	if err != nil {
-		return nil, fmt.Errorf("loading chart: %w", err)
+		return nil, fmt.Errorf(constant.LoadChartError, err)
 	}
 
 	err = IsChartInstallable(chart)
 	if err != nil {
-		return nil, fmt.Errorf("checking if chart is installable: %w", err)
+		return nil, fmt.Errorf(constant.CheckIfChartIsInstallableError, err)
 	}
 
 	if req := chart.Metadata.Dependencies; req != nil {
@@ -491,7 +492,7 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 					Debug:            h.config.Debug,
 				}
 				if err := man.Update(); err != nil {
-					return nil, fmt.Errorf("updating local charts directory: %w", err)
+					return nil, fmt.Errorf(constant.UpdateLocalChartsDirectoryError, err)
 				}
 				// Reload the chart with the updated Chart.lock file.
 				if chart, err = loader.Load(cp); err != nil {
@@ -505,7 +506,7 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 
 	values, err := cfg.ValuesMap()
 	if err != nil {
-		return nil, fmt.Errorf("generating values map: %w", err)
+		return nil, fmt.Errorf(constant.GenerateValuesMap, err)
 	}
 
 	r, err := client.Run(chart, values)
@@ -514,13 +515,13 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 			k, debugErr := kube.New(kube.NewFromKubeConfig(kubeConfigPath))
 			if debugErr != nil {
 				_, _ = fmt.Fprintf(h.config.DebugOutput, "failed to create debug client: %s", err)
-				return nil, fmt.Errorf("creating debugger: %w", err)
+				return nil, fmt.Errorf(constant.CreateDebuggerError, err)
 			}
 
 			output, debugErr := k.Debug(settings.Namespace())
 			if debugErr != nil {
 				_, _ = fmt.Fprintf(h.config.DebugOutput, "failed to get debug information: %s", debugErr)
-				return nil, fmt.Errorf("debugging namespace: %w", err)
+				return nil, fmt.Errorf(constant.DebugNamespaceError, err)
 			}
 
 			for title, data := range output {
@@ -528,7 +529,7 @@ func (h *Helm) Install(kubeConfigPath string, cfg *InstallConfig) (*release.Rele
 			}
 		}
 
-		return nil, fmt.Errorf("running helm install command: %w", err)
+		return nil, fmt.Errorf(constant.RunHelmInstallCommandError, err)
 	}
 
 	r.Chart = nil
@@ -610,7 +611,7 @@ func IsChartInstallable(ch *chartPkg.Chart) error {
 	case "", "application":
 		return nil
 	default:
-		return fmt.Errorf("chart: %s is not installable", ch.Metadata.Type)
+		return fmt.Errorf(constant.ChartNotInstallableError, ch.Metadata.Type)
 	}
 }
 
@@ -635,7 +636,7 @@ func Lock(file string) (UnlockFn, error) {
 		return lock.Unlock, nil
 	}
 
-	return nil, fmt.Errorf("failed to create lock: %s", lockFile)
+	return nil, fmt.Errorf(constant.CreateLockError, lockFile)
 }
 
 // RestoreEnvFn can be deferred in the calling function
@@ -743,7 +744,7 @@ func (c *Chart) ValuesYAML() ([]byte, error) {
 		values, err = yaml.Marshal(c.Values)
 
 		if err != nil {
-			return nil, fmt.Errorf("marshalling values struct to yaml: %w", err)
+			return nil, fmt.Errorf(constant.MarshallToYamlError, err)
 		}
 	}
 

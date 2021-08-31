@@ -330,4 +330,61 @@ const (
 
 	StartPortForwardingError = "starting port forwarding: %w"
 
+	StagingRepositoryError      = "staging repository: %w"
+	GetWorkTreeError            = "getting work tree: %w"
+	CheckoutBranchError         = "checking out branch: %w"
+	PullBranchError             = "pulling branch: %w"
+	RunActionError              = "running action: %w"
+	CheckStatusError            = "checking status: %w"
+	CommitNameServerRecordError = "committing nameserver record: %w"
+	PushToRemoteError           = "pushing to remote: %w"
+	RemoveTrackedFileError      = "removing file: %w"
+	AddFileError = "adding file: %w"
+	GetGitStatusError = "getting status: %w"
+	FileNotStagedAsDeletedError = "file: %s, not staged as deleted"
+	CreateFileError = "creating file: %w"
+	CloneRepositoryError = "cloning repository: %w"
+
+	InitializeRepositoryError = "initializing repository: %w"
+
+	BuildTokenVerificationRequestError = "failed to build token verification request: %w"
+	SendTokenVerificationRequestError = "failed to send token verification request: %w"
+	ValidationHTTPError = "HTTP error %v (%v) when requesting token validation"
+	InvalidAuthenticatorCredentilasError = "authenticator[%d]: invalid credentials, because: %w"
+
+	RecieveDeviceCodeError = "failed to retrieve device code: %w"
+	SurveyFailedError = "survey failed: %w"
+
+	DeviceAuthorizationError = "failed getting device authorization: %w"
+
+	UserNotReadyError = "user was not ready to continue: %w"
+
+	SerializeCredentialsError = "failed to serialize credentials"
+	MissingCredentialsError = "no credentials exist"
+
+	GetGithubCredentialsError = "failed to get github credentials: %w"
+	GetGithubTeamsError = "failed to retrieve teams: %w"
+	GetGithubRepositoriesError = "failed to retrieve repositories: %w"
+	CreateDeployKeyError = "creating deploy key: %w"
+	DeleteDeployKeyError = "deleting deploy key: %w"
+	CreateGithubPullRequestError = "creating github pull request: %w"
+	AddLabelToPullRequestError = "adding labels to pull request: %w"
+
+	GetAuthenticationDetailsError = "getting authentication details as environment: %w"
+	EstablishEnvironmentError = "establishing environment: %w"
+	InitializeActionConfirgurationError = "initializing action configuration: %w"
+	FindReleaseError = "finding release: %w"
+	BadReleaseStateError = "release is in state: %s, cannot continue"
+	LocateChartError = "locating chart: %w"
+	LoadChartError = "loading chart: %w"
+	CheckIfChartIsInstallableError = "checking if chart is installable: %w"
+	UpdateLocalChartsDirectoryError = "updating local charts directory: %w"
+	GenerateValuesMap = "generating values map: %w"
+	CreateDebuggerError = "creating debugger: %w"
+	DebugNamespaceError = "debugging namespace: %w"
+	RunHelmInstallCommandError = "running helm install command: %w"
+	ChartNotInstallableError = "chart: %s is not installable"
+	CreateLockError = "failed to create lock: %s"
+	MarshallToYamlError = "marshalling values struct to yaml: %w"
+
 )

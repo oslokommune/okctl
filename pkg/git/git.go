@@ -4,6 +4,7 @@ package git
 import (
 	"errors"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"os"
 	"time"
 
@@ -49,12 +50,12 @@ type ChangeSet struct {
 func (n *Git) UpdateRepository(c *ChangeSet) (*Result, error) {
 	r, err := c.Stager(c.FileSystem)
 	if err != nil {
-		return nil, fmt.Errorf("staging repository: %w", err)
+		return nil, fmt.Errorf(constant.StagingRepositoryError, err)
 	}
 
 	workTree, err := r.Worktree()
 	if err != nil {
-		return nil, fmt.Errorf("getting work tree: %w", err)
+		return nil, fmt.Errorf(constant.GetWorkTreeError, err)
 	}
 
 	err = workTree.Checkout(&git.CheckoutOptions{
@@ -67,7 +68,7 @@ func (n *Git) UpdateRepository(c *ChangeSet) (*Result, error) {
 			Create: true,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("checking out branch: %w", err)
+			return nil, fmt.Errorf(constant.CheckoutBranchError, err)
 		}
 	}
 
@@ -80,20 +81,20 @@ func (n *Git) UpdateRepository(c *ChangeSet) (*Result, error) {
 	if err != nil {
 		if errors.Is(err, git.NoErrAlreadyUpToDate) || errors.Is(err, plumbing.ErrReferenceNotFound) || errors.Is(err, plumbing.ErrObjectNotFound) {
 		} else {
-			return nil, fmt.Errorf("pulling branch: %w", err)
+			return nil, fmt.Errorf(constant.PullBranchError, err)
 		}
 	}
 
 	for _, action := range c.Actions {
 		err = action(workTree)
 		if err != nil {
-			return nil, fmt.Errorf("running action: %w", err)
+			return nil, fmt.Errorf(constant.RunActionError, err)
 		}
 	}
 
 	status, err := workTree.Status()
 	if err != nil {
-		return nil, fmt.Errorf("checking status: %w", err)
+		return nil, fmt.Errorf(constant.CheckStatusError, err)
 	}
 
 	if status.IsClean() {
@@ -114,7 +115,7 @@ func (n *Git) UpdateRepository(c *ChangeSet) (*Result, error) {
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("committing nameserver record: %w", err)
+		return nil, fmt.Errorf(constant.CommitNameServerRecordError, err)
 	}
 
 	if c.PushToRemote {
@@ -127,7 +128,7 @@ func (n *Git) UpdateRepository(c *ChangeSet) (*Result, error) {
 			},
 		})
 		if err != nil {
-			return nil, fmt.Errorf("pushing to remote: %w", err)
+			return nil, fmt.Errorf(constant.PushToRemoteError, err)
 		}
 	}
 
@@ -163,21 +164,21 @@ func RemoveFile(workingDir, fileName string) ActionFn {
 				return nil
 			}
 
-			return fmt.Errorf("removing file: %w", err)
+			return fmt.Errorf(constant.RemoveTrackedFileError, err)
 		}
 
 		_, err = worktree.Add(filePath)
 		if err != nil {
-			return fmt.Errorf("adding file: %w", err)
+			return fmt.Errorf(constant.AddFileError, err)
 		}
 
 		status, err := worktree.Status()
 		if err != nil {
-			return fmt.Errorf("getting status: %w", err)
+			return fmt.Errorf(constant.GetGitStatusError, err)
 		}
 
 		if status.File(filePath).Staging != git.Deleted {
-			return fmt.Errorf("file: %s, not staged as deleted", filePath)
+			return fmt.Errorf(constant.FileNotStagedAsDeletedError, filePath)
 		}
 
 		return nil
@@ -191,7 +192,7 @@ func AddFile(workingDir, fileName string, content []byte) ActionFn {
 
 		file, err := worktree.Filesystem.Create(filePath)
 		if err != nil {
-			return fmt.Errorf("creating file: %w", err)
+			return fmt.Errorf(constant.CreateFileError, err)
 		}
 
 		defer func(file billy.File) {
@@ -200,12 +201,12 @@ func AddFile(workingDir, fileName string, content []byte) ActionFn {
 
 		_, err = file.Write(content)
 		if err != nil {
-			return fmt.Errorf("writing to file: %w", err)
+			return fmt.Errorf(constant.WriteToFileError, err)
 		}
 
 		_, err = worktree.Add(filePath)
 		if err != nil {
-			return fmt.Errorf("adding file: %w", err)
+			return fmt.Errorf(constant.AddFileError, err)
 		}
 
 		return nil
@@ -221,7 +222,7 @@ func RepositoryStagerClone(repoURL string) RepositoryStagerFn {
 			Depth: 1,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("cloning repository: %w", err)
+			return nil, fmt.Errorf(constant.CloneRepositoryError, err)
 		}
 
 		return repository, nil
@@ -233,7 +234,7 @@ func RepositoryStagerInit(msg, fileName, content string, mem *memory.Storage) Re
 	return func(fs billy.Filesystem) (*git.Repository, error) {
 		repository, err := git.Init(mem, fs)
 		if err != nil {
-			return nil, fmt.Errorf("initialising repository: %w", err)
+			return nil, fmt.Errorf(constant.InitializeRepositoryError, err)
 		}
 
 		f, err := fs.Create(fileName)

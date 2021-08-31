@@ -197,4 +197,90 @@ const (
 
 	FailedToDeleteClusterError = "failed to delete cluster: %w"
 
+	QueryForClusterDataError = "querying state for cluster data: %w"
+
+	DescribeUerPoolDomainError = "describing user pool domain: %w"
+
+	DescribeUserPoolClientError = "describing user pool client: %w"
+
+	EableTotpfMfaError = "enabling totp mfa: %w"
+
+	SetPS1Error = "could not set PS1: %w"
+
+	CreateExecutablePS1Error = "could not create PS1 executable: %w"
+
+	CheckIfPS1ExecutableExistsError = "could not check existence of PS1 helper executable: %w"
+
+	UnableToCreatePS1FileError = "couldn't create PS1 file: %w"
+	WriteContentToPS1FileError = "could not write contents to ps1 file: %w"
+	ClosePS1FileError = "could not close ps1 file: %w"
+
+	CreateCloudFormationStackError = "creating cloud formation stack: %w"
+
+	CollectStackFormationOutputsError = "collecting stack outputs: %w"
+
+	PatchClouFormationTemplateError = "patching cloud formation template: %w"
+
+	RotateHookInitializeError = "initialising the file rotate hook: %v"
+	GetRepositoryRootDirectoryError = "getting repository root directory: %w"
+
+	CreateContainerRepositoryError = "creating container repository: %w"
+	DeleteContainerRepositoryError = "deleting container repository: %w"
+
+	GetStateError = "acquiring existence from state %w"
+	WriteVolumeToBufferError = "writing volume to buffer: %w"
+	WriteResourceDefinitionToBufferError = "writing resource definition to buffer: %w"
+
+	CanNotFindInArchiveError = "couldn't find: %s, in archive"
+
+	InitializeError = "initialising: %w"
+
+	CheckDepedencyError = "checking dependency: %w"
+
+	CheckIfPrimaryHostedZoneExistsError = "checking primary hosted zone existence: %w"
+
+	ReaderNilError = "reader is nil"
+
+	UnsupportedDigesterError = "unsupported digester: %s"
+
+	InvalidDomainError = "invalid domain: %s"
+
+	HolyCrapError = "holy crap"
+
+	UnhandledDNSReponseCodeError = "don't know how to handle DNS response code: %d"
+	DomainAlreadyInUseError = "domain '%s' already in use, found DNS records"
+	GetNSRecordsForDomainError = "unable to get NS records for domain '%s', does not appear to be delegated yet"
+	NameServerNotMatchingError = "nameservers do not match, expected: %s, but got: %s"
+
+	FailedToSetTTLOnNSRecordError = "failed to set NS record TTL: %w"
+
+	GetSecurityGroupForNodeError = "getting security group for node: %w"
+
+	AuthorizeSecurityGroupIngressError = "authorizing security group ingress: %w"
+
+	RevokeSecurityGroupIngressError = "revoking security group ingress: %w"
+
+	GetEIPQuotasError = "getting eip quotas: %w"
+
+	GetEIPCountError = "getting current eip count: %w"
+
+	GetFargateProfileError = "getting fargate profile: %w"
+
+	FailedToCreateServiceAccountError = "failed to create service account: %s, because: %w"
+	FailedToDeleteServiceAccountError = "failed to delete service account: %s, because: %w"
+
+	FailedToDeleteError = "failed to delete: %s, because: %w"
+
+	GetClusterInfoError = "failed to get cluster information: %s: %w"
+
+	DescribeListenersError = "describing listeners: %w"
+
+	DeleteListenersError = "deleting listener: %w"
+
+	CreateExternalDNSError = "creating external DNS: %w"
+	DeleteExteralDNSError  = "deleting external DNS: %w"
+
+	CheckIfDNSControllerExistsError = "acquiring DNS controller existence: %w"
+
+
 )

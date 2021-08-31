@@ -2,6 +2,7 @@ package servicequota
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicequotas"
@@ -29,12 +30,12 @@ func (e *EipCheck) CheckAvailability() (*Result, error) {
 		ServiceCode: aws.String("ec2"),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("getting eip quotas: %w", err)
+		return nil, fmt.Errorf(constant.GetEIPQuotasError, err)
 	}
 
 	eips, err := e.provider.EC2().DescribeAddresses(nil)
 	if err != nil {
-		return nil, fmt.Errorf("getting current eip count: %w", err)
+		return nil, fmt.Errorf(constant.GetEIPCountError, err)
 	}
 
 	quota := int(*q.Quota.Value)

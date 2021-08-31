@@ -6,6 +6,7 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"hash"
 	"io"
 
@@ -56,7 +57,7 @@ func NewDigester(digesters ...Type) Digester {
 // the provided digesters.
 func (d *digest) Digest(reader io.Reader) (map[Type]string, error) {
 	if reader == nil {
-		return nil, fmt.Errorf("reader is nil")
+		return nil, fmt.Errorf(constant.ReaderNilError)
 	}
 
 	type Digested struct {
@@ -78,7 +79,7 @@ func (d *digest) Digest(reader io.Reader) (map[Type]string, error) {
 		case TypeSHA512:
 			h = sha512.New()
 		default:
-			return nil, fmt.Errorf("unsupported digester: %s", d)
+			return nil, fmt.Errorf(constant.UnsupportedDigesterError, d)
 		}
 
 		hashers[i] = h

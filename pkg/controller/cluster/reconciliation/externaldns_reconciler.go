@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
@@ -23,14 +24,14 @@ const externalDNSReconcilerIdentifier = "DNS controller"
 func (z *externalDNSReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (result reconciliation.Result, err error) {
 	action, err := z.determineAction(meta, state)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	switch action {
 	case reconciliation.ActionCreate:
 		hz, err := state.Domain.GetPrimaryHostedZone()
 		if err != nil {
-			return result, fmt.Errorf("getting primary hosted zone: %w", err)
+			return result, fmt.Errorf(constant.GetPrimaryHostedZoneError, err)
 		}
 
 		_, err = z.client.CreateExternalDNS(ctx, client.CreateExternalDNSOpts{
@@ -41,14 +42,14 @@ func (z *externalDNSReconciler) Reconcile(ctx context.Context, meta reconciliati
 		if err != nil {
 			result.Requeue = errors.IsKind(err, errors.Timeout)
 
-			return result, fmt.Errorf("creating external DNS: %w", err)
+			return result, fmt.Errorf(constant.CreateExternalDNSError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
 	case reconciliation.ActionDelete:
 		err = z.client.DeleteExternalDNS(ctx, reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata))
 		if err != nil {
-			return result, fmt.Errorf("deleting external DNS: %w", err)
+			return result, fmt.Errorf(constant.DeleteExteralDNSError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -58,7 +59,7 @@ func (z *externalDNSReconciler) Reconcile(ctx context.Context, meta reconciliati
 		return reconciliation.Result{Requeue: false}, nil
 	}
 
-	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+	return reconciliation.Result{}, fmt.Errorf(constant.ActionNotImplementedError, string(action))
 }
 
 //nolint:funlen
@@ -74,7 +75,7 @@ func (z *externalDNSReconciler) determineAction(meta reconciliation.Metadata, st
 			clusterExistenceTest,
 		)
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking dependencies: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckDepedencyError, err)
 		}
 
 		if !dependenciesReady {
@@ -83,7 +84,7 @@ func (z *externalDNSReconciler) determineAction(meta reconciliation.Metadata, st
 
 		componentExists, err := state.ExternalDNS.HasExternalDNS()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("acquiring DNS controller existence: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfDNSControllerExistsError, err)
 		}
 
 		if componentExists {
@@ -94,7 +95,7 @@ func (z *externalDNSReconciler) determineAction(meta reconciliation.Metadata, st
 	case reconciliation.ActionDelete:
 		clusterExists, err := clusterExistenceTest()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking cluster existence: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfClusterExistsError, err)
 		}
 
 		if !clusterExists {
@@ -103,7 +104,7 @@ func (z *externalDNSReconciler) determineAction(meta reconciliation.Metadata, st
 
 		componentExists, err := state.ExternalDNS.HasExternalDNS()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("acquiring DNS controller existence: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfDNSControllerExistsError, err)
 		}
 
 		if !componentExists {
@@ -115,7 +116,7 @@ func (z *externalDNSReconciler) determineAction(meta reconciliation.Metadata, st
 			state.Monitoring.HasKubePromStack,
 		)
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking dependencies: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckDepedencyError, err)
 		}
 
 		if !dependenciesReady {

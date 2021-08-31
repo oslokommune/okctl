@@ -4,6 +4,7 @@ package ec2api
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -42,7 +43,7 @@ func (a *EC2API) securityGroupForNodeGroup(name, vpcID string) (string, error) {
 		},
 	})
 	if err != nil {
-		return "", fmt.Errorf("getting security group for node: %w", err)
+		return "", fmt.Errorf(constant.GetSecurityGroupForNodeError, err)
 	}
 
 	return *sgs.SecurityGroups[0].GroupId, nil
@@ -87,7 +88,7 @@ func (a *EC2API) AuthorizePodToNodeGroupTraffic(nodegroupName, podSecurityGroup,
 			return nil
 		}
 
-		return fmt.Errorf("authorizing security group ingress: %w", err)
+		return fmt.Errorf(constant.AuthorizeSecurityGroupIngressError, err)
 	}
 
 	return nil
@@ -109,7 +110,7 @@ func (a *EC2API) RevokePodToNodeGroupTraffic(nodegroupName, podSecurityGroup, vp
 			return nil
 		}
 
-		return fmt.Errorf("revoking security group ingress: %w", err)
+		return fmt.Errorf(constant.RevokeSecurityGroupIngressError, err)
 	}
 
 	return nil

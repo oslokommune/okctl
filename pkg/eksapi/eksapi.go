@@ -4,6 +4,7 @@ package eksapi
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
@@ -32,7 +33,7 @@ func (f *EKSAPI) FargateProfilePodExecutionRoleARN(profile string) (string, erro
 		FargateProfileName: aws.String(profile),
 	})
 	if err != nil {
-		return "", fmt.Errorf("getting fargate profile: %w", err)
+		return "", fmt.Errorf(constant.GetFargateProfileError, err)
 	}
 
 	return *p.FargateProfile.PodExecutionRoleArn, nil

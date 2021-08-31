@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/gosimple/slug"
 	"github.com/mishudark/errors"
@@ -84,7 +85,7 @@ func (d *domain) CreateHostedZone(opts api.CreateHostedZoneOpts) (*api.HostedZon
 
 	err = route53.New(d.provider).SetNSRecordTTL(p.HostedZoneID, NSTTL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to set NS record TTL: %w", err)
+		return nil, fmt.Errorf(constant.FailedToSetTTLOnNSRecordError, err)
 	}
 
 	return p, nil

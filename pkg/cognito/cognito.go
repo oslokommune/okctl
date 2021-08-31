@@ -2,6 +2,7 @@ package cognito
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -27,7 +28,7 @@ func (c *Cognito) UserPoolDomainInfo(domain string) (*UserPoolDomainInfo, error)
 		Domain: aws.String(domain),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("describing user pool domain: %w", err)
+		return nil, fmt.Errorf(constant.DescribeUerPoolDomainError, err)
 	}
 
 	return &UserPoolDomainInfo{
@@ -43,7 +44,7 @@ func (c *Cognito) UserPoolClientSecret(clientID, userPoolID string) (string, err
 		UserPoolId: aws.String(userPoolID),
 	})
 	if err != nil {
-		return "", fmt.Errorf("describing user pool client: %w", err)
+		return "", fmt.Errorf(constant.DescribeUserPoolClientError, err)
 	}
 
 	return *out.UserPoolClient.ClientSecret, nil
@@ -59,7 +60,7 @@ func (c *Cognito) EnableMFA(userPoolID string) error {
 		UserPoolId: aws.String(userPoolID),
 	})
 	if err != nil {
-		return fmt.Errorf("enabling totp mfa: %w", err)
+		return fmt.Errorf(constant.EableTotpfMfaError, err)
 	}
 
 	return nil

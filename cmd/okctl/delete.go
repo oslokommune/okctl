@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"io/ioutil"
 
@@ -54,7 +55,7 @@ including VPC, this is a highly destructive operation.`,
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			err := o.Initialise()
 			if err != nil {
-				return fmt.Errorf("initialising: %w", err)
+				return fmt.Errorf(constant.InitializeError, err)
 			}
 
 			return nil
@@ -69,14 +70,14 @@ including VPC, this is a highly destructive operation.`,
 
 			spin, err := spinner.New("deleting cluster", spinnerWriter)
 			if err != nil {
-				return fmt.Errorf("error creating spinner: %w", err)
+				return fmt.Errorf(constant.SpinnerCreationError, err)
 			}
 
 			state := o.StateHandlers(o.StateNodes())
 
 			services, err := o.ClientServices(state)
 			if err != nil {
-				return fmt.Errorf("error getting services: %w", err)
+				return fmt.Errorf(constant.GetServicesError, err)
 			}
 
 			schedulerOpts := common.SchedulerOpts{
@@ -116,7 +117,7 @@ including VPC, this is a highly destructive operation.`,
 
 			_, err = scheduler.Run(o.Ctx, state)
 			if err != nil {
-				return fmt.Errorf("synchronizing declaration with state: %w", err)
+				return fmt.Errorf(constant.SyncDeclarationWithStateError, err)
 			}
 
 			return nil

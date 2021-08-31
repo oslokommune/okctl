@@ -3,6 +3,7 @@ package elbv2api
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 
@@ -46,7 +47,7 @@ DESCRIBE:
 				}
 			}
 
-			return nil, fmt.Errorf("describing listeners: %w", err)
+			return nil, fmt.Errorf(constant.DescribeListenersError, err)
 		}
 
 		all = append(all, listeners.Listeners...)
@@ -70,7 +71,7 @@ func (a *ELBv2API) DeleteListenersWithCertificate(certificateARN string, listene
 					ListenerArn: listener.ListenerArn,
 				})
 				if err != nil {
-					return fmt.Errorf("deleting listener: %w", err)
+					return fmt.Errorf(constant.DeleteListenersError, err)
 				}
 			}
 		}

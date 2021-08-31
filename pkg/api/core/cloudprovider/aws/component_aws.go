@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/lambdafunction"
 
@@ -20,7 +21,7 @@ func (c *componentCloudProvider) CreateS3Bucket(opts *api.CreateS3BucketOpts) (*
 
 	template, err := cfn.New(composition).Build()
 	if err != nil {
-		return nil, fmt.Errorf("building the cloud formation template: %w", err)
+		return nil, fmt.Errorf(constant.BuildCloudFormationTemplateError, err)
 	}
 
 	r := cfn.NewRunner(c.provider)
@@ -33,7 +34,7 @@ func (c *componentCloudProvider) CreateS3Bucket(opts *api.CreateS3BucketOpts) (*
 		defaultTimeOut,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("creating cloud formation stack: %w", err)
+		return nil, fmt.Errorf(constant.CreateCloudFormationStackError, err)
 	}
 
 	b := &api.S3Bucket{
@@ -46,7 +47,7 @@ func (c *componentCloudProvider) CreateS3Bucket(opts *api.CreateS3BucketOpts) (*
 		composition.ResourceBucketNameOutput(): cfn.String(&b.Name),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("collecting stack outputs: %w", err)
+		return nil, fmt.Errorf(constant.CollectStackFormationOutputsError, err)
 	}
 
 	return b, nil
@@ -79,7 +80,7 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 
 	template, err := b.Build()
 	if err != nil {
-		return nil, fmt.Errorf("building cloud formation template: %w", err)
+		return nil, fmt.Errorf(constant.BuildCloudFormationTemplateError, err)
 	}
 
 	template, err = lambdafunction.PatchRotateLambda(
@@ -88,7 +89,7 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 		template,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("patching cloud formation template: %w", err)
+		return nil, fmt.Errorf(constant.PatchClouFormationTemplateError, err)
 	}
 
 	r := cfn.NewRunner(c.provider)
@@ -101,7 +102,7 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 		postgresTimeOutInMinutes,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("creating cloud formation stack: %w", err)
+		return nil, fmt.Errorf(constant.CreateCloudFormationStackError, err)
 	}
 
 	p := &api.PostgresDatabase{
@@ -123,7 +124,7 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 		composer.CloudFormationResourceName("RDSPGRotater"):                                  cfn.String(&p.LambdaFunctionARN),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("collecting stack outputs: %w", err)
+		return nil, fmt.Errorf(constant.CollectStackFormationOutputsError, err)
 	}
 
 	return p, nil

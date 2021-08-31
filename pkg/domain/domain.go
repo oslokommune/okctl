@@ -5,6 +5,7 @@ package domain
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"net/http"
 	"regexp"
 	"time"
@@ -70,9 +71,9 @@ func NotTaken(domain string) error {
 
 	switch resp.StatusCode {
 	case http.StatusBadRequest:
-		return fmt.Errorf("invalid domain: %s", domain)
+		return fmt.Errorf(constant.InvalidDomainError, domain)
 	case http.StatusInternalServerError:
-		return fmt.Errorf("holy crap")
+		return fmt.Errorf(constant.HolyCrapError)
 	}
 
 	dnsResponse := &DNSResponse{}
@@ -88,12 +89,12 @@ func NotTaken(domain string) error {
 	case dns.RcodeNameError:
 		return nil
 	default:
-		return fmt.Errorf("don't know how to handle DNS response code: %d", dnsResponse.Status)
+		return fmt.Errorf(constant.UnhandledDNSReponseCodeError, dnsResponse.Status)
 	}
 
 	for _, a := range dnsResponse.Answer {
 		if a.Type == dns.TypeNS {
-			return fmt.Errorf("domain '%s' already in use, found DNS records", domain)
+			return fmt.Errorf(constant.DomainAlreadyInUseError, domain)
 		}
 	}
 
@@ -133,9 +134,9 @@ func NameServers(domain string) ([]string, error) {
 
 	switch resp.StatusCode {
 	case http.StatusBadRequest:
-		return nil, fmt.Errorf("invalid domain: %s", domain)
+		return nil, fmt.Errorf(constant.InvalidDomainError, domain)
 	case http.StatusInternalServerError:
-		return nil, fmt.Errorf("holy crap")
+		return nil, fmt.Errorf(constant.HolyCrapError)
 	}
 
 	dnsResponse := &DNSResponse{}
@@ -151,9 +152,9 @@ func NameServers(domain string) ([]string, error) {
 	case dns.RcodeServerFailure:
 		return nil, fmt.Errorf("%s", dnsResponse.Comment)
 	case dns.RcodeNameError:
-		return nil, fmt.Errorf("unable to get NS records for domain '%s', does not appear to be delegated yet", domain)
+		return nil, fmt.Errorf(constant.GetNSRecordsForDomainError, domain)
 	default:
-		return nil, fmt.Errorf("don't know how to handle DNS response code: %d", dnsResponse.Status)
+		return nil, fmt.Errorf(constant.UnhandledDNSReponseCodeError, dnsResponse.Status)
 	}
 
 	var nameservers []string
@@ -180,13 +181,13 @@ func ShouldHaveNameServers(domain string, expectedNameservers []string) error {
 	}
 
 	if len(nameservers) == 0 {
-		return fmt.Errorf("unable to get NS records for domain '%s', does not appear to be delegated yet", domain)
+		return fmt.Errorf(constant.GetNSRecordsForDomainError, domain)
 	}
 
 	diff := compare(expectedNameservers, nameservers)
 
 	if len(diff) >= len(expectedNameservers) {
-		return fmt.Errorf("nameservers do not match, expected: %s, but got: %s", expectedNameservers, nameservers)
+		return fmt.Errorf(constant.NameServerNotMatchingError, expectedNameservers, nameservers)
 	}
 
 	return nil

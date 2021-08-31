@@ -4,6 +4,7 @@ package scaffold
 import (
 	"bytes"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"io/ioutil"
 	"regexp"
@@ -26,7 +27,7 @@ func volumesAsBytes(volumes []*v1.PersistentVolumeClaim) ([]byte, error) {
 	for index := range volumes {
 		err := writeCleanResource(&writer, volumes[index])
 		if err != nil {
-			return nil, fmt.Errorf("writing volume to buffer: %w", err)
+			return nil, fmt.Errorf(constant.WriteVolumeToBufferError, err)
 		}
 	}
 
@@ -39,7 +40,7 @@ func resourceAsBytes(data interface{}) ([]byte, error) {
 
 	err := writeCleanResource(&writer, data)
 	if err != nil {
-		return nil, fmt.Errorf("writing resource definition to buffer: %w", err)
+		return nil, fmt.Errorf(constant.WriteResourceDefinitionToBufferError, err)
 	}
 
 	return writer.Bytes(), nil

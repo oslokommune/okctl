@@ -3,6 +3,7 @@ package eksctl
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"path/filepath"
 	"regexp"
@@ -168,7 +169,7 @@ func (e *Eksctl) CreateServiceAccount(cfg *v1alpha5.ClusterConfig) ([]byte, erro
 
 	b, err := e.runWithConfig(args, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create service account: %s, because: %w", string(b), err)
+		return nil, fmt.Errorf(constant.FailedToCreateServiceAccountError, string(b), err)
 	}
 
 	return b, nil
@@ -185,7 +186,7 @@ func (e *Eksctl) DeleteServiceAccount(cfg *v1alpha5.ClusterConfig) ([]byte, erro
 
 	b, err := e.runWithConfig(args, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to delete service account: %s, because: %w", string(b), err)
+		return nil, fmt.Errorf(constant.FailedToDeleteServiceAccountError, string(b), err)
 	}
 
 	return b, nil
@@ -203,7 +204,7 @@ func (e *Eksctl) DeleteCluster(clusterName string) ([]byte, error) {
 
 	b, err := e.run(args)
 	if err != nil {
-		return nil, fmt.Errorf("failed to delete: %s, because: %w", string(b), err)
+		return nil, fmt.Errorf(constant.FailedToDeleteError, string(b), err)
 	}
 
 	return b, nil
@@ -221,7 +222,7 @@ func (e *Eksctl) DeleteFargateProfiles(clusterName, fragetProfileName string) ([
 
 	b, err := e.run(args)
 	if err != nil {
-		return nil, fmt.Errorf("failed to delete: %s, because: %w", string(b), err)
+		return nil, fmt.Errorf(constant.FailedToDeleteError, string(b), err)
 	}
 
 	return b, nil
@@ -237,7 +238,7 @@ func (e *Eksctl) CreateCluster(cfg *v1alpha5.ClusterConfig) ([]byte, error) {
 
 	b, err := e.runWithConfig(args, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create: %s, because: %w", string(b), err)
+		return nil, fmt.Errorf(constant.FailedToDeleteError, string(b), err)
 	}
 
 	return b, nil
@@ -264,7 +265,7 @@ func (e *Eksctl) HasCluster(cfg *v1alpha5.ClusterConfig) (bool, error) {
 			return false, nil
 		}
 
-		return false, fmt.Errorf("failed to get cluster information: %s: %w", string(out), err)
+		return false, fmt.Errorf(constant.GetClusterInfoError, string(out), err)
 	}
 
 	return true, nil

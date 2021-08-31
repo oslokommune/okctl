@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"strings"
 )
@@ -68,7 +69,7 @@ func (z *zipDecompressor) Decompress(r io.Reader, w io.Writer) error {
 		}
 	}
 
-	return fmt.Errorf("couldn't find: %s, in archive", z.file)
+	return fmt.Errorf(constant.CanNotFindInArchiveError, z.file)
 }
 
 // NewZipDecompressor returns a decompressor that knows how to handle .zip files
@@ -113,7 +114,7 @@ func (g *gzipTarDecompressor) Decompress(reader io.Reader, writer io.Writer) err
 		}
 	}
 
-	return fmt.Errorf("couldn't find: %s, in archive", g.file)
+	return fmt.Errorf(constant.CanNotFindInArchiveError, g.file)
 }
 
 // NewGzipTarDecompressor returns a decompressor that knows how to handle .tar.gz files

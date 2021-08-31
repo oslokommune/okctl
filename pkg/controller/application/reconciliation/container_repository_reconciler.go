@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 
@@ -21,7 +22,7 @@ type containerRepositoryReconciler struct {
 func (c *containerRepositoryReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
 	action, err := c.determineAction(meta, state)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	switch action {
@@ -32,7 +33,7 @@ func (c *containerRepositoryReconciler) Reconcile(ctx context.Context, meta reco
 			ImageName:       meta.ApplicationDeclaration.Image.Name,
 		})
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("creating container repository: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.CreateContainerRepositoryError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -42,7 +43,7 @@ func (c *containerRepositoryReconciler) Reconcile(ctx context.Context, meta reco
 			ImageName: meta.ApplicationDeclaration.Image.Name,
 		})
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("deleting container repository: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.DeleteContainerRepositoryError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -52,7 +53,7 @@ func (c *containerRepositoryReconciler) Reconcile(ctx context.Context, meta reco
 		return reconciliation.Result{Requeue: false}, nil
 	}
 
-	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+	return reconciliation.Result{}, fmt.Errorf(constant.ActionNotImplementedError, string(action))
 }
 
 func (c *containerRepositoryReconciler) determineAction(meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Action, error) {
@@ -60,7 +61,7 @@ func (c *containerRepositoryReconciler) determineAction(meta reconciliation.Meta
 
 	hasExistingImage, err := state.ContainerRepository.ApplicationHasImage(meta.ApplicationDeclaration.Metadata.Name)
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf("acquiring existence from state %w", err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.GetStateError, err)
 	}
 
 	switch userIndication {

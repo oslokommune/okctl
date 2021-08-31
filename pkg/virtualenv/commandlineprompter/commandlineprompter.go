@@ -3,6 +3,7 @@ package commandlineprompter
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"path"
 	"strings"
 
@@ -36,7 +37,7 @@ func New(opts CommandLinePromptOpts, shellType shelltype.ShellType) (CommandLine
 
 	err := setPs1(opts.UserDirStorage, osEnvVars)
 	if err != nil {
-		return nil, fmt.Errorf("could not set PS1: %w", err)
+		return nil, fmt.Errorf(constant.SetPS1Error, err)
 	}
 
 	switch shellType {
@@ -62,7 +63,7 @@ func New(opts CommandLinePromptOpts, shellType shelltype.ShellType) (CommandLine
 func setPs1(userDirStorage storage.Storer, osEnvVars map[string]string) error {
 	ps1Dir, err := createPs1ExecutableIfNotExists(userDirStorage)
 	if err != nil {
-		return fmt.Errorf("could not create PS1 executable: %w", err)
+		return fmt.Errorf(constant.CreateExecutablePS1Error, err)
 	}
 
 	if osPath, hasPath := osEnvVars["PATH"]; hasPath {
@@ -89,13 +90,13 @@ const (
 func createPs1ExecutableIfNotExists(store storage.Storer) (string, error) {
 	ps1FileExists, err := store.Exists(path.Join(Ps1Dir, Ps1Filename))
 	if err != nil {
-		return "", fmt.Errorf("could not check existence of PS1 helper executable: %w", err)
+		return "", fmt.Errorf(constant.CheckIfPS1ExecutableExistsError, err)
 	}
 
 	if !ps1FileExists {
 		ps1File, err := store.Create(Ps1Dir, Ps1Filename, 0o744)
 		if err != nil {
-			return "", fmt.Errorf("couldn't create PS1 file: %w", err)
+			return "", fmt.Errorf(constant.UnableToCreatePS1FileError, err)
 		}
 
 		_, err = ps1File.WriteString(`#!/usr/bin/env bash
@@ -108,12 +109,12 @@ K8S_NAMESPACE="${K8S_NAMESPACE:-default}"
 echo -e "$ENV:$K8S_NAMESPACE"
 `)
 		if err != nil {
-			return "", fmt.Errorf("could not write contents to ps1 file: %w", err)
+			return "", fmt.Errorf(constant.WriteContentToPS1FileError, err)
 		}
 
 		err = ps1File.Close()
 		if err != nil {
-			return "", fmt.Errorf("could not close ps1 file: %w", err)
+			return "", fmt.Errorf(constant.ClosePS1FileError, err)
 		}
 	}
 

@@ -2,6 +2,7 @@ package reconciliation
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 )
@@ -14,7 +15,7 @@ func AssertDependencyExistence(expectExistence bool, tests ...DependencyTestFn) 
 	for _, test := range tests {
 		actualExistence, err := test()
 		if err != nil {
-			return true, fmt.Errorf("checking dependency: %w", err)
+			return true, fmt.Errorf(constant.CheckDepedencyError, err)
 		}
 
 		if expectExistence != actualExistence {
@@ -38,7 +39,7 @@ func GeneratePrimaryDomainDelegationTest(state *clientCore.StateHandlers) Depend
 	return func() (bool, error) {
 		hasPrimaryHostedZone, err := state.Domain.HasPrimaryHostedZone()
 		if err != nil {
-			return false, fmt.Errorf("checking primary hosted zone existence: %w", err)
+			return false, fmt.Errorf(constant.CheckIfPrimaryHostedZoneExistsError, err)
 		}
 
 		if !hasPrimaryHostedZone {
@@ -47,7 +48,7 @@ func GeneratePrimaryDomainDelegationTest(state *clientCore.StateHandlers) Depend
 
 		domain, err := state.Domain.GetPrimaryHostedZone()
 		if err != nil {
-			return false, fmt.Errorf("acquiring primary hosted zone: %w", err)
+			return false, fmt.Errorf(constant.GetPrimaryHostedZoneError, err)
 		}
 
 		return domain.IsDelegated, nil

@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -18,7 +19,7 @@ func (c *containerRepositoryCloudProvider) CreateContainerRepository(opts *api.C
 
 	template, err := cfn.New(composition).Build()
 	if err != nil {
-		return nil, fmt.Errorf("building the cloud formation template: %w", err)
+		return nil, fmt.Errorf(constant.BuildCloudFormationTemplateError, err)
 	}
 
 	r := cfn.NewRunner(c.provider)
@@ -31,7 +32,7 @@ func (c *containerRepositoryCloudProvider) CreateContainerRepository(opts *api.C
 		defaultTimeOut,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("creating cloud formation stack: %w", err)
+		return nil, fmt.Errorf(constant.CreateCloudFormationStackError, err)
 	}
 
 	repository := &api.ContainerRepository{
@@ -45,7 +46,7 @@ func (c *containerRepositoryCloudProvider) CreateContainerRepository(opts *api.C
 		composition.ResourceRepositoryNameOutput(): cfn.String(&repository.Name),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("collecting stack outputs: %w", err)
+		return nil, fmt.Errorf(constant.CollectStackFormationOutputsError, err)
 	}
 
 	return repository, nil

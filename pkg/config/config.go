@@ -103,7 +103,7 @@ func (c *Config) EnableFileLog() error {
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("initialising the file rotate hook: %v", err)
+		return fmt.Errorf(constant.RotateHookInitializeError, err)
 	}
 
 	c.Logger.AddHook(rotateFileHook)
@@ -188,7 +188,7 @@ func (c *Config) GetRepoDir() (string, error) {
 func (c *Config) getRepositoryRootDirectory() (string, error) {
 	result, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
 	if err != nil {
-		return "", fmt.Errorf("getting repository root directory: %w", err)
+		return "", fmt.Errorf(constant.GetRepositoryRootDirectoryError, err)
 	}
 
 	pathAsString := string(bytes.Trim(result, "\n"))

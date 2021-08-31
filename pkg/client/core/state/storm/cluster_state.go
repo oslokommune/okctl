@@ -3,6 +3,7 @@ package storm
 import (
 	"errors"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"time"
 
 	stormpkg "github.com/asdine/storm/v3"
@@ -74,7 +75,7 @@ func (c *clusterState) HasCluster(name string) (bool, error) {
 			return false, nil
 		}
 
-		return false, fmt.Errorf("querying state for cluster data: %w", err)
+		return false, fmt.Errorf(constant.QueryForClusterDataError, err)
 	}
 
 	return true, nil

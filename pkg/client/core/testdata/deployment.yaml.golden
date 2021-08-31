@@ -15,6 +15,13 @@ spec:
     spec:
       containers:
       - name: my-app
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
         volumeMounts:
         - mountPath: /path/to/mount/volume
           name: my-app-pathtomountvolume

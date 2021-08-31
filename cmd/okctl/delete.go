@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"io/ioutil"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
 	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"

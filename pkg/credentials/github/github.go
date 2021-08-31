@@ -4,10 +4,11 @@ package github
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/pkg/browser"
 

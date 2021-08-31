@@ -123,24 +123,24 @@ const (
 
 	NoCredentialsAvailableError = "no credentials available"
 
-	AwsSomethingError = "something"
+	AwsSomethingError    = "something"
 	AwsSomethingBadError = "something bad"
 
 	GetHelmError = "getting helm release: %w"
-	GetVpcError = "getting vpc: %w"
+	GetVpcError  = "getting vpc: %w"
 
 	CreateAWSLoadBalancerControllerError = "creating aws load balancer controller: %w"
 	DeleteAWSLoadBalancerControllerError = "deleting aws load balancer controller: %w"
 
 	CheckIfAWSLoadBalancerExistsError = "acquiring AWS Load Balancer Controller existence: %w"
-	CheckDeleteDependenciesError = "checking deletion dependencies: %w"
+	CheckDeleteDependenciesError      = "checking deletion dependencies: %w"
 
 	CreateBlockStorageError = "creating blockstorage: %w"
 	DeleteBlockStorageError = "deleting blockstorage: %w"
-	LoadStateDatabaseError = "loading state database: %w"
+	LoadStateDatabaseError  = "loading state database: %w"
 
-	OutputExistsError = "already have output with name: %s"
-	ResourceExistsError = "already have resource with name: %s"
+	OutputExistsError            = "already have output with name: %s"
+	ResourceExistsError          = "already have resource with name: %s"
 	RemoveCertificateUsagesError = "removing usages of certificate: %w"
 
 	BuildCloudFormationTemplateError = "building cloudformation template: %w"
@@ -150,40 +150,40 @@ const (
 
 	HasCapacityError = "%s: required %d, but only have %d available"
 
-	CdirNotIpv4Error = "cidr (%s) is not of type IPv4"
-	CdirAddressSpaceError = "address space of cidr (%s) is less than required: %d < %d"
+	CdirNotIpv4Error         = "cidr (%s) is not of type IPv4"
+	CdirAddressSpaceError    = "address space of cidr (%s) is less than required: %d < %d"
 	CdirNotInLegalRangeError = "provided cidr (%s) is not in the legal ranges: %s"
 
-	ListLoadBalancersError = "listing load balancers: %w"
+	ListLoadBalancersError  = "listing load balancers: %w"
 	DeleteLoadBalancerError = "deleting load balancer: %w"
 
-	ListSecurityGroupsError = "listing security groups for vpc: %w"
-	DeleteSecurityGroupError = "deleting security group: %w"
-	ListingTargetGroupsError = "listing target groups: %w"
+	ListSecurityGroupsError   = "listing security groups for vpc: %w"
+	DeleteSecurityGroupError  = "deleting security group: %w"
+	ListingTargetGroupsError  = "listing target groups: %w"
 	DescribeTargetGroupsError = "describing tags for target group: %w"
-	RemovingTargetGrupError = "removing target group: %w"
+	RemovingTargetGrupError   = "removing target group: %w"
 
-	CheckIfVpcExistsError = "checking VPC existence: %w"
+	CheckIfVpcExistsError         = "checking VPC existence: %w"
 	FailedToWriteDebugOutputError = "failed to write debug output: %w"
 
-	FailedToMarshalDataError   = "failed to marshal data for"
-	FailedToCreateRequestError = "failed to create request for"
-	RequestFailedForError = "request failed for"
-	ResponseFailedForError = "failed to read response for"
+	FailedToMarshalDataError      = "failed to marshal data for"
+	FailedToCreateRequestError    = "failed to create request for"
+	RequestFailedForError         = "request failed for"
+	ResponseFailedForError        = "failed to read response for"
 	FailedTowriteDebugOutputError = "failed to write debug output: %w"
-	FailedToParseResponseError  ="failed to parse response: %w"
+	FailedToParseResponseError    = "failed to parse response: %w"
 	FailedToWriteProgressForError = "failed to write progress for"
 
 	UnmarshalOnServerSideError = "unmarshalling error from server side: %w: %s"
-	ValidateDeserializedError = "validating deserialized error with content %s: %w"
+	ValidateDeserializedError  = "validating deserialized error with content %s: %w"
 
 	CreateClusterError = "creating cluster: %w"
 	DeleteClusterError = "deleting cluster: %w"
 
-	DeleteDanglingALBError = "cleaning up dangling ALBs: %w"
+	DeleteDanglingALBError   = "cleaning up dangling ALBs: %w"
 	CheckDepedencyReadyError = "checking for dependency ready status: %w"
-	CleanUpALBError = "cleaning up ALBs: %w"
-	CleanUpTragetGroupError = "cleaning target groups: %w"
+	CleanUpALBError          = "cleaning up ALBs: %w"
+	CleanUpTragetGroupError  = "cleaning target groups: %w"
 
 	GetVPCStateError = "acquiring VPC state: %w"
 
@@ -192,8 +192,8 @@ const (
 	AssertExistenceError = "asserting existence: %w"
 
 	GetAwsIamAuthBinaryError = "retrieving aws-iam-authenticator binary: %w"
-	GetKubectlBinaryError = "retrieving kubectl binary: %w"
-	GetEksctlBinaryError = "retrieving eksctl binary: %w"
+	GetKubectlBinaryError    = "retrieving kubectl binary: %w"
+	GetEksctlBinaryError     = "retrieving eksctl binary: %w"
 
 	FailedToDeleteClusterError = "failed to delete cluster: %w"
 
@@ -213,7 +213,7 @@ const (
 
 	UnableToCreatePS1FileError = "couldn't create PS1 file: %w"
 	WriteContentToPS1FileError = "could not write contents to ps1 file: %w"
-	ClosePS1FileError = "could not close ps1 file: %w"
+	ClosePS1FileError          = "could not close ps1 file: %w"
 
 	CreateCloudFormationStackError = "creating cloud formation stack: %w"
 
@@ -221,14 +221,14 @@ const (
 
 	PatchClouFormationTemplateError = "patching cloud formation template: %w"
 
-	RotateHookInitializeError = "initialising the file rotate hook: %v"
+	RotateHookInitializeError       = "initialising the file rotate hook: %v"
 	GetRepositoryRootDirectoryError = "getting repository root directory: %w"
 
 	CreateContainerRepositoryError = "creating container repository: %w"
 	DeleteContainerRepositoryError = "deleting container repository: %w"
 
-	GetStateError = "acquiring existence from state %w"
-	WriteVolumeToBufferError = "writing volume to buffer: %w"
+	GetStateError                        = "acquiring existence from state %w"
+	WriteVolumeToBufferError             = "writing volume to buffer: %w"
 	WriteResourceDefinitionToBufferError = "writing resource definition to buffer: %w"
 
 	CanNotFindInArchiveError = "couldn't find: %s, in archive"
@@ -248,9 +248,9 @@ const (
 	HolyCrapError = "holy crap"
 
 	UnhandledDNSReponseCodeError = "don't know how to handle DNS response code: %d"
-	DomainAlreadyInUseError = "domain '%s' already in use, found DNS records"
-	GetNSRecordsForDomainError = "unable to get NS records for domain '%s', does not appear to be delegated yet"
-	NameServerNotMatchingError = "nameservers do not match, expected: %s, but got: %s"
+	DomainAlreadyInUseError      = "domain '%s' already in use, found DNS records"
+	GetNSRecordsForDomainError   = "unable to get NS records for domain '%s', does not appear to be delegated yet"
+	NameServerNotMatchingError   = "nameservers do not match, expected: %s, but got: %s"
 
 	FailedToSetTTLOnNSRecordError = "failed to set NS record TTL: %w"
 
@@ -285,31 +285,30 @@ const (
 	CreateExternalSecretSetError = "creating external secrets client set: %w"
 
 	ListExternalSecretsError = "listing external secrets in %s: %w"
-	GetExternalSecretsError = "getting external secret %s in %s: %w"
+	GetExternalSecretsError  = "getting external secret %s in %s: %w"
 
 	CreateExternalSecretsError = "creating external secrets: %w"
-	DeleteExternalSecretsError = "deleting external secrets: %w"
+	DeleteExternalSecretsError = "deleting external secrets: %w" //nolint
 
 	CheckIfSecretsControllerExistsError = "acquiring secrets controller existence: %w"
 
-
 	GetFargateOnDemanPodsQuotasError = "getting fargate on-demand pods quotas: %w"
-	GetFargetOnDemandPodUtilization = "getting fargate on-demand pods utilization: %w"
+	GetFargetOnDemandPodUtilization  = "getting fargate on-demand pods utilization: %w"
 
-	PkgURLValidationError = "a valid pkgURL must begin https://, got: %s"
-	DownloadFailedError = "failed to download file at: %s"
+	PkgURLValidationError  = "a valid pkgURL must begin https://, got: %s"
+	DownloadFailedError    = "failed to download file at: %s"
 	BadStatusDownloadError = "bad status: %s, failed download of: %s"
-	EmptyDownloadError = "downloaded file was size: 0, for url: %s"
+	EmptyDownloadError     = "downloaded file was size: 0, for url: %s"
 
-	FileSystemCastError = "could not cast implemenation to *fileSystem"
-	StructNotFoundError = "failed to retrieve struct: no such name '%s'"
-	ProcessStructError = "failed to process struct: %w"
+	FileSystemCastError  = "could not cast implemenation to *fileSystem"
+	StructNotFoundError  = "failed to retrieve struct: no such name '%s'"
+	ProcessStructError   = "failed to process struct: %w"
 	PostProcessDataError = "failed to postprocess data: %w"
 
-	FileExistsError = "file exists: %w"
-	UnknownOptionError = "unknown option: %s"
+	FileExistsError      = "file exists: %w"
+	UnknownOptionError   = "unknown option: %s"
 	ApplyAlterationError = "failed to apply alteration %s: %w"
-	PreProcessDataError = "failed to preprocess data: %w"
+	PreProcessDataError  = "failed to preprocess data: %w"
 
 	StoreBytesError = "failed to store bytes: %w"
 
@@ -321,12 +320,12 @@ const (
 	ProcessUnkownOpreationError   = "cannot process unknown operation option: %v"
 
 	WriteToFileError = "failed to write file: %w"
-	RemoveFileError = "failed to remove file: %w"
+	RemoveFileError  = "failed to remove file: %w"
 
 	RemoveDirectoryError = "failed to remove directory: %w"
 
 	FileSystemTaskCastError = "failed to cast task to *fileSystemTask"
-	ProcessTaskError = "failed to process task %s(%s): %w"
+	ProcessTaskError        = "failed to process task %s(%s): %w"
 
 	StartPortForwardingError = "starting port forwarding: %w"
 
@@ -339,52 +338,51 @@ const (
 	CommitNameServerRecordError = "committing nameserver record: %w"
 	PushToRemoteError           = "pushing to remote: %w"
 	RemoveTrackedFileError      = "removing file: %w"
-	AddFileError = "adding file: %w"
-	GetGitStatusError = "getting status: %w"
+	AddFileError                = "adding file: %w"
+	GetGitStatusError           = "getting status: %w"
 	FileNotStagedAsDeletedError = "file: %s, not staged as deleted"
-	CreateFileError = "creating file: %w"
-	CloneRepositoryError = "cloning repository: %w"
+	CreateFileError             = "creating file: %w"
+	CloneRepositoryError        = "cloning repository: %w"
 
 	InitializeRepositoryError = "initializing repository: %w"
 
-	BuildTokenVerificationRequestError = "failed to build token verification request: %w"
-	SendTokenVerificationRequestError = "failed to send token verification request: %w"
-	ValidationHTTPError = "HTTP error %v (%v) when requesting token validation"
+	BuildTokenVerificationRequestError   = "failed to build token verification request: %w"
+	SendTokenVerificationRequestError    = "failed to send token verification request: %w"
+	ValidationHTTPError                  = "HTTP error %v (%v) when requesting token validation"
 	InvalidAuthenticatorCredentilasError = "authenticator[%d]: invalid credentials, because: %w"
 
 	RecieveDeviceCodeError = "failed to retrieve device code: %w"
-	SurveyFailedError = "survey failed: %w"
+	SurveyFailedError      = "survey failed: %w"
 
 	DeviceAuthorizationError = "failed getting device authorization: %w"
 
 	UserNotReadyError = "user was not ready to continue: %w"
 
 	SerializeCredentialsError = "failed to serialize credentials"
-	MissingCredentialsError = "no credentials exist"
+	MissingCredentialsError   = "no credentials exist"
 
-	GetGithubCredentialsError = "failed to get github credentials: %w"
-	GetGithubTeamsError = "failed to retrieve teams: %w"
-	GetGithubRepositoriesError = "failed to retrieve repositories: %w"
-	CreateDeployKeyError = "creating deploy key: %w"
-	DeleteDeployKeyError = "deleting deploy key: %w"
+	GetGithubCredentialsError    = "failed to get github credentials: %w"
+	GetGithubTeamsError          = "failed to retrieve teams: %w"
+	GetGithubRepositoriesError   = "failed to retrieve repositories: %w"
+	CreateDeployKeyError         = "creating deploy key: %w"
+	DeleteDeployKeyError         = "deleting deploy key: %w"
 	CreateGithubPullRequestError = "creating github pull request: %w"
-	AddLabelToPullRequestError = "adding labels to pull request: %w"
+	AddLabelToPullRequestError   = "adding labels to pull request: %w"
 
-	GetAuthenticationDetailsError = "getting authentication details as environment: %w"
-	EstablishEnvironmentError = "establishing environment: %w"
+	GetAuthenticationDetailsError       = "getting authentication details as environment: %w"
+	EstablishEnvironmentError           = "establishing environment: %w"
 	InitializeActionConfirgurationError = "initializing action configuration: %w"
-	FindReleaseError = "finding release: %w"
-	BadReleaseStateError = "release is in state: %s, cannot continue"
-	LocateChartError = "locating chart: %w"
-	LoadChartError = "loading chart: %w"
-	CheckIfChartIsInstallableError = "checking if chart is installable: %w"
-	UpdateLocalChartsDirectoryError = "updating local charts directory: %w"
-	GenerateValuesMap = "generating values map: %w"
-	CreateDebuggerError = "creating debugger: %w"
-	DebugNamespaceError = "debugging namespace: %w"
-	RunHelmInstallCommandError = "running helm install command: %w"
-	ChartNotInstallableError = "chart: %s is not installable"
-	CreateLockError = "failed to create lock: %s"
-	MarshallToYamlError = "marshalling values struct to yaml: %w"
-
+	FindReleaseError                    = "finding release: %w"
+	BadReleaseStateError                = "release is in state: %s, cannot continue"
+	LocateChartError                    = "locating chart: %w"
+	LoadChartError                      = "loading chart: %w"
+	CheckIfChartIsInstallableError      = "checking if chart is installable: %w"
+	UpdateLocalChartsDirectoryError     = "updating local charts directory: %w"
+	GenerateValuesMap                   = "generating values map: %w"
+	CreateDebuggerError                 = "creating debugger: %w"
+	DebugNamespaceError                 = "debugging namespace: %w"
+	RunHelmInstallCommandError          = "running helm install command: %w"
+	ChartNotInstallableError            = "chart: %s is not installable"
+	CreateLockError                     = "failed to create lock: %s"
+	MarshallToYamlError                 = "marshalling values struct to yaml: %w"
 )

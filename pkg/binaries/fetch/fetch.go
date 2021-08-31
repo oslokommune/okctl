@@ -3,10 +3,11 @@ package fetch
 import (
 	"bytes"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"net/http"
 	"net/url"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 )
 
 // Fetcher provides an interface for downloading a file from a URL

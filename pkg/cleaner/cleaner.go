@@ -4,6 +4,7 @@ package cleaner
 import (
 	"errors"
 	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/aws/aws-sdk-go/aws"

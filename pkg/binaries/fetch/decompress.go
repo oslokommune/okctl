@@ -6,9 +6,10 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 )
 
 // Decompressor provides an interface for decompressing into a single file.

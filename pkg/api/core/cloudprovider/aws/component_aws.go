@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/lambdafunction"

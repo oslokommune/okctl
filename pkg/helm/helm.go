@@ -6,12 +6,13 @@ package helm
 import (
 	"context"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	merrors "github.com/mishudark/errors"
 

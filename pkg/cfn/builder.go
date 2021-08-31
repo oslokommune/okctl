@@ -2,6 +2,7 @@ package cfn
 
 import (
 	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/awslabs/goformation/v4/cloudformation"

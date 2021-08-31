@@ -2,8 +2,9 @@ package direct
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"time"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"

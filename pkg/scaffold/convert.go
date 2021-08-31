@@ -4,11 +4,12 @@ package scaffold
 import (
 	"bytes"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"io/ioutil"
 	"regexp"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"sigs.k8s.io/yaml"
 

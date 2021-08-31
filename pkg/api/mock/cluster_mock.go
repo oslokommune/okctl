@@ -4,6 +4,7 @@ package mock
 import (
 	"context"
 	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"

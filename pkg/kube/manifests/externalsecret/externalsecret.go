@@ -4,6 +4,7 @@ package externalsecret
 import (
 	"context"
 	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	typesv1 "github.com/oslokommune/okctl/pkg/kube/externalsecret/api/types/v1"

@@ -4,6 +4,7 @@ package github
 import (
 	"context"
 	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/google/go-github/v32/github"

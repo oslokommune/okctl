@@ -3,10 +3,11 @@ package store
 import (
 	"container/list"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/spf13/afero"
 )

@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 

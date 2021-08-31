@@ -5,10 +5,11 @@ package cidr
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"math"
 	"net"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	cidrpkg "github.com/apparentlymart/go-cidr/cidr"
 	"github.com/oslokommune/okctl/pkg/cfn/components/subnet"

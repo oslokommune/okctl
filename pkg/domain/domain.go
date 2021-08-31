@@ -5,10 +5,11 @@ package domain
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"net/http"
 	"regexp"
 	"time"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"

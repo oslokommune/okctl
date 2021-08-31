@@ -3,11 +3,12 @@ package eksctl
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
 

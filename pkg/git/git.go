@@ -4,9 +4,10 @@ package git
 import (
 	"errors"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"os"
 	"time"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/go-git/go-git/v5/storage/memory"
 

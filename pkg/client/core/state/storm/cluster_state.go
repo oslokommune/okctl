@@ -3,8 +3,9 @@ package storm
 import (
 	"errors"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"time"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"

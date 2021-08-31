@@ -3,9 +3,10 @@ package commandlineprompter
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"path"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/virtualenv/shelltype"
 

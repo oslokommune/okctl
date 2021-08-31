@@ -24,7 +24,6 @@ package forward
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"net/http"
 	"net/url"
@@ -33,6 +32,8 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"

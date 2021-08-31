@@ -4,8 +4,9 @@ package ec2api
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"

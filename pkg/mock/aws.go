@@ -6,8 +6,9 @@ import "C"
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"time"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"

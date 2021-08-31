@@ -2,8 +2,9 @@ package servicequota
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"time"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 

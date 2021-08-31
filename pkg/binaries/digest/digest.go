@@ -6,9 +6,10 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"hash"
 	"io"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/pkg/errors"
 )

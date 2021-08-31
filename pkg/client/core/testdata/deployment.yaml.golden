@@ -14,7 +14,25 @@ spec:
         app: my-app
     spec:
       containers:
-      - name: my-app
+      - livenessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /
+            port: 3000
+            scheme: HTTP
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+        name: my-app
+        readinessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /
+            port: 3000
+            scheme: HTTP
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
         resources:
           limits:
             cpu: 200m

@@ -59,21 +59,19 @@ After that, the following manual steps remain:
     ```
     kubectl apply -f infrastructure/applications/<app-name>/overlays/<cluster name>/argocd-application.yaml
     ```
-   
-The application.yaml declaration is used as an alternative to a wizard or numerous command flags. After running 
 
-```shell
-okctl apply application
-```
+:information_source: We assume your application returns a status code between 200 and 400 on "/". If this is not the
+case, make sure to configure the liveness and readiness probes in the
 
-there is no longer any point to keep it around. Feel free to delete it.
+`<app-name>/base/deployment.yaml` file.
 
 ## Setup an ArgoCD application manually
 
 This section describes what happens behind the scenes in the process described above. You can skip this entirely, it's
 just for educational purposes.
 
-This demonstrates how you can use Argo CD in conjunction with some other components we have installed in the base cluster. In your git repository, save the following definitions under a directory, e.g, `{git_root}/deployment/2048/`.
+This demonstrates how you can use Argo CD in conjunction with some other components we have installed in the base
+cluster. In your git repository, save the following definitions under a directory, e.g, `{git_root}/deployment/2048/`.
 
 **NB:** Remember to change the values in brackets `{...}` so they match your cluster setup.
 

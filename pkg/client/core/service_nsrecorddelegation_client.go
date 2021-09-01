@@ -35,7 +35,7 @@ func (s *nsRecordDelegationService) RevokeDomainDelegation(opts client.RevokeDom
 			Revoke(opts.PrimaryHostedZoneFQDN, workingDir),
 	)
 	if err != nil {
-		return fmt.Errorf("revoking dns zone delegation: %w", err)
+		return fmt.Errorf(constant.RevokeDNSZoneDelegationError, err)
 	}
 
 	if result.ModifiedRepository {

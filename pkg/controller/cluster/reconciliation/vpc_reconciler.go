@@ -26,7 +26,7 @@ type vpcReconciler struct {
 func (z *vpcReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
 	action, err := z.determineAction(meta, state)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	switch action {
@@ -37,7 +37,7 @@ func (z *vpcReconciler) Reconcile(ctx context.Context, meta reconciliation.Metad
 			Minimal: !meta.ClusterDeclaration.VPC.HighAvailability,
 		})
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("creating vpc: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.CreateVPCError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -46,7 +46,7 @@ func (z *vpcReconciler) Reconcile(ctx context.Context, meta reconciliation.Metad
 			ID: reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata),
 		})
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("deleting vpc: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.DeleteVPCError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -56,7 +56,7 @@ func (z *vpcReconciler) Reconcile(ctx context.Context, meta reconciliation.Metad
 		return reconciliation.Result{Requeue: false}, nil
 	}
 
-	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+	return reconciliation.Result{}, fmt.Errorf(constant.ActionNotImplementedError, string(action))
 }
 
 func (z *vpcReconciler) determineAction(meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Action, error) {
@@ -64,7 +64,7 @@ func (z *vpcReconciler) determineAction(meta reconciliation.Metadata, state *cli
 
 	componentExists, err := state.Vpc.HasVPC(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf("querying state: %w", err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.QueryStateError, err)
 	}
 
 	switch userIndication {
@@ -79,7 +79,7 @@ func (z *vpcReconciler) determineAction(meta reconciliation.Metadata, state *cli
 			servicequota.NewIgwCheck(constant.DefaultRequiredIgws, z.cloudProvider),
 		)
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking service quotas: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckServiceQuotasError, err)
 		}
 
 		return reconciliation.ActionCreate, nil
@@ -89,7 +89,7 @@ func (z *vpcReconciler) determineAction(meta reconciliation.Metadata, state *cli
 			generatePostgresDBExistenceTest(state),
 		)
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking dependencies: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckDependenciesError, err)
 		}
 
 		if !dependenciesReady {
@@ -110,7 +110,7 @@ func generatePostgresDBExistenceTest(state *clientCore.StateHandlers) func() (bo
 	return func() (bool, error) {
 		dbs, err := state.Component.GetPostgresDatabases()
 		if err != nil {
-			return false, fmt.Errorf("checking postgres databases state: %w", err)
+			return false, fmt.Errorf(constant.CheckPostgresDatabaseStateError, err)
 		}
 
 		return len(dbs) != 0, nil

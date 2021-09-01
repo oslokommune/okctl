@@ -4,6 +4,7 @@ package shellgetter
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"strings"
 
 	"github.com/oslokommune/okctl/pkg/storage"
@@ -50,7 +51,7 @@ func (g *ShellGetter) Get() (*Shell, error) {
 
 	shellCmd, err := shellCmdGetter.Get()
 	if err != nil {
-		return &Shell{}, fmt.Errorf("could not get shell command: %w", err)
+		return &Shell{}, fmt.Errorf(constant.GetShellCommandError, err)
 	}
 
 	var shellType shelltype.ShellType

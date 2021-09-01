@@ -132,7 +132,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			spin, err := spinner.New("applying cluster", spinnerWriter)
 			if err != nil {
-				return fmt.Errorf(constant.SpinnerCreationError, err)
+				return fmt.Errorf(constant.CreateSpinnerError, err)
 			}
 
 			state := o.StateHandlers(o.StateNodes())

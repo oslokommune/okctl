@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/gosimple/slug"
 
@@ -84,7 +85,7 @@ func (s *identityManagerService) CreateIdentityPoolUser(_ context.Context, opts 
 		UserPoolID: opts.UserPoolID,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("creating identity pool user: %w", err)
+		return nil, fmt.Errorf(constant.CreateIdentityPoolUserError, err)
 	}
 
 	user := &client.IdentityPoolUser{
@@ -97,7 +98,7 @@ func (s *identityManagerService) CreateIdentityPoolUser(_ context.Context, opts 
 
 	err = s.state.SaveIdentityPoolUser(user)
 	if err != nil {
-		return nil, fmt.Errorf("updating identity pool user state: %w", err)
+		return nil, fmt.Errorf(constant.UpdateIdentityPoolUserStateError, err)
 	}
 
 	return user, nil
@@ -122,7 +123,7 @@ func (s *identityManagerService) DeleteIdentityPoolUser(_ context.Context, opts 
 		slug.Make(opts.UserEmail),
 	))
 	if err != nil {
-		return fmt.Errorf("reomving identity pool user from state: %w", err)
+		return fmt.Errorf(constant.RemoveUserFromIdentityPoolStateError, err)
 	}
 
 	return nil
@@ -136,7 +137,7 @@ func (s *identityManagerService) CreateIdentityPoolClient(_ context.Context, opt
 		CallbackURL: opts.CallbackURL,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("creating identity pool client: %w", err)
+		return nil, fmt.Errorf(constant.CreateIdentityPoolClientError, err)
 	}
 
 	cl := &client.IdentityPoolClient{
@@ -152,7 +153,7 @@ func (s *identityManagerService) CreateIdentityPoolClient(_ context.Context, opt
 
 	err = s.state.SaveIdentityPoolClient(cl)
 	if err != nil {
-		return nil, fmt.Errorf("storing identity pool client state: %w", err)
+		return nil, fmt.Errorf(constant.StoreIdentityPoolClientStateError, err)
 	}
 
 	return cl, nil
@@ -166,7 +167,7 @@ func (s *identityManagerService) CreateIdentityPool(_ context.Context, opts clie
 		HostedZoneID: opts.HostedZoneID,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("creating identity pool: %w", err)
+		return nil, fmt.Errorf(constant.CreateIdentityPoolError, err)
 	}
 
 	pool := &client.IdentityPool{
@@ -195,7 +196,7 @@ func (s *identityManagerService) CreateIdentityPool(_ context.Context, opts clie
 
 	err = s.state.SaveIdentityPool(pool)
 	if err != nil {
-		return nil, fmt.Errorf("saving identity pool state: %w", err)
+		return nil, fmt.Errorf(constant.SaveIdentityPoolStateError, err)
 	}
 
 	return pool, nil

@@ -2,6 +2,7 @@ package servicequota
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicequotas"
@@ -29,12 +30,12 @@ func (v *VpcCheck) CheckAvailability() (*Result, error) {
 		ServiceCode: aws.String("vpc"),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("getting vpc quota: %w", err)
+		return nil, fmt.Errorf(constant.GetVPCQuotaError, err)
 	}
 
 	vpcs, err := v.provider.EC2().DescribeVpcs(nil)
 	if err != nil {
-		return nil, fmt.Errorf("getting current vpc count: %w", err)
+		return nil, fmt.Errorf(constant.GetVPCCountError, err)
 	}
 
 	quota := int(*q.Quota.Value)

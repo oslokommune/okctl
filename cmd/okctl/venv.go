@@ -68,7 +68,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 
 			cfg, err := kubeconfig.New(cluster.Config, o.CloudProvider).Get()
 			if err != nil {
-				return fmt.Errorf("creating kubconfig: %w", err)
+				return fmt.Errorf(constant.CreateKubeConfigError, err)
 			}
 
 			data, err := cfg.Bytes()
@@ -117,7 +117,7 @@ func venvRunE(o *okctl.Okctl, okctlEnvironment commands.OkctlEnvironment) error 
 
 	venv, err := virtualenv.CreateVirtualEnvironment(venvOpts)
 	if err != nil {
-		return fmt.Errorf("could not create virtual environment: %w", err)
+		return fmt.Errorf(constant.CreateVirtualEnvironmentError, err)
 	}
 
 	defer func() {
@@ -129,7 +129,7 @@ func venvRunE(o *okctl.Okctl, okctlEnvironment commands.OkctlEnvironment) error 
 
 	err = printWelcomeMessage(o.Out, venv, okctlEnvironment)
 	if err != nil {
-		return fmt.Errorf("could not print welcome message: %w", err)
+		return fmt.Errorf(constant.PrintWelcomeMessageError, err)
 	}
 
 	shell := exec.Command(venv.ShellCommand) //nolint:gosec
@@ -140,12 +140,12 @@ func venvRunE(o *okctl.Okctl, okctlEnvironment commands.OkctlEnvironment) error 
 
 	err = shell.Run()
 	if err != nil {
-		return fmt.Errorf("could not run shell: %w", err)
+		return fmt.Errorf(constant.RunShellError, err)
 	}
 
 	_, err = fmt.Fprintln(o.Out, "Exiting okctl virtual environment")
 	if err != nil {
-		return fmt.Errorf("could not print message: %w", err)
+		return fmt.Errorf(constant.PrintMessageError, err)
 	}
 
 	return nil
@@ -154,7 +154,7 @@ func venvRunE(o *okctl.Okctl, okctlEnvironment commands.OkctlEnvironment) error 
 func createVenvOpts(host state.Host, okctlEnvironment commands.OkctlEnvironment) (commandlineprompter.CommandLinePromptOpts, *storage.TemporaryStorage, error) {
 	currentUser, err := user.Current()
 	if err != nil {
-		return commandlineprompter.CommandLinePromptOpts{}, nil, fmt.Errorf("could not get current user: %w", err)
+		return commandlineprompter.CommandLinePromptOpts{}, nil, fmt.Errorf(constant.GetCurrentUserVenvError, err)
 	}
 
 	okctlEnvVars := commands.GetOkctlEnvVars(okctlEnvironment)
@@ -162,7 +162,7 @@ func createVenvOpts(host state.Host, okctlEnvironment commands.OkctlEnvironment)
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return commandlineprompter.CommandLinePromptOpts{}, nil, fmt.Errorf("could not get user's home directory: %w", err)
+		return commandlineprompter.CommandLinePromptOpts{}, nil, fmt.Errorf(constant.GetUserHomeDirectoryError, err)
 	}
 
 	venvOpts := commandlineprompter.CommandLinePromptOpts{
@@ -218,12 +218,12 @@ func printWelcomeMessage(stdout io.Writer, venv *virtualenv.VirtualEnvironment, 
 
 	whichKubectl, err := getWhich("kubectl", environ)
 	if err != nil {
-		return fmt.Errorf("could not get executable 'kubectl': %w", err)
+		return fmt.Errorf(constant.GetExecutableKubectlError, err)
 	}
 
 	whichAwsIamAuthenticator, err := getWhich("aws-iam-authenticator", environ)
 	if err != nil {
-		return fmt.Errorf("could not get executable 'aws-iam-authenticator': %w", err)
+		return fmt.Errorf(constant.GetExecutableAwsIamAuthenticatorError, err)
 	}
 
 	params := venvWelcomeMessage{

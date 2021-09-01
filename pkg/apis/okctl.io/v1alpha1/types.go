@@ -3,6 +3,7 @@ package v1alpha1
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 )
 
 const (
@@ -74,7 +75,7 @@ func SupportedAvailabilityZones(region string) ([]string, error) {
 			"eu-north-1c",
 		}, nil
 	default:
-		return nil, fmt.Errorf("region: %s is not supported", region)
+		return nil, fmt.Errorf(constant.UnsupportedRegionError, region)
 	}
 }
 

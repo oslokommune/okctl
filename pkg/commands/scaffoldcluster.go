@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"strings"
 	"text/template"
@@ -23,12 +24,12 @@ func ScaffoldClusterDeclaration(out io.Writer, opts ScaffoldClusterOpts) error {
 
 	t, err := template.New("cluster.yaml").Parse(clusterTemplate)
 	if err != nil {
-		return fmt.Errorf("parsing template string: %w", err)
+		return fmt.Errorf(constant.ParseTemplateStringError, err)
 	}
 
 	err = t.Execute(out, sanitizedOpts)
 	if err != nil {
-		return fmt.Errorf("interpolating template: %w", err)
+		return fmt.Errorf(constant.InterpolateTemplateError, err)
 	}
 
 	return nil

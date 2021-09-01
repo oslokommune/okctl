@@ -69,7 +69,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 			spin, err := spinner.New("applying application", o.Err)
 			if err != nil {
-				return fmt.Errorf(constant.SpinnerCreationError, err)
+				return fmt.Errorf(constant.CreateSpinnerError, err)
 			}
 
 			schedulerOpts := common.SchedulerOpts{

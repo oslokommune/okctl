@@ -3,6 +3,7 @@ package fetch
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"path"
 	"strings"
@@ -216,7 +217,7 @@ func (s *Processor) prepareAndLoad() (*Processor, error) {
 func (s *Processor) Fetch(name, version string) (string, error) {
 	binary, hasKey := s.LoadedBinaries[binaryIndex(name, version)]
 	if !hasKey {
-		return "", fmt.Errorf("could not find configuration for binary: %s, with version: %s", name, version)
+		return "", fmt.Errorf(constant.ConfirgurationForBinaryError, name, version)
 	}
 
 	err := binary.Fetch()

@@ -4,6 +4,7 @@ package smapi
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -37,7 +38,7 @@ func (a *SMAPI) RotateSecret(lambdaARN, secretID string) error {
 		SecretId: aws.String(secretID),
 	})
 	if err != nil {
-		return fmt.Errorf("creating secret rotation: %w", err)
+		return fmt.Errorf(constant.CreateSecretRotationError, err)
 	}
 
 	return nil
@@ -53,7 +54,7 @@ func (a *SMAPI) CancelRotateSecret(secretID string) error {
 			return nil
 		}
 
-		return fmt.Errorf("canceling secret rotation: %w", err)
+		return fmt.Errorf(constant.CancelSecretRotationError, err)
 	}
 
 	return nil

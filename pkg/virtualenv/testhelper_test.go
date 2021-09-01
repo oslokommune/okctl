@@ -2,6 +2,7 @@ package virtualenv_test
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"path"
 	"sort"
 	"testing"
@@ -45,7 +46,7 @@ johndoe:x:1000:1000:John Doe,,,:/home/%s:%s
 tcpdump:x:108:116::/nonexistent:/usr/sbin/nologin
 `, username, shellCmd))
 	if err != nil {
-		return nil, fmt.Errorf("could not write text to file: %w", err)
+		return nil, fmt.Errorf(constant.WriteToTextFileError, err)
 	}
 
 	return s, nil
@@ -79,12 +80,12 @@ func (h *testHelper) createUserHomeDirStorage(createZshrcFile bool) (*storage.Ep
 	if createZshrcFile {
 		file, err := s.Create(".", ".zshrc", 0o644)
 		if err != nil {
-			return nil, fmt.Errorf("couldn't create .zshrc file: %w", err)
+			return nil, fmt.Errorf(constant.CreateDotZshrcFileError, err)
 		}
 
 		err = file.Close()
 		if err != nil {
-			return nil, fmt.Errorf("couldn't close .zshrc file: %w", err)
+			return nil, fmt.Errorf(constant.CloseDotZshrcFileError, err)
 		}
 	}
 

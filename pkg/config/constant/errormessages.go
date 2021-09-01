@@ -35,7 +35,7 @@ const (
 
 	InferApplicationError     = "inferring application from stdin or file: %w"
 	OptionValidationerror     = "failed validating options: %w"
-	SpinnerCreationError      = "error creating spinner: %w"
+	CreateSpinnerError        = "error creating spinner: %w"
 	ReconcileApplicationError = "reconciling application: %w"
 
 	OpeningApplicationFileError = "opening application file: %w"
@@ -420,7 +420,7 @@ const (
 	CreateIdentityMangerResourceError = "creating identity manager resource: %w"
 	DeleteIdentityManagerError        = "deleting identity manager: %w"
 	CheckIfDependencyExistsError      = "checking dependency existence: %w"
-	CheckIfIdentityPoolExistsError    = "acquiring Identity Pool existence: %w"
+	CheckIdentityPoolExistenceError   = "acquiring Identity Pool existence: %w"
 
 	GetIGWQuotaError = "getting igw quota: %w"
 	GetIGWCountError = "getting current igw count: %w"
@@ -596,4 +596,121 @@ const (
 	PremissionToUseRoleError = "you do not have permission to use the role: %s, ask for help in #kjørermiljø-support on slack"
 
 	InferClusterDeclarationError = "inferring cluster declaration: %w"
+
+	ParseTemplateStringError = "parsing template string: %w"
+	InterpolateTemplateError = "interpolating template: %w"
+
+	ScaleTimeoutError = "timed out waiting for deployment to scale"
+	StartSpinnerError = "starting spinner: %w"
+	StartSubSpinnerError = "starting subspinner: %w"
+	ReconcileError = "reconciling %s: %w"
+
+	RequeueParseError = "passing requeue check for %s: %w"
+
+	HTTPRequestError = "http request failed, because: \n%s"
+
+	BuildClientConfigError = "building client from config: %w"
+	ListSecurityGroupPoliciesError = "listing security group policies; %w"
+	ApplySecurityGroupPolicyError = "applying security group policy: %w"
+	NewApplicationDeploymentError = "creating a new application deployment: %w"
+	CreateCertificateError = "create certificate: %w"
+	GenerateApplicationOverlayError = "generating application overlay: %w"
+
+	CreateIdentityPoolClient = "creating IdentityPool client: %w"
+
+	CreateKubernetesNamespaceError      = "creating k8s namespace: %w"
+	CreateIdentityPoolClientSecretError = "creating IdentityPool client secret: %w"
+	CreateArgoCDSecretKeyError          = "creating Argo secret key: %w"
+	CreateExternaSecretForDeployKeyErrror = "creating external secret for deploy key: %w"
+	CreateExternalSecretForIdentityPoolError = "creating external secret for IdentityPool client: %w"
+	PrepareChartValueError = "preparing chart values: %w"
+
+	CreateHelmReleaseError = "creating Helm release: %w"
+	StoreStateError = "storing state: %w"
+	HelmReleaseError = "helm release: %w"
+
+	CreateCertificateForAuthDomainError = "creating a certificate for auth domain: %w"
+
+	CreateIdentityPoolUserError          = "creating identity pool user: %w"
+	UpdateIdentityPoolUserStateError     = "updating identity pool user state: %w"
+	RemoveUserFromIdentityPoolStateError = "reomving identity pool user from state: %w"
+	CreateIdentityPoolClientError        = "creating identity pool client: %w"
+	StoreIdentityPoolClientStateError    = "storing identity pool client state: %w"
+	CreateIdentityPoolError              = "creating identity pool: %w"
+	SaveIdentityPoolStateError           = "saving identity pool state: %w"
+
+	CreateExteralDNSError = "creating external dns: %w"
+
+	RevokeDNSZoneDelegationError = "revoking dns zone delegation: %w"
+
+	GetShellCommandError = "could not get shell command: %w"
+
+	CreateSecretRotationError = "creating secret rotation: %w"
+	CancelSecretRotationError = "canceling secret rotation: %w"
+
+	ConfirgurationForBinaryError = "could not find configuration for binary: %s, with version: %s"
+
+	SubnetTypeError = "must provide at least one Subnet type"
+
+	AvailabilityZoneError = "must provide at least one availability zone"
+
+	CreateTempoError = "creating tempo: %w"
+	DeleteTempoError = "deleting tempo: %w"
+
+	DecodeJsonError = "decoding request as json: %w"
+
+	UnsupportedRegionError = "region: %s is not supported"
+
+	LoadConfigurationError = "failed to load app configuration from: %s"
+
+	GetUserDataDirectoryError = "getting user data dir: %w"
+	GetUserDataPathError = "getting user data path: %w"
+
+	HandleActionMapError = "handling action map: %w"
+
+	CreateIdentityPoolUserWithEmailError = "creating identity pool user %s: %w"
+	DeleteIdentityPoolUserWithEmailError = "deleting identity pool user %s: %w"
+	GetIdentityPoolUsersError            = "getting existing identity pool users: %w"
+
+	CreateVirtualEnvironmentError = "could not create virtual environment: %w"
+	PrintWelcomeMessageError = "could not print welcome message: %w"
+
+	RunShellError = "could not run shell: %w"
+	WriteToTextFileError = "could not write text to file: %w"
+
+	CreateDotZshrcFileError = "couldn't create .zshrc file: %w"
+	CloseDotZshrcFileError = "couldn't close .zshrc file: %w"
+
+	PrintMessageError = "could not print message: %w"
+
+	GetCurrentUserVenvError = "could not get current user: %w"
+	GetUserHomeDirectoryError = "could not get user's home directory: %w"
+
+	GetExecutableKubectlError = "could not get executable 'kubectl': %w"
+	GetExecutableAwsIamAuthenticatorError = "could not get executable 'aws-iam-authenticator': %w"
+
+	AbsolouteDeclerationPathError = "ensuring absolute declaration path: %w"
+
+	ValidateOkctlEnvironmentError = "failed to validate okctl environment: %w"
+
+	GetCurrentDirectoryError = "getting current directory: %w"
+
+	VerificationHashMatchError = "verification failed, hash mismatch, got: %s, expected: %s"
+	VerifyAllHashesEerror = "failed to verify all hashes we produced"
+
+	GetShellError              = "could not get shell: %w"
+	CreateComandLinePromtError = "could not create command line prompter: %w"
+
+	CreateVPCStackError = "creating vpc stack: %w"
+
+	ProcessStackOutputError = "processing stack outputs: %w"
+
+	CreateVPCError = "creating vpc: %w"
+	DeleteVPCError = "deleting vpc: %w"
+
+	CheckPostgresDatabaseStateError = "checking postgres databases state: %w"
+
+	GetVPCQuotaError = "getting vpc quota: %w"
+	GetVPCCountError = "getting current vpc count: %w"
 )
+

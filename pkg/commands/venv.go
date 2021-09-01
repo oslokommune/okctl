@@ -58,7 +58,7 @@ func GetOkctlEnvironment(o *okctl.Okctl, clusterDeclarationPath string) (OkctlEn
 
 	absoluteClusterDeclarationPath, err := ensureAbsolutePath(clusterDeclarationPath)
 	if err != nil {
-		return OkctlEnvironment{}, fmt.Errorf("ensuring absolute declaration path: %w", err)
+		return OkctlEnvironment{}, fmt.Errorf(constant.AbsolouteDeclerationPathError, err)
 	}
 
 	opts := OkctlEnvironment{
@@ -74,7 +74,7 @@ func GetOkctlEnvironment(o *okctl.Okctl, clusterDeclarationPath string) (OkctlEn
 
 	err = opts.Validate()
 	if err != nil {
-		return OkctlEnvironment{}, fmt.Errorf("failed to validate okctl environment: %w", err)
+		return OkctlEnvironment{}, fmt.Errorf(constant.ValidateOkctlEnvironmentError, err)
 	}
 
 	return opts, nil
@@ -87,7 +87,7 @@ func ensureAbsolutePath(declarationPath string) (string, error) {
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		return "", fmt.Errorf("getting current directory: %w", err)
+		return "", fmt.Errorf(constant.GetCurrentDirectoryError, err)
 	}
 
 	return path.Join(cwd, declarationPath), nil

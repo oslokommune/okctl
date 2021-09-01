@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"text/template"
 )
@@ -15,12 +16,12 @@ type ScaffoldApplicationOpts struct {
 func ScaffoldApplicationDeclaration(out io.Writer, opts ScaffoldApplicationOpts) error {
 	t, err := template.New("application.yaml").Parse(applicationTemplate)
 	if err != nil {
-		return fmt.Errorf("parsing template string: %w", err)
+		return fmt.Errorf(constant.ParseTemplateStringError, err)
 	}
 
 	err = t.Execute(out, opts)
 	if err != nil {
-		return fmt.Errorf("interpolating template: %w", err)
+		return fmt.Errorf(constant.InterpolateTemplateError, err)
 	}
 
 	return nil

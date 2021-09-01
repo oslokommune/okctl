@@ -4,6 +4,7 @@ package subnet
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"net"
 	"strings"
 
@@ -142,13 +143,13 @@ func (d *Distributor) DistinctAzs() int {
 // types and availability zones
 func NewDistributor(subnetTypes, azs []string) (*Distributor, error) {
 	if len(subnetTypes) == 0 {
-		return nil, fmt.Errorf("must provide at least one Subnet type")
+		return nil, fmt.Errorf(constant.SubnetTypeError)
 	}
 
 	uniqueTypes := uniqueStringsInSlice(subnetTypes)
 
 	if len(azs) == 0 {
-		return nil, fmt.Errorf("must provide at least one availability zone")
+		return nil, fmt.Errorf(constant.AvailabilityZoneError)
 	}
 
 	uniqueAzs := uniqueStringsInSlice(azs)

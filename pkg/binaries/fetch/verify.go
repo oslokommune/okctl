@@ -2,6 +2,7 @@ package fetch
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 
 	"github.com/oslokommune/okctl/pkg/binaries/digest"
@@ -62,14 +63,14 @@ func (v *verifier) Verify(reader io.Reader) error {
 
 	for hashType, digest := range calculatedDigests {
 		if v.digests[hashType] != digest {
-			return fmt.Errorf("verification failed, hash mismatch, got: %s, expected: %s", digest, v.digests[hashType])
+			return fmt.Errorf(constant.VerificationHashMatchError, digest, v.digests[hashType])
 		}
 
 		delete(calculatedDigests, hashType)
 	}
 
 	if len(calculatedDigests) != 0 {
-		return fmt.Errorf("failed to verify all hashes we produced")
+		return fmt.Errorf(constant.VerifyAllHashesEerror)
 	}
 
 	return nil

@@ -44,7 +44,7 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 
 	base, err := scaffold.GenerateApplicationBase(opts.Application, opts.IACRepoURL, relativeArgoCDSourcePath)
 	if err != nil {
-		return fmt.Errorf("creating a new application deployment: %w", err)
+		return fmt.Errorf(constant.NewApplicationDeploymentError, err)
 	}
 
 	certArn := ""
@@ -57,13 +57,13 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 			fmt.Sprintf("%s.%s", opts.Application.SubDomain, opts.HostedZoneDomain),
 		)
 		if err != nil {
-			return fmt.Errorf("create certificate: %w", err)
+			return fmt.Errorf(constant.CreateCertificateError, err)
 		}
 	}
 
 	overlay, err := scaffold.GenerateApplicationOverlay(opts.Application, opts.HostedZoneDomain, certArn)
 	if err != nil {
-		return fmt.Errorf("generating application overlay: %w", err)
+		return fmt.Errorf(constant.GenerateApplicationOverlayError, err)
 	}
 
 	applicationScaffold := &client.ScaffoldedApplication{

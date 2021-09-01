@@ -4,6 +4,7 @@ package scale
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"time"
 
 	"k8s.io/client-go/rest"
@@ -80,7 +81,7 @@ func (d *Scale) Scale(_ kubernetes.Interface, config *rest.Config) (interface{},
 			}
 
 			if time.Now().After(t0.Add(5 * time.Minute)) { // nolint: gomnd
-				return nil, fmt.Errorf("timed out waiting for deployment to scale")
+				return nil, fmt.Errorf(constant.ScaleTimeoutError)
 			}
 		}
 	}

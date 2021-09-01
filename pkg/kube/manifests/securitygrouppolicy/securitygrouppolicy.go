@@ -5,6 +5,7 @@ package securitygrouppolicy
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	v1beta1client "github.com/oslokommune/okctl/pkg/kube/securitygrouppolicy/clientset/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -38,12 +39,12 @@ func New(name, namespace string, manifest *v1beta1.SecurityGroupPolicy, config *
 func (s *SecurityGroupPolicy) Create() (*v1beta1.SecurityGroupPolicy, error) {
 	client, err := v1beta1client.NewForConfig(s.Config)
 	if err != nil {
-		return nil, fmt.Errorf("building client from config: %w", err)
+		return nil, fmt.Errorf(constant.BuildClientConfigError, err)
 	}
 
 	policies, err := client.SecurityGroupPolicy(s.Namespace).List(s.Ctx, metav1.ListOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("listing security group policies; %w", err)
+		return nil, fmt.Errorf(constant.ListSecurityGroupPoliciesError, err)
 	}
 
 	for _, policy := range policies.Items {
@@ -54,7 +55,7 @@ func (s *SecurityGroupPolicy) Create() (*v1beta1.SecurityGroupPolicy, error) {
 
 	p, err := client.SecurityGroupPolicy(s.Namespace).Create(s.Ctx, s.Manifest)
 	if err != nil {
-		return nil, fmt.Errorf("applying security group policy: %w", err)
+		return nil, fmt.Errorf(constant.ApplySecurityGroupPolicyError, err)
 	}
 
 	return p, nil

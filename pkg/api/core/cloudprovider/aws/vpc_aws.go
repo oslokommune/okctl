@@ -3,6 +3,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -29,7 +30,7 @@ func (c *vpcCloudProvider) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
 
 	template, err := b.Build()
 	if err != nil {
-		return nil, fmt.Errorf("building cloud formation template: %w", err)
+		return nil, fmt.Errorf(constant.BuildCloudFormationTemplateError, err)
 	}
 
 	stackName := cfn.NewStackNamer().Vpc(opts.ID.ClusterName)
@@ -38,7 +39,7 @@ func (c *vpcCloudProvider) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
 
 	err = r.CreateIfNotExists(opts.ID.ClusterName, stackName, template, nil, defaultTimeOut)
 	if err != nil {
-		return nil, fmt.Errorf("creating vpc stack: %w", err)
+		return nil, fmt.Errorf(constant.CreateVPCStackError, err)
 	}
 
 	v := &api.Vpc{
@@ -56,7 +57,7 @@ func (c *vpcCloudProvider) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
 		"DatabaseSubnetGroupName": cfn.String(&v.DatabaseSubnetsGroupName),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("processing stack outputs: %w", err)
+		return nil, fmt.Errorf(constant.ProcessStackOutputError, err)
 	}
 
 	return v, nil

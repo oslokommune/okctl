@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -16,7 +17,7 @@ import (
 func (c *Scheduler) Run(ctx context.Context, state *clientCore.StateHandlers) (Result, error) {
 	err := c.spinner.Start("reconciling")
 	if err != nil {
-		return Result{}, fmt.Errorf("starting spinner: %w", err)
+		return Result{}, fmt.Errorf(constant.StartSpinnerError, err)
 	}
 
 	defer func() {
@@ -31,18 +32,18 @@ func (c *Scheduler) Run(ctx context.Context, state *clientCore.StateHandlers) (R
 
 		err := subSpinner.Start(reconciler.String())
 		if err != nil {
-			return Result{}, fmt.Errorf("starting subspinner: %w", err)
+			return Result{}, fmt.Errorf(constant.StartSubSpinnerError, err)
 		}
 
 		result, err := reconciler.Reconcile(ctx, metadata, state)
 		if err != nil {
-			return Result{}, fmt.Errorf("reconciling %s: %w", reconciler.String(), err)
+			return Result{}, fmt.Errorf(constant.ReconcileError, reconciler.String(), err)
 		}
 
 		if result.Requeue {
 			err = queue.Push(reconciler)
 			if err != nil {
-				return Result{}, fmt.Errorf("passing requeue check for %s: %w", reconciler.String(), err)
+				return Result{}, fmt.Errorf(constant.RequeueParseError, reconciler.String(), err)
 			}
 		}
 
@@ -50,7 +51,7 @@ func (c *Scheduler) Run(ctx context.Context, state *clientCore.StateHandlers) (R
 
 		err = subSpinner.Stop()
 		if err != nil {
-			return Result{}, fmt.Errorf("stopping spinner: %w", err)
+			return Result{}, fmt.Errorf(constant.StopSpinnerError, err)
 		}
 	}
 

@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/cfn"
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
@@ -24,12 +25,12 @@ func (z *usersReconciler) Reconcile(ctx context.Context, meta reconciliation.Met
 
 	actionMap, err := z.determineActionsForUsers(meta, state)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	identityPoolExists, err := state.IdentityManager.HasIdentityPool()
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("checking identity pool existence: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.CheckIdentityPoolExistenceError, err)
 	}
 
 	hasCreate := hasCreateAction(actionMap)
@@ -42,7 +43,7 @@ func (z *usersReconciler) Reconcile(ctx context.Context, meta reconciliation.Met
 			cfn.NewStackNamer().IdentityPool(meta.ClusterDeclaration.Metadata.Name),
 		)
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("getting identity pool: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.GetIdentityPoolError, err)
 		}
 
 		userPoolID = im.UserPoolID
@@ -54,7 +55,7 @@ func (z *usersReconciler) Reconcile(ctx context.Context, meta reconciliation.Met
 		userPoolID: userPoolID,
 	})
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("handling action map: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.HandleActionMapError, err)
 	}
 
 	return reconciliation.Result{Requeue: false}, nil
@@ -78,7 +79,7 @@ func (z *usersReconciler) handleActionMap(ctx context.Context, opts handleOpts) 
 				UserPoolID: opts.userPoolID,
 			})
 			if err != nil {
-				return fmt.Errorf("creating identity pool user %s: %w", email, err)
+				return fmt.Errorf(constant.CreateIdentityPoolUserWithEmailError, email, err)
 			}
 
 			continue
@@ -88,7 +89,7 @@ func (z *usersReconciler) handleActionMap(ctx context.Context, opts handleOpts) 
 				UserEmail: email,
 			})
 			if err != nil {
-				return fmt.Errorf("deleting identity pool user %s: %w", email, err)
+				return fmt.Errorf(constant.DeleteIdentityPoolUserWithEmailError, email, err)
 			}
 
 			continue
@@ -107,7 +108,7 @@ func (z *usersReconciler) determineActionsForUsers(meta reconciliation.Metadata,
 
 	existingUsers, err := state.IdentityManager.GetIdentityPoolUsers()
 	if err != nil {
-		return nil, fmt.Errorf("getting existing identity pool users: %w", err)
+		return nil, fmt.Errorf(constant.GetIdentityPoolUsersError, err)
 	}
 
 	actionMap := make(map[string]reconciliation.Action)

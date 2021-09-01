@@ -29,7 +29,7 @@ func ErrOnUserDataNotFound() DataNotFoundFn {
 		f, _ := c.GetUserDataPath()
 
 		return &DataNotFoundErr{
-			err: fmt.Errorf("failed to load app configuration from: %s", f),
+			err: fmt.Errorf(constant.LoadConfigurationError, f),
 		}
 	}
 }
@@ -57,12 +57,12 @@ func CreateOnUserDataNotFoundWithNoInput() DataNotFoundFn {
 	return func(c *config.Config) (err error) {
 		userDir, err := c.GetUserDataDir()
 		if err != nil {
-			return fmt.Errorf("getting user data dir: %w", err)
+			return fmt.Errorf(constant.GetUserDataDirectoryError, err)
 		}
 
 		userDataPath, err := c.GetUserDataPath()
 		if err != nil {
-			return fmt.Errorf("getting user data path: %w", err)
+			return fmt.Errorf(constant.GetUserDataPathError, err)
 		}
 
 		data := state.NewUser()
@@ -101,12 +101,12 @@ func CreateOnUserDataNotFound() DataNotFoundFn {
 
 		userDir, err := c.GetUserDataDir()
 		if err != nil {
-			return fmt.Errorf("getting user data dir: %w", err)
+			return fmt.Errorf(constant.GetUserDataDirectoryError, err)
 		}
 
 		userDataPath, err := c.GetUserDataPath()
 		if err != nil {
-			return fmt.Errorf("getting user data path: %w", err)
+			return fmt.Errorf(constant.GetUserDataPathError, err)
 		}
 
 		_, err = fmt.Fprintf(c.Err, localMsg, userDataPath, userDir)

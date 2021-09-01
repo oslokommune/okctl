@@ -132,7 +132,7 @@ func (s *externalSecretsService) CreateExternalSecrets(ctx context.Context, opts
 		Values:         values,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("helm release: %w", err)
+		return nil, fmt.Errorf(constant.HelmReleaseError, err)
 	}
 
 	return &client.ExternalSecrets{

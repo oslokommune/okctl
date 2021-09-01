@@ -3,6 +3,7 @@ package virtualenv
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"sort"
 
 	"github.com/oslokommune/okctl/pkg/virtualenv/commandlineprompter"
@@ -37,12 +38,12 @@ func CreateVirtualEnvironment(opts commandlineprompter.CommandLinePromptOpts) (*
 
 	shell, err := shellGetter.Get()
 	if err != nil {
-		return nil, fmt.Errorf("could not get shell: %w", err)
+		return nil, fmt.Errorf(constant.GetShellError, err)
 	}
 
 	prompter, err := commandlineprompter.New(opts, shell.ShellType)
 	if err != nil {
-		return nil, fmt.Errorf("could not create command line prompter: %w", err)
+		return nil, fmt.Errorf(constant.CreateComandLinePromtError, err)
 	}
 
 	commandLinePrompt, err := prompter.CreatePrompt()

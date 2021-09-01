@@ -2,6 +2,7 @@ package spinner
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"time"
 
@@ -41,7 +42,7 @@ func New(suffix string, out io.Writer) (Spinner, error) {
 
 	s, err := yacspin.New(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("creating spinner: %w", err)
+		return nil, fmt.Errorf(constant.CreateSpinnerError, err)
 	}
 
 	return &spinner{

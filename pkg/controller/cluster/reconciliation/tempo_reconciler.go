@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
@@ -20,21 +21,21 @@ type tempoReconciler struct {
 func (z *tempoReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
 	action, err := z.determineAction(meta, state)
 	if err != nil {
-		return reconciliation.Result{Requeue: false}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{Requeue: false}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	switch action {
 	case reconciliation.ActionCreate:
 		_, err = z.client.CreateTempo(ctx, reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata))
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("creating tempo: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.CreateTempoError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
 	case reconciliation.ActionDelete:
 		err = z.client.DeleteTempo(ctx, reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata))
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("deleting tempo: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.DeleteTempoError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -44,7 +45,7 @@ func (z *tempoReconciler) Reconcile(ctx context.Context, meta reconciliation.Met
 		return reconciliation.Result{Requeue: false}, nil
 	}
 
-	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+	return reconciliation.Result{}, fmt.Errorf(constant.ActionNotImplementedError, string(action))
 }
 
 func (z *tempoReconciler) determineAction(meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Action, error) {
@@ -52,7 +53,7 @@ func (z *tempoReconciler) determineAction(meta reconciliation.Metadata, state *c
 
 	clusterExists, err := state.Cluster.HasCluster(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf("checking cluster existence: %w", err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckClusterExistanceError, err)
 	}
 
 	switch userIndication {
@@ -63,7 +64,7 @@ func (z *tempoReconciler) determineAction(meta reconciliation.Metadata, state *c
 
 		componentExists, err := state.Tempo.HasTempo()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking component existence: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckComponentExistenceError, err)
 		}
 
 		if componentExists {
@@ -78,7 +79,7 @@ func (z *tempoReconciler) determineAction(meta reconciliation.Metadata, state *c
 
 		componentExists, err := state.Tempo.HasTempo()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking component existence: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckComponentExistenceError, err)
 		}
 
 		if !componentExists {

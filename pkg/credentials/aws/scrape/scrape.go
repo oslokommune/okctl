@@ -3,6 +3,7 @@ package scrape
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
@@ -46,7 +47,7 @@ type FormError struct {
 // code
 func ErrorFromResponse(r *http.Response) error {
 	pretty, _ := httputil.DumpResponse(r, true)
-	return fmt.Errorf("http request failed, because: \n%s", pretty)
+	return fmt.Errorf(constant.HTTPRequestError, pretty)
 }
 
 // HasError returns the error message embedded in the HTML,

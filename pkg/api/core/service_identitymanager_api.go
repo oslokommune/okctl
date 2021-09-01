@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"strings"
 
 	"github.com/mishudark/errors"
@@ -78,7 +79,7 @@ func (s *identityManagerService) CreateIdentityPool(_ context.Context, opts api.
 	if err != nil {
 		var (
 			kind         errors.Kind
-			wrappedError = fmt.Errorf("creating a certificate for auth domain: %w", err)
+			wrappedError = fmt.Errorf(constant.CreateCertificateForAuthDomainError, err)
 		)
 
 		if strings.Contains(strings.ToLower(err.Error()), "stack creation time exceeded the specified timeout") {

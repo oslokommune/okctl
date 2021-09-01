@@ -4,6 +4,7 @@ import (
 	"context"
 	stderrors "errors"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -143,7 +144,7 @@ func (k *kubeService) CreateExternalDNSKubeDeployment(_ context.Context, opts ap
 	kube, err := k.run.CreateExternalDNSKubeDeployment(opts)
 	if err != nil {
 		var (
-			wrappedErr = fmt.Errorf("creating external dns: %w", err)
+			wrappedErr = fmt.Errorf(constant.CreateExteralDNSError, err)
 			kind       errors.Kind
 		)
 

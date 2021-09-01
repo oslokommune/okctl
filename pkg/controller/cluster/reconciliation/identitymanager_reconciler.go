@@ -97,7 +97,7 @@ func (z *identityManagerReconciler) determineAction(meta reconciliation.Metadata
 
 	componentExists, err := state.IdentityManager.HasIdentityPool()
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfIdentityPoolExistsError, err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIdentityPoolExistenceError, err)
 	}
 
 	switch userIndication {

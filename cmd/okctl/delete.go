@@ -71,7 +71,7 @@ including VPC, this is a highly destructive operation.`,
 
 			spin, err := spinner.New("deleting cluster", spinnerWriter)
 			if err != nil {
-				return fmt.Errorf(constant.SpinnerCreationError, err)
+				return fmt.Errorf(constant.CreateSpinnerError, err)
 			}
 
 			state := o.StateHandlers(o.StateNodes())

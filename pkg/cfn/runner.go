@@ -2,6 +2,7 @@ package cfn
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"regexp"
 	"strings"
 	"time"
@@ -51,7 +52,7 @@ func (r *Runner) Exists(stackName string) (bool, error) {
 
 	re, err := regexp.Compile(fmt.Sprintf(stackDoesNotExitRegex, stackName))
 	if err != nil {
-		return false, fmt.Errorf("failed to compile regex for stack existence: %w", err)
+		return false, fmt.Errorf(constant.RegexCompileStackExistenceError, err)
 	}
 
 	stack, err := r.Provider.CloudFormation().DescribeStacks(req)
@@ -125,7 +126,7 @@ func (r *Runner) existsAndReady(stackName string) (bool, error) {
 			return true, nil
 		}
 
-		return false, fmt.Errorf("stack: %s exists and is in a transitional state", stackName)
+		return false, fmt.Errorf(constant.StackInTransitionalStateError, stackName)
 	}
 
 	return false, nil
@@ -197,7 +198,7 @@ func (r *Runner) CreateIfNotExists(clusterName, stackName string, template []byt
 func (r *Runner) watchDelete(stackName string) error {
 	re, err := regexp.Compile(fmt.Sprintf(stackDoesNotExitRegex, stackName))
 	if err != nil {
-		return fmt.Errorf("failed to compile regex for stack existence: %w", err)
+		return fmt.Errorf(constant.RegexCompileStackExistenceError, err)
 	}
 
 	for {
@@ -220,7 +221,7 @@ func (r *Runner) watchDelete(stackName string) error {
 		}
 
 		if len(stack.Stacks) != 1 {
-			return fmt.Errorf("expected 1 cloudformation stack to be deleted")
+			return fmt.Errorf(constant.NumberOfStacksDeletedError)
 		}
 
 		sleepTime := defaultSleepTime * time.Second
@@ -247,11 +248,11 @@ func (r *Runner) watchCreate(stackName string) error {
 			StackName: aws.String(stackName),
 		})
 		if err != nil {
-			return fmt.Errorf("failed to describe stack after create: %w", err)
+			return fmt.Errorf(constant.DescribeStackAfterCreateError, err)
 		}
 
 		if len(stack.Stacks) != 1 {
-			return fmt.Errorf("expected 1 cloudformation stack to be created")
+			return fmt.Errorf(constant.NumberOfStacksDeletedError)
 		}
 
 		sleepTime := defaultSleepTime * time.Second
@@ -272,7 +273,7 @@ func (r *Runner) watchCreate(stackName string) error {
 func (r *Runner) detailedErr(stack *Stack) error {
 	events, err := r.failedEvents(*stack.StackId)
 	if err != nil {
-		return fmt.Errorf("getting failed events: %w", err)
+		return fmt.Errorf(constant.FailedEventsError, err)
 	}
 
 	failures := make([]string, len(events))
@@ -285,7 +286,7 @@ func (r *Runner) detailedErr(stack *Stack) error {
 		reason = *stack.StackStatusReason
 	}
 
-	return fmt.Errorf("stack: %s, failed events: %s",
+	return fmt.Errorf(constant.StackFailedEventsError,
 		reason,
 		strings.Join(failures, "\n"),
 	)

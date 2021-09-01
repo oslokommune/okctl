@@ -3,6 +3,7 @@ package kubeconfig
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"strings"
 
 	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
@@ -65,18 +66,18 @@ func (a *kubeConfig) Get() (*Config, error) {
 
 	cluster := c.Cluster
 	if cluster == nil {
-		return nil, fmt.Errorf("cluster was nil")
+		return nil, fmt.Errorf(constant.ClusterNilError)
 	}
 
 	var data []byte
 
 	switch *cluster.Status {
 	case eks.ClusterStatusCreating, eks.ClusterStatusDeleting, eks.ClusterStatusFailed:
-		return nil, fmt.Errorf("cannot create kubeconfig when cluster has status: %s", *cluster.Status)
+		return nil, fmt.Errorf(constant.CreateKubeconfigWithInvalidStatusError, *cluster.Status)
 	default:
 		data, err = base64.StdEncoding.DecodeString(*cluster.CertificateAuthority.Data)
 		if err != nil {
-			return nil, fmt.Errorf("decoding certificate authority data: %w", err)
+			return nil, fmt.Errorf(constant.DecodeCertificateAuthorityDataError, err)
 		}
 	}
 

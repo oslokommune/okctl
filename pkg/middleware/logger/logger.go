@@ -3,6 +3,7 @@ package logger
 
 import (
 	"context"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"strings"
 	"time"
 
@@ -68,7 +69,7 @@ func (l *logging) ProcessRequest(next endpoint.Endpoint) endpoint.Endpoint {
 // ProcessResponse handles logging of the response
 func (l *logging) ProcessResponse(err error, response interface{}, begin time.Time) {
 	if err != nil && !merrors.IsKind(err, merrors.NotExist) {
-		l.log.Errorf("processing request: %s", err.Error())
+		l.log.Errorf(constant.ProcessRequestError, err.Error())
 	}
 
 	if err == nil {

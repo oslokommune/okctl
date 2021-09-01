@@ -82,7 +82,7 @@ func (z *clusterReconciler) determineAction(meta reconciliation.Metadata, state 
 
 	componentExists, err := state.Cluster.HasCluster(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfClusterExistsError, err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckClusterExistanceError, err)
 	}
 
 	switch userIndication {

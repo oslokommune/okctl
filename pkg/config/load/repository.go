@@ -2,6 +2,7 @@ package load
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"path/filepath"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -25,7 +26,7 @@ func buildRepoDataLoader(declarationPath string, _ func(v *viper.Viper)) config.
 		}
 
 		if !exists {
-			return fmt.Errorf("couldn't find config file: %s", declarationPath)
+			return fmt.Errorf(constant.FindConfigFileError, declarationPath)
 		}
 
 		directory := filepath.Dir(declarationPath)

@@ -2,6 +2,7 @@ package shellgetter
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"os/exec"
 	"path"
 	"strings"
@@ -21,7 +22,7 @@ func newMacOsLoginShellCmdGetter(cmdGetter MacOsUserShellCmdGetter) *macOsLoginS
 func (g *macOsLoginShellCmdGetter) Get() (string, error) {
 	line, err := g.cmdGetter.RunDsclUserShell()
 	if err != nil {
-		return "", fmt.Errorf("could not get current user's login shell: %w", err)
+		return "", fmt.Errorf(constant.GetUserLoginShellError, err)
 	}
 
 	shellCmd := g.parseShellCmd(line)
@@ -63,7 +64,7 @@ func (m *DefaultMacOsShellGetter) RunDsclUserShell() (string, error) {
 
 	out, err := cmd.Output()
 	if err != nil {
-		return "", fmt.Errorf("could not run 'dscl' to get login shell: %w", err)
+		return "", fmt.Errorf(constant.RunDsclLoginShellError, err)
 	}
 
 	return string(out), nil

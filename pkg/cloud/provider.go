@@ -3,6 +3,7 @@ package cloud
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/aws/aws-sdk-go/service/acm"
 
@@ -66,7 +67,7 @@ type Provider struct {
 func New(region string, a awsauth.Authenticator) (*Provider, error) {
 	sess, creds, err := NewSession(region, a)
 	if err != nil {
-		return nil, fmt.Errorf("failed to authenticate with aws: %w", err)
+		return nil, fmt.Errorf(constant.AuthenticateWithAWSError, err)
 	}
 
 	return NewFromSession(region, creds.PrincipalARN, sess)
@@ -133,7 +134,7 @@ func NewSessionFromEnv(region string) (*session.Session, error) {
 		Region:      aws.String(region),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("retrieving credentials from env: %w", err)
+		return nil, fmt.Errorf(constant.GetCredentialsFromEnvError, err)
 	}
 
 	return sess, nil

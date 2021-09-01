@@ -96,7 +96,7 @@ func (z *externalDNSReconciler) determineAction(meta reconciliation.Metadata, st
 	case reconciliation.ActionDelete:
 		clusterExists, err := clusterExistenceTest()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfClusterExistsError, err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckClusterExistanceError, err)
 		}
 
 		if !clusterExists {

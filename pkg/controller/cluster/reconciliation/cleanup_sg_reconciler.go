@@ -30,7 +30,7 @@ func (z *cleanupSGReconciler) Reconcile(_ context.Context, meta reconciliation.M
 
 	clusterExists, err := state.Cluster.HasCluster(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf(constant.CheckIfClusterExistsError, err)
+		return reconciliation.Result{}, fmt.Errorf(constant.CheckClusterExistanceError, err)
 	}
 
 	if clusterExists {
@@ -39,7 +39,7 @@ func (z *cleanupSGReconciler) Reconcile(_ context.Context, meta reconciliation.M
 
 	vpcExists, err := state.Vpc.HasVPC(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf(constant.CheckIfVpcExistsError, err)
+		return reconciliation.Result{}, fmt.Errorf(constant.CheckVpcExistenceError, err)
 	}
 
 	if !vpcExists {

@@ -8,6 +8,7 @@ import (
 	"crypto/md5" // nolint: gosec
 	"encoding/hex"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"os"
 	"time"
@@ -158,7 +159,7 @@ func (p *PgBouncer) DeleteSecret(s *v1.Secret) error {
 	}()
 
 	if eventType != watch.Deleted {
-		return fmt.Errorf("timed out waiting for secret to be deleted")
+		return fmt.Errorf(constant.DeleteSecretTimeoutError)
 	}
 
 	return nil
@@ -168,7 +169,7 @@ func (p *PgBouncer) DeleteSecret(s *v1.Secret) error {
 func (p *PgBouncer) CreateSecret() error {
 	secrets, err := p.Client.CoreV1().Secrets(p.Secret.Namespace).List(p.Ctx, metav1.ListOptions{})
 	if err != nil {
-		return fmt.Errorf("listing secrets: %w", err)
+		return fmt.Errorf(constant.ListSecretsError, err)
 	}
 
 	for _, s := range secrets.Items {
@@ -177,7 +178,7 @@ func (p *PgBouncer) CreateSecret() error {
 
 			err = p.DeleteSecret(&s)
 			if err != nil {
-				return fmt.Errorf("removing existing secret: %w", err)
+				return fmt.Errorf(constant.RemoveSecretError, err)
 			}
 		}
 	}
@@ -186,7 +187,7 @@ func (p *PgBouncer) CreateSecret() error {
 
 	_, err = p.Client.CoreV1().Secrets(p.Secret.Namespace).Create(p.Ctx, p.Secret, metav1.CreateOptions{})
 	if err != nil {
-		return fmt.Errorf("creating secret: %w", err)
+		return fmt.Errorf(constant.CreateSecretError, err)
 	}
 
 	return nil
@@ -230,7 +231,7 @@ func (p *PgBouncer) Create() error {
 
 	pod, err := p.Client.CoreV1().Pods(p.Pod.Namespace).Create(p.Ctx, p.Pod, metav1.CreateOptions{})
 	if err != nil {
-		return fmt.Errorf("creating pod: %w", err)
+		return fmt.Errorf(constant.CreatePodError, err)
 	}
 
 	err = podpkg.New(p.Ctx, p.Logger, podWatchTimeoutInSeconds*time.Second, p.Client).WaitFor(podpkg.StateRunning, pod)
@@ -263,12 +264,12 @@ func (p *PgBouncer) Delete() error {
 		PropagationPolicy: &policy,
 	})
 	if err != nil {
-		return fmt.Errorf("deleting pgbouncer client pod: %w", err)
+		return fmt.Errorf(constant.DeletePgBouncerClientPodError, err)
 	}
 
 	err = p.DeleteSecret(p.Secret)
 	if err != nil {
-		return fmt.Errorf("deleting pgbouncer secret: %w", err)
+		return fmt.Errorf(constant.DeletePgBouncerSecretError, err)
 	}
 
 	return nil

@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"os/exec"
 	"strings"
@@ -107,7 +108,7 @@ func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 
 	err = cmd.Wait()
 	if err != nil {
-		return buff.Bytes(), fmt.Errorf("executing command: %s, got: %w", buff.Bytes(), err)
+		return buff.Bytes(), fmt.Errorf(constant.ExecuteCommandError, buff.Bytes(), err)
 	}
 
 	return buff.Bytes(), nil

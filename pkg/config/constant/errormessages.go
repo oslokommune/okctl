@@ -105,7 +105,7 @@ const (
 	CreateAutoScalerError = "creating autoscaler: %w"
 	DeleteAutoScalerError = "deleting autoscaler: %w"
 
-	CheckIfClusterExistsError    = "acquiring cluster existence: %w"
+	CheckClusterExistanceError   = "acquiring cluster existence: %w"
 	CheckIfAutoScalerExistsError = "acquiring autoscaler existence: %w"
 
 	GetHelmReleaseError = "getting Helm release: %w"
@@ -163,7 +163,7 @@ const (
 	DescribeTargetGroupsError = "describing tags for target group: %w"
 	RemovingTargetGrupError   = "removing target group: %w"
 
-	CheckIfVpcExistsError         = "checking VPC existence: %w"
+	CheckVpcExistenceError        = "checking VPC existence: %w"
 	FailedToWriteDebugOutputError = "failed to write debug output: %w"
 
 	FailedToMarshalDataError      = "failed to marshal data for"
@@ -474,5 +474,126 @@ const (
 	SerializeClusterRoleManifestError = "failed to serialise ClusterRole manifest: %w"
 	SerializeClusterRoleBindingManifestError = "failed to serialise ClusterRoleBinding manifest: %w"
 
+	ClusterNilError = "cluster was nil"
+	CreateKubeconfigWithInvalidStatusError = "cannot create kubeconfig when cluster has status: %s"
+	DecodeCertificateAuthorityDataError = "decoding certificate authority data: %w"
 
+	StoreKubecofigError = "storing kubeconfig: %w"
+	RemoveKubeconfigError = "removing kubeconfig: %w"
+
+	CreateKubePromstackError = "creating kubepromstack: %w"
+	DeleteKubePromstackError = "deleting kubepromstack: %w"
+	CheckComponentExistenceError = "checking component existence: %w"
+
+	ConvertJsonToYamlError = "converting json to yaml: %w"
+	DecodePatchError = "decoding patch: %w"
+	ApplyPatchError = "applying patch: %w"
+
+	GetUserLoginShellError = "could not get current user's login shell: %w"
+	OpenEtcPasswdError = "failed to open /etc/passwd when detecting user login shell: %w"
+	FindUserInEtcPasswdError = "failed to find '%s' in /etc/passwd"
+
+	ProcessRequestError = "processing request: %s"
+
+	CreateLokiError         = "creating Loki: %w"
+	DeleteLokiError         = "deleting Loki: %w"
+	CheckLokiExistenceError = "checking Loki existence: %w"
+
+	RunDsclLoginShellError = "could not run 'dscl' to get login shell: %w"
+
+	DeclarationExistenceError = "declaration must be provided"
+	ConvertToAbsolutePathError = "converting declaration path to absolute path: %w"
+
+	OkctlOutsideRepositoryError = "okctl needs to be run inside a Git repository (okctl outputs various configuration files that will be stored here)"
+	LoadRepositoryDataError = "loading repository data: %w"
+
+	DeletePolicyError = "deleting policy: %w"
+
+	InitializeDnsZoneDelegationError = "initializing dns zone delegation: %w"
+	RevokeDnsZoneDelegationError = "revoking dns zone delegation: %w"
+	GetPrimaryHostedZoneStateError = "acquiring primary hosted zone state: %w"
+
+	ValidateNameserversError = "validating nameservers: %w"
+	SetHostedZoneDelegationStatus = "setting hosted zone delegation status: %w"
+
+	TestDependenciesError = "testing dependencies: %w"
+	CheckHostedZoneDelegationStateError = "checking primary hosted zone delegation state: %w"
+	CheckDomainExistenceError = "checking domain existence: %w"
+
+	BuildDeviceCodeRequestError = "failed to build device code request: %w"
+	DecodeResponseError = "failed to decode response: %s, because: %w"
+	BuildAccsessTokenRequestError = "failed to build access token request: %w"
+	PollActionTokenError = "failed to poll for access token: %w"
+	PollOauthTokenHTTPError = "HTTP error %v (%v) when polling for OAuth token"
+	DecodePollingResponseError = "failed to decode polling response: %w"
+	AuthorizationError = "authorization failed: %v"
+
+	GetAwsAuthenticatorError = "acquiring AWS authenticator: %w"
+	GetGithubAuthenticatorError = "acquiring Github authenticator: %w"
+
+	DescribeSubnetOutputsError = "failed to describe subnet outputs: %w"
+
+	CreateParameterError = "failed to create parameter: %w"
+
+	CreatePresistentVolumeClaimError = "error creating pvc: %w"
+
+	DeleteSecretTimeoutError = "timed out waiting for secret to be deleted"
+	ListSecretsError = "listing secrets: %w"
+	RemoveSecretError = "removing existing secret: %w"
+	CreateSecretError = "creating secret: %w"
+
+	DeletePgBouncerClientPodError = "deleting pgbouncer client pod: %w"
+	DeletePgBouncerSecretError = "deleting pgbouncer secret: %w"
+
+	WaitForPodError = "waiting for pod: %v"
+
+	CreatePostgresDatabaseError = "creating postgres database: %w"
+	DeleteDatabaseError = "deleting database: %s, got: %w"
+
+	CheckDatabaseExistenceError = "checking existing postgres databases: %w"
+	CreateHostedZoneError = "creating hosted zone: %w"
+
+	DeletePrimaryHostedZoneError = "deleting primary hosted zone: %w"
+
+	MarshalJsonError = "failed to marshal as json: %w"
+	MarshalYamlError = "failed to marshal as yaml: %w"
+
+	WriteDotZshrcFileError              = "could not write .zshrc file: %w"
+	CreateTempDotZshrcFileError         = "could not create temporary .zshrc file: %w"
+	CreateTempDotZshrcContentError      = "could not create temporary .zshrc contents: %w"
+	WriteTempDotZshrcContentToFileError = "could not write contents to temporary .zshrc file: %w"
+	CheckTempDotZshrcFileExistenceError = "could not check if temporary .zshrc file exists: %w"
+	ReadDotZshrcContentError = "reading existing .zshrc content: %w"
+
+	CreatePromtailError = "creating promtail: %w"
+	DeletePromtailError = "deleting promtail: %w"
+
+	AuthenticateWithAWSError = "failed to authenticate with aws: %w"
+	GetCredentialsFromEnvError = "retrieving credentials from env: %w"
+
+	CreatePsqlClientPodError = "creating psql client pod: %w"
+	WatchPsqlClientPodError = "watching psql client pod: %w"
+	DeletePsqlClientPoolError = "deleting psql client pod: %w"
+	AttachPsqlClientPodError = "attaching to psql client pod: %w"
+
+	FindConfigFileError = "couldn't find config file: %s"
+
+	InvalidNumberOfNSRecordsError = "expected 1 NS records in hosted zone, but found %d"
+
+	ExecuteCommandError = "executing command: %s, got: %w"
+
+	RegexCompileStackExistenceError = "failed to compile regex for stack existence: %w"
+	StackInTransitionalStateError = "stack: %s exists and is in a transitional state"
+	NumberOfStacksDeletedError = "expected 1 cloudformation stack to be deleted"
+	DescribeStackAfterCreateError = "failed to describe stack after create: %w"
+	FailedEventsError = "getting failed events: %w"
+	StackFailedEventsError = "stack: %s, failed events: %s"
+
+	Base64SamlAssertionError = "base64 decoding SAML assertion: %w"
+	ParseSamlAssertionDocumentError = "parsing SAML assertion document: %w"
+	MissingTagInSamlDocumentError = "missing Assertion tag in saml document"
+	MissingAttributeStatementError = "missing element AttributeStatement"
+	PremissionToUseRoleError = "you do not have permission to use the role: %s, ask for help in #kjørermiljø-support on slack"
+
+	InferClusterDeclarationError = "inferring cluster declaration: %w"
 )

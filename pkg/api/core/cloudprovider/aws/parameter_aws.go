@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -41,7 +42,7 @@ func (p *parameter) CreateSecret(opts api.CreateSecretOpts) (*api.SecretParamete
 		Value:       aws.String(opts.Secret),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create parameter: %w", err)
+		return nil, fmt.Errorf(constant.CreateParameterError, err)
 	}
 
 	return &api.SecretParameter{

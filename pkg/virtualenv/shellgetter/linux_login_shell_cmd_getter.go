@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"strings"
 
 	"github.com/oslokommune/okctl/pkg/storage"
@@ -25,7 +26,7 @@ func newLinuxLoginShellCmdGetter(s storage.Storer, u string) shellCmdGetter {
 func (g *linuxLoginShellCmdGetter) Get() (string, error) {
 	line, err := g.findUserLoginShell()
 	if err != nil {
-		return "", fmt.Errorf("could not get current user's login shell: %w", err)
+		return "", fmt.Errorf(constant.GetUserLoginShellError, err)
 	}
 
 	shellCmd := g.parseShellCmd(line)
@@ -36,7 +37,7 @@ func (g *linuxLoginShellCmdGetter) Get() (string, error) {
 func (g *linuxLoginShellCmdGetter) findUserLoginShell() (string, error) {
 	fileContents, err := g.etcStorer.ReadAll("/passwd")
 	if err != nil {
-		return "", fmt.Errorf("failed to open /etc/passwd when detecting user login shell: %w", err)
+		return "", fmt.Errorf(constant.OpenEtcPasswdError, err)
 	}
 
 	scanner := bufio.NewScanner(bytes.NewReader(fileContents))
@@ -50,7 +51,7 @@ func (g *linuxLoginShellCmdGetter) findUserLoginShell() (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("failed to find '%s' in /etc/passwd", g.currentUsername)
+	return "", fmt.Errorf(constant.FindUserInEtcPasswdError, g.currentUsername)
 }
 
 func (*linuxLoginShellCmdGetter) parseShellCmd(line string) string {

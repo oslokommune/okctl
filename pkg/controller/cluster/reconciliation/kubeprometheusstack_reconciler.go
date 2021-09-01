@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/cfn"
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
@@ -22,21 +23,21 @@ type kubePrometheusStackReconciler struct {
 func (z *kubePrometheusStackReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
 	action, err := z.determineAction(meta, state)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	switch action {
 	case reconciliation.ActionCreate:
 		hz, err := state.Domain.GetPrimaryHostedZone()
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("getting primary hosted zone: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.GetPrimaryHostedZoneError, err)
 		}
 
 		im, err := state.IdentityManager.GetIdentityPool(
 			cfn.NewStackNamer().IdentityPool(meta.ClusterDeclaration.Metadata.Name),
 		)
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("getting identity pool: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.GetIdentityPoolError, err)
 		}
 
 		_, err = z.client.CreateKubePromStack(ctx, client.CreateKubePromStackOpts{
@@ -47,7 +48,7 @@ func (z *kubePrometheusStackReconciler) Reconcile(ctx context.Context, meta reco
 			UserPoolID:   im.UserPoolID,
 		})
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("creating kubepromstack: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.CreateKubePromstackError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -57,7 +58,7 @@ func (z *kubePrometheusStackReconciler) Reconcile(ctx context.Context, meta reco
 			Domain: meta.ClusterDeclaration.ClusterRootDomain,
 		})
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("deleting kubepromstack: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.DeleteKubePromstackError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -67,7 +68,7 @@ func (z *kubePrometheusStackReconciler) Reconcile(ctx context.Context, meta reco
 		return reconciliation.Result{Requeue: false}, nil
 	}
 
-	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+	return reconciliation.Result{}, fmt.Errorf(constant.ActionNotImplementedError, string(action))
 }
 
 func (z *kubePrometheusStackReconciler) determineAction(meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Action, error) {
@@ -75,7 +76,7 @@ func (z *kubePrometheusStackReconciler) determineAction(meta reconciliation.Meta
 
 	componentExists, err := state.Monitoring.HasKubePromStack()
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf("checking component existence: %w", err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckComponentExistenceError, err)
 	}
 
 	clusterExistenceTest := reconciliation.GenerateClusterExistenceTest(
@@ -94,7 +95,7 @@ func (z *kubePrometheusStackReconciler) determineAction(meta reconciliation.Meta
 			reconciliation.GeneratePrimaryDomainDelegationTest(state),
 		)
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking dependencies: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckDepedencyError, err)
 		}
 
 		if !dependenciesReady {
@@ -105,7 +106,7 @@ func (z *kubePrometheusStackReconciler) determineAction(meta reconciliation.Meta
 	case reconciliation.ActionDelete:
 		clusterExists, err := clusterExistenceTest()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking cluster existence: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckClusterExistanceError, err)
 		}
 
 		if !componentExists || !clusterExists {

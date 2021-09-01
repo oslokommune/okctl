@@ -34,14 +34,14 @@ func (z *nameserverDelegationReconciler) Reconcile(_ context.Context, meta recon
 
 	action, err := z.determineAction(meta, state)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	switch action {
 	case reconciliation.ActionCreate:
 		hz, err := state.Domain.GetPrimaryHostedZone()
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("getting primary hosted zone: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.GetPrimaryHostedZoneError, err)
 		}
 
 		err = z.client.InitiateDomainDelegation(client.InitiateDomainDelegationOpts{
@@ -51,14 +51,14 @@ func (z *nameserverDelegationReconciler) Reconcile(_ context.Context, meta recon
 			Labels:                labels,
 		})
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("initiating dns zone delegation: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.InitializeDnsZoneDelegationError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
 	case reconciliation.ActionDelete:
 		hz, err := state.Domain.GetPrimaryHostedZone()
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("getting primary hosted zone: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.GetPrimaryHostedZoneError, err)
 		}
 
 		err = z.client.RevokeDomainDelegation(client.RevokeDomainDelegationOpts{
@@ -67,7 +67,7 @@ func (z *nameserverDelegationReconciler) Reconcile(_ context.Context, meta recon
 			Labels:                labels,
 		})
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("revoking dns zone delegation: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.RevokeDnsZoneDelegationError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -77,7 +77,7 @@ func (z *nameserverDelegationReconciler) Reconcile(_ context.Context, meta recon
 		return reconciliation.Result{}, nil
 	}
 
-	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+	return reconciliation.Result{}, fmt.Errorf(constant.ActionNotImplementedError, string(action))
 }
 
 func (z *nameserverDelegationReconciler) determineAction(meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Action, error) {
@@ -85,7 +85,7 @@ func (z *nameserverDelegationReconciler) determineAction(meta reconciliation.Met
 
 	primaryHZExists, err := state.Domain.HasPrimaryHostedZone()
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf("acquiring primary hosted zone state: %w", err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.GetPrimaryHostedZoneStateError, err)
 	}
 
 	switch userIndication {
@@ -96,7 +96,7 @@ func (z *nameserverDelegationReconciler) determineAction(meta reconciliation.Met
 
 		hz, err := state.Domain.GetPrimaryHostedZone()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("acquiring state: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.GetStateError, err)
 		}
 
 		if hz.IsDelegated {
@@ -111,7 +111,7 @@ func (z *nameserverDelegationReconciler) determineAction(meta reconciliation.Met
 
 		hz, err := state.Domain.GetPrimaryHostedZone()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("acquiring state: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.GetStateError, err)
 		}
 
 		if !hz.IsDelegated {

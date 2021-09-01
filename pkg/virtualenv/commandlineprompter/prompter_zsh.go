@@ -2,6 +2,7 @@ package commandlineprompter
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"regexp"
 	"strings"
 
@@ -38,7 +39,7 @@ func (p *zshPrompter) CreatePrompt() (CommandLinePrompt, error) {
 
 	zshrcDir, err := p.writeZshrcFile()
 	if err != nil {
-		return CommandLinePrompt{}, fmt.Errorf("could not write .zshrc file: %w", err)
+		return CommandLinePrompt{}, fmt.Errorf(constant.WriteDotZshrcFileError, err)
 	}
 
 	// Make zsh use the new .zshrc file
@@ -52,17 +53,17 @@ func (p *zshPrompter) CreatePrompt() (CommandLinePrompt, error) {
 func (p *zshPrompter) writeZshrcFile() (string, error) {
 	zshrcTmpFile, err := p.tmpStorer.Create(".", zshrcFilename, 0o644)
 	if err != nil {
-		return "", fmt.Errorf("could not create temporary .zshrc file: %w", err)
+		return "", fmt.Errorf(constant.CreateTempDotZshrcFileError, err)
 	}
 
 	zshrcContents, err := p.createZshrcContents()
 	if err != nil {
-		return "", fmt.Errorf("could not create temporary .zshrc contents: %w", err)
+		return "", fmt.Errorf(constant.CreateTempDotZshrcContentError, err)
 	}
 
 	_, err = zshrcTmpFile.WriteString(zshrcContents)
 	if err != nil {
-		return "", fmt.Errorf("could not write contents to temporary .zshrc file: %w", err)
+		return "", fmt.Errorf(constant.WriteTempDotZshrcContentToFileError, err)
 	}
 
 	return p.tmpStorer.Path(), nil
@@ -73,13 +74,13 @@ func (p *zshPrompter) createZshrcContents() (string, error) {
 
 	zshrcExists, err := p.userHomeDirStorage.Exists(zshrcFilename)
 	if err != nil {
-		return "", fmt.Errorf("could not check if temporary .zshrc file exists: %w", err)
+		return "", fmt.Errorf(constant.CheckTempDotZshrcFileExistenceError, err)
 	}
 
 	if zshrcExists {
 		zshrcFileContents, err := p.userHomeDirStorage.ReadAll(zshrcFilename)
 		if err != nil {
-			return "", fmt.Errorf("reading existing .zshrc content: %w", err)
+			return "", fmt.Errorf(constant.ReadDotZshrcContentError, err)
 		}
 
 		cleanedContent := reClusterDeclarationExport.ReplaceAll(zshrcFileContents, []byte(""))

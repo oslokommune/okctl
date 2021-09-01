@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
@@ -20,7 +21,7 @@ type promtailReconciler struct {
 func (z *promtailReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
 	action, err := z.determineAction(meta, state)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	switch action {
@@ -30,7 +31,7 @@ func (z *promtailReconciler) Reconcile(ctx context.Context, meta reconciliation.
 			reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata),
 		)
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("creating promtail: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.CreatePromtailError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -40,7 +41,7 @@ func (z *promtailReconciler) Reconcile(ctx context.Context, meta reconciliation.
 			reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata),
 		)
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("deleting promtail: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.DeletePromtailError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -50,7 +51,7 @@ func (z *promtailReconciler) Reconcile(ctx context.Context, meta reconciliation.
 		return reconciliation.Result{Requeue: false}, nil
 	}
 
-	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+	return reconciliation.Result{}, fmt.Errorf(constant.ActionNotImplementedError, string(action))
 }
 
 func (z *promtailReconciler) determineAction(meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Action, error) {
@@ -58,7 +59,7 @@ func (z *promtailReconciler) determineAction(meta reconciliation.Metadata, state
 
 	clusterExists, err := state.Cluster.HasCluster(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf("checking cluster existence: %w", err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckClusterExistanceError, err)
 	}
 
 	switch userIndiciation {
@@ -69,7 +70,7 @@ func (z *promtailReconciler) determineAction(meta reconciliation.Metadata, state
 
 		componentExists, err := state.Promtail.HasPromtail()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking component existence: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckComponentExistenceError, err)
 		}
 
 		if componentExists {
@@ -84,7 +85,7 @@ func (z *promtailReconciler) determineAction(meta reconciliation.Metadata, state
 
 		componentExists, err := state.Promtail.HasPromtail()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking component existence: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckComponentExistenceError, err)
 		}
 
 		if !componentExists {

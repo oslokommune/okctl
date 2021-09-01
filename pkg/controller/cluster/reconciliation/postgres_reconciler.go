@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 
@@ -30,7 +31,7 @@ type database struct {
 func (z *postgresReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
 	vpcExists, err := state.Vpc.HasVPC(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("checking vpc existence: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.CheckVpcExistenceError, err)
 	}
 
 	if !vpcExists {
@@ -43,7 +44,7 @@ func (z *postgresReconciler) Reconcile(ctx context.Context, meta reconciliation.
 
 	vpc, err := state.Vpc.GetVpc(cfn.NewStackNamer().Vpc(meta.ClusterDeclaration.Metadata.Name))
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("getting vpc: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.GetVpcError, err)
 	}
 
 	clusterID := reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata)
@@ -52,7 +53,7 @@ func (z *postgresReconciler) Reconcile(ctx context.Context, meta reconciliation.
 
 	actionMap, err := z.determineActions(meta, state)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	for db, action := range actionMap {
@@ -69,7 +70,7 @@ func (z *postgresReconciler) Reconcile(ctx context.Context, meta reconciliation.
 				Namespace:         db.Namespace,
 			})
 			if err != nil {
-				return reconciliation.Result{}, fmt.Errorf("creating postgres database: %w", err)
+				return reconciliation.Result{}, fmt.Errorf(constant.CreatePostgresDatabaseError, err)
 			}
 		case reconciliation.ActionDelete:
 			err = z.client.DeletePostgresDatabase(ctx, client.DeletePostgresDatabaseOpts{
@@ -79,7 +80,7 @@ func (z *postgresReconciler) Reconcile(ctx context.Context, meta reconciliation.
 				VpcID:           vpc.VpcID,
 			})
 			if err != nil {
-				return reconciliation.Result{}, fmt.Errorf("deleting database: %s, got: %w", db.Name, err)
+				return reconciliation.Result{}, fmt.Errorf(constant.DeleteDatabaseError, db.Name, err)
 			}
 		case reconciliation.ActionNoop:
 			continue
@@ -96,7 +97,7 @@ func (z *postgresReconciler) determineActions(meta reconciliation.Metadata, stat
 
 	existingDatabases, err := state.Component.GetPostgresDatabases()
 	if err != nil {
-		return nil, fmt.Errorf("checking existing postgres databases: %w", err)
+		return nil, fmt.Errorf(constant.CheckDatabaseExistenceError, err)
 	}
 
 	for _, stateDatabase := range existingDatabases {

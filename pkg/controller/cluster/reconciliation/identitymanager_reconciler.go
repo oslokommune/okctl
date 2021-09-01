@@ -119,7 +119,7 @@ func (z *identityManagerReconciler) determineAction(meta reconciliation.Metadata
 	case reconciliation.ActionDelete:
 		clusterExists, err := state.Cluster.HasCluster(meta.ClusterDeclaration.Metadata.Name)
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfClusterExistsError, err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckClusterExistanceError, err)
 		}
 
 		if !clusterExists || !componentExists {

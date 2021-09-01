@@ -1,6 +1,7 @@
 package route53
 
 import (
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -140,7 +141,7 @@ func (r *Route53) SetNSRecordTTL(hostedZoneID string, nsTTLSecs int64) error {
 	}
 
 	if nsCount != 1 {
-		return errors.Errorf("expected 1 NS records in hosted zone, but found %d", nsCount)
+		return errors.Errorf(constant.InvalidNumberOfNSRecordsError, nsCount)
 	}
 
 	var changes []*route.Change

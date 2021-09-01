@@ -65,7 +65,7 @@ func (z *blockstorageReconciler) determineAction(_ context.Context, meta reconci
 
 	clusterExists, err := state.Cluster.HasCluster(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfClusterExistsError, err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckClusterExistanceError, err)
 	}
 
 	componentExists := false

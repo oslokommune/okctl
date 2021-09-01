@@ -28,6 +28,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -93,7 +94,7 @@ func RequestDeviceCode(client HTTPClient, config *Config) (*DeviceCode, error) {
 
 	r, err := http.NewRequest(http.MethodPost, config.DeviceEndpoint.CodeURL, strings.NewReader(form.Encode()))
 	if err != nil {
-		return nil, fmt.Errorf("failed to build device code request: %w", err)
+		return nil, fmt.Errorf(constant.BuildDeviceCodeRequestError, err)
 	}
 
 	r.Header.Add("Accept", "application/json")
@@ -119,7 +120,7 @@ func RequestDeviceCode(client HTTPClient, config *Config) (*DeviceCode, error) {
 
 	err = json.NewDecoder(bytes.NewReader(data)).Decode(&dcr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode response: %s, because: %w", string(data), err)
+		return nil, fmt.Errorf(constant.DecodeResponseError, string(data), err)
 	}
 
 	return &dcr, nil
@@ -141,7 +142,7 @@ func WaitForDeviceAuthorization(client HTTPClient, config *Config, code *DeviceC
 	for {
 		r, err := http.NewRequest(http.MethodPost, config.Endpoint.TokenURL, strings.NewReader(form.Encode()))
 		if err != nil {
-			return nil, fmt.Errorf("failed to build access token request: %w", err)
+			return nil, fmt.Errorf(constant.BuildAccsessTokenRequestError, err)
 		}
 
 		r.Header.Add("Accept", "application/json")
@@ -150,12 +151,12 @@ func WaitForDeviceAuthorization(client HTTPClient, config *Config, code *DeviceC
 
 		resp, err := client.Do(r)
 		if err != nil {
-			return nil, fmt.Errorf("failed to poll for access token: %w", err)
+			return nil, fmt.Errorf(constant.PollActionTokenError, err)
 		}
 
 		if resp.StatusCode != http.StatusOK {
 			_ = resp.Body.Close()
-			return nil, fmt.Errorf("HTTP error %v (%v) when polling for OAuth token",
+			return nil, fmt.Errorf(constant.PollOauthTokenHTTPError,
 				resp.StatusCode, http.StatusText(resp.StatusCode))
 		}
 
@@ -166,7 +167,7 @@ func WaitForDeviceAuthorization(client HTTPClient, config *Config, code *DeviceC
 		_ = resp.Body.Close()
 
 		if err != nil {
-			return nil, fmt.Errorf("failed to decode polling response: %w", err)
+			return nil, fmt.Errorf(constant.DecodePollingResponseError, err)
 		}
 
 		switch token.Error {
@@ -178,7 +179,7 @@ func WaitForDeviceAuthorization(client HTTPClient, config *Config, code *DeviceC
 		case "access_denied":
 			return nil, ErrAccessDenied
 		default:
-			return nil, fmt.Errorf("authorization failed: %v", token.Error)
+			return nil, fmt.Errorf(constant.AuthorizationError, token.Error)
 		}
 
 		_, err = fmt.Fprint(os.Stderr, ".")

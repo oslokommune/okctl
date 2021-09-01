@@ -743,12 +743,12 @@ https://www.passwordstore.org/
 func (o *Okctl) newCredentialsProvider() error {
 	awsAuthenticator, err := o.getAWSAuthenticator()
 	if err != nil {
-		return fmt.Errorf("acquiring AWS authenticator: %w", err)
+		return fmt.Errorf(constant.GetAwsAuthenticatorError, err)
 	}
 
 	githubAuthenticator, err := o.getGithubAuthenticator()
 	if err != nil {
-		return fmt.Errorf("acquiring Github authenticator: %w", err)
+		return fmt.Errorf(constant.GetGithubAuthenticatorError, err)
 	}
 
 	o.CredentialsProvider = credentials.New(awsAuthenticator, githubAuthenticator)

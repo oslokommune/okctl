@@ -69,27 +69,26 @@ being captured. Together with slack and slick.`,
 			var err error
 
 			if len(declarationPath) == 0 {
-				return fmt.Errorf("declaration must be provided")
+				return fmt.Errorf(constant.DeclarationExistenceError)
 			}
 
 			declarationPath, err = filepath.Abs(declarationPath)
 			if err != nil {
-				return fmt.Errorf("converting declaration path to absolute path: %w", err)
+				return fmt.Errorf(constant.ConvertToAbsolutePathError, err)
 			}
 
 			err = loadUserData(o, cmd)
 			if err != nil {
-				return fmt.Errorf("loading application data: %w", err)
+				return fmt.Errorf(constant.LoadApplicationDataError, err)
 			}
 
 			err = loadRepoData(o, declarationPath, cmd)
 			if err != nil {
 				if errors.Is(err, git.ErrRepositoryNotExists) {
-					return fmt.Errorf("okctl needs to be run inside a Git repository (okctl outputs " +
-						"various configuration files that will be stored here)")
+					return fmt.Errorf(constant.OkctlOutsideRepositoryError)
 				}
 
-				return fmt.Errorf("loading repository data: %w", err)
+				return fmt.Errorf(constant.LoadRepositoryDataError, err)
 			}
 
 			o.Out = cmd.OutOrStdout()

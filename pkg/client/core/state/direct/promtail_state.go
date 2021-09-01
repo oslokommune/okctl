@@ -2,6 +2,7 @@ package direct
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"time"
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/promtail"
@@ -34,7 +35,7 @@ func (l *promtailState) HasPromtail() (bool, error) {
 			return false, nil
 		}
 
-		return false, fmt.Errorf("getting helm release: %w", err)
+		return false, fmt.Errorf(constant.GetHelmReleaseError, err)
 	}
 
 	return true, nil

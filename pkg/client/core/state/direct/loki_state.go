@@ -2,6 +2,7 @@ package direct
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"time"
 
 	"github.com/mishudark/errors"
@@ -33,7 +34,7 @@ func (l *lokiState) HasLoki() (bool, error) {
 			return false, nil
 		}
 
-		return false, fmt.Errorf("getting helm release: %w", err)
+		return false, fmt.Errorf(constant.GetHelmReleaseError, err)
 	}
 
 	return true, nil

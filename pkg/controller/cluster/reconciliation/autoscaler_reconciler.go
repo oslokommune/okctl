@@ -60,7 +60,7 @@ func (z *autoscalerReconciler) determineAction(_ context.Context, meta reconcili
 
 	clusterExists, err := state.Cluster.HasCluster(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfClusterExistsError, err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckClusterExistanceError, err)
 	}
 
 	autoscalerExists := false

@@ -71,7 +71,7 @@ func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, er
 
 	exists, err := cli.HasCluster(cfg)
 	if err != nil {
-		return nil, fmt.Errorf(constant.CheckIfClusterExistsError, err)
+		return nil, fmt.Errorf(constant.CheckClusterExistanceError, err)
 	}
 
 	cluster := &api.Cluster{

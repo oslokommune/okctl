@@ -5,6 +5,7 @@ package pod
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -63,7 +64,7 @@ func (p *Pod) WaitFor(state State, pod *v1.Pod) error {
 		LabelSelector:   labels.Everything().String(),
 	})
 	if err != nil {
-		return fmt.Errorf("watching pod: %w", err)
+		return fmt.Errorf(constant.WatchPodError, err)
 	}
 
 	func() {
@@ -112,5 +113,5 @@ func (p *Pod) WaitFor(state State, pod *v1.Pod) error {
 		return nil
 	}
 
-	return fmt.Errorf("waiting for pod: %v", status.Phase)
+	return fmt.Errorf(constant.WaitForPodError, status.Phase)
 }

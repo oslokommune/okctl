@@ -60,7 +60,7 @@ func (z *externalSecretsReconciler) determineAction(_ context.Context, meta reco
 
 	clusterExists, err := state.Cluster.HasCluster(meta.ClusterDeclaration.Metadata.Name)
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckIfClusterExistsError, err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.CheckClusterExistanceError, err)
 	}
 
 	componentExists := false

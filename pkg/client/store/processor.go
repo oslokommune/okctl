@@ -3,6 +3,7 @@ package store
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"sigs.k8s.io/yaml"
 )
@@ -12,7 +13,7 @@ type toJSON struct{}
 func (t *toJSON) PreProcess(data interface{}) (*PreProcessed, error) {
 	d, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal as json: %w", err)
+		return nil, fmt.Errorf(constant.MarshalJsonError, err)
 	}
 
 	return &PreProcessed{
@@ -35,7 +36,7 @@ type fromJSON struct{}
 func (f *fromJSON) PostProcess(into interface{}, data []byte) (*PostProcessed, error) {
 	err := json.Unmarshal(data, into)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal as json: %w", err)
+		return nil, fmt.Errorf(constant.MarshalJsonError, err)
 	}
 
 	return &PostProcessed{
@@ -58,7 +59,7 @@ type toYAML struct{}
 func (t *toYAML) PreProcess(data interface{}) (*PreProcessed, error) {
 	d, err := yaml.Marshal(data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal as yaml: %w", err)
+		return nil, fmt.Errorf(constant.MarshalYamlError, err)
 	}
 
 	return &PreProcessed{
@@ -81,7 +82,7 @@ type fromYAML struct{}
 func (f *fromYAML) PostProcess(into interface{}, data []byte) (*PostProcessed, error) {
 	err := yaml.Unmarshal(data, into)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal as yaml: %w", err)
+		return nil, fmt.Errorf(constant.MarshalYamlError, err)
 	}
 
 	return &PostProcessed{

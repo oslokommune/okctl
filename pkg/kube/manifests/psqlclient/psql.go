@@ -5,6 +5,7 @@ package psqlclient
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"os"
 	"time"
 
@@ -52,7 +53,7 @@ func New(name, namespace string, pod *v1.Pod, clientSet kubernetes.Interface, co
 func (c *PSQLClient) Create() (*v1.Pod, error) {
 	p, err := c.Client.CoreV1().Pods(c.Namespace).Create(c.Ctx, c.Manifest, metav1.CreateOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("creating psql client pod: %w", err)
+		return nil, fmt.Errorf(constant.CreatePsqlClientPodError, err)
 	}
 
 	return p, nil
@@ -69,7 +70,7 @@ func (c *PSQLClient) Watch(resp *v1.Pod) error {
 		LabelSelector:   labels.Everything().String(),
 	})
 	if err != nil {
-		return fmt.Errorf("watching psql client pod: %w", err)
+		return fmt.Errorf(constant.WatchPsqlClientPodError, err)
 	}
 
 	func() {
@@ -93,7 +94,7 @@ func (c *PSQLClient) Watch(resp *v1.Pod) error {
 	}()
 
 	if status.Phase != v1.PodRunning {
-		return fmt.Errorf("waiting for pod: %v", status.Phase)
+		return fmt.Errorf(constant.WaitForPodError, status.Phase)
 	}
 
 	return nil
@@ -107,7 +108,7 @@ func (c *PSQLClient) Delete() error {
 		PropagationPolicy: &policy,
 	})
 	if err != nil {
-		return fmt.Errorf("deleting psql client pod: %w", err)
+		return fmt.Errorf(constant.DeletePsqlClientPoolError, err)
 	}
 
 	return nil
@@ -124,7 +125,7 @@ func (c *PSQLClient) Attach() error {
 		os.Stderr,
 	)
 	if err != nil {
-		return fmt.Errorf("attaching to psql client pod: %w", err)
+		return fmt.Errorf(constant.AttachPsqlClientPodError, err)
 	}
 
 	return nil

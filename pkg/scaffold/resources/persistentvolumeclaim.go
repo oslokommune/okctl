@@ -2,6 +2,7 @@ package resources
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"strings"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -23,7 +24,7 @@ func CreateOkctlVolume(app v1alpha1.Application, volume map[string]string) (core
 
 	pvc, err := createPersistentVolume(app, mountPath, size)
 	if err != nil {
-		return corev1.PersistentVolumeClaim{}, fmt.Errorf("error creating pvc: %w", err)
+		return corev1.PersistentVolumeClaim{}, fmt.Errorf(constant.CreatePresistentVolumeClaimError, err)
 	}
 
 	return pvc, nil

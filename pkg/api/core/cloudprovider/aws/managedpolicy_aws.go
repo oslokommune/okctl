@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -23,7 +24,7 @@ func (m *managedPolicy) CreatePolicy(opts api.CreatePolicyOpts) (*api.ManagedPol
 		defaultTimeOut,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("creating cloud formation stack: %w", err)
+		return nil, fmt.Errorf(constant.CreateCloudFormationStackError, err)
 	}
 
 	p := &api.ManagedPolicy{
@@ -36,7 +37,7 @@ func (m *managedPolicy) CreatePolicy(opts api.CreatePolicyOpts) (*api.ManagedPol
 		opts.PolicyOutputName: cfn.String(&p.PolicyARN),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("processing outputs: %w", err)
+		return nil, fmt.Errorf(constant.ProcessOutputsError, err)
 	}
 
 	return p, nil
@@ -47,7 +48,7 @@ func (m *managedPolicy) DeletePolicy(opts api.DeletePolicyOpts) error {
 
 	err := r.Delete(opts.StackName)
 	if err != nil {
-		return fmt.Errorf("deleting policy: %w", err)
+		return fmt.Errorf(constant.DeletePolicyError, err)
 	}
 
 	return nil

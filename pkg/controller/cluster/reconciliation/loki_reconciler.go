@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
@@ -20,21 +21,21 @@ const lokiReconcilerIdentifier = "Loki"
 func (z *lokiReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
 	action, err := z.determineAction(meta, state)
 	if err != nil {
-		return reconciliation.Result{Requeue: false}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{Requeue: false}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	switch action {
 	case reconciliation.ActionCreate:
 		_, err = z.client.CreateLoki(ctx, reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata))
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("creating Loki: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.CreateLokiError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
 	case reconciliation.ActionDelete:
 		err = z.client.DeleteLoki(ctx, reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata))
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("deleting Loki: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.DeleteLokiError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -44,7 +45,7 @@ func (z *lokiReconciler) Reconcile(ctx context.Context, meta reconciliation.Meta
 		return reconciliation.Result{Requeue: false}, nil
 	}
 
-	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+	return reconciliation.Result{}, fmt.Errorf(constant.ActionNotImplementedError, string(action))
 }
 
 func (z *lokiReconciler) determineAction(meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Action, error) {
@@ -56,7 +57,7 @@ func (z *lokiReconciler) determineAction(meta reconciliation.Metadata, state *cl
 	case reconciliation.ActionCreate:
 		dependenciesReady, err := reconciliation.AssertDependencyExistence(true, clusterExistenceTest)
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking dependencies: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckDepedencyError, err)
 		}
 
 		if !dependenciesReady {
@@ -65,7 +66,7 @@ func (z *lokiReconciler) determineAction(meta reconciliation.Metadata, state *cl
 
 		componentExists, err := state.Loki.HasLoki()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking Loki existence: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckLokiExistenceError, err)
 		}
 
 		if componentExists {
@@ -76,7 +77,7 @@ func (z *lokiReconciler) determineAction(meta reconciliation.Metadata, state *cl
 	case reconciliation.ActionDelete:
 		clusterExists, err := clusterExistenceTest()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking cluster existence: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckClusterExistanceError, err)
 		}
 
 		if !clusterExists {
@@ -85,7 +86,7 @@ func (z *lokiReconciler) determineAction(meta reconciliation.Metadata, state *cl
 
 		componentExists, err := state.Loki.HasLoki()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking Loki existence: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckLokiExistenceError, err)
 		}
 
 		if !componentExists {

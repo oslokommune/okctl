@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"time"
 
 	"github.com/oslokommune/okctl/pkg/client"
@@ -32,7 +33,7 @@ func (n *nameserversDelegatedTestReconciler) Reconcile(
 ) (reconciliation.Result, error) {
 	action, err := n.determineAction(meta, state)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	switch action {
@@ -46,7 +47,7 @@ func (n *nameserversDelegatedTestReconciler) Reconcile(
 
 		hz, err := state.Domain.GetPrimaryHostedZone()
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("getting primary hosted zone: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.GetPrimaryHostedZoneError, err)
 		}
 
 		err = domain.ShouldHaveNameServers(hz.FQDN, hz.NameServers)
@@ -56,12 +57,12 @@ func (n *nameserversDelegatedTestReconciler) Reconcile(
 			return reconciliation.Result{
 				Requeue:      true,
 				RequeueAfter: defaultTestingIntervalMinutes,
-			}, fmt.Errorf("validating nameservers: %w", err)
+			}, fmt.Errorf(constant.ValidateNameserversError, err)
 		}
 
 		err = n.domainService.SetHostedZoneDelegation(ctx, meta.ClusterDeclaration.ClusterRootDomain, true)
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("setting hosted zone delegation status: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.SetHostedZoneDelegationStatus, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -73,7 +74,7 @@ func (n *nameserversDelegatedTestReconciler) Reconcile(
 		return reconciliation.Result{Requeue: false}, nil
 	}
 
-	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+	return reconciliation.Result{}, fmt.Errorf(constant.ActionNotImplementedError, string(action))
 }
 
 func (n *nameserversDelegatedTestReconciler) determineAction(meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Action, error) {
@@ -88,7 +89,7 @@ func (n *nameserversDelegatedTestReconciler) determineAction(meta reconciliation
 			state.Domain.HasPrimaryHostedZone,
 		)
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("testing dependencies: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.TestDependenciesError, err)
 		}
 
 		if !dependenciesReady {
@@ -97,7 +98,7 @@ func (n *nameserversDelegatedTestReconciler) determineAction(meta reconciliation
 
 		isDelegated, err := delegationTest()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking primary hosted zone delegation state: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckHostedZoneDelegationStateError, err)
 		}
 
 		if isDelegated {
@@ -108,7 +109,7 @@ func (n *nameserversDelegatedTestReconciler) determineAction(meta reconciliation
 	case reconciliation.ActionDelete:
 		primaryHZExists, err := state.Domain.HasPrimaryHostedZone()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking domain existence: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckDomainExistenceError, err)
 		}
 
 		if !primaryHZExists {
@@ -117,7 +118,7 @@ func (n *nameserversDelegatedTestReconciler) determineAction(meta reconciliation
 
 		isDelegated, err := delegationTest()
 		if err != nil {
-			return reconciliation.ActionNoop, fmt.Errorf("checking primary hosted zone delegation state: %w", err)
+			return reconciliation.ActionNoop, fmt.Errorf(constant.CheckHostedZoneDelegationStateError, err)
 		}
 
 		if !isDelegated {

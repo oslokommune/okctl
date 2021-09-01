@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/commands"
 
@@ -24,7 +25,7 @@ func buildScaffoldApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			if declarationPath != "" {
 				clusterDeclaration, err := commands.InferClusterFromStdinOrFile(o.In, declarationPath)
 				if err != nil {
-					return fmt.Errorf("inferring cluster declaration: %w", err)
+					return fmt.Errorf(constant.InferClusterDeclarationError, err)
 				}
 
 				opts.PrimaryHostedZone = clusterDeclaration.ClusterRootDomain

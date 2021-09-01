@@ -4,6 +4,7 @@ package saml
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"strings"
 
 	"github.com/beevik/etree"
@@ -24,24 +25,24 @@ func formatErr(err error) error {
 func VerifyAssertion(expectRole string, assertion []byte) error {
 	data, err := base64.StdEncoding.DecodeString(string(assertion))
 	if err != nil {
-		return formatErr(fmt.Errorf("base64 decoding SAML assertion: %w", err))
+		return formatErr(fmt.Errorf(constant.Base64SamlAssertionError, err))
 	}
 
 	doc := etree.NewDocument()
 
 	err = doc.ReadFromBytes(data)
 	if err != nil {
-		return formatErr(fmt.Errorf("parsing SAML assertion document: %w", err))
+		return formatErr(fmt.Errorf(constant.ParseSamlAssertionDocumentError, err))
 	}
 
 	assertionElement := doc.FindElement(".//Assertion")
 	if assertionElement == nil {
-		return formatErr(fmt.Errorf("missing Assertion tag in saml document"))
+		return formatErr(fmt.Errorf(constant.MissingTagInSamlDocumentError))
 	}
 
 	attributeStatement := assertionElement.FindElement(childPath(assertionElement.Space, "AttributeStatement"))
 	if attributeStatement == nil {
-		return formatErr(fmt.Errorf("missing element AttributeStatement"))
+		return formatErr(fmt.Errorf(constant.MissingAttributeStatementError))
 	}
 
 	foundRole := false
@@ -62,7 +63,7 @@ FOUNDROLE:
 	}
 
 	if !foundRole {
-		return formatErr(fmt.Errorf("you do not have permission to use the role: %s, ask for help in #kjørermiljø-support on slack", expectRole))
+		return formatErr(fmt.Errorf(constant.PremissionToUseRoleError, expectRole))
 	}
 
 	return nil

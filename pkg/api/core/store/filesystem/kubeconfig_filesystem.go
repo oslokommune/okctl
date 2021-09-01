@@ -2,6 +2,7 @@ package filesystem
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"path"
 
 	"github.com/oslokommune/okctl/pkg/client"
@@ -28,14 +29,14 @@ type kubeConfig struct {
 func (k *kubeConfig) SaveKubeConfig(config *kubeconfig.Config) error {
 	cfg, err := config.Bytes()
 	if err != nil {
-		return fmt.Errorf("creating kubeconfig: %w", err)
+		return fmt.Errorf(constant.CreateKubeConfigError, err)
 	}
 
 	_, err = store.NewFileSystem(k.kubeConfigBaseDir, k.fs).
 		StoreBytes(k.kubeConfigFileName, cfg).
 		Do()
 	if err != nil {
-		return fmt.Errorf("storing kubeconfig: %w", err)
+		return fmt.Errorf(constant.StoreKubecofigError, err)
 	}
 
 	return nil
@@ -78,7 +79,7 @@ func (k *kubeConfig) DeleteKubeConfig() error {
 		Remove(k.kubeConfigFileName).
 		Do()
 	if err != nil {
-		return fmt.Errorf("removing kubeconfig: %w", err)
+		return fmt.Errorf(constant.RemoveKubeconfigError, err)
 	}
 
 	return nil

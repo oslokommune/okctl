@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 
@@ -23,7 +24,7 @@ const zoneReconcilerIdentifier = "hosted zones"
 func (z *zoneReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
 	action, err := z.determineAction(meta, state)
 	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
+		return reconciliation.Result{}, fmt.Errorf(constant.ReconcilerDetermineActionError, err)
 	}
 
 	switch action {
@@ -34,14 +35,14 @@ func (z *zoneReconciler) Reconcile(ctx context.Context, meta reconciliation.Meta
 			FQDN:   dns.Fqdn(meta.ClusterDeclaration.ClusterRootDomain),
 		})
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("creating hosted zone: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.CreateHostedZoneError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
 	case reconciliation.ActionDelete:
 		hz, err := state.Domain.GetPrimaryHostedZone()
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("getting primary hosted zone: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.GetPrimaryHostedZoneError, err)
 		}
 
 		err = z.client.DeletePrimaryHostedZone(ctx, client.DeletePrimaryHostedZoneOpts{
@@ -49,7 +50,7 @@ func (z *zoneReconciler) Reconcile(ctx context.Context, meta reconciliation.Meta
 			HostedZoneID: hz.HostedZoneID,
 		})
 		if err != nil {
-			return reconciliation.Result{}, fmt.Errorf("deleting primary hosted zone: %w", err)
+			return reconciliation.Result{}, fmt.Errorf(constant.DeletePrimaryHostedZoneError, err)
 		}
 
 		return reconciliation.Result{Requeue: false}, nil
@@ -59,7 +60,7 @@ func (z *zoneReconciler) Reconcile(ctx context.Context, meta reconciliation.Meta
 		return reconciliation.Result{Requeue: false}, nil
 	}
 
-	return reconciliation.Result{}, fmt.Errorf("action %s is not implemented", string(action))
+	return reconciliation.Result{}, fmt.Errorf(constant.ActionNotImplementedError, string(action))
 }
 
 func (z *zoneReconciler) determineAction(meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Action, error) {
@@ -67,7 +68,7 @@ func (z *zoneReconciler) determineAction(meta reconciliation.Metadata, state *cl
 
 	primaryHostedZoneExists, err := state.Domain.HasPrimaryHostedZone()
 	if err != nil {
-		return reconciliation.ActionNoop, fmt.Errorf("querying state: %w", err)
+		return reconciliation.ActionNoop, fmt.Errorf(constant.QueryStateError, err)
 	}
 
 	switch userIndication {

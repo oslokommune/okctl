@@ -2,6 +2,7 @@ package cfn
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"strconv"
 	"strings"
 
@@ -131,7 +132,7 @@ func Subnets(p v1alpha1.CloudProvider, to *[]api.VpcSubnet) ProcessOutputFn {
 			SubnetIds: aws.StringSlice(strings.Split(v, ",")),
 		})
 		if err != nil {
-			return fmt.Errorf("failed to describe subnet outputs: %w", err)
+			return fmt.Errorf(constant.DescribeSubnetOutputsError, err)
 		}
 
 		for _, s := range got.Subnets {

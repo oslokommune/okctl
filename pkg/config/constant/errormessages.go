@@ -422,6 +422,57 @@ const (
 	CheckIfDependencyExistsError      = "checking dependency existence: %w"
 	CheckIfIdentityPoolExistsError    = "acquiring Identity Pool existence: %w"
 
+	GetIGWQuotaError = "getting igw quota: %w"
+	GetIGWCountError = "getting current igw count: %w"
+
+	GetApplicationURLError = "getting application URL: %w"
+
+	ConnectToDockerError = "couldn't connect to docker: %w"
+	EdgePortError = "failed to find available port for edge: %w"
+	StartLockstackContainerError = "failed to start localstack container: %w"
+	WaitForLocalstackError = "failed to wait for localstack: %w"
+	CleanUpResourcesError = "failed to cleanup resources: %w"
+	BodyReadError = "failed to read body: %w"
+	UnmarshalJsonError = "failed to unmarshal json: %w"
+	WaitForRunnningStateError = "waiting for: %s, to get to running state, currently: %s"
+	NotOKLocalstackHtmlError = "got response code from localstack: %d, not 200 OK"
+	NoFreePortError = "failed to find free port: %w"
+	FailedCreateClusterError = "failed to create cluster: %w"
+	DestroyClusterError = "failed to destroy cluster: %w"
+	KubeConfigTempDirectoryError = "failed to create temporary directory for kubeconfig: %w"
+	CreateKubeConfigError = "failed to create kubeconfig: %w"
+	CreateDebugClientError = "failed to create debug client"
+	CleaupKubeConfigDirError = "failed to cleanup kubeconfig dir: %w"
+	ClusterCleaupError = "failed to cleanup cluster: %w"
+
+	GeneratePrivateKeyError = "failed to generate private key: %w"
+	GeneratePublicKeyError = "failed to generate public key: %w"
+	ValidatePrivateKeyError = "failed to validate private key: %w"
+	CreateSshRsaPublicKeyError = "failed to create ssh-rsa public key: %w"
+
+	NoSupportedBackendsForKeyringError = "no supported keyring backends for your operating system: %s"
+	EmptyValueForKeyError = "key of type %s cannot store empty value"
+
+	UserPasswordEmptyError = "key of type userPassword cannot store empty value"
+
+	ApplyKeyringError = "apply %s: %w"
+	UnknownResourceTypeError = "unknown resource type: %s"
+	GetDeploymentError = "getting deployment %s in %s: %w"
+	GetReplicasetError = "getting replicaset for %s in %s: %w"
+
+	CreateKubernetesClientError = "creating kubernetes client: %w"
+	ScaleDeploymentError = "scaling deployment: %w"
+	CreateConfigmapError = "creating configmap: %w"
+	MarshalManifestError = "marshalling manifest: %w"
+	DeleteConfigmapError = "deleting configmap: %w"
+	CreateManifestError = "creating manifest: %w"
+	CreateStorageclassError = "creating storageclass: %w"
+	CreateNamespaceError = "creating namespace: %w"
+	DeleteNamespaceError = "deleting namespace: %w"
+	ApplyKubernetesManifestError = "applying kubernetes manifests: %w"
+	SerializeDeploymentManifestError = "failed to serialize Deployment manifest: %w"
+	SerializeClusterRoleManifestError = "failed to serialise ClusterRole manifest: %w"
+	SerializeClusterRoleBindingManifestError = "failed to serialise ClusterRoleBinding manifest: %w"
 
 
 )

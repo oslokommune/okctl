@@ -9,6 +9,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 
 	"golang.org/x/crypto/ssh"
@@ -46,12 +47,12 @@ func (k *Keypair) Generate() (*Keypair, error) {
 
 	privateKey, err := k.generatePrivateKey()
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate private key: %w", err)
+		return nil, fmt.Errorf(constant.GeneratePrivateKeyError, err)
 	}
 
 	publicKeyBytes, err := k.generatePublicKey(&privateKey.PublicKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate public key: %w", err)
+		return nil, fmt.Errorf(constant.GeneratePublicKeyError, err)
 	}
 
 	privateKeyBytes := k.encodePrivateKeyAsPEM(privateKey)
@@ -66,12 +67,12 @@ func (k *Keypair) Generate() (*Keypair, error) {
 func (k *Keypair) generatePrivateKey() (*rsa.PrivateKey, error) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, k.BitSize)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate private key: %w", err)
+		return nil, fmt.Errorf(constant.GeneratePrivateKeyError, err)
 	}
 
 	err = privateKey.Validate()
 	if err != nil {
-		return nil, fmt.Errorf("failed to validate private key: %w", err)
+		return nil, fmt.Errorf(constant.ValidatePrivateKeyError, err)
 	}
 
 	return privateKey, nil
@@ -90,7 +91,7 @@ func (k *Keypair) encodePrivateKeyAsPEM(privateKey *rsa.PrivateKey) []byte {
 func (k *Keypair) generatePublicKey(privateKey *rsa.PublicKey) ([]byte, error) {
 	publicRsaKey, err := ssh.NewPublicKey(privateKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create ssh-rsa public key: %w", err)
+		return nil, fmt.Errorf(constant.CreateSshRsaPublicKeyError, err)
 	}
 
 	return ssh.MarshalAuthorizedKey(publicRsaKey), nil

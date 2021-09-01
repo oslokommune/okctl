@@ -2,6 +2,7 @@ package servicequota
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicequotas"
@@ -29,12 +30,12 @@ func (i *IgwCheck) CheckAvailability() (*Result, error) {
 		ServiceCode: aws.String("vpc"),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("getting igw quota: %w", err)
+		return nil, fmt.Errorf(constant.GetIGWQuotaError, err)
 	}
 
 	igws, err := i.provider.EC2().DescribeInternetGateways(nil)
 	if err != nil {
-		return nil, fmt.Errorf("getting current igw count: %w", err)
+		return nil, fmt.Errorf(constant.GetIGWCountError, err)
 	}
 
 	quota := int(*quotas.Quota.Value)

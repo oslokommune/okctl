@@ -2,6 +2,7 @@ package resources
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
@@ -59,7 +60,7 @@ func generateDefaultIngress() networkingv1beta1.Ingress {
 func createGenericIngress(app v1alpha1.Application) (networkingv1beta1.Ingress, error) {
 	hostURL, err := app.URL()
 	if err != nil {
-		return networkingv1beta1.Ingress{}, fmt.Errorf("getting application URL: %w", err)
+		return networkingv1beta1.Ingress{}, fmt.Errorf(constant.GetApplicationURLError, err)
 	}
 
 	ingress := generateDefaultIngress()

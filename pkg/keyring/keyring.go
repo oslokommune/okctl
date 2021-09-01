@@ -54,7 +54,7 @@ func DefaultKeyringForOS() (krPkg.Keyring, error) {
 		cfg.AllowedBackends = []krPkg.BackendType{krPkg.KeychainBackend}
 	case "linux":
 	default:
-		return nil, fmt.Errorf("no supported keyring backends for your operating system: %s", runtime.GOOS)
+		return nil, fmt.Errorf(constant.NoSupportedBackendsForKeyringError, runtime.GOOS)
 	}
 
 	return krPkg.Open(cfg)
@@ -63,7 +63,7 @@ func DefaultKeyringForOS() (krPkg.Keyring, error) {
 // Store a value with given keytype and value in keyring
 func (k *Keyring) Store(key KeyType, val string) error {
 	if len(val) == 0 {
-		return fmt.Errorf("key of type %s cannot store empty value", key)
+		return fmt.Errorf(constant.EmptyValueForKeyError, key)
 	}
 
 	return k.ring.Set(krPkg.Item{

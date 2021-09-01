@@ -2,6 +2,7 @@ package run
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"time"
 
 	merrors "github.com/mishudark/errors"
@@ -38,7 +39,7 @@ func (k *kubeRun) ScaleDeployment(opts api.ScaleDeploymentOpts) error {
 
 	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
 	if err != nil {
-		return fmt.Errorf("creating kubernetes client: %w", err)
+		return fmt.Errorf(constant.CreateKubernetesClientError, err)
 	}
 
 	_, err = client.Apply(kube.Applier{
@@ -46,7 +47,7 @@ func (k *kubeRun) ScaleDeployment(opts api.ScaleDeploymentOpts) error {
 		Description: fmt.Sprintf("scaling deployment: %s, at: %s, to: %d", opts.Name, opts.Namespace, opts.Replicas),
 	})
 	if err != nil {
-		return fmt.Errorf("scaling deployment: %w", err)
+		return fmt.Errorf(constant.ScaleDeploymentError, err)
 	}
 
 	return nil
@@ -62,7 +63,7 @@ func (k *kubeRun) CreateConfigMap(opts api.CreateConfigMapOpts) (*api.ConfigMap,
 
 	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
 	if err != nil {
-		return nil, fmt.Errorf("creating kubernetes client: %w", err)
+		return nil, fmt.Errorf(constant.CreateKubernetesClientError, err)
 	}
 
 	_, err = client.Apply(kube.Applier{
@@ -70,12 +71,12 @@ func (k *kubeRun) CreateConfigMap(opts api.CreateConfigMapOpts) (*api.ConfigMap,
 		Description: fmt.Sprintf("creating configmap: %s, at: %s", opts.Name, opts.Namespace),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("creating configmap: %w", err)
+		return nil, fmt.Errorf(constant.CreateConfigmapError, err)
 	}
 
 	data, err := yaml.Marshal(sec.Manifest)
 	if err != nil {
-		return nil, fmt.Errorf("marshalling manifest: %w", err)
+		return nil, fmt.Errorf(constant.MarshalManifestError, err)
 	}
 
 	return &api.ConfigMap{
@@ -89,7 +90,7 @@ func (k *kubeRun) CreateConfigMap(opts api.CreateConfigMapOpts) (*api.ConfigMap,
 func (k *kubeRun) DeleteConfigMap(opts api.DeleteConfigMapOpts) error {
 	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
 	if err != nil {
-		return fmt.Errorf("creating kubernetes client: %w", err)
+		return fmt.Errorf(constant.CreateKubernetesClientError, err)
 	}
 
 	_, err = client.Apply(kube.Applier{
@@ -97,7 +98,7 @@ func (k *kubeRun) DeleteConfigMap(opts api.DeleteConfigMapOpts) error {
 		Description: fmt.Sprintf("deleting configmap: %s, from: %s", opts.Name, opts.Namespace),
 	})
 	if err != nil {
-		return fmt.Errorf("deleting configmap: %w", err)
+		return fmt.Errorf(constant.DeleteConfigmapError, err)
 	}
 
 	return nil
@@ -106,12 +107,12 @@ func (k *kubeRun) DeleteConfigMap(opts api.DeleteConfigMapOpts) error {
 func (k *kubeRun) CreateStorageClass(opts api.CreateStorageClassOpts) (*api.StorageClassKube, error) {
 	sc, err := storageclass.New(opts.Name, opts.Parameters, opts.Annotations)
 	if err != nil {
-		return nil, fmt.Errorf("creating manifest: %w", err)
+		return nil, fmt.Errorf(constant.CreateManifestError, err)
 	}
 
 	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
 	if err != nil {
-		return nil, fmt.Errorf("creating kubernetes client: %w", err)
+		return nil, fmt.Errorf(constant.CreateKubernetesClientError, err)
 	}
 
 	_, err = client.Apply(kube.Applier{
@@ -119,12 +120,12 @@ func (k *kubeRun) CreateStorageClass(opts api.CreateStorageClassOpts) (*api.Stor
 		Description: fmt.Sprintf("storageclass: %s", opts.Name),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("creating storageclass: %w", err)
+		return nil, fmt.Errorf(constant.CreateStorageclassError, err)
 	}
 
 	manifest, err := sc.StorageClassManifest().Marshal()
 	if err != nil {
-		return nil, fmt.Errorf("marshalling manifest: %w", err)
+		return nil, fmt.Errorf(constant.MarshalManifestError, err)
 	}
 
 	return &api.StorageClassKube{
@@ -139,7 +140,7 @@ func (k *kubeRun) CreateNamespace(opts api.CreateNamespaceOpts) (*api.Namespace,
 
 	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
 	if err != nil {
-		return nil, fmt.Errorf("creating kubernetes client: %w", err)
+		return nil, fmt.Errorf(constant.CreateKubernetesClientError, err)
 	}
 
 	_, err = client.Apply(kube.Applier{
@@ -147,12 +148,12 @@ func (k *kubeRun) CreateNamespace(opts api.CreateNamespaceOpts) (*api.Namespace,
 		Description: fmt.Sprintf("creating namespace: %s", opts.Namespace),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("creating namespace: %w", err)
+		return nil, fmt.Errorf(constant.CreateNamespaceError, err)
 	}
 
 	manifest, err := ns.NamespaceManifest().Marshal()
 	if err != nil {
-		return nil, fmt.Errorf("marshalling manifest: %w", err)
+		return nil, fmt.Errorf(constant.MarshalManifestError, err)
 	}
 
 	return &api.Namespace{
@@ -168,7 +169,7 @@ func (k *kubeRun) DeleteNamespace(opts api.DeleteNamespaceOpts) error {
 
 	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
 	if err != nil {
-		return fmt.Errorf("creating kubernetes client: %w", err)
+		return fmt.Errorf(constant.CreateKubernetesClientError, err)
 	}
 
 	_, err = client.Apply(kube.Applier{
@@ -176,7 +177,7 @@ func (k *kubeRun) DeleteNamespace(opts api.DeleteNamespaceOpts) error {
 		Description: fmt.Sprintf("deleting namespace: %s", opts.Namespace),
 	})
 	if err != nil {
-		return fmt.Errorf("deleting namespace: %w", err)
+		return fmt.Errorf(constant.DeleteNamespaceError, err)
 	}
 
 	return nil
@@ -198,12 +199,12 @@ func (k *kubeRun) DeleteExternalSecrets(opts api.DeleteExternalSecretsOpts) erro
 
 	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
 	if err != nil {
-		return fmt.Errorf("creating kubernetes client: %w", err)
+		return fmt.Errorf(constant.CreateKubernetesClientError, err)
 	}
 
 	_, err = client.Apply(fns...)
 	if err != nil {
-		return fmt.Errorf("applying kubernetes manifests: %w", err)
+		return fmt.Errorf(constant.ApplyKubernetesManifestError, err)
 	}
 
 	return nil
@@ -233,12 +234,12 @@ func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*ap
 
 	raw, err := yaml.Marshal(secretManifest)
 	if err != nil {
-		return nil, fmt.Errorf("marshalling manifest: %w", err)
+		return nil, fmt.Errorf(constant.MarshalManifestError, err)
 	}
 
 	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
 	if err != nil {
-		return nil, fmt.Errorf("creating kubernetes client: %w", err)
+		return nil, fmt.Errorf(constant.CreateKubernetesClientError, err)
 	}
 
 	_, err = client.Apply(kube.Applier{
@@ -246,7 +247,7 @@ func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*ap
 		Description: fmt.Sprintf("external secret %s in %s", opts.Manifest.Name, opts.Manifest.Namespace),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("applying kubernetes manifests: %w", err)
+		return nil, fmt.Errorf(constant.ApplyKubernetesManifestError, err)
 	}
 
 	return &api.ExternalSecretsKube{
@@ -262,7 +263,7 @@ func (k *kubeRun) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKube
 
 	client, err := kube.New(kube.NewFromEKSCluster(opts.ID.ClusterName, opts.ID.Region, k.provider, k.auth))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create kubernetes client: %w", err)
+		return nil, fmt.Errorf(constant.CreateKubernetesClientError, err)
 	}
 
 	resources, err := client.Apply(
@@ -271,7 +272,7 @@ func (k *kubeRun) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKube
 		kube.Applier{Fn: ext.CreateClusterRoleBinding, Description: "external dns cluster role binding"},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to apply kubernets manifests: %w", err)
+		return nil, fmt.Errorf(constant.ApplyKubernetesManifestError, err)
 	}
 
 	err = client.Watch(resources, 4*time.Minute) // nolint: gomnd
@@ -281,17 +282,17 @@ func (k *kubeRun) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKube
 
 	deployment, err := yaml.Marshal(ext.DeploymentManifest())
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialise Deployment manifest: %w", err)
+		return nil, fmt.Errorf(constant.SerializeDeploymentManifestError, err)
 	}
 
 	clusterRole, err := yaml.Marshal(ext.ClusterRoleManifest())
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialise ClusterRole manifest: %w", err)
+		return nil, fmt.Errorf(constant.SerializeClusterRoleManifestError, err)
 	}
 
 	clusterRoleBinding, err := yaml.Marshal(ext.ClusterRoleBindingManifest())
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialise ClusterRoleBinding manifest: %w", err)
+		return nil, fmt.Errorf(constant.SerializeClusterRoleBindingManifestError, err)
 	}
 
 	return &api.ExternalDNSKube{

@@ -2,6 +2,7 @@ package keyring_test
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"testing"
 
 	"github.com/oslokommune/okctl/pkg/keyring"
@@ -27,7 +28,7 @@ func TestStore(t *testing.T) {
 			keytype:   keyring.KeyTypeUserPassword,
 			secret:    "",
 			expectErr: true,
-			expect:    fmt.Errorf("key of type userPassword cannot store empty value"),
+			expect:    fmt.Errorf(constant.UserPasswordEmptyError),
 		},
 	}
 

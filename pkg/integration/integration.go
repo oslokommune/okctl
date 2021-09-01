@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -44,14 +45,14 @@ func NewLocalstack() *Localstack {
 func (l *Localstack) Create(timeout time.Duration) error {
 	pool, err := dockertest.NewPool("")
 	if err != nil {
-		return fmt.Errorf("couldn't connect to docker: %w", err)
+		return fmt.Errorf(constant.ConnectToDockerError, err)
 	}
 
 	l.pool = pool
 
 	port, err := util.GetFreePort()
 	if err != nil {
-		return fmt.Errorf("failed to find available port for edge: %w", err)
+		return fmt.Errorf(constant.EdgePortError, err)
 	}
 
 	l.edgePort = port
@@ -76,12 +77,12 @@ func (l *Localstack) Create(timeout time.Duration) error {
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("failed to start localstack container: %w", err)
+		return fmt.Errorf(constant.StartLockstackContainerError, err)
 	}
 
 	err = pool.Retry(l.Health)
 	if err != nil {
-		return fmt.Errorf("failed to wait for localstack: %w", err)
+		return fmt.Errorf(constant.WaitForLocalstackError, err)
 	}
 
 	l.resource = resource
@@ -121,7 +122,7 @@ func (l *Localstack) Cleanup() error {
 	if l.pool != nil {
 		err := l.pool.Purge(l.resource)
 		if err != nil {
-			return fmt.Errorf("failed to cleanup resources: %w", err)
+			return fmt.Errorf(constant.CleanUpResourcesError, err)
 		}
 	}
 
@@ -139,17 +140,17 @@ func (l *Localstack) Health() error {
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("failed to read body: %w", err)
+		return fmt.Errorf(constant.BodyReadError, err)
 	}
 
 	err = json.Unmarshal(body, &services)
 	if err != nil {
-		return fmt.Errorf("failed to unmarshal json: %w", err)
+		return fmt.Errorf(constant.UnmarshalJsonError, err)
 	}
 
 	for service, status := range services["services"] {
 		if status != "running" {
-			return fmt.Errorf("waiting for: %s, to get to running state, currently: %s", service, status)
+			return fmt.Errorf(constant.WaitForRunnningStateError, service, status)
 		}
 	}
 
@@ -158,7 +159,7 @@ func (l *Localstack) Health() error {
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("got response code from localstack: %d, not 200 OK", resp.StatusCode)
+		return fmt.Errorf(constant.NotOKLocalstackHtmlError, resp.StatusCode)
 	}
 
 	return nil
@@ -205,7 +206,7 @@ func (k *KubernetesCluster) Create(timeout time.Duration) error {
 
 	port, err := util.GetFreePort()
 	if err != nil {
-		return fmt.Errorf("failed to find free port: %w", err)
+		return fmt.Errorf(constant.NoFreePortError, err)
 	}
 
 	cluster := &k3d.Cluster{
@@ -232,7 +233,7 @@ func (k *KubernetesCluster) Create(timeout time.Duration) error {
 
 	err = k3dCluster.ClusterCreate(k.ctx, runtimes.SelectedRuntime, cluster)
 	if err != nil {
-		return fmt.Errorf("failed to create cluster: %w", err)
+		return fmt.Errorf(constant.FailedCreateClusterError, err)
 	}
 
 	k.cluster = cluster
@@ -244,7 +245,7 @@ func (k *KubernetesCluster) Create(timeout time.Duration) error {
 func (k *KubernetesCluster) Destroy() error {
 	err := k3dCluster.ClusterDelete(k.ctx, runtimes.SelectedRuntime, k.cluster)
 	if err != nil {
-		return fmt.Errorf("failed to destroy cluster: %w", err)
+		return fmt.Errorf(constant.DestroyClusterError, err)
 	}
 
 	return nil
@@ -256,7 +257,7 @@ func (k *KubernetesCluster) KubeConfig() (string, error) {
 	if len(k.kubeConfigPath) == 0 {
 		dir, err := k.fs.TempDir("", "kubeconfig")
 		if err != nil {
-			return "", fmt.Errorf("failed to create temporary directory for kubeconfig: %w", err)
+			return "", fmt.Errorf(constant.KubeConfigTempDirectoryError, err)
 		}
 
 		k.kubeConfigDir = dir
@@ -270,7 +271,7 @@ func (k *KubernetesCluster) KubeConfig() (string, error) {
 
 	_, err := k3dCluster.KubeconfigGetWrite(k.ctx, runtimes.SelectedRuntime, k.cluster, k.kubeConfigPath, kubeConfOpts)
 	if err != nil {
-		return "", fmt.Errorf("failed to create kubeconfig: %w", err)
+		return "", fmt.Errorf(constant.CreateKubeConfigError, err)
 	}
 
 	return k.kubeConfigPath, nil
@@ -286,7 +287,7 @@ func (k *KubernetesCluster) Debug(namespace string) (map[string][]string, error)
 
 	ku, err := kube.New(kube.NewFromKubeConfig(kubeConfigPath))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create debug client")
+		return nil, fmt.Errorf(constant.CreateDebugClientError)
 	}
 
 	return ku.Debug(namespace)
@@ -298,12 +299,12 @@ func (k *KubernetesCluster) Cleanup() error {
 
 	err := k.fs.RemoveAll(k.kubeConfigDir)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("failed to cleanup kubeconfig dir: %w", err).Error())
+		errors = append(errors, fmt.Errorf(constant.CleaupKubeConfigDirError, err).Error())
 	}
 
 	err = k.Destroy()
 	if err != nil {
-		errors = append(errors, fmt.Errorf("failed to cleanup cluster: %w", err).Error())
+		errors = append(errors, fmt.Errorf(constant.ClusterCleaupError, err).Error())
 	}
 
 	if len(errors) > 0 {

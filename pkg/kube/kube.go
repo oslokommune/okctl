@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io/ioutil"
 	"time"
 
@@ -188,7 +189,7 @@ func (k *Kube) Apply(fns ...Applier) ([]interface{}, error) {
 	for i, a := range fns {
 		v, err := a.Fn(k.ClientSet, k.RestConfig)
 		if err != nil {
-			return nil, fmt.Errorf("apply %s: %w", a.Description, err)
+			return nil, fmt.Errorf(constant.ApplyKeyringError, a.Description, err)
 		}
 
 		values[i] = v
@@ -213,7 +214,7 @@ func (k *Kube) Watch(resources []interface{}, timeout time.Duration) error {
 		case *v1beta1.ClusterRole, *v1beta1.ClusterRoleBinding:
 			continue
 		default:
-			return fmt.Errorf("unknown resource type: %s", resource)
+			return fmt.Errorf(constant.UnknownResourceTypeError, resource)
 		}
 	}
 
@@ -230,12 +231,12 @@ func (k *Kube) WatchDeployment(deployment *appsv1.Deployment, timeout time.Durat
 	return wait.Poll(2*time.Second, timeout, func() (bool, error) { // nolint: gomnd
 		currentDeployment, err := k.ClientSet.AppsV1().Deployments(deployment.Namespace).Get(context.Background(), deployment.Name, metav1.GetOptions{})
 		if err != nil {
-			return false, fmt.Errorf("getting deployment %s in %s: %w", deployment.Name, deployment.Namespace, err)
+			return false, fmt.Errorf(constant.GetDeploymentError, deployment.Name, deployment.Namespace, err)
 		}
 
 		newReplicaSet, err := deploymentUtil.GetNewReplicaSet(currentDeployment, k.ClientSet.AppsV1())
 		if err != nil {
-			return false, fmt.Errorf("getting replicaset for %s in %s: %w", deployment.Name, deployment.Namespace, err)
+			return false, fmt.Errorf(constant.GetReplicasetError, deployment.Name, deployment.Namespace, err)
 		}
 
 		if newReplicaSet == nil {

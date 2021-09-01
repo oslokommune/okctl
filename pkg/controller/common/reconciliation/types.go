@@ -2,6 +2,7 @@ package reconciliation
 
 import (
 	"context"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"io"
 	"time"
 
@@ -54,7 +55,7 @@ type Reconciler interface {
 
 var (
 	// ErrMaximumReconciliationRequeues represents the reconciler trying a single reconciler too many times
-	ErrMaximumReconciliationRequeues = errors.New("max reconciliation requeues reached")
+	ErrMaximumReconciliationRequeues = errors.New(constant.MaxReconciliationReqeueusError)
 	// ErrIndecisive represents the situation where the reconciler can't figure out what to do
-	ErrIndecisive = errors.New("indecisive")
+	ErrIndecisive = errors.New(constant.IndescisiveError)
 )

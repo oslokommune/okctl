@@ -63,11 +63,11 @@ func (a Application) Validate() error {
 		validation.Field(&a.Image, validation.By(func(value interface{}) error {
 			image, ok := value.(ApplicationImage)
 			if !ok {
-				return errors.New("casting to ApplicationImage")
+				return errors.New(constant.CastApplicationImageError)
 			}
 
 			if image.HasName() && image.HasURI() {
-				return errors.New("name and uri are mutually exclusive, remove one of them")
+				return errors.New(constant.NameAndURICombinedError)
 			}
 
 			return nil

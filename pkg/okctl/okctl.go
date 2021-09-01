@@ -554,7 +554,7 @@ func (o *Okctl) waitForServer() error {
 	for {
 		select {
 		case <-timeout:
-			return errors.New("timed out waiting for server")
+			return errors.New(constant.ServerTimeoutError)
 		case <-tick.C:
 			r, err := http.Get(fmt.Sprintf("%s%s", o.ServerBaseURL, "health"))
 			if err != nil {

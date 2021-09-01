@@ -13,7 +13,7 @@ import (
 )
 
 // ErrNotFound is a not found error
-var ErrNotFound = errors.New("not found")
+var ErrNotFound = errors.New(constant.NotFoundError)
 
 // ACMAPI contains state for interacting with the API
 type ACMAPI struct {

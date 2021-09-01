@@ -72,7 +72,7 @@ type tokenOrError struct {
 
 // ErrAccessDenied is an error returned when the user has denied this
 // app access to their account.
-var ErrAccessDenied = errors.New("access denied by user")
+var ErrAccessDenied = errors.New(constant.AccessDeniedByUserError)
 
 const (
 	deviceGrantType = "urn:ietf:params:oauth:grant-type:device_code"

@@ -377,7 +377,7 @@ func (h *Helm) findRelease(releaseName string, config *action.Configuration) (*r
 		}
 	}
 
-	return nil, merrors.E(errors.New("release not found"), merrors.NotExist)
+	return nil, merrors.E(errors.New(constant.HelmReleaseNotFoundError), merrors.NotExist)
 }
 
 // Install a chart, comparable to: https://helm.sh/docs/helm/helm_install/

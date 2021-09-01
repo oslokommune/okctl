@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	stderrors "errors"
+	"github.com/oslokommune/okctl/pkg/config/constant"
 	"testing"
 
 	"github.com/mishudark/errors"
@@ -48,7 +49,7 @@ func (m mockIdentityManagerCloudProvider) DeleteIdentityPoolClient(_ api.DeleteI
 type mockCertificateCloudProvider struct{}
 
 func (m mockCertificateCloudProvider) CreateCertificate(_ api.CreateCertificateOpts) (*api.Certificate, error) {
-	return nil, stderrors.New("stack creation time exceeded the specified timeout")
+	return nil, stderrors.New(constant.StackCreationTimeoutError)
 }
 
 func (m mockCertificateCloudProvider) DeleteCertificate(_ api.DeleteCertificateOpts) error {

@@ -48,7 +48,7 @@ type verifier struct {
 }
 
 // ErrNoDigests indicates that no digests were provided
-var ErrNoDigests = errors.New("no digests provided")
+var ErrNoDigests = errors.New(constant.MissingDigest)
 
 // VerifyDigests using the provided input.
 func (v *verifier) Verify(reader io.Reader) error {

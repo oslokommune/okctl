@@ -712,5 +712,21 @@ const (
 
 	GetVPCQuotaError = "getting vpc quota: %w"
 	GetVPCCountError = "getting current vpc count: %w"
+
+	NotFoundError = "not found"
+	CastApplicationImageError = "casting to ApplicationImage"
+	NameAndURICombinedError = "name and uri are mutually exclusive, remove one of them"
+
+	HelmReleaseNotFoundError = "release not found"
+	AccessDeniedByUserError = "access denied by user"
+
+	ServerTimeoutError = "timed out waiting for server"
+	StackCreationTimeoutError = "stack creation time exceeded the specified timeout"
+
+	MaxReconciliationReqeueusError = "max reconciliation requeues reached"
+
+	IndescisiveError = "indecisive"
+
+	MissingDigest = "no digests provided"
 )
 

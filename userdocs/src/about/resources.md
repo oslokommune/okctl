@@ -7,8 +7,9 @@
 }
 
 .components-map-column {
-    flex-basis: 30%;
+    flex-basis: 32%;
 
+    font-size: .7rem;
 }
 
 .centered-title {
@@ -16,12 +17,24 @@
 }
 
 .component-title {
-    margin-top: 0 !important;
+    margin-top: 0.5em !important;
     margin-bottom: 0 !important;
+}
+
+.component-icon {
+    margin: 0 auto;
+    display: block;
+
+    height: 29px !important;
 }
 
 ul {
     margin-top: 0 !important;
+    margin-left: 0 !important;
+}
+
+li {
+    margin-left: 15px !important;
 }
 </style>
 
@@ -51,8 +64,8 @@ The following shows how relations between the different resources
 <div class="components-map-container">
     <div class="components-map-column">
         <h3 class="centered-title">Monitoring</h3>
-        
         <div>
+            <object class="component-icon" data="/img/Icon-Prometheus.svg" type="image/svg+xml"></object>
             <h4 class="component-title">Prometheus</h4>
             <span>Time series database</span>
             <ul>
@@ -64,6 +77,7 @@ The following shows how relations between the different resources
         </div>
 
         <div>
+            <object class="component-icon" data="/img/Icon-grafana.svg" type="image/svg+xml"></object>
             <h4 class="component-title">Grafana</h4>
             <span>Data visualizer</span>
             <ul>
@@ -73,6 +87,7 @@ The following shows how relations between the different resources
         </div>
 
         <div>
+            <object class="component-icon" data="/img/Icon-loki.svg" type="image/svg+xml"></object>
             <h4 class="component-title">Loki</h4>
             <span>Log aggregator</span>
             <ul>
@@ -91,6 +106,7 @@ The following shows how relations between the different resources
         </div>
 
         <div>
+            <object class="component-icon" data="/img/Icon-Tempo.svg" type="image/svg+xml"></object>
             <h4 class="component-title">Tempo</h4>
             <span>Tracing backend</span>
             <ul>
@@ -104,6 +120,7 @@ The following shows how relations between the different resources
         <h3 class="centered-title">Kube System</h3>
 
         <div>
+            <object class="component-icon" data="/img/Icon-AWS-LoadBalancer.svg" type="image/svg+xml"></object>
             <h4 class="component-title">AWS Load Balancer</h4>
             <span>Ingress controller</span>
             <ul>
@@ -112,6 +129,7 @@ The following shows how relations between the different resources
         </div>
 
         <div>
+            <object class="component-icon" data="/img/Icon-aws_autoscaler.svg" type="image/svg+xml"></object>
             <h4 class="component-title">AutoScaler</h4>
             <span>Horizontal cluster scaler</span>
             <ul>
@@ -120,6 +138,7 @@ The following shows how relations between the different resources
         </div>
 
         <div>
+            <object class="component-icon" data="/img/Icon-CSI.svg" type="image/svg+xml"></object>
             <h4 class="component-title">EBS CSI Controller</h4>
             <span>Persistent volume provider</span>
             <ul>
@@ -128,6 +147,7 @@ The following shows how relations between the different resources
         </div>
 
         <div>
+            <object class="component-icon" data="/img/Icon-aws_external_dns.svg" type="image/svg+xml"></object>
             <h4 class="component-title">External DNS</h4>
             <span>Domain administration controller</span>
             <ul>
@@ -136,6 +156,7 @@ The following shows how relations between the different resources
         </div>
 
         <div>
+            <object class="component-icon" data="/img/Icon-AWS-ExternalSecrets.svg" type="image/svg+xml"></object>
             <h4 class="component-title">External Secrets</h4>
             <span>Secrets controller</span>
             <ul>
@@ -148,6 +169,7 @@ The following shows how relations between the different resources
         <h3 class="centered-title">ArgoCD</h3>
 
         <div>
+            <object class="component-icon" data="/img/Icon-ArgoCD.svg" type="image/svg+xml"></object>
             <h4 class="component-title">ArgoCD</h4>
             <span>Continuous Deployment Provider</span>
             <ul>
@@ -158,6 +180,7 @@ The following shows how relations between the different resources
         </div>
 
         <div>
+            <object class="component-icon" data="/img/Icon-Dex.svg" type="image/svg+xml"></object>
             <h4 class="component-title">Dex</h4>
             <span>A pluggable OAuth2 handler</span>
             <ul>

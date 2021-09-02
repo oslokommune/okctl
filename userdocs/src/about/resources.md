@@ -54,7 +54,7 @@ The following is a map of all the resources okctl will set up
 The following shows how relations between the different resources
 
 <div style="display: flex;">
-    <img alt="resource dependencies" src="/img/resource_dependencies.png">
+    <img alt="resource dependencies" src="/img/Dependencies.png">
 </div>
 
 ## Kubernetes installed compontents

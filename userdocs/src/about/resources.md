@@ -46,7 +46,7 @@ li {
 The following is a map of all the resources okctl will set up
 
 <div style="display: flex;">
-    <img alt="cloud resources" src="/img/okctl-resource-overview.png">
+    <img alt="cloud resources" src="/img/Resources.png">
 </div>
 
 ## AWS resource dependencies

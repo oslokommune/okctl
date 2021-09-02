@@ -53,7 +53,7 @@ The following is a map of all the resources okctl will set up
 
 The following shows how relations between the different resources
 
-<div style="display: flex;">
+<div style="display: flex; width: 80%;">
     <img alt="resource dependencies" src="/img/Dependencies.png">
 </div>
 

@@ -734,6 +734,11 @@ grafana:
       ##
       annotations: {}
       multicluster: false
+
+      ## Allow Grafana to replicate dashboard structure from filesystem
+      provider:
+        foldersFromFilesStructure: true
+
     datasources:
       enabled: true
       defaultDatasourceEnabled: true
@@ -749,7 +754,12 @@ grafana:
       createPrometheusReplicasDatasources: false
       label: grafana_datasource
 
-  extraConfigmapMounts: []
+  extraConfigmapMounts:
+    - name: notification-provisioning
+      mountPath: /etc/grafana/provisioning/notifiers/grafana-notifiers.yaml
+      configMap: kube-prometheus-stack-grafana-notifiers
+      readOnly: true
+      subPath: notifiers.yaml
   # - name: certs-configmap
   #   mountPath: /etc/grafana/ssl/
   #   configMap: certs-configmap

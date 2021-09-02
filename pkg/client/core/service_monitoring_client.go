@@ -60,9 +60,10 @@ const (
 	adminPassName    = "admin-pass"
 	secretsCfgName   = "grafana-secrets-cm"
 
-	lokiDatasourceConfigMapName       = "loki-datasource"
-	tempoDatasourceConfigMapName      = "tempo-datasource"
-	cloudwatchDatasourceConfigMapName = "cloudwatch-datasource"
+	lokiDatasourceConfigMapName        = "loki-datasource"
+	tempoDatasourceConfigMapName       = "tempo-datasource"
+	cloudwatchDatasourceConfigMapName  = "cloudwatch-datasource"
+	notifiersProvisioningConfigMapName  = "kube-prometheus-stack-grafana-notifiers"
 
 	kubepromChartTimeout = 15 * time.Minute
 )
@@ -382,6 +383,15 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 
 	err = s.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
 		ID:        opts.ID,
+		Name:      notifiersProvisioningConfigMapName,
+		Namespace: constant.DefaultMonitoringNamespace,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = s.manifest.DeleteConfigMap(ctx, client.DeleteConfigMapOpts{
+		ID:        opts.ID,
 		Name:      cloudwatchDatasourceConfigMapName,
 		Namespace: constant.DefaultMonitoringNamespace,
 	})
@@ -543,6 +553,19 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 				},
 			},
 		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.manifest.CreateConfigMap(ctx, client.CreateConfigMapOpts{
+		ID:        opts.ID,
+		Name:      notifiersProvisioningConfigMapName,
+		Namespace: constant.DefaultMonitoringNamespace,
+		Data: map[string]string{
+			"notifiers.yaml": string(""),
+		},
+		Labels: nil,
 	})
 	if err != nil {
 		return nil, err

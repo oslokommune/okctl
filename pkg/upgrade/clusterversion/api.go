@@ -12,13 +12,13 @@ import (
 )
 
 // ValidateBinaryVsClusterVersion returns an error if binary version is less than cluster version
-func (c ClusterVersioner) ValidateBinaryVsClusterVersion(binaryVersionString string) error {
+func (v Versioner) ValidateBinaryVsClusterVersion(binaryVersionString string) error {
 	binaryVersion, err := semver.NewVersion(binaryVersionString)
 	if err != nil {
 		return fmt.Errorf("parsing binary version to semver from '%s': %w", binaryVersionString, err)
 	}
 
-	clusterVersionInfo, err := c.upgradeState.GetClusterVersionInfo()
+	clusterVersionInfo, err := v.upgradeState.GetClusterVersionInfo()
 	if errors.Is(err, client.ErrClusterVersionNotFound) {
 		// This means we haven't stored the cluster version yet. In this case we don't return an error, as we don't
 		// expect it to be stored yet.
@@ -34,10 +34,10 @@ func (c ClusterVersioner) ValidateBinaryVsClusterVersion(binaryVersionString str
 		return fmt.Errorf("parsing cluster verion to semver from '%s': %w", binaryVersionString, err)
 	}
 
-	return c.validateBinaryVsClusterVersion(binaryVersion, clusterVersion)
+	return v.validateBinaryVsClusterVersion(binaryVersion, clusterVersion)
 }
 
-func (c ClusterVersioner) validateBinaryVsClusterVersion(binaryVersion *semver.Version, clusterVersion *semver.Version) error {
+func (v Versioner) validateBinaryVsClusterVersion(binaryVersion *semver.Version, clusterVersion *semver.Version) error {
 	if binaryVersion.LessThan(clusterVersion) {
 		return fmt.Errorf("okctl binary version %s cannot be less than cluster version %s."+
 			" Get okctl version %s or later and try again",
@@ -48,10 +48,10 @@ func (c ClusterVersioner) validateBinaryVsClusterVersion(binaryVersion *semver.V
 }
 
 // SaveClusterVersion saves the provided version
-func (c ClusterVersioner) SaveClusterVersion(version string) error {
+func (v Versioner) SaveClusterVersion(version string) error {
 	didUpdateVersion := false
 
-	existing, err := c.upgradeState.GetClusterVersionInfo()
+	existing, err := v.upgradeState.GetClusterVersionInfo()
 	if err != nil && !errors.Is(err, client.ErrClusterVersionNotFound) {
 		return fmt.Errorf("getting cluster version info: %w", err)
 	}
@@ -62,8 +62,8 @@ func (c ClusterVersioner) SaveClusterVersion(version string) error {
 		didUpdateVersion = true
 	}
 
-	err = c.upgradeState.SaveClusterVersionInfo(&client.ClusterVersion{
-		ID:    c.clusterID,
+	err = v.upgradeState.SaveClusterVersionInfo(&client.ClusterVersion{
+		ID:    v.clusterID,
 		Value: version,
 	})
 	if err != nil {
@@ -71,26 +71,26 @@ func (c ClusterVersioner) SaveClusterVersion(version string) error {
 	}
 
 	if didUpdateVersion {
-		_, _ = fmt.Fprintf(c.out,
+		_, _ = fmt.Fprintf(v.out,
 			"Cluster version is now: %s. Remember to commit and push changes with git.\n", version)
 	}
 
 	return nil
 }
 
-// ClusterVersioner knows how to enforce correct version of the okctl binary versus the cluster version.
+// Versioner knows how to enforce correct version of the okctl binary versus the cluster version.
 // The intention is that we want to enforce that no users of a cluster are trying to run 'upgrade' or 'apply cluster'
 // with an outdated version of the okctl binary, that is, a version that is older than the cluster version.
 // The cluster version should be set to the current version whenever we run 'upgrade' or 'apply cluster'.
-type ClusterVersioner struct {
+type Versioner struct {
 	out          io.Writer
 	clusterID    api.ID
 	upgradeState client.UpgradeState
 }
 
-// New returns a new ClusterVersioner
-func New(out io.Writer, clusterID api.ID, upgradeState client.UpgradeState) ClusterVersioner {
-	return ClusterVersioner{
+// New returns a new Versioner
+func New(out io.Writer, clusterID api.ID, upgradeState client.UpgradeState) Versioner {
+	return Versioner{
 		out:          out,
 		clusterID:    clusterID,
 		upgradeState: upgradeState,

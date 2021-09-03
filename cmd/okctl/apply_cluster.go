@@ -54,7 +54,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := applyClusterOpts{}
 	var originalClusterVersioner originalclusterversion.Versioner
 
-	var clusterVersioner clusterversion.ClusterVersioner
+	var clusterVersioner clusterversion.Versioner
 
 	cmd := &cobra.Command{
 		Use:     "cluster -f declaration_file",

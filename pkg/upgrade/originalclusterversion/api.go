@@ -36,8 +36,8 @@ const SaveErrorMessage = "saving original cluster version. Your cluster will not
 // we can simplify this logic to just use version.GetVersionInfo().Version and ignore the cluster tag version.
 // To check if users has run this code, just check all users' cluster's state, and see if
 // upgrade/OriginalClusterVersion has been set or not. If it's set, it means this code has been run.
-func (o Versioner) SaveOriginalClusterVersionIfNotExists() error {
-	_, err := o.upgradeState.GetOriginalClusterVersion()
+func (v Versioner) SaveOriginalClusterVersionIfNotExists() error {
+	_, err := v.upgradeState.GetOriginalClusterVersion()
 	if err != nil && !errors.Is(err, client.ErrOriginalClusterVersionNotFound) {
 		return fmt.Errorf("getting original cluster version: %w", err)
 	}
@@ -45,13 +45,13 @@ func (o Versioner) SaveOriginalClusterVersionIfNotExists() error {
 	if errors.Is(err, client.ErrOriginalClusterVersionNotFound) {
 		var versionToSave *semver.Version
 
-		clusterStateVersion, err := o.getClusterStateVersion()
+		clusterStateVersion, err := v.getClusterStateVersion()
 		if err != nil {
 			return fmt.Errorf("getting cluster state version: %w", err)
 		}
 
-		err = o.upgradeState.SaveOriginalClusterVersionIfNotExists(&client.OriginalClusterVersion{
-			ID:    o.clusterID,
+		err = v.upgradeState.SaveOriginalClusterVersionIfNotExists(&client.OriginalClusterVersion{
+			ID:    v.clusterID,
 			Value: clusterStateVersion.String(),
 		})
 		if err != nil {
@@ -62,8 +62,8 @@ func (o Versioner) SaveOriginalClusterVersionIfNotExists() error {
 	return nil
 }
 
-func (o Versioner) getClusterStateVersion() (*semver.Version, error) {
-	cluster, err := o.clusterState.GetCluster(o.clusterID.ClusterName)
+func (v Versioner) getClusterStateVersion() (*semver.Version, error) {
+	cluster, err := v.clusterState.GetCluster(v.clusterID.ClusterName)
 	if err != nil {
 		return nil, fmt.Errorf("getting cluster version tag: %w", err)
 	}

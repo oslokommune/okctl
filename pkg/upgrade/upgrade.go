@@ -3,6 +3,7 @@ package upgrade
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversion"
 	"io"
 	"strings"
 

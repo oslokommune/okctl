@@ -73,7 +73,7 @@ func (f filter) removeTooNew(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinar
 // means "upgrade cluster and attached resources to support okctl version 0.0.60", we don't need to run this
 // upgrade binary.
 func (f filter) removeTooOld(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinary, error) {
-	var versionIsNewThanOriginalClusterVersion []okctlUpgradeBinary
+	var versionIsNewerThanOriginalClusterVersion []okctlUpgradeBinary
 
 	originalClusterSemver, err := semver.NewVersion(f.originalClusterVersion)
 	if err != nil {
@@ -82,11 +82,11 @@ func (f filter) removeTooOld(binaries []okctlUpgradeBinary) ([]okctlUpgradeBinar
 
 	for _, binary := range binaries {
 		if binary.SemverVersion().GreaterThan(originalClusterSemver) {
-			versionIsNewThanOriginalClusterVersion = append(versionIsNewThanOriginalClusterVersion, binary)
+			versionIsNewerThanOriginalClusterVersion = append(versionIsNewerThanOriginalClusterVersion, binary)
 		}
 	}
 
-	return versionIsNewThanOriginalClusterVersion, nil
+	return versionIsNewerThanOriginalClusterVersion, nil
 }
 
 type filter struct {

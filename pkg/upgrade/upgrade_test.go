@@ -34,7 +34,6 @@ const (
 type TestCase struct {
 	name                              string
 	withDebug                         bool
-	withConfirmationPrompt            bool
 	withOkctlVersion                  string
 	withOriginalClusterVersion        string
 	withGithubReleases                []*github.RepositoryRelease
@@ -482,7 +481,7 @@ func TestRunUpgrades(t *testing.T) {
 					Debug:               tc.withDebug,
 					Logger:              logrus.StandardLogger(),
 					Out:                 stdOutBuffer,
-					AutoConfirmPrompt:   !tc.withConfirmationPrompt,
+					AutoConfirmPrompt:   true,
 					RepositoryDirectory: repositoryAbsoluteDir,
 					GithubService:       newGithubServiceMock(tc.withGithubReleases),
 					ChecksumDownloader:  upgrade.NewChecksumDownloader(),

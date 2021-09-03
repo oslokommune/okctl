@@ -563,13 +563,23 @@ func getActualUpgradesRun(stdOutBuffer *bytes.Buffer) []string {
 	stdOut := stdOutBuffer.String()
 	re := regexp.MustCompile(`This is upgrade file for (okctl-upgrade.*)`)
 	found := re.FindAllStringSubmatch(stdOut, -1)
-	upgradesRun := make([]string, 0)
+	upgradesRun := make(map[string]bool)
+
+	actualUpgradesRun := make([]string, 0)
 
 	for _, match := range found {
-		upgradesRun = append(upgradesRun, match[1])
+		// match[1] is the captured regex group, e.g.: okctl-upgrade-0.0.64-amd64-linux
+		_, ok := upgradesRun[match[1]]
+		if !ok {
+			// First match is the simulation
+			upgradesRun[match[1]] = true
+		} else {
+			// Second match is the actual run
+			actualUpgradesRun = append(actualUpgradesRun, match[1])
+		}
 	}
 
-	return upgradesRun
+	return actualUpgradesRun
 }
 
 //nolint:unparam

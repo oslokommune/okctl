@@ -1,11 +1,14 @@
 // Package testutils provides test utilities for upgrade
 package testutils
 
-import "github.com/oslokommune/okctl/pkg/client"
+import (
+	"github.com/oslokommune/okctl/pkg/client"
+)
 
 type upgradeStateMock struct {
-	upgrades        map[string]*client.Upgrade
-	originalVersion string
+	upgrades               map[string]*client.Upgrade
+	originalClusterVersion string
+	clusterVersion         *client.ClusterVersion
 }
 
 func (m *upgradeStateMock) GetUpgrades() ([]*client.Upgrade, error) {
@@ -36,30 +39,35 @@ func (m *upgradeStateMock) GetUpgrade(version string) (*client.Upgrade, error) {
 }
 
 func (m *upgradeStateMock) SaveOriginalClusterVersionIfNotExists(originalClusterVersion *client.OriginalClusterVersion) error {
-	if len(m.originalVersion) == 0 {
-		m.originalVersion = originalClusterVersion.Value
+	if len(m.originalClusterVersion) == 0 {
+		m.originalClusterVersion = originalClusterVersion.Value
 	}
 
 	return nil
 }
 
 func (m *upgradeStateMock) GetOriginalClusterVersion() (*client.OriginalClusterVersion, error) {
-	if len(m.originalVersion) == 0 {
+	if len(m.originalClusterVersion) == 0 {
 		return nil, client.ErrOriginalClusterVersionNotFound
 	}
 
 	return &client.OriginalClusterVersion{
-		Value: m.originalVersion,
+		Value: m.originalClusterVersion,
 	}, nil
 }
 
 //goland:noinspection GoUnusedParameter
 func (m *upgradeStateMock) SaveClusterVersionInfo(version *client.ClusterVersion) error {
-	panic("implement me")
+	m.clusterVersion = version
+	return nil
 }
 
 func (m *upgradeStateMock) GetClusterVersionInfo() (*client.ClusterVersion, error) {
-	panic("implement me")
+	if m.clusterVersion == nil {
+		return nil, client.ErrClusterVersionNotFound
+	}
+
+	return m.clusterVersion, nil
 }
 
 // MockUpgradeState returns a mocked upgrade state

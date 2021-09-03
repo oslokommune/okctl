@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversion"
 
 	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
 
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/upgrade/originalversion"
 	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -16,11 +16,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type upgradeFlags struct {
+	confirm bool
+}
+
 //nolint:funlen
 func buildUpgradeCommand(o *okctl.Okctl) *cobra.Command {
+	flags := upgradeFlags{}
+
 	var upgrader upgrade.Upgrader
 
-	var originalVersionSaver originalversion.Saver
+	var originalClusterVersioner originalclusterversion.Versioner
 
 	var clusterVersioner clusterversion.ClusterVersioner
 
@@ -80,7 +86,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 			}
 
 			// Original version
-			originalVersionSaver, err = originalversion.New(
+			originalClusterVersioner, err = originalclusterversion.New(
 				api.ID{
 					Region:       o.Declaration.Metadata.Region,
 					AWSAccountID: o.Declaration.Metadata.AccountID,
@@ -93,9 +99,9 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				return fmt.Errorf("creating original version saver: %w", err)
 			}
 
-			err = originalVersionSaver.SaveOriginalClusterVersionIfNotExists()
+			err = originalClusterVersioner.SaveOriginalClusterVersionIfNotExists()
 			if err != nil {
-				return fmt.Errorf(originalversion.SaveErrorMessage, err)
+				return fmt.Errorf(originalclusterversion.SaveErrorMessage, err)
 			}
 
 			originalClusterVersion, err := stateHandlers.Upgrade.GetOriginalClusterVersion()
@@ -107,9 +113,11 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				Debug:                  o.Debug,
 				Logger:                 o.Logger,
 				Out:                    out,
+				AutoConfirmPrompt:      flags.confirm,
 				RepositoryDirectory:    repoDir,
 				GithubService:          services.Github,
 				ChecksumDownloader:     upgrade.NewChecksumDownloader(),
+				ClusterVersioner:       clusterVersioner,
 				FetcherOpts:            fetcherOpts,
 				OkctlVersion:           version.GetVersionInfo().Version,
 				OriginalClusterVersion: originalClusterVersion.Value,
@@ -128,16 +136,12 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 			if err != nil {
 				return fmt.Errorf("upgrading: %w", err)
 			}
-
-			err = clusterVersioner.SaveClusterVersion(version.GetVersionInfo())
-			if err != nil {
-				return fmt.Errorf(commands.SaveClusterVersionError, err)
-			}
-
 			return nil
 		},
 		Hidden: true,
 	}
+
+	cmd.PersistentFlags().BoolVarP(&flags.confirm, "confirm", "y", false, "Skip the confirmation prompt")
 
 	return cmd
 }

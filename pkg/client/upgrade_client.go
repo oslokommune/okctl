@@ -3,8 +3,6 @@ package client
 import (
 	"errors"
 
-	"github.com/oslokommune/okctl/pkg/version"
-
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
@@ -32,7 +30,7 @@ type OriginalClusterVersion struct {
 // ClusterVersion contains state about the cluster version
 type ClusterVersion struct {
 	ID    api.ID
-	Value version.Info
+	Value string
 }
 
 // UpgradeState updates the state

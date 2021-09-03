@@ -3,6 +3,7 @@ package upgrade_test
 import (
 	"bytes"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
 	"path"
 	"regexp"
 	"strings"
@@ -33,6 +34,7 @@ const (
 type TestCase struct {
 	name                              string
 	withDebug                         bool
+	withConfirmationPrompt            bool
 	withOkctlVersion                  string
 	withOriginalClusterVersion        string
 	withGithubReleases                []*github.RepositoryRelease
@@ -473,21 +475,25 @@ func TestRunUpgrades(t *testing.T) {
 			err = tmpStore.MkdirAll(repoDir)
 			assert.NoError(t, err)
 
+			upgradeState := testutils.MockUpgradeState()
+
 			defaultOpts := DefaultTestOpts{
 				Opts: upgrade.Opts{
 					Debug:               tc.withDebug,
 					Logger:              logrus.StandardLogger(),
 					Out:                 stdOutBuffer,
+					AutoConfirmPrompt:   !tc.withConfirmationPrompt,
 					RepositoryDirectory: repositoryAbsoluteDir,
 					GithubService:       newGithubServiceMock(tc.withGithubReleases),
 					ChecksumDownloader:  upgrade.NewChecksumDownloader(),
+					ClusterVersioner:    clusterversion.New(stdOutBuffer, api.ID{}, upgradeState),
 					FetcherOpts: upgrade.FetcherOpts{
 						Host:  tc.withHost,
 						Store: tmpStore,
 					},
 					OkctlVersion:           tc.withOkctlVersion,
 					OriginalClusterVersion: tc.withOriginalClusterVersion,
-					State:                  testutils.MockUpgradeState(),
+					State:                  upgradeState,
 					ClusterID:              api.ID{},
 				},
 				StdOutBuffer: stdOutBuffer,
@@ -499,6 +505,7 @@ func TestRunUpgrades(t *testing.T) {
 				return
 			}
 
+			// Or when
 			mockHTTPResponsesForGithubReleases(t, tc.withGithubReleaseAssetsFromFolder, tc.withGithubReleases)
 			defer httpmock.DeactivateAndReset()
 

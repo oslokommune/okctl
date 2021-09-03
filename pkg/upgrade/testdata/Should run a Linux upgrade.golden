@@ -2,5 +2,15 @@ Found 1 applicable upgrade(s):
 0.0.61
 
 preloading missing binary: okctl-upgrade_0.0.61 (0.0.61)
+Simulating upgrades...
+
+--- Simulating upgrade: okctl-upgrade_0.0.61 ---
+This is upgrade file for okctl-upgrade_0.0.61_Linux_amd64
+
+Simulating upgrades complete.
+
 --- Running upgrade: okctl-upgrade_0.0.61 ---
 This is upgrade file for okctl-upgrade_0.0.61_Linux_amd64
+Cluster version is now: 0.0.61. Remember to commit and push changes with git.
+
+Upgrade complete!

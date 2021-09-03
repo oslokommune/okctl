@@ -1,5 +1,5 @@
 // Package originalversion knows how to save the original version of a cluster
-package originalversion
+package originalclusterversion
 
 import (
 	"errors"
@@ -11,8 +11,8 @@ import (
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
-// Saver stores the version of okctl first used to apply a cluster
-type Saver struct {
+// Versioner stores the version of okctl first used to apply a cluster
+type Versioner struct {
 	clusterID    api.ID
 	upgradeState client.UpgradeState
 	clusterState client.ClusterState
@@ -36,7 +36,7 @@ const SaveErrorMessage = "saving original cluster version. Your cluster will not
 // we can simplify this logic to just use version.GetVersionInfo().Version and ignore the cluster tag version.
 // To check if users has run this code, just check all users' cluster's state, and see if
 // upgrade/OriginalClusterVersion has been set or not. If it's set, it means this code has been run.
-func (o Saver) SaveOriginalClusterVersionIfNotExists() error {
+func (o Versioner) SaveOriginalClusterVersionIfNotExists() error {
 	_, err := o.upgradeState.GetOriginalClusterVersion()
 	if err != nil && !errors.Is(err, client.ErrOriginalClusterVersionNotFound) {
 		return fmt.Errorf("getting original cluster version: %w", err)
@@ -62,7 +62,7 @@ func (o Saver) SaveOriginalClusterVersionIfNotExists() error {
 	return nil
 }
 
-func (o Saver) getClusterStateVersion() (*semver.Version, error) {
+func (o Versioner) getClusterStateVersion() (*semver.Version, error) {
 	cluster, err := o.clusterState.GetCluster(o.clusterID.ClusterName)
 	if err != nil {
 		return nil, fmt.Errorf("getting cluster version tag: %w", err)
@@ -81,13 +81,13 @@ func (o Saver) getClusterStateVersion() (*semver.Version, error) {
 	return clusterStateVersion, nil
 }
 
-// New returns a Saver
+// New returns a Versioner
 func New(
 	clusterID api.ID,
 	upgradeState client.UpgradeState,
 	clusterState client.ClusterState,
-) (Saver, error) {
-	return Saver{
+) (Versioner, error) {
+	return Versioner{
 		clusterID:    clusterID,
 		upgradeState: upgradeState,
 		clusterState: clusterState,

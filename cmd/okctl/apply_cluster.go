@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversion"
 	"io"
 	"io/ioutil"
 	"os"
@@ -11,8 +12,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
 	"github.com/oslokommune/okctl/pkg/version"
-
-	"github.com/oslokommune/okctl/pkg/upgrade/originalversion"
 
 	"github.com/oslokommune/okctl/pkg/api"
 
@@ -53,7 +52,7 @@ func (o *applyClusterOpts) Validate() error {
 // nolint funlen
 func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := applyClusterOpts{}
-	var originalVersionSaver originalversion.Saver
+	var originalClusterVersioner originalclusterversion.Versioner
 
 	var clusterVersioner clusterversion.ClusterVersioner
 
@@ -149,7 +148,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			}
 
 			// Original version
-			originalVersionSaver, err = originalversion.New(
+			originalClusterVersioner, err = originalclusterversion.New(
 				api.ID{
 					Region:       opts.Declaration.Metadata.Region,
 					AWSAccountID: opts.Declaration.Metadata.AccountID,
@@ -218,12 +217,12 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("synchronizing declaration with state: %w", err)
 			}
 
-			err = originalVersionSaver.SaveOriginalClusterVersionIfNotExists()
+			err = originalClusterVersioner.SaveOriginalClusterVersionIfNotExists()
 			if err != nil {
-				return fmt.Errorf(originalversion.SaveErrorMessage, err)
+				return fmt.Errorf(originalclusterversion.SaveErrorMessage, err)
 			}
 
-			err = clusterVersioner.SaveClusterVersion(version.GetVersionInfo())
+			err = clusterVersioner.SaveClusterVersion(version.GetVersionInfo().Version)
 			if err != nil {
 				return fmt.Errorf(commands.SaveClusterVersionError, err)
 			}

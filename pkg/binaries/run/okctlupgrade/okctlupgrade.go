@@ -2,11 +2,9 @@
 package okctlupgrade
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/oslokommune/okctl/pkg/binaries/run"
-	"github.com/oslokommune/okctl/pkg/context"
 	"github.com/sirupsen/logrus"
 )
 
@@ -43,12 +41,22 @@ func New(
 }
 
 // Run runs the okctl upgrade binary
-func (u *BinaryRunner) Run() ([]byte, error) {
+func (u *BinaryRunner) Run(force bool) ([]byte, error) {
 	var err error
 
-	runner := u.runner()
+	var envs []string
 
 	var args []string
+
+	if u.doDebug {
+		args = append(args, "--debug")
+	}
+
+	if force {
+		args = append(args, "--force")
+	}
+
+	runner := run.New(nil, u.repoDir, u.binaryPath, envs, u.cmdFn)
 
 	output, err := runner.Run(u.progress, args)
 	if err != nil {
@@ -62,14 +70,4 @@ func (u *BinaryRunner) Run() ([]byte, error) {
 // the default behavior is off
 func (u *BinaryRunner) SetDebug(enable bool) {
 	u.doDebug = enable
-}
-
-func (u *BinaryRunner) runner() run.Runner {
-	var envs []string
-
-	if u.doDebug {
-		envs = append(envs, fmt.Sprintf("%s=true", context.DefaultDebugEnv))
-	}
-
-	return run.New(nil, u.repoDir, u.binaryPath, envs, u.cmdFn)
 }

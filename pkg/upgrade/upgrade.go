@@ -6,6 +6,10 @@ import (
 	"io"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
+	"github.com/oslokommune/okctl/pkg/commands"
+	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
+
 	"github.com/oslokommune/okctl/pkg/github"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -52,9 +56,19 @@ func (u Upgrader) Run() error {
 		_, _ = fmt.Fprintln(u.out, "Did not find any applicable upgrades.")
 	}
 
-	err = u.runBinaries(upgradeBinaries)
+	ran, err := u.runBinaries(upgradeBinaries)
 	if err != nil {
 		return fmt.Errorf("running upgrade binaries: %w", err)
+	}
+
+	// Update cluster version
+	if ran {
+		err = u.clusterVersioner.SaveClusterVersion(u.filter.okctlVersion)
+		if err != nil {
+			return fmt.Errorf(commands.SaveClusterVersionError, err)
+		}
+
+		_, _ = fmt.Fprint(u.out, "\nUpgrade complete!\n")
 	}
 
 	return nil
@@ -75,12 +89,40 @@ func (u Upgrader) getAlreadyExecutedBinaries() (map[string]bool, error) {
 	return alreadyExecuted, nil
 }
 
-func (u Upgrader) runBinaries(upgradeBinaries []okctlUpgradeBinary) error {
-	binaryProvider, err := u.createBinaryProvider(upgradeBinaries)
-	if err != nil {
-		return fmt.Errorf("creating binary provider: %w", err)
+func (u Upgrader) runBinaries(upgradeBinaries []okctlUpgradeBinary) (bool, error) {
+	if len(upgradeBinaries) == 0 {
+		return false, nil
 	}
 
+	binaryProvider, err := u.createBinaryProvider(upgradeBinaries)
+	if err != nil {
+		return false, fmt.Errorf("creating binary provider: %w", err)
+	}
+
+	err = u.dryRunBinaries(upgradeBinaries, binaryProvider)
+	if err != nil {
+		return false, fmt.Errorf("simulating upgrades: %w", err)
+	}
+
+	doContinue, err := u.askUserIfReady()
+	if err != nil {
+		return false, fmt.Errorf("asking user for input: %w", err)
+	}
+
+	if !doContinue {
+		_, _ = fmt.Fprintln(u.out, "User aborted.")
+		return false, nil
+	}
+
+	err = u.doRunBinaries(upgradeBinaries, binaryProvider)
+	if err != nil {
+		return false, fmt.Errorf("running upgrades: %w", err)
+	}
+
+	return true, nil
+}
+
+func (u Upgrader) doRunBinaries(upgradeBinaries []okctlUpgradeBinary, binaryProvider upgradeBinaryProvider) error {
 	for _, binary := range upgradeBinaries {
 		// Get
 		binaryRunner, err := binaryProvider.okctlUpgradeRunner(binary.RawVersion())
@@ -93,7 +135,7 @@ func (u Upgrader) runBinaries(upgradeBinaries []okctlUpgradeBinary) error {
 		_, _ = fmt.Fprintf(u.out, "--- Running upgrade: %s ---\n", binary)
 
 		// Run
-		_, err = binaryRunner.Run()
+		_, err = binaryRunner.Run(true)
 		if err != nil {
 			_, _ = fmt.Fprintf(u.out, "--- Upgrade failed: %s ---\n", binary)
 			return fmt.Errorf("running upgrade binary %s: %w", binary, err)
@@ -128,6 +170,33 @@ func (u Upgrader) createBinaryProvider(upgradeBinaries []okctlUpgradeBinary) (up
 	binaryProvider := newUpgradeBinaryProvider(u.repositoryDirectory, u.logger, u.out, fetcher)
 
 	return binaryProvider, nil
+}
+
+func (u Upgrader) dryRunBinaries(upgradeBinaries []okctlUpgradeBinary, binaryProvider upgradeBinaryProvider) error {
+	_, _ = fmt.Fprint(u.out, "Simulating upgrades...\n\n")
+
+	for _, binary := range upgradeBinaries {
+		// Get
+		binaryRunner, err := binaryProvider.okctlUpgradeRunner(binary.RawVersion())
+		if err != nil {
+			return fmt.Errorf("getting okctl upgrade binary: %w", err)
+		}
+
+		binaryRunner.SetDebug(u.debug)
+
+		_, _ = fmt.Fprintf(u.out, "--- Simulating upgrade: %s ---\n", binary)
+
+		// Run
+		_, err = binaryRunner.Run(false)
+		if err != nil {
+			_, _ = fmt.Fprintf(u.out, "--- Upgrade failed: %s ---\n", binary)
+			return fmt.Errorf("running upgrade binary %s: %w", binary, err)
+		}
+	}
+
+	_, _ = fmt.Fprintf(u.out, "\nSimulating upgrades complete.\n\n")
+
+	return nil
 }
 
 func (u Upgrader) toStateBinaries(upgradeBinaries []okctlUpgradeBinary) []state.Binary {
@@ -172,6 +241,26 @@ func (u Upgrader) markAsRun(binary okctlUpgradeBinary) error {
 	return nil
 }
 
+func (u Upgrader) askUserIfReady() (bool, error) {
+	if u.autoConfirmPrompt {
+		return true, nil
+	}
+
+	doContinue := false
+	prompt := &survey.Confirm{
+		Message: "This will upgrade your okctl cluster, are you sure you want to continue?",
+	}
+
+	err := survey.AskOne(prompt, &doContinue)
+	if err != nil {
+		return false, err
+	}
+
+	_, _ = fmt.Fprintln(u.out, "")
+
+	return doContinue, nil
+}
+
 func printUpgradesIfDebug(debug bool, out io.Writer, text string, upgradeBinaries []okctlUpgradeBinary) {
 	if debug {
 		printUpgrades(out, text, upgradeBinaries)
@@ -202,9 +291,11 @@ type Opts struct {
 	Debug                  bool
 	Logger                 *logrus.Logger
 	Out                    io.Writer
+	AutoConfirmPrompt      bool
 	RepositoryDirectory    string
 	GithubService          client.GithubService
 	ChecksumDownloader     ChecksumHTTPDownloader
+	ClusterVersioner       clusterversion.ClusterVersioner
 	FetcherOpts            FetcherOpts
 	OkctlVersion           string
 	OriginalClusterVersion string
@@ -217,11 +308,13 @@ type Upgrader struct {
 	debug               bool
 	logger              *logrus.Logger
 	out                 io.Writer
+	autoConfirmPrompt   bool
 	clusterID           api.ID
 	state               client.UpgradeState
 	repositoryDirectory string
 	githubService       client.GithubService
 	githubReleaseParser GithubReleaseParser
+	clusterVersioner    clusterversion.ClusterVersioner
 	fetcherOpts         FetcherOpts
 	filter              filter
 }
@@ -232,11 +325,13 @@ func New(opts Opts) Upgrader {
 		debug:               opts.Debug,
 		logger:              opts.Logger,
 		out:                 opts.Out,
+		autoConfirmPrompt:   opts.AutoConfirmPrompt,
 		clusterID:           opts.ClusterID,
 		state:               opts.State,
 		repositoryDirectory: opts.RepositoryDirectory,
 		githubService:       opts.GithubService,
 		githubReleaseParser: NewGithubReleaseParser(opts.ChecksumDownloader),
+		clusterVersioner:    opts.ClusterVersioner,
 		fetcherOpts:         opts.FetcherOpts,
 		filter: filter{
 			debug:                  opts.Debug,

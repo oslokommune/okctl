@@ -4,8 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/oslokommune/okctl/pkg/version"
-
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/breeze"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -177,7 +175,7 @@ type ClusterVersion struct {
 	Metadata `storm:"inline"`
 
 	ID    ID
-	Value version.Info
+	Value string
 	Key   string
 }
 

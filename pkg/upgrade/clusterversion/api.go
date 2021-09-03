@@ -9,7 +9,6 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
-	versionPkg "github.com/oslokommune/okctl/pkg/version"
 )
 
 // ValidateBinaryVsClusterVersion returns an error if binary version is less than cluster version
@@ -30,7 +29,7 @@ func (c ClusterVersioner) ValidateBinaryVsClusterVersion(binaryVersionString str
 		return fmt.Errorf(": %w", err)
 	}
 
-	clusterVersion, err := semver.NewVersion(clusterVersionInfo.Value.Version)
+	clusterVersion, err := semver.NewVersion(clusterVersionInfo.Value)
 	if err != nil {
 		return fmt.Errorf("parsing cluster verion to semver from '%s': %w", binaryVersionString, err)
 	}
@@ -49,7 +48,7 @@ func (c ClusterVersioner) validateBinaryVsClusterVersion(binaryVersion *semver.V
 }
 
 // SaveClusterVersion saves the provided version
-func (c ClusterVersioner) SaveClusterVersion(version versionPkg.Info) error {
+func (c ClusterVersioner) SaveClusterVersion(version string) error {
 	didUpdateVersion := false
 
 	existing, err := c.upgradeState.GetClusterVersionInfo()
@@ -59,7 +58,7 @@ func (c ClusterVersioner) SaveClusterVersion(version versionPkg.Info) error {
 
 	if err != nil && errors.Is(err, client.ErrClusterVersionNotFound) {
 		didUpdateVersion = true
-	} else if version.Version != existing.Value.Version {
+	} else if version != existing.Value {
 		didUpdateVersion = true
 	}
 
@@ -73,7 +72,7 @@ func (c ClusterVersioner) SaveClusterVersion(version versionPkg.Info) error {
 
 	if didUpdateVersion {
 		_, _ = fmt.Fprintf(c.out,
-			"Cluster version is now: %s. Remember to commit and push changes with git.\n", version.Version)
+			"Cluster version is now: %s. Remember to commit and push changes with git.\n", version)
 	}
 
 	return nil

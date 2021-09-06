@@ -65,6 +65,8 @@ theme:
     - yaml
     - json
     - bash
+  analytics:
+    gtag: G-K8VMHVHRP8
 
 markdown_extensions:
   - attr_list
@@ -78,8 +80,3 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
-
-extra:
-  analytics:
-    provider: google
-    property: G-K8VMHVHRP8

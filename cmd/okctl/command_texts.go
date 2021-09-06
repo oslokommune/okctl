@@ -13,7 +13,7 @@ const (
 	ApplyApplicationShortDescription = "Applies an application.yaml to the IAC repo"
 
 	AttachCommandsShortDescription = "Attach commands"
-	AttachCommandsLongDescription  = `Hello! Attach to different services running in AWS
+	AttachCommandsLongDescription  = `Attach to different services running in AWS
 
 Sometimes it can be useful to attach to service running
 in AWS, such as a Postgres database, to inspect the schema

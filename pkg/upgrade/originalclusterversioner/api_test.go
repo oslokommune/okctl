@@ -1,7 +1,7 @@
-package originalclusterversion_test
+package originalclusterversioner_test
 
 import (
-	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversion"
+	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
 	"testing"
 
 	"github.com/oslokommune/okctl/pkg/upgrade/testutils"
@@ -35,15 +35,14 @@ func TestOriginalVersionSaver(t *testing.T) {
 			upgradeState := testutils.MockUpgradeState()
 			clusterState := mockClusterState(tc.existingClusterVersion)
 
-			saver, err := originalclusterversion.New(
+			versioner := originalclusterversioner.New(
 				api.ID{ClusterName: "my-cluster"},
 				upgradeState,
 				clusterState,
 			)
-			require.NoError(t, err)
 
 			// When
-			err = saver.SaveOriginalClusterVersionIfNotExists()
+			err := versioner.SaveOriginalClusterVersionIfNotExists()
 
 			// Then
 			require.NoError(t, err)

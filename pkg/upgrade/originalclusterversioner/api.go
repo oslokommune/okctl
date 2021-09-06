@@ -1,5 +1,5 @@
 // Package originalversion knows how to save the original version of a cluster
-package originalclusterversion
+package originalclusterversioner
 
 import (
 	"errors"
@@ -86,10 +86,10 @@ func New(
 	clusterID api.ID,
 	upgradeState client.UpgradeState,
 	clusterState client.ClusterState,
-) (Versioner, error) {
+) Versioner {
 	return Versioner{
 		clusterID:    clusterID,
 		upgradeState: upgradeState,
 		clusterState: clusterState,
-	}, nil
+	}
 }

@@ -2,12 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/commands"
-	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversion"
-
-	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
-
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/commands"
+	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
+	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
 	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -26,9 +24,9 @@ func buildUpgradeCommand(o *okctl.Okctl) *cobra.Command {
 
 	var upgrader upgrade.Upgrader
 
-	var originalClusterVersioner originalclusterversion.Versioner
+	var originalClusterVersioner originalclusterversioner.Versioner
 
-	var clusterVersioner clusterversion.Versioner
+	var clusterVersioner clusterversioner.Versioner
 
 	cmd := &cobra.Command{
 		Use:   "upgrade",
@@ -69,7 +67,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				Store: storage.NewFileSystemStorage(userDataDir),
 			}
 
-			clusterVersioner = clusterversion.New(
+			clusterVersioner = clusterversioner.New(
 				out,
 				api.ID{
 					Region:       o.Declaration.Metadata.Region,
@@ -79,7 +77,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				stateHandlers.Upgrade,
 			)
 
-			originalClusterVersioner, err = originalclusterversion.New(
+			originalClusterVersioner = originalclusterversioner.New(
 				api.ID{
 					Region:       o.Declaration.Metadata.Region,
 					AWSAccountID: o.Declaration.Metadata.AccountID,
@@ -88,9 +86,6 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				stateHandlers.Upgrade,
 				stateHandlers.Cluster,
 			)
-			if err != nil {
-				return fmt.Errorf("creating original version saver: %w", err)
-			}
 
 			err = clusterVersioner.ValidateBinaryVsClusterVersion(version.GetVersionInfo().Version)
 			if err != nil {
@@ -99,7 +94,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 
 			err = originalClusterVersioner.SaveOriginalClusterVersionIfNotExists()
 			if err != nil {
-				return fmt.Errorf(originalclusterversion.SaveErrorMessage, err)
+				return fmt.Errorf(originalclusterversioner.SaveErrorMessage, err)
 			}
 
 			originalClusterVersion, err := stateHandlers.Upgrade.GetOriginalClusterVersion()
@@ -108,18 +103,19 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 			}
 
 			upgrader = upgrade.New(upgrade.Opts{
-				Debug:                  o.Debug,
-				Logger:                 o.Logger,
-				Out:                    out,
-				AutoConfirmPrompt:      flags.confirm,
-				RepositoryDirectory:    repoDir,
-				GithubService:          services.Github,
-				ChecksumDownloader:     upgrade.NewChecksumDownloader(),
-				ClusterVersioner:       clusterVersioner,
-				FetcherOpts:            fetcherOpts,
-				OkctlVersion:           version.GetVersionInfo().Version,
-				OriginalClusterVersion: originalClusterVersion.Value,
-				State:                  stateHandlers.Upgrade,
+				Debug:                    o.Debug,
+				Logger:                   o.Logger,
+				Out:                      out,
+				AutoConfirmPrompt:        flags.confirm,
+				RepositoryDirectory:      repoDir,
+				GithubService:            services.Github,
+				ChecksumDownloader:       upgrade.NewChecksumDownloader(),
+				ClusterVersioner:         clusterVersioner,
+				OriginalClusterVersioner: originalClusterVersioner,
+				FetcherOpts:              fetcherOpts,
+				OkctlVersion:             version.GetVersionInfo().Version,
+				OriginalClusterVersion:   originalClusterVersion.Value,
+				State:                    stateHandlers.Upgrade,
 				ClusterID: api.ID{
 					Region:       o.Declaration.Metadata.Region,
 					AWSAccountID: o.Declaration.Metadata.AccountID,

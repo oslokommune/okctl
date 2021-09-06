@@ -3,7 +3,8 @@ package upgrade_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
+	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
+	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
 	"path"
 	"regexp"
 	"strings"
@@ -478,14 +479,15 @@ func TestRunUpgrades(t *testing.T) {
 
 			defaultOpts := DefaultTestOpts{
 				Opts: upgrade.Opts{
-					Debug:               tc.withDebug,
-					Logger:              logrus.StandardLogger(),
-					Out:                 stdOutBuffer,
-					AutoConfirmPrompt:   true,
-					RepositoryDirectory: repositoryAbsoluteDir,
-					GithubService:       newGithubServiceMock(tc.withGithubReleases),
-					ChecksumDownloader:  upgrade.NewChecksumDownloader(),
-					ClusterVersioner:    clusterversion.New(stdOutBuffer, api.ID{}, upgradeState),
+					Debug:                    tc.withDebug,
+					Logger:                   logrus.StandardLogger(),
+					Out:                      stdOutBuffer,
+					AutoConfirmPrompt:        true,
+					RepositoryDirectory:      repositoryAbsoluteDir,
+					GithubService:            newGithubServiceMock(tc.withGithubReleases),
+					ChecksumDownloader:       upgrade.NewChecksumDownloader(),
+					ClusterVersioner:         clusterversioner.New(stdOutBuffer, api.ID{}, upgradeState),
+					OriginalClusterVersioner: originalclusterversioner.New(api.ID{}, upgradeState, testutils.MockClusterState()),
 					FetcherOpts: upgrade.FetcherOpts{
 						Host:  tc.withHost,
 						Store: tmpStore,

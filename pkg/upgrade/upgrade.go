@@ -3,14 +3,13 @@ package upgrade
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversion"
+	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
+	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
 	"io"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/oslokommune/okctl/pkg/commands"
-	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
-
 	"github.com/oslokommune/okctl/pkg/github"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -289,51 +288,54 @@ type FetcherOpts struct {
 
 // Opts contains all data needed to create an Upgrader
 type Opts struct {
-	Debug                  bool
-	Logger                 *logrus.Logger
-	Out                    io.Writer
-	AutoConfirmPrompt      bool
-	RepositoryDirectory    string
-	GithubService          client.GithubService
-	ChecksumDownloader     ChecksumHTTPDownloader
-	ClusterVersioner       clusterversion.ClusterVersioner
-	FetcherOpts            FetcherOpts
-	OkctlVersion           string
-	OriginalClusterVersion string
-	State                  client.UpgradeState
-	ClusterID              api.ID
+	Debug                    bool
+	Logger                   *logrus.Logger
+	Out                      io.Writer
+	AutoConfirmPrompt        bool
+	RepositoryDirectory      string
+	GithubService            client.GithubService
+	ChecksumDownloader       ChecksumHTTPDownloader
+	ClusterVersioner         clusterversioner.Versioner
+	OriginalClusterVersioner originalclusterversioner.Versioner
+	FetcherOpts              FetcherOpts
+	OkctlVersion             string
+	OriginalClusterVersion   string
+	State                    client.UpgradeState
+	ClusterID                api.ID
 }
 
 // Upgrader knows how to upgrade okctl
 type Upgrader struct {
-	debug               bool
-	logger              *logrus.Logger
-	out                 io.Writer
-	autoConfirmPrompt   bool
-	clusterID           api.ID
-	state               client.UpgradeState
-	repositoryDirectory string
-	githubService       client.GithubService
-	githubReleaseParser GithubReleaseParser
-	clusterVersioner    clusterversion.ClusterVersioner
-	fetcherOpts         FetcherOpts
-	filter              filter
+	debug                    bool
+	logger                   *logrus.Logger
+	out                      io.Writer
+	autoConfirmPrompt        bool
+	clusterID                api.ID
+	state                    client.UpgradeState
+	repositoryDirectory      string
+	githubService            client.GithubService
+	githubReleaseParser      GithubReleaseParser
+	clusterVersioner         clusterversioner.Versioner
+	originalClusterVersioner originalclusterversioner.Versioner
+	fetcherOpts              FetcherOpts
+	filter                   filter
 }
 
 // New returns a new Upgrader
 func New(opts Opts) Upgrader {
 	return Upgrader{
-		debug:               opts.Debug,
-		logger:              opts.Logger,
-		out:                 opts.Out,
-		autoConfirmPrompt:   opts.AutoConfirmPrompt,
-		clusterID:           opts.ClusterID,
-		state:               opts.State,
-		repositoryDirectory: opts.RepositoryDirectory,
-		githubService:       opts.GithubService,
-		githubReleaseParser: NewGithubReleaseParser(opts.ChecksumDownloader),
-		clusterVersioner:    opts.ClusterVersioner,
-		fetcherOpts:         opts.FetcherOpts,
+		debug:                    opts.Debug,
+		logger:                   opts.Logger,
+		out:                      opts.Out,
+		autoConfirmPrompt:        opts.AutoConfirmPrompt,
+		clusterID:                opts.ClusterID,
+		state:                    opts.State,
+		repositoryDirectory:      opts.RepositoryDirectory,
+		githubService:            opts.GithubService,
+		githubReleaseParser:      NewGithubReleaseParser(opts.ChecksumDownloader),
+		clusterVersioner:         opts.ClusterVersioner,
+		originalClusterVersioner: opts.OriginalClusterVersioner,
+		fetcherOpts:              opts.FetcherOpts,
 		filter: filter{
 			debug:                  opts.Debug,
 			out:                    opts.Out,

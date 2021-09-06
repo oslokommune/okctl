@@ -1,5 +1,5 @@
 // Package clusterversion manages the cluster version
-package clusterversion
+package clusterversioner
 
 import (
 	"errors"

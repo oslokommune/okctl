@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversion"
+	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
+	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
 	"io"
 	"io/ioutil"
 	"os"
@@ -10,7 +11,6 @@ import (
 	"path"
 	"syscall"
 
-	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
 	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -52,9 +52,9 @@ func (o *applyClusterOpts) Validate() error {
 // nolint funlen
 func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := applyClusterOpts{}
-	var originalClusterVersioner originalclusterversion.Versioner
+	var originalClusterVersioner originalclusterversioner.Versioner
 
-	var clusterVersioner clusterversion.Versioner
+	var clusterVersioner clusterversioner.Versioner
 
 	cmd := &cobra.Command{
 		Use:     "cluster -f declaration_file",
@@ -132,7 +132,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			state := o.StateHandlers(o.StateNodes())
 
 			// Cluster version
-			clusterVersioner = clusterversion.New(
+			clusterVersioner = clusterversioner.New(
 				o.Out,
 				api.ID{
 					Region:       opts.Declaration.Metadata.Region,
@@ -148,7 +148,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			}
 
 			// Original version
-			originalClusterVersioner, err = originalclusterversion.New(
+			originalClusterVersioner = originalclusterversioner.New(
 				api.ID{
 					Region:       opts.Declaration.Metadata.Region,
 					AWSAccountID: opts.Declaration.Metadata.AccountID,
@@ -157,9 +157,6 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				state.Upgrade,
 				state.Cluster,
 			)
-			if err != nil {
-				return fmt.Errorf("creating original version saver: %w", err)
-			}
 
 			return nil
 		},
@@ -219,7 +216,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			err = originalClusterVersioner.SaveOriginalClusterVersionIfNotExists()
 			if err != nil {
-				return fmt.Errorf(originalclusterversion.SaveErrorMessage, err)
+				return fmt.Errorf(originalclusterversioner.SaveErrorMessage, err)
 			}
 
 			err = clusterVersioner.SaveClusterVersion(version.GetVersionInfo().Version)

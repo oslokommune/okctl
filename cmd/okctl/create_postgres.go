@@ -41,11 +41,9 @@ func buildCreatePostgresCommand(o *okctl.Okctl) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "postgres APPLICATION_NAME NAMESPACE",
-		Short: "Create an AWS RDS Postgres database",
-		Long: `We will create an AWS RDS Postgres database and make a Secret and ConfigMap available
-in the provided namespace containing data for accessing the database.
-`,
-		Args: cobra.ExactArgs(2), // nolint: gomnd
+		Short: CreateRDSPostgresDatabaseShortDescription,
+		Long:  CreateRDSPostgresDatabaseLongDescription,
+		Args:  cobra.ExactArgs(2), // nolint: gomnd
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			applicationName := args[0]
 			namespace := args[1]

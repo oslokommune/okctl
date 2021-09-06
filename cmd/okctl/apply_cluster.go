@@ -48,8 +48,8 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 	opts := applyClusterOpts{}
 
 	cmd := &cobra.Command{
-		Use:     ApplyClusterUsage,
-		Example: ApplyClusterExample,
+		Use:     "cluster -f declaration_file",
+		Example: "okctl apply cluster -f cluster.yaml",
 		Short:   ApplyClusterShortDescription,
 		Long:    ApplyClusterLongDescription,
 		Args:    cobra.ExactArgs(0),

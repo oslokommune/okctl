@@ -16,8 +16,8 @@ func buildScaffoldClusterCommand(o *okctl.Okctl) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "cluster",
 		Example: exampleUsage,
-		Short:   "Scaffold cluster resource template",
-		Long:    "Scaffolds a cluster resource which can be used to control cluster resources",
+		Short:   ScaffoldClusterShortDescription,
+		Long:    ScaffoldClusterLongDescription,
 		Args:    cobra.ExactArgs(scaffoldClusterArgumentQuantity),
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			return nil

@@ -39,6 +39,6 @@ type UpgradeState interface {
 	GetUpgrades() ([]*Upgrade, error)
 	SaveOriginalClusterVersionIfNotExists(originalClusterVersion *OriginalClusterVersion) error
 	GetOriginalClusterVersion() (*OriginalClusterVersion, error)
-	SaveClusterVersionInfo(version *ClusterVersion) error
-	GetClusterVersionInfo() (*ClusterVersion, error)
+	SaveClusterVersion(version *ClusterVersion) error
+	GetClusterVersion() (*ClusterVersion, error)
 }

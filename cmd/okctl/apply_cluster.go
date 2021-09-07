@@ -214,12 +214,18 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("synchronizing declaration with state: %w", err)
 			}
 
-			err = originalClusterVersioner.SaveOriginalClusterVersionIfNotExists()
+			// In the future, we can replace this call with
+			// originalClusterVersioner.SaveOriginalClusterVersionIfNotExists(version.GetVersionInfo().Version)
+			// See function comments.
+			err = originalClusterVersioner.SaveOriginalClusterVersionFromClusterTagIfNotExists()
 			if err != nil {
 				return fmt.Errorf(originalclusterversioner.SaveErrorMessage, err)
 			}
 
-			err = clusterVersioner.SaveClusterVersion(version.GetVersionInfo().Version)
+			// In the future, we can replace this call with
+			// clusterVersioner.SaveClusterVersionIfNotExists(version.GetVersionInfo().Version)
+			// See function comments.
+			err = clusterVersioner.SaveClusterVersionFromOriginalClusterVersionIfNotExists()
 			if err != nil {
 				return fmt.Errorf(commands.SaveClusterVersionError, err)
 			}

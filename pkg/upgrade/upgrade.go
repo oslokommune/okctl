@@ -63,7 +63,7 @@ func (u Upgrader) Run() error {
 
 	// Update cluster version
 	if ran {
-		err = u.clusterVersioner.SaveClusterVersion(u.filter.okctlVersion)
+		err = u.clusterVersioner.SaveClusterVersion(u.okctlVersion)
 		if err != nil {
 			return fmt.Errorf(commands.SaveClusterVersionError, err)
 		}
@@ -299,48 +299,65 @@ type Opts struct {
 	OriginalClusterVersioner originalclusterversioner.Versioner
 	FetcherOpts              FetcherOpts
 	OkctlVersion             string
-	OriginalClusterVersion   string
 	State                    client.UpgradeState
 	ClusterID                api.ID
 }
 
 // Upgrader knows how to upgrade okctl
 type Upgrader struct {
-	debug                    bool
-	logger                   *logrus.Logger
-	out                      io.Writer
-	autoConfirmPrompt        bool
-	clusterID                api.ID
-	state                    client.UpgradeState
-	repositoryDirectory      string
-	githubService            client.GithubService
-	githubReleaseParser      GithubReleaseParser
-	clusterVersioner         clusterversioner.Versioner
-	originalClusterVersioner originalclusterversioner.Versioner
-	fetcherOpts              FetcherOpts
-	filter                   filter
+	debug               bool
+	logger              *logrus.Logger
+	out                 io.Writer
+	autoConfirmPrompt   bool
+	clusterID           api.ID
+	state               client.UpgradeState
+	repositoryDirectory string
+	githubService       client.GithubService
+	githubReleaseParser GithubReleaseParser
+	clusterVersioner    clusterversioner.Versioner
+	okctlVersion        string
+	fetcherOpts         FetcherOpts
+	filter              filter
 }
 
-// New returns a new Upgrader
-func New(opts Opts) Upgrader {
+// New returns a new Upgrader, or an error if initialization fails
+func New(opts Opts) (Upgrader, error) {
+	err := opts.ClusterVersioner.ValidateBinaryVsClusterVersion(opts.OkctlVersion)
+	if err != nil {
+		return Upgrader{}, fmt.Errorf(commands.ValidateBinaryVsClusterVersionError, err)
+	}
+
+	// We can remove this call to SaveOriginalClusterVersionIfNotExists when we're sure all users have stored original
+	// cluster version into their state. It should be set by apply cluster, not upgrade. We need to have it here
+	// in case people run upgrade before apply cluster.
+	err = opts.OriginalClusterVersioner.SaveOriginalClusterVersionFromClusterTagIfNotExists()
+	if err != nil {
+		return Upgrader{}, fmt.Errorf(originalclusterversioner.SaveErrorMessage, err)
+	}
+
+	originalClusterVersion, err := opts.State.GetOriginalClusterVersion()
+	if err != nil {
+		return Upgrader{}, fmt.Errorf("getting original okctl version: %w", err)
+	}
+
 	return Upgrader{
-		debug:                    opts.Debug,
-		logger:                   opts.Logger,
-		out:                      opts.Out,
-		autoConfirmPrompt:        opts.AutoConfirmPrompt,
-		clusterID:                opts.ClusterID,
-		state:                    opts.State,
-		repositoryDirectory:      opts.RepositoryDirectory,
-		githubService:            opts.GithubService,
-		githubReleaseParser:      NewGithubReleaseParser(opts.ChecksumDownloader),
-		clusterVersioner:         opts.ClusterVersioner,
-		originalClusterVersioner: opts.OriginalClusterVersioner,
-		fetcherOpts:              opts.FetcherOpts,
+		debug:               opts.Debug,
+		logger:              opts.Logger,
+		out:                 opts.Out,
+		autoConfirmPrompt:   opts.AutoConfirmPrompt,
+		clusterID:           opts.ClusterID,
+		state:               opts.State,
+		repositoryDirectory: opts.RepositoryDirectory,
+		githubService:       opts.GithubService,
+		githubReleaseParser: NewGithubReleaseParser(opts.ChecksumDownloader),
+		clusterVersioner:    opts.ClusterVersioner,
+		okctlVersion:        opts.OkctlVersion,
+		fetcherOpts:         opts.FetcherOpts,
 		filter: filter{
 			debug:                  opts.Debug,
 			out:                    opts.Out,
 			okctlVersion:           opts.OkctlVersion,
-			originalClusterVersion: opts.OriginalClusterVersion,
+			originalClusterVersion: originalClusterVersion.Value,
 		},
-	}
+	}, nil
 }

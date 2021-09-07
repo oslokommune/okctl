@@ -187,7 +187,7 @@ func (o *ClusterVersion) Convert() *client.ClusterVersion {
 	}
 }
 
-func (u *upgradesState) GetClusterVersionInfo() (*client.ClusterVersion, error) {
+func (u *upgradesState) GetClusterVersion() (*client.ClusterVersion, error) {
 	clusterVersion, err := u.getClusterVersionInfo()
 	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
 		return nil, err
@@ -220,7 +220,7 @@ func newClusterVersion(o *client.ClusterVersion, meta Metadata) *ClusterVersion 
 	}
 }
 
-func (u *upgradesState) SaveClusterVersionInfo(version *client.ClusterVersion) error {
+func (u *upgradesState) SaveClusterVersion(version *client.ClusterVersion) error {
 	existing, err := u.getClusterVersionInfo()
 	if err != nil && !errors.Is(err, stormpkg.ErrNotFound) {
 		return err

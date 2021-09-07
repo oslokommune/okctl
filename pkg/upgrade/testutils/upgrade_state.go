@@ -57,12 +57,12 @@ func (m *upgradeStateMock) GetOriginalClusterVersion() (*client.OriginalClusterV
 }
 
 //goland:noinspection GoUnusedParameter
-func (m *upgradeStateMock) SaveClusterVersionInfo(version *client.ClusterVersion) error {
+func (m *upgradeStateMock) SaveClusterVersion(version *client.ClusterVersion) error {
 	m.clusterVersion = version
 	return nil
 }
 
-func (m *upgradeStateMock) GetClusterVersionInfo() (*client.ClusterVersion, error) {
+func (m *upgradeStateMock) GetClusterVersion() (*client.ClusterVersion, error) {
 	if m.clusterVersion == nil {
 		return nil, client.ErrClusterVersionNotFound
 	}
@@ -71,8 +71,11 @@ func (m *upgradeStateMock) GetClusterVersionInfo() (*client.ClusterVersion, erro
 }
 
 // MockUpgradeState returns a mocked upgrade state
-func MockUpgradeState() client.UpgradeState {
+func MockUpgradeState(clusterVersion string) client.UpgradeState {
 	return &upgradeStateMock{
 		upgrades: make(map[string]*client.Upgrade),
+		clusterVersion: &client.ClusterVersion{
+			Value: clusterVersion,
+		},
 	}
 }

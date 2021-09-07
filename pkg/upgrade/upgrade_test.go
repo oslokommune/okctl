@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
 	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
+	"github.com/stretchr/testify/require"
 	"path"
 	"regexp"
 	"strings"
@@ -33,16 +34,18 @@ const (
 )
 
 type TestCase struct {
-	name                              string
-	withDebug                         bool
-	withOkctlVersion                  string
-	withOriginalClusterVersion        string
-	withGithubReleases                []*github.RepositoryRelease
-	withGithubReleaseAssetsFromFolder string
-	withHost                          state.Host
-	withTestRun                       func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts)
-	expectBinaryVersionsRunOnce       []string
-	expectErrorContains               string
+	name                               string
+	withDebug                          bool
+	withOkctlVersion                   string
+	withOriginalClusterVersion         string
+	withClusterVersion                 string
+	withGithubReleases                 []*github.RepositoryRelease
+	withGithubReleaseAssetsFromFolder  string
+	withHost                           state.Host
+	withTestRun                        func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts)
+	expectBinaryVersionsRunOnce        []string
+	expectedClusterVersionAfterUpgrade string
+	expectErrorContains                string
 }
 
 //nolint:funlen
@@ -80,12 +83,14 @@ func TestRunUpgrades(t *testing.T) {
 			expectErrorContains:               "exit status 1",
 		},
 		{
-			name:                        "Should run zero upgrades",
-			withOkctlVersion:            "0.0.60",
-			withOriginalClusterVersion:  "0.0.50",
-			withGithubReleases:          []*github.RepositoryRelease{},
-			withHost:                    state.Host{Os: linux, Arch: amd64},
-			expectBinaryVersionsRunOnce: []string{},
+			name:                               "Should run zero upgrades",
+			withOkctlVersion:                   "0.0.60",
+			withOriginalClusterVersion:         "0.0.50",
+			withClusterVersion:                 "0.0.52",
+			withGithubReleases:                 []*github.RepositoryRelease{},
+			withHost:                           state.Host{Os: linux, Arch: amd64},
+			expectBinaryVersionsRunOnce:        []string{},
+			expectedClusterVersionAfterUpgrade: "0.0.52",
 		},
 		{
 			name:                              "Should run a Linux upgrade",
@@ -130,10 +135,11 @@ func TestRunUpgrades(t *testing.T) {
 				stdOutBuffer := new(bytes.Buffer)
 				defaultOpts.setStdOut(stdOutBuffer)
 
-				upgrader := upgrade.New(defaultOpts.Opts)
+				upgrader, err := upgrade.New(defaultOpts.Opts)
+				require.NoError(t, err)
 
 				// When running first time
-				err := upgrader.Run()
+				err = upgrader.Run()
 				assert.NoError(t, err)
 
 				// Then
@@ -155,7 +161,8 @@ func TestRunUpgrades(t *testing.T) {
 				stdOutBuffer = new(bytes.Buffer)
 				defaultOpts.setStdOut(stdOutBuffer)
 
-				upgrader = upgrade.New(defaultOpts.Opts)
+				upgrader, err = upgrade.New(defaultOpts.Opts)
+				require.NoError(t, err)
 
 				// When running second time
 				err = upgrader.Run()
@@ -242,10 +249,11 @@ func TestRunUpgrades(t *testing.T) {
 				stdOutBuffer := new(bytes.Buffer)
 				defaultOpts.setStdOut(stdOutBuffer)
 
-				upgrader := upgrade.New(defaultOpts.Opts)
+				upgrader, err := upgrade.New(defaultOpts.Opts)
+				require.NoError(t, err)
 
 				// When running upgrade first time
-				err := upgrader.Run()
+				err = upgrader.Run()
 
 				// Then
 				assert.NoError(t, err)
@@ -271,7 +279,8 @@ func TestRunUpgrades(t *testing.T) {
 				stdOutBuffer = new(bytes.Buffer)
 				defaultOpts.setStdOut(stdOutBuffer)
 
-				upgrader = upgrade.New(defaultOpts.Opts)
+				upgrader, err = upgrade.New(defaultOpts.Opts)
+				require.NoError(t, err)
 
 				// When running upgrade second time
 				err = upgrader.Run()
@@ -300,9 +309,10 @@ func TestRunUpgrades(t *testing.T) {
 			withGithubReleaseAssetsFromFolder: folderWorking,
 			withHost:                          state.Host{Os: linux, Arch: amd64},
 			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
-				upgrader := upgrade.New(defaultOpts.Opts)
+				upgrader, err := upgrade.New(defaultOpts.Opts)
+				require.NoError(t, err)
 
-				err := upgrader.Run()
+				err = upgrader.Run()
 
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(),
@@ -329,9 +339,10 @@ func TestRunUpgrades(t *testing.T) {
 			withGithubReleaseAssetsFromFolder: folderWorking,
 			withHost:                          state.Host{Os: linux, Arch: amd64},
 			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
-				upgrader := upgrade.New(defaultOpts.Opts)
+				upgrader, err := upgrade.New(defaultOpts.Opts)
+				require.NoError(t, err)
 
-				err := upgrader.Run()
+				err = upgrader.Run()
 
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(),
@@ -369,9 +380,10 @@ func TestRunUpgrades(t *testing.T) {
 			withGithubReleaseAssetsFromFolder: folderWorking,
 			withHost:                          state.Host{Os: linux, Arch: amd64},
 			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
-				upgrader := upgrade.New(defaultOpts.Opts)
+				upgrader, err := upgrade.New(defaultOpts.Opts)
+				require.NoError(t, err)
 
-				err := upgrader.Run()
+				err = upgrader.Run()
 
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(),
@@ -404,10 +416,11 @@ func TestRunUpgrades(t *testing.T) {
 				stdOutBuffer := new(bytes.Buffer)
 				defaultOpts.setStdOut(stdOutBuffer)
 
-				upgrader := upgrade.New(defaultOpts.Opts)
+				upgrader, err := upgrade.New(defaultOpts.Opts)
+				require.NoError(t, err)
 
 				// When 0.0.61 runs OK and 0.0.62 fails
-				err := upgrader.Run()
+				err = upgrader.Run()
 
 				// Then
 				t.Log(defaultOpts.StdOutBuffer.String())
@@ -439,7 +452,8 @@ func TestRunUpgrades(t *testing.T) {
 				stdOutBuffer = new(bytes.Buffer)
 				defaultOpts.setStdOut(stdOutBuffer)
 
-				upgrader = upgrade.New(defaultOpts.Opts)
+				upgrader, err = upgrade.New(defaultOpts.Opts)
+				require.NoError(t, err)
 
 				// When
 				err = upgrader.Run()
@@ -475,7 +489,14 @@ func TestRunUpgrades(t *testing.T) {
 			err = tmpStore.MkdirAll(repoDir)
 			assert.NoError(t, err)
 
-			upgradeState := testutils.MockUpgradeState()
+			if len(tc.withClusterVersion) == 0 {
+				tc.withClusterVersion = tc.withOriginalClusterVersion
+			}
+
+			upgradeState := testutils.MockUpgradeState(tc.withClusterVersion)
+			clusterVersioner := clusterversioner.New(stdOutBuffer, api.ID{}, upgradeState)
+			originalClusterVersioner := originalclusterversioner.New(
+				api.ID{}, upgradeState, testutils.MockClusterState(tc.withOriginalClusterVersion))
 
 			defaultOpts := DefaultTestOpts{
 				Opts: upgrade.Opts{
@@ -486,16 +507,15 @@ func TestRunUpgrades(t *testing.T) {
 					RepositoryDirectory:      repositoryAbsoluteDir,
 					GithubService:            newGithubServiceMock(tc.withGithubReleases),
 					ChecksumDownloader:       upgrade.NewChecksumDownloader(),
-					ClusterVersioner:         clusterversioner.New(stdOutBuffer, api.ID{}, upgradeState),
-					OriginalClusterVersioner: originalclusterversioner.New(api.ID{}, upgradeState, testutils.MockClusterState()),
+					ClusterVersioner:         clusterVersioner,
+					OriginalClusterVersioner: originalClusterVersioner,
 					FetcherOpts: upgrade.FetcherOpts{
 						Host:  tc.withHost,
 						Store: tmpStore,
 					},
-					OkctlVersion:           tc.withOkctlVersion,
-					OriginalClusterVersion: tc.withOriginalClusterVersion,
-					State:                  upgradeState,
-					ClusterID:              api.ID{},
+					OkctlVersion: tc.withOkctlVersion,
+					State:        upgradeState,
+					ClusterID:    api.ID{},
 				},
 				StdOutBuffer: stdOutBuffer,
 			}
@@ -510,7 +530,9 @@ func TestRunUpgrades(t *testing.T) {
 			mockHTTPResponsesForGithubReleases(t, tc.withGithubReleaseAssetsFromFolder, tc.withGithubReleases)
 			defer httpmock.DeactivateAndReset()
 
-			upgrader := upgrade.New(defaultOpts.Opts)
+			upgrader, err := upgrade.New(defaultOpts.Opts)
+			require.NoError(t, err)
+
 			err = upgrader.Run()
 
 			t.Log(stdOutBuffer.String())
@@ -527,6 +549,20 @@ func TestRunUpgrades(t *testing.T) {
 			expectedUpgradesRun := getExpectedUpgradesRun(tc.expectBinaryVersionsRunOnce, tc.withHost)
 			upgradesRun := getActualUpgradesRun(stdOutBuffer)
 			assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
+
+			clusterVersion, err := clusterVersioner.GetClusterVersion()
+			require.NoError(t, err)
+
+			if len(tc.expectedClusterVersionAfterUpgrade) > 0 {
+				assert.Equal(t, tc.expectedClusterVersionAfterUpgrade, clusterVersion)
+			} else {
+				assert.Equal(t, tc.withOkctlVersion, clusterVersion)
+			}
+
+			originalClusterVersion, err := originalClusterVersioner.GetOriginalClusterVersion()
+			require.NoError(t, err)
+
+			assert.Equal(t, originalClusterVersion, originalClusterVersion)
 
 			g := goldie.New(t)
 			g.Assert(t, tc.name, stdOutBuffer.Bytes())

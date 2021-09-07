@@ -32,8 +32,8 @@ func buildDeletePostgresCommand(o *okctl.Okctl) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "postgres",
-		Short: "Delete an AWS RDS Postgres database",
-		Long:  `Delete the AWS RDS Postgres database`,
+		Short: DeletePostgresShortDescription,
+		Long:  DeletePostgresLongDescription,
 		Args:  cobra.ExactArgs(0), // nolint: gomnd
 		PreRunE: func(_ *cobra.Command, _ []string) error {
 			err := o.Initialise()

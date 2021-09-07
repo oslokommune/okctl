@@ -40,7 +40,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "application",
-		Short: "Applies an application.yaml to the IAC repo",
+		Short: ApplyApplicationShortDescription,
 		Args:  cobra.ExactArgs(requiredApplyApplicationArguments),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			err := o.Initialise()

@@ -2,8 +2,9 @@ package upgrade
 
 import (
 	"fmt"
-	"github.com/AlecAivazis/survey/v2"
 	"io"
+
+	"github.com/AlecAivazis/survey/v2"
 )
 
 // Surveyor knows how to get input from the user

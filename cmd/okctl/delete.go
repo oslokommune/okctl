@@ -22,7 +22,7 @@ const (
 func buildDeleteCommand(o *okctl.Okctl) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
-		Short: "Delete commands",
+		Short: DeleteCommandsShortDescription,
 	}
 
 	deleteClusterCommand := buildDeleteClusterCommand(o)
@@ -47,10 +47,9 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "cluster",
-		Short: "Delete a cluster",
-		Long: `Delete all resources related to an EKS cluster,
-including VPC, this is a highly destructive operation.`,
-		Args: cobra.ExactArgs(deleteClusterArgs),
+		Short: DeleteClusterShortDescription,
+		Long:  DeleteClusterLongDescription,
+		Args:  cobra.ExactArgs(deleteClusterArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			err := o.Initialise()
 			if err != nil {

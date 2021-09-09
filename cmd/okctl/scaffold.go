@@ -8,7 +8,7 @@ import (
 func buildScaffoldCommand(o *okctl.Okctl) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "scaffold",
-		Short: "scaffold templates for different resources",
+		Short: ScaffoldCommandsShortDescription,
 	}
 
 	cmd.AddCommand(buildScaffoldClusterCommand(o))

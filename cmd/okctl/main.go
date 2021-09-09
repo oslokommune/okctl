@@ -49,15 +49,9 @@ func buildRootCommand() *cobra.Command {
 	o := okctl.New()
 
 	cmd := &cobra.Command{
-		Use:   "okctl",
-		Short: "Opinionated and effortless infrastructure and application management",
-		Long: `A highly opinionated CLI for creating a Kubernetes cluster in AWS with
-a set of applications that ensure tighter integration between AWS and
-Kubernetes, e.g., aws-alb-ingress-controller, external-secrets, etc.
-
-Also comes pre-configured with ArgoCD for managing deployments, etc.
-We also use the prometheus-operator for ensuring metrics and logs are
-being captured. Together with slack and slick.`,
+		Use:          "okctl",
+		Short:        OkctlShortDescription,
+		Long:         OkctlLongDescription,
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if cmd.Name() == cobra.ShellCompRequestCmd {

@@ -65,13 +65,13 @@ readinessProbe:
   timeoutSeconds: 1
 
 # -- Resource requests and limits
-resources: {}
-#  limits:
-#    cpu: 200m
-#    memory: 128Mi
-#  requests:
-#    cpu: 100m
-#    memory: 128Mi
+resources:
+  requests:
+    cpu: 200m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
 
 # -- The security context for pods
 podSecurityContext:

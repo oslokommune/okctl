@@ -51,16 +51,9 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "postgres",
-		Short: "Forward to the given postgres database",
-		Long: `This sets up PgBouncer in the Kubernetes cluster, which
-makes it possible to operate on a Postgres database running 
-on AWS via a local port.
-
-Be very mindful if using this functionality with a production
-cluster. If you issue the wrong commands you can potentially
-delete important data.
-`,
-		Args: cobra.ExactArgs(0), // nolint: gomnd
+		Short: ForwardPostgresShortDescription,
+		Long:  ForwardPostgresLongDescription,
+		Args:  cobra.ExactArgs(0), // nolint: gomnd
 		PreRunE: func(_ *cobra.Command, _ []string) error {
 			err := o.Initialise()
 			if err != nil {

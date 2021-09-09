@@ -17,8 +17,8 @@ func buildScaffoldApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "application",
-		Short: "Scaffold an application template",
-		Long:  "Scaffolds an application.yaml template which can be used to produce necessary Kubernetes and ArgoCD resources",
+		Short: ScaffoldShortDescription,
+		Long:  ScaffoldLongDescription,
 		Args:  cobra.ExactArgs(requiredArgumentsForCreateApplicationCommand),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if declarationPath != "" {

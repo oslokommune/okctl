@@ -65,6 +65,8 @@ theme:
     - yaml
     - json
     - bash
+  analytics:
+    gtag: G-K8VMHVHRP8
 
 markdown_extensions:
   - attr_list

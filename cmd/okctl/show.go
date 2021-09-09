@@ -24,7 +24,7 @@ const (
 func buildShowCommand(o *okctl.Okctl) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show",
-		Short: "Show commands",
+		Short: ShowCommandsShortDescription,
 	}
 
 	cmd.AddCommand(buildShowCredentialsCommand(o))
@@ -38,8 +38,8 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "credentials",
-		Short: "Show the location of the credentials",
-		Long:  `This makes it possible to source the output from this command to run with kubectl`,
+		Short: ShowShortDescription,
+		Long:  ShowLongDescription,
 		Args:  cobra.ExactArgs(showCredentialsArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			err := o.Initialise()

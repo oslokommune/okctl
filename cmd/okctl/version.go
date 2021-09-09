@@ -12,8 +12,8 @@ import (
 func buildVersionCommand(o *okctl.Okctl) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
-		Short: "Prints version info",
-		Long:  `Prints version number and git-sha of okctl-build.`,
+		Short: VersionShortDescription,
+		Long:  VersionLongDescription,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			return nil
 		},

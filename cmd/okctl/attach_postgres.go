@@ -41,7 +41,7 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "postgres",
-		Short: "Attach to the given postgres database",
+		Short: AttachPostgresShortDescription,
 		Args:  cobra.ExactArgs(0), // nolint: gomnd
 		PreRunE: func(_ *cobra.Command, _ []string) error {
 			err := o.Initialise()

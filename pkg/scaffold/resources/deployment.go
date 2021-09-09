@@ -4,7 +4,20 @@ import (
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+)
+
+const (
+	// defaultProbeInitialDelaySeconds defines how long k8s should wait before running the first probe
+	defaultProbeInitialDelaySeconds = 15
+	// defaultProbeTimeoutSeconds defines how long the probe should wait for a response before timing out
+	defaultProbeTimeoutSeconds = 5
+	// defaultProbeFailureThreshold defines how many times the probe should be retried before marking it as a failure
+	defaultProbeFailureThreshold = 10
+	// defaultProbePeriodSeconds defines how often the probe should be performed
+	defaultProbePeriodSeconds = 10
 )
 
 // CreateOkctlDeployment creates a deployment customized for okctl
@@ -89,6 +102,18 @@ func createContainers(app v1alpha1.Application) []corev1.Container {
 		Name:         app.Metadata.Name,
 		Env:          envVars,
 		VolumeMounts: volumeMounts,
+		Resources: corev1.ResourceRequirements{
+			Limits: map[corev1.ResourceName]resource.Quantity{
+				"memory": resource.MustParse("256Mi"),
+				"cpu":    resource.MustParse("200m"),
+			},
+			Requests: map[corev1.ResourceName]resource.Quantity{
+				"memory": resource.MustParse("128Mi"),
+				"cpu":    resource.MustParse("100m"),
+			},
+		},
+		ReadinessProbe: generateDefaultHTTPProbe(app.Port),
+		LivenessProbe:  generateDefaultHTTPProbe(app.Port),
 	}}
 
 	return containers
@@ -113,4 +138,20 @@ func createVolumes(app v1alpha1.Application) []corev1.Volume {
 	}
 
 	return volumes
+}
+
+func generateDefaultHTTPProbe(port int32) *corev1.Probe {
+	return &corev1.Probe{
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path:   "/",
+				Port:   intstr.IntOrString{IntVal: port},
+				Scheme: "HTTP",
+			},
+		},
+		InitialDelaySeconds: defaultProbeInitialDelaySeconds,
+		TimeoutSeconds:      defaultProbeTimeoutSeconds,
+		FailureThreshold:    defaultProbeFailureThreshold,
+		PeriodSeconds:       defaultProbePeriodSeconds,
+	}
 }

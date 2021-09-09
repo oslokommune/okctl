@@ -8,7 +8,7 @@ import (
 func buildApplyCommand(o *okctl.Okctl) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "apply",
-		Short: "Apply commands",
+		Short: ApplyCommandsShortDescription,
 	}
 
 	cmd.AddCommand(buildApplyApplicationCommand(o))

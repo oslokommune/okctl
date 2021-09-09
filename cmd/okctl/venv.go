@@ -29,24 +29,13 @@ const (
 	venvArgs = 0
 )
 
-const venvLong = `Runs a sub shell with all needed environmental variables set.
-
-The variables are the same as shown in "okctl show credentials". The shell command to run is retrieved from the first
-environment variable that is set of the following: $OKCTL_SHELL, $SHELL. If none is set, "/bin/sh" is used.
-
-So to override, you can run for instance:
-
-export OKCTL_SHELL=/bin/bash
-okctl venv -c my-cluster.yaml
-`
-
 func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 	okctlEnvironment := commands.OkctlEnvironment{}
 
 	cmd := &cobra.Command{
 		Use:   "venv",
-		Short: "Runs a virtual environment",
-		Long:  venvLong,
+		Short: VenvShortDescription,
+		Long:  VenvLongDescription,
 		Args:  cobra.ExactArgs(venvArgs),
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			e, err := venvPreRunE(o)

@@ -39,6 +39,7 @@ func (s TerminalSurveyor) AskUserIfReady() (bool, error) {
 	return doContinue, nil
 }
 
+// NewTerminalSurveyor creates a new TerminalSurveyor
 func NewTerminalSurveyor(out io.Writer, autoConfirm bool) TerminalSurveyor {
 	return TerminalSurveyor{
 		out,

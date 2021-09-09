@@ -48,6 +48,8 @@ type Application struct {
 
 	Environment map[string]string `json:"environment"`
 
+	Postgres string `json:"postgres"`
+
 	Volumes []map[string]string `json:"volumes"`
 
 	cluster Cluster

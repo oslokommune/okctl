@@ -60,6 +60,7 @@ type Services struct {
 	ArgoCD                           client.ArgoCDService
 	ApplicationService               client.ApplicationService
 	ApplicationManifestService       client.ApplicationManifestService
+	ApplicationPostgresService       client.ApplicationPostgresService
 	Certificate                      client.CertificateService
 	Cluster                          client.ClusterService
 	Domain                           client.DomainService

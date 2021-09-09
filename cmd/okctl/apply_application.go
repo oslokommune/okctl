@@ -81,6 +81,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			scheduler := common.NewScheduler(schedulerOpts,
 				reconciliation.NewApplicationReconciler(services.ApplicationService),
 				reconciliation.NewContainerRepositoryReconciler(services.ContainerRepository),
+				reconciliation.NewPostgresReconciler(services.ApplicationPostgresService),
 			)
 
 			_, err = scheduler.Run(o.Ctx, state)

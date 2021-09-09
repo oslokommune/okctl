@@ -294,6 +294,13 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		o.CloudProvider,
 	)
 
+	applicationPostgresService := clientCore.NewApplicationPostgresService(
+		applicationManifestService,
+		componentService,
+		rest.NewSecurityGroupAPI(o.restClient),
+		vpcService,
+	)
+
 	monitoringService := clientCore.NewMonitoringService(
 		handlers.Monitoring,
 		helmService,
@@ -335,6 +342,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		ArgoCD:                           argocdService,
 		ApplicationService:               applicationService,
 		ApplicationManifestService:       applicationManifestService,
+		ApplicationPostgresService:       applicationPostgresService,
 		Certificate:                      certificateService,
 		Cluster:                          clusterService,
 		Domain:                           domainService,
@@ -354,7 +362,6 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		ManagedPolicy:                    managedPolicyService,
 		ServiceAccount:                   serviceAccountService,
 		ContainerRepository:              containerRepositoryService,
-		ApplicationPostgresService:       applicationPostgresService,
 	}
 
 	return services, nil

@@ -26,6 +26,12 @@ type DeletePostgresDatabaseOpts struct {
 	VpcID           string
 }
 
+// GetPostgresDatabaseOpts contains the required inputs for retrieving an existing Postgres Database
+type GetPostgresDatabaseOpts struct {
+	ClusterID    api.ID
+	DatabaseName string
+}
+
 // PostgresDatabase contains the state after
 // creating the database
 type PostgresDatabase struct {
@@ -61,6 +67,7 @@ type S3Bucket struct {
 type ComponentService interface {
 	CreatePostgresDatabase(ctx context.Context, opts CreatePostgresDatabaseOpts) (*PostgresDatabase, error)
 	DeletePostgresDatabase(ctx context.Context, opts DeletePostgresDatabaseOpts) error
+	GetPostgresDatabase(ctx context.Context, opts GetPostgresDatabaseOpts) (*PostgresDatabase, error)
 }
 
 // ComponentAPI invokes the API

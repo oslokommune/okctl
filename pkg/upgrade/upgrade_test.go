@@ -3,15 +3,16 @@ package upgrade_test
 import (
 	"bytes"
 	"fmt"
+	"path"
+	"regexp"
+	"strings"
+	"testing"
+
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
 	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/require"
-	"path"
-	"regexp"
-	"strings"
-	"testing"
 
 	"github.com/oslokommune/okctl/pkg/upgrade/testutils"
 

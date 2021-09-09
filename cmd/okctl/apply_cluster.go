@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
-	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/signal"
 	"path"
 	"syscall"
+
+	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
+	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
 
 	"github.com/oslokommune/okctl/pkg/version"
 

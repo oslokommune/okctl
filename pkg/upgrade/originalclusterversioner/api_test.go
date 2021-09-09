@@ -1,8 +1,9 @@
 package originalclusterversioner_test
 
 import (
-	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
 	"testing"
+
+	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
 
 	"github.com/oslokommune/okctl/pkg/upgrade/testutils"
 

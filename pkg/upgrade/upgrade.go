@@ -3,10 +3,11 @@ package upgrade
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
-	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
 	"io"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
+	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/oslokommune/okctl/pkg/commands"

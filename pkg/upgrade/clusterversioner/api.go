@@ -11,7 +11,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
-// ValidateBinaryVsClusterVersion returns an error if binary version is less than cluster version
+// ValidateBinaryVsClusterVersion returns an error if binary version is less than cluster version.
 func (v Versioner) ValidateBinaryVsClusterVersion(binaryVersionString string) error {
 	binaryVersion, err := semver.NewVersion(binaryVersionString)
 	if err != nil {
@@ -49,30 +49,12 @@ func (v Versioner) validateBinaryVsClusterVersion(binaryVersion *semver.Version,
 
 // SaveClusterVersion saves the provided version
 func (v Versioner) SaveClusterVersion(version string) error {
-	didUpdateVersion := false
-
-	existing, err := v.upgradeState.GetClusterVersion()
-	if err != nil && !errors.Is(err, client.ErrClusterVersionNotFound) {
-		return fmt.Errorf("getting cluster version info: %w", err)
-	}
-
-	if err != nil && errors.Is(err, client.ErrClusterVersionNotFound) {
-		didUpdateVersion = true
-	} else if version != existing.Value {
-		didUpdateVersion = true
-	}
-
-	err = v.upgradeState.SaveClusterVersion(&client.ClusterVersion{
+	err := v.upgradeState.SaveClusterVersion(&client.ClusterVersion{
 		ID:    v.clusterID,
 		Value: version,
 	})
 	if err != nil {
 		return fmt.Errorf("saving cluster version: %w", err)
-	}
-
-	if didUpdateVersion {
-		_, _ = fmt.Fprintf(v.out,
-			"Cluster version is now: %s. Remember to commit and push changes with git.\n", version)
 	}
 
 	return nil

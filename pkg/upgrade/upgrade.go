@@ -54,22 +54,22 @@ func (u Upgrader) Run() error {
 		printUpgrades(u.out, "Found %d applicable upgrade(s):", upgradeBinaries)
 	} else {
 		_, _ = fmt.Fprintln(u.out, "Did not find any applicable upgrades.")
+		return nil
 	}
 
-	ran, err := u.runBinaries(upgradeBinaries)
+	err = u.runBinaries(upgradeBinaries)
 	if err != nil {
 		return fmt.Errorf("running upgrade binaries: %w", err)
 	}
 
 	// Update cluster version
-	if ran {
-		err = u.clusterVersioner.SaveClusterVersion(u.okctlVersion)
-		if err != nil {
-			return fmt.Errorf(commands.SaveClusterVersionError, err)
-		}
-
-		_, _ = fmt.Fprint(u.out, "\nUpgrade complete!\n")
+	err = u.clusterVersioner.SaveClusterVersion(u.okctlVersion)
+	if err != nil {
+		return fmt.Errorf(commands.SaveClusterVersionError, err)
 	}
+
+	_, _ = fmt.Fprintf(u.out, "\nUpgrade complete! Cluster version is now %s."+
+		" Remember to commit and push changes with git.\n", u.okctlVersion)
 
 	return nil
 }
@@ -89,37 +89,33 @@ func (u Upgrader) getAlreadyExecutedBinaries() (map[string]bool, error) {
 	return alreadyExecuted, nil
 }
 
-func (u Upgrader) runBinaries(upgradeBinaries []okctlUpgradeBinary) (bool, error) {
-	if len(upgradeBinaries) == 0 {
-		return false, nil
-	}
-
+func (u Upgrader) runBinaries(upgradeBinaries []okctlUpgradeBinary) error {
 	binaryProvider, err := u.createBinaryProvider(upgradeBinaries)
 	if err != nil {
-		return false, fmt.Errorf("creating binary provider: %w", err)
+		return fmt.Errorf("creating binary provider: %w", err)
 	}
 
 	err = u.dryRunBinaries(upgradeBinaries, binaryProvider)
 	if err != nil {
-		return false, fmt.Errorf("simulating upgrades: %w", err)
+		return fmt.Errorf("simulating upgrades: %w", err)
 	}
 
 	doContinue, err := u.askUserIfReady()
 	if err != nil {
-		return false, fmt.Errorf("asking user for input: %w", err)
+		return fmt.Errorf("asking user for input: %w", err)
 	}
 
 	if !doContinue {
 		_, _ = fmt.Fprintln(u.out, "User aborted.")
-		return false, nil
+		return nil
 	}
 
 	err = u.doRunBinaries(upgradeBinaries, binaryProvider)
 	if err != nil {
-		return false, fmt.Errorf("running upgrades: %w", err)
+		return fmt.Errorf("running upgrades: %w", err)
 	}
 
-	return true, nil
+	return nil
 }
 
 func (u Upgrader) doRunBinaries(upgradeBinaries []okctlUpgradeBinary, binaryProvider upgradeBinaryProvider) error {
@@ -145,6 +141,20 @@ func (u Upgrader) doRunBinaries(upgradeBinaries []okctlUpgradeBinary, binaryProv
 		err = u.markAsRun(binary)
 		if err != nil {
 			return fmt.Errorf("marking upgrades as run: %w", err)
+		}
+
+		// Update cluster version
+		// Note that we don't save the hotfix version, only the semver version. This is because we use the cluster
+		// versioner later to validate that the current okctl version against the cluster version. The okctl version
+		// will always be a semver version without any hotfix in it, so it wouldn't be possible to store a hotfix
+		// version here.
+		//
+		// Also, a hotfix version is supposed to just fix any errors being made in an upgrade binary, so
+		// the effect of an upgrade binary version 0.0.10 plus a hotfix binary 0.0.10.a, should be as if running one
+		// working upgrade binary with version 0.0.10.
+		err = u.clusterVersioner.SaveClusterVersion(binary.SemverVersion().String())
+		if err != nil {
+			return fmt.Errorf(commands.SaveClusterVersionError, err)
 		}
 	}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
 	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
+	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/require"
 	"path"
 	"regexp"
@@ -13,10 +14,8 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/upgrade/testutils"
 
-	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/sebdah/goldie/v2"
-
 	"github.com/jarcoal/httpmock"
+	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/github"
 	"github.com/oslokommune/okctl/pkg/storage"
@@ -102,6 +101,25 @@ func TestRunUpgrades(t *testing.T) {
 			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
 		},
 		{
+			// Bumping cluster version happens after running every upgrade binary, to that upgrade's version. In this
+			// test, that would be 0.0.61. Additionally, when all upgrades have completed successfully, we have chosen
+			// to bump the cluster version to the current version of okctl. The reason for that, is that we want that
+			// cluster to be in the same state as if creating a brand-new cluster with that okctl version.
+			//
+			// If creating a new cluster, the cluster version would be 0.0.70 (not 0.0.61). Therefore, we do a final
+			// bump of cluster version to the current version of okctl, which is what this test verifies.
+			//
+			// The exception to this, is if we have run zero upgrades. Since absolutely no changes have been made,
+			// we don't care about bumping cluster version either. This behavior is verified in another test.
+			name:                              "Should bump cluster version to the current okctl version after upgrading",
+			withOkctlVersion:                  "0.0.70",
+			withOriginalClusterVersion:        "0.0.50",
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
+			withGithubReleaseAssetsFromFolder: folderWorking,
+			withHost:                          state.Host{Os: linux, Arch: amd64},
+			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
+		},
+		{
 			name:                              "Should run a Darwin upgrade",
 			withOkctlVersion:                  "0.0.61",
 			withOriginalClusterVersion:        "0.0.50",
@@ -147,15 +165,10 @@ func TestRunUpgrades(t *testing.T) {
 
 				assert.NoError(t, err)
 
-				expectedUpgradesRun := getExpectedUpgradesRun(tc.expectBinaryVersionsRunOnce, state.Host{Os: linux, Arch: amd64})
-				upgradesRun := getActualUpgradesRun(defaultOpts.StdOutBuffer)
-				assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
+				originaltestName := tc.name
+				tc.name = originaltestName + "_run1"
 
-				g := goldie.New(t)
-				g.Assert(t, tc.name+"_run1", defaultOpts.StdOutBuffer.Bytes())
-
-				err = upgrader.Run()
-				assert.NoError(t, err)
+				doAsserts(t, tc, defaultOpts)
 
 				// Given
 				stdOutBuffer = new(bytes.Buffer)
@@ -172,11 +185,10 @@ func TestRunUpgrades(t *testing.T) {
 
 				assert.NoError(t, err)
 
-				expectedUpgradesRun = getExpectedUpgradesRun([]string{}, state.Host{Os: linux, Arch: amd64})
-				upgradesRun = getActualUpgradesRun(defaultOpts.StdOutBuffer)
-				assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
+				tc.name = originaltestName + "_run2"
+				tc.expectBinaryVersionsRunOnce = []string{}
 
-				g.Assert(t, tc.name+"_run2", defaultOpts.StdOutBuffer.Bytes())
+				doAsserts(t, tc, defaultOpts)
 			},
 		},
 		{
@@ -259,12 +271,12 @@ func TestRunUpgrades(t *testing.T) {
 				assert.NoError(t, err)
 				t.Log(stdOutBuffer.String())
 
-				expectedUpgradesRun := getExpectedUpgradesRun(githubReleaseVersions, state.Host{Os: linux, Arch: amd64})
-				upgradesRun := getActualUpgradesRun(stdOutBuffer)
-				assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
+				originaltestName := tc.name
 
-				g := goldie.New(t)
-				g.Assert(t, tc.name+"_run1", stdOutBuffer.Bytes())
+				tc.expectBinaryVersionsRunOnce = githubReleaseVersions
+				tc.name = originaltestName + "_run1"
+
+				doAsserts(t, tc, defaultOpts)
 
 				httpmock.DeactivateAndReset()
 
@@ -290,11 +302,10 @@ func TestRunUpgrades(t *testing.T) {
 
 				assert.NoError(t, err)
 
-				expectedUpgradesRun = getExpectedUpgradesRun([]string{"0.0.62.a", "0.0.62.b", "0.0.63.a"}, state.Host{Os: linux, Arch: amd64})
-				upgradesRun = getActualUpgradesRun(stdOutBuffer)
-				assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
+				tc.name = originaltestName + "_run2"
+				tc.expectBinaryVersionsRunOnce = []string{"0.0.62.a", "0.0.62.b", "0.0.63.a"}
 
-				g.Assert(t, tc.name+"_run2", stdOutBuffer.Bytes())
+				doAsserts(t, tc, defaultOpts)
 			},
 		},
 		{
@@ -428,12 +439,17 @@ func TestRunUpgrades(t *testing.T) {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), "It will crash")
 
-				expectedUpgradesRun := getExpectedUpgradesRun([]string{"0.0.61", "0.0.62"}, state.Host{Os: linux, Arch: amd64})
-				upgradesRun := getActualUpgradesRun(defaultOpts.StdOutBuffer)
-				assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
+				originaltestName := tc.name
 
-				g := goldie.New(t)
-				g.Assert(t, tc.name+"_run1", defaultOpts.StdOutBuffer.Bytes())
+				// Even if 0.0.62 crashed, we still expect the binary to have been run.
+				tc.expectBinaryVersionsRunOnce = []string{"0.0.61", "0.0.62"}
+
+				// 0.0.61 completed successfully, so we expect the cluster version to be 0.0.61.
+				tc.expectedClusterVersionAfterUpgrade = "0.0.61"
+
+				tc.name = originaltestName + "_run1"
+
+				doAsserts(t, tc, defaultOpts)
 
 				httpmock.DeactivateAndReset()
 
@@ -463,11 +479,13 @@ func TestRunUpgrades(t *testing.T) {
 
 				assert.NoError(t, err)
 
-				expectedUpgradesRun = getExpectedUpgradesRun([]string{"0.0.62.a", "0.0.63"}, state.Host{Os: linux, Arch: amd64})
-				upgradesRun = getActualUpgradesRun(defaultOpts.StdOutBuffer)
-				assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
+				tc.name = originaltestName + "_run2"
+				tc.expectBinaryVersionsRunOnce = []string{"0.0.62.a", "0.0.63"}
 
-				g.Assert(t, tc.name+"_run2", defaultOpts.StdOutBuffer.Bytes())
+				// All upgrades complteted successfully, so we expect cluster version to be the current okctl version
+				tc.expectedClusterVersionAfterUpgrade = tc.withOkctlVersion
+
+				doAsserts(t, tc, defaultOpts)
 			},
 		},
 	}
@@ -546,28 +564,37 @@ func TestRunUpgrades(t *testing.T) {
 
 			assert.NoError(t, err)
 
-			expectedUpgradesRun := getExpectedUpgradesRun(tc.expectBinaryVersionsRunOnce, tc.withHost)
-			upgradesRun := getActualUpgradesRun(stdOutBuffer)
-			assert.Equal(t, expectedUpgradesRun, upgradesRun, "Unexpected upgrades were run")
-
-			clusterVersion, err := clusterVersioner.GetClusterVersion()
-			require.NoError(t, err)
-
-			if len(tc.expectedClusterVersionAfterUpgrade) > 0 {
-				assert.Equal(t, tc.expectedClusterVersionAfterUpgrade, clusterVersion)
-			} else {
-				assert.Equal(t, tc.withOkctlVersion, clusterVersion)
-			}
-
-			originalClusterVersion, err := originalClusterVersioner.GetOriginalClusterVersion()
-			require.NoError(t, err)
-
-			assert.Equal(t, originalClusterVersion, originalClusterVersion)
-
-			g := goldie.New(t)
-			g.Assert(t, tc.name, stdOutBuffer.Bytes())
+			doAsserts(t, tc, defaultOpts)
 		})
 	}
+}
+
+func doAsserts(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
+	// Upgrades
+	expectedUpgradesRun := getExpectedUpgradesRun(tc.expectBinaryVersionsRunOnce, tc.withHost)
+	upgradesRun := getActualUpgradesRun(defaultOpts.StdOutBuffer)
+	assert.Equal(t, expectedUpgradesRun, upgradesRun, tc.name+": Unexpected upgrades were run")
+
+	// Cluster version
+	clusterVersion, err := defaultOpts.ClusterVersioner.GetClusterVersion()
+	require.NoError(t, err, tc.name)
+
+	if len(tc.expectedClusterVersionAfterUpgrade) > 0 {
+		assert.Equal(t, tc.expectedClusterVersionAfterUpgrade, clusterVersion, tc.name)
+	} else {
+		assert.Equal(t, tc.withOkctlVersion, clusterVersion, tc.name)
+	}
+
+	// Original version
+	originalClusterVersion, err := defaultOpts.OriginalClusterVersioner.GetOriginalClusterVersion()
+	require.NoError(t, err, tc.name)
+
+	assert.Equal(t, originalClusterVersion, originalClusterVersion, tc.name)
+
+	// Goldie
+	g := goldie.New(t)
+	t.Log(tc.name)
+	g.Assert(t, tc.name, defaultOpts.StdOutBuffer.Bytes())
 }
 
 type DefaultTestOpts struct {

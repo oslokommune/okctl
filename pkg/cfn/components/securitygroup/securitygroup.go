@@ -141,3 +141,51 @@ func NewLambdaFunctionOutgoing(groupName, resourceName, vpcID string, cidrs []st
 		},
 	}
 }
+
+// NewSecurityGroupOpts contains required data for creating a security group
+type NewSecurityGroupOpts struct {
+	Name         string
+	Description  string
+	ResourceName string
+	VPCID        string
+
+	InboundRules  []api.Rule
+	OutboundRules []api.Rule
+}
+
+// NewSecurityGroup initializes a new SecurityGroup
+func NewSecurityGroup(opts NewSecurityGroupOpts) *SecurityGroup {
+	ingresses := make([]ec2.SecurityGroup_Ingress, 0)
+	egresses := make([]ec2.SecurityGroup_Egress, 0)
+
+	for _, rule := range opts.InboundRules {
+		ingresses = append(ingresses, ec2.SecurityGroup_Ingress{
+			Description: rule.Description,
+			CidrIp:      rule.CidrIP,
+			IpProtocol:  rule.Protocol,
+			FromPort:    rule.FromPort,
+			ToPort:      rule.ToPort,
+		})
+	}
+
+	for _, rule := range opts.OutboundRules {
+		egresses = append(egresses, ec2.SecurityGroup_Egress{
+			Description: rule.Description,
+			CidrIp:      rule.CidrIP,
+			IpProtocol:  rule.Protocol,
+			FromPort:    rule.FromPort,
+			ToPort:      rule.ToPort,
+		})
+	}
+
+	return &SecurityGroup{
+		StoredName: opts.ResourceName,
+		Group: &ec2.SecurityGroup{
+			GroupDescription:     opts.Description,
+			GroupName:            opts.Name,
+			SecurityGroupEgress:  egresses,
+			SecurityGroupIngress: ingresses,
+			VpcId:                opts.VPCID,
+		},
+	}
+}

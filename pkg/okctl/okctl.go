@@ -354,6 +354,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		ManagedPolicy:                    managedPolicyService,
 		ServiceAccount:                   serviceAccountService,
 		ContainerRepository:              containerRepositoryService,
+		ApplicationPostgresService:       applicationPostgresService,
 	}
 
 	return services, nil
@@ -503,6 +504,10 @@ func (o *Okctl) initialise() error {
 		awsProvider.NewCertificateCloudProvider(provider),
 	)
 
+	securityGroupService := core.NewSecurityGroupService(
+		awsProvider.NewSecurityGroupCloudProvider(o.CloudProvider),
+	)
+
 	services := core.Services{
 		Cluster:                    clusterService,
 		Vpc:                        vpcService,
@@ -516,6 +521,7 @@ func (o *Okctl) initialise() error {
 		IdentityManager:            identityManagerService,
 		ComponentService:           componentService,
 		ContainerRepositoryService: containerRepositoryService,
+		SecurityGroupService:       securityGroupService,
 	}
 
 	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))

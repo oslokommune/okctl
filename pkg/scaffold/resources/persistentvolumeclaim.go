@@ -67,7 +67,7 @@ func generateDefaultPVC() corev1.PersistentVolumeClaim {
 					},
 				},
 			},
-			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteMany},
+			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
 		},
 	}
 }

@@ -16,6 +16,5 @@ Simulating upgrades complete.
 This is upgrade file for okctl-upgrade_0.0.63_Linux_amd64
 --- Running upgrade: okctl-upgrade_0.0.63.a ---
 This is upgrade file for okctl-upgrade_0.0.63.a_Linux_amd64
-Cluster version is now: 0.0.63. Remember to commit and push changes with git.
 
-Upgrade complete!
+Upgrade complete! Cluster version has been upgraded to your okctl version: 0.0.63. Remember to commit and push changes with git.

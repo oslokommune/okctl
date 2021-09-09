@@ -3,6 +3,7 @@ package upgrade_test
 import (
 	"bytes"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
 	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
 	"github.com/sebdah/goldie/v2"
@@ -127,6 +128,48 @@ func TestRunUpgrades(t *testing.T) {
 			withGithubReleaseAssetsFromFolder: folderWorking,
 			withHost:                          state.Host{Os: darwin, Arch: amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
+		},
+		{
+			name:                              "Should return error if okctl version is below cluster version",
+			withOkctlVersion:                  "0.0.60",
+			withOriginalClusterVersion:        "0.0.50",
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
+			withGithubReleaseAssetsFromFolder: folderWorking,
+			withHost:                          state.Host{Os: darwin, Arch: amd64},
+			expectBinaryVersionsRunOnce:       []string{},
+			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
+				err := defaultOpts.ClusterVersioner.SaveClusterVersion("0.0.70")
+				require.NoError(t, err)
+
+				_, err = upgrade.New(defaultOpts.Opts)
+
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "okctl binary version 0.0.60 cannot be less than cluster"+
+					" version 0.0.70. Get okctl version 0.0.70 or later and try again")
+			},
+		},
+		{
+			// In the future, when upgrade doesn't need to store original cluster version anymore, we should remove
+			// this functionality (and this test). See comment in function upgrade.New.
+			name:                              "Should save original cluster version if it doesn't exist",
+			withOkctlVersion:                  "0.0.61",
+			withOriginalClusterVersion:        "0.0.50",
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
+			withGithubReleaseAssetsFromFolder: folderWorking,
+			withHost:                          state.Host{Os: darwin, Arch: amd64},
+			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
+			withTestRun: func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
+				_, err := defaultOpts.OriginalClusterVersioner.GetOriginalClusterVersion()
+				require.ErrorIs(t, client.ErrOriginalClusterVersionNotFound, err)
+
+				_, err = upgrade.New(defaultOpts.Opts)
+				require.NoError(t, err)
+
+				originalClusterVersion, err := defaultOpts.OriginalClusterVersioner.GetOriginalClusterVersion()
+				assert.NoError(t, err)
+
+				assert.Equal(t, "0.0.50", originalClusterVersion)
+			},
 		},
 		{
 			name:                              "Should run multiple upgrades",
@@ -512,9 +555,11 @@ func TestRunUpgrades(t *testing.T) {
 			}
 
 			upgradeState := testutils.MockUpgradeState(tc.withClusterVersion)
+			clusterState := testutils.MockClusterState(tc.withOriginalClusterVersion)
+
 			clusterVersioner := clusterversioner.New(stdOutBuffer, api.ID{}, upgradeState)
 			originalClusterVersioner := originalclusterversioner.New(
-				api.ID{}, upgradeState, testutils.MockClusterState(tc.withOriginalClusterVersion))
+				api.ID{}, upgradeState, clusterState)
 
 			defaultOpts := DefaultTestOpts{
 				Opts: upgrade.Opts{

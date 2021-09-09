@@ -32,9 +32,19 @@ func (c clusterStateMock) HasCluster(name string) (bool, error) {
 	panic("implement me")
 }
 
-// MockClusterState returns a mocked upgrade state
+// MockClusterState returns a mocked upgrade state with the given cluster version
 func MockClusterState(clusterVersion string) client.ClusterState {
-	cluster := &client.Cluster{
+	cluster := createCluster()
+
+	cluster.Config.Metadata.Tags[v1alpha1.OkctlVersionTag] = clusterVersion
+
+	return &clusterStateMock{
+		cluster: cluster,
+	}
+}
+
+func createCluster() *client.Cluster {
+	return &client.Cluster{
 		ID:   api.ID{},
 		Name: "someCluster",
 		Config: &v1alpha5.ClusterConfig{
@@ -43,11 +53,5 @@ func MockClusterState(clusterVersion string) client.ClusterState {
 				Tags: make(map[string]string),
 			},
 		},
-	}
-
-	cluster.Config.Metadata.Tags[v1alpha1.OkctlVersionTag] = clusterVersion
-
-	return &clusterStateMock{
-		cluster: cluster,
 	}
 }

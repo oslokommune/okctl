@@ -7,9 +7,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/upgrade/testutils"
 
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
-	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -32,8 +29,8 @@ func TestOriginalVersionSaver(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			// Given
-			upgradeState := testutils.MockUpgradeState()
-			clusterState := mockClusterState(tc.existingClusterVersion)
+			upgradeState := testutils.MockUpgradeState(tc.existingClusterVersion)
+			clusterState := testutils.MockClusterState(tc.existingClusterVersion)
 
 			versioner := originalclusterversioner.New(
 				api.ID{ClusterName: "my-cluster"},
@@ -42,7 +39,7 @@ func TestOriginalVersionSaver(t *testing.T) {
 			)
 
 			// When
-			err := versioner.SaveOriginalClusterVersionIfNotExists()
+			err := versioner.SaveOriginalClusterVersionFromClusterTagIfNotExists()
 
 			// Then
 			require.NoError(t, err)
@@ -52,43 +49,5 @@ func TestOriginalVersionSaver(t *testing.T) {
 
 			assert.Equal(t, tc.expectedSavedVersion, savedVersion.Value)
 		})
-	}
-}
-
-type clusterStateMock struct {
-	clusterVersion string
-}
-
-//goland:noinspection GoUnusedParameter
-func (c clusterStateMock) SaveCluster(cluster *client.Cluster) error {
-	panic("implement me")
-}
-
-//goland:noinspection GoUnusedParameter
-func (c clusterStateMock) GetCluster(name string) (*client.Cluster, error) {
-	return &client.Cluster{
-		Config: &v1alpha5.ClusterConfig{
-			Metadata: v1alpha5.ClusterMeta{
-				Tags: map[string]string{
-					v1alpha1.OkctlVersionTag: c.clusterVersion,
-				},
-			},
-		},
-	}, nil
-}
-
-//goland:noinspection GoUnusedParameter
-func (c clusterStateMock) RemoveCluster(name string) error {
-	panic("implement me")
-}
-
-//goland:noinspection GoUnusedParameter
-func (c clusterStateMock) HasCluster(name string) (bool, error) {
-	panic("implement me")
-}
-
-func mockClusterState(clusterVersion string) client.ClusterState {
-	return &clusterStateMock{
-		clusterVersion: clusterVersion,
 	}
 }

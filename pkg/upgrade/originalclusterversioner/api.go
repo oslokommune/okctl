@@ -105,6 +105,7 @@ func (v Versioner) getClusterStateVersion() (*semver.Version, error) {
 	return clusterStateVersion, nil
 }
 
+// GetOriginalClusterVersion returns the original cluster version
 func (v Versioner) GetOriginalClusterVersion() (string, error) {
 	version, err := v.upgradeState.GetOriginalClusterVersion()
 	if err != nil && !errors.Is(err, client.ErrOriginalClusterVersionNotFound) {

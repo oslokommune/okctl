@@ -1,4 +1,4 @@
-// Package clusterversion manages the cluster version
+// Package clusterversioner manages the cluster version
 package clusterversioner
 
 import (

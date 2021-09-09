@@ -1,4 +1,4 @@
-// Package originalversion knows how to save the original version of a cluster
+// Package originalclusterversioner knows how to save the original version of a cluster
 package originalclusterversioner
 
 import (

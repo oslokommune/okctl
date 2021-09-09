@@ -6,61 +6,43 @@ import (
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/client/store"
 )
 
 // ScaffoldApplicationOpts contains information necessary to scaffold application resources
 type ScaffoldApplicationOpts struct {
-	OutputDir string
+	Cluster     v1alpha1.Cluster
+	Application v1alpha1.Application
 
-	ID               *api.ID
-	HostedZoneID     string
-	HostedZoneDomain string
-	IACRepoURL       string
-	Application      v1alpha1.Application
+	HostedZoneID string
 }
 
 // Validate ensures presented data is valid
 func (o *ScaffoldApplicationOpts) Validate() error {
 	return validation.ValidateStruct(o,
-		validation.Field(&o.ID, validation.Required),
-		validation.Field(&o.HostedZoneID, validation.Required),
-		validation.Field(&o.IACRepoURL, validation.Required),
+		validation.Field(&o.Cluster, validation.Required),
 		validation.Field(&o.Application, validation.Required),
+		validation.Field(&o.HostedZoneID, validation.Required),
 	)
 }
 
-// ScaffoldedApplication contains information required by ApplicationStore and ApplicationReport
-type ScaffoldedApplication struct {
-	ApplicationName string
-	ClusterName     string
+// CreateArgoCDApplicationManifestOpts contains data required when creating a ArgoCD Application Manifest
+type CreateArgoCDApplicationManifestOpts struct {
+	Cluster     v1alpha1.Cluster
+	Application v1alpha1.Application
+}
 
-	BaseKustomization []byte
-	ArgoCDResource    []byte
-	Volume            []byte
-	Ingress           []byte
-
-	OverlayKustomization []byte
-	Service              []byte
-	Namespace            []byte
-	Deployment           []byte
-	IngressPatch         []byte
-	ServicePatch         []byte
-	DeploymentPatch      []byte
-	ServiceMonitor       []byte
+// Validate ensures presented data is valid
+func (c CreateArgoCDApplicationManifestOpts) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.Cluster, validation.Required),
+		validation.Field(&c.Application, validation.Required),
+	)
 }
 
 // ApplicationService applies the scaffolding API and produces the requested resources
 type ApplicationService interface {
 	// ScaffoldApplication implements functionality for converting an Application.yaml to deployment resources
 	ScaffoldApplication(context.Context, *ScaffoldApplicationOpts) error
-}
-
-// ApplicationStore handles writing deployment resources to persistent storage
-type ApplicationStore interface {
-	// SaveApplication should implement functionality for storing the scaffolded application in som form of persistent storage
-	SaveApplication(*ScaffoldedApplication) (*store.Report, error)
-	// RemoveApplication should implement functionality for removing the scaffolded application from the persistent storage
-	RemoveApplication(string) (*store.Report, error)
+	// CreateArgoCDApplicationManifest implements functionality for integrating an app with ArgoCD
+	CreateArgoCDApplicationManifest(opts CreateArgoCDApplicationManifestOpts) error
 }

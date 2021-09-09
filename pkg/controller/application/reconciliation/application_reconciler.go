@@ -45,11 +45,6 @@ func (a *applicationReconciler) createApplication(ctx context.Context, meta reco
 		return reconciliation.Result{}, fmt.Errorf("getting primary hosted zone: %w", err)
 	}
 
-	gh, err := state.Github.GetGithubRepository(meta.ClusterDeclaration.Github.Path())
-	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("retrieving Github information")
-	}
-
 	if meta.ApplicationDeclaration.Image.HasName() {
 		repo, err := state.ContainerRepository.GetContainerRepository(meta.ApplicationDeclaration.Image.Name)
 		if err != nil {
@@ -60,18 +55,21 @@ func (a *applicationReconciler) createApplication(ctx context.Context, meta reco
 		meta.ApplicationDeclaration.Image.URI = repo.URI()
 	}
 
-	clusterID := reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata)
-
 	err = a.client.ScaffoldApplication(ctx, &client.ScaffoldApplicationOpts{
-		OutputDir:        meta.ClusterDeclaration.Github.OutputPath,
-		ID:               &clusterID,
-		HostedZoneID:     hz.HostedZoneID,
-		HostedZoneDomain: hz.Domain,
-		IACRepoURL:       gh.GitURL,
-		Application:      meta.ApplicationDeclaration,
+		Cluster:      *meta.ClusterDeclaration,
+		Application:  meta.ApplicationDeclaration,
+		HostedZoneID: hz.HostedZoneID,
 	})
 	if err != nil {
 		return reconciliation.Result{}, err
+	}
+
+	err = a.client.CreateArgoCDApplicationManifest(client.CreateArgoCDApplicationManifestOpts{
+		Cluster:     *meta.ClusterDeclaration,
+		Application: meta.ApplicationDeclaration,
+	})
+	if err != nil {
+		return reconciliation.Result{}, fmt.Errorf("creating ArgoCD Application manifest: %w", err)
 	}
 
 	return reconciliation.Result{Requeue: false}, nil
@@ -109,11 +107,11 @@ func (a *applicationReconciler) hasCreateDependenciesMet(meta reconciliation.Met
 		return false, fmt.Errorf("determining existence of primary hosted zone for %s: %w", a.String(), err)
 	}
 
-	if _, err := state.Github.GetGithubRepository(meta.ClusterDeclaration.Github.Path()); err == nil {
+	if _, err := state.Github.GetGithubRepository(meta.ClusterDeclaration.Github.Path()); err != nil {
 		if errors.Is(err, stormpkg.ErrNotFound) {
 			return false, nil
 		}
-	} else {
+
 		return false, fmt.Errorf("determining existence of a Github repository for %s: %w", a.String(), err)
 	}
 

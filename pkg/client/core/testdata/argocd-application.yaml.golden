@@ -10,7 +10,7 @@ spec:
   project: default
   source:
     path: infrastructure/applications/my-app/overlays/test
-    repoURL: git@dummy.com:test/repo.git
+    repoURL: git@github.com:test/repo.git
     targetRevision: HEAD
   syncPolicy:
     automated:

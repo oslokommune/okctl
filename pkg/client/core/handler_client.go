@@ -59,6 +59,7 @@ type Services struct {
 	AWSLoadBalancerControllerService client.AWSLoadBalancerControllerService
 	ArgoCD                           client.ArgoCDService
 	ApplicationService               client.ApplicationService
+	ApplicationManifestService       client.ApplicationManifestService
 	Certificate                      client.CertificateService
 	Cluster                          client.ClusterService
 	Domain                           client.DomainService

@@ -25,8 +25,6 @@ import (
 
 	"github.com/logrusorgru/aurora/v3"
 
-	clientFilesystem "github.com/oslokommune/okctl/pkg/client/core/store/filesystem"
-
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/client/core/api/rest"
 	githubClient "github.com/oslokommune/okctl/pkg/github"
@@ -176,6 +174,11 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 // ClientServices returns the initialised client-side services
 // nolint: funlen
 func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.Services, error) {
+	absoluteRepositoryPath, err := o.GetRepoDir()
+	if err != nil {
+		return nil, err
+	}
+
 	applicationsOutputDir, err := o.GetRepoApplicationsOutputDir()
 	if err != nil {
 		return nil, err
@@ -229,6 +232,11 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	manifestService := clientCore.NewManifestService(
 		rest.NewManifestAPI(o.restClient),
 		handlers.Manifest,
+	)
+
+	applicationManifestService := clientCore.NewApplicationManifestService(
+		o.FileSystem,
+		applicationsOutputDir,
 	)
 
 	blockstorageService := clientCore.NewBlockstorageService(
@@ -308,13 +316,10 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	applicationService := clientCore.NewApplicationService(
+		o.FileSystem,
 		certificateService,
-		clientFilesystem.NewApplicationStore(
-			clientFilesystem.Paths{
-				BaseDir: applicationsOutputDir,
-			},
-			o.FileSystem,
-		),
+		applicationManifestService,
+		absoluteRepositoryPath,
 	)
 
 	nameserverService := clientCore.NewNameserverHandlerService(ghClient)
@@ -329,6 +334,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		AWSLoadBalancerControllerService: awsLoadBalancerControllerService,
 		ArgoCD:                           argocdService,
 		ApplicationService:               applicationService,
+		ApplicationManifestService:       applicationManifestService,
 		Certificate:                      certificateService,
 		Cluster:                          clusterService,
 		Domain:                           domainService,

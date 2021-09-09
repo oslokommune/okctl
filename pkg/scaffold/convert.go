@@ -33,8 +33,8 @@ func volumesAsBytes(volumes []*v1.PersistentVolumeClaim) ([]byte, error) {
 	return writer.Bytes(), nil
 }
 
-// resourceAsBytes knows how to convert a Kubernetes resource to a byte array
-func resourceAsBytes(data interface{}) ([]byte, error) {
+// ResourceAsBytes knows how to convert a Kubernetes resource to a byte array
+func ResourceAsBytes(data interface{}) ([]byte, error) {
 	var writer bytes.Buffer
 
 	err := writeCleanResource(&writer, data)

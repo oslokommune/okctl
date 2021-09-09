@@ -9,7 +9,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
 	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/github"
 
@@ -58,9 +57,13 @@ func (u Upgrader) Run() error {
 		return nil
 	}
 
-	err = u.runBinaries(upgradeBinaries)
+	userConfirmedContinue, err := u.runBinaries(upgradeBinaries)
 	if err != nil {
 		return fmt.Errorf("running upgrade binaries: %w", err)
+	}
+
+	if !userConfirmedContinue {
+		return nil
 	}
 
 	// Update cluster version
@@ -90,33 +93,33 @@ func (u Upgrader) getAlreadyExecutedBinaries() (map[string]bool, error) {
 	return alreadyExecuted, nil
 }
 
-func (u Upgrader) runBinaries(upgradeBinaries []okctlUpgradeBinary) error {
+func (u Upgrader) runBinaries(upgradeBinaries []okctlUpgradeBinary) (bool, error) {
 	binaryProvider, err := u.createBinaryProvider(upgradeBinaries)
 	if err != nil {
-		return fmt.Errorf("creating binary provider: %w", err)
+		return false, fmt.Errorf("creating binary provider: %w", err)
 	}
 
 	err = u.dryRunBinaries(upgradeBinaries, binaryProvider)
 	if err != nil {
-		return fmt.Errorf("simulating upgrades: %w", err)
+		return false, fmt.Errorf("simulating upgrades: %w", err)
 	}
 
-	doContinue, err := u.askUserIfReady()
+	userConfirmedContinue, err := u.surveyor.AskUserIfReady()
 	if err != nil {
-		return fmt.Errorf("asking user for input: %w", err)
+		return false, fmt.Errorf("asking user for input: %w", err)
 	}
 
-	if !doContinue {
+	if !userConfirmedContinue {
 		_, _ = fmt.Fprintln(u.out, "User aborted.")
-		return nil
+		return false, nil
 	}
 
 	err = u.doRunBinaries(upgradeBinaries, binaryProvider)
 	if err != nil {
-		return fmt.Errorf("running upgrades: %w", err)
+		return false, fmt.Errorf("running upgrades: %w", err)
 	}
 
-	return nil
+	return true, nil
 }
 
 func (u Upgrader) doRunBinaries(upgradeBinaries []okctlUpgradeBinary, binaryProvider upgradeBinaryProvider) error {
@@ -252,26 +255,6 @@ func (u Upgrader) markAsRun(binary okctlUpgradeBinary) error {
 	return nil
 }
 
-func (u Upgrader) askUserIfReady() (bool, error) {
-	if u.autoConfirmPrompt {
-		return true, nil
-	}
-
-	doContinue := false
-	prompt := &survey.Confirm{
-		Message: "This will upgrade your okctl cluster, are you sure you want to continue?",
-	}
-
-	err := survey.AskOne(prompt, &doContinue)
-	if err != nil {
-		return false, err
-	}
-
-	_, _ = fmt.Fprintln(u.out, "")
-
-	return doContinue, nil
-}
-
 func printUpgradesIfDebug(debug bool, out io.Writer, text string, upgradeBinaries []okctlUpgradeBinary) {
 	if debug {
 		printUpgrades(out, text, upgradeBinaries)
@@ -302,12 +285,12 @@ type Opts struct {
 	Debug                    bool
 	Logger                   *logrus.Logger
 	Out                      io.Writer
-	AutoConfirmPrompt        bool
 	RepositoryDirectory      string
 	GithubService            client.GithubService
 	ChecksumDownloader       ChecksumHTTPDownloader
 	ClusterVersioner         clusterversioner.Versioner
 	OriginalClusterVersioner originalclusterversioner.Versioner
+	Surveyor                 Surveyor
 	FetcherOpts              FetcherOpts
 	OkctlVersion             string
 	State                    client.UpgradeState
@@ -319,13 +302,13 @@ type Upgrader struct {
 	debug               bool
 	logger              *logrus.Logger
 	out                 io.Writer
-	autoConfirmPrompt   bool
 	clusterID           api.ID
 	state               client.UpgradeState
 	repositoryDirectory string
 	githubService       client.GithubService
 	githubReleaseParser GithubReleaseParser
 	clusterVersioner    clusterversioner.Versioner
+	surveyor            Surveyor
 	okctlVersion        string
 	fetcherOpts         FetcherOpts
 	filter              filter
@@ -355,13 +338,13 @@ func New(opts Opts) (Upgrader, error) {
 		debug:               opts.Debug,
 		logger:              opts.Logger,
 		out:                 opts.Out,
-		autoConfirmPrompt:   opts.AutoConfirmPrompt,
 		clusterID:           opts.ClusterID,
 		state:               opts.State,
 		repositoryDirectory: opts.RepositoryDirectory,
 		githubService:       opts.GithubService,
 		githubReleaseParser: NewGithubReleaseParser(opts.ChecksumDownloader),
 		clusterVersioner:    opts.ClusterVersioner,
+		surveyor:            opts.Surveyor,
 		okctlVersion:        opts.OkctlVersion,
 		fetcherOpts:         opts.FetcherOpts,
 		filter: filter{

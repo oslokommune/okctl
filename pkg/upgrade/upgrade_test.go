@@ -43,6 +43,7 @@ type TestCase struct {
 	withGithubReleases                 []*github.RepositoryRelease
 	withGithubReleaseAssetsFromFolder  string
 	withHost                           state.Host
+	withUserAbort                      bool
 	withTestRun                        func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts)
 	expectBinaryVersionsRunOnce        []string
 	expectedClusterVersionAfterUpgrade string
@@ -120,6 +121,17 @@ func TestRunUpgrades(t *testing.T) {
 			withGithubReleaseAssetsFromFolder: folderWorking,
 			withHost:                          state.Host{Os: linux, Arch: amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
+		},
+		{
+			name:                               "Should not bump cluster version if user aborts upgrading",
+			withOkctlVersion:                   "0.0.70",
+			withOriginalClusterVersion:         "0.0.50",
+			withGithubReleases:                 createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
+			withGithubReleaseAssetsFromFolder:  folderWorking,
+			withHost:                           state.Host{Os: linux, Arch: amd64},
+			withUserAbort:                      true,
+			expectBinaryVersionsRunOnce:        []string{},
+			expectedClusterVersionAfterUpgrade: "0.0.50",
 		},
 		{
 			name:                              "Should run a Darwin upgrade",
@@ -562,17 +574,19 @@ func TestRunUpgrades(t *testing.T) {
 			originalClusterVersioner := originalclusterversioner.New(
 				api.ID{}, upgradeState, clusterState)
 
+			surveyor := testutils.NewAutoAnsweringSurveyor(!tc.withUserAbort)
+
 			defaultOpts := DefaultTestOpts{
 				Opts: upgrade.Opts{
 					Debug:                    tc.withDebug,
 					Logger:                   logrus.StandardLogger(),
 					Out:                      stdOutBuffer,
-					AutoConfirmPrompt:        true,
 					RepositoryDirectory:      repositoryAbsoluteDir,
 					GithubService:            newGithubServiceMock(tc.withGithubReleases),
 					ChecksumDownloader:       upgrade.NewChecksumDownloader(),
 					ClusterVersioner:         clusterVersioner,
 					OriginalClusterVersioner: originalClusterVersioner,
+					Surveyor:                 surveyor,
 					FetcherOpts: upgrade.FetcherOpts{
 						Host:  tc.withHost,
 						Store: tmpStore,

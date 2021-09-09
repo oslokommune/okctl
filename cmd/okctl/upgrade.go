@@ -85,16 +85,18 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				stateHandlers.Cluster,
 			)
 
+			surveyor := upgrade.NewTerminalSurveyor(out, flags.confirm)
+
 			upgrader, err = upgrade.New(upgrade.Opts{
 				Debug:                    o.Debug,
 				Logger:                   o.Logger,
 				Out:                      out,
-				AutoConfirmPrompt:        flags.confirm,
 				RepositoryDirectory:      repoDir,
 				GithubService:            services.Github,
 				ChecksumDownloader:       upgrade.NewChecksumDownloader(),
 				ClusterVersioner:         clusterVersioner,
 				OriginalClusterVersioner: originalClusterVersioner,
+				Surveyor:                 surveyor,
 				FetcherOpts:              fetcherOpts,
 				OkctlVersion:             version.GetVersionInfo().Version,
 				State:                    stateHandlers.Upgrade,

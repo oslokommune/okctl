@@ -4,6 +4,8 @@ package securitygroup
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/api"
+
 	"github.com/awslabs/goformation/v4/cloudformation"
 	"github.com/awslabs/goformation/v4/cloudformation/ec2"
 	"github.com/oslokommune/okctl/pkg/cfn"
@@ -40,8 +42,8 @@ func (s *SecurityGroup) Ref() string {
 }
 
 const (
-	postgresPort = 5432
 	httpsPort    = 443
+	postgresPort = 5432
 )
 
 // NewPostgresOutgoing returns an initialised security group
@@ -113,6 +115,46 @@ func NewRDSPGSMVPCEndpointIncoming(groupName, resourceName, vpcID string, source
 			VpcId: vpcID,
 		},
 	}
+}
+
+// PatchAppendEgressRule appends an egress rule to an existing cfn stack template
+func PatchAppendEgressRule(originalTemplate []byte, resourceName string, rule api.Rule) ([]byte, error) {
+	return patchAppendNewRule(patchAppendNewRuleOpts{
+		OriginalTemplate: originalTemplate,
+		ResourceName:     resourceName,
+		RuleType:         "Egress",
+		Rule:             rule,
+	})
+}
+
+// PatchAppendIngressRule appends an ingress rule to an existing cfn stack template
+func PatchAppendIngressRule(originalTemplate []byte, resourceName string, rule api.Rule) ([]byte, error) {
+	return patchAppendNewRule(patchAppendNewRuleOpts{
+		OriginalTemplate: originalTemplate,
+		ResourceName:     resourceName,
+		RuleType:         "Ingress",
+		Rule:             rule,
+	})
+}
+
+// PatchRemoveIngressRule removes an ingress rule from an existing cfn stack template
+func PatchRemoveIngressRule(originalTemplate []byte, resourceName string, rule api.Rule) ([]byte, error) {
+	return patchRemoveExistingRule(patchRemoveRuleOpts{
+		OriginalTemplate: originalTemplate,
+		ResourceName:     resourceName,
+		Rule:             rule,
+		RuleType:         "Ingress",
+	})
+}
+
+// PatchRemoveEgressRule removes an egress rule from an existing cfn stack template
+func PatchRemoveEgressRule(originalTemplate []byte, resourceName string, rule api.Rule) ([]byte, error) {
+	return patchRemoveExistingRule(patchRemoveRuleOpts{
+		OriginalTemplate: originalTemplate,
+		ResourceName:     resourceName,
+		Rule:             rule,
+		RuleType:         "Egress",
+	})
 }
 
 // NewLambdaFunctionOutgoing allows the lambda function to communicate on the correct

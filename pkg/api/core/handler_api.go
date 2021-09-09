@@ -57,6 +57,8 @@ type Endpoints struct {
 	CreateSecurityGroup             endpoint.Endpoint
 	GetSecurityGroup                endpoint.Endpoint
 	DeleteSecurityGroup             endpoint.Endpoint
+	AddSecurityGroupRule            endpoint.Endpoint
+	RemoveSecurityGroupRule         endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -100,14 +102,14 @@ func MakeEndpoints(s Services) Endpoints {
 		CreatePostgresDatabase:          makeCreatePostgresDatabaseEndpoint(s.ComponentService),
 		DeletePostgresDatabase:          makeDeletePostgresDatabaseEndpoint(s.ComponentService),
 		CreateS3Bucket:                  makeCreateS3BucketEndpoint(s.ComponentService),
-		AddSecurityGroupRule:            makeAddSecurityGroupRuleEndpoint(s.SecurityGroupService),
-		RemoveSecurityGroupRule:         makeRemoveSecurityGroupRuleEndpoint(s.SecurityGroupService),
 		DeleteS3Bucket:                  makeDeleteS3BucketEndpoint(s.ComponentService),
 		CreateContainerRepository:       makeCreateContainerRepositoryEndpoint(s.ContainerRepositoryService),
 		DeleteContainerRepository:       makeDeleteContainerRepositoryEndpoint(s.ContainerRepositoryService),
 		CreateSecurityGroup:             makeCreateSecurityGroupEndpoint(s.SecurityGroupService),
 		GetSecurityGroup:                makeGetSecurityGroupEndpoint(s.SecurityGroupService),
 		DeleteSecurityGroup:             makeDeleteSecurityGroupEndpoint(s.SecurityGroupService),
+		AddSecurityGroupRule:            makeAddSecurityGroupRuleEndpoint(s.SecurityGroupService),
+		RemoveSecurityGroupRule:         makeRemoveSecurityGroupRuleEndpoint(s.SecurityGroupService),
 	}
 }
 
@@ -150,13 +152,13 @@ type Handlers struct {
 	DeletePostgresDatabase          http.Handler
 	CreateS3Bucket                  http.Handler
 	DeleteS3Bucket                  http.Handler
-	AddSecurityGroupRule            http.Handler
-	RemoveSecurityGroupRule         http.Handler
 	CreateContainerRepository       http.Handler
 	DeleteContainerRepository       http.Handler
 	CreateSecurityGroup             http.Handler
 	GetSecurityGroup                http.Handler
 	DeleteSecurityGroup             http.Handler
+	AddSecurityGroupRule            http.Handler
+	RemoveSecurityGroupRule         http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -227,13 +229,13 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeletePostgresDatabase:          newServer(endpoints.DeletePostgresDatabase, decodeStructRequest(&api.DeletePostgresDatabaseOpts{})),
 		CreateS3Bucket:                  newServer(endpoints.CreateS3Bucket, decodeStructRequest(&api.CreateS3BucketOpts{})),
 		DeleteS3Bucket:                  newServer(endpoints.DeleteS3Bucket, decodeStructRequest(&api.DeleteS3BucketOpts{})),
-		AddSecurityGroupRule:            newServer(endpoints.AddSecurityGroupRule, decodeStructRequest(&api.AddRuleOpts{})),
-		RemoveSecurityGroupRule:         newServer(endpoints.RemoveSecurityGroupRule, decodeStructRequest(&api.RemoveRuleOpts{})),
 		CreateContainerRepository:       newServer(endpoints.CreateContainerRepository, decodeStructRequest(&api.CreateContainerRepositoryOpts{})),
 		DeleteContainerRepository:       newServer(endpoints.DeleteContainerRepository, decodeStructRequest(&api.DeleteContainerRepositoryOpts{})),
 		CreateSecurityGroup:             newServer(endpoints.CreateSecurityGroup, decodeStructRequest(&api.CreateSecurityGroupOpts{})),
 		GetSecurityGroup:                newServer(endpoints.GetSecurityGroup, decodeStructRequest(&api.GetSecurityGroupOpts{})),
 		DeleteSecurityGroup:             newServer(endpoints.DeleteSecurityGroup, decodeStructRequest(&api.DeleteSecurityGroupOpts{})),
+		AddSecurityGroupRule:            newServer(endpoints.AddSecurityGroupRule, decodeStructRequest(&api.AddRuleOpts{})),
+		RemoveSecurityGroupRule:         newServer(endpoints.RemoveSecurityGroupRule, decodeStructRequest(&api.RemoveRuleOpts{})),
 	}
 }
 
@@ -335,12 +337,12 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/containerrepositories", func(r chi.Router) {
 			r.Method(http.MethodPost, "/", handlers.CreateContainerRepository)
 			r.Method(http.MethodDelete, "/", handlers.DeleteContainerRepository)
+		})
+		r.Route("/securitygroups", func(r chi.Router) {
 			r.Route("/rules", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.AddSecurityGroupRule)
 				r.Method(http.MethodDelete, "/", handlers.RemoveSecurityGroupRule)
 			})
-		})
-		r.Route("/securitygroups", func(r chi.Router) {
 			r.Method(http.MethodPost, "/", handlers.CreateSecurityGroup)
 			r.Method(http.MethodGet, "/", handlers.GetSecurityGroup)
 			r.Method(http.MethodDelete, "/", handlers.DeleteSecurityGroup)
@@ -445,13 +447,13 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeletePostgresDatabase:          logmd.Logging(logger, "delete", componentsTag, postgresTag)(endpoints.DeletePostgresDatabase),
 			CreateS3Bucket:                  logmd.Logging(logger, "create", componentsTag, s3bucketTag)(endpoints.CreateS3Bucket),
 			DeleteS3Bucket:                  logmd.Logging(logger, "delete", componentsTag, s3bucketTag)(endpoints.DeleteS3Bucket),
-			AddSecurityGroupRule:            logmd.Logging(logger, "create", securityGroupTag, securityGroupRulesTag)(endpoints.AddSecurityGroupRule),
-			RemoveSecurityGroupRule:         logmd.Logging(logger, "delete", securityGroupTag, securityGroupRulesTag)(endpoints.RemoveSecurityGroupRule),
 			CreateContainerRepository:       logmd.Logging(logger, "create", componentsTag, containerRepositoryTag)(endpoints.CreateContainerRepository),
 			DeleteContainerRepository:       logmd.Logging(logger, "delete", componentsTag, containerRepositoryTag)(endpoints.DeleteContainerRepository),
 			CreateSecurityGroup:             logmd.Logging(logger, "create", securityGroupTag)(endpoints.CreateSecurityGroup),
 			GetSecurityGroup:                logmd.Logging(logger, "get", securityGroupTag)(endpoints.GetSecurityGroup),
 			DeleteSecurityGroup:             logmd.Logging(logger, "delete", securityGroupTag)(endpoints.DeleteSecurityGroup),
+			AddSecurityGroupRule:            logmd.Logging(logger, "create", securityGroupTag, securityGroupRulesTag)(endpoints.AddSecurityGroupRule),
+			RemoveSecurityGroupRule:         logmd.Logging(logger, "delete", securityGroupTag, securityGroupRulesTag)(endpoints.RemoveSecurityGroupRule),
 		}
 	}
 }

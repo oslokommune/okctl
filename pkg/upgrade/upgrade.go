@@ -187,7 +187,8 @@ func (u Upgrader) createBinaryProvider(upgradeBinaries []okctlUpgradeBinary) (up
 }
 
 func (u Upgrader) dryRunBinaries(upgradeBinaries []okctlUpgradeBinary, binaryProvider upgradeBinaryProvider) error {
-	_, _ = fmt.Fprint(u.out, "Simulating upgrades...\n\n")
+	_, _ = fmt.Fprint(u.out, "Simulating upgrades (we're not doing any actual changes yet, "+
+		"just printing what's going to happen)... \n\n")
 
 	for _, binary := range upgradeBinaries {
 		// Get

@@ -40,7 +40,7 @@ func (v Versioner) ValidateBinaryVsClusterVersion(binaryVersionString string) er
 func (v Versioner) validateBinaryVsClusterVersion(binaryVersion *semver.Version, clusterVersion *semver.Version) error {
 	if binaryVersion.LessThan(clusterVersion) {
 		return fmt.Errorf("okctl binary version %s cannot be less than cluster version %s."+
-			" Get okctl version %s or later and try again",
+			" Get okctl version %s or later and try again (get it from https://okctl.io)",
 			binaryVersion.String(), clusterVersion.String(), clusterVersion.String())
 	}
 

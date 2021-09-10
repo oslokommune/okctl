@@ -24,7 +24,7 @@ You will be prompted before continuing.
 Example output:
 
 ```shell
-$ okctl2 -c cluster-dev.yaml upgrade
+$ okctl -c cluster-dev.yaml upgrade
 Found 2 applicable upgrade(s):
 0.0.50, 0.0.51
 
@@ -43,22 +43,24 @@ Simulating upgrades complete.
 
 ? This will upgrade your okctl cluster, are you sure you want to continue? Yes
 
---- Running upgrade: okctl-upgrade_0.0.66 ---
+--- Running upgrade: okctl-upgrade_0.0.50 ---
 Upgrading ArgoCD
 Upgrading ArgoCD complete!
---- Running upgrade: okctl-upgrade_0.0.67 ---
+--- Running upgrade: okctl-upgrade_0.0.51 ---
 Upgrading Some Other Component
 Upgrading Some Other Component complete!
 
 Upgrade complete! Cluster version is now 0.0.70. Remember to commit and push changes with git.
-
 ```
 
 ## Questions and answers
 
 **Is there any way of knowing more in detail what okctl upgrade will do?**
 
-Yes, go to https://github.com/oslokommune/okctl-upgrade/releases and read about each upgrade.
+Yes, go to the [upgrade release page](https://github.com/oslokommune/okctl-upgrade/releases) and read about each
+upgrade.
+
+Also, as you can see from the example output above, upgrades are being simulated before actually applied.
 
 **Can I downgrade after upgrading?**
 

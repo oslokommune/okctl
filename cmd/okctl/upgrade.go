@@ -119,7 +119,6 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 			}
 			return nil
 		},
-		Hidden: true,
 	}
 
 	cmd.PersistentFlags().BoolVarP(&flags.confirm, "confirm", "y", false, "Skip the confirmation prompt")

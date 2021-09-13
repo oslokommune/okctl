@@ -49,7 +49,6 @@ require (
 	github.com/gorilla/handlers v1.4.2 // indirect
 	github.com/gosimple/slug v1.10.0
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
-	github.com/hako/durafmt v0.0.0-20200710122514-c0fb7b4da026
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/jarcoal/httpmock v1.0.8
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect

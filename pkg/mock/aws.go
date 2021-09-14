@@ -1144,6 +1144,15 @@ func (p *CloudProvider) DescribeStacksResponse(status string) *CloudProvider {
 	return p
 }
 
+// DescribeStacksError pushes an unsuccessful response onto the describe stacks list
+func (p *CloudProvider) DescribeStacksError(err error) *CloudProvider {
+	p.CFAPI.DescribeStacksFn = append(p.CFAPI.DescribeStacksFn, func(input *cloudformation.DescribeStacksInput) (*cloudformation.DescribeStacksOutput, error) {
+		return nil, err
+	})
+
+	return p
+}
+
 // DescribeSecurityGroupsResponse returns the provided outputs
 func (p *CloudProvider) DescribeSecurityGroupsResponse(output *ec2.DescribeSecurityGroupsOutput, err error) *CloudProvider {
 	p.EC2API.DescribeSecurityGroupsFn = func(*ec2.DescribeSecurityGroupsInput) (*ec2.DescribeSecurityGroupsOutput, error) {
@@ -1529,6 +1538,7 @@ func NewGoodCloudProvider() *CloudProvider {
 				return &cloudwatch.GetMetricStatisticsOutput{}, nil
 			},
 		},
+		CFAPI: &CFAPI{DescribeStacksFn: []func(input *cloudformation.DescribeStacksInput) (*cloudformation.DescribeStacksOutput, error){}},
 	}
 }
 
@@ -1614,6 +1624,7 @@ func NewBadCloudProvider() *CloudProvider {
 				return nil, errBad
 			},
 		},
+		CFAPI: &CFAPI{DescribeStacksFn: []func(input *cloudformation.DescribeStacksInput) (*cloudformation.DescribeStacksOutput, error){}},
 	}
 }
 

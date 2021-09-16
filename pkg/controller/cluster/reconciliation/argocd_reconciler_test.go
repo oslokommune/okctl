@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/github"
+
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/client"
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
@@ -157,6 +159,10 @@ func (m mockGithubService) CreateGithubRepository(_ context.Context, _ client.Cr
 
 func (m mockGithubService) DeleteGithubRepository(_ context.Context, _ client.DeleteGithubRepositoryOpts) error {
 	return nil
+}
+
+func (m mockGithubService) ListReleases(_, _ string) ([]*github.RepositoryRelease, error) {
+	return nil, nil
 }
 
 type mockArgoCDState struct {

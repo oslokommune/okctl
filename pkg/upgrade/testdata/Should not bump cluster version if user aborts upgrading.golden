@@ -1,0 +1,15 @@
+Okctl needs to initialize parts of the cluster state to support upgrades. Afterwards you should commit and push changes to git.
+If you want more details, see https://okctl.io/getting-started/upgrading
+
+Found 1 applicable upgrade(s):
+0.0.61
+
+preloading missing binary: okctl-upgrade_0.0.61 (0.0.61)
+Simulating upgrades (we're not doing any actual changes yet, just printing what's going to happen)... 
+
+--- Simulating upgrade: okctl-upgrade_0.0.61 ---
+This is upgrade file for okctl-upgrade_0.0.61_Linux_amd64
+
+Simulating upgrades complete.
+
+Upgrade aborted by user.

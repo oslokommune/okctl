@@ -1,0 +1,43 @@
+Okctl needs to initialize parts of the cluster state to support upgrades. Afterwards you should commit and push changes to git.
+If you want more details, see https://okctl.io/getting-started/upgrading
+
+Found 6 applicable upgrade(s):
+0.0.61, 0.0.62, 0.0.62.a, 0.0.62.b, 0.0.63, 0.0.63.a
+
+preloading missing binary: okctl-upgrade_0.0.61 (0.0.61)
+preloading missing binary: okctl-upgrade_0.0.62 (0.0.62)
+preloading missing binary: okctl-upgrade_0.0.62.a (0.0.62.a)
+preloading missing binary: okctl-upgrade_0.0.62.b (0.0.62.b)
+preloading missing binary: okctl-upgrade_0.0.63 (0.0.63)
+preloading missing binary: okctl-upgrade_0.0.63.a (0.0.63.a)
+Simulating upgrades (we're not doing any actual changes yet, just printing what's going to happen)... 
+
+--- Simulating upgrade: okctl-upgrade_0.0.61 ---
+This is upgrade file for okctl-upgrade_0.0.61_Linux_amd64
+--- Simulating upgrade: okctl-upgrade_0.0.62 ---
+This is upgrade file for okctl-upgrade_0.0.62_Linux_amd64
+--- Simulating upgrade: okctl-upgrade_0.0.62.a ---
+This is upgrade file for okctl-upgrade_0.0.62.a_Linux_amd64
+--- Simulating upgrade: okctl-upgrade_0.0.62.b ---
+This is upgrade file for okctl-upgrade_0.0.62.b_Linux_amd64
+--- Simulating upgrade: okctl-upgrade_0.0.63 ---
+This is upgrade file for okctl-upgrade_0.0.63_Linux_amd64
+--- Simulating upgrade: okctl-upgrade_0.0.63.a ---
+This is upgrade file for okctl-upgrade_0.0.63.a_Linux_amd64
+
+Simulating upgrades complete.
+
+--- Running upgrade: okctl-upgrade_0.0.61 ---
+This is upgrade file for okctl-upgrade_0.0.61_Linux_amd64
+--- Running upgrade: okctl-upgrade_0.0.62 ---
+This is upgrade file for okctl-upgrade_0.0.62_Linux_amd64
+--- Running upgrade: okctl-upgrade_0.0.62.a ---
+This is upgrade file for okctl-upgrade_0.0.62.a_Linux_amd64
+--- Running upgrade: okctl-upgrade_0.0.62.b ---
+This is upgrade file for okctl-upgrade_0.0.62.b_Linux_amd64
+--- Running upgrade: okctl-upgrade_0.0.63 ---
+This is upgrade file for okctl-upgrade_0.0.63_Linux_amd64
+--- Running upgrade: okctl-upgrade_0.0.63.a ---
+This is upgrade file for okctl-upgrade_0.0.63.a_Linux_amd64
+
+Upgrade complete! Cluster version is now 0.0.63. Remember to commit and push changes with git.

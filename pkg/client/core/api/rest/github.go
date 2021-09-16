@@ -63,6 +63,10 @@ func (a *githubAPI) CreateRepositoryDeployKey(opts client.CreateGithubDeployKeyO
 	}, nil
 }
 
+func (a *githubAPI) ListReleases(owner, repo string) ([]*github.RepositoryRelease, error) {
+	return a.client.ListReleases(owner, repo)
+}
+
 // NewGithubAPI returns an instantiated github API client
 func NewGithubAPI(paramAPI client.ParameterAPI, client github.Githuber) client.GithubAPI {
 	return &githubAPI{

@@ -73,34 +73,34 @@ func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
 
 	stdoutIn, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting stdout pipe: %w", err)
 	}
 
 	stderrIn, err := cmd.StderrPipe()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting stderr pipe: %w", err)
 	}
 
 	var buff bytes.Buffer
 
-	multi := io.MultiReader(stdoutIn, stderrIn)
-	out := io.MultiWriter(progress, &buff)
-	scanner := bufio.NewScanner(multi)
+	multiReader := io.MultiReader(stdoutIn, stderrIn)
+	multiWriter := io.MultiWriter(progress, &buff)
 
 	err = cmd.Start()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("executing command: %w", err)
 	}
 
-	for scanner.Scan() {
-		s := scanner.Text()
+	_, err = io.Copy(multiWriter, multiReader)
+	if err != nil {
+		return nil, fmt.Errorf("doing io.Copy: %w", err)
+	}
 
-		_, err = io.Copy(out, strings.NewReader(s))
-		if err != nil {
-			return nil, err
-		}
+	if r.Logger != nil {
+		scanner := bufio.NewScanner(multiReader)
 
-		if r.Logger != nil {
+		for scanner.Scan() {
+			s := scanner.Text()
 			r.Logger.Info(s)
 		}
 	}

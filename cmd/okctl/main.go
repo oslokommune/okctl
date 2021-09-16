@@ -26,8 +26,8 @@ func main() {
 	}
 }
 
-func loadRepoData(o *okctl.Okctl, configFile string, _ *cobra.Command) error {
-	o.RepoDataLoader = load.RepoDataFromConfigFile(configFile)
+func loadRepoData(o *okctl.Okctl, declarationPath string, _ *cobra.Command) error {
+	o.RepoDataLoader = load.RepoDataFromConfigFile(declarationPath)
 
 	return o.LoadRepoData()
 }
@@ -112,6 +112,7 @@ func buildRootCommand() *cobra.Command {
 	cmd.AddCommand(buildAttachCommand(o))
 	cmd.AddCommand(buildForwardCommand(o))
 	cmd.AddCommand(buildVersionCommand(o))
+	cmd.AddCommand(buildUpgradeCommand(o))
 
 	f := cmd.Flags()
 	f.StringVarP(&outputFormat, "output", "o", "text",

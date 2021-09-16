@@ -23,6 +23,7 @@ type StateNodes struct {
 	ManagedPolicy       breeze.Client
 	ServiceAccount      breeze.Client
 	ContainerRepository breeze.Client
+	Upgrade             breeze.Client
 }
 
 // StateHandlers contains the state handlers
@@ -50,6 +51,7 @@ type StateHandlers struct {
 	AWSLoadBalancerController client.AWSLoadBalancerControllerState
 	Blockstorage              client.BlockstorageState
 	ExternalSecrets           client.ExternalSecretsState
+	Upgrade                   client.UpgradeState
 }
 
 // Services contains all client-side services

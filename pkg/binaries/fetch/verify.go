@@ -37,7 +37,8 @@ func NewVerifier(digests map[digest.Type]string) Verifier {
 	}
 
 	return &verifier{
-		digests: digests,
+		digests:     digests,
+		digestTypes: digestTypes,
 	}
 }
 

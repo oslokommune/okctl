@@ -137,6 +137,7 @@ func (o *Okctl) StateNodes() *clientCore.StateNodes {
 		ManagedPolicy:       o.DB.From(constant.DefaultStormNodeManagedPolicy),
 		ServiceAccount:      o.DB.From(constant.DefaultStormNodeServiceAccount),
 		ContainerRepository: o.DB.From(constant.DefaultStormNodeContainerRepository),
+		Upgrade:             o.DB.From(constant.DefaultStormNodeUpgrade),
 	}
 }
 
@@ -168,6 +169,7 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 		AWSLoadBalancerController: direct.NewAWSLoadBalancerState(o.Declaration.Metadata, helmClient),
 		Blockstorage:              direct.NewBlockstorageState(o.Declaration.Metadata, helmClient),
 		ExternalSecrets:           direct.NewExternalSecretsState(o.Declaration.Metadata, helmClient),
+		Upgrade:                   storm.NewUpgradesState(nodes.Upgrade),
 	}
 }
 

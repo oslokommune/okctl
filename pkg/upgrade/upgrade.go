@@ -313,44 +313,9 @@ type Upgrader struct {
 	githubReleaseParser GithubReleaseParser
 	clusterVersioner    clusterversion.Versioner
 	surveyor            survey.Surveyor
-	autoConfirm         bool
 	okctlVersion        string
 	fetcherOpts         FetcherOpts
 	filter              filter
-}
-
-// New returns a new Upgrader, or an error if initialization fails
-func New(opts Opts) (Upgrader, error) {
-	err := opts.ClusterVersioner.ValidateBinaryVsClusterVersion(opts.OkctlVersion)
-	if err != nil {
-		return Upgrader{}, fmt.Errorf(commands.ValidateBinaryVsClusterVersionError, err)
-	}
-
-	originalClusterVersion, err := getOriginalClusterVersion(opts)
-	if err != nil {
-		return Upgrader{}, err
-	}
-
-	return Upgrader{
-		debug:               opts.Debug,
-		logger:              opts.Logger,
-		out:                 opts.Out,
-		clusterID:           opts.ClusterID,
-		state:               opts.State,
-		repositoryDirectory: opts.RepositoryDirectory,
-		githubService:       opts.GithubService,
-		githubReleaseParser: NewGithubReleaseParser(opts.ChecksumDownloader),
-		clusterVersioner:    opts.ClusterVersioner,
-		surveyor:            opts.Surveyor,
-		okctlVersion:        opts.OkctlVersion,
-		fetcherOpts:         opts.FetcherOpts,
-		filter: filter{
-			debug:                  opts.Debug,
-			out:                    opts.Out,
-			okctlVersion:           opts.OkctlVersion,
-			originalClusterVersion: originalClusterVersion.Value,
-		},
-	}, nil
 }
 
 // DocumentationURL is the URL to the upgrade documentation

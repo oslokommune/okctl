@@ -95,28 +95,78 @@ okctl --cluster-declaration cluster.yaml attach postgres --name dbtest
 
 The above command will drop you into a `psql` shell.
 
-### Security Group Policy
+### Connecting an application with a database
 
-Per the documentation on [security groups for pods](https://docs.aws.amazon.com/eks/latest/userguide/security-groups-for-pods.html), the way we associate a VPC security group in AWS with a Kubernetes Pod is by declaring a `SecurityGroupPolicy` manifest.
+#### Motivation
 
-```yaml
-apiVersion: vpcresources.k8s.aws/v1beta1
-kind: SecurityGroupPolicy
-metadata:
-  name: <my-security-group-policy>
-  namespace: <my-namespace>
-spec:
-  <selector>: # For example podSelector
-    matchLabels:
-      <role>: <my-role>
-  securityGroups:
-    groupIds:
-      - <sg-abc123> # Here you can use the Security Group called *PGRDSOutgoing*
+Setting up firewall and networking rules for connecting to a database in a production environment can be challenging.
+
+In okctl we've implemented a way to do all this for you. By specifying the
+`postgres` attribute in the application declaration, okctl will handle it for you.
+
+#### Prerequisites
+
+:information_source: You'll need a database provisioned with `okctl`.
+See [Postgres](/getting-started/application-addons/#postgres)
+on how to use `okctl` to create a PostgreSQL database.
+
+#### Usage
+
+```shell
+# Usage in application.yaml
+...
+postgres: <database name>
+...
+
+# Example in application.yaml
+...
+postgres: gopherdb
+...
 ```
 
-In the `SecurityGroupPolicy` manifest, one can select which Pods should be associated with the security group by using the `podSelector` or `serviceAccountSelector`. Either will match on labels associated with the service accounts or pods in question.
+:information_source: The **database name** is the name you've defined for your database in the cluster declaration under
+the
+`databases` attribute.
 
-**Note:** Until we have fixed this in okctl, you need to do the following:
+After you've added the `postgres` attribute to the application declaration, run
+
+```shell
+# Usage
+okctl -c <cluster declaration> apply application -f <application declaration>
+
+# Example
+okctl -c cluster.yaml apply application -f application.yaml
+```
+
+to apply the changes.
+
+Okctl will then apply the changes in three steps:
+
+1. set up and configure the required security groups
+2. create a security group policy
+3. add it to the application.
+
+Remember to add and push the changes done in the git repository for `ArgoCD` to pick up the changes.
+
+:information_source: After you've confirmed that ArgoCD has acknowledged the changes, you might have to manually restart
+the application for the changes to take effect. You can restart the pod by either restarting it in the `ArgoCD` GUI or
+by running
+
+```shell 
+kubectl -n <app namespace> delete pod <pod id>
+```
+
+That's it. Your application should now be able to read and write to the database.
+
+#### Manually setting up an app to database connection
+
+See [this](/help/manually-connecting-to-postgres) article.
+
+#### Notes
+
+##### Probes
+
+Until we have fixed this in okctl, you need to do the following:
 
 1. Disable TCP early demux by running the following command:
 
@@ -126,8 +176,9 @@ In the `SecurityGroupPolicy` manifest, one can select which Pods should be assoc
         -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
     ```
 
-2. Allow traffic from the `ClusterSharedNodeSecurityGroup` to the `Outgoing` postgres security group on the port your `healthcheck` is running on in the pod
+2. Allow traffic from the `ClusterSharedNodeSecurityGroup` to the `Outgoing` postgres security group on the port
+   your `healthcheck` is running on in the pod
 
-### Security groups for Pods and Fargate
+##### Security groups for Pods and Fargate
 
 Per now, it is not possible to associate security groups with pods running in fargate, this is on the roadmap however, the following [issue](https://github.com/aws/containers-roadmap/issues/625) is tracking the progress.

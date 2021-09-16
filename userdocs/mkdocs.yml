@@ -16,7 +16,7 @@ nav:
       - 5. Create application: getting-started/create-application.md
       - 6. View bundled applications: getting-started/view-bundled-applications.md
       - 7. Monitoring your cluster and applications: getting-started/monitoring.md
-      - 8. Application addons: getting-started/application-addons.md
+      - 8. Use a database: getting-started/application-addons.md
       - 9. Continuous integration: getting-started/continuous-integration.md
       - 10. Upgrading okctl: getting-started/upgrading.md
       - 11. Delete cluster: getting-started/delete-cluster.md
@@ -31,7 +31,8 @@ nav:
   - Help:
       - FAQ: help/faq.md
       - Running a Docker image in your cluster: help/docker-registry.md
-      - Common issues: help/common-issues.md
+      - Manually connecting to PostgreSQL: help/manually-connecting-to-postgres.md
+    - Common issues: help/common-issues.md
       - Outdated common issues: help/outdated-common-issues.md
 
 plugins:

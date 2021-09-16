@@ -19,9 +19,7 @@ type Versioner struct {
 }
 
 // SaveErrorMessage contains the error messsage to return if saving original cluster version fails
-const SaveErrorMessage = "saving original cluster version. Your cluster will not work as expected. Please" +
-	" retry and see if this error goes away. If it does, everything is okay. If not, contact the" +
-	" developers to address this issue. Error details: %w"
+const SaveErrorMessage = "saving original cluster version: %w"
 
 // SaveOriginalClusterVersionIfNotExists saves the original cluster version
 func (v Versioner) SaveOriginalClusterVersionIfNotExists(version string) error {
@@ -43,8 +41,8 @@ func (v Versioner) SaveOriginalClusterVersionIfNotExists(version string) error {
 	return nil
 }
 
-// SaveOriginalClusterVersionFromClusterTagIfNotExists stores the original cluster version if it doesn't exist, with
-// the value from the cluster tag.
+// SaveOriginalClusterVersionFromClusterTagIfNotExists stores the original cluster version if it doesn't
+// exist, with the value from the cluster tag. (tag UPGR01)
 //
 // When we're sure all users has run this code, i.e. stored original okctl version in state, the caller of this function
 // can replace the call with a call to SaveOriginalClusterVersionIfNotExists(version.GetVersionInfo().Version).
@@ -84,6 +82,18 @@ func (v Versioner) SaveOriginalClusterVersionFromClusterTagIfNotExists() error {
 	}
 
 	return nil
+}
+
+// OriginalClusterVersionExists returns if original cluster version exists
+func (v Versioner) OriginalClusterVersionExists() (bool, error) {
+	_, err := v.upgradeState.GetOriginalClusterVersion()
+	if errors.Is(err, client.ErrOriginalClusterVersionNotFound) {
+		return false, nil
+	} else if err != nil {
+		return false, fmt.Errorf("getting original cluster version: %w", err)
+	}
+
+	return true, nil
 }
 
 func (v Versioner) getClusterStateVersion() (*semver.Version, error) {

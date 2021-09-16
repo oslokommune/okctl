@@ -1,18 +1,35 @@
 package testutils
 
+import (
+	"fmt"
+)
+
 // AutoAnsweringSurveyor simulates a user always giving the configured answer
 type AutoAnsweringSurveyor struct {
-	answer bool
+	currentAnswer int
+	answers       []bool
 }
 
-// AskUserIfReady returns the previously configured answer
-func (s AutoAnsweringSurveyor) AskUserIfReady() (bool, error) {
-	return s.answer, nil
+// PromptUser returns the previously configured answer
+//goland:noinspection GoUnusedParameter
+func (s *AutoAnsweringSurveyor) PromptUser(message string) (bool, error) {
+	if len(s.answers) == 0 {
+		return true, nil
+	}
+
+	if s.currentAnswer >= len(s.answers) {
+		return false, fmt.Errorf("no more answers configured. You need to initialize with none or all answers")
+	}
+
+	answer := s.answers[s.currentAnswer]
+	s.currentAnswer++
+
+	return answer, nil
 }
 
 // NewAutoAnsweringSurveyor returns a new AutoAnsweringSurveyor
-func NewAutoAnsweringSurveyor(answer bool) AutoAnsweringSurveyor {
-	return AutoAnsweringSurveyor{
-		answer,
+func NewAutoAnsweringSurveyor(answers []bool) *AutoAnsweringSurveyor {
+	return &AutoAnsweringSurveyor{
+		answers: answers,
 	}
 }

@@ -83,7 +83,7 @@ func (v Versioner) SaveClusterVersionIfNotExists(version string) error {
 }
 
 // SaveClusterVersionFromOriginalClusterVersionIfNotExists gets the cluster's original version, and saves it as the
-// current cluster version.
+// current cluster version. (tag UPGR01)
 //
 // When we're sure all users have set cluster version in state, the caller of this function can replace the call
 // with a call to SaveClusterVersionIfNotExists(version.GetVersionInfo().Version).

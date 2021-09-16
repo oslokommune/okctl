@@ -9,6 +9,9 @@ import (
 	"path"
 	"syscall"
 
+	"github.com/Masterminds/semver"
+	"github.com/oslokommune/okctl/pkg/upgrade"
+
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
 	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
 
@@ -133,13 +136,15 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			state := o.StateHandlers(o.StateNodes())
 
 			// Cluster version
+			clusterID := api.ID{
+				Region:       o.Declaration.Metadata.Region,
+				AWSAccountID: o.Declaration.Metadata.AccountID,
+				ClusterName:  o.Declaration.Metadata.Name,
+			}
+
 			clusterVersioner = clusterversioner.New(
 				o.Out,
-				api.ID{
-					Region:       opts.Declaration.Metadata.Region,
-					AWSAccountID: opts.Declaration.Metadata.AccountID,
-					ClusterName:  opts.Declaration.Metadata.Name,
-				},
+				clusterID,
 				state.Upgrade,
 			)
 
@@ -150,11 +155,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			// Original version
 			originalClusterVersioner = originalclusterversioner.New(
-				api.ID{
-					Region:       opts.Declaration.Metadata.Region,
-					AWSAccountID: opts.Declaration.Metadata.AccountID,
-					ClusterName:  opts.Declaration.Metadata.Name,
-				},
+				clusterID,
 				state.Upgrade,
 				state.Cluster,
 			)
@@ -215,30 +216,10 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("synchronizing declaration with state: %w", err)
 			}
 
-			// In the future, we can replace this call with
-			// originalClusterVersioner.SaveOriginalClusterVersionIfNotExists(version.GetVersionInfo().Version)
-			// See function comments.
-			err = originalClusterVersioner.SaveOriginalClusterVersionFromClusterTagIfNotExists()
+			err = handleClusterVersioning(o, originalClusterVersioner, clusterVersioner, opts)
 			if err != nil {
-				return fmt.Errorf(originalclusterversioner.SaveErrorMessage, err)
+				return fmt.Errorf("handle cluster versioning: %w", err)
 			}
-
-			// In the future, we can replace this call with
-			// clusterVersioner.SaveClusterVersionIfNotExists(version.GetVersionInfo().Version)
-			// See function comments.
-			err = clusterVersioner.SaveClusterVersionFromOriginalClusterVersionIfNotExists()
-			if err != nil {
-				return fmt.Errorf(commands.SaveClusterVersionError, err)
-			}
-
-			_, _ = fmt.Fprintln(o.Out, "\nYour cluster is up to date.")
-			_, _ = fmt.Fprintln(o.Out,
-				fmt.Sprintf(
-					"\nTo access your cluster, run %s to activate the environment for your cluster",
-					aurora.Green(fmt.Sprintf("okctl venv -c %s", opts.File)),
-				),
-			)
-			_, _ = fmt.Fprintln(o.Out, fmt.Sprintf("Your cluster should then be available with %s", aurora.Green("kubectl")))
 
 			return nil
 		},
@@ -259,6 +240,86 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 	)
 
 	return cmd
+}
+
+// (tag UPGR01) In the future, we can replace most of this function with
+// originalClusterVersioner.SaveOriginalClusterVersionIfNotExists(version.GetVersionInfo().Version)
+// clusterVersioner.SaveClusterVersionIfNotExists(version.GetVersionInfo().Version)
+// See those functions' comments.
+func handleClusterVersioning(
+	o *okctl.Okctl,
+	originalClusterVersioner originalclusterversioner.Versioner,
+	clusterVersioner clusterversioner.Versioner,
+	opts applyClusterOpts,
+) error {
+	hasOriginalClusterVersion, err := originalClusterVersioner.OriginalClusterVersionExists()
+	if err != nil {
+		return fmt.Errorf("checking if original cluster version exists: %w", err)
+	}
+
+	err = originalClusterVersioner.SaveOriginalClusterVersionFromClusterTagIfNotExists()
+	if err != nil {
+		return fmt.Errorf(originalclusterversioner.SaveErrorMessage, err)
+	}
+
+	err = clusterVersioner.SaveClusterVersionFromOriginalClusterVersionIfNotExists()
+	if err != nil {
+		return fmt.Errorf(commands.SaveClusterVersionError, err)
+	}
+
+	// When deleting for tag UPGR01, keep this function (or its contents), but delete this comment
+	printClusterReadyMessage(o, opts)
+
+	// Remove this when original cluster version has been stored for all users
+	clusterVersion, err := clusterVersioner.GetClusterVersion()
+	if err != nil {
+		return fmt.Errorf("getting original cluster version: %w", err)
+	}
+
+	// We show this message only for old (pre upgrade-release) clusters, because for new clusters, we will always store
+	// version immediately.
+	shouldShowMessage, err := isVersionFromBeforeUpgradeWasReleased(clusterVersion)
+	if err != nil {
+		return fmt.Errorf("checking upgrade release version: %w", err)
+	}
+
+	if !hasOriginalClusterVersion && shouldShowMessage {
+		stateFile := path.Join(
+			opts.Declaration.Github.OutputPath, opts.Declaration.Metadata.Name, constant.DefaultStormDBName)
+
+		_, _ = fmt.Fprintf(o.Out, "\nOkctl detected that parts of the cluster state had to be "+
+			"initialized to support future upgrades. The cluster state has now been initialized. You "+
+			"must commit and push changes to %s. For more information, see %s\n",
+			stateFile,
+			upgrade.DocumentationURL)
+	}
+
+	return nil
+}
+
+func printClusterReadyMessage(o *okctl.Okctl, opts applyClusterOpts) {
+	{
+		_, _ = fmt.Fprintln(o.Out, "\nYour cluster is up to date.")
+		_, _ = fmt.Fprintf(o.Out,
+			"\nTo access your cluster, run %s to activate the environment for your cluster\n",
+			aurora.Green(fmt.Sprintf("okctl venv -c %s", opts.File)),
+		)
+		_, _ = fmt.Fprintf(o.Out, "Your cluster should then be available with %s\n", aurora.Green("kubectl"))
+	}
+}
+
+func isVersionFromBeforeUpgradeWasReleased(versionString string) (bool, error) {
+	v, err := semver.NewVersion(versionString)
+	if err != nil {
+		return false, fmt.Errorf("cannot create semver version from '%s': %w", versionString, err)
+	}
+
+	versionWhereUpgradeWasReleased, err := semver.NewVersion("0.0.66")
+	if err != nil {
+		return false, fmt.Errorf("cannot create semver version: %w", err)
+	}
+
+	return v.LessThan(versionWhereUpgradeWasReleased), nil
 }
 
 const usageApplyClusterFile = `specifies where to read the declaration from. Use "-" for stdin`

@@ -6,6 +6,8 @@ import (
 	"io"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/upgrade/survey"
+
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
 	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
 
@@ -104,13 +106,14 @@ func (u Upgrader) runBinaries(upgradeBinaries []okctlUpgradeBinary) (bool, error
 		return false, fmt.Errorf("simulating upgrades: %w", err)
 	}
 
-	userConfirmedContinue, err := u.surveyor.AskUserIfReady()
+	userConfirmedContinue, err := u.surveyor.PromptUser(
+		"This will upgrade your okctl cluster, are you sure you want to continue?")
 	if err != nil {
 		return false, fmt.Errorf("asking user for input: %w", err)
 	}
 
 	if !userConfirmedContinue {
-		_, _ = fmt.Fprintln(u.out, "User aborted.")
+		_, _ = fmt.Fprintln(u.out, "Upgrade aborted by user.")
 		return false, nil
 	}
 
@@ -291,7 +294,7 @@ type Opts struct {
 	ChecksumDownloader       ChecksumHTTPDownloader
 	ClusterVersioner         clusterversioner.Versioner
 	OriginalClusterVersioner originalclusterversioner.Versioner
-	Surveyor                 Surveyor
+	Surveyor                 survey.Surveyor
 	FetcherOpts              FetcherOpts
 	OkctlVersion             string
 	State                    client.UpgradeState
@@ -309,7 +312,8 @@ type Upgrader struct {
 	githubService       client.GithubService
 	githubReleaseParser GithubReleaseParser
 	clusterVersioner    clusterversioner.Versioner
-	surveyor            Surveyor
+	surveyor            survey.Surveyor
+	autoConfirm         bool
 	okctlVersion        string
 	fetcherOpts         FetcherOpts
 	filter              filter
@@ -322,17 +326,9 @@ func New(opts Opts) (Upgrader, error) {
 		return Upgrader{}, fmt.Errorf(commands.ValidateBinaryVsClusterVersionError, err)
 	}
 
-	// We can remove this call to SaveOriginalClusterVersionIfNotExists when we're sure all users have stored original
-	// cluster version into their state. It should be set by apply cluster, not upgrade. We need to have it here
-	// in case people run upgrade before apply cluster.
-	err = opts.OriginalClusterVersioner.SaveOriginalClusterVersionFromClusterTagIfNotExists()
+	originalClusterVersion, err := getOriginalClusterVersion(opts)
 	if err != nil {
-		return Upgrader{}, fmt.Errorf(originalclusterversioner.SaveErrorMessage, err)
-	}
-
-	originalClusterVersion, err := opts.State.GetOriginalClusterVersion()
-	if err != nil {
-		return Upgrader{}, fmt.Errorf("getting original okctl version: %w", err)
+		return Upgrader{}, err
 	}
 
 	return Upgrader{
@@ -355,4 +351,45 @@ func New(opts Opts) (Upgrader, error) {
 			originalClusterVersion: originalClusterVersion.Value,
 		},
 	}, nil
+}
+
+// DocumentationURL is the URL to the upgrade documentation
+const DocumentationURL = "https://okctl.io/getting-started/upgrading"
+
+func getOriginalClusterVersion(opts Opts) (*client.OriginalClusterVersion, error) {
+	hasOriginalClusterVersion, err := opts.OriginalClusterVersioner.OriginalClusterVersionExists()
+	if err != nil {
+		return nil, fmt.Errorf("checking if original cluster version exists: %w", err)
+	}
+
+	// (tag UPGR01) We can remove replace this if-block and above call to OriginalClusterVersionExists with a call to
+	// originalClusterVersioner.SaveOriginalClusterVersionIfNotExists
+	// when we're sure all users have stored original cluster version into their state. It should be set by
+	// apply cluster, not upgrade. We need to have it here in case people run upgrade before apply cluster.
+	if !hasOriginalClusterVersion {
+		_, _ = fmt.Fprintf(opts.Out, "Okctl needs to initialize parts of the cluster state to support upgrades."+
+			" Afterwards you should commit and push changes to git.\nIf you want more details, see %s\n\n",
+			DocumentationURL)
+
+		answer, err := opts.Surveyor.PromptUser("Do you want to proceed?")
+		if err != nil {
+			return nil, fmt.Errorf("prompting user: %w", err)
+		}
+
+		if !answer {
+			return nil, fmt.Errorf("upgrade aborted by user")
+		}
+
+		err = opts.OriginalClusterVersioner.SaveOriginalClusterVersionFromClusterTagIfNotExists()
+		if err != nil {
+			return nil, fmt.Errorf(originalclusterversioner.SaveErrorMessage, err)
+		}
+	}
+
+	originalClusterVersion, err := opts.State.GetOriginalClusterVersion()
+	if err != nil {
+		return nil, fmt.Errorf("getting original okctl version: %w", err)
+	}
+
+	return originalClusterVersion, nil
 }

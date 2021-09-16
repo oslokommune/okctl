@@ -33,11 +33,7 @@ func TestOriginalVersionSaver(t *testing.T) {
 			upgradeState := testutils.MockUpgradeState(tc.existingClusterVersion)
 			clusterState := testutils.MockClusterState(tc.existingClusterVersion)
 
-			versioner := originalclusterversioner.New(
-				api.ID{ClusterName: "my-cluster"},
-				upgradeState,
-				clusterState,
-			)
+			versioner := originalclusterversioner.New(api.ID{ClusterName: "my-cluster"}, upgradeState, clusterState)
 
 			// When
 			err := versioner.SaveOriginalClusterVersionFromClusterTagIfNotExists()

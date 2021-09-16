@@ -43,7 +43,7 @@ type TestCase struct {
 	withGithubReleases                 []*github.RepositoryRelease
 	withGithubReleaseAssetsFromFolder  string
 	withHost                           state.Host
-	withUserAbort                      bool
+	withUserAnswers                    []bool
 	withTestRun                        func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts)
 	expectBinaryVersionsRunOnce        []string
 	expectedClusterVersionAfterUpgrade string
@@ -129,7 +129,7 @@ func TestRunUpgrades(t *testing.T) {
 			withGithubReleases:                 createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder:  folderWorking,
 			withHost:                           state.Host{Os: linux, Arch: amd64},
-			withUserAbort:                      true,
+			withUserAnswers:                    []bool{true, false},
 			expectBinaryVersionsRunOnce:        []string{},
 			expectedClusterVersionAfterUpgrade: "0.0.50",
 		},
@@ -163,7 +163,7 @@ func TestRunUpgrades(t *testing.T) {
 		},
 		{
 			// In the future, when upgrade doesn't need to store original cluster version anymore, we should remove
-			// this functionality (and this test). See comment in function upgrade.New.
+			// this functionality (and this test). See comment in function upgrade.New. (tag UPGR01)
 			name:                              "Should save original cluster version if it doesn't exist",
 			withOkctlVersion:                  "0.0.61",
 			withOriginalClusterVersion:        "0.0.50",
@@ -571,10 +571,9 @@ func TestRunUpgrades(t *testing.T) {
 			clusterState := testutils.MockClusterState(tc.withOriginalClusterVersion)
 
 			clusterVersioner := clusterversioner.New(stdOutBuffer, api.ID{}, upgradeState)
-			originalClusterVersioner := originalclusterversioner.New(
-				api.ID{}, upgradeState, clusterState)
+			originalClusterVersioner := originalclusterversioner.New(api.ID{}, upgradeState, clusterState)
 
-			surveyor := testutils.NewAutoAnsweringSurveyor(!tc.withUserAbort)
+			surveyor := testutils.NewAutoAnsweringSurveyor(tc.withUserAnswers)
 
 			defaultOpts := DefaultTestOpts{
 				Opts: upgrade.Opts{

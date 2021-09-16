@@ -1,4 +1,5 @@
-package upgrade
+// Package survey knows how to get input from the user
+package survey
 
 import (
 	"fmt"
@@ -9,7 +10,7 @@ import (
 
 // Surveyor knows how to get input from the user
 type Surveyor interface {
-	AskUserIfReady() (bool, error)
+	PromptUser(message string) (bool, error)
 }
 
 // TerminalSurveyor knows how to get input from the user via a terminal
@@ -18,25 +19,25 @@ type TerminalSurveyor struct {
 	autoConfirm bool
 }
 
-// AskUserIfReady prompts the user if they want to continue
-func (s TerminalSurveyor) AskUserIfReady() (bool, error) {
+// PromptUser prompts the user if they want to continue
+func (s TerminalSurveyor) PromptUser(message string) (bool, error) {
 	if s.autoConfirm {
 		return true, nil
 	}
 
-	doContinue := false
+	answer := false
 	prompt := &survey.Confirm{
-		Message: "This will upgrade your okctl cluster, are you sure you want to continue?",
+		Message: message,
 	}
 
-	err := survey.AskOne(prompt, &doContinue)
+	err := survey.AskOne(prompt, &answer)
 	if err != nil {
 		return false, err
 	}
 
 	_, _ = fmt.Fprintln(s.out, "")
 
-	return doContinue, nil
+	return answer, nil
 }
 
 // NewTerminalSurveyor creates a new TerminalSurveyor

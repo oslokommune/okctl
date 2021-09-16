@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/upgrade/survey"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
 	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
@@ -79,13 +81,9 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				stateHandlers.Upgrade,
 			)
 
-			originalClusterVersioner = originalclusterversioner.New(
-				clusterID,
-				stateHandlers.Upgrade,
-				stateHandlers.Cluster,
-			)
+			surveyor := survey.NewTerminalSurveyor(out, flags.confirm)
 
-			surveyor := upgrade.NewTerminalSurveyor(out, flags.confirm)
+			originalClusterVersioner = originalclusterversioner.New(clusterID, stateHandlers.Upgrade, stateHandlers.Cluster)
 
 			upgrader, err = upgrade.New(upgrade.Opts{
 				Debug:                    o.Debug,
@@ -100,11 +98,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				FetcherOpts:              fetcherOpts,
 				OkctlVersion:             version.GetVersionInfo().Version,
 				State:                    stateHandlers.Upgrade,
-				ClusterID: api.ID{
-					Region:       o.Declaration.Metadata.Region,
-					AWSAccountID: o.Declaration.Metadata.AccountID,
-					ClusterName:  o.Declaration.Metadata.Name,
-				},
+				ClusterID:                clusterID,
 			})
 			if err != nil {
 				return fmt.Errorf("creating upgrader: %w", err)
@@ -121,7 +115,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 		},
 	}
 
-	cmd.PersistentFlags().BoolVarP(&flags.confirm, "confirm", "y", false, "Skip the confirmation prompt")
+	cmd.PersistentFlags().BoolVarP(&flags.confirm, "confirm", "y", false, "Skip confirmation prompts")
 
 	return cmd
 }

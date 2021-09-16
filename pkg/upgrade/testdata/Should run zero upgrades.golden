@@ -1,1 +1,4 @@
+Okctl needs to initialize parts of the cluster state to support upgrades. Afterwards you should commit and push changes to git.
+If you want more details, see https://okctl.io/getting-started/upgrading
+
 Did not find any applicable upgrades.

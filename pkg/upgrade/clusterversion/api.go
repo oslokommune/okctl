@@ -26,7 +26,7 @@ func (v Versioner) ValidateBinaryVsClusterVersion(binaryVersionString string) er
 	}
 
 	if err != nil {
-		return fmt.Errorf(": %w", err)
+		return fmt.Errorf("getting cluster version: %w", err)
 	}
 
 	clusterVersion, err := semver.NewVersion(clusterVersionInfo.Value)

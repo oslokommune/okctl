@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/logrusorgru/aurora"
 
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"

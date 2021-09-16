@@ -116,7 +116,7 @@ func (s *Processor) prepareAndLoad() (*Processor, error) {
 		if exists {
 			s.Logger.Debugf("binary already exists: %s (%s)", binary.Name, binary.Version)
 
-			s.LoadedBinaries[binaryIndex(binary.Name, binary.Version)] = &Stager{
+			s.LoadedBinaries[binaryKey(binary.Name, binary.Version)] = &Stager{
 				BinaryPath: s.Store.Abs(binaryPath),
 			}
 
@@ -151,7 +151,7 @@ func (s *Processor) prepareAndLoad() (*Processor, error) {
 
 		stager.BinaryPath = s.Store.Abs(binaryPath)
 
-		s.LoadedBinaries[binaryIndex(binary.Name, binary.Version)] = stager
+		s.LoadedBinaries[binaryKey(binary.Name, binary.Version)] = stager
 	}
 
 	return s, nil
@@ -159,7 +159,7 @@ func (s *Processor) prepareAndLoad() (*Processor, error) {
 
 // Fetch attempts to download and verify the binary
 func (s *Processor) Fetch(name, version string) (string, error) {
-	binary, hasKey := s.LoadedBinaries[binaryIndex(name, version)]
+	binary, hasKey := s.LoadedBinaries[binaryKey(name, version)]
 	if !hasKey {
 		return "", fmt.Errorf("could not find configuration for binary: %s, with version: %s", name, version)
 	}
@@ -192,6 +192,6 @@ func replaceVars(content string, vars map[string]string) string {
 	return content
 }
 
-func binaryIndex(name, version string) string {
+func binaryKey(name, version string) string {
 	return fmt.Sprintf("%s-%s", name, version)
 }

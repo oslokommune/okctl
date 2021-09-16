@@ -3,11 +3,12 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
+	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversion"
+
 	"github.com/oslokommune/okctl/pkg/upgrade/survey"
 
 	"github.com/oslokommune/okctl/pkg/api"
-	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
-	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
 	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -26,9 +27,9 @@ func buildUpgradeCommand(o *okctl.Okctl) *cobra.Command {
 
 	var upgrader upgrade.Upgrader
 
-	var originalClusterVersioner originalclusterversioner.Versioner
+	var originalClusterVersioner originalclusterversion.Versioner
 
-	var clusterVersioner clusterversioner.Versioner
+	var clusterVersioner clusterversion.Versioner
 
 	cmd := &cobra.Command{
 		Use:   "upgrade",
@@ -75,7 +76,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				ClusterName:  o.Declaration.Metadata.Name,
 			}
 
-			clusterVersioner = clusterversioner.New(
+			clusterVersioner = clusterversion.New(
 				out,
 				clusterID,
 				stateHandlers.Upgrade,
@@ -83,7 +84,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 
 			surveyor := survey.NewTerminalSurveyor(out, flags.confirm)
 
-			originalClusterVersioner = originalclusterversioner.New(clusterID, stateHandlers.Upgrade, stateHandlers.Cluster)
+			originalClusterVersioner = originalclusterversion.New(clusterID, stateHandlers.Upgrade, stateHandlers.Cluster)
 
 			upgrader, err = upgrade.New(upgrade.Opts{
 				Debug:                    o.Debug,

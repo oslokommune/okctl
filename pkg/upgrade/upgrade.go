@@ -6,10 +6,10 @@ import (
 	"io"
 	"strings"
 
-	"github.com/oslokommune/okctl/pkg/upgrade/survey"
+	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
+	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversion"
 
-	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
-	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
+	"github.com/oslokommune/okctl/pkg/upgrade/survey"
 
 	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/github"
@@ -292,8 +292,8 @@ type Opts struct {
 	RepositoryDirectory      string
 	GithubService            client.GithubService
 	ChecksumDownloader       ChecksumHTTPDownloader
-	ClusterVersioner         clusterversioner.Versioner
-	OriginalClusterVersioner originalclusterversioner.Versioner
+	ClusterVersioner         clusterversion.Versioner
+	OriginalClusterVersioner originalclusterversion.Versioner
 	Surveyor                 survey.Surveyor
 	FetcherOpts              FetcherOpts
 	OkctlVersion             string
@@ -311,7 +311,7 @@ type Upgrader struct {
 	repositoryDirectory string
 	githubService       client.GithubService
 	githubReleaseParser GithubReleaseParser
-	clusterVersioner    clusterversioner.Versioner
+	clusterVersioner    clusterversion.Versioner
 	surveyor            survey.Surveyor
 	autoConfirm         bool
 	okctlVersion        string
@@ -382,7 +382,7 @@ func getOriginalClusterVersion(opts Opts) (*client.OriginalClusterVersion, error
 
 		err = opts.OriginalClusterVersioner.SaveOriginalClusterVersionFromClusterTagIfNotExists()
 		if err != nil {
-			return nil, fmt.Errorf(originalclusterversioner.SaveErrorMessage, err)
+			return nil, fmt.Errorf(originalclusterversion.SaveErrorMessage, err)
 		}
 	}
 
@@ -392,4 +392,38 @@ func getOriginalClusterVersion(opts Opts) (*client.OriginalClusterVersion, error
 	}
 
 	return originalClusterVersion, nil
+}
+
+// New returns a new Upgrader, or an error if initialization fails
+func New(opts Opts) (Upgrader, error) {
+	err := opts.ClusterVersioner.ValidateBinaryVsClusterVersion(opts.OkctlVersion)
+	if err != nil {
+		return Upgrader{}, fmt.Errorf(commands.ValidateBinaryVsClusterVersionError, err)
+	}
+
+	originalClusterVersion, err := getOriginalClusterVersion(opts)
+	if err != nil {
+		return Upgrader{}, err
+	}
+
+	return Upgrader{
+		debug:               opts.Debug,
+		logger:              opts.Logger,
+		out:                 opts.Out,
+		clusterID:           opts.ClusterID,
+		state:               opts.State,
+		repositoryDirectory: opts.RepositoryDirectory,
+		githubService:       opts.GithubService,
+		githubReleaseParser: NewGithubReleaseParser(opts.ChecksumDownloader),
+		clusterVersioner:    opts.ClusterVersioner,
+		surveyor:            opts.Surveyor,
+		okctlVersion:        opts.OkctlVersion,
+		fetcherOpts:         opts.FetcherOpts,
+		filter: filter{
+			debug:                  opts.Debug,
+			out:                    opts.Out,
+			okctlVersion:           opts.OkctlVersion,
+			originalClusterVersion: originalClusterVersion.Value,
+		},
+	}, nil
 }

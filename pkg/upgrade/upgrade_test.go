@@ -8,9 +8,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
+	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversion"
+
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/upgrade/clusterversioner"
-	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversioner"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/require"
 
@@ -570,8 +571,8 @@ func TestRunUpgrades(t *testing.T) {
 			upgradeState := testutils.MockUpgradeState(tc.withClusterVersion)
 			clusterState := testutils.MockClusterState(tc.withOriginalClusterVersion)
 
-			clusterVersioner := clusterversioner.New(stdOutBuffer, api.ID{}, upgradeState)
-			originalClusterVersioner := originalclusterversioner.New(api.ID{}, upgradeState, clusterState)
+			clusterVersioner := clusterversion.New(stdOutBuffer, api.ID{}, upgradeState)
+			originalClusterVersioner := originalclusterversion.New(api.ID{}, upgradeState, clusterState)
 
 			surveyor := testutils.NewAutoAnsweringSurveyor(tc.withUserAnswers)
 

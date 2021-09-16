@@ -150,7 +150,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			err = clusterVersioner.ValidateBinaryVsClusterVersion(version.GetVersionInfo().Version)
 			if err != nil {
-				return fmt.Errorf(commands.ValidateBinaryVsClusterVersionError, err)
+				return fmt.Errorf(commands.ValidateBinaryVsClusterVersionErr, err)
 			}
 
 			// Original version
@@ -264,7 +264,7 @@ func handleClusterVersioning(
 
 	err = clusterVersioner.SaveClusterVersionFromOriginalClusterVersionIfNotExists()
 	if err != nil {
-		return fmt.Errorf(commands.SaveClusterVersionError, err)
+		return fmt.Errorf(commands.SaveClusterVersionErr, err)
 	}
 
 	// When deleting for tag UPGR01, keep this function (or its contents), but delete this comment

@@ -71,7 +71,7 @@ func (u Upgrader) Run() error {
 	// Update cluster version
 	err = u.clusterVersioner.SaveClusterVersion(u.okctlVersion)
 	if err != nil {
-		return fmt.Errorf(commands.SaveClusterVersionError, err)
+		return fmt.Errorf(commands.SaveClusterVersionErr, err)
 	}
 
 	_, _ = fmt.Fprintf(u.out, "\nUpgrade complete! Cluster version is now %s."+
@@ -161,7 +161,7 @@ func (u Upgrader) doRunBinaries(upgradeBinaries []okctlUpgradeBinary, binaryProv
 		// working upgrade binary with version 0.0.10.
 		err = u.clusterVersioner.SaveClusterVersion(binary.SemverVersion().String())
 		if err != nil {
-			return fmt.Errorf(commands.SaveClusterVersionError, err)
+			return fmt.Errorf(commands.SaveClusterVersionErr, err)
 		}
 	}
 
@@ -363,7 +363,7 @@ func getOriginalClusterVersion(opts Opts) (*client.OriginalClusterVersion, error
 func New(opts Opts) (Upgrader, error) {
 	err := opts.ClusterVersioner.ValidateBinaryVsClusterVersion(opts.OkctlVersion)
 	if err != nil {
-		return Upgrader{}, fmt.Errorf(commands.ValidateBinaryVsClusterVersionError, err)
+		return Upgrader{}, fmt.Errorf(commands.ValidateBinaryVsClusterVersionErr, err)
 	}
 
 	originalClusterVersion, err := getOriginalClusterVersion(opts)

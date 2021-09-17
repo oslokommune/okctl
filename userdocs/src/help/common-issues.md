@@ -54,3 +54,16 @@ to their repositories. Update your ~/.okctl/helm/repositories.yaml, and update U
 stable	   | https://kubernetes-charts.storage.googleapis.com           | https://charts.helm.sh/stable    |
 incubator  | https://kubernetes-charts-incubator.storage.googleapis.com | https://charts.helm.sh/incubator |
 
+## okctl apply cluster: Always prompts for github machine authentication, even after it has been set
+
+There is an issue with some versions of [pinentry-curses](https://manpages.debian.org/testing/pinentry-curses/pinentry-curses.1.en.html) where sometimes the prompt
+to enter a password for you PGP key will not appear. We store the authentication token in a keyring, and since it cannot be decrypted without the password okctl
+just skips ahead. The solution is to export the following environment variable:
+
+```bash
+GPG_TTY=$(tty)
+export GPG_TTY
+```
+
+This can be done in your current shell before you run okctl commands, or can be put in your `.bashrc` or similar to ensure you will always be prompted for your
+encryption key password. A bit more detail explanation can be found on [stackoverflow](https://stackoverflow.com/questions/17769831/how-to-make-gpg-prompt-for-passphrase-on-cli)

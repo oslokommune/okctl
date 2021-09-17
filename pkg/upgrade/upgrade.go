@@ -278,44 +278,10 @@ func printUpgrades(out io.Writer, text string, upgradeBinaries []okctlUpgradeBin
 	_, _ = fmt.Fprintln(out, "")
 }
 
-// FetcherOpts contains data needed to initialize a fetch.Provider
-type FetcherOpts struct {
-	Host  state.Host
-	Store storage.Storer
-}
-
-// Opts contains all data needed to create an Upgrader
-type Opts struct {
-	Debug                    bool
-	Logger                   *logrus.Logger
-	Out                      io.Writer
-	RepositoryDirectory      string
-	GithubService            client.GithubService
-	ChecksumDownloader       ChecksumHTTPDownloader
-	ClusterVersioner         clusterversion.Versioner
-	OriginalClusterVersioner originalclusterversion.Versioner
-	Surveyor                 survey.Surveyor
-	FetcherOpts              FetcherOpts
-	OkctlVersion             string
-	State                    client.UpgradeState
-	ClusterID                api.ID
-}
-
-// Upgrader knows how to upgrade okctl
-type Upgrader struct {
-	debug               bool
-	logger              *logrus.Logger
-	out                 io.Writer
-	clusterID           api.ID
-	state               client.UpgradeState
-	repositoryDirectory string
-	githubService       client.GithubService
-	githubReleaseParser GithubReleaseParser
-	clusterVersioner    clusterversion.Versioner
-	surveyor            survey.Surveyor
-	okctlVersion        string
-	fetcherOpts         FetcherOpts
-	filter              filter
+// capitalizeFirst converts for instance "liNUX" to "Linux". We use this because we expect GitHub release assets for
+// upgrades to be named this way.
+func capitalizeFirst(os string) string {
+	return strings.ToUpper(os[0:1]) + strings.ToLower(os[1:])
 }
 
 // DocumentationURL is the URL to the upgrade documentation
@@ -359,6 +325,46 @@ func getOriginalClusterVersion(opts Opts) (*client.OriginalClusterVersion, error
 	return originalClusterVersion, nil
 }
 
+// FetcherOpts contains data needed to initialize a fetch.Provider
+type FetcherOpts struct {
+	Host  state.Host
+	Store storage.Storer
+}
+
+// Opts contains all data needed to create an Upgrader
+type Opts struct {
+	Debug                    bool
+	Logger                   *logrus.Logger
+	Out                      io.Writer
+	RepositoryDirectory      string
+	GithubService            client.GithubService
+	ChecksumDownloader       ChecksumHTTPDownloader
+	ClusterVersioner         clusterversion.Versioner
+	OriginalClusterVersioner originalclusterversion.Versioner
+	Surveyor                 survey.Surveyor
+	FetcherOpts              FetcherOpts
+	OkctlVersion             string
+	State                    client.UpgradeState
+	ClusterID                api.ID
+}
+
+// Upgrader knows how to upgrade okctl
+type Upgrader struct {
+	debug               bool
+	logger              *logrus.Logger
+	out                 io.Writer
+	clusterID           api.ID
+	state               client.UpgradeState
+	repositoryDirectory string
+	githubService       client.GithubService
+	githubReleaseParser GithubReleaseParser
+	clusterVersioner    clusterversion.Versioner
+	surveyor            survey.Surveyor
+	okctlVersion        string
+	fetcherOpts         FetcherOpts
+	filter              filter
+}
+
 // New returns a new Upgrader, or an error if initialization fails
 func New(opts Opts) (Upgrader, error) {
 	err := opts.ClusterVersioner.ValidateBinaryVsClusterVersion(opts.OkctlVersion)
@@ -369,6 +375,15 @@ func New(opts Opts) (Upgrader, error) {
 	originalClusterVersion, err := getOriginalClusterVersion(opts)
 	if err != nil {
 		return Upgrader{}, err
+	}
+
+	fetcherOpts := FetcherOpts{
+		Host: state.Host{
+			// Github release URL expects OS to be Linux, not linux
+			Os:   capitalizeFirst(opts.FetcherOpts.Host.Os),
+			Arch: opts.FetcherOpts.Host.Arch,
+		},
+		Store: opts.FetcherOpts.Store,
 	}
 
 	return Upgrader{
@@ -383,7 +398,7 @@ func New(opts Opts) (Upgrader, error) {
 		clusterVersioner:    opts.ClusterVersioner,
 		surveyor:            opts.Surveyor,
 		okctlVersion:        opts.OkctlVersion,
-		fetcherOpts:         opts.FetcherOpts,
+		fetcherOpts:         fetcherOpts,
 		filter: filter{
 			debug:                  opts.Debug,
 			out:                    opts.Out,

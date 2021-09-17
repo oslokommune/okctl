@@ -15,7 +15,6 @@ const (
 
 // BinaryRunner stores state for running the cli
 type BinaryRunner struct {
-	doDebug    bool
 	repoDir    string
 	progress   io.Writer
 	logger     *logrus.Logger
@@ -40,20 +39,41 @@ func New(
 	}
 }
 
-// Run runs the okctl upgrade binary
-func (u *BinaryRunner) Run(force bool) ([]byte, error) {
+// Flags contains the flags to pass to the binary when running it
+type Flags struct {
+	Debug   bool
+	Confirm bool
+}
+
+// DryRun runs the okctl upgrade binary with the dry-run flag set to true
+func (u *BinaryRunner) DryRun(flags Flags) ([]byte, error) {
+	return u.doRun(flags, true)
+}
+
+// Run runs the okctl upgrade binary with the dry-run flag set to false
+func (u *BinaryRunner) Run(flags Flags) ([]byte, error) {
+	return u.doRun(flags, false)
+}
+
+func (u *BinaryRunner) doRun(flags Flags, dryRun bool) ([]byte, error) {
 	var err error
 
 	var envs []string
 
 	var args []string
 
-	if u.doDebug {
+	if flags.Debug {
 		args = append(args, "--debug")
 	}
 
-	if force {
-		args = append(args, "--force")
+	if flags.Confirm {
+		args = append(args, "--debug")
+	}
+
+	if dryRun {
+		args = append(args, "--dry-run true")
+	} else {
+		args = append(args, "--dry-run false")
 	}
 
 	runner := run.New(nil, u.repoDir, u.binaryPath, envs, u.cmdFn)
@@ -64,10 +84,4 @@ func (u *BinaryRunner) Run(force bool) ([]byte, error) {
 	}
 
 	return output, err
-}
-
-// SetDebug sets whether we should increase log output from eksctl,
-// the default behavior is off
-func (u *BinaryRunner) SetDebug(enable bool) {
-	u.doDebug = enable
 }

@@ -6,6 +6,8 @@ import (
 	"io"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/binaries/run/okctlupgrade"
+
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
 	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversion"
 
@@ -133,12 +135,14 @@ func (u Upgrader) doRunBinaries(upgradeBinaries []okctlUpgradeBinary, binaryProv
 			return fmt.Errorf("getting okctl upgrade binary: %w", err)
 		}
 
-		binaryRunner.SetDebug(u.debug)
-
 		_, _ = fmt.Fprintf(u.out, "--- Running upgrade: %s ---\n", binary)
 
 		// Run
-		_, err = binaryRunner.Run(true)
+		_, err = binaryRunner.Run(okctlupgrade.Flags{
+			Debug:   u.debug,
+			Confirm: u.autoConfirm,
+		})
+
 		if err != nil {
 			_, _ = fmt.Fprintf(u.out, "--- Upgrade failed: %s ---\n", binary)
 			return fmt.Errorf("running upgrade binary %s: %w", binary, err)
@@ -200,12 +204,12 @@ func (u Upgrader) dryRunBinaries(upgradeBinaries []okctlUpgradeBinary, binaryPro
 			return fmt.Errorf("getting okctl upgrade binary: %w", err)
 		}
 
-		binaryRunner.SetDebug(u.debug)
-
 		_, _ = fmt.Fprintf(u.out, "--- Simulating upgrade: %s ---\n", binary)
 
 		// Run
-		_, err = binaryRunner.Run(false)
+		_, err = binaryRunner.DryRun(okctlupgrade.Flags{
+			Debug: u.debug,
+		})
 		if err != nil {
 			_, _ = fmt.Fprintf(u.out, "--- Upgrade failed: %s ---\n", binary)
 			return fmt.Errorf("running upgrade binary %s: %w", binary, err)

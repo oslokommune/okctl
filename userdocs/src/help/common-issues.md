@@ -65,5 +65,5 @@ GPG_TTY=$(tty)
 export GPG_TTY
 ```
 
-This can be done in your current shell before you run okctl commands, or can be put in your `.bashrc` or similar to ensure you will always be prompted for you
+This can be done in your current shell before you run okctl commands, or can be put in your `.bashrc` or similar to ensure you will always be prompted for your
 encryption key password. A bit more detail explanation can be found on [stackoverflow](https://stackoverflow.com/questions/17769831/how-to-make-gpg-prompt-for-passphrase-on-cli)

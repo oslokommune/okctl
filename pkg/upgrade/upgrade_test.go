@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"path"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
@@ -30,8 +29,8 @@ import (
 const (
 	folderWorking  = "working"
 	folderCrashing = "upgrade_crashes"
-	linux          = "linux"
-	darwin         = "darwin"
+	linux          = "Linux"
+	darwin         = "Darwin"
 	amd64          = "amd64"
 )
 
@@ -413,10 +412,10 @@ func TestRunUpgrades(t *testing.T) {
 				err = upgrader.Run()
 
 				assert.Error(t, err)
-				assert.Contains(t, err.Error(),
+				assert.Contains(t, err.Error(), fmt.Sprintf(
 					"parsing upgrade binaries: validating release: could not find checksum asset for "+
-						"release 0.0.61 (assets: okctl_upgrade-linux_amd64_0.0.61.tar.gz,"+
-						"okctl_upgrade-darwin_amd64_0.0.61.tar.gz)",
+						"release 0.0.61 (assets: okctl_upgrade-%s_%s_0.0.61.tar.gz,"+
+						"okctl_upgrade-%s_%s_0.0.61.tar.gz)", linux, amd64, darwin, amd64),
 				)
 			},
 		},
@@ -674,7 +673,7 @@ func getExpectedUpgradesRun(expectBinaryVersionsRunOnce []string, withHost state
 		expectedUpgradesRun = append(expectedUpgradesRun,
 			fmt.Sprintf("okctl-upgrade_%s_%s_%s",
 				binaryVersion,
-				capitalizeFirst(withHost.Os),
+				withHost.Os,
 				withHost.Arch,
 			),
 		)
@@ -714,8 +713,6 @@ func createGithubReleases(oses []string, arch string, versions []string) []*gith
 		assets := make([]*github.ReleaseAsset, 0, len(oses)+1)
 
 		for _, os := range oses {
-			os = capitalizeFirst(os)
-
 			asset := createGihubReleaseAssetBinary(os, arch, version)
 			assets = append(assets, asset)
 		}
@@ -747,10 +744,4 @@ func createGihubReleaseAssetBinary(os, arch, version string) *github.ReleaseAsse
 		BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
 			"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz", version, version, os, arch)),
 	}
-}
-
-// capitalizeFirst converts for instance "linux" to "Linux". We use this because we expect github release assets for
-// upgrades to be named this way.
-func capitalizeFirst(os string) string {
-	return strings.ToUpper(os[0:1]) + strings.ToLower(os[1:])
 }

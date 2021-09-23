@@ -492,7 +492,7 @@ func TestRunUpgrades(t *testing.T) {
 				// Then
 				t.Log(defaultOpts.StdOutBuffer.String())
 
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Contains(t, err.Error(), "It will crash")
 
 				originaltestName := tc.name

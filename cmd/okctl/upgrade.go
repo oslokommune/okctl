@@ -91,6 +91,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 
 			upgrader, err = upgrade.New(upgrade.Opts{
 				Debug:                    o.Debug,
+				AutoConfirm:              flags.confirm,
 				Logger:                   o.Logger,
 				Out:                      out,
 				RepositoryDirectory:      repoDir,

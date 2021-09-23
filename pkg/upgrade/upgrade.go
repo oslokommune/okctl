@@ -338,6 +338,7 @@ type FetcherOpts struct {
 // Opts contains all data needed to create an Upgrader
 type Opts struct {
 	Debug                    bool
+	AutoConfirm              bool
 	Logger                   *logrus.Logger
 	Out                      io.Writer
 	RepositoryDirectory      string
@@ -355,6 +356,7 @@ type Opts struct {
 // Upgrader knows how to upgrade okctl
 type Upgrader struct {
 	debug               bool
+	autoConfirm         bool
 	logger              *logrus.Logger
 	out                 io.Writer
 	clusterID           api.ID

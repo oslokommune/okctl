@@ -50,8 +50,6 @@ fi
 
 if [[ "$@" =~ "--dry-run false" ]]; then
   echo "Doing actual changes."
-  echo "It will crash now."
-  exit 1
 elif [[ "$@" =~ "--dry-run true" ]] || [[ "$@" =~ "--dry-run" ]]; then
   echo "--dry-run true flag was provided, so simulating changes."
 fi

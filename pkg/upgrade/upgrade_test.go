@@ -578,6 +578,7 @@ func TestRunUpgrades(t *testing.T) {
 			defaultOpts := DefaultTestOpts{
 				Opts: upgrade.Opts{
 					Debug:                    tc.withDebug,
+					AutoConfirm:              true,
 					Logger:                   logrus.StandardLogger(),
 					Out:                      stdOutBuffer,
 					RepositoryDirectory:      repositoryAbsoluteDir,

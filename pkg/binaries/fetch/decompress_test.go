@@ -48,7 +48,7 @@ func TestDecompressor(t *testing.T) {
 			name:         "ZipDecompressor returns error when file not found",
 			decompressor: fetch.NewZipDecompressor("does_not_exist", 1000),
 			data:         readFile(t, zipTestFile),
-			expect:       "couldn't find: does_not_exist, in archive",
+			expect:       "couldn't find file 'does_not_exist' in archive",
 			expectError:  true,
 		},
 		{
@@ -68,7 +68,7 @@ func TestDecompressor(t *testing.T) {
 			name:         "GzipTarDecompressor returns errors when file not found",
 			decompressor: fetch.NewGzipTarDecompressor("does_not_exist", 1000),
 			data:         readFile(t, tarGzTestFile),
-			expect:       "couldn't find: does_not_exist, in archive",
+			expect:       "couldn't find file 'does_not_exist' in archive",
 			expectError:  true,
 		},
 	}

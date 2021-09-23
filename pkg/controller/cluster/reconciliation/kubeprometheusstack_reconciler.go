@@ -92,6 +92,7 @@ func (z *kubePrometheusStackReconciler) determineAction(meta reconciliation.Meta
 		dependenciesReady, err := reconciliation.AssertDependencyExistence(true,
 			clusterExistenceTest,
 			reconciliation.GeneratePrimaryDomainDelegationTest(state),
+			state.IdentityManager.HasIdentityPool,
 		)
 		if err != nil {
 			return reconciliation.ActionNoop, fmt.Errorf("checking dependencies: %w", err)

@@ -70,7 +70,7 @@ func (u *BinaryRunner) doRun(flags Flags, dryRun bool) ([]byte, error) {
 	}
 
 	if flags.Confirm {
-		args = append(args, "--debug")
+		args = append(args, "--confirm")
 	}
 
 	if dryRun {

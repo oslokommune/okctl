@@ -23,9 +23,11 @@ Simulating upgrades complete.
 
 --- Running upgrade: okctl-upgrade_0.0.61 ---
 This is upgrade file for okctl-upgrade_0.0.61_Linux_amd64
+--confirm flag was provided
 Doing actual changes.
 --- Running upgrade: okctl-upgrade_0.0.62 ---
 This is upgrade file for okctl-upgrade_0.0.62_Linux_amd64
+--confirm flag was provided
 Doing actual changes.
 It will crash now.
 --- Upgrade failed: okctl-upgrade_0.0.62 ---

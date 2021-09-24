@@ -76,6 +76,15 @@ func TestRunUpgrades(t *testing.T) {
 			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
 		},
 		{
+			name:                              "Should print upgrade's stdout and stderr to stdout",
+			withOkctlVersion:                  "0.0.62",
+			withOriginalClusterVersion:        "0.0.50",
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.62"}),
+			withGithubReleaseAssetsFromFolder: folderCrashing,
+			withHost:                          state.Host{Os: linux, Arch: amd64},
+			expectErrorContains:               "exit status 1",
+		},
+		{
 			name:                              "Should return exit status if upgrade crashes",
 			withOkctlVersion:                  "0.0.58",
 			withOriginalClusterVersion:        "0.0.50",
@@ -515,7 +524,7 @@ func TestRunUpgrades(t *testing.T) {
 				t.Log(defaultOpts.StdOutBuffer.String())
 
 				require.Error(t, err)
-				assert.Contains(t, err.Error(), "It will crash")
+				assert.Contains(t, err.Error(), "exit status 1")
 
 				originaltestName := tc.name
 
@@ -648,6 +657,8 @@ func TestRunUpgrades(t *testing.T) {
 			if len(tc.expectErrorContains) > 0 {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tc.expectErrorContains)
+
+				doGoldieAssert(t, tc, defaultOpts)
 				return
 			}
 
@@ -680,7 +691,10 @@ func doAsserts(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
 
 	assert.Equal(t, originalClusterVersion, originalClusterVersion, tc.name)
 
-	// Goldie
+	doGoldieAssert(t, tc, defaultOpts)
+}
+
+func doGoldieAssert(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
 	g := goldie.New(t)
 	t.Log(tc.name)
 	g.Assert(t, tc.name, defaultOpts.StdOutBuffer.Bytes())

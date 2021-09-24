@@ -299,6 +299,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		componentService,
 		rest.NewSecurityGroupAPI(o.restClient),
 		vpcService,
+		rest.NewApplicationPostgresIntegrationAPI(o.restClient),
 	)
 
 	monitoringService := clientCore.NewMonitoringService(

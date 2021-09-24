@@ -40,6 +40,7 @@ type Endpoints struct {
 	CreateConfigMap                 endpoint.Endpoint
 	DeleteConfigMap                 endpoint.Endpoint
 	ScaleDeployment                 endpoint.Endpoint
+	DisableEarlyDemux               endpoint.Endpoint
 	CreateHelmRelease               endpoint.Endpoint
 	DeleteHelmRelease               endpoint.Endpoint
 	GetHelmRelease                  endpoint.Endpoint
@@ -91,6 +92,7 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateConfigMap:                 makeCreateConfigMapEndpoint(s.Kube),
 		DeleteConfigMap:                 makeDeleteConfigMap(s.Kube),
 		ScaleDeployment:                 makeScaleDeployment(s.Kube),
+		DisableEarlyDemux:               makeDisableEarlyDemux(s.Kube),
 		CreateHelmRelease:               makeCreateHelmRelease(s.Helm),
 		DeleteHelmRelease:               makeDeleteHelmRelease(s.Helm),
 		GetHelmRelease:                  makeGetHelmRelease(s.Helm),
@@ -140,6 +142,7 @@ type Handlers struct {
 	CreateConfigMap                 http.Handler
 	DeleteConfigMap                 http.Handler
 	ScaleDeployment                 http.Handler
+	DisableEarlyDemux               http.Handler
 	CreateHelmRelease               http.Handler
 	DeleteHelmRelease               http.Handler
 	GetHelmRelease                  http.Handler
@@ -217,6 +220,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateConfigMap:                 newServer(endpoints.CreateConfigMap, decodeCreateConfigMap),
 		DeleteConfigMap:                 newServer(endpoints.DeleteConfigMap, decodeDeleteConfigMap),
 		ScaleDeployment:                 newServer(endpoints.ScaleDeployment, decodeScaleDeployment),
+		DisableEarlyDemux:               newServer(endpoints.DisableEarlyDemux, decodeDisableEarlyDemux),
 		CreateHelmRelease:               newServer(endpoints.CreateHelmRelease, decodeCreateHelmRelease),
 		DeleteHelmRelease:               newServer(endpoints.DeleteHelmRelease, decodeDeleteHelmRelease),
 		GetHelmRelease:                  newServer(endpoints.GetHelmRelease, decodeGetHelmRelease),
@@ -289,6 +293,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			})
 			r.Route("/scale", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.ScaleDeployment)
+			})
+			r.Route("/earlydemux", func(r chi.Router) {
+				r.Method(http.MethodDelete, "/", handlers.DisableEarlyDemux)
 			})
 		})
 		r.Route("/domains", func(r chi.Router) {
@@ -403,6 +410,7 @@ const (
 	s3bucketTag            = "s3bucket"
 	containerRepositoryTag = "containerrepository"
 	securityGroupTag       = "securitygroups"
+	earlyDemuxTag          = "earlyDemux"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -435,6 +443,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateConfigMap:                 logmd.Logging(logger, "create", kubeTag, configMapTag)(endpoints.CreateConfigMap),
 			DeleteConfigMap:                 logmd.Logging(logger, "delete", kubeTag, configMapTag)(endpoints.DeleteConfigMap),
 			ScaleDeployment:                 logmd.Logging(logger, "create", kubeTag, scaleTag)(endpoints.ScaleDeployment),
+			DisableEarlyDemux:               logmd.Logging(logger, "delete", kubeTag, earlyDemuxTag)(endpoints.DisableEarlyDemux),
 			CreateHelmRelease:               logmd.Logging(logger, "create", helmTag, releasesTag)(endpoints.CreateHelmRelease),
 			DeleteHelmRelease:               logmd.Logging(logger, "delete", helmTag, releasesTag)(endpoints.DeleteHelmRelease),
 			GetHelmRelease:                  logmd.Logging(logger, "get", helmTag, releasesTag)(endpoints.GetHelmRelease),

@@ -28,14 +28,15 @@ const (
 )
 
 type applicationPostgresService struct {
-	manifestService  client.ApplicationManifestService
-	pgService        client.ComponentService
-	securityGroupAPI client.SecurityGroupAPI
-	vpcService       client.VPCService
+	manifestService        client.ApplicationManifestService
+	pgService              client.ComponentService
+	securityGroupAPI       client.SecurityGroupAPI
+	vpcService             client.VPCService
+	applicationPostgresAPI client.ApplicationPostgresAPI
 }
 
 // AddPostgresToApplication does the required steps for allowing EKS pod to RDS traffic
-func (a *applicationPostgresService) AddPostgresToApplication(ctx context.Context, opts client.AddPostgresToApplicationOpts) error {
+func (a *applicationPostgresService) AddPostgresToApplication(ctx context.Context, opts client.AddPostgresToApplicationOpts) error { //nolint:funlen
 	clusterID := clusterMetaAsID(opts.Cluster.Metadata)
 
 	vpc, err := a.vpcService.GetVPC(ctx, clusterID)
@@ -90,6 +91,11 @@ func (a *applicationPostgresService) AddPostgresToApplication(ctx context.Contex
 	})
 	if err != nil {
 		return fmt.Errorf("adding incoming rule for database security group: %w", err)
+	}
+
+	err = a.disableEarlyTCPDemux(ctx, clusterID)
+	if err != nil {
+		return fmt.Errorf("disabling early demux: %w", err)
 	}
 
 	return nil
@@ -214,6 +220,11 @@ func (a *applicationPostgresService) generateSecurityGroupPolicy(ctx context.Con
 	return nil
 }
 
+// ref: https://aws.amazon.com/blogs/containers/introducing-security-groups-for-pods/
+func (a *applicationPostgresService) disableEarlyTCPDemux(ctx context.Context, clusterID api.ID) error {
+	return a.applicationPostgresAPI.DisableEarlyTCPDemux(ctx, clusterID)
+}
+
 func (a *applicationPostgresService) removeSecurityGroupPolicy(
 	ctx context.Context,
 	cluster v1alpha1.Cluster,
@@ -335,11 +346,13 @@ func NewApplicationPostgresService(
 	pgService client.ComponentService,
 	securityGroupAPI client.SecurityGroupAPI,
 	vpcService client.VPCService,
+	applicationPostgresAPI client.ApplicationPostgresAPI,
 ) client.ApplicationPostgresService {
 	return &applicationPostgresService{
-		manifestService:  manifestService,
-		pgService:        pgService,
-		securityGroupAPI: securityGroupAPI,
-		vpcService:       vpcService,
+		manifestService:        manifestService,
+		pgService:              pgService,
+		securityGroupAPI:       securityGroupAPI,
+		vpcService:             vpcService,
+		applicationPostgresAPI: applicationPostgresAPI,
 	}
 }

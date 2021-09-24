@@ -95,3 +95,14 @@ func decodeScaleDeployment(_ context.Context, r *http.Request) (interface{}, err
 
 	return opts, nil
 }
+
+func decodeDisableEarlyDemux(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.ID
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}

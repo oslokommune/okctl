@@ -34,6 +34,10 @@ func createValidID() api.ID {
 
 type mockKubeRun struct{}
 
+func (m mockKubeRun) DisableEarlyDEMUX(_ context.Context, _ api.ID) error {
+	panic("implement me")
+}
+
 func (m mockKubeRun) CreateExternalDNSKubeDeployment(_ api.CreateExternalDNSKubeDeploymentOpts) (*api.ExternalDNSKube, error) {
 	return nil, wait.ErrWaitTimeout
 }

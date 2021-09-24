@@ -160,6 +160,21 @@ func (k *kubeService) CreateExternalDNSKubeDeployment(_ context.Context, opts ap
 	return kube, nil
 }
 
+// DisableEarlyDEMUX disables early TCP demux in the aws-node daemonset
+func (k *kubeService) DisableEarlyDEMUX(ctx context.Context, clusterID api.ID) error {
+	err := clusterID.Validate()
+	if err != nil {
+		return errors.E(err, "validating inputs", errors.Invalid)
+	}
+
+	err = k.run.DisableEarlyDEMUX(ctx, clusterID)
+	if err != nil {
+		return errors.E(err, "disabling early TCP demux", errors.Internal)
+	}
+
+	return nil
+}
+
 // NewKubeService returns an initialised kube service
 func NewKubeService(run api.KubeRun) api.KubeService {
 	return &kubeService{

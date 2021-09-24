@@ -240,6 +240,7 @@ type KubeService interface {
 	DeleteConfigMap(ctx context.Context, opts DeleteConfigMapOpts) error
 	ScaleDeployment(ctx context.Context, opts ScaleDeploymentOpts) error
 	CreateNamespace(ctx context.Context, opts CreateNamespaceOpts) (*Namespace, error)
+	DisableEarlyDEMUX(ctx context.Context, clusterID ID) error
 }
 
 // KubeRun provides kube deployment run layer
@@ -253,4 +254,5 @@ type KubeRun interface {
 	DeleteConfigMap(opts DeleteConfigMapOpts) error
 	ScaleDeployment(opts ScaleDeploymentOpts) error
 	CreateNamespace(opts CreateNamespaceOpts) (*Namespace, error)
+	DisableEarlyDEMUX(ctx context.Context, clusterID ID) error
 }

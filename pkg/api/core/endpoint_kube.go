@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 
+	merrors "github.com/mishudark/errors"
+
 	"github.com/go-kit/kit/endpoint"
 	"github.com/oslokommune/okctl/pkg/api"
 )
@@ -58,5 +60,16 @@ func makeScaleDeployment(s api.KubeService) endpoint.Endpoint {
 func makeCreateNamespace(s api.KubeService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return s.CreateNamespace(ctx, *request.(*api.CreateNamespaceOpts))
+	}
+}
+
+func makeDisableEarlyDemux(s api.KubeService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		payload, ok := request.(api.ID)
+		if !ok {
+			return Empty{}, merrors.E(merrors.New("casting early demux payload"), merrors.Internal)
+		}
+
+		return Empty{}, s.DisableEarlyDEMUX(ctx, payload)
 	}
 }

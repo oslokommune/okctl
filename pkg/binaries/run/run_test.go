@@ -84,7 +84,7 @@ func TestRun(t *testing.T) {
 			expect: "wd=working_dir, path=binary_path, env=env_var, args=binary_args",
 		},
 		{
-			name: "If command fails, it should return an error that contains the command's exit code",
+			name: "If command fails, error should contain an error that contains the command's exit code",
 			run: func() *run.Run {
 				r := run.New(nil, "working_dir", "binary_path", []string{"env_var"}, run.Cmd())
 				r.CmdFn = fakeExecCommandFailure()
@@ -92,6 +92,16 @@ func TestRun(t *testing.T) {
 			}(),
 			args:                []string{"binary_args"},
 			expectErrorContains: "got: exit status 1",
+		},
+		{
+			name: "If command fails, error should contain path to binary that failed",
+			run: func() *run.Run {
+				r := run.New(nil, "working_dir", "/tmp/some_binary", []string{"env_var"}, run.Cmd())
+				r.CmdFn = fakeExecCommandFailure()
+				return r
+			}(),
+			args:                []string{"binary_args"},
+			expectErrorContains: "/tmp/some_binary",
 		},
 	}
 

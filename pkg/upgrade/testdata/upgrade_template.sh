@@ -6,14 +6,14 @@ ARCH=amd64
 
 has_invalid_param() {
     declare -a valid_args
-    valid_args=(--debug --confirm --dry-run true false)
+    valid_args=(--debug --confirm --dry-run --dry-run=true --dry-run=false)
     for arg
         do
 
         # Thanks to https://stackoverflow.com/questions/3685970/check-if-a-bash-array-contains-a-value
         # shellcheck disable=SC2076
         if [[ ! " ${valid_args[*]} " =~ " ${arg} " ]]; then
-            echo "Invalid argument: $arg"
+            echo "Invalid argument: $arg. Valid args: ${valid_args[*]}"
             return 0
         fi
     done
@@ -48,8 +48,8 @@ if has_param '--confirm' "$@"; then
     echo "--confirm flag was provided"
 fi
 
-if [[ "$@" =~ "--dry-run false" ]]; then
-  echo "Doing actual changes."
-elif [[ "$@" =~ "--dry-run true" ]] || [[ "$@" =~ "--dry-run" ]]; then
+if has_param '--dry-run=true' "$@" || has_param '--dry-run' "$@"; then
   echo "--dry-run true flag was provided, so simulating changes."
+else
+  echo "Doing actual changes."
 fi

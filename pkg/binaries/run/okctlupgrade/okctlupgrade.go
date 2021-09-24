@@ -74,9 +74,9 @@ func (u *BinaryRunner) doRun(flags Flags, dryRun bool) ([]byte, error) {
 	}
 
 	if dryRun {
-		args = append(args, "--dry-run", "true")
+		args = append(args, "--dry-run=true")
 	} else {
-		args = append(args, "--dry-run", "false")
+		args = append(args, "--dry-run=false")
 	}
 
 	runner := run.New(nil, u.repoDir, u.binaryPath, envs, u.cmdFn)

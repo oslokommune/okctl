@@ -32,7 +32,7 @@ nav:
       - FAQ: help/faq.md
       - Running a Docker image in your cluster: help/docker-registry.md
       - Manually connecting to PostgreSQL: help/manually-connecting-to-postgres.md
-    - Common issues: help/common-issues.md
+      - Common issues: help/common-issues.md
       - Outdated common issues: help/outdated-common-issues.md
 
 plugins:

@@ -1,2 +1,2 @@
-ccbd77fa6636ebe47f871a48fd1f323b2f41128cbc4583b04abb4df2140bb274  okctl-upgrade_0.0.61_Darwin_amd64.tar.gz
-84b88c0c847122332a0a7302a2f61e030c839d92b8965f431de55dd88751148b  okctl-upgrade_0.0.61_Linux_amd64.tar.gz
+ac07dcc89e06556a545d1cdf41a4031a531de550fd641daf15ac348083a1ab06  okctl-upgrade_0.0.61_Darwin_amd64.tar.gz
+c064e6566125c900b2c864fff2deb497b3ccda7d1fe0ac8b1738bf3887344587  okctl-upgrade_0.0.61_Linux_amd64.tar.gz

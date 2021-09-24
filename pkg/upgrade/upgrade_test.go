@@ -37,6 +37,7 @@ const (
 type TestCase struct {
 	name                               string
 	withDebug                          bool
+	withConfirm                        *bool
 	withOkctlVersion                   string
 	withOriginalClusterVersion         string
 	withClusterVersion                 string
@@ -274,6 +275,27 @@ func TestRunUpgrades(t *testing.T) {
 			withGithubReleaseAssetsFromFolder: folderWorking,
 			withHost:                          state.Host{Os: linux, Arch: amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.62", "0.0.63"},
+		},
+		{
+			name:                              "Should be possible to run update with confirm flag",
+			withConfirm:                       boolPtr(true),
+			withOkctlVersion:                  "0.0.65",
+			withOriginalClusterVersion:        "0.0.60",
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.62"}),
+			withGithubReleaseAssetsFromFolder: folderWorking,
+			withHost:                          state.Host{Os: linux, Arch: amd64},
+			expectBinaryVersionsRunOnce:       []string{"0.0.62"},
+		},
+		{
+			// Default for tests is run -with- confirm flag, so here we verify the opposite
+			name:                              "Should be possible to run update without confirm flag",
+			withConfirm:                       boolPtr(false),
+			withOkctlVersion:                  "0.0.65",
+			withOriginalClusterVersion:        "0.0.60",
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.62"}),
+			withGithubReleaseAssetsFromFolder: folderWorking,
+			withHost:                          state.Host{Os: linux, Arch: amd64},
+			expectBinaryVersionsRunOnce:       []string{"0.0.62"},
 		},
 		{
 			name:                       "Should run upgrade hot fixes, and in correct order",
@@ -552,6 +574,13 @@ func TestRunUpgrades(t *testing.T) {
 			// Given
 			var err error
 
+			var autoConfirm bool
+			if tc.withConfirm == nil {
+				autoConfirm = true
+			} else {
+				autoConfirm = *tc.withConfirm
+			}
+
 			stdOutBuffer := new(bytes.Buffer)
 
 			tmpStore, err := storage.NewTemporaryStorage()
@@ -578,7 +607,7 @@ func TestRunUpgrades(t *testing.T) {
 			defaultOpts := DefaultTestOpts{
 				Opts: upgrade.Opts{
 					Debug:                    tc.withDebug,
-					AutoConfirm:              true,
+					AutoConfirm:              autoConfirm,
 					Logger:                   logrus.StandardLogger(),
 					Out:                      stdOutBuffer,
 					RepositoryDirectory:      repositoryAbsoluteDir,
@@ -745,4 +774,8 @@ func createGihubReleaseAssetBinary(os, arch, version string) *github.ReleaseAsse
 		BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
 			"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz", version, version, os, arch)),
 	}
+}
+
+func boolPtr(val bool) *bool {
+	return &val
 }

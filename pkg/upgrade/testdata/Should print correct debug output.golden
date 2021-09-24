@@ -34,10 +34,12 @@ Simulating upgrades complete.
 --- Running upgrade: okctl-upgrade_0.0.62 ---
 This is upgrade file for okctl-upgrade_0.0.62_Linux_amd64
 --debug flag was provided, so here is some debug output..
+--confirm flag was provided
 Doing actual changes.
 --- Running upgrade: okctl-upgrade_0.0.63 ---
 This is upgrade file for okctl-upgrade_0.0.63_Linux_amd64
 --debug flag was provided, so here is some debug output..
+--confirm flag was provided
 Doing actual changes.
 
 Upgrade complete! Cluster version is now 0.0.63. Remember to commit and push changes with git.

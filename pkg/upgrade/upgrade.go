@@ -394,6 +394,7 @@ func New(opts Opts) (Upgrader, error) {
 
 	return Upgrader{
 		debug:               opts.Debug,
+		autoConfirm:         opts.AutoConfirm,
 		logger:              opts.Logger,
 		out:                 opts.Out,
 		clusterID:           opts.ClusterID,

@@ -38,7 +38,7 @@ if has_invalid_param "$@"; then
 fi
 
 # This is a test upgrade. We output this line so we can verify that this specific upgrade was run.
-echo This is upgrade file for okctl-upgrade_${VER}_${OS}_${ARCH}
+echo "This is upgrade file for okctl-upgrade_${VER}_${OS}_${ARCH}"
 
 if has_param '--debug' "$@"; then
     echo "--debug flag was provided, so here is some debug output.."

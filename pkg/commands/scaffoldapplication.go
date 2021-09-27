@@ -54,7 +54,7 @@ image:
 subDomain: my-app
 
 # The port your app listens on
-# Comment this out to avoid setting up a service (required if url is specified)
+# Comment this out to avoid setting up a service (required if subDomain is specified)
 #
 port: 3000
 
@@ -66,7 +66,7 @@ port: 3000
 #postgres: dbname
 
 # How many replicas of your application should we scaffold
-#replicas: 3 # 1 by default
+#replicas: 1
 
 # A Docker repository secret for pulling your image
 #imagePullSecret: my-pull-secret-name

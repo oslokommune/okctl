@@ -47,15 +47,26 @@ metadata:
   name: <my-security-group-policy> # Can be anything
   namespace: <my-namespace> # Must be the same namespace as the application
 spec:
-  podSelector: # Other selectors are also available
-    matchLabels:
-      <role>: <my-role>
-  securityGroups:
-    groupIds:
-      - <sg-abc123> # The security group ID to be associated
+   podSelector: # Other selectors are also available
+      matchLabels:
+         <role>: <my-role>
+   securityGroups:
+      groupIds:
+         - <sg-abc123> # The security group ID to be associated
 ```
 
 Create the security group policy CRD as a YAML file and use `kubectl apply -f <file>` to apply it to your Kubernetes
 cluster.
+
+### Disable Early TCP Demux
+
+For now, early TCP Demux does not work when a pod has been connected to a security group. To ensure early TCP demux has
+been disabled, run the following command:
+
+```bash
+kubectl patch daemonset aws-node \
+    -n kube-system \
+    -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
+```
 
 That's it. After restarting your pod, your pod should be able to connect to the database.

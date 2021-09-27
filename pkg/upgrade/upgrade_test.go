@@ -114,6 +114,15 @@ func TestRunUpgrades(t *testing.T) {
 			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
 		},
 		{
+			name:                              "Should run a Darwin upgrade",
+			withOkctlVersion:                  "0.0.61",
+			withOriginalClusterVersion:        "0.0.50",
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
+			withGithubReleaseAssetsFromFolder: folderWorking,
+			withHost:                          state.Host{Os: darwin, Arch: amd64},
+			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
+		},
+		{
 			// Bumping cluster version happens after running every upgrade binary, to that upgrade's version. In this
 			// test, that would be 0.0.61. Additionally, when all upgrades have completed successfully, we have chosen
 			// to bump the cluster version to the current version of okctl. The reason for that, is that we want that
@@ -133,24 +142,18 @@ func TestRunUpgrades(t *testing.T) {
 			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
 		},
 		{
-			name:                               "Should not bump cluster version if user aborts upgrading",
-			withOkctlVersion:                   "0.0.70",
-			withOriginalClusterVersion:         "0.0.50",
-			withGithubReleases:                 createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
-			withGithubReleaseAssetsFromFolder:  folderWorking,
-			withHost:                           state.Host{Os: linux, Arch: amd64},
-			withUserAnswers:                    []bool{true, false},
-			expectBinaryVersionsRunOnce:        []string{},
-			expectedClusterVersionAfterUpgrade: "0.0.50",
-		},
-		{
-			name:                              "Should run a Darwin upgrade",
-			withOkctlVersion:                  "0.0.61",
+			name:                              "Should not bump cluster version if user aborts upgrading",
+			withOkctlVersion:                  "0.0.70",
 			withOriginalClusterVersion:        "0.0.50",
 			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: folderWorking,
-			withHost:                          state.Host{Os: darwin, Arch: amd64},
-			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
+			withHost:                          state.Host{Os: linux, Arch: amd64},
+			withUserAnswers: []bool{
+				true,  // (tag UPGR01) 'Yes' to save original cluster version
+				false, // 'No' to if the user wants to proceed upgradeing
+			},
+			expectBinaryVersionsRunOnce:        []string{},
+			expectedClusterVersionAfterUpgrade: "0.0.50",
 		},
 		{
 			name:                              "Should return error if okctl version is below cluster version",

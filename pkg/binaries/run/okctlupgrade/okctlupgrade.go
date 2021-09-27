@@ -22,23 +22,6 @@ type BinaryRunner struct {
 	cmdFn      run.CmdFn
 }
 
-// New creates a new okctl upgrade cli wrapper
-func New(
-	repoDir string,
-	progress io.Writer,
-	logger *logrus.Logger,
-	binaryPath string,
-	cmdFn run.CmdFn,
-) *BinaryRunner {
-	return &BinaryRunner{
-		repoDir:    repoDir,
-		progress:   progress,
-		logger:     logger,
-		binaryPath: binaryPath,
-		cmdFn:      cmdFn,
-	}
-}
-
 // Flags contains the flags to pass to the binary when running it.
 // As a safety measure for not running an upgade binary accidentally with --dry-run false, which is the default, a dry
 // run flag is not included as a field here.
@@ -87,4 +70,21 @@ func (u *BinaryRunner) doRun(flags Flags, dryRun bool) ([]byte, error) {
 	}
 
 	return output, err
+}
+
+// New creates a new okctl upgrade cli wrapper
+func New(
+	repoDir string,
+	progress io.Writer,
+	logger *logrus.Logger,
+	binaryPath string,
+	cmdFn run.CmdFn,
+) *BinaryRunner {
+	return &BinaryRunner{
+		repoDir:    repoDir,
+		progress:   progress,
+		logger:     logger,
+		binaryPath: binaryPath,
+		cmdFn:      cmdFn,
+	}
 }

@@ -161,9 +161,3 @@ That's it. Your application should now be able to read and write to the database
 #### Manually setting up an app to database connection
 
 See [this](/help/manually-connecting-to-postgres) article.
-
-#### Notes
-
-##### Security groups for Pods and Fargate
-
-Per now, it is not possible to associate security groups with pods running in fargate, this is on the roadmap however, the following [issue](https://github.com/aws/containers-roadmap/issues/625) is tracking the progress.

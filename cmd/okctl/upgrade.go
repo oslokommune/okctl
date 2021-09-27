@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/logrusorgru/aurora"
-
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
 	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversion"
 
@@ -39,7 +37,6 @@ func buildUpgradeCommand(o *okctl.Okctl) *cobra.Command {
 		Long: `Runs a series of upgrade migrations to upgrade resources made by okctl
 to the current version of okctl. Example of such resources are helm charts, okctl cluster and application declarations,
 binaries used by okctl (kubectl, etc), and internal state.`,
-		Hidden: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			err := o.Initialise()
 			if err != nil {
@@ -112,9 +109,6 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			_, _ = fmt.Fprint(o.Out,
-				aurora.Bold("\nThis is an experimental feature. Use at your own risk!\n\n").String())
-
 			err := upgrader.Run()
 			if err != nil {
 				return fmt.Errorf("upgrading: %w", err)

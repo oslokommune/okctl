@@ -62,7 +62,7 @@ port: 3000
 #prometheus:
 #  path: /metrics
 
-# Enable integration with a Postgres database
+# Enable connection with a PostgreSQL database
 #postgres: dbname
 
 # How many replicas of your application should we scaffold

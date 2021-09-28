@@ -38,12 +38,10 @@ func (p *upgradeBinaryProvider) okctlUpgradeRunner(version string) (*okctlupgrad
 	return p.binaryRunners[version], nil
 }
 
-// Using a custom Cmd instead of the default one, as we have to set stdin to os.Stdin, in order to for our upgrades
-// to be able to get input from the user
 func cmd() run.CmdFn {
 	return func(workingDir, path string, env, args []string) *exec.Cmd {
 		cmd := run.Cmd()(workingDir, path, env, args)
-		cmd.Stdin = os.Stdin
+		cmd.Stdin = os.Stdin // Enables user input when running a binary
 
 		return cmd
 	}

@@ -235,6 +235,10 @@ func (r *Runner) Update(stackName string, template []byte) error {
 		return fmt.Errorf("describing stack %s: %w", stackName, err)
 	}
 
+	if len(response.Stacks) > 1 {
+		return fmt.Errorf("too many stacks selected")
+	}
+
 	existingStack := response.Stacks[0]
 
 	stackInput := &cfPkg.UpdateStackInput{

@@ -25,7 +25,7 @@ type BinaryRunner struct {
 // Flags contains the flags to pass to the binary when running it.
 // As a safety measure for not running an upgade binary accidentally with --dry-run false, which is the default, a dry
 // run flag is not included as a field here.
-// Too see the semantics of these flags, see https://github.com/oslokommune/okctl-upgrade
+// To see the semantics of these flags, see https://github.com/oslokommune/okctl-upgrade
 type Flags struct {
 	Debug   bool
 	Confirm bool

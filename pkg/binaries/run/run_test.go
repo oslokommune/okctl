@@ -84,7 +84,7 @@ func TestRun(t *testing.T) {
 			expect: "wd=working_dir, path=binary_path, env=env_var, args=binary_args",
 		},
 		{
-			name: "If command fails, error should contain an error that contains the command's exit code",
+			name: "If command fails, error should contain the command's exit code",
 			run: func() *run.Run {
 				r := run.New(nil, "working_dir", "binary_path", []string{"env_var"}, run.Cmd())
 				r.CmdFn = fakeExecCommandFailure()

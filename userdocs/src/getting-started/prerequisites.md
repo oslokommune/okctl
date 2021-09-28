@@ -8,7 +8,7 @@ If you don't have any keys, create a new one with `gpg --gen-key`
 
 ## Create a new GitHub repository
 
-Go to github.com/oslokommune and create a new **private** git repository.
+Go to github.com/oslokommune and create a new **private or internal** git repository.
 
 :information_source: This repository will be used by okctl to store infrastructure-as-code, which means files containing
 various configuration for your up-and-coming cluster.

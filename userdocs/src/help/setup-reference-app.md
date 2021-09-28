@@ -1,8 +1,8 @@
 #Okctl demo app
 *Guide from zero to running with a reference application*
 
-(TODO , write short about motivation for this application)
-What is this app, and what it should be user for.
+This guide will give you a complete example for how to set up a reference application in an okctl environment. It can be useful
+to see how various part are configured together and help gain a better understandning for how you configure your own application.
 
 Following this guide will set up:
 
@@ -41,7 +41,7 @@ Scaffold and [apply your application](https://okctl.io/getting-started/create-ap
 
 We are going to apply the following [app](https://github.com/oslokommune/okctl-kotlin-app-template) (you don't have to look at the source-code to continue this guide)
 
-Add these changes to the default scaffold (diff view: Todo explain what you mean with diff view) 
+Add these changes to the default scaffold (diff view: remove lines with a '-', add lines with a '+')
 ```yaml
 -  name: my-app
 +  name: demo-app
@@ -50,7 +50,7 @@ Add these changes to the default scaffold (diff view: Todo explain what you mean
 +  namespace: demo
 
 -  uri: ghcr.io/oslokommune/okctl-hello:v0.0.3
-+  uri: ghcr.io/oslokommune/okctl-kotlin-app-template:v0.0.15
++  uri: ghcr.io/oslokommune/okctl-kotlin-app-template:v0.0.23
   
 -subDomain: my-app
 +subDomain: app
@@ -113,13 +113,13 @@ cd secret && uuidgen | sed 's/-//g' > password.secret
 
 4. Forward postgres to your local machine, and create a new user
     * First create a password file, if you read the code there is some information hidden in there, the following commands assume you are back in the root of your iac repository and that you have followed the guide to this point:
-      (TODO break up lines on all bash )
     ```bash
-    echo "This_password_can_be_anything_and_is_only_used_for_your_own_login_into_psql_after_forward_postgres_is_running_Yes_this_entire_sentence_will_be_part_of_your_temporary_password"$(uuidgen | sed 's/-//g') > secret/tmp.password
+    echo "This_password_can_be_anything"$(uuidgen | sed 's/-//g') > secret/tmp.password
     ```
     * Now forward postgres: Use your own cluster definition file (-c), and the name of your database -n, **the username (-u) should not exist in the database already**:
     ```bash
-    okctl forward postgres -c okctl-demo-dev.yaml -n okctldemo -u tempuser -p secret/tmp.password
+    okctl forward postgres -c okctl-demo-dev.yaml -n okctldemo \
+    -u tempuser -p secret/tmp.password
     ```
     * Run the following script (copy and paste the whole thing) to generate sql we will use to insert into your database
     ```bash
@@ -165,14 +165,13 @@ env:
 ```
 [View example in context](https://github.com/oslokommune/okctl-demo-iac/blob/5a685ce340f10d008a2e615e1f9b9c4b305dedc9/infrastructure/applications/demo-app/base/deployment.yaml)
 
-(todo rewrite this)
-Replace content `infrastructure/applications/demo-app/overlays/okctl-demo-dev/deployment-patch.json` with. You need to use the appropriate value for endpoint to your own database, that can be found under RDS -> DB instances - > (your database):
+Replace content in `infrastructure/applications/demo-app/overlays/okctl-demo-dev/deployment-patch.json` with the code-block below. You need to use the appropriate value for endpoint to your own database, that can be found under RDS -> DB instances - > (your database):
 ```json
 [
     {
         "op": "add",
         "path": "/spec/template/spec/containers/0/image",
-        "value": "ghcr.io/oslokommune/okctl-kotlin-app-template:v0.0.14"
+        "value": "ghcr.io/oslokommune/okctl-kotlin-app-template:v0.0.23"
     },
     {
         "op": "add",
@@ -202,11 +201,4 @@ Replace content `infrastructure/applications/demo-app/overlays/okctl-demo-dev/de
 Also, pay attention to the number at the end of each env variable in the path. Since env is *one* array, you need to start counting from *after* common env variables defined in deployment.yaml.
 Since deployment.yaml specifies 3 env variables (index 0, 1 , 2) we start counting from 3.
 
-*This concludes this guide, good luck!* 
-
-**Need to write about the following**
-
-* Prometheus (exposing /metrics endpoint)
-
-# TODO 
-* Use ref app in scaffold instead of hello? - maybe in addition to.
+*This concludes this guide, good luck!*

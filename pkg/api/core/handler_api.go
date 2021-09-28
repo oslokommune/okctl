@@ -40,6 +40,7 @@ type Endpoints struct {
 	CreateConfigMap                 endpoint.Endpoint
 	DeleteConfigMap                 endpoint.Endpoint
 	ScaleDeployment                 endpoint.Endpoint
+	DisableEarlyDemux               endpoint.Endpoint
 	CreateHelmRelease               endpoint.Endpoint
 	DeleteHelmRelease               endpoint.Endpoint
 	GetHelmRelease                  endpoint.Endpoint
@@ -54,6 +55,11 @@ type Endpoints struct {
 	DeleteS3Bucket                  endpoint.Endpoint
 	CreateContainerRepository       endpoint.Endpoint
 	DeleteContainerRepository       endpoint.Endpoint
+	CreateSecurityGroup             endpoint.Endpoint
+	GetSecurityGroup                endpoint.Endpoint
+	DeleteSecurityGroup             endpoint.Endpoint
+	AddSecurityGroupRule            endpoint.Endpoint
+	RemoveSecurityGroupRule         endpoint.Endpoint
 }
 
 // MakeEndpoints returns the endpoints initialised with their
@@ -86,6 +92,7 @@ func MakeEndpoints(s Services) Endpoints {
 		CreateConfigMap:                 makeCreateConfigMapEndpoint(s.Kube),
 		DeleteConfigMap:                 makeDeleteConfigMap(s.Kube),
 		ScaleDeployment:                 makeScaleDeployment(s.Kube),
+		DisableEarlyDemux:               makeDisableEarlyDemux(s.Kube),
 		CreateHelmRelease:               makeCreateHelmRelease(s.Helm),
 		DeleteHelmRelease:               makeDeleteHelmRelease(s.Helm),
 		GetHelmRelease:                  makeGetHelmRelease(s.Helm),
@@ -100,6 +107,11 @@ func MakeEndpoints(s Services) Endpoints {
 		DeleteS3Bucket:                  makeDeleteS3BucketEndpoint(s.ComponentService),
 		CreateContainerRepository:       makeCreateContainerRepositoryEndpoint(s.ContainerRepositoryService),
 		DeleteContainerRepository:       makeDeleteContainerRepositoryEndpoint(s.ContainerRepositoryService),
+		CreateSecurityGroup:             makeCreateSecurityGroupEndpoint(s.SecurityGroupService),
+		GetSecurityGroup:                makeGetSecurityGroupEndpoint(s.SecurityGroupService),
+		DeleteSecurityGroup:             makeDeleteSecurityGroupEndpoint(s.SecurityGroupService),
+		AddSecurityGroupRule:            makeAddSecurityGroupRuleEndpoint(s.SecurityGroupService),
+		RemoveSecurityGroupRule:         makeRemoveSecurityGroupRuleEndpoint(s.SecurityGroupService),
 	}
 }
 
@@ -130,6 +142,7 @@ type Handlers struct {
 	CreateConfigMap                 http.Handler
 	DeleteConfigMap                 http.Handler
 	ScaleDeployment                 http.Handler
+	DisableEarlyDemux               http.Handler
 	CreateHelmRelease               http.Handler
 	DeleteHelmRelease               http.Handler
 	GetHelmRelease                  http.Handler
@@ -144,6 +157,11 @@ type Handlers struct {
 	DeleteS3Bucket                  http.Handler
 	CreateContainerRepository       http.Handler
 	DeleteContainerRepository       http.Handler
+	CreateSecurityGroup             http.Handler
+	GetSecurityGroup                http.Handler
+	DeleteSecurityGroup             http.Handler
+	AddSecurityGroupRule            http.Handler
+	RemoveSecurityGroupRule         http.Handler
 }
 
 // EncodeResponseType defines a type for responses
@@ -202,6 +220,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		CreateConfigMap:                 newServer(endpoints.CreateConfigMap, decodeCreateConfigMap),
 		DeleteConfigMap:                 newServer(endpoints.DeleteConfigMap, decodeDeleteConfigMap),
 		ScaleDeployment:                 newServer(endpoints.ScaleDeployment, decodeScaleDeployment),
+		DisableEarlyDemux:               newServer(endpoints.DisableEarlyDemux, decodeDisableEarlyDemux),
 		CreateHelmRelease:               newServer(endpoints.CreateHelmRelease, decodeCreateHelmRelease),
 		DeleteHelmRelease:               newServer(endpoints.DeleteHelmRelease, decodeDeleteHelmRelease),
 		GetHelmRelease:                  newServer(endpoints.GetHelmRelease, decodeGetHelmRelease),
@@ -216,6 +235,11 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 		DeleteS3Bucket:                  newServer(endpoints.DeleteS3Bucket, decodeStructRequest(&api.DeleteS3BucketOpts{})),
 		CreateContainerRepository:       newServer(endpoints.CreateContainerRepository, decodeStructRequest(&api.CreateContainerRepositoryOpts{})),
 		DeleteContainerRepository:       newServer(endpoints.DeleteContainerRepository, decodeStructRequest(&api.DeleteContainerRepositoryOpts{})),
+		CreateSecurityGroup:             newServer(endpoints.CreateSecurityGroup, decodeStructRequest(&api.CreateSecurityGroupOpts{})),
+		GetSecurityGroup:                newServer(endpoints.GetSecurityGroup, decodeStructRequest(&api.GetSecurityGroupOpts{})),
+		DeleteSecurityGroup:             newServer(endpoints.DeleteSecurityGroup, decodeStructRequest(&api.DeleteSecurityGroupOpts{})),
+		AddSecurityGroupRule:            newServer(endpoints.AddSecurityGroupRule, decodeStructRequest(&api.AddRuleOpts{})),
+		RemoveSecurityGroupRule:         newServer(endpoints.RemoveSecurityGroupRule, decodeStructRequest(&api.RemoveRuleOpts{})),
 	}
 }
 
@@ -270,6 +294,9 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			r.Route("/scale", func(r chi.Router) {
 				r.Method(http.MethodPost, "/", handlers.ScaleDeployment)
 			})
+			r.Route("/earlydemux", func(r chi.Router) {
+				r.Method(http.MethodDelete, "/", handlers.DisableEarlyDemux)
+			})
 		})
 		r.Route("/domains", func(r chi.Router) {
 			r.Route("/hostedzones", func(r chi.Router) {
@@ -318,6 +345,15 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 			r.Method(http.MethodPost, "/", handlers.CreateContainerRepository)
 			r.Method(http.MethodDelete, "/", handlers.DeleteContainerRepository)
 		})
+		r.Route("/securitygroups", func(r chi.Router) {
+			r.Route("/rules", func(r chi.Router) {
+				r.Method(http.MethodPost, "/", handlers.AddSecurityGroupRule)
+				r.Method(http.MethodDelete, "/", handlers.RemoveSecurityGroupRule)
+			})
+			r.Method(http.MethodPost, "/", handlers.CreateSecurityGroup)
+			r.Method(http.MethodGet, "/", handlers.GetSecurityGroup)
+			r.Method(http.MethodDelete, "/", handlers.DeleteSecurityGroup)
+		})
 	})
 
 	return r
@@ -337,6 +373,7 @@ type Services struct {
 	IdentityManager            api.IdentityManagerService
 	ComponentService           api.ComponentService
 	ContainerRepositoryService api.ContainerRepositoryService
+	SecurityGroupService       api.SecurityGroupService
 }
 
 // EndpointOption makes it easy to enable and disable the endpoint
@@ -369,8 +406,11 @@ const (
 	scaleTag               = "scale"
 	postgresTag            = "postgres"
 	componentsTag          = "components"
+	securityGroupRulesTag  = "rules"
 	s3bucketTag            = "s3bucket"
 	containerRepositoryTag = "containerrepository"
+	securityGroupTag       = "securitygroups"
+	earlyDemuxTag          = "earlyDemux"
 )
 
 // InstrumentEndpoints adds instrumentation to the endpoints
@@ -403,6 +443,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			CreateConfigMap:                 logmd.Logging(logger, "create", kubeTag, configMapTag)(endpoints.CreateConfigMap),
 			DeleteConfigMap:                 logmd.Logging(logger, "delete", kubeTag, configMapTag)(endpoints.DeleteConfigMap),
 			ScaleDeployment:                 logmd.Logging(logger, "create", kubeTag, scaleTag)(endpoints.ScaleDeployment),
+			DisableEarlyDemux:               logmd.Logging(logger, "delete", kubeTag, earlyDemuxTag)(endpoints.DisableEarlyDemux),
 			CreateHelmRelease:               logmd.Logging(logger, "create", helmTag, releasesTag)(endpoints.CreateHelmRelease),
 			DeleteHelmRelease:               logmd.Logging(logger, "delete", helmTag, releasesTag)(endpoints.DeleteHelmRelease),
 			GetHelmRelease:                  logmd.Logging(logger, "get", helmTag, releasesTag)(endpoints.GetHelmRelease),
@@ -417,6 +458,11 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 			DeleteS3Bucket:                  logmd.Logging(logger, "delete", componentsTag, s3bucketTag)(endpoints.DeleteS3Bucket),
 			CreateContainerRepository:       logmd.Logging(logger, "create", componentsTag, containerRepositoryTag)(endpoints.CreateContainerRepository),
 			DeleteContainerRepository:       logmd.Logging(logger, "delete", componentsTag, containerRepositoryTag)(endpoints.DeleteContainerRepository),
+			CreateSecurityGroup:             logmd.Logging(logger, "create", securityGroupTag)(endpoints.CreateSecurityGroup),
+			GetSecurityGroup:                logmd.Logging(logger, "get", securityGroupTag)(endpoints.GetSecurityGroup),
+			DeleteSecurityGroup:             logmd.Logging(logger, "delete", securityGroupTag)(endpoints.DeleteSecurityGroup),
+			AddSecurityGroupRule:            logmd.Logging(logger, "create", securityGroupTag, securityGroupRulesTag)(endpoints.AddSecurityGroupRule),
+			RemoveSecurityGroupRule:         logmd.Logging(logger, "delete", securityGroupTag, securityGroupRulesTag)(endpoints.RemoveSecurityGroupRule),
 		}
 	}
 }

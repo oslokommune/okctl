@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/api"
+
 	"github.com/oslokommune/okctl/pkg/cfn/components/containerrepository"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/lambdafunction"
@@ -1639,5 +1641,71 @@ func (e *ECRRepositoryComposer) Compose() (*cfn.Composition, error) {
 func NewECRRepositoryComposer(imageName string) *ECRRepositoryComposer {
 	return &ECRRepositoryComposer{
 		ImageName: imageName,
+	}
+}
+
+// SecurityGroupComposer contains state required for creating an ECR repository
+type SecurityGroupComposer struct {
+	ClusterName   string
+	VPCID         string
+	Name          string
+	Description   string
+	InboundRules  []api.Rule
+	OutboundRules []api.Rule
+	resourceName  string
+}
+
+// CloudFormationResourceName returns the CF logical name
+func (e *SecurityGroupComposer) CloudFormationResourceName(suffix string) string {
+	if suffix == "" {
+		return e.resourceName
+	}
+
+	return fmt.Sprintf("%s-%s", e.resourceName, suffix)
+}
+
+// PhysicalName returns the name of the resource
+func (e *SecurityGroupComposer) PhysicalName(resource string) string {
+	return fmt.Sprintf("%s%s%s", e.Name, e.ClusterName, resource)
+}
+
+// Compose returns the outputs and resources
+func (e *SecurityGroupComposer) Compose() (*cfn.Composition, error) {
+	sg := securitygroup.NewSecurityGroup(securitygroup.NewSecurityGroupOpts{
+		Name:          e.PhysicalName(e.Name),
+		Description:   e.Description,
+		ResourceName:  e.CloudFormationResourceName(""),
+		VPCID:         e.VPCID,
+		InboundRules:  e.InboundRules,
+		OutboundRules: e.OutboundRules,
+	})
+
+	return &cfn.Composition{
+		Outputs:   []cfn.StackOutputer{sg},
+		Resources: []cfn.ResourceNamer{sg},
+	}, nil
+}
+
+// NewSecurityGroupComposerOpts defines required data to create a Security Group CloudFormation template
+type NewSecurityGroupComposerOpts struct {
+	ClusterName   string
+	ResourceName  string
+	VPCID         string
+	Name          string
+	Description   string
+	InboundRules  []api.Rule
+	OutboundRules []api.Rule
+}
+
+// NewSecurityGroupComposer returns an initialized application security group composer
+func NewSecurityGroupComposer(opts NewSecurityGroupComposerOpts) *SecurityGroupComposer {
+	return &SecurityGroupComposer{
+		ClusterName:   opts.ClusterName,
+		resourceName:  opts.ResourceName,
+		VPCID:         opts.VPCID,
+		Name:          opts.Name,
+		Description:   opts.Description,
+		InboundRules:  opts.InboundRules,
+		OutboundRules: opts.OutboundRules,
 	}
 }

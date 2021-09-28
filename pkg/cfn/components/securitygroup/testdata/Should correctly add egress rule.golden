@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Outputs:
+  SG:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-SG
+    Value:
+      Ref: SG
+  SGGroupId:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-SGGroupId
+    Value:
+      Fn::GetAtt:
+      - SG
+      - GroupId
+Resources:
+  SG:
+    Properties:
+      GroupDescription: Defines network access regarding dbapp
+      GroupName: dbappjulius-devdbapp
+      SecurityGroupEgress:
+      - CidrIp: 192.168.0.1/24
+        Description: Allow traffic to application security group
+        FromPort: 5432
+        IpProtocol: tcp
+        ToPort: 5432
+      - CidrIp: 192.168.8.0/24
+        Description: Allow Postgres traffic to database subnet
+        FromPort: 5432
+        IpProtocol: tcp
+        ToPort: 5432
+      - CidrIp: 192.168.5.0/24
+        Description: Allow Postgres traffic to database subnet
+        FromPort: 5432
+        IpProtocol: tcp
+        ToPort: 5432
+      - CidrIp: 192.168.2.0/24
+        Description: Allow Postgres traffic to database subnet
+        FromPort: 5432
+        IpProtocol: tcp
+        ToPort: 5432
+      SecurityGroupIngress:
+      - CidrIp: 192.168.0.0/20
+        Description: Required DNS/tcp entrypoint for control plane
+        FromPort: 53
+        IpProtocol: tcp
+        ToPort: 53
+      - CidrIp: 192.168.0.0/20
+        Description: Required DNS/udp entrypoint for control plane
+        FromPort: 53
+        IpProtocol: udp
+        ToPort: 53
+      VpcId: vpc-074eaaf3bcc642368
+    Type: AWS::EC2::SecurityGroup

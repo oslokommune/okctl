@@ -5,6 +5,9 @@ package v1beta1
 
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+// SecurityGroupPolicyKind is a string value that represents the resource type
+const SecurityGroupPolicyKind = "SecurityGroupPolicy"
+
 // SecurityGroupPolicySpec defines the spec content
 //+kubebuilder:object:generate:=true
 type SecurityGroupPolicySpec struct {

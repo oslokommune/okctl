@@ -5,20 +5,28 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/oslokommune/okctl/pkg/config/constant"
-
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
+	"github.com/oslokommune/okctl/pkg/config/constant"
+	"github.com/oslokommune/okctl/pkg/jsonpatch"
 	"github.com/oslokommune/okctl/pkg/scaffold"
+	"github.com/spf13/afero"
+)
+
+const (
+	defaultArgoCDApplicationManifestPermissions = 0o644 // u+rw g+r o+r
+	defaultArgoCDApplicationManifestFilename    = "argocd-application.yaml"
 )
 
 type applicationService struct {
-	cert  client.CertificateService
-	store client.ApplicationStore
+	certificateService    client.CertificateService
+	appManifestService    client.ApplicationManifestService
+	fs                    *afero.Afero
+	absoluteRepositoryDir string
 }
 
 func (s *applicationService) createCertificate(ctx context.Context, id *api.ID, hostedZoneID, fqdn string) (string, error) {
-	cert, certFnErr := s.cert.CreateCertificate(ctx, client.CreateCertificateOpts{
+	cert, certFnErr := s.certificateService.CreateCertificate(ctx, client.CreateCertificateOpts{
 		ID:           *id,
 		FQDN:         fqdn,
 		Domain:       fqdn,
@@ -39,12 +47,15 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 		return err
 	}
 
-	relativeApplicationDir := path.Join(opts.OutputDir, constant.DefaultApplicationsOutputDir, opts.Application.Metadata.Name)
-	relativeArgoCDSourcePath := path.Join(relativeApplicationDir, constant.DefaultApplicationOverlayDir, opts.ID.ClusterName)
+	manifestSaver := generateManifestSaver(ctx, s.appManifestService, opts.Application.Metadata.Name)
+	patchSaver := generatePatchSaver(ctx, s.appManifestService, opts.Cluster.Metadata.Name, opts.Application.Metadata.Name)
 
-	base, err := scaffold.GenerateApplicationBase(opts.Application, opts.IACRepoURL, relativeArgoCDSourcePath)
+	err = scaffold.GenerateApplicationBase(scaffold.GenerateApplicationBaseOpts{
+		SaveManifest: manifestSaver,
+		Application:  opts.Application,
+	})
 	if err != nil {
-		return fmt.Errorf("creating a new application deployment: %w", err)
+		return fmt.Errorf("generating application base resources: %w", err)
 	}
 
 	certArn := ""
@@ -52,52 +63,92 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 	if opts.Application.HasIngress() {
 		certArn, err = s.createCertificate(
 			ctx,
-			opts.ID,
+			&api.ID{
+				Region:       opts.Cluster.Metadata.Region,
+				AWSAccountID: opts.Cluster.Metadata.AccountID,
+				ClusterName:  opts.Cluster.Metadata.Name,
+			},
 			opts.HostedZoneID,
-			fmt.Sprintf("%s.%s", opts.Application.SubDomain, opts.HostedZoneDomain),
+			fmt.Sprintf("%s.%s", opts.Application.SubDomain, opts.Cluster.ClusterRootDomain),
 		)
 		if err != nil {
-			return fmt.Errorf("create certificate: %w", err)
+			return fmt.Errorf("creating certificate: %w", err)
 		}
 	}
 
-	overlay, err := scaffold.GenerateApplicationOverlay(opts.Application, opts.HostedZoneDomain, certArn)
+	err = scaffold.GenerateApplicationOverlay(scaffold.GenerateApplicationOverlayOpts{
+		SavePatch:      patchSaver,
+		Application:    opts.Application,
+		Domain:         opts.Cluster.ClusterRootDomain,
+		CertificateARN: certArn,
+	})
 	if err != nil {
 		return fmt.Errorf("generating application overlay: %w", err)
-	}
-
-	applicationScaffold := &client.ScaffoldedApplication{
-		ApplicationName:      opts.Application.Metadata.Name,
-		ClusterName:          opts.ID.ClusterName,
-		BaseKustomization:    base.Kustomization,
-		Namespace:            base.Namespace,
-		Deployment:           base.Deployment,
-		Service:              base.Service,
-		Ingress:              base.Ingress,
-		Volume:               base.Volumes,
-		ServiceMonitor:       base.ServiceMonitor,
-		OverlayKustomization: overlay.Kustomization,
-		ArgoCDResource:       base.ArgoApplication,
-		IngressPatch:         overlay.IngressPatch,
-		ServicePatch:         overlay.ServicePatch,
-		DeploymentPatch:      overlay.DeploymentPatch,
-	}
-
-	_, err = s.store.SaveApplication(applicationScaffold)
-	if err != nil {
-		return err
 	}
 
 	return nil
 }
 
+// CreateArgoCDApplicationManifest creates necessary files for the ArgoCD integration
+func (s *applicationService) CreateArgoCDApplicationManifest(opts client.CreateArgoCDApplicationManifestOpts) error {
+	relativeOverlayDir := path.Join(
+		opts.Cluster.Github.OutputPath,
+		constant.DefaultApplicationsOutputDir,
+		opts.Application.Metadata.Name,
+		constant.DefaultApplicationOverlayDir,
+		opts.Cluster.Metadata.Name,
+	)
+
+	absoluteOverlayDir := path.Join(s.absoluteRepositoryDir, relativeOverlayDir)
+	absoluteArgoCDApplicationManifestPath := path.Join(absoluteOverlayDir, defaultArgoCDApplicationManifestFilename)
+
+	err := scaffold.GenerateArgoCDApplicationManifest(scaffold.GenerateArgoCDApplicationManifestOpts{
+		Saver: func(content []byte) error {
+			return s.fs.WriteFile(absoluteArgoCDApplicationManifestPath, content, defaultArgoCDApplicationManifestPermissions)
+		},
+		Application:                   opts.Application,
+		IACRepoURL:                    opts.Cluster.Github.URL(),
+		RelativeApplicationOverlayDir: relativeOverlayDir,
+	})
+	if err != nil {
+		return fmt.Errorf("generating ArgoCD Application manifest: %w", err)
+	}
+
+	return nil
+}
+
+func generateManifestSaver(ctx context.Context, service client.ApplicationManifestService, applicationName string) scaffold.ManifestSaver {
+	return func(filename string, content []byte) error {
+		return service.SaveManifest(ctx, client.SaveManifestOpts{
+			ApplicationName: applicationName,
+			Filename:        filename,
+			Content:         content,
+		})
+	}
+}
+
+func generatePatchSaver(ctx context.Context, service client.ApplicationManifestService, clusterName, applicationName string) scaffold.PatchSaver {
+	return func(kind string, patch jsonpatch.Patch) error {
+		return service.SavePatch(ctx, client.SavePatchOpts{
+			ApplicationName: applicationName,
+			ClusterName:     clusterName,
+			Kind:            kind,
+			Patch:           patch,
+		})
+	}
+}
+
 // NewApplicationService initializes a new Scaffold application service
 func NewApplicationService(
-	cert client.CertificateService,
-	store client.ApplicationStore,
+	fs *afero.Afero,
+	certificateService client.CertificateService,
+	appManifestService client.ApplicationManifestService,
+	absoluteRepositoryDir string,
 ) client.ApplicationService {
 	return &applicationService{
-		cert:  cert,
-		store: store,
+		certificateService:    certificateService,
+		appManifestService:    appManifestService,
+		fs:                    fs,
+		absoluteRepositoryDir: absoluteRepositoryDir,
 	}
 }

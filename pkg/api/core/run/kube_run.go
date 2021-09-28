@@ -1,6 +1,7 @@
 package run
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -304,6 +305,39 @@ func (k *kubeRun) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKube
 			"clusterrolebinding.yaml": clusterRoleBinding,
 		},
 	}, nil
+}
+
+// DisableEarlyDEMUX finds and sets the aws-node's VPC CNI init container's DISABLE_TCP_EARLY_DEMUX variable to false
+// Ref: https://docs.aws.amazon.com/eks/latest/userguide/security-groups-for-pods.html
+func (k *kubeRun) DisableEarlyDEMUX(ctx context.Context, clusterID api.ID) error {
+	var (
+		initContainerIndex           = -1
+		disableTCPEarlyDemuxVarIndex = -1
+	)
+
+	client, err := kube.New(kube.NewFromEKSCluster(clusterID.ClusterName, clusterID.Region, k.provider, k.auth))
+	if err != nil {
+		return fmt.Errorf("creating kubernetes client: %w", err)
+	}
+
+	_, err = client.Apply(kube.Applier{
+		Fn: findTCPEarlyDemuxIndexes(ctx, &initContainerIndex, &disableTCPEarlyDemuxVarIndex),
+	})
+	if err != nil {
+		return err
+	}
+
+	rawPatch, err := generateRawDisableEarlyDemuxPatch(initContainerIndex, disableTCPEarlyDemuxVarIndex)
+	if err != nil {
+		return fmt.Errorf("generating disable early demux patch: %w", err)
+	}
+
+	_, err = client.Apply(kube.Applier{Fn: disableEarlyDemuxPatchApplier(ctx, rawPatch)})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // NewKubeRun returns an initialised kube runner

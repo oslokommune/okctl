@@ -184,6 +184,11 @@ func (c ClusterGithub) Path() string {
 	return fmt.Sprintf("%s/%s", c.Organisation, c.Repository)
 }
 
+// URL returns the Github IAC repository URL
+func (c ClusterGithub) URL() string {
+	return fmt.Sprintf("git@github.com:%s", c.Path())
+}
+
 // Validate returns an error if ClusterGithub is missing required information
 func (c ClusterGithub) Validate() error {
 	return validation.ValidateStruct(&c,

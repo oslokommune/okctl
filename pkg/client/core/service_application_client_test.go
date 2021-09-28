@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/jsonpatch"
+
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/commands"
@@ -16,10 +18,8 @@ import (
 	"github.com/sebdah/goldie/v2"
 	"github.com/spf13/afero"
 
-	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/core"
-	clientFilesystem "github.com/oslokommune/okctl/pkg/client/core/store/filesystem"
 	"gotest.tools/assert"
 )
 
@@ -70,63 +70,73 @@ volumes:
 #    cert-manager.io/cluster-issuer: letsencrypt-production
 `
 
-// nolint: lll
+// nolint:funlen,lll
 func TestNewApplicationService(t *testing.T) {
 	testInputBuffer := bytes.NewBufferString(defaultTemplate)
 
-	aferoFs := afero.Afero{
-		Fs: afero.NewMemMapFs(),
-	}
-
-	mockPaths := clientFilesystem.Paths{
-		BaseDir: path.Join("infrastructure", "applications"),
-	}
-
-	service := core.NewApplicationService(
-		&mockCertService{},
-		clientFilesystem.NewApplicationStore(mockPaths, &aferoFs),
-	)
+	fs := &afero.Afero{Fs: afero.NewMemMapFs()}
 
 	cluster := v1alpha1.Cluster{
+		Metadata: v1alpha1.ClusterMeta{
+			Name:      "test",
+			Region:    "eu-west-1",
+			AccountID: "012345678912",
+		},
+		Github: v1alpha1.ClusterGithub{
+			Organisation: "test",
+			Repository:   "repo.git",
+			OutputPath:   "infrastructure",
+		},
 		ClusterRootDomain: "kjoremiljo.oslo.systems",
 	}
 
-	application, err := commands.InferApplicationFromStdinOrFile(cluster, testInputBuffer, &aferoFs, "-")
+	absoluteRepoDir := "/"
+	absoluteOutputDir := path.Join(absoluteRepoDir, cluster.Github.OutputPath)
+	absoluteApplicationsDir := path.Join(absoluteOutputDir, constant.DefaultApplicationsOutputDir)
+
+	appManifestService := core.NewApplicationManifestService(fs, absoluteApplicationsDir)
+
+	service := core.NewApplicationService(
+		fs,
+		&mockCertService{},
+		appManifestService,
+		absoluteRepoDir,
+	)
+
+	application, err := commands.InferApplicationFromStdinOrFile(cluster, testInputBuffer, fs, "-")
 	assert.NilError(t, err)
 
-	clusterName := "test"
 	err = service.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
-		ID: &api.ID{
-			Region:       "eu-west-1",
-			AWSAccountID: "012345678912",
-			ClusterName:  clusterName,
-		},
-		HostedZoneID:     "dummyID",
-		HostedZoneDomain: "kjoremiljo.oslo.systems",
-		IACRepoURL:       "git@dummy.com:test/repo.git",
-		Application:      application,
-		OutputDir:        "infrastructure",
+		Cluster:      cluster,
+		Application:  application,
+		HostedZoneID: "dummyID",
+	})
+	assert.NilError(t, err)
+
+	err = service.CreateArgoCDApplicationManifest(client.CreateArgoCDApplicationManifestOpts{
+		Cluster:     cluster,
+		Application: application,
 	})
 	assert.NilError(t, err)
 
 	g := goldie.New(t)
 
-	appDir := filepath.Join(mockPaths.BaseDir, application.Metadata.Name)
+	appDir := filepath.Join(absoluteApplicationsDir, application.Metadata.Name)
 	appBaseDir := filepath.Join(appDir, constant.DefaultApplicationBaseDir)
-	appOverlayDir := filepath.Join(appDir, constant.DefaultApplicationOverlayDir, clusterName)
+	appOverlayDir := filepath.Join(appDir, constant.DefaultApplicationOverlayDir, cluster.Metadata.Name)
 
-	g.Assert(t, "kustomization-base.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "kustomization.yaml")))
-	g.Assert(t, "namespace.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "namespace.yaml")))
-	g.Assert(t, "deployment.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "deployment.yaml")))
-	g.Assert(t, "volumes.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "volumes.yaml")))
-	g.Assert(t, "ingress.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "ingress.yaml")))
-	g.Assert(t, "service.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "service.yaml")))
-	g.Assert(t, "service-monitor.yaml", readFile(t, &aferoFs, filepath.Join(appBaseDir, "service-monitor.yaml")))
+	g.Assert(t, "kustomization-base.yaml", readFile(t, fs, filepath.Join(appBaseDir, "kustomization.yaml")))
+	g.Assert(t, "namespace.yaml", readFile(t, fs, filepath.Join(appBaseDir, "namespace.yaml")))
+	g.Assert(t, "deployment.yaml", readFile(t, fs, filepath.Join(appBaseDir, "deployment.yaml")))
+	g.Assert(t, "volumes.yaml", readFile(t, fs, filepath.Join(appBaseDir, "volumes.yaml")))
+	g.Assert(t, "ingress.yaml", readFile(t, fs, filepath.Join(appBaseDir, "ingress.yaml")))
+	g.Assert(t, "service.yaml", readFile(t, fs, filepath.Join(appBaseDir, "service.yaml")))
+	g.Assert(t, "service-monitor.yaml", readFile(t, fs, filepath.Join(appBaseDir, "service-monitor.yaml")))
 
-	g.Assert(t, "kustomization-overlay.yaml", readFile(t, &aferoFs, filepath.Join(appOverlayDir, "kustomization.yaml")))
-	g.Assert(t, "deployment-patch.yaml", readFile(t, &aferoFs, filepath.Join(appOverlayDir, "deployment-patch.json")))
-	g.Assert(t, "ingress-patch.yaml", readFile(t, &aferoFs, filepath.Join(appOverlayDir, "ingress-patch.json")))
-	g.Assert(t, "argocd-application.yaml", readFile(t, &aferoFs, filepath.Join(appOverlayDir, "argocd-application.yaml")))
+	g.Assert(t, "kustomization-overlay.yaml", readFile(t, fs, filepath.Join(appOverlayDir, "kustomization.yaml")))
+	g.Assert(t, "deployment-patch.yaml", readFile(t, fs, filepath.Join(appOverlayDir, "deployment-patch.json")))
+	g.Assert(t, "ingress-patch.yaml", readFile(t, fs, filepath.Join(appOverlayDir, "ingress-patch.json")))
+	g.Assert(t, "argocd-application.yaml", readFile(t, fs, filepath.Join(appOverlayDir, "argocd-application.yaml")))
 }
 
 // nolint: funlen
@@ -172,21 +182,28 @@ func TestCertificateCreation(t *testing.T) {
 			certService := &mockCertService{CreateCounter: 0}
 
 			service := core.NewApplicationService(
+				&afero.Afero{Fs: afero.NewMemMapFs()},
 				certService,
-				clientFilesystem.NewApplicationStore(clientFilesystem.Paths{}, &afero.Afero{Fs: afero.NewMemMapFs()}),
+				mockAppManifestService{},
+				"",
 			)
 
 			err := service.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
-				OutputDir: "infrastructure",
-				ID: &api.ID{
-					Region:       "azeroth",
-					AWSAccountID: "012345678912",
-					ClusterName:  "dummy-dev",
+				Cluster: v1alpha1.Cluster{
+					Metadata: v1alpha1.ClusterMeta{
+						Name:      "test",
+						Region:    "eu-west-1",
+						AccountID: "012345678912",
+					},
+					ClusterRootDomain: "okctl.io",
+					Github: v1alpha1.ClusterGithub{
+						Organisation: "oslokommune",
+						Repository:   "dummy",
+						OutputPath:   "infrastructure",
+					},
 				},
-				HostedZoneID:     "somedummyid",
-				HostedZoneDomain: "okctl.io",
-				IACRepoURL:       "dummyurl",
-				Application:      tc.withApplication(),
+				HostedZoneID: "somedummyid",
+				Application:  tc.withApplication(),
 			})
 
 			assert.NilError(t, err)
@@ -229,4 +246,18 @@ func (m *mockCertService) CreateCertificate(_ context.Context, _ client.CreateCe
 	return &client.Certificate{
 		ARN: "arn:which:isnt:an:arn",
 	}, nil
+}
+
+type mockAppManifestService struct{}
+
+func (m mockAppManifestService) SaveManifest(_ context.Context, _ client.SaveManifestOpts) error {
+	return nil
+}
+
+func (m mockAppManifestService) SavePatch(_ context.Context, _ client.SavePatchOpts) error {
+	return nil
+}
+
+func (m mockAppManifestService) GetPatch(_ context.Context, _ client.GetPatchOpts) (jsonpatch.Patch, error) {
+	return jsonpatch.Patch{}, nil
 }

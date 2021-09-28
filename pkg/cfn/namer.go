@@ -27,6 +27,7 @@ const (
 	DefaultStackNameRDSPostgres                       = "rdspostgres"
 	DefaultStackNameS3Bucket                          = "s3bucket"
 	DefaultStackNameContainerRepository               = "containerrepository"
+	DefaultStackNameSecurityGroup                     = "sg"
 )
 
 // StackNamer knows how to name cloud formation stacks
@@ -204,5 +205,15 @@ func (n *StackNamer) ContainerRepository(clusterName, imageName string) string {
 		DefaultStackNameContainerRepository,
 		clusterName,
 		imageName,
+	)
+}
+
+// SecurityGroup returns the stack name of the security group cfn stack
+func (n *StackNamer) SecurityGroup(clusterName, securityGroupName string) string {
+	return fmt.Sprintf("%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameSecurityGroup,
+		clusterName,
+		securityGroupName,
 	)
 }

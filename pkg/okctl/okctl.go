@@ -25,8 +25,6 @@ import (
 
 	"github.com/logrusorgru/aurora/v3"
 
-	clientFilesystem "github.com/oslokommune/okctl/pkg/client/core/store/filesystem"
-
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/client/core/api/rest"
 	githubClient "github.com/oslokommune/okctl/pkg/github"
@@ -176,6 +174,11 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 // ClientServices returns the initialised client-side services
 // nolint: funlen
 func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.Services, error) {
+	absoluteRepositoryPath, err := o.GetRepoDir()
+	if err != nil {
+		return nil, err
+	}
+
 	applicationsOutputDir, err := o.GetRepoApplicationsOutputDir()
 	if err != nil {
 		return nil, err
@@ -229,6 +232,11 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	manifestService := clientCore.NewManifestService(
 		rest.NewManifestAPI(o.restClient),
 		handlers.Manifest,
+	)
+
+	applicationManifestService := clientCore.NewApplicationManifestService(
+		o.FileSystem,
+		applicationsOutputDir,
 	)
 
 	blockstorageService := clientCore.NewBlockstorageService(
@@ -286,6 +294,14 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		o.CloudProvider,
 	)
 
+	applicationPostgresService := clientCore.NewApplicationPostgresService(
+		applicationManifestService,
+		componentService,
+		rest.NewSecurityGroupAPI(o.restClient),
+		vpcService,
+		rest.NewApplicationPostgresIntegrationAPI(o.restClient),
+	)
+
 	monitoringService := clientCore.NewMonitoringService(
 		handlers.Monitoring,
 		helmService,
@@ -308,13 +324,10 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	applicationService := clientCore.NewApplicationService(
+		o.FileSystem,
 		certificateService,
-		clientFilesystem.NewApplicationStore(
-			clientFilesystem.Paths{
-				BaseDir: applicationsOutputDir,
-			},
-			o.FileSystem,
-		),
+		applicationManifestService,
+		absoluteRepositoryPath,
 	)
 
 	nameserverService := clientCore.NewNameserverHandlerService(ghClient)
@@ -329,6 +342,8 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		AWSLoadBalancerControllerService: awsLoadBalancerControllerService,
 		ArgoCD:                           argocdService,
 		ApplicationService:               applicationService,
+		ApplicationManifestService:       applicationManifestService,
+		ApplicationPostgresService:       applicationPostgresService,
 		Certificate:                      certificateService,
 		Cluster:                          clusterService,
 		Domain:                           domainService,
@@ -497,6 +512,10 @@ func (o *Okctl) initialise() error {
 		awsProvider.NewCertificateCloudProvider(provider),
 	)
 
+	securityGroupService := core.NewSecurityGroupService(
+		awsProvider.NewSecurityGroupCloudProvider(o.CloudProvider),
+	)
+
 	services := core.Services{
 		Cluster:                    clusterService,
 		Vpc:                        vpcService,
@@ -510,6 +529,7 @@ func (o *Okctl) initialise() error {
 		IdentityManager:            identityManagerService,
 		ComponentService:           componentService,
 		ContainerRepositoryService: containerRepositoryService,
+		SecurityGroupService:       securityGroupService,
 	}
 
 	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))

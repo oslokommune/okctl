@@ -290,6 +290,17 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 	return nil
 }
 
+func (c *componentService) GetPostgresDatabase(_ context.Context, opts client.GetPostgresDatabaseOpts) (*client.PostgresDatabase, error) {
+	stackName := cfn.NewStackNamer().RDSPostgres(opts.DatabaseName, opts.ClusterID.ClusterName)
+
+	db, err := c.state.GetPostgresDatabase(stackName)
+	if err != nil {
+		return nil, fmt.Errorf("fetching database from state: %w", err)
+	}
+
+	return db, nil
+}
+
 // NewComponentService returns an initialised component service
 func NewComponentService(
 	api client.ComponentAPI,

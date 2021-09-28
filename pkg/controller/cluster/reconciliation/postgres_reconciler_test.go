@@ -136,6 +136,10 @@ func (m mockPostgresService) DeletePostgresDatabase(_ context.Context, _ client.
 	return nil
 }
 
+func (m mockPostgresService) GetPostgresDatabase(_ context.Context, _ client.GetPostgresDatabaseOpts) (*client.PostgresDatabase, error) {
+	panic("implement me")
+}
+
 type mockComponentState struct {
 	databases []*client.PostgresDatabase
 }

@@ -4,50 +4,68 @@ package jsonpatch
 
 import (
 	"encoding/json"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 // OperationType represents one of the json patch operation types defines in https://tools.ietf.org/html/rfc6902#section-4
-type OperationType int
+type OperationType string
+
+func (receiver OperationType) String() string {
+	return string(receiver)
+}
+
+// Validate ensures the OperationType is a valid JSON patch type
+func (receiver OperationType) Validate() error {
+	return validation.Validate(&receiver,
+		validation.In(
+			OperationTypeAdd,
+			OperationTypeRemove,
+			OperationTypeReplace,
+			OperationTypeMove,
+			OperationTypeCopy,
+			OperationTypeTest,
+		),
+	)
+}
 
 const (
 	// OperationTypeAdd represents an add operation
-	OperationTypeAdd OperationType = iota
+	OperationTypeAdd OperationType = "add"
 	// OperationTypeRemove represents a remove operation
-	OperationTypeRemove
+	OperationTypeRemove OperationType = "remove"
 	// OperationTypeReplace represents a replace operation
-	OperationTypeReplace
+	OperationTypeReplace OperationType = "replace"
 	// OperationTypeMove represents a move operation
-	OperationTypeMove
+	OperationTypeMove OperationType = "move"
 	// OperationTypeCopy represents a copy operation
-	OperationTypeCopy
+	OperationTypeCopy OperationType = "copy"
 	// OperationTypeTest represents a test operation
-	OperationTypeTest
+	OperationTypeTest OperationType = "test"
 )
-
-func operationTypeToString(t OperationType) string {
-	switch t {
-	case OperationTypeAdd:
-		return "add"
-	case OperationTypeRemove:
-		return "remove"
-	case OperationTypeReplace:
-		return "replace"
-	case OperationTypeMove:
-		return "move"
-	case OperationTypeCopy:
-		return "copy"
-	case OperationTypeTest:
-		return "test"
-	default:
-		return "n/a"
-	}
-}
 
 // Operation represents a single patch operation, meaning an action on a kubernetes resource attribute
 type Operation struct {
 	Type  OperationType `json:"op"`
 	Path  string        `json:"path"`
 	Value interface{}   `json:"value"`
+}
+
+// Equals knows how to determine if two operations are equal
+func (o Operation) Equals(target Operation) bool {
+	if o.Type != target.Type {
+		return false
+	}
+
+	if o.Path != target.Path {
+		return false
+	}
+
+	if o.Value != target.Value {
+		return false
+	}
+
+	return true
 }
 
 // Patch represents a kustomize patch.json file containing a list of patch operations
@@ -80,6 +98,17 @@ func (p *Patch) Add(o ...Operation) *Patch {
 	return p
 }
 
+// HasOperation determines if a patch has a specific operation
+func (p *Patch) HasOperation(operation Operation) bool {
+	for _, op := range p.Operations {
+		if op.Equals(operation) {
+			return true
+		}
+	}
+
+	return false
+}
+
 // MarshalJSON knows how to turn a Patch into a kustomize patch.json
 func (p Patch) MarshalJSON() ([]byte, error) {
 	type serializedOperation struct {
@@ -92,7 +121,7 @@ func (p Patch) MarshalJSON() ([]byte, error) {
 
 	for index, operation := range p.Operations {
 		patch[index] = serializedOperation{
-			Type:  operationTypeToString(operation.Type),
+			Type:  string(operation.Type),
 			Path:  operation.Path,
 			Value: operation.Value,
 		}

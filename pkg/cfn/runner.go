@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	merrors "github.com/mishudark/errors"
+
 	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -22,10 +24,11 @@ const (
 	// CapabilityAutoExpand is required when a stack contains macros
 	CapabilityAutoExpand = cfPkg.CapabilityCapabilityAutoExpand
 
-	stackDoesNotExitRegex = "^Stack with id (.*)%s(.*) does not exist$"
 	defaultSleepTime      = 30
 	awsErrValidationError = "ValidationError"
 )
+
+var stackDoesNotExistRe = regexp.MustCompile("^Stack with id (.*) does not exist$")
 
 // Stack defines a single cloud formation stack
 type Stack = cfPkg.Stack
@@ -49,16 +52,11 @@ func (r *Runner) Exists(stackName string) (bool, error) {
 		StackName: aws.String(stackName),
 	}
 
-	re, err := regexp.Compile(fmt.Sprintf(stackDoesNotExitRegex, stackName))
-	if err != nil {
-		return false, fmt.Errorf("failed to compile regex for stack existence: %w", err)
-	}
-
 	stack, err := r.Provider.CloudFormation().DescribeStacks(req)
 	if err != nil {
 		switch e := err.(type) {
 		case awserr.Error:
-			if e.Code() == awsErrValidationError && re.MatchString(e.Message()) {
+			if e.Code() == awsErrValidationError && stackDoesNotExistRe.MatchString(e.Message()) {
 				return false, nil
 			}
 
@@ -194,12 +192,71 @@ func (r *Runner) CreateIfNotExists(clusterName, stackName string, template []byt
 	return r.watchCreate(stackName)
 }
 
-func (r *Runner) watchDelete(stackName string) error {
-	re, err := regexp.Compile(fmt.Sprintf(stackDoesNotExitRegex, stackName))
+// Get fetches an existing CloudFormation stack
+func (r *Runner) Get(stackName string) (cfPkg.Stack, error) {
+	response, err := r.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
+		StackName: aws.String(stackName),
+	})
 	if err != nil {
-		return fmt.Errorf("failed to compile regex for stack existence: %w", err)
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() { //nolint:gocritic
+			case awsErrValidationError:
+				if stackDoesNotExistRe.MatchString(aerr.Message()) {
+					return cfPkg.Stack{}, merrors.E(err, "stack not found", merrors.NotExist)
+				}
+			}
+		}
+
+		return cfPkg.Stack{}, fmt.Errorf("describing stack %s: %w", stackName, err)
 	}
 
+	return *response.Stacks[0], nil
+}
+
+// GetTemplate fetches an existing CloudFormation stack template
+func (r *Runner) GetTemplate(stackName string) ([]byte, error) {
+	response, err := r.Provider.CloudFormation().GetTemplate(&cfPkg.GetTemplateInput{
+		StackName:     aws.String(stackName),
+		TemplateStage: aws.String(cfPkg.TemplateStageOriginal),
+	})
+	if err != nil {
+		return []byte{}, fmt.Errorf("describing stack %s: %w", stackName, err)
+	}
+
+	return []byte(*response.TemplateBody), nil
+}
+
+// Update updates an existing CloudFormation template
+func (r *Runner) Update(stackName string, template []byte) error {
+	response, err := r.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
+		StackName: aws.String(stackName),
+	})
+	if err != nil {
+		return fmt.Errorf("describing stack %s: %w", stackName, err)
+	}
+
+	if len(response.Stacks) > 1 {
+		return fmt.Errorf("too many stacks selected")
+	}
+
+	existingStack := response.Stacks[0]
+
+	stackInput := &cfPkg.UpdateStackInput{
+		StackName:    aws.String(stackName),
+		TemplateBody: aws.String(string(template)),
+		Capabilities: existingStack.Capabilities,
+		Tags:         existingStack.Tags,
+	}
+
+	_, err = r.Provider.CloudFormation().UpdateStack(stackInput)
+	if err != nil {
+		return fmt.Errorf("updating CloudFormation stack: %w", err)
+	}
+
+	return r.watchUpdate(stackName)
+}
+
+func (r *Runner) watchDelete(stackName string) error {
 	for {
 		// https://docs.aws.amazon.com/sdk-for-go/api/service/cloudformation/#CloudFormation.DeleteStack
 		// Deleted stacks do not show up in the DescribeStacks API if the deletion has been completed successfully.
@@ -209,7 +266,7 @@ func (r *Runner) watchDelete(stackName string) error {
 		if err != nil {
 			switch e := err.(type) {
 			case awserr.Error:
-				if e.Code() == awsErrValidationError && re.MatchString(e.Message()) {
+				if e.Code() == awsErrValidationError && stackDoesNotExistRe.MatchString(e.Message()) {
 					return nil
 				}
 
@@ -263,6 +320,36 @@ func (r *Runner) watchCreate(stackName string) error {
 			return r.detailedErr(stack.Stacks[0])
 		case cfPkg.StackStatusCreateInProgress:
 			time.Sleep(sleepTime)
+		default:
+			return r.detailedErr(stack.Stacks[0])
+		}
+	}
+}
+
+func (r *Runner) watchUpdate(stackName string) error {
+	for {
+		stack, err := r.Provider.CloudFormation().DescribeStacks(&cfPkg.DescribeStacksInput{
+			StackName: aws.String(stackName),
+		})
+		if err != nil {
+			return fmt.Errorf("describing stack after update: %w", err)
+		}
+
+		if len(stack.Stacks) != 1 {
+			return fmt.Errorf("expected 1 cloudformation stack to be updated")
+		}
+
+		sleepTime := defaultSleepTime * time.Second
+
+		switch *stack.Stacks[0].StackStatus {
+		case cfPkg.StackStatusUpdateInProgress:
+			time.Sleep(sleepTime)
+		case cfPkg.StackStatusUpdateComplete:
+			return nil
+		case cfPkg.StackStatusUpdateRollbackInProgress:
+			time.Sleep(sleepTime)
+		case cfPkg.StackStatusUpdateRollbackComplete:
+			return r.detailedErr(stack.Stacks[0])
 		default:
 			return r.detailedErr(stack.Stacks[0])
 		}

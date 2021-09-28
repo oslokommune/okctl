@@ -60,8 +60,9 @@ cluster.
 
 ### Disable Early TCP Demux
 
-For now, early TCP Demux does not work when a pod has been connected to a security group. To ensure early TCP demux has
-been disabled, run the following command:
+Doing the above step, i.e. connecting a pod to a security group, will make your liveness and readyness probes stop
+working. We can avoid this by disabling something called "Early TCP Demux". To ensure early TCP demux has been disabled,
+run the following command:
 
 ```bash
 kubectl patch daemonset aws-node \

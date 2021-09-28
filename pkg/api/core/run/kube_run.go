@@ -308,6 +308,7 @@ func (k *kubeRun) CreateExternalDNSKubeDeployment(opts api.CreateExternalDNSKube
 }
 
 // DisableEarlyDEMUX finds and sets the aws-node's VPC CNI init container's DISABLE_TCP_EARLY_DEMUX variable to false
+// Ref: https://docs.aws.amazon.com/eks/latest/userguide/security-groups-for-pods.html
 func (k *kubeRun) DisableEarlyDEMUX(ctx context.Context, clusterID api.ID) error {
 	var (
 		initContainerIndex           = -1

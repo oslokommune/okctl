@@ -1,4 +1,4 @@
-#Okctl demo app
+# Okctl demo app
 *Guide from zero to running with a reference application*
 
 This guide will give you a complete example for how to set up a reference application in an okctl environment. It can be useful

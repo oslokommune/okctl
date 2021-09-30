@@ -39,7 +39,8 @@ accountID: '123456789123' #set to your own AWS account id
 ## Add application to cluster
 Scaffold and [apply your application](https://okctl.io/getting-started/create-application/).
 
-We are going to apply the following [app](https://github.com/oslokommune/okctl-kotlin-app-template) (you don't have to look at the source-code to continue this guide)
+We are going to apply the following [app](https://github.com/oslokommune/okctl-kotlin-app-template). You also have a look at the [iac repository](https://github.com/oslokommune/okctl-demo-iac), and the application [running](https://app.okctl-demo.oslo.systems/) in our dev cluster.
+You don't have to look at the app source code or iac repository to continue this guide.
 
 Add these changes to the default scaffold (diff view: remove lines with a '-', add lines with a '+')
 ```yaml

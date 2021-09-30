@@ -50,7 +50,7 @@ Add these changes to the default scaffold (diff view: remove lines with a '-', a
 +  namespace: demo
 
 -  uri: ghcr.io/oslokommune/okctl-hello:v0.0.3
-+  uri: ghcr.io/oslokommune/okctl-kotlin-app-template:v0.0.23
++  uri: ghcr.io/oslokommune/okctl-kotlin-app-template:v0.0.24
   
 -subDomain: my-app
 +subDomain: app

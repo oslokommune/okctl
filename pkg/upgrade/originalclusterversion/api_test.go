@@ -18,11 +18,17 @@ func TestOriginalVersionSaver(t *testing.T) {
 		name                   string
 		existingClusterVersion string
 		expectedSavedVersion   string
+		expectedError          string
 	}{
 		{
 			name:                   "Should store cluster tag version",
 			existingClusterVersion: "0.0.50",
 			expectedSavedVersion:   "0.0.50",
+		},
+		{
+			name:                   "Should return error if cluster tag version is not in semver format",
+			existingClusterVersion: "dev",
+			expectedError:          "getting cluster state version: parsing version 'dev': Invalid Semantic Version",
 		},
 	}
 
@@ -39,6 +45,11 @@ func TestOriginalVersionSaver(t *testing.T) {
 			err := versioner.SaveOriginalClusterVersionFromClusterTagIfNotExists()
 
 			// Then
+			if len(tc.expectedError) > 0 {
+				assert.Contains(t, tc.expectedError, err.Error())
+				return
+			}
+
 			require.NoError(t, err)
 
 			savedVersion, err := upgradeState.GetOriginalClusterVersion()

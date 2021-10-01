@@ -1,10 +1,8 @@
 package version
 
-const devVersion = "dev"
-
 // Version of okctl
 // nolint: gochecknoglobals
-var Version = devVersion
+var Version = "dev"
 
 // ShortCommit hash
 // nolint: gochecknoglobals

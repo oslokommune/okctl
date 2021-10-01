@@ -314,7 +314,7 @@ func isVersionFromBeforeUpgradeWasReleased(versionString string) (bool, error) {
 		return false, fmt.Errorf("cannot create semver version from '%s': %w", versionString, err)
 	}
 
-	versionWhereUpgradeWasReleased, err := semver.NewVersion("0.0.67")
+	versionWhereUpgradeWasReleased, err := semver.NewVersion("0.0.66")
 	if err != nil {
 		return false, fmt.Errorf("cannot create semver version: %w", err)
 	}

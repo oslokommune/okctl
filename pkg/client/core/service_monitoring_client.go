@@ -63,7 +63,7 @@ const (
 	lokiDatasourceConfigMapName        = "loki-datasource"
 	tempoDatasourceConfigMapName       = "tempo-datasource"
 	cloudwatchDatasourceConfigMapName  = "cloudwatch-datasource"
-	notifiersProvisioningConfigMapName  = "kube-prometheus-stack-grafana-notifiers"
+	notifiersProvisioningConfigMapName = "kube-prometheus-stack-grafana-notifiers"
 
 	kubepromChartTimeout = 15 * time.Minute
 )

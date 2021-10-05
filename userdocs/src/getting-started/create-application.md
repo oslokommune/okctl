@@ -13,6 +13,8 @@ be making changes to the Kubernetes and ArgoCD resources from that point on.
 2. We apply the application declaration to the infrastructure as code repository, which converts the application
 declaration to resources understood by Kubernetes and ArgoCD.
 
+For a complete example you can follow this [guide](https://okctl.io/help/setup-reference-app/).
+
 ## Deploy an application
 
 :information_source: If you need information on how to make your Docker images available in the cluster, see [Running a Docker image in your cluster](/help/docker-registry)

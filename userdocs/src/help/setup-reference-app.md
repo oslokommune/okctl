@@ -37,41 +37,52 @@ accountID: '123456789123' #set to your own AWS account id
 ```
 
 ## Add application to cluster
-Scaffold and [apply your application](https://okctl.io/getting-started/create-application/).
-
 We are going to apply the following [app](https://github.com/oslokommune/okctl-kotlin-app-template). You also have a look at the [iac repository](https://github.com/oslokommune/okctl-demo-iac), and the application [running](https://app.okctl-demo.oslo.systems/) in our dev cluster.
 You don't have to look at the app source code or iac repository to continue this guide.
 
-Add these changes to the default scaffold (diff view: remove lines with a '-', add lines with a '+')
+You can copy the yaml below into a file, or use `okctl scaffold application` and edit values manually, when you have yaml file ready you can [apply your application](https://okctl.io/getting-started/create-application/).
+
 ```yaml
--  name: my-app
-+  name: demo-app
+apiVersion: okctl.io/v1alpha1
+kind: Application
 
--  namespace: my-namespace
-+  namespace: demo
+metadata:
+   # A name that identifies your app
+   name: demo-app
+   # The Kubernetes namespace where your app will live
+   namespace: demo
 
--  uri: ghcr.io/oslokommune/okctl-hello:v0.0.3
-+  uri: ghcr.io/oslokommune/okctl-kotlin-app-template:v0.0.24
-  
--subDomain: my-app
-+subDomain: app
-  
--port: 3000
-+port: 8080 # The app we are going to set up uses port 8080
-  
--#prometheus:
--#  path: /metrics
-+prometheus: 
-+  path: /metrics #The demo app exposes a metrics endpoint
+# The Docker image containing the application. image.uri and image.name is mutually exclusive. Either specify the URI or
+# define a name of an ECR repository for which okctl will create for you.
+image:
+   # uri defines where the image can be pulled from
+   uri: ghcr.io/oslokommune/okctl-kotlin-app-template:v0.0.28
 
--#postgres: dbname
-+postgres: okctldemo
-  
--#volumes:
--#  - /path/to/mount/volume: # Requests 1Gi by default
-+volumes:
-+   - /okctl/demo/storage: # Requests 1Gi by default
+# The subdomain of the URL your app should be available on
+# Example in a cluster with okctl-demo.oslo.systems as root cluster URL (as defined by primary DNS zone in the
+# cluster declaration):
+#
+# subDomain: okctl
+# result: okctl.okctl-demo.oslo.systems
+# Comment this out to avoid setting up an ingress, in other words - avoid exposing it on the internet
+#
+subDomain: app
 
+# The port your app listens on
+# Comment this out to avoid setting up a service (required if url is specified)
+#
+port: 8080
+
+# Enable prometheus scraping of metrics
+prometheus:
+   path: /metrics
+
+# Enable integration with a Postgres database
+postgres: okctldemo
+
+# Volumes to mount
+volumes:
+   - /okctl/demo/storage: # Requests 1Gi by default
 ```
 
 ## Setup application user in database
@@ -88,7 +99,7 @@ cd secret && uuidgen | sed 's/-//g' > password.secret
     * Copy content from the `password.secret` file generated in the first step into the Value box
     * Click Create parameter
 3. Create an external secret in you iac repo:
-    * Create file `my-iac-repo/infrastructure/applications/my-app/overlays/my-cluster/postgres-external-secret.yaml`  this example : `okctl-demo-iac/infrastructure/applications/demo-app/overlays/okctl-demo-dev/postgres-external-secret.yaml`
+    * Create file `my-iac-repo/infrastructure/applications/<app-name>/overlays/<cluster-name>/postgres-external-secret.yaml`
     * Add the following code to it, remember to change cluster name, app name (and region if applicable):
     ```yaml
     apiVersion: 'kubernetes-client.io/v1'
@@ -99,10 +110,10 @@ cd secret && uuidgen | sed 's/-//g' > password.secret
       region: eu-west-1
       backendType: systemManager
       data:
-        - key: /okctl/mycluster/myapp/db_password
+        - key: /okctl/<cluster-name>/<app-name>/db_password
           name: db_password
     ```
-    * Add a line to file, so the last three lines looks like the example below `my-iac-repo/infrastructure/applications/my-app/overlays/my-cluster/kustomization.yaml` this example : `okctl-demo-iac/infrastructure/applications/demo-app/overlays/okctl-demo-dev/kustomization.yaml`
+    * Add a line to file, so the last three lines looks like the example below `my-iac-repo/infrastructure/applications/<app-name>/overlays/<clsuter-name>/kustomization.yaml`
     ```yaml
     resources:
     - ../../base
@@ -115,7 +126,7 @@ cd secret && uuidgen | sed 's/-//g' > password.secret
 4. Forward postgres to your local machine, and create a new user
     * First create a password file, if you read the code there is some information hidden in there, the following commands assume you are back in the root of your iac repository and that you have followed the guide to this point:
     ```bash
-    echo "This_password_can_be_anything"$(uuidgen | sed 's/-//g') > secret/tmp.password
+    echo $(uuidgen | sed 's/-//g') > secret/tmp.password
     ```
     * Now forward postgres: Use your own cluster definition file (-c), and the name of your database -n, **the username (-u) should not exist in the database already**:
     ```bash
@@ -141,6 +152,8 @@ cd secret && uuidgen | sed 's/-//g' > password.secret
     ```
   
     * Add the user to your database, make any changes to sql if applicable
+
+      **NOTE**: You need to have postgres client (psql) [installed on local machine](https://www.compose.com/articles/postgresql-tips-installing-the-postgresql-client/) for this script to work.
     ```bash
     read -p "Enter database name [okctldemo]: " database && \
     database=${database:-okctldemo} && \
@@ -158,7 +171,7 @@ Add the following to `infrastructure/applications/demo-app/base/deployment.yaml`
 ```yaml
 env:
   - name: PVC_PATH
-    value: "/okctl/demo/storage/myfile.txt"
+    value: "/okctl/demo/storage/myfile.txt" # Normally you would link a directory, but we only use one file in this example
   - name: DB_NAME
     value: okctldemo
   - name: DB_USERNAME
@@ -201,5 +214,10 @@ Replace content in `infrastructure/applications/demo-app/overlays/okctl-demo-dev
 
 Also, pay attention to the number at the end of each env variable in the path. Since env is *one* array, you need to start counting from *after* common env variables defined in deployment.yaml.
 Since deployment.yaml specifies 3 env variables (index 0, 1 , 2) we start counting from 3.
+
+Finally, in your iac repository:
+```bash
+git commit -m "Setup environment for demo app" && git push
+```
 
 *This concludes this guide, good luck!*

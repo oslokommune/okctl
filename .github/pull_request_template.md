@@ -14,10 +14,12 @@
 <!--- Please describe in detail how verify the change you have done. -->
 <!--- In the context of a bug fix, this should include how to reproduce the bug. -->
 <!--- In the context of a feature, this should include how to demonstrate the feature. -->
+<!--- In the event of a pure code refactoring, just ignore this section -->
 
 ## Additional info:
 
-<!-- For example screenshots if relevant -->
+<!--- Ignore if not relevant -->
+<!--- For example screenshots -->
 
 ## Types of changes
 

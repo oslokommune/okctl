@@ -94,12 +94,12 @@ func NewDefaultValues(opts ValuesOpts) *Values {
 			},
 			Resources: resources{
 				Limits: resourceEntry{
-					CPU:    "500m",
-					Memory: "512Mi",
+					CPU:    "800m",
+					Memory: "1Gi",
 				},
 				Requests: resourceEntry{
-					CPU:    "250m",
-					Memory: "256Mi",
+					CPU:    "500m",
+					Memory: "512Mi",
 				},
 			},
 			ServiceAccount: serviceAccount{

@@ -4,9 +4,12 @@ package mock
 import "C"
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"time"
+
+	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
@@ -134,12 +137,22 @@ func DefaultValidCredentials() *awspkg.Credentials {
 }
 
 // DefaultValidStsCredentials returns a mocked set of valid aws sts credentials
+//goland:noinspection GoUnusedExportedFunction
 func DefaultValidStsCredentials() *sts.Credentials {
 	creds := DefaultStsCredentials()
 
 	creds.Expiration = aws.Time(time.Now().Add(1 * time.Hour).Local())
 
 	return creds
+}
+
+// DefaultVersionInfo is the default version
+func DefaultVersionInfo() version.Info {
+	return version.Info{
+		Version:     "0.0.20",
+		ShortCommit: "some-commit",
+		BuildDate:   "2021-06-22T05:17:07Z",
+	}
 }
 
 // SQAPI mocks the service quotas interface
@@ -1649,4 +1662,18 @@ func Stacks(status string) []*cloudformation.Stack {
 			StackStatusReason: aws.String("something"),
 		},
 	}
+}
+
+func NewVersioner() version.Versioner {
+	return version.NewWith(newMockGithubber())
+}
+
+type mockGithubber struct{}
+
+func (m mockGithubber) ListReleases(_ context.Context, _, _ string) ([]*version.RepositoryRelease, error) {
+	panic("implement me")
+}
+
+func newMockGithubber() version.Github {
+	return mockGithubber{}
 }

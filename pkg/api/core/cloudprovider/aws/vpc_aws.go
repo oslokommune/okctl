@@ -2,7 +2,10 @@
 package aws
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -15,11 +18,17 @@ const (
 )
 
 type vpcCloudProvider struct {
-	provider v1alpha1.CloudProvider
+	provider  v1alpha1.CloudProvider
+	versioner version.Versioner
 }
 
 // CreateVpc will use the cloud provider to create a cluster in the cloud
-func (c *vpcCloudProvider) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
+func (c *vpcCloudProvider) CreateVpc(ctx context.Context, opts api.CreateVpcOpts) (*api.Vpc, error) {
+	versionInfo, err := c.versioner.GetVersionInfo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting version info: %w", err)
+	}
+
 	var b *cfn.Builder
 	if opts.Minimal {
 		b = cfn.New(components.NewMinimalVPCComposer(opts.ID.ClusterName, opts.Cidr, opts.ID.Region))
@@ -36,7 +45,7 @@ func (c *vpcCloudProvider) CreateVpc(opts api.CreateVpcOpts) (*api.Vpc, error) {
 
 	r := cfn.NewRunner(c.provider)
 
-	err = r.CreateIfNotExists(opts.ID.ClusterName, stackName, template, nil, defaultTimeOut)
+	err = r.CreateIfNotExists(versionInfo, opts.ID.ClusterName, stackName, template, nil, defaultTimeOut)
 	if err != nil {
 		return nil, fmt.Errorf("creating vpc stack: %w", err)
 	}
@@ -68,8 +77,9 @@ func (c *vpcCloudProvider) DeleteVpc(opts api.DeleteVpcOpts) error {
 }
 
 // NewVpcCloud returns a cloud provider for cluster
-func NewVpcCloud(provider v1alpha1.CloudProvider) api.VpcCloudProvider {
+func NewVpcCloud(provider v1alpha1.CloudProvider, versioner version.Versioner) api.VpcCloudProvider {
 	return &vpcCloudProvider{
-		provider: provider,
+		provider:  provider,
+		versioner: versioner,
 	}
 }

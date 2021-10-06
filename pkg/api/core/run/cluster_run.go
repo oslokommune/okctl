@@ -2,9 +2,11 @@
 package run
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/oslokommune/okctl/pkg/kubeconfig"
+	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/clusterconfig"
@@ -19,6 +21,7 @@ import (
 )
 
 type clusterRun struct {
+	versioner          version.Versioner
 	awsCredentialsPath string
 	awsConfigPath      string
 	provider           binaries.Provider
@@ -29,7 +32,12 @@ type clusterRun struct {
 
 // CreateCluster invokes a CLI for performing create
 // nolint: funlen
-func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, error) {
+func (c *clusterRun) CreateCluster(ctx context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error) {
+	versionInfo, err := c.versioner.GetVersionInfo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting version info: %w", err)
+	}
+
 	a, err := c.provider.AwsIamAuthenticator(awsiamauthenticator.Version)
 	if err != nil {
 		return nil, fmt.Errorf("retrieving aws-iam-authenticator binary: %w", err)
@@ -46,6 +54,7 @@ func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, er
 	}
 
 	cfg, err := clusterconfig.New(&clusterconfig.Args{
+		ClusterVersionInfo:     versionInfo,
 		ClusterName:            opts.ID.ClusterName,
 		PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
 		PrivateSubnets:         opts.VpcPrivateSubnets,
@@ -124,12 +133,14 @@ func (c *clusterRun) DeleteCluster(opts api.ClusterDeleteOpts) error {
 // NewClusterRun returns a executor for clusterRun
 func NewClusterRun(
 	debug bool,
+	versioner version.Versioner,
 	kubeConfigStore api.KubeConfigStore,
 	awsCredentialsPath, awsConfigPath string,
 	provider binaries.Provider,
 	cloud v1alpha1.CloudProvider,
 ) api.ClusterRun {
 	return &clusterRun{
+		versioner:          versioner,
 		kubeConfigStore:    kubeConfigStore,
 		debug:              debug,
 		awsCredentialsPath: awsCredentialsPath,

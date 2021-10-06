@@ -29,8 +29,8 @@ metadata:
   tags:
     alpha.okctl.io/cluster-name: test
     alpha.okctl.io/managed: "true"
-    alpha.okctl.io/okctl-commit: unknown
-    alpha.okctl.io/okctl-version: dev
+    alpha.okctl.io/okctl-commit: some-commit
+    alpha.okctl.io/okctl-version: 0.0.20
   version: "1.18"
 nodeGroups:
 - desiredCapacity: 1

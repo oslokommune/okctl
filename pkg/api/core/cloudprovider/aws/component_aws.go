@@ -1,7 +1,10 @@
 package aws
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/lambdafunction"
 
@@ -12,10 +15,16 @@ import (
 )
 
 type componentCloudProvider struct {
-	provider v1alpha1.CloudProvider
+	provider  v1alpha1.CloudProvider
+	versioner version.Versioner
 }
 
-func (c *componentCloudProvider) CreateS3Bucket(opts *api.CreateS3BucketOpts) (*api.S3Bucket, error) {
+func (c *componentCloudProvider) CreateS3Bucket(ctx context.Context, opts *api.CreateS3BucketOpts) (*api.S3Bucket, error) {
+	versionInfo, err := c.versioner.GetVersionInfo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting version info: %w", err)
+	}
+
 	composition := components.NewS3BucketComposer(opts.Name, "S3Bucket")
 
 	template, err := cfn.New(composition).Build()
@@ -26,6 +35,7 @@ func (c *componentCloudProvider) CreateS3Bucket(opts *api.CreateS3BucketOpts) (*
 	r := cfn.NewRunner(c.provider)
 
 	err = r.CreateIfNotExists(
+		versionInfo,
 		opts.ID.ClusterName,
 		opts.StackName,
 		template,
@@ -61,7 +71,12 @@ const (
 )
 
 // nolint: funlen
-func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgresDatabaseOpts) (*api.PostgresDatabase, error) {
+func (c *componentCloudProvider) CreatePostgresDatabase(ctx context.Context, opts *api.CreatePostgresDatabaseOpts) (*api.PostgresDatabase, error) {
+	versionInfo, err := c.versioner.GetVersionInfo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting version info: %w", err)
+	}
+
 	composer := components.NewRDSPostgresComposer(components.RDSPostgresComposerOpts{
 		ApplicationDBName: opts.ApplicationName,
 		AWSAccountID:      opts.ID.AWSAccountID,
@@ -94,6 +109,7 @@ func (c *componentCloudProvider) CreatePostgresDatabase(opts *api.CreatePostgres
 	r := cfn.NewRunner(c.provider)
 
 	err = r.CreateIfNotExists(
+		versionInfo,
 		opts.ID.ClusterName,
 		opts.StackName,
 		template,
@@ -134,8 +150,9 @@ func (c *componentCloudProvider) DeletePostgresDatabase(opts *api.DeletePostgres
 }
 
 // NewComponentCloudProvider returns an initialised component cloud provider
-func NewComponentCloudProvider(provider v1alpha1.CloudProvider) api.ComponentCloudProvider {
+func NewComponentCloudProvider(provider v1alpha1.CloudProvider, versioner version.Versioner) api.ComponentCloudProvider {
 	return &componentCloudProvider{
-		provider: provider,
+		provider:  provider,
+		versioner: versioner,
 	}
 }

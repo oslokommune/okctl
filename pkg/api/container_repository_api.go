@@ -53,6 +53,6 @@ type ContainerRepositoryService interface {
 // ContainerRepositoryCloudProvider defines the required cloud operations
 // for container repositories
 type ContainerRepositoryCloudProvider interface {
-	CreateContainerRepository(opts *CreateContainerRepositoryOpts) (*ContainerRepository, error)
+	CreateContainerRepository(ctx context.Context, opts *CreateContainerRepositoryOpts) (*ContainerRepository, error)
 	DeleteContainerRepository(opts *DeleteContainerRepositoryOpts) error
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/oslokommune/okctl/pkg/version"
@@ -18,7 +19,15 @@ func buildVersionCommand(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			_, err := fmt.Fprint(o.Out, version.String()+"\n")
+			versioner := version.New()
+
+			ver, err := versioner.String(context.Background())
+			if err != nil {
+				return fmt.Errorf("getting version: %w", err)
+			}
+
+			_, err = fmt.Fprintln(o.Out, ver)
+
 			return err
 		},
 	}

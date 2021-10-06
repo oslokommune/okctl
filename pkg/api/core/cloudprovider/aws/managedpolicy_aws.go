@@ -1,7 +1,10 @@
 package aws
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -9,13 +12,20 @@ import (
 )
 
 type managedPolicy struct {
-	provider v1alpha1.CloudProvider
+	provider  v1alpha1.CloudProvider
+	versioner version.Versioner
 }
 
-func (m *managedPolicy) CreatePolicy(opts api.CreatePolicyOpts) (*api.ManagedPolicy, error) {
+func (m *managedPolicy) CreatePolicy(ctx context.Context, opts api.CreatePolicyOpts) (*api.ManagedPolicy, error) {
+	versionInfo, err := m.versioner.GetVersionInfo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting version info: %w", err)
+	}
+
 	r := cfn.NewRunner(m.provider)
 
-	err := r.CreateIfNotExists(
+	err = r.CreateIfNotExists(
+		versionInfo,
 		opts.ID.ClusterName,
 		opts.StackName,
 		opts.CloudFormationTemplate,
@@ -54,8 +64,9 @@ func (m *managedPolicy) DeletePolicy(opts api.DeletePolicyOpts) error {
 }
 
 // NewManagedPolicyCloudProvider returns an initialised cloud provider
-func NewManagedPolicyCloudProvider(provider v1alpha1.CloudProvider) api.ManagedPolicyCloudProvider {
+func NewManagedPolicyCloudProvider(provider v1alpha1.CloudProvider, versioner version.Versioner) api.ManagedPolicyCloudProvider {
 	return &managedPolicy{
-		provider: provider,
+		provider:  provider,
+		versioner: versioner,
 	}
 }

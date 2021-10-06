@@ -6,12 +6,14 @@ import (
 	"fmt"
 
 	"github.com/oslokommune/okctl/pkg/apis/eksctl.io/v1alpha5"
+	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/clusterconfig"
 )
 
+//goland:noinspection ALL
 const (
 	// DefaultAWSAccountID is a default aws account id used in mocks
 	DefaultAWSAccountID = "123456789012"
@@ -76,6 +78,7 @@ func DefaultID() api.ID {
 }
 
 // DefaultVpcCreateOpts returns options for creating a vpc with defaults set
+//goland:noinspection ALL
 func DefaultVpcCreateOpts() api.CreateVpcOpts {
 	return api.CreateVpcOpts{
 		ID:   DefaultID(),
@@ -84,6 +87,7 @@ func DefaultVpcCreateOpts() api.CreateVpcOpts {
 }
 
 // DefaultVpcDeleteOpts returns options for deleting a vpc with defaults set
+//goland:noinspection ALL
 func DefaultVpcDeleteOpts() api.DeleteVpcOpts {
 	return api.DeleteVpcOpts{
 		ID: DefaultID(),
@@ -91,6 +95,7 @@ func DefaultVpcDeleteOpts() api.DeleteVpcOpts {
 }
 
 // DefaultClusterDeleteOpts returns options for deleting a cluster with defaults set
+//goland:noinspection ALL
 func DefaultClusterDeleteOpts() api.ClusterDeleteOpts {
 	return api.ClusterDeleteOpts{
 		ID: DefaultID(),
@@ -110,6 +115,7 @@ func DefaultClusterCreateOpts() api.ClusterCreateOpts {
 }
 
 // DefaultPublicSubnets returns a map of public subnets with defaults set
+//goland:noinspection ALL
 func DefaultPublicSubnets() map[string]v1alpha5.ClusterNetwork {
 	return map[string]v1alpha5.ClusterNetwork{
 		DefaultAvailabilityZone: {
@@ -131,6 +137,7 @@ func DefaultVpcPublicSubnets() []api.VpcSubnet {
 }
 
 // DefaultPrivateSubnets returns a map of private subnets with defaults set
+//goland:noinspection ALL
 func DefaultPrivateSubnets() map[string]v1alpha5.ClusterNetwork {
 	return map[string]v1alpha5.ClusterNetwork{
 		DefaultAvailabilityZone: {
@@ -154,6 +161,7 @@ func DefaultVpcPrivateSubnets() []api.VpcSubnet {
 // DefaultClusterConfig returns a cluster config with defaults set
 func DefaultClusterConfig() *v1alpha5.ClusterConfig {
 	c, _ := clusterconfig.New(&clusterconfig.Args{
+		ClusterVersionInfo:     DefaultVersionInfo(),
 		ClusterName:            DefaultClusterName,
 		PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(DefaultAWSAccountID),
 		PrivateSubnets:         DefaultVpcPrivateSubnets(),
@@ -165,6 +173,15 @@ func DefaultClusterConfig() *v1alpha5.ClusterConfig {
 	})
 
 	return c
+}
+
+// DefaultVersionInfo is the default version
+func DefaultVersionInfo() version.Info {
+	return version.Info{
+		Version:     "0.0.20",
+		ShortCommit: "some-commit",
+		BuildDate:   "2021-06-22T05:17:07Z",
+	}
 }
 
 // DefaultVpc returns a vpc with defaults set
@@ -203,6 +220,7 @@ func (s *ClusterService) DeleteCluster(ctx context.Context, opts api.ClusterDele
 }
 
 // NewGoodClusterService returns a cluster service that will succeed
+//goland:noinspection ALL
 func NewGoodClusterService() *ClusterService {
 	return &ClusterService{
 		CreateClusterFn: func(_ context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error) {
@@ -215,6 +233,7 @@ func NewGoodClusterService() *ClusterService {
 }
 
 // NewBadClusterService returns a cluster service that will fail
+//goland:noinspection ALL
 func NewBadClusterService() *ClusterService {
 	return &ClusterService{
 		CreateClusterFn: func(context.Context, api.ClusterCreateOpts) (*api.Cluster, error) {
@@ -243,6 +262,7 @@ func (c *VpcCloud) DeleteVpc(opts api.DeleteVpcOpts) error {
 }
 
 // NewGoodVpcCloud returns a cluster cloud that will succeed
+//goland:noinspection ALL
 func NewGoodVpcCloud() *VpcCloud {
 	return &VpcCloud{
 		CreateVpcFn: func(opts api.CreateVpcOpts) (*api.Vpc, error) {
@@ -255,6 +275,7 @@ func NewGoodVpcCloud() *VpcCloud {
 }
 
 // NewBadVpcCloud returns a cluster cloud that will fail
+//goland:noinspection ALL
 func NewBadVpcCloud() *VpcCloud {
 	return &VpcCloud{
 		CreateVpcFn: func(opts api.CreateVpcOpts) (*api.Vpc, error) {
@@ -268,13 +289,13 @@ func NewBadVpcCloud() *VpcCloud {
 
 // ClusterExe provides a mock for the cluster exe interface
 type ClusterExe struct {
-	CreateClusterFn func(opts api.ClusterCreateOpts) (*api.Cluster, error)
+	CreateClusterFn func(ctx context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error)
 	DeleteClusterFn func(opts api.ClusterDeleteOpts) error
 }
 
 // CreateCluster invokes the mocked create cluster function
-func (c *ClusterExe) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, error) {
-	return c.CreateClusterFn(opts)
+func (c *ClusterExe) CreateCluster(ctx context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error) {
+	return c.CreateClusterFn(ctx, opts)
 }
 
 // DeleteCluster invokes the mocked delete cluster function
@@ -285,7 +306,7 @@ func (c *ClusterExe) DeleteCluster(opts api.ClusterDeleteOpts) error {
 // NewGoodClusterExe returns a cluster exe that will succeed
 func NewGoodClusterExe() *ClusterExe {
 	return &ClusterExe{
-		CreateClusterFn: func(api.ClusterCreateOpts) (*api.Cluster, error) {
+		CreateClusterFn: func(context.Context, api.ClusterCreateOpts) (*api.Cluster, error) {
 			return DefaultCluster(), nil
 		},
 		DeleteClusterFn: func(opts api.ClusterDeleteOpts) error {
@@ -295,9 +316,10 @@ func NewGoodClusterExe() *ClusterExe {
 }
 
 // NewBadClusterExe returns a cluster exe that will fail
+//goland:noinspection ALL
 func NewBadClusterExe() *ClusterExe {
 	return &ClusterExe{
-		CreateClusterFn: func(opts api.ClusterCreateOpts) (*api.Cluster, error) {
+		CreateClusterFn: func(_ context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error) {
 			return nil, ErrBad
 		},
 		DeleteClusterFn: func(opts api.ClusterDeleteOpts) error {
@@ -329,6 +351,7 @@ func (c *ClusterStore) GetCluster(id api.ID) (*api.Cluster, error) {
 }
 
 // NewGoodClusterStore returns a cluster store that will succeed
+//goland:noinspection ALL
 func NewGoodClusterStore() *ClusterStore {
 	return &ClusterStore{
 		SaveClusterFn: func(cluster *api.Cluster) error {
@@ -344,6 +367,7 @@ func NewGoodClusterStore() *ClusterStore {
 }
 
 // NewBadClusterStore returns a cluster store that will fail
+//goland:noinspection ALL
 func NewBadClusterStore() *ClusterStore {
 	return &ClusterStore{
 		SaveClusterFn: func(cluster *api.Cluster) error {
@@ -381,6 +405,7 @@ func (c *ClusterConfigStore) GetClusterConfig(env string) (*v1alpha5.ClusterConf
 }
 
 // NewGoodClusterConfigStore returns a cluster config store that will succeed
+//goland:noinspection ALL
 func NewGoodClusterConfigStore() *ClusterConfigStore {
 	return &ClusterConfigStore{
 		SaveClusterConfigFn: func(config *v1alpha5.ClusterConfig) error {
@@ -418,6 +443,7 @@ func (k *KubeConfigStore) DeleteKubeConfig() error {
 }
 
 // NewGoodKubeConfigStore returns a store that succeeds
+//goland:noinspection ALL
 func NewGoodKubeConfigStore() *KubeConfigStore {
 	return &KubeConfigStore{
 		CreateKubeConfigFn: func() (string, error) {

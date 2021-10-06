@@ -113,8 +113,8 @@ type ComponentService interface {
 // ComponentCloudProvider defines the required cloud operations
 // for the components
 type ComponentCloudProvider interface {
-	CreatePostgresDatabase(opts *CreatePostgresDatabaseOpts) (*PostgresDatabase, error)
+	CreatePostgresDatabase(ctx context.Context, opts *CreatePostgresDatabaseOpts) (*PostgresDatabase, error)
 	DeletePostgresDatabase(opts *DeletePostgresDatabaseOpts) error
-	CreateS3Bucket(opts *CreateS3BucketOpts) (*S3Bucket, error)
+	CreateS3Bucket(ctx context.Context, opts *CreateS3BucketOpts) (*S3Bucket, error)
 	DeleteS3Bucket(opts *DeleteS3BucketOpts) error
 }

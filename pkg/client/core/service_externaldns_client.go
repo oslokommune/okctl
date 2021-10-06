@@ -2,6 +2,9 @@ package core
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components"
 
@@ -15,15 +18,17 @@ import (
 )
 
 type externalDNSService struct {
-	api   client.ExternalDNSAPI
-	state client.ExternalDNSState
+	versioner version.Versioner
+	api       client.ExternalDNSAPI
 
+	state   client.ExternalDNSState
 	policy  client.ManagedPolicyService
 	account client.ServiceAccountService
 }
 
 func (s *externalDNSService) DeleteExternalDNS(ctx context.Context, id api.ID) error {
 	config, err := clusterconfig.NewExternalDNSServiceAccount(
+		version.Info{},
 		id.ClusterName,
 		id.Region,
 		"n/a",
@@ -63,6 +68,11 @@ func (s *externalDNSService) DeleteExternalDNS(ctx context.Context, id api.ID) e
 
 // nolint: funlen
 func (s *externalDNSService) CreateExternalDNS(ctx context.Context, opts client.CreateExternalDNSOpts) (*client.ExternalDNS, error) {
+	versionInfo, err := s.versioner.GetVersionInfo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting version info: %w", err)
+	}
+
 	b := cfn.New(
 		components.NewExternalDNSPolicyComposer(opts.ID.ClusterName),
 	)
@@ -86,6 +96,7 @@ func (s *externalDNSService) CreateExternalDNS(ctx context.Context, opts client.
 	}
 
 	config, err := clusterconfig.NewExternalDNSServiceAccount(
+		versionInfo,
 		opts.ID.ClusterName,
 		opts.ID.Region,
 		policy.PolicyARN,
@@ -135,15 +146,17 @@ func (s *externalDNSService) CreateExternalDNS(ctx context.Context, opts client.
 
 // NewExternalDNSService returns an initialised service
 func NewExternalDNSService(
+	versioner version.Versioner,
 	api client.ExternalDNSAPI,
 	state client.ExternalDNSState,
 	policy client.ManagedPolicyService,
 	account client.ServiceAccountService,
 ) client.ExternalDNSService {
 	return &externalDNSService{
-		api:     api,
-		state:   state,
-		policy:  policy,
-		account: account,
+		versioner: versioner,
+		api:       api,
+		state:     state,
+		policy:    policy,
+		account:   account,
 	}
 }

@@ -1,7 +1,10 @@
 package aws
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/gosimple/slug"
 
@@ -15,12 +18,11 @@ import (
 const (
 	// DefaultCloudFrontHostedZoneID is the default hosted zone id for all cloud front distributions
 	DefaultCloudFrontHostedZoneID = "Z2FDTNDATAQYW2"
-	// DefaultCloudFrontACMRegion is the default region for ACM certificates used with a cloud front distribution
-	DefaultCloudFrontACMRegion = "us-east-1"
 )
 
 type identityManagerCloudProvider struct {
-	provider v1alpha1.CloudProvider
+	provider  v1alpha1.CloudProvider
+	versioner version.Versioner
 }
 
 func (s *identityManagerCloudProvider) DeleteIdentityPoolClient(opts api.DeleteIdentityPoolClientOpts) error {
@@ -43,7 +45,12 @@ func (s *identityManagerCloudProvider) DeleteIdentityPoolUser(opts api.DeleteIde
 	return nil
 }
 
-func (s *identityManagerCloudProvider) CreateIdentityPoolClient(opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
+func (s *identityManagerCloudProvider) CreateIdentityPoolClient(ctx context.Context, opts api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
+	versionInfo, err := s.versioner.GetVersionInfo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting version info: %w", err)
+	}
+
 	b := cfn.New(components.NewUserPoolClient(
 		opts.Purpose,
 		opts.ID.ClusterName,
@@ -60,7 +67,7 @@ func (s *identityManagerCloudProvider) CreateIdentityPoolClient(opts api.CreateI
 
 	r := cfn.NewRunner(s.provider)
 
-	err = r.CreateIfNotExists(opts.ID.ClusterName, stackName, template, nil, defaultTimeOut)
+	err = r.CreateIfNotExists(versionInfo, opts.ID.ClusterName, stackName, template, nil, defaultTimeOut)
 	if err != nil {
 		return nil, fmt.Errorf("creating identity pool client cloud formation stack: %w", err)
 	}
@@ -108,7 +115,12 @@ func (s *identityManagerCloudProvider) DeleteIdentityPool(opts api.DeleteIdentit
 }
 
 // nolint: funlen
-func (s *identityManagerCloudProvider) CreateIdentityPool(certificateARN string, opts api.CreateIdentityPoolOpts) (*api.IdentityPool, error) {
+func (s *identityManagerCloudProvider) CreateIdentityPool(ctx context.Context, certificateARN string, opts api.CreateIdentityPoolOpts) (*api.IdentityPool, error) {
+	versionInfo, err := s.versioner.GetVersionInfo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting version info: %w", err)
+	}
+
 	b := cfn.New(components.NewUserPool(
 		opts.ID.ClusterName,
 		opts.AuthDomain,
@@ -126,7 +138,7 @@ func (s *identityManagerCloudProvider) CreateIdentityPool(certificateARN string,
 
 	r := cfn.NewRunner(s.provider)
 
-	err = r.CreateIfNotExists(opts.ID.ClusterName, stackName, template, nil, defaultTimeOut)
+	err = r.CreateIfNotExists(versionInfo, opts.ID.ClusterName, stackName, template, nil, defaultTimeOut)
 	if err != nil {
 		return nil, fmt.Errorf("creating identity pool cloud formation stack: %w", err)
 	}
@@ -145,7 +157,7 @@ func (s *identityManagerCloudProvider) CreateIdentityPool(certificateARN string,
 
 	aliasStackName := cfn.NewStackNamer().AliasRecordSet(opts.ID.ClusterName, slug.Make(d.UserPoolDomain))
 
-	err = r.CreateIfNotExists(opts.ID.ClusterName, aliasStackName, aliasTemplate, nil, defaultTimeOut)
+	err = r.CreateIfNotExists(versionInfo, opts.ID.ClusterName, aliasStackName, aliasTemplate, nil, defaultTimeOut)
 	if err != nil {
 		return nil, fmt.Errorf("creating alias cloud formation stack: %w", err)
 	}
@@ -181,7 +193,7 @@ func (s *identityManagerCloudProvider) CreateIdentityPool(certificateARN string,
 	return pool, nil
 }
 
-func (s *identityManagerCloudProvider) CreateIdentityPoolUser(opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {
+func (s *identityManagerCloudProvider) CreateIdentityPoolUser(ctx context.Context, opts api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {
 	b := cfn.New(components.NewUserPoolUser(
 		opts.Email,
 		opts.UserPoolID,
@@ -196,7 +208,12 @@ func (s *identityManagerCloudProvider) CreateIdentityPoolUser(opts api.CreateIde
 
 	r := cfn.NewRunner(s.provider)
 
-	err = r.CreateIfNotExists(opts.ID.ClusterName, stackName, template, nil, defaultTimeOut)
+	versionInfo, err := s.versioner.GetVersionInfo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting version info: %w", err)
+	}
+
+	err = r.CreateIfNotExists(versionInfo, opts.ID.ClusterName, stackName, template, nil, defaultTimeOut)
 	if err != nil {
 		return nil, fmt.Errorf("creating identity pool user cloud formation stack: %w", err)
 	}
@@ -213,8 +230,9 @@ func (s *identityManagerCloudProvider) CreateIdentityPoolUser(opts api.CreateIde
 }
 
 // NewIdentityManagerCloudProvider returns an initialised cloud layer
-func NewIdentityManagerCloudProvider(provider v1alpha1.CloudProvider) api.IdentityManagerCloudProvider {
+func NewIdentityManagerCloudProvider(provider v1alpha1.CloudProvider, versioner version.Versioner) api.IdentityManagerCloudProvider {
 	return &identityManagerCloudProvider{
-		provider: provider,
+		provider:  provider,
+		versioner: versioner,
 	}
 }

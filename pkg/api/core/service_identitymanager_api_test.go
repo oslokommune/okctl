@@ -25,15 +25,15 @@ func (m mockIdentityManagerCloudProvider) DeleteIdentityPoolUser(_ api.DeleteIde
 	panic("implement me")
 }
 
-func (m mockIdentityManagerCloudProvider) CreateIdentityPool(_ string, _ api.CreateIdentityPoolOpts) (*api.IdentityPool, error) {
+func (m mockIdentityManagerCloudProvider) CreateIdentityPool(_ context.Context, _ string, _ api.CreateIdentityPoolOpts) (*api.IdentityPool, error) {
 	panic("implement me")
 }
 
-func (m mockIdentityManagerCloudProvider) CreateIdentityPoolClient(_ api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
+func (m mockIdentityManagerCloudProvider) CreateIdentityPoolClient(_ context.Context, _ api.CreateIdentityPoolClientOpts) (*api.IdentityPoolClient, error) {
 	panic("implement me")
 }
 
-func (m mockIdentityManagerCloudProvider) CreateIdentityPoolUser(_ api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {
+func (m mockIdentityManagerCloudProvider) CreateIdentityPoolUser(_ context.Context, _ api.CreateIdentityPoolUserOpts) (*api.IdentityPoolUser, error) {
 	panic("implement me")
 }
 
@@ -47,7 +47,7 @@ func (m mockIdentityManagerCloudProvider) DeleteIdentityPoolClient(_ api.DeleteI
 
 type mockCertificateCloudProvider struct{}
 
-func (m mockCertificateCloudProvider) CreateCertificate(_ api.CreateCertificateOpts) (*api.Certificate, error) {
+func (m mockCertificateCloudProvider) CreateCertificate(_ context.Context, _ api.CreateCertificateOpts) (*api.Certificate, error) {
 	return nil, stderrors.New("stack creation time exceeded the specified timeout")
 }
 

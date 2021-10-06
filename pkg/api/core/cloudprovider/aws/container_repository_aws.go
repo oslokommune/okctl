@@ -1,7 +1,10 @@
 package aws
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -10,10 +13,16 @@ import (
 )
 
 type containerRepositoryCloudProvider struct {
-	provider v1alpha1.CloudProvider
+	provider  v1alpha1.CloudProvider
+	versioner version.Versioner
 }
 
-func (c *containerRepositoryCloudProvider) CreateContainerRepository(opts *api.CreateContainerRepositoryOpts) (*api.ContainerRepository, error) {
+func (c *containerRepositoryCloudProvider) CreateContainerRepository(ctx context.Context, opts *api.CreateContainerRepositoryOpts) (*api.ContainerRepository, error) {
+	versionInfo, err := c.versioner.GetVersionInfo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting version info: %w", err)
+	}
+
 	composition := components.NewECRRepositoryComposer(opts.Name)
 
 	template, err := cfn.New(composition).Build()
@@ -24,6 +33,7 @@ func (c *containerRepositoryCloudProvider) CreateContainerRepository(opts *api.C
 	r := cfn.NewRunner(c.provider)
 
 	err = r.CreateIfNotExists(
+		versionInfo,
 		opts.ClusterID.ClusterName,
 		opts.StackName,
 		template,
@@ -56,8 +66,9 @@ func (c *containerRepositoryCloudProvider) DeleteContainerRepository(opts *api.D
 }
 
 // NewContainerRepositoryCloudProvider returns an initialised container repository cloud provider
-func NewContainerRepositoryCloudProvider(provider v1alpha1.CloudProvider) api.ContainerRepositoryCloudProvider {
+func NewContainerRepositoryCloudProvider(provider v1alpha1.CloudProvider, versioner version.Versioner) api.ContainerRepositoryCloudProvider {
 	return &containerRepositoryCloudProvider{
-		provider: provider,
+		provider:  provider,
+		versioner: versioner,
 	}
 }

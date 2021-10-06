@@ -25,13 +25,13 @@ func (d *domainService) DeleteHostedZone(_ context.Context, opts api.DeleteHoste
 	return nil
 }
 
-func (d *domainService) CreateHostedZone(_ context.Context, opts api.CreateHostedZoneOpts) (*api.HostedZone, error) {
+func (d *domainService) CreateHostedZone(ctx context.Context, opts api.CreateHostedZoneOpts) (*api.HostedZone, error) {
 	err := opts.Validate()
 	if err != nil {
 		return nil, errors.E(err, "failed to validate hosted zone inputs")
 	}
 
-	hostedZone, err := d.cloudProvider.CreateHostedZone(opts)
+	hostedZone, err := d.cloudProvider.CreateHostedZone(ctx, opts)
 	if err != nil {
 		return nil, errors.E(err, "failed to create hosted zone")
 	}

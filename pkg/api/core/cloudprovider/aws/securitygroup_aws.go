@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/version"
+
 	merrors "github.com/mishudark/errors"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -15,7 +17,8 @@ import (
 )
 
 type securityGroupCloudProvider struct {
-	provider v1alpha1.CloudProvider
+	provider  v1alpha1.CloudProvider
+	versioner version.Versioner
 }
 
 const (
@@ -24,7 +27,12 @@ const (
 )
 
 // CreateSecurityGroup knows how to create a Security Group through CloudFormation
-func (s *securityGroupCloudProvider) CreateSecurityGroup(_ context.Context, opts api.CreateSecurityGroupOpts) (api.SecurityGroup, error) {
+func (s *securityGroupCloudProvider) CreateSecurityGroup(ctx context.Context, opts api.CreateSecurityGroupOpts) (api.SecurityGroup, error) {
+	versionInfo, err := s.versioner.GetVersionInfo(ctx)
+	if err != nil {
+		return api.SecurityGroup{}, fmt.Errorf("getting version info: %w", err)
+	}
+
 	composer := components.NewSecurityGroupComposer(components.NewSecurityGroupComposerOpts{
 		ClusterName:   opts.ClusterID.ClusterName,
 		ResourceName:  defaultSecurityGroupResourceName,
@@ -47,6 +55,7 @@ func (s *securityGroupCloudProvider) CreateSecurityGroup(_ context.Context, opts
 	stackName := cfn.NewStackNamer().SecurityGroup(opts.ClusterID.ClusterName, opts.Name)
 
 	err = r.CreateIfNotExists(
+		versionInfo,
 		opts.ClusterID.ClusterName,
 		stackName,
 		template,
@@ -169,6 +178,9 @@ func (s *securityGroupCloudProvider) RemoveRule(_ context.Context, opts api.Remo
 }
 
 // NewSecurityGroupCloudProvider initializes a new SecurityGroupCloudProvider
-func NewSecurityGroupCloudProvider(provider v1alpha1.CloudProvider) api.SecurityGroupCloudProvider {
-	return &securityGroupCloudProvider{provider: provider}
+func NewSecurityGroupCloudProvider(provider v1alpha1.CloudProvider, versioner version.Versioner) api.SecurityGroupCloudProvider {
+	return &securityGroupCloudProvider{
+		provider:  provider,
+		versioner: versioner,
+	}
 }

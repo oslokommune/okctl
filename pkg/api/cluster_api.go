@@ -58,6 +58,6 @@ type ClusterService interface {
 
 // ClusterRun provides an interface for running CLIs
 type ClusterRun interface {
-	CreateCluster(opts ClusterCreateOpts) (*Cluster, error)
+	CreateCluster(ctx context.Context, opts ClusterCreateOpts) (*Cluster, error)
 	DeleteCluster(opts ClusterDeleteOpts) error
 }

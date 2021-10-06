@@ -12,13 +12,13 @@ type clusterService struct {
 	run api.ClusterRun
 }
 
-func (s *clusterService) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error) {
+func (s *clusterService) CreateCluster(ctx context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error) {
 	err := opts.Validate()
 	if err != nil {
 		return nil, errors.E(err, "validating inputs", errors.Invalid)
 	}
 
-	cluster, err := s.run.CreateCluster(opts)
+	cluster, err := s.run.CreateCluster(ctx, opts)
 	if err != nil {
 		return nil, errors.E(err, "creating cluster", errors.Internal)
 	}

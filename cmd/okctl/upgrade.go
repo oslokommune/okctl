@@ -87,6 +87,12 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 
 			originalClusterVersioner = originalclusterversion.New(clusterID, stateHandlers.Upgrade, stateHandlers.Cluster)
 
+			versioner := version.New()
+			versionInfo, err := versioner.GetVersionInfo(o.Ctx)
+			if err != nil {
+				return fmt.Errorf("getting version info: %w", err)
+			}
+
 			upgrader, err = upgrade.New(upgrade.Opts{
 				Debug:                    o.Debug,
 				AutoConfirm:              flags.confirm,
@@ -99,7 +105,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				OriginalClusterVersioner: originalClusterVersioner,
 				Surveyor:                 surveyor,
 				FetcherOpts:              fetcherOpts,
-				OkctlVersion:             version.GetVersionInfo().Version,
+				OkctlVersion:             versionInfo.Version,
 				State:                    stateHandlers.Upgrade,
 				ClusterID:                clusterID,
 			})

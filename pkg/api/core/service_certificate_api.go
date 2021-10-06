@@ -39,13 +39,13 @@ func (c *certificateService) DeleteCertificate(_ context.Context, opts api.Delet
 	return nil
 }
 
-func (c *certificateService) CreateCertificate(_ context.Context, opts api.CreateCertificateOpts) (*api.Certificate, error) {
+func (c *certificateService) CreateCertificate(ctx context.Context, opts api.CreateCertificateOpts) (*api.Certificate, error) {
 	err := opts.Validate()
 	if err != nil {
 		return nil, errors.E(err, "validating inputs", errors.Invalid)
 	}
 
-	cert, err := c.cloudProvider.CreateCertificate(opts)
+	cert, err := c.cloudProvider.CreateCertificate(ctx, opts)
 	if err != nil {
 		return nil, errors.E(err, "creating certificate", errors.Internal)
 	}

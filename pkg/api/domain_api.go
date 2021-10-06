@@ -58,6 +58,6 @@ type DomainService interface {
 
 // DomainCloudProvider provides the cloud provider layer
 type DomainCloudProvider interface {
-	CreateHostedZone(opts CreateHostedZoneOpts) (*HostedZone, error)
+	CreateHostedZone(ctx context.Context, opts CreateHostedZoneOpts) (*HostedZone, error)
 	DeleteHostedZone(opts DeleteHostedZoneOpts) error
 }

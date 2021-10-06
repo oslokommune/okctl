@@ -11,13 +11,13 @@ type componentService struct {
 	provider api.ComponentCloudProvider
 }
 
-func (c *componentService) CreateS3Bucket(_ context.Context, opts *api.CreateS3BucketOpts) (*api.S3Bucket, error) {
+func (c *componentService) CreateS3Bucket(ctx context.Context, opts *api.CreateS3BucketOpts) (*api.S3Bucket, error) {
 	err := opts.Validate()
 	if err != nil {
 		return nil, errors.E(err, "invalid inputs", errors.Invalid)
 	}
 
-	b, err := c.provider.CreateS3Bucket(opts)
+	b, err := c.provider.CreateS3Bucket(ctx, opts)
 	if err != nil {
 		return nil, errors.E(err, "creating S3 bucket", errors.Internal)
 	}
@@ -39,13 +39,13 @@ func (c *componentService) DeleteS3Bucket(_ context.Context, opts *api.DeleteS3B
 	return nil
 }
 
-func (c *componentService) CreatePostgresDatabase(_ context.Context, opts *api.CreatePostgresDatabaseOpts) (*api.PostgresDatabase, error) {
+func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts *api.CreatePostgresDatabaseOpts) (*api.PostgresDatabase, error) {
 	err := opts.Validate()
 	if err != nil {
 		return nil, errors.E(err, "invalid inputs", errors.Invalid)
 	}
 
-	pg, err := c.provider.CreatePostgresDatabase(opts)
+	pg, err := c.provider.CreatePostgresDatabase(ctx, opts)
 	if err != nil {
 		return nil, errors.E(err, "creating postgres database", errors.Internal)
 	}

@@ -81,6 +81,7 @@ func (v Versioner) fetchSemanticDevVersion(ctx context.Context) (*semver.Version
 	})
 
 	newestVersionString := releases[len(releases)-1].GetTagName()
+
 	newestVersion, err := semver.NewVersion(newestVersionString)
 	if err != nil {
 		return nil, fmt.Errorf("parsing version string '%s': %w", newestVersionString, err)
@@ -89,12 +90,14 @@ func (v Versioner) fetchSemanticDevVersion(ctx context.Context) (*semver.Version
 	return newestVersion, nil
 }
 
+// New returns a new Versioner
 func New() Versioner {
 	return Versioner{
 		github: newGithub(),
 	}
 }
 
+// NewWith returns a new Versioner with passed dependencies
 func NewWith(github Github) Versioner {
 	return Versioner{
 		github: github,

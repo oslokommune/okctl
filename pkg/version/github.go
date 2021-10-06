@@ -7,6 +7,7 @@ import (
 	"github.com/google/go-github/v32/github"
 )
 
+// Github knows how to do GitHub operations
 type Github interface {
 	ListReleases(ctx context.Context, owner, repo string) ([]*RepositoryRelease, error)
 }
@@ -15,6 +16,7 @@ type httpGithuber struct {
 	Client *github.Client
 }
 
+// RepositoryRelease shadows github.RepositoryRelease
 type RepositoryRelease = github.RepositoryRelease
 
 const listReleasesPageSize = 100

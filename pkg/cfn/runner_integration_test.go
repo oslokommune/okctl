@@ -107,6 +107,7 @@ Resources:
       ResponseTemplates:
         application/json: '{"errors":[{"message":$context.error.messageString}]}'`
 
+//nolint:funlen
 func TestTemplates(t *testing.T) {
 	config.SkipUnlessIntegration(t)
 

@@ -16,7 +16,7 @@
 <!--- In the context of a feature, this should include how to demonstrate the feature. -->
 <!--- In the event of a pure code refactoring, just ignore this section -->
 
-## Additional info:
+## Additional info
 
 <!--- Ignore if not relevant -->
 <!--- For example screenshots -->

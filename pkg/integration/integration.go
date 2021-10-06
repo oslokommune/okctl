@@ -23,6 +23,7 @@ import (
 	k3dCluster "github.com/rancher/k3d/v3/pkg/cluster"
 	"github.com/rancher/k3d/v3/pkg/runtimes"
 	k3d "github.com/rancher/k3d/v3/pkg/types"
+	k3dversion "github.com/rancher/k3d/v3/version"
 	"github.com/spf13/afero"
 )
 
@@ -192,6 +193,8 @@ func (k *KubernetesCluster) Create(timeout time.Duration) error {
 		WaitForServer: true,
 		Timeout:       timeout,
 	}
+
+	k3dversion.HelperVersionOverride = "4.4-linux-amd64"
 
 	serverNode := &k3d.Node{
 		Role: k3d.ServerRole,

@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/logrusorgru/aurora"
-
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
 	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversion"
 
@@ -91,6 +89,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 
 			upgrader, err = upgrade.New(upgrade.Opts{
 				Debug:                    o.Debug,
+				AutoConfirm:              flags.confirm,
 				Logger:                   o.Logger,
 				Out:                      out,
 				RepositoryDirectory:      repoDir,
@@ -111,9 +110,6 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			_, _ = fmt.Fprint(o.Out,
-				aurora.Bold("\nThis is an experimental feature. Use at your own risk!\n\n").String())
-
 			err := upgrader.Run()
 			if err != nil {
 				return fmt.Errorf("upgrading: %w", err)

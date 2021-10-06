@@ -6,6 +6,8 @@ import (
 	"io"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/binaries/run/okctlupgrade"
+
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
 	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversion"
 
@@ -125,49 +127,6 @@ func (u Upgrader) runBinaries(upgradeBinaries []okctlUpgradeBinary) (bool, error
 	return true, nil
 }
 
-func (u Upgrader) doRunBinaries(upgradeBinaries []okctlUpgradeBinary, binaryProvider upgradeBinaryProvider) error {
-	for _, binary := range upgradeBinaries {
-		// Get
-		binaryRunner, err := binaryProvider.okctlUpgradeRunner(binary.RawVersion())
-		if err != nil {
-			return fmt.Errorf("getting okctl upgrade binary: %w", err)
-		}
-
-		binaryRunner.SetDebug(u.debug)
-
-		_, _ = fmt.Fprintf(u.out, "--- Running upgrade: %s ---\n", binary)
-
-		// Run
-		_, err = binaryRunner.Run(true)
-		if err != nil {
-			_, _ = fmt.Fprintf(u.out, "--- Upgrade failed: %s ---\n", binary)
-			return fmt.Errorf("running upgrade binary %s: %w", binary, err)
-		}
-
-		// Mark as run
-		err = u.markAsRun(binary)
-		if err != nil {
-			return fmt.Errorf("marking upgrades as run: %w", err)
-		}
-
-		// Update cluster version
-		// Note that we don't save the hotfix version, only the semver version. This is because we use the cluster
-		// versioner later to validate that the current okctl version against the cluster version. The okctl version
-		// will always be a semver version without any hotfix in it, so it wouldn't be possible to store a hotfix
-		// version here.
-		//
-		// Also, a hotfix version is supposed to just fix any errors being made in an upgrade binary, so
-		// the effect of an upgrade binary version 0.0.10 plus a hotfix binary 0.0.10.a, should be as if running one
-		// working upgrade binary with version 0.0.10.
-		err = u.clusterVersioner.SaveClusterVersion(binary.SemverVersion().String())
-		if err != nil {
-			return fmt.Errorf(commands.SaveClusterVersionErr, err)
-		}
-	}
-
-	return nil
-}
-
 func (u Upgrader) createBinaryProvider(upgradeBinaries []okctlUpgradeBinary) (upgradeBinaryProvider, error) {
 	binaries := u.toStateBinaries(upgradeBinaries)
 
@@ -200,12 +159,12 @@ func (u Upgrader) dryRunBinaries(upgradeBinaries []okctlUpgradeBinary, binaryPro
 			return fmt.Errorf("getting okctl upgrade binary: %w", err)
 		}
 
-		binaryRunner.SetDebug(u.debug)
-
 		_, _ = fmt.Fprintf(u.out, "--- Simulating upgrade: %s ---\n", binary)
 
 		// Run
-		_, err = binaryRunner.Run(false)
+		_, err = binaryRunner.DryRun(okctlupgrade.Flags{
+			Debug: u.debug,
+		})
 		if err != nil {
 			_, _ = fmt.Fprintf(u.out, "--- Upgrade failed: %s ---\n", binary)
 			return fmt.Errorf("running upgrade binary %s: %w", binary, err)
@@ -213,6 +172,51 @@ func (u Upgrader) dryRunBinaries(upgradeBinaries []okctlUpgradeBinary, binaryPro
 	}
 
 	_, _ = fmt.Fprintf(u.out, "\nSimulating upgrades complete.\n\n")
+
+	return nil
+}
+
+func (u Upgrader) doRunBinaries(upgradeBinaries []okctlUpgradeBinary, binaryProvider upgradeBinaryProvider) error {
+	for _, binary := range upgradeBinaries {
+		// Get
+		binaryRunner, err := binaryProvider.okctlUpgradeRunner(binary.RawVersion())
+		if err != nil {
+			return fmt.Errorf("getting okctl upgrade binary: %w", err)
+		}
+
+		_, _ = fmt.Fprintf(u.out, "--- Running upgrade: %s ---\n", binary)
+
+		// Run
+		_, err = binaryRunner.Run(okctlupgrade.Flags{
+			Debug:   u.debug,
+			Confirm: u.autoConfirm,
+		})
+
+		if err != nil {
+			_, _ = fmt.Fprintf(u.out, "--- Upgrade failed: %s ---\n", binary)
+			return fmt.Errorf("running upgrade binary %s: %w", binary, err)
+		}
+
+		// Mark as run
+		err = u.markAsRun(binary)
+		if err != nil {
+			return fmt.Errorf("marking upgrades as run: %w", err)
+		}
+
+		// Update cluster version
+		// Note that we don't save the hotfix version, only the semver version. This is because we use the cluster
+		// versioner later to validate that the current okctl version against the cluster version. The okctl version
+		// will always be a semver version without any hotfix in it, so it wouldn't be possible to store a hotfix
+		// version here.
+		//
+		// Also, a hotfix version is supposed to just fix any errors being made in an upgrade binary, so
+		// the effect of an upgrade binary version 0.0.10 plus a hotfix binary 0.0.10.a, should be as if running one
+		// working upgrade binary with version 0.0.10.
+		err = u.clusterVersioner.SaveClusterVersion(binary.SemverVersion().String())
+		if err != nil {
+			return fmt.Errorf(commands.SaveClusterVersionErr, err)
+		}
+	}
 
 	return nil
 }
@@ -334,6 +338,7 @@ type FetcherOpts struct {
 // Opts contains all data needed to create an Upgrader
 type Opts struct {
 	Debug                    bool
+	AutoConfirm              bool
 	Logger                   *logrus.Logger
 	Out                      io.Writer
 	RepositoryDirectory      string
@@ -351,6 +356,7 @@ type Opts struct {
 // Upgrader knows how to upgrade okctl
 type Upgrader struct {
 	debug               bool
+	autoConfirm         bool
 	logger              *logrus.Logger
 	out                 io.Writer
 	clusterID           api.ID
@@ -388,6 +394,7 @@ func New(opts Opts) (Upgrader, error) {
 
 	return Upgrader{
 		debug:               opts.Debug,
+		autoConfirm:         opts.AutoConfirm,
 		logger:              opts.Logger,
 		out:                 opts.Out,
 		clusterID:           opts.ClusterID,

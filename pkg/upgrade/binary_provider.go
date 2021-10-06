@@ -3,6 +3,8 @@ package upgrade
 import (
 	"fmt"
 	"io"
+	"os"
+	"os/exec"
 
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
 	"github.com/oslokommune/okctl/pkg/binaries/run"
@@ -30,10 +32,19 @@ func (p *upgradeBinaryProvider) okctlUpgradeRunner(version string) (*okctlupgrad
 			return nil, err
 		}
 
-		p.binaryRunners[version] = okctlupgrade.New(p.repoDir, p.progress, p.logger, binaryPath, run.Cmd())
+		p.binaryRunners[version] = okctlupgrade.New(p.repoDir, p.progress, p.logger, binaryPath, cmd())
 	}
 
 	return p.binaryRunners[version], nil
+}
+
+func cmd() run.CmdFn {
+	return func(workingDir, path string, env, args []string) *exec.Cmd {
+		cmd := run.Cmd()(workingDir, path, env, args)
+		cmd.Stdin = os.Stdin // Enables user input when running a binary
+
+		return cmd
+	}
 }
 
 func newUpgradeBinaryProvider(

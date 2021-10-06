@@ -2,20 +2,21 @@ Okctl needs to initialize parts of the cluster state to support upgrades. Afterw
 If you want more details, see https://okctl.io/getting-started/upgrading
 
 Found 1 applicable upgrade(s):
-0.0.61
+0.0.62
 
-preloading missing binary: okctl-upgrade_0.0.61 (0.0.61)
+preloading missing binary: okctl-upgrade_0.0.62 (0.0.62)
 Simulating upgrades (we're not doing any actual changes yet, just printing what's going to happen)... 
 
---- Simulating upgrade: okctl-upgrade_0.0.61 ---
-This is upgrade file for okctl-upgrade_0.0.61_Darwin_amd64
+--- Simulating upgrade: okctl-upgrade_0.0.62 ---
+This is upgrade file for okctl-upgrade_0.0.62_Linux_amd64
 --dry-run true flag was provided, so simulating changes.
 
 Simulating upgrades complete.
 
---- Running upgrade: okctl-upgrade_0.0.61 ---
-This is upgrade file for okctl-upgrade_0.0.61_Darwin_amd64
+--- Running upgrade: okctl-upgrade_0.0.62 ---
+This is upgrade file for okctl-upgrade_0.0.62_Linux_amd64
 --confirm flag was provided
 Doing actual changes.
-
-Upgrade complete! Cluster version is now 0.0.61. Remember to commit and push changes with git.
+It will crash now.
+Error: some IO or network wasn't available
+--- Upgrade failed: okctl-upgrade_0.0.62 ---

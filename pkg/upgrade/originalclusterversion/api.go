@@ -109,7 +109,7 @@ func (v Versioner) getClusterStateVersion() (*semver.Version, error) {
 
 	clusterStateVersion, err := semver.NewVersion(clusterStateVersionString)
 	if err != nil {
-		return nil, fmt.Errorf("parsing version '%s': %w", clusterStateVersion, err)
+		return nil, fmt.Errorf("parsing version '%s': %w", clusterStateVersionString, err)
 	}
 
 	return clusterStateVersion, nil

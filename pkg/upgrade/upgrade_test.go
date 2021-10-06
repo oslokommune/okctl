@@ -37,6 +37,7 @@ const (
 type TestCase struct {
 	name                               string
 	withDebug                          bool
+	withConfirm                        *bool
 	withOkctlVersion                   string
 	withOriginalClusterVersion         string
 	withClusterVersion                 string
@@ -75,6 +76,15 @@ func TestRunUpgrades(t *testing.T) {
 			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
 		},
 		{
+			name:                              "Should print upgrade's stdout and stderr to stdout",
+			withOkctlVersion:                  "0.0.62",
+			withOriginalClusterVersion:        "0.0.50",
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.62"}),
+			withGithubReleaseAssetsFromFolder: folderCrashing,
+			withHost:                          state.Host{Os: linux, Arch: amd64},
+			expectErrorContains:               "exit status 1",
+		},
+		{
 			name:                              "Should return exit status if upgrade crashes",
 			withOkctlVersion:                  "0.0.58",
 			withOriginalClusterVersion:        "0.0.50",
@@ -104,6 +114,15 @@ func TestRunUpgrades(t *testing.T) {
 			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
 		},
 		{
+			name:                              "Should run a Darwin upgrade",
+			withOkctlVersion:                  "0.0.61",
+			withOriginalClusterVersion:        "0.0.50",
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
+			withGithubReleaseAssetsFromFolder: folderWorking,
+			withHost:                          state.Host{Os: darwin, Arch: amd64},
+			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
+		},
+		{
 			// Bumping cluster version happens after running every upgrade binary, to that upgrade's version. In this
 			// test, that would be 0.0.61. Additionally, when all upgrades have completed successfully, we have chosen
 			// to bump the cluster version to the current version of okctl. The reason for that, is that we want that
@@ -123,24 +142,18 @@ func TestRunUpgrades(t *testing.T) {
 			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
 		},
 		{
-			name:                               "Should not bump cluster version if user aborts upgrading",
-			withOkctlVersion:                   "0.0.70",
-			withOriginalClusterVersion:         "0.0.50",
-			withGithubReleases:                 createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
-			withGithubReleaseAssetsFromFolder:  folderWorking,
-			withHost:                           state.Host{Os: linux, Arch: amd64},
-			withUserAnswers:                    []bool{true, false},
-			expectBinaryVersionsRunOnce:        []string{},
-			expectedClusterVersionAfterUpgrade: "0.0.50",
-		},
-		{
-			name:                              "Should run a Darwin upgrade",
-			withOkctlVersion:                  "0.0.61",
+			name:                              "Should not bump cluster version if user aborts upgrading",
+			withOkctlVersion:                  "0.0.70",
 			withOriginalClusterVersion:        "0.0.50",
 			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
 			withGithubReleaseAssetsFromFolder: folderWorking,
-			withHost:                          state.Host{Os: darwin, Arch: amd64},
-			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
+			withHost:                          state.Host{Os: linux, Arch: amd64},
+			withUserAnswers: []bool{
+				true,  // (tag UPGR01) 'Yes' to save original cluster version
+				false, // 'No' to if the user wants to proceed upgradeing
+			},
+			expectBinaryVersionsRunOnce:        []string{},
+			expectedClusterVersionAfterUpgrade: "0.0.50",
 		},
 		{
 			name:                              "Should return error if okctl version is below cluster version",
@@ -274,6 +287,27 @@ func TestRunUpgrades(t *testing.T) {
 			withGithubReleaseAssetsFromFolder: folderWorking,
 			withHost:                          state.Host{Os: linux, Arch: amd64},
 			expectBinaryVersionsRunOnce:       []string{"0.0.62", "0.0.63"},
+		},
+		{
+			name:                              "Should be possible to run update with confirm flag",
+			withConfirm:                       boolPtr(true),
+			withOkctlVersion:                  "0.0.65",
+			withOriginalClusterVersion:        "0.0.60",
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.62"}),
+			withGithubReleaseAssetsFromFolder: folderWorking,
+			withHost:                          state.Host{Os: linux, Arch: amd64},
+			expectBinaryVersionsRunOnce:       []string{"0.0.62"},
+		},
+		{
+			// Default for tests is run -with- confirm flag, so here we verify the opposite
+			name:                              "Should be possible to run update without confirm flag",
+			withConfirm:                       boolPtr(false),
+			withOkctlVersion:                  "0.0.65",
+			withOriginalClusterVersion:        "0.0.60",
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.62"}),
+			withGithubReleaseAssetsFromFolder: folderWorking,
+			withHost:                          state.Host{Os: linux, Arch: amd64},
+			expectBinaryVersionsRunOnce:       []string{"0.0.62"},
 		},
 		{
 			name:                       "Should run upgrade hot fixes, and in correct order",
@@ -492,8 +526,8 @@ func TestRunUpgrades(t *testing.T) {
 				// Then
 				t.Log(defaultOpts.StdOutBuffer.String())
 
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), "It will crash")
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), "exit status 1")
 
 				originaltestName := tc.name
 
@@ -552,6 +586,13 @@ func TestRunUpgrades(t *testing.T) {
 			// Given
 			var err error
 
+			var autoConfirm bool
+			if tc.withConfirm == nil {
+				autoConfirm = true
+			} else {
+				autoConfirm = *tc.withConfirm
+			}
+
 			stdOutBuffer := new(bytes.Buffer)
 
 			tmpStore, err := storage.NewTemporaryStorage()
@@ -578,6 +619,7 @@ func TestRunUpgrades(t *testing.T) {
 			defaultOpts := DefaultTestOpts{
 				Opts: upgrade.Opts{
 					Debug:                    tc.withDebug,
+					AutoConfirm:              autoConfirm,
 					Logger:                   logrus.StandardLogger(),
 					Out:                      stdOutBuffer,
 					RepositoryDirectory:      repositoryAbsoluteDir,
@@ -618,6 +660,8 @@ func TestRunUpgrades(t *testing.T) {
 			if len(tc.expectErrorContains) > 0 {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tc.expectErrorContains)
+
+				doGoldieAssert(t, tc, defaultOpts)
 				return
 			}
 
@@ -650,7 +694,10 @@ func doAsserts(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
 
 	assert.Equal(t, originalClusterVersion, originalClusterVersion, tc.name)
 
-	// Goldie
+	doGoldieAssert(t, tc, defaultOpts)
+}
+
+func doGoldieAssert(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
 	g := goldie.New(t)
 	t.Log(tc.name)
 	g.Assert(t, tc.name, defaultOpts.StdOutBuffer.Bytes())
@@ -744,4 +791,8 @@ func createGihubReleaseAssetBinary(os, arch, version string) *github.ReleaseAsse
 		BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
 			"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz", version, version, os, arch)),
 	}
+}
+
+func boolPtr(val bool) *bool {
+	return &val
 }

@@ -11,17 +11,24 @@ Simulating upgrades (we're not doing any actual changes yet, just printing what'
 
 --- Simulating upgrade: okctl-upgrade_0.0.61 ---
 This is upgrade file for okctl-upgrade_0.0.61_Linux_amd64
+--dry-run true flag was provided, so simulating changes.
 --- Simulating upgrade: okctl-upgrade_0.0.62 ---
 This is upgrade file for okctl-upgrade_0.0.62_Linux_amd64
-Simulating, not doing anything.
+--dry-run true flag was provided, so simulating changes.
 --- Simulating upgrade: okctl-upgrade_0.0.63 ---
 This is upgrade file for okctl-upgrade_0.0.63_Linux_amd64
+--dry-run true flag was provided, so simulating changes.
 
 Simulating upgrades complete.
 
 --- Running upgrade: okctl-upgrade_0.0.61 ---
 This is upgrade file for okctl-upgrade_0.0.61_Linux_amd64
+--confirm flag was provided
+Doing actual changes.
 --- Running upgrade: okctl-upgrade_0.0.62 ---
 This is upgrade file for okctl-upgrade_0.0.62_Linux_amd64
-It will crash.
+--confirm flag was provided
+Doing actual changes.
+It will crash now.
+Error: some IO or network wasn't available
 --- Upgrade failed: okctl-upgrade_0.0.62 ---

@@ -28,14 +28,15 @@ $ okctl -c cluster-dev.yaml upgrade
 Found 2 applicable upgrade(s):
 0.0.50, 0.0.51
 
-Simulating upgrades...
+preloading missing binary: okctl-upgrade_0.0.50 (0.0.50)
+preloading missing binary: okctl-upgrade_0.0.51 (0.0.51)
+
+Simulating upgrades (we're not doing any actual changes yet, just printing what's going to happen)...
 
 --- Simulating upgrade: okctl-upgrade_0.0.50 ---
-Simulating the upgrade, not doing any changes.
 Upgrading ArgoCD
 Upgrading ArgoCD complete!
 --- Simulating upgrade: okctl-upgrade_0.0.51 ---
-Simulating the upgrade, not doing any changes.
 Upgrading Some Other Component
 Upgrading Some Other Component complete!
 

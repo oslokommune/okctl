@@ -111,9 +111,9 @@ github:
 #  # Enable Tempo, exposing traces in Grafana
 #  tempo: true
 
-## Specify the database(s) for okctl to provision
-## namespace is for placing database information
-## user defines the admin user to provision for operations
+## Specify the database(s) for okctl to provision.
+## namespace is for placing database information.
+## user defines the admin user to provision for operations.
 #databases:
 #  postgres:
 #  - name: dbname

@@ -72,7 +72,7 @@ type CertificateService interface {
 
 // CertificateCloudProvider defines the cloud interaction
 type CertificateCloudProvider interface {
-	CreateCertificate(opts CreateCertificateOpts) (*Certificate, error)
+	CreateCertificate(ctx context.Context, opts CreateCertificateOpts) (*Certificate, error)
 	DeleteCertificate(opts DeleteCertificateOpts) error
 	DeleteCognitoCertificate(opts DeleteCognitoCertificateOpts) error
 }

@@ -42,7 +42,14 @@ func TestCreate(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.runner.CreateIfNotExists("myCluster", mock.DefaultStackName, []byte{}, nil, 10)
+			err := tc.runner.CreateIfNotExists(
+				mock.DefaultVersionInfo(),
+				"myCluster",
+				mock.DefaultStackName,
+				[]byte{},
+				nil,
+				10,
+			)
 			if tc.expectError {
 				assert.Error(t, err)
 				assert.Equal(t, tc.expect, err.Error())

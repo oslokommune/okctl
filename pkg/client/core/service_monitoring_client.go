@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/version"
+
 	"github.com/mishudark/errors"
 
 	"github.com/oslokommune/okctl/pkg/iamapi"
@@ -40,15 +42,16 @@ import (
 )
 
 type monitoringService struct {
-	state    client.MonitoringState
-	helm     client.HelmService
-	cert     client.CertificateService
-	ident    client.IdentityManagerService
-	param    client.ParameterService
-	manifest client.ManifestService
-	service  client.ServiceAccountService
-	policy   client.ManagedPolicyService
-	provider v1alpha1.CloudProvider
+	versioner version.Versioner
+	state     client.MonitoringState
+	helm      client.HelmService
+	cert      client.CertificateService
+	ident     client.IdentityManagerService
+	param     client.ParameterService
+	manifest  client.ManifestService
+	service   client.ServiceAccountService
+	policy    client.ManagedPolicyService
+	provider  v1alpha1.CloudProvider
 }
 
 const (
@@ -345,6 +348,7 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 	}
 
 	cc, err := clusterconfig.NewCloudwatchDatasourceServiceAccount(
+		version.Info{},
 		opts.ID.ClusterName,
 		opts.ID.Region,
 		"N/A",
@@ -416,6 +420,11 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 
 // nolint: funlen, gocyclo
 func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client.CreateKubePromStackOpts) (*client.KubePromStack, error) {
+	versionInfo, err := s.versioner.GetVersionInfo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting version info: %w", err)
+	}
+
 	cft, err := cfn.New(components.NewCloudwatchDatasourcePolicyComposer(opts.ID.ClusterName)).Build()
 	if err != nil {
 		return nil, err
@@ -432,6 +441,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 	}
 
 	cc, err := clusterconfig.NewCloudwatchDatasourceServiceAccount(
+		versionInfo,
 		opts.ID.ClusterName,
 		opts.ID.Region,
 		policy.PolicyARN,
@@ -704,6 +714,7 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 
 // NewMonitoringService returns an initialised service
 func NewMonitoringService(
+	versioner version.Versioner,
 	state client.MonitoringState,
 	helm client.HelmService,
 	cert client.CertificateService,
@@ -715,14 +726,15 @@ func NewMonitoringService(
 	provider v1alpha1.CloudProvider,
 ) client.MonitoringService {
 	return &monitoringService{
-		state:    state,
-		helm:     helm,
-		cert:     cert,
-		ident:    ident,
-		param:    param,
-		manifest: manifest,
-		service:  service,
-		policy:   policy,
-		provider: provider,
+		versioner: versioner,
+		state:     state,
+		helm:      helm,
+		cert:      cert,
+		ident:     ident,
+		param:     param,
+		manifest:  manifest,
+		service:   service,
+		policy:    policy,
+		provider:  provider,
 	}
 }

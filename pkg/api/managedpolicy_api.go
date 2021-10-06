@@ -56,6 +56,6 @@ type ManagedPolicyService interface {
 
 // ManagedPolicyCloudProvider defines the cloud provider layer for managed policies
 type ManagedPolicyCloudProvider interface {
-	CreatePolicy(opts CreatePolicyOpts) (*ManagedPolicy, error)
+	CreatePolicy(ctx context.Context, opts CreatePolicyOpts) (*ManagedPolicy, error)
 	DeletePolicy(opts DeletePolicyOpts) error
 }

@@ -15,6 +15,7 @@ type clusterConfigRetrieverFn func(config *v1alpha5.ClusterConfig)
 
 func createMonitoringService(retriever clusterConfigRetrieverFn) client.MonitoringService {
 	return NewMonitoringService(
+		mock.NewVersioner(),
 		mockState{},
 		mockHelm{},
 		mockCertService{},

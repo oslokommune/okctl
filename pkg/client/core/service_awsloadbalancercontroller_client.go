@@ -2,6 +2,9 @@ package core // nolint: dupl
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
@@ -18,13 +21,15 @@ import (
 )
 
 type awsLoadBalancerControllerService struct {
-	policy  client.ManagedPolicyService
-	account client.ServiceAccountService
-	helm    client.HelmService
+	versioner version.Versioner
+	policy    client.ManagedPolicyService
+	account   client.ServiceAccountService
+	helm      client.HelmService
 }
 
 func (s *awsLoadBalancerControllerService) DeleteAWSLoadBalancerController(ctx context.Context, id api.ID) error {
 	config, err := clusterconfig.NewAWSLoadBalancerControllerServiceAccount(
+		version.Info{},
 		id.ClusterName,
 		id.Region,
 		"n/a",
@@ -68,6 +73,11 @@ func (s *awsLoadBalancerControllerService) DeleteAWSLoadBalancerController(ctx c
 
 //nolint:lll,funlen
 func (s *awsLoadBalancerControllerService) CreateAWSLoadBalancerController(ctx context.Context, opts client.CreateAWSLoadBalancerControllerOpts) (*client.AWSLoadBalancerController, error) {
+	versionInfo, err := s.versioner.GetVersionInfo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting version info: %w", err)
+	}
+
 	b := cfn.New(
 		components.NewAWSLoadBalancerControllerComposer(
 			opts.ID.ClusterName,
@@ -93,6 +103,7 @@ func (s *awsLoadBalancerControllerService) CreateAWSLoadBalancerController(ctx c
 	}
 
 	config, err := clusterconfig.NewAWSLoadBalancerControllerServiceAccount(
+		versionInfo,
 		opts.ID.ClusterName,
 		opts.ID.Region,
 		policy.PolicyARN,
@@ -145,13 +156,15 @@ func (s *awsLoadBalancerControllerService) CreateAWSLoadBalancerController(ctx c
 
 // NewAWSLoadBalancerControllerService returns an initialised service
 func NewAWSLoadBalancerControllerService(
+	versioner version.Versioner,
 	policy client.ManagedPolicyService,
 	account client.ServiceAccountService,
 	helm client.HelmService,
 ) client.AWSLoadBalancerControllerService {
 	return &awsLoadBalancerControllerService{
-		policy:  policy,
-		account: account,
-		helm:    helm,
+		versioner: versioner,
+		policy:    policy,
+		account:   account,
+		helm:      helm,
 	}
 }

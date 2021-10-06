@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/api/mock"
+
 	"github.com/oslokommune/okctl/pkg/config"
 
 	"github.com/oslokommune/okctl/pkg/cfn"
@@ -152,7 +154,14 @@ func TestTemplates(t *testing.T) {
 
 		// If test fails, grab the docker logs I think
 		t.Run(tc.name, func(t *testing.T) {
-			err := cfn.NewRunner(provider.Provider).CreateIfNotExists("myCluster", tc.stackName, tc.templateBody, nil, 30)
+			err := cfn.NewRunner(provider.Provider).CreateIfNotExists(
+				mock.DefaultVersionInfo(),
+				"myCluster",
+				tc.stackName,
+				tc.templateBody,
+				nil,
+				30,
+			)
 			assert.NoError(t, err)
 
 			if err != nil {

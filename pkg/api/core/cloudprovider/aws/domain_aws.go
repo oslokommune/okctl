@@ -1,7 +1,10 @@
 package aws
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/gosimple/slug"
 	"github.com/mishudark/errors"
@@ -14,7 +17,8 @@ import (
 )
 
 type domain struct {
-	provider v1alpha1.CloudProvider
+	provider  v1alpha1.CloudProvider
+	versioner version.Versioner
 }
 
 func (d *domain) DeleteHostedZone(opts api.DeleteHostedZoneOpts) error {
@@ -36,7 +40,12 @@ func (d *domain) DeleteHostedZone(opts api.DeleteHostedZoneOpts) error {
 	return nil
 }
 
-func (d *domain) CreateHostedZone(opts api.CreateHostedZoneOpts) (*api.HostedZone, error) {
+func (d *domain) CreateHostedZone(ctx context.Context, opts api.CreateHostedZoneOpts) (*api.HostedZone, error) {
+	versionInfo, err := d.versioner.GetVersionInfo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting version info: %w", err)
+	}
+
 	// Create hosted zone
 	b := cfn.New(components.NewHostedZoneComposer(opts.FQDN, "A public hosted zone for creating ingresses with"))
 
@@ -54,7 +63,7 @@ func (d *domain) CreateHostedZone(opts api.CreateHostedZoneOpts) (*api.HostedZon
 
 	r := cfn.NewRunner(d.provider)
 
-	err = r.CreateIfNotExists(opts.ID.ClusterName, stackName, template, nil, defaultTimeOut)
+	err = r.CreateIfNotExists(versionInfo, opts.ID.ClusterName, stackName, template, nil, defaultTimeOut)
 	if err != nil {
 		return nil, errors.E(err, "failed to create cloud formation template")
 	}
@@ -91,8 +100,9 @@ func (d *domain) CreateHostedZone(opts api.CreateHostedZoneOpts) (*api.HostedZon
 }
 
 // NewDomainCloudProvider returns an initialised cloud provider for domains
-func NewDomainCloudProvider(provider v1alpha1.CloudProvider) api.DomainCloudProvider {
+func NewDomainCloudProvider(provider v1alpha1.CloudProvider, versioner version.Versioner) api.DomainCloudProvider {
 	return &domain{
-		provider: provider,
+		provider:  provider,
+		versioner: versioner,
 	}
 }

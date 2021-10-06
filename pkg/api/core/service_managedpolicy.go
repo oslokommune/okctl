@@ -11,13 +11,13 @@ type managedPolicyService struct {
 	provider api.ManagedPolicyCloudProvider
 }
 
-func (m *managedPolicyService) CreatePolicy(_ context.Context, opts api.CreatePolicyOpts) (*api.ManagedPolicy, error) {
+func (m *managedPolicyService) CreatePolicy(ctx context.Context, opts api.CreatePolicyOpts) (*api.ManagedPolicy, error) {
 	err := opts.Validate()
 	if err != nil {
 		return nil, errors.E(err, "validating inputs", errors.Invalid)
 	}
 
-	p, err := m.provider.CreatePolicy(opts)
+	p, err := m.provider.CreatePolicy(ctx, opts)
 	if err != nil {
 		return nil, errors.E(err, "creating managed policy", errors.Internal)
 	}

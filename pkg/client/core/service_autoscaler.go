@@ -2,6 +2,9 @@ package core
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
@@ -19,13 +22,15 @@ import (
 )
 
 type autoscalerService struct {
-	policy  client.ManagedPolicyService
-	account client.ServiceAccountService
-	helm    client.HelmService
+	versioner version.Versioner
+	policy    client.ManagedPolicyService
+	account   client.ServiceAccountService
+	helm      client.HelmService
 }
 
 func (s *autoscalerService) DeleteAutoscaler(ctx context.Context, id api.ID) error {
 	config, err := clusterconfig.NewAutoscalerServiceAccount(
+		version.Info{},
 		id.ClusterName,
 		id.Region,
 		"n/a",
@@ -69,6 +74,11 @@ func (s *autoscalerService) DeleteAutoscaler(ctx context.Context, id api.ID) err
 
 // nolint: funlen
 func (s *autoscalerService) CreateAutoscaler(ctx context.Context, opts client.CreateAutoscalerOpts) (*client.Autoscaler, error) {
+	versionInfo, err := s.versioner.GetVersionInfo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting version info: %w", err)
+	}
+
 	b := cfn.New(
 		components.NewAutoscalerPolicyComposer(opts.ID.ClusterName),
 	)
@@ -92,6 +102,7 @@ func (s *autoscalerService) CreateAutoscaler(ctx context.Context, opts client.Cr
 	}
 
 	config, err := clusterconfig.NewAutoscalerServiceAccount(
+		versionInfo,
 		opts.ID.ClusterName,
 		opts.ID.Region,
 		policy.PolicyARN,
@@ -144,13 +155,15 @@ func (s *autoscalerService) CreateAutoscaler(ctx context.Context, opts client.Cr
 
 // NewAutoscalerService returns an initialised service
 func NewAutoscalerService(
+	versioner version.Versioner,
 	policy client.ManagedPolicyService,
 	account client.ServiceAccountService,
 	helm client.HelmService,
 ) client.AutoscalerService {
 	return &autoscalerService{
-		policy:  policy,
-		account: account,
-		helm:    helm,
+		versioner: versioner,
+		policy:    policy,
+		account:   account,
+		helm:      helm,
 	}
 }

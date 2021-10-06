@@ -2,6 +2,9 @@ package core
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
@@ -19,10 +22,11 @@ import (
 )
 
 type blockstorageService struct {
-	policy  client.ManagedPolicyService
-	account client.ServiceAccountService
-	helm    client.HelmService
-	kube    client.ManifestService
+	versioner version.Versioner
+	policy    client.ManagedPolicyService
+	account   client.ServiceAccountService
+	helm      client.HelmService
+	kube      client.ManifestService
 }
 
 func (s *blockstorageService) DeleteBlockstorage(ctx context.Context, id api.ID) error {
@@ -36,6 +40,7 @@ func (s *blockstorageService) DeleteBlockstorage(ctx context.Context, id api.ID)
 	}
 
 	config, err := clusterconfig.NewBlockstorageServiceAccount(
+		version.Info{},
 		id.ClusterName,
 		id.Region,
 		"n/a",
@@ -70,6 +75,11 @@ func (s *blockstorageService) DeleteBlockstorage(ctx context.Context, id api.ID)
 
 // nolint: funlen
 func (s *blockstorageService) CreateBlockstorage(ctx context.Context, opts client.CreateBlockstorageOpts) (*client.Blockstorage, error) {
+	versionInfo, err := s.versioner.GetVersionInfo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting version info: %w", err)
+	}
+
 	b := cfn.New(
 		components.NewBlockstoragePolicyComposer(opts.ID.ClusterName),
 	)
@@ -93,6 +103,7 @@ func (s *blockstorageService) CreateBlockstorage(ctx context.Context, opts clien
 	}
 
 	config, err := clusterconfig.NewBlockstorageServiceAccount(
+		versionInfo,
 		opts.ID.ClusterName,
 		opts.ID.Region,
 		policy.PolicyARN,
@@ -147,15 +158,17 @@ func (s *blockstorageService) CreateBlockstorage(ctx context.Context, opts clien
 
 // NewBlockstorageService returns an initialised service
 func NewBlockstorageService(
+	versioner version.Versioner,
 	policy client.ManagedPolicyService,
 	account client.ServiceAccountService,
 	helm client.HelmService,
 	kube client.ManifestService,
 ) client.BlockstorageService {
 	return &blockstorageService{
-		policy:  policy,
-		account: account,
-		helm:    helm,
-		kube:    kube,
+		versioner: versioner,
+		policy:    policy,
+		account:   account,
+		helm:      helm,
+		kube:      kube,
 	}
 }

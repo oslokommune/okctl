@@ -12,13 +12,13 @@ type containerRepositoryService struct {
 }
 
 // CreateContainerRepository handles creating a container repository
-func (c *containerRepositoryService) CreateContainerRepository(_ context.Context, opts *api.CreateContainerRepositoryOpts) (*api.ContainerRepository, error) {
+func (c *containerRepositoryService) CreateContainerRepository(ctx context.Context, opts *api.CreateContainerRepositoryOpts) (*api.ContainerRepository, error) {
 	err := opts.Validate()
 	if err != nil {
 		return nil, errors.E(err, "validating create opts", errors.Invalid)
 	}
 
-	repository, err := c.provider.CreateContainerRepository(opts)
+	repository, err := c.provider.CreateContainerRepository(ctx, opts)
 	if err != nil {
 		return nil, errors.E(err, "creating container repository", errors.Internal)
 	}

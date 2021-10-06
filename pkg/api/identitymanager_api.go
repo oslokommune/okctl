@@ -99,9 +99,9 @@ type IdentityManagerService interface {
 
 // IdentityManagerCloudProvider implements the cloud layer
 type IdentityManagerCloudProvider interface {
-	CreateIdentityPool(certificateARN string, opts CreateIdentityPoolOpts) (*IdentityPool, error)
-	CreateIdentityPoolClient(opts CreateIdentityPoolClientOpts) (*IdentityPoolClient, error)
-	CreateIdentityPoolUser(opts CreateIdentityPoolUserOpts) (*IdentityPoolUser, error)
+	CreateIdentityPool(ctx context.Context, certificateARN string, opts CreateIdentityPoolOpts) (*IdentityPool, error)
+	CreateIdentityPoolClient(ctx context.Context, opts CreateIdentityPoolClientOpts) (*IdentityPoolClient, error)
+	CreateIdentityPoolUser(ctx context.Context, opts CreateIdentityPoolUserOpts) (*IdentityPoolUser, error)
 	DeleteIdentityPool(opts DeleteIdentityPoolOpts) error
 	DeleteIdentityPoolClient(opts DeleteIdentityPoolClientOpts) error
 	DeleteIdentityPoolUser(opts DeleteIdentityPoolUserOpts) error

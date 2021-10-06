@@ -4,6 +4,8 @@ package mock
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/api/mock"
+
 	"github.com/oslokommune/okctl/pkg/helm"
 
 	"helm.sh/helm/v3/pkg/release"
@@ -382,6 +384,7 @@ func Vpc() *client.Vpc {
 // ClusterConfig returns a fake cluster config
 func ClusterConfig() *v1alpha5.ClusterConfig {
 	c, _ := clusterconfig.New(&clusterconfig.Args{
+		ClusterVersionInfo:     mock.DefaultVersionInfo(),
 		ClusterName:            DefaultClusterName,
 		PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(DefaultAWSAccountID),
 		PrivateSubnets:         PrivateSubnetsAPI(),

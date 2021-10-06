@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
+	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/externalsecrets"
 
@@ -20,13 +21,15 @@ import (
 )
 
 type externalSecretsService struct {
-	policy  client.ManagedPolicyService
-	account client.ServiceAccountService
-	helm    client.HelmService
+	versioner version.Versioner
+	policy    client.ManagedPolicyService
+	account   client.ServiceAccountService
+	helm      client.HelmService
 }
 
 func (s *externalSecretsService) DeleteExternalSecrets(ctx context.Context, id api.ID) error {
 	config, err := clusterconfig.NewExternalSecretsServiceAccount(
+		version.Info{},
 		id.ClusterName,
 		id.Region,
 		"n/a",
@@ -70,6 +73,11 @@ func (s *externalSecretsService) DeleteExternalSecrets(ctx context.Context, id a
 
 // nolint: funlen
 func (s *externalSecretsService) CreateExternalSecrets(ctx context.Context, opts client.CreateExternalSecretsOpts) (*client.ExternalSecrets, error) {
+	versionInfo, err := s.versioner.GetVersionInfo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting version info: %w", err)
+	}
+
 	b := cfn.New(
 		components.NewExternalSecretsPolicyComposer(
 			opts.ID.ClusterName,
@@ -95,6 +103,7 @@ func (s *externalSecretsService) CreateExternalSecrets(ctx context.Context, opts
 	}
 
 	config, err := clusterconfig.NewExternalSecretsServiceAccount(
+		versionInfo,
 		opts.ID.ClusterName,
 		opts.ID.Region,
 		policy.PolicyARN,
@@ -144,13 +153,15 @@ func (s *externalSecretsService) CreateExternalSecrets(ctx context.Context, opts
 
 // NewExternalSecretsService returns an initialised service
 func NewExternalSecretsService(
+	versioner version.Versioner,
 	policy client.ManagedPolicyService,
 	account client.ServiceAccountService,
 	helm client.HelmService,
 ) client.ExternalSecretsService {
 	return &externalSecretsService{
-		policy:  policy,
-		account: account,
-		helm:    helm,
+		versioner: versioner,
+		policy:    policy,
+		account:   account,
+		helm:      helm,
 	}
 }

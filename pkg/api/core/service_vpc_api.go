@@ -12,13 +12,13 @@ type vpc struct {
 }
 
 // CreateVpc implements the business logic for creating a vpc
-func (v *vpc) CreateVpc(_ context.Context, opts api.CreateVpcOpts) (*api.Vpc, error) {
+func (v *vpc) CreateVpc(ctx context.Context, opts api.CreateVpcOpts) (*api.Vpc, error) {
 	err := opts.Validate()
 	if err != nil {
 		return nil, errors.E(err, "validating the inputs", errors.Invalid)
 	}
 
-	got, err := v.cloud.CreateVpc(opts)
+	got, err := v.cloud.CreateVpc(ctx, opts)
 	if err != nil {
 		return nil, errors.E(err, "creating vpc", errors.Internal)
 	}

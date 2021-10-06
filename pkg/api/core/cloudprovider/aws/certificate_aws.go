@@ -1,7 +1,10 @@
 package aws
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/cleaner"
 
@@ -18,7 +21,8 @@ const (
 )
 
 type certificate struct {
-	provider v1alpha1.CloudProvider
+	provider  v1alpha1.CloudProvider
+	versioner version.Versioner
 }
 
 func (c *certificate) DeleteCognitoCertificate(opts api.DeleteCognitoCertificateOpts) error {
@@ -43,7 +47,12 @@ func (c *certificate) DeleteCertificate(opts api.DeleteCertificateOpts) error {
 	return cfn.NewRunner(c.provider).Delete(cfn.NewStackNamer().Certificate(opts.ID.ClusterName, slug.Make(opts.Domain)))
 }
 
-func (c *certificate) CreateCertificate(opts api.CreateCertificateOpts) (*api.Certificate, error) {
+func (c *certificate) CreateCertificate(ctx context.Context, opts api.CreateCertificateOpts) (*api.Certificate, error) {
+	versionInfo, err := c.versioner.GetVersionInfo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting version info: %w", err)
+	}
+
 	b := cfn.New(components.NewPublicCertificateComposer(opts.Domain, opts.HostedZoneID))
 
 	stackName := cfn.NewStackNamer().Certificate(opts.ID.ClusterName, slug.Make(opts.Domain))
@@ -55,7 +64,7 @@ func (c *certificate) CreateCertificate(opts api.CreateCertificateOpts) (*api.Ce
 
 	r := cfn.NewRunner(c.provider)
 
-	err = r.CreateIfNotExists(opts.ID.ClusterName, stackName, template, nil, certificateTimeout)
+	err = r.CreateIfNotExists(versionInfo, opts.ID.ClusterName, stackName, template, nil, certificateTimeout)
 	if err != nil {
 		return nil, fmt.Errorf("applying cloudformation template: %w", err)
 	}
@@ -80,8 +89,9 @@ func (c *certificate) CreateCertificate(opts api.CreateCertificateOpts) (*api.Ce
 }
 
 // NewCertificateCloudProvider returns an initialised cloud provider
-func NewCertificateCloudProvider(provider v1alpha1.CloudProvider) api.CertificateCloudProvider {
+func NewCertificateCloudProvider(provider v1alpha1.CloudProvider, versioner version.Versioner) api.CertificateCloudProvider {
 	return &certificate{
-		provider: provider,
+		provider:  provider,
+		versioner: versioner,
 	}
 }

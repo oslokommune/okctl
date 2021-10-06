@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/version"
+
 	"github.com/oslokommune/okctl/pkg/client/core/state/direct"
 
 	"github.com/oslokommune/okctl/pkg/breeze"
@@ -176,6 +178,8 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 // ClientServices returns the initialised client-side services
 // nolint: funlen
 func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.Services, error) {
+	versioner := version.New()
+
 	applicationsOutputDir, err := o.GetRepoApplicationsOutputDir()
 	if err != nil {
 		return nil, err
@@ -221,6 +225,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	autoscalerService := clientCore.NewAutoscalerService(
+		versioner,
 		managedPolicyService,
 		serviceAccountService,
 		helmService,
@@ -232,6 +237,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	blockstorageService := clientCore.NewBlockstorageService(
+		versioner,
 		managedPolicyService,
 		serviceAccountService,
 		helmService,
@@ -249,6 +255,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	externalSecretsService := clientCore.NewExternalSecretsService(
+		versioner,
 		managedPolicyService,
 		serviceAccountService,
 		helmService,
@@ -260,6 +267,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	externalDNSService := clientCore.NewExternalDNSService(
+		versioner,
 		rest.NewExternalDNSAPI(o.restClient),
 		handlers.ExternalDNS,
 		managedPolicyService,
@@ -267,6 +275,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	awsLoadBalancerControllerService := clientCore.NewAWSLoadBalancerControllerService(
+		versioner,
 		managedPolicyService,
 		serviceAccountService,
 		helmService,
@@ -287,6 +296,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	monitoringService := clientCore.NewMonitoringService(
+		versioner,
 		handlers.Monitoring,
 		helmService,
 		certificateService,
@@ -399,6 +409,8 @@ func (o *Okctl) initialise() error {
 		return err
 	}
 
+	versioner := version.New()
+
 	kubeConfigStore, err := o.KubeConfigStore()
 	if err != nil {
 		return err
@@ -407,7 +419,7 @@ func (o *Okctl) initialise() error {
 	o.kubeConfigStore = kubeConfigStore
 
 	vpcService := core.NewVpcService(
-		awsProvider.NewVpcCloud(o.CloudProvider),
+		awsProvider.NewVpcCloud(o.CloudProvider, versioner),
 	)
 
 	clusterName := o.Declaration.Metadata.Name
@@ -415,6 +427,7 @@ func (o *Okctl) initialise() error {
 	clusterService := core.NewClusterService(
 		run.NewClusterRun(
 			o.Debug,
+			versioner,
 			kubeConfigStore,
 			path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsConfig),
 			path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsCredentials),
@@ -423,7 +436,8 @@ func (o *Okctl) initialise() error {
 		),
 	)
 
-	managedPolicyService := core.NewManagedPolicyService(awsProvider.NewManagedPolicyCloudProvider(o.CloudProvider))
+	managedPolicyService := core.NewManagedPolicyService(
+		awsProvider.NewManagedPolicyCloudProvider(o.CloudProvider, versioner))
 
 	serviceAccountService := core.NewServiceAccountService(
 		run.NewServiceAccountRun(
@@ -466,11 +480,11 @@ func (o *Okctl) initialise() error {
 	)
 
 	domainService := core.NewDomainService(
-		awsProvider.NewDomainCloudProvider(o.CloudProvider),
+		awsProvider.NewDomainCloudProvider(o.CloudProvider, versioner),
 	)
 
 	certificateService := core.NewCertificateService(
-		awsProvider.NewCertificateCloudProvider(o.CloudProvider),
+		awsProvider.NewCertificateCloudProvider(o.CloudProvider, versioner),
 	)
 
 	parameterService := core.NewParameterService(
@@ -478,11 +492,11 @@ func (o *Okctl) initialise() error {
 	)
 
 	componentService := core.NewComponentService(
-		awsProvider.NewComponentCloudProvider(o.CloudProvider),
+		awsProvider.NewComponentCloudProvider(o.CloudProvider, versioner),
 	)
 
 	containerRepositoryService := core.NewContainerRepositoryService(
-		awsProvider.NewContainerRepositoryCloudProvider(o.CloudProvider),
+		awsProvider.NewContainerRepositoryCloudProvider(o.CloudProvider, versioner),
 	)
 
 	// When creating a certificate for a CloudFront distribution, we
@@ -493,8 +507,8 @@ func (o *Okctl) initialise() error {
 	}
 
 	identityManagerService := core.NewIdentityManagerService(
-		awsProvider.NewIdentityManagerCloudProvider(o.CloudProvider),
-		awsProvider.NewCertificateCloudProvider(provider),
+		awsProvider.NewIdentityManagerCloudProvider(o.CloudProvider, versioner),
+		awsProvider.NewCertificateCloudProvider(provider, versioner),
 	)
 
 	services := core.Services{

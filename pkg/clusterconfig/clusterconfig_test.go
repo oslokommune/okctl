@@ -23,6 +23,7 @@ func TestNew(t *testing.T) {
 		{
 			name: "Validate cluster config",
 			args: &clusterconfig.Args{
+				ClusterVersionInfo:     mock.DefaultVersionInfo(),
 				ClusterName:            "test",
 				PermissionsBoundaryARN: v1alpha1.PermissionsBoundaryARN(mock.DefaultAWSAccountID),
 				PrivateSubnets:         mock.DefaultVpcPrivateSubnets(),
@@ -74,7 +75,8 @@ func TestNewServiceAccount(t *testing.T) {
 		{
 			name: "Validate service account",
 			args: &clusterconfig.ServiceAccountArgs{
-				ClusterName: "test",
+				ClusterVersionInfo: mock.DefaultVersionInfo(),
+				ClusterName:        "test",
 				Labels: map[string]string{
 					"label": "some-label",
 				},
@@ -140,7 +142,8 @@ func TestNewExternalSecretsServiceAccount(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := clusterconfig.NewExternalSecretsServiceAccount(tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
+			got, err := clusterconfig.NewExternalSecretsServiceAccount(
+				mock.DefaultVersionInfo(), tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
 			if tc.expectErr {
 				assert.Error(t, err)
 				assert.Equal(t, tc.err, err.Error())
@@ -182,7 +185,8 @@ func TestNewAlbIngressControllerServiceAccount(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := clusterconfig.NewAlbIngressControllerServiceAccount(tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
+			got, err := clusterconfig.NewAlbIngressControllerServiceAccount(
+				mock.DefaultVersionInfo(), tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
 			if tc.expectErr {
 				assert.Error(t, err)
 				assert.Equal(t, tc.err, err.Error())
@@ -224,7 +228,8 @@ func TestNewAWSLoadBalancerControllerServiceAccount(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := clusterconfig.NewAWSLoadBalancerControllerServiceAccount(tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
+			got, err := clusterconfig.NewAWSLoadBalancerControllerServiceAccount(
+				mock.DefaultVersionInfo(), tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
 			if tc.expectErr {
 				assert.Error(t, err)
 				assert.Equal(t, tc.err, err.Error())
@@ -266,7 +271,8 @@ func TestNewExternalDNSServiceAccount(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := clusterconfig.NewExternalDNSServiceAccount(tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
+			got, err := clusterconfig.NewExternalDNSServiceAccount(
+				mock.DefaultVersionInfo(), tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
 			if tc.expectErr {
 				assert.Error(t, err)
 				assert.Equal(t, tc.err, err.Error())
@@ -308,7 +314,8 @@ func TestNewAutoscalerServiceAccount(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := clusterconfig.NewAutoscalerServiceAccount(tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
+			got, err := clusterconfig.NewAutoscalerServiceAccount(
+				mock.DefaultVersionInfo(), tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
 			if tc.expectErr {
 				assert.Error(t, err)
 				assert.Equal(t, tc.err, err.Error())
@@ -350,7 +357,8 @@ func TestNewBlockstorageServiceAccount(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := clusterconfig.NewBlockstorageServiceAccount(tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
+			got, err := clusterconfig.NewBlockstorageServiceAccount(
+				mock.DefaultVersionInfo(), tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
 			if tc.expectErr {
 				assert.Error(t, err)
 				assert.Equal(t, tc.err, err.Error())
@@ -396,7 +404,8 @@ func TestNewCloudwatchDatasourceServiceAccount(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := clusterconfig.NewCloudwatchDatasourceServiceAccount(tc.clusterName, tc.region, tc.policyArn, tc.namespace, tc.permissionsBoundaryArn)
+			got, err := clusterconfig.NewCloudwatchDatasourceServiceAccount(
+				mock.DefaultVersionInfo(), tc.clusterName, tc.region, tc.policyArn, tc.namespace, tc.permissionsBoundaryArn)
 			if tc.expectErr {
 				assert.Error(t, err)
 				assert.Equal(t, tc.err, err.Error())

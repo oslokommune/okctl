@@ -20,6 +20,8 @@ nav:
       - 9. Continuous integration: getting-started/continuous-integration.md
       - 10. Upgrading okctl: getting-started/upgrading.md
       - 11. Delete cluster: getting-started/delete-cluster.md
+  - Cluster:
+      - Declaration reference: cluster/reference.md
   - Building blocks:
       - buildingblocks/cloud.md
       - buildingblocks/github.md

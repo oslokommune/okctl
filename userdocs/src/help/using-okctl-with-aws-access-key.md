@@ -27,6 +27,7 @@ okctl -a access-key venv -c my-cluster.yaml
 ```
 
 Reference:
+
 * [AWS documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html)
 
 ### Get a team member to give you access
@@ -60,6 +61,7 @@ data:
 ```
 
 Replace
+
 * `123456789012` with AWS account number
 * `clustowner@email.com` with the e-mail of the user giving access 
 * `someone@email.com` with the e-mail of the user who wants access 
@@ -99,4 +101,24 @@ kubectl apply -f mycluster-access-list.yaml
 ```
 
 Reference:
+
 * https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html
+
+### Verify
+
+Now, the user who wants access can verify that things work by running
+
+```shell
+export AWS_ACCESS_KEY_ID=someid
+export AWS_SECRET_ACCESS_KEY=somesecret
+
+okctl -a access-key venv -c my-cluster.yaml
+
+kubectl get pods
+```
+
+This should give no errors - either a list of pods, or just the message
+
+```
+No resources found in default namespace.
+```

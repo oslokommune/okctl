@@ -102,7 +102,7 @@ kubectl apply -f mycluster-access-list.yaml
 
 Reference:
 
-* https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html
+* [AWS documentation](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html)
 
 ### Verify
 

@@ -72,6 +72,11 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 
 			kubeConfigFile := path.Join(appDir, constant.DefaultCredentialsDirName, okctlEnvironment.ClusterName, constant.DefaultClusterKubeConfig)
 
+			err = o.FileSystem.MkdirAll(path.Dir(kubeConfigFile), 0o700)
+			if err != nil {
+				return err
+			}
+
 			err = o.FileSystem.WriteFile(kubeConfigFile, data, 0o644)
 			if err != nil {
 				return err

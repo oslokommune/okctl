@@ -85,14 +85,15 @@ roleRef:
 subjects:
   - apiGroup: rbac.authorization.k8s.io
     kind: User
-    name: someone@email.com
+    name: clustowner@email.com
   - apiGroup: rbac.authorization.k8s.io
     kind: User
     name: someone@email.com
 
 ```
 
-Under `subjects`, add a list of all the users who shall have access to the cluster. This should be the same list as in `mapUsers` mentioned above.
+Under `subjects`, edit the list so that it contains all the users who shall have access to the cluster. This should be
+the same list as in `mapUsers` mentioned above.
 
 Then run
 

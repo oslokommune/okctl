@@ -8,7 +8,7 @@ Log in to your AWS console ➡ IAM ➡ Users ➡ Pick one ➡ Security credentia
 
 Note down access key ID and secret.
 
-![okctl](userdocs/src/img/create-access-key.png)
+<span style="display:block;text-align:center">![create-access-key](/img/create-access-key.png)</span>
 
 ## Log in to your cluster
 

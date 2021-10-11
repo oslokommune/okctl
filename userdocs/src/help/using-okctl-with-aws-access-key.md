@@ -89,7 +89,6 @@ subjects:
   - apiGroup: rbac.authorization.k8s.io
     kind: User
     name: someone@email.com
-
 ```
 
 Under `subjects`, edit the list so that it contains all the users who shall have access to the cluster. This should be

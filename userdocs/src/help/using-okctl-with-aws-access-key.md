@@ -25,7 +25,7 @@ Run
 export AWS_ACCESS_KEY_ID=someid
 export AWS_SECRET_ACCESS_KEY=somesecret
 
-okctl -a access-key venv -c my-cluster.yaml
+okctl -a access-key venv --cluster-declaration my-cluster.yaml
 ```
 
 Reference: 

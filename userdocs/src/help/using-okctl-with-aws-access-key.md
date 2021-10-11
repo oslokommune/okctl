@@ -1,7 +1,5 @@
 ## Motivation
 
-TODO innrykk
-
 If you want to use okctl with an access key from AWS instead of okctl's default authentication, follow these steps.
 
 ## Get an access key
@@ -10,36 +8,18 @@ Log in to your AWS console ➡ IAM ➡ Users ➡ Pick one ➡ Security credentia
 
 Note down access key ID and secret.
 
-TODO screenshot
+![okctl](userdocs/src/img/create-access-key.png)
 
 ## Log in to your cluster
 
 Run
 
 ```shell
-export AWS_ACCESS_KEY_ID=<your access key id>
-export AWS_SECRET_ACCESS_KEY=<your access key secret>
-
-okctl -a access-key <the okctl command you want to run> 
-```
-
-For instance
-
-```shell
-export AWS_ACCESS_KEY_ID=someid
-export AWS_SECRET_ACCESS_KEY=somesecret
-
-okctl -a access-key venv -c my-cluster.yaml 
-```
-
-ELLER
-
-```shell
 # Usage
 # export AWS_ACCESS_KEY_ID=<your access key id>
 # export AWS_SECRET_ACCESS_KEY=<your access key secret>
 #
-# okctl -a access-key <the okctl command you want to run>
+# okctl -a access-key venv --cluster-declaration <cluster declaration 
 
 # Example
 export AWS_ACCESS_KEY_ID=someid
@@ -47,21 +27,6 @@ export AWS_SECRET_ACCESS_KEY=somesecret
 
 okctl -a access-key venv -c my-cluster.yaml
 ```
-
-ELLER
-
-Run
-
-```shell
-export AWS_ACCESS_KEY_ID=someid
-export AWS_SECRET_ACCESS_KEY=somesecret
-
-okctl -a access-key venv -c my-cluster.yaml 
-```
-
-
-* Replace `someid` with your access key id
-* Replace `somesecret` with your access key secret
 
 Reference: 
   [AWS documentation - CLI configure envvars](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html)
@@ -127,8 +92,7 @@ subjects:
     name: someone@email.com
 ```
 
-Under `subjects`, edit the list so that it contains all the users who shall have access to the cluster. This should be
-the same list as in `mapUsers` mentioned above.
+Under `subjects`, edit the list so that it contains all the users who shall have access to the cluster. This should be the same list as in `mapUsers` mentioned above.
 
 Then run
 
@@ -156,3 +120,5 @@ This should give no errors - either a list of pods, or just the message
 ```
 No resources found in default namespace.
 ```
+
+That's it. Now you are able to run all okctl commands with the `-a access-key` option, which tells okctl to use the provided access key instead of using the default authentication method.

@@ -70,8 +70,10 @@ theme:
     - yaml
     - json
     - bash
-  analytics:
-    gtag: G-K8VMHVHRP8
+
+google_analytics:
+  - G-K8VMHVHRP8
+  - auto
 
 markdown_extensions:
   - attr_list

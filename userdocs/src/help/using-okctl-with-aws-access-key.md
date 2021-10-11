@@ -1,12 +1,18 @@
-## Using okctl with an access key from AWS
+## Motivation
+
+TODO innrykk
 
 If you want to use okctl with an access key from AWS instead of okctl's default authentication, follow these steps.
 
-### Get an access key
+## Get an access key
 
-* Log in to your AWS console ➡ IAM ➡ Users ➡ Pick one ➡ Security credentials ➡ Create access key. Note down access key ID and secret.
+Log in to your AWS console ➡ IAM ➡ Users ➡ Pick one ➡ Security credentials ➡ Create access key.
 
-### Log in to your cluster
+Note down access key ID and secret.
+
+TODO screenshot
+
+## Log in to your cluster
 
 Run
 
@@ -17,7 +23,7 @@ export AWS_SECRET_ACCESS_KEY=<your access key secret>
 okctl -a access-key <the okctl command you want to run> 
 ```
 
-For instance:
+For instance
 
 ```shell
 export AWS_ACCESS_KEY_ID=someid
@@ -26,15 +32,45 @@ export AWS_SECRET_ACCESS_KEY=somesecret
 okctl -a access-key venv -c my-cluster.yaml 
 ```
 
-Reference:
+ELLER
 
-* [AWS documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html)
+```shell
+# Usage
+# export AWS_ACCESS_KEY_ID=<your access key id>
+# export AWS_SECRET_ACCESS_KEY=<your access key secret>
+#
+# okctl -a access-key <the okctl command you want to run>
 
-### Get a team member to give you access
+# Example
+export AWS_ACCESS_KEY_ID=someid
+export AWS_SECRET_ACCESS_KEY=somesecret
+
+okctl -a access-key venv -c my-cluster.yaml
+```
+
+ELLER
+
+Run
+
+```shell
+export AWS_ACCESS_KEY_ID=someid
+export AWS_SECRET_ACCESS_KEY=somesecret
+
+okctl -a access-key venv -c my-cluster.yaml 
+```
+
+
+* Replace `someid` with your access key id
+* Replace `somesecret` with your access key secret
+
+Reference: 
+  [AWS documentation - CLI configure envvars](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html)
+
+## Get a team member to give you access
 
 Someone with access to the okctl cluster must give you access by following the steps below.
 
-#### Step 2
+### Step 1
 
 Log in to the cluster with `okctl venv` as described above.
 
@@ -68,9 +104,9 @@ Replace
 
 There could be more users listed here.
 
-#### Step 3
+### Step 2
 
-Create a file `mycluster-access-list.yaml` with the contents (or edit a file, if you have run this step before):
+Create a file `mycluster-access-list.yaml` with the contents (or edit the file, if you have run this step before):
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -100,11 +136,9 @@ Then run
 kubectl apply -f mycluster-access-list.yaml
 ```
 
-Reference:
+Reference: [AWS documentation - Add user role](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html)
 
-* [AWS documentation](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html)
-
-### Verify
+## Verify
 
 Now, the user who wants access can verify that things work by running
 

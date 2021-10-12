@@ -13,7 +13,7 @@ mkdocs-git-revision-date-plugin==0.3
 mkdocs-material==5.5.12
 mkdocs-material-extensions==1.0
 mkdocs-redirects==1.0.1
-nltk==3.5
+nltk==3.6.5
 Pygments==2.7.4
 pymdown-extensions==7.1
 PyYAML==5.4

@@ -156,6 +156,13 @@ to have okctl generate a cluster based on the declaration.
 
 That's it. Sit back and enjoy or go do something else while `okctl` does its thing (can take up to an hour).
 
+**NB**: You need to have an ssh agent running with ssh-key associated with your github account added. The example below
+uses default location for ssh key. Replace path if your key is located elsewhere.
+```bash
+eval `ssh-agent`
+ssh-add ~/.ssh/id_rsa
+```
+
 ## Authentication
 
 ### Device authentication flow

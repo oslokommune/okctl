@@ -77,7 +77,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			err = o.FileSystem.WriteFile(kubeConfigFile, data, 0o644)
+			err = o.FileSystem.WriteFile(kubeConfigFile, data, 0o640)
 			if err != nil {
 				return err
 			}

@@ -1,4 +1,4 @@
-# Okctl demo app
+# Okctl reference app
 *Guide from zero to running with a reference application*
 
 This guide will give you a complete example for how to set up a reference application in an okctl environment. It can be useful
@@ -6,7 +6,7 @@ to see how various part are configured together and help gain a better understan
 
 Following this guide will set up:
 
-* A running demo application in a new or existing cluster
+* A running reference application in a new or existing cluster
 * Postgres database for the application (RDS)
 * A Persistent volume claim ([PVC](https://aws.amazon.com/premiumsupport/knowledge-center/eks-persistent-storage/)) for the application 
 
@@ -19,11 +19,11 @@ If setting up a new cluster, these are the lines you need to change. If using an
 ```yaml
 accountID: '123456789123' #set to your own AWS account id
 ...
-   name: my-cluster-name # The name of your cluster, IE okctl-demo-dev
+   name: my-cluster-name # The name of your cluster, IE okctl-reference-dev
 ...
  clusterRootDomain: my-cluster-name.oslo.systems # your oslo.system sub-domain
 ...
-   repository: my_iac_repo_name #your iac repo name IE okctl-demo-iac
+   repository: my_iac_repo_name #your iac repo name IE okctl-reference-iac
 ...
  users:
  - email: user.email@emailprovider.org #your email
@@ -31,13 +31,13 @@ accountID: '123456789123' #set to your own AWS account id
    # production, since it will make the configuration much more straight-forward later
  databases:
    postgres:  
-   - name: okctldemo 
-     namespace: okctldemo
-     user: okctldemo
+   - name: okctlreference
+     namespace: okctlreference
+     user: okctlreference
 ```
 
 ## Add application to cluster
-We are going to apply the following [app](https://github.com/oslokommune/okctl-kotlin-app-template). You also have a look at the [iac repository](https://github.com/oslokommune/okctl-demo-iac), and the application [running](https://app.okctl-demo.oslo.systems/) in our dev cluster.
+We are going to apply the following [app](https://github.com/oslokommune/okctl-reference-app). You also have a look at the [iac repository](https://github.com/oslokommune/okctl-reference-iac), and the application [running](https://app.okctl-reference.oslo.systems/) in our cluster.
 You don't have to look at the app source code or iac repository to continue this guide.
 
 You can copy the yaml below into a file, or use `okctl scaffold application` and edit values manually, when you have yaml file ready you can [apply your application](https://okctl.io/getting-started/create-application/).
@@ -48,22 +48,22 @@ kind: Application
 
 metadata:
    # A name that identifies your app
-   name: demo-app
+   name: okctl-reference-app
    # The Kubernetes namespace where your app will live
-   namespace: demo
+   namespace: reference
 
 # The Docker image containing the application. image.uri and image.name is mutually exclusive. Either specify the URI or
 # define a name of an ECR repository for which okctl will create for you.
 image:
    # uri defines where the image can be pulled from
-   uri: ghcr.io/oslokommune/okctl-kotlin-app-template:v0.0.28
+   uri: ghcr.io/oslokommune/okctl-reference-app:v0.0.29
 
 # The subdomain of the URL your app should be available on
-# Example in a cluster with okctl-demo.oslo.systems as root cluster URL (as defined by primary DNS zone in the
+# Example in a cluster with okctl-reference.oslo.systems as root cluster URL (as defined by primary DNS zone in the
 # cluster declaration):
 #
 # subDomain: okctl
-# result: okctl.okctl-demo.oslo.systems
+# result: okctl.okctl-reference.oslo.systems
 # Comment this out to avoid setting up an ingress, in other words - avoid exposing it on the internet
 #
 subDomain: app
@@ -78,11 +78,11 @@ prometheus:
    path: /metrics
 
 # Enable integration with a Postgres database
-postgres: okctldemo
+postgres: okctlreference
 
 # Volumes to mount
 volumes:
-   - /okctl/demo/storage: # Requests 1Gi by default
+   - /okctl/reference/storage: # Requests 1Gi by default
 ```
 
 ## Setup application user in database
@@ -93,7 +93,7 @@ cd secret && uuidgen | sed 's/-//g' > password.secret
 ```
 
 2. Go to AWS console -> Systems manager -> Parameter store - > Click Create parameter
-    * Name : `/okctl/<cluster-name>/<app-name>/db_password`  example: `/okctl/okctl-demo-dev/demo-app/db_password`
+    * Name : `/okctl/<cluster-name>/<app-name>/db_password`
     * Description : `Database password for app user`
     * Set type to 'Secure string'
     * Copy content from the `password.secret` file generated in the first step into the Value box
@@ -130,7 +130,7 @@ cd secret && uuidgen | sed 's/-//g' > password.secret
     ```
     * Now forward postgres: Use your own cluster definition file (-c), and the name of your database -n, **the username (-u) should not exist in the database already**:
     ```bash
-    okctl forward postgres -c okctl-demo-dev.yaml -n okctldemo \
+    okctl forward postgres -c <cluster-name>.yaml -n okctlreference \
     -u tempuser -p secret/tmp.password
     ```
     * Run the following script (copy and paste the whole thing) to generate sql we will use to insert into your database
@@ -155,8 +155,8 @@ cd secret && uuidgen | sed 's/-//g' > password.secret
 
       **NOTE**: You need to have postgres client (psql) [installed on local machine](https://www.compose.com/articles/postgresql-tips-installing-the-postgresql-client/) for this script to work.
     ```bash
-    read -p "Enter database name [okctldemo]: " database && \
-    database=${database:-okctldemo} && \
+    read -p "Enter database name [okctlreference]: " database && \
+    database=${database:-okctlreference} && \
     export PGPASSWORD=$(cat secret/tmp.password) && psql -h localhost -U tempuser $database < secret/newuser.sql
     ```
   
@@ -165,27 +165,32 @@ cd secret && uuidgen | sed 's/-//g' > password.secret
     rm -rf secret
     ```
 
-## Setup environment variables in you app
+## Setup environment variables and security context in you app
 
-Add the following to `infrastructure/applications/demo-app/base/deployment.yaml`:
+Add the following to `infrastructure/applications/<app-name>/base/deployment.yaml`:
 ```yaml
-env:
-  - name: PVC_PATH
-    value: "/okctl/demo/storage/myfile.txt" # Normally you would link a directory, but we only use one file in this example
-  - name: DB_NAME
-    value: okctldemo
-  - name: DB_USERNAME
-    value: appuser
+spec:
+ securityContext:
+    fsGroup: 1001
+containers:
+...
+   env:
+     - name: PVC_PATH
+       value: "/okctl/reference/storage/myfile.txt" # Normally you would link a directory, but we only use one file in this example
+     - name: DB_NAME
+       value: okctlreference
+     - name: DB_USERNAME
+       value: appuser
 ```
-[View example in context](https://github.com/oslokommune/okctl-demo-iac/blob/5a685ce340f10d008a2e615e1f9b9c4b305dedc9/infrastructure/applications/demo-app/base/deployment.yaml)
+[View example in context](https://github.com/oslokommune/okctl-reference-iac/blob/110aee763ffa0d812330eeccd748a99fbe54d6cd/infrastructure/applications/okctl-reference-app/base/deployment.yaml)
 
-Replace content in `infrastructure/applications/demo-app/overlays/okctl-demo-dev/deployment-patch.json` with the code-block below. You need to use the appropriate value for endpoint to your own database, that can be found under RDS -> DB instances - > (your database):
+Replace content in `infrastructure/applications/<app-name>/overlays/<cluster-name>/deployment-patch.json` with the code-block below. You need to use the appropriate value for endpoint to your own database, that can be found under RDS -> DB instances - > (your database):
 ```json
 [
     {
         "op": "add",
         "path": "/spec/template/spec/containers/0/image",
-        "value": "ghcr.io/oslokommune/okctl-kotlin-app-template:v0.0.23"
+        "value": "ghcr.io/oslokommune/okctl-reference-app:v0.0.29"
     },
     {
         "op": "add",
@@ -205,7 +210,7 @@ Replace content in `infrastructure/applications/demo-app/overlays/okctl-demo-dev
         "path": "/spec/template/spec/containers/0/env/4",
         "value": {
             "name": "DB_ENDPOINT",
-            "value": "okctl-demo-dev-okctldemo.c7d1uu67i7fm.eu-west-1.rds.amazonaws.com"
+            "value": "okctl-reference-dev-okctlreference.c7d1uu67i7fm.eu-west-1.rds.amazonaws.com"
 
         }
     }
@@ -217,7 +222,7 @@ Since deployment.yaml specifies 3 env variables (index 0, 1 , 2) we start counti
 
 Finally, in your iac repository:
 ```bash
-git commit -m "Setup environment for demo app" && git push
+git commit -m "Setup environment for reference app" && git push
 ```
 
 *This concludes this guide, good luck!*

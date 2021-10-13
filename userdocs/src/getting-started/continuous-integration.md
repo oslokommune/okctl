@@ -13,8 +13,8 @@ You need a IAM user with credentials that you can use for github actions. You ne
 and prod environment: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey
 
 Github repositories used in this guide as a working example
-1. Application repository (https://github.com/oslokommune/okctl-reference-app)
-2. IAC repo (https://github.com/oslokommune/okctl-reference-iac)
+1. [Application repository](https://github.com/oslokommune/okctl-reference-app)
+2. [IAC repo](https://github.com/oslokommune/okctl-reference-iac)
 
 
 Generate a secret key in your IAC repo

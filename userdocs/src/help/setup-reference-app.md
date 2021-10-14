@@ -14,7 +14,11 @@ Following this guide will set up:
 ## Get your cluster ready
 Use an existing cluster or, [set up a new cluster](https://okctl.io/getting-started/create-cluster/).
 
+*For simplicity this guide will assume that your cluster declaration file is simply named `cluster.yaml`. Edit any commands that reference this file where appropriate*
+
+
 If setting up a new cluster, these are the lines you need to change. If using an existing cluster, make sure it has a database.
+Databases set up with a okctl cluster is a list. So if you already have a database in your cluster declaration, just add `okctlreference` to the list, as shown below.
 
 ```yaml
 accountID: '123456789123' #set to your own AWS account id
@@ -27,8 +31,9 @@ accountID: '123456789123' #set to your own AWS account id
 ...
  users:
  - email: user.email@emailprovider.org #your email
-   # name, namesapce and username do not have to be the same, but it should be the same as you chose for
+   # name, namespace and username do not have to be the same, but it should be the same as you chose for
    # production, since it will make the configuration much more straight-forward later
+...
  databases:
    postgres:  
    - name: okctlreference
@@ -36,11 +41,13 @@ accountID: '123456789123' #set to your own AWS account id
      user: okctlreference
 ```
 
+**NB:** Remember to re-run`okctl apply cluster -f cluster.yaml` if you added a new database or did other changes to your cluster declaration file. Also remember `git commit -m "State changes" && git push`
+
 ## Add application to cluster
-We are going to apply the following [app](https://github.com/oslokommune/okctl-reference-app). You also have a look at the [iac repository](https://github.com/oslokommune/okctl-reference-iac), and the application [running](https://app.okctl-reference.oslo.systems/) in our cluster.
+We are going to apply the following [app](https://github.com/oslokommune/okctl-reference-app). You can also have a look at the [iac repository](https://github.com/oslokommune/okctl-reference-iac), and the application [running](https://app.okctl-reference.oslo.systems/) in our cluster.
 You don't have to look at the app source code or iac repository to continue this guide.
 
-You can copy the yaml below into a file, or use `okctl scaffold application` and edit values manually, when you have yaml file ready you can [apply your application](https://okctl.io/getting-started/create-application/).
+Copy the yaml below into a file `refapp.yaml` in the root of your iac-repository. Alternativley use `okctl scaffold application > refapp.yaml` and edit values manually.
 
 ```yaml
 apiVersion: okctl.io/v1alpha1
@@ -84,23 +91,32 @@ postgres: okctlreference
 volumes:
    - /okctl/reference/storage: # Requests 1Gi by default
 ```
+When you have `refapp.yaml` file enter a virtual environment for your cluster:
+```bash
+okctl venv -c cluster.yaml
+```
+Apply the reference application:
+```bash
+okctl apply appliaction -f refapp.yaml
+```
+**NB:** Follow instructions from output of `okctl apply`
 
 ## Setup application user in database
 1. Create a temporary secret directory in your iac repo, add it to gitignore (so you don't accidentally push it). Finally generate your new password in a file. You can delete this when you are done, but you will need it in later steps of this guide.
 ```bash
-mkdir secret && echo secret/* >> .gitignore && \
+mkdir secret && echo "secret/*" >> .gitignore && \
 cd secret && uuidgen | sed 's/-//g' > password.secret
 ```
 
 2. Go to AWS console -> Systems manager -> Parameter store - > Click Create parameter
-    * Name : `/okctl/<cluster-name>/<app-name>/db_password`
+    * Name : `/okctl/<cluster-name>/okctl-reference-app/db_password`
     * Description : `Database password for app user`
     * Set type to 'Secure string'
     * Copy content from the `password.secret` file generated in the first step into the Value box
     * Click Create parameter
 3. Create an external secret in you iac repo:
-    * Create file `my-iac-repo/infrastructure/applications/<app-name>/overlays/<cluster-name>/postgres-external-secret.yaml`
-    * Add the following code to it, remember to change cluster name, app name (and region if applicable):
+    * Create file `<iac-repo>/infrastructure/applications/okctl-reference-app/overlays/<cluster-name>/postgres-external-secret.yaml`
+    * Add the following code to it, remember to change cluster name, and region if applicable:
     ```yaml
     apiVersion: 'kubernetes-client.io/v1'
     kind: ExternalSecret
@@ -110,18 +126,16 @@ cd secret && uuidgen | sed 's/-//g' > password.secret
       region: eu-west-1
       backendType: systemManager
       data:
-        - key: /okctl/<cluster-name>/<app-name>/db_password
+        - key: /okctl/<cluster-name>/okctl-reference-app/db_password
           name: db_password
     ```
-    * Add a line to file, so the last three lines looks like the example below `my-iac-repo/infrastructure/applications/<app-name>/overlays/<clsuter-name>/kustomization.yaml`
+    * Add a line to file, so the last three lines looks like the example below `<iac-repo>/infrastructure/applications/okctl-reference-app/overlays/<clsuter-name>/kustomization.yaml`
     ```yaml
     resources:
     - ../../base
     - postgres-external-secret.yaml
     ```
     * Git commit and push
-    * You can go to ArgoCD and confirm that the secret is now available:
-      ![okctl](../img/externalsecret-argocd.png)
 
 4. Forward postgres to your local machine, and create a new user
     * First create a password file, if you read the code there is some information hidden in there, the following commands assume you are back in the root of your iac repository and that you have followed the guide to this point:
@@ -130,7 +144,7 @@ cd secret && uuidgen | sed 's/-//g' > password.secret
     ```
     * Now forward postgres: Use your own cluster definition file (-c), and the name of your database -n, **the username (-u) should not exist in the database already**:
     ```bash
-    okctl forward postgres -c <cluster-name>.yaml -n okctlreference \
+    okctl forward postgres -c cluster.yaml -n okctlreference \
     -u tempuser -p secret/tmp.password
     ```
     * Run the following script (copy and paste the whole thing) to generate sql we will use to insert into your database
@@ -167,7 +181,7 @@ cd secret && uuidgen | sed 's/-//g' > password.secret
 
 ## Setup environment variables and security context in you app
 
-Add the following to `infrastructure/applications/<app-name>/base/deployment.yaml`:
+Add the following to `infrastructure/applications/okctl-reference-app/base/deployment.yaml`:
 ```yaml
 spec:
  securityContext:
@@ -184,7 +198,7 @@ containers:
 ```
 [View example in context](https://github.com/oslokommune/okctl-reference-iac/blob/110aee763ffa0d812330eeccd748a99fbe54d6cd/infrastructure/applications/okctl-reference-app/base/deployment.yaml)
 
-Replace content in `infrastructure/applications/<app-name>/overlays/<cluster-name>/deployment-patch.json` with the code-block below. You need to use the appropriate value for endpoint to your own database, that can be found under RDS -> DB instances - > (your database):
+Replace content in `infrastructure/applications/okctl-reference-app/overlays/<cluster-name>/deployment-patch.json` with the code-block below. You need to use the appropriate value for endpoint to your own database, that can be found under RDS -> DB instances - > (your database):
 ```json
 [
     {

@@ -70,15 +70,10 @@ theme:
     - yaml
     - json
     - bash
-
-google_analytics:
-  - G-K8VMHVHRP8
-  - auto
-
   extra:
-    - analytics:
-        provider: custom
-        property: G-K8VMHVHRP8
+    analytics:
+      provider: custom
+      property: G-K8VMHVHRP8
 
 markdown_extensions:
   - attr_list

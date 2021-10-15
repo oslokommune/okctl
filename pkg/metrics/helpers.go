@@ -1,4 +1,4 @@
-package restapi
+package metrics
 
 import (
 	"bytes"
@@ -7,13 +7,17 @@ import (
 	"net/url"
 )
 
-func postEvent(apiURL url.URL, payload []byte) error {
+const metricsPath = "/v1/metrics/events"
+
+func postEvent(apiURL url.URL, userAgent string, payload []byte) error {
+	apiURL.Path = metricsPath
+
 	request, err := http.NewRequest(http.MethodPost, apiURL.String(), bytes.NewBuffer(payload))
 	if err != nil {
 		return fmt.Errorf("preparing request: %w", err)
 	}
 
-	request.Header.Set("User-Agent", requiredUserAgent)
+	request.Header.Set("User-Agent", userAgent)
 	request.Header.Set("Content-Type", "application/json")
 
 	httpClient := http.Client{}

@@ -17,6 +17,9 @@ const (
 
 	// ArchAmd64 represents all 64-bit systems
 	ArchAmd64 = "amd64"
+
+	defaultMetricsUserAgent = "okctl"
+	defaultMetricsAPIURL    = "https://metrics.kjoremiljo.oslo.systems"
 )
 
 // User stores the state for the configuration
@@ -25,6 +28,7 @@ type User struct {
 	User     UserInfo
 	Host     Host
 	Binaries []Binary
+	Metrics  Metrics
 }
 
 // UserInfo stores state related to the user themselves
@@ -78,6 +82,12 @@ type Host struct {
 	Arch string
 }
 
+// Metrics exposes configuration of metrics
+type Metrics struct {
+	UserAgent string `json:"userAgent"`
+	APIURL    string `json:"apiURL"`
+}
+
 // Validate determines if the host operating
 // system is valid
 func (h Host) Validate() error {
@@ -109,5 +119,9 @@ func NewUser() *User {
 			Arch: runtime.GOARCH,
 		},
 		Binaries: KnownBinaries(),
+		Metrics: Metrics{
+			UserAgent: defaultMetricsUserAgent,
+			APIURL:    defaultMetricsAPIURL,
+		},
 	}
 }

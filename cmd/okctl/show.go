@@ -108,7 +108,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 
 			cfg, err := kubeconfig.New(cluster.Config, o.CloudProvider).Get()
 			if err != nil {
-				return fmt.Errorf("creating kubconfig: %w", err)
+				return fmt.Errorf("creating kubeconfig: %w", err)
 			}
 
 			data, err := cfg.Bytes()

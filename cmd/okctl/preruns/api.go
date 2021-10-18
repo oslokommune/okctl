@@ -1,6 +1,8 @@
 package preruns
 
 import (
+	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/config/load"
 	"github.com/oslokommune/okctl/pkg/metrics"
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -37,6 +39,11 @@ func InitializeMetrics(o *okctl.Okctl) PreRunEer {
 	return func(cmd *cobra.Command, args []string) error {
 		metrics.SetUserAgent(o.UserState.Metrics.UserAgent)
 		metrics.SetMetricsOut(o.Out)
+
+		err := metrics.SetAPIURL(o.UserState.Metrics.APIURL)
+		if err != nil {
+			return fmt.Errorf("setting metrics API URL: %w", err)
+		}
 
 		return nil
 	}

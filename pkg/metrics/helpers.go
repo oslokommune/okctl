@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -33,6 +34,26 @@ func postEvent(apiURL url.URL, userAgent string, payload []byte) error {
 
 	if response.StatusCode != http.StatusCreated {
 		return fmt.Errorf("unexpected status code %d: %s", response.StatusCode, response.Status)
+	}
+
+	return nil
+}
+
+// publishE sends a metric event to the okctl-metrics-service
+func publishE(event Event) error {
+	err := event.Validate()
+	if err != nil {
+		return fmt.Errorf("validating metrics event: %w", err)
+	}
+
+	rawEvent, err := json.Marshal(event)
+	if err != nil {
+		return fmt.Errorf("marshalling event as JSON: %w", err)
+	}
+
+	err = postEvent(ctx.APIURL, ctx.UserAgent, rawEvent)
+	if err != nil {
+		return fmt.Errorf("POSTing event: %w", err)
 	}
 
 	return nil

@@ -2,7 +2,6 @@
 package metrics
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/url"
@@ -16,6 +15,8 @@ var ctx = context{ // nolint:gochecknoglobals
 }
 
 // Publish sends a metric event to the okctl-metrics-service
+// This function wraps the main publish function and prints out a warning if there is an error. It seems drastic to
+// crash the program due to a metrics fault
 func Publish(event Event) {
 	err := publishE(event)
 	if err != nil {
@@ -23,22 +24,14 @@ func Publish(event Event) {
 	}
 }
 
-// publishE sends a metric event to the okctl-metrics-service
-func publishE(event Event) error {
-	err := event.Validate()
+// SetAPIURL configures the API URL for the Publish POST request
+func SetAPIURL(newAPIURL string) error {
+	parsedURL, err := url.Parse(newAPIURL)
 	if err != nil {
-		return fmt.Errorf("validating metrics event: %w", err)
+		return fmt.Errorf("parsing URL: %w", err)
 	}
 
-	rawEvent, err := json.Marshal(event)
-	if err != nil {
-		return fmt.Errorf("marshalling event as JSON: %w", err)
-	}
-
-	err = postEvent(ctx.APIURL, ctx.UserAgent, rawEvent)
-	if err != nil {
-		return fmt.Errorf("POSTing event: %w", err)
-	}
+	ctx.APIURL = *parsedURL
 
 	return nil
 }

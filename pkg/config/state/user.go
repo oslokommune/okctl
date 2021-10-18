@@ -19,6 +19,7 @@ const (
 	ArchAmd64 = "amd64"
 
 	defaultMetricsUserAgent = "okctl"
+	defaultMetricsAPIURL    = "https://metrics.kjoremiljo.oslo.systems"
 )
 
 // User stores the state for the configuration
@@ -84,6 +85,7 @@ type Host struct {
 // Metrics exposes configuration of metrics
 type Metrics struct {
 	UserAgent string `json:"userAgent"`
+	APIURL    string `json:"apiURL"`
 }
 
 // Validate determines if the host operating
@@ -119,6 +121,7 @@ func NewUser() *User {
 		Binaries: KnownBinaries(),
 		Metrics: Metrics{
 			UserAgent: defaultMetricsUserAgent,
+			APIURL:    defaultMetricsAPIURL,
 		},
 	}
 }

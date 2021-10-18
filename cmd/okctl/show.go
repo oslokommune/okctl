@@ -123,7 +123,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 
 			kubeConfigFile := path.Join(appDir, constant.DefaultCredentialsDirName, okctlEnvironment.ClusterName, constant.DefaultClusterKubeConfig)
 
-			err = o.FileSystem.WriteFile(kubeConfigFile, data, 0o644)
+			err = o.FileSystem.WriteFile(kubeConfigFile, data, 0o640)
 			if err != nil {
 				return err
 			}

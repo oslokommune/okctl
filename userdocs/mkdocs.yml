@@ -36,7 +36,7 @@ nav:
       - Manually connecting to PostgreSQL: help/manually-connecting-to-postgres.md
       - Outdated common issues: help/outdated-common-issues.md
       - Running a Docker image in your cluster: help/docker-registry.md
-      - Set up demo application full example: help/setup-reference-app.md
+      - Set up reference application full example: help/setup-reference-app.md
       - Using Okctl with an access key: help/using-okctl-with-aws-access-key.md
 
 plugins:
@@ -71,10 +71,6 @@ theme:
     - yaml
     - json
     - bash
-
-google_analytics:
-  - G-K8VMHVHRP8
-  - auto
 
 markdown_extensions:
   - attr_list

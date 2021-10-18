@@ -1,4 +1,4 @@
-# Okctl demo app
+# Okctl reference app
 *Guide from zero to running with a reference application*
 
 This guide will give you a complete example for how to set up a reference application in an okctl environment. It can be useful
@@ -6,7 +6,7 @@ to see how various part are configured together and help gain a better understan
 
 Following this guide will set up:
 
-* A running demo application in a new or existing cluster
+* A running reference application in a new or existing cluster
 * Postgres database for the application (RDS)
 * A Persistent volume claim ([PVC](https://aws.amazon.com/premiumsupport/knowledge-center/eks-persistent-storage/)) for the application 
 
@@ -14,33 +14,40 @@ Following this guide will set up:
 ## Get your cluster ready
 Use an existing cluster or, [set up a new cluster](https://okctl.io/getting-started/create-cluster/).
 
+*For simplicity this guide will assume that your cluster declaration file is simply named `cluster.yaml`. Edit any commands that reference this file where appropriate*
+
+
 If setting up a new cluster, these are the lines you need to change. If using an existing cluster, make sure it has a database.
+Databases set up with a okctl cluster is a list. So if you already have a database in your cluster declaration, just add `okctlreference` to the list, as shown below.
 
 ```yaml
 accountID: '123456789123' #set to your own AWS account id
 ...
-   name: my-cluster-name # The name of your cluster, IE okctl-demo-dev
+   name: my-cluster-name # The name of your cluster, IE okctl-reference-dev
 ...
  clusterRootDomain: my-cluster-name.oslo.systems # your oslo.system sub-domain
 ...
-   repository: my_iac_repo_name #your iac repo name IE okctl-demo-iac
+   repository: my_iac_repo_name #your iac repo name IE okctl-reference-iac
 ...
  users:
  - email: user.email@emailprovider.org #your email
-   # name, namesapce and username do not have to be the same, but it should be the same as you chose for
+   # name, namespace and username do not have to be the same, but it should be the same as you chose for
    # production, since it will make the configuration much more straight-forward later
+...
  databases:
    postgres:  
-   - name: okctldemo 
-     namespace: okctldemo
-     user: okctldemo
+   - name: okctlreference
+     namespace: okctlreference
+     user: okctlreference
 ```
 
+**NB:** Remember to re-run`okctl apply cluster -f cluster.yaml` if you added a new database or did other changes to your cluster declaration file. Also remember `git commit -m "State changes" && git push`
+
 ## Add application to cluster
-We are going to apply the following [app](https://github.com/oslokommune/okctl-kotlin-app-template). You also have a look at the [iac repository](https://github.com/oslokommune/okctl-demo-iac), and the application [running](https://app.okctl-demo.oslo.systems/) in our dev cluster.
+We are going to apply the following [app](https://github.com/oslokommune/okctl-reference-app). You can also have a look at the [iac repository](https://github.com/oslokommune/okctl-reference-iac), and the application [running](https://app.okctl-reference.oslo.systems/) in our cluster.
 You don't have to look at the app source code or iac repository to continue this guide.
 
-You can copy the yaml below into a file, or use `okctl scaffold application` and edit values manually, when you have yaml file ready you can [apply your application](https://okctl.io/getting-started/create-application/).
+Copy the yaml below into a file `refapp.yaml` in the root of your iac-repository. Alternativley use `okctl scaffold application > refapp.yaml` and edit values manually.
 
 ```yaml
 apiVersion: okctl.io/v1alpha1
@@ -48,22 +55,22 @@ kind: Application
 
 metadata:
    # A name that identifies your app
-   name: demo-app
+   name: okctl-reference-app
    # The Kubernetes namespace where your app will live
-   namespace: demo
+   namespace: reference
 
 # The Docker image containing the application. image.uri and image.name is mutually exclusive. Either specify the URI or
 # define a name of an ECR repository for which okctl will create for you.
 image:
    # uri defines where the image can be pulled from
-   uri: ghcr.io/oslokommune/okctl-kotlin-app-template:v0.0.28
+   uri: ghcr.io/oslokommune/okctl-reference-app:v0.0.29
 
 # The subdomain of the URL your app should be available on
-# Example in a cluster with okctl-demo.oslo.systems as root cluster URL (as defined by primary DNS zone in the
+# Example in a cluster with okctl-reference.oslo.systems as root cluster URL (as defined by primary DNS zone in the
 # cluster declaration):
 #
 # subDomain: okctl
-# result: okctl.okctl-demo.oslo.systems
+# result: okctl.okctl-reference.oslo.systems
 # Comment this out to avoid setting up an ingress, in other words - avoid exposing it on the internet
 #
 subDomain: app
@@ -78,29 +85,38 @@ prometheus:
    path: /metrics
 
 # Enable integration with a Postgres database
-postgres: okctldemo
+postgres: okctlreference
 
 # Volumes to mount
 volumes:
-   - /okctl/demo/storage: # Requests 1Gi by default
+   - /okctl/reference/storage: # Requests 1Gi by default
 ```
+When you have `refapp.yaml` file enter a virtual environment for your cluster:
+```bash
+okctl venv -c cluster.yaml
+```
+Apply the reference application:
+```bash
+okctl apply appliaction -f refapp.yaml
+```
+**NB:** Follow instructions from output of `okctl apply`
 
 ## Setup application user in database
 1. Create a temporary secret directory in your iac repo, add it to gitignore (so you don't accidentally push it). Finally generate your new password in a file. You can delete this when you are done, but you will need it in later steps of this guide.
 ```bash
-mkdir secret && echo secret/* >> .gitignore && \
+mkdir secret && echo "secret/*" >> .gitignore && \
 cd secret && uuidgen | sed 's/-//g' > password.secret
 ```
 
 2. Go to AWS console -> Systems manager -> Parameter store - > Click Create parameter
-    * Name : `/okctl/<cluster-name>/<app-name>/db_password`  example: `/okctl/okctl-demo-dev/demo-app/db_password`
+    * Name : `/okctl/<cluster-name>/okctl-reference-app/db_password`
     * Description : `Database password for app user`
     * Set type to 'Secure string'
     * Copy content from the `password.secret` file generated in the first step into the Value box
     * Click Create parameter
 3. Create an external secret in you iac repo:
-    * Create file `my-iac-repo/infrastructure/applications/<app-name>/overlays/<cluster-name>/postgres-external-secret.yaml`
-    * Add the following code to it, remember to change cluster name, app name (and region if applicable):
+    * Create file `<iac-repo>/infrastructure/applications/okctl-reference-app/overlays/<cluster-name>/postgres-external-secret.yaml`
+    * Add the following code to it, remember to change cluster name, and region if applicable:
     ```yaml
     apiVersion: 'kubernetes-client.io/v1'
     kind: ExternalSecret
@@ -110,18 +126,16 @@ cd secret && uuidgen | sed 's/-//g' > password.secret
       region: eu-west-1
       backendType: systemManager
       data:
-        - key: /okctl/<cluster-name>/<app-name>/db_password
+        - key: /okctl/<cluster-name>/okctl-reference-app/db_password
           name: db_password
     ```
-    * Add a line to file, so the last three lines looks like the example below `my-iac-repo/infrastructure/applications/<app-name>/overlays/<clsuter-name>/kustomization.yaml`
+    * Add a line to file, so the last three lines looks like the example below `<iac-repo>/infrastructure/applications/okctl-reference-app/overlays/<clsuter-name>/kustomization.yaml`
     ```yaml
     resources:
     - ../../base
     - postgres-external-secret.yaml
     ```
     * Git commit and push
-    * You can go to ArgoCD and confirm that the secret is now available:
-      ![okctl](../img/externalsecret-argocd.png)
 
 4. Forward postgres to your local machine, and create a new user
     * First create a password file, if you read the code there is some information hidden in there, the following commands assume you are back in the root of your iac repository and that you have followed the guide to this point:
@@ -130,7 +144,7 @@ cd secret && uuidgen | sed 's/-//g' > password.secret
     ```
     * Now forward postgres: Use your own cluster definition file (-c), and the name of your database -n, **the username (-u) should not exist in the database already**:
     ```bash
-    okctl forward postgres -c okctl-demo-dev.yaml -n okctldemo \
+    okctl forward postgres -c cluster.yaml -n okctlreference \
     -u tempuser -p secret/tmp.password
     ```
     * Run the following script (copy and paste the whole thing) to generate sql we will use to insert into your database
@@ -155,8 +169,8 @@ cd secret && uuidgen | sed 's/-//g' > password.secret
 
       **NOTE**: You need to have postgres client (psql) [installed on local machine](https://www.compose.com/articles/postgresql-tips-installing-the-postgresql-client/) for this script to work.
     ```bash
-    read -p "Enter database name [okctldemo]: " database && \
-    database=${database:-okctldemo} && \
+    read -p "Enter database name [okctlreference]: " database && \
+    database=${database:-okctlreference} && \
     export PGPASSWORD=$(cat secret/tmp.password) && psql -h localhost -U tempuser $database < secret/newuser.sql
     ```
   
@@ -165,27 +179,32 @@ cd secret && uuidgen | sed 's/-//g' > password.secret
     rm -rf secret
     ```
 
-## Setup environment variables in you app
+## Setup environment variables and security context in you app
 
-Add the following to `infrastructure/applications/demo-app/base/deployment.yaml`:
+Add the following to `infrastructure/applications/okctl-reference-app/base/deployment.yaml`:
 ```yaml
-env:
-  - name: PVC_PATH
-    value: "/okctl/demo/storage/myfile.txt" # Normally you would link a directory, but we only use one file in this example
-  - name: DB_NAME
-    value: okctldemo
-  - name: DB_USERNAME
-    value: appuser
+spec:
+ securityContext:
+    fsGroup: 1001
+containers:
+...
+   env:
+     - name: PVC_PATH
+       value: "/okctl/reference/storage/myfile.txt" # Normally you would link a directory, but we only use one file in this example
+     - name: DB_NAME
+       value: okctlreference
+     - name: DB_USERNAME
+       value: appuser
 ```
-[View example in context](https://github.com/oslokommune/okctl-demo-iac/blob/5a685ce340f10d008a2e615e1f9b9c4b305dedc9/infrastructure/applications/demo-app/base/deployment.yaml)
+[View example in context](https://github.com/oslokommune/okctl-reference-iac/blob/110aee763ffa0d812330eeccd748a99fbe54d6cd/infrastructure/applications/okctl-reference-app/base/deployment.yaml)
 
-Replace content in `infrastructure/applications/demo-app/overlays/okctl-demo-dev/deployment-patch.json` with the code-block below. You need to use the appropriate value for endpoint to your own database, that can be found under RDS -> DB instances - > (your database):
+Replace content in `infrastructure/applications/okctl-reference-app/overlays/<cluster-name>/deployment-patch.json` with the code-block below. You need to use the appropriate value for endpoint to your own database, that can be found under RDS -> DB instances - > (your database):
 ```json
 [
     {
         "op": "add",
         "path": "/spec/template/spec/containers/0/image",
-        "value": "ghcr.io/oslokommune/okctl-kotlin-app-template:v0.0.23"
+        "value": "ghcr.io/oslokommune/okctl-reference-app:v0.0.29"
     },
     {
         "op": "add",
@@ -205,7 +224,7 @@ Replace content in `infrastructure/applications/demo-app/overlays/okctl-demo-dev
         "path": "/spec/template/spec/containers/0/env/4",
         "value": {
             "name": "DB_ENDPOINT",
-            "value": "okctl-demo-dev-okctldemo.c7d1uu67i7fm.eu-west-1.rds.amazonaws.com"
+            "value": "okctl-reference-dev-okctlreference.c7d1uu67i7fm.eu-west-1.rds.amazonaws.com"
 
         }
     }
@@ -217,7 +236,7 @@ Since deployment.yaml specifies 3 env variables (index 0, 1 , 2) we start counti
 
 Finally, in your iac repository:
 ```bash
-git commit -m "Setup environment for demo app" && git push
+git commit -m "Setup environment for reference app" && git push
 ```
 
 *This concludes this guide, good luck!*

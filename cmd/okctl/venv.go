@@ -29,7 +29,6 @@ const (
 	venvArgs = 0
 )
 
-//nolint:funlen
 func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 	okctlEnvironment := commands.OkctlEnvironment{}
 
@@ -78,14 +77,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			var kubeConfigPerm os.FileMode = 0o600
-
-			err = o.FileSystem.WriteFile(kubeConfigFile, data, kubeConfigPerm)
-			if err != nil {
-				return err
-			}
-
-			err = o.FileSystem.Chmod(kubeConfigFile, kubeConfigPerm)
+			err = o.FileSystem.WriteFile(kubeConfigFile, data, 0o640)
 			if err != nil {
 				return err
 			}

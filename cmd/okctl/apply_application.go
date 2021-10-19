@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/cmd/okctl/preruns"
+	"github.com/oslokommune/okctl/pkg/metrics"
+
 	"github.com/oslokommune/okctl/pkg/spinner"
 
 	"github.com/oslokommune/okctl/pkg/controller/application/reconciliation"
@@ -42,24 +45,28 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 		Use:   "application",
 		Short: ApplyApplicationShortDescription,
 		Args:  cobra.ExactArgs(requiredApplyApplicationArguments),
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			err := o.Initialise()
-			if err != nil {
-				return err
-			}
+		PreRunE: preruns.PreRunECombinator(
+			preruns.InitializeMetrics(o),
+			preruns.InitializeOkctl(o),
+			func(cmd *cobra.Command, args []string) (err error) {
+				opts.Application, err = commands.InferApplicationFromStdinOrFile(*o.Declaration, o.In, o.FileSystem, opts.File)
+				if err != nil {
+					return fmt.Errorf("inferring application from stdin or file: %w", err)
+				}
 
-			opts.Application, err = commands.InferApplicationFromStdinOrFile(*o.Declaration, o.In, o.FileSystem, opts.File)
-			if err != nil {
-				return fmt.Errorf("inferring application from stdin or file: %w", err)
-			}
-
-			return nil
-		},
+				return nil
+			},
+		),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			err := opts.Validate()
 			if err != nil {
 				return fmt.Errorf("failed validating options: %w", err)
 			}
+
+			metrics.Publish(metrics.Event{
+				Category: metrics.CategoryApplication,
+				Action:   metrics.ActionApply,
+			})
 
 			state := o.StateHandlers(o.StateNodes())
 

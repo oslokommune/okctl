@@ -48,3 +48,15 @@ func InitializeMetrics(o *okctl.Okctl) PreRunEer {
 		return nil
 	}
 }
+
+// InitializeOkctl initializes the okctl instance
+func InitializeOkctl(o *okctl.Okctl) PreRunEer {
+	return func(cmd *cobra.Command, args []string) error {
+		err := o.Initialise()
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+}

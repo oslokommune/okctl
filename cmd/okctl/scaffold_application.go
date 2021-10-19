@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/cmd/okctl/preruns"
+	"github.com/oslokommune/okctl/pkg/metrics"
+
 	"github.com/oslokommune/okctl/pkg/commands"
 
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -20,21 +23,30 @@ func buildScaffoldApplicationCommand(o *okctl.Okctl) *cobra.Command {
 		Short: ScaffoldShortDescription,
 		Long:  ScaffoldLongDescription,
 		Args:  cobra.ExactArgs(requiredArgumentsForCreateApplicationCommand),
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			if declarationPath != "" {
-				clusterDeclaration, err := commands.InferClusterFromStdinOrFile(o.In, declarationPath)
-				if err != nil {
-					return fmt.Errorf("inferring cluster declaration: %w", err)
+		PersistentPreRunE: preruns.PreRunECombinator(
+			preruns.LoadUserData(o),
+			preruns.InitializeMetrics(o),
+			func(cmd *cobra.Command, args []string) error {
+				if declarationPath != "" {
+					clusterDeclaration, err := commands.InferClusterFromStdinOrFile(o.In, declarationPath)
+					if err != nil {
+						return fmt.Errorf("inferring cluster declaration: %w", err)
+					}
+
+					opts.PrimaryHostedZone = clusterDeclaration.ClusterRootDomain
+				} else {
+					opts.PrimaryHostedZone = "okctl.io"
 				}
 
-				opts.PrimaryHostedZone = clusterDeclaration.ClusterRootDomain
-			} else {
-				opts.PrimaryHostedZone = "okctl.io"
-			}
-
-			return nil
-		},
+				return nil
+			},
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			metrics.Publish(metrics.Event{
+				Category: metrics.CategoryApplication,
+				Action:   metrics.ActionScaffold,
+			})
+
 			return commands.ScaffoldApplicationDeclaration(o.Out, opts)
 		},
 	}

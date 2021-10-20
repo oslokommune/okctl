@@ -48,11 +48,24 @@ make test
 make release-local
 ```
 
+After running the initialization process that will automatically start when running a command, please edit your
+`~/.okctl/conf.yml` and add the following:
+
+```yaml
+...
+metrics:
+  userAgent: okctldev
+...
+```
+
+This will allow us to differentiate between actual production usage and development usage. Thank you!
+
 #### 4. Write your feature
 
-- Find an [issue](https://github.com/oslokommune/okctl/issues) to work on or
-  create your own. If you are a new contributor take a look at issues marked
-  with [good first issue](https://github.com/oslokommune/okctl/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+- Find an [issue](https://github.com/oslokommune/okctl/issues) to work on or create your own. If you are a new
+  contributor take a look at issues marked
+  with [good first issue](https://github.com/oslokommune/okctl/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+  .
 
 - Then create a topic branch from where you want to base your work (usually branched from master):
 

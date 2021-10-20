@@ -49,6 +49,12 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			preruns.InitializeMetrics(o),
 			preruns.InitializeOkctl(o),
 			func(cmd *cobra.Command, args []string) (err error) {
+				metrics.Publish(metrics.Event{
+					Category: metrics.CategoryCommandExecution,
+					Action:   metrics.ActionApplyApplication,
+					Label:    metrics.LabelStart,
+				})
+
 				opts.Application, err = commands.InferApplicationFromStdinOrFile(*o.Declaration, o.In, o.FileSystem, opts.File)
 				if err != nil {
 					return fmt.Errorf("inferring application from stdin or file: %w", err)
@@ -62,11 +68,6 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed validating options: %w", err)
 			}
-
-			metrics.Publish(metrics.Event{
-				Category: metrics.CategoryApplication,
-				Action:   metrics.ActionApply,
-			})
 
 			state := o.StateHandlers(o.StateNodes())
 
@@ -104,6 +105,15 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				Application: opts.Application,
 				Cluster:     *o.Declaration,
 			})
+		},
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			metrics.Publish(metrics.Event{
+				Category: metrics.CategoryCommandExecution,
+				Action:   metrics.ActionApplyApplication,
+				Label:    metrics.LabelEnd,
+			})
+
+			return nil
 		},
 	}
 

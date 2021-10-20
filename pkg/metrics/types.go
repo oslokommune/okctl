@@ -12,27 +12,9 @@ type Event = metricsapi.Event
 
 type (
 	// Category defines the category of an event
-	Category metricsapi.Category
+	Category = metricsapi.Category
 	// Action defines the action of an event
-	Action metricsapi.Action
-)
-
-// Categories
-const (
-	// CategoryCluster represents metrics associated with cluster manipulation
-	CategoryCluster = metricsapi.CategoryCluster
-	// CategoryApplication represents metrics associated with application manipulation
-	CategoryApplication = metricsapi.CategoryApplication
-)
-
-// Actions
-const (
-	// ActionScaffold represents scaffolding a resource
-	ActionScaffold = metricsapi.ActionScaffold
-	// ActionApply represents applying a resource
-	ActionApply = metricsapi.ActionApply
-	// ActionDelete represents deleting a resource
-	ActionDelete = metricsapi.ActionDelete
+	Action = metricsapi.Action
 )
 
 type context struct {
@@ -40,3 +22,10 @@ type context struct {
 	UserAgent  string
 	APIURL     url.URL
 }
+
+const (
+	// LabelStart indicates the start of something
+	LabelStart = "start"
+	// LabelEnd indicates the end of something
+	LabelEnd = "end"
+)

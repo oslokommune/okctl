@@ -37,7 +37,10 @@ func buildShowCommand(o *okctl.Okctl) *cobra.Command {
 
 //nolint:funlen,gocognit
 func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
-	okctlEnvironment := commands.OkctlEnvironment{}
+	var (
+		okctlEnvironment = commands.OkctlEnvironment{}
+		err              error
+	)
 
 	cmd := &cobra.Command{
 		Use:   "credentials",
@@ -46,6 +49,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 		Args:  cobra.ExactArgs(showCredentialsArgs),
 		PreRunE: preruns.PreRunECombinator(
 			preruns.LoadUserData(o),
+			preruns.InitializeMetrics(o),
 			preruns.InitializeOkctl(o),
 			func(_ *cobra.Command, args []string) error {
 				metrics.Publish(metrics.Event{
@@ -53,11 +57,6 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 					Action:   metrics.ActionShowCredentials,
 					Label:    metrics.LabelStart,
 				})
-
-				err := o.Initialise()
-				if err != nil {
-					return err
-				}
 
 				okctlEnvironment, err = commands.GetOkctlEnvironment(o, declarationPath)
 				if err != nil {

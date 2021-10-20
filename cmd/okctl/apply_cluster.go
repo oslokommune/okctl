@@ -9,9 +9,9 @@ import (
 	"path"
 	"syscall"
 
-	"github.com/oslokommune/okctl/cmd/okctl/preruns"
 	"github.com/oslokommune/okctl/pkg/metrics"
 
+	"github.com/oslokommune/okctl/cmd/okctl/preruns"
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
 	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversion"
 
@@ -84,6 +84,12 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			preruns.LoadUserData(o),
 			preruns.InitializeMetrics(o),
 			func(cmd *cobra.Command, args []string) (err error) {
+				metrics.Publish(metrics.Event{
+					Category: metrics.CategoryCommandExecution,
+					Action:   metrics.ActionApplyCluster,
+					Label:    metrics.LabelStart,
+				})
+
 				opts.Declaration, err = commands.InferClusterFromStdinOrFile(o.In, opts.File)
 				if err != nil {
 					return fmt.Errorf("inferring cluster: %w", err)
@@ -93,11 +99,6 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("validating cluster declaration: %w", err)
 				}
-
-				metrics.Publish(metrics.Event{
-					Category: metrics.CategoryCluster,
-					Action:   metrics.ActionApply,
-				})
 
 				o.Declaration = opts.Declaration
 
@@ -226,6 +227,15 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("handle cluster versioning: %w", err)
 			}
+
+			return nil
+		},
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			metrics.Publish(metrics.Event{
+				Category: metrics.CategoryCommandExecution,
+				Action:   metrics.ActionApplyCluster,
+				Label:    metrics.LabelEnd,
+			})
 
 			return nil
 		},

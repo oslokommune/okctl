@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/oslokommune/okctl/cmd/okctl/preruns"
 	"github.com/oslokommune/okctl/pkg/metrics"
 
+	"github.com/oslokommune/okctl/cmd/okctl/preruns"
 	"github.com/oslokommune/okctl/pkg/commands"
 
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -23,10 +23,19 @@ func buildScaffoldApplicationCommand(o *okctl.Okctl) *cobra.Command {
 		Short: ScaffoldShortDescription,
 		Long:  ScaffoldLongDescription,
 		Args:  cobra.ExactArgs(requiredArgumentsForCreateApplicationCommand),
-		PersistentPreRunE: preruns.PreRunECombinator(
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			return nil
+		},
+		PreRunE: preruns.PreRunECombinator(
 			preruns.LoadUserData(o),
 			preruns.InitializeMetrics(o),
 			func(cmd *cobra.Command, args []string) error {
+				metrics.Publish(metrics.Event{
+					Category: metrics.CategoryCommandExecution,
+					Action:   metrics.ActionScaffoldApplication,
+					Label:    metrics.LabelStart,
+				})
+
 				if declarationPath != "" {
 					clusterDeclaration, err := commands.InferClusterFromStdinOrFile(o.In, declarationPath)
 					if err != nil {
@@ -42,12 +51,16 @@ func buildScaffoldApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			},
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			return commands.ScaffoldApplicationDeclaration(o.Out, opts)
+		},
+		PostRunE: func(cmd *cobra.Command, args []string) error {
 			metrics.Publish(metrics.Event{
-				Category: metrics.CategoryApplication,
-				Action:   metrics.ActionScaffold,
+				Category: metrics.CategoryCommandExecution,
+				Action:   metrics.ActionScaffoldApplication,
+				Label:    metrics.LabelEnd,
 			})
 
-			return commands.ScaffoldApplicationDeclaration(o.Out, opts)
+			return nil
 		},
 	}
 

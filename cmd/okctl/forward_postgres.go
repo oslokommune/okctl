@@ -5,6 +5,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/oslokommune/okctl/cmd/okctl/preruns"
+	"github.com/oslokommune/okctl/pkg/metrics"
+
 	"github.com/oslokommune/okctl/pkg/cfn"
 
 	"github.com/oslokommune/okctl/pkg/kube/manifests/pgbouncer"
@@ -54,38 +57,48 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 		Short: ForwardPostgresShortDescription,
 		Long:  ForwardPostgresLongDescription,
 		Args:  cobra.ExactArgs(0), // nolint: gomnd
-		PreRunE: func(_ *cobra.Command, _ []string) error {
-			err := o.Initialise()
-			if err != nil {
-				return err
-			}
+		PreRunE: preruns.PreRunECombinator(
+			preruns.LoadUserData(o),
+			preruns.InitializeMetrics(o),
+			func(_ *cobra.Command, _ []string) error {
+				metrics.Publish(metrics.Event{
+					Category: metrics.CategoryCommandExecution,
+					Action:   metrics.ActionForwardPostgres,
+					Label:    metrics.LabelStart,
+				})
 
-			if len(opts.ApplicationName) == 0 {
-				return fmt.Errorf("missing database instance name")
-			}
+				if len(opts.ApplicationName) == 0 {
+					return fmt.Errorf("missing database instance name")
+				}
 
-			db, err := o.StateHandlers(o.StateNodes()).Component.GetPostgresDatabase(
-				cfn.NewStackNamer().RDSPostgres(opts.ApplicationName, o.Declaration.Metadata.Name),
-			)
-			if err != nil {
-				return err
-			}
+				err := o.Initialise()
+				if err != nil {
+					return err
+				}
 
-			opts.ID.AWSAccountID = o.Declaration.Metadata.AccountID
-			opts.ID.Region = o.Declaration.Metadata.Region
-			opts.ID.ClusterName = o.Declaration.Metadata.Name
-			opts.Namespace = db.Namespace
-			opts.ConfigMapName = db.DatabaseConfigMapName
-			opts.SecretName = db.AdminSecretName
-			opts.SecurityGroup = db.OutgoingSecurityGroupID
+				db, err := o.StateHandlers(o.StateNodes()).Component.GetPostgresDatabase(
+					cfn.NewStackNamer().RDSPostgres(opts.ApplicationName, o.Declaration.Metadata.Name),
+				)
+				if err != nil {
+					return err
+				}
 
-			err = opts.Validate()
-			if err != nil {
-				return err
-			}
+				opts.ID.AWSAccountID = o.Declaration.Metadata.AccountID
+				opts.ID.Region = o.Declaration.Metadata.Region
+				opts.ID.ClusterName = o.Declaration.Metadata.Name
+				opts.Namespace = db.Namespace
+				opts.ConfigMapName = db.DatabaseConfigMapName
+				opts.SecretName = db.AdminSecretName
+				opts.SecurityGroup = db.OutgoingSecurityGroupID
 
-			return nil
-		},
+				err = opts.Validate()
+				if err != nil {
+					return err
+				}
+
+				return nil
+			},
+		),
 		RunE: func(_ *cobra.Command, _ []string) (err error) {
 			clientSet, config, err := kube.NewFromEKSCluster(
 				opts.ID.ClusterName,
@@ -175,6 +188,15 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 			}()
 
 			return err
+		},
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			metrics.Publish(metrics.Event{
+				Category: metrics.CategoryCommandExecution,
+				Action:   metrics.ActionForwardPostgres,
+				Label:    metrics.LabelEnd,
+			})
+
+			return nil
 		},
 	}
 

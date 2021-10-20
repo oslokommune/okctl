@@ -9,6 +9,9 @@ import (
 	"path"
 	"strings"
 
+	"github.com/oslokommune/okctl/cmd/okctl/preruns"
+	"github.com/oslokommune/okctl/pkg/metrics"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/kubeconfig"
@@ -29,7 +32,7 @@ const (
 	venvArgs = 0
 )
 
-func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
+func buildVenvCommand(o *okctl.Okctl) *cobra.Command { //nolint: funlen
 	okctlEnvironment := commands.OkctlEnvironment{}
 
 	cmd := &cobra.Command{
@@ -37,16 +40,26 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 		Short: VenvShortDescription,
 		Long:  VenvLongDescription,
 		Args:  cobra.ExactArgs(venvArgs),
-		PreRunE: func(_ *cobra.Command, args []string) error {
-			e, err := venvPreRunE(o)
-			if err != nil {
-				return err
-			}
+		PreRunE: preruns.PreRunECombinator(
+			preruns.LoadUserData(o),
+			preruns.InitializeMetrics(o),
+			func(_ *cobra.Command, args []string) error {
+				metrics.Publish(metrics.Event{
+					Category: metrics.CategoryCommandExecution,
+					Action:   metrics.ActionVenv,
+					Label:    metrics.LabelStart,
+				})
 
-			okctlEnvironment = e
+				e, err := venvPreRunE(o)
+				if err != nil {
+					return err
+				}
 
-			return nil
-		},
+				okctlEnvironment = e
+
+				return nil
+			},
+		),
 		RunE: func(_ *cobra.Command, args []string) error {
 			handlers := o.StateHandlers(o.StateNodes())
 
@@ -83,6 +96,15 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command {
 			}
 
 			return venvRunE(o, okctlEnvironment)
+		},
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			metrics.Publish(metrics.Event{
+				Category: metrics.CategoryCommandExecution,
+				Action:   metrics.ActionVenv,
+				Label:    metrics.LabelEnd,
+			})
+
+			return nil
 		},
 	}
 

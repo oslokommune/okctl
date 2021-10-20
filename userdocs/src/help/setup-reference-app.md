@@ -147,11 +147,10 @@ cd secret && uuidgen | sed 's/-//g' > password.secret
     okctl forward postgres -c cluster.yaml -n okctlreference \
     -u tempuser -p secret/tmp.password
     ```
-    * Run the following script (copy and paste the whole thing) to generate sql we will use to insert into your database
+    * Run the following script, in a new shell, (copy and paste the whole thing) to generate sql we will use to insert into your database
     ```bash
     password=$(cat secret/password.secret) && \
-    read -p "Enter appuser name [appuser]: " username && \
-    username=${username:-appuser} && \
+    username=appuser && \
     cat << EOF > secret/newuser.sql
     -- Same as create role with option 'login', and set a password
     create user $username with password '$password';
@@ -165,12 +164,11 @@ cd secret && uuidgen | sed 's/-//g' > password.secret
     EOF
     ```
   
-    * Add the user to your database, make any changes to sql if applicable
+    * Add the user to your database, make any changes to sql if applicable, replace databasename if you called it something else.
 
       **NOTE**: You need to have postgres client (psql) [installed on local machine](https://www.compose.com/articles/postgresql-tips-installing-the-postgresql-client/) for this script to work.
     ```bash
-    read -p "Enter database name [okctlreference]: " database && \
-    database=${database:-okctlreference} && \
+    database=okctlreference && \
     export PGPASSWORD=$(cat secret/tmp.password) && psql -h localhost -U tempuser $database < secret/newuser.sql
     ```
   

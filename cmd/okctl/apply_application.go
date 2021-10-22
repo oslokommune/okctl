@@ -49,11 +49,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			preruns.InitializeMetrics(o),
 			preruns.InitializeOkctl(o),
 			func(cmd *cobra.Command, args []string) (err error) {
-				metrics.Publish(metrics.Event{
-					Category: metrics.CategoryCommandExecution,
-					Action:   metrics.ActionApplyApplication,
-					Label:    metrics.LabelStart,
-				})
+				metrics.Publish(generateStartEvent(metrics.ActionApplyApplication))
 
 				opts.Application, err = commands.InferApplicationFromStdinOrFile(*o.Declaration, o.In, o.FileSystem, opts.File)
 				if err != nil {
@@ -107,11 +103,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			})
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(metrics.Event{
-				Category: metrics.CategoryCommandExecution,
-				Action:   metrics.ActionApplyApplication,
-				Label:    metrics.LabelEnd,
-			})
+			metrics.Publish(generateEndEvent(metrics.ActionApplyApplication))
 
 			return nil
 		},

@@ -58,11 +58,7 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 			preruns.InitializeMetrics(o),
 			preruns.InitializeOkctl(o),
 			func(cmd *cobra.Command, args []string) error {
-				metrics.Publish(metrics.Event{
-					Category: metrics.CategoryCommandExecution,
-					Action:   metrics.ActionDeleteCluster,
-					Label:    metrics.LabelEnd,
-				})
+				metrics.Publish(generateStartEvent(metrics.ActionDeleteCluster))
 
 				return nil
 			},
@@ -130,11 +126,7 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(metrics.Event{
-				Category: metrics.CategoryCommandExecution,
-				Action:   metrics.ActionDeleteCluster,
-				Label:    metrics.LabelEnd,
-			})
+			metrics.Publish(generateEndEvent(metrics.ActionDeleteCluster))
 
 			return nil
 		},

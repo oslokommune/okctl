@@ -52,11 +52,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 			preruns.InitializeMetrics(o),
 			preruns.InitializeOkctl(o),
 			func(_ *cobra.Command, args []string) error {
-				metrics.Publish(metrics.Event{
-					Category: metrics.CategoryCommandExecution,
-					Action:   metrics.ActionShowCredentials,
-					Label:    metrics.LabelStart,
-				})
+				metrics.Publish(generateStartEvent(metrics.ActionShowCredentials))
 
 				okctlEnvironment, err = commands.GetOkctlEnvironment(o, declarationPath)
 				if err != nil {
@@ -143,11 +139,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 			return err
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(metrics.Event{
-				Category: metrics.CategoryCommandExecution,
-				Action:   metrics.ActionShowCredentials,
-				Label:    metrics.LabelEnd,
-			})
+			metrics.Publish(generateEndEvent(metrics.ActionShowCredentials))
 
 			return nil
 		},

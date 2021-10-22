@@ -45,11 +45,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 			preruns.LoadUserData(o),
 			preruns.InitializeMetrics(o),
 			func(cmd *cobra.Command, args []string) error {
-				metrics.Publish(metrics.Event{
-					Category: metrics.CategoryCommandExecution,
-					Action:   metrics.ActionUpgrade,
-					Label:    metrics.LabelStart,
-				})
+				metrics.Publish(generateStartEvent(metrics.ActionUpgrade))
 
 				err := o.Initialise()
 				if err != nil {
@@ -130,11 +126,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 			return nil
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(metrics.Event{
-				Category: metrics.CategoryCommandExecution,
-				Action:   metrics.ActionUpgrade,
-				Label:    metrics.LabelEnd,
-			})
+			metrics.Publish(generateEndEvent(metrics.ActionUpgrade))
 
 			return nil
 		},

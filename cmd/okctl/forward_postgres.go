@@ -61,11 +61,7 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 			preruns.LoadUserData(o),
 			preruns.InitializeMetrics(o),
 			func(_ *cobra.Command, _ []string) error {
-				metrics.Publish(metrics.Event{
-					Category: metrics.CategoryCommandExecution,
-					Action:   metrics.ActionForwardPostgres,
-					Label:    metrics.LabelStart,
-				})
+				metrics.Publish(generateStartEvent(metrics.ActionForwardPostgres))
 
 				if len(opts.ApplicationName) == 0 {
 					return fmt.Errorf("missing database instance name")
@@ -190,11 +186,7 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 			return err
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(metrics.Event{
-				Category: metrics.CategoryCommandExecution,
-				Action:   metrics.ActionForwardPostgres,
-				Label:    metrics.LabelEnd,
-			})
+			metrics.Publish(generateEndEvent(metrics.ActionForwardPostgres))
 
 			return nil
 		},

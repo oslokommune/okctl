@@ -24,11 +24,7 @@ func buildVersionCommand(o *okctl.Okctl) *cobra.Command {
 			preruns.LoadUserData(o),
 			preruns.InitializeMetrics(o),
 			func(cmd *cobra.Command, args []string) error {
-				metrics.Publish(metrics.Event{
-					Category: metrics.CategoryCommandExecution,
-					Action:   metrics.ActionVersion,
-					Label:    metrics.LabelStart,
-				})
+				metrics.Publish(generateStartEvent(metrics.ActionVersion))
 
 				return nil
 			},
@@ -38,11 +34,7 @@ func buildVersionCommand(o *okctl.Okctl) *cobra.Command {
 			return err
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(metrics.Event{
-				Category: metrics.CategoryCommandExecution,
-				Action:   metrics.ActionVersion,
-				Label:    metrics.LabelEnd,
-			})
+			metrics.Publish(generateEndEvent(metrics.ActionVersion))
 
 			return nil
 		},

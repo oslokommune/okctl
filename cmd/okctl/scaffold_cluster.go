@@ -28,11 +28,7 @@ func buildScaffoldClusterCommand(o *okctl.Okctl) *cobra.Command {
 			preruns.LoadUserData(o),
 			preruns.InitializeMetrics(o),
 			func(cmd *cobra.Command, args []string) error {
-				metrics.Publish(metrics.Event{
-					Category: metrics.CategoryCommandExecution,
-					Action:   metrics.ActionScaffoldCluster,
-					Label:    metrics.LabelStart,
-				})
+				metrics.Publish(generateStartEvent(metrics.ActionScaffoldCluster))
 
 				return nil
 			},
@@ -41,11 +37,7 @@ func buildScaffoldClusterCommand(o *okctl.Okctl) *cobra.Command {
 			return commands.ScaffoldClusterDeclaration(o.Out, opts)
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(metrics.Event{
-				Category: metrics.CategoryCommandExecution,
-				Action:   metrics.ActionScaffoldCluster,
-				Label:    metrics.LabelEnd,
-			})
+			metrics.Publish(generateEndEvent(metrics.ActionScaffoldCluster))
 
 			return nil
 		},

@@ -44,11 +44,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command { //nolint: funlen
 			preruns.LoadUserData(o),
 			preruns.InitializeMetrics(o),
 			func(_ *cobra.Command, args []string) error {
-				metrics.Publish(metrics.Event{
-					Category: metrics.CategoryCommandExecution,
-					Action:   metrics.ActionVenv,
-					Label:    metrics.LabelStart,
-				})
+				metrics.Publish(generateStartEvent(metrics.ActionVenv))
 
 				e, err := venvPreRunE(o)
 				if err != nil {
@@ -98,11 +94,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command { //nolint: funlen
 			return venvRunE(o, okctlEnvironment)
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(metrics.Event{
-				Category: metrics.CategoryCommandExecution,
-				Action:   metrics.ActionVenv,
-				Label:    metrics.LabelEnd,
-			})
+			metrics.Publish(generateEndEvent(metrics.ActionVenv))
 
 			return nil
 		},

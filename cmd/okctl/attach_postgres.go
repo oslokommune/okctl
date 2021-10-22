@@ -50,11 +50,7 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 			preruns.LoadUserData(o),
 			preruns.InitializeMetrics(o),
 			func(_ *cobra.Command, _ []string) error {
-				metrics.Publish(metrics.Event{
-					Category: metrics.CategoryCommandExecution,
-					Action:   metrics.ActionAttachPostgres,
-					Label:    metrics.LabelStart,
-				})
+				metrics.Publish(generateStartEvent(metrics.ActionAttachPostgres))
 
 				err := o.Initialise()
 				if err != nil {
@@ -170,11 +166,7 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 			return err
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(metrics.Event{
-				Category: metrics.CategoryCommandExecution,
-				Action:   metrics.ActionAttachPostgres,
-				Label:    metrics.LabelEnd,
-			})
+			metrics.Publish(generateEndEvent(metrics.ActionAttachPostgres))
 
 			return nil
 		},

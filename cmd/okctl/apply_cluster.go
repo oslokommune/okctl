@@ -84,11 +84,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			preruns.LoadUserData(o),
 			preruns.InitializeMetrics(o),
 			func(cmd *cobra.Command, args []string) (err error) {
-				metrics.Publish(metrics.Event{
-					Category: metrics.CategoryCommandExecution,
-					Action:   metrics.ActionApplyCluster,
-					Label:    metrics.LabelStart,
-				})
+				metrics.Publish(generateStartEvent(metrics.ActionApplyCluster))
 
 				opts.Declaration, err = commands.InferClusterFromStdinOrFile(o.In, opts.File)
 				if err != nil {
@@ -231,11 +227,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(metrics.Event{
-				Category: metrics.CategoryCommandExecution,
-				Action:   metrics.ActionApplyCluster,
-				Label:    metrics.LabelEnd,
-			})
+			metrics.Publish(generateEndEvent(metrics.ActionApplyCluster))
 
 			return nil
 		},

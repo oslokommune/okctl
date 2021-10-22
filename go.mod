@@ -8,7 +8,7 @@ replace github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.
 
 require (
 	github.com/99designs/keyring v1.1.6
-	github.com/AlecAivazis/survey/v2 v2.2.15
+	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/Masterminds/semver v1.5.0
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d // indirect
@@ -71,7 +71,6 @@ require (
 	github.com/sebdah/goldie/v2 v2.5.3
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.8.1
-	github.com/smartystreets/assertions v1.0.0 // indirect
 	github.com/spf13/afero v1.6.0
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
@@ -86,7 +85,7 @@ require (
 	golang.org/x/crypto v0.0.0-20210915214749-c084706c2272
 	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
 	gopkg.in/h2non/gock.v1 v1.1.0
-	gopkg.in/ini.v1 v1.62.0
+	gopkg.in/ini.v1 v1.63.2
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gotest.tools v2.2.0+incompatible

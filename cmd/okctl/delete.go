@@ -5,6 +5,9 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/oslokommune/okctl/cmd/okctl/preruns"
+	"github.com/oslokommune/okctl/pkg/metrics"
+
 	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
 	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 
@@ -50,14 +53,20 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 		Short: DeleteClusterShortDescription,
 		Long:  DeleteClusterLongDescription,
 		Args:  cobra.ExactArgs(deleteClusterArgs),
-		PreRunE: func(_ *cobra.Command, args []string) error {
-			err := o.Initialise()
-			if err != nil {
-				return fmt.Errorf("initialising: %w", err)
-			}
+		PreRunE: preruns.PreRunECombinator(
+			preruns.LoadUserData(o),
+			preruns.InitializeMetrics(o),
+			preruns.InitializeOkctl(o),
+			func(cmd *cobra.Command, args []string) error {
+				metrics.Publish(metrics.Event{
+					Category: metrics.CategoryCommandExecution,
+					Action:   metrics.ActionDeleteCluster,
+					Label:    metrics.LabelEnd,
+				})
 
-			return nil
-		},
+				return nil
+			},
+		),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			var spinnerWriter io.Writer
 			if opts.DisableSpinner {
@@ -117,6 +126,15 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("synchronizing declaration with state: %w", err)
 			}
+
+			return nil
+		},
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			metrics.Publish(metrics.Event{
+				Category: metrics.CategoryCommandExecution,
+				Action:   metrics.ActionDeleteCluster,
+				Label:    metrics.LabelEnd,
+			})
 
 			return nil
 		},

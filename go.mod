@@ -47,7 +47,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/handlers v1.4.2 // indirect
-	github.com/gosimple/slug v1.10.0
+	github.com/gosimple/slug v1.11.0
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/jarcoal/httpmock v1.0.8

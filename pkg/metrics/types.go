@@ -22,10 +22,3 @@ type context struct {
 	UserAgent  string
 	APIURL     url.URL
 }
-
-const (
-	// LabelStart indicates the start of something
-	LabelStart = "start"
-	// LabelEnd indicates the end of something
-	LabelEnd = "end"
-)

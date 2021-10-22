@@ -382,11 +382,11 @@ CIDR defines the VPC IP range. Leave this be if you don't know what it is/does
 
 <div>
     <span class="type">Type</span>:
-    String
+    Boolean
 </div>
 <div>
     <span class="default">Default</span>:
-    192.168.0.0/20
+    true
 </div>
 
 HighAvailability means we create redundancy in the network setup. If set to true we will create a NAT gateway per public

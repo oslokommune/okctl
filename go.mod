@@ -98,5 +98,5 @@ require (
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009 // indirect
 	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/aws-iam-authenticator v0.5.3
-	sigs.k8s.io/yaml v1.2.0
+	sigs.k8s.io/yaml v1.3.0
 )

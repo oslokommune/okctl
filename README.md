@@ -84,9 +84,6 @@ kubernetes   ClusterIP   10.100.0.1   <none>        443/TCP   1h
 # Get help for any command
 $ okctl --help
 
-# Show credentials for cluster
-$ okctl show credentials -c cluster.yaml
-
 # Run a sub shell with environment variables from the above command and a custom command prompt (PS1)
 $ okctl venv -c cluster.yaml
 

@@ -60,6 +60,10 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
+			if len(opts.ApplicationName) == 0 {
+				return fmt.Errorf("missing database instance name")
+			}
+
 			db, err := o.StateHandlers(o.StateNodes()).Component.GetPostgresDatabase(
 				cfn.NewStackNamer().RDSPostgres(opts.ApplicationName, o.Declaration.Metadata.Name),
 			)

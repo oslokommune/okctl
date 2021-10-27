@@ -2,7 +2,10 @@
 package scaffold
 
 import (
+	"bufio"
 	"fmt"
+	"os/exec"
+	"strings"
 
 	"github.com/oslokommune/okctl/pkg/jsonpatch"
 
@@ -86,14 +89,20 @@ func GenerateApplicationBase(opts GenerateApplicationBaseOpts) error {
 		}
 	}
 
-	rawNamespace, err := ResourceAsBytes(resources.CreateNamespace(opts.Application))
+	namespaceExists, err := checkNamespace(opts.Application.Metadata.Namespace)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error checkin namespace existence")
 	}
+	if !namespaceExists {
+		rawNamespace, err := ResourceAsBytes(resources.CreateNamespace(opts.Application))
+		if err != nil {
+			return err
+		}
 
-	err = opts.SaveManifest("namespace.yaml", rawNamespace)
-	if err != nil {
-		return fmt.Errorf("saving namespace manifest: %w", err)
+		err = opts.SaveManifest("namespace.yaml", rawNamespace)
+		if err != nil {
+			return fmt.Errorf("saving namespace manifest: %w", err)
+		}
 	}
 
 	rawDeployment, err := ResourceAsBytes(resources.CreateOkctlDeployment(opts.Application))
@@ -107,6 +116,27 @@ func GenerateApplicationBase(opts GenerateApplicationBaseOpts) error {
 	}
 
 	return nil
+}
+
+func checkNamespace(namespace string) (bool, error) {
+	cmd := exec.Command("kubectl", "get", "namespaces", "-o", "name")
+
+	output, err := cmd.Output()
+	if err != nil {
+		return false, err
+	}
+
+	namespaces := strings.ReplaceAll(string(output),"namespace/", "")
+
+
+	scanner := bufio.NewScanner(strings.NewReader(namespaces))
+	for scanner.Scan() {
+		if scanner.Text() == namespace {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 // GenerateApplicationOverlay generates patches for environment specific parts of the kubernetes resources

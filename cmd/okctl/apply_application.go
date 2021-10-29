@@ -63,7 +63,10 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 
 			state := o.StateHandlers(o.StateNodes())
 
-			services, _ := o.ClientServices(state)
+			services, err := o.ClientServices(state)
+			if err != nil {
+				return fmt.Errorf("acquiring client services: %w", err)
+			}
 
 			spin, err := spinner.New("applying application", o.Err)
 			if err != nil {

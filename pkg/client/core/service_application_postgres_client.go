@@ -64,17 +64,17 @@ func (a *applicationPostgresService) AddPostgresToApplication(ctx context.Contex
 		return fmt.Errorf("creating security group: %w", err)
 	}
 
+	err = a.generateSecurityGroupPolicy(ctx, opts.Cluster, opts.Application, appSecurityGroup)
+	if err != nil {
+		return fmt.Errorf("generating security group policy: %w", err)
+	}
+
 	stackName := cfn.NewStackNamer().RDSPostgres(opts.DatabaseName, opts.Cluster.Metadata.Name)
 
 	resourceName := components.NewRDSPostgresComposer(components.RDSPostgresComposerOpts{
 		ApplicationDBName: opts.DatabaseName,
 		ClusterName:       opts.Cluster.Metadata.Name,
 	}).CloudFormationResourceName("RDSPostgresIncoming")
-
-	err = a.generateSecurityGroupPolicy(ctx, opts.Cluster, opts.Application, securityGroup)
-	if err != nil {
-		return fmt.Errorf("generating security group policy: %w", err)
-	}
 
 	_, err = a.securityGroupAPI.AddRule(ctx, api.AddRuleOpts{
 		ClusterName:               opts.Cluster.Metadata.Name,
@@ -86,7 +86,7 @@ func (a *applicationPostgresService) AddPostgresToApplication(ctx context.Contex
 			FromPort:              postgresPort,
 			ToPort:                postgresPort,
 			Protocol:              api.RuleProtocolTCP,
-			SourceSecurityGroupID: securityGroup.ID,
+			SourceSecurityGroupID: appSecurityGroup.ID,
 		},
 	})
 	if err != nil {

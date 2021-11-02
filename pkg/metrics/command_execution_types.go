@@ -35,6 +35,7 @@ const (
 )
 
 const (
+	// LabelPhaseKey represents the key for the phase labels
 	LabelPhaseKey = metricsapi.LabelPhaseKey
 	// LabelPhaseStart represents the start of a command
 	LabelPhaseStart = metricsapi.LabelPhaseStart

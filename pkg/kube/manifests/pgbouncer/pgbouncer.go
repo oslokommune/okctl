@@ -347,7 +347,6 @@ func Pod(
 		},
 		Spec: v1.PodSpec{
 			TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
-			DNSPolicy:                     v1.DNSDefault,
 			Volumes: []v1.Volume{
 				{
 					Name: "config-volume",

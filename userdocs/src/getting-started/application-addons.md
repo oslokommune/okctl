@@ -47,10 +47,6 @@ When combined these can be used to create a valid postgresql connection string.
 The secret and the configmap will be placed in the Kubernetes namespace defined in the cluster declaration when provisioning the
 database server.
 
-### DNS Policy
-
-In Kubernetes, it is possible to define a [DNS Policy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy) for a pod. For a Pod to be able to connect to the Postgres database it needs permissions via an attached security group, but also need to be able to resolve the PGHOST. To resolve the PGHOST, it might be necessary to set the `dnsPolicy` of the pod to `Default`, which means that the Pod inherits the node's DNS policy. 
-
 ### Forwarding traffic to the database from a local machine
 
 If you want to attach to the database from intellij or some other IDE, you can do so by setting up a port forwarder, you can do so with the following command:

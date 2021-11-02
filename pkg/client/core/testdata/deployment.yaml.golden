@@ -44,6 +44,7 @@ spec:
         - mountPath: /path/to/mount/volume
           name: my-app-pathtomountvolume
       dnsPolicy: Default
+      terminationGracePeriodSeconds: 30
       volumes:
       - name: my-app-pathtomountvolume
         persistentVolumeClaim:

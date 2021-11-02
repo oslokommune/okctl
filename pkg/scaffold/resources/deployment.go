@@ -18,6 +18,9 @@ const (
 	defaultProbeFailureThreshold = 10
 	// defaultProbePeriodSeconds defines how often the probe should be performed
 	defaultProbePeriodSeconds = 10
+	// defaultTerminationGracePeriodSeconds defines how long a pod should be allowed to attempt a graceful shutdown
+	// See https://docs.aws.amazon.com/eks/latest/userguide/security-groups-for-pods.html
+	defaultTerminationGracePeriodSeconds = 30 // 30 is default in Kubernetes
 )
 
 // CreateOkctlDeployment creates a deployment customized for okctl
@@ -67,8 +70,9 @@ func generateDefaultDeployment() appsv1.Deployment {
 					Annotations: nil,
 				},
 				Spec: corev1.PodSpec{
-					DNSPolicy: corev1.DNSDefault,
-					Volumes:   nil,
+					DNSPolicy:                     corev1.DNSDefault,
+					Volumes:                       nil,
+					TerminationGracePeriodSeconds: int64AsPointer(defaultTerminationGracePeriodSeconds),
 				},
 			},
 		},

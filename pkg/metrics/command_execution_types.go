@@ -2,9 +2,10 @@ package metrics
 
 import metricsapi "github.com/oslokommune/okctl-metrics-service/pkg/endpoints/metrics"
 
+// CategoryCommandExecution represents the context of running commands
+const CategoryCommandExecution = metricsapi.CategoryCommandExecution
+
 const (
-	// CategoryCommandExecution represents the context of running commands
-	CategoryCommandExecution = metricsapi.CategoryCommandExecution
 
 	// ActionScaffoldCluster represents running the command `okctl scaffold cluster`
 	ActionScaffoldCluster = metricsapi.ActionScaffoldCluster
@@ -31,4 +32,12 @@ const (
 	ActionVenv = metricsapi.ActionVenv
 	// ActionVersion represents running the command `okctl version`
 	ActionVersion = metricsapi.ActionVersion
+)
+
+const (
+	LabelPhaseKey = metricsapi.LabelPhaseKey
+	// LabelPhaseStart represents the start of a command
+	LabelPhaseStart = metricsapi.LabelPhaseStart
+	// LabelPhaseEnd represents the end of the command
+	LabelPhaseEnd = metricsapi.LabelPhaseEnd
 )

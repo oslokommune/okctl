@@ -2,18 +2,12 @@ package main
 
 import "github.com/oslokommune/okctl/pkg/metrics"
 
-const (
-	labelKeyPhase   = "phase"
-	labelValueStart = "start"
-	labelValueEnd   = "end"
-)
-
 func generateStartEvent(action metrics.Action) metrics.Event {
 	return metrics.Event{
 		Category: metrics.CategoryCommandExecution,
 		Action:   action,
 		Labels: map[string]string{
-			labelKeyPhase: labelValueStart,
+			metrics.LabelPhaseKey: metrics.LabelPhaseStart,
 		},
 	}
 }
@@ -23,7 +17,7 @@ func generateEndEvent(action metrics.Action) metrics.Event {
 		Category: metrics.CategoryCommandExecution,
 		Action:   action,
 		Labels: map[string]string{
-			labelKeyPhase: labelValueEnd,
+			metrics.LabelPhaseKey: metrics.LabelPhaseEnd,
 		},
 	}
 }

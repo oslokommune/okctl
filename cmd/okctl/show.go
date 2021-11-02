@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/oslokommune/okctl/cmd/okctl/preruns"
+	"github.com/oslokommune/okctl/pkg/metrics"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/logrusorgru/aurora/v3"
@@ -34,26 +37,31 @@ func buildShowCommand(o *okctl.Okctl) *cobra.Command {
 
 //nolint:funlen,gocognit
 func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
-	okctlEnvironment := commands.OkctlEnvironment{}
+	var (
+		okctlEnvironment = commands.OkctlEnvironment{}
+		err              error
+	)
 
 	cmd := &cobra.Command{
 		Use:   "credentials",
 		Short: ShowShortDescription,
 		Long:  ShowLongDescription,
 		Args:  cobra.ExactArgs(showCredentialsArgs),
-		PreRunE: func(_ *cobra.Command, args []string) error {
-			err := o.Initialise()
-			if err != nil {
-				return err
-			}
+		PreRunE: preruns.PreRunECombinator(
+			preruns.LoadUserData(o),
+			preruns.InitializeMetrics(o),
+			preruns.InitializeOkctl(o),
+			func(_ *cobra.Command, args []string) error {
+				metrics.Publish(generateStartEvent(metrics.ActionShowCredentials))
 
-			okctlEnvironment, err = commands.GetOkctlEnvironment(o, declarationPath)
-			if err != nil {
-				return err
-			}
+				okctlEnvironment, err = commands.GetOkctlEnvironment(o, declarationPath)
+				if err != nil {
+					return err
+				}
 
-			return nil
-		},
+				return nil
+			},
+		),
 		RunE: func(_ *cobra.Command, _ []string) error {
 			okctlEnvVars := commands.GetOkctlEnvVars(okctlEnvironment)
 
@@ -129,6 +137,11 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 			}
 
 			return err
+		},
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			metrics.Publish(generateEndEvent(metrics.ActionShowCredentials))
+
+			return nil
 		},
 	}
 

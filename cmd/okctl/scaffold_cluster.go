@@ -1,8 +1,10 @@
 package main
 
 import (
+	"github.com/oslokommune/okctl/cmd/okctl/preruns"
 	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/config/constant"
+	"github.com/oslokommune/okctl/pkg/metrics"
 
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
@@ -22,8 +24,22 @@ func buildScaffoldClusterCommand(o *okctl.Okctl) *cobra.Command {
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			return nil
 		},
+		PreRunE: preruns.PreRunECombinator(
+			preruns.LoadUserData(o),
+			preruns.InitializeMetrics(o),
+			func(cmd *cobra.Command, args []string) error {
+				metrics.Publish(generateStartEvent(metrics.ActionScaffoldCluster))
+
+				return nil
+			},
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return commands.ScaffoldClusterDeclaration(o.Out, opts)
+		},
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			metrics.Publish(generateEndEvent(metrics.ActionScaffoldCluster))
+
+			return nil
 		},
 	}
 

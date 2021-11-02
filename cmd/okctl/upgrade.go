@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/cmd/okctl/preruns"
+	"github.com/oslokommune/okctl/pkg/metrics"
+
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
 	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversion"
 
@@ -38,82 +41,93 @@ func buildUpgradeCommand(o *okctl.Okctl) *cobra.Command {
 to the current version of okctl. Example of such resources are helm charts, okctl cluster and application declarations,
 binaries used by okctl (kubectl, etc), and internal state.`,
 		Hidden: true,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			err := o.Initialise()
-			if err != nil {
-				return err
-			}
+		PreRunE: preruns.PreRunECombinator(
+			preruns.LoadUserData(o),
+			preruns.InitializeMetrics(o),
+			func(cmd *cobra.Command, args []string) error {
+				metrics.Publish(generateStartEvent(metrics.ActionUpgrade))
 
-			stateHandlers := o.StateHandlers(o.StateNodes())
+				err := o.Initialise()
+				if err != nil {
+					return err
+				}
 
-			services, err := o.ClientServices(stateHandlers)
-			if err != nil {
-				return err
-			}
+				stateHandlers := o.StateHandlers(o.StateNodes())
 
-			out := o.Out
-			if o.Debug {
-				out = o.Err
-			}
+				services, err := o.ClientServices(stateHandlers)
+				if err != nil {
+					return err
+				}
 
-			userDataDir, err := o.GetUserDataDir()
-			if err != nil {
-				return err
-			}
+				out := o.Out
+				if o.Debug {
+					out = o.Err
+				}
 
-			repoDir, err := o.GetHomeDir()
-			if err != nil {
-				return err
-			}
+				userDataDir, err := o.GetUserDataDir()
+				if err != nil {
+					return err
+				}
 
-			fetcherOpts := upgrade.FetcherOpts{
-				Host:  o.Host(),
-				Store: storage.NewFileSystemStorage(userDataDir),
-			}
+				repoDir, err := o.GetHomeDir()
+				if err != nil {
+					return err
+				}
 
-			clusterID := api.ID{
-				Region:       o.Declaration.Metadata.Region,
-				AWSAccountID: o.Declaration.Metadata.AccountID,
-				ClusterName:  o.Declaration.Metadata.Name,
-			}
+				fetcherOpts := upgrade.FetcherOpts{
+					Host:  o.Host(),
+					Store: storage.NewFileSystemStorage(userDataDir),
+				}
 
-			clusterVersioner = clusterversion.New(
-				out,
-				clusterID,
-				stateHandlers.Upgrade,
-			)
+				clusterID := api.ID{
+					Region:       o.Declaration.Metadata.Region,
+					AWSAccountID: o.Declaration.Metadata.AccountID,
+					ClusterName:  o.Declaration.Metadata.Name,
+				}
 
-			surveyor := survey.NewTerminalSurveyor(out, flags.confirm)
+				clusterVersioner = clusterversion.New(
+					out,
+					clusterID,
+					stateHandlers.Upgrade,
+				)
 
-			originalClusterVersioner = originalclusterversion.New(clusterID, stateHandlers.Upgrade, stateHandlers.Cluster)
+				surveyor := survey.NewTerminalSurveyor(out, flags.confirm)
 
-			upgrader, err = upgrade.New(upgrade.Opts{
-				Debug:                    o.Debug,
-				AutoConfirm:              flags.confirm,
-				Logger:                   o.Logger,
-				Out:                      out,
-				RepositoryDirectory:      repoDir,
-				GithubService:            services.Github,
-				ChecksumDownloader:       upgrade.NewChecksumDownloader(),
-				ClusterVersioner:         clusterVersioner,
-				OriginalClusterVersioner: originalClusterVersioner,
-				Surveyor:                 surveyor,
-				FetcherOpts:              fetcherOpts,
-				OkctlVersion:             version.GetVersionInfo().Version,
-				State:                    stateHandlers.Upgrade,
-				ClusterID:                clusterID,
-			})
-			if err != nil {
-				return fmt.Errorf("creating upgrader: %w", err)
-			}
+				originalClusterVersioner = originalclusterversion.New(clusterID, stateHandlers.Upgrade, stateHandlers.Cluster)
 
-			return nil
-		},
+				upgrader, err = upgrade.New(upgrade.Opts{
+					Debug:                    o.Debug,
+					AutoConfirm:              flags.confirm,
+					Logger:                   o.Logger,
+					Out:                      out,
+					RepositoryDirectory:      repoDir,
+					GithubService:            services.Github,
+					ChecksumDownloader:       upgrade.NewChecksumDownloader(),
+					ClusterVersioner:         clusterVersioner,
+					OriginalClusterVersioner: originalClusterVersioner,
+					Surveyor:                 surveyor,
+					FetcherOpts:              fetcherOpts,
+					OkctlVersion:             version.GetVersionInfo().Version,
+					State:                    stateHandlers.Upgrade,
+					ClusterID:                clusterID,
+				})
+				if err != nil {
+					return fmt.Errorf("creating upgrader: %w", err)
+				}
+
+				return nil
+			},
+		),
 		RunE: func(_ *cobra.Command, args []string) error {
 			err := upgrader.Run()
 			if err != nil {
 				return fmt.Errorf("upgrading: %w", err)
 			}
+			return nil
+		},
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			metrics.Publish(generateEndEvent(metrics.ActionUpgrade))
+
 			return nil
 		},
 	}

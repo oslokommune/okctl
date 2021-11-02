@@ -9,6 +9,9 @@ import (
 	"path"
 	"syscall"
 
+	"github.com/oslokommune/okctl/pkg/metrics"
+
+	"github.com/oslokommune/okctl/cmd/okctl/preruns"
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
 	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversion"
 
@@ -33,7 +36,6 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
-	"github.com/oslokommune/okctl/pkg/config/load"
 	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/spinner"
@@ -78,90 +80,91 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			return nil
 		},
-		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
-			opts.Declaration, err = commands.InferClusterFromStdinOrFile(o.In, opts.File)
-			if err != nil {
-				return fmt.Errorf("inferring cluster: %w", err)
-			}
+		PreRunE: preruns.PreRunECombinator(
+			preruns.LoadUserData(o),
+			preruns.InitializeMetrics(o),
+			func(cmd *cobra.Command, args []string) (err error) {
+				metrics.Publish(generateStartEvent(metrics.ActionApplyCluster))
 
-			err = opts.Declaration.Validate()
-			if err != nil {
-				return fmt.Errorf("validating cluster declaration: %w", err)
-			}
-
-			err = loadNoUserInputUserData(o, cmd)
-			if err != nil {
-				return fmt.Errorf("loading application data: %w", err)
-			}
-
-			o.Declaration = opts.Declaration
-
-			// Move into a function
-			{
-				baseDir, err := o.GetRepoDir()
+				opts.Declaration, err = commands.InferClusterFromStdinOrFile(o.In, opts.File)
 				if err != nil {
-					return err
+					return fmt.Errorf("inferring cluster: %w", err)
 				}
 
-				stormDB := path.Join(baseDir, o.Declaration.Github.OutputPath, o.Declaration.Metadata.Name, constant.DefaultStormDBName)
-
-				exists, err := o.FileSystem.Exists(stormDB)
+				err = opts.Declaration.Validate()
 				if err != nil {
-					return err
+					return fmt.Errorf("validating cluster declaration: %w", err)
 				}
 
-				if !exists {
-					err := o.FileSystem.MkdirAll(path.Dir(stormDB), 0o744)
+				o.Declaration = opts.Declaration
+
+				// Move into a function
+				{
+					baseDir, err := o.GetRepoDir()
 					if err != nil {
 						return err
 					}
 
-					db, err := storm.Open(stormDB, storm.Codec(json.Codec))
+					stormDB := path.Join(baseDir, o.Declaration.Github.OutputPath, o.Declaration.Metadata.Name, constant.DefaultStormDBName)
+
+					exists, err := o.FileSystem.Exists(stormDB)
 					if err != nil {
 						return err
 					}
 
-					err = db.Close()
-					if err != nil {
-						return err
+					if !exists {
+						err := o.FileSystem.MkdirAll(path.Dir(stormDB), 0o744)
+						if err != nil {
+							return err
+						}
+
+						db, err := storm.Open(stormDB, storm.Codec(json.Codec))
+						if err != nil {
+							return err
+						}
+
+						err = db.Close()
+						if err != nil {
+							return err
+						}
 					}
 				}
-			}
 
-			err = o.Initialise()
-			if err != nil {
-				return fmt.Errorf("initializing okctl: %w", err)
-			}
+				err = o.Initialise()
+				if err != nil {
+					return fmt.Errorf("initializing okctl: %w", err)
+				}
 
-			state := o.StateHandlers(o.StateNodes())
+				state := o.StateHandlers(o.StateNodes())
 
-			// Cluster version
-			clusterID := api.ID{
-				Region:       o.Declaration.Metadata.Region,
-				AWSAccountID: o.Declaration.Metadata.AccountID,
-				ClusterName:  o.Declaration.Metadata.Name,
-			}
+				// Cluster version
+				clusterID := api.ID{
+					Region:       o.Declaration.Metadata.Region,
+					AWSAccountID: o.Declaration.Metadata.AccountID,
+					ClusterName:  o.Declaration.Metadata.Name,
+				}
 
-			clusterVersioner = clusterversion.New(
-				o.Out,
-				clusterID,
-				state.Upgrade,
-			)
+				clusterVersioner = clusterversion.New(
+					o.Out,
+					clusterID,
+					state.Upgrade,
+				)
 
-			err = clusterVersioner.ValidateBinaryVsClusterVersion(version.GetVersionInfo().Version)
-			if err != nil {
-				return fmt.Errorf(commands.ValidateBinaryVsClusterVersionErr, err)
-			}
+				err = clusterVersioner.ValidateBinaryVsClusterVersion(version.GetVersionInfo().Version)
+				if err != nil {
+					return fmt.Errorf(commands.ValidateBinaryVsClusterVersionErr, err)
+				}
 
-			// Original version
-			originalClusterVersioner = originalclusterversion.New(
-				clusterID,
-				state.Upgrade,
-				state.Cluster,
-			)
+				// Original version
+				originalClusterVersioner = originalclusterversion.New(
+					clusterID,
+					state.Upgrade,
+					state.Cluster,
+				)
 
-			return nil
-		},
+				return nil
+			},
+		),
 		RunE: func(cmd *cobra.Command, _ []string) (err error) {
 			var spinnerWriter io.Writer
 			if opts.DisableSpinner {
@@ -220,6 +223,11 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("handle cluster versioning: %w", err)
 			}
+
+			return nil
+		},
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			metrics.Publish(generateEndEvent(metrics.ActionApplyCluster))
 
 			return nil
 		},
@@ -323,12 +331,3 @@ func isVersionFromBeforeUpgradeWasReleased(versionString string) (bool, error) {
 }
 
 const usageApplyClusterFile = `specifies where to read the declaration from. Use "-" for stdin`
-
-// ~/.okctl.yaml
-func loadNoUserInputUserData(o *okctl.Okctl, cmd *cobra.Command) error {
-	userDataNotFound := load.CreateOnUserDataNotFoundWithNoInput()
-
-	o.UserDataLoader = load.UserDataFromFlagsEnvConfigDefaults(cmd, userDataNotFound)
-
-	return o.LoadUserData()
-}

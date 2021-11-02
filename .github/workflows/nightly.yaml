@@ -69,6 +69,7 @@ jobs:
         run: dist/linux_linux_amd64/okctl apply cluster --github-credentials-type token --aws-credentials-type access-key --no-spinner --file nightly-cfg.yaml
         env:
           OKCTL_DEBUG: true
+          OKCTL_METRICS_USERAGENT: okctldev
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           GITHUB_TOKEN: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_PAT }}
@@ -77,6 +78,7 @@ jobs:
         run: dist/linux_linux_amd64/okctl delete cluster --github-credentials-type token --aws-credentials-type access-key --no-spinner --confirm --cluster-declaration nightly-cfg.yaml
         env:
           OKCTL_DEBUG: true
+          OKCTL_METRICS_USERAGENT: okctldev
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           GITHUB_TOKEN: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_PAT }}

@@ -26,7 +26,7 @@ how to do this with git. The principle is to keep your changes, but add the stuf
 
 # Steps
 
-Let's say you have previously scaffolded and applied an application like this:
+In the following steps, we're assuming that you have previously scaffolded and applied an application like this:
 
 ```shell
 okctl scaffold application > my-app.yaml
@@ -36,7 +36,7 @@ okctl -c my-cluster.yaml apply application -f my-app.yaml
 :bulb: If you don't have the application manifest (`my-app-yaml`), you can attempt to re-create it by
 running `okctl scaffold application` and edit the values to match your existing application.
 
-To upgrade, start by downloading the latest version of okctl. See [install instructions](/getting-started/install.md).
+Start by downloading the latest version of okctl. See [install instructions](/getting-started/install.md).
 
 Ensure you have a clean git state:
 
@@ -45,9 +45,11 @@ git status -s # should return no output
 ```
 
 Then delete existing application manifests. This ensures that we delete files that okctl apply application doesn't
-produce anymore. You _can_ skip this command to get a simpler git diff below, but you should only do so if you know what
-you are doing (i.e. you know that `okctl apply application` doesn't produce fewer files than it did last time you
-ran `okctl apply application`).
+produce anymore.
+
+:bulb: You _can_ skip the following `rm` command to get a simpler git diff below, but you should only do so if you know
+that `okctl apply application` doesn't produce fewer files than it did last time you ran `okctl apply application`. For
+instance, the old okctl perhaps produced `some-deployment-patch.json`, but in the new version, it doesn't.
 
 ```shell
 rm -rf infrastructure/application/my-app
@@ -59,7 +61,8 @@ Re-create application manifests from scratch.
 okctl -c my-cluster.yaml apply application -f my-app.yaml
 ```
 
-Now, use your favourite git diff tool to get back what is specific for your application.
+Running this command overwrites your existing files. So now you use your favourite git diff tool to get back what is
+specific for your application, while also keeping updated values from okctl.
 
 In the example screenshot below, I'm using Intellij to do the diff. The newest version of okctl has
 changed `initialDelaySeconds` from `3` to `5`. So, I'll apply those two changes. Additionaly,
@@ -68,7 +71,7 @@ application needs. So I'll apply that change as well.
 
 ![okctl](/img/application-upgrade-diff.png)
 
-When you have reapplied all changes, all that is left is committing and pushing the changes.
+When you have reapplied all changes for all files, all that is left is committing and pushing the changes.
 
 ```shell
 git add .

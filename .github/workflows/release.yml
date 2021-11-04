@@ -35,7 +35,7 @@ jobs:
 
       -
         name: Run GoReleaser
-        run: make release --skip-validate --skip-publish
+        run: make release
         env:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}
           RELEASE_NOTES: docs/release_notes/${{ steps.tagName.outputs.tag }}.md

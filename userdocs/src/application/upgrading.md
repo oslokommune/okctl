@@ -16,9 +16,13 @@ Some motivations to upgrade an application include
 manifests, it simply overwrites any existing files. Since you probably have made some changes to these files, simply
 running `okctl apply application` again would overwrite these changes.
 
-In order to update the manifests, you need to do a manual merge. You can do this in any way you want, but in the steps
-below, we describe how to do this with git. The principle is to keep your changes, but add the stuff that is new from
-okctl.
+In order to update the manifests, you need to
+
+* run `okctl apply application` to create manifests from scratch
+* get updated values from the new version of okctl, while also keeping values that is needed by your application
+
+In other words, you need to do a manual merge. You can do this in any way you want, but in the steps below, we describe
+how to do this with git. The principle is to keep your changes, but add the stuff that is new from okctl.
 
 # Steps
 
@@ -29,7 +33,7 @@ okctl scaffold application > my-app.yaml
 okctl -c my-cluster.yaml apply application -f my-app.yaml
 ```
 
-:tip: If you don't have the application manifest (`my-app-yaml`), you can attempt to re-create it by
+:bulb: If you don't have the application manifest (`my-app-yaml`), you can attempt to re-create it by
 running `okctl scaffold application` and edit the values to match your existing application.
 
 To upgrade, start by downloading the latest version of okctl. See [install instructions](/getting-started/install.md).
@@ -57,9 +61,10 @@ okctl -c my-cluster.yaml apply application -f my-app.yaml
 
 Now, use your favourite git diff tool to get back what is specific for your application.
 
-In the example screenshot below, we're using Intellij to do the diff, and the newest version of okctl has
-changed `initialDelaySeconds` from `3` to `5`. So, you would apply those two changes. Additionaly, my application uses
-an environment variable `DSN`, so you would apply that change as well.
+In the example screenshot below, I'm using Intellij to do the diff. The newest version of okctl has
+changed `initialDelaySeconds` from `3` to `5`. So, I'll apply those two changes. Additionaly,
+since `okctl apply application` wrote this file from scratch, it didn't keep the environment variable `DSN` that my
+application needs. So I'll apply that change as well.
 
 ![okctl](/img/application-upgrade-diff.png)
 

@@ -41,9 +41,9 @@ git status -s # should return no output
 ```
 
 Then delete existing application manifests. This ensures that we delete files that okctl apply application doesn't
-produce anymore. You _can_ skip this command to get a simpler git diff below, but you should only do so if you know
-what you are doing (i.e. you know that `okctl apply application` doesn't produce fewer files than it did last time you
-ran `okctl apply application`).  
+produce anymore. You _can_ skip this command to get a simpler git diff below, but you should only do so if you know what
+you are doing (i.e. you know that `okctl apply application` doesn't produce fewer files than it did last time you
+ran `okctl apply application`).
 
 ```shell
 rm -rf infrastructure/application/my-app
@@ -57,13 +57,13 @@ okctl -c my-cluster.yaml apply application -f my-app.yaml
 
 Now, use your favourite git diff tool to get back what is specific for your application.
 
-In the following example: The newest version of okctl has changed `initialDelaySeconds` from `3` to `5`. So, you would
-apply those two changes. Additionaly, my application uses an environment variable `DSN`, so I'll apply that change as
-well.
+In the example screenshot below, we're using Intellij to do the diff, and the newest version of okctl has
+changed `initialDelaySeconds` from `3` to `5`. So, you would apply those two changes. Additionaly, my application uses
+an environment variable `DSN`, so you would apply that change as well.
 
-![okctl](userdocs/src/img/application-upgrade-diff.png)
+![okctl](/img/application-upgrade-diff.png)
 
-When you have reapplied all changes, all that is left is committing and pushing the changes, like any other change.
+When you have reapplied all changes, all that is left is committing and pushing the changes.
 
 ```shell
 git add .

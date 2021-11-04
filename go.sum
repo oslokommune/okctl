@@ -1154,8 +1154,8 @@ github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYr
 github.com/openzipkin/zipkin-go v0.2.5/go.mod h1:KpXfKdgRDnnhsxw4pNIH9Md5lyFqKUa4YDFlwRYAMyE=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
-github.com/oslokommune/okctl-metrics-service v0.1.4 h1:2rkP4iQsAKfhBRbrGB29bauwVJyGvpZy155A+Wjoexw=
-github.com/oslokommune/okctl-metrics-service v0.1.4/go.mod h1:yDjdZUm2AzQw/dQDhzcdCbm9KSoOq6NSdUXbOabFUmQ=
+github.com/oslokommune/okctl-metrics-service v0.1.5 h1:AoeDBAPUysL4UmdmxlJ/XSR1wMAK0RkMeTeI+ItUiKU=
+github.com/oslokommune/okctl-metrics-service v0.1.5/go.mod h1:yDjdZUm2AzQw/dQDhzcdCbm9KSoOq6NSdUXbOabFUmQ=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pascaldekloe/goe v0.1.0/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pborman/uuid v1.2.0/go.mod h1:X/NO0urCmaxf9VXbdlT7C2Yzkj2IKimNn4k+gtPdI/k=

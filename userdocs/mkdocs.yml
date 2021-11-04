@@ -22,6 +22,8 @@ nav:
       - 11. Delete cluster: getting-started/delete-cluster.md
   - Cluster:
       - Declaration reference: cluster/reference.md
+  - Application:
+      - Upgrading: application/upgrading.md
   - Building blocks:
       - buildingblocks/cloud.md
       - buildingblocks/github.md

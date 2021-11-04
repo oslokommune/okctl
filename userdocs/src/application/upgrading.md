@@ -71,7 +71,7 @@ application needs. So I'll apply that change as well.
 
 ![okctl](/img/application-upgrade-diff.png)
 
-When you have reapplied all changes for all files, all that is left is committing and pushing the changes.
+When you have reapplied all changes for all files, all that is left to do is committing and pushing the changes.
 
 ```shell
 git add .

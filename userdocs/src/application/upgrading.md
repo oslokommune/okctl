@@ -1,3 +1,6 @@
+TL;DR: To upgrade an application, download newest okctl, run `okctl apply application` and do a manual diff to get the
+updated values.
+
 Sometimes newer versions of okctl updates the way `okctl apply application` works. For example, the latest okctl version
 may create an application with better health checks than the old version.
 

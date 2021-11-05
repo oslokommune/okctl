@@ -73,8 +73,6 @@ MAKEDOC        := $(GOBIN)/makedoc
 STATIK         := $(GOBIN)/statik
 GOFUMPT        := $(GOBIN)/gofumpt
 
-# Deprecated: Use release-local instead.
-GORELEASER     := bin/goreleaser/v.0.154.0/$(OS)/goreleaser
 
 $(GOLANGCILINT):
 	# To bump, simply change the version at the end to the desired version. The git sha here points to the newest commit

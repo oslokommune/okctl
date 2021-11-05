@@ -117,7 +117,7 @@ release-local:
 	  -v $$PWD:/go/src/github.com/oslokommune/okctl \
 	  -v /var/run/docker.sock:/var/run/docker.sock \
 	  -w /go/src/github.com/oslokommune/okctl \
-	  ghcr.io/oslokommune/golang-cross:v1.17.3-4 release --config=/go/src/github.com/oslokommune/okctl/.goreleaser-local.yml --snapshot --skip-publish --rm-dist
+	  ghcr.io/oslokommune/golang-cross:latest release --config=/go/src/github.com/oslokommune/okctl/.goreleaser-local.yml --snapshot --skip-publish --rm-dist
 
 release:
 	 docker run --rm --privileged \

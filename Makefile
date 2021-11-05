@@ -186,3 +186,15 @@ test-coverage: fmt lint test-coverage-tools
 	@$(GOCOVMERGE) $(COVERAGE_DIR)/coverage/*.cover > $(COVERAGE_PROFILE)
 	@$(GO) tool cover -html=$(COVERAGE_PROFILE) -o $(COVERAGE_HTML)
 	@$(GOCOV) convert $(COVERAGE_PROFILE) | $(GOCOVXML) > $(COVERAGE_XML)
+
+## User documentation
+doc:
+	cd userdocs && python -m venv .venv
+
+	@echo
+	@echo Now run:
+	@echo
+	@echo cd userdocs
+	@echo source .venv/bin/activate
+	@echo pip install -r requirements.txt
+	@echo mkdocs serve

@@ -28,6 +28,7 @@ const (
 	DefaultStackNameS3Bucket                          = "s3bucket"
 	DefaultStackNameContainerRepository               = "containerrepository"
 	DefaultStackNameSecurityGroup                     = "sg"
+	DefaultStackNameDynamoDBTable                     = "dynamodb"
 )
 
 // StackNamer knows how to name cloud formation stacks
@@ -215,5 +216,15 @@ func (n *StackNamer) SecurityGroup(clusterName, securityGroupName string) string
 		DefaultStackNameSecurityGroup,
 		clusterName,
 		securityGroupName,
+	)
+}
+
+// DynamoDBTable returns the stack name of a DynamoDB table cfn stack
+func (n *StackNamer) DynamoDBTable(clusterName string, tableName string) string {
+	return fmt.Sprintf("%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameDynamoDBTable,
+		clusterName,
+		tableName,
 	)
 }

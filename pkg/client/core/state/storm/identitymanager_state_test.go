@@ -22,7 +22,10 @@ func TestIdentityPoolStateScenario(t *testing.T) {
 		assert.NoError(t, err)
 	}()
 
-	db := breeze.New(filepath.Join(dir, "storm.db"))
+	db := breeze.New()
+
+	db.SetDatabaseFilePath(filepath.Join(dir, "storm.db"))
+	db.SetWritable(true)
 
 	err = db.Init(&storm.IdentityPool{})
 	assert.NoError(t, err)
@@ -56,7 +59,10 @@ func TestIdentityPoolClientStateScenario(t *testing.T) {
 		assert.NoError(t, err)
 	}()
 
-	db := breeze.New(filepath.Join(dir, "storm.db"))
+	db := breeze.New()
+
+	db.SetDatabaseFilePath(filepath.Join(dir, "storm.db"))
+	db.SetWritable(true)
 
 	err = db.Init(&storm.IdentityPoolClient{})
 	assert.NoError(t, err)
@@ -89,7 +95,10 @@ func TestIdentityPoolUserStateScenario(t *testing.T) {
 		assert.NoError(t, err)
 	}()
 
-	db := breeze.New(filepath.Join(dir, "storm.db"))
+	db := breeze.New()
+
+	db.SetDatabaseFilePath(filepath.Join(dir, "storm.db"))
+	db.SetWritable(true)
 
 	err = db.Init(&storm.IdentityPoolUser{})
 	assert.NoError(t, err)

@@ -22,7 +22,10 @@ func TestKubePromStackStateScenario(t *testing.T) {
 		assert.NoError(t, err)
 	}()
 
-	db := breeze.New(filepath.Join(dir, "storm.db"))
+	db := breeze.New()
+
+	db.SetDatabaseFilePath(filepath.Join(dir, "storm.db"))
+	db.SetWritable(true)
 
 	err = db.Init(&storm.KubePromStack{})
 	assert.NoError(t, err)

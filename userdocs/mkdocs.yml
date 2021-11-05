@@ -36,6 +36,7 @@ nav:
       - Common issues: help/common-issues.md
       - FAQ: help/faq.md
       - Manually connecting to PostgreSQL: help/manually-connecting-to-postgres.md
+      - Manually handling state: help/manually-handling-state.md
       - Outdated common issues: help/outdated-common-issues.md
       - Running a Docker image in your cluster: help/docker-registry.md
       - Set up reference application full example: help/setup-reference-app.md

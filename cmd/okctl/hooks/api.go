@@ -1,4 +1,4 @@
-package preruns
+package hooks
 
 import (
 	"fmt"
@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// PreRunECombinator takes an arbitrary amount of preRunE functions and runs them all
-func PreRunECombinator(preRunEers ...PreRunEer) PreRunEer {
+// RunECombinator takes an arbitrary amount of preRunE functions and runs them all
+func RunECombinator(preRunEers ...RunEer) RunEer {
 	return func(cmd *cobra.Command, args []string) error {
 		for _, runEer := range preRunEers {
 			err := runEer(cmd, args)
@@ -24,7 +24,7 @@ func PreRunECombinator(preRunEers ...PreRunEer) PreRunEer {
 }
 
 // LoadUserData ensures the o.UserData is loaded or created
-func LoadUserData(o *okctl.Okctl) PreRunEer {
+func LoadUserData(o *okctl.Okctl) RunEer {
 	return func(cmd *cobra.Command, args []string) error {
 		userDataNotFound := load.CreateOnUserDataNotFoundWithNoInput()
 
@@ -35,7 +35,7 @@ func LoadUserData(o *okctl.Okctl) PreRunEer {
 }
 
 // InitializeMetrics initializes required metrics data
-func InitializeMetrics(o *okctl.Okctl) PreRunEer {
+func InitializeMetrics(o *okctl.Okctl) RunEer {
 	return func(cmd *cobra.Command, args []string) error {
 		metrics.SetUserAgent(o.UserState.Metrics.UserAgent)
 		metrics.SetMetricsOut(o.Out)
@@ -50,7 +50,7 @@ func InitializeMetrics(o *okctl.Okctl) PreRunEer {
 }
 
 // InitializeOkctl initializes the okctl instance
-func InitializeOkctl(o *okctl.Okctl) PreRunEer {
+func InitializeOkctl(o *okctl.Okctl) RunEer {
 	return func(cmd *cobra.Command, args []string) error {
 		err := o.Initialise()
 		if err != nil {

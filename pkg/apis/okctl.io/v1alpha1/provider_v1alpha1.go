@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront/cloudfrontiface"
 	"github.com/aws/aws-sdk-go/service/cloudwatch/cloudwatchiface"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/aws/aws-sdk-go/service/eks/eksiface"
 	"github.com/aws/aws-sdk-go/service/elbv2/elbv2iface"
@@ -34,6 +35,7 @@ type CloudProvider interface {
 	CloudFormation() cloudformationiface.CloudFormationAPI
 	CloudWatch() cloudwatchiface.CloudWatchAPI
 	ACM() acmiface.ACMAPI
+	DynamoDB() dynamodbiface.DynamoDBAPI
 	Region() string
 	PrincipalARN() string
 }

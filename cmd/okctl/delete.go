@@ -5,7 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/oslokommune/okctl/cmd/okctl/preruns"
+	"github.com/oslokommune/okctl/cmd/okctl/hooks"
 	"github.com/oslokommune/okctl/pkg/metrics"
 
 	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
@@ -53,15 +53,13 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 		Short: DeleteClusterShortDescription,
 		Long:  DeleteClusterLongDescription,
 		Args:  cobra.ExactArgs(deleteClusterArgs),
-		PreRunE: preruns.PreRunECombinator(
-			preruns.LoadUserData(o),
-			preruns.InitializeMetrics(o),
-			preruns.InitializeOkctl(o),
-			func(cmd *cobra.Command, args []string) error {
-				metrics.Publish(generateStartEvent(metrics.ActionDeleteCluster))
-
-				return nil
-			},
+		PreRunE: hooks.RunECombinator(
+			hooks.LoadUserData(o),
+			hooks.InitializeMetrics(o),
+			hooks.EmitStartCommandExecutionEvent(metrics.ActionDeleteCluster),
+			hooks.InitializeOkctl(o),
+			hooks.AcquireStateLock(o),
+			hooks.DownloadState(o, true),
 		),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			var spinnerWriter io.Writer
@@ -123,13 +121,16 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("synchronizing declaration with state: %w", err)
 			}
 
-			return nil
-		},
-		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(generateEndEvent(metrics.ActionDeleteCluster))
+			err = hooks.PurgeRemoteState(o)(cmd, nil)
+			if err != nil {
+				return fmt.Errorf("purging remote state: %w", err)
+			}
 
 			return nil
 		},
+		PostRunE: hooks.RunECombinator(
+			hooks.EmitEndCommandExecutionEvent(metrics.ActionDeleteCluster),
+		),
 	}
 
 	flags := cmd.Flags()

@@ -119,6 +119,11 @@ func TestBuilderAndComposers(t *testing.T) {
 			golden:   "s3-bucket.yaml",
 			composer: components.NewS3BucketComposer("myBucket", "S3Bucket"),
 		},
+		{
+			name:     "DynamoDB composer",
+			golden:   "dynamodb.yaml",
+			composer: components.NewDynamoDBTableComposer("myTable", "myID"),
+		},
 	}
 
 	for _, tc := range testCases {

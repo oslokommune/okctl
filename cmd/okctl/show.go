@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/oslokommune/okctl/cmd/okctl/preruns"
+	"github.com/oslokommune/okctl/cmd/okctl/hooks"
 	"github.com/oslokommune/okctl/pkg/metrics"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
@@ -47,13 +47,13 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 		Short: ShowShortDescription,
 		Long:  ShowLongDescription,
 		Args:  cobra.ExactArgs(showCredentialsArgs),
-		PreRunE: preruns.PreRunECombinator(
-			preruns.LoadUserData(o),
-			preruns.InitializeMetrics(o),
-			preruns.InitializeOkctl(o),
+		PreRunE: hooks.RunECombinator(
+			hooks.LoadUserData(o),
+			hooks.InitializeMetrics(o),
+			hooks.EmitStartCommandExecutionEvent(metrics.ActionShowCredentials),
+			hooks.InitializeOkctl(o),
+			hooks.DownloadState(o, false),
 			func(_ *cobra.Command, args []string) error {
-				metrics.Publish(generateStartEvent(metrics.ActionShowCredentials))
-
 				okctlEnvironment, err = commands.GetOkctlEnvironment(o, declarationPath)
 				if err != nil {
 					return err
@@ -143,11 +143,10 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 
 			return err
 		},
-		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(generateEndEvent(metrics.ActionShowCredentials))
-
-			return nil
-		},
+		PostRunE: hooks.RunECombinator(
+			hooks.ClearLocalState(o),
+			hooks.EmitEndCommandExecutionEvent(metrics.ActionShowCredentials),
+		),
 	}
 
 	return cmd

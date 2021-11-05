@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/middleware/logger"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 
 	"github.com/mishudark/errors"
@@ -52,11 +54,14 @@ func (c *HTTPClient) DoDelete(endpoint string, body interface{}) error {
 // Do performs the request
 // nolint: funlen
 func (c *HTTPClient) Do(method, endpoint string, body interface{}, into interface{}) error {
-	if c.Debug {
-		_, err := fmt.Fprintf(c.Progress, "client (method: %s, endpoint: %s) starting request: %s", method, endpoint, litter.Sdump(body))
-		if err != nil {
-			return fmt.Errorf("failed to write debug output: %w", err)
-		}
+	err := debugPrintRequest(debugPrintMeta{
+		Debug:    c.Debug,
+		Writer:   c.Progress,
+		Method:   method,
+		Endpoint: endpoint,
+	}, body)
+	if err != nil {
+		return fmt.Errorf("printing request debug information: %w", err)
 	}
 
 	data, err := json.Marshal(body)
@@ -103,11 +108,14 @@ func (c *HTTPClient) Do(method, endpoint string, body interface{}, into interfac
 		}
 	}
 
-	if c.Debug {
-		_, err = io.Copy(c.Progress, strings.NewReader(string(out)))
-		if err != nil {
-			return fmt.Errorf("%s: %w", pretty("failed to write progress for", method, endpoint), err)
-		}
+	err = debugPrintResponse(debugPrintMeta{
+		Debug:    c.Debug,
+		Writer:   c.Progress,
+		Method:   method,
+		Endpoint: endpoint,
+	}, out, into)
+	if err != nil {
+		return fmt.Errorf("printing response debug information: %w", err)
 	}
 
 	return nil
@@ -149,4 +157,64 @@ func deserializeErrorPayload(jsonContent []byte) error {
 	}
 
 	return errors.E(errors.New(data.Error), data.Code, data.Detail)
+}
+
+type debugPrintMeta struct {
+	Debug    bool
+	Writer   io.Writer
+	Method   string
+	Endpoint string
+}
+
+func debugPrintResponse(meta debugPrintMeta, out []byte, into interface{}) (err error) {
+	if !meta.Debug {
+		return nil
+	}
+
+	rawInto := out
+
+	if anonymizeResponse, ok := into.(logger.AnonymizeResponseLogger); ok {
+		redacted := anonymizeResponse.AnonymizeResponse(into)
+
+		rawInto, err = json.Marshal(redacted)
+		if err != nil {
+			return fmt.Errorf("marshalling redacted response: %w", err)
+		}
+	}
+
+	_, err = io.Copy(meta.Writer, strings.NewReader(string(rawInto)))
+	if err != nil {
+		return fmt.Errorf(
+			"%s: %w",
+			pretty("failed to write progress for", meta.Method, meta.Endpoint),
+			err,
+		)
+	}
+
+	return nil
+}
+
+func debugPrintRequest(meta debugPrintMeta, body interface{}) error {
+	if !meta.Debug {
+		return nil
+	}
+
+	bodyAsString := litter.Sdump(body)
+
+	if anonymizeRequest, ok := body.(logger.AnonymizeRequestLogger); ok {
+		bodyAsString = litter.Sdump(anonymizeRequest.AnonymizeRequest(body))
+	}
+
+	_, err := fmt.Fprintf(
+		meta.Writer,
+		"client (method: %s, endpoint: %s) starting request: %s",
+		meta.Method,
+		meta.Endpoint,
+		bodyAsString,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to write debug output: %w", err)
+	}
+
+	return nil
 }

@@ -1001,6 +1001,7 @@ type S3API struct {
 
 	PutObjectFn    func(*s3.PutObjectInput) (*s3.PutObjectOutput, error)
 	DeleteObjectFn func(*s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error)
+	GetObjectFn    func(*s3.GetObjectInput) (*s3.GetObjectOutput, error)
 }
 
 // DeleteObject mocks the invocation
@@ -1011,6 +1012,11 @@ func (a *S3API) DeleteObject(input *s3.DeleteObjectInput) (*s3.DeleteObjectOutpu
 // PutObject mocks the invocation
 func (a *S3API) PutObject(input *s3.PutObjectInput) (*s3.PutObjectOutput, error) {
 	return a.PutObjectFn(input)
+}
+
+// GetObject mocks the invocation
+func (a *S3API) GetObject(input *s3.GetObjectInput) (*s3.GetObjectOutput, error) {
+	return a.GetObjectFn(input)
 }
 
 // SMAPI mocks the SecretsManager API
@@ -1460,6 +1466,9 @@ func NewGoodCloudProvider() *CloudProvider {
 			DeleteObjectFn: func(*s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error) {
 				return &s3.DeleteObjectOutput{}, nil
 			},
+			GetObjectFn: func(*s3.GetObjectInput) (*s3.GetObjectOutput, error) {
+				return &s3.GetObjectOutput{}, nil
+			},
 		},
 		SMAPI: &SMAPI{
 			RotateSecretFn: func(*secretsmanager.RotateSecretInput) (*secretsmanager.RotateSecretOutput, error) {
@@ -1599,6 +1608,9 @@ func NewBadCloudProvider() *CloudProvider {
 				return nil, errBad
 			},
 			DeleteObjectFn: func(*s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error) {
+				return nil, errBad
+			},
+			GetObjectFn: func(*s3.GetObjectInput) (*s3.GetObjectOutput, error) {
 				return nil, errBad
 			},
 		},

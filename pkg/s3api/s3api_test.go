@@ -80,3 +80,38 @@ func TestS3APIDeleteObject(t *testing.T) {
 		})
 	}
 }
+
+func TestS3API_GetObject(t *testing.T) {
+	testCases := []struct {
+		name      string
+		provider  v1alpha1.CloudProvider
+		expect    interface{}
+		expectErr bool
+	}{
+		{
+			name:     "Should work",
+			provider: mock.NewGoodCloudProvider(),
+		},
+		{
+			name:      "Should fail",
+			provider:  mock.NewBadCloudProvider(),
+			expect:    "something bad",
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := s3api.New(tc.provider).GetObject("bucket", "key")
+
+			if tc.expectErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expect, err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}

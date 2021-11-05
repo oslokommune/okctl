@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/oslokommune/okctl/cmd/okctl/preruns"
+	"github.com/oslokommune/okctl/cmd/okctl/hooks"
 	"github.com/oslokommune/okctl/pkg/metrics"
 
 	"github.com/oslokommune/okctl/pkg/spinner"
@@ -45,12 +45,13 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 		Use:   "application",
 		Short: ApplyApplicationShortDescription,
 		Args:  cobra.ExactArgs(requiredApplyApplicationArguments),
-		PreRunE: preruns.PreRunECombinator(
-			preruns.InitializeMetrics(o),
-			preruns.InitializeOkctl(o),
+		PreRunE: hooks.RunECombinator(
+			hooks.InitializeMetrics(o),
+			hooks.EmitStartCommandExecutionEvent(metrics.ActionApplyApplication),
+			hooks.InitializeOkctl(o),
+			hooks.AcquireStateLock(o),
+			hooks.DownloadState(o, true),
 			func(cmd *cobra.Command, args []string) (err error) {
-				metrics.Publish(generateStartEvent(metrics.ActionApplyApplication))
-
 				err = commands.ValidateBinaryEqualsClusterVersion(o)
 				if err != nil {
 					return err
@@ -107,11 +108,12 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				Cluster:     *o.Declaration,
 			})
 		},
-		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(generateEndEvent(metrics.ActionApplyApplication))
-
-			return nil
-		},
+		PostRunE: hooks.RunECombinator(
+			hooks.UploadState(o),
+			hooks.ClearLocalState(o),
+			hooks.ReleaseStateLock(o),
+			hooks.EmitEndCommandExecutionEvent(metrics.ActionApplyApplication),
+		),
 	}
 
 	cmd.Flags().StringVarP(&opts.File, "file", "f", "", "Specify the file path. Use \"-\" for stdin")

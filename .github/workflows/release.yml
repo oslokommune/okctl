@@ -2,8 +2,6 @@ name: goreleaser
 
 on:
   push:
-    branches:
-      - GoRelease
     tags:
       - '*'
 
@@ -39,4 +37,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}
           RELEASE_NOTES: docs/release_notes/${{ steps.tagName.outputs.tag }}.md
-          ARGS:  --skip-validate --skip-publish

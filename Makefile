@@ -127,7 +127,7 @@ release:
 	  -v /var/run/docker.sock:/var/run/docker.sock \
 	  -w /go/src/github.com/oslokommune/okctl \
 	  -e GITHUB_TOKEN \
-	  ghcr.io/gythialy/golang-cross-builder:v1.17.2-2 release --rm-dist --release-notes=$(RELEASE_NOTES) --config=/go/src/github.com/oslokommune/okctl/.goreleaser.yml $ARGS
+	  ghcr.io/gythialy/golang-cross-builder:v1.17.2-2 release --rm-dist --release-notes=$(RELEASE_NOTES) --config=/go/src/github.com/oslokommune/okctl/.goreleaser.yml $$ARGS
 
 ## Generate
 generate: $(STATIK)

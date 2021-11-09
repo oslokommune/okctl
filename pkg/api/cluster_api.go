@@ -50,10 +50,29 @@ func (o *ClusterDeleteOpts) Validate() error {
 	)
 }
 
+// ClusterSecurityGroupIDGetOpts specifies the required inputs for getting the cluster's security group
+type ClusterSecurityGroupIDGetOpts struct {
+	ID ID
+}
+
+// ClusterSecurityGroupID contains an EKS cluster's cluster security group ID
+// See https://docs.aws.amazon.com/eks/latest/userguide/sec-group-reqs.html
+type ClusterSecurityGroupID struct {
+	Value string
+}
+
+// Validate the delete inputs
+func (o *ClusterSecurityGroupIDGetOpts) Validate() error {
+	return validation.ValidateStruct(o,
+		validation.Field(&o.ID, validation.Required),
+	)
+}
+
 // ClusterService provides an interface for the business logic when working with clusters
 type ClusterService interface {
 	CreateCluster(context.Context, ClusterCreateOpts) (*Cluster, error)
 	DeleteCluster(context.Context, ClusterDeleteOpts) error
+	GetClusterSecurityGroupID(context.Context, ClusterSecurityGroupIDGetOpts) (*ClusterSecurityGroupID, error)
 }
 
 // ClusterRun provides an interface for running CLIs

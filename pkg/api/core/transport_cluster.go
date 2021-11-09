@@ -29,3 +29,14 @@ func decodeClusterDeleteRequest(_ context.Context, r *http.Request) (interface{}
 
 	return cluster, nil
 }
+
+func decodeGetClusterSecurityGroupIDRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var opts api.ClusterSecurityGroupIDGetOpts
+
+	err := json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}

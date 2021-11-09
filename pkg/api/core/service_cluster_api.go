@@ -3,13 +3,17 @@ package core
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 )
 
 type clusterService struct {
-	run api.ClusterRun
+	run           api.ClusterRun
+	cloudProvider v1alpha1.CloudProvider
 }
 
 func (s *clusterService) CreateCluster(_ context.Context, opts api.ClusterCreateOpts) (*api.Cluster, error) {
@@ -40,9 +44,27 @@ func (s *clusterService) DeleteCluster(_ context.Context, opts api.ClusterDelete
 	return nil
 }
 
+// GetClusterSecurityGroupID returns the EKS cluster's security group ID.
+// See https://docs.aws.amazon.com/eks/latest/userguide/sec-group-reqs.html
+func (s *clusterService) GetClusterSecurityGroupID(
+	ctx context.Context, opts api.ClusterSecurityGroupIDGetOpts,
+) (*api.ClusterSecurityGroupID, error) {
+	cluster, err := s.cloudProvider.EKS().DescribeClusterWithContext(ctx, &eks.DescribeClusterInput{
+		Name: &opts.ID.ClusterName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("describing cluster: %w", err)
+	}
+
+	return &api.ClusterSecurityGroupID{
+		Value: *cluster.Cluster.ResourcesVpcConfig.ClusterSecurityGroupId,
+	}, nil
+}
+
 // NewClusterService returns a service operator for the clusterService operations
-func NewClusterService(run api.ClusterRun) api.ClusterService {
+func NewClusterService(run api.ClusterRun, cloudProvider v1alpha1.CloudProvider) api.ClusterService {
 	return &clusterService{
-		run: run,
+		run:           run,
+		cloudProvider: cloudProvider,
 	}
 }

@@ -3,8 +3,6 @@ package core
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
@@ -53,7 +51,7 @@ func (s *clusterService) GetClusterSecurityGroupID(
 		Name: &opts.ID.ClusterName,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("describing cluster: %w", err)
+		return nil, errors.E(err, "describing cluster", errors.Internal)
 	}
 
 	return &api.ClusterSecurityGroupID{

@@ -26,7 +26,7 @@ func (a *clusterAPI) DeleteCluster(opts api.ClusterDeleteOpts) error {
 
 func (a *clusterAPI) GetClusterSecurityGroupID(opts api.ClusterSecurityGroupIDGetOpts) (*api.ClusterSecurityGroupID, error) {
 	id := &api.ClusterSecurityGroupID{}
-	return id, a.client.DoGet(ClusterSecurityGroupIDTarget, &opts, &id)
+	return id, a.client.DoGet(ClusterSecurityGroupIDTarget, &opts, id)
 }
 
 // NewClusterAPI returns an initialised cluster API

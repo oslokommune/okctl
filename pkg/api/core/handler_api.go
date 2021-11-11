@@ -200,7 +200,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 	return &Handlers{
 		CreateCluster:                   newServer(endpoints.CreateCluster, decodeClusterCreateRequest),
 		DeleteCluster:                   newServer(endpoints.DeleteCluster, decodeClusterDeleteRequest),
-		GetClusterSecurityGroupID:       newServer(endpoints.GetClusterSecurityGroupID, decodeGetClusterSecurityGroupIDRequest),
+		GetClusterSecurityGroupID:       newServer(endpoints.GetClusterSecurityGroupID, decodeStructRequest(&api.ClusterSecurityGroupIDGetOpts{})),
 		CreateVpc:                       newServer(endpoints.CreateVpc, decodeVpcCreateRequest),
 		DeleteVpc:                       newServer(endpoints.DeleteVpc, decodeVpcDeleteRequest),
 		CreateExternalDNSKubeDeployment: newServer(endpoints.CreateExternalDNSKubeDeployment, decodeCreateExternalDNSKubeDeployment),

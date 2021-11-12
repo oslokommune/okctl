@@ -70,7 +70,7 @@ func MakeEndpoints(s Services) Endpoints {
 	return Endpoints{
 		CreateCluster:                   makeCreateClusterEndpoint(s.Cluster),
 		DeleteCluster:                   makeDeleteClusterEndpoint(s.Cluster),
-		GetClusterSecurityGroupID:       makeGetClusterSecurityGroupID(s.Cluster),
+		GetClusterSecurityGroupID:       makeGetClusterSecurityGroupIDEndpoint(s.Cluster),
 		CreateVpc:                       makeCreateVpcEndpoint(s.Vpc),
 		DeleteVpc:                       makeDeleteVpcEndpoint(s.Vpc),
 		CreateExternalDNSKubeDeployment: makeCreateExternalDNSKubeDeploymentEndpoint(s.Kube),

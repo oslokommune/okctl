@@ -256,10 +256,10 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/clusters", func(r chi.Router) {
 			r.Method(http.MethodPost, "/", handlers.CreateCluster)
 			r.Method(http.MethodDelete, "/", handlers.DeleteCluster)
-		})
 
-		r.Route("/clustersecuritygroupid", func(r chi.Router) {
-			r.Method(http.MethodGet, "/", handlers.GetClusterSecurityGroupID)
+			r.Route("/clustersecuritygroupid", func(r chi.Router) {
+				r.Method(http.MethodGet, "/", handlers.GetClusterSecurityGroupID)
+			})
 		})
 
 		r.Route("/vpcs", func(r chi.Router) {

@@ -9,7 +9,7 @@ import (
 const ClusterTarget = "clusters/"
 
 // ClusterSecurityGroupIDTarget is the API route for HTTP requests
-const ClusterSecurityGroupIDTarget = "clustersecuritygroupid/"
+const ClusterSecurityGroupIDTarget = ClusterTarget + "clustersecuritygroupid/"
 
 type clusterAPI struct {
 	client *HTTPClient

@@ -70,8 +70,18 @@ func (o *ClusterSecurityGroupIDGetOpts) Validate() error {
 
 // ClusterService provides an interface for the business logic when working with clusters
 type ClusterService interface {
+	ClusterCruder
+	ClusterDetailer
+}
+
+// ClusterCruder knows how to create and delete clusters
+type ClusterCruder interface {
 	CreateCluster(context.Context, ClusterCreateOpts) (*Cluster, error)
 	DeleteCluster(context.Context, ClusterDeleteOpts) error
+}
+
+// ClusterDetailer knows how to get details about a cluster
+type ClusterDetailer interface {
 	GetClusterSecurityGroupID(context.Context, *ClusterSecurityGroupIDGetOpts) (*ClusterSecurityGroupID, error)
 }
 

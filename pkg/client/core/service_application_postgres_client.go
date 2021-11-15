@@ -134,7 +134,7 @@ func (a *applicationPostgresService) RemovePostgresFromApplication(ctx context.C
 
 // HasPostgresIntegration knows if an application has an existing integration with a database
 func (a *applicationPostgresService) HasPostgresIntegration(ctx context.Context, opts client.HasPostgresIntegrationOpts) (bool, error) {
-	sg, err := a.securityGroupAPI.GetSecurityGroup(ctx, api.GetSecurityGroupOpts{
+	appSecurityGroup, err := a.securityGroupAPI.GetSecurityGroup(ctx, api.GetSecurityGroupOpts{
 		Name:        opts.Application.Metadata.Name,
 		ClusterName: opts.Cluster.Metadata.Name,
 	})
@@ -159,11 +159,16 @@ func (a *applicationPostgresService) HasPostgresIntegration(ctx context.Context,
 		return false, fmt.Errorf("acquiring patch: %w", err)
 	}
 
-	return patch.HasOperation(jsonpatch.Operation{
-		Type:  jsonpatch.OperationTypeAdd,
-		Path:  "/spec/securityGroups/groupIds/0",
-		Value: sg.ID,
-	}), nil
+	clusterID := clusterMetaAsID(opts.Cluster.Metadata)
+
+	clusterSecurityGroupID, err := a.clusterService.GetClusterSecurityGroupID(ctx, client.GetClusterSecurityGroupIDOpts{
+		ID: clusterID,
+	})
+	if err != nil {
+		return false, fmt.Errorf("getting cluster security group ID: %w", err)
+	}
+
+	return patch.HasOperations(a.newSecurityGroupPatchOperations(clusterSecurityGroupID.Value, appSecurityGroup)), nil
 }
 
 func (a *applicationPostgresService) allowTrafficFromAppToRDS(ctx context.Context, opts client.AddPostgresToApplicationOpts, appSecurityGroup api.SecurityGroup) error {
@@ -243,18 +248,7 @@ func (a *applicationPostgresService) generateSecurityGroupPolicyManifest(
 		ClusterName:     cluster.Metadata.Name,
 		Kind:            v1beta1.SecurityGroupPolicyKind,
 		Patch: jsonpatch.Patch{
-			Operations: []jsonpatch.Operation{
-				{
-					Type:  jsonpatch.OperationTypeAdd,
-					Path:  "/spec/securityGroups/groupIds/0",
-					Value: clusterSecurityGroupID,
-				},
-				{
-					Type:  jsonpatch.OperationTypeAdd,
-					Path:  "/spec/securityGroups/groupIds/1",
-					Value: appSecurityGroup.ID,
-				},
-			},
+			Operations: a.newSecurityGroupPatchOperations(clusterSecurityGroupID, appSecurityGroup),
 		},
 	})
 	if err != nil {
@@ -262,6 +256,24 @@ func (a *applicationPostgresService) generateSecurityGroupPolicyManifest(
 	}
 
 	return nil
+}
+
+func (a *applicationPostgresService) newSecurityGroupPatchOperations(
+	clusterSecurityGroupID string,
+	appSecurityGroup api.SecurityGroup,
+) []jsonpatch.Operation {
+	return []jsonpatch.Operation{
+		{
+			Type:  jsonpatch.OperationTypeAdd,
+			Path:  "/spec/securityGroups/groupIds/0",
+			Value: clusterSecurityGroupID,
+		},
+		{
+			Type:  jsonpatch.OperationTypeAdd,
+			Path:  "/spec/securityGroups/groupIds/1",
+			Value: appSecurityGroup.ID,
+		},
+	}
 }
 
 // ref: https://aws.amazon.com/blogs/containers/introducing-security-groups-for-pods/

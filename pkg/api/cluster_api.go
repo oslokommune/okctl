@@ -72,7 +72,7 @@ func (o *ClusterSecurityGroupIDGetOpts) Validate() error {
 type ClusterService interface {
 	CreateCluster(context.Context, ClusterCreateOpts) (*Cluster, error)
 	DeleteCluster(context.Context, ClusterDeleteOpts) error
-	GetClusterSecurityGroupID(context.Context, ClusterSecurityGroupIDGetOpts) (*ClusterSecurityGroupID, error)
+	GetClusterSecurityGroupID(context.Context, *ClusterSecurityGroupIDGetOpts) (*ClusterSecurityGroupID, error)
 }
 
 // ClusterRun provides an interface for running CLIs

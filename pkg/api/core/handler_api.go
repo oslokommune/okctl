@@ -391,6 +391,7 @@ type EndpointOption func(Endpoints) Endpoints
 
 const (
 	clusterTag             = "clusterService"
+	securityGroupIDTag     = "securityGroupID"
 	vpcTag                 = "vpc"
 	managedPoliciesTag     = "managedPolicies"
 	externalSecretsTag     = "externalSecrets"
@@ -429,7 +430,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 		return Endpoints{
 			CreateCluster:                   logmd.Logging(logger, "create", clusterTag)(endpoints.CreateCluster),
 			DeleteCluster:                   logmd.Logging(logger, "delete", clusterTag)(endpoints.DeleteCluster),
-			GetClusterSecurityGroupID:       logmd.Logging(logger, "get", clusterTag, "securityGroupID")(endpoints.GetClusterSecurityGroupID),
+			GetClusterSecurityGroupID:       logmd.Logging(logger, "get", clusterTag, securityGroupIDTag)(endpoints.GetClusterSecurityGroupID),
 			CreateVpc:                       logmd.Logging(logger, "create", vpcTag)(endpoints.CreateVpc),
 			DeleteVpc:                       logmd.Logging(logger, "delete", vpcTag)(endpoints.DeleteVpc),
 			CreateExternalDNSKubeDeployment: logmd.Logging(logger, "create", kubeTag, externalDNSTag)(endpoints.CreateExternalDNSKubeDeployment),

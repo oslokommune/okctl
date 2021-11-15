@@ -80,7 +80,7 @@ func TestGetClusterSecurityGroupId(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			clusterSecurityGroupID, err := tc.service.GetClusterSecurityGroupID(context.Background(), tc.opts)
+			clusterSecurityGroupID, err := tc.service.GetClusterSecurityGroupID(context.Background(), &tc.opts)
 
 			if tc.expectError {
 				assert.Error(t, err)

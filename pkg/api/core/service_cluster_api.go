@@ -3,6 +3,7 @@ package core
 
 import (
 	"context"
+
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
@@ -45,7 +46,7 @@ func (s *clusterService) DeleteCluster(_ context.Context, opts api.ClusterDelete
 // GetClusterSecurityGroupID returns the EKS cluster's security group ID.
 // See https://docs.aws.amazon.com/eks/latest/userguide/sec-group-reqs.html
 func (s *clusterService) GetClusterSecurityGroupID(
-	ctx context.Context, opts api.ClusterSecurityGroupIDGetOpts,
+	ctx context.Context, opts *api.ClusterSecurityGroupIDGetOpts,
 ) (*api.ClusterSecurityGroupID, error) {
 	cluster, err := s.cloudProvider.EKS().DescribeClusterWithContext(ctx, &eks.DescribeClusterInput{
 		Name: &opts.ID.ClusterName,

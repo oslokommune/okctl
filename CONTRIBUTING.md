@@ -22,7 +22,7 @@ Parts of this contributing guide has been borrowed from the excellent [eksctl](h
 
 This project is written in Go. To be able to contribute you will need:
 
-1. A working Go installation of Go >= 1.14. You can check the
+1. A working Go installation of Go >= 1.16. You can check the
 [official installation guide](https://golang.org/doc/install).
 
 2. Make sure that `$(go env GOPATH)/bin` is in your shell's `PATH`. You can do so by

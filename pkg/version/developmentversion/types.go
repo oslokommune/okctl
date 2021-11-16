@@ -1,4 +1,4 @@
-package github
+package developmentversion
 
 import "github.com/google/go-github/v32/github"
 

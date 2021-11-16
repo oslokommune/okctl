@@ -1,30 +1,23 @@
 package version
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-
-	"github.com/oslokommune/okctl/pkg/version/github"
+	"github.com/oslokommune/okctl/pkg/version/developmentversion"
+	"github.com/oslokommune/okctl/pkg/version/types"
 )
 
 // GetVersionInfo returns the current version
-func GetVersionInfo() Info {
+func GetVersionInfo() types.Info {
 	var semanticVersion string
 
 	if Version == devVersion {
-		v, err := github.FetchVersion(context.Background())
-		if err != nil {
-			semanticVersion = "0.0.10"
-			fmt.Printf("Warning: Could not get version, using hard coded version '%s' instead\n", semanticVersion)
-		} else {
-			semanticVersion = v.String()
-		}
+		semanticVersion = developmentversion.GetVersionInfo()
 	} else {
 		semanticVersion = Version
 	}
 
-	return Info{
+	return types.Info{
 		Version:     semanticVersion,
 		ShortCommit: ShortCommit,
 		BuildDate:   BuildDate,

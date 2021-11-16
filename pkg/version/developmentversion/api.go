@@ -1,5 +1,5 @@
 // Package github knows how to fetch a version from github
-package github
+package developmentversion
 
 import (
 	"context"
@@ -11,23 +11,34 @@ import (
 	"github.com/google/go-github/v32/github"
 )
 
-var cachedVersion *semver.Version //nolint:gochecknoglobals // Ignoring global since version.GetVersionInfo() is global already
+var cachedVersion string //nolint:gochecknoglobals // Ignoring global since version.GetVersionInfo() is global already
 
-// FetchVersion fetches the latest version from GitHub
-func FetchVersion(ctx context.Context) (*semver.Version, error) {
-	if cachedVersion != nil {
+// GetVersionInfo returns the current version
+func GetVersionInfo() string {
+	if len(cachedVersion) > 0 {
 		fmt.Println("Using cache")
-		return cachedVersion, nil
+		return cachedVersion
 	}
 
-	var err error
-	cachedVersion, err = doFetchVersion(ctx)
+	cachedVersion = getGithubOrHardCodedVersion()
 
-	return cachedVersion, err
+	return cachedVersion
 }
 
-func doFetchVersion(ctx context.Context) (*semver.Version, error) {
-	releases, err := listReleases(ctx, "oslokommune", "okctl")
+func getGithubOrHardCodedVersion() string {
+	ver, err := doFetchVersion()
+	if err != nil {
+		hardCodedVersion := "0.0.10"
+		fmt.Printf("Warning: Could not get version, using hard coded version '%s' instead\n", hardCodedVersion)
+
+		return hardCodedVersion
+	}
+
+	return ver.String()
+}
+
+func doFetchVersion() (*semver.Version, error) {
+	releases, err := listReleases(context.Background(), "oslokommune", "okctl")
 	if err != nil {
 		return nil, fmt.Errorf("listing releases: %w", err)
 	}

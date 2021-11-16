@@ -1,4 +1,4 @@
-package version
+package types
 
 // Info contains the version information
 type Info struct {

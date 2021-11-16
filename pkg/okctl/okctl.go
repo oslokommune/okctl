@@ -300,6 +300,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		rest.NewSecurityGroupAPI(o.restClient),
 		vpcService,
 		rest.NewApplicationPostgresIntegrationAPI(o.restClient),
+		clusterService,
 	)
 
 	monitoringService := clientCore.NewMonitoringService(
@@ -436,6 +437,7 @@ func (o *Okctl) initialise() error {
 			o.BinariesProvider,
 			o.CloudProvider,
 		),
+		o.CloudProvider,
 	)
 
 	managedPolicyService := core.NewManagedPolicyService(awsProvider.NewManagedPolicyCloudProvider(o.CloudProvider))

@@ -31,16 +31,23 @@ type ClusterDeleteOpts struct {
 	FargateProfileName string
 }
 
-// ClusterService orchestrates the creation of a cluster
+// GetClusterSecurityGroupIDOpts specifies the required inputs for getting a cluster
+type GetClusterSecurityGroupIDOpts struct {
+	ID api.ID
+}
+
+// ClusterService manages a cluster
 type ClusterService interface {
 	CreateCluster(context.Context, ClusterCreateOpts) (*Cluster, error)
 	DeleteCluster(context.Context, ClusterDeleteOpts) error
+	GetClusterSecurityGroupID(ctx context.Context, opts GetClusterSecurityGroupIDOpts) (*api.ClusterSecurityGroupID, error)
 }
 
 // ClusterAPI invokes the API calls for creating a cluster
 type ClusterAPI interface {
 	CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, error)
 	DeleteCluster(opts api.ClusterDeleteOpts) error
+	GetClusterSecurityGroupID(opts api.ClusterSecurityGroupIDGetOpts) (*api.ClusterSecurityGroupID, error)
 }
 
 // ClusterState implements the state layer

@@ -33,6 +33,7 @@ type applicationPostgresService struct {
 	securityGroupAPI       client.SecurityGroupAPI
 	vpcService             client.VPCService
 	applicationPostgresAPI client.ApplicationPostgresAPI
+	clusterService         client.ClusterService
 }
 
 // AddPostgresToApplication does the required steps for allowing EKS pod to RDS traffic
@@ -52,7 +53,7 @@ func (a *applicationPostgresService) AddPostgresToApplication(ctx context.Contex
 		return fmt.Errorf("fetching database: %w", err)
 	}
 
-	securityGroup, err := a.securityGroupAPI.CreateSecurityGroup(ctx, api.CreateSecurityGroupOpts{
+	appSecurityGroup, err := a.securityGroupAPI.CreateSecurityGroup(ctx, api.CreateSecurityGroupOpts{
 		ClusterID:     clusterID,
 		VPCID:         vpc.VpcID,
 		Name:          opts.Application.Metadata.Name,
@@ -64,33 +65,14 @@ func (a *applicationPostgresService) AddPostgresToApplication(ctx context.Contex
 		return fmt.Errorf("creating security group: %w", err)
 	}
 
-	stackName := cfn.NewStackNamer().RDSPostgres(opts.DatabaseName, opts.Cluster.Metadata.Name)
-
-	resourceName := components.NewRDSPostgresComposer(components.RDSPostgresComposerOpts{
-		ApplicationDBName: opts.DatabaseName,
-		ClusterName:       opts.Cluster.Metadata.Name,
-	}).CloudFormationResourceName("RDSPostgresIncoming")
-
-	err = a.generateSecurityGroupPolicy(ctx, opts.Cluster, opts.Application, securityGroup)
+	err = a.allowTrafficFromAppToRDS(ctx, opts, appSecurityGroup)
 	if err != nil {
-		return fmt.Errorf("generating security group policy: %w", err)
+		return fmt.Errorf("allowing traffic to RDS: %w", err)
 	}
 
-	_, err = a.securityGroupAPI.AddRule(ctx, api.AddRuleOpts{
-		ClusterName:               opts.Cluster.Metadata.Name,
-		SecurityGroupStackName:    stackName,
-		SecurityGroupResourceName: resourceName,
-		RuleType:                  api.RuleTypeIngress,
-		Rule: api.Rule{
-			Description:           fmt.Sprintf("Allow postgres traffic from %s", opts.Application.Metadata.Name),
-			FromPort:              postgresPort,
-			ToPort:                postgresPort,
-			Protocol:              api.RuleProtocolTCP,
-			SourceSecurityGroupID: securityGroup.ID,
-		},
-	})
+	err = a.createSecurityGroupPolicy(ctx, opts, appSecurityGroup)
 	if err != nil {
-		return fmt.Errorf("adding incoming rule for database security group: %w", err)
+		return fmt.Errorf("creating security group policy: %w", err)
 	}
 
 	err = a.disableEarlyTCPDemux(ctx, clusterID)
@@ -152,7 +134,7 @@ func (a *applicationPostgresService) RemovePostgresFromApplication(ctx context.C
 
 // HasPostgresIntegration knows if an application has an existing integration with a database
 func (a *applicationPostgresService) HasPostgresIntegration(ctx context.Context, opts client.HasPostgresIntegrationOpts) (bool, error) {
-	sg, err := a.securityGroupAPI.GetSecurityGroup(ctx, api.GetSecurityGroupOpts{
+	appSecurityGroup, err := a.securityGroupAPI.GetSecurityGroup(ctx, api.GetSecurityGroupOpts{
 		Name:        opts.Application.Metadata.Name,
 		ClusterName: opts.Cluster.Metadata.Name,
 	})
@@ -177,14 +159,76 @@ func (a *applicationPostgresService) HasPostgresIntegration(ctx context.Context,
 		return false, fmt.Errorf("acquiring patch: %w", err)
 	}
 
-	return patch.HasOperation(jsonpatch.Operation{
-		Type:  jsonpatch.OperationTypeAdd,
-		Path:  "/spec/securityGroups/groupIds/0",
-		Value: sg.ID,
-	}), nil
+	clusterID := clusterMetaAsID(opts.Cluster.Metadata)
+
+	clusterSecurityGroupID, err := a.clusterService.GetClusterSecurityGroupID(ctx, client.GetClusterSecurityGroupIDOpts{
+		ID: clusterID,
+	})
+	if err != nil {
+		return false, fmt.Errorf("getting cluster security group ID: %w", err)
+	}
+
+	return patch.HasOperations(a.newSecurityGroupPatchOperations(clusterSecurityGroupID.Value, appSecurityGroup)), nil
 }
 
-func (a *applicationPostgresService) generateSecurityGroupPolicy(ctx context.Context, cluster v1alpha1.Cluster, app v1alpha1.Application, sg api.SecurityGroup) error {
+func (a *applicationPostgresService) allowTrafficFromAppToRDS(ctx context.Context, opts client.AddPostgresToApplicationOpts, appSecurityGroup api.SecurityGroup) error {
+	stackName := cfn.NewStackNamer().RDSPostgres(opts.DatabaseName, opts.Cluster.Metadata.Name)
+
+	resourceName := components.NewRDSPostgresComposer(components.RDSPostgresComposerOpts{
+		ApplicationDBName: opts.DatabaseName,
+		ClusterName:       opts.Cluster.Metadata.Name,
+	}).CloudFormationResourceName("RDSPostgresIncoming")
+
+	_, err := a.securityGroupAPI.AddRule(ctx, api.AddRuleOpts{
+		ClusterName:               opts.Cluster.Metadata.Name,
+		SecurityGroupStackName:    stackName,
+		SecurityGroupResourceName: resourceName,
+		RuleType:                  api.RuleTypeIngress,
+		Rule: api.Rule{
+			Description:           fmt.Sprintf("Allow postgres traffic from %s", opts.Application.Metadata.Name),
+			FromPort:              postgresPort,
+			ToPort:                postgresPort,
+			Protocol:              api.RuleProtocolTCP,
+			SourceSecurityGroupID: appSecurityGroup.ID,
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("adding incoming rule for database security group: %w", err)
+	}
+
+	return nil
+}
+
+func (a *applicationPostgresService) createSecurityGroupPolicy(
+	ctx context.Context,
+	opts client.AddPostgresToApplicationOpts,
+	appSecurityGroup api.SecurityGroup,
+) error {
+	clusterID := clusterMetaAsID(opts.Cluster.Metadata)
+
+	clusterSecurityGroupID, err := a.clusterService.GetClusterSecurityGroupID(ctx, client.GetClusterSecurityGroupIDOpts{
+		ID: clusterID,
+	})
+	if err != nil {
+		return fmt.Errorf("getting cluster security group ID: %w", err)
+	}
+
+	err = a.generateSecurityGroupPolicyManifest(
+		ctx, opts.Cluster, opts.Application, appSecurityGroup, clusterSecurityGroupID.Value)
+	if err != nil {
+		return fmt.Errorf("generating security group policy: %w", err)
+	}
+
+	return nil
+}
+
+func (a *applicationPostgresService) generateSecurityGroupPolicyManifest(
+	ctx context.Context,
+	cluster v1alpha1.Cluster,
+	app v1alpha1.Application,
+	appSecurityGroup api.SecurityGroup,
+	clusterSecurityGroupID string,
+) error {
 	baseManifest, err := scaffold.ResourceAsBytes(resources.CreateSecurityGroupPolicy(app))
 	if err != nil {
 		return fmt.Errorf("converting security group policy to bytes: %w", err)
@@ -204,13 +248,7 @@ func (a *applicationPostgresService) generateSecurityGroupPolicy(ctx context.Con
 		ClusterName:     cluster.Metadata.Name,
 		Kind:            v1beta1.SecurityGroupPolicyKind,
 		Patch: jsonpatch.Patch{
-			Operations: []jsonpatch.Operation{
-				{
-					Type:  jsonpatch.OperationTypeAdd,
-					Path:  "/spec/securityGroups/groupIds/0",
-					Value: sg.ID,
-				},
-			},
+			Operations: a.newSecurityGroupPatchOperations(clusterSecurityGroupID, appSecurityGroup),
 		},
 	})
 	if err != nil {
@@ -218,6 +256,24 @@ func (a *applicationPostgresService) generateSecurityGroupPolicy(ctx context.Con
 	}
 
 	return nil
+}
+
+func (a *applicationPostgresService) newSecurityGroupPatchOperations(
+	clusterSecurityGroupID string,
+	appSecurityGroup api.SecurityGroup,
+) []jsonpatch.Operation {
+	return []jsonpatch.Operation{
+		{
+			Type:  jsonpatch.OperationTypeAdd,
+			Path:  "/spec/securityGroups/groupIds/0",
+			Value: clusterSecurityGroupID,
+		},
+		{
+			Type:  jsonpatch.OperationTypeAdd,
+			Path:  "/spec/securityGroups/groupIds/1",
+			Value: appSecurityGroup.ID,
+		},
+	}
 }
 
 // ref: https://aws.amazon.com/blogs/containers/introducing-security-groups-for-pods/
@@ -347,6 +403,7 @@ func NewApplicationPostgresService(
 	securityGroupAPI client.SecurityGroupAPI,
 	vpcService client.VPCService,
 	applicationPostgresAPI client.ApplicationPostgresAPI,
+	clusterService client.ClusterService,
 ) client.ApplicationPostgresService {
 	return &applicationPostgresService{
 		manifestService:        manifestService,
@@ -354,5 +411,6 @@ func NewApplicationPostgresService(
 		securityGroupAPI:       securityGroupAPI,
 		vpcService:             vpcService,
 		applicationPostgresAPI: applicationPostgresAPI,
+		clusterService:         clusterService,
 	}
 }

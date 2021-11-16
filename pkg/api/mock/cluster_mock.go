@@ -53,6 +53,8 @@ const (
 	DefaultPolicyARN = "arn:aws:iam::123456789012:policy/somePolicy"
 	// DefaultDomainName is the default domain name
 	DefaultDomainName = "test.oslo.systems"
+	// DefaultClusterSecurityGroupIDValue is the default domain name
+	DefaultClusterSecurityGroupIDValue = "sg-2430fjm0fgCLUSTER"
 )
 
 // ErrBad just defines a mocked error
@@ -106,6 +108,13 @@ func DefaultClusterCreateOpts() api.ClusterCreateOpts {
 		VpcID:             DefaultVpcID,
 		VpcPrivateSubnets: DefaultVpcPrivateSubnets(),
 		VpcPublicSubnets:  DefaultVpcPublicSubnets(),
+	}
+}
+
+// DefaultClusterSecurityGroupIDGetOpts returns options for getting a cluster security group ID with defaults set
+func DefaultClusterSecurityGroupIDGetOpts() api.ClusterSecurityGroupIDGetOpts {
+	return api.ClusterSecurityGroupIDGetOpts{
+		ID: DefaultID(),
 	}
 }
 
@@ -183,6 +192,13 @@ func DefaultCluster() *api.Cluster {
 	return &api.Cluster{
 		ID:     DefaultID(),
 		Config: DefaultClusterConfig(),
+	}
+}
+
+// DefaultClusterSecurityGroupID returns a default cluster security group ID
+func DefaultClusterSecurityGroupID() *api.ClusterSecurityGroupID {
+	return &api.ClusterSecurityGroupID{
+		Value: DefaultClusterSecurityGroupIDValue,
 	}
 }
 

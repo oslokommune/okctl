@@ -109,6 +109,17 @@ func (p *Patch) HasOperation(operation Operation) bool {
 	return false
 }
 
+// HasOperations determines if a patch contains all the given operations
+func (p *Patch) HasOperations(operations []Operation) bool {
+	for _, op := range operations {
+		if !p.HasOperation(op) {
+			return false
+		}
+	}
+
+	return true
+}
+
 // MarshalJSON knows how to turn a Patch into a kustomize patch.json
 func (p Patch) MarshalJSON() ([]byte, error) {
 	type serializedOperation struct {

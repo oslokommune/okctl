@@ -55,3 +55,42 @@ func TestMarshallPatch(t *testing.T) {
 		})
 	}
 }
+
+func TestHasOperations(t *testing.T) {
+	testCases := []struct {
+		name           string
+		withPatch      Patch
+		expectContains []Operation
+	}{
+		{
+			name: "Should work",
+			withPatch: Patch{
+				Operations: []Operation{
+					{
+						Type:  OperationTypeAdd,
+						Path:  "/hello",
+						Value: "howdy",
+					},
+					{
+						Type:  OperationTypeAdd,
+						Path:  "/bye",
+						Value: "bye",
+					},
+				},
+			},
+			expectContains: []Operation{
+				{
+					Type:  OperationTypeAdd,
+					Path:  "/bye",
+					Value: "bye",
+				},
+			},
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			assert.True(t, tc.withPatch.HasOperations(tc.expectContains))
+		})
+	}
+}

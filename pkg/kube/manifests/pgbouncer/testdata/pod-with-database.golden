@@ -45,7 +45,6 @@ spec:
     volumeMounts:
     - mountPath: /etc/pgbouncer/
       name: pgbouncer
-  dnsPolicy: Default
   initContainers:
   - command:
     - /bin/sh

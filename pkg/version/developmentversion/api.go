@@ -1,10 +1,10 @@
-// Package github knows how to fetch a version from github
+// Package developmentversion knows how to fetch the current version in development mode
 package developmentversion
 
 import (
 	"context"
 	"fmt"
-	"sort"
+	sortPkg "sort"
 
 	"github.com/Masterminds/semver"
 
@@ -25,25 +25,53 @@ func GetVersionInfo() string {
 	return cachedVersion
 }
 
+// Reset resets all globals. Useful for testing.
+func Reset() {
+	cachedVersion = ""
+	ListReleases = listReleases
+}
+
+// HardCodedVersion is the version used if contact with GitHub fails
+const HardCodedVersion = "0.0.10"
+
 func getGithubOrHardCodedVersion() string {
 	ver, err := doFetchVersion()
 	if err != nil {
-		hardCodedVersion := "0.0.10"
-		fmt.Printf("Warning: Could not get version, using hard coded version '%s' instead\n", hardCodedVersion)
+		fmt.Printf("Warning: Could not get version, using hard coded version '%s' instead\n", HardCodedVersion)
 
-		return hardCodedVersion
+		return HardCodedVersion
 	}
 
 	return ver.String()
 }
 
+// ListReleases knows how to list GitHub releases
+var ListReleases ListReleasesFn = listReleases //nolint:gochecknoglobals
+
 func doFetchVersion() (*semver.Version, error) {
-	releases, err := listReleases(context.Background(), "oslokommune", "okctl")
+	releases, err := ListReleases(context.Background(), "oslokommune", "okctl")
 	if err != nil {
 		return nil, fmt.Errorf("listing releases: %w", err)
 	}
 
-	sort.SliceStable(releases, func(i, j int) bool {
+	sort(releases)
+
+	if len(releases) == 0 {
+		return nil, fmt.Errorf("expected one or more releases, but was zero")
+	}
+
+	newestVersionString := releases[len(releases)-1].GetTagName()
+
+	newestVersion, err := semver.NewVersion(newestVersionString)
+	if err != nil {
+		return nil, fmt.Errorf("parsing version string '%s': %w", newestVersionString, err)
+	}
+
+	return newestVersion, nil
+}
+
+func sort(releases []*RepositoryRelease) {
+	sortPkg.SliceStable(releases, func(i, j int) bool {
 		iVersion, err := semver.NewVersion(releases[i].GetTagName())
 		if err != nil {
 			return false
@@ -56,15 +84,6 @@ func doFetchVersion() (*semver.Version, error) {
 
 		return iVersion.LessThan(jVersion)
 	})
-
-	newestVersionString := releases[len(releases)-1].GetTagName()
-
-	newestVersion, err := semver.NewVersion(newestVersionString)
-	if err != nil {
-		return nil, fmt.Errorf("parsing version string '%s': %w", newestVersionString, err)
-	}
-
-	return newestVersion, nil
 }
 
 const listReleasesPageSize = 100

@@ -11,7 +11,7 @@ import (
 func GetVersionInfo() types.Info {
 	var semanticVersion string
 
-	if Version == devVersion {
+	if Version == DevVersion {
 		semanticVersion = developmentversion.GetVersionInfo()
 	} else {
 		semanticVersion = Version
@@ -24,7 +24,7 @@ func GetVersionInfo() types.Info {
 	}
 }
 
-// String returns the current version
+// String returns the current version as JSON
 func String() string {
 	versionInfo := GetVersionInfo()
 

@@ -193,6 +193,11 @@ func (a *EKSAPI) DescribeCluster(input *eks.DescribeClusterInput) (*eks.Describe
 	return a.DescribeClusterFn(input)
 }
 
+// DescribeClusterWithContext mocks describe cluster with context invocation
+func (a *EKSAPI) DescribeClusterWithContext(_ aws.Context, input *eks.DescribeClusterInput, _ ...request.Option) (*eks.DescribeClusterOutput, error) {
+	return a.DescribeClusterFn(input)
+}
+
 // DescribeFargateProfile mocks the API invocation
 func (a *EKSAPI) DescribeFargateProfile(input *eks.DescribeFargateProfileInput) (*eks.DescribeFargateProfileOutput, error) {
 	return a.DescribeFargateProfileFn(input)
@@ -239,6 +244,15 @@ func (a *EC2API) DescribeVpcs(input *ec2.DescribeVpcsInput) (*ec2.DescribeVpcsOu
 
 // DescribeSecurityGroups invokes the mocked response
 func (a *EC2API) DescribeSecurityGroups(input *ec2.DescribeSecurityGroupsInput) (*ec2.DescribeSecurityGroupsOutput, error) {
+	return a.DescribeSecurityGroupsFn(input)
+}
+
+// DescribeSecurityGroupsWithContext invokes the mocked response
+func (a *EC2API) DescribeSecurityGroupsWithContext(_ aws.Context, input *ec2.DescribeSecurityGroupsInput, _ ...request.Option) (*ec2.DescribeSecurityGroupsOutput, error) {
+	return a.DescribeSecurityGroupsFn(input)
+}
+
+func (a *EC2API) DescribeSecurityGroupsWithContext2(_ aws.Context, input *ec2.DescribeSecurityGroupsInput, _ ...request.Option) (*ec2.DescribeSecurityGroupsOutput, error) {
 	return a.DescribeSecurityGroupsFn(input)
 }
 
@@ -1357,6 +1371,9 @@ func NewGoodCloudProvider() *CloudProvider {
 						Endpoint: aws.String("https://something"),
 						Name:     aws.String(mock.DefaultClusterName),
 						Status:   aws.String(eks.ClusterStatusActive),
+						ResourcesVpcConfig: &eks.VpcConfigResponse{
+							ClusterSecurityGroupId: aws.String(mock.DefaultClusterSecurityGroupIDValue),
+						},
 					},
 				}, nil
 			},

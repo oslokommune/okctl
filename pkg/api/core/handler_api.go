@@ -17,6 +17,7 @@ import (
 type Endpoints struct {
 	CreateCluster                   endpoint.Endpoint
 	DeleteCluster                   endpoint.Endpoint
+	GetClusterSecurityGroupID       endpoint.Endpoint
 	CreateVpc                       endpoint.Endpoint
 	DeleteVpc                       endpoint.Endpoint
 	CreateExternalDNSKubeDeployment endpoint.Endpoint
@@ -69,6 +70,7 @@ func MakeEndpoints(s Services) Endpoints {
 	return Endpoints{
 		CreateCluster:                   makeCreateClusterEndpoint(s.Cluster),
 		DeleteCluster:                   makeDeleteClusterEndpoint(s.Cluster),
+		GetClusterSecurityGroupID:       makeGetClusterSecurityGroupIDEndpoint(s.Cluster),
 		CreateVpc:                       makeCreateVpcEndpoint(s.Vpc),
 		DeleteVpc:                       makeDeleteVpcEndpoint(s.Vpc),
 		CreateExternalDNSKubeDeployment: makeCreateExternalDNSKubeDeploymentEndpoint(s.Kube),
@@ -119,6 +121,7 @@ func MakeEndpoints(s Services) Endpoints {
 type Handlers struct {
 	CreateCluster                   http.Handler
 	DeleteCluster                   http.Handler
+	GetClusterSecurityGroupID       http.Handler
 	CreateVpc                       http.Handler
 	DeleteVpc                       http.Handler
 	CreateExternalDNSKubeDeployment http.Handler
@@ -197,6 +200,7 @@ func MakeHandlers(responseType EncodeResponseType, endpoints Endpoints) *Handler
 	return &Handlers{
 		CreateCluster:                   newServer(endpoints.CreateCluster, decodeClusterCreateRequest),
 		DeleteCluster:                   newServer(endpoints.DeleteCluster, decodeClusterDeleteRequest),
+		GetClusterSecurityGroupID:       newServer(endpoints.GetClusterSecurityGroupID, decodeStructRequest(&api.ClusterSecurityGroupIDGetOpts{})),
 		CreateVpc:                       newServer(endpoints.CreateVpc, decodeVpcCreateRequest),
 		DeleteVpc:                       newServer(endpoints.DeleteVpc, decodeVpcDeleteRequest),
 		CreateExternalDNSKubeDeployment: newServer(endpoints.CreateExternalDNSKubeDeployment, decodeCreateExternalDNSKubeDeployment),
@@ -252,7 +256,12 @@ func AttachRoutes(handlers *Handlers) http.Handler {
 		r.Route("/clusters", func(r chi.Router) {
 			r.Method(http.MethodPost, "/", handlers.CreateCluster)
 			r.Method(http.MethodDelete, "/", handlers.DeleteCluster)
+
+			r.Route("/clustersecuritygroupid", func(r chi.Router) {
+				r.Method(http.MethodGet, "/", handlers.GetClusterSecurityGroupID)
+			})
 		})
+
 		r.Route("/vpcs", func(r chi.Router) {
 			r.Method(http.MethodPost, "/", handlers.CreateVpc)
 			r.Method(http.MethodDelete, "/", handlers.DeleteVpc)
@@ -382,6 +391,7 @@ type EndpointOption func(Endpoints) Endpoints
 
 const (
 	clusterTag             = "clusterService"
+	securityGroupIDTag     = "securityGroupID"
 	vpcTag                 = "vpc"
 	managedPoliciesTag     = "managedPolicies"
 	externalSecretsTag     = "externalSecrets"
@@ -420,6 +430,7 @@ func InstrumentEndpoints(logger *logrus.Logger) EndpointOption {
 		return Endpoints{
 			CreateCluster:                   logmd.Logging(logger, "create", clusterTag)(endpoints.CreateCluster),
 			DeleteCluster:                   logmd.Logging(logger, "delete", clusterTag)(endpoints.DeleteCluster),
+			GetClusterSecurityGroupID:       logmd.Logging(logger, "get", clusterTag, securityGroupIDTag)(endpoints.GetClusterSecurityGroupID),
 			CreateVpc:                       logmd.Logging(logger, "create", vpcTag)(endpoints.CreateVpc),
 			DeleteVpc:                       logmd.Logging(logger, "delete", vpcTag)(endpoints.DeleteVpc),
 			CreateExternalDNSKubeDeployment: logmd.Logging(logger, "create", kubeTag, externalDNSTag)(endpoints.CreateExternalDNSKubeDeployment),

@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/api"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -125,6 +127,10 @@ func (m mockClusterService) DeleteCluster(_ context.Context, _ client.ClusterDel
 	m.deletionBump()
 
 	return nil
+}
+
+func (m mockClusterService) GetClusterSecurityGroupID(_ context.Context, _ client.GetClusterSecurityGroupIDOpts) (*api.ClusterSecurityGroupID, error) {
+	panic("implement me")
 }
 
 func createCloudProvider(serviceQuotaOK bool) v1alpha1.CloudProvider {

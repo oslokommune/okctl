@@ -94,6 +94,12 @@ func (s *clusterService) DeleteCluster(_ context.Context, opts client.ClusterDel
 	return nil
 }
 
+func (s *clusterService) GetClusterSecurityGroupID(_ context.Context, opts client.GetClusterSecurityGroupIDOpts) (*api.ClusterSecurityGroupID, error) {
+	return s.api.GetClusterSecurityGroupID(api.ClusterSecurityGroupIDGetOpts{
+		ID: opts.ID,
+	})
+}
+
 // NewClusterService returns an initialised cluster service
 func NewClusterService(
 	api client.ClusterAPI,

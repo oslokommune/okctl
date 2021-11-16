@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	awsmock "github.com/oslokommune/okctl/pkg/mock"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/api/core"
@@ -23,6 +25,7 @@ func TestClusterCreateCluster(t *testing.T) {
 			name: "Validate request",
 			service: core.NewClusterService(
 				mock.NewGoodClusterExe(),
+				awsmock.NewGoodCloudProvider(),
 			),
 			opts:   mock.DefaultClusterCreateOpts(),
 			expect: mock.DefaultCluster(),
@@ -31,6 +34,7 @@ func TestClusterCreateCluster(t *testing.T) {
 			name: "Invalid opts",
 			service: core.NewClusterService(
 				mock.NewGoodClusterExe(),
+				awsmock.NewGoodCloudProvider(),
 			),
 			opts: api.ClusterCreateOpts{},
 			//nolint: lll
@@ -50,6 +54,40 @@ func TestClusterCreateCluster(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Empty(t, cmp.Diff(tc.expect, got))
+			}
+		})
+	}
+}
+
+func TestGetClusterSecurityGroupId(t *testing.T) {
+	testCases := []struct {
+		name        string
+		service     api.ClusterService
+		opts        api.ClusterSecurityGroupIDGetOpts
+		expect      interface{}
+		expectError bool
+	}{
+		{
+			name: "Should work",
+			service: core.NewClusterService(
+				mock.NewGoodClusterExe(),
+				awsmock.NewGoodCloudProvider(),
+			),
+			opts:   mock.DefaultClusterSecurityGroupIDGetOpts(),
+			expect: mock.DefaultClusterSecurityGroupID(),
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			clusterSecurityGroupID, err := tc.service.GetClusterSecurityGroupID(context.Background(), &tc.opts)
+
+			if tc.expectError {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expect, err.Error())
+			} else {
+				assert.NoError(t, err)
+				assert.Empty(t, cmp.Diff(tc.expect, clusterSecurityGroupID))
 			}
 		})
 	}

@@ -54,7 +54,7 @@ require (
 	github.com/oslokommune/okctl-metrics-service v0.1.5
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.52.0
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.52.1
 	github.com/rancher/k3d/v3 v3.4.0
 	github.com/sanity-io/litter v1.5.0
 	github.com/sebdah/goldie/v2 v2.5.3

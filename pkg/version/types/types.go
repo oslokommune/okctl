@@ -1,3 +1,4 @@
+// Package types contains types used by versioning.
 package types
 
 // Info contains the version information

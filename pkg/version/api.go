@@ -3,6 +3,7 @@ package version
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/version/developmentversion"
 	"github.com/oslokommune/okctl/pkg/version/types"
 )

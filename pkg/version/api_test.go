@@ -3,12 +3,13 @@ package version_test
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/oslokommune/okctl/pkg/github"
 	"github.com/oslokommune/okctl/pkg/version"
 	"github.com/oslokommune/okctl/pkg/version/developmentversion"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 //nolint:funlen

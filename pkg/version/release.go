@@ -1,5 +1,6 @@
 package version
 
+// DevVersion is the developer version
 const DevVersion = "dev"
 
 // Version of okctl

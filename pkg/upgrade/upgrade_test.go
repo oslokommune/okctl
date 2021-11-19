@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
@@ -700,7 +701,11 @@ func doAsserts(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
 func doGoldieAssert(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
 	g := goldie.New(t)
 	t.Log(tc.name)
-	g.Assert(t, tc.name, defaultOpts.StdOutBuffer.Bytes())
+
+	// Remove apostrophes, so we don't break importing okctl as a library
+	goldieFilename := strings.ReplaceAll(tc.name, "'", "")
+
+	g.Assert(t, goldieFilename, defaultOpts.StdOutBuffer.Bytes())
 }
 
 type DefaultTestOpts struct {

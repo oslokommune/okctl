@@ -117,7 +117,7 @@ release-local:
 	  -v $$PWD:/go/src/github.com/oslokommune/okctl \
 	  -v /var/run/docker.sock:/var/run/docker.sock \
 	  -w /go/src/github.com/oslokommune/okctl \
-	  troian/golang-cross:v1.16 release --config=/go/src/github.com/oslokommune/okctl/.goreleaser-local.yml --snapshot --skip-publish --rm-dist
+	  ghcr.io/gythialy/golang-cross:v1.17.3-2 release --rm-dist --config=/go/src/github.com/oslokommune/okctl/.goreleaser-local.yml --snapshot --skip-publish
 
 release:
 	 docker run --rm --privileged \
@@ -125,7 +125,7 @@ release:
 	  -v /var/run/docker.sock:/var/run/docker.sock \
 	  -w /go/src/github.com/oslokommune/okctl \
 	  -e GITHUB_TOKEN \
-	  troian/golang-cross:v1.16 release --rm-dist --release-notes=$(RELEASE_NOTES) --config=/go/src/github.com/oslokommune/okctl/.goreleaser.yml
+	  ghcr.io/gythialy/golang-cross:v1.17.3-2 release --rm-dist --config=/go/src/github.com/oslokommune/okctl/.goreleaser.yml --release-notes=$(RELEASE_NOTES)
 
 ## Generate
 generate: $(STATIK)

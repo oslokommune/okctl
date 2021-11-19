@@ -125,10 +125,11 @@ global:
   # -- Labels for the all deployed pods
   podLabels: {}
   # -- Toggle and define securityContext. See [values.yaml]
-  securityContext: {}
-  #  runAsUser: 999
-  #  runAsGroup: 999
-  #  fsGroup: 999
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    runAsGroup: 999
+    fsGroup: 999
 
   # -- If defined, uses a Secret to pull an image from a private Docker registry or repository
   imagePullSecrets: []
@@ -296,13 +297,13 @@ controller:
   priorityClassName: ""
 
   # -- Resource limits and requests for the application controller pods
-  resources: {}
-  #  limits:
-  #    cpu: 500m
-  #    memory: 512Mi
-  #  requests:
-  #    cpu: 250m
-  #    memory: 256Mi
+  resources:
+    limits:
+      cpu: 800m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
 
   serviceAccount:
     # -- Create a service account for the application controller
@@ -464,7 +465,7 @@ dex:
   ## Supported from Dex >= 2.28.0
   livenessProbe:
     # -- Enable Kubernetes liveness probe for Dex >= 2.28.0
-    enabled: false
+    enabled: true
     # -- Minimum consecutive failures for the [probe] to be considered failed after having succeeded
     failureThreshold: 3
     # -- Number of seconds after the container has started before [probe] is initiated
@@ -477,7 +478,7 @@ dex:
     timeoutSeconds: 1
   readinessProbe:
     # -- Enable Kubernetes readiness probe for Dex >= 2.28.0
-    enabled: false
+    enabled: true
     # -- Minimum consecutive failures for the [probe] to be considered failed after having succeeded
     failureThreshold: 3
     # -- Number of seconds after the container has started before [probe] is initiated
@@ -559,13 +560,13 @@ dex:
     # readOnlyRootFilesystem: true
 
 # -- Resource limits and requests for dex
-  resources: {}
-  #  limits:
-  #    cpu: 50m
-  #    memory: 64Mi
-  #  requests:
-  #    cpu: 10m
-  #    memory: 32Mi
+  resources:
+    limits:
+      cpu: 50m
+      memory: 64Mi
+    requests:
+      cpu: 10m
+      memory: 32Mi
 
   # -- Additional containers to be added to the dex pod
   extraContainers: []
@@ -641,7 +642,9 @@ redis:
   # -- Redis pod-level security context
   securityContext:
     runAsNonRoot: true
-    runAsUser: 999
+	runAsGroup: 1000
+    runAsUser: 1000
+	fsGroup: 1000
 
   serviceAccount:
     # -- Create a service account for the redis pod
@@ -654,13 +657,13 @@ redis:
     automountServiceAccountToken: false
 
   # -- Resource limits and requests for redis
-  resources: {}
-  #  limits:
-  #    cpu: 200m
-  #    memory: 128Mi
-  #  requests:
-  #    cpu: 100m
-  #    memory: 64Mi
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
 
   # -- Additional volumeMounts to the redis container
   volumeMounts: []
@@ -789,8 +792,8 @@ server:
     imagePullPolicy: "" # IfNotPresent
 
   # -- Additional command line arguments to pass to Argo CD server
-  extraArgs: []
-  #  - --insecure
+  extraArgs:
+  - --insecure
 
   # This flag is used to either remove or pass the CLI flag --staticassets /shared/app to the Argo CD server app
   staticAssets:
@@ -884,13 +887,13 @@ server:
     # readOnlyRootFilesystem: true
 
   # -- Resource limits and requests for the Argo CD server
-  resources: {}
-  #  limits:
-  #    cpu: 100m
-  #    memory: 128Mi
-  #  requests:
-  #    cpu: 50m
-  #    memory: 64Mi
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
 
   ## Certificate configuration
   certificate:
@@ -915,7 +918,7 @@ server:
     # -- Server service labels
     labels: {}
     # -- Server service type
-    type: ClusterIP
+    type: NodePort
     # -- Server service http port for NodePort service type (only if server.service.type is set to "NodePort")
     nodePortHttp: 30080
     # -- Server service https port for NodePort service type (only if server.service.type is set to "NodePort")
@@ -984,9 +987,16 @@ server:
 
   ingress:
     # -- Enable an ingress resource for the Argo CD server
-    enabled: false
+    enabled: true
     # -- Additional ingress annotations
-    annotations: {}
+    annotations:
+		kubernetes.io/ingress.class: alb
+		alb.ingress.kubernetes.io/scheme: internet-facing
+		alb.ingress.kubernetes.io/target-type: instance
+		alb.ingress.kubernetes.io/healthcheck-path: /healthz
+		alb.ingress.kubernetes.io/listen-ports: "[{'HTTP':80},{'HTTPS':443}]"
+		alb.ingress.kubernetes.io/actions.ssl-redirect: "{'Type':'redirect','RedirectConfig':{'Protocol':'HTTPS','Port':'443','StatusCode':'HTTP_301'}}"
+		alb.ingress.kubernetes.io/certificate-arn: {{ .CertificateARN }}
     # -- Additional ingress labels
     labels: {}
     # -- Defines which ingress controller will implement the resource
@@ -997,29 +1007,28 @@ server:
     ## Hostnames must be provided if Ingress is enabled.
     ## Secrets must be manually created in the namespace
     hosts:
-      []
+	- {{ .HostName }}
       # - argocd.example.com
 
     # -- List of ingress paths
     paths:
-      - /
+      - /*
     # -- Ingress path type. One of Exact, Prefix or ImplementationSpecific
     pathType: Prefix
     # -- Additional ingress paths
     extraPaths:
-      []
-      # - path: /*
-      #   backend:
-      #     serviceName: ssl-redirect
-      #     servicePort: use-annotation
+	#- path: /*
+	#  backend:
+	#	serviceName: ssl-redirect
+	#	servicePort: use-annotation
       ## for Kubernetes >=1.19 (when "networking.k8s.io/v1" is used)
-      # - path: /*
-      #   pathType: Prefix
-      #   backend:
-      #     service:
-      #       name: ssl-redirect
-      #       port:
-      #         name: use-annotation
+    - path: /*
+      pathType: Prefix
+      backend:
+        service:
+          name: ssl-redirect
+          port:
+            name: use-annotation
 
     # -- Ingress TLS configuration
     tls:
@@ -1120,7 +1129,7 @@ server:
   # @default -- See [values.yaml]
   config:
     # Argo CD's externally facing base URL (optional). Required when configuring SSO
-    url: https://argocd.example.com
+    url: {{ .URL }}
     # Argo CD instance label key
     application.instanceLabelKey: argocd.argoproj.io/instance
 
@@ -1137,18 +1146,19 @@ server:
     #     url: https://argoproj.github.io/argo-helm
     #     name: argo
 
-    # oidc.config: |
-    #   name: AzureAD
-    #   issuer: https://login.microsoftonline.com/TENANT_ID/v2.0
-    #   clientID: CLIENT_ID
-    #   clientSecret: $oidc.azuread.clientSecret
-    #   requestedIDTokenClaims:
-    #     groups:
-    #       essential: true
-    #   requestedScopes:
-    #     - openid
-    #     - profile
-    #     - email
+    oidc.config: |
+      name: AWS Cognito
+      issuer: https://cognito-idp.{{ .Region }}.amazonaws.com/{{ .UserPoolID }}
+      clientID: {{ .ClientID }}
+      clientSecret: $oidc.cognito.clientSecret
+	  redirectURI: {{ .URL }}/api/dex/callback
+      requestedIDTokenClaims:
+        groups:
+          essential: true
+      requestedScopes:
+        - openid
+        - profile
+        - email
 
   # -- Annotations to be added to ArgoCD ConfigMap
   configAnnotations: {}
@@ -1156,7 +1166,9 @@ server:
   # -- ArgoCD rbac config ([ArgoCD RBAC policy])
   ## Ref: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/rbac.md
   rbacConfig:
-    {}
+	policy.csv: |
+		g, admins, role:admin
+	scopes: '[email, groups]'
     # policy.csv is an file containing user-defined RBAC policies and role definitions (optional).
     # Policy rules are in the form:
     #   p, subject, resource, action, object, effect
@@ -1423,13 +1435,13 @@ repoServer:
     # readOnlyRootFilesystem: true
 
   # -- Resource limits and requests for the repo server pods
-  resources: {}
-  #  limits:
-  #    cpu: 50m
-  #    memory: 128Mi
-  #  requests:
-  #    cpu: 10m
-  #    memory: 64Mi
+  resources:
+    limits:
+      cpu: 50m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
 
   ## Repo server service configuration
   service:
@@ -1643,7 +1655,12 @@ configs:
 
   # -- Repository credentials to be used as Templates for other repos
   ## Creates a secret for each key/value specified below to create repository credentials
-  credentialTemplates: {}
+  credentialTemplates:
+	iac-repo-creds:
+		url: {{ .RepoURL }}
+		sshPrivateKeySecret:
+          name: {{ .PrivateKeySecretName }}
+          key: {{ .PrivateKeySecretKey }}
     # github-enterprise-creds-1:
     #   url: https://github.com/argoproj
     #   githubAppID: 1
@@ -1667,7 +1684,10 @@ configs:
   # -- Repositories list to be used by applications
   ## Creates a secret for each key/value specified below to create repositories
   ## Note: the last example in the list would use a repository credential template, configured under "configs.repositoryCredentials".
-  repositories: {}
+  repositories:
+    iac-repo:
+		url: {{ .RepoURL }}
+        name: {{ .RepoName }}
     # istio-helm-repo:
     #   url: https://storage.googleapis.com/istio-prerelease/daily-build/master-latest-daily/charts
     #   name: istio.io
@@ -1683,7 +1703,7 @@ configs:
 
   secret:
     # -- Create the argocd-secret
-    createSecret: true
+    createSecret: false
     # -- Annotations to be added to argocd-secret
     annotations: {}
 

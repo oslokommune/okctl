@@ -16,7 +16,6 @@ var cachedVersion string //nolint:gochecknoglobals // Ignoring global since vers
 // GetVersionInfo returns the current version
 func GetVersionInfo() string {
 	if len(cachedVersion) > 0 {
-		fmt.Println("Using cache")
 		return cachedVersion
 	}
 

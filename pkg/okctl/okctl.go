@@ -28,6 +28,7 @@ import (
 	"github.com/logrusorgru/aurora/v3"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
+	clientDirectAPI "github.com/oslokommune/okctl/pkg/client/core/api/direct"
 	"github.com/oslokommune/okctl/pkg/client/core/api/rest"
 	githubClient "github.com/oslokommune/okctl/pkg/github"
 
@@ -264,8 +265,12 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		helmService,
 	)
 
+	domainAPIService := core.NewDomainService(
+		awsProvider.NewDomainCloudProvider(o.CloudProvider),
+	)
+
 	domainService := clientCore.NewDomainService(
-		rest.NewDomainAPI(o.restClient),
+		clientDirectAPI.NewDomainAPI(domainAPIService),
 		handlers.Domain,
 	)
 

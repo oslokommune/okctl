@@ -1,6 +1,9 @@
 package clusterconfig_test
 
 import (
+	"context"
+	"github.com/oslokommune/okctl/pkg/github"
+	"github.com/oslokommune/okctl/pkg/version/developmentversion"
 	"testing"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
@@ -44,8 +47,10 @@ func TestNew(t *testing.T) {
 
 	for _, tc := range testCases {
 		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
+			mockVersion()
+			defer developmentversion.Reset()
+
 			got, err := clusterconfig.New(tc.args)
 			if tc.expectErr {
 				assert.Error(t, err)
@@ -98,6 +103,9 @@ func TestNewServiceAccount(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
+			mockVersion()
+			defer developmentversion.Reset()
+
 			got, err := clusterconfig.NewServiceAccount(tc.args)
 			if tc.expectErr {
 				assert.Error(t, err)
@@ -140,6 +148,9 @@ func TestNewExternalSecretsServiceAccount(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
+			mockVersion()
+			defer developmentversion.Reset()
+
 			got, err := clusterconfig.NewExternalSecretsServiceAccount(tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
 			if tc.expectErr {
 				assert.Error(t, err)
@@ -182,6 +193,9 @@ func TestNewAlbIngressControllerServiceAccount(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
+			mockVersion()
+			defer developmentversion.Reset()
+
 			got, err := clusterconfig.NewAlbIngressControllerServiceAccount(tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
 			if tc.expectErr {
 				assert.Error(t, err)
@@ -224,6 +238,9 @@ func TestNewAWSLoadBalancerControllerServiceAccount(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
+			mockVersion()
+			defer developmentversion.Reset()
+
 			got, err := clusterconfig.NewAWSLoadBalancerControllerServiceAccount(tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
 			if tc.expectErr {
 				assert.Error(t, err)
@@ -266,6 +283,9 @@ func TestNewExternalDNSServiceAccount(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
+			mockVersion()
+			defer developmentversion.Reset()
+
 			got, err := clusterconfig.NewExternalDNSServiceAccount(tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
 			if tc.expectErr {
 				assert.Error(t, err)
@@ -308,6 +328,9 @@ func TestNewAutoscalerServiceAccount(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
+			mockVersion()
+			defer developmentversion.Reset()
+
 			got, err := clusterconfig.NewAutoscalerServiceAccount(tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
 			if tc.expectErr {
 				assert.Error(t, err)
@@ -350,6 +373,9 @@ func TestNewBlockstorageServiceAccount(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
+			mockVersion()
+			defer developmentversion.Reset()
+
 			got, err := clusterconfig.NewBlockstorageServiceAccount(tc.clusterName, tc.region, tc.policyArn, tc.permissionsBoundaryArn)
 			if tc.expectErr {
 				assert.Error(t, err)
@@ -396,6 +422,9 @@ func TestNewCloudwatchDatasourceServiceAccount(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
+			mockVersion()
+			defer developmentversion.Reset()
+
 			got, err := clusterconfig.NewCloudwatchDatasourceServiceAccount(tc.clusterName, tc.region, tc.policyArn, tc.namespace, tc.permissionsBoundaryArn)
 			if tc.expectErr {
 				assert.Error(t, err)
@@ -410,5 +439,17 @@ func TestNewCloudwatchDatasourceServiceAccount(t *testing.T) {
 				g.Assert(t, tc.golden, d)
 			}
 		})
+	}
+}
+
+func mockVersion() {
+	developmentversion.ListReleases = func(
+		ctx context.Context, owner string, repo string,
+	) ([]*developmentversion.RepositoryRelease, error) {
+		return []*developmentversion.RepositoryRelease{
+			{
+				TagName: github.StringPtr("0.0.70"),
+			},
+		}, nil
 	}
 }

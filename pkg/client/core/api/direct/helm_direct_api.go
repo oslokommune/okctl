@@ -23,8 +23,9 @@ func (d *helmDirectClient) DeleteHelmRelease(opts api.DeleteHelmReleaseOpts) err
 	return d.service.DeleteHelmRelease(context.Background(), opts)
 }
 
+// NewHelmAPI initializes a helm API that uses the server side service directly
 func NewHelmAPI(service api.HelmService) client.HelmAPI {
 	return &helmDirectClient{
-		service:service,
+		service: service,
 	}
 }

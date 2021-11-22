@@ -80,7 +80,7 @@ require (
 	helm.sh/helm/v3 v3.7.1
 	k8s.io/api v0.22.4
 	k8s.io/apimachinery v0.22.4
-	k8s.io/cli-runtime v0.22.3
+	k8s.io/cli-runtime v0.22.4
 	k8s.io/client-go v0.22.4
 	sigs.k8s.io/aws-iam-authenticator v0.5.3
 	sigs.k8s.io/yaml v1.3.0

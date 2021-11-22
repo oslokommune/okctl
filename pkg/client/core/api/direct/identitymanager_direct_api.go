@@ -2,6 +2,7 @@ package direct
 
 import (
 	"context"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 )
@@ -34,6 +35,7 @@ func (i identityManagerDirectClient) DeleteIdentityPoolUser(opts api.DeleteIdent
 	return i.service.DeleteIdentityPoolUser(context.Background(), opts)
 }
 
+// NewIdentityManagerAPI returns an initialised API that user server side service directly
 func NewIdentityManagerAPI(service api.IdentityManagerService) client.IdentityManagerAPI {
 	return &identityManagerDirectClient{
 		service: service,

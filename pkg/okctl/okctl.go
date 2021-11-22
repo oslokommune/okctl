@@ -210,8 +210,18 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		handlers.Certificate,
 	)
 
+	// When creating a certificate for a CloudFront distribution, we
+	// need to create the certificate in us-east-1
+	provider, _ := o.NewCloudProviderWithRegion("us-east-1")
+	if err != nil {
+		o.Logger.Errorf("Unable to get certificate cloud provider")
+	}
+
 	identityManagerService := clientCore.NewIdentityManagerService(
-		rest.NewIdentityManagerAPI(o.restClient),
+		clientDirectAPI.NewIdentityManagerAPI(core.NewIdentityManagerService(
+			awsProvider.NewIdentityManagerCloudProvider(o.CloudProvider),
+			awsProvider.NewCertificateCloudProvider(provider),
+		)),
 		handlers.IdentityManager,
 		certificateService,
 	)

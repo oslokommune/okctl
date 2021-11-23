@@ -11,8 +11,8 @@ import (
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
-// ValidateBinaryVsClusterVersion returns an error if binary version is less than cluster version.
-func (v Versioner) ValidateBinaryVsClusterVersion(binaryVersionString string) error {
+// ValidateBinaryEqualsClusterVersion returns an error if binary version is not equal to cluster version
+func (v Versioner) ValidateBinaryEqualsClusterVersion(binaryVersionString string) error {
 	binaryVersion, err := semver.NewVersion(binaryVersionString)
 	if err != nil {
 		return fmt.Errorf("parsing binary version to semver from '%s': %w", binaryVersionString, err)
@@ -22,6 +22,8 @@ func (v Versioner) ValidateBinaryVsClusterVersion(binaryVersionString string) er
 	if errors.Is(err, client.ErrClusterVersionNotFound) {
 		// This means we haven't stored the cluster version yet. In this case we don't return an error, as we don't
 		// expect it to be stored yet.
+		//
+		// (tag UPGR01) When we know all clusters have stored cluster version, we should return an error in this case.
 		return nil
 	}
 
@@ -34,14 +36,44 @@ func (v Versioner) ValidateBinaryVsClusterVersion(binaryVersionString string) er
 		return fmt.Errorf("parsing cluster verion to semver from '%s': %w", binaryVersionString, err)
 	}
 
-	return v.validateBinaryVsClusterVersion(binaryVersion, clusterVersion)
+	// Validate
+	if binaryVersion.Equal(clusterVersion) {
+		return nil
+	}
+
+	return fmt.Errorf("okctl binary version must be equal to cluster version %s, but was %s",
+		clusterVersion, binaryVersion)
 }
 
-func (v Versioner) validateBinaryVsClusterVersion(binaryVersion *semver.Version, clusterVersion *semver.Version) error {
+// ValidateBinaryVersionNotLessThanClusterVersion returns an error if binary version is less than cluster version.
+func (v Versioner) ValidateBinaryVersionNotLessThanClusterVersion(binaryVersionString string) error {
+	binaryVersion, err := semver.NewVersion(binaryVersionString)
+	if err != nil {
+		return fmt.Errorf("parsing binary version to semver from '%s': %w", binaryVersionString, err)
+	}
+
+	clusterVersionInfo, err := v.upgradeState.GetClusterVersion()
+	if errors.Is(err, client.ErrClusterVersionNotFound) {
+		// This means we haven't stored the cluster version yet. In this case we don't return an error, as we don't
+		// expect it to be stored yet.
+		//
+		// (tag UPGR01) When we know all clusters have stored cluster version, we should return an error in this case.
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("getting cluster version: %w", err)
+	}
+
+	clusterVersion, err := semver.NewVersion(clusterVersionInfo.Value)
+	if err != nil {
+		return fmt.Errorf("parsing cluster verion to semver from '%s': %w", binaryVersionString, err)
+	}
+
+	// Validate
 	if binaryVersion.LessThan(clusterVersion) {
-		return fmt.Errorf("okctl binary version %s cannot be less than cluster version %s."+
-			" Get okctl version %s or later and try again (get it from https://okctl.io)",
-			binaryVersion.String(), clusterVersion.String(), clusterVersion.String())
+		return fmt.Errorf("okctl binary version %s cannot be less than cluster version %s. Get okctl version %s or"+
+			" later and try again", binaryVersion, clusterVersion, clusterVersion)
 	}
 
 	return nil

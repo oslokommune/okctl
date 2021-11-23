@@ -1034,19 +1034,26 @@ server:
     #     url: https://argoproj.github.io/argo-helm
     #     name: argo
 
-    oidc.config: |
-      name: AWS Cognito
-      issuer: https://cognito-idp.{{ .Region }}.amazonaws.com/{{ .UserPoolID }}
-      clientID: {{ .ClientID }}
-      clientSecret: $oidc.cognito.clientSecret
-      redirectURI: {{ .URL }}/api/dex/callback
-      requestedIDTokenClaims:
-        groups:
-          essential: true
-      requestedScopes:
-        - openid
-        - profile
-        - email
+    dex.config: |
+      logger:
+        level: debug
+      connectors:
+      - type: oidc
+        id: aws
+        name: Cognito
+        config:
+          issuer: https://cognito-idp.{{ .Region }}.amazonaws.com/{{ .UserPoolID }}
+          clientID: {{ .ClientID }}
+          clientSecret: $dex.cognito.clientSecret
+          redirectURI: {{ .URL }}/api/dex/callback
+          scopes:
+            - openid
+            - profile
+            - email
+          insecureEnableGroups: true
+          claimMapping:
+            groups: "cognito:groups"
+            name: "cognito:username"
 
   # -- Annotations to be added to ArgoCD ConfigMap
   configAnnotations: { }

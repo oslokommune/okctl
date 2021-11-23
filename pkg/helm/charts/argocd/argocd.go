@@ -19,8 +19,8 @@ const (
 	Namespace = "argocd"
 )
 
-//go:embed values-template.yaml
 //nolint:gochecknoglobals
+//go:embed values-template.yaml
 var valuesTemplate string
 
 // New returns an initialised Helm chart

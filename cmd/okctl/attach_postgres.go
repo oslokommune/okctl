@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-
 	"github.com/oslokommune/okctl/cmd/okctl/preruns"
+	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/metrics"
 
 	"github.com/oslokommune/okctl/pkg/cfn"
@@ -53,6 +53,11 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 				metrics.Publish(generateStartEvent(metrics.ActionAttachPostgres))
 
 				err := o.Initialise()
+				if err != nil {
+					return err
+				}
+
+				err = commands.ValidateBinaryEqualsClusterVersion(o)
 				if err != nil {
 					return err
 				}

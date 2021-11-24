@@ -59,6 +59,11 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 					return err
 				}
 
+				err := commands.ValidateBinaryVersionNotLessThanClusterVersion(o)
+				if err != nil {
+					return err
+				}
+
 				return nil
 			},
 		),

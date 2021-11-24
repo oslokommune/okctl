@@ -53,6 +53,11 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command { //nolint: funlen
 
 				okctlEnvironment = e
 
+				err = commands.ValidateBinaryVersionNotLessThanClusterVersion(o)
+				if err != nil {
+					return err
+				}
+
 				return nil
 			},
 		),

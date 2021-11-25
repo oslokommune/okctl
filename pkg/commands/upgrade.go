@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"

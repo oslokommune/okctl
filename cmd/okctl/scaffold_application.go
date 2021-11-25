@@ -38,6 +38,13 @@ func buildScaffoldApplicationCommand(o *okctl.Okctl) *cobra.Command {
 						return fmt.Errorf("inferring cluster declaration: %w", err)
 					}
 
+					o.Declaration = clusterDeclaration
+
+					err = commands.ValidateBinaryVersionNotLessThanClusterVersion(o)
+					if err != nil {
+						return err
+					}
+
 					opts.PrimaryHostedZone = clusterDeclaration.ClusterRootDomain
 				} else {
 					opts.PrimaryHostedZone = "okctl.io"

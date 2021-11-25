@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/commands"
 	"os"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/commands"
 
 	"github.com/oslokommune/okctl/cmd/okctl/preruns"
 	"github.com/oslokommune/okctl/pkg/metrics"

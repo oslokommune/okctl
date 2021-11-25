@@ -2,11 +2,12 @@ package clusterversion_test
 
 import (
 	"bytes"
+	"testing"
+
 	"github.com/oslokommune/okctl/pkg/client/mock"
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
 	"github.com/oslokommune/okctl/pkg/upgrade/testutils"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestValidateBinaryEqualsClusterVersion(t *testing.T) {
@@ -54,5 +55,4 @@ func TestValidateBinaryEqualsClusterVersion(t *testing.T) {
 			}
 		})
 	}
-
 }

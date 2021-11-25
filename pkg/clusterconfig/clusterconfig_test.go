@@ -2,9 +2,10 @@ package clusterconfig_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/oslokommune/okctl/pkg/github"
 	"github.com/oslokommune/okctl/pkg/version/developmentversion"
-	"testing"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 

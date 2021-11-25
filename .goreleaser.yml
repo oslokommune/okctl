@@ -62,24 +62,3 @@ archives:
 
 checksum:
   name_template: 'okctl_checksums.txt'
-
-brews:
-  -
-    tap:
-      owner: oslokommune
-      name: homebrew-tap
-
-    commit_author:
-      name: okctl
-      email: okctl@oslo.kommune.no
-
-    folder: Formula
-
-    homepage: "https://github.com/oslokommune/okctl"
-
-    description: "Opinionated and effortless infrastructure and application management"
-
-    skip_upload: false
-
-    custom_block: |
-      head "https://github.com/oslokommune/okctl/releases/download/latest_release/okctl_Darwin_amd64.tar.gz"

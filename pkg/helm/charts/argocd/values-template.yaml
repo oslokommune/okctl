@@ -1331,11 +1331,11 @@ repoServer:
   # -- Resource limits and requests for the repo server pods
   resources:
     limits:
+      cpu: 100m
+      memory: 256Mi
+    requests:
       cpu: 50m
       memory: 128Mi
-    requests:
-      cpu: 10m
-      memory: 64Mi
 
   ## Repo server service configuration
   service:

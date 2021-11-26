@@ -1538,7 +1538,7 @@ configs:
     #     OnMNWIs7ssDJBsB7VFC8hcwf79jz7kC0xmQqDfw51Xhhk04kla+v+HZcFW2AO9so
     #     6ZdVHHQnIbJa7yQJKZ+hK49IOoBR6JgdB5kymoplLLiuqZSYTcwSBZ72FYTm3iAr
     #     jzvt1hxpxVDmXvRnkhRrIRhK4QgJL0jRmirBjDY+PYYd7bdRIjN7WNZLFsgplnS8
-    #     9w6CwG32pRlm0c8kkiQ7FXA6BYCqOsDI8f1VGQv331OpR2Ck+FTv+L7DAmg6l37W
+  #     9w6CwG32pRlm0c8kkiQ7FXA6BYCqOsDI8f1VGQv331OpR2Ck+FTv+L7DAmg6l37W
   #     +LB9LGh4OAp68ImTjqf6ioGKG0RBSznwME+r4nXtT1S/qLR6ASWUS4ViWRhbRlNK
   #     XWyb96wrUlv+E8I=
   #     -----END CERTIFICATE-----
@@ -1548,12 +1548,10 @@ configs:
 
   # -- Repository credentials to be used as Templates for other repos
   ## Creates a secret for each key/value specified below to create repository credentials
-  credentialTemplates:
-    iac-repo-creds:
-      url: {{ .RepoURL }}
-      sshPrivateKeySecret:
-        name: {{ .PrivateKeySecretName }}
-        key: {{ .PrivateKeySecretKey }}
+  credentialTemplates: { }
+    #iac-repo-creds:
+    #  url: {{ .RepoURL }}
+    #  sshPrivateKey: {{ .PrivateKeySecretKey }}
     # github-enterprise-creds-1:
     #   url: https://github.com/argoproj
     #   githubAppID: 1
@@ -1572,15 +1570,15 @@ configs:
     #  sshPrivateKey: |
     #    -----BEGIN OPENSSH PRIVATE KEY-----
     #    ...
-    #    -----END OPENSSH PRIVATE KEY-----
+  #    -----END OPENSSH PRIVATE KEY-----
 
   # -- Repositories list to be used by applications
   ## Creates a secret for each key/value specified below to create repositories
   ## Note: the last example in the list would use a repository credential template, configured under "configs.repositoryCredentials".
-  repositories:
-    iac-repo:
-      url: {{ .RepoURL }}
-      name: {{ .RepoName }}
+  repositories: { }
+    #iac-repo:
+    #  url: {{ .RepoURL }}
+    #  name: {{ .RepoName }}
     # istio-helm-repo:
     #   url: https://storage.googleapis.com/istio-prerelease/daily-build/master-latest-daily/charts
     #   name: istio.io

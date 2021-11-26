@@ -18,10 +18,10 @@ nav:
       - 7. Monitoring your cluster and applications: getting-started/monitoring.md
       - 8. Use a database: getting-started/application-addons.md
       - 9. Continuous integration: getting-started/continuous-integration.md
-      - 10. Upgrading okctl: getting-started/upgrading.md
-      - 11. Delete cluster: getting-started/delete-cluster.md
+      - 10. Delete cluster: getting-started/delete-cluster.md
   - Cluster:
       - Declaration reference: cluster/reference.md
+      - Upgrading: cluster/upgrading.md
   - Application:
       - Upgrading: application/upgrading.md
   - Building blocks:

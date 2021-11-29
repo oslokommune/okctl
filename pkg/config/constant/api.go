@@ -30,7 +30,7 @@ const (
 
 	DefaultEKSKubernetesVersion = "1.19"
 
-	DefaultChartApplyTimeout  = 5 * time.Minute
+	DefaultChartApplyTimeout  = 10 * time.Minute
 	DefaultChartRemoveTimeout = 5 * time.Minute
 	DefaultChartFindTimeout   = 1 * time.Minute
 

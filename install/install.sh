@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 C='\033[0;32m'
+BOLD='\033[1m'
 CX='\033[0m'
+
 
 function fetch_binary() {
   VERSION=$1
@@ -16,33 +18,39 @@ function fetch_binary() {
 
 function install_local_bin() {
   if [[ -f /usr/local/bin/okctl ]]; then
-    echo "You need to remove the old version of okctl before continuing. Run the following command"
+    echo "You need to remove the old version of okctl before continuing. Run the following command:"
     echo -e "${C}sudo rm /usr/local/bin/okctl${CX}"
     echo
     echo "and then re-run this installation."
+    echo
+    echo -e "Reason: This installation has detected that you have ${BOLD}~/.local/bin${CX} added to your PATH, so the okctl"\
+      "binary will be put there instead. By doing this, future installations should be completely automatic, without the need"\
+      "for running the ${C}sudo rm${CX} command above."
     exit 1
   fi
 
   fetch_binary $1
 
   mv /tmp/okctl $HOME/.local/bin
-  echo "Successfully installed okctl. Test it by running:"
+  echo "Successfully installed okctl. You can test it by running:"
   echo -e "${C}okctl version${CX}"
 }
 
 function install_usr() {
   fetch_binary $1
 
-  echo "okctl downloaded. To complete installation, run"
+  echo "okctl downloaded. To complete installation, run:"
   printf $C
   echo sudo mv /tmp/okctl /usr/local/bin
   printf $CX
   echo
-  echo "Then test it by running"
+  echo "You can then test it by running:"
   echo -e "${C}okctl version${CX}"
   echo
-  echo -e "💡 Tip: To avoid having to run the ${C}sudo mv${CX} command above in the future, create the directory"\
-    "\033[1m~/.local/bin${CX} and add it to your PATH."
+  echo -e "💡 Tip: To avoid having to run the ${C}sudo mv${CX} command above for future installations, you can ignore the"\
+    "${C}sudo mv${CX} command above, and instead do the following:"
+  echo -e "- Create the directory ${BOLD}~/.local/bin${CX} and add it to your PATH."
+  echo "- Re-run this installation. This installation will detect the directory, and put okctl there."
 }
 
 if [[ -z $1 ]]; then

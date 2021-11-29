@@ -40,6 +40,9 @@ function install_usr() {
   echo
   echo "Then test it by running"
   echo -e "${C}okctl version${CX}"
+  echo
+  echo -e "💡 Tip: To avoid having to run the ${C}sudo mv${CX} command above in the future, create the directory"\
+    "\033[1m~/.local/bin${CX} and add it to your PATH."
 }
 
 if [[ -z $1 ]]; then

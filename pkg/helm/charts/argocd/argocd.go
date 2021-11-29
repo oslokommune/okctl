@@ -29,7 +29,7 @@ func New(values *Values, timeout time.Duration) *helm.Chart {
 		RepositoryName: "argo",
 		RepositoryURL:  "https://argoproj.github.io/argo-helm",
 		ReleaseName:    ReleaseName,
-		Version:        "3.26.9",
+		Version:        "3.26.12",
 		Chart:          "argo-cd",
 		Namespace:      Namespace,
 		Timeout:        timeout,

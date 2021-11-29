@@ -29,10 +29,17 @@ func TestNew(t *testing.T) {
 	}{
 		{
 			name: "Should work",
-			ext: externalsecret.New("name", "default", externalsecret.SecretManifest("name", "default", api.BackendTypeParameterStore, nil, nil, []typesv1.ExternalSecretData{
-				{
-					Key:  "/path",
-					Name: "from",
+			ext: externalsecret.New("name", "default", externalsecret.SecretManifest(externalsecret.SecretManifestOpts{
+				Name:        "name",
+				Namespace:   "default",
+				BackendType: api.BackendTypeParameterStore,
+				Annotations: nil,
+				Labels:      nil,
+				Data: []typesv1.ExternalSecretData{
+					{
+						Key:  "/path",
+						Name: "from",
+					},
 				},
 			})),
 		},
@@ -86,10 +93,17 @@ func TestExternalDNS(t *testing.T) {
 		// - https://github.com/external-secrets/kubernetes-external-secrets/blob/master/charts/kubernetes-external-secrets/crds/kubernetes-client.io_externalsecrets_crd.yaml
 		{
 			name: "Should work",
-			ext: externalsecret.New("name", "default", externalsecret.SecretManifest("name", "default", api.BackendTypeParameterStore, nil, nil, []typesv1.ExternalSecretData{
-				{
-					Key:  "/path",
-					Name: "",
+			ext: externalsecret.New("name", "default", externalsecret.SecretManifest(externalsecret.SecretManifestOpts{
+				Name:        "name",
+				Namespace:   "default",
+				BackendType: api.BackendTypeParameterStore,
+				Annotations: nil,
+				Labels:      nil,
+				Data: []typesv1.ExternalSecretData{
+					{
+						Key:  "/path",
+						Name: "",
+					},
 				},
 			})),
 		},

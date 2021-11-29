@@ -82,6 +82,11 @@ const (
 	BackendTypeParameterStore = "systemManager"
 )
 
+// ExternalSecretSpecTemplate represents the template attribute of an ExternalSecret
+type ExternalSecretSpecTemplate struct {
+	StringData map[string]interface{}
+}
+
 // Manifest represents a single external secret
 type Manifest struct {
 	Name        string
@@ -90,6 +95,7 @@ type Manifest struct {
 	Annotations map[string]string
 	Labels      map[string]string
 	Data        []Data
+	Template    ExternalSecretSpecTemplate
 }
 
 // Validate manifest

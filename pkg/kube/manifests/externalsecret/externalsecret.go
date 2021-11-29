@@ -97,15 +97,15 @@ func SecretManifest(opts SecretManifestOpts) *typesv1.ExternalSecret {
 		Spec: typesv1.ExternalSecretSpec{
 			BackendType: opts.BackendType,
 			Data:        opts.Data,
-			Template:    getTemplateIfRequred(opts),
+			Template:    getTemplateIfRequired(opts),
 		},
 	}
 
 	return e
 }
 
-// getTemplateIfRequred knows if an externalsecrets template should be created
-func getTemplateIfRequred(opts SecretManifestOpts) *typesv1.ExternalSecretTemplate {
+// getTemplateIfRequired knows if an externalsecrets template should be created
+func getTemplateIfRequired(opts SecretManifestOpts) *typesv1.ExternalSecretTemplate {
 	if opts.Labels == nil && opts.Annotations == nil && opts.StringDataTemplate == nil {
 		return nil
 	}

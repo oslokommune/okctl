@@ -3,7 +3,8 @@
 C='\033[0;32m'
 BOLD='\033[1m'
 CX='\033[0m'
-
+USER_AGENT=$(grep -Po "userAgent: \K[a-zA-Z0-9]+$" ~/.okctl/conf.yml 2>/dev/null || echo okctl)
+METRICS_URL="https://metrics.kjoremiljo.oslo.systems/v1/metrics/events"
 
 function fetch_binary() {
   VERSION=$1
@@ -53,6 +54,38 @@ function install_usr() {
   echo "- Re-run this installation. This installation will detect the directory, and put okctl there."
 }
 
+function publish_event() {
+  ACTION=$1
+
+  curl $METRICS_URL \
+      -X POST \
+      -H "User-Agent: $USER_AGENT" \
+      -H "Content-Type: application/json" \
+      -d "{\"category\": \"install\", \"action\": \"$ACTION\" }"
+}
+
+function publish_start_stop() {
+  PHASE_KEY=$1
+
+  curl $METRICS_URL \
+    -X POST \
+    -H "User-Agent: $USER_AGENT" \
+    -H "Content-Type: application/json" \
+    -d "{\"category\": \"install\", \"action\": \"okctl\", \"labels\": { \"phase\": \"$PHASE_KEY\" } }"
+}
+
+function publish_start() {
+  PHASE_KEY="start"
+  publish_start_stop $PHASE_KEY
+}
+
+function publish_stop() {
+  PHASE_KEY="stop"
+  publish_start_stop $PHASE_KEY
+}
+
+publish_start
+
 if [[ -z $1 ]]; then
   VERSION=latest
 else
@@ -63,6 +96,8 @@ fi
 if command -v brew &> /dev/null; then
   # Check if okctl exists
   if brew list okctl &> /dev/null; then
+    publish_event brew_uninstall
+
     echo Uninstalling okctl from brew
     brew uninstall okctl
     brew untap oslokommune/tap
@@ -77,3 +112,4 @@ else
   install_usr $VERSION
 fi
 
+publish_stop

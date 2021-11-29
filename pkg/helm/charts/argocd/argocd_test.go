@@ -3,8 +3,6 @@ package argocd_test
 import (
 	"testing"
 
-	"gopkg.in/yaml.v3"
-
 	"github.com/oslokommune/okctl/pkg/helm/charts/argocd"
 
 	"github.com/sebdah/goldie/v2"
@@ -40,7 +38,7 @@ func TestNewDefaultValues(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := yaml.Marshal(tc.values)
+			got, err := tc.values.RawYAML()
 			assert.NoError(t, err)
 
 			g := goldie.New(t)

@@ -3,7 +3,7 @@
 To automatically install the latest version of okctl, run
 
 ```shell
-curl -fsSL https://raw.githubusercontent.com/oslokommune/okctl/HEAD/install/install.sh | /bin/bash
+curl -fsSL https://raw.githubusercontent.com/oslokommune/okctl/KM445-okctl_version_must_equal_cluster_version/install/install.sh | /bin/bash
 ```
 
 and follow the instructions.
@@ -11,7 +11,7 @@ and follow the instructions.
 To get a specific version of okctl, run (replace `0.0.74` with the version you want)
 
 ```shell
-curl -fsSL https://raw.githubusercontent.com/oslokommune/okctl/HEAD/install/install.sh | /bin/bash -s 0.0.74
+curl -fsSL https://raw.githubusercontent.com/oslokommune/okctl/KM445-okctl_version_must_equal_cluster_version/install/install.sh | /bin/bash -s 0.0.74
 ```
 
 and follow the instructions.

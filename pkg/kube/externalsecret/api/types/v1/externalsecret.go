@@ -21,7 +21,8 @@ type ExternalSecretSpec struct {
 
 //+kubebuilder:object:generate:=true
 type ExternalSecretTemplate struct {
-	Metadata ExternalSecretTemplateMetadata `json:"metadata"`
+	Metadata   ExternalSecretTemplateMetadata `json:"metadata"`
+	StringData map[string]interface{}         `json:"stringData"`
 }
 
 //+kubebuilder:object:generate:=true

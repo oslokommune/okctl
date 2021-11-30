@@ -84,30 +84,39 @@ func (a *ExternalSecret) DeleteSecret(_ kubernetes.Interface, config *rest.Confi
 }
 
 // SecretManifest returns the manifest
-func SecretManifest(name, namespace, backendType string, annotations, labels map[string]string, data []typesv1.ExternalSecretData) *typesv1.ExternalSecret {
+func SecretManifest(opts SecretManifestOpts) *typesv1.ExternalSecret {
 	e := &typesv1.ExternalSecret{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ExternalSecret",
 			APIVersion: "kubernetes-client.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
+			Name:      opts.Name,
+			Namespace: opts.Namespace,
 		},
 		Spec: typesv1.ExternalSecretSpec{
-			BackendType: backendType,
-			Data:        data,
+			BackendType: opts.BackendType,
+			Data:        opts.Data,
+			Template:    getTemplateIfRequired(opts),
 		},
-	}
-
-	if labels != nil || annotations != nil {
-		e.Spec.Template = &typesv1.ExternalSecretTemplate{
-			Metadata: typesv1.ExternalSecretTemplateMetadata{
-				Annotations: annotations,
-				Labels:      labels,
-			},
-		}
 	}
 
 	return e
+}
+
+// getTemplateIfRequired knows if an externalsecrets template should be created
+func getTemplateIfRequired(opts SecretManifestOpts) *typesv1.ExternalSecretTemplate {
+	if opts.Labels == nil && opts.Annotations == nil && opts.StringDataTemplate == nil {
+		return nil
+	}
+
+	template := &typesv1.ExternalSecretTemplate{
+		Metadata: typesv1.ExternalSecretTemplateMetadata{
+			Annotations: opts.Annotations,
+			Labels:      opts.Labels,
+		},
+		StringData: opts.StringDataTemplate,
+	}
+
+	return template
 }

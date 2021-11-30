@@ -735,7 +735,7 @@ func (c *Chart) ValuesYAML() ([]byte, error) {
 		values, err = v.RawYAML()
 
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("converting to raw yaml: %w", err)
 		}
 	case []byte:
 		values = v

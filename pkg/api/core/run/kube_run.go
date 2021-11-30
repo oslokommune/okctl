@@ -221,14 +221,15 @@ func (k *kubeRun) CreateExternalSecrets(opts api.CreateExternalSecretsOpts) (*ap
 		}
 	}
 
-	secretManifest := externalsecret.SecretManifest(
-		opts.Manifest.Name,
-		opts.Manifest.Namespace,
-		opts.Manifest.Backend,
-		opts.Manifest.Annotations,
-		opts.Manifest.Labels,
-		data,
-	)
+	secretManifest := externalsecret.SecretManifest(externalsecret.SecretManifestOpts{
+		Name:               opts.Manifest.Name,
+		Namespace:          opts.Manifest.Namespace,
+		BackendType:        opts.Manifest.Backend,
+		Annotations:        opts.Manifest.Annotations,
+		Labels:             opts.Manifest.Labels,
+		Data:               data,
+		StringDataTemplate: opts.Manifest.Template.StringData,
+	})
 
 	fn := externalsecret.New(opts.Manifest.Name, opts.Manifest.Namespace, secretManifest)
 

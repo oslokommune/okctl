@@ -34,7 +34,9 @@ const (
 	argoPurpose          = "argocd"
 	argoPrivateKeyName   = "argocd-privatekey"
 	argoSecretName       = "argocd-secret"
-	argoChartTimeout     = 15 * time.Minute
+	// argoChartTimeout does not work right now. See https://trello.com/c/zrS1xDXz for details
+	argoChartTimeout      = 15 * time.Minute
+	argoRepositoryTypeGit = "git"
 )
 
 // nolint: funlen
@@ -175,12 +177,21 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 				"meta.helm.sh/release-namespace": "argocd",
 			},
 			Labels: map[string]string{
-				"app.kubernetes.io/managed-by": "Helm",
+				"app.kubernetes.io/managed-by":   "Helm",
+				"argocd.argoproj.io/secret-type": "repository",
 			},
 			Data: []api.Data{
 				{
 					Name: privateKeyDataName,
 					Key:  opts.Repository.DeployKey.PrivateKeySecret.Path,
+				},
+			},
+			Template: api.ExternalSecretSpecTemplate{
+				StringData: map[string]interface{}{
+					"name":          opts.Repository.FullName,
+					"url":           opts.Repository.GitURL,
+					"type":          argoRepositoryTypeGit,
+					"sshPrivateKey": fmt.Sprintf("%s data[\"%s\"] %s", "<%=", privateKeyDataName, "%>"),
 				},
 			},
 		},

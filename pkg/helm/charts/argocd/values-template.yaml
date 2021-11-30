@@ -888,7 +888,7 @@ server:
       alb.ingress.kubernetes.io/healthcheck-path: /healthz
       alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
       alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type":"redirect","RedirectConfig":{"Protocol":"HTTPS","Port":"443","StatusCode":"HTTP_301"}}'
-      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-west-1:123456789012/certificate/12345abc
+      alb.ingress.kubernetes.io/certificate-arn: {{ .CertificateARN }}
     # -- Additional ingress labels
     labels: { }
     # -- Defines which ingress controller will implement the resource
@@ -899,7 +899,7 @@ server:
     ## Hostnames must be provided if Ingress is enabled.
     ## Secrets must be manually created in the namespace
     hosts:
-      - argocd.test.oslo.systems
+      - {{ .HostName }}
       # - argocd.example.com
 
     # -- List of ingress paths
@@ -1017,7 +1017,7 @@ server:
   # @default -- See [values.yaml]
   config:
     # Argo CD's externally facing base URL (optional). Required when configuring SSO
-    url: https://argocd.test.oslo.systems
+    url: {{ .URL }}
     # Argo CD instance label key
     application.instanceLabelKey: argocd.argoproj.io/instance
 
@@ -1042,10 +1042,10 @@ server:
         id: aws
         name: Cognito
         config:
-          issuer: https://cognito-idp..amazonaws.com/VBNJ6723FAKE
-          clientID: client12345
+          issuer: https://cognito-idp.{{ .Region }}.amazonaws.com/{{ .UserPoolID }}
+          clientID: {{ .ClientID }}
           clientSecret: $dex.cognito.clientSecret
-          redirectURI: https://argocd.test.oslo.systems/api/dex/callback
+          redirectURI: {{ .URL }}/api/dex/callback
           scopes:
             - openid
             - profile
@@ -1550,8 +1550,8 @@ configs:
   ## Creates a secret for each key/value specified below to create repository credentials
   credentialTemplates: { }
     #iac-repo-creds:
-    #  url: git@github.com:oslokommune/test.git
-    #  sshPrivateKey: ssh-private-key
+    #  url: {{ .RepoURL }}
+    #  sshPrivateKey: {{ .PrivateKeySecretKey }}
     # github-enterprise-creds-1:
     #   url: https://github.com/argoproj
     #   githubAppID: 1
@@ -1577,8 +1577,8 @@ configs:
   ## Note: the last example in the list would use a repository credential template, configured under "configs.repositoryCredentials".
   repositories: { }
     #iac-repo:
-    #  url: git@github.com:oslokommune/test.git
-    #  name: test
+    #  url: {{ .RepoURL }}
+    #  name: {{ .RepoName }}
     # istio-helm-repo:
     #   url: https://storage.googleapis.com/istio-prerelease/daily-build/master-latest-daily/charts
     #   name: istio.io

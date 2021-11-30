@@ -84,7 +84,7 @@ function publish_stop() {
   publish_start_stop $PHASE_KEY
 }
 
-publish_start
+# publish_start
 
 if [[ -z $1 ]]; then
   VERSION=latest
@@ -96,7 +96,7 @@ fi
 if command -v brew &> /dev/null; then
   # Check if okctl exists
   if brew list okctl &> /dev/null; then
-    publish_event brew_uninstall
+    # publish_event brew_uninstall
 
     echo Uninstalling okctl from brew
     brew uninstall okctl
@@ -112,4 +112,4 @@ else
   install_usr $VERSION
 fi
 
-publish_stop
+# publish_stop

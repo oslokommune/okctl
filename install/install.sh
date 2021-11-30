@@ -48,9 +48,9 @@ function install_usr() {
   echo "You can then test it by running:"
   echo -e "${C}okctl version${CX}"
   echo
-  echo -e "💡 Tip: To avoid having to run the ${C}sudo mv${CX} command above for future installations, you can ignore the"\
-    "${C}sudo mv${CX} command above, and instead do the following:"
-  echo -e "- Create the directory ${BOLD}~/.local/bin${CX} and add it to your PATH."
+  echo -e "💡 Tip: To avoid having to run the ${C}sudo mv${CX} command above for future installations, you can do the following:"
+  echo -e "- Create the directory ${BOLD}~/.local/bin${CX}"
+  echo -e "- Add ${BOLD}~/.local/bin${CX} to your PATH."
   echo "- Re-run this installation. This installation will detect the directory, and put okctl there."
 }
 

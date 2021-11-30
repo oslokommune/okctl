@@ -73,7 +73,7 @@ require (
 	golang.org/x/crypto v0.0.0-20210915214749-c084706c2272
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f
 	gopkg.in/h2non/gock.v1 v1.1.2
-	gopkg.in/ini.v1 v1.65.0
+	gopkg.in/ini.v1 v1.66.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gotest.tools v2.2.0+incompatible

@@ -29,11 +29,12 @@ type argoCDService struct {
 
 // nolint: gosec
 const (
-	argoClientSecretName  = "argocd/client_secret"
-	argoSecretKeyName     = "argocd/secret_key"
-	argoPurpose           = "argocd"
-	argoPrivateKeyName    = "argocd-privatekey"
-	argoSecretName        = "argocd-secret"
+	argoClientSecretName = "argocd/client_secret"
+	argoSecretKeyName    = "argocd/secret_key"
+	argoPurpose          = "argocd"
+	argoPrivateKeyName   = "argocd-privatekey"
+	argoSecretName       = "argocd-secret"
+	// argoChartTimeout does not work right now. See https://trello.com/c/zrS1xDXz for details
 	argoChartTimeout      = 15 * time.Minute
 	argoRepositoryTypeGit = "git"
 )

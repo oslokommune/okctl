@@ -16,6 +16,8 @@ curl -fsSL https://raw.githubusercontent.com/oslokommune/okctl/KM445-okctl_versi
 
 and follow the instructions.
 
+ℹ The automatic installation script does the steps described below, while trying to put the okctl binary at a location that avoids using `sudo`.
+
 ## Manual installation
 
 ### macOS

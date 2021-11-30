@@ -31,7 +31,7 @@ brew untap oslokommune/tap
 
 Then install with the instructions below.
 
-Read more about this change in https://github.com/oslokommune/okctl/pull/786.
+Read more about this change in [#786](https://github.com/oslokommune/okctl/pull/786).
 
 ### macOS and Linux
 
@@ -52,4 +52,3 @@ sudo mv /tmp/okctl /usr/local/bin # or somewhere else on your $PATH
 ## Enable shell autocompletion
 
 To get autocompletion in your shell working run `okctl completion -h` and follow the steps for your preferred shell.
-

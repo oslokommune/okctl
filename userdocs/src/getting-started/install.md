@@ -50,3 +50,4 @@ sudo mv /tmp/okctl /usr/local/bin # or somewhere else on your $PATH
 ## Enable shell autocompletion
 
 To get autocompletion in your shell working run `okctl completion -h` and follow the steps for your preferred shell.
+

@@ -210,11 +210,11 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		handlers.Certificate,
 	)
 
-
 	usProvider, err := o.getUsEastOneProvider()
 	if err != nil {
 		return nil, errors.New("Unable to get certificate cloud provider")
 	}
+
 	identityManagerService := clientCore.NewIdentityManagerService(
 		clientDirectAPI.NewIdentityManagerAPI(core.NewIdentityManagerService(
 			awsProvider.NewIdentityManagerCloudProvider(o.CloudProvider),
@@ -519,6 +519,7 @@ func (o *Okctl) initialise() error {
 	if err != nil {
 		return errors.New("Unable to get certificate cloud provider")
 	}
+
 	identityManagerService := core.NewIdentityManagerService(
 		awsProvider.NewIdentityManagerCloudProvider(o.CloudProvider),
 		awsProvider.NewCertificateCloudProvider(usProvider),
@@ -797,5 +798,6 @@ func (o *Okctl) getUsEastOneProvider() (v1alpha1.CloudProvider, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return provider, nil
 }

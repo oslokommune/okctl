@@ -4,6 +4,7 @@ package okctl
 
 import (
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/logging"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -388,6 +389,8 @@ func (o *Okctl) KubeConfigStore() (api.KubeConfigStore, error) {
 // Initialise okctl for receiving requests
 // nolint: funlen
 func (o *Okctl) initialise() error {
+	logging.InitLogger()
+
 	err := o.EnableFileLog()
 	if err != nil {
 		return err

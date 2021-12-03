@@ -5,6 +5,7 @@ import (
 
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/logging"
 )
 
 type domainService struct {
@@ -12,6 +13,11 @@ type domainService struct {
 }
 
 func (d *domainService) DeleteHostedZone(_ context.Context, opts api.DeleteHostedZoneOpts) error {
+	logger := logging.GetLogger("Domain service", "DeleteHostedZone").
+		WithField("hostedZoneId", opts.HostedZoneID)
+
+	logger.Info("Deleting hosted zone")
+
 	err := opts.Validate()
 	if err != nil {
 		return errors.E(err, "failed to validate inputs")

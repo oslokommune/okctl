@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-C='\033[0;32m'
+CMD='\033[1;32m'
 BOLD='\033[1m'
 CX='\033[0m'
 USER_AGENT=$(grep -Po "userAgent: \K[a-zA-Z0-9]+$" ~/.okctl/conf.yml 2>/dev/null || echo okctl)
@@ -19,14 +19,14 @@ function fetch_binary() {
 
 function install_local_bin() {
   if [[ -f /usr/local/bin/okctl ]]; then
-    echo "You need to remove the old version of okctl before continuing. Run the following command:"
-    echo -e "${C}sudo rm /usr/local/bin/okctl${CX}"
+    echo "❗ Installation NOT complete. You need to remove the old version of okctl before continuing. Run the following command:"
+    echo -e "${CMD}sudo rm /usr/local/bin/okctl${CX}"
     echo
     echo "and then re-run this installation."
     echo
     echo -e "Reason: This installation has detected that you have ${BOLD}~/.local/bin${CX} added to your PATH, so the okctl"\
       "binary will be put there instead. By doing this, future installations should be completely automatic, without the need"\
-      "for running the ${C}sudo rm${CX} command above."
+      "for running the ${CMD}sudo rm${CX} command above."
     exit 1
   fi
 
@@ -34,21 +34,22 @@ function install_local_bin() {
 
   mv /tmp/okctl $HOME/.local/bin
   echo "Successfully installed okctl. You can test it by running:"
-  echo -e "${C}okctl version${CX}"
+  echo -e "${CMD}okctl version${CX}"
 }
 
 function install_usr() {
   fetch_binary $1
 
-  echo "okctl downloaded. To complete installation, run:"
-  printf $C
-  echo sudo mv /tmp/okctl /usr/local/bin
+  echo "Done."
+  echo
+  echo "-------------------------------------------------------------------------------------------------------------------------"
+  echo "To complete installation, run:"
+  printf $CMD
+  echo "sudo mv /tmp/okctl /usr/local/bin"
   printf $CX
+  echo "-------------------------------------------------------------------------------------------------------------------------"
   echo
-  echo "You can then test it by running:"
-  echo -e "${C}okctl version${CX}"
-  echo
-  echo -e "💡 Tip: To avoid having to run the ${C}sudo mv${CX} command above for future installations, you can do the following:"
+  echo -e "💡 Tip: To avoid having to run the ${CMD}sudo mv${CX} command above for future installations, you can do the following:"
   echo -e "- Create the directory ${BOLD}~/.local/bin${CX}"
   echo -e "- Add ${BOLD}~/.local/bin${CX} to your PATH."
   echo "- Re-run this installation. This installation will detect the directory, and put okctl there."
@@ -99,9 +100,8 @@ if command -v brew &> /dev/null; then
     # publish_event brew_uninstall
 
     echo Uninstalling okctl from brew
-    brew uninstall okctl
-    brew untap oslokommune/tap
-    echo
+    brew uninstall okctl &> /tmp/okctl_brew_uninstall.txt
+    brew untap oslokommune/tap &>> /tmp/okctl_brew_uninstall.txt
   fi
 fi
 

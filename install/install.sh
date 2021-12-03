@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
 
+function get_user_agent() {
+  if [[ -f ~/.okctl/conf.yml ]]; then
+    USER_AGENT=$( (grep -E "userAgent:" ~/.okctl/conf.yml || echo okctl) | sed 's/userAgent://')
+    echo "$USER_AGENT"
+  else
+    echo "okctl"
+  fi
+}
+
 CMD='\033[1;32m'
 BOLD='\033[1m'
 CX='\033[0m'
-USER_AGENT=$(grep -Po "userAgent: \K[a-zA-Z0-9]+$" ~/.okctl/conf.yml 2>/dev/null || echo okctl)
 METRICS_URL="https://metrics.kjoremiljo.oslo.systems/v1/metrics/events"
+USER_AGENT=$(get_user_agent)
 
 function fetch_binary() {
   VERSION=$1
@@ -55,15 +64,6 @@ function install_usr() {
   echo "- Re-run this installation. This installation will detect the directory, and put okctl there."
 }
 
-function publish_event() {
-  ACTION=$1
-
-  curl $METRICS_URL \
-      -X POST \
-      -H "User-Agent: $USER_AGENT" \
-      -H "Content-Type: application/json" \
-      -d "{\"category\": \"install\", \"action\": \"$ACTION\" }"
-}
 
 function publish_start_stop() {
   PHASE_KEY=$1
@@ -72,7 +72,7 @@ function publish_start_stop() {
     -X POST \
     -H "User-Agent: $USER_AGENT" \
     -H "Content-Type: application/json" \
-    -d "{\"category\": \"install\", \"action\": \"okctl\", \"labels\": { \"phase\": \"$PHASE_KEY\" } }"
+    -d "{\"category\": \"installation\", \"action\": \"install\", \"labels\": { \"phase\": \"$PHASE_KEY\" } }"
 }
 
 function publish_start() {
@@ -85,7 +85,17 @@ function publish_stop() {
   publish_start_stop $PHASE_KEY
 }
 
-# publish_start
+function publish_brew_uninstall() {
+  ACTION=$1
+
+  curl $METRICS_URL \
+      -X POST \
+      -H "User-Agent: $USER_AGENT" \
+      -H "Content-Type: application/json" \
+      -d "{\"category\": \"brewokctlinstallation\", \"action\": \"uninstall\" }"
+}
+
+publish_start
 
 if [[ -z $1 ]]; then
   VERSION=latest
@@ -97,11 +107,12 @@ fi
 if command -v brew &> /dev/null; then
   # Check if okctl exists
   if brew list okctl &> /dev/null; then
-    # publish_event brew_uninstall
-
     echo Uninstalling okctl from brew
-    brew uninstall okctl &> /tmp/okctl_brew_uninstall.txt
-    brew untap oslokommune/tap &>> /tmp/okctl_brew_uninstall.txt
+    brew uninstall okctl 2>&1 1> /tmp/okctl_brew_uninstall.txt
+    brew untap oslokommune/tap 2>&1 1>> /tmp/okctl_brew_uninstall.txt
+    echo
+
+    publish_brew_uninstall
   fi
 fi
 
@@ -112,4 +123,4 @@ else
   install_usr $VERSION
 fi
 
-# publish_stop
+publish_stop

@@ -1,5 +1,9 @@
 ## Automatic installation 🆕
 
+The automatic installation script does the same steps as described in the "Manual installation" section, while trying to put the okctl binary at a location that avoids using `sudo`.
+
+
+### macOS and Linux
 To automatically install the latest version of okctl, run
 
 ```shell
@@ -8,6 +12,8 @@ curl -fsSL https://raw.githubusercontent.com/oslokommune/okctl/KM445-okctl_versi
 
 and follow the instructions.
 
+<br/>
+
 To get a specific version of okctl, run (replace `0.0.74` with the version you want)
 
 ```shell
@@ -15,8 +21,6 @@ curl -fsSL https://raw.githubusercontent.com/oslokommune/okctl/KM445-okctl_versi
 ```
 
 and follow the instructions.
-
-ℹ The automatic installation script does the steps described below, while trying to put the okctl binary at a location that avoids using `sudo`.
 
 ## Manual installation
 
@@ -41,6 +45,8 @@ To get the latest version of okctl, run
 curl --silent --location "https://github.com/oslokommune/okctl/releases/latest/download/okctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
 sudo mv /tmp/okctl /usr/local/bin # or somewhere else on your $PATH
 ```
+
+<br/>
 
 To get a specific version of okctl, run (replace `0.0.74` with the version you want)
 

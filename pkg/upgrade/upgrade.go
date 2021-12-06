@@ -373,7 +373,7 @@ type Upgrader struct {
 
 // New returns a new Upgrader, or an error if initialization fails
 func New(opts Opts) (Upgrader, error) {
-	err := opts.ClusterVersioner.ValidateBinaryVsClusterVersion(opts.OkctlVersion)
+	err := opts.ClusterVersioner.ValidateBinaryVersionNotLessThanClusterVersion(opts.OkctlVersion)
 	if err != nil {
 		return Upgrader{}, fmt.Errorf(commands.ValidateBinaryVsClusterVersionErr, err)
 	}

@@ -96,14 +96,13 @@ func TestRunUpgrades(t *testing.T) {
 			expectErrorContains:               "exit status 1",
 		},
 		{
-			name:                               "Should run zero upgrades",
-			withOkctlVersion:                   "0.0.60",
-			withOriginalClusterVersion:         "0.0.50",
-			withClusterVersion:                 "0.0.52",
-			withGithubReleases:                 []*github.RepositoryRelease{},
-			withHost:                           state.Host{Os: linux, Arch: amd64},
-			expectBinaryVersionsRunOnce:        []string{},
-			expectedClusterVersionAfterUpgrade: "0.0.60",
+			name:                        "Should run zero upgrades",
+			withOkctlVersion:            "0.0.60",
+			withOriginalClusterVersion:  "0.0.50",
+			withClusterVersion:          "0.0.52",
+			withGithubReleases:          []*github.RepositoryRelease{},
+			withHost:                    state.Host{Os: linux, Arch: amd64},
+			expectBinaryVersionsRunOnce: []string{},
 		},
 		{
 			name:                              "Should run a Linux upgrade",
@@ -131,22 +130,20 @@ func TestRunUpgrades(t *testing.T) {
 			//
 			// If creating a new cluster, the cluster version would be 0.0.70 (not 0.0.61). Therefore, we do a final
 			// bump of cluster version to the current version of okctl, which is what this test verifies.
-			name:                               "Should bump cluster version to the current okctl version after upgrading",
-			withOkctlVersion:                   "0.0.70",
-			withOriginalClusterVersion:         "0.0.50",
-			withGithubReleases:                 createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
-			withGithubReleaseAssetsFromFolder:  folderWorking,
-			withHost:                           state.Host{Os: linux, Arch: amd64},
-			expectBinaryVersionsRunOnce:        []string{"0.0.61"},
-			expectedClusterVersionAfterUpgrade: "0.0.70",
+			name:                              "Should bump cluster version to the current okctl version after upgrading",
+			withOkctlVersion:                  "0.0.70",
+			withOriginalClusterVersion:        "0.0.50",
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
+			withGithubReleaseAssetsFromFolder: folderWorking,
+			withHost:                          state.Host{Os: linux, Arch: amd64},
+			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
 		},
 		{
-			name:                               "Should bump cluster version to the current okctl version after upgrading, even if zero upgrades were run",
-			withOkctlVersion:                   "0.0.70",
-			withOriginalClusterVersion:         "0.0.50",
-			withGithubReleaseAssetsFromFolder:  folderWorking,
-			withHost:                           state.Host{Os: linux, Arch: amd64},
-			expectedClusterVersionAfterUpgrade: "0.0.70",
+			name:                              "Should bump cluster version to the current okctl version after upgrading, even if zero upgrades were run",
+			withOkctlVersion:                  "0.0.70",
+			withOriginalClusterVersion:        "0.0.50",
+			withGithubReleaseAssetsFromFolder: folderWorking,
+			withHost:                          state.Host{Os: linux, Arch: amd64},
 		},
 		{
 			name:                              "Should not bump cluster version if user aborts upgrading",
@@ -615,6 +612,10 @@ func TestRunUpgrades(t *testing.T) {
 				tc.withClusterVersion = tc.withOriginalClusterVersion
 			}
 
+			if len(tc.expectedClusterVersionAfterUpgrade) == 0 {
+				tc.expectedClusterVersionAfterUpgrade = tc.withOkctlVersion
+			}
+
 			upgradeState := testutils.MockUpgradeState(tc.withClusterVersion)
 			clusterState := testutils.MockClusterState(tc.withOriginalClusterVersion)
 
@@ -688,12 +689,7 @@ func doAsserts(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts) {
 	// Cluster version
 	clusterVersion, err := defaultOpts.ClusterVersioner.GetClusterVersion()
 	require.NoError(t, err, tc.name)
-
-	if len(tc.expectedClusterVersionAfterUpgrade) > 0 {
-		assert.Equal(t, tc.expectedClusterVersionAfterUpgrade, clusterVersion, tc.name)
-	} else {
-		assert.Equal(t, tc.withOkctlVersion, clusterVersion, tc.name)
-	}
+	assert.Equal(t, tc.expectedClusterVersionAfterUpgrade, clusterVersion, tc.name)
 
 	// Original version
 	originalClusterVersion, err := defaultOpts.OriginalClusterVersioner.GetOriginalClusterVersion()

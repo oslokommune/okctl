@@ -56,18 +56,17 @@ func (u Upgrader) Run() error {
 	// Run
 	if len(upgradeBinaries) > 0 {
 		printUpgrades(u.out, "Found %d applicable upgrade(s):", upgradeBinaries)
+
+		userConfirmedContinue, err := u.runBinaries(upgradeBinaries)
+		if err != nil {
+			return fmt.Errorf("running upgrade binaries: %w", err)
+		}
+
+		if !userConfirmedContinue {
+			return nil
+		}
 	} else {
-		_, _ = fmt.Fprintln(u.out, "Did not find any applicable upgrades.")
-		return nil
-	}
-
-	userConfirmedContinue, err := u.runBinaries(upgradeBinaries)
-	if err != nil {
-		return fmt.Errorf("running upgrade binaries: %w", err)
-	}
-
-	if !userConfirmedContinue {
-		return nil
+		_, _ = fmt.Fprintln(u.out, "Did not find any applicable upgrades. Cluster version will be updated regardless.")
 	}
 
 	// Update cluster version
@@ -76,7 +75,7 @@ func (u Upgrader) Run() error {
 		return fmt.Errorf(commands.SaveClusterVersionErr, err)
 	}
 
-	_, _ = fmt.Fprintf(u.out, "\nUpgrade complete! Cluster version is now %s."+
+	_, _ = fmt.Fprintf(u.out, "\nUpgrade complete, cluster version is now %s."+
 		" Remember to commit and push changes with git.\n", u.okctlVersion)
 
 	return nil

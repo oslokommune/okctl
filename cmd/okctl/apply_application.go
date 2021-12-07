@@ -51,6 +51,11 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			func(cmd *cobra.Command, args []string) (err error) {
 				metrics.Publish(generateStartEvent(metrics.ActionApplyApplication))
 
+				err = commands.ValidateBinaryEqualsClusterVersion(o)
+				if err != nil {
+					return err
+				}
+
 				opts.Application, err = commands.InferApplicationFromStdinOrFile(*o.Declaration, o.In, o.FileSystem, opts.File)
 				if err != nil {
 					return fmt.Errorf("inferring application from stdin or file: %w", err)

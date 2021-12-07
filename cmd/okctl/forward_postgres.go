@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/commands"
+
 	"github.com/oslokommune/okctl/cmd/okctl/preruns"
 	"github.com/oslokommune/okctl/pkg/metrics"
 
@@ -68,6 +70,11 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 				}
 
 				err := o.Initialise()
+				if err != nil {
+					return err
+				}
+
+				err = commands.ValidateBinaryVersionNotLessThanClusterVersion(o)
 				if err != nil {
 					return err
 				}

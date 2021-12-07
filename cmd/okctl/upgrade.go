@@ -40,7 +40,6 @@ func buildUpgradeCommand(o *okctl.Okctl) *cobra.Command {
 		Long: `Runs a series of upgrade migrations to upgrade resources made by okctl
 to the current version of okctl. Example of such resources are helm charts, okctl cluster and application declarations,
 binaries used by okctl (kubectl, etc), and internal state.`,
-		Hidden: true,
 		PreRunE: preruns.PreRunECombinator(
 			preruns.LoadUserData(o),
 			preruns.InitializeMetrics(o),

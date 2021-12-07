@@ -18,6 +18,8 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/oslokommune/okctl/pkg/upgrade"
 
+	"github.com/oslokommune/okctl/pkg/version"
+
 	"github.com/oslokommune/okctl/pkg/api"
 
 	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
@@ -147,6 +149,11 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 					clusterID,
 					state.Upgrade,
 				)
+
+				err = clusterVersioner.ValidateBinaryEqualsClusterVersion(version.GetVersionInfo().Version)
+				if err != nil {
+					return fmt.Errorf(commands.ValidateBinaryVsClusterVersionErr, err)
+				}
 
 				// Original version
 				originalClusterVersioner = originalclusterversion.New(

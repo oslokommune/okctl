@@ -74,7 +74,7 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 					return err
 				}
 
-				err = commands.ValidateBinaryEqualsClusterVersion(o)
+				err = commands.ValidateBinaryVersionNotLessThanClusterVersion(o)
 				if err != nil {
 					return err
 				}

@@ -17,4 +17,4 @@ Simulating upgrades complete.
 This is upgrade file for okctl-upgrade_0.0.62_Linux_amd64
 Doing actual changes.
 
-Upgrade complete! Cluster version is now 0.0.65. Remember to commit and push changes with git.
+Upgrade complete, cluster version is now 0.0.65. Remember to commit and push changes with git.

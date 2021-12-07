@@ -56,18 +56,17 @@ func (u Upgrader) Run() error {
 	// Run
 	if len(upgradeBinaries) > 0 {
 		printUpgrades(u.out, "Found %d applicable upgrade(s):", upgradeBinaries)
+
+		userConfirmedContinue, err := u.runBinaries(upgradeBinaries)
+		if err != nil {
+			return fmt.Errorf("running upgrade binaries: %w", err)
+		}
+
+		if !userConfirmedContinue {
+			return nil
+		}
 	} else {
 		_, _ = fmt.Fprintln(u.out, "Did not find any applicable upgrades.")
-		return nil
-	}
-
-	userConfirmedContinue, err := u.runBinaries(upgradeBinaries)
-	if err != nil {
-		return fmt.Errorf("running upgrade binaries: %w", err)
-	}
-
-	if !userConfirmedContinue {
-		return nil
 	}
 
 	// Update cluster version

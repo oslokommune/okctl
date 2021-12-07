@@ -103,7 +103,7 @@ func TestRunUpgrades(t *testing.T) {
 			withGithubReleases:                 []*github.RepositoryRelease{},
 			withHost:                           state.Host{Os: linux, Arch: amd64},
 			expectBinaryVersionsRunOnce:        []string{},
-			expectedClusterVersionAfterUpgrade: "0.0.52",
+			expectedClusterVersionAfterUpgrade: "0.0.60",
 		},
 		{
 			name:                              "Should run a Linux upgrade",
@@ -131,16 +131,22 @@ func TestRunUpgrades(t *testing.T) {
 			//
 			// If creating a new cluster, the cluster version would be 0.0.70 (not 0.0.61). Therefore, we do a final
 			// bump of cluster version to the current version of okctl, which is what this test verifies.
-			//
-			// The exception to this, is if we have run zero upgrades. Since absolutely no changes have been made,
-			// we don't care about bumping cluster version either. This behavior is verified in another test.
-			name:                              "Should bump cluster version to the current okctl version after upgrading",
-			withOkctlVersion:                  "0.0.70",
-			withOriginalClusterVersion:        "0.0.50",
-			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
-			withGithubReleaseAssetsFromFolder: folderWorking,
-			withHost:                          state.Host{Os: linux, Arch: amd64},
-			expectBinaryVersionsRunOnce:       []string{"0.0.61"},
+			name:                               "Should bump cluster version to the current okctl version after upgrading",
+			withOkctlVersion:                   "0.0.70",
+			withOriginalClusterVersion:         "0.0.50",
+			withGithubReleases:                 createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
+			withGithubReleaseAssetsFromFolder:  folderWorking,
+			withHost:                           state.Host{Os: linux, Arch: amd64},
+			expectBinaryVersionsRunOnce:        []string{"0.0.61"},
+			expectedClusterVersionAfterUpgrade: "0.0.70",
+		},
+		{
+			name:                               "Should bump cluster version to the current okctl version after upgrading, even if zero upgrades were run",
+			withOkctlVersion:                   "0.0.70",
+			withOriginalClusterVersion:         "0.0.50",
+			withGithubReleaseAssetsFromFolder:  folderWorking,
+			withHost:                           state.Host{Os: linux, Arch: amd64},
+			expectedClusterVersionAfterUpgrade: "0.0.70",
 		},
 		{
 			name:                              "Should not bump cluster version if user aborts upgrading",
@@ -172,7 +178,7 @@ func TestRunUpgrades(t *testing.T) {
 
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), "okctl binary version 0.0.60 cannot be less than cluster"+
-					" version 0.0.70. Get okctl version 0.0.70 or later and try again")
+					" version 0.0.70. Install okctl version 0.0.70 or later and try again")
 			},
 		},
 		{

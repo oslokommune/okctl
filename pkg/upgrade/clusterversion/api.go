@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/logrusorgru/aurora/v3"
+
 	"github.com/Masterminds/semver"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -41,8 +43,9 @@ func (v Versioner) ValidateBinaryEqualsClusterVersion(binaryVersionString string
 		return nil
 	}
 
-	return fmt.Errorf("okctl binary version must be equal to cluster version %s, but was %s",
-		clusterVersion, binaryVersion)
+	return fmt.Errorf("okctl binary version must be equal to cluster version %s, but was %s. Either run %s"+
+		" to upgrade your cluster to the current version of okctl, or install okctl version %s",
+		clusterVersion, binaryVersion, aurora.Green("okctl upgrade"), clusterVersion)
 }
 
 // ValidateBinaryVersionNotLessThanClusterVersion returns an error if binary version is less than cluster version.
@@ -72,7 +75,7 @@ func (v Versioner) ValidateBinaryVersionNotLessThanClusterVersion(binaryVersionS
 
 	// Validate
 	if binaryVersion.LessThan(clusterVersion) {
-		return fmt.Errorf("okctl binary version %s cannot be less than cluster version %s. Get okctl version %s or"+
+		return fmt.Errorf("okctl binary version %s cannot be less than cluster version %s. Install okctl version %s or"+
 			" later and try again", binaryVersion, clusterVersion, clusterVersion)
 	}
 

@@ -14,7 +14,7 @@ require (
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/asdine/storm/v3 v3.2.1
-	github.com/aws/aws-sdk-go v1.42.20
+	github.com/aws/aws-sdk-go v1.42.21
 	github.com/awslabs/goformation/v4 v4.19.5
 	github.com/beevik/etree v1.1.0
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
@@ -77,7 +77,7 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gotest.tools v2.2.0+incompatible
-	helm.sh/helm/v3 v3.7.1
+	helm.sh/helm/v3 v3.7.2
 	k8s.io/api v0.22.4
 	k8s.io/apimachinery v0.22.4
 	k8s.io/cli-runtime v0.22.4

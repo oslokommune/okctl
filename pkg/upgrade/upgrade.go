@@ -24,10 +24,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// OkctlUpgradeRepo contains the repository for upgrades
+const OkctlUpgradeRepo = "okctl-upgrade"
+
+// OkctlUpgradeRepoURL contains URL for the upgrade repository
+var OkctlUpgradeRepoURL = fmt.Sprintf("https://github.com/oslokommune/%s", OkctlUpgradeRepo) //nolint:gochecknoglobals
+
 // Run upgrades okctl
 func (u Upgrader) Run() error {
 	// Fetch
-	releases, err := u.githubService.ListReleases(github.DefaultOrg, "okctl-upgrade")
+	releases, err := u.githubService.ListReleases(github.DefaultOrg, OkctlUpgradeRepo)
 	if err != nil {
 		return fmt.Errorf("listing github releases: %w", err)
 	}
@@ -225,7 +231,8 @@ func (u Upgrader) toStateBinaries(upgradeBinaries []okctlUpgradeBinary) []state.
 
 	for _, upgradeBinary := range upgradeBinaries {
 		URLPattern := fmt.Sprintf(
-			"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_#{os}_#{arch}.tar.gz",
+			"%s/releases/download/%s/okctl-upgrade_%s_#{os}_#{arch}.tar.gz",
+			OkctlUpgradeRepoURL,
 			upgradeBinary.RawVersion(),
 			upgradeBinary.RawVersion(),
 		)

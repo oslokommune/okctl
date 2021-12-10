@@ -470,14 +470,14 @@ func TestRunUpgrades(t *testing.T) {
 						{
 							Name: github.StringPtr("okctl_upgrade-linux_amd64_0.0.61.tar.gz"),
 							BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
-								"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz",
-								"0.0.61", "0.0.61", linux, amd64)),
+								"%s/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz",
+								upgrade.OkctlUpgradeRepoURL, "0.0.61", "0.0.61", linux, amd64)),
 						},
 						{
 							Name: github.StringPtr("okctl_upgrade-darwin_amd64_0.0.61.tar.gz"),
 							BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
-								"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz",
-								"0.0.61", "0.0.61", darwin, amd64)),
+								"%s/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz",
+								upgrade.OkctlUpgradeRepoURL, "0.0.61", "0.0.61", darwin, amd64)),
 						},
 					},
 				},
@@ -775,7 +775,7 @@ func createGithubReleases(oses []string, arch string, versions []string) []*gith
 			Name:        github.StringPtr(upgrade.ChecksumsTxt),
 			ContentType: github.StringPtr("text/plain"),
 			BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
-				"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade-checksums.txt", version)),
+				"%s/releases/download/%s/okctl-upgrade-checksums.txt", upgrade.OkctlUpgradeRepoURL, version)),
 		})
 
 		release := &github.RepositoryRelease{
@@ -796,7 +796,7 @@ func createGihubReleaseAssetBinary(os, arch, version string) *github.ReleaseAsse
 		Name:        github.StringPtr(fmt.Sprintf("okctl_upgrade-%s_%s_%s.tar.gz", os, arch, version)),
 		ContentType: github.StringPtr("application/gzip"),
 		BrowserDownloadURL: github.StringPtr(fmt.Sprintf(
-			"https://github.com/oslokommune/okctl-upgrade/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz", version, version, os, arch)),
+			"%s/releases/download/%s/okctl-upgrade_%s_%s_%s.tar.gz", upgrade.OkctlUpgradeRepoURL, version, version, os, arch)),
 	}
 }
 

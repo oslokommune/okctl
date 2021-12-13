@@ -390,7 +390,7 @@ func (o *Okctl) KubeConfigStore() (api.KubeConfigStore, error) {
 // Initialise okctl for receiving requests
 // nolint: funlen
 func (o *Okctl) initialise() error {
-	logFile, err := o.GetLogName("newconsole.log")
+	logFile, err := o.GetFullLogFilePath("newconsole.log")
 	if err != nil {
 		return err
 	}

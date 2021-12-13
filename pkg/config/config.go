@@ -77,7 +77,7 @@ func New() *Config {
 
 // EnableFileLog for writing logs to a file
 func (c *Config) EnableFileLog() error {
-	logFile, err := c.GetLogName(constant.DefaultLogName)
+	logFile, err := c.GetFullLogFilePath(constant.DefaultLogName)
 	if err != nil {
 		return err
 	}
@@ -234,14 +234,14 @@ func (c *Config) GetUserDataPath() (string, error) {
 	return filepath.Join(base, constant.DefaultConfig), nil
 }
 
-// GetLogName returns the path to a logfile
-func (c *Config) GetLogName(logName string) (string, error) {
+// GetFullLogFilePath returns the full path to a logfile
+func (c *Config) GetFullLogFilePath(logFileName string) (string, error) {
 	base, err := c.GetUserDataDir()
 	if err != nil {
 		return "", err
 	}
 
-	return filepath.Join(base, constant.DefaultLogDir, logName), nil
+	return filepath.Join(base, constant.DefaultLogDir, logFileName), nil
 }
 
 // GetRepoOutputDir return the repository output directory,

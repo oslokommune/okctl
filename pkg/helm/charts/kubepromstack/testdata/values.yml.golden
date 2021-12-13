@@ -96,9 +96,9 @@ global:
       ## Specify pod annotations
       ## Ref: https://kubernetes.io/docs/concepts/policy/pod-security-policy/#apparmor
       ## Ref: https://kubernetes.io/docs/concepts/policy/pod-security-policy/#seccomp
-      ## Ref: https://kubernetes.io/docs/concepts/policy/pod-security-policy/#sysctl
-      ##
-      # seccomp.security.alpha.kubernetes.io/allowedProfileNames: '*'
+    ## Ref: https://kubernetes.io/docs/concepts/policy/pod-security-policy/#sysctl
+    ##
+    # seccomp.security.alpha.kubernetes.io/allowedProfileNames: '*'
     # seccomp.security.alpha.kubernetes.io/defaultProfileName: 'docker/default'
     # apparmor.security.beta.kubernetes.io/defaultProfileName: 'runtime/default'
 
@@ -565,6 +565,10 @@ alertmanager:
 grafana:
   enabled: true
   namespaceOverride: ""
+
+  image:
+    repository: grafana/grafana
+    tag: 7.5.12
 
   serviceAccount:
     create: false
@@ -1332,7 +1336,7 @@ prometheusOperator:
   ## This is mutually exclusive with denyNamespaces. Setting this to an empty object will disable the configuration
   ##
   namespaces: {}
-    # releaseNamespace: true
+  # releaseNamespace: true
   # additional:
   # - kube-system
 
@@ -1477,9 +1481,9 @@ prometheusOperator:
     #   requiredDuringSchedulingIgnoredDuringExecution:
     #     nodeSelectorTerms:
     #     - matchExpressions:
-    #       - key: kubernetes.io/e2e-az-name
-    #         operator: In
-    #         values:
+  #       - key: kubernetes.io/e2e-az-name
+  #         operator: In
+  #         values:
   #         - e2e-az1
   #         - e2e-az2
 
@@ -1684,7 +1688,7 @@ prometheus:
     ## Secret must be manually created in the namespace
     ##
     tls: []
-      # - secretName: prometheus-general-tls
+    # - secretName: prometheus-general-tls
     #   hosts:
     #     - prometheus.example.com
 
@@ -2150,7 +2154,7 @@ prometheus:
     ## Expected values are the secret name and key
     ## Cannot be used with additionalScrapeConfigs
     additionalScrapeConfigsSecret: {}
-      # enabled: false
+    # enabled: false
     # name:
     # key:
 
@@ -2343,9 +2347,9 @@ prometheus:
 
     ## Path to client key file
     ##
-    # keyFile: ""
+  # keyFile: ""
 
-    ## Server name used to verify host name
+  ## Server name used to verify host name
   ##
   # serverName: ""
 
@@ -2387,7 +2391,7 @@ prometheus:
     ##
     # matchNames: []
 
-    ## Endpoints of the selected pods to be monitored
-    ## https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#podmetricsendpoint
+  ## Endpoints of the selected pods to be monitored
+  ## https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#podmetricsendpoint
   ##
   # podMetricsEndpoints: []

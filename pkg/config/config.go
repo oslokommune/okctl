@@ -8,9 +8,9 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"time"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/logging"
 
 	"github.com/rancher/k3d/v3/cmd/util"
 
@@ -23,9 +23,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/api/core"
 	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/context"
-	"github.com/oslokommune/okctl/pkg/rotatefilehook"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 )
 
 // DataLoaderFn is the type for loading configuration data
@@ -79,36 +77,12 @@ func New() *Config {
 
 // EnableFileLog for writing logs to a file
 func (c *Config) EnableFileLog() error {
-	logFile, err := c.GetLogName()
+	logFile, err := c.GetLogName(constant.DefaultLogName)
 	if err != nil {
 		return err
 	}
 
-	rotateFileHook, err := rotatefilehook.NewRotateFileHook(rotatefilehook.RotateFileConfig{
-		Filename:   logFile,
-		MaxSize:    constant.DefaultLogSizeInMb,
-		MaxBackups: constant.DefaultLogBackups,
-		MaxAge:     constant.DefaultLogDays,
-		Levels: []logrus.Level{
-			logrus.PanicLevel,
-			logrus.FatalLevel,
-			logrus.ErrorLevel,
-			logrus.WarnLevel,
-			logrus.InfoLevel,
-			logrus.DebugLevel,
-			logrus.TraceLevel,
-		},
-		Formatter: &logrus.JSONFormatter{
-			TimestampFormat: time.RFC822,
-		},
-	})
-	if err != nil {
-		return fmt.Errorf("initialising the file rotate hook: %v", err)
-	}
-
-	c.Logger.AddHook(rotateFileHook)
-
-	return nil
+	return logging.AddLogFileHook(c.Logger, logFile)
 }
 
 // SetFormat sets the response type when encoding
@@ -261,13 +235,13 @@ func (c *Config) GetUserDataPath() (string, error) {
 }
 
 // GetLogName returns the path to a logfile
-func (c *Config) GetLogName() (string, error) {
+func (c *Config) GetLogName(logName string) (string, error) {
 	base, err := c.GetUserDataDir()
 	if err != nil {
 		return "", err
 	}
 
-	return filepath.Join(base, constant.DefaultLogDir, constant.DefaultLogName), nil
+	return filepath.Join(base, constant.DefaultLogDir, logName), nil
 }
 
 // GetRepoOutputDir return the repository output directory,

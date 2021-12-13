@@ -1,7 +1,12 @@
 package logging
 
 import (
+	"fmt"
 	"os"
+	"time"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
+	"github.com/oslokommune/okctl/pkg/rotatefilehook"
 
 	"github.com/oslokommune/okctl/pkg/context"
 	"github.com/sirupsen/logrus"
@@ -42,7 +47,7 @@ func (l logrusLogger) WithField(key string, value interface{}) Logger {
 	}
 }
 
-func newLogrusLogger() Logger {
+func newLogrusLogger(logFile string) Logger {
 	_, debug := os.LookupEnv(context.DefaultDebugEnv)
 
 	logger := logrus.New()
@@ -55,8 +60,39 @@ func newLogrusLogger() Logger {
 		logger.Level = logrus.TraceLevel
 	}
 
+	AddLogFileHook(logger, logFile)
+
 	return logrusLogger{
 		logger: logger,
 		fields: make(logrus.Fields),
 	}
+}
+
+// AddLogFileHook Add a Hook to write logs to rotating log files
+func AddLogFileHook(logger *logrus.Logger, logFile string) error {
+	rotateFileHook, err := rotatefilehook.NewRotateFileHook(rotatefilehook.RotateFileConfig{
+		Filename:   logFile,
+		MaxSize:    constant.DefaultLogSizeInMb,
+		MaxBackups: constant.DefaultLogBackups,
+		MaxAge:     constant.DefaultLogDays,
+		Levels: []logrus.Level{
+			logrus.PanicLevel,
+			logrus.FatalLevel,
+			logrus.ErrorLevel,
+			logrus.WarnLevel,
+			logrus.InfoLevel,
+			logrus.DebugLevel,
+			logrus.TraceLevel,
+		},
+		Formatter: &logrus.JSONFormatter{
+			TimestampFormat: time.RFC822,
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("initialising the file rotate hook: %v", err)
+	}
+
+	logger.AddHook(rotateFileHook)
+
+	return nil
 }

@@ -5,8 +5,8 @@ package logging
 var logger Logger //nolint: gochecknoglobals
 
 // InitLogger initialize the global logger instance
-func InitLogger() {
-	initLogger(newLogrusLogger())
+func InitLogger(logFile string) {
+	initLogger(newLogrusLogger(logFile))
 }
 
 func initLogger(l Logger) {

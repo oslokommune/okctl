@@ -6,7 +6,11 @@ var logger Logger //nolint: gochecknoglobals
 
 // InitLogger initialize the global logger instance
 func InitLogger() {
-	logger = newLogrusLogger()
+	initLogger(newLogrusLogger())
+}
+
+func initLogger(l Logger) {
+	logger = l
 }
 
 // GetLogger returns a logger with the given component and activity as

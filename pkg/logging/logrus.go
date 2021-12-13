@@ -47,7 +47,7 @@ func (l logrusLogger) WithField(key string, value interface{}) Logger {
 	}
 }
 
-func newLogrusLogger(logFile string) Logger {
+func newLogrusLogger(logFile string) (Logger, error) {
 	_, debug := os.LookupEnv(context.DefaultDebugEnv)
 
 	logger := logrus.New()
@@ -60,12 +60,15 @@ func newLogrusLogger(logFile string) Logger {
 		logger.Level = logrus.TraceLevel
 	}
 
-	AddLogFileHook(logger, logFile)
+	err := AddLogFileHook(logger, logFile)
+	if err != nil {
+		return nil, err
+	}
 
 	return logrusLogger{
 		logger: logger,
 		fields: make(logrus.Fields),
-	}
+	}, nil
 }
 
 // AddLogFileHook Add a Hook to write logs to rotating log files

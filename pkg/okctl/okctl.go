@@ -394,7 +394,11 @@ func (o *Okctl) initialise() error {
 	if err != nil {
 		return err
 	}
-	logging.InitLogger(logFile)
+
+	err = logging.InitLogger(logFile)
+	if err != nil {
+		return err
+	}
 
 	err = o.EnableFileLog()
 	if err != nil {

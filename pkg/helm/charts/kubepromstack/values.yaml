@@ -572,7 +572,7 @@ grafana:
 
   serviceAccount:
     create: false
-    name: cloudwatch-something
+    name: {{.GrafanaServiceAccountName}}
 
   ## Deploy default dashboards.
   ##
@@ -580,8 +580,8 @@ grafana:
 
   env:
     GF_SERVER_PROTOCOL: http
-    GF_SERVER_DOMAIN: grafana.okctl-test.oslo.systems
-    GF_SERVER_ROOT_URL: https://grafana.okctl-test.oslo.systems
+    GF_SERVER_DOMAIN: {{.GrafanaHostname}}
+    GF_SERVER_ROOT_URL: https://{{.GrafanaHostname}}
     GF_SERVER_ENABLE_GZIP: "true"
     GF_USERS_AUTO_ASSIGN_ORG: "true"
     GF_USERS_AUTO_ASSIGN_ORG_ID: "true"
@@ -589,27 +589,27 @@ grafana:
     GF_SECURITY_COOKIE_SECURE: "true"
     GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
     GF_AUTH_GENERIC_OAUTH_NAME: "Cognito"
-    GF_AUTH_GENERIC_OAUTH_CLIENT_ID: 12345dsfg456ty
+    GF_AUTH_GENERIC_OAUTH_CLIENT_ID: {{.ClientID}}
     GF_AUTH_GENERIC_OAUTH_SCOPES: openid profile email
-    GF_AUTH_GENERIC_OAUTH_AUTH_URL: https://auth.okctl-test.oslo.system/oauth2/authorize
-    GF_AUTH_GENERIC_OAUTH_API_URL: https://auth.okctl-test.oslo.system/oauth2/userInfo
-    GF_AUTH_GENERIC_OAUTH_TOKEN_URL: https://auth.okctl-test.oslo.system/oauth2/token
+    GF_AUTH_GENERIC_OAUTH_AUTH_URL: https://{{.AuthHostname}}/oauth2/authorize
+    GF_AUTH_GENERIC_OAUTH_API_URL: https://{{.AuthHostname}}/oauth2/userInfo
+    GF_AUTH_GENERIC_OAUTH_TOKEN_URL: https://{{.AuthHostname}}/oauth2/token
     GF_AUTH_GENERIC_OAUTH_ALLOW_SIGNUP: "true"
 
   envValueFrom:
     GF_SECURITY_SECRET_KEY:
       secretKeyRef:
-        name: grafana-secrets-cm
-        key: cookies-secret-key
+        name: {{.SecretsConfigName}}
+        key: {{.SecretsGrafanaCookieSecretKey}}
     GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET:
       secretKeyRef:
-        name: grafana-secrets-cm
-        key: client-secret-key
+        name: {{.SecretsConfigName}}
+        key: {{.SecretsGrafanaOauthClientSecretKey}}
 
   admin:
-    existingSecret: grafana-secrets-cm
-    userKey: admin-user
-    passwordKey: admin-pass
+    existingSecret: {{.SecretsConfigName}}
+    userKey: {{.SecretsGrafanaAdminUserKey}}
+    passwordKey: {{.SecretsGrafanaAdminPassKey}}
 
   ingress:
     ## If true, Grafana Ingress will be created
@@ -625,7 +625,7 @@ grafana:
       alb.ingress.kubernetes.io/healthcheck-path: /api/health
       alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
       alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
-      alb.ingress.kubernetes.io/certificate-arn: arn::1234567890/certificate/fake
+      alb.ingress.kubernetes.io/certificate-arn: {{.GrafanaCertificateARN}}
 
     ## Labels to be added to the Ingress
     ##
@@ -637,7 +637,7 @@ grafana:
     # hosts:
     #   - grafana.domain.com
     hosts:
-      - grafana.okctl-test.oslo.systems
+      - {{.GrafanaHostname}}
 
     ## Path for grafana ingress
     path: /

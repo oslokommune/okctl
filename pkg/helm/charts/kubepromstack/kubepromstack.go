@@ -64,7 +64,5 @@ func (v *Values) RawYAML() ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
-// valuesTemplate is based on the following values.yaml:
-// - https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml
 //go:embed values.yaml
 var valuesTemplate string //nolint:gochecknoglobals

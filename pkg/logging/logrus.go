@@ -88,7 +88,7 @@ func AddLogFileHook(logger *logrus.Logger, logFile string) error {
 			logrus.TraceLevel,
 		},
 		Formatter: &logrus.JSONFormatter{
-			TimestampFormat: time.RFC822,
+			TimestampFormat: time.RFC3339,
 		},
 	})
 	if err != nil {

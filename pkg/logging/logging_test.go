@@ -19,6 +19,11 @@ func initTestLogger() *test.Hook {
 	return hook
 }
 
+func TestInitLogger(t *testing.T) {
+	err := InitLogger("log.txt")
+	assert.NoError(t, err)
+}
+
 func TestGetLogger(t *testing.T) {
 	hook := initTestLogger()
 	log := GetLogger("my-component", "my-activity")

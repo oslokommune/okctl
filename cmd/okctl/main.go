@@ -47,6 +47,10 @@ func buildRootCommand() *cobra.Command {
 	var outputFormat string
 
 	o := okctl.New()
+	if err := o.InitLogging(); err != nil {
+		fmt.Println("Error configuring logging: %w", err)
+		os.Exit(1)
+	}
 
 	cmd := &cobra.Command{
 		Use:          "okctl",

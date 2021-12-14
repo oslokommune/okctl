@@ -48,7 +48,7 @@ func buildRootCommand() *cobra.Command {
 
 	o := okctl.New()
 	if err := o.InitLogging(); err != nil {
-		fmt.Println("Error configuring logging: %w", err)
+		fmt.Fprintln(os.Stderr, "Error configuring logging:", err)
 		os.Exit(1)
 	}
 

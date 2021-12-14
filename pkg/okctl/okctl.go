@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/logging"
+
 	"github.com/oslokommune/okctl/pkg/client/core/state/direct"
 
 	"github.com/oslokommune/okctl/pkg/breeze"
@@ -383,6 +385,18 @@ func (o *Okctl) KubeConfigStore() (api.KubeConfigStore, error) {
 		o.StateHandlers(o.StateNodes()).Cluster,
 		o.FileSystem,
 	), nil
+}
+
+// InitLogging initialize logging library
+func (o *Okctl) InitLogging() error {
+	logFile, err := o.GetFullLogFilePath("newconsole.log")
+	if err != nil {
+		return err
+	}
+
+	err = logging.InitLogger(logFile)
+
+	return err
 }
 
 // Initialise okctl for receiving requests

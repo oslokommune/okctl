@@ -39,7 +39,7 @@ require (
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.3.0
-	github.com/gosimple/slug v1.11.2
+	github.com/gosimple/slug v1.12.0
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
 	github.com/jarcoal/httpmock v1.0.8
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect

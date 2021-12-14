@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -10,6 +11,7 @@ import (
 
 func initTestLogger() *test.Hook {
 	l, hook := test.NewNullLogger()
+	l.SetLevel(logrus.TraceLevel)
 
 	initLogger(logrusLogger{
 		logger: l,
@@ -38,6 +40,36 @@ func TestGetLogger(t *testing.T) {
 	assert.Contains(t, msg, "component=my-component")
 	assert.Contains(t, msg, "activity=my-activity")
 	assert.Contains(t, msg, "msg=\"Hello!\"")
+}
+
+func TestLogLevels(t *testing.T) {
+	hook := initTestLogger()
+
+	messages := []string{
+		"Something very low level.",
+		"Useful debugging information.",
+		"Something noteworthy happened!",
+		"You should probably take a look at this.",
+		"Something failed but I'm not quitting.",
+	}
+
+	levels := []string{"trace", "debug", "info", "warn", "error"}
+
+	log := GetLogger("my-component", "my-activity")
+	log.Trace(messages[0])
+	log.Debug(messages[1])
+	log.Info(messages[2])
+	log.Warn(messages[3])
+	log.Error(messages[4])
+
+	assert.Equal(t, 5, len(hook.Entries), "Should have 5 log messages")
+
+	for i, entry := range hook.AllEntries() {
+		msg, err := entry.String()
+		assert.NoError(t, err)
+		assert.Contains(t, msg, messages[i])
+		assert.Contains(t, msg, fmt.Sprintf("level=%s", levels[i]))
+	}
 }
 
 func TestLogWithField(t *testing.T) {

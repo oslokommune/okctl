@@ -25,7 +25,7 @@ func TestCleanOsEnvVars(t *testing.T) {
 
 			withVariables: []string{
 				"PATH=/bin",
-				fmt.Sprintf("%s_%s=somevalue", constant.EnvPrefix, constant.EnvClusterDeclaration),
+				fmt.Sprintf("%s=somevalue", constant.EnvClusterDeclaration),
 				"EDITOR=vim",
 			},
 			expectVariables: []string{"EDITOR=vim", "PATH=/bin"},

@@ -6,6 +6,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/context"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -25,6 +27,8 @@ type OkctlEnvironment struct {
 	KubectlBinaryDir       string
 	AwsIamAuthenticatorDir string
 	ClusterDeclarationPath string
+	AWSCredentialsType     string
+	GithubCredentialsType  string
 }
 
 // Validate the inputs
@@ -36,6 +40,9 @@ func (o *OkctlEnvironment) Validate() error {
 		validation.Field(&o.UserDataDir, validation.Required),
 		validation.Field(&o.KubectlBinaryDir, validation.Required),
 		validation.Field(&o.AwsIamAuthenticatorDir, validation.Required),
+		validation.Field(&o.ClusterDeclarationPath, validation.Required),
+		validation.Field(&o.AWSCredentialsType, validation.Required),
+		validation.Field(&o.GithubCredentialsType, validation.Required),
 	)
 }
 
@@ -70,6 +77,8 @@ func GetOkctlEnvironment(o *okctl.Okctl, clusterDeclarationPath string) (OkctlEn
 		KubectlBinaryDir:       path.Dir(k.BinaryPath),
 		AwsIamAuthenticatorDir: path.Dir(a.BinaryPath),
 		ClusterDeclarationPath: absoluteClusterDeclarationPath,
+		AWSCredentialsType:     o.Context.AWSCredentialsType,
+		GithubCredentialsType:  o.Context.GithubCredentialsType,
 	}
 
 	err = opts.Validate()
@@ -91,6 +100,13 @@ func ensureAbsolutePath(declarationPath string) (string, error) {
 	}
 
 	return path.Join(cwd, declarationPath), nil
+}
+
+// GetVenvEnvVars returns the environmental variables needed by a virtual environment. This contains environment variables from
+// the user's shell merged with those from the okctl.
+func GetVenvEnvVars(okctlEnvironment OkctlEnvironment) map[string]string {
+	okctlEnvVars := GetOkctlEnvVars(okctlEnvironment)
+	return MergeEnvVars(CleanOsEnvVars(os.Environ()), okctlEnvVars)
 }
 
 // GetOkctlEnvVars converts an okctl environment to a map with environmental variables
@@ -120,14 +136,15 @@ func GetOkctlEnvVars(opts OkctlEnvironment) map[string]string {
 		envMap[k] = v
 	}
 
-	clusterDeclarationKey := fmt.Sprintf("%s_%s", constant.EnvPrefix, constant.EnvClusterDeclaration)
-
 	envMap["AWS_CONFIG_FILE"] = awsConfig
 	envMap["AWS_SHARED_CREDENTIALS_FILE"] = awsCredentials
 	envMap["AWS_PROFILE"] = "default"
-	envMap[clusterDeclarationKey] = opts.ClusterDeclarationPath
 	envMap["KUBECONFIG"] = kubeConfig
 	envMap["PATH"] = getPathWithOkctlBinaries(opts)
+
+	envMap[constant.EnvClusterDeclaration] = opts.ClusterDeclarationPath
+	envMap[context.DefaultAWSCredentialsType] = opts.AWSCredentialsType
+	envMap[context.DefaultGithubCredentialsType] = opts.GithubCredentialsType
 
 	return envMap
 }
@@ -197,7 +214,7 @@ func toSlice(m map[string]string) []string {
 
 // CleanOsEnvVars ensures blacklisted variables are removed from the list
 func CleanOsEnvVars(environ []string) []string {
-	keyBlacklist := []string{fmt.Sprintf("%s_%s", constant.EnvPrefix, constant.EnvClusterDeclaration)}
+	keyBlacklist := []string{constant.EnvClusterDeclaration}
 	cleanedVars := toMap(environ)
 
 	for _, blacklistedKey := range keyBlacklist {

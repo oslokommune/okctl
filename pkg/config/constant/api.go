@@ -1,7 +1,9 @@
 // Package constant contains constants used throughout okctl
 package constant
 
-import "time"
+import (
+	"time"
+)
 
 // nolint: golint
 const (
@@ -85,7 +87,7 @@ const (
 	// EnvHome is the default env var parsed for determining the application home
 	EnvHome = "OKCTL_HOME"
 	// EnvClusterDeclaration specifies the path to the cluster declaration context
-	EnvClusterDeclaration = "CLUSTER_DECLARATION"
+	EnvClusterDeclaration = EnvPrefix + "_" + "CLUSTER_DECLARATION"
 
 	// DefaultApplicationsOutputDir is where the application declarations reside
 	DefaultApplicationsOutputDir = "applications"

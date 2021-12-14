@@ -125,7 +125,7 @@ func buildRootCommand() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&declarationPath,
 		"cluster-declaration",
 		"c",
-		os.Getenv(fmt.Sprintf("%s_%s", constant.EnvPrefix, constant.EnvClusterDeclaration)),
+		os.Getenv(constant.EnvClusterDeclaration),
 		"The cluster declaration you want to use",
 	)
 	cmd.PersistentFlags().StringVarP(&awsCredentialsType,

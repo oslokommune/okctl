@@ -46,6 +46,7 @@ type TestCase struct {
 	withGithubReleaseAssetsFromFolder  string
 	withHost                           state.Host
 	withUserAnswers                    []bool
+	withBinaryEnvironmentVaribles      map[string]string
 	withTestRun                        func(t *testing.T, tc TestCase, defaultOpts DefaultTestOpts)
 	expectBinaryVersionsRunOnce        []string
 	expectedClusterVersionAfterUpgrade string
@@ -200,6 +201,16 @@ func TestRunUpgrades(t *testing.T) {
 
 				assert.Equal(t, "0.0.50", originalClusterVersion)
 			},
+		},
+		{
+			name:                              "Should set correct environment variables for the upgrade binary run",
+			withOkctlVersion:                  "0.0.70",
+			withOriginalClusterVersion:        "0.0.50",
+			withGithubReleases:                createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.70.somecomponent"}),
+			withGithubReleaseAssetsFromFolder: "verify_environment_variables",
+			withHost:                          state.Host{Os: linux, Arch: amd64},
+			withBinaryEnvironmentVaribles:     map[string]string{"SOME_VAR": "hello"},
+			expectBinaryVersionsRunOnce:       []string{"0.0.70.somecomponent"},
 		},
 		{
 			name:                              "Should run multiple upgrades",
@@ -624,6 +635,10 @@ func TestRunUpgrades(t *testing.T) {
 
 			surveyor := testutils.NewAutoAnsweringSurveyor(tc.withUserAnswers)
 
+			if len(tc.withBinaryEnvironmentVaribles) == 0 {
+				tc.withBinaryEnvironmentVaribles = make(map[string]string)
+			}
+
 			defaultOpts := DefaultTestOpts{
 				Opts: upgrade.Opts{
 					Debug:                    tc.withDebug,
@@ -640,9 +655,10 @@ func TestRunUpgrades(t *testing.T) {
 						Host:  tc.withHost,
 						Store: tmpStore,
 					},
-					OkctlVersion: tc.withOkctlVersion,
-					State:        upgradeState,
-					ClusterID:    api.ID{},
+					OkctlVersion:               tc.withOkctlVersion,
+					State:                      upgradeState,
+					ClusterID:                  api.ID{},
+					BinaryEnvironmentVariables: tc.withBinaryEnvironmentVaribles,
 				},
 				StdOutBuffer: stdOutBuffer,
 			}

@@ -15,11 +15,12 @@ const (
 
 // BinaryRunner stores state for running the cli
 type BinaryRunner struct {
-	repoDir    string
-	progress   io.Writer
-	logger     *logrus.Logger
-	binaryPath string
-	cmdFn      run.CmdFn
+	repoDir              string
+	progress             io.Writer
+	logger               *logrus.Logger
+	environmentVariables []string
+	binaryPath           string
+	cmdFn                run.CmdFn
 }
 
 // Flags contains the flags to pass to the binary when running it.
@@ -32,19 +33,17 @@ type Flags struct {
 }
 
 // DryRun runs the okctl upgrade binary with the dry-run flag set to true
-func (u *BinaryRunner) DryRun(flags Flags) ([]byte, error) {
-	return u.doRun(flags, true)
+func (r *BinaryRunner) DryRun(flags Flags) ([]byte, error) {
+	return r.doRun(flags, true)
 }
 
 // Run runs the okctl upgrade binary with the dry-run flag set to false
-func (u *BinaryRunner) Run(flags Flags) ([]byte, error) {
-	return u.doRun(flags, false)
+func (r *BinaryRunner) Run(flags Flags) ([]byte, error) {
+	return r.doRun(flags, false)
 }
 
-func (u *BinaryRunner) doRun(flags Flags, dryRun bool) ([]byte, error) {
+func (r *BinaryRunner) doRun(flags Flags, dryRun bool) ([]byte, error) {
 	var err error
-
-	var envs []string
 
 	var args []string
 
@@ -62,9 +61,9 @@ func (u *BinaryRunner) doRun(flags Flags, dryRun bool) ([]byte, error) {
 		args = append(args, "--dry-run=false")
 	}
 
-	runner := run.New(nil, u.repoDir, u.binaryPath, envs, u.cmdFn)
+	runner := run.New(nil, r.repoDir, r.binaryPath, r.environmentVariables, r.cmdFn)
 
-	output, err := runner.Run(u.progress, args)
+	output, err := runner.Run(r.progress, args)
 	if err != nil {
 		return nil, err
 	}
@@ -73,18 +72,13 @@ func (u *BinaryRunner) doRun(flags Flags, dryRun bool) ([]byte, error) {
 }
 
 // New creates a new okctl upgrade cli wrapper
-func New(
-	repoDir string,
-	progress io.Writer,
-	logger *logrus.Logger,
-	binaryPath string,
-	cmdFn run.CmdFn,
-) *BinaryRunner {
+func New(repoDir string, progress io.Writer, logger *logrus.Logger, environmentVariables []string, binaryPath string, cmdFn run.CmdFn) *BinaryRunner {
 	return &BinaryRunner{
-		repoDir:    repoDir,
-		progress:   progress,
-		logger:     logger,
-		binaryPath: binaryPath,
-		cmdFn:      cmdFn,
+		repoDir:              repoDir,
+		progress:             progress,
+		logger:               logger,
+		environmentVariables: environmentVariables,
+		binaryPath:           binaryPath,
+		cmdFn:                cmdFn,
 	}
 }

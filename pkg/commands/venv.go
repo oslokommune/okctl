@@ -127,12 +127,10 @@ func GetOkctlEnvVars(opts OkctlEnvironment) map[string]string {
 		envMap[k] = v
 	}
 
-	clusterDeclarationKey := fmt.Sprintf("%s_%s", constant.EnvPrefix, constant.EnvClusterDeclaration)
-
 	envMap["AWS_CONFIG_FILE"] = awsConfig
 	envMap["AWS_SHARED_CREDENTIALS_FILE"] = awsCredentials
 	envMap["AWS_PROFILE"] = "default"
-	envMap[clusterDeclarationKey] = opts.ClusterDeclarationPath
+	envMap[constant.EnvClusterDeclaration] = opts.ClusterDeclarationPath
 	envMap["KUBECONFIG"] = kubeConfig
 	envMap["PATH"] = getPathWithOkctlBinaries(opts)
 
@@ -204,7 +202,7 @@ func toSlice(m map[string]string) []string {
 
 // CleanOsEnvVars ensures blacklisted variables are removed from the list
 func CleanOsEnvVars(environ []string) []string {
-	keyBlacklist := []string{fmt.Sprintf("%s_%s", constant.EnvPrefix, constant.EnvClusterDeclaration)}
+	keyBlacklist := []string{constant.EnvClusterDeclaration}
 	cleanedVars := toMap(environ)
 
 	for _, blacklistedKey := range keyBlacklist {

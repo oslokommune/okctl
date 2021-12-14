@@ -18,7 +18,8 @@ type upgradeBinaryProvider struct {
 	fetcher  fetch.Provider
 	logger   *logrus.Logger
 
-	binaryRunners map[string]*okctlupgrade.BinaryRunner
+	binaryRunners        map[string]*okctlupgrade.BinaryRunner
+	environmentVariables map[string]string
 }
 
 func (p *upgradeBinaryProvider) okctlUpgradeRunner(version string) (*okctlupgrade.BinaryRunner, error) {
@@ -32,10 +33,25 @@ func (p *upgradeBinaryProvider) okctlUpgradeRunner(version string) (*okctlupgrad
 			return nil, err
 		}
 
-		p.binaryRunners[version] = okctlupgrade.New(p.repoDir, p.progress, p.logger, binaryPath, cmd())
+		envs := toSlice(p.environmentVariables)
+
+		p.binaryRunners[version] = okctlupgrade.New(p.repoDir, p.progress, p.logger, envs, binaryPath, cmd())
 	}
 
 	return p.binaryRunners[version], nil
+}
+
+func toSlice(m map[string]string) []string {
+	result := make([]string, len(m))
+	index := 0
+
+	for key, val := range m {
+		result[index] = fmt.Sprintf("%s=%s", key, val)
+
+		index++
+	}
+
+	return result
 }
 
 func cmd() run.CmdFn {
@@ -52,12 +68,14 @@ func newUpgradeBinaryProvider(
 	logger *logrus.Logger,
 	progress io.Writer,
 	fetcher fetch.Provider,
+	binaryEnvironmentVariables map[string]string,
 ) upgradeBinaryProvider {
 	return upgradeBinaryProvider{
-		repoDir:       repoDir,
-		progress:      progress,
-		fetcher:       fetcher,
-		logger:        logger,
-		binaryRunners: map[string]*okctlupgrade.BinaryRunner{},
+		repoDir:              repoDir,
+		progress:             progress,
+		fetcher:              fetcher,
+		logger:               logger,
+		binaryRunners:        map[string]*okctlupgrade.BinaryRunner{},
+		environmentVariables: binaryEnvironmentVariables,
 	}
 }

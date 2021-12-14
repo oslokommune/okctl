@@ -93,6 +93,13 @@ func ensureAbsolutePath(declarationPath string) (string, error) {
 	return path.Join(cwd, declarationPath), nil
 }
 
+// GetVenvEnvVars returns the environmental variables needed by a virtual environment. This contains environment variables from
+// the user's shell merged with those from the okctl.
+func GetVenvEnvVars(okctlEnvironment OkctlEnvironment) map[string]string {
+	okctlEnvVars := GetOkctlEnvVars(okctlEnvironment)
+	return MergeEnvVars(CleanOsEnvVars(os.Environ()), okctlEnvVars)
+}
+
 // GetOkctlEnvVars converts an okctl environment to a map with environmental variables
 func GetOkctlEnvVars(opts OkctlEnvironment) map[string]string {
 	appDir := opts.UserDataDir

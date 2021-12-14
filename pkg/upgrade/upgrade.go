@@ -148,7 +148,7 @@ func (u Upgrader) createBinaryProvider(upgradeBinaries []okctlUpgradeBinary) (up
 		return upgradeBinaryProvider{}, fmt.Errorf("creating upgrade binaries fetcher: %w", err)
 	}
 
-	binaryProvider := newUpgradeBinaryProvider(u.repositoryDirectory, u.logger, u.out, fetcher)
+	binaryProvider := newUpgradeBinaryProvider(u.repositoryDirectory, u.logger, u.out, fetcher, u.binaryEnvironmentVariables)
 
 	return binaryProvider, nil
 }
@@ -343,38 +343,40 @@ type FetcherOpts struct {
 
 // Opts contains all data needed to create an Upgrader
 type Opts struct {
-	Debug                    bool
-	AutoConfirm              bool
-	Logger                   *logrus.Logger
-	Out                      io.Writer
-	RepositoryDirectory      string
-	GithubService            client.GithubService
-	ChecksumDownloader       ChecksumHTTPDownloader
-	ClusterVersioner         clusterversion.Versioner
-	OriginalClusterVersioner originalclusterversion.Versioner
-	Surveyor                 survey.Surveyor
-	FetcherOpts              FetcherOpts
-	OkctlVersion             string
-	State                    client.UpgradeState
-	ClusterID                api.ID
+	Debug                      bool
+	AutoConfirm                bool
+	Logger                     *logrus.Logger
+	Out                        io.Writer
+	RepositoryDirectory        string
+	GithubService              client.GithubService
+	ChecksumDownloader         ChecksumHTTPDownloader
+	ClusterVersioner           clusterversion.Versioner
+	OriginalClusterVersioner   originalclusterversion.Versioner
+	Surveyor                   survey.Surveyor
+	FetcherOpts                FetcherOpts
+	OkctlVersion               string
+	State                      client.UpgradeState
+	ClusterID                  api.ID
+	BinaryEnvironmentVariables map[string]string
 }
 
 // Upgrader knows how to upgrade okctl
 type Upgrader struct {
-	debug               bool
-	autoConfirm         bool
-	logger              *logrus.Logger
-	out                 io.Writer
-	clusterID           api.ID
-	state               client.UpgradeState
-	repositoryDirectory string
-	githubService       client.GithubService
-	githubReleaseParser GithubReleaseParser
-	clusterVersioner    clusterversion.Versioner
-	surveyor            survey.Surveyor
-	okctlVersion        string
-	fetcherOpts         FetcherOpts
-	filter              filter
+	debug                      bool
+	autoConfirm                bool
+	logger                     *logrus.Logger
+	out                        io.Writer
+	clusterID                  api.ID
+	state                      client.UpgradeState
+	repositoryDirectory        string
+	githubService              client.GithubService
+	githubReleaseParser        GithubReleaseParser
+	clusterVersioner           clusterversion.Versioner
+	surveyor                   survey.Surveyor
+	okctlVersion               string
+	fetcherOpts                FetcherOpts
+	filter                     filter
+	binaryEnvironmentVariables map[string]string
 }
 
 // New returns a new Upgrader, or an error if initialization fails
@@ -418,5 +420,6 @@ func New(opts Opts) (Upgrader, error) {
 			okctlVersion:           opts.OkctlVersion,
 			originalClusterVersion: originalClusterVersion.Value,
 		},
+		binaryEnvironmentVariables: opts.BinaryEnvironmentVariables,
 	}, nil
 }

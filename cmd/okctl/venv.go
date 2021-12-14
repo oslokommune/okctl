@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
-	"os"
+	osPkg "os"
 	"os/exec"
 	"os/user"
 	"path"
@@ -170,10 +170,9 @@ func createVenvOpts(host state.Host, okctlEnvironment commands.OkctlEnvironment)
 		return commandlineprompter.CommandLinePromptOpts{}, nil, fmt.Errorf("could not get current user: %w", err)
 	}
 
-	okctlEnvVars := commands.GetOkctlEnvVars(okctlEnvironment)
-	envVars := commands.MergeEnvVars(commands.CleanOsEnvVars(os.Environ()), okctlEnvVars)
+	envVars := commands.GetVenvEnvVars(okctlEnvironment)
 
-	homeDir, err := os.UserHomeDir()
+	homeDir, err := osPkg.UserHomeDir()
 	if err != nil {
 		return commandlineprompter.CommandLinePromptOpts{}, nil, fmt.Errorf("could not get user's home directory: %w", err)
 	}

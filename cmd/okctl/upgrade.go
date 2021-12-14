@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/oslokommune/okctl/cmd/okctl/preruns"
+	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/metrics"
 
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
@@ -51,6 +52,13 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 					return err
 				}
 
+				okctlEnvironment, err := commands.GetOkctlEnvironment(o, declarationPath)
+				if err != nil {
+					return err
+				}
+
+				upgradeBinaryEnvVars := commands.GetVenvEnvVars(okctlEnvironment)
+
 				stateHandlers := o.StateHandlers(o.StateNodes())
 
 				services, err := o.ClientServices(stateHandlers)
@@ -95,20 +103,21 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 				originalClusterVersioner = originalclusterversion.New(clusterID, stateHandlers.Upgrade, stateHandlers.Cluster)
 
 				upgrader, err = upgrade.New(upgrade.Opts{
-					Debug:                    o.Debug,
-					AutoConfirm:              flags.confirm,
-					Logger:                   o.Logger,
-					Out:                      out,
-					RepositoryDirectory:      repoDir,
-					GithubService:            services.Github,
-					ChecksumDownloader:       upgrade.NewChecksumDownloader(),
-					ClusterVersioner:         clusterVersioner,
-					OriginalClusterVersioner: originalClusterVersioner,
-					Surveyor:                 surveyor,
-					FetcherOpts:              fetcherOpts,
-					OkctlVersion:             version.GetVersionInfo().Version,
-					State:                    stateHandlers.Upgrade,
-					ClusterID:                clusterID,
+					Debug:                      o.Debug,
+					AutoConfirm:                flags.confirm,
+					Logger:                     o.Logger,
+					Out:                        out,
+					RepositoryDirectory:        repoDir,
+					GithubService:              services.Github,
+					ChecksumDownloader:         upgrade.NewChecksumDownloader(),
+					ClusterVersioner:           clusterVersioner,
+					OriginalClusterVersioner:   originalClusterVersioner,
+					Surveyor:                   surveyor,
+					FetcherOpts:                fetcherOpts,
+					OkctlVersion:               version.GetVersionInfo().Version,
+					State:                      stateHandlers.Upgrade,
+					ClusterID:                  clusterID,
+					BinaryEnvironmentVariables: upgradeBinaryEnvVars,
 				})
 				if err != nil {
 					return fmt.Errorf("creating upgrader: %w", err)

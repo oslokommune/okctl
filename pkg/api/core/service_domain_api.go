@@ -14,9 +14,11 @@ type domainService struct {
 
 func (d *domainService) DeleteHostedZone(_ context.Context, opts api.DeleteHostedZoneOpts) error {
 	logger := logging.GetLogger("Domain service", "DeleteHostedZone").
-		WithField("hostedZoneId", opts.HostedZoneID)
+		WithField("id", opts.ID).
+		WithField("hostedZoneId", opts.HostedZoneID).
+		WithField("domain", opts.Domain)
 
-	logger.Info("Deleting hosted zone")
+	logger.Trace("Deleting hosted zone")
 
 	err := opts.Validate()
 	if err != nil {

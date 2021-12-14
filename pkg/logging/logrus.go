@@ -17,6 +17,10 @@ type logrusLogger struct {
 	fields logrus.Fields
 }
 
+func (l logrusLogger) Trace(msg string) {
+	l.logger.WithFields(l.fields).Trace(msg)
+}
+
 func (l logrusLogger) Debug(msg string) {
 	l.logger.WithFields(l.fields).Debug(msg)
 }

@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/upgrade"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/jarcoal/httpmock"
@@ -16,7 +18,9 @@ import (
 )
 
 // mockHTTPResponsesForGithubReleases mocks Github releases from the folder [baseFolder/release.TagName]
-func mockHTTPResponsesForGithubReleases(t *testing.T, baseFolder string, releases []*github.RepositoryRelease) {
+func mockHTTPResponsesForGithubReleases(t *testing.T, baseFolder string, githubReleases GithubReleases) {
+	releases := createGithubReleasesFromTestCase(t, githubReleases)
+
 	// shuffle slice to better test sorting of releases
 	shuffled := shuffle(releases)
 
@@ -45,7 +49,7 @@ func shuffle(src []*github.RepositoryRelease) []*github.RepositoryRelease {
 }
 
 func registerHTTPResponseFromReleaseTagFolder(t *testing.T, baseFolder string, release *github.RepositoryRelease) {
-	versionFolder := *release.TagName
+	versionFolder := upgrade.ToUpgradeVersion(*release.TagName)
 	mockHTTPResponseForGithubRelease(t, path.Join(baseFolder, versionFolder), release)
 }
 

@@ -53,7 +53,7 @@ func (g GithubReleaseParser) parseRelease(release *github.RepositoryRelease) (ok
 		return okctlUpgradeBinary{}, err
 	}
 
-	releaseUpgradeVersion := *release.TagName
+	releaseUpgradeVersion := ToUpgradeVersion(*release.TagName)
 
 	var binaryChecksums []state.Checksum
 
@@ -89,7 +89,7 @@ func (g GithubReleaseParser) parseRelease(release *github.RepositoryRelease) (ok
 		return okctlUpgradeBinary{}, fmt.Errorf("parsing upgrade version: %w", err)
 	}
 
-	return newOkctlUpgradeBinary(binaryVersion, binaryChecksums), nil
+	return newOkctlUpgradeBinary(binaryVersion, binaryChecksums, *release.TagName), nil
 }
 
 func (g GithubReleaseParser) validateRelease(r *github.RepositoryRelease) error {
@@ -208,11 +208,16 @@ func (g GithubReleaseParser) validateUpgradeBinaryAsset(asset *ghPkg.ReleaseAsse
 
 	if upgradeFile.version != releaseUpgradeVersion {
 		return fmt.Errorf(
-			"expected okctl upgrade binary version '%s' to equal release upgrade version (i.e. tag) '%s'",
+			"expected okctl upgrade binary version '%s' to equal release upgrade version '%s'",
 			upgradeFile.version, releaseUpgradeVersion)
 	}
 
 	return nil
+}
+
+// ToUpgradeVersion converts a git tag to an upgrade version
+func ToUpgradeVersion(tagName string) string {
+	return strings.Replace(tagName, "+", ".", 1)
 }
 
 // NewGithubReleaseParser returns a new GithubReleaseParser

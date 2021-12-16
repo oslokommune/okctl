@@ -15,18 +15,20 @@ import (
 type okctlUpgradeBinary struct {
 	// fileExtension can be for instance "tar.gz"
 	fileExtension string
-	// version is the upgrade version, for instance "0.0.56" or "0.0.56_some_hotfix"
+	// version is the upgrade version
 	version upgradeBinaryVersion
 	// checksum is a list of checksums, one for every combination of host OS and architecture that exists for this
 	// binary, for instance Linux-amd64
 	checksums []state.Checksum
+	// git tag associated with the binary
+	gitTag string
 }
 
 func (b okctlUpgradeBinary) String() string {
 	return b.BinaryName()
 }
 
-// BinaryName returns a string with a version, for instance "okctl-upgrade_0.0.56"
+// BinaryName returns a string with a version, for instance "okctl-upgrade_0.0.56.some-component"
 func (b okctlUpgradeBinary) BinaryName() string {
 	return fmt.Sprintf(okctlupgrade.BinaryNameFormat, b.RawVersion())
 }
@@ -41,6 +43,10 @@ func (b okctlUpgradeBinary) SemverVersion() *semverPkg.Version {
 
 func (b okctlUpgradeBinary) HotfixVersion() string {
 	return b.version.hotfix
+}
+
+func (b okctlUpgradeBinary) GitTag() string {
+	return b.gitTag
 }
 
 func sort(upgradeBinaries []okctlUpgradeBinary) {
@@ -58,10 +64,11 @@ func sort(upgradeBinaries []okctlUpgradeBinary) {
 	})
 }
 
-func newOkctlUpgradeBinary(version upgradeBinaryVersion, checksums []state.Checksum) okctlUpgradeBinary {
+func newOkctlUpgradeBinary(version upgradeBinaryVersion, checksums []state.Checksum, gitTag string) okctlUpgradeBinary {
 	return okctlUpgradeBinary{
 		fileExtension: ".tar.gz",
 		version:       version,
 		checksums:     checksums,
+		gitTag:        gitTag,
 	}
 }

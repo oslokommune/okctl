@@ -21,7 +21,7 @@ func TestGithubReleaseParser(t *testing.T) {
 	}{
 		{
 			name:         "Should work when everything is OK",
-			releases:     createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
+			releases:     createGithubReleases(t, []string{linux, darwin}, amd64, []string{"0.0.61"}),
 			checksumFile: fmt.Sprintf("%s/0.0.61/%s", folderWorking, upgrade.ChecksumsTxt),
 		},
 		{
@@ -65,7 +65,7 @@ func TestGithubReleaseParser(t *testing.T) {
 		},
 		{
 			name:         "Should return error about invalid substrings in checksum file",
-			releases:     createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
+			releases:     createGithubReleases(t, []string{linux, darwin}, amd64, []string{"0.0.61"}),
 			checksumFile: "github_release_parser/okctl-upgrade-checksums-substring-error.txt",
 			expectError: "expected 2 substrings when splitting digest line on whitespace, got 3 in string " +
 				"'716c5b3f517c197bdb748a55983b7a6de9045a66c759ee3f10863d19bbf90a61  " +
@@ -73,14 +73,14 @@ func TestGithubReleaseParser(t *testing.T) {
 		},
 		{
 			name:         "Should return error about invalid filename in checksum file",
-			releases:     createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
+			releases:     createGithubReleases(t, []string{linux, darwin}, amd64, []string{"0.0.61"}),
 			checksumFile: "github_release_parser/okctl-upgrade-checksums-filename-error.txt",
 			expectError: "expected 4 substrings when splitting on underscore (_), got 5 in string " +
 				"'okctl-upgrade_0.0.61_Darwin_amd64_invalidstuff.tar.gz'",
 		},
 		{
 			name:         "Should return error about too many dots in checksum file",
-			releases:     createGithubReleases([]string{linux, darwin}, amd64, []string{"0.0.61"}),
+			releases:     createGithubReleases(t, []string{linux, darwin}, amd64, []string{"0.0.61"}),
 			checksumFile: "github_release_parser/okctl-upgrade-checksums-osarch-error.txt",
 			expectError: "expected at least 2 substrings when splitting on dot (.), got 1 in string " +
 				"'okctl-upgrade_0.0.61_Darwin_amd64'",
@@ -93,12 +93,12 @@ func TestGithubReleaseParser(t *testing.T) {
 					TagName: github.StringPtr("0.0.61"),
 					Name:    github.StringPtr("0.0.61"),
 					Assets: []*github.ReleaseAsset{
-						createGihubReleaseAssetBinary(linux, amd64, "0.0.55"),
-						createGihubReleaseAssetBinary(linux, amd64, "0.0.55"),
+						createGihubReleaseAssetBinary(linux, amd64, "0.0.55", "0.0.55"),
+						createGihubReleaseAssetBinary(linux, amd64, "0.0.55", "0.0.55"),
 					},
 				},
 			},
-			expectError: "expected okctl upgrade binary version '0.0.55' to equal release upgrade version (i.e. tag) '0.0.61'",
+			expectError: "expected okctl upgrade binary version '0.0.55' to equal release upgrade version '0.0.61'",
 		},
 	}
 

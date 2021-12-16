@@ -8,12 +8,14 @@ import (
 )
 
 const (
-	dotCountForRegularSemver    = 3
-	dotCountForSemverWithHotfix = 4
+	// DotCountForRegularSemver contains the amount of dots in a regular semver version
+	DotCountForRegularSemver = 3
+	// DotCountForSemverWithHotfix contains the amount of dots in a semver plus hotfix version
+	DotCountForSemverWithHotfix = 4
 )
 
 type upgradeBinaryVersion struct {
-	// raw is semver + hotfix, for instance "0.0.56_a"
+	// raw is semver + hotfix, for instance "0.0.56.a"
 	raw string
 	// semver is the semantic version, for instance "0.0.56"
 	semver *semverPkg.Version
@@ -38,13 +40,13 @@ func parseUpgradeBinaryVersion(text string) (upgradeBinaryVersion, error) {
 	parts := strings.Split(text, ".")
 
 	switch {
-	case len(parts) == dotCountForRegularSemver:
+	case len(parts) == DotCountForRegularSemver:
 		semver, err = semverPkg.NewVersion(text)
 		if err != nil {
 			return upgradeBinaryVersion{}, fmt.Errorf(
 				"parsing to semantic version from '%s': %w", text, err)
 		}
-	case len(parts) == dotCountForSemverWithHotfix:
+	case len(parts) == DotCountForSemverWithHotfix:
 		semverString := strings.Join(parts[0:3], ".")
 
 		semver, err = semverPkg.NewVersion(semverString)

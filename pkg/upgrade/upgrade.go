@@ -3,9 +3,10 @@ package upgrade
 
 import (
 	"fmt"
-	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"io"
 	"strings"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 
 	"github.com/oslokommune/okctl/pkg/binaries/run/okctlupgrade"
 
@@ -234,7 +235,7 @@ func (u Upgrader) toStateBinaries(upgradeBinaries []okctlUpgradeBinary) []state.
 		URLPattern := fmt.Sprintf(
 			"%s/releases/download/%s/okctl-upgrade_%s_#{os}_#{arch}.tar.gz",
 			OkctlUpgradeRepoURL,
-			upgradeBinary.RawVersion(),
+			upgradeBinary.GitTag(),
 			upgradeBinary.RawVersion(),
 		)
 

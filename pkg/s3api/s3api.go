@@ -123,6 +123,10 @@ func (a *S3API) deleteAllVersions(bucketName string) error {
 			return errors.E(err, "listing object versions")
 		}
 
+		if result.Versions == nil {
+			break
+		}
+
 		_, err = a.provider.S3().DeleteObjects(&s3.DeleteObjectsInput{
 			Bucket: aws.String(bucketName),
 			Delete: &s3.Delete{Objects: objectVersionsAsIdentifiers(result.Versions)},

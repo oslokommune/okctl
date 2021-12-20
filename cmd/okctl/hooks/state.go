@@ -9,6 +9,8 @@ import (
 	"path"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/logging"
+
 	"github.com/spf13/afero"
 
 	"github.com/asdine/storm/v3"
@@ -89,7 +91,11 @@ func DownloadState(o *okctl.Okctl, writable bool) RunEer {
 //
 // Remember to release the lock after uploading the state.
 func UploadState(o *okctl.Okctl) RunEer {
+	log := logging.GetLogger(logComponent, "UploadState")
+
 	return func(_ *cobra.Command, _ []string) error {
+		log.Debug("starting")
+
 		if o.DB == nil {
 			return ErrNotInitialized
 		}
@@ -116,6 +122,8 @@ func UploadState(o *okctl.Okctl) RunEer {
 
 			return fmt.Errorf("opening local state: %w", err)
 		}
+
+		log.Debug("uploading state")
 
 		err = services.RemoteState.Upload(metadataAsClusterID(o.Declaration.Metadata), f)
 		if err != nil {
@@ -184,7 +192,11 @@ func ReleaseStateLock(o *okctl.Okctl) RunEer {
 
 // PurgeRemoteState removes all traces of remote state suitable for a delete environment kind of operation
 func PurgeRemoteState(o *okctl.Okctl) RunEer {
+	log := logging.GetLogger(logComponent, "PurgeRemoteState")
+
 	return func(_ *cobra.Command, _ []string) error {
+		log.Debug("running hook")
+
 		services, err := o.ClientServices(o.StateHandlers(o.StateNodes()))
 		if err != nil {
 			return fmt.Errorf(clientServicesErrFormat, err)
@@ -200,10 +212,14 @@ func PurgeRemoteState(o *okctl.Okctl) RunEer {
 			return fmt.Errorf("acquiring okctl directory: %w", err)
 		}
 
+		log.Debug("backing up state database")
+
 		err = backupStateDatabase(o.FileSystem, okctlDir, o.Declaration.Metadata.Name, localStateDBPath)
 		if err != nil {
 			return fmt.Errorf("backing up local database: %w", err)
 		}
+
+		log.Debug("purging state")
 
 		err = services.RemoteState.Purge(metadataAsClusterID(o.Declaration.Metadata))
 		if err != nil {

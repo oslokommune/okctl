@@ -112,8 +112,12 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 			)
 
 			ready, err := checkIfReady(o.Declaration.Metadata.Name, o, opts.Confirm)
-			if err != nil || !ready {
-				return err
+			if err != nil {
+				return fmt.Errorf("checking if user is ready: %w", err)
+			}
+
+			if !ready {
+				return hooks.ReleaseStateLock(o)(nil, nil)
 			}
 
 			_, err = scheduler.Run(o.Ctx, state)

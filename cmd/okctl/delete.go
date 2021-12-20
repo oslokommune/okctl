@@ -133,6 +133,7 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 			return nil
 		},
 		PostRunE: hooks.RunECombinator(
+			hooks.ClearLocalState(o),
 			hooks.EmitEndCommandExecutionEvent(metrics.ActionDeleteCluster),
 		),
 	}

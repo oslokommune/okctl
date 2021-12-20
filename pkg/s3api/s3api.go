@@ -5,6 +5,8 @@ package s3api
 import (
 	"io"
 
+	"github.com/mishudark/errors"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -60,12 +62,12 @@ func (a *S3API) GetObject(bucket, key string) (io.ReadCloser, error) {
 func (a *S3API) EmptyBucket(bucketName string) error {
 	err := a.deleteAllObjects(bucketName)
 	if err != nil {
-		return err
+		return errors.E(err, "deleting all objects")
 	}
 
 	err = a.deleteAllVersions(bucketName)
 	if err != nil {
-		return err
+		return errors.E(err, "deleting all versions")
 	}
 
 	return nil
@@ -118,7 +120,7 @@ func (a *S3API) deleteAllVersions(bucketName string) error {
 			VersionIdMarker: nextMarker,
 		})
 		if err != nil {
-			return err
+			return errors.E(err, "listing object versions")
 		}
 
 		_, err = a.provider.S3().DeleteObjects(&s3.DeleteObjectsInput{
@@ -126,7 +128,7 @@ func (a *S3API) deleteAllVersions(bucketName string) error {
 			Delete: &s3.Delete{Objects: objectVersionsAsIdentifiers(result.Versions)},
 		})
 		if err != nil {
-			return err
+			return errors.E(err, "deleting versions")
 		}
 
 		if !*result.IsTruncated {

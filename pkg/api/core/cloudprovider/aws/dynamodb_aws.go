@@ -44,7 +44,7 @@ func (k kvStoreProvider) CreateStore(opts api.CreateStoreOpts) error {
 
 // DeleteStore knows how to delete a DynamoDB table
 func (k kvStoreProvider) DeleteStore(opts api.DeleteStoreOpts) error {
-	stackName := cfn.NewStackNamer().DynamoDBTable(opts.ClusterID.ClusterName, storeNameGenerator(string(opts.Name)))
+	stackName := cfn.NewStackNamer().DynamoDBTable(opts.ClusterID.ClusterName, string(opts.Name))
 
 	r := cfn.NewRunner(k.provider)
 

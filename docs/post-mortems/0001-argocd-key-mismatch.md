@@ -6,7 +6,7 @@ Example:
 The backend of Oslo Nøkkelen were unavailable for 31 minutes due to an increase in traffic that happened after a
 proaktiv melding.
 -->
-Users were reporting 
+Users were unable to deploy updates to their application through ArgoCD.
 
 ## Timeline
 <!-- 

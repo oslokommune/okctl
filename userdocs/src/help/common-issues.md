@@ -1,3 +1,18 @@
+## apply cluster fails with "knownhosts: key mismatch"
+
+When running `okctl apply cluster`, you get
+
+```bash
+✓   applying cluster
+Error: synchronizing declaration with state: reconciling nameserver delegation: initiating dns zone delegation: staging repository: cloning repository: ssh: handshake failed: knownhosts: key mismatch
+```
+
+One solution is to replace your `known_hosts` file with new entries for github.com:
+
+```bash
+mv ~/.ssh/known_hosts{,.bak} && ssh-keyscan github.com > ~/.ssh/known_hosts
+````
+
 ## Device authentication flow fails (Linux only)
 
 If you are unable to complete device authentication against GitHub, you need to install `pass`

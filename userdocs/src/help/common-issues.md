@@ -11,7 +11,7 @@ One solution is to replace your `known_hosts` file with new entries for github.c
 
 ```bash
 mv ~/.ssh/known_hosts{,.bak} && ssh-keyscan github.com > ~/.ssh/known_hosts
-````
+```
 
 ## Device authentication flow fails (Linux only)
 

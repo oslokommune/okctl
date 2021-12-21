@@ -27,6 +27,8 @@ We've decided to go for [this](/docs/post-mortems/0000-post-mortem-template.md) 
 
 All post-mortems are to be placed in [/docs/post-mortems](/docs/post-mortems).
 
+The post-mortem template is a guideline. Add and/or remove points you deem reasonable.
+
 ## Consequences
 <!--
     Short description of positive and negative consequences of the decision

@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/metrics"
+
 	"github.com/oslokommune/okctl/cmd/okctl/hooks"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
@@ -15,6 +17,8 @@ func buildMaintenanceStateReleaseLockCommand(o *okctl.Okctl) *cobra.Command {
 		Long:  longMaintenanceReleaseStateLockDescription,
 		PreRunE: hooks.RunECombinator(
 			hooks.LoadUserData(o),
+			hooks.InitializeMetrics(o),
+			hooks.EmitStartCommandExecutionEvent(metrics.ActionMaintenanceStateReleaseLock),
 			hooks.InitializeOkctl(o),
 		),
 		RunE: func(_ *cobra.Command, _ []string) error {
@@ -29,6 +33,9 @@ func buildMaintenanceStateReleaseLockCommand(o *okctl.Okctl) *cobra.Command {
 
 			return nil
 		},
+		PostRunE: hooks.RunECombinator(
+			hooks.EmitEndCommandExecutionEvent(metrics.ActionMaintenanceStateReleaseLock),
+		),
 	}
 
 	return cmd

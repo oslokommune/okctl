@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/metrics"
+
 	"github.com/oslokommune/okctl/pkg/api"
 
 	"github.com/oslokommune/okctl/cmd/okctl/hooks"
@@ -18,6 +20,8 @@ func buildMaintenanceStateUploadCommand(o *okctl.Okctl) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		PreRunE: hooks.RunECombinator(
 			hooks.LoadUserData(o),
+			hooks.InitializeMetrics(o),
+			hooks.EmitStartCommandExecutionEvent(metrics.ActionMaintenanceStateUpload),
 			hooks.InitializeOkctl(o),
 		),
 		RunE: func(_ *cobra.Command, args []string) error {
@@ -52,6 +56,9 @@ func buildMaintenanceStateUploadCommand(o *okctl.Okctl) *cobra.Command {
 
 			return nil
 		},
+		PostRunE: hooks.RunECombinator(
+			hooks.EmitEndCommandExecutionEvent(metrics.ActionMaintenanceStateUpload),
+		),
 	}
 
 	return cmd

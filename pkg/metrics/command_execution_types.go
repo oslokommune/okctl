@@ -32,6 +32,15 @@ const (
 	ActionVenv = metricsapi.ActionVenv
 	// ActionVersion represents running the command `okctl version`
 	ActionVersion = metricsapi.ActionVersion
+
+	// ActionMaintenanceStateAcquireLock represents running the command `okctl maintenance state-acquire-lock
+	ActionMaintenanceStateAcquireLock = metricsapi.ActionMaintenanceStateAcquireLock
+	// ActionMaintenanceStateReleaseLock represents running the command `okctl maintenance state-release-lock
+	ActionMaintenanceStateReleaseLock = metricsapi.ActionMaintenanceStateReleaseLock
+	// ActionMaintenanceStateDownload represents running the command `okctl maintenance state-download
+	ActionMaintenanceStateDownload = metricsapi.ActionMaintenanceStateDownload
+	// ActionMaintenanceStateUpload represents running the command `okctl maintenance state-upload
+	ActionMaintenanceStateUpload = metricsapi.ActionMaintenanceStateUpload
 )
 
 const (

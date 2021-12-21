@@ -28,16 +28,15 @@ Describe the relevant activites in a timeline format. Remember activities leadin
     09:40 DOWNTIME END - Amount of 500 status codes are down to zero
     10:10 EVENT END - Reaches criteria of 30 minutes with normal activity
 -->
-2021-11-17
-    03:35 Nightly fails due to `cloning repository: ssh: handshake failed: knownhosts: key mismatch`<sub>2</sub>
-    16:26 User reports error in #kjøremiljø-support<sub>1</sub>
-    16:29 User agrees that we can wait until the day after to look into it
-2021-11-18
-    08:33 The team identifies the problem - Github rotated the certificate for their servers
-    08:53 The team identifies a solution, and announces it and an impending upgrade - upgrading ArgoCD
-    12:27 Another user posts a temporary fix - using `ssh-keyscan github.com`
-2021-12-06
-    15:53 The team releases an update for the okctl binary ([0.0.75](https://github.com/oslokommune/okctl/releases/tag/v0.0.75)) with the newest ArgoCD
+2021-09-1 --:-- Github releases a blog post describing the changes and the fix 2021-11-17 --:-- ArgoCD releases a
+version with updated known_hosts 03:35 Nightly fails due
+to `cloning repository: ssh: handshake failed: knownhosts: key mismatch`<sub>2</sub>
+16:26 User reports error in #kjøremiljø-support<sub>1</sub>
+16:29 User agrees that we can wait until the day after to look into it 2021-11-18 08:33 The team identifies the problem
+- Github rotated the certificate for their servers 08:53 The team identifies a solution, and announces it and an
+impending upgrade - upgrading ArgoCD 12:27 Another user posts a temporary fix - using `ssh-keyscan github.com`
+2021-12-06 15:53 The team releases an update for the okctl
+binary ([0.0.75](https://github.com/oslokommune/okctl/releases/tag/v0.0.75)) with the newest ArgoCD
 
 ## Impact
 <!--

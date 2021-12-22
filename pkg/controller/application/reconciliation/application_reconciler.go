@@ -64,14 +64,6 @@ func (a *applicationReconciler) createApplication(ctx context.Context, meta reco
 		return reconciliation.Result{}, err
 	}
 
-	err = a.client.CreateArgoCDApplicationManifest(client.CreateArgoCDApplicationManifestOpts{
-		Cluster:     *meta.ClusterDeclaration,
-		Application: meta.ApplicationDeclaration,
-	})
-	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("creating ArgoCD Application manifest: %w", err)
-	}
-
 	return reconciliation.Result{Requeue: false}, nil
 }
 

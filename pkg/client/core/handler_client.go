@@ -80,4 +80,5 @@ type Services struct {
 	ManagedPolicy                    client.ManagedPolicyService
 	ServiceAccount                   client.ServiceAccountService
 	ContainerRepository              client.ContainerRepositoryService
+	RemoteState                      client.RemoteStateService
 }

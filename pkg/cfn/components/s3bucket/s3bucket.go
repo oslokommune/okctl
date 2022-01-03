@@ -11,8 +11,9 @@ import (
 // S3Bucket contains the state required for building
 // the cloud formation template
 type S3Bucket struct {
-	StoredName string
-	BucketName string
+	StoredName           string
+	BucketName           string
+	BlockAllPublicAccess bool
 }
 
 // Resource returns the cloud formation template
@@ -20,6 +21,12 @@ func (s *S3Bucket) Resource() cloudformation.Resource {
 	return &s3.Bucket{
 		AccessControl: "BucketOwnerFullControl",
 		BucketName:    s.BucketName,
+		PublicAccessBlockConfiguration: &s3.Bucket_PublicAccessBlockConfiguration{
+			BlockPublicAcls:       s.BlockAllPublicAccess,
+			BlockPublicPolicy:     s.BlockAllPublicAccess,
+			IgnorePublicAcls:      s.BlockAllPublicAccess,
+			RestrictPublicBuckets: s.BlockAllPublicAccess,
+		},
 	}
 }
 

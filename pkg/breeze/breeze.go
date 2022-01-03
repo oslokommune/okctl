@@ -2,6 +2,7 @@ package breeze
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/asdine/storm/v3/index"
 
@@ -11,14 +12,26 @@ import (
 
 // Breeze contains the required state
 type Breeze struct {
-	path   string
-	addend []string
+	path     *string
+	addend   []string
+	writable *bool
+}
+
+// configurer defines functionality for configuring
+type configurer interface {
+	// SetDatabaseFilePath indicates where Breeze should look for a database file
+	SetDatabaseFilePath(string)
+	// SetWritable enables mutating operations
+	SetWritable(bool)
+	// IsWritable returns true if Breeze is allowed to mutate data
+	IsWritable() bool
 }
 
 // Client extracts the interface we are currently using from storm
 // we can simply extend this interface in the future if we want to
 // use more of the available functionality
 type Client interface {
+	configurer
 	All(to interface{}, options ...func(*index.Options)) error
 	AllByIndex(fieldName string, to interface{}, options ...func(*index.Options)) error
 	DeleteStruct(data interface{}) error
@@ -29,10 +42,11 @@ type Client interface {
 }
 
 // New returns an initialised client
-func New(path string) Breeze {
-	return Breeze{
-		path: path,
-	}
+func New() Breeze {
+	path := ""
+	writable := false
+
+	return Breeze{path: &path, writable: &writable}
 }
 
 // From returns the client with the added addend, we
@@ -128,9 +142,34 @@ func (b Breeze) DeleteStruct(data interface{}) error {
 	return node.DeleteStruct(data)
 }
 
+// SetDatabaseFilePath configures the path to where breeze will look for the database file when doing operations
+func (b Breeze) SetDatabaseFilePath(path string) {
+	*b.path = path
+}
+
+// SetWritable sets a flag enabling or disabling database mutation
+func (b Breeze) SetWritable(writable bool) {
+	*b.writable = writable
+}
+
+// IsWritable returns the flag representing if the database can be mutated
+func (b Breeze) IsWritable() bool {
+	return *b.writable
+}
+
 // open the storm database
 func (b Breeze) open() (*storm.DB, storm.Node, error) {
-	db, err := storm.Open(b.path, storm.Codec(json.Codec))
+	if *b.path == "" {
+		return nil, nil, fmt.Errorf("no database path is set")
+	}
+
+	var fileMode os.FileMode = 0o400
+
+	if *b.writable {
+		fileMode = 0o600
+	}
+
+	db, err := storm.Open(*b.path, storm.Codec(json.Codec), storm.BoltOptions(fileMode, nil))
 	if err != nil {
 		return nil, nil, fmt.Errorf("loading state database: %w", err)
 	}

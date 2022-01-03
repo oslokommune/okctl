@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/oslokommune/okctl/cmd/okctl/preruns"
+	"github.com/oslokommune/okctl/cmd/okctl/hooks"
 	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/config/constant"
 	"github.com/oslokommune/okctl/pkg/metrics"
@@ -24,23 +24,17 @@ func buildScaffoldClusterCommand(o *okctl.Okctl) *cobra.Command {
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			return nil
 		},
-		PreRunE: preruns.PreRunECombinator(
-			preruns.LoadUserData(o),
-			preruns.InitializeMetrics(o),
-			func(cmd *cobra.Command, args []string) error {
-				metrics.Publish(generateStartEvent(metrics.ActionScaffoldCluster))
-
-				return nil
-			},
+		PreRunE: hooks.RunECombinator(
+			hooks.LoadUserData(o),
+			hooks.InitializeMetrics(o),
+			hooks.EmitStartCommandExecutionEvent(metrics.ActionScaffoldCluster),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return commands.ScaffoldClusterDeclaration(o.Out, opts)
 		},
-		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(generateEndEvent(metrics.ActionScaffoldCluster))
-
-			return nil
-		},
+		PostRunE: hooks.RunECombinator(
+			hooks.EmitEndCommandExecutionEvent(metrics.ActionScaffoldCluster),
+		),
 	}
 
 	flags := cmd.Flags()

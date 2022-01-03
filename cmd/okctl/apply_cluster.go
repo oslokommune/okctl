@@ -11,7 +11,7 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/metrics"
 
-	"github.com/oslokommune/okctl/cmd/okctl/preruns"
+	"github.com/oslokommune/okctl/cmd/okctl/hooks"
 	"github.com/oslokommune/okctl/pkg/upgrade/clusterversion"
 	"github.com/oslokommune/okctl/pkg/upgrade/originalclusterversion"
 
@@ -23,10 +23,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/api"
 
 	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
-
-	"github.com/asdine/storm/v3/codec/json"
-
-	"github.com/asdine/storm/v3"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
@@ -80,61 +76,15 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			return nil
 		},
-		PreRunE: preruns.PreRunECombinator(
-			preruns.LoadUserData(o),
-			preruns.InitializeMetrics(o),
+		PreRunE: hooks.RunECombinator(
+			hooks.LoadUserData(o),
+			hooks.InitializeMetrics(o),
+			hooks.EmitStartCommandExecutionEvent(metrics.ActionApplyCluster),
+			hooks.LoadClusterDeclaration(o, &opts.File),
+			hooks.InitializeOkctl(o),
+			hooks.AcquireStateLock(o),
+			hooks.DownloadState(o, true),
 			func(cmd *cobra.Command, args []string) (err error) {
-				metrics.Publish(generateStartEvent(metrics.ActionApplyCluster))
-
-				opts.Declaration, err = commands.InferClusterFromStdinOrFile(o.In, opts.File)
-				if err != nil {
-					return fmt.Errorf("inferring cluster: %w", err)
-				}
-
-				err = opts.Declaration.Validate()
-				if err != nil {
-					return fmt.Errorf("validating cluster declaration: %w", err)
-				}
-
-				o.Declaration = opts.Declaration
-
-				// Move into a function
-				{
-					baseDir, err := o.GetRepoDir()
-					if err != nil {
-						return err
-					}
-
-					stormDB := path.Join(baseDir, o.Declaration.Github.OutputPath, o.Declaration.Metadata.Name, constant.DefaultStormDBName)
-
-					exists, err := o.FileSystem.Exists(stormDB)
-					if err != nil {
-						return err
-					}
-
-					if !exists {
-						err := o.FileSystem.MkdirAll(path.Dir(stormDB), 0o744)
-						if err != nil {
-							return err
-						}
-
-						db, err := storm.Open(stormDB, storm.Codec(json.Codec))
-						if err != nil {
-							return err
-						}
-
-						err = db.Close()
-						if err != nil {
-							return err
-						}
-					}
-				}
-
-				err = o.Initialise()
-				if err != nil {
-					return fmt.Errorf("initializing okctl: %w", err)
-				}
-
 				state := o.StateHandlers(o.StateNodes())
 
 				// Cluster version
@@ -226,11 +176,12 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			return nil
 		},
-		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(generateEndEvent(metrics.ActionApplyCluster))
-
-			return nil
-		},
+		PostRunE: hooks.RunECombinator(
+			hooks.UploadState(o),
+			hooks.ClearLocalState(o),
+			hooks.ReleaseStateLock(o),
+			hooks.EmitEndCommandExecutionEvent(metrics.ActionApplyCluster),
+		),
 	}
 
 	flags := cmd.Flags()

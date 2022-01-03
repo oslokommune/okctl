@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  myResource:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-myResource
+    Value:
+      Ref: myResource
+Resources:
+  myResource:
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      BillingMode: PROVISIONED
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      SSESpecification:
+        SSEEnabled: true
+      TableName: my-table
+    Type: AWS::DynamoDB::Table

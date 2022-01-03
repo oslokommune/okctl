@@ -11,4 +11,5 @@ Resources:
     Properties:
       AccessControl: BucketOwnerFullControl
       BucketName: my-Bucket
+      PublicAccessBlockConfiguration: {}
     Type: AWS::S3::Bucket

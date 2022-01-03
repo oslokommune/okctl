@@ -22,7 +22,10 @@ func TestServiceAccountStateScenario(t *testing.T) {
 		assert.NoError(t, err)
 	}()
 
-	db := breeze.New(filepath.Join(dir, "storm.db"))
+	db := breeze.New()
+
+	db.SetDatabaseFilePath(filepath.Join(dir, "storm.db"))
+	db.SetWritable(true)
 
 	err = db.Init(&storm.ServiceAccount{})
 	assert.NoError(t, err)

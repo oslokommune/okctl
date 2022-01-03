@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/oslokommune/okctl/cmd/okctl/preruns"
+	"github.com/oslokommune/okctl/cmd/okctl/hooks"
 	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/metrics"
 
@@ -47,18 +47,14 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 		Use:   "postgres",
 		Short: AttachPostgresShortDescription,
 		Args:  cobra.ExactArgs(0), // nolint: gomnd
-		PreRunE: preruns.PreRunECombinator(
-			preruns.LoadUserData(o),
-			preruns.InitializeMetrics(o),
+		PreRunE: hooks.RunECombinator(
+			hooks.LoadUserData(o),
+			hooks.InitializeMetrics(o),
+			hooks.EmitStartCommandExecutionEvent(metrics.ActionAttachPostgres),
+			hooks.InitializeOkctl(o),
+			hooks.DownloadState(o, false),
 			func(_ *cobra.Command, _ []string) error {
-				metrics.Publish(generateStartEvent(metrics.ActionAttachPostgres))
-
-				err := o.Initialise()
-				if err != nil {
-					return err
-				}
-
-				err = commands.ValidateBinaryVersionNotLessThanClusterVersion(o)
+				err := commands.ValidateBinaryVersionNotLessThanClusterVersion(o)
 				if err != nil {
 					return err
 				}
@@ -171,11 +167,10 @@ func buildAttachPostgres(o *okctl.Okctl) *cobra.Command {
 
 			return err
 		},
-		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(generateEndEvent(metrics.ActionAttachPostgres))
-
-			return nil
-		},
+		PostRunE: hooks.RunECombinator(
+			hooks.ClearLocalState(o),
+			hooks.EmitEndCommandExecutionEvent(metrics.ActionAttachPostgres),
+		),
 	}
 
 	flags := cmd.Flags()

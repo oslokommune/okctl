@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"github.com/oslokommune/okctl/cmd/okctl/hooks"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/go-git/go-git/v5"
@@ -20,10 +22,47 @@ import (
 )
 
 func main() {
-	cmd := buildRootCommand()
+	cmd, o := buildRootCommand()
+	exitCode := 0
+
 	if err := cmd.Execute(); err != nil {
-		os.Exit(1)
+		exitCode = 1
 	}
+
+	err := gracefullyTearDownState(o)
+	if err != nil {
+		fmt.Fprintf(cmd.ErrOrStderr(), "gracefully cleaning up state: %s", err.Error())
+	}
+
+	os.Exit(exitCode)
+}
+
+func gracefullyTearDownState(o *okctl.Okctl) error {
+	err := hooks.UploadState(o)(nil, nil)
+	if err != nil {
+		switch {
+		case errors.Is(err, hooks.ErrNotInitialized):
+			return nil
+		case errors.Is(err, hooks.ErrImmutable):
+			return nil
+		case errors.Is(err, hooks.ErrNotFound):
+			return nil
+		default:
+			return fmt.Errorf("uploading state: %w", err)
+		}
+	}
+
+	err = hooks.ReleaseStateLock(o)(nil, nil)
+	if err != nil {
+		return fmt.Errorf("releasing state lock: %w", err)
+	}
+
+	err = hooks.ClearLocalState(o)(nil, nil)
+	if err != nil {
+		return fmt.Errorf("clearing local state: %w", err)
+	}
+
+	return nil
 }
 
 func loadRepoData(o *okctl.Okctl, declarationPath string, _ *cobra.Command) error {
@@ -43,7 +82,7 @@ func loadUserData(o *okctl.Okctl, cmd *cobra.Command) error {
 var declarationPath string //nolint:gochecknoglobals
 
 //nolint:funlen,govet
-func buildRootCommand() *cobra.Command {
+func buildRootCommand() (*cobra.Command, *okctl.Okctl) {
 	var outputFormat string
 
 	o := okctl.New()
@@ -99,6 +138,12 @@ func buildRootCommand() *cobra.Command {
 			signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 			go func() {
 				<-c
+
+				err = gracefullyTearDownState(o)
+				if err != nil {
+					fmt.Fprintf(cmd.ErrOrStderr(), "gracefully up state: %s", err.Error())
+				}
+
 				os.Exit(1)
 			}()
 
@@ -117,6 +162,7 @@ func buildRootCommand() *cobra.Command {
 	cmd.AddCommand(buildForwardCommand(o))
 	cmd.AddCommand(buildVersionCommand(o))
 	cmd.AddCommand(buildUpgradeCommand(o))
+	cmd.AddCommand(buildMaintenanceCommand(o))
 
 	f := cmd.Flags()
 	f.StringVarP(&outputFormat, "output", "o", "text",
@@ -149,5 +195,5 @@ func buildRootCommand() *cobra.Command {
 		),
 	)
 
-	return cmd
+	return cmd, o
 }

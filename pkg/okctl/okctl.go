@@ -341,6 +341,16 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		o.CloudProvider,
 	)
 
+	objectStorageService := core.NewObjectStorageService(
+		awsProvider.NewObjectStorageCloudProvider(o.CloudProvider),
+	)
+
+	keyValueStoreService := core.NewKeyValueStoreService(
+		awsProvider.NewDynamoDBKeyValueStoreCloudProvider(o.CloudProvider),
+	)
+
+	remoteStateService := clientCore.NewRemoteStateService(keyValueStoreService, objectStorageService)
+
 	services := &clientCore.Services{
 		AWSLoadBalancerControllerService: awsLoadBalancerControllerService,
 		ArgoCD:                           argocdService,
@@ -366,6 +376,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		ManagedPolicy:                    managedPolicyService,
 		ServiceAccount:                   serviceAccountService,
 		ContainerRepository:              containerRepositoryService,
+		RemoteState:                      remoteStateService,
 	}
 
 	return services, nil
@@ -412,10 +423,7 @@ func (o *Okctl) initialise() error {
 		return err
 	}
 
-	err = o.initialiseBreeze()
-	if err != nil {
-		return err
-	}
+	o.DB = breeze.New()
 
 	o.restClient = rest.New(o.Debug, o.Err, o.ServerURL)
 
@@ -610,19 +618,6 @@ func (o *Okctl) waitForServer() error {
 	}
 }
 
-func (o *Okctl) initialiseBreeze() error {
-	outputDir, err := o.GetRepoOutputDir()
-	if err != nil {
-		return err
-	}
-
-	db := breeze.New(path.Join(outputDir, constant.DefaultStormDBName))
-
-	o.DB = db
-
-	return nil
-}
-
 // initialiseProviders knows how to create all required providers
 func (o *Okctl) initialiseProviders() error {
 	err := o.newCredentialsProvider()
@@ -706,7 +701,7 @@ func (o *Okctl) getAWSAuthenticator() (*aws.Auth, error) {
 
 	defaultRing, err := keyring.DefaultKeyringForOS()
 	if err != nil {
-		return nil, fmt.Errorf(`unable to create a keyring. It is possible no valid backends were found 
+		return nil, fmt.Errorf(`unable to create a keyring. It is possible no valid backends were found
 on your system, take a look at this site for valid options:
 https://github.com/99designs/keyring#keyring
 
@@ -755,7 +750,7 @@ func (o *Okctl) getGithubAuthenticator() (*github.Auth, error) {
 
 	defaultRing, err := keyring.DefaultKeyringForOS()
 	if err != nil {
-		return nil, fmt.Errorf(`unable to create a keyring. It is possible no valid backends were found 
+		return nil, fmt.Errorf(`unable to create a keyring. It is possible no valid backends were found
 on your system, take a look at this site for valid options:
 https://github.com/99designs/keyring#keyring
 

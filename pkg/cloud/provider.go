@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 
 	"github.com/aws/aws-sdk-go/service/acm/acmiface"
 
@@ -97,6 +99,7 @@ func NewFromSession(region, principalARN string, sess *session.Session) (*Provid
 	services.cf = cloudfront.New(sess)
 	services.cw = cloudwatch.New(sess)
 	services.acm = acm.New(sess)
+	services.dynamodb = dynamodb.New(sess)
 
 	return p, nil
 }
@@ -141,20 +144,21 @@ func NewSessionFromEnv(region string) (*session.Session, error) {
 
 // Services stores access to the various AWS APIs
 type Services struct {
-	sm    secretsmanageriface.SecretsManagerAPI
-	s3    s3iface.S3API
-	iam   iamiface.IAMAPI
-	cfn   cloudformationiface.CloudFormationAPI
-	ec2   ec2iface.EC2API
-	elbv2 elbv2iface.ELBV2API
-	eks   eksiface.EKSAPI
-	ssm   ssmiface.SSMAPI
-	sq    servicequotasiface.ServiceQuotasAPI
-	r53   route53iface.Route53API
-	cip   cognitoidentityprovideriface.CognitoIdentityProviderAPI
-	cf    cloudfrontiface.CloudFrontAPI
-	cw    cloudwatchiface.CloudWatchAPI
-	acm   acmiface.ACMAPI
+	sm       secretsmanageriface.SecretsManagerAPI
+	s3       s3iface.S3API
+	iam      iamiface.IAMAPI
+	cfn      cloudformationiface.CloudFormationAPI
+	ec2      ec2iface.EC2API
+	elbv2    elbv2iface.ELBV2API
+	eks      eksiface.EKSAPI
+	ssm      ssmiface.SSMAPI
+	sq       servicequotasiface.ServiceQuotasAPI
+	r53      route53iface.Route53API
+	cip      cognitoidentityprovideriface.CognitoIdentityProviderAPI
+	cf       cloudfrontiface.CloudFrontAPI
+	cw       cloudwatchiface.CloudWatchAPI
+	acm      acmiface.ACMAPI
+	dynamodb dynamodbiface.DynamoDBAPI
 
 	region       string
 	principalARN string
@@ -163,6 +167,11 @@ type Services struct {
 // CloudWatch returns an interface to the CloudWatch API
 func (s *Services) CloudWatch() cloudwatchiface.CloudWatchAPI {
 	return s.cw
+}
+
+// DynamoDB returns an interface to the DynamoDB API
+func (s *Services) DynamoDB() dynamodbiface.DynamoDBAPI {
+	return s.dynamodb
 }
 
 // SecretsManager returns an interface to the SecretsManager API

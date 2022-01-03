@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/oslokommune/okctl/cmd/okctl/preruns"
+	"github.com/oslokommune/okctl/cmd/okctl/hooks"
 	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/metrics"
 
@@ -41,17 +41,14 @@ func buildUpgradeCommand(o *okctl.Okctl) *cobra.Command {
 		Long: `Runs a series of upgrade migrations to upgrade resources made by okctl
 to the current version of okctl. Example of such resources are helm charts, okctl cluster and application declarations,
 binaries used by okctl (kubectl, etc), and internal state.`,
-		PreRunE: preruns.PreRunECombinator(
-			preruns.LoadUserData(o),
-			preruns.InitializeMetrics(o),
+		PreRunE: hooks.RunECombinator(
+			hooks.LoadUserData(o),
+			hooks.InitializeMetrics(o),
+			hooks.EmitStartCommandExecutionEvent(metrics.ActionUpgrade),
+			hooks.InitializeOkctl(o),
+			hooks.AcquireStateLock(o),
+			hooks.DownloadState(o, true),
 			func(cmd *cobra.Command, args []string) error {
-				metrics.Publish(generateStartEvent(metrics.ActionUpgrade))
-
-				err := o.Initialise()
-				if err != nil {
-					return err
-				}
-
 				okctlEnvironment, err := commands.GetOkctlEnvironment(o, declarationPath)
 				if err != nil {
 					return err
@@ -133,11 +130,12 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 			}
 			return nil
 		},
-		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(generateEndEvent(metrics.ActionUpgrade))
-
-			return nil
-		},
+		PostRunE: hooks.RunECombinator(
+			hooks.UploadState(o),
+			hooks.ClearLocalState(o),
+			hooks.ReleaseStateLock(o),
+			hooks.EmitEndCommandExecutionEvent(metrics.ActionUpgrade),
+		),
 	}
 
 	cmd.PersistentFlags().BoolVarP(

@@ -18,6 +18,19 @@ func TestNew(t *testing.T) {
 				"my-Bucket",
 			),
 		},
+		{
+			Name:   "S3Bucket with blocked public access",
+			Golden: "s3bucket-public-block.yaml",
+			Content: func() *s3bucket.S3Bucket {
+				b := s3bucket.New(
+					"myResource",
+					"my-Bucket",
+				)
+				b.BlockAllPublicAccess = true
+
+				return b
+			}(),
+		},
 	}
 
 	tstr.RunTests(t, testCases, nil)

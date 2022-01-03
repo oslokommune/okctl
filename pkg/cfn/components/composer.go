@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/cfn/components/dynamodb"
+
 	"github.com/oslokommune/okctl/pkg/api"
 
 	"github.com/oslokommune/okctl/pkg/cfn/components/containerrepository"
@@ -1587,8 +1589,9 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 // S3BucketComposer contains the state required for creating
 // the AWS S3 bucket
 type S3BucketComposer struct {
-	BucketName   string
-	ResourceName string
+	BucketName           string
+	ResourceName         string
+	BlockAllPublicAccess bool
 }
 
 // ResourceBucketNameOutput returns the name of the resource
@@ -1602,6 +1605,8 @@ func (s *S3BucketComposer) Compose() (*cfn.Composition, error) {
 		s.ResourceBucketNameOutput(),
 		s.BucketName,
 	)
+
+	b.BlockAllPublicAccess = s.BlockAllPublicAccess
 
 	return &cfn.Composition{
 		Outputs:   []cfn.StackOutputer{b},
@@ -1707,5 +1712,29 @@ func NewSecurityGroupComposer(opts NewSecurityGroupComposerOpts) *SecurityGroupC
 		Description:   opts.Description,
 		InboundRules:  opts.InboundRules,
 		OutboundRules: opts.OutboundRules,
+	}
+}
+
+// DynamoDBTableComposer defines the required data to create a DynamoDB Table CloudFormation template
+type DynamoDBTableComposer struct {
+	tableName    string
+	partitionKey string
+}
+
+// Compose returns the outputs and resources
+func (d *DynamoDBTableComposer) Compose() (*cfn.Composition, error) {
+	table := dynamodb.New("DynamoDBTable", d.tableName, d.partitionKey)
+
+	return &cfn.Composition{
+		Outputs:   []cfn.StackOutputer{table},
+		Resources: []cfn.ResourceNamer{table},
+	}, nil
+}
+
+// NewDynamoDBTableComposer returns an initialized DynamoDB Table composer
+func NewDynamoDBTableComposer(tableName string, partitionKey string) *DynamoDBTableComposer {
+	return &DynamoDBTableComposer{
+		tableName:    tableName,
+		partitionKey: partitionKey,
 	}
 }

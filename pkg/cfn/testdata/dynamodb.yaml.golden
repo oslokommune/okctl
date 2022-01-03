@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  DynamoDBTable:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DynamoDBTable
+    Value:
+      Ref: DynamoDBTable
+Resources:
+  DynamoDBTable:
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: myID
+        AttributeType: S
+      BillingMode: PROVISIONED
+      KeySchema:
+      - AttributeName: myID
+        KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      SSESpecification:
+        SSEEnabled: true
+      TableName: myTable
+    Type: AWS::DynamoDB::Table

@@ -7,7 +7,7 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/commands"
 
-	"github.com/oslokommune/okctl/cmd/okctl/preruns"
+	"github.com/oslokommune/okctl/cmd/okctl/hooks"
 	"github.com/oslokommune/okctl/pkg/metrics"
 
 	"github.com/oslokommune/okctl/pkg/cfn"
@@ -59,22 +59,18 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 		Short: ForwardPostgresShortDescription,
 		Long:  ForwardPostgresLongDescription,
 		Args:  cobra.ExactArgs(0), // nolint: gomnd
-		PreRunE: preruns.PreRunECombinator(
-			preruns.LoadUserData(o),
-			preruns.InitializeMetrics(o),
+		PreRunE: hooks.RunECombinator(
+			hooks.LoadUserData(o),
+			hooks.InitializeMetrics(o),
+			hooks.EmitStartCommandExecutionEvent(metrics.ActionForwardPostgres),
+			hooks.InitializeOkctl(o),
+			hooks.DownloadState(o, false),
 			func(_ *cobra.Command, _ []string) error {
-				metrics.Publish(generateStartEvent(metrics.ActionForwardPostgres))
-
 				if len(opts.ApplicationName) == 0 {
 					return fmt.Errorf("missing database instance name")
 				}
 
-				err := o.Initialise()
-				if err != nil {
-					return err
-				}
-
-				err = commands.ValidateBinaryVersionNotLessThanClusterVersion(o)
+				err := commands.ValidateBinaryVersionNotLessThanClusterVersion(o)
 				if err != nil {
 					return err
 				}
@@ -192,11 +188,10 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 
 			return err
 		},
-		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(generateEndEvent(metrics.ActionForwardPostgres))
-
-			return nil
-		},
+		PostRunE: hooks.RunECombinator(
+			hooks.ClearLocalState(o),
+			hooks.EmitEndCommandExecutionEvent(metrics.ActionForwardPostgres),
+		),
 	}
 
 	flags := cmd.Flags()

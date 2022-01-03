@@ -5,7 +5,7 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/metrics"
 
-	"github.com/oslokommune/okctl/cmd/okctl/preruns"
+	"github.com/oslokommune/okctl/cmd/okctl/hooks"
 	"github.com/oslokommune/okctl/pkg/commands"
 
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -26,12 +26,11 @@ func buildScaffoldApplicationCommand(o *okctl.Okctl) *cobra.Command {
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			return nil
 		},
-		PreRunE: preruns.PreRunECombinator(
-			preruns.LoadUserData(o),
-			preruns.InitializeMetrics(o),
+		PreRunE: hooks.RunECombinator(
+			hooks.LoadUserData(o),
+			hooks.InitializeMetrics(o),
+			hooks.EmitStartCommandExecutionEvent(metrics.ActionScaffoldApplication),
 			func(cmd *cobra.Command, args []string) error {
-				metrics.Publish(generateStartEvent(metrics.ActionScaffoldApplication))
-
 				if declarationPath != "" {
 					clusterDeclaration, err := commands.InferClusterFromStdinOrFile(o.In, declarationPath)
 					if err != nil {
@@ -56,11 +55,9 @@ func buildScaffoldApplicationCommand(o *okctl.Okctl) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return commands.ScaffoldApplicationDeclaration(o.Out, opts)
 		},
-		PostRunE: func(cmd *cobra.Command, args []string) error {
-			metrics.Publish(generateEndEvent(metrics.ActionScaffoldApplication))
-
-			return nil
-		},
+		PostRunE: hooks.RunECombinator(
+			hooks.EmitEndCommandExecutionEvent(metrics.ActionScaffoldApplication),
+		),
 	}
 
 	return cmd

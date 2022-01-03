@@ -185,7 +185,8 @@ func (c *Config) GetRepoStatePath() (string, error) {
 	return filepath.Join(base, constant.DefaultRepositoryStateFile), nil
 }
 
-// GetHomeDir will get the okctl application home dir
+// GetHomeDir will return the value of OKCTL_HOME. Will default to the user's home directory. I.e.: /home/user/ in unix
+// based systems
 func (c *Config) GetHomeDir() (string, error) {
 	if len(c.homeDir) != 0 {
 		return c.homeDir, nil
@@ -213,7 +214,7 @@ func (c *Config) GetHomeDir() (string, error) {
 }
 
 // GetUserDataDir will get the directory to where okctl
-// application data should be written
+// application data should be written. I.e.: /home/user/.okctl in unix based systems
 func (c *Config) GetUserDataDir() (string, error) {
 	home, err := c.GetHomeDir()
 	if err != nil {
@@ -224,7 +225,7 @@ func (c *Config) GetUserDataDir() (string, error) {
 }
 
 // GetUserDataPath returns the path to the okctl application
-// config path
+// config path. I.e.: /home/user/.okctl/conf.yml
 func (c *Config) GetUserDataPath() (string, error) {
 	base, err := c.GetUserDataDir()
 	if err != nil {

@@ -13,7 +13,6 @@ Describe the relevant activites in a timeline format. Remember activities
 leading up to the event being triggered. Make sure to link to graphs, logs and
 other relevant information sources.
 
-
 2019-12-30
     23:30 A proactive message got sendt out to all the citizens of Oslo
 2019-12-31
@@ -68,12 +67,13 @@ Example:
 - Deploying the database update was fast
 -->
 
-## What could we have done better
+## What went wrong
 <!--
 Describe what went wrong trying to handle the event.
 
 Example:
 - Had to manually roll back the database while testing fixes
+- We missed the notification regarding Keycloak upgrade
 -->
 
 ## Where were we lucky

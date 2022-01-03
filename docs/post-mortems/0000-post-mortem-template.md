@@ -8,8 +8,11 @@ proaktiv melding.
 -->
 
 ## Timeline
-<!-- 
-Describe the relevant activites in a timeline format. Remember activities leading up to the event being triggered.
+<!--
+Describe the relevant activites in a timeline format. Remember activities
+leading up to the event being triggered. Make sure to link to graphs, logs and
+other relevant information sources.
+
 
 2019-12-30
     23:30 A proactive message got sendt out to all the citizens of Oslo

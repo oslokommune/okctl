@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/mishudark/errors"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/config/constant"
@@ -102,7 +104,12 @@ func (s *applicationService) CreateArgoCDApplicationManifest(opts client.CreateA
 	absoluteOverlayDir := path.Join(s.absoluteRepositoryDir, relativeOverlayDir)
 	absoluteArgoCDApplicationManifestPath := path.Join(absoluteOverlayDir, defaultArgoCDApplicationManifestFilename)
 
-	err := scaffold.GenerateArgoCDApplicationManifest(scaffold.GenerateArgoCDApplicationManifestOpts{
+	err := s.fs.MkdirAll(absoluteOverlayDir, 0o700)
+	if err != nil {
+		return errors.E(err, "ensuring overlay directory: %w", err)
+	}
+
+	err = scaffold.GenerateArgoCDApplicationManifest(scaffold.GenerateArgoCDApplicationManifestOpts{
 		Saver: func(content []byte) error {
 			return s.fs.WriteFile(absoluteArgoCDApplicationManifestPath, content, defaultArgoCDApplicationManifestPermissions)
 		},
@@ -111,7 +118,7 @@ func (s *applicationService) CreateArgoCDApplicationManifest(opts client.CreateA
 		RelativeApplicationOverlayDir: relativeOverlayDir,
 	})
 	if err != nil {
-		return fmt.Errorf("generating ArgoCD Application manifest: %w", err)
+		return errors.E(err, "generating ArgoCD Application manifest")
 	}
 
 	return nil

@@ -31,7 +31,6 @@ import (
 	"github.com/logrusorgru/aurora"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/spinner"
@@ -41,7 +40,6 @@ import (
 type applyClusterOpts struct {
 	DisableSpinner bool
 	File           string
-	Declaration    *v1alpha1.Cluster
 }
 
 // Validate ensures the applyClusterOpts contains the right information
@@ -244,7 +242,7 @@ func handleClusterVersioning(
 
 	if !hasOriginalClusterVersion && shouldShowMessage {
 		stateFile := path.Join(
-			opts.Declaration.Github.OutputPath, opts.Declaration.Metadata.Name, constant.DefaultStormDBName)
+			o.Declaration.Github.OutputPath, o.Declaration.Metadata.Name, constant.DefaultStormDBName)
 
 		_, _ = fmt.Fprintf(o.Out, "\nOkctl detected that parts of the cluster state had to be "+
 			"initialized to support future upgrades. The cluster state has now been initialized. You "+

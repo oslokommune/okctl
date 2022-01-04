@@ -25,16 +25,27 @@ func main() {
 	cmd, o := buildRootCommand()
 	exitCode := 0
 
-	if err := cmd.Execute(); err != nil {
+	defer func() {
+		os.Exit(exitCode)
+	}()
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintln(cmd.ErrOrStderr(), r)
+
+			exitCode = 1
+		}
+
+		err := gracefullyTearDownState(o)
+		if err != nil {
+			fmt.Fprintf(cmd.ErrOrStderr(), "gracefully cleaning up state: %s", err.Error())
+		}
+	}()
+
+	err := cmd.Execute()
+	if err != nil {
 		exitCode = 1
 	}
-
-	err := gracefullyTearDownState(o)
-	if err != nil {
-		fmt.Fprintf(cmd.ErrOrStderr(), "gracefully cleaning up state: %s", err.Error())
-	}
-
-	os.Exit(exitCode)
 }
 
 func gracefullyTearDownState(o *okctl.Okctl) error {

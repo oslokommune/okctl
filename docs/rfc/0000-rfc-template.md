@@ -1,5 +1,4 @@
 # 0000. Request for comments
-
 <!-- 
     Date representing when the RFC was submittet for review 
 
@@ -9,7 +8,6 @@
 Date:
 
 ## Context
-
 <!--
     Short description of why this decision is needed
 
@@ -17,9 +15,7 @@ Date:
     We want to better document our decisions
 -->
 
-
 ## Decision
-
 <!--
     Short summary of the decision
 
@@ -28,11 +24,9 @@ Date:
 -->
 
 ## Consequences
-
 <!--
     Short description of positive and negative consequences of the decision
 
     Example:
     The decisions we deem relevant will be documented in this format here in this folder.
 -->
-

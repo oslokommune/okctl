@@ -14,7 +14,7 @@ import (
 
 func buildMaintenanceStateUploadCommand(o *okctl.Okctl) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "state-upload <path to cluster.yaml>",
+		Use:   "state-upload <path to state.db>",
 		Short: "uploads a state.db",
 		Long:  longMaintenanceStateUploadDescription,
 		Args:  cobra.ExactArgs(1),

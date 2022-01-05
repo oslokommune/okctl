@@ -1,0 +1,32 @@
+name: "Delete cluster"
+description: "Deletes an okctl cluster"
+
+inputs:
+  cluster-manifest-path:
+    description: Path to the cluster manifest
+    required: true
+  okctl-path:
+    description: Path to the okctl binary
+    required: true
+  aws-access-key-id:
+    description: AWS service user access key ID
+    required: true
+  aws-secret-access-key:
+    description: AWS service user secret access key
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        ${{ inputs.okctl-path }} delete cluster \
+          --cluster-declaration ${{ inputs.cluster-manifest-path }} \
+          --aws-credentials-type access-key \
+          --confirm \
+          --no-spinner
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+        OKCTL_DEBUG: 'true'
+        OKCTL_METRICS_USERAGENT: okctldev
+      shell: bash

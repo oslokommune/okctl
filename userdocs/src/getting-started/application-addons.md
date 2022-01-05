@@ -77,20 +77,6 @@ By default this will use the postgres default port of `5432`, but you can change
 to use when connecting to the postgres client, for example psql. The user connected to Postgres will however be the admin
 user defined in `cluster.yaml` when provisioning the database.
 
-### Attaching to the database from a local machine
-
-We also provide a convenience function for connecting to the Postgres database from your local machine with minimal effort:
-
-```bash
-# Usage
-okctl --cluster-declaration <path to cluster declaration> attach postgres --name <database server name>
-
-# Example
-okctl --cluster-declaration cluster.yaml attach postgres --name dbtest
-```
-
-The above command will drop you into a `psql` shell.
-
 ### Connecting an application with a database
 
 #### Motivation

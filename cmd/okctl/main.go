@@ -169,7 +169,6 @@ func buildRootCommand() (*cobra.Command, *okctl.Okctl) {
 	cmd.AddCommand(buildScaffoldCommand(o))
 	cmd.AddCommand(buildShowCommand(o))
 	cmd.AddCommand(buildVenvCommand(o))
-	cmd.AddCommand(buildAttachCommand(o))
 	cmd.AddCommand(buildForwardCommand(o))
 	cmd.AddCommand(buildVersionCommand(o))
 	cmd.AddCommand(buildUpgradeCommand(o))

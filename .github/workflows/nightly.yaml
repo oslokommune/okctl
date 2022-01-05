@@ -34,7 +34,7 @@ jobs:
 
           metadata:
             accountID: "${{ secrets.NIGHTLY_AWS_ACCOUNT_ID }}"
-            name: nightly-test
+            name: okctl-nightly
             region: eu-west-1
 
           clusterRootDomain: nightly.auto.oslo.systems

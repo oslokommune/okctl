@@ -1,4 +1,4 @@
-name: 'Nightly build'
+name: 'Nightly'
 
 on:
   workflow_dispatch: {}
@@ -16,6 +16,9 @@ jobs:
         with:
           go-version: 1.16
 
+      - run: echo "okctlPath=dist/linux_linux_amd64/okctl" >> $GITHUB_ENV
+      - run: echo "clusterManifestPath=nightly-cfg.yaml" >> $GITHUB_ENV
+
       - name: Test
         run: go test -v ./...
 
@@ -26,62 +29,32 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_SECRET_KEY }}
 
-      - name: Create config
-        run: |
-          cat <<EOF > nightly-cfg.yaml
-          apiVersion: okctl.io/v1alpha1
-          kind: Cluster
-
-          metadata:
-            accountID: "${{ secrets.NIGHTLY_AWS_ACCOUNT_ID }}"
-            name: okctl-nightly
-            region: eu-west-1
-
-          clusterRootDomain: nightly.auto.oslo.systems
-
-          github:
-            repository: okctl-iac
-            organisation: oslokommune
-            outputPath: infra
-
-          integrations:
-            argoCD: true
-            autoscaler: true
-            awsLoadBalancerController: true
-            blockstorage: true
-            cognito: true
-            externalDNS: true
-            externalSecrets: true
-            kubePromStack: true
-            loki: true
-            promtail: true
-            tempo: true
-
-          vpc:
-            cidr: 192.168.0.0/20
-            highAvailability: true
-          
-          experimental:
-            automatizeZoneDelegation: true
-          EOF
+      - name: Scaffold cluster manifest
+        uses: ./.github/workflows/nightly/scaffold-cluster
+        with:
+          aws-account-id: ${{ secrets.NIGHTLY_AWS_ACCOUNT_ID }}
+          okctl-path: ${{ env.okctlPath }}
+          cluster-manifest-path: ${{ env.clusterManifestPath }}
+          cluster-name: okctl-nightly
+          repository-name: okctl-iac
 
       - name: Create cluster
-        run: dist/linux_linux_amd64/okctl apply cluster --github-credentials-type token --aws-credentials-type access-key --no-spinner --file nightly-cfg.yaml
-        env:
-          OKCTL_DEBUG: true
-          OKCTL_METRICS_USERAGENT: okctldev
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          GITHUB_TOKEN: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_PAT }}
+        uses: ./.github/workflows/nightly/apply-cluster
+        with:
+          okctl-path: ${{ env.okctlPath }}
+          cluster-manifest-path: ${{ env.clusterManifestPath }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          github-token: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_PAT }}
 
       - name: Delete cluster
-        run: dist/linux_linux_amd64/okctl delete cluster --github-credentials-type token --aws-credentials-type access-key --no-spinner --confirm --cluster-declaration nightly-cfg.yaml
-        env:
-          OKCTL_DEBUG: true
-          OKCTL_METRICS_USERAGENT: okctldev
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          GITHUB_TOKEN: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_PAT }}
+        uses: ./.github/workflows/nightly/delete-cluster
+        with:
+          okctl-path: ${{ env.okctlPath }}
+          cluster-manifest-path: ${{ env.clusterManifestPath }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          github-token: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_PAT }}
 
       - name: Notify
         if: ${{ always() }}

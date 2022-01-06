@@ -1,0 +1,40 @@
+name: "Scaffold cluster"
+description: "Scaffold an okctl cluster manifest"
+
+inputs:
+  okctl-path:
+    description: Path to the okctl binary
+    required: true
+  cluster-manifest-path:
+    description: Cluster Manifest output path
+    required: true
+  cluster-name:
+    description: Name of the cluster
+    required: true
+  repository-name:
+    description: Name of the relevant IAC repository
+    required: true
+  aws-account-id:
+    description: AWS account ID
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        ${{ inputs.okctl-path }} scaffold cluster \
+          --aws-account-id "${{ inputs.aws-account-id }}" \
+          --name "${{ inputs.cluster-name }}" \
+          --repository-name "${{ inputs.repository-name }}" \
+          > ${{ inputs.cluster-manifest-path }}
+      env:
+        OKCTL_DEBUG: 'true'
+        OKCTL_METRICS_USERAGENT: okctldev
+      shell: bash
+
+    - name: Set clusterRootDomain
+      run: yq eval -i '.clusterRootDomain = "nightly.auto.oslo.systems"' ${{ env.clusterManifestPath }}
+      shell: bash
+    - name: Set automatize zone delegation
+      run: yq eval -i '.experimental.automatizeZoneDelegation = true' ${{ env.clusterManifestPath }}
+      shell: bash

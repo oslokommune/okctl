@@ -30,44 +30,14 @@ jobs:
 
       - run: echo "clusterManifestPath=nightly-cfg.yaml" >> $GITHUB_ENV
 
-      - name: Create config
-        run: |
-          cat <<EOF > ${{ env.clusterManifestPath }}
-          apiVersion: okctl.io/v1alpha1
-          kind: Cluster
-
-          metadata:
-            accountID: "${{ secrets.NIGHTLY_AWS_ACCOUNT_ID }}"
-            name: okctl-nightly
-            region: eu-west-1
-
-          clusterRootDomain: nightly.auto.oslo.systems
-
-          github:
-            repository: okctl-iac
-            organisation: oslokommune
-            outputPath: infra
-
-          integrations:
-            argoCD: true
-            autoscaler: true
-            awsLoadBalancerController: true
-            blockstorage: true
-            cognito: true
-            externalDNS: true
-            externalSecrets: true
-            kubePromStack: true
-            loki: true
-            promtail: true
-            tempo: true
-
-          vpc:
-            cidr: 192.168.0.0/20
-            highAvailability: true
-          
-          experimental:
-            automatizeZoneDelegation: true
-          EOF
+      - name: Create cluster.yaml
+        run: ${{ env.okctlPath }} scaffold cluster -i "${{ secrets.NIGHTLY_AWS_ACCOUNT_ID }}" -n "okctl-nightly"
+      - name: Set clusterRootDomain
+        run: yq eval -i '.clusterRootDomain = "nightly.auto.oslo.systems"' ${{ env.clusterManifestPath }}
+      - name: Set IAC repository
+        run: yq eval -i '.github.repository = "okctl-iac" ${{ env.clusterManifestPath }}
+      - name: Set automatize zone delegation
+        run: yq eval -i '.experimental.automatizeZoneDelegation = true' ${{ env.clusterManifestPath }}
 
       - name: Create cluster
         uses: ./.github/workflows/nightly/apply-cluster

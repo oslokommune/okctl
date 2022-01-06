@@ -3,6 +3,7 @@ package run
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/oslokommune/okctl/pkg/kubeconfig"
 
@@ -21,6 +22,7 @@ import (
 type clusterRun struct {
 	awsCredentialsPath string
 	awsConfigPath      string
+	awsProfile         string
 	provider           binaries.Provider
 	cloud              v1alpha1.CloudProvider
 	debug              bool
@@ -59,12 +61,18 @@ func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, er
 		return nil, errors.E(err, "creating cluster config", errors.Internal)
 	}
 
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+
 	cli.Debug(c.debug)
 	cli.AddToPath(a.BinaryPath, k.BinaryPath)
 	cli.AddToEnv(
 		fmt.Sprintf("AWS_CONFIG_FILE=%s", c.awsConfigPath),
 		fmt.Sprintf("AWS_SHARED_CREDENTIALS_FILE=%s", c.awsCredentialsPath),
-		"AWS_PROFILE=default",
+		fmt.Sprintf("AWS_PROFILE=%s", c.awsProfile),
+		fmt.Sprintf("HOME=%s", userHomeDir),
 	)
 
 	exists, err := cli.HasCluster(cfg)
@@ -125,7 +133,7 @@ func (c *clusterRun) DeleteCluster(opts api.ClusterDeleteOpts) error {
 func NewClusterRun(
 	debug bool,
 	kubeConfigStore api.KubeConfigStore,
-	awsCredentialsPath, awsConfigPath string,
+	awsCredentialsPath, awsConfigPath, awsProfile string,
 	provider binaries.Provider,
 	cloud v1alpha1.CloudProvider,
 ) api.ClusterRun {
@@ -134,6 +142,7 @@ func NewClusterRun(
 		debug:              debug,
 		awsCredentialsPath: awsCredentialsPath,
 		awsConfigPath:      awsConfigPath,
+		awsProfile:         awsProfile,
 		provider:           provider,
 		cloud:              cloud,
 	}

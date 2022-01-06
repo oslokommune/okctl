@@ -54,7 +54,10 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 					return err
 				}
 
-				upgradeBinaryEnvVars := commands.GetVenvEnvVars(okctlEnvironment)
+				upgradeBinaryEnvVars, err := commands.GetVenvEnvVars(okctlEnvironment)
+				if err != nil {
+					return err
+				}
 
 				stateHandlers := o.StateHandlers(o.StateNodes())
 

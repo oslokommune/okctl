@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/credentials/aws/saml"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -31,6 +33,7 @@ const (
 
 // Credentials contains all data required for using AWS
 type Credentials struct {
+	AwsProfile      string
 	AccessKeyID     string
 	SecretAccessKey string
 	SessionToken    string
@@ -78,6 +81,7 @@ func (a *Auth) AsEnv() ([]string, error) {
 	}
 
 	return []string{
+		fmt.Sprintf("AWS_PROFILE=%s", creds.AwsProfile),
 		fmt.Sprintf("AWS_ACCESS_KEY_ID=%s", creds.AccessKeyID),
 		fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", creds.SecretAccessKey),
 		fmt.Sprintf("AWS_SESSION_TOKEN=%s", creds.SessionToken),
@@ -207,10 +211,21 @@ type KeyGetter func(key string) (value string)
 
 // NewAuthEnvironment creates a retriever that fetches credentials from
 // environment variables
-func NewAuthEnvironment(region string, getter KeyGetter) Retriever {
+func NewAuthEnvironment(region string, getter KeyGetter) (Retriever, error) {
+	awsAccessKeyID := getter("AWS_ACCESS_KEY_ID")
+	awsSecretAccessKey := getter("AWS_SECRET_ACCESS_KEY")
+
+	if awsAccessKeyID == "" || awsSecretAccessKey == "" {
+		return nil, fmt.Errorf(
+			"environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY not set, see %s for more information",
+			constant.DefaultAwsAuthDocumentationURL,
+		)
+	}
+
 	credentials := &Credentials{
-		AccessKeyID:     getter("AWS_ACCESS_KEY_ID"),
-		SecretAccessKey: getter("AWS_SECRET_ACCESS_KEY"),
+		AwsProfile:      constant.DefaultAwsProfile,
+		AccessKeyID:     awsAccessKeyID,
+		SecretAccessKey: awsSecretAccessKey,
 		Region:          region,
 		Expires:         time.Now().Add(defaultAWSServiceUserCredentialsDuration),
 	}
@@ -218,7 +233,31 @@ func NewAuthEnvironment(region string, getter KeyGetter) Retriever {
 	return &AuthStatic{
 		Credentials: credentials,
 		IsValid:     credentials.AccessKeyID != "" && credentials.SecretAccessKey != "",
+	}, nil
+}
+
+// NewAuthProfile creates a retriever that fetches credentials from AWS profile
+// environment variable
+func NewAuthProfile(region string, getter KeyGetter) (Retriever, error) {
+	awsProfile := getter("AWS_PROFILE")
+
+	if awsProfile == "" {
+		return nil, fmt.Errorf(
+			"environment variable AWS_PROFILE not set, see %s for more information",
+			constant.DefaultAwsAuthDocumentationURL,
+		)
 	}
+
+	credentials := &Credentials{
+		AwsProfile: awsProfile,
+		Region:     region,
+		Expires:    time.Now().Add(defaultAWSServiceUserCredentialsDuration),
+	}
+
+	return &AuthStatic{
+		Credentials: credentials,
+		IsValid:     credentials.AwsProfile != "",
+	}, nil
 }
 
 // DefaultStsProvider returns a standard aws sts client
@@ -332,6 +371,7 @@ func (a *AuthSAML) Retrieve() (*Credentials, error) {
 	}
 
 	return &Credentials{
+		AwsProfile:      constant.DefaultAwsProfile,
 		AccessKeyID:     aws.StringValue(resp.Credentials.AccessKeyId),
 		SecretAccessKey: aws.StringValue(resp.Credentials.SecretAccessKey),
 		SessionToken:    aws.StringValue(resp.Credentials.SessionToken),
@@ -616,6 +656,7 @@ func (s *IniPersister) Get() (*Credentials, error) {
 	}
 
 	return &Credentials{
+		AwsProfile:      constant.DefaultAwsProfile, // SAML login uses 'default' profile
 		AccessKeyID:     creds.AccessKeyID,
 		SecretAccessKey: creds.SecretAccessKey,
 		SessionToken:    creds.SessionToken,

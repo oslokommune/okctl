@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/oslokommune/okctl/cmd/okctl/hooks"
@@ -96,6 +97,17 @@ var declarationPath string //nolint:gochecknoglobals
 func buildRootCommand() (*cobra.Command, *okctl.Okctl) {
 	var outputFormat string
 
+	awsCredentialsTypes := []string{
+		context.AWSCredentialsTypeSAML,
+		context.AWSCredentialsTypeAccessKey,
+		context.AWSCredentialsTypeAwsProfile,
+	}
+
+	githubCredentialsTypes := []string{
+		context.GithubCredentialsTypeDeviceAuthentication,
+		context.GithubCredentialsTypeToken,
+	}
+
 	o := okctl.New()
 	if err := o.InitLogging(); err != nil {
 		fmt.Fprintln(os.Stderr, "Error configuring logging:", err)
@@ -110,6 +122,19 @@ func buildRootCommand() (*cobra.Command, *okctl.Okctl) {
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if cmd.Name() == cobra.ShellCompRequestCmd {
 				return nil
+			}
+
+			if !contains(awsCredentialsTypes, awsCredentialsType) {
+				return fmt.Errorf(
+					"invalid AWS credentials type '%s'. Allowed values: %s. See %s for more information",
+					awsCredentialsType,
+					strings.Join(awsCredentialsTypes, ","),
+					constant.DefaultAwsAuthDocumentationURL,
+				)
+			}
+
+			if !contains(githubCredentialsTypes, githubCredentialsType) {
+				return fmt.Errorf("invalid Github credentials type '%s'. Allowed values: %s", githubCredentialsType, strings.Join(githubCredentialsTypes, ","))
 			}
 
 			enableServiceUserAuthentication(o)
@@ -189,9 +214,8 @@ func buildRootCommand() (*cobra.Command, *okctl.Okctl) {
 		"a",
 		getWithDefault(os.Getenv, constant.EnvAWSCredentialsType, context.AWSCredentialsTypeSAML),
 		fmt.Sprintf(
-			"The form of authentication to use for AWS. Possible values: [%s,%s]",
-			context.AWSCredentialsTypeSAML,
-			context.AWSCredentialsTypeAccessKey,
+			"The form of authentication to use for AWS. Possible values: [%s]",
+			strings.Join(awsCredentialsTypes, ","),
 		),
 	)
 	cmd.PersistentFlags().StringVarP(&githubCredentialsType,
@@ -199,9 +223,8 @@ func buildRootCommand() (*cobra.Command, *okctl.Okctl) {
 		"g",
 		getWithDefault(os.Getenv, constant.EnvGithubCredentialsType, context.GithubCredentialsTypeDeviceAuthentication),
 		fmt.Sprintf(
-			"The form of authentication to use for Github. Possible values: [%s,%s]",
-			context.GithubCredentialsTypeDeviceAuthentication,
-			context.GithubCredentialsTypeToken,
+			"The form of authentication to use for Github. Possible values: [%s]",
+			strings.Join(githubCredentialsTypes, ","),
 		),
 	)
 
@@ -216,4 +239,14 @@ func getWithDefault(getter func(key string) string, key string, defaultValue str
 	}
 
 	return rawValue
+}
+
+func contains(l []string, v string) bool {
+	for _, el := range l {
+		if v == el {
+			return true
+		}
+	}
+
+	return false
 }

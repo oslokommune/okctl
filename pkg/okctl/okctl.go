@@ -427,6 +427,11 @@ func (o *Okctl) initialise() error {
 
 	o.restClient = rest.New(o.Debug, o.Err, o.ServerURL)
 
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+
 	homeDir, err := o.GetHomeDir()
 	if err != nil {
 		return err
@@ -450,12 +455,27 @@ func (o *Okctl) initialise() error {
 
 	clusterName := o.Declaration.Metadata.Name
 
+	awsCredentials, err := o.CredentialsProvider.Aws().Raw()
+	if err != nil {
+		return err
+	}
+
+	var awsCredentialsPath, awsConfigPath string
+	if o.AWSCredentialsType == context.AWSCredentialsTypeAwsProfile {
+		awsConfigPath = path.Join(userHomeDir, ".aws", "config")
+		awsCredentialsPath = path.Join(userHomeDir, ".aws", "credentials")
+	} else {
+		awsCredentialsPath = path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsConfig)
+		awsConfigPath = path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsCredentials)
+	}
+
 	clusterService := core.NewClusterService(
 		run.NewClusterRun(
 			o.Debug,
 			kubeConfigStore,
-			path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsConfig),
-			path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsCredentials),
+			awsCredentialsPath,
+			awsConfigPath,
+			awsCredentials.AwsProfile,
 			o.BinariesProvider,
 			o.CloudProvider,
 		),
@@ -467,8 +487,9 @@ func (o *Okctl) initialise() error {
 	serviceAccountService := core.NewServiceAccountService(
 		run.NewServiceAccountRun(
 			o.Debug,
-			path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsConfig),
-			path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsCredentials),
+			awsCredentialsPath,
+			awsConfigPath,
+			awsCredentials.AwsProfile,
 			o.BinariesProvider,
 		),
 	)
@@ -691,9 +712,27 @@ func (o *Okctl) newCloudProvider() error {
 
 func (o *Okctl) getAWSAuthenticator() (*aws.Auth, error) {
 	if o.AWSCredentialsType == context.AWSCredentialsTypeAccessKey {
-		return aws.New(aws.NewInMemoryStorage(), aws.NewAuthEnvironment(o.Declaration.Metadata.Region, os.Getenv)), nil
+		retriever, err := aws.NewAuthEnvironment(o.Declaration.Metadata.Region, os.Getenv)
+		if err != nil {
+			return nil, err
+		}
+
+		return aws.New(aws.NewInMemoryStorage(), retriever), nil
 	}
 
+	if o.AWSCredentialsType == context.AWSCredentialsTypeAwsProfile {
+		retriever, err := aws.NewAuthProfile(o.Declaration.Metadata.Region, os.Getenv)
+		if err != nil {
+			return nil, err
+		}
+
+		return aws.New(aws.NewInMemoryStorage(), retriever), nil
+	}
+
+	return o.getSAMLAuthenticator()
+}
+
+func (o *Okctl) getSAMLAuthenticator() (*aws.Auth, error) {
 	appDir, err := o.GetUserDataDir()
 	if err != nil {
 		return nil, err
@@ -723,6 +762,7 @@ https://www.passwordstore.org/
 		_ = k.Store(keyring.KeyTypeUserPassword, password)
 	}
 
+	// We know credentials type is SAML here, so we use the okctl credentials dir
 	authStore := aws.NewIniPersister(aws.NewFileSystemIniStorer(
 		constant.DefaultClusterAwsConfig,
 		constant.DefaultClusterAwsCredentials,

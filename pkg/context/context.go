@@ -24,6 +24,8 @@ const (
 	AWSCredentialsTypeSAML = "saml"
 	// AWSCredentialsTypeAccessKey represents using access key environment variables for AWS authentication
 	AWSCredentialsTypeAccessKey = "access-key"
+	// AWSCredentialsTypeAwsProfile represents using AWS Profile environment variable for AWS authentication
+	AWSCredentialsTypeAwsProfile = "aws-profile"
 
 	// GithubCredentialsTypeDeviceAuthentication represents using the device authentication flow to authenticate with
 	// Github

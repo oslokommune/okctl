@@ -37,6 +37,7 @@ const (
 	DefaultChartFindTimeout   = 1 * time.Minute
 
 	DefaultAwsRegion                       = "eu-west-1"
+	DefaultAwsProfile                      = "default"
 	DefaultGithubHost                      = "git@github.com"
 	DefaultGithubOrganization              = "oslokommune"
 	DefaultFargateObservabilityNamespace   = "aws-observability"
@@ -129,4 +130,6 @@ const (
 	DefaultOutputDirectory = "infrastructure"
 
 	DefaultAutomaticPullRequestMergeLabel = "automerge"
+
+	DefaultAwsAuthDocumentationURL = "https://www.okctl.io/authenticating-to-aws/"
 )

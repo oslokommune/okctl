@@ -113,15 +113,28 @@ func NewSession(region string, auth awsauth.Authenticator) (*session.Session, *a
 
 	config := aws.NewConfig().
 		WithRegion(region).
-		WithCredentials(
-			awsCreds.NewStaticCredentials(
-				creds.AccessKeyID,
-				creds.SecretAccessKey,
-				creds.SessionToken,
-			),
-		)
+		WithCredentialsChainVerboseErrors(true)
 
-	sess, err := session.NewSession(config)
+	var opts session.Options
+
+	if creds.AccessKeyID != "" {
+		// Login with environment access key or SAML, setting static credentials
+		opts = session.Options{}
+		config = config.WithCredentials(awsCreds.NewStaticCredentials(
+			creds.AccessKeyID,
+			creds.SecretAccessKey,
+			creds.SessionToken,
+		))
+	} else {
+		// Login with AWS profile, using default credentials chain
+		opts = session.Options{
+			SharedConfigState: session.SharedConfigEnable, // Enable SSO login
+		}
+	}
+
+	opts.Config.MergeIn(config)
+
+	sess, err := session.NewSessionWithOptions(opts)
 	if err != nil {
 		return nil, nil, err
 	}

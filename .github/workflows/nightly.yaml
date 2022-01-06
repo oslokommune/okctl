@@ -29,7 +29,7 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_SECRET_KEY }}
 
-      - name: Create cluster.yaml
+      - name: Scaffold cluster manifest
         uses: ./.github/workflows/nightly/scaffold-cluster
         with:
           aws-account-id: ${{ secrets.NIGHTLY_AWS_ACCOUNT_ID }}

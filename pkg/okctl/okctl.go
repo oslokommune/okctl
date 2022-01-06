@@ -212,8 +212,16 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		handlers.Certificate,
 	)
 
+	usProvider, err := o.getUsEastOneProvider()
+	if err != nil {
+		return nil, errors.New("Unable to get certificate cloud provider")
+	}
+
 	identityManagerService := clientCore.NewIdentityManagerService(
-		rest.NewIdentityManagerAPI(o.restClient),
+		clientDirectAPI.NewIdentityManagerAPI(core.NewIdentityManagerService(
+			awsProvider.NewIdentityManagerCloudProvider(o.CloudProvider),
+			awsProvider.NewCertificateCloudProvider(usProvider),
+		)),
 		handlers.IdentityManager,
 		certificateService,
 	)
@@ -550,16 +558,14 @@ func (o *Okctl) initialise() error {
 		awsProvider.NewContainerRepositoryCloudProvider(o.CloudProvider),
 	)
 
-	// When creating a certificate for a CloudFront distribution, we
-	// need to create the certificate in us-east-1
-	provider, err := o.NewCloudProviderWithRegion("us-east-1")
+	usProvider, err := o.getUsEastOneProvider()
 	if err != nil {
-		return err
+		return errors.New("Unable to get certificate cloud provider")
 	}
 
 	identityManagerService := core.NewIdentityManagerService(
 		awsProvider.NewIdentityManagerCloudProvider(o.CloudProvider),
-		awsProvider.NewCertificateCloudProvider(provider),
+		awsProvider.NewCertificateCloudProvider(usProvider),
 	)
 
 	securityGroupService := core.NewSecurityGroupService(
@@ -832,4 +838,15 @@ func (o *Okctl) newCredentialsProvider() error {
 	o.CredentialsProvider = credentials.New(awsAuthenticator, githubAuthenticator)
 
 	return nil
+}
+
+// When creating a certificate for a CloudFront distribution, we
+// need to create the certificate in us-east-1
+func (o *Okctl) getUsEastOneProvider() (v1alpha1.CloudProvider, error) {
+	provider, err := o.NewCloudProviderWithRegion("us-east-1")
+	if err != nil {
+		return nil, err
+	}
+
+	return provider, nil
 }

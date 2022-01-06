@@ -31,13 +31,13 @@ jobs:
       - run: echo "clusterManifestPath=nightly-cfg.yaml" >> $GITHUB_ENV
 
       - name: Create cluster.yaml
-        run: ${{ env.okctlPath }} scaffold cluster -i "${{ secrets.NIGHTLY_AWS_ACCOUNT_ID }}" -n "okctl-nightly"
-      - name: Set clusterRootDomain
-        run: yq eval -i '.clusterRootDomain = "nightly.auto.oslo.systems"' ${{ env.clusterManifestPath }}
-      - name: Set IAC repository
-        run: yq eval -i '.github.repository = "okctl-iac" ${{ env.clusterManifestPath }}
-      - name: Set automatize zone delegation
-        run: yq eval -i '.experimental.automatizeZoneDelegation = true' ${{ env.clusterManifestPath }}
+        uses: ./.github/workflows/nightly/scaffold-cluster
+        with:
+          aws-account-id: ${{ secrets.NIGHTLY_AWS_ACCOUNT_ID }}
+          okctl-path: ${{ env.okctlPath }}
+          cluster-manifest-path: ${{ env.clusterManifestPath }}
+          cluster-name: okctl-nightly
+          repository-name: okctl-iac
 
       - name: Create cluster
         uses: ./.github/workflows/nightly/apply-cluster

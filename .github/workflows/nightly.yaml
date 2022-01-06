@@ -16,19 +16,18 @@ jobs:
         with:
           go-version: 1.16
 
+      - run: echo "okctlPath=dist/linux_linux_amd64/okctl" >> $GITHUB_ENV
+      - run: echo "clusterManifestPath=nightly-cfg.yaml" >> $GITHUB_ENV
+
       - name: Test
         run: go test -v ./...
 
       - name: Build
         run: make release-local
 
-      - run: echo "okctlPath=dist/linux_linux_amd64/okctl" >> $GITHUB_ENV
-
       - uses: webfactory/ssh-agent@v0.5.4
         with:
           ssh-private-key: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_SECRET_KEY }}
-
-      - run: echo "clusterManifestPath=nightly-cfg.yaml" >> $GITHUB_ENV
 
       - name: Create cluster.yaml
         uses: ./.github/workflows/nightly/scaffold-cluster

@@ -14,6 +14,9 @@ inputs:
   aws-secret-access-key:
     description: AWS service user secret access key
     required: true
+  github-token:
+    description: Github authentication token
+    required: true
 
 runs:
   using: "composite"
@@ -22,11 +25,13 @@ runs:
         ${{ inputs.okctl-path }} delete cluster \
           --cluster-declaration ${{ inputs.cluster-manifest-path }} \
           --aws-credentials-type access-key \
+          --github-credentials-type token \
           --confirm \
           --no-spinner
       env:
         AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
         OKCTL_DEBUG: 'true'
         OKCTL_METRICS_USERAGENT: okctldev
       shell: bash

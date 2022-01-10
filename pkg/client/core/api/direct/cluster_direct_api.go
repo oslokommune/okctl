@@ -2,10 +2,10 @@ package direct
 
 import (
 	"context"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 )
-
 
 type clusterDirectClient struct {
 	service api.ClusterService

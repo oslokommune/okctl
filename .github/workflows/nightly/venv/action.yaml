@@ -18,7 +18,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: cmd/nightly/venv-tester/dist/venv-tester ${{ inputs.okctl-path }} ${{ cluster-manifest-path }}
+    - run: cmd/nightly/venv-tester/dist/venv-tester ${{ inputs.okctl-path }} ${{ inputs.cluster-manifest-path }}
       shell: bash
       env:
         OKCTL_AWS_CREDENTIALS_TYPE: access-key

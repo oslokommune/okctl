@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 function get_user_agent() {
   if [[ -f ~/.okctl/conf.yml ]]; then
     USER_AGENT=$( (grep -E "userAgent:" ~/.okctl/conf.yml || echo okctl) | sed 's/userAgent://')

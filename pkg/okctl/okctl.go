@@ -295,8 +295,32 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		helmService,
 	)
 
+	appDir, err := o.GetUserDataDir()
+	if err != nil {
+		return nil, err
+	}
+
+	kubeConfigStore, err := o.KubeConfigStore()
+	if err != nil {
+		return nil, err
+	}
+
+	clusterName := o.Declaration.Metadata.Name
+
+	clusterServiceCore := core.NewClusterService(
+		run.NewClusterRun(
+			o.Debug,
+			kubeConfigStore,
+			path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsConfig),
+			path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsCredentials),
+			o.BinariesProvider,
+			o.CloudProvider,
+		),
+		o.CloudProvider,
+	)
+
 	clusterService := clientCore.NewClusterService(
-		rest.NewClusterAPI(o.restClient),
+		clientDirectAPI.NewClusterAPI(clusterServiceCore),
 		handlers.Cluster,
 		o.CloudProvider,
 		o.CredentialsProvider.Aws(),

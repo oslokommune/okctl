@@ -371,7 +371,9 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	nameserverService := clientCore.NewNameserverHandlerService(ghClient)
 
 	containerRepositoryService := clientCore.NewContainerRepositoryService(
-		rest.NewContainerRepositoryAPI(o.restClient),
+		clientDirectAPI.NewContainerRepositoryAPI(core.NewContainerRepositoryService(
+			awsProvider.NewContainerRepositoryCloudProvider(o.CloudProvider),
+		)),
 		handlers.ContainerRepository,
 		o.CloudProvider,
 	)

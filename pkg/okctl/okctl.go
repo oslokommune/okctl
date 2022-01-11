@@ -325,7 +325,9 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	componentService := clientCore.NewComponentService(
-		rest.NewComponentAPI(o.restClient),
+		clientDirectAPI.NewComponentAPI(core.NewComponentService(
+			awsProvider.NewComponentCloudProvider(o.CloudProvider),
+		)),
 		handlers.Component,
 		manifestService,
 		o.CloudProvider,

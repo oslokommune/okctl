@@ -21,7 +21,8 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: |
+    - name: Run scaffold cluster
+      run: |
         ${{ inputs.okctl-path }} scaffold cluster \
           --aws-account-id "${{ inputs.aws-account-id }}" \
           --name "${{ inputs.cluster-name }}" \

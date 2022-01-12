@@ -18,16 +18,21 @@ type S3Bucket struct {
 
 // Resource returns the cloud formation template
 func (s *S3Bucket) Resource() cloudformation.Resource {
-	return &s3.Bucket{
+	bucket := &s3.Bucket{
 		AccessControl: "BucketOwnerFullControl",
 		BucketName:    s.BucketName,
-		PublicAccessBlockConfiguration: &s3.Bucket_PublicAccessBlockConfiguration{
+	}
+
+	if s.BlockAllPublicAccess {
+		bucket.PublicAccessBlockConfiguration = &s3.Bucket_PublicAccessBlockConfiguration{
 			BlockPublicAcls:       s.BlockAllPublicAccess,
 			BlockPublicPolicy:     s.BlockAllPublicAccess,
 			IgnorePublicAcls:      s.BlockAllPublicAccess,
 			RestrictPublicBuckets: s.BlockAllPublicAccess,
-		},
+		}
 	}
+
+	return bucket
 }
 
 // Name returns the name of the resource

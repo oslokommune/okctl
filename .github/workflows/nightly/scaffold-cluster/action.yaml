@@ -38,7 +38,3 @@ runs:
     - name: Set automatize zone delegation
       run: yq eval -i '.experimental.automatizeZoneDelegation = true' ${{ env.clusterManifestPath }}
       shell: bash
-    - name: Provision Postgres database
-      run: |
-        yq eval -i '.databases.postgres[0] = {"name": "nightlydb", "namespace": "nightlydb", "user": "postgres"}' ${{ env.clusterManifestPath }}
-      shell: bash

@@ -21,4 +21,4 @@ The environment variable SOME_VAR is: hello
 
 Done
 
-Upgrade complete, cluster version is now 0.0.70. Remember to commit and push changes with git.
+Upgrade complete, cluster version is now 0.0.70.

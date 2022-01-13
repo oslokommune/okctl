@@ -35,14 +35,9 @@ investigating.
   * We repeat the process we did for the development environment, i.e. taking backup of logs, running log persistence patch,
     restoring backups, and running resource quota patch for Loki.
 
-    13:xx We create a backup of Loki logs in production. We then run the resource quota for the production environment, except
-    for the Loki pod, as its logs isn't persisted. The
-
-
 ## Impact
 
 * Development environment went down for approximately 1 hour and 30 minutes.
-* Booking's development and production got patched with critical patches.
 
 ## Cause(s)
 
@@ -71,7 +66,7 @@ investigating.
   [Supporting information and documentation](#supporting-information-and-documentation).
 
 ## Where were we lucky
-* 
+
 * The affected environment was development and not production. 
 * The environment went down during work hours.
 
@@ -91,6 +86,8 @@ information about their infrastructure.
 
 ## Supporting information and documentation
 
+* For new application made with `okctl apply applications`, resource quotas are set by default. However, in theory, if somebody
+spins up lots of pods wihout resource quotas, this could happen again.
 * A final thought: This is what can happen when we're establishing a culture of "you own it, you run it", where people run their
 own infrastructure. Also, most of our teams have more experience with developement than operations. We're in the start of this
 culture change, and it's not unlikely to have a few bumps in the road. As people will get used to this culture, we expect this to

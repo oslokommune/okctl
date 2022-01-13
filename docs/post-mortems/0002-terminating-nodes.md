@@ -56,7 +56,7 @@ investigating.
 * We responded fast.
 * We were able to quickly identify the issue.
 * We had patches to fix the problem readily available.
-* Communication between us and the Booking team went well (using Whereby)
+* Communication between us and the Booking team went well (using Whereby).
 
 ## What went wrong
 

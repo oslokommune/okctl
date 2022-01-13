@@ -187,7 +187,7 @@ func buildRootCommand() (*cobra.Command, *okctl.Okctl) {
 	cmd.PersistentFlags().StringVarP(&awsCredentialsType,
 		"aws-credentials-type",
 		"a",
-		context.AWSCredentialsTypeSAML,
+		getWithDefault(os.Getenv, constant.EnvAWSCredentialsType, context.AWSCredentialsTypeSAML),
 		fmt.Sprintf(
 			"The form of authentication to use for AWS. Possible values: [%s,%s]",
 			context.AWSCredentialsTypeSAML,
@@ -197,7 +197,7 @@ func buildRootCommand() (*cobra.Command, *okctl.Okctl) {
 	cmd.PersistentFlags().StringVarP(&githubCredentialsType,
 		"github-credentials-type",
 		"g",
-		context.GithubCredentialsTypeDeviceAuthentication,
+		getWithDefault(os.Getenv, constant.EnvGithubCredentialsType, context.GithubCredentialsTypeDeviceAuthentication),
 		fmt.Sprintf(
 			"The form of authentication to use for Github. Possible values: [%s,%s]",
 			context.GithubCredentialsTypeDeviceAuthentication,
@@ -206,4 +206,14 @@ func buildRootCommand() (*cobra.Command, *okctl.Okctl) {
 	)
 
 	return cmd, o
+}
+
+func getWithDefault(getter func(key string) string, key string, defaultValue string) string {
+	rawValue := getter(key)
+
+	if rawValue == "" {
+		return defaultValue
+	}
+
+	return rawValue
 }

@@ -88,6 +88,10 @@ const (
 	EnvHome = "OKCTL_HOME"
 	// EnvClusterDeclaration specifies the path to the cluster declaration context
 	EnvClusterDeclaration = EnvPrefix + "_" + "CLUSTER_DECLARATION"
+	// EnvAWSCredentialsType enables setting the --aws-authentication-type flag through environment vars
+	EnvAWSCredentialsType = EnvPrefix + "_" + "AWS_AUTHENTICATION_TYPE"
+	// EnvGithubCredentialsType enables setting the --github-authentication-type flag through environment vars
+	EnvGithubCredentialsType = EnvPrefix + "_" + "GITHUB_AUTHENTICATION_TYPE"
 
 	// DefaultApplicationsOutputDir is where the application declarations reside
 	DefaultApplicationsOutputDir = "applications"

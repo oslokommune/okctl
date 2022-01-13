@@ -206,7 +206,9 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	certificateService := clientCore.NewCertificateService(
-		rest.NewCertificateAPI(o.restClient),
+		clientDirectAPI.NewCertificateAPI(core.NewCertificateService(
+			awsProvider.NewCertificateCloudProvider(o.CloudProvider),
+		)),
 		handlers.Certificate,
 	)
 

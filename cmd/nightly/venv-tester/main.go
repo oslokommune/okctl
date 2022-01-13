@@ -61,10 +61,18 @@ func testVenv(okctlBinaryPath string, clusterManifestPath string) error {
 	}
 
 	log.Println("Running kubectl -n kube-system get pods")
-	c.SendLine("kubectl -n kube-system get pods")
+
+	_, err = c.SendLine("kubectl -n kube-system get pods")
+	if err != nil {
+		return fmt.Errorf("sending kubectl command: %w", err)
+	}
 
 	log.Println("Running exit")
-	c.SendLine("exit")
+
+	_, err = c.SendLine("exit")
+	if err != nil {
+		return fmt.Errorf("sending exit command: %w", err)
+	}
 
 	log.Printf("Looking for a match for %s", expectedString)
 
@@ -86,7 +94,7 @@ func testVenv(okctlBinaryPath string, clusterManifestPath string) error {
 func printUsage() {
 	fmt.Println("venv-tester")
 	fmt.Println()
-	fmt.Println("Opens okctl venv, runs kubectl -n kube-system get pods and exists")
+	fmt.Println("Opens okctl venv, runs kubectl -n kube-system get pods and exits")
 	fmt.Println("with a status of 0 or 1 depending on if it finds \"aws-node\"")
 	fmt.Println()
 	fmt.Println("USAGE:")

@@ -283,7 +283,9 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	externalDNSService := clientCore.NewExternalDNSService(
-		rest.NewExternalDNSAPI(o.restClient),
+		clientDirectAPI.NewExternalDNSAPI(core.NewKubeService(
+			run.NewKubeRun(o.CloudProvider, o.CredentialsProvider.Aws()),
+		)),
 		handlers.ExternalDNS,
 		managedPolicyService,
 		serviceAccountService,

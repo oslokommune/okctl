@@ -83,8 +83,7 @@ func (u Upgrader) Run() error {
 		return fmt.Errorf(commands.SaveClusterVersionErr, err)
 	}
 
-	_, _ = fmt.Fprintf(u.out, "\nUpgrade complete, cluster version is now %s."+
-		" Remember to commit and push changes with git.\n", u.okctlVersion)
+	_, _ = fmt.Fprintf(u.out, "\nUpgrade complete, cluster version is now %s.\n", u.okctlVersion)
 
 	return nil
 }

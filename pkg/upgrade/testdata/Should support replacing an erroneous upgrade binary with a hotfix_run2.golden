@@ -22,4 +22,4 @@ This is upgrade file for okctl-upgrade_0.0.63_Linux_amd64
 --confirm flag was provided
 Doing actual changes.
 
-Upgrade complete, cluster version is now 0.0.65. Remember to commit and push changes with git.
+Upgrade complete, cluster version is now 0.0.65.

@@ -64,6 +64,10 @@ linters-settings:
     min-complexity: 15
   golint:
     min-confidence: 0
+  gomnd:
+    settings:
+      mnd:
+        ignored-numbers: 0o700,0o744,0o755,0o644,0o640
 
 output:
   format: colored-line-number

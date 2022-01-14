@@ -5,19 +5,17 @@ deploy new changes pushed to Git. This lasted for 24 hours, then it started work
 
 ## Timeline
 
-2022-01-11 00:00 ArgoCD stops doing automatic deployments.
-2022-01-11 09:20 A user notifies us on Slack about the issue. [Thread link](https://oslokommune.slack.com/archives/CV9EGL9UG/p1641889201058000).
-2022-01-12 00:00 ArgoCD deployments starts working again by itself. 
+2022-01-11
+* 00:00 ArgoCD stops doing automatic deployments.
+* 09:20 A user notifies us on Slack about the issue. [Thread link](https://oslokommune.slack.com/archives/CV9EGL9UG/p1641889201058000).
+
+2022-01-12
+* 00:00 ArgoCD deployments starts working again by itself. 
 
 ## Impact
 
-<!--
-Describe the consequences this had for the organization.
-
-Example:
-- Approximately 30.000 users downloaded and experienced an error using the app.
-- Users already logged in experienced some minor delay in the app
--->
+* ArgoCD deployments stopped working for 24 hours. Only one team notified us about this problem, but in theory all our teams
+should have had this problem.
 
 ## Cause(s)
 
@@ -28,30 +26,24 @@ RSA key with SHA-1, which is no longer allowed. Please use a newer client or a d
 grpc.method=GenerateManifest grpc.request.deadline="2022-01-11T00:04:31Z" grpc.service=repository.RepoServerService
 grpc.start_time="2022-01-11T00:03:31Z" grpc.time_ms=1359.753 span.kind=server system=grpc
 
-The issue is we're using the SHA-1 hashing algorithm for our GitHub deploy keys. GitHub deactivated support for SHA-1 keys
-for 24 hours the 11th january 2022, in a so-called "brownout", to alert clients still using these keys to replace them.
-See: [1] and [2] and 
+The issue is we're using the SHA-1 hashing algorithm for our GitHub deploy keys. GitHub deactivated support for SHA-1 keys for 24
+hours the 11th january 2022, in a so-called "brownout", to alert clients still using these keys to replace them. See: [1] and [2]
+and
 
 The deploy key is created by Okctl (see
 [keypair.go](https://github.com/oslokommune/okctl/blob/2173be74b104abd36b9b9b17b12b3f3d9f41fed2/pkg/keypair/keypair.go)), and is a
-SSH-key using SHA-1. The public key resides in every IAC-repository in GitHub, while the private key is injected as a secret to ArgoCD. ArgoCD
-uses this to pull changes from GitHub. So when ArgoCD used the key to pull the IAC repository, GitHub responded with the above error message.
+SSH-key using SHA-1. The public key resides in every IAC-repository in GitHub, while the private key is injected as a secret to
+ArgoCD. ArgoCD uses this to pull changes from GitHub. So when ArgoCD used the key to pull the IAC repository, GitHub responded
+with the above error message.
 
 ## Solution
 
-We need to update Okctl to use a new key format for the deploy key. [1] suggests
-ed25519, referring to https://security.stackexchange.com/a/144044/29078, which appears to be a solid choice. Then we need to roll
-out this change, preferably through an upgrade.
+We need to update Okctl to use a new key format for the deploy key. [1] suggests ed25519, referring
+to https://security.stackexchange.com/a/144044/29078, which appears to be a solid choice. Then we need to roll out this change,
+preferably through an upgrade.
 
 ## What went well
 
-<!--
-Describe what went well trying to handle the event.
-
-Example:
-- Alerting mechanisms worked brilliantly when errors started comming in
-- Deploying the database update was fast
--->
 
 ## What went wrong
 

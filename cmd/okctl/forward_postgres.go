@@ -25,6 +25,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const defaultPostgreSQLPort = 5432
+
 type forwardPostgresOpts struct {
 	ID              api.ID
 	ApplicationName string
@@ -227,7 +229,7 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 	flags.Int32VarP(&opts.ListenPort,
 		"listen-port",
 		"l",
-		5432,
+		defaultPostgreSQLPort,
 		"The port on your local machine traffic will be forwarded to",
 	)
 

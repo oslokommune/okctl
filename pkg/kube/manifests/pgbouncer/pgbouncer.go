@@ -33,6 +33,7 @@ const (
 	podWatchTimeoutInSeconds          = 120
 	secretWatchTimeoutInSeconds       = 10
 	secretWatchSleepIntervalInSeconds = 1
+	maxClientConnections              = 5
 )
 
 // PgBouncer contains the state we need
@@ -405,7 +406,7 @@ func Pod(
 							// Also, for some reason, pgbouncer has been observed to create a lot of connections,
 							// which starves the actual application for connections.
 							Name:  "MAX_CLIENT_CONN",
-							Value: fmt.Sprintf("%d", 5),
+							Value: fmt.Sprintf("%d", maxClientConnections),
 						},
 						{
 							Name: "DB_USER",

@@ -71,7 +71,7 @@ func (m *mockDynamoProvider) InsertItem(_ api.InsertItemOpts) error {
 	return nil
 }
 
-func (m mockDynamoProvider) RemoveItem(_ api.DeleteItemOpts) error {
+func (m *mockDynamoProvider) RemoveItem(_ api.DeleteItemOpts) error {
 	m.hasLock = false
 
 	return nil

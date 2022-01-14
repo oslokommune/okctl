@@ -54,8 +54,8 @@ other blogs from Kubernetes and AWS, which adds to the noise.
 ## Where were we lucky
 
 * GitHub used a "brownout" for this, meaning they pushed the change only for 1 day, for then to restore support for the SHA-1 key
-  format. The intention is to force clients to notice the issue. They will implement the actual, permanent change 2022-03-15, so
-  we need to come up with a fix in good time before this, so our teams can roll out a fix before this happens. 
+  format the day after. The intention is to force clients to notice the issue. They will implement the actual, permanent change
+  2022-03-15, so we need to come up with a fix in good time before this, so our teams can roll out a fix before this happens.
 
 ## Mitigations
 

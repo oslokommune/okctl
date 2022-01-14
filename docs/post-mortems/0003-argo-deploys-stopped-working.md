@@ -49,11 +49,11 @@ preferably through an upgrade.
 
 * We were not aware in any way of this breaking change from GitHub. They linked blog post above is the only message I could find
 about it. We have now subscribed to this blog, but the blog is filled with non-relevant noise, and we're already following
-other blogs from Kubernetes and AWS with the same issue.
+other blogs from Kubernetes and AWS, which adds to the noise.
 
 ## Where were we lucky
 
-* GitHub used a "brownout" for this, meaning the pushed the change only for 1 day, for then to restore support for the SHA-1 key
+* GitHub used a "brownout" for this, meaning they pushed the change only for 1 day, for then to restore support for the SHA-1 key
   format. The intention is to force clients to notice the issue. They will implement the actual, permanent change 2022-03-15, so
   we need to come up with a fix in good time before this, so our teams can roll out a fix before this happens. 
 

@@ -14,9 +14,9 @@ const (
 	// DefaultDebugEnv if set will ensure verbose debugging output
 	DefaultDebugEnv = "OKCTL_DEBUG"
 	// DefaultAWSCredentialsType if set will ensure where okctl seeks AWS authentication credentials
-	DefaultAWSCredentialsType = "OKCTL_AWS_CREDENTIALS_TYPE"
+	DefaultAWSCredentialsType = "OKCTL_AWS_CREDENTIALS_TYPE" //nolint:gosec
 	// DefaultGithubCredentialsType if set will ensure where okctl seeks Github authentication credentials
-	DefaultGithubCredentialsType = "OKCTL_GITHUB_CREDENTIALS_TYPE"
+	DefaultGithubCredentialsType = "OKCTL_GITHUB_CREDENTIALS_TYPE" //nolint:gosec
 )
 
 const (

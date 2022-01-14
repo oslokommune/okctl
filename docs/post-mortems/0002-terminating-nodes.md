@@ -28,12 +28,12 @@ investigating.
   * We create a backup of Loki logs in development, and test that it's possible to restore. We then apply the persistent
     storage patch for Loki, and restore the logs. We then run the resource quota patch again, this time enabling it for Loki also.
 
-  * We then run the resource quota patch, without Loki, in production. As it's getting late, we delay the rest of the fix to
+  * 15:30 We then run the resource quota patch, without Loki, in production. As it's getting late, we delay the rest of the fix to
     after the weekend.
 
-* 2022-01-10
-  * We repeat the process we did for the development environment, i.e. taking backup of logs, running log persistence patch,
-    restoring backups, and running resource quota patch for Loki.
+* 2022-01-10 07:41 - 10:30
+  * We repeat the process we did for the development environment, i.e. taking backup of logs, running log
+    persistence patch, restoring backups, and running resource quota patch for Loki.
 
 ## Impact
 

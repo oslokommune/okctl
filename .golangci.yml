@@ -38,15 +38,12 @@ linters:
     - whitespace
     - gochecknoglobals
     - gocognit
-#    - godot
     - godox
     - gomnd
-#    - gomodguard
+    - gomodguard
     - goprintffuncname
-#    - nestif
     - prealloc
     - rowserrcheck
-#    - testpackage
     - wsl
 
 issues:

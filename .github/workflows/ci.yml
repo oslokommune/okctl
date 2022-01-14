@@ -104,5 +104,5 @@ jobs:
       - name: Check coverage
         run: make test-coverage
 
-      - name: Check code coverage
+      - name: Upload coverage
         uses: codecov/codecov-action@v2.1.0

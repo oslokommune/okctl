@@ -80,8 +80,8 @@ Example:
 - Create tests that cover creation and authentication of users
 -->
 
-* We have decided to put all messages about upgrades, patches and other important messages on okctl.io. We'll create an RSS feed
-for posts, and forward those to Slack on a separate channel (TODO update with decision). With these steps, people
+* We have decided to put all messages about important upgrades, patches and other important messages on okctl.io. We'll create an RSS feed
+for posts, and forward those to Slack on a separate channel (#okctl-viktig). With these steps, people
 have multiple options for getting information about their infrastructure.
 
 ## Supporting information and documentation

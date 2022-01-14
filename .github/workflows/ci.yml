@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  ci:
+  AppArmor:
     runs-on: ubuntu-latest
     steps:
       - name: apparmor
@@ -16,27 +16,87 @@ jobs:
           sudo apt-get remove mysql-server --purge
           sudo apt-get install apparmor-profiles
           sudo apparmor_parser -R /etc/apparmor.d/usr.sbin.mysqld
+
+  Formatting:
+    runs-on: ubuntu-latest
+    steps:
       - name: Install Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.16.4
+          go-version: 1.16
+
+      - name: Checkout code
+        uses: actions/checkout@v2.4.0
+
       - uses: actions/cache@v2.1.7
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
+
+      - run: make fmt
+
+  Lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - name: Checkout code
+        uses: actions/checkout@v2.4.0
+
+      - uses: actions/cache@v2.1.7
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - run: make lint
+
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - name: Checkout code
+        uses: actions/checkout@v2.4.0
+
+      - uses: actions/cache@v2.1.7
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
       - uses: actions/cache@v2.1.7
         with:
           path: ~/.cache/go-build
           key: ${{ runner.os }}-go-build-${{ hashFiles('log.txt') }}
           restore-keys: |
             ${{ runner.os }}-go-build-
+
+      - run: make test
+
+  Coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
       - name: Checkout code
         uses: actions/checkout@v2.4.0
-      - name: Run golang checks
-        run: make check
+
       - name: Check coverage
         run: make test-coverage
+
       - name: Check code coverage
         uses: codecov/codecov-action@v2.1.0

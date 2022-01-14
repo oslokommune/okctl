@@ -101,8 +101,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2.4.0
 
-      - name: Check coverage
-        run: make test-coverage
+      - name: Generate coverage report
+        run: |
+          go test -coverprofile=c.out -covermode=atomic ./...
+          go tool cover -html=c.out -o coverage.html
 
       - name: Upload coverage
         uses: codecov/codecov-action@v2.1.0
+        with:
+          directory: ./
+          files: coverage.html

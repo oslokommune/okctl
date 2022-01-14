@@ -48,14 +48,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2.4.0
 
-      - uses: actions/cache@v2.1.7
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@5c56cd6c9dc07901af25baab6f2b0d9f3b7c3018 #v2.5.2
         with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - run: make lint
+          version: 1.43.0 # golangci-lint version, optional
+          only-new-issues: true
+          # if set to true then action uses pre-installed Go
+          skip-go-installation: true
 
   Test:
     runs-on: ubuntu-latest

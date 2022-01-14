@@ -41,7 +41,10 @@ func main() {
 }
 
 func testVenv(okctlBinaryPath string, clusterManifestPath string) error {
-	c, err := expect.NewConsole(expect.WithDefaultTimeout(defaultTimeoutSeconds * time.Second))
+	c, err := expect.NewConsole(
+		expect.WithDefaultTimeout(defaultTimeoutSeconds*time.Second),
+		expect.WithStdout(os.Stdout),
+	)
 	if err != nil {
 		return fmt.Errorf("creating pseudo console: %w", err)
 	}

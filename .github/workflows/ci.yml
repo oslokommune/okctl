@@ -102,9 +102,7 @@ jobs:
         uses: actions/checkout@v2.4.0
 
       - name: Generate coverage report
-        run: |
-          go test -coverprofile=c.out -covermode=atomic ./...
-          go tool cover -html=c.out -o coverage.html
+        run: make test-coverage
 
       - name: Upload coverage
         uses: codecov/codecov-action@v2.1.0

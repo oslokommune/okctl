@@ -240,7 +240,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	managedPolicyService := clientCore.NewManagedPolicyService(
-		rest.NewManagedPolicyAPI(o.restClient),
+		clientDirectAPI.NewManagedPolicyAPI(core.NewManagedPolicyService(awsProvider.NewManagedPolicyCloudProvider(o.CloudProvider))),
 		handlers.ManagedPolicy,
 	)
 

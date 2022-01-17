@@ -272,9 +272,13 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		certificateService,
 	)
 
+	paramCoreService := core.NewParameterService(
+		awsProvider.NewParameterCloudProvider(o.CloudProvider),
+	)
+
 	githubService := clientCore.NewGithubService(
 		rest.NewGithubAPI(
-			rest.NewParameterAPI(o.restClient),
+			clientDirectAPI.NewParameterAPI(paramCoreService),
 			ghClient,
 		),
 		handlers.Github,
@@ -309,7 +313,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	paramService := clientCore.NewParameterService(
-		rest.NewParameterAPI(o.restClient),
+		clientDirectAPI.NewParameterAPI(paramCoreService),
 		handlers.Parameter,
 	)
 

@@ -73,7 +73,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 					return err
 				}
 
-				repoDir, err := o.GetHomeDir()
+				repoDir, err := o.GetRepoDir()
 				if err != nil {
 					return err
 				}

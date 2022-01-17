@@ -212,6 +212,10 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		return nil, err
 	}
 
+	kubeService := core.NewKubeService(
+		run.NewKubeRun(o.CloudProvider, o.CredentialsProvider.Aws()),
+	)
+
 	helmRun := run.NewHelmRun(
 		helm.New(&helm.Config{
 			HomeDir:              homeDir,
@@ -289,7 +293,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	manifestService := clientCore.NewManifestService(
-		rest.NewManifestAPI(o.restClient),
+		clientDirectAPI.NewManifestAPI(kubeService),
 		handlers.Manifest,
 	)
 
@@ -331,9 +335,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	externalDNSService := clientCore.NewExternalDNSService(
-		clientDirectAPI.NewExternalDNSAPI(core.NewKubeService(
-			run.NewKubeRun(o.CloudProvider, o.CredentialsProvider.Aws()),
-		)),
+		clientDirectAPI.NewExternalDNSAPI(kubeService),
 		handlers.ExternalDNS,
 		managedPolicyService,
 		serviceAccountService,
@@ -373,10 +375,6 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		handlers.Component,
 		manifestService,
 		o.CloudProvider,
-	)
-
-	kubeService := core.NewKubeService(
-		run.NewKubeRun(o.CloudProvider, o.CredentialsProvider.Aws()),
 	)
 
 	securityGroupService := core.NewSecurityGroupService(

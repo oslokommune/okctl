@@ -7,22 +7,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/client"
 )
 
-// TargetKubeExternalSecret is the API route for the manifest
-const TargetKubeExternalSecret = "kube/externalsecrets/"
-
-// TargetKubeNamespace is the api route for the namespace
-const TargetKubeNamespace = "kube/namespaces/"
-
-// TargetKubeStorageClasses is the API route for the storage classes
-const TargetKubeStorageClasses = "kube/storageclasses/"
-
-// TargetKubeConfigMap is the API route for the native secrets
-// nolint: gosec
-const TargetKubeConfigMap = "kube/configmaps/"
-
-// TargetKubeScaleDeployment is th API route for the scaling of a deployment
-const TargetKubeScaleDeployment = "kube/scale/"
-
 type manifestAPIDirectClient struct {
 	service api.KubeService
 }

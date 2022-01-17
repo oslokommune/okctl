@@ -244,8 +244,19 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		handlers.ManagedPolicy,
 	)
 
+	clusterName := o.Declaration.Metadata.Name
+
+	coreServiceAccountService := core.NewServiceAccountService(
+		run.NewServiceAccountRun(
+			o.Debug,
+			path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsConfig),
+			path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsCredentials),
+			o.BinariesProvider,
+		),
+	)
+
 	serviceAccountService := clientCore.NewServiceAccountService(
-		rest.NewServiceAccountAPI(o.restClient),
+		clientDirectAPI.NewServiceAccountAPI(coreServiceAccountService),
 		handlers.ServiceAccount,
 	)
 
@@ -344,8 +355,6 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		serviceAccountService,
 		helmService,
 	)
-
-	clusterName := o.Declaration.Metadata.Name
 
 	clusterServiceCore := core.NewClusterService(
 		run.NewClusterRun(

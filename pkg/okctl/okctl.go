@@ -375,10 +375,14 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		run.NewKubeRun(o.CloudProvider, o.CredentialsProvider.Aws()),
 	)
 
+	securityGroupService := core.NewSecurityGroupService(
+		awsProvider.NewSecurityGroupCloudProvider(o.CloudProvider),
+	)
+
 	applicationPostgresService := clientCore.NewApplicationPostgresService(
 		applicationManifestService,
 		componentService,
-		rest.NewSecurityGroupAPI(o.restClient),
+		clientDirectAPI.NewSecurityGroupAPI(securityGroupService),
 		vpcService,
 		clientDirectAPI.NewApplicationPostgresIntegrationAPI(kubeService),
 		clusterService,

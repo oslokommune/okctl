@@ -38,15 +38,12 @@ linters:
     - whitespace
     - gochecknoglobals
     - gocognit
-#    - godot
     - godox
     - gomnd
-#    - gomodguard
+    - gomodguard
     - goprintffuncname
-#    - nestif
     - prealloc
     - rowserrcheck
-#    - testpackage
     - wsl
 
 issues:
@@ -64,6 +61,7 @@ linters-settings:
     min-complexity: 15
   golint:
     min-confidence: 0
-
-output:
-  format: colored-line-number
+  gomnd:
+    settings:
+      mnd:
+        ignored-numbers: 0o700,0o744,0o755,0o644,0o640

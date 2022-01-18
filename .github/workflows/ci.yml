@@ -4,10 +4,10 @@ on:
   push:
     branches:
       - main
-  pull_request:
+  pull_request: {}
 
 jobs:
-  ci:
+  AppArmor:
     runs-on: ubuntu-latest
     steps:
       - name: apparmor
@@ -16,27 +16,96 @@ jobs:
           sudo apt-get remove mysql-server --purge
           sudo apt-get install apparmor-profiles
           sudo apparmor_parser -R /etc/apparmor.d/usr.sbin.mysqld
+
+  Formatting:
+    runs-on: ubuntu-latest
+    steps:
       - name: Install Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.16.4
+          go-version: 1.16
+
+      - name: Checkout code
+        uses: actions/checkout@v2.4.0
+
       - uses: actions/cache@v2.1.7
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
+
+      - run: make fmt
+
+  Lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - name: Checkout code
+        uses: actions/checkout@v2.4.0
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@5c56cd6c9dc07901af25baab6f2b0d9f3b7c3018 #v2.5.2
+        with:
+          version: v1.43.0 # golangci-lint version, optional
+          only-new-issues: true
+          # if set to true then action uses pre-installed Go
+          skip-go-installation: true
+
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - name: Checkout code
+        uses: actions/checkout@v2.4.0
+
+      - uses: actions/cache@v2.1.7
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
       - uses: actions/cache@v2.1.7
         with:
           path: ~/.cache/go-build
           key: ${{ runner.os }}-go-build-${{ hashFiles('log.txt') }}
           restore-keys: |
             ${{ runner.os }}-go-build-
+
+      - run: make test
+
+  Coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - uses: actions/cache@v2.1.7
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
       - name: Checkout code
         uses: actions/checkout@v2.4.0
-      - name: Run golang checks
-        run: make check
-      - name: Check coverage
+
+      - name: Generate coverage report
         run: make test-coverage
-      - name: Check code coverage
+
+      - name: Upload coverage
         uses: codecov/codecov-action@v2.1.0
+        with:
+          directory: ./
+          files: coverage.html

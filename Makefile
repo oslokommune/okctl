@@ -77,7 +77,7 @@ GOFUMPT        := $(GOBIN)/gofumpt
 $(GOLANGCILINT):
 	# To bump, simply change the version at the end to the desired version. The git sha here points to the newest commit
 	# of the install script verified by our team located here: https://github.com/golangci/golangci-lint/blob/master/install.sh
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/b90551cdf9c6214075f2a40d1b5595c6b41ffff0/install.sh | sh -s -- -b ${GOBIN} v1.40.1
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/b90551cdf9c6214075f2a40d1b5595c6b41ffff0/install.sh | sh -s -- -b ${GOBIN} v1.43.0
 
 $(GOIMPORTS):
 	$(GO) install golang.org/x/tools/cmd/goimports@latest
@@ -160,9 +160,11 @@ test-verbose: ARGS=-v
 test-race:    ARGS=-race
 integration:  export INTEGRATION_TESTS=true
 $(TEST_TARGETS): test
-check test tests: fmt lint $(RICHGO)
+test: $(RICHGO)
 	$(GO) test -timeout $(TIMEOUT) $(ARGS) $(TESTPKGS) | tee >(RICHGO_FORCE_COLOR=1 $(RICHGO) testfilter); \
 		test $${PIPESTATUS[0]} -eq 0
+
+check: fmt lint test
 
 test-update:
 	$(GO) test ./... -update
@@ -173,7 +175,7 @@ COVERAGE_XML     = $(COVERAGE_DIR)/coverage.xml
 COVERAGE_HTML    = $(COVERAGE_DIR)/index.html
 test-coverage-tools: | $(GOCOVMERGE) $(GOCOV) $(GOCOVXML)
 test-coverage: COVERAGE_DIR := $(BUILD_DIR)/test/coverage.$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
-test-coverage: fmt lint test-coverage-tools
+test-coverage: test-coverage-tools
 	@mkdir -p $(COVERAGE_DIR)/coverage
 	@for pkg in $(TESTPKGS); do \
         go test \

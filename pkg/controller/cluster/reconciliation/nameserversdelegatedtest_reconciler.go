@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	defaultTestingIntervalMinutes                = 5 * time.Minute
+	defaultTestingInterval                       = 5 * time.Minute
 	nameserversDelegatedTestReconcilerIdentifier = "nameserver delegation verification"
 )
 
@@ -55,7 +55,7 @@ func (n *nameserversDelegatedTestReconciler) Reconcile(
 
 			return reconciliation.Result{
 				Requeue:      true,
-				RequeueAfter: defaultTestingIntervalMinutes,
+				RequeueAfter: defaultTestingInterval,
 			}, fmt.Errorf("validating nameservers: %w", err)
 		}
 

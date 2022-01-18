@@ -224,9 +224,10 @@ func MergeEnvVars(osEnvs []string, venvMap map[string]string) map[string]string 
 
 func toMap(slice []string) map[string]string {
 	m := make(map[string]string)
+	numberOfResultingSubstrings := 2
 
 	for _, env := range slice {
-		split := strings.SplitN(env, "=", 2)
+		split := strings.SplitN(env, "=", numberOfResultingSubstrings)
 		key := split[0]
 		val := split[1]
 		m[key] = val

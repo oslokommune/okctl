@@ -679,9 +679,10 @@ func EstablishEnv(envs map[string]string) (RestoreEnvFn, error) {
 // SplitEnv returns the split envvars
 func SplitEnv(envs []string) map[string]string {
 	out := map[string]string{}
+	numberOfResultingSubstrings := 2
 
 	for _, envVar := range envs {
-		e := strings.SplitN(envVar, "=", 2)
+		e := strings.SplitN(envVar, "=", numberOfResultingSubstrings)
 
 		var key, val string
 

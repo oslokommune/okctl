@@ -17,22 +17,25 @@ inputs:
   github-token:
     description: Github authentication token
     required: true
+  database-name:
+    description: Name of the database to provision
+    required: true
 
 runs:
   using: "composite"
   steps:
     - name: Add databases entry
       run: |
-        yq eval -i '.databases.postgres[0] = {"name": "nightlydb", "namespace": "nightlydb", "user": "postgres"}' ${{ env.clusterManifestPath }}
+        yq eval -i '.databases.postgres[0] = {"name": "${{ inputs.database-name }}", "namespace": "nightlydb", "user": "postgres"}' ${{ inputs.cluster-manifest-path }}
       shell: bash
     - name: Apply cluster
       run: |
         ${{ inputs.okctl-path }} apply cluster \
           --file ${{ inputs.cluster-manifest-path }} \
-          --aws-credentials-type access-key \
-          --github-credentials-type token \
           --no-spinner
       env:
+        OKCTL_AWS_CREDENTIALS_TYPE: access-key
+        OKCTL_GITHUB_CREDENTIALS_TYPE: token
         AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
         GITHUB_TOKEN: ${{ inputs.github-token }}

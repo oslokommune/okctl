@@ -312,7 +312,9 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	vpcService := clientCore.NewVPCService(
-		rest.NewVPCAPI(o.restClient),
+		clientDirectAPI.NewVPCAPI(core.NewVpcService(
+			awsProvider.NewVpcCloud(o.CloudProvider),
+		)),
 		handlers.Vpc,
 	)
 

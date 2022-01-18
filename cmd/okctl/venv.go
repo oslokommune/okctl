@@ -165,7 +165,10 @@ func createVenvOpts(host state.Host, okctlEnvironment commands.OkctlEnvironment)
 		return commandlineprompter.CommandLinePromptOpts{}, nil, fmt.Errorf("could not get current user: %w", err)
 	}
 
-	envVars := commands.GetVenvEnvVars(okctlEnvironment)
+	envVars, err := commands.GetVenvEnvVars(okctlEnvironment)
+	if err != nil {
+		return commandlineprompter.CommandLinePromptOpts{}, nil, fmt.Errorf("could not get environment variables: %w", err)
+	}
 
 	homeDir, err := osPkg.UserHomeDir()
 	if err != nil {

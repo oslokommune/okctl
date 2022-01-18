@@ -35,7 +35,7 @@ func buildShowCommand(o *okctl.Okctl) *cobra.Command {
 	return cmd
 }
 
-//nolint:funlen,gocognit
+//nolint:funlen,gocognit,gocyclo
 func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 	var (
 		okctlEnvironment = commands.OkctlEnvironment{}
@@ -68,7 +68,10 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 			},
 		),
 		RunE: func(_ *cobra.Command, _ []string) error {
-			okctlEnvVars := commands.GetOkctlEnvVars(okctlEnvironment)
+			okctlEnvVars, err := commands.GetOkctlEnvVars(okctlEnvironment)
+			if err != nil {
+				return err
+			}
 
 			for k, v := range okctlEnvVars {
 				_, err := fmt.Fprintf(o.Out, "export %s=%s\n", k, v)

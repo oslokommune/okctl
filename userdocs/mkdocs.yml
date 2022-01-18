@@ -41,6 +41,7 @@ nav:
       - Running a Docker image in your cluster: help/docker-registry.md
       - Set up reference application full example: help/setup-reference-app.md
       - Using Okctl with an access key: help/using-okctl-with-aws-access-key.md
+      - Using Okctl with an AWS profile: help/using-okctl-with-aws-profile.md
 
 plugins:
   - git-revision-date

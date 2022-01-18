@@ -19,10 +19,12 @@ import (
 
 // OkctlEnvironment contains data about the okctl environment
 type OkctlEnvironment struct {
-	Region                 string
 	AWSAccountID           string
+	Region                 string
+	AwsProfile             string
 	ClusterName            string
 	UserDataDir            string
+	UserHomeDir            string
 	Debug                  bool
 	KubectlBinaryDir       string
 	AwsIamAuthenticatorDir string
@@ -36,8 +38,10 @@ func (o *OkctlEnvironment) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.AWSAccountID, validation.Required),
 		validation.Field(&o.Region, validation.Required),
+		validation.Field(&o.AwsProfile, validation.Required),
 		validation.Field(&o.ClusterName, validation.Required),
 		validation.Field(&o.UserDataDir, validation.Required),
+		validation.Field(&o.UserHomeDir, validation.Required),
 		validation.Field(&o.KubectlBinaryDir, validation.Required),
 		validation.Field(&o.AwsIamAuthenticatorDir, validation.Required),
 		validation.Field(&o.ClusterDeclarationPath, validation.Required),
@@ -51,6 +55,18 @@ func GetOkctlEnvironment(o *okctl.Okctl, clusterDeclarationPath string) (OkctlEn
 	userDataDir, err := o.GetUserDataDir()
 	if err != nil {
 		return OkctlEnvironment{}, err
+	}
+
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return OkctlEnvironment{}, err
+	}
+
+	var awsProfile string
+	if o.AWSCredentialsType == context.AWSCredentialsTypeAwsProfile {
+		awsProfile = os.Getenv("AWS_PROFILE")
+	} else {
+		awsProfile = constant.DefaultAwsProfile
 	}
 
 	k, err := o.BinariesProvider.Kubectl(kubectl.Version)
@@ -69,10 +85,12 @@ func GetOkctlEnvironment(o *okctl.Okctl, clusterDeclarationPath string) (OkctlEn
 	}
 
 	opts := OkctlEnvironment{
-		Region:                 o.Declaration.Metadata.Region,
 		AWSAccountID:           o.Declaration.Metadata.AccountID,
+		Region:                 o.Declaration.Metadata.Region,
+		AwsProfile:             awsProfile,
 		ClusterName:            o.Declaration.Metadata.Name,
 		UserDataDir:            userDataDir,
+		UserHomeDir:            userHomeDir,
 		Debug:                  o.Debug,
 		KubectlBinaryDir:       path.Dir(k.BinaryPath),
 		AwsIamAuthenticatorDir: path.Dir(a.BinaryPath),
@@ -104,18 +122,36 @@ func ensureAbsolutePath(declarationPath string) (string, error) {
 
 // GetVenvEnvVars returns the environmental variables needed by a virtual environment. This contains environment variables from
 // the user's shell merged with those from the okctl.
-func GetVenvEnvVars(okctlEnvironment OkctlEnvironment) map[string]string {
-	okctlEnvVars := GetOkctlEnvVars(okctlEnvironment)
-	return MergeEnvVars(CleanOsEnvVars(os.Environ()), okctlEnvVars)
+func GetVenvEnvVars(okctlEnvironment OkctlEnvironment) (map[string]string, error) {
+	okctlEnvVars, err := GetOkctlEnvVars(okctlEnvironment)
+	if err != nil {
+		return nil, err
+	}
+
+	return MergeEnvVars(CleanOsEnvVars(os.Environ()), okctlEnvVars), nil
 }
 
 // GetOkctlEnvVars converts an okctl environment to a map with environmental variables
-func GetOkctlEnvVars(opts OkctlEnvironment) map[string]string {
+func GetOkctlEnvVars(opts OkctlEnvironment) (map[string]string, error) {
 	appDir := opts.UserDataDir
 
+	var awsProfile, awsConfig, awsCredentials string
+
+	if opts.AWSCredentialsType == context.AWSCredentialsTypeAwsProfile {
+		awsProfile = opts.AwsProfile
+		if awsProfile == "" {
+			return nil, fmt.Errorf("environment variable AWS_PROFILE not set")
+		}
+
+		awsConfig = path.Join(opts.UserHomeDir, ".aws", "config")
+		awsCredentials = path.Join(opts.UserHomeDir, ".aws", "credentials")
+	} else {
+		awsProfile = constant.DefaultAwsProfile
+		awsConfig = path.Join(appDir, constant.DefaultCredentialsDirName, opts.ClusterName, constant.DefaultClusterAwsConfig)
+		awsCredentials = path.Join(appDir, constant.DefaultCredentialsDirName, opts.ClusterName, constant.DefaultClusterAwsCredentials)
+	}
+
 	kubeConfig := path.Join(appDir, constant.DefaultCredentialsDirName, opts.ClusterName, constant.DefaultClusterKubeConfig)
-	awsConfig := path.Join(appDir, constant.DefaultCredentialsDirName, opts.ClusterName, constant.DefaultClusterAwsConfig)
-	awsCredentials := path.Join(appDir, constant.DefaultCredentialsDirName, opts.ClusterName, constant.DefaultClusterAwsCredentials)
 
 	h := &helm.Config{
 		HelmPluginsDirectory: path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmPluginsDirectory),
@@ -138,7 +174,7 @@ func GetOkctlEnvVars(opts OkctlEnvironment) map[string]string {
 
 	envMap["AWS_CONFIG_FILE"] = awsConfig
 	envMap["AWS_SHARED_CREDENTIALS_FILE"] = awsCredentials
-	envMap["AWS_PROFILE"] = "default"
+	envMap["AWS_PROFILE"] = awsProfile
 	envMap["KUBECONFIG"] = kubeConfig
 	envMap["PATH"] = getPathWithOkctlBinaries(opts)
 
@@ -146,7 +182,7 @@ func GetOkctlEnvVars(opts OkctlEnvironment) map[string]string {
 	envMap[context.DefaultAWSCredentialsType] = opts.AWSCredentialsType
 	envMap[context.DefaultGithubCredentialsType] = opts.GithubCredentialsType
 
-	return envMap
+	return envMap, nil
 }
 
 func getPathWithOkctlBinaries(opts OkctlEnvironment) string {
@@ -214,7 +250,8 @@ func toSlice(m map[string]string) []string {
 
 // CleanOsEnvVars ensures blacklisted variables are removed from the list
 func CleanOsEnvVars(environ []string) []string {
-	keyBlacklist := []string{constant.EnvClusterDeclaration}
+	// We want to control AWS_PROFILE for e.g. SAML login
+	keyBlacklist := []string{constant.EnvClusterDeclaration, "AWS_PROFILE"}
 	cleanedVars := toMap(environ)
 
 	for _, blacklistedKey := range keyBlacklist {

@@ -122,10 +122,6 @@ func Create(username string, cfg *v1alpha5.ClusterConfig) clientCmdApi.Config {
 							Name:  "AWS_DEFAULT_REGION",
 							Value: cfg.Metadata.Region,
 						},
-						{
-							Name:  "AWS_PROFILE",
-							Value: "default",
-						},
 					},
 					Args: []string{"token", "-i", cfg.Metadata.Name},
 				},

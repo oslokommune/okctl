@@ -189,8 +189,22 @@ That's it! You are all set. Switch back to the console and enjoy `okctl` creatin
 
 In some cases it can be useful to use a service user for authentication. 
 
-By passing the flag `--aws-credentials-type access-key` to `okctl apply cluster`, `okctl` will look for the following
-environment variables to be used to authenticate:
+You can configure your service user using a
+[named AWS Profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) in your
+AWS configuration (`~/.aws/credentials` on Linux/Mac or `%USERPROFILE%\.aws\credentials` on Windows).
+
+By passing the flag `--aws-credentials-type aws-profile` to `okctl apply cluster`, `okctl` will look for the
+`AWS_PROFILE` environment variable to select the credentials to be used to authenticate.
+
+```shell
+# Example
+export AWS_PROFILE=myprofile
+
+okctl apply cluster --aws-credentials-type aws-profile -f cluster.yaml
+```
+
+Alternatiely, by passing the flag `--aws-credentials-type access-key` to `okctl apply cluster`, `okctl` will look for
+the following environment variables to directly fetch the IAM access key and secret key to be used to authenticate:
 
 * `AWS_ACCESS_KEY_ID`
 * `AWS_SECRET_ACCESS_KEY`

@@ -195,13 +195,42 @@ func TestAuthEnvironment(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			getter := func(key string) string {
-				return tc.withEnv[key]
+			auth, err := aws.NewAuthEnvironment("dummy-region", getter(tc.withEnv))
+
+			if tc.expectValid {
+				assert.True(t, auth.Valid())
+			} else {
+				assert.NotNil(t, err)
 			}
-
-			auth := aws.NewAuthEnvironment("dummy-region", getter)
-
-			assert.Equal(t, tc.expectValid, auth.Valid())
 		})
+	}
+}
+
+func TestNewAuthProfile(t *testing.T) {
+	osEnv := map[string]string{
+		"AWS_PROFILE": "testprofile",
+	}
+
+	retriever, err := aws.NewAuthProfile("region", getter(osEnv))
+
+	assert.NotNil(t, retriever)
+	assert.True(t, retriever.Valid(), "credentials should be valid as AWS_PROFILE is set")
+	assert.Nil(t, err)
+}
+
+func TestNewAuthMissingProfile(t *testing.T) {
+	osEnv := map[string]string{
+		"AWS_PROFILE": "",
+	}
+
+	retriever, err := aws.NewAuthProfile("region", getter(osEnv))
+
+	assert.Nil(t, retriever)
+	assert.NotNil(t, err, "credentials are invalid if AWS_PROFILE is not set")
+}
+
+func getter(m map[string]string) aws.KeyGetter {
+	return func(key string) string {
+		return m[key]
 	}
 }

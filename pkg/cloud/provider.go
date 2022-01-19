@@ -4,6 +4,9 @@ package cloud
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/aws/aws-sdk-go/service/ecr/ecriface"
+
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
@@ -90,6 +93,7 @@ func NewFromSession(region, principalARN string, sess *session.Session) (*Provid
 	services.iam = iam.New(sess)
 	services.cfn = cloudformation.New(sess)
 	services.ec2 = ec2.New(sess)
+	services.ecr = ecr.New(sess)
 	services.elbv2 = elbv2.New(sess)
 	services.eks = eks.New(sess)
 	services.ssm = ssm.New(sess)
@@ -172,6 +176,7 @@ type Services struct {
 	cw       cloudwatchiface.CloudWatchAPI
 	acm      acmiface.ACMAPI
 	dynamodb dynamodbiface.DynamoDBAPI
+	ecr      ecriface.ECRAPI
 
 	region       string
 	principalARN string
@@ -185,6 +190,11 @@ func (s *Services) CloudWatch() cloudwatchiface.CloudWatchAPI {
 // DynamoDB returns an interface to the DynamoDB API
 func (s *Services) DynamoDB() dynamodbiface.DynamoDBAPI {
 	return s.dynamodb
+}
+
+// ECR returns an interface to the ECR API
+func (s *Services) ECR() ecriface.ECRAPI {
+	return s.ecr
 }
 
 // SecretsManager returns an interface to the SecretsManager API

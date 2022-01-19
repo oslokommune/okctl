@@ -10,6 +10,8 @@ import (
 	"path"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/clients/kubectl/binary"
+
 	"github.com/oslokommune/okctl/pkg/logging"
 
 	"github.com/oslokommune/okctl/pkg/client/core/state/direct"
@@ -332,7 +334,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 
 	applicationService := clientCore.NewApplicationService(
 		o.FileSystem,
-		certificateService,
+		o.toolChain.Kubectl,
 		applicationManifestService,
 		absoluteRepositoryPath,
 	)
@@ -516,6 +518,8 @@ func (o *Okctl) initializeToolChain() error {
 		run.NewKubeRun(o.CloudProvider, o.CredentialsProvider.Aws()),
 	)
 
+	kubectl := binary.New(o.FileSystem, o.BinariesProvider, o.CredentialsProvider, *o.Declaration)
+
 	helmRun := run.NewHelmRun(
 		helm.New(&helm.Config{
 			HomeDir:              homeDir,
@@ -579,6 +583,7 @@ func (o *Okctl) initializeToolChain() error {
 		ServiceAccount:             serviceAccountService,
 		Helm:                       helmService,
 		Kube:                       kubeService,
+		Kubectl:                    kubectl,
 		Domain:                     domainService,
 		Certificate:                certificateService,
 		Parameter:                  parameterService,

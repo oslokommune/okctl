@@ -14,25 +14,26 @@ import (
 )
 
 // requiredApplyApplicationArguments defines number of arguments the ApplyApplication command expects
-const requiredApplyApplicationArguments = 0
+const requiredDeleteApplicationArguments = 0
 
 //nolint funlen
-func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
+func buildDeleteApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &handlers.HandleApplicationOpts{
 		Okctl: o,
+		Purge: true,
 	}
 
 	cmd := &cobra.Command{
 		Use:   "application",
-		Short: ApplyApplicationShortDescription,
-		Args:  cobra.ExactArgs(requiredApplyApplicationArguments),
+		Short: deleteApplicationShortDescription,
+		Long:  deleteApplicationLongDescription,
+		Args:  cobra.ExactArgs(requiredDeleteApplicationArguments),
 		PreRunE: hooks.RunECombinator(
 			hooks.InitializeMetrics(o),
-			hooks.EmitStartCommandExecutionEvent(metrics.ActionApplyApplication),
+			hooks.EmitStartCommandExecutionEvent(metrics.ActionDeleteApplication),
 			hooks.InitializeOkctl(o),
 			hooks.AcquireStateLock(o),
 			hooks.DownloadState(o, true),
-			hooks.VerifyClusterExistsInState(o),
 			func(cmd *cobra.Command, args []string) (err error) {
 				err = commands.ValidateBinaryEqualsClusterVersion(o)
 				if err != nil {
@@ -52,11 +53,12 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.UploadState(o),
 			hooks.ClearLocalState(o),
 			hooks.ReleaseStateLock(o),
-			hooks.EmitEndCommandExecutionEvent(metrics.ActionApplyApplication),
+			hooks.EmitEndCommandExecutionEvent(metrics.ActionDeleteApplication),
 		),
 	}
 
 	cmd.Flags().StringVarP(&opts.File, "file", "f", "", "Specify the file path. Use \"-\" for stdin")
+	cmd.Flags().BoolVarP(&opts.Confirm, "confirm", "y", false, "confirm all choices")
 
 	return cmd
 }

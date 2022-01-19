@@ -84,5 +84,6 @@ type CertificateAPI interface {
 type CertificateState interface {
 	SaveCertificate(certificate *Certificate) error
 	GetCertificate(domain string) (*Certificate, error)
+	HasCertificate(domain string) (bool, error)
 	RemoveCertificate(domain string) error
 }

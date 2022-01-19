@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/logging"
+
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
@@ -14,6 +16,8 @@ import (
 
 // Run initiates scheduling of reconcilers
 func (c *Scheduler) Run(ctx context.Context, state *clientCore.StateHandlers) (Result, error) {
+	log := logging.GetLogger("scheduler", "run")
+
 	err := c.spinner.Start("reconciling")
 	if err != nil {
 		return Result{}, fmt.Errorf("starting spinner: %w", err)
@@ -27,17 +31,23 @@ func (c *Scheduler) Run(ctx context.Context, state *clientCore.StateHandlers) (R
 	metadata := c.metadata()
 
 	for reconciler := queue.Pop(); reconciler != nil; reconciler = queue.Pop() {
+		logEntry := log.WithField("reconciler", reconciler.String())
+
 		subSpinner := c.spinner.SubSpinner()
 
-		err := subSpinner.Start(reconciler.String())
+		err = subSpinner.Start(reconciler.String())
 		if err != nil {
 			return Result{}, fmt.Errorf("starting subspinner: %w", err)
 		}
+
+		logEntry.Debug("Starting reconciliation")
 
 		result, err := reconciler.Reconcile(ctx, metadata, state)
 		if err != nil {
 			return Result{}, fmt.Errorf("reconciling %s: %w", reconciler.String(), err)
 		}
+
+		logEntry.Debug(fmt.Sprintf("Reconciliation result: %+v", result))
 
 		if result.Requeue {
 			err = queue.Push(reconciler)

@@ -1,0 +1,7 @@
+
+This will delete the application mockapp and all associated resources. Resources include:
+- Amazon Load Balancer instance
+- SSL certificate 
+- ArgoCD application manifest locally and in the remote IAC repository
+- Kubernetes manifests locally
+

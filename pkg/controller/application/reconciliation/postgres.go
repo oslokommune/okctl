@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/logging"
+
 	"github.com/oslokommune/okctl/pkg/client"
 
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
@@ -11,7 +13,10 @@ import (
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 )
 
-const postgresReconcilerName = "postgres integration"
+const (
+	postgresReconcilerName = "postgres integration"
+	postgresLogTag         = "appReconciliation/postgres"
+)
 
 // containerRepositoryReconciler contains service and metadata for the relevant resource
 type postgresReconciler struct {
@@ -20,10 +25,14 @@ type postgresReconciler struct {
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
 func (c *postgresReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
+	log := logging.GetLogger(postgresLogTag, "reconcile")
+
 	action, err := c.determineAction(ctx, meta, state)
 	if err != nil {
 		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
 	}
+
+	log.Debug(fmt.Sprintf("determined action: %s", string(action)))
 
 	switch action {
 	case reconciliation.ActionCreate:
@@ -39,6 +48,7 @@ func (c *postgresReconciler) Reconcile(ctx context.Context, meta reconciliation.
 		return reconciliation.Result{Requeue: false}, nil
 	case reconciliation.ActionDelete:
 		err = c.applicationPostgresService.RemovePostgresFromApplication(ctx, client.RemovePostgresFromApplicationOpts{
+			Cluster:      *meta.ClusterDeclaration,
 			Application:  meta.ApplicationDeclaration,
 			DatabaseName: meta.ApplicationDeclaration.Postgres,
 		})

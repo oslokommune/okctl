@@ -36,6 +36,18 @@ func (c DeleteContainerRepositoryOpts) Validate() error {
 	)
 }
 
+// EmptyContainerRepositoryOpts contains necessary information to remove all images in a container repository
+type EmptyContainerRepositoryOpts struct {
+	Name string
+}
+
+// Validate ensures the struct contains valid data
+func (c EmptyContainerRepositoryOpts) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.Name, validation.Required),
+	)
+}
+
 // ContainerRepository represents a container repository
 type ContainerRepository struct {
 	ClusterID              ID
@@ -48,6 +60,7 @@ type ContainerRepository struct {
 type ContainerRepositoryService interface {
 	CreateContainerRepository(ctx context.Context, opts *CreateContainerRepositoryOpts) (*ContainerRepository, error)
 	DeleteContainerRepository(ctx context.Context, opts *DeleteContainerRepositoryOpts) error
+	EmptyContainerRepository(ctx context.Context, opts EmptyContainerRepositoryOpts) error
 }
 
 // ContainerRepositoryCloudProvider defines the required cloud operations
@@ -55,4 +68,5 @@ type ContainerRepositoryService interface {
 type ContainerRepositoryCloudProvider interface {
 	CreateContainerRepository(opts *CreateContainerRepositoryOpts) (*ContainerRepository, error)
 	DeleteContainerRepository(opts *DeleteContainerRepositoryOpts) error
+	EmptyContainerRepository(ctx context.Context, opts EmptyContainerRepositoryOpts) error
 }

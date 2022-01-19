@@ -1,0 +1,5 @@
+
+This will delete the application mockapp and all associated resources. Resources include: 
+- ArgoCD application manifest locally and in the remote IAC repository
+- Kubernetes manifests locally
+

@@ -207,6 +207,27 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		return nil, err
 	}
 
+	awsCredentials, err := o.CredentialsProvider.Aws().Raw()
+	if err != nil {
+		return nil, err
+	}
+
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+
+	clusterName := o.Declaration.Metadata.Name
+
+	var awsCredentialsPath, awsConfigPath string
+	if o.AWSCredentialsType == context.AWSCredentialsTypeAwsProfile {
+		awsConfigPath = path.Join(userHomeDir, ".aws", "config")
+		awsCredentialsPath = path.Join(userHomeDir, ".aws", "credentials")
+	} else {
+		awsCredentialsPath = path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsConfig)
+		awsConfigPath = path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsCredentials)
+	}
+
 	o.kubeConfigStore = kubeConfigStore
 
 	awsIamAuth, err := o.BinariesProvider.AwsIamAuthenticator(awsiamauthenticator.Version)
@@ -250,13 +271,12 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		handlers.ManagedPolicy,
 	)
 
-	clusterName := o.Declaration.Metadata.Name
-
 	coreServiceAccountService := core.NewServiceAccountService(
 		run.NewServiceAccountRun(
 			o.Debug,
-			path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsConfig),
-			path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsCredentials),
+			awsCredentialsPath,
+			awsConfigPath,
+			awsCredentials.AwsProfile,
 			o.BinariesProvider,
 		),
 	)
@@ -366,8 +386,9 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		run.NewClusterRun(
 			o.Debug,
 			kubeConfigStore,
-			path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsConfig),
-			path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsCredentials),
+			awsCredentialsPath,
+			awsConfigPath,
+			awsCredentials.AwsProfile,
 			o.BinariesProvider,
 			o.CloudProvider,
 		),

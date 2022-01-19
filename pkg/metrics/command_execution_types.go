@@ -23,8 +23,6 @@ const (
 
 	// ActionForwardPostgres represents running the command `okctl forward postgres`
 	ActionForwardPostgres = commandexecution.ActionForwardPostgres
-	// ActionAttachPostgres represents running the command `okctl attach postgres`
-	ActionAttachPostgres = commandexecution.ActionAttachPostgres
 
 	// ActionShowCredentials represents running the command `okctl show credentials`
 	ActionShowCredentials = commandexecution.ActionShowCredentials

@@ -37,6 +37,9 @@ in the provided namespace containing data for accessing the database.
 	DeleteClusterLongDescription  = `Delete all resources related to an EKS cluster,
 including VPC, this is a highly destructive operation.`
 
+	deleteApplicationShortDescription = "Delete an application"
+	deleteApplicationLongDescription  = "Delete all resources related to an application"
+
 	DeletePostgresShortDescription = "Delete an AWS RDS Postgres database"
 	DeletePostgresLongDescription  = `Delete the AWS RDS Postgres database`
 

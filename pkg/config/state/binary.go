@@ -14,7 +14,7 @@ func AWSIamAuthenticatorKnownBinaries() []Binary {
 	return []Binary{
 		{
 			Name:       "aws-iam-authenticator",
-			Version:    "0.5.2",
+			Version:    "0.5.3",
 			BufferSize: "100mb",
 			URLPattern: "https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v#{ver}/aws-iam-authenticator_#{ver}_#{os}_#{arch}",
 			Checksums: []Checksum{
@@ -22,13 +22,13 @@ func AWSIamAuthenticatorKnownBinaries() []Binary {
 					Os:     "darwin",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "f418c52d90947e56c9d9b01d3f32bbe52a0ba5ec02b65fc1ca9b85bff1652c2b",
+					Digest: "effd376c6ad00e90e45384000decac89f8495c76a3f52dee9eec389cfda236b7",
 				},
 				{
 					Os:     "linux",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "5bbe44ad7f6dd87a02e0b463a2aed9611836eb2f40d7fbe8c517460a4385621b",
+					Digest: "20f4d8ece0f867c38b917ebe37dff934a31aabe385e26986183b14d72c70c137",
 				},
 			},
 		},

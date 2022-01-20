@@ -29,7 +29,15 @@ func (a *applicationReconciler) Reconcile(ctx context.Context, meta reconciliati
 	case reconciliation.ActionCreate:
 		return a.createApplication(ctx, meta, state)
 	case reconciliation.ActionDelete:
-		return reconciliation.Result{}, errors.New("deletion of applications is not implemented")
+		err = a.client.DeleteApplicationManifests(ctx, client.DeleteApplicationManifestsOpts{
+			Cluster:     *meta.ClusterDeclaration,
+			Application: meta.ApplicationDeclaration,
+		})
+		if err != nil {
+			return reconciliation.Result{}, fmt.Errorf("deleting application manifests: %w", err)
+		}
+
+		return reconciliation.Result{Requeue: false}, nil
 	case reconciliation.ActionWait:
 		return reconciliation.Result{Requeue: true}, nil
 	case reconciliation.ActionNoop:

@@ -93,6 +93,24 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 	return nil
 }
 
+// DeleteApplicationManifests removes manifests related to an application
+func (s *applicationService) DeleteApplicationManifests(_ context.Context, opts client.DeleteApplicationManifestsOpts) error {
+	relativeApplicationDir := path.Join(
+		opts.Cluster.Github.OutputPath,
+		constant.DefaultApplicationsOutputDir,
+		opts.Application.Metadata.Name,
+	)
+
+	absoluteApplicationDir := path.Join(s.absoluteRepositoryDir, relativeApplicationDir)
+
+	err := s.fs.RemoveAll(absoluteApplicationDir)
+	if err != nil {
+		return errors.E(err, "removing application directory: %w", err)
+	}
+
+	return nil
+}
+
 // CreateArgoCDApplicationManifest creates necessary files for the ArgoCD integration
 func (s *applicationService) CreateArgoCDApplicationManifest(opts client.CreateArgoCDApplicationManifestOpts) error {
 	relativeOverlayDir := path.Join(

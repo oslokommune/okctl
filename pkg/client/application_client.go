@@ -25,6 +25,20 @@ func (o *ScaffoldApplicationOpts) Validate() error {
 	)
 }
 
+// DeleteApplicationManifestsOpts contains necessary information to delete application manifests
+type DeleteApplicationManifestsOpts struct {
+	Cluster     v1alpha1.Cluster
+	Application v1alpha1.Application
+}
+
+// Validate ensures presented data is valid
+func (o DeleteApplicationManifestsOpts) Validate() error {
+	return validation.ValidateStruct(o,
+		validation.Field(&o.Cluster, validation.Required),
+		validation.Field(&o.Application, validation.Required),
+	)
+}
+
 // CreateArgoCDApplicationManifestOpts contains data required when creating a ArgoCD Application Manifest
 type CreateArgoCDApplicationManifestOpts struct {
 	Cluster     v1alpha1.Cluster
@@ -57,6 +71,8 @@ func (c DeleteArgoCDApplicationManifestOpts) Validate() error {
 type ApplicationService interface {
 	// ScaffoldApplication implements functionality for converting an Application.yaml to deployment resources
 	ScaffoldApplication(context.Context, *ScaffoldApplicationOpts) error
+	// DeleteApplicationManifests implements functionality for deleting application manifests
+	DeleteApplicationManifests(context.Context, DeleteApplicationManifestsOpts) error
 	// CreateArgoCDApplicationManifest implements functionality for integrating an app with ArgoCD
 	CreateArgoCDApplicationManifest(opts CreateArgoCDApplicationManifestOpts) error
 	// DeleteArgoCDApplicationManifest implements functionality for removing an ArgoCD integration for an app

@@ -5,7 +5,7 @@ const (
 	// Name sets the name of the binary/cli
 	Name = "aws-iam-authenticator"
 	// Version sets the currently used version of the binary/cli
-	Version = "0.5.2"
+	Version = "0.5.3"
 )
 
 // AwsIamAuthenticator stores state for running the cli

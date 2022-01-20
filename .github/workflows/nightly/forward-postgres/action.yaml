@@ -1,0 +1,40 @@
+name: "Forward Postgres"
+description: "Runs okctl forward postgres"
+
+inputs:
+  cluster-manifest-path:
+    description: Path to the cluster manifest
+    required: true
+  okctl-path:
+    description: Path to the okctl binary
+    required: true
+  aws-access-key-id:
+    description: AWS service user access key ID
+    required: true
+  aws-secret-access-key:
+    description: AWS service user secret access key
+    required: true
+  github-token:
+    description: Github authentication token
+    required: true
+  database-name:
+    description: Name of the database to provision
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        cmd/nightly/forward-postgres-tester/dist/forward-postgres-tester \
+          ${{ inputs.okctl-path }} \
+          ${{ inputs.cluster-manifest-path }} \
+          ${{ inputs.database-name }}
+      shell: bash
+      env:
+        OKCTL_AWS_CREDENTIALS_TYPE: access-key
+        OKCTL_GITHUB_CREDENTIALS_TYPE: token
+        AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        OKCTL_METRICS_USERAGENT: okctldev
+        OKCTL_DEBUG: 'true'

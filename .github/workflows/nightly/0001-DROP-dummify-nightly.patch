@@ -1,0 +1,62 @@
+From cd257a5447509ce5d396e874e0d5111ace8a73a8 Mon Sep 17 00:00:00 2001
+From: Julius Pedersen <deifyed@tutanota.com>
+Date: Fri, 7 Jan 2022 09:32:10 +0100
+Subject: [PATCH] DROP dummify nightly
+
+---
+ .github/workflows/nightly.yaml | 26 ++++++++++----------------
+ 1 file changed, 10 insertions(+), 16 deletions(-)
+
+diff --git a/.github/workflows/nightly.yaml b/.github/workflows/nightly.yaml
+index b4620093..3471435a 100644
+--- a/.github/workflows/nightly.yaml
++++ b/.github/workflows/nightly.yaml
+@@ -1,9 +1,9 @@
+ name: 'Nightly'
+ 
+ on:
+-  workflow_dispatch: {}
+-  schedule:
+-    - cron: 0 2 * * 1-5
++  push:
++    branches:
++      - KM462-add-venv-nightly-test
+ 
+ jobs:
+   create:
+@@ -19,10 +19,15 @@ jobs:
+       - run: echo "okctlPath=dist/linux_linux_amd64/okctl" >> $GITHUB_ENV
+       - run: echo "clusterManifestPath=nightly-cfg.yaml" >> $GITHUB_ENV
+ 
+-      - name: Test
+-        run: go test -v ./...
++      - name: Cache binary
++        id: cache-binary
++        uses: actions/cache@v2
++        with:
++          path: ${{ env.okctlPath }}
++          key: binary
+ 
+       - name: Build
++        if: steps.cache-binary.outputs.cache-hit != 'true'
+         run: make release-local
+ 
+       - uses: webfactory/ssh-agent@v0.5.4
+@@ -55,14 +60,3 @@ jobs:
+           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+           github-token: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_PAT }}
+-
+-      - name: Notify
+-        if: ${{ always() }}
+-        uses: rtCamp/action-slack-notify@v2.2.0
+-        env:
+-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_KJOREMILJO }}
+-          SLACK_USERNAME: okctl-bot
+-          SLACK_MSG_AUTHOR: okctl-bot
+-          SLACK_COLOR: ${{job.status}}
+-          SLACK_TITLE: Nightly build
+-          SLACK_ICON_EMOJI: ':okctl-closeup:'
+-- 
+2.34.1
+

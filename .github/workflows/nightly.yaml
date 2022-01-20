@@ -18,6 +18,7 @@ jobs:
 
       - run: echo "okctlPath=dist/linux_linux_amd64/okctl" >> $GITHUB_ENV
       - run: echo "clusterManifestPath=nightly-cfg.yaml" >> $GITHUB_ENV
+      - run: echo "databaseName=nightlydb" >> $GITHUB_ENV
 
       - name: Test
         run: go test -v ./...
@@ -55,6 +56,26 @@ jobs:
           aws-access-key-id: ${{ secrets.NIGHTLY_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.NIGHTLY_AWS_SECRET_ACCESS_KEY }}
           github-token: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_PAT }}
+
+      - name: Provision PostgreSQL
+        uses: ./.github/workflows/nightly/provision-postgres
+        with:
+          okctl-path: ${{ env.okctlPath }}
+          cluster-manifest-path: ${{ env.clusterManifestPath }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          github-token: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_PAT }}
+          database-name: ${{ env.databaseName }}
+
+      - name: Test forward postgres command
+        uses: ./.github/workflows/nightly/forward-postgres
+        with:
+          okctl-path: ${{ env.okctlPath }}
+          cluster-manifest-path: ${{ env.clusterManifestPath }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          github-token: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_PAT }}
+          database-name: ${{ env.databaseName }}
 
       - name: Delete cluster
         uses: ./.github/workflows/nightly/delete-cluster

@@ -2,7 +2,9 @@ package core
 
 import (
 	"context"
+	stderrors "errors"
 	"fmt"
+	"os"
 	"path"
 
 	"github.com/mishudark/errors"
@@ -139,6 +141,10 @@ func (s *applicationService) DeleteArgoCDApplicationManifest(opts client.DeleteA
 
 	err := s.fs.Remove(absoluteArgoCDApplicationManifestPath)
 	if err != nil {
+		if stderrors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+
 		return errors.E(err, "removing ArgoCD application manifest")
 	}
 

@@ -124,6 +124,27 @@ func (s *applicationService) CreateArgoCDApplicationManifest(opts client.CreateA
 	return nil
 }
 
+// DeleteArgoCDApplicationManifest removes necessary files related to the ArgoCD integration
+func (s *applicationService) DeleteArgoCDApplicationManifest(opts client.DeleteArgoCDApplicationManifestOpts) error {
+	relativeOverlayDir := path.Join(
+		opts.Cluster.Github.OutputPath,
+		constant.DefaultApplicationsOutputDir,
+		opts.Application.Metadata.Name,
+		constant.DefaultApplicationOverlayDir,
+		opts.Cluster.Metadata.Name,
+	)
+
+	absoluteOverlayDir := path.Join(s.absoluteRepositoryDir, relativeOverlayDir)
+	absoluteArgoCDApplicationManifestPath := path.Join(absoluteOverlayDir, defaultArgoCDApplicationManifestFilename)
+
+	err := s.fs.Remove(absoluteArgoCDApplicationManifestPath)
+	if err != nil {
+		return errors.E(err, "removing ArgoCD application manifest")
+	}
+
+	return nil
+}
+
 func generateManifestSaver(ctx context.Context, service client.ApplicationManifestService, applicationName string) scaffold.ManifestSaver {
 	return func(filename string, content []byte) error {
 		return service.SaveManifest(ctx, client.SaveManifestOpts{

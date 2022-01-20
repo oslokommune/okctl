@@ -36,7 +36,15 @@ func (a *argoCDApplicationReconciler) Reconcile(_ context.Context, meta reconcil
 
 		return reconciliation.Result{}, nil
 	case reconciliation.ActionDelete:
-		return reconciliation.Result{}, errors.New("deletion of an ArgoCD Application is not implemented")
+		err = a.client.DeleteArgoCDApplicationManifest(client.DeleteArgoCDApplicationManifestOpts{
+			Cluster:     *meta.ClusterDeclaration,
+			Application: meta.ApplicationDeclaration,
+		})
+		if err != nil {
+			return reconciliation.Result{}, fmt.Errorf("deleting ArgoCD application manifest: %w", err)
+		}
+
+		return reconciliation.Result{Requeue: false}, nil
 	case reconciliation.ActionNoop:
 		return reconciliation.Result{Requeue: false}, nil
 	case reconciliation.ActionWait:

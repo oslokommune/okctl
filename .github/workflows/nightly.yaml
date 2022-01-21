@@ -62,8 +62,8 @@ jobs:
         with:
           okctl-path: ${{ env.okctlPath }}
           cluster-manifest-path: ${{ env.clusterManifestPath }}
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.NIGHTLY_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.NIGHTLY_AWS_SECRET_ACCESS_KEY }}
           github-token: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_PAT }}
           database-name: ${{ env.databaseName }}
 
@@ -72,8 +72,8 @@ jobs:
         with:
           okctl-path: ${{ env.okctlPath }}
           cluster-manifest-path: ${{ env.clusterManifestPath }}
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.NIGHTLY_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.NIGHTLY_AWS_SECRET_ACCESS_KEY }}
           github-token: ${{ secrets.OKCTL_BOT_NIGHTLY_BUILD_PAT }}
           database-name: ${{ env.databaseName }}
 

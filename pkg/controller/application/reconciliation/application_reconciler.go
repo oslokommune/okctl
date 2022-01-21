@@ -163,7 +163,7 @@ func (a *applicationReconciler) hasDeleteDependenciesMet(opts generalOpts) (bool
 	return true, nil
 }
 
-// NodeType returns the relevant NodeType for this reconciler
+// String returns an identifier for this reconciler
 func (a *applicationReconciler) String() string {
 	return applicationReconcilerIdentifier
 }

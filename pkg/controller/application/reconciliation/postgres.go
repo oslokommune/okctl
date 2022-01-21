@@ -48,6 +48,7 @@ func (c *postgresReconciler) Reconcile(ctx context.Context, meta reconciliation.
 		return reconciliation.Result{Requeue: false}, nil
 	case reconciliation.ActionDelete:
 		err = c.applicationPostgresService.RemovePostgresFromApplication(ctx, client.RemovePostgresFromApplicationOpts{
+			Cluster:      *meta.ClusterDeclaration,
 			Application:  meta.ApplicationDeclaration,
 			DatabaseName: meta.ApplicationDeclaration.Postgres,
 		})

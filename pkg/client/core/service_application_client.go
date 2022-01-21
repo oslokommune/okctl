@@ -7,6 +7,8 @@ import (
 	"os"
 	"path"
 
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"github.com/mishudark/errors"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -95,13 +97,10 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 
 // DeleteApplicationManifests removes manifests related to an application
 func (s *applicationService) DeleteApplicationManifests(_ context.Context, opts client.DeleteApplicationManifestsOpts) error {
-	relativeApplicationDir := path.Join(
-		opts.Cluster.Github.OutputPath,
-		constant.DefaultApplicationsOutputDir,
-		opts.Application.Metadata.Name,
+	absoluteApplicationDir := path.Join(
+		s.absoluteRepositoryDir,
+		getRelativeApplicationDirectory(opts.Cluster, opts.Application),
 	)
-
-	absoluteApplicationDir := path.Join(s.absoluteRepositoryDir, relativeApplicationDir)
 
 	err := s.fs.RemoveAll(absoluteApplicationDir)
 	if err != nil {
@@ -113,14 +112,7 @@ func (s *applicationService) DeleteApplicationManifests(_ context.Context, opts 
 
 // CreateArgoCDApplicationManifest creates necessary files for the ArgoCD integration
 func (s *applicationService) CreateArgoCDApplicationManifest(opts client.CreateArgoCDApplicationManifestOpts) error {
-	relativeOverlayDir := path.Join(
-		opts.Cluster.Github.OutputPath,
-		constant.DefaultApplicationsOutputDir,
-		opts.Application.Metadata.Name,
-		constant.DefaultApplicationOverlayDir,
-		opts.Cluster.Metadata.Name,
-	)
-
+	relativeOverlayDir := getRelativeOverlayDirectory(opts.Cluster, opts.Application)
 	absoluteOverlayDir := path.Join(s.absoluteRepositoryDir, relativeOverlayDir)
 	absoluteArgoCDApplicationManifestPath := path.Join(absoluteOverlayDir, defaultArgoCDApplicationManifestFilename)
 
@@ -146,18 +138,11 @@ func (s *applicationService) CreateArgoCDApplicationManifest(opts client.CreateA
 
 // DeleteArgoCDApplicationManifest removes necessary files related to the ArgoCD integration
 func (s *applicationService) DeleteArgoCDApplicationManifest(opts client.DeleteArgoCDApplicationManifestOpts) error {
-	relativeOverlayDir := path.Join(
-		opts.Cluster.Github.OutputPath,
-		constant.DefaultApplicationsOutputDir,
-		opts.Application.Metadata.Name,
-		constant.DefaultApplicationOverlayDir,
-		opts.Cluster.Metadata.Name,
-	)
+	absoluteOverlayDir := path.Join(s.absoluteRepositoryDir, getRelativeOverlayDirectory(opts.Cluster, opts.Application))
 
-	absoluteOverlayDir := path.Join(s.absoluteRepositoryDir, relativeOverlayDir)
-	absoluteArgoCDApplicationManifestPath := path.Join(absoluteOverlayDir, defaultArgoCDApplicationManifestFilename)
+	argoCDApplicationManifestPath := path.Join(absoluteOverlayDir, defaultArgoCDApplicationManifestFilename)
 
-	err := s.fs.Remove(absoluteArgoCDApplicationManifestPath)
+	err := s.fs.Remove(argoCDApplicationManifestPath)
 	if err != nil {
 		if stderrors.Is(err, os.ErrNotExist) {
 			return nil
@@ -167,6 +152,21 @@ func (s *applicationService) DeleteArgoCDApplicationManifest(opts client.DeleteA
 	}
 
 	return nil
+}
+
+func getRelativeApplicationDirectory(cluster v1alpha1.Cluster, app v1alpha1.Application) string {
+	return path.Join(
+		cluster.Github.OutputPath,
+		constant.DefaultApplicationsOutputDir,
+		app.Metadata.Name,
+	)
+}
+
+func getRelativeOverlayDirectory(cluster v1alpha1.Cluster, app v1alpha1.Application) string {
+	return path.Join(
+		getRelativeApplicationDirectory(cluster, app),
+		constant.DefaultApplicationOverlayDir, cluster.Metadata.Name,
+	)
 }
 
 func generateManifestSaver(ctx context.Context, service client.ApplicationManifestService, applicationName string) scaffold.ManifestSaver {

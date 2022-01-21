@@ -239,7 +239,8 @@ func VerifyClusterExistsInState(o *okctl.Okctl) RunEer {
 
 		_, err := handlers.Cluster.GetCluster(o.Declaration.Metadata.Name)
 		if err != nil {
-			o.Logger.Debug("Could not find cluster in current state: ", err)
+			log := logging.GetLogger(logComponent, "VerifyClusterExistsInState")
+			log.Debug("Could not find cluster in current state")
 
 			if errors.Is(err, storm.ErrNotFound) {
 				return fmt.Errorf("getting existing cluster %s: %w", o.Declaration.Metadata.Name, err)

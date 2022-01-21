@@ -20,6 +20,11 @@ type DeleteContainerRepositoryOpts struct {
 	ImageName string
 }
 
+// EmptyContainerRepositoryOpts contains necessary information to empty a container registry
+type EmptyContainerRepositoryOpts struct {
+	Name string
+}
+
 // ContainerRepository contains state after creating a container repository
 type ContainerRepository struct {
 	ClusterID              api.ID
@@ -33,12 +38,14 @@ type ContainerRepository struct {
 type ContainerRepositoryService interface {
 	CreateContainerRepository(ctx context.Context, opts CreateContainerRepositoryOpts) (*ContainerRepository, error)
 	DeleteContainerRepository(ctx context.Context, opts DeleteContainerRepositoryOpts) error
+	EmptyContainerRepository(ctx context.Context, opts EmptyContainerRepositoryOpts) error
 }
 
 // ContainerRepositoryAPI invokes the API
 type ContainerRepositoryAPI interface {
 	CreateContainerRepository(opts api.CreateContainerRepositoryOpts) (*api.ContainerRepository, error)
 	DeleteContainerRepository(opts api.DeleteContainerRepositoryOpts) error
+	EmptyContainerRepository(opts api.EmptyContainerRepositoryOpts) error
 }
 
 // ContainerRepositoryState updates the state

@@ -1,7 +1,11 @@
 package aws
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ecr"
 
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -53,6 +57,25 @@ func (c *containerRepositoryCloudProvider) CreateContainerRepository(opts *api.C
 
 func (c *containerRepositoryCloudProvider) DeleteContainerRepository(opts *api.DeleteContainerRepositoryOpts) error {
 	return cfn.NewRunner(c.provider).Delete(opts.StackName)
+}
+
+func (c *containerRepositoryCloudProvider) EmptyContainerRepository(ctx context.Context, opts api.EmptyContainerRepositoryOpts) error {
+	result, err := c.provider.ECR().ListImagesWithContext(ctx, &ecr.ListImagesInput{
+		RepositoryName: aws.String(opts.Name),
+	})
+	if err != nil {
+		return fmt.Errorf("acquiring image IDs: %w", err)
+	}
+
+	_, err = c.provider.ECR().BatchDeleteImageWithContext(ctx, &ecr.BatchDeleteImageInput{
+		ImageIds:       result.ImageIds,
+		RepositoryName: aws.String(opts.Name),
+	})
+	if err != nil {
+		return fmt.Errorf("deleting images: %w", err)
+	}
+
+	return nil
 }
 
 // NewContainerRepositoryCloudProvider returns an initialised container repository cloud provider

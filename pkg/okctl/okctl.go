@@ -174,9 +174,40 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 	}
 }
 
+// InitializeToolChain with core services
+func (o *Okctl) InitializeToolChain() (*clientDirectAPI.Clients, error) {
+	services, err := o.CoreServices()
+	if err != nil {
+		return nil, err
+	}
+
+	return &clientDirectAPI.Clients{
+		AppPostgresIntegration: clientDirectAPI.NewApplicationPostgresIntegrationAPI(services.Kube),
+		Certificate:            clientDirectAPI.NewCertificateAPI(services.Certificate),
+		Cluster:                clientDirectAPI.NewClusterAPI(services.Cluster),
+		Component:              clientDirectAPI.NewComponentAPI(services.ComponentService),
+		ContainerRepo:          clientDirectAPI.NewContainerRepositoryAPI(services.ContainerRepositoryService),
+		ExternalDNS:            clientDirectAPI.NewExternalDNSAPI(services.Kube),
+		Helm:                   clientDirectAPI.NewHelmAPI(services.Helm),
+		IdentityManager:        clientDirectAPI.NewIdentityManagerAPI(services.IdentityManager),
+		ManagedPolicy:          clientDirectAPI.NewManagedPolicyAPI(services.ManagedPolicy),
+		Manifest:               clientDirectAPI.NewManifestAPI(services.Kube),
+		Parameter:              clientDirectAPI.NewParameterAPI(services.Parameter),
+		SecuityGroup:           clientDirectAPI.NewSecurityGroupAPI(services.SecurityGroupService),
+		ServiceAccount:         clientDirectAPI.NewServiceAccountAPI(services.ServiceAccount),
+		Vpc:                    clientDirectAPI.NewVPCAPI(services.Vpc),
+		Domain:                 clientDirectAPI.NewDomainAPI(services.Domain),
+	}, nil
+}
+
 // ClientServices returns the initialised client-side services
 // nolint: funlen
 func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.Services, error) {
+	toolChain, err := o.InitializeToolChain()
+	if err != nil {
+		return nil, err
+	}
+
 	absoluteRepositoryPath, err := o.GetRepoDir()
 	if err != nil {
 		return nil, err
@@ -192,128 +223,42 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		return nil, err
 	}
 
-	homeDir, err := o.GetHomeDir()
-	if err != nil {
-		return nil, err
-	}
-
-	appDir, err := o.GetUserDataDir()
-	if err != nil {
-		return nil, err
-	}
-
 	kubeConfigStore, err := o.KubeConfigStore()
 	if err != nil {
 		return nil, err
 	}
 
-	awsCredentials, err := o.CredentialsProvider.Aws().Raw()
-	if err != nil {
-		return nil, err
-	}
-
-	userHomeDir, err := os.UserHomeDir()
-	if err != nil {
-		return nil, err
-	}
-
-	clusterName := o.Declaration.Metadata.Name
-
-	var awsCredentialsPath, awsConfigPath string
-	if o.AWSCredentialsType == context.AWSCredentialsTypeAwsProfile {
-		awsConfigPath = path.Join(userHomeDir, ".aws", "config")
-		awsCredentialsPath = path.Join(userHomeDir, ".aws", "credentials")
-	} else {
-		awsCredentialsPath = path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsConfig)
-		awsConfigPath = path.Join(appDir, constant.DefaultCredentialsDirName, clusterName, constant.DefaultClusterAwsCredentials)
-	}
-
 	o.kubeConfigStore = kubeConfigStore
 
-	awsIamAuth, err := o.BinariesProvider.AwsIamAuthenticator(awsiamauthenticator.Version)
-	if err != nil {
-		return nil, err
-	}
-
-	kubeService := core.NewKubeService(
-		run.NewKubeRun(o.CloudProvider, o.CredentialsProvider.Aws()),
-	)
-
-	helmRun := run.NewHelmRun(
-		helm.New(&helm.Config{
-			HomeDir:              homeDir,
-			Path:                 fmt.Sprintf("/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:%s", path.Dir(awsIamAuth.BinaryPath)),
-			HelmPluginsDirectory: path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmPluginsDirectory),
-			HelmRegistryConfig:   path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmRegistryConfig),
-			HelmRepositoryConfig: path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmRepositoryConfig),
-			HelmRepositoryCache:  path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmRepositoryCache),
-			HelmBaseDir:          path.Join(appDir, constant.DefaultHelmBaseDir),
-			Debug:                o.Debug,
-			DebugOutput:          o.Err,
-		},
-			o.CredentialsProvider.Aws(),
-			o.FileSystem,
-		),
-		kubeConfigStore,
-	)
-
-	helmAPIService := core.NewHelmService(
-		helmRun,
-	)
-
 	helmService := clientCore.NewHelmService(
-		clientDirectAPI.NewHelmAPI(helmAPIService),
+		toolChain.Helm,
 		handlers.Helm,
 	)
 
 	managedPolicyService := clientCore.NewManagedPolicyService(
-		clientDirectAPI.NewManagedPolicyAPI(core.NewManagedPolicyService(awsProvider.NewManagedPolicyCloudProvider(o.CloudProvider))),
+		toolChain.ManagedPolicy,
 		handlers.ManagedPolicy,
 	)
 
-	coreServiceAccountService := core.NewServiceAccountService(
-		run.NewServiceAccountRun(
-			o.Debug,
-			awsCredentialsPath,
-			awsConfigPath,
-			awsCredentials.AwsProfile,
-			o.BinariesProvider,
-		),
-	)
-
 	serviceAccountService := clientCore.NewServiceAccountService(
-		clientDirectAPI.NewServiceAccountAPI(coreServiceAccountService),
+		toolChain.ServiceAccount,
 		handlers.ServiceAccount,
 	)
 
 	certificateService := clientCore.NewCertificateService(
-		clientDirectAPI.NewCertificateAPI(core.NewCertificateService(
-			awsProvider.NewCertificateCloudProvider(o.CloudProvider),
-		)),
+		toolChain.Certificate,
 		handlers.Certificate,
 	)
 
-	usProvider, err := o.getUsEastOneProvider()
-	if err != nil {
-		return nil, errors.New("Unable to get certificate cloud provider")
-	}
-
 	identityManagerService := clientCore.NewIdentityManagerService(
-		clientDirectAPI.NewIdentityManagerAPI(core.NewIdentityManagerService(
-			awsProvider.NewIdentityManagerCloudProvider(o.CloudProvider),
-			awsProvider.NewCertificateCloudProvider(usProvider),
-		)),
+		toolChain.IdentityManager,
 		handlers.IdentityManager,
 		certificateService,
 	)
 
-	paramCoreService := core.NewParameterService(
-		awsProvider.NewParameterCloudProvider(o.CloudProvider),
-	)
-
 	githubService := clientCore.NewGithubService(
 		rest.NewGithubAPI(
-			clientDirectAPI.NewParameterAPI(paramCoreService),
+			toolChain.Parameter,
 			ghClient,
 		),
 		handlers.Github,
@@ -326,7 +271,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	manifestService := clientCore.NewManifestService(
-		clientDirectAPI.NewManifestAPI(kubeService),
+		toolChain.Manifest,
 		handlers.Manifest,
 	)
 
@@ -343,14 +288,12 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	vpcService := clientCore.NewVPCService(
-		clientDirectAPI.NewVPCAPI(core.NewVpcService(
-			awsProvider.NewVpcCloud(o.CloudProvider),
-		)),
+		toolChain.Vpc,
 		handlers.Vpc,
 	)
 
 	paramService := clientCore.NewParameterService(
-		clientDirectAPI.NewParameterAPI(paramCoreService),
+		toolChain.Parameter,
 		handlers.Parameter,
 	)
 
@@ -360,17 +303,13 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		helmService,
 	)
 
-	domainAPIService := core.NewDomainService(
-		awsProvider.NewDomainCloudProvider(o.CloudProvider),
-	)
-
 	domainService := clientCore.NewDomainService(
-		clientDirectAPI.NewDomainAPI(domainAPIService),
+		toolChain.Domain,
 		handlers.Domain,
 	)
 
 	externalDNSService := clientCore.NewExternalDNSService(
-		clientDirectAPI.NewExternalDNSAPI(kubeService),
+		toolChain.ExternalDNS,
 		handlers.ExternalDNS,
 		managedPolicyService,
 		serviceAccountService,
@@ -382,45 +321,26 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		helmService,
 	)
 
-	clusterServiceCore := core.NewClusterService(
-		run.NewClusterRun(
-			o.Debug,
-			kubeConfigStore,
-			awsCredentialsPath,
-			awsConfigPath,
-			awsCredentials.AwsProfile,
-			o.BinariesProvider,
-			o.CloudProvider,
-		),
-		o.CloudProvider,
-	)
-
 	clusterService := clientCore.NewClusterService(
-		clientDirectAPI.NewClusterAPI(clusterServiceCore),
+		toolChain.Cluster,
 		handlers.Cluster,
 		o.CloudProvider,
 		o.CredentialsProvider.Aws(),
 	)
 
 	componentService := clientCore.NewComponentService(
-		clientDirectAPI.NewComponentAPI(core.NewComponentService(
-			awsProvider.NewComponentCloudProvider(o.CloudProvider),
-		)),
+		toolChain.Component,
 		handlers.Component,
 		manifestService,
 		o.CloudProvider,
 	)
 
-	securityGroupService := core.NewSecurityGroupService(
-		awsProvider.NewSecurityGroupCloudProvider(o.CloudProvider),
-	)
-
 	applicationPostgresService := clientCore.NewApplicationPostgresService(
 		applicationManifestService,
 		componentService,
-		clientDirectAPI.NewSecurityGroupAPI(securityGroupService),
+		toolChain.SecuityGroup,
 		vpcService,
-		clientDirectAPI.NewApplicationPostgresIntegrationAPI(kubeService),
+		toolChain.AppPostgresIntegration,
 		clusterService,
 	)
 
@@ -455,9 +375,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	nameserverService := clientCore.NewNameserverHandlerService(ghClient)
 
 	containerRepositoryService := clientCore.NewContainerRepositoryService(
-		clientDirectAPI.NewContainerRepositoryAPI(core.NewContainerRepositoryService(
-			awsProvider.NewContainerRepositoryCloudProvider(o.CloudProvider),
-		)),
+		toolChain.ContainerRepo,
 		handlers.ContainerRepository,
 		o.CloudProvider,
 	)
@@ -548,24 +466,63 @@ func (o *Okctl) initialise() error {
 
 	o.restClient = rest.New(o.Debug, o.Err, o.ServerURL)
 
-	userHomeDir, err := os.UserHomeDir()
+	services, err := o.CoreServices()
 	if err != nil {
 		return err
+	}
+
+	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))
+
+	handlers := core.MakeHandlers(core.EncodeJSONResponse, endpoints)
+
+	router := http.NewServeMux()
+	router.Handle("/", core.AttachRoutes(handlers))
+	router.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	server := &http.Server{
+		Handler: router,
+		Addr:    o.Destination,
+	}
+
+	// nolint: gomnd
+	errs := make(chan error, 2)
+
+	go func() {
+		errs <- server.ListenAndServe()
+	}()
+
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, syscall.SIGINT)
+		errs <- fmt.Errorf("%s", <-c)
+	}()
+
+	return o.waitForServer()
+}
+
+// CoreServices initialize core services
+// nolint: funlen
+func (o *Okctl) CoreServices() (core.Services, error) {
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return core.Services{}, err
 	}
 
 	homeDir, err := o.GetHomeDir()
 	if err != nil {
-		return err
+		return core.Services{}, err
 	}
 
 	appDir, err := o.GetUserDataDir()
 	if err != nil {
-		return err
+		return core.Services{}, err
 	}
 
 	kubeConfigStore, err := o.KubeConfigStore()
 	if err != nil {
-		return err
+		return core.Services{}, err
 	}
 
 	o.kubeConfigStore = kubeConfigStore
@@ -578,7 +535,7 @@ func (o *Okctl) initialise() error {
 
 	awsCredentials, err := o.CredentialsProvider.Aws().Raw()
 	if err != nil {
-		return err
+		return core.Services{}, err
 	}
 
 	var awsCredentialsPath, awsConfigPath string
@@ -621,7 +578,7 @@ func (o *Okctl) initialise() error {
 
 	awsIamAuth, err := o.BinariesProvider.AwsIamAuthenticator(awsiamauthenticator.Version)
 	if err != nil {
-		return err
+		return core.Services{}, err
 	}
 
 	helmRun := run.NewHelmRun(
@@ -668,7 +625,7 @@ func (o *Okctl) initialise() error {
 
 	usProvider, err := o.getUsEastOneProvider()
 	if err != nil {
-		return errors.New("Unable to get certificate cloud provider")
+		return core.Services{}, errors.New("Unable to get certificate cloud provider")
 	}
 
 	identityManagerService := core.NewIdentityManagerService(
@@ -696,35 +653,7 @@ func (o *Okctl) initialise() error {
 		SecurityGroupService:       securityGroupService,
 	}
 
-	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))
-
-	handlers := core.MakeHandlers(core.EncodeJSONResponse, endpoints)
-
-	router := http.NewServeMux()
-	router.Handle("/", core.AttachRoutes(handlers))
-	router.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-
-	server := &http.Server{
-		Handler: router,
-		Addr:    o.Destination,
-	}
-
-	// nolint: gomnd
-	errs := make(chan error, 2)
-
-	go func() {
-		errs <- server.ListenAndServe()
-	}()
-
-	go func() {
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, syscall.SIGINT)
-		errs <- fmt.Errorf("%s", <-c)
-	}()
-
-	return o.waitForServer()
+	return services, nil
 }
 
 // waitForServer waits for the http.Server to become active

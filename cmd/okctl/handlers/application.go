@@ -48,7 +48,7 @@ func HandleApplication(opts *HandleApplicationOpts) RunEHandler {
 		}
 
 		scheduler := common.NewScheduler(schedulerOpts,
-			reconciliation.NewApplicationReconciler(services.ApplicationService),
+			reconciliation.NewApplicationReconciler(services.ApplicationService, services.ApplicationPostgresService),
 			reconciliation.NewContainerRepositoryReconciler(services.ContainerRepository),
 			reconciliation.NewPostgresReconciler(services.ApplicationPostgresService),
 			reconciliation.NewArgoCDApplicationReconciler(services.ApplicationService),

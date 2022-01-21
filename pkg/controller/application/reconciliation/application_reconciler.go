@@ -15,7 +15,8 @@ const applicationReconcilerIdentifier = "kubernetes manifests"
 
 // applicationReconciler contains service and metadata for the relevant resource
 type applicationReconciler struct {
-	client client.ApplicationService
+	client             client.ApplicationService
+	postgresAppService client.ApplicationPostgresService
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
@@ -97,6 +98,15 @@ func (a *applicationReconciler) determineAction(opts generalOpts) (reconciliatio
 
 		return reconciliation.ActionCreate, nil
 	case reconciliation.ActionDelete:
+		dependenciesReady, err := a.hasDeleteDependenciesMet(opts)
+		if err != nil {
+			return reconciliation.ActionNoop, fmt.Errorf("acquiring dependency state: %w", err)
+		}
+
+		if !dependenciesReady {
+			return reconciliation.ActionWait, nil
+		}
+
 		return reconciliation.ActionDelete, nil
 	}
 
@@ -135,15 +145,34 @@ func (a *applicationReconciler) hasCreateDependenciesMet(meta reconciliation.Met
 	return true, nil
 }
 
+// hasDeleteDependenciesMet checks dependencies
+func (a *applicationReconciler) hasDeleteDependenciesMet(opts generalOpts) (bool, error) {
+	existingPostgresIntegration, err := a.postgresAppService.HasPostgresIntegration(opts.Ctx, client.HasPostgresIntegrationOpts{
+		Cluster:      *opts.Meta.ClusterDeclaration,
+		Application:  opts.Meta.ApplicationDeclaration,
+		DatabaseName: opts.Meta.ApplicationDeclaration.Postgres,
+	})
+	if err != nil {
+		return false, fmt.Errorf("checking for existing postgres integration: %w", err)
+	}
+
+	if existingPostgresIntegration {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 // NodeType returns the relevant NodeType for this reconciler
 func (a *applicationReconciler) String() string {
 	return applicationReconcilerIdentifier
 }
 
 // NewApplicationReconciler creates a new reconciler for the VPC resource
-func NewApplicationReconciler(client client.ApplicationService) reconciliation.Reconciler {
+func NewApplicationReconciler(client client.ApplicationService, postgresAppService client.ApplicationPostgresService) reconciliation.Reconciler {
 	return &applicationReconciler{
-		client: client,
+		client:             client,
+		postgresAppService: postgresAppService,
 	}
 }
 

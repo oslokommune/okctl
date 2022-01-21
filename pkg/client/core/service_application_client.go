@@ -154,6 +154,23 @@ func (s *applicationService) DeleteArgoCDApplicationManifest(opts client.DeleteA
 	return nil
 }
 
+// HasArgoCDIntegration checks if an application has been set up with ArgoCD
+func (s *applicationService) HasArgoCDIntegration(_ context.Context, opts client.HasArgoCDIntegrationOpts) (bool, error) {
+	absoluteOverlayDir := path.Join(s.absoluteRepositoryDir, getRelativeOverlayDirectory(opts.Cluster, opts.Application))
+	absoluteArgoCDApplicationManifestPath := path.Join(absoluteOverlayDir, defaultArgoCDApplicationManifestFilename)
+
+	_, err := s.fs.Stat(absoluteArgoCDApplicationManifestPath)
+	if err != nil {
+		if stderrors.Is(err, os.ErrNotExist) {
+			return false, nil
+		}
+
+		return false, errors.E(err, "checking existence of ArgoCD application manifest: %w", err)
+	}
+
+	return true, nil
+}
+
 func getRelativeApplicationDirectory(cluster v1alpha1.Cluster, app v1alpha1.Application) string {
 	return path.Join(
 		cluster.Github.OutputPath,

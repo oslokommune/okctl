@@ -68,6 +68,7 @@ type Okctl struct {
 	DB breeze.Client
 
 	restClient      *rest.HTTPClient
+	coreServices    core.Services
 	kubeConfigStore api.KubeConfigStore
 }
 
@@ -144,7 +145,7 @@ func (o *Okctl) StateNodes() *clientCore.StateNodes {
 
 // StateHandlers returns the initialised state handlers
 func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHandlers {
-	helmClient := rest.NewHelmAPI(o.restClient)
+	helmClient := clientDirectAPI.NewHelmAPI(o.coreServices.Helm)
 
 	return &clientCore.StateHandlers{
 		Helm:                      storm.NewHelmState(nodes.Helm),
@@ -176,27 +177,22 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 
 // InitializeToolChain with core services
 func (o *Okctl) InitializeToolChain() (*clientDirectAPI.ToolChain, error) {
-	services, err := o.CoreServices()
-	if err != nil {
-		return nil, err
-	}
-
 	return &clientDirectAPI.ToolChain{
-		AppPostgresIntegration: clientDirectAPI.NewApplicationPostgresIntegrationAPI(services.Kube),
-		Certificate:            clientDirectAPI.NewCertificateAPI(services.Certificate),
-		Cluster:                clientDirectAPI.NewClusterAPI(services.Cluster),
-		Component:              clientDirectAPI.NewComponentAPI(services.ComponentService),
-		ContainerRepo:          clientDirectAPI.NewContainerRepositoryAPI(services.ContainerRepositoryService),
-		ExternalDNS:            clientDirectAPI.NewExternalDNSAPI(services.Kube),
-		Helm:                   clientDirectAPI.NewHelmAPI(services.Helm),
-		IdentityManager:        clientDirectAPI.NewIdentityManagerAPI(services.IdentityManager),
-		ManagedPolicy:          clientDirectAPI.NewManagedPolicyAPI(services.ManagedPolicy),
-		Manifest:               clientDirectAPI.NewManifestAPI(services.Kube),
-		Parameter:              clientDirectAPI.NewParameterAPI(services.Parameter),
-		SecuityGroup:           clientDirectAPI.NewSecurityGroupAPI(services.SecurityGroupService),
-		ServiceAccount:         clientDirectAPI.NewServiceAccountAPI(services.ServiceAccount),
-		Vpc:                    clientDirectAPI.NewVPCAPI(services.Vpc),
-		Domain:                 clientDirectAPI.NewDomainAPI(services.Domain),
+		AppPostgresIntegration: clientDirectAPI.NewApplicationPostgresIntegrationAPI(o.coreServices.Kube),
+		Certificate:            clientDirectAPI.NewCertificateAPI(o.coreServices.Certificate),
+		Cluster:                clientDirectAPI.NewClusterAPI(o.coreServices.Cluster),
+		Component:              clientDirectAPI.NewComponentAPI(o.coreServices.ComponentService),
+		ContainerRepo:          clientDirectAPI.NewContainerRepositoryAPI(o.coreServices.ContainerRepositoryService),
+		ExternalDNS:            clientDirectAPI.NewExternalDNSAPI(o.coreServices.Kube),
+		Helm:                   clientDirectAPI.NewHelmAPI(o.coreServices.Helm),
+		IdentityManager:        clientDirectAPI.NewIdentityManagerAPI(o.coreServices.IdentityManager),
+		ManagedPolicy:          clientDirectAPI.NewManagedPolicyAPI(o.coreServices.ManagedPolicy),
+		Manifest:               clientDirectAPI.NewManifestAPI(o.coreServices.Kube),
+		Parameter:              clientDirectAPI.NewParameterAPI(o.coreServices.Parameter),
+		SecuityGroup:           clientDirectAPI.NewSecurityGroupAPI(o.coreServices.SecurityGroupService),
+		ServiceAccount:         clientDirectAPI.NewServiceAccountAPI(o.coreServices.ServiceAccount),
+		Vpc:                    clientDirectAPI.NewVPCAPI(o.coreServices.Vpc),
+		Domain:                 clientDirectAPI.NewDomainAPI(o.coreServices.Domain),
 	}, nil
 }
 
@@ -466,12 +462,12 @@ func (o *Okctl) initialise() error {
 
 	o.restClient = rest.New(o.Debug, o.Err, o.ServerURL)
 
-	services, err := o.CoreServices()
+	err = o.initializeCoreServices()
 	if err != nil {
 		return err
 	}
 
-	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))
+	endpoints := core.GenerateEndpoints(o.coreServices, core.InstrumentEndpoints(o.Logger))
 
 	handlers := core.MakeHandlers(core.EncodeJSONResponse, endpoints)
 
@@ -502,22 +498,34 @@ func (o *Okctl) initialise() error {
 	return o.waitForServer()
 }
 
-// CoreServices initialize core services
+// initializeCoreServices initialize core services
 // nolint: funlen
-func (o *Okctl) CoreServices() (core.Services, error) {
-	userHomeDir, err := os.UserHomeDir()
+func (o *Okctl) initializeCoreServices() error {
+	homeDir, err := o.GetHomeDir()
 	if err != nil {
-		return core.Services{}, err
+		return err
 	}
 
 	appDir, err := o.GetUserDataDir()
 	if err != nil {
-		return core.Services{}, err
+		return err
 	}
 
 	kubeConfigStore, err := o.KubeConfigStore()
 	if err != nil {
-		return core.Services{}, err
+		return err
+	}
+
+	o.kubeConfigStore = kubeConfigStore
+
+	awsIamAuth, err := o.BinariesProvider.AwsIamAuthenticator(awsiamauthenticator.Version)
+	if err != nil {
+		return err
+	}
+
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return err
 	}
 
 	vpcService := core.NewVpcService(
@@ -528,7 +536,7 @@ func (o *Okctl) CoreServices() (core.Services, error) {
 
 	awsCredentials, err := o.CredentialsProvider.Aws().Raw()
 	if err != nil {
-		return core.Services{}, err
+		return err
 	}
 
 	var awsCredentialsPath, awsConfigPath string
@@ -569,10 +577,27 @@ func (o *Okctl) CoreServices() (core.Services, error) {
 		run.NewKubeRun(o.CloudProvider, o.CredentialsProvider.Aws()),
 	)
 
-	helmService, err := o.helmCoreService()
-	if err != nil {
-		return core.Services{}, err
-	}
+	helmRun := run.NewHelmRun(
+		helm.New(&helm.Config{
+			HomeDir:              homeDir,
+			Path:                 fmt.Sprintf("/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:%s", path.Dir(awsIamAuth.BinaryPath)),
+			HelmPluginsDirectory: path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmPluginsDirectory),
+			HelmRegistryConfig:   path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmRegistryConfig),
+			HelmRepositoryConfig: path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmRepositoryConfig),
+			HelmRepositoryCache:  path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmRepositoryCache),
+			HelmBaseDir:          path.Join(appDir, constant.DefaultHelmBaseDir),
+			Debug:                o.Debug,
+			DebugOutput:          o.Err,
+		},
+			o.CredentialsProvider.Aws(),
+			o.FileSystem,
+		),
+		kubeConfigStore,
+	)
+
+	helmService := core.NewHelmService(
+		helmRun,
+	)
 
 	domainService := core.NewDomainService(
 		awsProvider.NewDomainCloudProvider(o.CloudProvider),
@@ -596,7 +621,7 @@ func (o *Okctl) CoreServices() (core.Services, error) {
 
 	usProvider, err := o.getUsEastOneProvider()
 	if err != nil {
-		return core.Services{}, errors.New("Unable to get certificate cloud provider")
+		return errors.New("Unable to get certificate cloud provider")
 	}
 
 	identityManagerService := core.NewIdentityManagerService(
@@ -624,7 +649,9 @@ func (o *Okctl) CoreServices() (core.Services, error) {
 		SecurityGroupService:       securityGroupService,
 	}
 
-	return services, nil
+	o.coreServices = services
+
+	return nil
 }
 
 func (o *Okctl) helmCoreService() (api.HelmService, error) {
@@ -649,7 +676,6 @@ func (o *Okctl) helmCoreService() (api.HelmService, error) {
 	if err != nil {
 		return nil, err
 	}
-
 
 	helmRun := run.NewHelmRun(
 		helm.New(&helm.Config{

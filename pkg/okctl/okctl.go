@@ -257,7 +257,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	githubService := clientCore.NewGithubService(
-		rest.NewGithubAPI(
+		clientDirectAPI.NewGithubAPI(
 			toolChain.Parameter,
 			ghClient,
 		),

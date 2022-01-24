@@ -55,11 +55,6 @@ func (a *applicationReconciler) Reconcile(ctx context.Context, meta reconciliati
 }
 
 func (a *applicationReconciler) createApplication(opts generalOpts) (reconciliation.Result, error) {
-	hz, err := opts.State.Domain.GetPrimaryHostedZone()
-	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("getting primary hosted zone: %w", err)
-	}
-
 	if opts.Meta.ApplicationDeclaration.Image.HasName() {
 		repo, err := opts.State.ContainerRepository.GetContainerRepository(opts.Meta.ApplicationDeclaration.Image.Name)
 		if err != nil {
@@ -70,10 +65,26 @@ func (a *applicationReconciler) createApplication(opts generalOpts) (reconciliat
 		opts.Meta.ApplicationDeclaration.Image.URI = repo.URI()
 	}
 
-	err = a.client.ScaffoldApplication(opts.Ctx, &client.ScaffoldApplicationOpts{
-		Cluster:      *opts.Meta.ClusterDeclaration,
-		Application:  opts.Meta.ApplicationDeclaration,
-		HostedZoneID: hz.HostedZoneID,
+	certificateARN := ""
+
+	if opts.Meta.ApplicationDeclaration.HasIngress() {
+		appURL, err := opts.Meta.ApplicationDeclaration.URL()
+		if err != nil {
+			return reconciliation.Result{}, fmt.Errorf("acquiring application URL: %w", err)
+		}
+
+		cert, err := opts.State.Certificate.GetCertificate(appURL.String())
+		if err != nil {
+			return reconciliation.Result{}, fmt.Errorf("retrieving certificate from state: %w", err)
+		}
+
+		certificateARN = cert.ARN
+	}
+
+	err := a.client.ScaffoldApplication(opts.Ctx, &client.ScaffoldApplicationOpts{
+		Cluster:        *opts.Meta.ClusterDeclaration,
+		Application:    opts.Meta.ApplicationDeclaration,
+		CertificateARN: certificateARN,
 	})
 	if err != nil {
 		return reconciliation.Result{}, err
@@ -135,6 +146,22 @@ func (a *applicationReconciler) hasCreateDependenciesMet(meta reconciliation.Met
 		exists, err := state.ContainerRepository.ApplicationHasImage(meta.ApplicationDeclaration.Metadata.Name)
 		if err != nil {
 			return false, fmt.Errorf("determining existence of a ECR repository: %w", err)
+		}
+
+		if !exists {
+			return false, nil
+		}
+	}
+
+	if meta.ApplicationDeclaration.HasIngress() {
+		appURL, err := meta.ApplicationDeclaration.URL()
+		if err != nil {
+			return false, fmt.Errorf("acquiring application URL: %w", err)
+		}
+
+		exists, err := state.Certificate.HasCertificate(appURL.String())
+		if err != nil {
+			return false, fmt.Errorf("checking existence of certificate: %w", err)
 		}
 
 		if !exists {

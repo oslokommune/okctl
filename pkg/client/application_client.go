@@ -13,7 +13,7 @@ type ScaffoldApplicationOpts struct {
 	Cluster     v1alpha1.Cluster
 	Application v1alpha1.Application
 
-	HostedZoneID string
+	CertificateARN string
 }
 
 // Validate ensures presented data is valid
@@ -21,7 +21,6 @@ func (o *ScaffoldApplicationOpts) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.Cluster, validation.Required),
 		validation.Field(&o.Application, validation.Required),
-		validation.Field(&o.HostedZoneID, validation.Required),
 	)
 }
 

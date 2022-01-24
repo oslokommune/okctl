@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/jsonpatch"
-
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/commands"
@@ -98,7 +96,6 @@ func TestNewApplicationService(t *testing.T) {
 
 	service := core.NewApplicationService(
 		fs,
-		&mockCertService{},
 		appManifestService,
 		absoluteRepoDir,
 	)
@@ -107,9 +104,9 @@ func TestNewApplicationService(t *testing.T) {
 	assert.NilError(t, err)
 
 	err = service.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
-		Cluster:      cluster,
-		Application:  application,
-		HostedZoneID: "dummyID",
+		Cluster:        cluster,
+		Application:    application,
+		CertificateARN: "arn:which:isnt:an:arn",
 	})
 	assert.NilError(t, err)
 
@@ -139,125 +136,9 @@ func TestNewApplicationService(t *testing.T) {
 	g.Assert(t, "argocd-application.yaml", readFile(t, fs, filepath.Join(appOverlayDir, "argocd-application.yaml")))
 }
 
-// nolint: funlen
-func TestCertificateCreation(t *testing.T) {
-	testCases := []struct {
-		name string
-
-		withApplication   func() v1alpha1.Application
-		expectCreateCount int
-	}{
-		{
-			name: "Should request certificate upon subDomain specification",
-
-			withApplication: func() v1alpha1.Application {
-				app := createValidApplication()
-
-				app.SubDomain = "dummyapp"
-
-				return app
-			},
-
-			expectCreateCount: 1,
-		},
-		{
-			name: "Should not request certificate when subDomain is not specified",
-
-			withApplication: func() v1alpha1.Application {
-				app := createValidApplication()
-
-				app.SubDomain = ""
-
-				return app
-			},
-
-			expectCreateCount: 0,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			certService := &mockCertService{CreateCounter: 0}
-
-			service := core.NewApplicationService(
-				&afero.Afero{Fs: afero.NewMemMapFs()},
-				certService,
-				mockAppManifestService{},
-				"",
-			)
-
-			err := service.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
-				Cluster: v1alpha1.Cluster{
-					Metadata: v1alpha1.ClusterMeta{
-						Name:      "test",
-						Region:    "eu-west-1",
-						AccountID: "012345678912",
-					},
-					ClusterRootDomain: "okctl.io",
-					Github: v1alpha1.ClusterGithub{
-						Organisation: "oslokommune",
-						Repository:   "dummy",
-						OutputPath:   "infrastructure",
-					},
-				},
-				HostedZoneID: "somedummyid",
-				Application:  tc.withApplication(),
-			})
-
-			assert.NilError(t, err)
-			assert.Equal(t, tc.expectCreateCount, certService.CreateCounter)
-		})
-	}
-}
-
-func createValidApplication() v1alpha1.Application {
-	app := v1alpha1.NewApplication(v1alpha1.NewCluster())
-
-	app.Metadata.Name = "dummy-app"
-	app.Metadata.Namespace = "dummyns"
-
-	return app
-}
-
 func readFile(t *testing.T, fs *afero.Afero, path string) []byte {
 	result, err := fs.ReadFile(path)
 	assert.NilError(t, err)
 
 	return result
-}
-
-type mockCertService struct {
-	CreateCounter int
-}
-
-func (m *mockCertService) DeleteCertificate(_ context.Context, _ client.DeleteCertificateOpts) error {
-	return nil
-}
-
-func (m *mockCertService) DeleteCognitoCertificate(_ context.Context, _ client.DeleteCognitoCertificateOpts) error {
-	return nil
-}
-
-func (m *mockCertService) CreateCertificate(_ context.Context, _ client.CreateCertificateOpts) (*client.Certificate, error) {
-	m.CreateCounter++
-
-	return &client.Certificate{
-		ARN: "arn:which:isnt:an:arn",
-	}, nil
-}
-
-type mockAppManifestService struct{}
-
-func (m mockAppManifestService) SaveManifest(_ context.Context, _ client.SaveManifestOpts) error {
-	return nil
-}
-
-func (m mockAppManifestService) SavePatch(_ context.Context, _ client.SavePatchOpts) error {
-	return nil
-}
-
-func (m mockAppManifestService) GetPatch(_ context.Context, _ client.GetPatchOpts) (jsonpatch.Patch, error) {
-	return jsonpatch.Patch{}, nil
 }

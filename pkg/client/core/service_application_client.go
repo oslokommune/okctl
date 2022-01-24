@@ -11,7 +11,6 @@ import (
 
 	"github.com/mishudark/errors"
 
-	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/config/constant"
 	"github.com/oslokommune/okctl/pkg/jsonpatch"
@@ -25,24 +24,9 @@ const (
 )
 
 type applicationService struct {
-	certificateService    client.CertificateService
 	appManifestService    client.ApplicationManifestService
 	fs                    *afero.Afero
 	absoluteRepositoryDir string
-}
-
-func (s *applicationService) createCertificate(ctx context.Context, id *api.ID, hostedZoneID, fqdn string) (string, error) {
-	cert, certFnErr := s.certificateService.CreateCertificate(ctx, client.CreateCertificateOpts{
-		ID:           *id,
-		FQDN:         fqdn,
-		Domain:       fqdn,
-		HostedZoneID: hostedZoneID,
-	})
-	if certFnErr != nil {
-		return "", certFnErr
-	}
-
-	return cert.ARN, nil
 }
 
 // ScaffoldApplication turns a file path into Kubernetes resources
@@ -64,29 +48,11 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 		return fmt.Errorf("generating application base resources: %w", err)
 	}
 
-	certArn := ""
-
-	if opts.Application.HasIngress() {
-		certArn, err = s.createCertificate(
-			ctx,
-			&api.ID{
-				Region:       opts.Cluster.Metadata.Region,
-				AWSAccountID: opts.Cluster.Metadata.AccountID,
-				ClusterName:  opts.Cluster.Metadata.Name,
-			},
-			opts.HostedZoneID,
-			fmt.Sprintf("%s.%s", opts.Application.SubDomain, opts.Cluster.ClusterRootDomain),
-		)
-		if err != nil {
-			return fmt.Errorf("creating certificate: %w", err)
-		}
-	}
-
 	err = scaffold.GenerateApplicationOverlay(scaffold.GenerateApplicationOverlayOpts{
 		SavePatch:      patchSaver,
 		Application:    opts.Application,
 		Domain:         opts.Cluster.ClusterRootDomain,
-		CertificateARN: certArn,
+		CertificateARN: opts.CertificateARN,
 	})
 	if err != nil {
 		return fmt.Errorf("generating application overlay: %w", err)
@@ -210,12 +176,10 @@ func generatePatchSaver(ctx context.Context, service client.ApplicationManifestS
 // NewApplicationService initializes a new Scaffold application service
 func NewApplicationService(
 	fs *afero.Afero,
-	certificateService client.CertificateService,
 	appManifestService client.ApplicationManifestService,
 	absoluteRepositoryDir string,
 ) client.ApplicationService {
 	return &applicationService{
-		certificateService:    certificateService,
 		appManifestService:    appManifestService,
 		fs:                    fs,
 		absoluteRepositoryDir: absoluteRepositoryDir,

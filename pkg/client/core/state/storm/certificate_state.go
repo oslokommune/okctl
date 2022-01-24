@@ -2,6 +2,7 @@ package storm
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/oslokommune/okctl/pkg/breeze"
@@ -87,6 +88,19 @@ func (c *certificateState) GetCertificate(domain string) (*client.Certificate, e
 	}
 
 	return cert.Convert(), nil
+}
+
+func (c *certificateState) HasCertificate(domain string) (bool, error) {
+	_, err := c.GetCertificate(domain)
+	if err != nil {
+		if errors.Is(err, stormpkg.ErrNotFound) {
+			return false, nil
+		}
+
+		return false, fmt.Errorf("retrieving certificate: %w", err)
+	}
+
+	return true, nil
 }
 
 func (c *certificateState) RemoveCertificate(domain string) error {

@@ -46,7 +46,7 @@ func (u UserInfo) Validate() error {
 		),
 		validation.Field(&u.Username,
 			validation.Required,
-			validation.Match(regexp.MustCompile("^[a-z]{3}[0-9]{6}$")).Error("username must be in the form: yyyXXXXXX (y = letter, x = digit)"),
+			validation.Match(regexp.MustCompile("^[a-z]{3}[0-9]{4,7}$")).Error("username must be in the form: yyyXXXXXX (y = letter, x = digit)"),
 		),
 	)
 }

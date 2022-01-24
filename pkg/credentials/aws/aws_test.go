@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 	"github.com/google/go-cmp/cmp"
+	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api/mock"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	awsmock "github.com/oslokommune/okctl/pkg/mock"
@@ -227,6 +228,66 @@ func TestNewAuthMissingProfile(t *testing.T) {
 
 	assert.Nil(t, retriever)
 	assert.NotNil(t, err, "credentials are invalid if AWS_PROFILE is not set")
+}
+
+func TestAuthSAMLUsernameValidation(t *testing.T) {
+	testCases := []struct {
+		name        string
+		username    string
+		expectError bool
+		expect      interface{}
+	}{
+		{
+			name:     "Correct username, minimum length",
+			username: "ooo1234",
+		},
+		{
+			name:     "Correct username, maximum length",
+			username: "ooo1234567",
+		},
+		{
+			name:        "Too short username",
+			username:    "ooo123",
+			expectError: true,
+			expect:      "Username: username must match: yyyXXXXXX (y = letter, x = digit).",
+		},
+		{
+			name:        "Too long username",
+			username:    "ooo12345678",
+			expectError: true,
+			expect:      "Username: username must match: yyyXXXXXX (y = letter, x = digit).",
+		},
+	}
+
+	authSAML := aws.NewAuthSAML(
+		"000000000000",
+		mock.DefaultRegion,
+		awsmock.NewGoodScraper(),
+		func(session *session.Session) stsiface.STSAPI {
+			return awsmock.NewGoodSTSAPI()
+		},
+		aws.Static("username", "the", "123456"),
+	)
+
+	err := authSAML.PopulateFn(authSAML)
+	if err != nil {
+		assert.Error(t, errors.New("populating required fields"))
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			authSAML.Username = tc.username
+			err := authSAML.Validate()
+			if tc.expectError {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expect, err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }
 
 func getter(m map[string]string) aws.KeyGetter {

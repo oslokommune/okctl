@@ -310,8 +310,8 @@ func (a *AuthSAML) Valid() bool {
 func (a *AuthSAML) Validate() error {
 	return validation.ValidateStruct(a,
 		validation.Field(&a.Username,
-			validation.Match(regexp.MustCompile("^[a-z]{3}[0-9]{6}$")).
-				Error("username must match: yyyXXXXXX (y = letter, x = digit"),
+			validation.Match(regexp.MustCompile("^[a-z]{3}[0-9]{4,7}$")).
+				Error("username must match: yyyXXXXXX (y = letter, x = digit)"),
 		),
 		validation.Field(&a.Password,
 			validation.Required,

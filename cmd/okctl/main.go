@@ -15,7 +15,6 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/pkg/errors"
 
-	"github.com/oslokommune/okctl/pkg/api/core"
 	"github.com/oslokommune/okctl/pkg/config/load"
 	"github.com/oslokommune/okctl/pkg/context"
 	"github.com/oslokommune/okctl/pkg/okctl"
@@ -167,8 +166,6 @@ func buildRootCommand() (*cobra.Command, *okctl.Okctl) {
 
 			o.Out = cmd.OutOrStdout()
 			o.Err = cmd.OutOrStderr()
-
-			o.SetFormat(core.EncodeResponseType(outputFormat))
 
 			c := make(chan os.Signal)
 			signal.Notify(c, os.Interrupt, syscall.SIGTERM)

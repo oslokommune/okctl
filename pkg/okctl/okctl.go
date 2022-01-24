@@ -7,9 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/signal"
 	"path"
-	"syscall"
 	"time"
 
 	"github.com/oslokommune/okctl/pkg/logging"
@@ -463,35 +461,7 @@ func (o *Okctl) initialise() error {
 		return err
 	}
 
-	endpoints := core.GenerateEndpoints(o.coreServices, core.InstrumentEndpoints(o.Logger))
-
-	handlers := core.MakeHandlers(core.EncodeJSONResponse, endpoints)
-
-	router := http.NewServeMux()
-	router.Handle("/", core.AttachRoutes(handlers))
-	router.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-
-	server := &http.Server{
-		Handler: router,
-		Addr:    o.Destination,
-	}
-
-	// nolint: gomnd
-	errs := make(chan error, 2)
-
-	go func() {
-		errs <- server.ListenAndServe()
-	}()
-
-	go func() {
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, syscall.SIGINT)
-		errs <- fmt.Errorf("%s", <-c)
-	}()
-
-	return o.waitForServer()
+	return nil
 }
 
 // initializeCoreServices initialize core services
@@ -648,37 +618,6 @@ func (o *Okctl) initializeCoreServices() error {
 	o.coreServices = services
 
 	return nil
-}
-
-// waitForServer waits for the http.Server to become active
-func (o *Okctl) waitForServer() error {
-	const (
-		serverHealthTimeoutInSec = 5
-		serverHealthIntervalInMs = 100
-	)
-
-	timeout := time.After(serverHealthTimeoutInSec * time.Second)
-	tick := time.NewTicker(serverHealthIntervalInMs * time.Millisecond)
-
-	for {
-		select {
-		case <-timeout:
-			return errors.New("timed out waiting for server")
-		case <-tick.C:
-			r, err := http.Get(fmt.Sprintf("%s%s", o.ServerBaseURL, "health"))
-			if err != nil {
-				return err
-			}
-
-			defer func() {
-				_ = r.Body.Close()
-			}()
-
-			if r.StatusCode == http.StatusOK {
-				return nil
-			}
-		}
-	}
 }
 
 // initialiseProviders knows how to create all required providers

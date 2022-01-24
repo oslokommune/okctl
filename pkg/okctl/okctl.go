@@ -175,13 +175,13 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 }
 
 // InitializeToolChain with core services
-func (o *Okctl) InitializeToolChain() (*clientDirectAPI.Clients, error) {
+func (o *Okctl) InitializeToolChain() (*clientDirectAPI.ToolChain, error) {
 	services, err := o.CoreServices()
 	if err != nil {
 		return nil, err
 	}
 
-	return &clientDirectAPI.Clients{
+	return &clientDirectAPI.ToolChain{
 		AppPostgresIntegration: clientDirectAPI.NewApplicationPostgresIntegrationAPI(services.Kube),
 		Certificate:            clientDirectAPI.NewCertificateAPI(services.Certificate),
 		Cluster:                clientDirectAPI.NewClusterAPI(services.Cluster),

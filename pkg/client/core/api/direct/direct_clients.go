@@ -2,8 +2,8 @@ package direct
 
 import "github.com/oslokommune/okctl/pkg/client"
 
-// Clients contains the direct clients
-type Clients struct {
+// ToolChain contains the direct clients
+type ToolChain struct {
 	AppPostgresIntegration client.ApplicationPostgresAPI
 	Certificate            client.CertificateAPI
 	Cluster                client.ClusterAPI

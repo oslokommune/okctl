@@ -510,11 +510,6 @@ func (o *Okctl) CoreServices() (core.Services, error) {
 		return core.Services{}, err
 	}
 
-	homeDir, err := o.GetHomeDir()
-	if err != nil {
-		return core.Services{}, err
-	}
-
 	appDir, err := o.GetUserDataDir()
 	if err != nil {
 		return core.Services{}, err
@@ -524,8 +519,6 @@ func (o *Okctl) CoreServices() (core.Services, error) {
 	if err != nil {
 		return core.Services{}, err
 	}
-
-	o.kubeConfigStore = kubeConfigStore
 
 	vpcService := core.NewVpcService(
 		awsProvider.NewVpcCloud(o.CloudProvider),
@@ -576,32 +569,10 @@ func (o *Okctl) CoreServices() (core.Services, error) {
 		run.NewKubeRun(o.CloudProvider, o.CredentialsProvider.Aws()),
 	)
 
-	awsIamAuth, err := o.BinariesProvider.AwsIamAuthenticator(awsiamauthenticator.Version)
+	helmService, err := o.helmCoreService()
 	if err != nil {
 		return core.Services{}, err
 	}
-
-	helmRun := run.NewHelmRun(
-		helm.New(&helm.Config{
-			HomeDir:              homeDir,
-			Path:                 fmt.Sprintf("/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:%s", path.Dir(awsIamAuth.BinaryPath)),
-			HelmPluginsDirectory: path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmPluginsDirectory),
-			HelmRegistryConfig:   path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmRegistryConfig),
-			HelmRepositoryConfig: path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmRepositoryConfig),
-			HelmRepositoryCache:  path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmRepositoryCache),
-			HelmBaseDir:          path.Join(appDir, constant.DefaultHelmBaseDir),
-			Debug:                o.Debug,
-			DebugOutput:          o.Err,
-		},
-			o.CredentialsProvider.Aws(),
-			o.FileSystem,
-		),
-		kubeConfigStore,
-	)
-
-	helmService := core.NewHelmService(
-		helmRun,
-	)
 
 	domainService := core.NewDomainService(
 		awsProvider.NewDomainCloudProvider(o.CloudProvider),
@@ -654,6 +625,55 @@ func (o *Okctl) CoreServices() (core.Services, error) {
 	}
 
 	return services, nil
+}
+
+func (o *Okctl) helmCoreService() (api.HelmService, error) {
+	homeDir, err := o.GetHomeDir()
+	if err != nil {
+		return nil, err
+	}
+
+	appDir, err := o.GetUserDataDir()
+	if err != nil {
+		return nil, err
+	}
+
+	kubeConfigStore, err := o.KubeConfigStore()
+	if err != nil {
+		return nil, err
+	}
+
+	o.kubeConfigStore = kubeConfigStore
+
+	awsIamAuth, err := o.BinariesProvider.AwsIamAuthenticator(awsiamauthenticator.Version)
+	if err != nil {
+		return nil, err
+	}
+
+
+	helmRun := run.NewHelmRun(
+		helm.New(&helm.Config{
+			HomeDir:              homeDir,
+			Path:                 fmt.Sprintf("/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:%s", path.Dir(awsIamAuth.BinaryPath)),
+			HelmPluginsDirectory: path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmPluginsDirectory),
+			HelmRegistryConfig:   path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmRegistryConfig),
+			HelmRepositoryConfig: path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmRepositoryConfig),
+			HelmRepositoryCache:  path.Join(appDir, constant.DefaultHelmBaseDir, constant.DefaultHelmRepositoryCache),
+			HelmBaseDir:          path.Join(appDir, constant.DefaultHelmBaseDir),
+			Debug:                o.Debug,
+			DebugOutput:          o.Err,
+		},
+			o.CredentialsProvider.Aws(),
+			o.FileSystem,
+		),
+		kubeConfigStore,
+	)
+
+	helmService := core.NewHelmService(
+		helmRun,
+	)
+
+	return helmService, nil
 }
 
 // waitForServer waits for the http.Server to become active

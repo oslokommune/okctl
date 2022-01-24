@@ -458,8 +458,6 @@ func (o *Okctl) initialise() error {
 
 	o.DB = breeze.New()
 
-	o.restClient = rest.New(o.Debug, o.Err, o.ServerURL)
-
 	err = o.initializeCoreServices()
 	if err != nil {
 		return err

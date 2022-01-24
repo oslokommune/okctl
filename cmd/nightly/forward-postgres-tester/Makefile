@@ -1,2 +1,2 @@
 build:
-	go build -o dist/venv-tester
+	go build -o dist/forward-postgres-tester

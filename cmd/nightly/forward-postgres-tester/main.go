@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"syscall"
 	"time"
+
+	"github.com/Netflix/go-expect" //nolint:typecheck
 )
 
 func main() {

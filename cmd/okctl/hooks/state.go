@@ -243,6 +243,14 @@ func VerifyClusterExistsInState(o *okctl.Okctl) RunEer {
 			log.Debug("Could not find cluster in current state")
 
 			if errors.Is(err, storm.ErrNotFound) {
+				_, _ = fmt.Fprintln(
+					o.Out,
+					"Could not find a cluster in your state.db. If you have recently upgraded from okctl version 0.0.80, "+
+						"you need to do some manual maintenance before continuing. See: "+
+						"https://www.okctl.io/common-issues/#i-get-an-error-message-with-getting-existing-cluster-cluster-name-not-found and "+
+						"https://www.okctl.io/concerning-upgrades-and-patches/",
+				)
+
 				return fmt.Errorf("getting existing cluster %s: %w", o.Declaration.Metadata.Name, err)
 			}
 

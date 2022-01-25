@@ -290,6 +290,68 @@ func TestAuthSAMLUsernameValidation(t *testing.T) {
 	}
 }
 
+func TestAuthSAMLMFATokenValidation(t *testing.T) {
+	testCases := []struct {
+		name        string
+		token       string
+		expectError bool
+		expect      interface{}
+	}{
+		{
+			name:  "Correct token length",
+			token: "123456",
+		},
+		{
+			name:        "Too short token",
+			token:       "12345",
+			expectError: true,
+			expect:      "MFAToken: token must consist of 6 digits.",
+		},
+		{
+			name:        "Too long token",
+			token:       "1234567",
+			expectError: true,
+			expect:      "MFAToken: token must consist of 6 digits.",
+		},
+		{
+			name:        "Correct length, but contains non-numeric character",
+			token:       "123a56",
+			expectError: true,
+			expect:      "MFAToken: token must consist of 6 digits.",
+		},
+	}
+
+	authSAML := aws.NewAuthSAML(
+		"000000000000",
+		mock.DefaultRegion,
+		awsmock.NewGoodScraper(),
+		func(session *session.Session) stsiface.STSAPI {
+			return awsmock.NewGoodSTSAPI()
+		},
+		aws.Static("ooo123456", "the", "123456"),
+	)
+
+	err := authSAML.PopulateFn(authSAML)
+	if err != nil {
+		assert.Error(t, errors.New("populating required fields"))
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			authSAML.MFAToken = tc.token
+			err := authSAML.Validate()
+			if tc.expectError {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expect, err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 func getter(m map[string]string) aws.KeyGetter {
 	return func(key string) string {
 		return m[key]

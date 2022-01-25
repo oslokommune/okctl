@@ -310,7 +310,7 @@ func (a *AuthSAML) Valid() bool {
 func (a *AuthSAML) Validate() error {
 	return validation.ValidateStruct(a,
 		validation.Field(&a.Username,
-			validation.Match(regexp.MustCompile("^[a-z]{3}[0-9]{4,7}$")).
+			validation.Match(regexp.MustCompile(constant.ValidationOKUsername)).
 				Error("username must match: yyyXXXXXX (y = letter, x = digit)"),
 		),
 		validation.Field(&a.Password,
@@ -324,7 +324,7 @@ func (a *AuthSAML) Validate() error {
 			validation.Length(awsAccountIDLength, awsAccountIDLength),
 		),
 		validation.Field(&a.MFAToken,
-			validation.Match(regexp.MustCompile("^[0-9]{6}$")).
+			validation.Match(regexp.MustCompile(constant.ValidationMFATokenLength)).
 				Error("token must consist of 6 digits"),
 		),
 	)

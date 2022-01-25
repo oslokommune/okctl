@@ -24,6 +24,11 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Build forward-postgres-tester
+      run: |
+        $(cd cmd/nightly/forward-postgres-tester/ && make build)
+      shell: bash
+
     - run: |
         cmd/nightly/forward-postgres-tester/dist/forward-postgres-tester \
           ${{ inputs.okctl-path }} \

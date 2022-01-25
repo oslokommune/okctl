@@ -51,6 +51,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.InitializeOkctl(o),
 			hooks.AcquireStateLock(o),
 			hooks.DownloadState(o, true),
+			hooks.VerifyClusterExistsInState(o),
 			func(cmd *cobra.Command, args []string) (err error) {
 				err = commands.ValidateBinaryEqualsClusterVersion(o)
 				if err != nil {

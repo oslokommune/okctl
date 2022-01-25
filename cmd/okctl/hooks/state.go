@@ -230,6 +230,37 @@ func PurgeRemoteState(o *okctl.Okctl) RunEer {
 	}
 }
 
+// VerifyClusterExistsInState ensures we have a cluster in the state before continuing
+// This could happen if maintenance mode was not run after upgrading
+// to 0.0.80 and we don't have a state.db in S3 - see #491
+func VerifyClusterExistsInState(o *okctl.Okctl) RunEer {
+	return func(_ *cobra.Command, _ []string) error {
+		handlers := o.StateHandlers(o.StateNodes())
+
+		_, err := handlers.Cluster.GetCluster(o.Declaration.Metadata.Name)
+		if err != nil {
+			log := logging.GetLogger(logComponent, "VerifyClusterExistsInState")
+			log.Debug("Could not find cluster in current state")
+
+			if errors.Is(err, storm.ErrNotFound) {
+				_, _ = fmt.Fprintln(
+					o.Out,
+					"Could not find a cluster in your state.db. If you have recently upgraded from okctl version 0.0.80, "+
+						"you need to do some manual maintenance before continuing. See: "+
+						"https://www.okctl.io/common-issues/#i-get-an-error-message-with-getting-existing-cluster-cluster-name-not-found and "+
+						"https://www.okctl.io/concerning-upgrades-and-patches/",
+				)
+
+				return fmt.Errorf("getting existing cluster %s: %w", o.Declaration.Metadata.Name, err)
+			}
+
+			return fmt.Errorf("getting cluster from state: %w", err)
+		}
+
+		return nil
+	}
+}
+
 func backupStateDatabase(fs *afero.Afero, rootDir string, clusterName string, dbPath string) error {
 	stateBackupPath := path.Join(
 		rootDir,

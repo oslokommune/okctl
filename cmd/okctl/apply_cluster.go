@@ -82,6 +82,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.InitializeOkctl(o),
 			hooks.AcquireStateLock(o),
 			hooks.DownloadState(o, true),
+			hooks.VerifyClusterExistsInState(o),
 			func(cmd *cobra.Command, args []string) (err error) {
 				state := o.StateHandlers(o.StateNodes())
 

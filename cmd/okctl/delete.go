@@ -60,6 +60,7 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.InitializeOkctl(o),
 			hooks.AcquireStateLock(o),
 			hooks.DownloadState(o, true),
+			hooks.VerifyClusterExistsInState(o),
 		),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			var spinnerWriter io.Writer

@@ -53,6 +53,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.EmitStartCommandExecutionEvent(metrics.ActionShowCredentials),
 			hooks.InitializeOkctl(o),
 			hooks.DownloadState(o, false),
+			hooks.VerifyClusterExistsInState(o),
 			func(_ *cobra.Command, args []string) error {
 				okctlEnvironment, err = commands.GetOkctlEnvironment(o, declarationPath)
 				if err != nil {

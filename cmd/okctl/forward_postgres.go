@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/client"
 	"os"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/client"
 
 	"github.com/oslokommune/okctl/pkg/commands"
 

@@ -48,6 +48,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 			hooks.InitializeOkctl(o),
 			hooks.AcquireStateLock(o),
 			hooks.DownloadState(o, true),
+			hooks.VerifyClusterExistsInState(o),
 			func(cmd *cobra.Command, args []string) error {
 				okctlEnvironment, err := commands.GetOkctlEnvironment(o, declarationPath)
 				if err != nil {
@@ -71,19 +72,19 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 					out = o.Err
 				}
 
-				userDataDir, err := o.GetUserDataDir()
-				if err != nil {
-					return err
-				}
-
 				repoDir, err := o.GetRepoDir()
 				if err != nil {
 					return err
 				}
 
+				tmpStorage, err := storage.NewTemporaryStorage()
+				if err != nil {
+					return fmt.Errorf("creating temporary storage: %w", err)
+				}
+
 				fetcherOpts := upgrade.FetcherOpts{
 					Host:  o.Host(),
-					Store: storage.NewFileSystemStorage(userDataDir),
+					Store: tmpStorage,
 				}
 
 				clusterID := api.ID{

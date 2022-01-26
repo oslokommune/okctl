@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/client"
 
 	"github.com/oslokommune/okctl/pkg/commands"
 
@@ -102,6 +105,19 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 			},
 		),
 		RunE: func(_ *cobra.Command, _ []string) (err error) {
+			services, err := o.ClientServices(o.StateHandlers(o.StateNodes()))
+			if err != nil {
+				return fmt.Errorf("acquiring client services: %w", err)
+			}
+
+			clusterSecurityGroupID, err := services.Cluster.GetClusterSecurityGroupID(
+				context.Background(),
+				client.GetClusterSecurityGroupIDOpts{ID: opts.ID},
+			)
+			if err != nil {
+				return fmt.Errorf("acquiring cluster security group ID: %w", err)
+			}
+
 			clientSet, config, err := kube.NewFromEKSCluster(
 				opts.ID.ClusterName,
 				opts.ID.Region,
@@ -136,7 +152,10 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 					app,
 					opts.Namespace,
 					labels,
-					[]string{opts.SecurityGroup},
+					[]string{
+						opts.SecurityGroup,
+						clusterSecurityGroupID.Value,
+					},
 				),
 				config,
 			)
@@ -157,7 +176,7 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 				}
 			}()
 
-			client := pgbouncer.New(&pgbouncer.Config{
+			pgBouncerClient := pgbouncer.New(&pgbouncer.Config{
 				Name:                  app,
 				Database:              opts.DatabaseName,
 				Namespace:             opts.Namespace,
@@ -175,14 +194,14 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 				Logger:                o.Logger,
 			})
 
-			err = client.Create()
+			err = pgBouncerClient.Create()
 			if err != nil {
 				return err
 			}
 
 			defer func() {
 				o.Logger.Info("removing pgbouncer pod")
-				cerr := client.Delete()
+				cerr := pgBouncerClient.Delete()
 				if cerr != nil {
 					o.Logger.Warnf("deleting pgbouncer pod: %s", cerr)
 					err = cerr

@@ -147,17 +147,15 @@ func TestRunCmdOutput(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			var progress bytes.Buffer
+			var out bytes.Buffer
 
-			out, err := tc.run.Run(&progress, []string{tc.output})
+			outResult, err := tc.run.Run(&out, []string{tc.output})
 			assert.NoError(t, err)
 
 			expectedOutput := "wd=working_dir, path=binary_path, env=, args=" + tc.output
 
-			assert.Equal(t, expectedOutput, string(out))
-
-			expectedProgess := []byte(expectedOutput)
-			assert.Equal(t, expectedProgess, progress.Bytes())
+			assert.Equal(t, expectedOutput, string(outResult))
+			assert.Equal(t, expectedOutput, out.String())
 		})
 	}
 }
@@ -213,4 +211,36 @@ func fakeExecCommand(testName string) run.CmdFn {
 
 		return cmd
 	}
+}
+
+const (
+	testStdout = "this is stdout\n"
+	testStderr = "this is stderr\n"
+)
+
+func TestRunCmdStdoutAndStderr(t *testing.T) {
+	t.Run("Should get both stdout and stderr", func(t *testing.T) {
+		cmdFn := fakeExecCommand("StdoutAndStderr")
+		var out bytes.Buffer
+
+		outResult, err := run.New(nil, "working_dir", "binary_path", []string{}, cmdFn).
+			Run(&out, []string{})
+		assert.NoError(t, err)
+
+		expectedOutput := testStdout + testStderr
+
+		assert.Equal(t, expectedOutput, string(outResult))
+		assert.Equal(t, expectedOutput, out.String())
+	})
+}
+
+func TestRunProcessStdoutAndStderr(t *testing.T) {
+	if os.Getenv("GO_TEST_PROCESS") != "1" {
+		return
+	}
+
+	_, _ = fmt.Fprint(os.Stdout, testStdout)
+	_, _ = fmt.Fprint(os.Stderr, testStderr)
+
+	os.Exit(0)
 }

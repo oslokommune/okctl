@@ -132,4 +132,7 @@ const (
 	DefaultAutomaticPullRequestMergeLabel = "automerge"
 
 	DefaultAwsAuthDocumentationURL = "https://www.okctl.io/authenticating-to-aws/"
+
+	ValidationOKUsername     = "^[a-z]{3}[0-9]{4,7}$"
+	ValidationMFATokenLength = "^[0-9]{6}$" // #nosec G101
 )

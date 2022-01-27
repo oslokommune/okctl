@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 
 	"github.com/oslokommune/okctl/pkg/cfn"
@@ -93,6 +95,10 @@ func (z *postgresReconciler) determineActions(meta reconciliation.Metadata, stat
 	actionMap := make(map[database]reconciliation.Action)
 
 	indicatedDatabases := meta.ClusterDeclaration.Databases.Postgres
+
+	if meta.Purge {
+		indicatedDatabases = []v1alpha1.ClusterDatabasesPostgres{}
+	}
 
 	existingDatabases, err := state.Component.GetPostgresDatabases()
 	if err != nil {

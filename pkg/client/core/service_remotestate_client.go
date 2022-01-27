@@ -123,7 +123,7 @@ func (r *remoteStateService) Purge(clusterID api.ID) error {
 	stateDBBucketName := generateStateDBBucketName(clusterID.ClusterName)
 
 	err := r.objectAPI.EmptyBucket(api.EmptyBucketOpts{BucketName: stateDBBucketName})
-	if err != nil {
+	if err != nil && !errors.IsKind(err, errors.NotExist) {
 		return fmt.Errorf("emptying state bucket: %w", err)
 	}
 

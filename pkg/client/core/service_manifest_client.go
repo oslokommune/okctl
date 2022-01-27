@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 
+	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 
 	"github.com/oslokommune/okctl/pkg/client"
@@ -51,7 +52,7 @@ func (s *manifestService) DeleteConfigMap(_ context.Context, opts client.DeleteC
 		Name:      opts.Name,
 		Namespace: opts.Namespace,
 	})
-	if err != nil {
+	if err != nil && !errors.IsKind(err, errors.NotExist) {
 		return err
 	}
 
@@ -68,7 +69,7 @@ func (s *manifestService) DeleteExternalSecret(_ context.Context, opts client.De
 		ID:        opts.ID,
 		Manifests: opts.Secrets,
 	})
-	if err != nil {
+	if err != nil && !errors.IsKind(err, errors.NotExist) {
 		return err
 	}
 
@@ -125,7 +126,7 @@ func (s *manifestService) CreateNamespace(_ context.Context, opts api.CreateName
 
 func (s *manifestService) DeleteNamespace(_ context.Context, opts api.DeleteNamespaceOpts) error {
 	err := s.api.DeleteNamespace(opts)
-	if err != nil {
+	if err != nil && !errors.IsKind(err, errors.NotExist) {
 		return err
 	}
 

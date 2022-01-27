@@ -42,7 +42,11 @@ func (a *EC2API) securityGroupForNodeGroup(name, vpcID string) (string, error) {
 		},
 	})
 	if err != nil {
-		return "", fmt.Errorf("getting security group for node: %w", err)
+		return "", fmt.Errorf("calling EC2 API: %w", err)
+	}
+
+	if len(sgs.SecurityGroups) == 0 {
+		return "", ErrNotFound
 	}
 
 	return *sgs.SecurityGroups[0].GroupId, nil
@@ -75,7 +79,7 @@ func (a *EC2API) permissionsForPodToNodeGroup(podSecurityGroup, vpcID string) []
 func (a *EC2API) AuthorizePodToNodeGroupTraffic(nodegroupName, podSecurityGroup, vpcID string) error {
 	nodegroupSecurityGroup, err := a.securityGroupForNodeGroup(nodegroupName, vpcID)
 	if err != nil {
-		return err
+		return fmt.Errorf("finding security group for node group: %w", err)
 	}
 
 	_, err = a.provider.EC2().AuthorizeSecurityGroupIngress(&ec2.AuthorizeSecurityGroupIngressInput{
@@ -97,7 +101,7 @@ func (a *EC2API) AuthorizePodToNodeGroupTraffic(nodegroupName, podSecurityGroup,
 func (a *EC2API) RevokePodToNodeGroupTraffic(nodegroupName, podSecurityGroup, vpcID string) error {
 	nodegroupSecurityGroup, err := a.securityGroupForNodeGroup(nodegroupName, vpcID)
 	if err != nil {
-		return err
+		return fmt.Errorf("finding security group for node group: %w", err)
 	}
 
 	_, err = a.provider.EC2().RevokeSecurityGroupIngress(&ec2.RevokeSecurityGroupIngressInput{

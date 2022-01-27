@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/kube"
+
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/mishudark/errors"
@@ -72,7 +74,13 @@ func (k *kubeService) DeleteConfigMap(_ context.Context, opts api.DeleteConfigMa
 
 	err = k.run.DeleteConfigMap(opts)
 	if err != nil {
-		return errors.E(err, "removing configmap", errors.Internal)
+		kind := errors.Internal
+
+		if stderrors.Is(err, kube.ErrClusterNotFound) {
+			kind = errors.NotExist
+		}
+
+		return errors.E(err, "removing configmap", kind)
 	}
 
 	return nil
@@ -86,7 +94,13 @@ func (k *kubeService) DeleteExternalSecrets(_ context.Context, opts api.DeleteEx
 
 	err = k.run.DeleteExternalSecrets(opts)
 	if err != nil {
-		return errors.E(err, "removing external secrets", errors.Internal)
+		kind := errors.Internal
+
+		if stderrors.Is(err, kube.ErrClusterNotFound) {
+			kind = errors.NotExist
+		}
+
+		return errors.E(err, "removing external secrets", kind)
 	}
 
 	return nil
@@ -114,7 +128,13 @@ func (k *kubeService) DeleteNamespace(_ context.Context, opts api.DeleteNamespac
 
 	err = k.run.DeleteNamespace(opts)
 	if err != nil {
-		return errors.E(err, "deleting namespace", errors.Internal)
+		kind := errors.Internal
+
+		if stderrors.Is(err, kube.ErrClusterNotFound) {
+			kind = errors.NotExist
+		}
+
+		return errors.E(err, "deleting namespace", kind)
 	}
 
 	return nil

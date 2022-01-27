@@ -3,9 +3,12 @@ package core
 import (
 	"bytes"
 	"context"
+	stderrors "errors"
 	"fmt"
 	"regexp"
 	"strconv"
+
+	"github.com/mishudark/errors"
 
 	"github.com/oslokommune/okctl/pkg/smapi"
 
@@ -197,7 +200,7 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 	return postgres, nil
 }
 
-// nolint: funlen
+// nolint: funlen,gocyclo
 func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts client.DeletePostgresDatabaseOpts) error {
 	stackName := cfn.NewStackNamer().RDSPostgres(opts.ApplicationName, opts.ID.ClusterName)
 
@@ -211,7 +214,7 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 		db.OutgoingSecurityGroupID,
 		opts.VpcID,
 	)
-	if err != nil {
+	if err != nil && !stderrors.Is(err, ec2api.ErrNotFound) {
 		return err
 	}
 
@@ -262,7 +265,7 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 		bucketName,
 		postgresRotaterLambdaKey,
 	)
-	if err != nil {
+	if err != nil && !stderrors.Is(err, s3api.ErrBucketDoesNotExist) {
 		return err
 	}
 
@@ -270,7 +273,7 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 		ID:        opts.ID,
 		StackName: cfn.NewStackNamer().S3Bucket(opts.ApplicationName, opts.ID.ClusterName),
 	})
-	if err != nil {
+	if err != nil && errors.IsKind(err, errors.NotExist) {
 		return err
 	}
 

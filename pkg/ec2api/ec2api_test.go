@@ -38,7 +38,7 @@ func TestEC2APIAuthorizePodToNodeGroupTraffic(t *testing.T) {
 			name: "Fails describing security group",
 			provider: mock.NewCloudProvider().
 				DescribeSecurityGroupsResponse(nil, fmt.Errorf("something bad")),
-			expect:    "getting security group for node: something bad",
+			expect:    "finding security group for node group: calling EC2 API: something bad",
 			expectErr: true,
 		},
 		{
@@ -96,7 +96,7 @@ func TestEC2APIRevokePodToNodeGroupTraffic(t *testing.T) {
 			name: "Fails describing security group",
 			provider: mock.NewCloudProvider().
 				DescribeSecurityGroupsResponse(nil, fmt.Errorf("something bad")),
-			expect:    "getting security group for node: something bad",
+			expect:    "finding security group for node group: calling EC2 API: something bad",
 			expectErr: true,
 		},
 		{

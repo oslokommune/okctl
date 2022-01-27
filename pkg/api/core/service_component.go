@@ -33,7 +33,7 @@ func (c *componentService) DeleteS3Bucket(_ context.Context, opts *api.DeleteS3B
 
 	err = c.provider.DeleteS3Bucket(opts)
 	if err != nil {
-		return errors.E(err, "deleting S3 bucket", errors.Internal)
+		return errors.E(err, "deleting S3 bucket")
 	}
 
 	return nil

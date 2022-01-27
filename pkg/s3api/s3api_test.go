@@ -60,7 +60,7 @@ func TestS3APIDeleteObject(t *testing.T) {
 		{
 			name:      "Should fail",
 			provider:  mock.NewBadCloudProvider(),
-			expect:    "something bad",
+			expect:    "calling delete object API: something bad",
 			expectErr: true,
 		},
 	}

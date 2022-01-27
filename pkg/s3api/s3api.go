@@ -3,7 +3,11 @@
 package s3api
 
 import (
+	stderrors "errors"
+	"fmt"
 	"io"
+
+	"github.com/aws/aws-sdk-go/aws/awserr"
 
 	"github.com/mishudark/errors"
 
@@ -38,11 +42,19 @@ func (a *S3API) DeleteObject(bucket, key string) error {
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	})
-	if err != nil {
-		return err
+	if err == nil {
+		return nil
 	}
 
-	return nil
+	var aerr awserr.Error
+
+	if stderrors.As(err, &aerr) {
+		if aerr.Code() == s3.ErrCodeNoSuchBucket {
+			return ErrBucketDoesNotExist
+		}
+	}
+
+	return fmt.Errorf("calling delete object API: %w", err)
 }
 
 // GetObject retrieves the object at bucket/key

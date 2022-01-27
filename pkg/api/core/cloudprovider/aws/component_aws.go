@@ -1,8 +1,13 @@
 package aws
 
 import (
+	stderrors "errors"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/service/s3"
+
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/cfn/components/lambdafunction"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -53,7 +58,20 @@ func (c *componentCloudProvider) CreateS3Bucket(opts *api.CreateS3BucketOpts) (*
 }
 
 func (c *componentCloudProvider) DeleteS3Bucket(opts *api.DeleteS3BucketOpts) error {
-	return cfn.NewRunner(c.provider).Delete(opts.StackName)
+	err := cfn.NewRunner(c.provider).Delete(opts.StackName)
+	if err == nil {
+		return nil
+	}
+
+	var aerr awserr.Error
+
+	if stderrors.As(err, &aerr) {
+		if aerr.Code() == s3.ErrCodeNoSuchBucket {
+			return errors.E(err, errors.NotExist)
+		}
+	}
+
+	return errors.E(err, errors.Internal)
 }
 
 const (

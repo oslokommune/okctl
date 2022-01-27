@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/oslokommune/okctl/pkg/client"
+	"github.com/oslokommune/okctl/pkg/logging"
 
 	"github.com/oslokommune/okctl/pkg/commands"
 
@@ -64,10 +67,14 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 		Short: ForwardPostgresShortDescription,
 		Long:  ForwardPostgresLongDescription,
 		Args:  cobra.ExactArgs(0), // nolint: gomnd
+		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+			return nil
+		},
 		PreRunE: hooks.RunECombinator(
 			hooks.LoadUserData(o),
 			hooks.InitializeMetrics(o),
 			hooks.EmitStartCommandExecutionEvent(metrics.ActionForwardPostgres),
+			hooks.LoadClusterDeclaration(o, &declarationPath),
 			hooks.InitializeOkctl(o),
 			hooks.DownloadState(o, false),
 			hooks.VerifyClusterExistsInState(o),
@@ -165,17 +172,6 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 				return err
 			}
 
-			defer func() {
-				o.Logger.Info("removing pgbouncer security group policy")
-
-				perr := policyClient.Delete()
-				if perr != nil {
-					o.Logger.Warnf("deleting pgbouncer security group policy: %s", perr)
-
-					err = perr
-				}
-			}()
-
 			pgBouncerClient := pgbouncer.New(&pgbouncer.Config{
 				Name:                  app,
 				Database:              opts.DatabaseName,
@@ -194,19 +190,12 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 				Logger:                o.Logger,
 			})
 
+			activateSigintCatch(policyClient.Delete, pgBouncerClient.Delete)
+
 			err = pgBouncerClient.Create()
 			if err != nil {
 				return err
 			}
-
-			defer func() {
-				o.Logger.Info("removing pgbouncer pod")
-				cerr := pgBouncerClient.Delete()
-				if cerr != nil {
-					o.Logger.Warnf("deleting pgbouncer pod: %s", cerr)
-					err = cerr
-				}
-			}()
 
 			return err
 		},
@@ -254,4 +243,23 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 	)
 
 	return cmd
+}
+
+func activateSigintCatch(teardownFns ...func() error) {
+	log := logging.GetLogger("forward postgres", "activateSigintCatch")
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-c
+		log.Info("removing pgbouncer security group policy")
+
+		for _, teardownFn := range teardownFns {
+			err := teardownFn()
+			if err != nil {
+				log.Warn(err.Error())
+			}
+		}
+	}()
 }

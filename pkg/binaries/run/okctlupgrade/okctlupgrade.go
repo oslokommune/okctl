@@ -16,7 +16,7 @@ const (
 // BinaryRunner stores state for running the cli
 type BinaryRunner struct {
 	repoDir              string
-	progress             io.Writer
+	out                  io.Writer
 	logger               *logrus.Logger
 	environmentVariables []string
 	binaryPath           string
@@ -63,7 +63,7 @@ func (r *BinaryRunner) doRun(flags Flags, dryRun bool) ([]byte, error) {
 
 	runner := run.New(nil, r.repoDir, r.binaryPath, r.environmentVariables, r.cmdFn)
 
-	output, err := runner.Run(r.progress, args)
+	output, err := runner.Run(r.out, args)
 	if err != nil {
 		return nil, err
 	}
@@ -72,10 +72,10 @@ func (r *BinaryRunner) doRun(flags Flags, dryRun bool) ([]byte, error) {
 }
 
 // New creates a new okctl upgrade cli wrapper
-func New(repoDir string, progress io.Writer, logger *logrus.Logger, environmentVariables []string, binaryPath string, cmdFn run.CmdFn) *BinaryRunner {
+func New(repoDir string, out io.Writer, logger *logrus.Logger, environmentVariables []string, binaryPath string, cmdFn run.CmdFn) *BinaryRunner {
 	return &BinaryRunner{
 		repoDir:              repoDir,
-		progress:             progress,
+		out:                  out,
 		logger:               logger,
 		environmentVariables: environmentVariables,
 		binaryPath:           binaryPath,

@@ -2,7 +2,6 @@
 package run
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"io"
@@ -67,50 +66,34 @@ func Cmd() CmdFn {
 	}
 }
 
-// Run a command and record the progress to the provided writer
-func (r *Run) Run(progress io.Writer, args []string) ([]byte, error) {
+// Run a command and write its stdout and stderr to the provided writer, as a return value, and to the instance's logger, if set.
+func (r *Run) Run(out io.Writer, args []string) ([]byte, error) {
 	cmd := r.CmdFn(r.WorkingDirectory, r.BinaryPath, r.Env, args)
 
-	stdoutIn, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, fmt.Errorf("getting stdout pipe: %w", err)
+	var returnBuffer bytes.Buffer
+
+	var multiWriter io.Writer
+
+	if r.Logger == nil {
+		multiWriter = io.MultiWriter(out, &returnBuffer)
+	} else {
+		multiWriter = io.MultiWriter(out, &returnBuffer, r.Logger.Out)
 	}
 
-	stderrIn, err := cmd.StderrPipe()
-	if err != nil {
-		return nil, fmt.Errorf("getting stderr pipe: %w", err)
-	}
+	cmd.Stdout = multiWriter
+	cmd.Stderr = multiWriter
 
-	var buff bytes.Buffer
-
-	multiReader := io.MultiReader(stdoutIn, stderrIn)
-	multiWriter := io.MultiWriter(progress, &buff)
-
-	err = cmd.Start()
+	err := cmd.Start()
 	if err != nil {
 		return nil, fmt.Errorf("executing command: %w", err)
 	}
 
-	_, err = io.Copy(multiWriter, multiReader)
-	if err != nil {
-		return nil, fmt.Errorf("doing io.Copy: %w", err)
-	}
-
-	if r.Logger != nil {
-		scanner := bufio.NewScanner(multiReader)
-
-		for scanner.Scan() {
-			s := scanner.Text()
-			r.Logger.Info(s)
-		}
-	}
-
 	err = cmd.Wait()
 	if err != nil {
-		return buff.Bytes(), fmt.Errorf("executing command: %s, got: %w", r.BinaryPath, err)
+		return returnBuffer.Bytes(), fmt.Errorf("executing command: %s, got: %w", r.BinaryPath, err)
 	}
 
-	return buff.Bytes(), nil
+	return returnBuffer.Bytes(), nil
 }
 
 // New returns a runner capable of executing

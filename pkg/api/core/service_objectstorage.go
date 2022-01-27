@@ -1,7 +1,10 @@
 package core
 
 import (
+	stderrors "errors"
 	"io"
+
+	"github.com/oslokommune/okctl/pkg/s3api"
 
 	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
@@ -35,7 +38,18 @@ func (o objectStorageService) EmptyBucket(opts api.EmptyBucketOpts) error {
 		return errors.E(err, validatingObjectStorageOptsErrFormat)
 	}
 
-	return o.provider.EmptyBucket(opts)
+	err = o.provider.EmptyBucket(opts)
+	if err != nil {
+		kind := errors.Internal
+
+		if stderrors.Is(err, s3api.ErrBucketDoesNotExist) {
+			kind = errors.NotExist
+		}
+
+		return errors.E(err, "calling provider's empty bucket function", kind)
+	}
+
+	return nil
 }
 
 func (o objectStorageService) PutObject(opts api.PutObjectOpts) error {

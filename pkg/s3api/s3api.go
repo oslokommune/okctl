@@ -98,6 +98,12 @@ func (a *S3API) deleteAllObjects(bucketName string) error {
 			Marker: nextMarker,
 		})
 		if err != nil {
+			var aerr awserr.Error
+
+			if stderrors.As(err, &aerr) && aerr.Code() == s3.ErrCodeNoSuchBucket {
+				return ErrBucketDoesNotExist
+			}
+
 			return err
 		}
 

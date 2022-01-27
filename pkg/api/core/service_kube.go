@@ -4,8 +4,9 @@ import (
 	"context"
 	stderrors "errors"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/kube"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/kube"
 
 	"k8s.io/apimachinery/pkg/util/wait"
 

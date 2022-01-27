@@ -200,7 +200,7 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 	return postgres, nil
 }
 
-// nolint: funlen
+// nolint: funlen,gocyclo
 func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts client.DeletePostgresDatabaseOpts) error {
 	stackName := cfn.NewStackNamer().RDSPostgres(opts.ApplicationName, opts.ID.ClusterName)
 
@@ -214,7 +214,7 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 		db.OutgoingSecurityGroupID,
 		opts.VpcID,
 	)
-	if err != nil {
+	if err != nil && !stderrors.Is(err, ec2api.ErrNotFound) {
 		return err
 	}
 

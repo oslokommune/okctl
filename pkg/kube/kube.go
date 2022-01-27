@@ -7,9 +7,12 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws/awserr"
 
 	"github.com/oslokommune/okctl/pkg/cloud"
 
@@ -71,6 +74,14 @@ type ClientSetProvider interface {
 func New(provider ClientSetProvider) (*Kube, error) {
 	clientset, config, err := provider.Get()
 	if err != nil {
+		var aerr awserr.Error
+
+		if errors.As(err, &aerr) {
+			if aerr.Code() == eks.ErrCodeResourceNotFoundException {
+				return nil, ErrClusterNotFound
+			}
+		}
+
 		return nil, err
 	}
 

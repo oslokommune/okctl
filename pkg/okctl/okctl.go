@@ -174,21 +174,8 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 // InitializeToolChain with core services
 func (o *Okctl) InitializeToolChain() (*clientDirectAPI.ToolChain, error) {
 	return &clientDirectAPI.ToolChain{
-		AppPostgresIntegration: clientDirectAPI.NewApplicationPostgresIntegrationAPI(o.coreServices.Kube),
-		Certificate:            clientDirectAPI.NewCertificateAPI(o.coreServices.Certificate),
-		Cluster:                clientDirectAPI.NewClusterAPI(o.coreServices.Cluster),
-		Component:              clientDirectAPI.NewComponentAPI(o.coreServices.ComponentService),
-		ContainerRepo:          clientDirectAPI.NewContainerRepositoryAPI(o.coreServices.ContainerRepositoryService),
-		ExternalDNS:            clientDirectAPI.NewExternalDNSAPI(o.coreServices.Kube),
-		Helm:                   clientDirectAPI.NewHelmAPI(o.coreServices.Helm),
-		IdentityManager:        clientDirectAPI.NewIdentityManagerAPI(o.coreServices.IdentityManager),
-		ManagedPolicy:          clientDirectAPI.NewManagedPolicyAPI(o.coreServices.ManagedPolicy),
-		Manifest:               clientDirectAPI.NewManifestAPI(o.coreServices.Kube),
-		Parameter:              clientDirectAPI.NewParameterAPI(o.coreServices.Parameter),
-		SecuityGroup:           clientDirectAPI.NewSecurityGroupAPI(o.coreServices.SecurityGroupService),
-		ServiceAccount:         clientDirectAPI.NewServiceAccountAPI(o.coreServices.ServiceAccount),
-		Vpc:                    clientDirectAPI.NewVPCAPI(o.coreServices.Vpc),
-		Domain:                 clientDirectAPI.NewDomainAPI(o.coreServices.Domain),
+		Helm:   clientDirectAPI.NewHelmAPI(o.coreServices.Helm),
+		Domain: clientDirectAPI.NewDomainAPI(o.coreServices.Domain),
 	}, nil
 }
 
@@ -228,29 +215,29 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	managedPolicyService := clientCore.NewManagedPolicyService(
-		toolChain.ManagedPolicy,
+		o.coreServices.ManagedPolicy,
 		handlers.ManagedPolicy,
 	)
 
 	serviceAccountService := clientCore.NewServiceAccountService(
-		toolChain.ServiceAccount,
+		o.coreServices.ServiceAccount,
 		handlers.ServiceAccount,
 	)
 
 	certificateService := clientCore.NewCertificateService(
-		toolChain.Certificate,
+		o.coreServices.Certificate,
 		handlers.Certificate,
 	)
 
 	identityManagerService := clientCore.NewIdentityManagerService(
-		toolChain.IdentityManager,
+		o.coreServices.IdentityManager,
 		handlers.IdentityManager,
 		certificateService,
 	)
 
 	githubService := clientCore.NewGithubService(
 		clientDirectAPI.NewGithubAPI(
-			toolChain.Parameter,
+			o.coreServices.Parameter,
 			ghClient,
 		),
 		handlers.Github,
@@ -263,7 +250,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	manifestService := clientCore.NewManifestService(
-		toolChain.Manifest,
+		o.coreServices.Kube,
 		handlers.Manifest,
 	)
 
@@ -280,12 +267,12 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	vpcService := clientCore.NewVPCService(
-		toolChain.Vpc,
+		o.coreServices.Vpc,
 		handlers.Vpc,
 	)
 
 	paramService := clientCore.NewParameterService(
-		toolChain.Parameter,
+		o.coreServices.Parameter,
 		handlers.Parameter,
 	)
 
@@ -301,7 +288,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	externalDNSService := clientCore.NewExternalDNSService(
-		toolChain.ExternalDNS,
+		o.coreServices.Kube,
 		handlers.ExternalDNS,
 		managedPolicyService,
 		serviceAccountService,
@@ -314,14 +301,14 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	clusterService := clientCore.NewClusterService(
-		toolChain.Cluster,
+		o.coreServices.Cluster,
 		handlers.Cluster,
 		o.CloudProvider,
 		o.CredentialsProvider.Aws(),
 	)
 
 	componentService := clientCore.NewComponentService(
-		toolChain.Component,
+		o.coreServices.ComponentService,
 		handlers.Component,
 		manifestService,
 		o.CloudProvider,
@@ -330,9 +317,9 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	applicationPostgresService := clientCore.NewApplicationPostgresService(
 		applicationManifestService,
 		componentService,
-		toolChain.SecuityGroup,
+		o.coreServices.SecurityGroupService,
 		vpcService,
-		toolChain.AppPostgresIntegration,
+		o.coreServices.Kube,
 		clusterService,
 	)
 
@@ -367,7 +354,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	nameserverService := clientCore.NewNameserverHandlerService(ghClient)
 
 	containerRepositoryService := clientCore.NewContainerRepositoryService(
-		toolChain.ContainerRepo,
+		o.coreServices.ContainerRepositoryService,
 		handlers.ContainerRepository,
 		o.CloudProvider,
 	)
@@ -456,7 +443,7 @@ func (o *Okctl) initialise() error {
 
 	o.DB = breeze.New()
 
-	err = o.initializeCoreServices()
+	err = o.initializeToolChain()
 	if err != nil {
 		return err
 	}
@@ -464,9 +451,9 @@ func (o *Okctl) initialise() error {
 	return nil
 }
 
-// initializeCoreServices initialize core services
+// initializeToolChain initialize core services
 // nolint: funlen
-func (o *Okctl) initializeCoreServices() error {
+func (o *Okctl) initializeToolChain() error {
 	homeDir, err := o.GetHomeDir()
 	if err != nil {
 		return err

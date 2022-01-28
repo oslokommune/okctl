@@ -11,8 +11,8 @@ import (
 )
 
 type vpcService struct {
-	api   client.VPCAPI
-	state client.VPCState
+	service api.VpcService
+	state   client.VPCState
 }
 
 func (s *vpcService) GetVPC(_ context.Context, id api.ID) (*client.Vpc, error) {
@@ -24,8 +24,8 @@ func (s *vpcService) GetVPC(_ context.Context, id api.ID) (*client.Vpc, error) {
 	return vpc, nil
 }
 
-func (s *vpcService) CreateVpc(_ context.Context, opts client.CreateVpcOpts) (*client.Vpc, error) {
-	vpc, err := s.api.CreateVpc(api.CreateVpcOpts{
+func (s *vpcService) CreateVpc(context context.Context, opts client.CreateVpcOpts) (*client.Vpc, error) {
+	vpc, err := s.service.CreateVpc(context, api.CreateVpcOpts{
 		ID:      opts.ID,
 		Cidr:    opts.Cidr,
 		Minimal: opts.Minimal,
@@ -84,8 +84,8 @@ func (s *vpcService) CreateVpc(_ context.Context, opts client.CreateVpcOpts) (*c
 	return v, nil
 }
 
-func (s *vpcService) DeleteVpc(_ context.Context, opts client.DeleteVpcOpts) error {
-	err := s.api.DeleteVpc(api.DeleteVpcOpts{
+func (s *vpcService) DeleteVpc(context context.Context, opts client.DeleteVpcOpts) error {
+	err := s.service.DeleteVpc(context, api.DeleteVpcOpts{
 		ID: opts.ID,
 	})
 	if err != nil {
@@ -101,9 +101,9 @@ func (s *vpcService) DeleteVpc(_ context.Context, opts client.DeleteVpcOpts) err
 }
 
 // NewVPCService returns an initialised VPC service
-func NewVPCService(api client.VPCAPI, state client.VPCState) client.VPCService {
+func NewVPCService(service api.VpcService, state client.VPCState) client.VPCService {
 	return &vpcService{
-		api:   api,
-		state: state,
+		service: service,
+		state:   state,
 	}
 }

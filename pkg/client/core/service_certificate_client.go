@@ -12,12 +12,12 @@ import (
 )
 
 type certificateService struct {
-	api   client.CertificateAPI
-	state client.CertificateState
+	service api.CertificateService
+	state   client.CertificateState
 }
 
 func (s *certificateService) DeleteCognitoCertificate(_ context.Context, opts client.DeleteCognitoCertificateOpts) error {
-	err := s.api.DeleteCognitoCertificate(api.DeleteCognitoCertificateOpts{
+	err := s.service.DeleteCognitoCertificate(context.Background(), api.DeleteCognitoCertificateOpts{
 		ID:     opts.ID,
 		Domain: opts.Domain,
 	})
@@ -29,7 +29,7 @@ func (s *certificateService) DeleteCognitoCertificate(_ context.Context, opts cl
 }
 
 func (s *certificateService) DeleteCertificate(_ context.Context, opts client.DeleteCertificateOpts) error {
-	err := s.api.DeleteCertificate(api.DeleteCertificateOpts{
+	err := s.service.DeleteCertificate(context.Background(), api.DeleteCertificateOpts{
 		ID:     opts.ID,
 		Domain: opts.Domain,
 	})
@@ -62,7 +62,7 @@ func (s *certificateService) CreateCertificate(_ context.Context, opts client.Cr
 		}
 	}
 
-	c, err := s.api.CreateCertificate(api.CreateCertificateOpts{
+	c, err := s.service.CreateCertificate(context.Background(), api.CreateCertificateOpts{
 		ID:           opts.ID,
 		FQDN:         opts.FQDN,
 		Domain:       opts.Domain,
@@ -92,11 +92,11 @@ func (s *certificateService) CreateCertificate(_ context.Context, opts client.Cr
 
 // NewCertificateService returns an initialised service
 func NewCertificateService(
-	api client.CertificateAPI,
+	service api.CertificateService,
 	state client.CertificateState,
 ) client.CertificateService {
 	return &certificateService{
-		api:   api,
-		state: state,
+		service: service,
+		state:   state,
 	}
 }

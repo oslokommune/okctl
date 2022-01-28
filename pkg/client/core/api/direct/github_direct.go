@@ -1,6 +1,7 @@
 package direct
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -10,8 +11,8 @@ import (
 )
 
 type githubAPI struct {
-	client       github.Githuber
-	parameterAPI client.ParameterAPI
+	client  github.Githuber
+	service api.ParameterService
 }
 
 func githubDeployKeySecretName(org, repo string) string {
@@ -19,7 +20,7 @@ func githubDeployKeySecretName(org, repo string) string {
 }
 
 func (a *githubAPI) DeleteRepositoryDeployKey(opts client.DeleteGithubDeployKeyOpts) error {
-	err := a.parameterAPI.DeleteSecret(api.DeleteSecretOpts{
+	err := a.service.DeleteSecret(context.Background(), api.DeleteSecretOpts{
 		Name: githubDeployKeySecretName(opts.Organisation, opts.Repository),
 	})
 	if err != nil {
@@ -35,7 +36,7 @@ func (a *githubAPI) CreateRepositoryDeployKey(opts client.CreateGithubDeployKeyO
 		return nil, err
 	}
 
-	param, err := a.parameterAPI.CreateSecret(api.CreateSecretOpts{
+	param, err := a.service.CreateSecret(context.Background(), api.CreateSecretOpts{
 		ID:     opts.ID,
 		Name:   githubDeployKeySecretName(opts.Organisation, opts.Repository),
 		Secret: string(key.PrivateKey),
@@ -68,9 +69,9 @@ func (a *githubAPI) ListReleases(owner, repo string) ([]*github.RepositoryReleas
 }
 
 // NewGithubAPI returns an instantiated github API client
-func NewGithubAPI(paramAPI client.ParameterAPI, client github.Githuber) client.GithubAPI {
+func NewGithubAPI(service api.ParameterService, client github.Githuber) client.GithubAPI {
 	return &githubAPI{
-		client:       client,
-		parameterAPI: paramAPI,
+		client:  client,
+		service: service,
 	}
 }

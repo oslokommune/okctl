@@ -20,7 +20,6 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/mitchellh/go-homedir"
-	"github.com/oslokommune/okctl/pkg/api/core"
 	"github.com/oslokommune/okctl/pkg/config/state"
 	"github.com/oslokommune/okctl/pkg/context"
 	"github.com/pkg/errors"
@@ -50,7 +49,6 @@ type Config struct {
 	ServerURL     string
 	ServerBaseURL string
 
-	format  core.EncodeResponseType
 	homeDir string
 	repoDir string
 }
@@ -83,16 +81,6 @@ func (c *Config) EnableFileLog() error {
 	}
 
 	return logging.AddLogFileHook(c.Logger, logFile)
-}
-
-// SetFormat sets the response type when encoding
-func (c *Config) SetFormat(responseType core.EncodeResponseType) {
-	c.format = responseType
-}
-
-// Format returns the encode response type
-func (c *Config) Format() core.EncodeResponseType {
-	return c.format
 }
 
 // LoadRepoData will attempt to load repository data

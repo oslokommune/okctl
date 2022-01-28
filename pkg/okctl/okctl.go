@@ -7,9 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/signal"
 	"path"
-	"syscall"
 	"time"
 
 	"github.com/oslokommune/okctl/pkg/logging"
@@ -28,7 +26,7 @@ import (
 	"github.com/logrusorgru/aurora/v3"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
-	"github.com/oslokommune/okctl/pkg/client/core/api/rest"
+	clientDirectAPI "github.com/oslokommune/okctl/pkg/client/core/api/direct"
 	githubClient "github.com/oslokommune/okctl/pkg/github"
 
 	"github.com/oslokommune/okctl/pkg/config/state"
@@ -66,7 +64,7 @@ type Okctl struct {
 
 	DB breeze.Client
 
-	restClient      *rest.HTTPClient
+	coreServices    core.Services
 	kubeConfigStore api.KubeConfigStore
 }
 
@@ -143,7 +141,7 @@ func (o *Okctl) StateNodes() *clientCore.StateNodes {
 
 // StateHandlers returns the initialised state handlers
 func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHandlers {
-	helmClient := rest.NewHelmAPI(o.restClient)
+	helmClient := clientDirectAPI.NewHelmAPI(o.coreServices.Helm)
 
 	return &clientCore.StateHandlers{
 		Helm:                      storm.NewHelmState(nodes.Helm),
@@ -173,9 +171,35 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 	}
 }
 
+// InitializeToolChain with core services
+func (o *Okctl) InitializeToolChain() (*clientDirectAPI.ToolChain, error) {
+	return &clientDirectAPI.ToolChain{
+		AppPostgresIntegration: clientDirectAPI.NewApplicationPostgresIntegrationAPI(o.coreServices.Kube),
+		Certificate:            clientDirectAPI.NewCertificateAPI(o.coreServices.Certificate),
+		Cluster:                clientDirectAPI.NewClusterAPI(o.coreServices.Cluster),
+		Component:              clientDirectAPI.NewComponentAPI(o.coreServices.ComponentService),
+		ContainerRepo:          clientDirectAPI.NewContainerRepositoryAPI(o.coreServices.ContainerRepositoryService),
+		ExternalDNS:            clientDirectAPI.NewExternalDNSAPI(o.coreServices.Kube),
+		Helm:                   clientDirectAPI.NewHelmAPI(o.coreServices.Helm),
+		IdentityManager:        clientDirectAPI.NewIdentityManagerAPI(o.coreServices.IdentityManager),
+		ManagedPolicy:          clientDirectAPI.NewManagedPolicyAPI(o.coreServices.ManagedPolicy),
+		Manifest:               clientDirectAPI.NewManifestAPI(o.coreServices.Kube),
+		Parameter:              clientDirectAPI.NewParameterAPI(o.coreServices.Parameter),
+		SecuityGroup:           clientDirectAPI.NewSecurityGroupAPI(o.coreServices.SecurityGroupService),
+		ServiceAccount:         clientDirectAPI.NewServiceAccountAPI(o.coreServices.ServiceAccount),
+		Vpc:                    clientDirectAPI.NewVPCAPI(o.coreServices.Vpc),
+		Domain:                 clientDirectAPI.NewDomainAPI(o.coreServices.Domain),
+	}, nil
+}
+
 // ClientServices returns the initialised client-side services
 // nolint: funlen
 func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.Services, error) {
+	toolChain, err := o.InitializeToolChain()
+	if err != nil {
+		return nil, err
+	}
+
 	absoluteRepositoryPath, err := o.GetRepoDir()
 	if err != nil {
 		return nil, err
@@ -191,35 +215,42 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		return nil, err
 	}
 
+	kubeConfigStore, err := o.KubeConfigStore()
+	if err != nil {
+		return nil, err
+	}
+
+	o.kubeConfigStore = kubeConfigStore
+
 	helmService := clientCore.NewHelmService(
-		rest.NewHelmAPI(o.restClient),
+		toolChain.Helm,
 		handlers.Helm,
 	)
 
 	managedPolicyService := clientCore.NewManagedPolicyService(
-		rest.NewManagedPolicyAPI(o.restClient),
+		toolChain.ManagedPolicy,
 		handlers.ManagedPolicy,
 	)
 
 	serviceAccountService := clientCore.NewServiceAccountService(
-		rest.NewServiceAccountAPI(o.restClient),
+		toolChain.ServiceAccount,
 		handlers.ServiceAccount,
 	)
 
 	certificateService := clientCore.NewCertificateService(
-		rest.NewCertificateAPI(o.restClient),
+		toolChain.Certificate,
 		handlers.Certificate,
 	)
 
 	identityManagerService := clientCore.NewIdentityManagerService(
-		rest.NewIdentityManagerAPI(o.restClient),
+		toolChain.IdentityManager,
 		handlers.IdentityManager,
 		certificateService,
 	)
 
 	githubService := clientCore.NewGithubService(
-		rest.NewGithubAPI(
-			rest.NewParameterAPI(o.restClient),
+		clientDirectAPI.NewGithubAPI(
+			toolChain.Parameter,
 			ghClient,
 		),
 		handlers.Github,
@@ -232,7 +263,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	manifestService := clientCore.NewManifestService(
-		rest.NewManifestAPI(o.restClient),
+		toolChain.Manifest,
 		handlers.Manifest,
 	)
 
@@ -249,12 +280,12 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	vpcService := clientCore.NewVPCService(
-		rest.NewVPCAPI(o.restClient),
+		toolChain.Vpc,
 		handlers.Vpc,
 	)
 
 	paramService := clientCore.NewParameterService(
-		rest.NewParameterAPI(o.restClient),
+		toolChain.Parameter,
 		handlers.Parameter,
 	)
 
@@ -265,12 +296,12 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	domainService := clientCore.NewDomainService(
-		rest.NewDomainAPI(o.restClient),
+		toolChain.Domain,
 		handlers.Domain,
 	)
 
 	externalDNSService := clientCore.NewExternalDNSService(
-		rest.NewExternalDNSAPI(o.restClient),
+		toolChain.ExternalDNS,
 		handlers.ExternalDNS,
 		managedPolicyService,
 		serviceAccountService,
@@ -283,14 +314,14 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	clusterService := clientCore.NewClusterService(
-		rest.NewClusterAPI(o.restClient),
+		toolChain.Cluster,
 		handlers.Cluster,
 		o.CloudProvider,
 		o.CredentialsProvider.Aws(),
 	)
 
 	componentService := clientCore.NewComponentService(
-		rest.NewComponentAPI(o.restClient),
+		toolChain.Component,
 		handlers.Component,
 		manifestService,
 		o.CloudProvider,
@@ -299,9 +330,9 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	applicationPostgresService := clientCore.NewApplicationPostgresService(
 		applicationManifestService,
 		componentService,
-		rest.NewSecurityGroupAPI(o.restClient),
+		toolChain.SecuityGroup,
 		vpcService,
-		rest.NewApplicationPostgresIntegrationAPI(o.restClient),
+		toolChain.AppPostgresIntegration,
 		clusterService,
 	)
 
@@ -336,7 +367,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	nameserverService := clientCore.NewNameserverHandlerService(ghClient)
 
 	containerRepositoryService := clientCore.NewContainerRepositoryService(
-		rest.NewContainerRepositoryAPI(o.restClient),
+		toolChain.ContainerRepo,
 		handlers.ContainerRepository,
 		o.CloudProvider,
 	)
@@ -425,13 +456,17 @@ func (o *Okctl) initialise() error {
 
 	o.DB = breeze.New()
 
-	o.restClient = rest.New(o.Debug, o.Err, o.ServerURL)
-
-	userHomeDir, err := os.UserHomeDir()
+	err = o.initializeCoreServices()
 	if err != nil {
 		return err
 	}
 
+	return nil
+}
+
+// initializeCoreServices initialize core services
+// nolint: funlen
+func (o *Okctl) initializeCoreServices() error {
 	homeDir, err := o.GetHomeDir()
 	if err != nil {
 		return err
@@ -448,6 +483,16 @@ func (o *Okctl) initialise() error {
 	}
 
 	o.kubeConfigStore = kubeConfigStore
+
+	awsIamAuth, err := o.BinariesProvider.AwsIamAuthenticator(awsiamauthenticator.Version)
+	if err != nil {
+		return err
+	}
+
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
 
 	vpcService := core.NewVpcService(
 		awsProvider.NewVpcCloud(o.CloudProvider),
@@ -498,11 +543,6 @@ func (o *Okctl) initialise() error {
 		run.NewKubeRun(o.CloudProvider, o.CredentialsProvider.Aws()),
 	)
 
-	awsIamAuth, err := o.BinariesProvider.AwsIamAuthenticator(awsiamauthenticator.Version)
-	if err != nil {
-		return err
-	}
-
 	helmRun := run.NewHelmRun(
 		helm.New(&helm.Config{
 			HomeDir:              homeDir,
@@ -545,16 +585,14 @@ func (o *Okctl) initialise() error {
 		awsProvider.NewContainerRepositoryCloudProvider(o.CloudProvider),
 	)
 
-	// When creating a certificate for a CloudFront distribution, we
-	// need to create the certificate in us-east-1
-	provider, err := o.NewCloudProviderWithRegion("us-east-1")
+	usProvider, err := o.getUsEastOneProvider()
 	if err != nil {
-		return err
+		return errors.New("Unable to get certificate cloud provider")
 	}
 
 	identityManagerService := core.NewIdentityManagerService(
 		awsProvider.NewIdentityManagerCloudProvider(o.CloudProvider),
-		awsProvider.NewCertificateCloudProvider(provider),
+		awsProvider.NewCertificateCloudProvider(usProvider),
 	)
 
 	securityGroupService := core.NewSecurityGroupService(
@@ -577,66 +615,9 @@ func (o *Okctl) initialise() error {
 		SecurityGroupService:       securityGroupService,
 	}
 
-	endpoints := core.GenerateEndpoints(services, core.InstrumentEndpoints(o.Logger))
+	o.coreServices = services
 
-	handlers := core.MakeHandlers(core.EncodeJSONResponse, endpoints)
-
-	router := http.NewServeMux()
-	router.Handle("/", core.AttachRoutes(handlers))
-	router.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-
-	server := &http.Server{
-		Handler: router,
-		Addr:    o.Destination,
-	}
-
-	// nolint: gomnd
-	errs := make(chan error, 2)
-
-	go func() {
-		errs <- server.ListenAndServe()
-	}()
-
-	go func() {
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, syscall.SIGINT)
-		errs <- fmt.Errorf("%s", <-c)
-	}()
-
-	return o.waitForServer()
-}
-
-// waitForServer waits for the http.Server to become active
-func (o *Okctl) waitForServer() error {
-	const (
-		serverHealthTimeoutInSec = 5
-		serverHealthIntervalInMs = 100
-	)
-
-	timeout := time.After(serverHealthTimeoutInSec * time.Second)
-	tick := time.NewTicker(serverHealthIntervalInMs * time.Millisecond)
-
-	for {
-		select {
-		case <-timeout:
-			return errors.New("timed out waiting for server")
-		case <-tick.C:
-			r, err := http.Get(fmt.Sprintf("%s%s", o.ServerBaseURL, "health"))
-			if err != nil {
-				return err
-			}
-
-			defer func() {
-				_ = r.Body.Close()
-			}()
-
-			if r.StatusCode == http.StatusOK {
-				return nil
-			}
-		}
-	}
+	return nil
 }
 
 // initialiseProviders knows how to create all required providers
@@ -827,4 +808,15 @@ func (o *Okctl) newCredentialsProvider() error {
 	o.CredentialsProvider = credentials.New(awsAuthenticator, githubAuthenticator)
 
 	return nil
+}
+
+// When creating a certificate for a CloudFront distribution, we
+// need to create the certificate in us-east-1
+func (o *Okctl) getUsEastOneProvider() (v1alpha1.CloudProvider, error) {
+	provider, err := o.NewCloudProviderWithRegion("us-east-1")
+	if err != nil {
+		return nil, err
+	}
+
+	return provider, nil
 }

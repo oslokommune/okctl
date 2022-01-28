@@ -15,10 +15,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-const (
-	defaultArgoCDApplicationManifestPermissions = 0o644 // u+rw g+r o+r
-	defaultArgoCDApplicationManifestFilename    = "argocd-application.yaml"
-)
+const defaultArgoCDApplicationManifestFilename = "argocd-application.yaml"
 
 type applicationService struct {
 	certificateService    client.CertificateService
@@ -109,16 +106,19 @@ func (s *applicationService) CreateArgoCDApplicationManifest(opts client.CreateA
 		return errors.E(err, "ensuring overlay directory: %w", err)
 	}
 
-	err = scaffold.GenerateArgoCDApplicationManifest(scaffold.GenerateArgoCDApplicationManifestOpts{
-		Saver: func(content []byte) error {
-			return s.fs.WriteFile(absoluteArgoCDApplicationManifestPath, content, defaultArgoCDApplicationManifestPermissions)
-		},
-		Application:                   opts.Application,
-		IACRepoURL:                    opts.Cluster.Github.URL(),
-		RelativeApplicationOverlayDir: relativeOverlayDir,
+	manifest, err := scaffold.GenerateArgoCDApplicationManifest(scaffold.GenerateArgoCDApplicationManifestOpts{
+		Name:          opts.Application.Metadata.Name,
+		Namespace:     opts.Application.Metadata.Namespace,
+		IACRepoURL:    opts.Cluster.Github.URL(),
+		SourceSyncDir: relativeOverlayDir,
 	})
 	if err != nil {
 		return errors.E(err, "generating ArgoCD Application manifest")
+	}
+
+	err = s.fs.WriteReader(absoluteArgoCDApplicationManifestPath, manifest)
+	if err != nil {
+		return fmt.Errorf("writing manifest: %w", err)
 	}
 
 	return nil

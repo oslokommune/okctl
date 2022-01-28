@@ -2,7 +2,6 @@ package resources
 
 import (
 	argo "github.com/oslokommune/okctl/internal/third_party/argoproj/argo-cd/pkg/apis/application/v1alpha1"
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -37,13 +36,13 @@ func generateDefaultArgoApp() argo.Application {
 }
 
 // CreateArgoApp creates an ArgoCD definition customized for okctl
-func CreateArgoApp(app v1alpha1.Application, sourceRepositoryURL string, sourceRepositoryPath string) argo.Application {
+func CreateArgoApp(name string, namespace string, sourceRepositoryURL string, sourceRepositoryPath string) argo.Application {
 	argoApp := generateDefaultArgoApp()
 
-	argoApp.ObjectMeta.Name = app.Metadata.Name
+	argoApp.ObjectMeta.Name = name
 
-	if app.Metadata.Namespace != "" {
-		argoApp.Spec.Destination.Namespace = app.Metadata.Namespace
+	if namespace != "" {
+		argoApp.Spec.Destination.Namespace = namespace
 	}
 
 	argoApp.Spec.Source.Path = sourceRepositoryPath

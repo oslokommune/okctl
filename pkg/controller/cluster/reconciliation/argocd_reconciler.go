@@ -86,16 +86,14 @@ func (z *argocdReconciler) createArgoCD(ctx context.Context, meta reconciliation
 	}
 
 	_, err = z.argocdClient.CreateArgoCD(ctx, client.CreateArgoCDOpts{
-		ID:                 reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata),
-		Domain:             meta.ClusterDeclaration.ClusterRootDomain,
-		FQDN:               dns.Fqdn(meta.ClusterDeclaration.ClusterRootDomain),
-		HostedZoneID:       hz.HostedZoneID,
-		GithubOrganisation: meta.ClusterDeclaration.Github.Organisation,
-		UserPoolID:         im.UserPoolID,
-		AuthDomain:         im.AuthDomain,
-		Repository:         repo,
+		ClusterManifest: *meta.ClusterDeclaration,
+		Domain:          meta.ClusterDeclaration.ClusterRootDomain,
+		FQDN:            dns.Fqdn(meta.ClusterDeclaration.ClusterRootDomain),
+		HostedZoneID:    hz.HostedZoneID,
+		UserPoolID:      im.UserPoolID,
+		AuthDomain:      im.AuthDomain,
+		Repository:      repo,
 	})
-
 	if err != nil {
 		// nolint: godox
 		// TODO: Need to identify the correct error

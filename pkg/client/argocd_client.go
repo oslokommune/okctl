@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"github.com/oslokommune/okctl/pkg/api"
 )
 
@@ -24,14 +26,13 @@ type ArgoCD struct {
 // CreateArgoCDOpts contains the required inputs
 // for setting up argo cd
 type CreateArgoCDOpts struct {
-	ID                 api.ID
-	Domain             string
-	FQDN               string
-	HostedZoneID       string
-	GithubOrganisation string
-	UserPoolID         string
-	AuthDomain         string
-	Repository         *GithubRepository
+	ClusterManifest v1alpha1.Cluster
+	Domain          string
+	FQDN            string
+	HostedZoneID    string
+	UserPoolID      string
+	AuthDomain      string
+	Repository      *GithubRepository
 }
 
 // DeleteArgoCDOpts contains the required inputs
@@ -44,6 +45,7 @@ type DeleteArgoCDOpts struct {
 type ArgoCDService interface {
 	CreateArgoCD(ctx context.Context, opts CreateArgoCDOpts) (*ArgoCD, error)
 	DeleteArgoCD(ctx context.Context, opts DeleteArgoCDOpts) error
+	SetupApplicationsSync(ctx context.Context, cluster v1alpha1.Cluster) error
 }
 
 // ArgoCDState implements the state layer

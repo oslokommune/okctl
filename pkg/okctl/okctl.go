@@ -332,14 +332,18 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		o.CloudProvider,
 	)
 
-	argocdService := clientCore.NewArgoCDService(
-		identityManagerService,
-		certificateService,
-		manifestService,
-		paramService,
-		helmService,
-		handlers.ArgoCD,
-	)
+	argocdService := clientCore.NewArgoCDService(clientCore.NewArgoCDServiceOpts{
+		Fs:                  o.FileSystem,
+		BinaryProvider:      o.BinariesProvider,
+		CredentialsProvider: o.CredentialsProvider,
+		AbsoluteRepoDir:     absoluteRepositoryPath,
+		Identity:            identityManagerService,
+		Cert:                certificateService,
+		Manifest:            manifestService,
+		Param:               paramService,
+		Helm:                helmService,
+		State:               handlers.ArgoCD,
+	})
 
 	applicationService := clientCore.NewApplicationService(
 		o.FileSystem,

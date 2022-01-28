@@ -171,8 +171,8 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 	}
 }
 
-// InitializeToolChain with core services
-func (o *Okctl) InitializeToolChain() (*clientDirectAPI.ToolChain, error) {
+// InitializeDirectClients with core services
+func (o *Okctl) InitializeDirectClients() (*clientDirectAPI.ToolChain, error) {
 	return &clientDirectAPI.ToolChain{
 		Helm:   clientDirectAPI.NewHelmAPI(o.coreServices.Helm),
 		Domain: clientDirectAPI.NewDomainAPI(o.coreServices.Domain),
@@ -182,7 +182,7 @@ func (o *Okctl) InitializeToolChain() (*clientDirectAPI.ToolChain, error) {
 // ClientServices returns the initialised client-side services
 // nolint: funlen
 func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.Services, error) {
-	toolChain, err := o.InitializeToolChain()
+	directClients, err := o.InitializeDirectClients()
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +210,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	o.kubeConfigStore = kubeConfigStore
 
 	helmService := clientCore.NewHelmService(
-		toolChain.Helm,
+		directClients.Helm,
 		handlers.Helm,
 	)
 
@@ -283,7 +283,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	domainService := clientCore.NewDomainService(
-		toolChain.Domain,
+		directClients.Domain,
 		handlers.Domain,
 	)
 

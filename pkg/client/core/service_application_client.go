@@ -98,12 +98,16 @@ func (s *applicationService) CreateArgoCDApplicationManifest(opts client.CreateA
 		opts.Cluster.Metadata.Name,
 	)
 
-	absoluteOverlayDir := path.Join(s.absoluteRepositoryDir, relativeOverlayDir)
-	absoluteArgoCDApplicationManifestPath := path.Join(absoluteOverlayDir, defaultArgoCDApplicationManifestFilename)
+	absoluteArgoCDApplicationManifestPath := path.Join(s.absoluteRepositoryDir,
+		opts.Cluster.Github.OutputPath,
+		opts.Cluster.Metadata.Name,
+		constant.DefaultApplicationsOutputDir,
+		fmt.Sprintf("%s.yaml", opts.Application.Metadata.Name),
+	)
 
-	err := s.fs.MkdirAll(absoluteOverlayDir, 0o700)
+	err := s.fs.MkdirAll(path.Dir(absoluteArgoCDApplicationManifestPath), 0o700)
 	if err != nil {
-		return errors.E(err, "ensuring overlay directory: %w", err)
+		return errors.E(err, "ensuring cluster applications directory: %w", err)
 	}
 
 	manifest, err := scaffold.GenerateArgoCDApplicationManifest(scaffold.GenerateArgoCDApplicationManifestOpts{

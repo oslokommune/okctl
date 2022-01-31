@@ -62,7 +62,7 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		return nil, err
 	}
 
-	bucket, err := c.service.CreateS3Bucket(context.Background(), &api.CreateS3BucketOpts{
+	bucket, err := c.service.CreateS3Bucket(ctx, &api.CreateS3BucketOpts{
 		ID:        opts.ID,
 		Name:      bucketName,
 		StackName: cfn.NewStackNamer().S3Bucket(opts.ApplicationName, opts.ID.ClusterName),
@@ -80,7 +80,7 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		return nil, err
 	}
 
-	pg, err := c.service.CreatePostgresDatabase(context.Background(), &api.CreatePostgresDatabaseOpts{
+	pg, err := c.service.CreatePostgresDatabase(ctx, &api.CreatePostgresDatabaseOpts{
 		ID:                opts.ID,
 		ApplicationName:   opts.ApplicationName,
 		UserName:          opts.UserName,
@@ -228,7 +228,7 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 		return err
 	}
 
-	err = c.service.DeletePostgresDatabase(context.Background(), &api.DeletePostgresDatabaseOpts{
+	err = c.service.DeletePostgresDatabase(ctx, &api.DeletePostgresDatabaseOpts{
 		ID:        opts.ID,
 		StackName: stackName,
 	})
@@ -269,7 +269,7 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 		return err
 	}
 
-	err = c.service.DeleteS3Bucket(context.Background(), &api.DeleteS3BucketOpts{
+	err = c.service.DeleteS3Bucket(ctx, &api.DeleteS3BucketOpts{
 		ID:        opts.ID,
 		StackName: cfn.NewStackNamer().S3Bucket(opts.ApplicationName, opts.ID.ClusterName),
 	})

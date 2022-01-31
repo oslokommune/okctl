@@ -66,24 +66,6 @@ func (h *testHelper) createUserDirStorage(basepath string) *userDirStorage {
 	}
 }
 
-func (h *testHelper) createUserHomeDirStorage(createZshrcFile bool) (*storage.EphemeralStorage, error) {
-	s := storage.NewEphemeralStorage()
-
-	if createZshrcFile {
-		file, err := s.Create(".", ".zshrc", 0o644)
-		if err != nil {
-			return nil, fmt.Errorf("couldn't create .zshrc file: %w", err)
-		}
-
-		err = file.Close()
-		if err != nil {
-			return nil, fmt.Errorf("couldn't close .zshrc file: %w", err)
-		}
-	}
-
-	return s, nil
-}
-
 func (h *testHelper) toSlice(m map[string]string) []string {
 	s := make([]string, 0)
 

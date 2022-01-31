@@ -52,6 +52,7 @@ func (g *ShellGetter) Get() (*Shell, error) {
 	}
 
 	var shellType shelltype.ShellType
+
 	var shellArgs []string
 
 	switch {

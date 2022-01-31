@@ -66,13 +66,6 @@ func (h *testHelper) createUserDirStorage(basepath string) *userDirStorage {
 	}
 }
 
-func (h *testHelper) createTmpStorage() *storage.EphemeralStorage {
-	s := storage.NewEphemeralStorage()
-	s.BasePath = h.tmpBasedir
-
-	return s
-}
-
 func (h *testHelper) createUserHomeDirStorage(createZshrcFile bool) (*storage.EphemeralStorage, error) {
 	s := storage.NewEphemeralStorage()
 

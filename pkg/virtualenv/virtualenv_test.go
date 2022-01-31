@@ -196,15 +196,12 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 
 			userDirStorage := testHelper.createUserDirStorage(fmt.Sprintf("/home/%s/.okctl", testHelper.currentUsername))
 
-			tmpStorage := testHelper.createTmpStorage()
-
 			opts := commandlineprompter.CommandLinePromptOpts{
 				Os:                   tc.os,
 				MacOsUserShellGetter: testHelper.NewTestMacOsLoginShellGetter(),
 				OsEnvVars:            tc.osEnvVars,
 				EtcStorage:           etcStorage,
 				UserDirStorage:       userDirStorage.storage,
-				TmpStorage:           tmpStorage,
 				ClusterName:          "myenv",
 				CurrentUsername:      testHelper.currentUsername,
 			}

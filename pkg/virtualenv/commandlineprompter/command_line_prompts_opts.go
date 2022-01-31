@@ -12,7 +12,6 @@ type CommandLinePromptOpts struct {
 	OsEnvVars            map[string]string
 	EtcStorage           storage.Storer
 	UserDirStorage       storage.Storer
-	TmpStorage           storage.Storer
 	ClusterName          string
 	CurrentUsername      string
 }

@@ -1,7 +1,6 @@
 
-	Successfully scaffolded my-app
-	To deploy your application:
-		- Commit and push the changes done by okctl
-		- Run [32mkubectl apply -f infrastructure/applications/my-app/overlays/test-cluster/argocd-application.yaml[0m
+Successfully applied my-app
 
-    If using an ingress, it can take up to five minutes for the routing to configure
+To finalize the changes:
+- Commit and push the changes done by okctl
+

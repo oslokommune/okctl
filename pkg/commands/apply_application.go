@@ -5,19 +5,17 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"path"
 	"path/filepath"
 	"text/template"
 
-	"github.com/logrusorgru/aurora/v3"
-
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"github.com/spf13/afero"
 
 	"sigs.k8s.io/yaml"
 )
+
+const pushECRImageInstructionURL = "https://www.okctl.io/running-a-docker-image-in-your-cluster/#push-a-docker-image-to-the-amazon-elastic-container-registry-ecr"
 
 // InferApplicationFromStdinOrFile returns an okctl application based on input. The function will parse input either
 // from the reader or from the fs based on if path is a path or if it is "-". "-" represents stdin
@@ -58,16 +56,15 @@ type ApplyApplicationSuccessMessageOpts struct {
 	ApplicationName           string
 	OptionalDockerTagPushStep string
 	OptionalDockerImageURI    string
-	KubectlApplyArgoCmd       string
+	OptionalIngressInfo       string
 }
 
 const applyApplicationSuccessMessage = `
-	Successfully scaffolded {{ .ApplicationName }}
-	To deploy your application:
-		- Commit and push the changes done by okctl{{ .OptionalDockerTagPushStep }}
-		- Run {{ .KubectlApplyArgoCmd }}
+Successfully applied {{ .ApplicationName }}
 
-    If using an ingress, it can take up to five minutes for the routing to configure
+To finalize the changes:
+- Commit and push the changes done by okctl{{ .OptionalDockerTagPushStep }}
+{{ .OptionalIngressInfo }}
 `
 
 // WriteApplyApplicationSucessMessageOpts contains necessary information to compile and write a success message
@@ -80,21 +77,20 @@ type WriteApplyApplicationSucessMessageOpts struct {
 
 // WriteApplyApplicationSuccessMessage produces a relevant message for successfully reconciling an application
 func WriteApplyApplicationSuccessMessage(opts WriteApplyApplicationSucessMessageOpts) error {
-	argoCDResourcePath := path.Join(
-		opts.Cluster.Github.OutputPath,
-		constant.DefaultApplicationsOutputDir,
-		opts.Application.Metadata.Name,
-		constant.DefaultApplicationOverlayDir,
-		opts.Cluster.Metadata.Name,
-		"argocd-application.yaml",
-	)
-
+	optionalIngressInfo := ""
 	optionalDockerTagPushStep := ""
 
 	if opts.Application.Image.HasName() {
-		optionalDockerTagPushStep = `
-        - Tag and push a docker image to your container repository. See instructions on
-          https://okctl.io/help/docker-registry/#push-a-docker-image-to-the-amazon-elastic-container-registry-ecr`
+		optionalDockerTagPushStep = fmt.Sprintf("\n%s\n  %s",
+			"- Tag and push a docker image to your container repository. See instructions on",
+			pushECRImageInstructionURL,
+		)
+	}
+
+	if opts.Application.HasIngress() {
+		optionalIngressInfo = fmt.Sprintf("\n%s",
+			"N.B.: it can take up to five minutes for the routing to configure",
+		)
 	}
 
 	tmpl, err := template.New("t").Parse(applyApplicationSuccessMessage)
@@ -108,7 +104,7 @@ func WriteApplyApplicationSuccessMessage(opts WriteApplyApplicationSucessMessage
 		ApplicationName:           opts.Application.Metadata.Name,
 		OptionalDockerTagPushStep: optionalDockerTagPushStep,
 		OptionalDockerImageURI:    opts.Application.Image.URI,
-		KubectlApplyArgoCmd:       aurora.Green(fmt.Sprintf("kubectl apply -f %s", argoCDResourcePath)).String(),
+		OptionalIngressInfo:       optionalIngressInfo,
 	})
 	if err != nil {
 		return err

@@ -43,8 +43,12 @@ type DeleteArgoCDOpts struct {
 
 // ArgoCDService is a business logic implementation
 type ArgoCDService interface {
+	// CreateArgoCD defines functionality for installing ArgoCD into a cluster
 	CreateArgoCD(ctx context.Context, opts CreateArgoCDOpts) (*ArgoCD, error)
+	// DeleteArgoCD defines functionality for uninstalling ArgoCD from a cluster
 	DeleteArgoCD(ctx context.Context, opts DeleteArgoCDOpts) error
+	// SetupApplicationsSync defines functionality for preparing a directory where ArgoCD application manifests will be
+	// automatically synced
 	SetupApplicationsSync(ctx context.Context, cluster v1alpha1.Cluster) error
 }
 

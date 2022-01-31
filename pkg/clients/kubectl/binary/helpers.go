@@ -49,6 +49,7 @@ func (c *client) cacheReaderOnFs(r io.Reader) (string, teardownFn, error) {
 	return targetPath, teardowner, nil
 }
 
+// generateEnv knows how to produce an array of environment variables required to run kubectl commands
 func (c client) generateEnv() ([]string, error) {
 	awsEnvCredentials, err := c.credentialsProvider.Aws().AsEnv()
 	if err != nil {
@@ -80,6 +81,8 @@ func (c client) generateEnv() ([]string, error) {
 	return env, nil
 }
 
+// generatePath knows how to produce the value of a PATH environment variable containing all necessary binaries to run
+// kubectl commands
 func (c client) generatePath() ([]string, error) {
 	k, err := c.binaryProvider.Kubectl(kubectl.Version)
 	if err != nil {

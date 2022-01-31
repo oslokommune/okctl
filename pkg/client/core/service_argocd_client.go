@@ -324,7 +324,7 @@ func (s *argoCDService) SetupApplicationsSync(_ context.Context, cluster v1alpha
 
 	absoluteArgoCDManifestPath := path.Join(s.absoluteRepoDir, relativeArgoCDManifestPath)
 
-	manifest, err := scaffold.GenerateArgoCDApplicationManifest(scaffold.GenerateArgoCDApplicationManifestOpts{
+	originalManifest, err := scaffold.GenerateArgoCDApplicationManifest(scaffold.GenerateArgoCDApplicationManifestOpts{
 		Name:          "cluster-applications",
 		Namespace:     argocd.Namespace,
 		IACRepoURL:    cluster.Github.URL(),
@@ -334,18 +334,18 @@ func (s *argoCDService) SetupApplicationsSync(_ context.Context, cluster v1alpha
 		return fmt.Errorf("generating ArgoCD application manifest: %w", err)
 	}
 
-	buf := bytes.Buffer{}
+	manifestCopy := bytes.Buffer{}
 
-	reader := io.TeeReader(manifest, &buf)
+	manifest := io.TeeReader(originalManifest, &manifestCopy)
 
-	err = s.fs.WriteReader(absoluteArgoCDManifestPath, reader)
+	err = s.fs.WriteReader(absoluteArgoCDManifestPath, manifest)
 	if err != nil {
 		return fmt.Errorf("writing manifest: %w", err)
 	}
 
 	kubectlClient := binary.New(s.fs, s.binaryProvider, s.credentialsProvider, cluster)
 
-	err = kubectlClient.Apply(&buf)
+	err = kubectlClient.Apply(&manifestCopy)
 	if err != nil {
 		return fmt.Errorf("applying ArgoCD application manifest: %w", err)
 	}

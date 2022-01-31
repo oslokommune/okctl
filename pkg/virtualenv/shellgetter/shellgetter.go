@@ -13,7 +13,6 @@ import (
 // ShellGetter is a provider for getting a shell executable based on some environment
 type ShellGetter struct {
 	Os                      Os
-	UserHomeDir             string
 	OsEnvVars               map[string]string
 	EtcStorage              storage.Storer
 	CurrentUsername         string
@@ -24,13 +23,11 @@ type ShellGetter struct {
 func NewShellGetter(
 	os Os,
 	macOsUserShellGetter MacOsUserShellCmdGetter,
-	userHomeDir string,
 	osEnvVars map[string]string,
 	etcStorage storage.Storer,
 	currentUsername string) *ShellGetter {
 	return &ShellGetter{
 		Os:                      os,
-		UserHomeDir:             userHomeDir,
 		OsEnvVars:               osEnvVars,
 		EtcStorage:              etcStorage,
 		CurrentUsername:         currentUsername,

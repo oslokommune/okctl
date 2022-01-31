@@ -12,7 +12,6 @@ type CommandLinePromptOpts struct {
 	OsEnvVars            map[string]string
 	EtcStorage           storage.Storer
 	UserDirStorage       storage.Storer
-	UserHomeDirStorage   storage.Storer
 	TmpStorage           storage.Storer
 	ClusterName          string
 	CurrentUsername      string
@@ -23,7 +22,6 @@ func NewShellGetter(opts CommandLinePromptOpts) *shellgetter.ShellGetter {
 	return shellgetter.NewShellGetter(
 		opts.Os,
 		opts.MacOsUserShellGetter,
-		opts.UserHomeDirStorage.Path(),
 		opts.OsEnvVars,
 		opts.EtcStorage,
 		opts.CurrentUsername)

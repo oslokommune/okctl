@@ -1,6 +1,0 @@
-setopt PROMPT_SUBST
-autoload -U colors && colors # Enable colors
-prompt() {
-PS1="Dir: %~ $"
-}
-precmd_functions+=(prompt)

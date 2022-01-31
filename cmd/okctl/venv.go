@@ -182,7 +182,6 @@ func createVenvOpts(host state.Host, okctlEnvironment commands.OkctlEnvironment)
 		OsEnvVars:            envVars,
 		EtcStorage:           storage.NewFileSystemStorage("/etc"),
 		UserDirStorage:       storage.NewFileSystemStorage(okctlEnvironment.UserDataDir),
-		UserHomeDirStorage:   storage.NewFileSystemStorage(homeDir),
 		TmpStorage:           nil,
 		ClusterName:          okctlEnvironment.ClusterName,
 		CurrentUsername:      currentUser.Username,

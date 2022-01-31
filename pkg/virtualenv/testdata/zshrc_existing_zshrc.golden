@@ -1,6 +1,0 @@
-setopt PROMPT_SUBST
-autoload -U colors && colors # Enable colors
-prompt() {
-PS1="%F{red}%~ %f%F{blue}($(venv_ps1 myenv)%f) $ "
-}
-precmd_functions+=(prompt)

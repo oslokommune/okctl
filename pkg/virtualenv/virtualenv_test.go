@@ -8,7 +8,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/virtualenv"
 	"github.com/oslokommune/okctl/pkg/virtualenv/commandlineprompter"
-	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,12 +16,11 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 	testHelper := newTestHelper(t)
 
 	testCases := []struct {
-		name            string
-		os              shellgetter.Os
-		osEnvVars       map[string]string
-		loginShellCmd   string
-		createZshrcFile bool
-		assertion       func(commandlineprompter.CommandLinePromptOpts, *virtualenv.VirtualEnvironment)
+		name          string
+		os            shellgetter.Os
+		osEnvVars     map[string]string
+		loginShellCmd string
+		assertion     func(commandlineprompter.CommandLinePromptOpts, *virtualenv.VirtualEnvironment)
 	}{
 		{
 			name: "Should get shell to execute from /etc/passwd",
@@ -72,7 +70,7 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 			},
 		},
 		{
-			name: "When using zsh, should set correct PATH and ZDOTDIR, and create venv_ps1 executable",
+			name: "When using zsh, should set correct PATH and PS1, and create venv_ps1 executable",
 			os:   shellgetter.OsLinux,
 			osEnvVars: map[string]string{
 				"PATH": "/somepath:/somepath2",
@@ -80,8 +78,8 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 			loginShellCmd: "/bin/zsh",
 			assertion: func(opts commandlineprompter.CommandLinePromptOpts, venv *virtualenv.VirtualEnvironment) {
 				expectedOsEnvVars := testHelper.toSlice(map[string]string{
-					"PATH":    fmt.Sprintf("%s:%s:%s", testHelper.ps1Dir, "/somepath", "/somepath2"),
-					"ZDOTDIR": testHelper.tmpBasedir,
+					"PATH": fmt.Sprintf("%s:%s:%s", testHelper.ps1Dir, "/somepath", "/somepath2"),
+					"PS1":  "%F{red}%~ %f%F{blue}($(venv_ps1 myenv)%f) $ ",
 				})
 				assert.Equal(t, expectedOsEnvVars, venv.Environ())
 				testHelper.assertGoldenVenvPs1(t, opts)
@@ -105,62 +103,14 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 			},
 		},
 		{
-			name: "When using zsh, a temporary .zshrc file should have been generated",
-			os:   shellgetter.OsLinux,
-			osEnvVars: map[string]string{
-				"PATH": "/somepath:/somepath2",
-			},
-			loginShellCmd: "/bin/zsh",
-			assertion: func(opts commandlineprompter.CommandLinePromptOpts, venv *virtualenv.VirtualEnvironment) {
-				zshrc, err := opts.TmpStorage.ReadAll(".zshrc")
-				assert.Nil(t, err)
-
-				g := goldie.New(t)
-				g.Assert(t, "zshrc_no_existing_zshrc", zshrc)
-			},
-		},
-		{
-			name: "When using zsh and .zshrc already exists, the tmp .zshrc should source original",
-			os:   shellgetter.OsLinux,
-			osEnvVars: map[string]string{
-				"PATH": "/somepath:/somepath2",
-			},
-			loginShellCmd:   "/bin/zsh",
-			createZshrcFile: true,
-			assertion: func(opts commandlineprompter.CommandLinePromptOpts, venv *virtualenv.VirtualEnvironment) {
-				zshrc, err := opts.TmpStorage.ReadAll(".zshrc")
-				assert.Nil(t, err)
-
-				g := goldie.New(t)
-				g.Assert(t, "zshrc_existing_zshrc", zshrc)
-			},
-		},
-		{
-			name: "When using zsh and OKCTL_PS1 is set, temp .zshrc should contain the custom PS1",
+			name: "When using zsh and OKCTL_PS1 is set, the environment should contain the custom PS1",
 			os:   shellgetter.OsLinux,
 			osEnvVars: map[string]string{
 				"OKCTL_PS1": "Dir: %~ $",
 			},
 			loginShellCmd: "/bin/zsh",
 			assertion: func(opts commandlineprompter.CommandLinePromptOpts, venv *virtualenv.VirtualEnvironment) {
-				zshrc, err := opts.TmpStorage.ReadAll(".zshrc")
-				assert.Nil(t, err)
-
-				g := goldie.New(t)
-				g.Assert(t, "zshrc_custom_ps1", zshrc)
-			},
-		},
-		{
-			name: "When using zsh and ZDOTDIR is already set, a warning is returned",
-			os:   shellgetter.OsLinux,
-			osEnvVars: map[string]string{
-				"PATH":    "/somepath:/somepath2",
-				"ZDOTDIR": "/somewhere",
-			},
-			loginShellCmd:   "/bin/zsh",
-			createZshrcFile: true,
-			assertion: func(opts commandlineprompter.CommandLinePromptOpts, venv *virtualenv.VirtualEnvironment) {
-				assert.True(t, len(venv.Warning) > 0)
+				assert.Contains(t, venv.Environ(), `PS1=Dir: %~ $`)
 			},
 		},
 		{
@@ -218,12 +168,13 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 			},
 			loginShellCmd: "/bin/zsh",
 			assertion: func(opts commandlineprompter.CommandLinePromptOpts, venv *virtualenv.VirtualEnvironment) {
-				// Verify expeceted .zshrc
-				zshrc, err := opts.TmpStorage.ReadAll(".zshrc")
-				assert.Nil(t, err)
-
-				g := goldie.New(t)
-				g.Assert(t, "zshrc_custom_ps1_with_env", zshrc)
+				expectedOsEnvVars := testHelper.toSlice(map[string]string{
+					"OKCTL_PS1": `Dir: %~ | \$(venv_ps1 %env) \$`,
+					"PATH":      testHelper.ps1Dir,
+					"PS1":       fmt.Sprintf(`Dir: %%~ | \$(venv_ps1 %s) \$`, opts.ClusterName),
+				})
+				assert.Equal(t, expectedOsEnvVars, venv.Environ())
+				testHelper.assertGoldenVenvPs1(t, opts)
 			},
 		},
 		{
@@ -245,11 +196,6 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 
 			userDirStorage := testHelper.createUserDirStorage(fmt.Sprintf("/home/%s/.okctl", testHelper.currentUsername))
 
-			userHomeDirStorage, err := testHelper.createUserHomeDirStorage(tc.createZshrcFile)
-			if err != nil {
-				assert.Fail(t, "couldn't create user home dir storage: %w", err)
-			}
-
 			tmpStorage := testHelper.createTmpStorage()
 
 			opts := commandlineprompter.CommandLinePromptOpts{
@@ -258,7 +204,6 @@ func TestCreateVirtualEnvironment(t *testing.T) {
 				OsEnvVars:            tc.osEnvVars,
 				EtcStorage:           etcStorage,
 				UserDirStorage:       userDirStorage.storage,
-				UserHomeDirStorage:   userHomeDirStorage,
 				TmpStorage:           tmpStorage,
 				ClusterName:          "myenv",
 				CurrentUsername:      testHelper.currentUsername,

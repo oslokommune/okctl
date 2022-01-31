@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/mishudark/errors"
+
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
@@ -126,6 +128,10 @@ func (z *postgresReconciler) determineActions(meta reconciliation.Metadata, stat
 		if ok {
 			actionMap[db] = reconciliation.ActionNoop
 		} else {
+			err = validatePostgresDatabaseName(db.Name)
+			if err != nil {
+				return nil, fmt.Errorf("invalid database name: %w", err)
+			}
 			actionMap[db] = reconciliation.ActionCreate
 		}
 	}
@@ -163,4 +169,12 @@ func subnetsAsIDList(subnets []client.VpcSubnet) []string {
 	}
 
 	return ids
+}
+
+func validatePostgresDatabaseName(dbName string) error {
+	if dbName == "db" || dbName == "database" {
+		return errors.New("'db' and 'database' are reserved")
+	}
+
+	return nil
 }

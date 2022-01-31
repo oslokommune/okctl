@@ -23,6 +23,9 @@ func TestPostgresReconciler(t *testing.T) {
 
 		expectCreations int
 		expectDeletions int
+
+		expectErr bool
+		err       string
 	}{
 		{
 			name: "Should do nothing when nothing is defined and nothing is existing",
@@ -85,6 +88,40 @@ func TestPostgresReconciler(t *testing.T) {
 			expectCreations: 1,
 			expectDeletions: 2,
 		},
+		{
+			name: "Should create no databases because the declared databases names are reserved",
+
+			withVPCExists: true,
+			withDeclaredDBs: []v1alpha1.ClusterDatabasesPostgres{
+				{
+					Name: "db",
+				},
+				{
+					Name: "database",
+				},
+			},
+			withExistingDBs: []*client.PostgresDatabase{},
+			expectCreations: 0,
+			expectErr:       true,
+			err:             "determining course of action: invalid database name: 'db' and 'database' are reserved",
+		},
+		{
+			name: "Should create no databases because one of the declared database names are reserved",
+
+			withVPCExists: true,
+			withDeclaredDBs: []v1alpha1.ClusterDatabasesPostgres{
+				{
+					Name: "db",
+				},
+				{
+					Name: "new-user-database",
+				},
+			},
+			withExistingDBs: []*client.PostgresDatabase{},
+			expectCreations: 0,
+			expectErr:       true,
+			err:             "determining course of action: invalid database name: 'db' and 'database' are reserved",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -111,7 +148,12 @@ func TestPostgresReconciler(t *testing.T) {
 			}
 
 			_, err := reconciler.Reconcile(context.Background(), meta, state)
-			assert.NoError(t, err)
+			if tc.expectErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.err, err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
 
 			assert.Equal(t, tc.expectCreations, creations)
 			assert.Equal(t, tc.expectDeletions, deletions)

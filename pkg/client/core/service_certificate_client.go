@@ -16,8 +16,8 @@ type certificateService struct {
 	state   client.CertificateState
 }
 
-func (s *certificateService) DeleteCognitoCertificate(_ context.Context, opts client.DeleteCognitoCertificateOpts) error {
-	err := s.service.DeleteCognitoCertificate(context.Background(), api.DeleteCognitoCertificateOpts{
+func (s *certificateService) DeleteCognitoCertificate(context context.Context, opts client.DeleteCognitoCertificateOpts) error {
+	err := s.service.DeleteCognitoCertificate(context, api.DeleteCognitoCertificateOpts{
 		ID:     opts.ID,
 		Domain: opts.Domain,
 	})
@@ -28,8 +28,8 @@ func (s *certificateService) DeleteCognitoCertificate(_ context.Context, opts cl
 	return nil
 }
 
-func (s *certificateService) DeleteCertificate(_ context.Context, opts client.DeleteCertificateOpts) error {
-	err := s.service.DeleteCertificate(context.Background(), api.DeleteCertificateOpts{
+func (s *certificateService) DeleteCertificate(context context.Context, opts client.DeleteCertificateOpts) error {
+	err := s.service.DeleteCertificate(context, api.DeleteCertificateOpts{
 		ID:     opts.ID,
 		Domain: opts.Domain,
 	})
@@ -45,7 +45,7 @@ func (s *certificateService) DeleteCertificate(_ context.Context, opts client.De
 	return nil
 }
 
-func (s *certificateService) CreateCertificate(_ context.Context, opts client.CreateCertificateOpts) (*client.Certificate, error) {
+func (s *certificateService) CreateCertificate(context context.Context, opts client.CreateCertificateOpts) (*client.Certificate, error) {
 	// [Refactor] Reconciler is responsible for ordering operations
 	//
 	// We should be doing this check in the reconciler together with a
@@ -62,7 +62,7 @@ func (s *certificateService) CreateCertificate(_ context.Context, opts client.Cr
 		}
 	}
 
-	c, err := s.service.CreateCertificate(context.Background(), api.CreateCertificateOpts{
+	c, err := s.service.CreateCertificate(context, api.CreateCertificateOpts{
 		ID:           opts.ID,
 		FQDN:         opts.FQDN,
 		Domain:       opts.Domain,

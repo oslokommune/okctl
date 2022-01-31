@@ -22,8 +22,8 @@ type clusterService struct {
 	auth     aws.Authenticator
 }
 
-func (s *clusterService) CreateCluster(_ context.Context, opts client.ClusterCreateOpts) (*client.Cluster, error) {
-	c, err := s.service.CreateCluster(context.Background(), api.ClusterCreateOpts{
+func (s *clusterService) CreateCluster(context context.Context, opts client.ClusterCreateOpts) (*client.Cluster, error) {
+	c, err := s.service.CreateCluster(context, api.ClusterCreateOpts{
 		ID:      opts.ID,
 		Cidr:    opts.Cidr,
 		Version: opts.Version,
@@ -77,8 +77,8 @@ func (s *clusterService) CreateCluster(_ context.Context, opts client.ClusterCre
 	return cluster, nil
 }
 
-func (s *clusterService) DeleteCluster(_ context.Context, opts client.ClusterDeleteOpts) error {
-	err := s.service.DeleteCluster(context.Background(), api.ClusterDeleteOpts{
+func (s *clusterService) DeleteCluster(context context.Context, opts client.ClusterDeleteOpts) error {
+	err := s.service.DeleteCluster(context, api.ClusterDeleteOpts{
 		ID:                 opts.ID,
 		FargateProfileName: opts.FargateProfileName,
 	})
@@ -94,8 +94,8 @@ func (s *clusterService) DeleteCluster(_ context.Context, opts client.ClusterDel
 	return nil
 }
 
-func (s *clusterService) GetClusterSecurityGroupID(_ context.Context, opts client.GetClusterSecurityGroupIDOpts) (*api.ClusterSecurityGroupID, error) {
-	return s.service.GetClusterSecurityGroupID(context.Background(), &api.ClusterSecurityGroupIDGetOpts{
+func (s *clusterService) GetClusterSecurityGroupID(context context.Context, opts client.GetClusterSecurityGroupIDOpts) (*api.ClusterSecurityGroupID, error) {
+	return s.service.GetClusterSecurityGroupID(context, &api.ClusterSecurityGroupIDGetOpts{
 		ID: opts.ID,
 	})
 }

@@ -19,8 +19,8 @@ type containerRepositoryService struct {
 }
 
 // CreateContainerRepository handles api, state, store and report orchistration for creation of a container repository
-func (c *containerRepositoryService) CreateContainerRepository(_ context.Context, opts client.CreateContainerRepositoryOpts) (*client.ContainerRepository, error) {
-	repository, err := c.service.CreateContainerRepository(context.Background(), &api.CreateContainerRepositoryOpts{
+func (c *containerRepositoryService) CreateContainerRepository(context context.Context, opts client.CreateContainerRepositoryOpts) (*client.ContainerRepository, error) {
+	repository, err := c.service.CreateContainerRepository(context, &api.CreateContainerRepositoryOpts{
 		ClusterID: opts.ClusterID,
 		Name:      opts.ImageName,
 		StackName: cfn.NewStackNamer().ContainerRepository(opts.ImageName, opts.ClusterID.ClusterName),
@@ -46,8 +46,8 @@ func (c *containerRepositoryService) CreateContainerRepository(_ context.Context
 }
 
 // DeleteContainerRepository handles api, state, store and report orchistration for deletion of a container repository
-func (c *containerRepositoryService) DeleteContainerRepository(_ context.Context, opts client.DeleteContainerRepositoryOpts) error {
-	err := c.service.DeleteContainerRepository(context.Background(), &api.DeleteContainerRepositoryOpts{
+func (c *containerRepositoryService) DeleteContainerRepository(context context.Context, opts client.DeleteContainerRepositoryOpts) error {
+	err := c.service.DeleteContainerRepository(context, &api.DeleteContainerRepositoryOpts{
 		ClusterID: opts.ClusterID,
 		StackName: cfn.NewStackNamer().ContainerRepository(opts.ImageName, opts.ClusterID.ClusterName),
 	})

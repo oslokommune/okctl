@@ -105,7 +105,7 @@ func (s *externalDNSService) CreateExternalDNS(ctx context.Context, opts client.
 		return nil, err
 	}
 
-	kube, err := s.service.CreateExternalDNSKubeDeployment(context.Background(), api.CreateExternalDNSKubeDeploymentOpts{
+	kube, err := s.service.CreateExternalDNSKubeDeployment(ctx, api.CreateExternalDNSKubeDeploymentOpts{
 		ID:           opts.ID,
 		HostedZoneID: opts.HostedZoneID,
 		DomainFilter: opts.Domain,

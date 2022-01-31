@@ -13,6 +13,7 @@ type VirtualEnvironment struct {
 	env          map[string]string
 	Warning      string
 	ShellCommand string
+	ShellArgs    []string
 }
 
 // Environ returns all environment variables in the virtual environment, on the form
@@ -54,5 +55,6 @@ func CreateVirtualEnvironment(opts commandlineprompter.CommandLinePromptOpts) (*
 		env:          commandLinePrompt.Env,
 		Warning:      commandLinePrompt.Warning,
 		ShellCommand: shell.Command,
+		ShellArgs:    shell.Args,
 	}, nil
 }

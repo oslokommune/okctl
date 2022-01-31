@@ -47,10 +47,8 @@ func New(opts CommandLinePromptOpts, shellType shelltype.ShellType) (CommandLine
 		}, nil
 	case shelltype.Zsh:
 		return &zshPrompter{
-			userHomeDirStorage: opts.UserHomeDirStorage,
-			tmpStorer:          opts.TmpStorage,
-			osEnvVars:          osEnvVars,
-			clusterName:        opts.ClusterName,
+			clusterName: opts.ClusterName,
+			osEnvVars:   osEnvVars,
 		}, nil
 	default:
 		return &noopPrompter{

@@ -141,7 +141,7 @@ func venvRunE(o *okctl.Okctl, okctlEnvironment commands.OkctlEnvironment) error 
 		return fmt.Errorf("could not print welcome message: %w", err)
 	}
 
-	shell := exec.Command(venv.ShellCommand) //nolint:gosec
+	shell := exec.Command(venv.ShellCommand, venv.ShellArgs...) //nolint:gosec
 	shell.Env = venv.Environ()
 	shell.Stdout = o.Out
 	shell.Stdin = o.In

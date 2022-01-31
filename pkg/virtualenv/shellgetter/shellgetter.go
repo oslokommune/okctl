@@ -41,6 +41,7 @@ func NewShellGetter(
 // Shell contains data about a shell executable (like bash)
 type Shell struct {
 	Command   string
+	Args      []string
 	ShellType shelltype.ShellType
 }
 
@@ -54,18 +55,23 @@ func (g *ShellGetter) Get() (*Shell, error) {
 	}
 
 	var shellType shelltype.ShellType
+	var shellArgs []string
 
 	switch {
 	case g.shellIsBash(shellCmd):
 		shellType = shelltype.Bash
 	case g.shellIsZsh(shellCmd):
 		shellType = shelltype.Zsh
+		// Don't read the user configuration files, so that we can control
+		// "standard" environment variables (PS1, AWS_PROFILE)
+		shellArgs = []string{"-f"}
 	default:
 		shellType = shelltype.Unknown
 	}
 
 	return &Shell{
 		Command:   shellCmd,
+		Args:      shellArgs,
 		ShellType: shellType,
 	}, nil
 }

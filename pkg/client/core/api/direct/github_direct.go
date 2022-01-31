@@ -11,8 +11,8 @@ import (
 )
 
 type githubAPI struct {
-	client  github.Githuber
-	service api.ParameterService
+	client           github.Githuber
+	parameterService api.ParameterService
 }
 
 func githubDeployKeySecretName(org, repo string) string {
@@ -20,7 +20,7 @@ func githubDeployKeySecretName(org, repo string) string {
 }
 
 func (a *githubAPI) DeleteRepositoryDeployKey(opts client.DeleteGithubDeployKeyOpts) error {
-	err := a.service.DeleteSecret(context.Background(), api.DeleteSecretOpts{
+	err := a.parameterService.DeleteSecret(context.Background(), api.DeleteSecretOpts{
 		Name: githubDeployKeySecretName(opts.Organisation, opts.Repository),
 	})
 	if err != nil {
@@ -36,7 +36,7 @@ func (a *githubAPI) CreateRepositoryDeployKey(opts client.CreateGithubDeployKeyO
 		return nil, err
 	}
 
-	param, err := a.service.CreateSecret(context.Background(), api.CreateSecretOpts{
+	param, err := a.parameterService.CreateSecret(context.Background(), api.CreateSecretOpts{
 		ID:     opts.ID,
 		Name:   githubDeployKeySecretName(opts.Organisation, opts.Repository),
 		Secret: string(key.PrivateKey),
@@ -71,7 +71,7 @@ func (a *githubAPI) ListReleases(owner, repo string) ([]*github.RepositoryReleas
 // NewGithubAPI returns an instantiated github API client
 func NewGithubAPI(service api.ParameterService, client github.Githuber) client.GithubAPI {
 	return &githubAPI{
-		client:  client,
-		service: service,
+		client:           client,
+		parameterService: service,
 	}
 }

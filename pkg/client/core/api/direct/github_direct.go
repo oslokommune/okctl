@@ -11,7 +11,7 @@ import (
 )
 
 type githubAPI struct {
-	client           github.Githuber
+	githubClient     github.Githuber
 	parameterService api.ParameterService
 }
 
@@ -27,7 +27,7 @@ func (a *githubAPI) DeleteRepositoryDeployKey(opts client.DeleteGithubDeployKeyO
 		return err
 	}
 
-	return a.client.DeleteDeployKey(opts.Organisation, opts.Repository, opts.Identifier)
+	return a.githubClient.DeleteDeployKey(opts.Organisation, opts.Repository, opts.Identifier)
 }
 
 func (a *githubAPI) CreateRepositoryDeployKey(opts client.CreateGithubDeployKeyOpts) (*client.GithubDeployKey, error) {
@@ -45,7 +45,7 @@ func (a *githubAPI) CreateRepositoryDeployKey(opts client.CreateGithubDeployKeyO
 		return nil, err
 	}
 
-	deployKey, err := a.client.CreateDeployKey(opts.Organisation, opts.Repository, opts.Title, string(key.PublicKey))
+	deployKey, err := a.githubClient.CreateDeployKey(opts.Organisation, opts.Repository, opts.Title, string(key.PublicKey))
 	if err != nil {
 		return nil, err
 	}
@@ -65,13 +65,13 @@ func (a *githubAPI) CreateRepositoryDeployKey(opts client.CreateGithubDeployKeyO
 }
 
 func (a *githubAPI) ListReleases(owner, repo string) ([]*github.RepositoryRelease, error) {
-	return a.client.ListReleases(owner, repo)
+	return a.githubClient.ListReleases(owner, repo)
 }
 
-// NewGithubAPI returns an instantiated github API client
+// NewGithubAPI returns an instantiated github API githubClient
 func NewGithubAPI(service api.ParameterService, client github.Githuber) client.GithubAPI {
 	return &githubAPI{
-		client:           client,
+		githubClient:     client,
 		parameterService: service,
 	}
 }

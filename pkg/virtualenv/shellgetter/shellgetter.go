@@ -53,15 +53,16 @@ func (g *ShellGetter) Get() (*Shell, error) {
 
 	var shellType shelltype.ShellType
 
+	// Used to set flags to avoid reading the user configuration files, so that
+	// we can control "standard" environment variables (PS1, AWS_PROFILE)
 	var shellArgs []string
 
 	switch {
 	case g.shellIsBash(shellCmd):
 		shellType = shelltype.Bash
+		shellArgs = []string{"--norc", "--noprofile"}
 	case g.shellIsZsh(shellCmd):
 		shellType = shelltype.Zsh
-		// Don't read the user configuration files, so that we can control
-		// "standard" environment variables (PS1, AWS_PROFILE)
 		shellArgs = []string{"-f"}
 	default:
 		shellType = shelltype.Unknown

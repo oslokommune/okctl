@@ -12,15 +12,15 @@ import (
 )
 
 type containerRepositoryService struct {
-	api   client.ContainerRepositoryAPI
-	state client.ContainerRepositoryState
+	service api.ContainerRepositoryService
+	state   client.ContainerRepositoryState
 
 	provider v1alpha1.CloudProvider
 }
 
 // CreateContainerRepository handles api, state, store and report orchistration for creation of a container repository
-func (c *containerRepositoryService) CreateContainerRepository(_ context.Context, opts client.CreateContainerRepositoryOpts) (*client.ContainerRepository, error) {
-	repository, err := c.api.CreateContainerRepository(api.CreateContainerRepositoryOpts{
+func (c *containerRepositoryService) CreateContainerRepository(context context.Context, opts client.CreateContainerRepositoryOpts) (*client.ContainerRepository, error) {
+	repository, err := c.service.CreateContainerRepository(context, &api.CreateContainerRepositoryOpts{
 		ClusterID: opts.ClusterID,
 		Name:      opts.ImageName,
 		StackName: cfn.NewStackNamer().ContainerRepository(opts.ImageName, opts.ClusterID.ClusterName),
@@ -46,8 +46,8 @@ func (c *containerRepositoryService) CreateContainerRepository(_ context.Context
 }
 
 // DeleteContainerRepository handles api, state, store and report orchistration for deletion of a container repository
-func (c *containerRepositoryService) DeleteContainerRepository(_ context.Context, opts client.DeleteContainerRepositoryOpts) error {
-	err := c.api.DeleteContainerRepository(api.DeleteContainerRepositoryOpts{
+func (c *containerRepositoryService) DeleteContainerRepository(context context.Context, opts client.DeleteContainerRepositoryOpts) error {
+	err := c.service.DeleteContainerRepository(context, &api.DeleteContainerRepositoryOpts{
 		ClusterID: opts.ClusterID,
 		StackName: cfn.NewStackNamer().ContainerRepository(opts.ImageName, opts.ClusterID.ClusterName),
 	})
@@ -65,12 +65,12 @@ func (c *containerRepositoryService) DeleteContainerRepository(_ context.Context
 
 // NewContainerRepositoryService returns an initialised container repository service
 func NewContainerRepositoryService(
-	api client.ContainerRepositoryAPI,
+	service api.ContainerRepositoryService,
 	state client.ContainerRepositoryState,
 	provider v1alpha1.CloudProvider,
 ) client.ContainerRepositoryService {
 	return &containerRepositoryService{
-		api:      api,
+		service:  service,
 		state:    state,
 		provider: provider,
 	}

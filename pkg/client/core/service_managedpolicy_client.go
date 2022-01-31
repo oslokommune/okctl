@@ -8,12 +8,12 @@ import (
 )
 
 type managedPolicyService struct {
-	api   client.ManagedPolicyAPI
-	state client.ManagedPolicyState
+	service api.ManagedPolicyService
+	state   client.ManagedPolicyState
 }
 
-func (m *managedPolicyService) CreatePolicy(_ context.Context, opts client.CreatePolicyOpts) (*client.ManagedPolicy, error) {
-	p, err := m.api.CreatePolicy(api.CreatePolicyOpts{
+func (m *managedPolicyService) CreatePolicy(context context.Context, opts client.CreatePolicyOpts) (*client.ManagedPolicy, error) {
+	p, err := m.service.CreatePolicy(context, api.CreatePolicyOpts{
 		ID:                     opts.ID,
 		StackName:              opts.StackName,
 		PolicyOutputName:       opts.PolicyOutputName,
@@ -38,8 +38,8 @@ func (m *managedPolicyService) CreatePolicy(_ context.Context, opts client.Creat
 	return policy, nil
 }
 
-func (m *managedPolicyService) DeletePolicy(_ context.Context, opts client.DeletePolicyOpts) error {
-	err := m.api.DeletePolicy(api.DeletePolicyOpts{
+func (m *managedPolicyService) DeletePolicy(context context.Context, opts client.DeletePolicyOpts) error {
+	err := m.service.DeletePolicy(context, api.DeletePolicyOpts{
 		ID:        opts.ID,
 		StackName: opts.StackName,
 	})
@@ -52,11 +52,11 @@ func (m *managedPolicyService) DeletePolicy(_ context.Context, opts client.Delet
 
 // NewManagedPolicyService returns an initialised service
 func NewManagedPolicyService(
-	api client.ManagedPolicyAPI,
+	service api.ManagedPolicyService,
 	state client.ManagedPolicyState,
 ) client.ManagedPolicyService {
 	return &managedPolicyService{
-		api:   api,
-		state: state,
+		service: service,
+		state:   state,
 	}
 }

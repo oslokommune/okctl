@@ -10,16 +10,16 @@ import (
 )
 
 type manifestService struct {
-	api   client.ManifestAPI
-	state client.ManifestState
+	service api.KubeService
+	state   client.ManifestState
 }
 
-func (s *manifestService) ScaleDeployment(_ context.Context, opts api.ScaleDeploymentOpts) error {
-	return s.api.ScaleDeployment(opts)
+func (s *manifestService) ScaleDeployment(context context.Context, opts api.ScaleDeploymentOpts) error {
+	return s.service.ScaleDeployment(context, opts)
 }
 
-func (s *manifestService) CreateConfigMap(_ context.Context, opts client.CreateConfigMapOpts) (*client.KubernetesManifest, error) {
-	cm, err := s.api.CreateConfigMap(api.CreateConfigMapOpts{
+func (s *manifestService) CreateConfigMap(context context.Context, opts client.CreateConfigMapOpts) (*client.KubernetesManifest, error) {
+	cm, err := s.service.CreateConfigMap(context, api.CreateConfigMapOpts{
 		ID:        opts.ID,
 		Name:      opts.Name,
 		Namespace: opts.Namespace,
@@ -46,8 +46,8 @@ func (s *manifestService) CreateConfigMap(_ context.Context, opts client.CreateC
 	return m, nil
 }
 
-func (s *manifestService) DeleteConfigMap(_ context.Context, opts client.DeleteConfigMapOpts) error {
-	err := s.api.DeleteConfigMap(api.DeleteConfigMapOpts{
+func (s *manifestService) DeleteConfigMap(context context.Context, opts client.DeleteConfigMapOpts) error {
+	err := s.service.DeleteConfigMap(context, api.DeleteConfigMapOpts{
 		ID:        opts.ID,
 		Name:      opts.Name,
 		Namespace: opts.Namespace,
@@ -64,8 +64,8 @@ func (s *manifestService) DeleteConfigMap(_ context.Context, opts client.DeleteC
 	return nil
 }
 
-func (s *manifestService) DeleteExternalSecret(_ context.Context, opts client.DeleteExternalSecretOpts) error {
-	err := s.api.DeleteExternalSecret(api.DeleteExternalSecretsOpts{
+func (s *manifestService) DeleteExternalSecret(context context.Context, opts client.DeleteExternalSecretOpts) error {
+	err := s.service.DeleteExternalSecrets(context, api.DeleteExternalSecretsOpts{
 		ID:        opts.ID,
 		Manifests: opts.Secrets,
 	})
@@ -81,8 +81,8 @@ func (s *manifestService) DeleteExternalSecret(_ context.Context, opts client.De
 	return nil
 }
 
-func (s *manifestService) CreateStorageClass(_ context.Context, opts api.CreateStorageClassOpts) (*client.KubernetesManifest, error) {
-	sc, err := s.api.CreateStorageClass(opts)
+func (s *manifestService) CreateStorageClass(context context.Context, opts api.CreateStorageClassOpts) (*client.KubernetesManifest, error) {
+	sc, err := s.service.CreateStorageClass(context, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -102,8 +102,8 @@ func (s *manifestService) CreateStorageClass(_ context.Context, opts api.CreateS
 	return m, nil
 }
 
-func (s *manifestService) CreateNamespace(_ context.Context, opts api.CreateNamespaceOpts) (*client.KubernetesManifest, error) {
-	ns, err := s.api.CreateNamespace(opts)
+func (s *manifestService) CreateNamespace(context context.Context, opts api.CreateNamespaceOpts) (*client.KubernetesManifest, error) {
+	ns, err := s.service.CreateNamespace(context, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -124,8 +124,8 @@ func (s *manifestService) CreateNamespace(_ context.Context, opts api.CreateName
 	return m, nil
 }
 
-func (s *manifestService) DeleteNamespace(_ context.Context, opts api.DeleteNamespaceOpts) error {
-	err := s.api.DeleteNamespace(opts)
+func (s *manifestService) DeleteNamespace(context context.Context, opts api.DeleteNamespaceOpts) error {
+	err := s.service.DeleteNamespace(context, opts)
 	if err != nil && !errors.IsKind(err, errors.NotExist) {
 		return err
 	}
@@ -138,16 +138,21 @@ func (s *manifestService) DeleteNamespace(_ context.Context, opts api.DeleteName
 	return nil
 }
 
-func (s *manifestService) CreateExternalSecret(_ context.Context, opts client.CreateExternalSecretOpts) (*client.KubernetesManifest, error) {
-	m, err := s.api.CreateExternalSecret(opts)
+func (s *manifestService) CreateExternalSecret(context context.Context, featureOpts client.CreateExternalSecretOpts) (*client.KubernetesManifest, error) {
+	toolOpts := api.CreateExternalSecretsOpts{
+		ID:       featureOpts.ID,
+		Manifest: featureOpts.Manifest,
+	}
+
+	m, err := s.service.CreateExternalSecrets(context, toolOpts)
 	if err != nil {
 		return nil, err
 	}
 
 	manifest := &client.KubernetesManifest{
-		ID:        opts.ID,
-		Name:      opts.Name,
-		Namespace: opts.Namespace,
+		ID:        featureOpts.ID,
+		Name:      featureOpts.Name,
+		Namespace: featureOpts.Namespace,
 		Type:      client.ManifestTypeExternalSecret,
 		Content:   m.Content,
 	}
@@ -161,12 +166,9 @@ func (s *manifestService) CreateExternalSecret(_ context.Context, opts client.Cr
 }
 
 // NewManifestService returns an initialised service
-func NewManifestService(
-	api client.ManifestAPI,
-	state client.ManifestState,
-) client.ManifestService {
+func NewManifestService(service api.KubeService, state client.ManifestState) client.ManifestService {
 	return &manifestService{
-		api:   api,
-		state: state,
+		service: service,
+		state:   state,
 	}
 }

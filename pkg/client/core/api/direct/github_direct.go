@@ -1,6 +1,7 @@
 package direct
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -10,8 +11,8 @@ import (
 )
 
 type githubAPI struct {
-	client       github.Githuber
-	parameterAPI client.ParameterAPI
+	githubClient     github.Githuber
+	parameterService api.ParameterService
 }
 
 func githubDeployKeySecretName(org, repo string) string {
@@ -19,14 +20,14 @@ func githubDeployKeySecretName(org, repo string) string {
 }
 
 func (a *githubAPI) DeleteRepositoryDeployKey(opts client.DeleteGithubDeployKeyOpts) error {
-	err := a.parameterAPI.DeleteSecret(api.DeleteSecretOpts{
+	err := a.parameterService.DeleteSecret(context.Background(), api.DeleteSecretOpts{
 		Name: githubDeployKeySecretName(opts.Organisation, opts.Repository),
 	})
 	if err != nil {
 		return err
 	}
 
-	return a.client.DeleteDeployKey(opts.Organisation, opts.Repository, opts.Identifier)
+	return a.githubClient.DeleteDeployKey(opts.Organisation, opts.Repository, opts.Identifier)
 }
 
 func (a *githubAPI) CreateRepositoryDeployKey(opts client.CreateGithubDeployKeyOpts) (*client.GithubDeployKey, error) {
@@ -35,7 +36,7 @@ func (a *githubAPI) CreateRepositoryDeployKey(opts client.CreateGithubDeployKeyO
 		return nil, err
 	}
 
-	param, err := a.parameterAPI.CreateSecret(api.CreateSecretOpts{
+	param, err := a.parameterService.CreateSecret(context.Background(), api.CreateSecretOpts{
 		ID:     opts.ID,
 		Name:   githubDeployKeySecretName(opts.Organisation, opts.Repository),
 		Secret: string(key.PrivateKey),
@@ -44,7 +45,7 @@ func (a *githubAPI) CreateRepositoryDeployKey(opts client.CreateGithubDeployKeyO
 		return nil, err
 	}
 
-	deployKey, err := a.client.CreateDeployKey(opts.Organisation, opts.Repository, opts.Title, string(key.PublicKey))
+	deployKey, err := a.githubClient.CreateDeployKey(opts.Organisation, opts.Repository, opts.Title, string(key.PublicKey))
 	if err != nil {
 		return nil, err
 	}
@@ -64,13 +65,13 @@ func (a *githubAPI) CreateRepositoryDeployKey(opts client.CreateGithubDeployKeyO
 }
 
 func (a *githubAPI) ListReleases(owner, repo string) ([]*github.RepositoryRelease, error) {
-	return a.client.ListReleases(owner, repo)
+	return a.githubClient.ListReleases(owner, repo)
 }
 
-// NewGithubAPI returns an instantiated github API client
-func NewGithubAPI(paramAPI client.ParameterAPI, client github.Githuber) client.GithubAPI {
+// NewGithubAPI returns an instantiated github API githubClient
+func NewGithubAPI(service api.ParameterService, client github.Githuber) client.GithubAPI {
 	return &githubAPI{
-		client:       client,
-		parameterAPI: paramAPI,
+		githubClient:     client,
+		parameterService: service,
 	}
 }

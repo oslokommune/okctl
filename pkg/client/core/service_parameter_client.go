@@ -8,12 +8,12 @@ import (
 )
 
 type parameterService struct {
-	api   client.ParameterAPI
-	state client.ParameterState
+	service api.ParameterService
+	state   client.ParameterState
 }
 
-func (s *parameterService) DeleteSecret(_ context.Context, opts client.DeleteSecretOpts) error {
-	err := s.api.DeleteSecret(api.DeleteSecretOpts{
+func (s *parameterService) DeleteSecret(context context.Context, opts client.DeleteSecretOpts) error {
+	err := s.service.DeleteSecret(context, api.DeleteSecretOpts{
 		Name: opts.Name,
 	})
 	if err != nil {
@@ -23,8 +23,8 @@ func (s *parameterService) DeleteSecret(_ context.Context, opts client.DeleteSec
 	return s.state.RemoveSecret(opts.Name)
 }
 
-func (s *parameterService) CreateSecret(_ context.Context, opts client.CreateSecretOpts) (*client.SecretParameter, error) {
-	secret, err := s.api.CreateSecret(api.CreateSecretOpts{
+func (s *parameterService) CreateSecret(context context.Context, opts client.CreateSecretOpts) (*client.SecretParameter, error) {
+	secret, err := s.service.CreateSecret(context, api.CreateSecretOpts{
 		ID:     opts.ID,
 		Name:   opts.Name,
 		Secret: opts.Secret,
@@ -51,11 +51,11 @@ func (s *parameterService) CreateSecret(_ context.Context, opts client.CreateSec
 
 // NewParameterService returns an initialised service
 func NewParameterService(
-	api client.ParameterAPI,
+	service api.ParameterService,
 	state client.ParameterState,
 ) client.ParameterService {
 	return &parameterService{
-		api:   api,
-		state: state,
+		service: service,
+		state:   state,
 	}
 }

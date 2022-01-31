@@ -28,12 +28,12 @@ const (
 )
 
 type applicationPostgresService struct {
-	manifestService        client.ApplicationManifestService
-	pgService              client.ComponentService
-	securityGroupAPI       client.SecurityGroupAPI
-	vpcService             client.VPCService
-	applicationPostgresAPI client.ApplicationPostgresAPI
-	clusterService         client.ClusterService
+	manifestService client.ApplicationManifestService
+	pgService       client.ComponentService
+	sgService       api.SecurityGroupService
+	vpcService      client.VPCService
+	kubeService     api.KubeService
+	clusterService  client.ClusterService
 }
 
 // AddPostgresToApplication does the required steps for allowing EKS pod to RDS traffic
@@ -53,7 +53,7 @@ func (a *applicationPostgresService) AddPostgresToApplication(ctx context.Contex
 		return fmt.Errorf("fetching database: %w", err)
 	}
 
-	appSecurityGroup, err := a.securityGroupAPI.CreateSecurityGroup(ctx, api.CreateSecurityGroupOpts{
+	appSecurityGroup, err := a.sgService.CreateSecurityGroup(ctx, api.CreateSecurityGroupOpts{
 		ClusterID:     clusterID,
 		VPCID:         vpc.VpcID,
 		Name:          opts.Application.Metadata.Name,
@@ -85,7 +85,7 @@ func (a *applicationPostgresService) AddPostgresToApplication(ctx context.Contex
 
 // RemovePostgresFromApplication cleans up required configuration for achieving communication between a EKS pod and RDS
 func (a *applicationPostgresService) RemovePostgresFromApplication(ctx context.Context, opts client.RemovePostgresFromApplicationOpts) error {
-	securityGroup, err := a.securityGroupAPI.GetSecurityGroup(ctx, api.GetSecurityGroupOpts{
+	securityGroup, err := a.sgService.GetSecurityGroup(ctx, api.GetSecurityGroupOpts{
 		ClusterName: opts.Cluster.Metadata.Name,
 		Name:        opts.Application.Metadata.Name,
 	})
@@ -93,7 +93,7 @@ func (a *applicationPostgresService) RemovePostgresFromApplication(ctx context.C
 		return fmt.Errorf("getting security group: %w", err)
 	}
 
-	err = a.securityGroupAPI.DeleteSecurityGroup(ctx, api.DeleteSecurityGroupOpts{
+	err = a.sgService.DeleteSecurityGroup(ctx, api.DeleteSecurityGroupOpts{
 		ClusterName: opts.Cluster.Metadata.Name,
 		Name:        opts.Application.Metadata.Name,
 	})
@@ -113,7 +113,7 @@ func (a *applicationPostgresService) RemovePostgresFromApplication(ctx context.C
 		return fmt.Errorf("removing security group policy: %w", err)
 	}
 
-	err = a.securityGroupAPI.RemoveRule(ctx, api.RemoveRuleOpts{
+	err = a.sgService.RemoveRule(ctx, api.RemoveRuleOpts{
 		ClusterName:               opts.Cluster.Metadata.Name,
 		SecurityGroupStackName:    stackName,
 		SecurityGroupResourceName: resourceName,
@@ -134,7 +134,7 @@ func (a *applicationPostgresService) RemovePostgresFromApplication(ctx context.C
 
 // HasPostgresIntegration knows if an application has an existing integration with a database
 func (a *applicationPostgresService) HasPostgresIntegration(ctx context.Context, opts client.HasPostgresIntegrationOpts) (bool, error) {
-	appSecurityGroup, err := a.securityGroupAPI.GetSecurityGroup(ctx, api.GetSecurityGroupOpts{
+	appSecurityGroup, err := a.sgService.GetSecurityGroup(ctx, api.GetSecurityGroupOpts{
 		Name:        opts.Application.Metadata.Name,
 		ClusterName: opts.Cluster.Metadata.Name,
 	})
@@ -179,7 +179,7 @@ func (a *applicationPostgresService) allowTrafficFromAppToRDS(ctx context.Contex
 		ClusterName:       opts.Cluster.Metadata.Name,
 	}).CloudFormationResourceName("RDSPostgresIncoming")
 
-	_, err := a.securityGroupAPI.AddRule(ctx, api.AddRuleOpts{
+	_, err := a.sgService.AddRule(ctx, api.AddRuleOpts{
 		ClusterName:               opts.Cluster.Metadata.Name,
 		SecurityGroupStackName:    stackName,
 		SecurityGroupResourceName: resourceName,
@@ -278,7 +278,7 @@ func (a *applicationPostgresService) newSecurityGroupPatchOperations(
 
 // ref: https://aws.amazon.com/blogs/containers/introducing-security-groups-for-pods/
 func (a *applicationPostgresService) disableEarlyTCPDemux(ctx context.Context, clusterID api.ID) error {
-	return a.applicationPostgresAPI.DisableEarlyTCPDemux(ctx, clusterID)
+	return a.kubeService.DisableEarlyDEMUX(ctx, clusterID)
 }
 
 func (a *applicationPostgresService) removeSecurityGroupPolicy(
@@ -400,17 +400,17 @@ func getOperationIndexForSecurityGroupID(operations []jsonpatch.Operation, secur
 func NewApplicationPostgresService(
 	manifestService client.ApplicationManifestService,
 	pgService client.ComponentService,
-	securityGroupAPI client.SecurityGroupAPI,
+	sgService api.SecurityGroupService,
 	vpcService client.VPCService,
-	applicationPostgresAPI client.ApplicationPostgresAPI,
+	kubeService api.KubeService,
 	clusterService client.ClusterService,
 ) client.ApplicationPostgresService {
 	return &applicationPostgresService{
-		manifestService:        manifestService,
-		pgService:              pgService,
-		securityGroupAPI:       securityGroupAPI,
-		vpcService:             vpcService,
-		applicationPostgresAPI: applicationPostgresAPI,
-		clusterService:         clusterService,
+		manifestService: manifestService,
+		pgService:       pgService,
+		sgService:       sgService,
+		vpcService:      vpcService,
+		kubeService:     kubeService,
+		clusterService:  clusterService,
 	}
 }

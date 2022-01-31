@@ -15,8 +15,8 @@ import (
 )
 
 type externalDNSService struct {
-	api   client.ExternalDNSAPI
-	state client.ExternalDNSState
+	service api.KubeService
+	state   client.ExternalDNSState
 
 	policy  client.ManagedPolicyService
 	account client.ServiceAccountService
@@ -105,7 +105,7 @@ func (s *externalDNSService) CreateExternalDNS(ctx context.Context, opts client.
 		return nil, err
 	}
 
-	kube, err := s.api.CreateExternalDNSKubeDeployment(api.CreateExternalDNSKubeDeploymentOpts{
+	kube, err := s.service.CreateExternalDNSKubeDeployment(ctx, api.CreateExternalDNSKubeDeploymentOpts{
 		ID:           opts.ID,
 		HostedZoneID: opts.HostedZoneID,
 		DomainFilter: opts.Domain,
@@ -135,13 +135,13 @@ func (s *externalDNSService) CreateExternalDNS(ctx context.Context, opts client.
 
 // NewExternalDNSService returns an initialised service
 func NewExternalDNSService(
-	api client.ExternalDNSAPI,
+	service api.KubeService,
 	state client.ExternalDNSState,
 	policy client.ManagedPolicyService,
 	account client.ServiceAccountService,
 ) client.ExternalDNSService {
 	return &externalDNSService{
-		api:     api,
+		service: service,
 		state:   state,
 		policy:  policy,
 		account: account,

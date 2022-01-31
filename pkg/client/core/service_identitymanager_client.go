@@ -13,14 +13,14 @@ import (
 )
 
 type identityManagerService struct {
-	api   client.IdentityManagerAPI
-	state client.IdentityManagerState
+	service api.IdentityManagerService
+	state   client.IdentityManagerState
 
 	cert client.CertificateService
 }
 
-func (s *identityManagerService) DeleteIdentityPoolClient(_ context.Context, opts client.DeleteIdentityPoolClientOpts) error {
-	err := s.api.DeleteIdentityPoolClient(api.DeleteIdentityPoolClientOpts{
+func (s *identityManagerService) DeleteIdentityPoolClient(context context.Context, opts client.DeleteIdentityPoolClientOpts) error {
+	err := s.service.DeleteIdentityPoolClient(context, api.DeleteIdentityPoolClientOpts{
 		ID:      opts.ID,
 		Purpose: opts.Purpose,
 	})
@@ -55,7 +55,7 @@ func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, id api.
 		return err
 	}
 
-	err = s.api.DeleteIdentityPool(api.DeleteIdentityPoolOpts{
+	err = s.service.DeleteIdentityPool(ctx, api.DeleteIdentityPoolOpts{
 		ID:         id,
 		UserPoolID: pool.UserPoolID,
 		Domain:     pool.AuthDomain,
@@ -72,13 +72,13 @@ func (s *identityManagerService) DeleteIdentityPool(ctx context.Context, id api.
 	return nil
 }
 
-func (s *identityManagerService) CreateIdentityPoolUser(_ context.Context, opts client.CreateIdentityPoolUserOpts) (*client.IdentityPoolUser, error) {
+func (s *identityManagerService) CreateIdentityPoolUser(context context.Context, opts client.CreateIdentityPoolUserOpts) (*client.IdentityPoolUser, error) {
 	err := opts.Validate()
 	if err != nil {
 		return nil, err
 	}
 
-	u, err := s.api.CreateIdentityPoolUser(api.CreateIdentityPoolUserOpts{
+	u, err := s.service.CreateIdentityPoolUser(context, api.CreateIdentityPoolUserOpts{
 		ID:         opts.ID,
 		Email:      opts.Email,
 		UserPoolID: opts.UserPoolID,
@@ -103,13 +103,13 @@ func (s *identityManagerService) CreateIdentityPoolUser(_ context.Context, opts 
 	return user, nil
 }
 
-func (s *identityManagerService) DeleteIdentityPoolUser(_ context.Context, opts client.DeleteIdentityPoolUserOpts) error {
+func (s *identityManagerService) DeleteIdentityPoolUser(context context.Context, opts client.DeleteIdentityPoolUserOpts) error {
 	err := opts.Validate()
 	if err != nil {
 		return err
 	}
 
-	err = s.api.DeleteIdentityPoolUser(api.DeleteIdentityPoolUserOpts{
+	err = s.service.DeleteIdentityPoolUser(context, api.DeleteIdentityPoolUserOpts{
 		ClusterID: opts.ClusterID,
 		UserEmail: opts.UserEmail,
 	})
@@ -128,8 +128,8 @@ func (s *identityManagerService) DeleteIdentityPoolUser(_ context.Context, opts 
 	return nil
 }
 
-func (s *identityManagerService) CreateIdentityPoolClient(_ context.Context, opts client.CreateIdentityPoolClientOpts) (*client.IdentityPoolClient, error) {
-	c, err := s.api.CreateIdentityPoolClient(api.CreateIdentityPoolClientOpts{
+func (s *identityManagerService) CreateIdentityPoolClient(context context.Context, opts client.CreateIdentityPoolClientOpts) (*client.IdentityPoolClient, error) {
+	c, err := s.service.CreateIdentityPoolClient(context, api.CreateIdentityPoolClientOpts{
 		ID:          opts.ID,
 		UserPoolID:  opts.UserPoolID,
 		Purpose:     opts.Purpose,
@@ -158,8 +158,8 @@ func (s *identityManagerService) CreateIdentityPoolClient(_ context.Context, opt
 	return cl, nil
 }
 
-func (s *identityManagerService) CreateIdentityPool(_ context.Context, opts client.CreateIdentityPoolOpts) (*client.IdentityPool, error) {
-	p, err := s.api.CreateIdentityPool(api.CreateIdentityPoolOpts{
+func (s *identityManagerService) CreateIdentityPool(context context.Context, opts client.CreateIdentityPoolOpts) (*client.IdentityPool, error) {
+	p, err := s.service.CreateIdentityPool(context, api.CreateIdentityPoolOpts{
 		ID:           opts.ID,
 		AuthDomain:   opts.AuthDomain,
 		AuthFQDN:     opts.AuthFQDN,
@@ -203,13 +203,13 @@ func (s *identityManagerService) CreateIdentityPool(_ context.Context, opts clie
 
 // NewIdentityManagerService returns an initialised service
 func NewIdentityManagerService(
-	api client.IdentityManagerAPI,
+	service api.IdentityManagerService,
 	state client.IdentityManagerState,
 	cert client.CertificateService,
 ) client.IdentityManagerService {
 	return &identityManagerService{
-		api:   api,
-		state: state,
-		cert:  cert,
+		service: service,
+		state:   state,
+		cert:    cert,
 	}
 }

@@ -64,7 +64,7 @@ type Okctl struct {
 
 	DB breeze.Client
 
-	coreServices    core.Services
+	toolChain       core.Services
 	kubeConfigStore api.KubeConfigStore
 }
 
@@ -141,7 +141,7 @@ func (o *Okctl) StateNodes() *clientCore.StateNodes {
 
 // StateHandlers returns the initialised state handlers
 func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHandlers {
-	helmClient := clientDirectAPI.NewHelmAPI(o.coreServices.Helm)
+	helmClient := clientDirectAPI.NewHelmAPI(o.toolChain.Helm)
 
 	return &clientCore.StateHandlers{
 		Helm:                      storm.NewHelmState(nodes.Helm),
@@ -171,31 +171,18 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 	}
 }
 
-// InitializeToolChain with core services
-func (o *Okctl) InitializeToolChain() (*clientDirectAPI.ToolChain, error) {
+// InitializeDirectClients with core services
+func (o *Okctl) InitializeDirectClients() (*clientDirectAPI.ToolChain, error) {
 	return &clientDirectAPI.ToolChain{
-		AppPostgresIntegration: clientDirectAPI.NewApplicationPostgresIntegrationAPI(o.coreServices.Kube),
-		Certificate:            clientDirectAPI.NewCertificateAPI(o.coreServices.Certificate),
-		Cluster:                clientDirectAPI.NewClusterAPI(o.coreServices.Cluster),
-		Component:              clientDirectAPI.NewComponentAPI(o.coreServices.ComponentService),
-		ContainerRepo:          clientDirectAPI.NewContainerRepositoryAPI(o.coreServices.ContainerRepositoryService),
-		ExternalDNS:            clientDirectAPI.NewExternalDNSAPI(o.coreServices.Kube),
-		Helm:                   clientDirectAPI.NewHelmAPI(o.coreServices.Helm),
-		IdentityManager:        clientDirectAPI.NewIdentityManagerAPI(o.coreServices.IdentityManager),
-		ManagedPolicy:          clientDirectAPI.NewManagedPolicyAPI(o.coreServices.ManagedPolicy),
-		Manifest:               clientDirectAPI.NewManifestAPI(o.coreServices.Kube),
-		Parameter:              clientDirectAPI.NewParameterAPI(o.coreServices.Parameter),
-		SecuityGroup:           clientDirectAPI.NewSecurityGroupAPI(o.coreServices.SecurityGroupService),
-		ServiceAccount:         clientDirectAPI.NewServiceAccountAPI(o.coreServices.ServiceAccount),
-		Vpc:                    clientDirectAPI.NewVPCAPI(o.coreServices.Vpc),
-		Domain:                 clientDirectAPI.NewDomainAPI(o.coreServices.Domain),
+		Helm:   clientDirectAPI.NewHelmAPI(o.toolChain.Helm),
+		Domain: clientDirectAPI.NewDomainAPI(o.toolChain.Domain),
 	}, nil
 }
 
 // ClientServices returns the initialised client-side services
 // nolint: funlen
 func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.Services, error) {
-	toolChain, err := o.InitializeToolChain()
+	directClients, err := o.InitializeDirectClients()
 	if err != nil {
 		return nil, err
 	}
@@ -223,34 +210,34 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	o.kubeConfigStore = kubeConfigStore
 
 	helmService := clientCore.NewHelmService(
-		toolChain.Helm,
+		directClients.Helm,
 		handlers.Helm,
 	)
 
 	managedPolicyService := clientCore.NewManagedPolicyService(
-		toolChain.ManagedPolicy,
+		o.toolChain.ManagedPolicy,
 		handlers.ManagedPolicy,
 	)
 
 	serviceAccountService := clientCore.NewServiceAccountService(
-		toolChain.ServiceAccount,
+		o.toolChain.ServiceAccount,
 		handlers.ServiceAccount,
 	)
 
 	certificateService := clientCore.NewCertificateService(
-		toolChain.Certificate,
+		o.toolChain.Certificate,
 		handlers.Certificate,
 	)
 
 	identityManagerService := clientCore.NewIdentityManagerService(
-		toolChain.IdentityManager,
+		o.toolChain.IdentityManager,
 		handlers.IdentityManager,
 		certificateService,
 	)
 
 	githubService := clientCore.NewGithubService(
 		clientDirectAPI.NewGithubAPI(
-			toolChain.Parameter,
+			o.toolChain.Parameter,
 			ghClient,
 		),
 		handlers.Github,
@@ -263,7 +250,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	manifestService := clientCore.NewManifestService(
-		toolChain.Manifest,
+		o.toolChain.Kube,
 		handlers.Manifest,
 	)
 
@@ -280,12 +267,12 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	vpcService := clientCore.NewVPCService(
-		toolChain.Vpc,
+		o.toolChain.Vpc,
 		handlers.Vpc,
 	)
 
 	paramService := clientCore.NewParameterService(
-		toolChain.Parameter,
+		o.toolChain.Parameter,
 		handlers.Parameter,
 	)
 
@@ -296,12 +283,12 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	domainService := clientCore.NewDomainService(
-		toolChain.Domain,
+		directClients.Domain,
 		handlers.Domain,
 	)
 
 	externalDNSService := clientCore.NewExternalDNSService(
-		toolChain.ExternalDNS,
+		o.toolChain.Kube,
 		handlers.ExternalDNS,
 		managedPolicyService,
 		serviceAccountService,
@@ -314,14 +301,14 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	clusterService := clientCore.NewClusterService(
-		toolChain.Cluster,
+		o.toolChain.Cluster,
 		handlers.Cluster,
 		o.CloudProvider,
 		o.CredentialsProvider.Aws(),
 	)
 
 	componentService := clientCore.NewComponentService(
-		toolChain.Component,
+		o.toolChain.ComponentService,
 		handlers.Component,
 		manifestService,
 		o.CloudProvider,
@@ -330,9 +317,9 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	applicationPostgresService := clientCore.NewApplicationPostgresService(
 		applicationManifestService,
 		componentService,
-		toolChain.SecuityGroup,
+		o.toolChain.SecurityGroupService,
 		vpcService,
-		toolChain.AppPostgresIntegration,
+		o.toolChain.Kube,
 		clusterService,
 	)
 
@@ -367,7 +354,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	nameserverService := clientCore.NewNameserverHandlerService(ghClient)
 
 	containerRepositoryService := clientCore.NewContainerRepositoryService(
-		toolChain.ContainerRepo,
+		o.toolChain.ContainerRepositoryService,
 		handlers.ContainerRepository,
 		o.CloudProvider,
 	)
@@ -456,7 +443,7 @@ func (o *Okctl) initialise() error {
 
 	o.DB = breeze.New()
 
-	err = o.initializeCoreServices()
+	err = o.initializeToolChain()
 	if err != nil {
 		return err
 	}
@@ -464,9 +451,9 @@ func (o *Okctl) initialise() error {
 	return nil
 }
 
-// initializeCoreServices initialize core services
+// initializeToolChain initialize core services
 // nolint: funlen
-func (o *Okctl) initializeCoreServices() error {
+func (o *Okctl) initializeToolChain() error {
 	homeDir, err := o.GetHomeDir()
 	if err != nil {
 		return err
@@ -615,7 +602,7 @@ func (o *Okctl) initializeCoreServices() error {
 		SecurityGroupService:       securityGroupService,
 	}
 
-	o.coreServices = services
+	o.toolChain = services
 
 	return nil
 }

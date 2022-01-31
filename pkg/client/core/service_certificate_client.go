@@ -12,12 +12,12 @@ import (
 )
 
 type certificateService struct {
-	api   client.CertificateAPI
-	state client.CertificateState
+	service api.CertificateService
+	state   client.CertificateState
 }
 
-func (s *certificateService) DeleteCognitoCertificate(_ context.Context, opts client.DeleteCognitoCertificateOpts) error {
-	err := s.api.DeleteCognitoCertificate(api.DeleteCognitoCertificateOpts{
+func (s *certificateService) DeleteCognitoCertificate(context context.Context, opts client.DeleteCognitoCertificateOpts) error {
+	err := s.service.DeleteCognitoCertificate(context, api.DeleteCognitoCertificateOpts{
 		ID:     opts.ID,
 		Domain: opts.Domain,
 	})
@@ -28,8 +28,8 @@ func (s *certificateService) DeleteCognitoCertificate(_ context.Context, opts cl
 	return nil
 }
 
-func (s *certificateService) DeleteCertificate(_ context.Context, opts client.DeleteCertificateOpts) error {
-	err := s.api.DeleteCertificate(api.DeleteCertificateOpts{
+func (s *certificateService) DeleteCertificate(context context.Context, opts client.DeleteCertificateOpts) error {
+	err := s.service.DeleteCertificate(context, api.DeleteCertificateOpts{
 		ID:     opts.ID,
 		Domain: opts.Domain,
 	})
@@ -45,7 +45,7 @@ func (s *certificateService) DeleteCertificate(_ context.Context, opts client.De
 	return nil
 }
 
-func (s *certificateService) CreateCertificate(_ context.Context, opts client.CreateCertificateOpts) (*client.Certificate, error) {
+func (s *certificateService) CreateCertificate(context context.Context, opts client.CreateCertificateOpts) (*client.Certificate, error) {
 	// [Refactor] Reconciler is responsible for ordering operations
 	//
 	// We should be doing this check in the reconciler together with a
@@ -62,7 +62,7 @@ func (s *certificateService) CreateCertificate(_ context.Context, opts client.Cr
 		}
 	}
 
-	c, err := s.api.CreateCertificate(api.CreateCertificateOpts{
+	c, err := s.service.CreateCertificate(context, api.CreateCertificateOpts{
 		ID:           opts.ID,
 		FQDN:         opts.FQDN,
 		Domain:       opts.Domain,
@@ -92,11 +92,11 @@ func (s *certificateService) CreateCertificate(_ context.Context, opts client.Cr
 
 // NewCertificateService returns an initialised service
 func NewCertificateService(
-	api client.CertificateAPI,
+	service api.CertificateService,
 	state client.CertificateState,
 ) client.CertificateService {
 	return &certificateService{
-		api:   api,
-		state: state,
+		service: service,
+		state:   state,
 	}
 }

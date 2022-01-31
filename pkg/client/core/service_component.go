@@ -28,7 +28,7 @@ import (
 )
 
 type componentService struct {
-	api      client.ComponentAPI
+	service  api.ComponentService
 	state    client.ComponentState
 	manifest client.ManifestService
 	provider v1alpha1.CloudProvider
@@ -62,7 +62,7 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		return nil, err
 	}
 
-	bucket, err := c.api.CreateS3Bucket(api.CreateS3BucketOpts{
+	bucket, err := c.service.CreateS3Bucket(ctx, &api.CreateS3BucketOpts{
 		ID:        opts.ID,
 		Name:      bucketName,
 		StackName: cfn.NewStackNamer().S3Bucket(opts.ApplicationName, opts.ID.ClusterName),
@@ -80,7 +80,7 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		return nil, err
 	}
 
-	pg, err := c.api.CreatePostgresDatabase(api.CreatePostgresDatabaseOpts{
+	pg, err := c.service.CreatePostgresDatabase(ctx, &api.CreatePostgresDatabaseOpts{
 		ID:                opts.ID,
 		ApplicationName:   opts.ApplicationName,
 		UserName:          opts.UserName,
@@ -228,7 +228,7 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 		return err
 	}
 
-	err = c.api.DeletePostgresDatabase(api.DeletePostgresDatabaseOpts{
+	err = c.service.DeletePostgresDatabase(ctx, &api.DeletePostgresDatabaseOpts{
 		ID:        opts.ID,
 		StackName: stackName,
 	})
@@ -269,7 +269,7 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 		return err
 	}
 
-	err = c.api.DeleteS3Bucket(api.DeleteS3BucketOpts{
+	err = c.service.DeleteS3Bucket(ctx, &api.DeleteS3BucketOpts{
 		ID:        opts.ID,
 		StackName: cfn.NewStackNamer().S3Bucket(opts.ApplicationName, opts.ID.ClusterName),
 	})
@@ -306,13 +306,13 @@ func (c *componentService) GetPostgresDatabase(_ context.Context, opts client.Ge
 
 // NewComponentService returns an initialised component service
 func NewComponentService(
-	api client.ComponentAPI,
+	service api.ComponentService,
 	state client.ComponentState,
 	manifest client.ManifestService,
 	provider v1alpha1.CloudProvider,
 ) client.ComponentService {
 	return &componentService{
-		api:      api,
+		service:  service,
 		state:    state,
 		manifest: manifest,
 		provider: provider,

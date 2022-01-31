@@ -8,12 +8,12 @@ import (
 )
 
 type serviceAccountService struct {
-	api   client.ServiceAccountAPI
-	state client.ServiceAccountState
+	service api.ServiceAccountService
+	state   client.ServiceAccountState
 }
 
-func (m *serviceAccountService) CreateServiceAccount(_ context.Context, opts client.CreateServiceAccountOpts) (*client.ServiceAccount, error) {
-	s, err := m.api.CreateServiceAccount(api.CreateServiceAccountOpts{
+func (m *serviceAccountService) CreateServiceAccount(context context.Context, opts client.CreateServiceAccountOpts) (*client.ServiceAccount, error) {
+	s, err := m.service.CreateServiceAccount(context, api.CreateServiceAccountOpts{
 		ID:        opts.ID,
 		Name:      opts.Name,
 		PolicyArn: opts.PolicyArn,
@@ -38,8 +38,8 @@ func (m *serviceAccountService) CreateServiceAccount(_ context.Context, opts cli
 	return sa, nil
 }
 
-func (m *serviceAccountService) DeleteServiceAccount(_ context.Context, opts client.DeleteServiceAccountOpts) error {
-	err := m.api.DeleteServiceAccount(api.DeleteServiceAccountOpts{
+func (m *serviceAccountService) DeleteServiceAccount(context context.Context, opts client.DeleteServiceAccountOpts) error {
+	err := m.service.DeleteServiceAccount(context, api.DeleteServiceAccountOpts{
 		ID:     opts.ID,
 		Name:   opts.Name,
 		Config: opts.Config,
@@ -58,11 +58,11 @@ func (m *serviceAccountService) DeleteServiceAccount(_ context.Context, opts cli
 
 // NewServiceAccountService returns an initialised service
 func NewServiceAccountService(
-	api client.ServiceAccountAPI,
+	service api.ServiceAccountService,
 	state client.ServiceAccountState,
 ) client.ServiceAccountService {
 	return &serviceAccountService{
-		api:   api,
-		state: state,
+		service: service,
+		state:   state,
 	}
 }

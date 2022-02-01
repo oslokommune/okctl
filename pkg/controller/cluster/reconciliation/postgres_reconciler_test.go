@@ -23,9 +23,6 @@ func TestPostgresReconciler(t *testing.T) {
 
 		expectCreations int
 		expectDeletions int
-
-		expectErr bool
-		err       string
 	}{
 		{
 			name: "Should do nothing when nothing is defined and nothing is existing",
@@ -88,40 +85,6 @@ func TestPostgresReconciler(t *testing.T) {
 			expectCreations: 1,
 			expectDeletions: 2,
 		},
-		{
-			name: "Should create no databases because the declared databases names are reserved",
-
-			withVPCExists: true,
-			withDeclaredDBs: []v1alpha1.ClusterDatabasesPostgres{
-				{
-					Name: "db",
-				},
-				{
-					Name: "database",
-				},
-			},
-			withExistingDBs: []*client.PostgresDatabase{},
-			expectCreations: 0,
-			expectErr:       true,
-			err:             "determining course of action: invalid database name: 'db' and 'database' are reserved",
-		},
-		{
-			name: "Should create no databases because one of the declared database names are reserved",
-
-			withVPCExists: true,
-			withDeclaredDBs: []v1alpha1.ClusterDatabasesPostgres{
-				{
-					Name: "db",
-				},
-				{
-					Name: "new-user-database",
-				},
-			},
-			withExistingDBs: []*client.PostgresDatabase{},
-			expectCreations: 0,
-			expectErr:       true,
-			err:             "determining course of action: invalid database name: 'db' and 'database' are reserved",
-		},
 	}
 
 	for _, tc := range testCases {
@@ -148,15 +111,105 @@ func TestPostgresReconciler(t *testing.T) {
 			}
 
 			_, err := reconciler.Reconcile(context.Background(), meta, state)
-			if tc.expectErr {
-				assert.Error(t, err)
-				assert.Equal(t, tc.err, err.Error())
-			} else {
-				assert.NoError(t, err)
-			}
+			assert.NoError(t, err)
 
 			assert.Equal(t, tc.expectCreations, creations)
 			assert.Equal(t, tc.expectDeletions, deletions)
+		})
+	}
+}
+
+//nolint:funlen
+func TestPostgresReconcilerInvalidDatabaseName(t *testing.T) {
+	const withVPCExists bool = true
+
+	testCases := []struct {
+		name            string
+		withDeclaredDBs []v1alpha1.ClusterDatabasesPostgres
+		err             string
+	}{
+		{
+			name: "Should create no databases because the declared databases names are reserved",
+			withDeclaredDBs: []v1alpha1.ClusterDatabasesPostgres{
+				{
+					Name: "db",
+				},
+				{
+					Name: "database",
+				},
+			},
+			err: "determining course of action: invalid database name: 'db' and 'database' are reserved",
+		},
+		{
+			name: "Should create no databases because one of the declared database names are reserved",
+			withDeclaredDBs: []v1alpha1.ClusterDatabasesPostgres{
+				{
+					Name: "db",
+				},
+				{
+					Name: "new-user-database",
+				},
+			},
+			err: "determining course of action: invalid database name: 'db' and 'database' are reserved",
+		},
+		{
+			name: "Should fail because database name is longer than 60 characters",
+			withDeclaredDBs: []v1alpha1.ClusterDatabasesPostgres{
+				{
+					Name: "usersusersusersusersusersusersusersusersusersusersusersusers1",
+				},
+			},
+			err: "determining course of action: invalid database name: cannot be longer than 60 characters",
+		},
+		{
+			name: "Should fail because database name starts with a number",
+			withDeclaredDBs: []v1alpha1.ClusterDatabasesPostgres{
+				{
+					Name: "9-nine",
+				},
+			},
+			err: "determining course of action: invalid database name: cannot start with a number",
+		},
+		{
+			name: "Should fail because database ends with a hyphen",
+			withDeclaredDBs: []v1alpha1.ClusterDatabasesPostgres{
+				{
+					Name: "nine-",
+				},
+			},
+			err: "determining course of action: invalid database name: cannot end with a hyphen",
+		},
+		{
+			name: "Should fail because database name have two consecutive hyphens",
+			withDeclaredDBs: []v1alpha1.ClusterDatabasesPostgres{
+				{
+					Name: "nine--nine",
+				},
+			},
+			err: "determining course of action: invalid database name: cannot have two consecutive hyphens",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			reconciler := NewPostgresReconciler(&mockPostgresService{})
+
+			meta := reconciliation.Metadata{
+				ClusterDeclaration: &v1alpha1.Cluster{
+					Databases: &v1alpha1.ClusterDatabases{Postgres: tc.withDeclaredDBs},
+				},
+			}
+
+			state := &clientCore.StateHandlers{
+				Vpc:       &mockVPCState{exists: withVPCExists},
+				Component: &mockComponentState{},
+			}
+
+			_, err := reconciler.Reconcile(context.Background(), meta, state)
+			assert.Error(t, err)
+			assert.Equal(t, tc.err, err.Error())
 		})
 	}
 }

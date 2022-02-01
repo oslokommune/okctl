@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	"github.com/mishudark/errors"
 
@@ -172,8 +173,49 @@ func subnetsAsIDList(subnets []client.VpcSubnet) []string {
 }
 
 func validatePostgresDatabaseName(dbName string) error {
+	// Two reserved names that cannot be used as dbName:
 	if dbName == "db" || dbName == "database" {
 		return errors.New("'db' and 'database' are reserved")
+	}
+
+	// #####
+	// From the AWS console when creating a database:
+
+	// 1 to 60 alphanumeric characters or hyphens
+	const maxLengthDatabaseName int = 60
+
+	length := len(dbName)
+	if length > maxLengthDatabaseName {
+		return errors.New("cannot be longer than 60 characters")
+	}
+
+	// First character must be a letter
+	startsWithNumber, _ := regexp.MatchString(`^[0-9]`, dbName)
+	if startsWithNumber {
+		return errors.New("cannot start with a number")
+	}
+
+	// Can't end with a hyphen.
+	endsWithHyphen, _ := regexp.MatchString(`-$`, dbName)
+	if endsWithHyphen {
+		return errors.New("cannot end with a hyphen")
+	}
+
+	// Can't contain two consecutive hyphens
+	containsConsecutiveHyphens, _ := regexp.MatchString(`--`, dbName)
+	if containsConsecutiveHyphens {
+		return errors.New("cannot have two consecutive hyphens")
+	}
+
+	// #####
+	// When creating a postgres database in aws console you can create it with capital letters,
+	// but it will be stored in lowercase letters.
+	// In addition: the process of creating S3 bucket for the database will result in a error
+	// if the database name contains a uppercase letter
+	// So: don't allow the use of uppercase letters in databases.postgres.name
+	containsUpperCase, _ := regexp.MatchString(`[A-Z]`, dbName)
+	if containsUpperCase {
+		return errors.New("cannot contain uppercase letters")
 	}
 
 	return nil

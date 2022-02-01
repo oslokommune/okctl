@@ -188,6 +188,24 @@ func TestPostgresReconcilerInvalidDatabaseName(t *testing.T) {
 			},
 			err: "determining course of action: invalid database name: cannot have two consecutive hyphens",
 		},
+		{
+			name: "Should fail because database name have uppercase letters",
+			withDeclaredDBs: []v1alpha1.ClusterDatabasesPostgres{
+				{
+					Name: "aInvalidDatabase",
+				},
+			},
+			err: "determining course of action: invalid database name: cannot contain uppercase letters",
+		},
+		{
+			name: "Should fail because database name starts with uppercase letters",
+			withDeclaredDBs: []v1alpha1.ClusterDatabasesPostgres{
+				{
+					Name: "Invaliddatabase",
+				},
+			},
+			err: "determining course of action: invalid database name: cannot contain uppercase letters",
+		},
 	}
 
 	for _, tc := range testCases {

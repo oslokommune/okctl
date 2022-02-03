@@ -1,6 +1,7 @@
 package direct
 
 import (
+	"context"
 	"fmt"
 
 	merrors "github.com/mishudark/errors"
@@ -13,7 +14,7 @@ import (
 
 type externalSecretsState struct {
 	clusterMeta v1alpha1.ClusterMeta
-	helm        client.HelmAPI
+	helm        api.HelmService
 }
 
 // HasExternalSecrets returns a boolean indicating if the resource exists
@@ -23,7 +24,7 @@ func (e externalSecretsState) HasExternalSecrets() (bool, error) {
 		constant.DefaultChartApplyTimeout,
 	)
 
-	_, err := e.helm.GetHelmRelease(api.GetHelmReleaseOpts{
+	_, err := e.helm.GetHelmRelease(context.Background(), api.GetHelmReleaseOpts{
 		ClusterID: api.ID{
 			Region:       e.clusterMeta.Region,
 			AWSAccountID: e.clusterMeta.AccountID,
@@ -44,9 +45,9 @@ func (e externalSecretsState) HasExternalSecrets() (bool, error) {
 }
 
 // NewExternalSecretsState returns an initialized state client
-func NewExternalSecretsState(clusterMeta v1alpha1.ClusterMeta, helmClient client.HelmAPI) client.ExternalSecretsState {
+func NewExternalSecretsState(clusterMeta v1alpha1.ClusterMeta, helmService api.HelmService) client.ExternalSecretsState {
 	return &externalSecretsState{
 		clusterMeta: clusterMeta,
-		helm:        helmClient,
+		helm:        helmService,
 	}
 }

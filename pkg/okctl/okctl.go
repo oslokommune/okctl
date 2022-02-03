@@ -141,8 +141,6 @@ func (o *Okctl) StateNodes() *clientCore.StateNodes {
 
 // StateHandlers returns the initialised state handlers
 func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHandlers {
-	helmClient := clientDirectAPI.NewHelmAPI(o.toolChain.Helm)
-
 	return &clientCore.StateHandlers{
 		Helm:                      storm.NewHelmState(nodes.Helm),
 		ManagedPolicy:             storm.NewManagedPolicyState(nodes.ManagedPolicy),
@@ -174,7 +172,6 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 // InitializeDirectClients with core services
 func (o *Okctl) InitializeDirectClients() (*clientDirectAPI.ToolChain, error) {
 	return &clientDirectAPI.ToolChain{
-		Helm:   clientDirectAPI.NewHelmAPI(o.toolChain.Helm),
 		Domain: clientDirectAPI.NewDomainAPI(o.toolChain.Domain),
 	}, nil
 }
@@ -210,7 +207,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	o.kubeConfigStore = kubeConfigStore
 
 	helmService := clientCore.NewHelmService(
-		directClients.Helm,
+		o.toolChain.Helm,
 		handlers.Helm,
 	)
 

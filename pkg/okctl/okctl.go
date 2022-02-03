@@ -162,7 +162,7 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 		ContainerRepository:       storm.NewContainerRepositoryState(nodes.ContainerRepository),
 		Loki:                      direct.NewLokiState(o.Declaration.Metadata, o.toolChain.Helm),
 		Promtail:                  direct.NewPromtailState(o.Declaration.Metadata, o.toolChain.Helm),
-		Tempo:                     direct.NewTempoState(o.Declaration.Metadata, helmClient),
+		Tempo:                     direct.NewTempoState(o.Declaration.Metadata, o.toolChain.Helm),
 		Autoscaler:                direct.NewAutoscalerState(o.Declaration.Metadata, helmClient),
 		AWSLoadBalancerController: direct.NewAWSLoadBalancerState(o.Declaration.Metadata, helmClient),
 		Blockstorage:              direct.NewBlockstorageState(o.Declaration.Metadata, helmClient),

@@ -1,6 +1,7 @@
 package direct
 
 import (
+	"context"
 	"fmt"
 
 	merrors "github.com/mishudark/errors"
@@ -13,7 +14,7 @@ import (
 
 type blockstorageState struct {
 	clusterMeta v1alpha1.ClusterMeta
-	helm        client.HelmAPI
+	helm        api.HelmService
 }
 
 // HasBlockstorage returns a boolean indicating if the resource exists
@@ -23,7 +24,7 @@ func (b blockstorageState) HasBlockstorage() (bool, error) {
 		constant.DefaultChartApplyTimeout,
 	)
 
-	_, err := b.helm.GetHelmRelease(api.GetHelmReleaseOpts{
+	_, err := b.helm.GetHelmRelease(context.Background(), api.GetHelmReleaseOpts{
 		ClusterID: api.ID{
 			Region:       b.clusterMeta.Region,
 			AWSAccountID: b.clusterMeta.AccountID,
@@ -44,9 +45,9 @@ func (b blockstorageState) HasBlockstorage() (bool, error) {
 }
 
 // NewBlockstorageState returns an initialized state client
-func NewBlockstorageState(clusterMeta v1alpha1.ClusterMeta, helmClient client.HelmAPI) client.BlockstorageState {
+func NewBlockstorageState(clusterMeta v1alpha1.ClusterMeta, helhelmService api.HelmService) client.BlockstorageState {
 	return &blockstorageState{
 		clusterMeta: clusterMeta,
-		helm:        helmClient,
+		helm:        helhelmService,
 	}
 }

@@ -45,9 +45,9 @@ func (b blockstorageState) HasBlockstorage() (bool, error) {
 }
 
 // NewBlockstorageState returns an initialized state client
-func NewBlockstorageState(clusterMeta v1alpha1.ClusterMeta, helhelmService api.HelmService) client.BlockstorageState {
+func NewBlockstorageState(clusterMeta v1alpha1.ClusterMeta, helmService api.HelmService) client.BlockstorageState {
 	return &blockstorageState{
 		clusterMeta: clusterMeta,
-		helm:        helhelmService,
+		helm:        helmService,
 	}
 }

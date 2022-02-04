@@ -306,6 +306,10 @@ type ClusterDatabasesPostgres struct {
 
 // Validate the content of a postgres database declaration
 func (c ClusterDatabasesPostgres) Validate() error {
+	const minLengthDatabaseName int = 1
+
+	const maxLengthDatabaseName int = 60
+
 	/*
 	 * Validation of database name is based on:
 	 * 1. AWS RDS rules when creating a postgres database
@@ -320,7 +324,7 @@ func (c ClusterDatabasesPostgres) Validate() error {
 				"db",
 				"database",
 			).Error("'db' and 'database' are reserved postgres database names"),
-			validation.Length(1, 60).Error("database name cannot be longer than 60 characters"),
+			validation.Length(minLengthDatabaseName, maxLengthDatabaseName).Error("database name cannot be longer than 60 characters"),
 			validation.Match(regexp.MustCompile("^[^A-Z]+$")).Error("database name cannot have capital letter"),
 			validation.Match(regexp.MustCompile("^[a-z]")).Error("database name must start with a letter"),
 			validation.Match(regexp.MustCompile("[^-]$")).Error("database name must not end with a hyphen"),

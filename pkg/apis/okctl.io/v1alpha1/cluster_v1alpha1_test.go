@@ -165,6 +165,52 @@ func TestPostgresValidateDatabaseName(t *testing.T) {
 	}
 }
 
+//nolint:funlen
+func TestPostgresValidateUserName(t *testing.T) {
+	testCases := []struct {
+		name      string
+		user      string
+		expectErr string
+	}{
+		{
+			name: "'administrator' is a valid username'",
+			user: "administrator",
+		},
+		{
+			name: "'admin2' is a valid username'",
+			user: "admin2",
+		},
+		{
+			name: "'my-admin' is a valid username'",
+			user: "my-admin",
+		},
+		{
+			name:      "'admin' is a reserved postgres username",
+			user:      "admin",
+			expectErr: "user: 'admin' is a reserved postgres username.",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			database := v1alpha1.ClusterDatabasesPostgres{
+				Name:      "valid-database-name",
+				User:      tc.user,
+				Namespace: "valid-namespace",
+			}
+			errs := database.Validate()
+			if tc.expectErr == "" {
+				assert.NoError(t, errs)
+			} else {
+				assert.Error(t, errs)
+				assert.Equal(t, tc.expectErr, errs.Error())
+			}
+		})
+	}
+}
+
 func newCluster(name, rootDomain, githubOrganization, githubRepository, awsAccountID string) v1alpha1.Cluster {
 	c := v1alpha1.NewCluster()
 	c.Metadata.Name = name

@@ -307,7 +307,7 @@ type ClusterDatabasesPostgres struct {
 // Validate the content of a postgres database declaration
 func (c ClusterDatabasesPostgres) Validate() error {
 	/*
-	 * Based on
+	 * Validation of database name is based on:
 	 * 1. AWS RDS rules when creating a postgres database
 	 * 2. Limitations when we use cloudformation to create a bucket,
 	 *	capital letters will result in a error. AWS RDS will also lowercase all
@@ -326,9 +326,9 @@ func (c ClusterDatabasesPostgres) Validate() error {
 			validation.Match(regexp.MustCompile("[^-]$")).Error("database name must not end with a hyphen"),
 			validation.By(fieldCanNotContainString("--", "database name can not have two consecutive hyphens")),
 		),
-		validation.Field(&c.User, validation.Required, validation.NotIn([]string{
+		validation.Field(&c.User, validation.Required, validation.NotIn(
 			"admin",
-		})),
+		).Error("'admin' is a reserved postgres username")),
 		validation.Field(&c.Namespace, validation.Required),
 	)
 }

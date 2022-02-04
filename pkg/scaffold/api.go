@@ -141,6 +141,7 @@ func GenerateApplicationOverlay(opts GenerateApplicationOverlayOpts) error {
 // GenerateArgoCDApplicationManifest generates an ArgoCD Application manifest
 func GenerateArgoCDApplicationManifest(opts GenerateArgoCDApplicationManifestOpts) (io.Reader, error) {
 	argoApp := resources.CreateArgoApp(opts.Name, opts.Namespace, opts.IACRepoURL, opts.SourceSyncDir)
+	argoApp.Spec.SyncPolicy.Automated.Prune = opts.Prune
 
 	raw, err := ResourceAsBytes(argoApp)
 	if err != nil {

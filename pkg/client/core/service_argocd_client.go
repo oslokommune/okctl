@@ -330,6 +330,7 @@ func (s *argoCDService) SetupApplicationsSync(_ context.Context, cluster v1alpha
 		Namespace:     argocd.Namespace,
 		IACRepoURL:    cluster.Github.URL(),
 		SourceSyncDir: path.Dir(relativeArgoCDManifestPath),
+		Prune:         true,
 	})
 	if err != nil {
 		return fmt.Errorf("generating ArgoCD application manifest: %w", err)

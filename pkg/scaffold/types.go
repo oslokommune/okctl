@@ -32,4 +32,5 @@ type GenerateArgoCDApplicationManifestOpts struct {
 	Namespace     string
 	IACRepoURL    string
 	SourceSyncDir string
+	Prune         bool
 }

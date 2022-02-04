@@ -65,10 +65,10 @@ func (c *containerRepositoryService) DeleteContainerRepository(context context.C
 }
 
 // EmptyContainerRepository deletes all images present in a container repository
-func (c *containerRepositoryService) EmptyContainerRepository(_ context.Context, opts client.EmptyContainerRepositoryOpts) error {
-	err := c.api.EmptyContainerRepository(api.EmptyContainerRepositoryOpts{Name: opts.Name})
+func (c *containerRepositoryService) EmptyContainerRepository(ctx context.Context, opts client.EmptyContainerRepositoryOpts) error {
+	err := c.service.EmptyContainerRepository(ctx, api.EmptyContainerRepositoryOpts{Name: opts.Name})
 	if err != nil {
-		return fmt.Errorf("calling API: %w", err)
+		return fmt.Errorf("calling ECR service's empty container repository: %w", err)
 	}
 
 	return nil

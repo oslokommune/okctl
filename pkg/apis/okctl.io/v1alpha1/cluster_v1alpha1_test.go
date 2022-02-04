@@ -90,6 +90,81 @@ func TestValidations(t *testing.T) {
 	}
 }
 
+//nolint:funlen
+func TestPostgresValidateDatabaseName(t *testing.T) {
+	testCases := []struct {
+		name         string
+		databaseName string
+		expectErr    string
+	}{
+		{
+			name:         "Valid databaes name",
+			databaseName: "my-user-database",
+		},
+		{
+			name:         "'db' is a reserved database name",
+			databaseName: "db",
+			expectErr:    "name: 'db' and 'database' are reserved postgres database names.",
+		},
+		{
+			name:         "'database' is a reserved database name",
+			databaseName: "database",
+			expectErr:    "name: 'db' and 'database' are reserved postgres database names.",
+		},
+		{
+			name:         "Should fail because database name is longer than 60 characters",
+			databaseName: "usersusersusersusersusersusersusersusersusersusersusersusers1",
+			expectErr:    "name: database name cannot be longer than 60 characters.",
+		},
+		{
+			name:         "Should fail because database name starts with a number",
+			databaseName: "9-nine",
+			expectErr:    "name: database name must start with a letter.",
+		},
+
+		{
+			name:         "Should fail because database ends with a hyphen",
+			databaseName: "nine-",
+			expectErr:    "name: database name must not end with a hyphen.",
+		},
+
+		{
+			name:         "Should fail because database name have two consecutive hyphens",
+			databaseName: "nine--nine",
+			expectErr:    "name: database name can not have two consecutive hyphens.",
+		},
+		{
+			name:         "Should fail because database name have uppercase letters",
+			databaseName: "aInvalidDatabase",
+			expectErr:    "name: database name cannot have capital letter.",
+		},
+		{
+			name:         "Should fail because database name starts with uppercase letters",
+			databaseName: "Invaliddatabase",
+			expectErr:    "name: database name cannot have capital letter.",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			database := v1alpha1.ClusterDatabasesPostgres{
+				Name:      tc.databaseName,
+				User:      "administrator",
+				Namespace: "valid-namespace",
+			}
+			errs := database.Validate()
+			if tc.expectErr == "" {
+				assert.NoError(t, errs)
+			} else {
+				assert.Error(t, errs)
+				assert.Equal(t, tc.expectErr, errs.Error())
+			}
+		})
+	}
+}
+
 func newCluster(name, rootDomain, githubOrganization, githubRepository, awsAccountID string) v1alpha1.Cluster {
 	c := v1alpha1.NewCluster()
 	c.Metadata.Name = name

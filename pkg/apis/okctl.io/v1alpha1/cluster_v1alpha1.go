@@ -3,6 +3,9 @@ package v1alpha1
 import (
 	"fmt"
 	"regexp"
+	"strings"
+
+	"github.com/mishudark/errors"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
@@ -303,13 +306,44 @@ type ClusterDatabasesPostgres struct {
 
 // Validate the content of a postgres database declaration
 func (c ClusterDatabasesPostgres) Validate() error {
+	/*
+	 * Based on
+	 * 1. AWS RDS rules when creating a postgres database
+	 * 2. Limitations when we use cloudformation to create a bucket,
+	 *	capital letters will result in a error. AWS RDS will also lowercase all
+	 *	database names if you enter them with capital letters
+	 */
 	return validation.ValidateStruct(&c,
-		validation.Field(&c.Name, validation.Required, is.Alphanumeric),
+		validation.Field(&c.Name,
+			validation.Required,
+			validation.NotIn(
+				"db",
+				"database",
+			).Error("'db' and 'database' are reserved postgres database names"),
+			validation.Length(1, 60).Error("database name cannot be longer than 60 characters"),
+			validation.Match(regexp.MustCompile("^[^A-Z]+$")).Error("database name cannot have capital letter"),
+			validation.Match(regexp.MustCompile("^[a-z]")).Error("database name must start with a letter"),
+			validation.Match(regexp.MustCompile("[^-]$")).Error("database name must not end with a hyphen"),
+			validation.By(fieldCanNotContainString("--", "database name can not have two consecutive hyphens")),
+		),
 		validation.Field(&c.User, validation.Required, validation.NotIn([]string{
 			"admin",
 		})),
 		validation.Field(&c.Namespace, validation.Required),
 	)
+}
+
+func fieldCanNotContainString(str string, errorString string) validation.RuleFunc {
+	return func(value interface{}) error {
+		s, _ := value.(string)
+		res := strings.Contains(s, str)
+
+		if res {
+			return errors.New(errorString)
+		}
+
+		return nil
+	}
 }
 
 // ClusterExperimental contains experimental fields

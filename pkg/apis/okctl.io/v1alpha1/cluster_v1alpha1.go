@@ -3,9 +3,6 @@ package v1alpha1
 import (
 	"fmt"
 	"regexp"
-	"strings"
-
-	"github.com/mishudark/errors"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
@@ -20,6 +17,11 @@ const (
 	ClusterKind = "Cluster"
 	// ClusterAPIVersion defines the versioned schema of this representation
 	ClusterAPIVersion = "okctl.io/v1alpha1"
+
+	// DatabaseNameMinimumLength is the minimum length of a postgres database name
+	DatabaseNameMinimumLength = 1
+	// DatabaseNameMaximumLength is the maximum length of a postgres database name
+	DatabaseNameMaximumLength = 60
 )
 
 // Cluster is a unique Kubernetes cluster with a set of integrations that
@@ -306,13 +308,13 @@ type ClusterDatabasesPostgres struct {
 
 // Validate the content of a postgres database declaration
 func (c ClusterDatabasesPostgres) Validate() error {
-	const minLengthDatabaseName int = 1
-
-	const maxLengthDatabaseName int = 60
-
 	/*
 	 * Validation of database name is based on:
 	 * 1. AWS RDS rules when creating a postgres database
+	 *	The rules are from:
+	 *	- https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_CreateDBInstance.html
+	 *	- http://eu-west-1.console.aws.amazon.com/rds/home - under "DB instance identifier" when creating a RDS instance
+	 *
 	 * 2. Limitations when we use cloudformation to create a bucket,
 	 *	capital letters will result in a error. AWS RDS will also lowercase all
 	 *	database names if you enter them with capital letters
@@ -324,30 +326,17 @@ func (c ClusterDatabasesPostgres) Validate() error {
 				"db",
 				"database",
 			).Error("'db' and 'database' are reserved postgres database names"),
-			validation.Length(minLengthDatabaseName, maxLengthDatabaseName).Error("database name cannot be longer than 60 characters"),
+			validation.Length(DatabaseNameMinimumLength, DatabaseNameMaximumLength).Error("database name cannot be longer than 60 characters"),
 			validation.Match(regexp.MustCompile("^[^A-Z]+$")).Error("database name cannot have capital letter"),
 			validation.Match(regexp.MustCompile("^[a-z]")).Error("database name must start with a letter"),
 			validation.Match(regexp.MustCompile("[^-]$")).Error("database name must not end with a hyphen"),
-			validation.By(fieldCanNotContainString("--", "database name can not have two consecutive hyphens")),
+			validation.By(ValidateFieldCanNotContainString("--", "database name can not have two consecutive hyphens")),
 		),
 		validation.Field(&c.User, validation.Required, validation.NotIn(
 			"admin",
 		).Error("'admin' is a reserved postgres username")),
 		validation.Field(&c.Namespace, validation.Required),
 	)
-}
-
-func fieldCanNotContainString(str string, errorString string) validation.RuleFunc {
-	return func(value interface{}) error {
-		s, _ := value.(string)
-		res := strings.Contains(s, str)
-
-		if res {
-			return errors.New(errorString)
-		}
-
-		return nil
-	}
 }
 
 // ClusterExperimental contains experimental fields

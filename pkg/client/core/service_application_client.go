@@ -15,8 +15,6 @@ import (
 	"github.com/spf13/afero"
 )
 
-const defaultArgoCDApplicationManifestFilename = "argocd-application.yaml"
-
 type applicationService struct {
 	certificateService    client.CertificateService
 	appManifestService    client.ApplicationManifestService
@@ -101,7 +99,8 @@ func (s *applicationService) CreateArgoCDApplicationManifest(opts client.CreateA
 	absoluteArgoCDApplicationManifestPath := path.Join(s.absoluteRepositoryDir,
 		opts.Cluster.Github.OutputPath,
 		opts.Cluster.Metadata.Name,
-		constant.DefaultApplicationsOutputDir,
+		constant.DefaultArgoCDClusterConfigDir,
+		constant.DefaultArgoCDClusterConfigApplicationsDir,
 		fmt.Sprintf("%s.yaml", opts.Application.Metadata.Name),
 	)
 

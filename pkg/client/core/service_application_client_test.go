@@ -126,10 +126,10 @@ func TestNewApplicationService(t *testing.T) {
 	appBaseDir := filepath.Join(appDir, constant.DefaultApplicationBaseDir)
 	appOverlayDir := filepath.Join(appDir, constant.DefaultApplicationOverlayDir, cluster.Metadata.Name)
 	clusterApplicationsDir := filepath.Join(
-		absoluteRepoDir,
 		absoluteOutputDir,
 		cluster.Metadata.Name,
-		constant.DefaultApplicationsOutputDir,
+		constant.DefaultArgoCDClusterConfigDir,
+		constant.DefaultArgoCDClusterConfigApplicationsDir,
 	)
 
 	g.Assert(t, "kustomization-base.yaml", readFile(t, fs, filepath.Join(appBaseDir, "kustomization.yaml")))

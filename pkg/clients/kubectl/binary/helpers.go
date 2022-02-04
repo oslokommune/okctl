@@ -1,11 +1,15 @@
 package binary
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
+
+	"github.com/oslokommune/okctl/pkg/logging"
 
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
@@ -13,6 +17,37 @@ import (
 
 	"github.com/google/uuid"
 )
+
+// runKubectlCommand knows how to run a command with the kubectl binary
+func (c client) runKubectlCommand(logActivity string, args []string) error {
+	log := logging.GetLogger("kubectl/binary", logActivity)
+
+	k, err := c.binaryProvider.Kubectl(kubectl.Version)
+	if err != nil {
+		return fmt.Errorf("acquiring kubectl binary path: %w", err)
+	}
+
+	cmd := exec.Command(k.BinaryPath, args...) //nolint:gosec
+
+	multiwriter := bytes.Buffer{}
+
+	cmd.Stdout = &multiwriter
+	cmd.Stderr = &multiwriter
+
+	cmd.Env, err = c.generateEnv()
+	if err != nil {
+		return fmt.Errorf("generating environment: %w", err)
+	}
+
+	err = cmd.Run()
+	if err != nil {
+		log.Error(multiwriter.String())
+
+		return fmt.Errorf("running command: %w", err)
+	}
+
+	return nil
+}
 
 // envAsArray converts a map to a string array of KEY=VALUE pairs
 func envAsArray(m map[string]string) []string {

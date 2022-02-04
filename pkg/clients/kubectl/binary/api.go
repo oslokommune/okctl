@@ -23,9 +23,28 @@ func (c client) Apply(manifest io.Reader) error {
 		_ = teardowner()
 	}()
 
-	err = c.applyFile(targetPath)
+	err = c.runKubectlCommand("apply", []string{"apply", "-f", targetPath})
 	if err != nil {
 		return fmt.Errorf("applying manifest: %w", err)
+	}
+
+	return nil
+}
+
+// Delete runs kubectl delete on a manifest
+func (c client) Delete(manifest io.Reader) error {
+	targetPath, teardowner, err := c.cacheReaderOnFs(manifest)
+	if err != nil {
+		return fmt.Errorf("caching manifest on file system: %w", err)
+	}
+
+	defer func() {
+		_ = teardowner()
+	}()
+
+	err = c.runKubectlCommand("delete", []string{"delete", "-f", targetPath})
+	if err != nil {
+		return fmt.Errorf("deleting manifest: %w", err)
 	}
 
 	return nil

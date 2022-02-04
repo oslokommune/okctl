@@ -94,6 +94,10 @@ const (
 	// EnvGithubCredentialsType enables setting the --github-credentials-type flag through environment vars
 	EnvGithubCredentialsType = EnvPrefix + "_" + "GITHUB_CREDENTIALS_TYPE"
 
+	// DefaultArgoCDClusterConfigDir is where we do cluster specific ArgoCD configuration
+	DefaultArgoCDClusterConfigDir = "argocd"
+	// DefaultArgoCDClusterConfigApplicationsDir is where we put ArgoCD application manifests for applications
+	DefaultArgoCDClusterConfigApplicationsDir = "applications"
 	// DefaultApplicationsOutputDir is where the application declarations reside
 	DefaultApplicationsOutputDir = "applications"
 	// DefaultApplicationBaseDir is where the directory where application base files reside

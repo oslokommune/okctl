@@ -50,8 +50,9 @@ const (
 	argoPrivateKeyName   = "argocd-privatekey"
 	argoSecretName       = "argocd-secret"
 	// argoChartTimeout does not work right now. See https://trello.com/c/zrS1xDXz for details
-	argoChartTimeout      = 15 * time.Minute
-	argoRepositoryTypeGit = "git"
+	argoChartTimeout                     = 15 * time.Minute
+	argoRepositoryTypeGit                = "git"
+	defaultArgoCDApplicationManifestName = "applications"
 )
 
 // nolint: funlen
@@ -318,14 +319,14 @@ func (s *argoCDService) SetupApplicationsSync(_ context.Context, cluster v1alpha
 	relativeArgoCDManifestPath := path.Join(
 		cluster.Github.OutputPath,
 		cluster.Metadata.Name,
-		constant.DefaultApplicationsOutputDir,
-		defaultArgoCDApplicationManifestFilename,
+		constant.DefaultArgoCDClusterConfigDir,
+		fmt.Sprintf("%s.yaml", defaultArgoCDApplicationManifestName),
 	)
 
 	absoluteArgoCDManifestPath := path.Join(s.absoluteRepoDir, relativeArgoCDManifestPath)
 
 	originalManifest, err := scaffold.GenerateArgoCDApplicationManifest(scaffold.GenerateArgoCDApplicationManifestOpts{
-		Name:          "cluster-applications",
+		Name:          defaultArgoCDApplicationManifestName,
 		Namespace:     argocd.Namespace,
 		IACRepoURL:    cluster.Github.URL(),
 		SourceSyncDir: path.Dir(relativeArgoCDManifestPath),
@@ -335,7 +336,6 @@ func (s *argoCDService) SetupApplicationsSync(_ context.Context, cluster v1alpha
 	}
 
 	manifestCopy := bytes.Buffer{}
-
 	manifest := io.TeeReader(originalManifest, &manifestCopy)
 
 	err = s.fs.WriteReader(absoluteArgoCDManifestPath, manifest)

@@ -1,11 +1,15 @@
 package core
 
 import (
+	"bytes"
 	"context"
 	stderrors "errors"
 	"fmt"
+	"io"
 	"os"
 	"path"
+
+	"github.com/oslokommune/okctl/pkg/clients/kubectl"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
@@ -27,6 +31,7 @@ type applicationService struct {
 	appManifestService    client.ApplicationManifestService
 	fs                    *afero.Afero
 	absoluteRepositoryDir string
+	kubectl               kubectl.Client
 }
 
 // ScaffoldApplication turns a file path into Kubernetes resources
@@ -104,11 +109,32 @@ func (s *applicationService) CreateArgoCDApplicationManifest(opts client.CreateA
 
 // DeleteArgoCDApplicationManifest removes necessary files related to the ArgoCD integration
 func (s *applicationService) DeleteArgoCDApplicationManifest(opts client.DeleteArgoCDApplicationManifestOpts) error {
+	var manifest io.Reader
+
+	err := scaffold.GenerateArgoCDApplicationManifest(scaffold.GenerateArgoCDApplicationManifestOpts{
+		Saver: func(content []byte) error {
+			manifest = bytes.NewReader(content)
+
+			return nil
+		},
+		Application:                   opts.Application,
+		IACRepoURL:                    opts.Cluster.Github.URL(),
+		RelativeApplicationOverlayDir: getRelativeOverlayDirectory(opts.Cluster, opts.Application),
+	})
+	if err != nil {
+		return fmt.Errorf("generating ArgoCD application manifest: %w", err)
+	}
+
+	err = s.kubectl.Delete(manifest)
+	if err != nil {
+		return fmt.Errorf("deleting ArgoCD application manifest from cluster: %w", err)
+	}
+
 	absoluteOverlayDir := path.Join(s.absoluteRepositoryDir, getRelativeOverlayDirectory(opts.Cluster, opts.Application))
 
 	argoCDApplicationManifestPath := path.Join(absoluteOverlayDir, defaultArgoCDApplicationManifestFilename)
 
-	err := s.fs.Remove(argoCDApplicationManifestPath)
+	err = s.fs.Remove(argoCDApplicationManifestPath)
 	if err != nil {
 		if stderrors.Is(err, os.ErrNotExist) {
 			return nil
@@ -176,10 +202,12 @@ func generatePatchSaver(ctx context.Context, service client.ApplicationManifestS
 // NewApplicationService initializes a new Scaffold application service
 func NewApplicationService(
 	fs *afero.Afero,
+	kubectlClient kubectl.Client,
 	appManifestService client.ApplicationManifestService,
 	absoluteRepositoryDir string,
 ) client.ApplicationService {
 	return &applicationService{
+		kubectl:               kubectlClient,
 		appManifestService:    appManifestService,
 		fs:                    fs,
 		absoluteRepositoryDir: absoluteRepositoryDir,

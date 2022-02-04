@@ -3,6 +3,7 @@ package core_test
 import (
 	"bytes"
 	"context"
+	"io"
 	"path"
 	"path/filepath"
 	"testing"
@@ -96,6 +97,7 @@ func TestNewApplicationService(t *testing.T) {
 
 	service := core.NewApplicationService(
 		fs,
+		&mockKubectlClient{},
 		appManifestService,
 		absoluteRepoDir,
 	)
@@ -142,3 +144,8 @@ func readFile(t *testing.T, fs *afero.Afero, path string) []byte {
 
 	return result
 }
+
+type mockKubectlClient struct{}
+
+func (m mockKubectlClient) Apply(_ io.Reader) error  { panic("implement me") }
+func (m mockKubectlClient) Delete(_ io.Reader) error { panic("implement me") }

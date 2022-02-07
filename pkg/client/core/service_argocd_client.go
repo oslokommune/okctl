@@ -316,20 +316,27 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 
 // SetupApplicationsSync applies an ArgoCD Application manifest which ensures syncing of an application folder
 func (s *argoCDService) SetupApplicationsSync(_ context.Context, cluster v1alpha1.Cluster) error {
-	relativeArgoCDManifestPath := path.Join(
+	relativeArgoCDConfigDir := path.Join(
 		cluster.Github.OutputPath,
 		cluster.Metadata.Name,
 		constant.DefaultArgoCDClusterConfigDir,
-		fmt.Sprintf("%s.yaml", defaultArgoCDApplicationManifestName),
 	)
 
-	absoluteArgoCDManifestPath := path.Join(s.absoluteRepoDir, relativeArgoCDManifestPath)
+	relativeArgoCDApplicationsSyncDir := path.Join(
+		relativeArgoCDConfigDir,
+		constant.DefaultArgoCDClusterConfigApplicationsDir,
+	)
+
+	absoluteArgoCDManifestPath := path.Join(s.absoluteRepoDir,
+		relativeArgoCDConfigDir,
+		fmt.Sprintf("%s.yaml", defaultArgoCDApplicationManifestName),
+	)
 
 	originalManifest, err := scaffold.GenerateArgoCDApplicationManifest(scaffold.GenerateArgoCDApplicationManifestOpts{
 		Name:          defaultArgoCDApplicationManifestName,
 		Namespace:     argocd.Namespace,
 		IACRepoURL:    cluster.Github.URL(),
-		SourceSyncDir: path.Dir(relativeArgoCDManifestPath),
+		SourceSyncDir: relativeArgoCDApplicationsSyncDir,
 		Prune:         true,
 	})
 	if err != nil {

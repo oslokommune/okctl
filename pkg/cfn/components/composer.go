@@ -1348,6 +1348,7 @@ const (
 	// - https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html
 	amazonRDSEnhancedMonitoringRole = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
 	awsLambdaBasicExecutionRole     = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+	awsLambdaVPCAccessExecutionRole = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
 )
 
 // CloudFormationResourceName returns the CF logical name
@@ -1471,7 +1472,7 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 		c.PhysicalName("RDSPGRotaterRole"),
 		c.CloudFormationResourceName("RDSPGRotaterRole"),
 		v1alpha1.PermissionsBoundaryARN(c.AWSAccountID),
-		[]string{awsLambdaBasicExecutionRole},
+		[]string{awsLambdaBasicExecutionRole, awsLambdaVPCAccessExecutionRole},
 		policydocument.PolicyDocument{
 			Version: policydocument.Version,
 			Statement: []policydocument.StatementEntry{
@@ -1494,17 +1495,6 @@ func (c *RDSPostgresComposer) Compose() (*cfn.Composition, error) {
 						Effect: policydocument.EffectTypeAllow,
 						Action: []string{
 							"secretsmanager:GetRandomPassword",
-						},
-						Resource: []string{
-							"*",
-						},
-					},
-					{
-						Effect: policydocument.EffectTypeAllow,
-						Action: []string{
-							"ec2:CreateNetworkInterface",
-							"ec2:DeleteNetworkInterface",
-							"ec2:DescribeNetworkInterfaces",
 						},
 						Resource: []string{
 							"*",

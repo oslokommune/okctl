@@ -194,19 +194,13 @@ Resources:
         Version: 2012-10-17
       ManagedPolicyArns:
       - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
       PermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
       Policies:
       - PolicyDocument:
           Statement:
           - Action:
             - secretsmanager:GetRandomPassword
-            Effect: Allow
-            Resource:
-            - '*'
-          - Action:
-            - ec2:CreateNetworkInterface
-            - ec2:DeleteNetworkInterface
-            - ec2:DescribeNetworkInterfaces
             Effect: Allow
             Resource:
             - '*'

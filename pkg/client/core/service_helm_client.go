@@ -8,12 +8,12 @@ import (
 )
 
 type helmService struct {
-	api   client.HelmAPI
-	state client.HelmState
+	service api.HelmService
+	state   client.HelmState
 }
 
-func (h *helmService) CreateHelmRelease(_ context.Context, opts client.CreateHelmReleaseOpts) (*client.Helm, error) {
-	r, err := h.api.CreateHelmRelease(api.CreateHelmReleaseOpts{
+func (h *helmService) CreateHelmRelease(context context.Context, opts client.CreateHelmReleaseOpts) (*client.Helm, error) {
+	r, err := h.service.CreateHelmRelease(context, api.CreateHelmReleaseOpts{
 		ID:             opts.ID,
 		RepositoryName: opts.RepositoryName,
 		RepositoryURL:  opts.RepositoryURL,
@@ -41,8 +41,8 @@ func (h *helmService) CreateHelmRelease(_ context.Context, opts client.CreateHel
 	return release, nil
 }
 
-func (h *helmService) DeleteHelmRelease(_ context.Context, opts client.DeleteHelmReleaseOpts) error {
-	err := h.api.DeleteHelmRelease(api.DeleteHelmReleaseOpts{
+func (h *helmService) DeleteHelmRelease(context context.Context, opts client.DeleteHelmReleaseOpts) error {
+	err := h.service.DeleteHelmRelease(context, api.DeleteHelmReleaseOpts{
 		ID:          opts.ID,
 		ReleaseName: opts.ReleaseName,
 		Namespace:   opts.Namespace,
@@ -54,8 +54,8 @@ func (h *helmService) DeleteHelmRelease(_ context.Context, opts client.DeleteHel
 	return h.state.RemoveHelmRelease(opts.ReleaseName)
 }
 
-func (h *helmService) GetHelmRelease(_ context.Context, opts client.GetHelmReleaseOpts) (*client.Helm, error) {
-	release, err := h.api.GetHelmRelease(api.GetHelmReleaseOpts{
+func (h *helmService) GetHelmRelease(context context.Context, opts client.GetHelmReleaseOpts) (*client.Helm, error) {
+	release, err := h.service.GetHelmRelease(context, api.GetHelmReleaseOpts{
 		ClusterID:   opts.ClusterID,
 		ReleaseName: opts.ReleaseName,
 		Namespace:   opts.Namespace,
@@ -72,9 +72,9 @@ func (h *helmService) GetHelmRelease(_ context.Context, opts client.GetHelmRelea
 }
 
 // NewHelmService returns an initialised helm service
-func NewHelmService(api client.HelmAPI, state client.HelmState) client.HelmService {
+func NewHelmService(service api.HelmService, state client.HelmState) client.HelmService {
 	return &helmService{
-		api:   api,
-		state: state,
+		service: service,
+		state:   state,
 	}
 }

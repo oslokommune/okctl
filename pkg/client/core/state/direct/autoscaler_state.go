@@ -1,6 +1,7 @@
 package direct
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 
 type autoscalerState struct {
 	clusterMeta v1alpha1.ClusterMeta
-	helm        client.HelmAPI
+	helm        api.HelmService
 }
 
 func (a autoscalerState) HasAutoscaler() (bool, error) {
@@ -22,7 +23,7 @@ func (a autoscalerState) HasAutoscaler() (bool, error) {
 		0*time.Minute,
 	)
 
-	_, err := a.helm.GetHelmRelease(api.GetHelmReleaseOpts{
+	_, err := a.helm.GetHelmRelease(context.Background(), api.GetHelmReleaseOpts{
 		ClusterID: api.ID{
 			Region:       a.clusterMeta.Region,
 			AWSAccountID: a.clusterMeta.AccountID,
@@ -43,9 +44,9 @@ func (a autoscalerState) HasAutoscaler() (bool, error) {
 }
 
 // NewAutoscalerState returns an initialized state client
-func NewAutoscalerState(clusterMeta v1alpha1.ClusterMeta, helmClient client.HelmAPI) client.AutoscalerState {
+func NewAutoscalerState(clusterMeta v1alpha1.ClusterMeta, helmService api.HelmService) client.AutoscalerState {
 	return &autoscalerState{
 		clusterMeta: clusterMeta,
-		helm:        helmClient,
+		helm:        helmService,
 	}
 }

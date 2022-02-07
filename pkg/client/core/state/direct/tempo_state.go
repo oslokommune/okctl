@@ -1,6 +1,7 @@
 package direct
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -13,14 +14,14 @@ import (
 )
 
 type tempoState struct {
-	helm        client.HelmAPI
+	helm        api.HelmService
 	clusterMeta v1alpha1.ClusterMeta
 }
 
 func (l *tempoState) HasTempo() (bool, error) {
 	ch := tempo.New(tempo.NewDefaultValues(), 0*time.Minute)
 
-	_, err := l.helm.GetHelmRelease(api.GetHelmReleaseOpts{
+	_, err := l.helm.GetHelmRelease(context.Background(), api.GetHelmReleaseOpts{
 		ClusterID: api.ID{
 			Region:       l.clusterMeta.Region,
 			AWSAccountID: l.clusterMeta.AccountID,
@@ -41,9 +42,9 @@ func (l *tempoState) HasTempo() (bool, error) {
 }
 
 // NewTempoState returns an initialized state client
-func NewTempoState(clusterMeta v1alpha1.ClusterMeta, helmClient client.HelmAPI) client.TempoState {
+func NewTempoState(clusterMeta v1alpha1.ClusterMeta, helmService api.HelmService) client.TempoState {
 	return &tempoState{
 		clusterMeta: clusterMeta,
-		helm:        helmClient,
+		helm:        helmService,
 	}
 }

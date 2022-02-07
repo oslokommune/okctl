@@ -1,6 +1,7 @@
 package direct
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -12,14 +13,14 @@ import (
 )
 
 type lokiState struct {
-	helm        client.HelmAPI
+	helm        api.HelmService
 	clusterMeta v1alpha1.ClusterMeta
 }
 
 func (l *lokiState) HasLoki() (bool, error) {
 	ch := loki.New(loki.NewDefaultValues(), 0*time.Minute)
 
-	_, err := l.helm.GetHelmRelease(api.GetHelmReleaseOpts{
+	_, err := l.helm.GetHelmRelease(context.Background(), api.GetHelmReleaseOpts{
 		ClusterID: api.ID{
 			Region:       l.clusterMeta.Region,
 			AWSAccountID: l.clusterMeta.AccountID,
@@ -40,9 +41,9 @@ func (l *lokiState) HasLoki() (bool, error) {
 }
 
 // NewLokiState returns an initialized state client
-func NewLokiState(clusterMeta v1alpha1.ClusterMeta, helmClient client.HelmAPI) client.LokiState {
+func NewLokiState(clusterMeta v1alpha1.ClusterMeta, helmService api.HelmService) client.LokiState {
 	return &lokiState{
 		clusterMeta: clusterMeta,
-		helm:        helmClient,
+		helm:        helmService,
 	}
 }

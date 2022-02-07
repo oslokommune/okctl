@@ -141,8 +141,6 @@ func (o *Okctl) StateNodes() *clientCore.StateNodes {
 
 // StateHandlers returns the initialised state handlers
 func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHandlers {
-	helmClient := clientDirectAPI.NewHelmAPI(o.toolChain.Helm)
-
 	return &clientCore.StateHandlers{
 		Helm:                      storm.NewHelmState(nodes.Helm),
 		ManagedPolicy:             storm.NewManagedPolicyState(nodes.ManagedPolicy),
@@ -160,13 +158,13 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 		Monitoring:                storm.NewMonitoringState(nodes.Monitoring),
 		ArgoCD:                    storm.NewArgoCDState(nodes.ArgoCD),
 		ContainerRepository:       storm.NewContainerRepositoryState(nodes.ContainerRepository),
-		Loki:                      direct.NewLokiState(o.Declaration.Metadata, helmClient),
-		Promtail:                  direct.NewPromtailState(o.Declaration.Metadata, helmClient),
-		Tempo:                     direct.NewTempoState(o.Declaration.Metadata, helmClient),
-		Autoscaler:                direct.NewAutoscalerState(o.Declaration.Metadata, helmClient),
-		AWSLoadBalancerController: direct.NewAWSLoadBalancerState(o.Declaration.Metadata, helmClient),
-		Blockstorage:              direct.NewBlockstorageState(o.Declaration.Metadata, helmClient),
-		ExternalSecrets:           direct.NewExternalSecretsState(o.Declaration.Metadata, helmClient),
+		Loki:                      direct.NewLokiState(o.Declaration.Metadata, o.toolChain.Helm),
+		Promtail:                  direct.NewPromtailState(o.Declaration.Metadata, o.toolChain.Helm),
+		Tempo:                     direct.NewTempoState(o.Declaration.Metadata, o.toolChain.Helm),
+		Autoscaler:                direct.NewAutoscalerState(o.Declaration.Metadata, o.toolChain.Helm),
+		AWSLoadBalancerController: direct.NewAWSLoadBalancerState(o.Declaration.Metadata, o.toolChain.Helm),
+		Blockstorage:              direct.NewBlockstorageState(o.Declaration.Metadata, o.toolChain.Helm),
+		ExternalSecrets:           direct.NewExternalSecretsState(o.Declaration.Metadata, o.toolChain.Helm),
 		Upgrade:                   storm.NewUpgradesState(nodes.Upgrade),
 	}
 }
@@ -174,7 +172,6 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 // InitializeDirectClients with core services
 func (o *Okctl) InitializeDirectClients() (*clientDirectAPI.ToolChain, error) {
 	return &clientDirectAPI.ToolChain{
-		Helm:   clientDirectAPI.NewHelmAPI(o.toolChain.Helm),
 		Domain: clientDirectAPI.NewDomainAPI(o.toolChain.Domain),
 	}, nil
 }
@@ -210,7 +207,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	o.kubeConfigStore = kubeConfigStore
 
 	helmService := clientCore.NewHelmService(
-		directClients.Helm,
+		o.toolChain.Helm,
 		handlers.Helm,
 	)
 

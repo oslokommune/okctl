@@ -1,6 +1,7 @@
 package direct
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -13,14 +14,14 @@ import (
 )
 
 type promtailState struct {
-	helm        client.HelmAPI
+	helm        api.HelmService
 	clusterMeta v1alpha1.ClusterMeta
 }
 
 func (l *promtailState) HasPromtail() (bool, error) {
 	ch := promtail.New(promtail.NewDefaultValues(), 0*time.Minute)
 
-	_, err := l.helm.GetHelmRelease(api.GetHelmReleaseOpts{
+	_, err := l.helm.GetHelmRelease(context.Background(), api.GetHelmReleaseOpts{
 		ClusterID: api.ID{
 			Region:       l.clusterMeta.Region,
 			AWSAccountID: l.clusterMeta.AccountID,
@@ -41,9 +42,9 @@ func (l *promtailState) HasPromtail() (bool, error) {
 }
 
 // NewPromtailState returns an initialized state client
-func NewPromtailState(clusterMeta v1alpha1.ClusterMeta, helmClient client.HelmAPI) client.PromtailState {
+func NewPromtailState(clusterMeta v1alpha1.ClusterMeta, helmService api.HelmService) client.PromtailState {
 	return &promtailState{
 		clusterMeta: clusterMeta,
-		helm:        helmClient,
+		helm:        helmService,
 	}
 }

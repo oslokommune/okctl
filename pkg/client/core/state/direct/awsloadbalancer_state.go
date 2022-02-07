@@ -1,6 +1,7 @@
 package direct
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -13,14 +14,14 @@ import (
 
 type awsLoadBalancerState struct {
 	clusterMeta v1alpha1.ClusterMeta
-	helm        client.HelmAPI
+	helm        api.HelmService
 }
 
 // HasAWSLoadBalancerController returns a boolean indicating if the resource exists
 func (a awsLoadBalancerState) HasAWSLoadBalancerController() (bool, error) {
 	ch := awslbc.New(awslbc.NewDefaultValues(a.clusterMeta.Name, "", a.clusterMeta.Region), 0*time.Minute)
 
-	_, err := a.helm.GetHelmRelease(api.GetHelmReleaseOpts{
+	_, err := a.helm.GetHelmRelease(context.Background(), api.GetHelmReleaseOpts{
 		ClusterID: api.ID{
 			Region:       a.clusterMeta.Region,
 			AWSAccountID: a.clusterMeta.AccountID,
@@ -41,9 +42,9 @@ func (a awsLoadBalancerState) HasAWSLoadBalancerController() (bool, error) {
 }
 
 // NewAWSLoadBalancerState returns an initialized state client
-func NewAWSLoadBalancerState(clusterMeta v1alpha1.ClusterMeta, helmClient client.HelmAPI) client.AWSLoadBalancerControllerState {
+func NewAWSLoadBalancerState(clusterMeta v1alpha1.ClusterMeta, helmService api.HelmService) client.AWSLoadBalancerControllerState {
 	return &awsLoadBalancerState{
 		clusterMeta: clusterMeta,
-		helm:        helmClient,
+		helm:        helmService,
 	}
 }

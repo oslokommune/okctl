@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/api"
 
 	stormpkg "github.com/asdine/storm/v3"
@@ -12,8 +13,8 @@ import (
 )
 
 type domainService struct {
-	service   api.DomainService
-	state client.DomainState
+	service api.DomainService
+	state   client.DomainState
 }
 
 func (s *domainService) GetPrimaryHostedZone(_ context.Context) (*client.HostedZone, error) {
@@ -118,9 +119,9 @@ func (s *domainService) SetHostedZoneDelegation(_ context.Context, domain string
 }
 
 // NewDomainService returns an initialised service
-func NewDomainService(service api.DomainService, state client.DomainState, ) client.DomainService {
+func NewDomainService(service api.DomainService, state client.DomainState) client.DomainService {
 	return &domainService{
-		service:   service,
-		state: state,
+		service: service,
+		state:   state,
 	}
 }

@@ -53,6 +53,17 @@ func InferApplicationFromStdinOrFile(declaration v1alpha1.Cluster, stdin io.Read
 	return app, nil
 }
 
+func generateArgoCDApplicationManifestPath(cluster v1alpha1.Cluster, application v1alpha1.Application) string {
+	return path.Join(
+		cluster.Github.OutputPath,
+		constant.DefaultApplicationsOutputDir,
+		application.Metadata.Name,
+		constant.DefaultApplicationOverlayDir,
+		cluster.Metadata.Name,
+		"argocd-application.yaml",
+	)
+}
+
 // ApplyApplicationSuccessMessageOpts contains the values for customizing the apply application success message
 type ApplyApplicationSuccessMessageOpts struct {
 	ApplicationName           string
@@ -80,14 +91,7 @@ type WriteApplyApplicationSucessMessageOpts struct {
 
 // WriteApplyApplicationSuccessMessage produces a relevant message for successfully reconciling an application
 func WriteApplyApplicationSuccessMessage(opts WriteApplyApplicationSucessMessageOpts) error {
-	argoCDResourcePath := path.Join(
-		opts.Cluster.Github.OutputPath,
-		constant.DefaultApplicationsOutputDir,
-		opts.Application.Metadata.Name,
-		constant.DefaultApplicationOverlayDir,
-		opts.Cluster.Metadata.Name,
-		"argocd-application.yaml",
-	)
+	argoCDResourcePath := generateArgoCDApplicationManifestPath(opts.Cluster, opts.Application)
 
 	optionalDockerTagPushStep := ""
 
@@ -115,6 +119,44 @@ func WriteApplyApplicationSuccessMessage(opts WriteApplyApplicationSucessMessage
 	}
 
 	fmt.Fprint(opts.Out, tmplBuffer.String())
+
+	return nil
+}
+
+const deleteApplicationSuccessMessage = `
+	Successfully deleted {{ .ApplicationName }}
+	To finish the deletion process:
+		- Commit and push the changes done by okctl
+		- Run {{ .KubectlDeleteArgoCDManifestCmd }}
+`
+
+// WriteDeleteApplicationSuccessMessageOpts contains the values for customizing delete application success message
+type WriteDeleteApplicationSuccessMessageOpts struct {
+	Out io.Writer
+
+	Cluster     v1alpha1.Cluster
+	Application v1alpha1.Application
+}
+
+// WriteDeleteApplicationSuccessMessage produces a relevant message for successfully deleting an application
+func WriteDeleteApplicationSuccessMessage(opts WriteDeleteApplicationSuccessMessageOpts) error {
+	argoCDResourcePath := generateArgoCDApplicationManifestPath(opts.Cluster, opts.Application)
+
+	tmpl, err := template.New("t").Parse(deleteApplicationSuccessMessage)
+	if err != nil {
+		return err
+	}
+
+	err = tmpl.Execute(opts.Out, struct {
+		ApplicationName                string
+		KubectlDeleteArgoCDManifestCmd string
+	}{
+		ApplicationName:                opts.Application.Metadata.Name,
+		KubectlDeleteArgoCDManifestCmd: aurora.Green(fmt.Sprintf("kubectl delete -f %s", argoCDResourcePath)).String(),
+	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

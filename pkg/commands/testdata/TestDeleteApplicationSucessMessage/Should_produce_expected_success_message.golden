@@ -1,0 +1,5 @@
+
+	Successfully deleted test
+	To finish the deletion process:
+		- Commit and push the changes done by okctl
+		- Run [32mkubectl delete -f applications/test/overlays/argocd-application.yaml[0m

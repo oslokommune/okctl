@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"io"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -60,12 +61,24 @@ func HandleApplication(opts *HandleApplicationOpts) RunEHandler {
 			return fmt.Errorf("reconciling application: %w", err)
 		}
 
-		return commands.WriteApplyApplicationSuccessMessage(commands.WriteApplyApplicationSucessMessageOpts{
-			Out:         opts.Okctl.Out,
-			Application: opts.Application,
-			Cluster:     *opts.Okctl.Declaration,
+		return writeSuccessMessage(opts.Okctl.Out, *opts.Okctl.Declaration, opts.Application, opts.Purge)
+	}
+}
+
+func writeSuccessMessage(out io.Writer, cluster v1alpha1.Cluster, application v1alpha1.Application, purgeFlag bool) error {
+	if purgeFlag {
+		return commands.WriteDeleteApplicationSuccessMessage(commands.WriteDeleteApplicationSuccessMessageOpts{
+			Out:         out,
+			Cluster:     cluster,
+			Application: application,
 		})
 	}
+
+	return commands.WriteApplyApplicationSuccessMessage(commands.WriteApplyApplicationSucessMessageOpts{
+		Out:         out,
+		Cluster:     cluster,
+		Application: application,
+	})
 }
 
 // HandleApplicationOpts contains all the necessary options for application reconciliation

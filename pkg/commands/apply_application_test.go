@@ -61,3 +61,35 @@ func TestApplyApplicationSuccessMessage(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteApplicationSucessMessage(t *testing.T) {
+	testCases := []struct {
+		name            string
+		withCluster     v1alpha1.Cluster
+		withApplication v1alpha1.Application
+	}{
+		{
+			name:            "Should produce expected success message",
+			withCluster:     v1alpha1.Cluster{},
+			withApplication: v1alpha1.Application{Metadata: v1alpha1.ApplicationMeta{Name: "test"}},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			var result bytes.Buffer
+
+			err := WriteDeleteApplicationSuccessMessage(WriteDeleteApplicationSuccessMessageOpts{
+				Out:         &result,
+				Cluster:     tc.withCluster,
+				Application: tc.withApplication,
+			})
+			assert.NoError(t, err)
+
+			g := goldie.New(t)
+			g.Assert(t, t.Name(), result.Bytes())
+		})
+	}
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/keypair"
 
@@ -15,9 +16,9 @@ import (
 )
 
 type githubService struct {
-	parameterService   api.ParameterService
-	githubClient *github.Github
-	state client.GithubState
+	parameterService api.ParameterService
+	githubClient     *github.Github
+	state            client.GithubState
 }
 
 func githubDeployKeySecretName(org, repo string) string {
@@ -90,28 +91,28 @@ func (s *githubService) CreateGithubRepository(_ context.Context, opts client.Cr
 	return repo, nil
 }
 
-func (a *githubService) DeleteRepositoryDeployKey(opts client.DeleteGithubDeployKeyOpts) error {
-	err := a.parameterService.DeleteSecret(context.Background(), api.DeleteSecretOpts{
+func (s *githubService) DeleteRepositoryDeployKey(opts client.DeleteGithubDeployKeyOpts) error {
+	err := s.parameterService.DeleteSecret(context.Background(), api.DeleteSecretOpts{
 		Name: githubDeployKeySecretName(opts.Organisation, opts.Repository),
 	})
 	if err != nil {
 		return err
 	}
 
-	return a.githubClient.DeleteDeployKey(opts.Organisation, opts.Repository, opts.Identifier)
+	return s.githubClient.DeleteDeployKey(opts.Organisation, opts.Repository, opts.Identifier)
 }
 
-func (a *githubService) ListReleases(owner, repo string) ([]*github.RepositoryRelease, error) {
-	return a.githubClient.ListReleases(owner, repo)
+func (s *githubService) ListReleases(owner, repo string) ([]*github.RepositoryRelease, error) {
+	return s.githubClient.ListReleases(owner, repo)
 }
 
-func (a *githubService) CreateRepositoryDeployKey(opts client.CreateGithubDeployKeyOpts) (*client.GithubDeployKey, error) {
+func (s *githubService) CreateRepositoryDeployKey(opts client.CreateGithubDeployKeyOpts) (*client.GithubDeployKey, error) {
 	key, err := keypair.New(keypair.DefaultRandReader(), keypair.DefaultBitSize).Generate()
 	if err != nil {
 		return nil, err
 	}
 
-	param, err := a.parameterService.CreateSecret(context.Background(), api.CreateSecretOpts{
+	param, err := s.parameterService.CreateSecret(context.Background(), api.CreateSecretOpts{
 		ID:     opts.ID,
 		Name:   githubDeployKeySecretName(opts.Organisation, opts.Repository),
 		Secret: string(key.PrivateKey),
@@ -120,7 +121,7 @@ func (a *githubService) CreateRepositoryDeployKey(opts client.CreateGithubDeploy
 		return nil, err
 	}
 
-	deployKey, err := a.githubClient.CreateDeployKey(opts.Organisation, opts.Repository, opts.Title, string(key.PublicKey))
+	deployKey, err := s.githubClient.CreateDeployKey(opts.Organisation, opts.Repository, opts.Title, string(key.PublicKey))
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +144,7 @@ func (a *githubService) CreateRepositoryDeployKey(opts client.CreateGithubDeploy
 func NewGithubService(parameterService api.ParameterService, githubClient *github.Github, state client.GithubState) client.GithubService {
 	return &githubService{
 		parameterService: parameterService,
-		githubClient:  githubClient,
-		state: state,
+		githubClient:     githubClient,
+		state:            state,
 	}
 }

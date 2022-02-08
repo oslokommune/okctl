@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/oslokommune/okctl/pkg/api"
 
 	"github.com/oslokommune/okctl/pkg/github"
 
@@ -13,7 +14,8 @@ import (
 )
 
 type githubService struct {
-	api   client.GithubAPI
+	parameterService   api.ParameterService
+	githubClient *github.Github
 	state client.GithubState
 }
 
@@ -88,9 +90,10 @@ func (s *githubService) ListReleases(owner, repo string) ([]*github.RepositoryRe
 }
 
 // NewGithubService returns an initialised service
-func NewGithubService(api client.GithubAPI, state client.GithubState) client.GithubService {
+func NewGithubService(parameterService api.ParameterService, githubClient *github.Github, state client.GithubState) client.GithubService {
 	return &githubService{
-		api:   api,
+		parameterService: parameterService,
+		githubClient:  githubClient,
 		state: state,
 	}
 }

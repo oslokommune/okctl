@@ -268,7 +268,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	domainService := clientCore.NewDomainService(
-		clientDirectAPI.NewDomainAPI(o.toolChain.Domain),
+		o.toolChain.Domain,
 		handlers.Domain,
 	)
 

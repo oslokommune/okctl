@@ -2,7 +2,9 @@
 package scaffold
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 
 	"github.com/oslokommune/okctl/pkg/jsonpatch"
 
@@ -137,15 +139,16 @@ func GenerateApplicationOverlay(opts GenerateApplicationOverlayOpts) error {
 }
 
 // GenerateArgoCDApplicationManifest generates an ArgoCD Application manifest
-func GenerateArgoCDApplicationManifest(opts GenerateArgoCDApplicationManifestOpts) error {
-	argoApp := resources.CreateArgoApp(opts.Application, opts.IACRepoURL, opts.RelativeApplicationOverlayDir)
+func GenerateArgoCDApplicationManifest(opts GenerateArgoCDApplicationManifestOpts) (io.Reader, error) {
+	argoApp := resources.CreateArgoApp(opts.Name, opts.Namespace, opts.IACRepoURL, opts.SourceSyncDir)
+	argoApp.Spec.SyncPolicy.Automated.Prune = opts.Prune
 
 	raw, err := ResourceAsBytes(argoApp)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return opts.Saver(raw)
+	return bytes.NewReader(raw), nil
 }
 
 func createIngressPatch(subDomain, domain, certArn string) jsonpatch.Patch {

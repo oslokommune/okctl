@@ -11,9 +11,6 @@ type ManifestSaver func(filename string, content []byte) error
 // PatchSaver defines a function which store patches
 type PatchSaver func(kind string, patch jsonpatch.Patch) error
 
-// argoApplicationManifestSaver defines a function which stores an ArgoCD Application manifest
-type argoApplicationManifestSaver func(content []byte) error
-
 // GenerateApplicationBaseOpts contains required data to generate application base manifests
 type GenerateApplicationBaseOpts struct {
 	SaveManifest ManifestSaver
@@ -31,8 +28,9 @@ type GenerateApplicationOverlayOpts struct {
 
 // GenerateArgoCDApplicationManifestOpts contains required information to generate an ArgoCD Application Manifest
 type GenerateArgoCDApplicationManifestOpts struct {
-	Saver                         argoApplicationManifestSaver
-	Application                   v1alpha1.Application
-	IACRepoURL                    string
-	RelativeApplicationOverlayDir string
+	Name          string
+	Namespace     string
+	IACRepoURL    string
+	SourceSyncDir string
+	Prune         bool
 }

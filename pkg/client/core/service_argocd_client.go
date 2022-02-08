@@ -1,10 +1,21 @@
 package core
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"path"
 	"time"
+
+	"github.com/oslokommune/okctl/pkg/binaries"
+	"github.com/oslokommune/okctl/pkg/clients/kubectl/binary"
+	"github.com/oslokommune/okctl/pkg/credentials"
+
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl/pkg/scaffold"
+	"github.com/spf13/afero"
 
 	"github.com/asdine/storm/v3"
 
@@ -19,12 +30,16 @@ import (
 )
 
 type argoCDService struct {
-	state    client.ArgoCDState
-	identity client.IdentityManagerService
-	cert     client.CertificateService
-	manifest client.ManifestService
-	param    client.ParameterService
-	helm     client.HelmService
+	state               client.ArgoCDState
+	identity            client.IdentityManagerService
+	cert                client.CertificateService
+	manifest            client.ManifestService
+	param               client.ParameterService
+	helm                client.HelmService
+	fs                  *afero.Afero
+	absoluteRepoDir     string
+	binaryProvider      binaries.Provider
+	credentialsProvider credentials.Provider
 }
 
 // nolint: gosec
@@ -35,8 +50,9 @@ const (
 	argoPrivateKeyName   = "argocd-privatekey"
 	argoSecretName       = "argocd-secret"
 	// argoChartTimeout does not work right now. See https://trello.com/c/zrS1xDXz for details
-	argoChartTimeout      = 15 * time.Minute
-	argoRepositoryTypeGit = "git"
+	argoChartTimeout                     = 15 * time.Minute
+	argoRepositoryTypeGit                = "git"
+	defaultArgoCDApplicationManifestName = "applications"
 )
 
 // nolint: funlen
@@ -116,8 +132,10 @@ func (s *argoCDService) DeleteArgoCD(ctx context.Context, opts client.DeleteArgo
 
 // nolint: funlen
 func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgoCDOpts) (*client.ArgoCD, error) {
+	clusterID := clusterMetaAsID(opts.ClusterManifest.Metadata)
+
 	cert, err := s.cert.CreateCertificate(ctx, client.CreateCertificateOpts{
-		ID:           opts.ID,
+		ID:           clusterID,
 		FQDN:         fmt.Sprintf("argocd.%s", opts.FQDN),
 		Domain:       fmt.Sprintf("argocd.%s", opts.Domain),
 		HostedZoneID: opts.HostedZoneID,
@@ -127,7 +145,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 	}
 
 	identityClient, err := s.identity.CreateIdentityPoolClient(ctx, client.CreateIdentityPoolClientOpts{
-		ID:          opts.ID,
+		ID:          clusterID,
 		UserPoolID:  opts.UserPoolID,
 		Purpose:     argoPurpose,
 		CallbackURL: fmt.Sprintf("https://%s/api/dex/callback", cert.Domain),
@@ -137,7 +155,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 	}
 
 	_, err = s.manifest.CreateNamespace(ctx, api.CreateNamespaceOpts{
-		ID:        opts.ID,
+		ID:        clusterID,
 		Namespace: constant.DefaultArgoCDNamespace,
 	})
 	if err != nil {
@@ -145,7 +163,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 	}
 
 	clientSecret, err := s.param.CreateSecret(ctx, client.CreateSecretOpts{
-		ID:     opts.ID,
+		ID:     clusterID,
 		Name:   argoClientSecretName,
 		Secret: identityClient.ClientSecret,
 	})
@@ -154,7 +172,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 	}
 
 	secretKey, err := s.param.CreateSecret(ctx, client.CreateSecretOpts{
-		ID:     opts.ID,
+		ID:     clusterID,
 		Name:   argoSecretKeyName,
 		Secret: uuid.New().String(),
 	})
@@ -165,7 +183,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 	privateKeyDataName := "ssh-private-key"
 
 	priv, err := s.manifest.CreateExternalSecret(ctx, client.CreateExternalSecretOpts{
-		ID:        opts.ID,
+		ID:        clusterID,
 		Name:      argoPrivateKeyName,
 		Namespace: constant.DefaultArgoCDNamespace,
 		Manifest: api.Manifest{
@@ -201,7 +219,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 	}
 
 	sec, err := s.manifest.CreateExternalSecret(ctx, client.CreateExternalSecretOpts{
-		ID:        opts.ID,
+		ID:        clusterID,
 		Name:      argoSecretName,
 		Namespace: constant.DefaultArgoCDNamespace,
 		Manifest: api.Manifest{
@@ -234,10 +252,10 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 	chart := argocd.New(argocd.NewDefaultValues(argocd.ValuesOpts{
 		URL:                  fmt.Sprintf("https://%s", cert.Domain),
 		HostName:             cert.Domain,
-		Region:               opts.ID.Region,
+		Region:               clusterID.Region,
 		CertificateARN:       cert.ARN,
 		ClientID:             identityClient.ClientID,
-		Organisation:         opts.GithubOrganisation,
+		Organisation:         opts.ClusterManifest.Github.Organisation,
 		AuthDomain:           opts.AuthDomain,
 		UserPoolID:           opts.UserPoolID,
 		RepoURL:              opts.Repository.GitURL,
@@ -252,7 +270,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 	}
 
 	a, err := s.helm.CreateHelmRelease(ctx, client.CreateHelmReleaseOpts{
-		ID:             opts.ID,
+		ID:             clusterID,
 		RepositoryName: chart.RepositoryName,
 		RepositoryURL:  chart.RepositoryURL,
 		ReleaseName:    chart.ReleaseName,
@@ -266,7 +284,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 	}
 
 	argo := &client.ArgoCD{
-		ID:             opts.ID,
+		ID:             clusterID,
 		ArgoDomain:     cert.Domain,
 		ArgoURL:        fmt.Sprintf("https://%s", cert.Domain),
 		AuthDomain:     opts.AuthDomain,
@@ -283,6 +301,11 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		},
 	}
 
+	err = s.SetupApplicationsSync(ctx, opts.ClusterManifest)
+	if err != nil {
+		return nil, fmt.Errorf("setting up application sync: %w", err)
+	}
+
 	err = s.state.SaveArgoCD(argo)
 	if err != nil {
 		return nil, fmt.Errorf("storing state: %w", err)
@@ -291,21 +314,79 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 	return argo, nil
 }
 
+// SetupApplicationsSync applies an ArgoCD Application manifest which ensures syncing of an application folder
+func (s *argoCDService) SetupApplicationsSync(_ context.Context, cluster v1alpha1.Cluster) error {
+	relativeArgoCDConfigDir := path.Join(
+		cluster.Github.OutputPath,
+		cluster.Metadata.Name,
+		constant.DefaultArgoCDClusterConfigDir,
+	)
+
+	relativeArgoCDApplicationsSyncDir := path.Join(
+		relativeArgoCDConfigDir,
+		constant.DefaultArgoCDClusterConfigApplicationsDir,
+	)
+
+	absoluteArgoCDManifestPath := path.Join(s.absoluteRepoDir,
+		relativeArgoCDConfigDir,
+		fmt.Sprintf("%s.yaml", defaultArgoCDApplicationManifestName),
+	)
+
+	originalManifest, err := scaffold.GenerateArgoCDApplicationManifest(scaffold.GenerateArgoCDApplicationManifestOpts{
+		Name:          defaultArgoCDApplicationManifestName,
+		Namespace:     argocd.Namespace,
+		IACRepoURL:    cluster.Github.URL(),
+		SourceSyncDir: relativeArgoCDApplicationsSyncDir,
+		Prune:         true,
+	})
+	if err != nil {
+		return fmt.Errorf("generating ArgoCD application manifest: %w", err)
+	}
+
+	manifestCopy := bytes.Buffer{}
+	manifest := io.TeeReader(originalManifest, &manifestCopy)
+
+	err = s.fs.WriteReader(absoluteArgoCDManifestPath, manifest)
+	if err != nil {
+		return fmt.Errorf("writing manifest: %w", err)
+	}
+
+	kubectlClient := binary.New(s.fs, s.binaryProvider, s.credentialsProvider, cluster)
+
+	err = kubectlClient.Apply(&manifestCopy)
+	if err != nil {
+		return fmt.Errorf("applying ArgoCD application manifest: %w", err)
+	}
+
+	return nil
+}
+
+// NewArgoCDServiceOpts defines required data for an ArgoCD service
+type NewArgoCDServiceOpts struct {
+	Fs                  *afero.Afero
+	BinaryProvider      binaries.Provider
+	CredentialsProvider credentials.Provider
+	AbsoluteRepoDir     string
+	Identity            client.IdentityManagerService
+	Cert                client.CertificateService
+	Manifest            client.ManifestService
+	Param               client.ParameterService
+	Helm                client.HelmService
+	State               client.ArgoCDState
+}
+
 // NewArgoCDService returns an initialised service
-func NewArgoCDService(
-	identity client.IdentityManagerService,
-	cert client.CertificateService,
-	manifest client.ManifestService,
-	param client.ParameterService,
-	helm client.HelmService,
-	state client.ArgoCDState,
-) client.ArgoCDService {
+func NewArgoCDService(opts NewArgoCDServiceOpts) client.ArgoCDService {
 	return &argoCDService{
-		state:    state,
-		identity: identity,
-		cert:     cert,
-		manifest: manifest,
-		param:    param,
-		helm:     helm,
+		fs:                  opts.Fs,
+		absoluteRepoDir:     opts.AbsoluteRepoDir,
+		binaryProvider:      opts.BinaryProvider,
+		credentialsProvider: opts.CredentialsProvider,
+		state:               opts.State,
+		identity:            opts.Identity,
+		cert:                opts.Cert,
+		manifest:            opts.Manifest,
+		param:               opts.Param,
+		helm:                opts.Helm,
 	}
 }

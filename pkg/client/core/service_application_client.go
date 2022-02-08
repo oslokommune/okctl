@@ -15,11 +15,6 @@ import (
 	"github.com/spf13/afero"
 )
 
-const (
-	defaultArgoCDApplicationManifestPermissions = 0o644 // u+rw g+r o+r
-	defaultArgoCDApplicationManifestFilename    = "argocd-application.yaml"
-)
-
 type applicationService struct {
 	certificateService    client.CertificateService
 	appManifestService    client.ApplicationManifestService
@@ -101,24 +96,32 @@ func (s *applicationService) CreateArgoCDApplicationManifest(opts client.CreateA
 		opts.Cluster.Metadata.Name,
 	)
 
-	absoluteOverlayDir := path.Join(s.absoluteRepositoryDir, relativeOverlayDir)
-	absoluteArgoCDApplicationManifestPath := path.Join(absoluteOverlayDir, defaultArgoCDApplicationManifestFilename)
+	absoluteArgoCDApplicationManifestPath := path.Join(s.absoluteRepositoryDir,
+		opts.Cluster.Github.OutputPath,
+		opts.Cluster.Metadata.Name,
+		constant.DefaultArgoCDClusterConfigDir,
+		constant.DefaultArgoCDClusterConfigApplicationsDir,
+		fmt.Sprintf("%s.yaml", opts.Application.Metadata.Name),
+	)
 
-	err := s.fs.MkdirAll(absoluteOverlayDir, 0o700)
+	err := s.fs.MkdirAll(path.Dir(absoluteArgoCDApplicationManifestPath), 0o700)
 	if err != nil {
-		return errors.E(err, "ensuring overlay directory: %w", err)
+		return errors.E(err, "ensuring cluster applications directory: %w", err)
 	}
 
-	err = scaffold.GenerateArgoCDApplicationManifest(scaffold.GenerateArgoCDApplicationManifestOpts{
-		Saver: func(content []byte) error {
-			return s.fs.WriteFile(absoluteArgoCDApplicationManifestPath, content, defaultArgoCDApplicationManifestPermissions)
-		},
-		Application:                   opts.Application,
-		IACRepoURL:                    opts.Cluster.Github.URL(),
-		RelativeApplicationOverlayDir: relativeOverlayDir,
+	manifest, err := scaffold.GenerateArgoCDApplicationManifest(scaffold.GenerateArgoCDApplicationManifestOpts{
+		Name:          opts.Application.Metadata.Name,
+		Namespace:     opts.Application.Metadata.Namespace,
+		IACRepoURL:    opts.Cluster.Github.URL(),
+		SourceSyncDir: relativeOverlayDir,
 	})
 	if err != nil {
 		return errors.E(err, "generating ArgoCD Application manifest")
+	}
+
+	err = s.fs.WriteReader(absoluteArgoCDApplicationManifestPath, manifest)
+	if err != nil {
+		return fmt.Errorf("writing manifest: %w", err)
 	}
 
 	return nil

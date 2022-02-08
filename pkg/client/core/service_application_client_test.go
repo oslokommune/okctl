@@ -3,6 +3,7 @@ package core_test
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"path"
 	"path/filepath"
 	"testing"
@@ -124,6 +125,12 @@ func TestNewApplicationService(t *testing.T) {
 	appDir := filepath.Join(absoluteApplicationsDir, application.Metadata.Name)
 	appBaseDir := filepath.Join(appDir, constant.DefaultApplicationBaseDir)
 	appOverlayDir := filepath.Join(appDir, constant.DefaultApplicationOverlayDir, cluster.Metadata.Name)
+	clusterApplicationsDir := filepath.Join(
+		absoluteOutputDir,
+		cluster.Metadata.Name,
+		constant.DefaultArgoCDClusterConfigDir,
+		constant.DefaultArgoCDClusterConfigApplicationsDir,
+	)
 
 	g.Assert(t, "kustomization-base.yaml", readFile(t, fs, filepath.Join(appBaseDir, "kustomization.yaml")))
 	g.Assert(t, "namespace.yaml", readFile(t, fs, filepath.Join(appBaseDir, "namespace.yaml")))
@@ -136,7 +143,10 @@ func TestNewApplicationService(t *testing.T) {
 	g.Assert(t, "kustomization-overlay.yaml", readFile(t, fs, filepath.Join(appOverlayDir, "kustomization.yaml")))
 	g.Assert(t, "deployment-patch.yaml", readFile(t, fs, filepath.Join(appOverlayDir, "deployment-patch.json")))
 	g.Assert(t, "ingress-patch.yaml", readFile(t, fs, filepath.Join(appOverlayDir, "ingress-patch.json")))
-	g.Assert(t, "argocd-application.yaml", readFile(t, fs, filepath.Join(appOverlayDir, "argocd-application.yaml")))
+	g.Assert(t, "argocd-application.yaml", readFile(t, fs, filepath.Join(
+		clusterApplicationsDir,
+		fmt.Sprintf("%s.yaml", application.Metadata.Name),
+	)))
 }
 
 // nolint: funlen

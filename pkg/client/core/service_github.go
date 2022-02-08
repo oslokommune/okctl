@@ -93,6 +93,7 @@ func (s *githubService) CreateGithubRepository(_ context.Context, opts client.Cr
 
 func (s *githubService) DeleteRepositoryDeployKey(opts client.DeleteGithubDeployKeyOpts) error {
 	err := s.parameterService.DeleteSecret(context.Background(), api.DeleteSecretOpts{
+		ID:   opts.ID,
 		Name: githubDeployKeySecretName(opts.Organisation, opts.Repository),
 	})
 	if err != nil {

@@ -38,12 +38,14 @@ type CreateSecretOpts struct {
 
 // DeleteSecretOpts contains the input required for deleting a secret parameter
 type DeleteSecretOpts struct {
+	ID   ID
 	Name string
 }
 
 // Validate the inputs
 func (o DeleteSecretOpts) Validate() error {
 	return validation.ValidateStruct(&o,
+		validation.Field(&o.ID, validation.Required),
 		validation.Field(&o.Name, validation.Required),
 	)
 }

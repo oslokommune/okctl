@@ -11,6 +11,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/Masterminds/semver v1.5.0
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
+	github.com/ScaleFT/sshkeys v0.0.0-20200327173127-6142f742bca5
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/asdine/storm/v3 v3.2.1
@@ -28,7 +29,6 @@ require (
 	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/foolin/pagser v0.1.5
 	github.com/garyburd/redigo v1.6.2 // indirect
-	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/go-kit/kit v0.12.0

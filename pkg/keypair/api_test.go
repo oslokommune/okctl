@@ -13,7 +13,7 @@ import (
 func TestGenerate(t *testing.T) {
 	t.Run("should create expected keypair", func(t *testing.T) {
 		// Given
-		r := rand.New(rand.NewSource(234149819819191918)) //nolint:gosec
+		r := rand.New(rand.NewSource(215823169816)) //nolint:gosec
 
 		// When
 		keyPair, err := keypair.GenerateFromReader(r)

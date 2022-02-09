@@ -117,7 +117,7 @@ func KubensKnownBinaries() []Binary {
 					Os:     "linux",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "3dbe69e6deb35fbd6fec95b13d20ac1527544867ae56e3dae17e8c4d638b25b9",
+					Digest: "8b3672961fb15f8b87d5793af8bd3c1cca52c016596fbf57c46ab4ef39265fcd",
 				},
 			},
 		},

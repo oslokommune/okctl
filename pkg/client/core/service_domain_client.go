@@ -3,6 +3,9 @@ package core
 import (
 	"context"
 	"errors"
+	"fmt"
+
+	"github.com/oslokommune/okctl/pkg/api"
 
 	stormpkg "github.com/asdine/storm/v3"
 
@@ -10,8 +13,8 @@ import (
 )
 
 type domainService struct {
-	api   client.DomainAPI
-	state client.DomainState
+	service api.DomainService
+	state   client.DomainState
 }
 
 func (s *domainService) GetPrimaryHostedZone(_ context.Context) (*client.HostedZone, error) {
@@ -19,7 +22,7 @@ func (s *domainService) GetPrimaryHostedZone(_ context.Context) (*client.HostedZ
 }
 
 // DeletePrimaryHostedZone and all associated records
-func (s *domainService) DeletePrimaryHostedZone(_ context.Context, opts client.DeletePrimaryHostedZoneOpts) error {
+func (s *domainService) DeletePrimaryHostedZone(context context.Context, opts client.DeletePrimaryHostedZoneOpts) error {
 	hz, err := s.state.GetPrimaryHostedZone()
 	if err != nil {
 		if errors.Is(err, stormpkg.ErrNotFound) {
@@ -33,9 +36,13 @@ func (s *domainService) DeletePrimaryHostedZone(_ context.Context, opts client.D
 
 	if hz.Managed {
 		// HostedZone is managed by us, so delete it
-		err = s.api.DeletePrimaryHostedZone(hz.Domain, opts)
+		err := s.service.DeleteHostedZone(context, api.DeleteHostedZoneOpts{
+			ID:           opts.ID,
+			HostedZoneID: opts.HostedZoneID,
+			Domain:       hz.Domain,
+		})
 		if err != nil {
-			return err
+			return fmt.Errorf("deleting hosted zone: %w", err)
 		}
 	}
 
@@ -47,7 +54,7 @@ func (s *domainService) DeletePrimaryHostedZone(_ context.Context, opts client.D
 	return nil
 }
 
-func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.CreatePrimaryHostedZoneOpts) (*client.HostedZone, error) {
+func (s *domainService) CreatePrimaryHostedZone(context context.Context, opts client.CreatePrimaryHostedZoneOpts) (*client.HostedZone, error) {
 	// [Refactor] Reconciler is responsible for ordering operations
 	//
 	// We should be doing this check in the reconciler together with a
@@ -64,12 +71,28 @@ func (s *domainService) CreatePrimaryHostedZone(_ context.Context, opts client.C
 		}
 	}
 
-	zone, err := s.api.CreatePrimaryHostedZone(opts)
+	hz, err := s.service.CreateHostedZone(context, api.CreateHostedZoneOpts{
+		ID:     opts.ID,
+		Domain: opts.Domain,
+		FQDN:   opts.FQDN,
+		NSTTL:  opts.NameServerTTL,
+	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating hosted zone: %w", err)
 	}
 
-	zone.IsDelegated = false
+	zone := &client.HostedZone{
+		ID:                     hz.ID,
+		IsDelegated:            false,
+		Primary:                true,
+		Managed:                hz.Managed,
+		FQDN:                   hz.FQDN,
+		Domain:                 hz.Domain,
+		HostedZoneID:           hz.HostedZoneID,
+		NameServers:            hz.NameServers,
+		StackName:              hz.StackName,
+		CloudFormationTemplate: hz.CloudFormationTemplate,
+	}
 
 	err = s.state.SaveHostedZone(zone)
 	if err != nil {
@@ -96,12 +119,9 @@ func (s *domainService) SetHostedZoneDelegation(_ context.Context, domain string
 }
 
 // NewDomainService returns an initialised service
-func NewDomainService(
-	api client.DomainAPI,
-	state client.DomainState,
-) client.DomainService {
+func NewDomainService(service api.DomainService, state client.DomainState) client.DomainService {
 	return &domainService{
-		api:   api,
-		state: state,
+		service: service,
+		state:   state,
 	}
 }

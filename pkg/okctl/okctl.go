@@ -169,21 +169,9 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 	}
 }
 
-// InitializeDirectClients with core services
-func (o *Okctl) InitializeDirectClients() (*clientDirectAPI.ToolChain, error) {
-	return &clientDirectAPI.ToolChain{
-		Domain: clientDirectAPI.NewDomainAPI(o.toolChain.Domain),
-	}, nil
-}
-
 // ClientServices returns the initialised client-side services
 // nolint: funlen
 func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.Services, error) {
-	directClients, err := o.InitializeDirectClients()
-	if err != nil {
-		return nil, err
-	}
-
 	absoluteRepositoryPath, err := o.GetRepoDir()
 	if err != nil {
 		return nil, err
@@ -280,7 +268,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	domainService := clientCore.NewDomainService(
-		directClients.Domain,
+		o.toolChain.Domain,
 		handlers.Domain,
 	)
 

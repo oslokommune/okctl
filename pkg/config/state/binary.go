@@ -5,6 +5,7 @@ func KnownBinaries() (binaries []Binary) {
 	binaries = append(binaries, EksctlKnownBinaries()...)
 	binaries = append(binaries, AWSIamAuthenticatorKnownBinaries()...)
 	binaries = append(binaries, KubectlKnownBinaries()...)
+	binaries = append(binaries, KubensKnownBinaries()...)
 
 	return binaries
 }
@@ -79,6 +80,38 @@ func KubectlKnownBinaries() []Binary {
 					Arch:   "amd64",
 					Type:   "sha256",
 					Digest: "f3f3919bf94d7b7f2014e2e9b318f049f4de378aed62833d609d211cf416935b",
+				},
+				{
+					Os:     "linux",
+					Arch:   "amd64",
+					Type:   "sha256",
+					Digest: "3dbe69e6deb35fbd6fec95b13d20ac1527544867ae56e3dae17e8c4d638b25b9",
+				},
+			},
+		},
+	}
+}
+
+// KubensKnownBinaries returns the known binaries
+func KubensKnownBinaries() []Binary {
+	// Known limitation of Kubens: release-builds does not follow the same pattern as the above binaries,
+	// resulting in different architecture releases. Hardcoded to `_x86_64` for now
+	return []Binary{
+		{
+			Name:       "kubens",
+			Version:    "0.9.4",
+			BufferSize: "100mb",
+			URLPattern: "https://github.com/ahmetb/kubectx/releases/download/v#{ver}/kubens_v#{ver}_#{os}_x86_64.tar.gz",
+			Archive: Archive{
+				Type:   ".tar.gz",
+				Target: "kubens",
+			},
+			Checksums: []Checksum{
+				{
+					Os:     "darwin",
+					Arch:   "amd64",
+					Type:   "sha256",
+					Digest: "ef43ab1217e09ac1b929d4b9dd2c22cbb10540ef277a3a9b484c020820c988b1",
 				},
 				{
 					Os:     "linux",

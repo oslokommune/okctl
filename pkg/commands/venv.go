@@ -13,6 +13,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
+	"github.com/oslokommune/okctl/pkg/binaries/run/kubens"
 	"github.com/oslokommune/okctl/pkg/helm"
 	"github.com/oslokommune/okctl/pkg/okctl"
 )
@@ -27,6 +28,7 @@ type OkctlEnvironment struct {
 	UserHomeDir            string
 	Debug                  bool
 	KubectlBinaryDir       string
+	KubensBinaryDir        string
 	AwsIamAuthenticatorDir string
 	ClusterDeclarationPath string
 	AWSCredentialsType     string
@@ -43,6 +45,7 @@ func (o *OkctlEnvironment) Validate() error {
 		validation.Field(&o.UserDataDir, validation.Required),
 		validation.Field(&o.UserHomeDir, validation.Required),
 		validation.Field(&o.KubectlBinaryDir, validation.Required),
+		validation.Field(&o.KubensBinaryDir, validation.Required),
 		validation.Field(&o.AwsIamAuthenticatorDir, validation.Required),
 		validation.Field(&o.ClusterDeclarationPath, validation.Required),
 		validation.Field(&o.AWSCredentialsType, validation.Required),
@@ -74,6 +77,11 @@ func GetOkctlEnvironment(o *okctl.Okctl, clusterDeclarationPath string) (OkctlEn
 		return OkctlEnvironment{}, err
 	}
 
+	kn, err := o.BinariesProvider.Kubens(kubens.Version)
+	if err != nil {
+		return OkctlEnvironment{}, err
+	}
+
 	a, err := o.BinariesProvider.AwsIamAuthenticator(awsiamauthenticator.Version)
 	if err != nil {
 		return OkctlEnvironment{}, err
@@ -93,6 +101,7 @@ func GetOkctlEnvironment(o *okctl.Okctl, clusterDeclarationPath string) (OkctlEn
 		UserHomeDir:            userHomeDir,
 		Debug:                  o.Debug,
 		KubectlBinaryDir:       path.Dir(k.BinaryPath),
+		KubensBinaryDir:        path.Dir(kn.BinaryPath),
 		AwsIamAuthenticatorDir: path.Dir(a.BinaryPath),
 		ClusterDeclarationPath: absoluteClusterDeclarationPath,
 		AWSCredentialsType:     o.Context.AWSCredentialsType,
@@ -186,7 +195,7 @@ func GetOkctlEnvVars(opts OkctlEnvironment) (map[string]string, error) {
 }
 
 func getPathWithOkctlBinaries(opts OkctlEnvironment) string {
-	okctlPath := fmt.Sprintf("%s:%s", opts.KubectlBinaryDir, opts.AwsIamAuthenticatorDir)
+	okctlPath := fmt.Sprintf("%s:%s:%s", opts.KubectlBinaryDir, opts.KubensBinaryDir, opts.AwsIamAuthenticatorDir)
 	osPath, osPathExists := os.LookupEnv("PATH")
 
 	if osPathExists {

@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
 )
@@ -39,7 +40,7 @@ func generate(reader io.Reader) (*Keypair, error) {
 		return nil, fmt.Errorf("converting private key to PEM format: %w", err)
 	}
 
-	publicKey, err := publicKeyToPEMFormat(publicKeyRaw)
+	publicKey, err := toSSHKeyFormat(publicKeyRaw)
 	if err != nil {
 		return nil, fmt.Errorf("converting public key to PEM format: %w", err)
 	}
@@ -50,19 +51,13 @@ func generate(reader io.Reader) (*Keypair, error) {
 	}, nil
 }
 
-func publicKeyToPEMFormat(publicKey ed25519.PublicKey) ([]byte, error) {
-	// PKIX format explained: https://stackoverflow.com/a/49878687/915441
-	privateKeyPKCS8, err := x509.MarshalPKIXPublicKey(publicKey)
+func toSSHKeyFormat(publicKey ed25519.PublicKey) ([]byte, error) {
+	sshPublicKey, err := ssh.NewPublicKey(publicKey)
 	if err != nil {
-		return nil, fmt.Errorf("marshalling private key: %w", err)
+		return nil, fmt.Errorf("failed to create ssh-ed25519 public key: %w", err)
 	}
 
-	pemBlock := &pem.Block{
-		Type:  "PUBLIC KEY",
-		Bytes: privateKeyPKCS8,
-	}
-
-	return toPEMFormat(pemBlock)
+	return ssh.MarshalAuthorizedKey(sshPublicKey), nil
 }
 
 func privateKeyToPEMFormat(privateKey ed25519.PrivateKey) ([]byte, error) {

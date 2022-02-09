@@ -221,7 +221,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 
 	githubService := clientCore.NewGithubService(
 		o.toolChain.Parameter,
-		ghClient,
+		*ghClient,
 		handlers.Github,
 	)
 

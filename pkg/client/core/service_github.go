@@ -17,7 +17,7 @@ import (
 
 type githubService struct {
 	parameterService api.ParameterService
-	githubClient     *github.Github
+	githubClient     github.Github
 	state            client.GithubState
 }
 
@@ -141,7 +141,7 @@ func (s *githubService) CreateRepositoryDeployKey(opts client.CreateGithubDeploy
 }
 
 // NewGithubService returns an initialised service
-func NewGithubService(parameterService api.ParameterService, githubClient *github.Github, state client.GithubState) client.GithubService {
+func NewGithubService(parameterService api.ParameterService, githubClient github.Github, state client.GithubState) client.GithubService {
 	return &githubService{
 		parameterService: parameterService,
 		githubClient:     githubClient,

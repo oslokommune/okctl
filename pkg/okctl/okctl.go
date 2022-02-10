@@ -26,7 +26,6 @@ import (
 	"github.com/logrusorgru/aurora/v3"
 
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
-	clientDirectAPI "github.com/oslokommune/okctl/pkg/client/core/api/direct"
 	githubClient "github.com/oslokommune/okctl/pkg/github"
 
 	"github.com/oslokommune/okctl/pkg/config/state"
@@ -221,10 +220,8 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 	)
 
 	githubService := clientCore.NewGithubService(
-		clientDirectAPI.NewGithubAPI(
-			o.toolChain.Parameter,
-			ghClient,
-		),
+		o.toolChain.Parameter,
+		*ghClient,
 		handlers.Github,
 	)
 

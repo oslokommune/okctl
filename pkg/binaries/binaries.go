@@ -11,6 +11,7 @@ import (
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/binaries/run/eksctl"
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
+	"github.com/oslokommune/okctl/pkg/binaries/run/kubens"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	"github.com/oslokommune/okctl/pkg/storage"
 )
@@ -19,6 +20,7 @@ import (
 type Provider interface {
 	Eksctl(version string) (*eksctl.Eksctl, error)
 	Kubectl(version string) (*kubectl.Kubectl, error)
+	Kubens(version string) (*kubens.Kubens, error)
 	AwsIamAuthenticator(version string) (*awsiamauthenticator.AwsIamAuthenticator, error)
 }
 
@@ -30,6 +32,7 @@ type provider struct {
 
 	eksctl              map[string]*eksctl.Eksctl
 	kubectl             map[string]*kubectl.Kubectl
+	kubens              map[string]*kubens.Kubens
 	awsIamAuthenticator map[string]*awsiamauthenticator.AwsIamAuthenticator
 }
 
@@ -65,6 +68,22 @@ func (p *provider) Kubectl(version string) (*kubectl.Kubectl, error) {
 	return p.kubectl[version], nil
 }
 
+// Kubens returns a kubens cli wrapper for running commands
+func (p *provider) Kubens(version string) (*kubens.Kubens, error) {
+	_, ok := p.kubens[version]
+
+	if !ok {
+		binaryPath, err := p.fetcher.Fetch(kubens.Name, version)
+		if err != nil {
+			return nil, err
+		}
+
+		p.kubens[version] = kubens.New(binaryPath)
+	}
+
+	return p.kubens[version], nil
+}
+
 // Eksctl returns an eksctl cli wrapper for running commands
 func (p *provider) Eksctl(version string) (*eksctl.Eksctl, error) {
 	_, ok := p.eksctl[version]
@@ -96,6 +115,7 @@ func New(logger *logrus.Logger, progress io.Writer, auth aws.Authenticator, fetc
 		logger:              logger,
 		eksctl:              map[string]*eksctl.Eksctl{},
 		kubectl:             map[string]*kubectl.Kubectl{},
+		kubens:              map[string]*kubens.Kubens{},
 		awsIamAuthenticator: map[string]*awsiamauthenticator.AwsIamAuthenticator{},
 	}
 }

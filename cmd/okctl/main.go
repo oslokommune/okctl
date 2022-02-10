@@ -186,7 +186,6 @@ func buildRootCommand() (*cobra.Command, *okctl.Okctl) {
 
 	cmd.AddCommand(buildApplyCommand(o))
 	cmd.AddCommand(buildCompletionCommand(o))
-	cmd.AddCommand(buildCreateCommand(o))
 	cmd.AddCommand(buildDeleteCommand(o))
 	cmd.AddCommand(buildScaffoldCommand(o))
 	cmd.AddCommand(buildShowCommand(o))

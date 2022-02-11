@@ -3,11 +3,12 @@ package edkey_test
 import (
 	"bytes"
 	"crypto/ed25519"
+	"math/rand"
+	"testing"
+
 	"github.com/oslokommune/okctl/pkg/keypair/edkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"math/rand"
-	"testing"
 )
 
 // TestEdkeyContainsOriginalKey verifies that package edkey wraps a ed25519 key

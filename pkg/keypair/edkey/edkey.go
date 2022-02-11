@@ -83,7 +83,7 @@ func MarshalED25519PrivateKey(key ed25519.PrivateKey) []byte {
 	w.KdfName = "none"
 	w.KdfOpts = ""
 	w.NumKeys = 1
-	w.PubKey = append(prefix, pubKey...)
+	w.PubKey = append(prefix, pubKey...) //nolint:wsl,gocritic
 	w.PrivKeyBlock = ssh.Marshal(pk1)
 
 	magic = append(magic, ssh.Marshal(w)...)

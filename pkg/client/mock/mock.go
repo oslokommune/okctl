@@ -491,8 +491,8 @@ func GithubDeployKey() *client.GithubDeployKey {
 		Organisation:     DefaultGithubOrg,
 		Repository:       DefaultGithubName,
 		Identifier:       234567, // nolint: gomnd
-		Title:            "okctl-iac-deploykey",
-		PublicKey:        "ssh-rsa y390uf30uf03",
+		Title:            "okctl-iac-clustername",
+		PublicKey:        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA4NtsHov87nPdn1BhtPckjz3jmzHXvqtWkTrIGlYm0E",
 		PrivateKeySecret: GithubSecret(),
 	}
 }

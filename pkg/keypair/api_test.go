@@ -24,5 +24,9 @@ func TestGenerate(t *testing.T) {
 		g := goldie.New(t)
 		g.Assert(t, "publicKey", keyPair.PublicKey)
 		g.Assert(t, "privateKey", keyPair.PrivateKey)
+
+		// Another way to validate these keys:
+		// ssh-add privateKey.golden
+		// ssh-keygen -l -f publicKey.golden
 	})
 }

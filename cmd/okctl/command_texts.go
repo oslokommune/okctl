@@ -21,18 +21,6 @@ or perform other simple operations.`
 
 	AttachPostgresShortDescription = "Attach to the given postgres database"
 
-	CreateCommandsShortDescription = "Create commands"
-	CreateCommandsLongDescription  = `Create various kinds of resources.
-
-Pre-requisites:
-okctl creates various configuration files, and assumes that it is
-running in a git repository. Initialize or clone a git repository
-before running any of these commands.`
-
-	CreateRDSPostgresDatabaseShortDescription = "Create an AWS RDS Postgres database"
-	CreateRDSPostgresDatabaseLongDescription  = `We will create an AWS RDS Postgres database and make a Secret and ConfigMap available
-in the provided namespace containing data for accessing the database.
-`
 	DeleteClusterShortDescription = "Delete a cluster"
 	DeleteClusterLongDescription  = `Delete all resources related to an EKS cluster,
 including VPC, this is a highly destructive operation.`

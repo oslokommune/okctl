@@ -27,9 +27,15 @@ if [[ $(pwd) != */okctl* ]]; then
     exit 1
 fi
 
-if [[ $(git st | wc -l) -gt 0 ]]; then
+if [[ -n $(git status --porcelain) ]]; then
     echo Dirty git status. Clean up before retrying.
-    #exit 1
+    exit 1
+fi
+
+if ! command -v bat &> /dev/null
+then
+    echo 'bat' could not be found. Install before retrying.
+    exit
 fi
 
 git checkout master
@@ -62,7 +68,7 @@ EOF
 (bat docs/release_notes/$RELEASE_VERSION_RAW.md || cat docs/release_notes/$RELEASE_VERSION_RAW.md)
 
 git add docs/release_notes/$NEXT_VERSION_RAW.md
-git df --cached
+git diff --cached
 git commit -m "Add changelog file for $NEXT_VERSION_RAW"
 
 git tag $RELEASE_VERSION

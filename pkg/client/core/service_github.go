@@ -108,7 +108,7 @@ func (s *githubService) ListReleases(owner, repo string) ([]*github.RepositoryRe
 }
 
 func (s *githubService) CreateRepositoryDeployKey(opts client.CreateGithubDeployKeyOpts) (*client.GithubDeployKey, error) {
-	key, err := keypair.New(keypair.DefaultRandReader(), keypair.DefaultBitSize).Generate()
+	key, err := keypair.Generate()
 	if err != nil {
 		return nil, err
 	}

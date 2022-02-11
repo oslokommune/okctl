@@ -6,9 +6,10 @@ import (
 	"crypto/rand"
 	"encoding/pem"
 	"fmt"
+	"io"
+
 	"github.com/oslokommune/okctl/pkg/keypair/edkey"
 	"golang.org/x/crypto/ssh"
-	"io"
 )
 
 // Keypair is the key pair and its metadata

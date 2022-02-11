@@ -9,6 +9,11 @@
 //
 // There also shouldn't be a need to bump this code at all, as it's working.
 //
+// Next question, is it secure? Yes. The only thing this package does is wrap a ed25519 key in the OpenSSH format. Details:
+// - The code uses the official ed25519 package.
+// - Line 56, "pk1.Pub = pubKey", shows that the code is just wrapping a pubKey into a "pk1" struct that contains various
+// metadata. edkey_test.go -> TestEdkeyContainsOriginalKey verifies this wrapping.
+//
 // We should replace this whole package when Golang adds proper support for OpenSSH format. See:
 // https://github.com/golang/go/issues/37132
 package edkey

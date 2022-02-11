@@ -1,15 +1,16 @@
 package edkey
 
 import (
+	"crypto/ed25519"
 	"math/rand"
 
-	"golang.org/x/crypto/ed25519"
 	"golang.org/x/crypto/ssh"
 )
 
-/* Writes ed25519 private keys into the new OpenSSH private key format.
-I have no idea why this isn't implemented anywhere yet, you can do seemingly
-everything except write it to disk in the OpenSSH private key format. */
+// MarshalED25519PrivateKey writes ed25519 private keys into the new OpenSSH private key format.
+// I have no idea why this isn't implemented anywhere yet, you can do seemingly
+// everything except write it to disk in the OpenSSH private key format. */
+//nolint:funlen
 func MarshalED25519PrivateKey(key ed25519.PrivateKey) []byte {
 	// Add our key header (followed by a null byte)
 	magic := append([]byte("openssh-key-v1"), 0)
@@ -35,7 +36,9 @@ func MarshalED25519PrivateKey(key ed25519.PrivateKey) []byte {
 	}{}
 
 	// Set our check ints
-	ci := rand.Uint32()
+	// Regarding nolint:gosec: It is supposed to be 32 bits. This implementation also uses 32 bits:
+	// https://github.com/ScaleFT/sshkeys/blob/6142f742bca5d46caa302031dfebb98b45fd10ed/marshal.go#L183
+	ci := rand.Uint32() //nolint:gosec
 	pk1.Check1 = ci
 	pk1.Check2 = ci
 
@@ -45,9 +48,10 @@ func MarshalED25519PrivateKey(key ed25519.PrivateKey) []byte {
 	// Add the pubkey to the optionally-encrypted block
 	pk, ok := key.Public().(ed25519.PublicKey)
 	if !ok {
-		//fmt.Fprintln(os.Stderr, "ed25519.PublicKey type assertion failed on an ed25519 public key. This should never ever happen.")
+		// fmt.Fprintln(os.Stderr, "ed25519.PublicKey type assertion failed on an ed25519 public key. This should never ever happen.")
 		return nil
 	}
+
 	pubKey := []byte(pk)
 	pk1.Pub = pubKey
 

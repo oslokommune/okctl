@@ -2,19 +2,14 @@ package main
 
 import (
 	"fmt"
-	"path"
 
 	"github.com/oslokommune/okctl/cmd/okctl/hooks"
 	"github.com/oslokommune/okctl/pkg/metrics"
-
-	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/logrusorgru/aurora/v3"
 	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
 	"github.com/oslokommune/okctl/pkg/commands"
-
-	"github.com/oslokommune/okctl/pkg/kubeconfig"
 
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
@@ -54,6 +49,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.InitializeOkctl(o),
 			hooks.DownloadState(o, false),
 			hooks.VerifyClusterExistsInState(o),
+			hooks.WriteKubeConfig(o),
 			func(_ *cobra.Command, args []string) error {
 				okctlEnvironment, err = commands.GetOkctlEnvironment(o, declarationPath)
 				if err != nil {
@@ -112,35 +108,6 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 			}
 
 			_, err = fmt.Fprint(o.Err, txt)
-			if err != nil {
-				return err
-			}
-
-			handlers := o.StateHandlers(o.StateNodes())
-
-			cluster, err := handlers.Cluster.GetCluster(o.Declaration.Metadata.Name)
-			if err != nil {
-				return err
-			}
-
-			cfg, err := kubeconfig.New(cluster.Config, o.CloudProvider).Get()
-			if err != nil {
-				return fmt.Errorf("creating kubconfig: %w", err)
-			}
-
-			data, err := cfg.Bytes()
-			if err != nil {
-				return err
-			}
-
-			appDir, err := o.GetUserDataDir()
-			if err != nil {
-				return err
-			}
-
-			kubeConfigFile := path.Join(appDir, constant.DefaultCredentialsDirName, okctlEnvironment.ClusterName, constant.DefaultClusterKubeConfig)
-
-			err = o.FileSystem.WriteFile(kubeConfigFile, data, 0o644)
 			if err != nil {
 				return err
 			}

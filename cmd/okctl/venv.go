@@ -6,15 +6,12 @@ import (
 	osPkg "os"
 	"os/exec"
 	"os/user"
-	"path"
 	"strings"
 
 	"github.com/oslokommune/okctl/cmd/okctl/hooks"
 	"github.com/oslokommune/okctl/pkg/metrics"
 
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"github.com/oslokommune/okctl/pkg/config/state"
-	"github.com/oslokommune/okctl/pkg/kubeconfig"
 	"github.com/oslokommune/okctl/pkg/virtualenv/shellgetter"
 
 	"github.com/oslokommune/okctl/pkg/virtualenv/commandlineprompter"
@@ -47,6 +44,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command { //nolint: funlen
 			hooks.InitializeOkctl(o),
 			hooks.DownloadState(o, false),
 			hooks.VerifyClusterExistsInState(o),
+			hooks.WriteKubeConfig(o),
 			func(_ *cobra.Command, args []string) error {
 				e, err := venvPreRunE(o)
 				if err != nil {
@@ -64,40 +62,6 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command { //nolint: funlen
 			},
 		),
 		RunE: func(_ *cobra.Command, args []string) error {
-			handlers := o.StateHandlers(o.StateNodes())
-
-			cluster, err := handlers.Cluster.GetCluster(o.Declaration.Metadata.Name)
-			if err != nil {
-				return err
-			}
-
-			cfg, err := kubeconfig.New(cluster.Config, o.CloudProvider).Get()
-			if err != nil {
-				return fmt.Errorf("creating kubconfig: %w", err)
-			}
-
-			data, err := cfg.Bytes()
-			if err != nil {
-				return err
-			}
-
-			appDir, err := o.GetUserDataDir()
-			if err != nil {
-				return err
-			}
-
-			kubeConfigFile := path.Join(appDir, constant.DefaultCredentialsDirName, okctlEnvironment.ClusterName, constant.DefaultClusterKubeConfig)
-
-			err = o.FileSystem.MkdirAll(path.Dir(kubeConfigFile), 0o700)
-			if err != nil {
-				return err
-			}
-
-			err = o.FileSystem.WriteFile(kubeConfigFile, data, 0o640)
-			if err != nil {
-				return err
-			}
-
 			return venvRunE(o, okctlEnvironment)
 		},
 		PostRunE: hooks.RunECombinator(

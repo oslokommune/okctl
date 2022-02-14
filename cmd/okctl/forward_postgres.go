@@ -78,11 +78,8 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 			hooks.InitializeOkctl(o),
 			hooks.DownloadState(o, false),
 			hooks.VerifyClusterExistsInState(o),
+			hooks.ValidatePostgresApplicationName(o, &opts.ApplicationName),
 			func(_ *cobra.Command, _ []string) error {
-				if len(opts.ApplicationName) == 0 {
-					return fmt.Errorf("missing database instance name")
-				}
-
 				err := commands.ValidateBinaryVersionNotLessThanClusterVersion(o)
 				if err != nil {
 					return err

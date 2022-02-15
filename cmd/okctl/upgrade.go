@@ -49,6 +49,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 			hooks.AcquireStateLock(o),
 			hooks.DownloadState(o, true),
 			hooks.VerifyClusterExistsInState(o),
+			hooks.WriteKubeConfig(o),
 			func(cmd *cobra.Command, args []string) error {
 				okctlEnvironment, err := commands.GetOkctlEnvironment(o, declarationPath)
 				if err != nil {

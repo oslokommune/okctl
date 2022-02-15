@@ -49,6 +49,7 @@ const (
 
 	DefaultClusterConfig         = "cluster.yml"
 	DefaultClusterKubeConfig     = "kubeconfig"
+	DefaultClusterKubePermission = 0o600
 	DefaultClusterAwsConfig      = "aws-config"
 	DefaultClusterAwsCredentials = "aws-credentials"
 	DefaultClusterBaseDir        = "cluster"

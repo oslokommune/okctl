@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/client"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -32,7 +34,7 @@ func (k *kubeConfig) SaveKubeConfig(config *kubeconfig.Config) error {
 	}
 
 	_, err = store.NewFileSystem(k.kubeConfigBaseDir, k.fs).
-		StoreBytes(k.kubeConfigFileName, cfg).
+		StoreBytes(k.kubeConfigFileName, cfg, store.WithFilePermissionsMode(constant.DefaultClusterKubePermission)).
 		Do()
 	if err != nil {
 		return fmt.Errorf("storing kubeconfig: %w", err)

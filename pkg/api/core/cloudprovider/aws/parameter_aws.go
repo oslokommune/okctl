@@ -15,8 +15,10 @@ type parameter struct {
 }
 
 func (p *parameter) DeleteSecret(opts api.DeleteSecretOpts) error {
+	path := p.getSecretPath(opts.ID.ClusterName, opts.Name)
+
 	_, err := p.provider.SSM().DeleteParameter(&ssm.DeleteParameterInput{
-		Name: aws.String(opts.Name),
+		Name: aws.String(path),
 	})
 	if err != nil {
 		if strings.Contains(err.Error(), "ParameterNotFound:") {
@@ -30,7 +32,7 @@ func (p *parameter) DeleteSecret(opts api.DeleteSecretOpts) error {
 }
 
 func (p *parameter) CreateSecret(opts api.CreateSecretOpts) (*api.SecretParameter, error) {
-	path := fmt.Sprintf("/okctl/%s/%s", opts.ID.ClusterName, opts.Name)
+	path := p.getSecretPath(opts.ID.ClusterName, opts.Name)
 
 	got, err := p.provider.SSM().PutParameter(&ssm.PutParameterInput{
 		DataType:    aws.String("text"),
@@ -52,6 +54,10 @@ func (p *parameter) CreateSecret(opts api.CreateSecretOpts) (*api.SecretParamete
 			Path:    path,
 		},
 	}, nil
+}
+
+func (p *parameter) getSecretPath(clusterName, secretName string) string {
+	return fmt.Sprintf("/okctl/%s/%s", clusterName, secretName)
 }
 
 // NewParameterCloudProvider returns an initialised cloud provider

@@ -14,6 +14,7 @@ type parameterService struct {
 
 func (s *parameterService) DeleteSecret(context context.Context, opts client.DeleteSecretOpts) error {
 	err := s.service.DeleteSecret(context, api.DeleteSecretOpts{
+		ID:   opts.ID,
 		Name: opts.Name,
 	})
 	if err != nil {

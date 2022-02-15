@@ -332,8 +332,12 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 	}
 
 	for _, secretName := range []string{clientSecretName, secretKeyName, adminUserName, adminPassName} {
-		if err = s.param.DeleteSecret(ctx, client.DeleteSecretOpts{Name: secretName}); err != nil {
-			return err
+		err = s.param.DeleteSecret(ctx, client.DeleteSecretOpts{
+			ID:   opts.ID,
+			Name: secretName,
+		})
+		if err != nil {
+			return fmt.Errorf("deleting parameter secret: %w", err)
 		}
 	}
 

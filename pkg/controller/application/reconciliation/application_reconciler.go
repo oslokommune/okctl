@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/oslokommune/okctl/pkg/logging"
 
 	stormpkg "github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -16,10 +18,15 @@ const applicationReconcilerIdentifier = "kubernetes manifests"
 // applicationReconciler contains service and metadata for the relevant resource
 type applicationReconciler struct {
 	client client.ApplicationService
+	logger logging.Logger
 }
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
 func (a *applicationReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
+	a.logger = logging.GetLogger("application", "reconcile")
+	a.logger.Debug(fmt.Sprintf("Reconciling application: %#v \n", meta.ApplicationDeclaration.Image))
+	a.logger.Trace(spew.Sdump(meta))
+
 	action, err := a.determineAction(meta, state)
 	if err != nil {
 		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
@@ -63,6 +70,8 @@ func (a *applicationReconciler) createApplication(ctx context.Context, meta reco
 	if err != nil {
 		return reconciliation.Result{}, err
 	}
+
+	a.logger.Debug(fmt.Sprintf("Successfully created application: %#v \n", meta.ApplicationDeclaration.Image))
 
 	return reconciliation.Result{Requeue: false}, nil
 }

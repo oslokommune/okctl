@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/davecgh/go-spew/spew"
+	"github.com/oslokommune/okctl/pkg/logging"
+
 	"github.com/mishudark/errors"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -20,6 +23,7 @@ type applicationService struct {
 	appManifestService    client.ApplicationManifestService
 	fs                    *afero.Afero
 	absoluteRepositoryDir string
+	logger                logging.Logger
 }
 
 func (s *applicationService) createCertificate(ctx context.Context, id *api.ID, hostedZoneID, fqdn string) (string, error) {
@@ -39,6 +43,8 @@ func (s *applicationService) createCertificate(ctx context.Context, id *api.ID, 
 // ScaffoldApplication turns a file path into Kubernetes resources
 // nolint: funlen
 func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *client.ScaffoldApplicationOpts) error {
+	s.logger.Trace(spew.Sdump(opts))
+
 	err := opts.Validate()
 	if err != nil {
 		return err
@@ -88,6 +94,7 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 
 // CreateArgoCDApplicationManifest creates necessary files for the ArgoCD integration
 func (s *applicationService) CreateArgoCDApplicationManifest(opts client.CreateArgoCDApplicationManifestOpts) error {
+	s.logger.Trace(spew.Sdump(opts))
 	relativeOverlayDir := path.Join(
 		opts.Cluster.Github.OutputPath,
 		constant.DefaultApplicationsOutputDir,
@@ -160,5 +167,6 @@ func NewApplicationService(
 		appManifestService:    appManifestService,
 		fs:                    fs,
 		absoluteRepositoryDir: absoluteRepositoryDir,
+		logger:                logging.GetLogger("application", "clientService"),
 	}
 }

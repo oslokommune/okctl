@@ -4,10 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
-	"os/signal"
 	"path"
-	"syscall"
 
 	"github.com/oslokommune/okctl/pkg/metrics"
 
@@ -62,18 +59,6 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 		Short:   ApplyClusterShortDescription,
 		Long:    ApplyClusterLongDescription,
 		Args:    cobra.ExactArgs(0),
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) (err error) {
-			c := make(chan os.Signal)
-			signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-			go func() {
-				<-c
-				os.Exit(1)
-			}()
-
-			enableServiceUserAuthentication(o)
-
-			return nil
-		},
 		PreRunE: hooks.RunECombinator(
 			hooks.LoadUserData(o),
 			hooks.InitializeMetrics(o),

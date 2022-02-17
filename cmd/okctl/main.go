@@ -3,19 +3,13 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/signal"
-	"path/filepath"
 	"strings"
-	"syscall"
 
+	"github.com/oslokommune/okctl/cmd/okctl/auth"
 	"github.com/oslokommune/okctl/cmd/okctl/hooks"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
-	"github.com/go-git/go-git/v5"
-	"github.com/pkg/errors"
-
-	"github.com/oslokommune/okctl/pkg/config/load"
 	"github.com/oslokommune/okctl/pkg/context"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
@@ -36,7 +30,7 @@ func main() {
 			exitCode = 1
 		}
 
-		err := gracefullyTearDownState(o)
+		err := hooks.GracefullyTearDownState(o)
 		if err != nil {
 			fmt.Fprintf(cmd.ErrOrStderr(), "gracefully cleaning up state: %s", err.Error())
 		}
@@ -48,65 +42,10 @@ func main() {
 	}
 }
 
-func gracefullyTearDownState(o *okctl.Okctl) error {
-	err := hooks.UploadState(o)(nil, nil)
-	if err != nil {
-		switch {
-		case errors.Is(err, hooks.ErrNotInitialized):
-			return nil
-		case errors.Is(err, hooks.ErrImmutable):
-			return nil
-		case errors.Is(err, hooks.ErrNotFound):
-			return nil
-		default:
-			return fmt.Errorf("uploading state: %w", err)
-		}
-	}
-
-	err = hooks.ReleaseStateLock(o)(nil, nil)
-	if err != nil {
-		return fmt.Errorf("releasing state lock: %w", err)
-	}
-
-	err = hooks.ClearLocalState(o)(nil, nil)
-	if err != nil {
-		return fmt.Errorf("clearing local state: %w", err)
-	}
-
-	return nil
-}
-
-func loadRepoData(o *okctl.Okctl, declarationPath string, _ *cobra.Command) error {
-	o.RepoDataLoader = load.RepoDataFromConfigFile(declarationPath)
-
-	return o.LoadRepoData()
-}
-
-func loadUserData(o *okctl.Okctl, cmd *cobra.Command) error {
-	userDataNotFound := load.CreateOnUserDataNotFound()
-
-	o.UserDataLoader = load.UserDataFromFlagsEnvConfigDefaults(cmd, userDataNotFound)
-
-	return o.LoadUserData()
-}
-
+// This will be deleted when all sub-commands starts using hooks.LoadDeclarationPath(o, &opts.DeclarationPath),
 var declarationPath string //nolint:gochecknoglobals
 
-//nolint:funlen,govet
 func buildRootCommand() (*cobra.Command, *okctl.Okctl) {
-	var outputFormat string
-
-	awsCredentialsTypes := []string{
-		context.AWSCredentialsTypeSAML,
-		context.AWSCredentialsTypeAccessKey,
-		context.AWSCredentialsTypeAwsProfile,
-	}
-
-	githubCredentialsTypes := []string{
-		context.GithubCredentialsTypeDeviceAuthentication,
-		context.GithubCredentialsTypeToken,
-	}
-
 	o := okctl.New()
 	if err := o.InitLogging(); err != nil {
 		fmt.Fprintln(os.Stderr, "Error configuring logging:", err)
@@ -114,76 +53,20 @@ func buildRootCommand() (*cobra.Command, *okctl.Okctl) {
 	}
 
 	cmd := &cobra.Command{
-		Use:          "okctl",
-		Short:        OkctlShortDescription,
-		Long:         OkctlLongDescription,
-		SilenceUsage: true,
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			if cmd.Name() == cobra.ShellCompRequestCmd {
-				return nil
-			}
-
-			if !contains(awsCredentialsTypes, awsCredentialsType) {
-				return fmt.Errorf(
-					"invalid AWS credentials type '%s'. Allowed values: %s. See %s for more information",
-					awsCredentialsType,
-					strings.Join(awsCredentialsTypes, ","),
-					constant.DefaultAwsAuthDocumentationURL,
-				)
-			}
-
-			if !contains(githubCredentialsTypes, githubCredentialsType) {
-				return fmt.Errorf("invalid Github credentials type '%s'. Allowed values: %s", githubCredentialsType, strings.Join(githubCredentialsTypes, ","))
-			}
-
-			enableServiceUserAuthentication(o)
-
-			var err error
-
-			if len(declarationPath) == 0 {
-				return fmt.Errorf("declaration must be provided")
-			}
-
-			declarationPath, err = filepath.Abs(declarationPath)
-			if err != nil {
-				return fmt.Errorf("converting declaration path to absolute path: %w", err)
-			}
-
-			err = loadUserData(o, cmd)
-			if err != nil {
-				return fmt.Errorf("loading application data: %w", err)
-			}
-
-			err = loadRepoData(o, declarationPath, cmd)
-			if err != nil {
-				if errors.Is(err, git.ErrRepositoryNotExists) {
-					return fmt.Errorf("okctl needs to be run inside a Git repository (okctl outputs " +
-						"various configuration files that will be stored here)")
-				}
-
-				return fmt.Errorf("loading repository data: %w", err)
-			}
-
-			o.Out = cmd.OutOrStdout()
-			o.Err = cmd.OutOrStderr()
-
-			c := make(chan os.Signal)
-			signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-			go func() {
-				<-c
-
-				err = gracefullyTearDownState(o)
-				if err != nil {
-					fmt.Fprintf(cmd.ErrOrStderr(), "gracefully up state: %s", err.Error())
-				}
-
-				os.Exit(1)
-			}()
-
-			return nil
-		},
+		Use:               "okctl",
+		Short:             OkctlShortDescription,
+		Long:              OkctlLongDescription,
+		SilenceUsage:      true,
+		PersistentPreRunE: hooks.InitializeEnvironment(o),
 	}
 
+	addAvailableCommands(cmd, o)
+	addCommonCommandFlags(cmd)
+
+	return cmd, o
+}
+
+func addAvailableCommands(cmd *cobra.Command, o *okctl.Okctl) {
 	cmd.AddCommand(buildApplyCommand(o))
 	cmd.AddCommand(buildCompletionCommand(o))
 	cmd.AddCommand(buildDeleteCommand(o))
@@ -194,37 +77,27 @@ func buildRootCommand() (*cobra.Command, *okctl.Okctl) {
 	cmd.AddCommand(buildVersionCommand(o))
 	cmd.AddCommand(buildUpgradeCommand(o))
 	cmd.AddCommand(buildMaintenanceCommand(o))
+}
 
-	f := cmd.Flags()
-	f.StringVarP(&outputFormat, "output", "o", "text",
-		"The format of the output returned to the user")
-
-	cmd.PersistentFlags().StringVarP(&declarationPath,
-		"cluster-declaration",
-		"c",
-		os.Getenv(constant.EnvClusterDeclaration),
-		"The cluster declaration you want to use",
-	)
-	cmd.PersistentFlags().StringVarP(&awsCredentialsType,
+func addCommonCommandFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().StringVarP(&auth.AwsCredentialsType,
 		"aws-credentials-type",
 		"a",
 		getWithDefault(os.Getenv, constant.EnvAWSCredentialsType, context.AWSCredentialsTypeSAML),
 		fmt.Sprintf(
 			"The form of authentication to use for AWS. Possible values: [%s]",
-			strings.Join(awsCredentialsTypes, ","),
+			strings.Join(auth.GetAwsCredentialsTypes(), ","),
 		),
 	)
-	cmd.PersistentFlags().StringVarP(&githubCredentialsType,
+	cmd.PersistentFlags().StringVarP(&auth.GithubCredentialsType,
 		"github-credentials-type",
 		"g",
 		getWithDefault(os.Getenv, constant.EnvGithubCredentialsType, context.GithubCredentialsTypeDeviceAuthentication),
 		fmt.Sprintf(
 			"The form of authentication to use for Github. Possible values: [%s]",
-			strings.Join(githubCredentialsTypes, ","),
+			strings.Join(auth.GetGithubCredentialsTypes(), ","),
 		),
 	)
-
-	return cmd, o
 }
 
 func getWithDefault(getter func(key string) string, key string, defaultValue string) string {
@@ -235,14 +108,4 @@ func getWithDefault(getter func(key string) string, key string, defaultValue str
 	}
 
 	return rawValue
-}
-
-func contains(l []string, v string) bool {
-	for _, el := range l {
-		if v == el {
-			return true
-		}
-	}
-
-	return false
 }

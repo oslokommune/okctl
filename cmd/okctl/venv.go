@@ -8,6 +8,8 @@ import (
 	"os/user"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/cmd/okctl/hooks"
 	"github.com/oslokommune/okctl/pkg/metrics"
 
@@ -29,8 +31,13 @@ const (
 	venvArgs = 0
 )
 
+type venvOpts struct {
+	ClusterDeclarationPath string
+}
+
 func buildVenvCommand(o *okctl.Okctl) *cobra.Command { //nolint: funlen
 	okctlEnvironment := commands.OkctlEnvironment{}
+	opts := venvOpts{}
 
 	cmd := &cobra.Command{
 		Use:   "venv",
@@ -41,6 +48,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command { //nolint: funlen
 			hooks.LoadUserData(o),
 			hooks.InitializeMetrics(o),
 			hooks.EmitStartCommandExecutionEvent(metrics.ActionVenv),
+			hooks.LoadClusterDeclarationPath(o, &opts.ClusterDeclarationPath),
 			hooks.InitializeOkctl(o),
 			hooks.DownloadState(o, false),
 			hooks.VerifyClusterExistsInState(o),
@@ -69,6 +77,15 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command { //nolint: funlen
 			hooks.EmitEndCommandExecutionEvent(metrics.ActionVenv),
 		),
 	}
+
+	flags := cmd.Flags()
+
+	flags.StringVarP(&opts.ClusterDeclarationPath,
+		"cluster-declaration",
+		"c",
+		osPkg.Getenv(constant.EnvClusterDeclaration),
+		usageApplyClusterFile,
+	)
 
 	return cmd
 }

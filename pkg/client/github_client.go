@@ -113,11 +113,6 @@ type DeleteGithubDeployKeyOpts struct {
 type GithubService interface {
 	CreateGithubRepository(ctx context.Context, opts CreateGithubRepositoryOpts) (*GithubRepository, error)
 	DeleteGithubRepository(ctx context.Context, opts DeleteGithubRepositoryOpts) error
-	ListReleases(owner, repo string) ([]*github.RepositoryRelease, error)
-}
-
-// GithubAPI invokes the Github API
-type GithubAPI interface {
 	CreateRepositoryDeployKey(opts CreateGithubDeployKeyOpts) (*GithubDeployKey, error)
 	DeleteRepositoryDeployKey(opts DeleteGithubDeployKeyOpts) error
 	ListReleases(owner, repo string) ([]*github.RepositoryRelease, error)

@@ -11,6 +11,14 @@ type githubServiceMock struct {
 	releases []*github.RepositoryRelease
 }
 
+func (g githubServiceMock) CreateRepositoryDeployKey(_ client.CreateGithubDeployKeyOpts) (*client.GithubDeployKey, error) {
+	panic("not needed by mock")
+}
+
+func (g githubServiceMock) DeleteRepositoryDeployKey(_ client.DeleteGithubDeployKeyOpts) error {
+	panic("not needed by mock")
+}
+
 func (g githubServiceMock) CreateGithubRepository(context.Context, client.CreateGithubRepositoryOpts) (*client.GithubRepository, error) {
 	panic("not needed by mock")
 }

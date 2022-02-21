@@ -127,20 +127,16 @@ func (s *applicationService) DeleteArgoCDApplicationManifest(opts client.DeleteA
 
 	err = s.fs.Remove(absoluteArgoCDApplicationManifestPath)
 	if err != nil {
-		if stderrors.Is(err, os.ErrNotExist) {
-			return nil
+		if !stderrors.Is(err, os.ErrNotExist) {
+			return errors.E(err, "removing ArgoCD application manifest")
 		}
-
-		return errors.E(err, "removing ArgoCD application manifest")
 	}
 
 	err = s.patchArgoCDApplicationManifest(opts.Application.Metadata.Name)
 	if err != nil {
-		if stderrors.Is(err, kubectl.ErrNotFound) {
-			return nil
+		if !stderrors.Is(err, kubectl.ErrNotFound) {
+			return fmt.Errorf("adding finalizer to application manifest: %w", err)
 		}
-
-		return fmt.Errorf("adding finalizer to application manifest: %w", err)
 	}
 
 	manifest, err := scaffold.GenerateArgoCDApplicationManifest(scaffold.GenerateArgoCDApplicationManifestOpts{
@@ -155,7 +151,9 @@ func (s *applicationService) DeleteArgoCDApplicationManifest(opts client.DeleteA
 
 	err = s.kubectl.Delete(manifest)
 	if err != nil {
-		return fmt.Errorf("deleting ArgoCD application manifest from cluster: %w", err)
+		if !stderrors.Is(err, kubectl.ErrNotFound) {
+			return fmt.Errorf("deleting ArgoCD application manifest from cluster: %w", err)
+		}
 	}
 
 	return nil

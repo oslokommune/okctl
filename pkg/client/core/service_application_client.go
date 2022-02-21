@@ -120,7 +120,14 @@ func (s *applicationService) DeleteArgoCDApplicationManifest(opts client.DeleteA
 	relativeArgoCDApplicationManifestPath := getRelativeArgoCDManifestPath(opts.Cluster, opts.Application)
 	absoluteArgoCDApplicationManifestPath := path.Join(s.absoluteRepositoryDir, relativeArgoCDApplicationManifestPath)
 
-	err := s.deleteFileFromGitRepository(opts.Cluster, opts.Application, relativeArgoCDApplicationManifestPath)
+	err := s.patchArgoCDApplicationManifest(opts.Application.Metadata.Name)
+	if err != nil {
+		if !stderrors.Is(err, kubectl.ErrNotFound) {
+			return fmt.Errorf("adding finalizer to application manifest: %w", err)
+		}
+	}
+
+	err = s.deleteFileFromGitRepository(opts.Cluster, opts.Application, relativeArgoCDApplicationManifestPath)
 	if err != nil {
 		return fmt.Errorf("deleting application manifest in repository: %w", err)
 	}
@@ -129,13 +136,6 @@ func (s *applicationService) DeleteArgoCDApplicationManifest(opts client.DeleteA
 	if err != nil {
 		if !stderrors.Is(err, os.ErrNotExist) {
 			return errors.E(err, "removing ArgoCD application manifest")
-		}
-	}
-
-	err = s.patchArgoCDApplicationManifest(opts.Application.Metadata.Name)
-	if err != nil {
-		if !stderrors.Is(err, kubectl.ErrNotFound) {
-			return fmt.Errorf("adding finalizer to application manifest: %w", err)
 		}
 	}
 

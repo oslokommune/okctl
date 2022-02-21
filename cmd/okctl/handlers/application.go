@@ -38,20 +38,6 @@ func HandleApplication(opts *HandleApplicationOpts) RunEHandler { //nolint:funle
 			return nil
 		}
 
-		state := opts.Okctl.StateHandlers(opts.Okctl.StateNodes())
-
-		services, err := opts.Okctl.ClientServices(state)
-		if err != nil {
-			return fmt.Errorf("acquiring client services: %w", err)
-		}
-
-		kubectlClient := binary.New(
-			opts.Okctl.FileSystem,
-			opts.Okctl.BinariesProvider,
-			opts.Okctl.CredentialsProvider,
-			*opts.Okctl.Declaration,
-		)
-
 		statusVerb := "applying"
 		if opts.Purge {
 			statusVerb = "deleting"
@@ -62,22 +48,17 @@ func HandleApplication(opts *HandleApplicationOpts) RunEHandler { //nolint:funle
 			return fmt.Errorf("error creating spinner: %w", err)
 		}
 
-		schedulerOpts := common.SchedulerOpts{
-			Out:                             opts.Okctl.Out,
-			Spinner:                         spin,
-			ReconciliationLoopDelayFunction: common.DefaultDelayFunction,
-			ClusterDeclaration:              *opts.Okctl.Declaration,
-			ApplicationDeclaration:          opts.Application,
-			PurgeFlag:                       opts.Purge,
+		scheduler, err := createScheduler(createSchedulerOpts{
+			Okctl:               opts.Okctl,
+			Spinner:             spin,
+			ApplicationManifest: opts.Application,
+			Purge:               opts.Purge,
+		})
+		if err != nil {
+			return fmt.Errorf("preparing scheduler: %w", err)
 		}
 
-		scheduler := common.NewScheduler(schedulerOpts,
-			reconciliation.NewCertificateReconciler(services.Certificate, services.Domain, kubectlClient),
-			reconciliation.NewApplicationReconciler(services.ApplicationService, services.ApplicationPostgresService),
-			reconciliation.NewContainerRepositoryReconciler(services.ContainerRepository),
-			reconciliation.NewPostgresReconciler(services.ApplicationPostgresService),
-			reconciliation.NewArgoCDApplicationReconciler(services.ApplicationService),
-		)
+		state := opts.Okctl.StateHandlers(opts.Okctl.StateNodes())
 
 		_, err = scheduler.Run(opts.Okctl.Ctx, state)
 		if err != nil {
@@ -86,6 +67,41 @@ func HandleApplication(opts *HandleApplicationOpts) RunEHandler { //nolint:funle
 
 		return writeSuccessMessage(opts.Okctl.Out, *opts.Okctl.Declaration, opts.Application, opts.Purge)
 	}
+}
+
+func createScheduler(opts createSchedulerOpts) (common.Scheduler, error) {
+	state := opts.Okctl.StateHandlers(opts.Okctl.StateNodes())
+
+	services, err := opts.Okctl.ClientServices(state)
+	if err != nil {
+		return common.Scheduler{}, fmt.Errorf("acquiring client services: %w", err)
+	}
+
+	kubectlClient := binary.New(
+		opts.Okctl.FileSystem,
+		opts.Okctl.BinariesProvider,
+		opts.Okctl.CredentialsProvider,
+		*opts.Okctl.Declaration,
+	)
+
+	schedulerOpts := common.SchedulerOpts{
+		Out:                             opts.Okctl.Out,
+		Spinner:                         opts.Spinner,
+		ReconciliationLoopDelayFunction: common.DefaultDelayFunction,
+		ClusterDeclaration:              *opts.Okctl.Declaration,
+		ApplicationDeclaration:          opts.ApplicationManifest,
+		PurgeFlag:                       opts.Purge,
+	}
+
+	scheduler := common.NewScheduler(schedulerOpts,
+		reconciliation.NewCertificateReconciler(services.Certificate, services.Domain, kubectlClient),
+		reconciliation.NewApplicationReconciler(services.ApplicationService, services.ApplicationPostgresService),
+		reconciliation.NewContainerRepositoryReconciler(services.ContainerRepository),
+		reconciliation.NewPostgresReconciler(services.ApplicationPostgresService),
+		reconciliation.NewArgoCDApplicationReconciler(services.ApplicationService),
+	)
+
+	return scheduler, nil
 }
 
 func writeSuccessMessage(out io.Writer, cluster v1alpha1.Cluster, application v1alpha1.Application, purgeFlag bool) error {
@@ -165,6 +181,13 @@ func deleteApplicationReadyCheck(out io.Writer, application v1alpha1.Application
 	}
 
 	return ready, nil
+}
+
+type createSchedulerOpts struct {
+	Okctl               *okctl.Okctl
+	Spinner             spinner.Spinner
+	ApplicationManifest v1alpha1.Application
+	Purge               bool
 }
 
 // HandleApplicationOpts contains all the necessary options for application reconciliation

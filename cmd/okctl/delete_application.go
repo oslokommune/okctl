@@ -57,7 +57,12 @@ func buildDeleteApplicationCommand(o *okctl.Okctl) *cobra.Command {
 		),
 	}
 
-	cmd.Flags().StringVarP(&opts.File, "file", "f", "", "Specify the file path. Use \"-\" for stdin")
+	cmd.Flags().StringVarP(
+		&opts.File,
+		"file",
+		"f", "",
+		"Specify the file path for the application to delete. Use \"-\" for stdin",
+	)
 	cmd.Flags().BoolVarP(&opts.Confirm, "confirm", "y", false, "confirm all choices")
 
 	return cmd

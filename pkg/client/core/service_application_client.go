@@ -120,7 +120,7 @@ func (s *applicationService) DeleteArgoCDApplicationManifest(opts client.DeleteA
 	relativeArgoCDApplicationManifestPath := getRelativeArgoCDManifestPath(opts.Cluster, opts.Application)
 	absoluteArgoCDApplicationManifestPath := path.Join(s.absoluteRepositoryDir, relativeArgoCDApplicationManifestPath)
 
-	err := s.deleteFileInRemote(opts.Cluster, opts.Application, relativeArgoCDApplicationManifestPath)
+	err := s.deleteFileFromGitRepository(opts.Cluster, opts.Application, relativeArgoCDApplicationManifestPath)
 	if err != nil {
 		return fmt.Errorf("deleting application manifest in repository: %w", err)
 	}
@@ -180,8 +180,8 @@ func (s *applicationService) HasArgoCDIntegration(_ context.Context, opts client
 	return true, nil
 }
 
-// deleteFileInRemote creates a commit on the main branch of a repository that removes a file path
-func (s *applicationService) deleteFileInRemote(cluster v1alpha1.Cluster, app v1alpha1.Application, path string) error {
+// deleteFileFromGitRepository creates a commit on the main branch of a repository that removes a file path
+func (s *applicationService) deleteFileFromGitRepository(cluster v1alpha1.Cluster, app v1alpha1.Application, path string) error {
 	repo, err := git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{
 		URL:   cluster.Github.URL(),
 		Depth: 1,

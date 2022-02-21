@@ -153,7 +153,7 @@ func (a *applicationReconciler) hasCreateDependenciesMet(meta reconciliation.Met
 		return false, nil
 	}
 
-	ok, err = hasIngressCreateDependencies(state, meta.ApplicationDeclaration)
+	ok, err = hasIngressCreateDependenciesMet(state, meta.ApplicationDeclaration)
 	if err != nil {
 		return false, fmt.Errorf("checking ingress create dependencies: %w", err)
 	}
@@ -178,7 +178,7 @@ func hasECRCreateDependenciesMet(state *clientCore.StateHandlers, application v1
 	return exists, nil
 }
 
-func hasIngressCreateDependencies(state *clientCore.StateHandlers, application v1alpha1.Application) (bool, error) {
+func hasIngressCreateDependenciesMet(state *clientCore.StateHandlers, application v1alpha1.Application) (bool, error) {
 	if !application.HasIngress() {
 		return true, nil
 	}

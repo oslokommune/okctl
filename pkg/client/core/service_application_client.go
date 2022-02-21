@@ -178,7 +178,8 @@ func (s *applicationService) HasArgoCDIntegration(_ context.Context, opts client
 	return true, nil
 }
 
-// deleteFileFromGitRepository creates a commit on the main branch of a repository that removes a file path
+// deleteFileFromGitRepository creates and pushes a commit to the main branch of a repository that removes a file at a
+// certain path
 func (s *applicationService) deleteFileFromGitRepository(cluster v1alpha1.Cluster, app v1alpha1.Application, path string) error {
 	repo, err := git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{
 		URL:   cluster.Github.URL(),

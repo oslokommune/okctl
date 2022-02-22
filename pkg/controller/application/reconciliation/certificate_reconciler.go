@@ -8,8 +8,6 @@ import (
 	"github.com/asdine/storm/v3"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/clients/kubectl"
-
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 )
@@ -99,11 +97,11 @@ func (c certificateReconciler) determineAction(meta reconciliation.Metadata, sta
 			return "", fmt.Errorf("acquiring certificate: %w", err)
 		}
 
-		ingressExists, err := c.kubectl.Exists(kubectl.Resource{
-			Namespace: meta.ApplicationDeclaration.Metadata.Namespace,
-			Kind:      "ingress",
-			Name:      meta.ApplicationDeclaration.Metadata.Name,
-		})
+		ingressExists, err := state.Kubernetes.HasResource(
+			"ingress",
+			meta.ApplicationDeclaration.Metadata.Namespace,
+			meta.ApplicationDeclaration.Metadata.Name,
+		)
 		if err != nil {
 			return "", fmt.Errorf("checking ingress existence: %w", err)
 		}
@@ -124,11 +122,10 @@ func (c certificateReconciler) String() string {
 }
 
 // NewCertificateReconciler initializes a new certificate reconciler
-func NewCertificateReconciler(cert client.CertificateService, domain client.DomainService, kubectlClient kubectl.Client) reconciliation.Reconciler {
+func NewCertificateReconciler(cert client.CertificateService, domain client.DomainService) reconciliation.Reconciler {
 	return &certificateReconciler{
 		certificateService: cert,
 		domainService:      domain,
-		kubectl:            kubectlClient,
 	}
 }
 
@@ -137,5 +134,4 @@ const certificateReconcilerName = "certificates"
 type certificateReconciler struct {
 	certificateService client.CertificateService
 	domainService      client.DomainService
-	kubectl            kubectl.Client
 }

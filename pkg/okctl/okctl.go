@@ -142,8 +142,11 @@ func (o *Okctl) StateNodes() *clientCore.StateNodes {
 
 // StateHandlers returns the initialised state handlers
 func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHandlers {
+	kubectlClient := binary.New(o.FileSystem, o.BinariesProvider, o.CredentialsProvider, *o.Declaration)
+
 	return &clientCore.StateHandlers{
 		Helm:                      storm.NewHelmState(nodes.Helm),
+		Kubernetes:                direct.NewKubernetesState(kubectlClient),
 		ManagedPolicy:             storm.NewManagedPolicyState(nodes.ManagedPolicy),
 		ServiceAccount:            storm.NewServiceAccountState(nodes.ServiceAccount),
 		Certificate:               storm.NewCertificateState(nodes.Certificate),

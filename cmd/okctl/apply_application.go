@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/oslokommune/okctl/cmd/okctl/handlers"
+	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 
 	"github.com/oslokommune/okctl/cmd/okctl/hooks"
 	"github.com/oslokommune/okctl/pkg/metrics"
@@ -19,7 +20,11 @@ const requiredApplyApplicationArguments = 0
 //nolint funlen
 func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &handlers.HandleApplicationOpts{
-		Okctl: o,
+		Out:             o.Out,
+		Err:             o.Err,
+		Ctx:             o.Ctx,
+		ClusterManifest: *o.Declaration,
+		DelayFunction:   common.DefaultDelayFunction,
 	}
 
 	cmd := &cobra.Command{
@@ -39,9 +44,16 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 					return err
 				}
 
-				opts.Application, err = commands.InferApplicationFromStdinOrFile(*o.Declaration, o.In, o.FileSystem, opts.File)
+				opts.ApplicationManifest, err = commands.InferApplicationFromStdinOrFile(*o.Declaration, o.In, o.FileSystem, opts.File)
 				if err != nil {
 					return fmt.Errorf("inferring application from stdin or file: %w", err)
+				}
+
+				opts.State = o.StateHandlers(o.StateNodes())
+
+				opts.Services, err = o.ClientServices(opts.State)
+				if err != nil {
+					return fmt.Errorf("preparing client services: %w", err)
 				}
 
 				return nil

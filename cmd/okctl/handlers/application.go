@@ -1,20 +1,20 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"text/template"
 
-	"github.com/AlecAivazis/survey/v2"
+	"github.com/oslokommune/okctl/pkg/client/core"
 
-	"github.com/oslokommune/okctl/pkg/clients/kubectl/binary"
+	"github.com/AlecAivazis/survey/v2"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/controller/application/reconciliation"
 	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
-	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/oslokommune/okctl/pkg/spinner"
 	"github.com/spf13/cobra"
 )
@@ -33,7 +33,7 @@ func HandleApplication(opts *HandleApplicationOpts) RunEHandler { //nolint:funle
 		}
 
 		if !ready {
-			fmt.Fprintln(opts.Okctl.Err, "user wasn't ready to continue, aborting.")
+			fmt.Fprintln(opts.Err, "user wasn't ready to continue, aborting.")
 
 			return nil
 		}
@@ -43,65 +43,50 @@ func HandleApplication(opts *HandleApplicationOpts) RunEHandler { //nolint:funle
 			statusVerb = "deleting"
 		}
 
-		spin, err := spinner.New(fmt.Sprintf("%s application", statusVerb), opts.Okctl.Err)
+		spin, err := spinner.New(fmt.Sprintf("%s application", statusVerb), opts.Err)
 		if err != nil {
 			return fmt.Errorf("error creating spinner: %w", err)
 		}
 
-		scheduler, err := createScheduler(createSchedulerOpts{
-			Okctl:               opts.Okctl,
+		scheduler := createScheduler(createSchedulerOpts{
+			Out:                 opts.Out,
+			Services:            opts.Services,
+			State:               opts.State,
 			Spinner:             spin,
-			ApplicationManifest: opts.Application,
+			ClusterManifest:     opts.ClusterManifest,
+			ApplicationManifest: opts.ApplicationManifest,
 			Purge:               opts.Purge,
+			DelayFunction:       opts.DelayFunction,
 		})
-		if err != nil {
-			return fmt.Errorf("preparing scheduler: %w", err)
-		}
 
-		state := opts.Okctl.StateHandlers(opts.Okctl.StateNodes())
-
-		_, err = scheduler.Run(opts.Okctl.Ctx, state)
+		_, err = scheduler.Run(opts.Ctx, opts.State)
 		if err != nil {
 			return fmt.Errorf("reconciling application: %w", err)
 		}
 
-		return writeSuccessMessage(opts.Okctl.Out, *opts.Okctl.Declaration, opts.Application, opts.Purge)
+		return writeSuccessMessage(opts.Out, opts.ClusterManifest, opts.ApplicationManifest, opts.Purge)
 	}
 }
 
-func createScheduler(opts createSchedulerOpts) (common.Scheduler, error) {
-	state := opts.Okctl.StateHandlers(opts.Okctl.StateNodes())
-
-	services, err := opts.Okctl.ClientServices(state)
-	if err != nil {
-		return common.Scheduler{}, fmt.Errorf("acquiring client services: %w", err)
-	}
-
-	kubectlClient := binary.New(
-		opts.Okctl.FileSystem,
-		opts.Okctl.BinariesProvider,
-		opts.Okctl.CredentialsProvider,
-		*opts.Okctl.Declaration,
-	)
-
+func createScheduler(opts createSchedulerOpts) common.Scheduler {
 	schedulerOpts := common.SchedulerOpts{
-		Out:                             opts.Okctl.Out,
+		Out:                             opts.Out,
 		Spinner:                         opts.Spinner,
-		ReconciliationLoopDelayFunction: common.DefaultDelayFunction,
-		ClusterDeclaration:              *opts.Okctl.Declaration,
+		ReconciliationLoopDelayFunction: opts.DelayFunction,
+		ClusterDeclaration:              opts.ClusterManifest,
 		ApplicationDeclaration:          opts.ApplicationManifest,
 		PurgeFlag:                       opts.Purge,
 	}
 
 	scheduler := common.NewScheduler(schedulerOpts,
-		reconciliation.NewCertificateReconciler(services.Certificate, services.Domain, kubectlClient),
-		reconciliation.NewApplicationReconciler(services.ApplicationService, services.ApplicationPostgresService),
-		reconciliation.NewContainerRepositoryReconciler(services.ContainerRepository),
-		reconciliation.NewPostgresReconciler(services.ApplicationPostgresService),
-		reconciliation.NewArgoCDApplicationReconciler(services.ApplicationService),
+		reconciliation.NewCertificateReconciler(opts.Services.Certificate, opts.Services.Domain),
+		reconciliation.NewApplicationReconciler(opts.Services.ApplicationService, opts.Services.ApplicationPostgresService),
+		reconciliation.NewContainerRepositoryReconciler(opts.Services.ContainerRepository),
+		reconciliation.NewPostgresReconciler(opts.Services.ApplicationPostgresService),
+		reconciliation.NewArgoCDApplicationReconciler(opts.Services.ApplicationService),
 	)
 
-	return scheduler, nil
+	return scheduler
 }
 
 func writeSuccessMessage(out io.Writer, cluster v1alpha1.Cluster, application v1alpha1.Application, purgeFlag bool) error {
@@ -155,7 +140,7 @@ func reconcileApplicationReadyCheck(opts *HandleApplicationOpts) (bool, error) {
 		return true, nil
 	}
 
-	return deleteApplicationReadyCheck(opts.Okctl.Out, opts.Application, opts.Confirm)
+	return deleteApplicationReadyCheck(opts.Out, opts.ApplicationManifest, opts.Confirm)
 }
 
 func deleteApplicationReadyCheck(out io.Writer, application v1alpha1.Application, preConfirmed bool) (bool, error) {
@@ -184,27 +169,39 @@ func deleteApplicationReadyCheck(out io.Writer, application v1alpha1.Application
 }
 
 type createSchedulerOpts struct {
-	Okctl               *okctl.Okctl
+	Out io.Writer
+
+	Services *core.Services
+	State    *core.StateHandlers
+
 	Spinner             spinner.Spinner
+	ClusterManifest     v1alpha1.Cluster
 	ApplicationManifest v1alpha1.Application
 	Purge               bool
+	DelayFunction       func()
 }
 
 // HandleApplicationOpts contains all the necessary options for application reconciliation
 type HandleApplicationOpts struct {
-	Okctl *okctl.Okctl
+	Out io.Writer
+	Err io.Writer
+	Ctx context.Context
 
-	File string
+	State    *core.StateHandlers
+	Services *core.Services
+	File     string
 
-	Application v1alpha1.Application
-	Purge       bool
-	Confirm     bool
+	ClusterManifest     v1alpha1.Cluster
+	ApplicationManifest v1alpha1.Application
+	Purge               bool
+	Confirm             bool
+	DelayFunction       func()
 }
 
 // Validate the options for "apply application"
 func (o HandleApplicationOpts) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.File, validation.Required),
-		validation.Field(&o.Application),
+		validation.Field(&o.ApplicationManifest),
 	)
 }

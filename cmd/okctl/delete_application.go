@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
+
 	"github.com/oslokommune/okctl/cmd/okctl/handlers"
 
 	"github.com/oslokommune/okctl/cmd/okctl/hooks"
@@ -19,8 +21,11 @@ const requiredDeleteApplicationArguments = 0
 //nolint funlen
 func buildDeleteApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &handlers.HandleApplicationOpts{
-		Okctl: o,
-		Purge: true,
+		Out:           o.Out,
+		Err:           o.Err,
+		Ctx:           o.Ctx,
+		DelayFunction: common.DefaultDelayFunction,
+		Purge:         true,
 	}
 
 	cmd := &cobra.Command{
@@ -40,9 +45,18 @@ func buildDeleteApplicationCommand(o *okctl.Okctl) *cobra.Command {
 					return err
 				}
 
-				opts.Application, err = commands.InferApplicationFromStdinOrFile(*o.Declaration, o.In, o.FileSystem, opts.File)
+				opts.ClusterManifest = *o.Declaration
+
+				opts.ApplicationManifest, err = commands.InferApplicationFromStdinOrFile(*o.Declaration, o.In, o.FileSystem, opts.File)
 				if err != nil {
 					return fmt.Errorf("inferring application from stdin or file: %w", err)
+				}
+
+				opts.State = o.StateHandlers(o.StateNodes())
+
+				opts.Services, err = o.ClientServices(opts.State)
+				if err != nil {
+					return fmt.Errorf("preparing client services: %w", err)
 				}
 
 				return nil

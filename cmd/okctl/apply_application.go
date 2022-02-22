@@ -20,11 +20,10 @@ const requiredApplyApplicationArguments = 0
 //nolint funlen
 func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 	opts := &handlers.HandleApplicationOpts{
-		Out:             o.Out,
-		Err:             o.Err,
-		Ctx:             o.Ctx,
-		ClusterManifest: *o.Declaration,
-		DelayFunction:   common.DefaultDelayFunction,
+		Out:           o.Out,
+		Err:           o.Err,
+		Ctx:           o.Ctx,
+		DelayFunction: common.DefaultDelayFunction,
 	}
 
 	cmd := &cobra.Command{
@@ -43,6 +42,8 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 				if err != nil {
 					return err
 				}
+
+				opts.ClusterManifest = *o.Declaration
 
 				opts.ApplicationManifest, err = commands.InferApplicationFromStdinOrFile(*o.Declaration, o.In, o.FileSystem, opts.File)
 				if err != nil {

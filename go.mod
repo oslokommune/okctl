@@ -50,7 +50,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/moby/sys/mount v0.2.0 // indirect
 	github.com/ory/dockertest v3.3.5+incompatible
-	github.com/oslokommune/okctl-metrics-service v0.1.8
+	github.com/oslokommune/okctl-metrics-service v0.1.9
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.52.1

@@ -30,6 +30,7 @@ func buildDeleteCommand(o *okctl.Okctl) *cobra.Command {
 
 	deleteClusterCommand := buildDeleteClusterCommand(o)
 	cmd.AddCommand(deleteClusterCommand)
+	cmd.AddCommand(buildDeleteApplicationCommand(o))
 	cmd.AddCommand(buildDeletePostgresCommand(o))
 
 	return cmd

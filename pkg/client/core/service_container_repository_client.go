@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
@@ -58,6 +59,16 @@ func (c *containerRepositoryService) DeleteContainerRepository(context context.C
 	err = c.state.RemoveContainerRepository(opts.ImageName)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// EmptyContainerRepository deletes all images present in a container repository
+func (c *containerRepositoryService) EmptyContainerRepository(ctx context.Context, opts client.EmptyContainerRepositoryOpts) error {
+	err := c.service.EmptyContainerRepository(ctx, api.EmptyContainerRepositoryOpts{Name: opts.Name})
+	if err != nil {
+		return fmt.Errorf("calling ECR service's empty container repository: %w", err)
 	}
 
 	return nil

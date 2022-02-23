@@ -2,7 +2,7 @@
 package logging
 
 // The global logger instance
-var logger Logger //nolint: gochecknoglobals
+var logger = newNoopLogger() //nolint: gochecknoglobals
 
 // InitLogger initialize the global logger instance
 func InitLogger(logFile string) error {

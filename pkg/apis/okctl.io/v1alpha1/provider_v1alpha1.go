@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
+	"github.com/aws/aws-sdk-go/service/ecr/ecriface"
 	"github.com/aws/aws-sdk-go/service/eks/eksiface"
 	"github.com/aws/aws-sdk-go/service/elbv2/elbv2iface"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
@@ -26,6 +27,7 @@ type CloudProvider interface {
 	IAM() iamiface.IAMAPI
 	SSM() ssmiface.SSMAPI
 	EC2() ec2iface.EC2API
+	ECR() ecriface.ECRAPI
 	EKS() eksiface.EKSAPI
 	ELBV2() elbv2iface.ELBV2API
 	ServiceQuotas() servicequotasiface.ServiceQuotasAPI

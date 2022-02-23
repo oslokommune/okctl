@@ -37,7 +37,14 @@ func (c *containerRepositoryReconciler) Reconcile(ctx context.Context, meta reco
 
 		return reconciliation.Result{Requeue: false}, nil
 	case reconciliation.ActionDelete:
-		err := c.client.DeleteContainerRepository(ctx, client.DeleteContainerRepositoryOpts{
+		err = c.client.EmptyContainerRepository(ctx, client.EmptyContainerRepositoryOpts{
+			Name: meta.ApplicationDeclaration.Image.Name,
+		})
+		if err != nil {
+			return reconciliation.Result{}, fmt.Errorf("emptying container repository: %w", err)
+		}
+
+		err = c.client.DeleteContainerRepository(ctx, client.DeleteContainerRepositoryOpts{
 			ClusterID: reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata),
 			ImageName: meta.ApplicationDeclaration.Image.Name,
 		})

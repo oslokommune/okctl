@@ -114,3 +114,36 @@ func WriteApplyApplicationSuccessMessage(opts WriteApplyApplicationSucessMessage
 
 	return nil
 }
+
+const deleteApplicationSuccessMessage = `
+	Successfully deleted {{ .ApplicationName }}
+	To finish the deletion process:
+		- Commit and push the changes done by okctl
+`
+
+// WriteDeleteApplicationSuccessMessageOpts contains the values for customizing delete application success message
+type WriteDeleteApplicationSuccessMessageOpts struct {
+	Out io.Writer
+
+	Cluster     v1alpha1.Cluster
+	Application v1alpha1.Application
+}
+
+// WriteDeleteApplicationSuccessMessage produces a relevant message for successfully deleting an application
+func WriteDeleteApplicationSuccessMessage(opts WriteDeleteApplicationSuccessMessageOpts) error {
+	tmpl, err := template.New("t").Parse(deleteApplicationSuccessMessage)
+	if err != nil {
+		return err
+	}
+
+	err = tmpl.Execute(opts.Out, struct {
+		ApplicationName string
+	}{
+		ApplicationName: opts.Application.Metadata.Name,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

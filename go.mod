@@ -53,7 +53,7 @@ require (
 	github.com/oslokommune/okctl-metrics-service v0.1.9
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.52.1
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.54.0
 	github.com/rancher/k3d/v3 v3.4.0
 	github.com/sanity-io/litter v1.5.2
 	github.com/sebdah/goldie/v2 v2.5.3
@@ -77,10 +77,10 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gotest.tools v2.2.0+incompatible
 	helm.sh/helm/v3 v3.7.2
-	k8s.io/api v0.22.4
-	k8s.io/apimachinery v0.22.4
+	k8s.io/api v0.23.0
+	k8s.io/apimachinery v0.23.0
 	k8s.io/cli-runtime v0.22.4
-	k8s.io/client-go v0.22.4
+	k8s.io/client-go v0.23.0
 	sigs.k8s.io/aws-iam-authenticator v0.5.3
 	sigs.k8s.io/yaml v1.3.0
 )

@@ -1,6 +1,7 @@
 package binary
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
@@ -80,7 +81,7 @@ func (c client) Exists(resource kubectl.Resource) (bool, error) {
 		resource.Name,
 	})
 	if err != nil {
-		if isNotFoundErr(err) {
+		if errors.Is(err, kubectl.ErrNotFound) {
 			return false, nil
 		}
 

@@ -191,10 +191,12 @@ func generateMockClusterManifest() v1alpha1.Cluster {
 
 type mockKubectlClient struct{}
 
-func (m mockKubectlClient) Apply(_ io.Reader) error                 { panic("implement me") }
-func (m mockKubectlClient) Delete(_ io.Reader) error                { panic("implement me") }
-func (m mockKubectlClient) Patch(_ kubectl.PatchOpts) error         { panic("implement me") }
-func (m mockKubectlClient) Exists(_ kubectl.Resource) (bool, error) { panic("implement me") }
+func (m mockKubectlClient) Get(kubectl.Resource) (io.Reader, error) { panic("implement me") }
+func (m mockKubectlClient) Apply(io.Reader) error                   { panic("implement me") }
+func (m mockKubectlClient) DeleteByManifest(io.Reader) error        { panic("implement me") }
+func (m mockKubectlClient) DeleteByResource(kubectl.Resource) error { panic("implement me") }
+func (m mockKubectlClient) Patch(kubectl.PatchOpts) error           { panic("implement me") }
+func (m mockKubectlClient) Exists(kubectl.Resource) (bool, error)   { panic("implement me") }
 
 const (
 	defaultMockARN  = "arn:which:isnt:an:arn"

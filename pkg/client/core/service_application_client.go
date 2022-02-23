@@ -149,7 +149,7 @@ func (s *applicationService) DeleteArgoCDApplicationManifest(opts client.DeleteA
 		return fmt.Errorf("generating ArgoCD application manifest: %w", err)
 	}
 
-	err = s.kubectl.Delete(manifest)
+	err = s.kubectl.DeleteByManifest(manifest)
 	if err != nil {
 		if !stderrors.Is(err, kubectl.ErrNotFound) {
 			return fmt.Errorf("deleting ArgoCD application manifest from cluster: %w", err)

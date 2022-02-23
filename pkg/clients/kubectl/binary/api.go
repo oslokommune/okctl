@@ -24,7 +24,9 @@ func (c client) Apply(manifest io.Reader) error {
 		_ = teardowner()
 	}()
 
-	err = c.runKubectlCommand("apply", []string{"apply", "-f", targetPath})
+	_, err = c.runKubectlCommand("apply",
+		"apply", "--filename", targetPath,
+	)
 	if err != nil {
 		return fmt.Errorf("applying manifest: %w", err)
 	}
@@ -32,8 +34,35 @@ func (c client) Apply(manifest io.Reader) error {
 	return nil
 }
 
-// Delete runs kubectl delete on a manifest
-func (c client) Delete(manifest io.Reader) error {
+// Get runs kubectl get to retrieve resources as yaml
+func (c *client) Get(resource kubectl.Resource) (io.Reader, error) {
+	output, err := c.runKubectlCommand("get",
+		"--namespace", resource.Namespace,
+		"get", resource.Kind, resource.Name,
+		"--output", "yaml",
+	)
+	if err != nil {
+		return nil, fmt.Errorf("running command: %w", err)
+	}
+
+	return output, nil
+}
+
+// DeleteByResource deletes resources based on values
+func (c *client) DeleteByResource(resource kubectl.Resource) error {
+	_, err := c.runKubectlCommand("delete",
+		"--namespace", resource.Namespace,
+		"delete", resource.Kind, resource.Name,
+	)
+	if err != nil {
+		return fmt.Errorf("running command: %w", err)
+	}
+
+	return nil
+}
+
+// DeleteByManifest deletes resources based on a manifest
+func (c client) DeleteByManifest(manifest io.Reader) error {
 	targetPath, teardowner, err := c.cacheReaderOnFs(manifest)
 	if err != nil {
 		return fmt.Errorf("caching manifest on file system: %w", err)
@@ -43,7 +72,7 @@ func (c client) Delete(manifest io.Reader) error {
 		_ = teardowner()
 	}()
 
-	err = c.runKubectlCommand("delete", []string{"delete", "-f", targetPath})
+	_, err = c.runKubectlCommand("delete", "delete", "-f", targetPath)
 	if err != nil {
 		return fmt.Errorf("deleting manifest: %w", err)
 	}
@@ -58,13 +87,13 @@ func (c client) Patch(opts kubectl.PatchOpts) error {
 		return fmt.Errorf("reading patch: %w", err)
 	}
 
-	err = c.runKubectlCommand("patch", []string{
+	_, err = c.runKubectlCommand("patch",
 		"--namespace", opts.Namespace,
 		"patch",
 		opts.Kind, opts.Name,
 		"--patch", string(rawPatch),
 		"--type", "json",
-	})
+	)
 	if err != nil {
 		return fmt.Errorf("calling kubectl: %w", err)
 	}
@@ -74,12 +103,12 @@ func (c client) Patch(opts kubectl.PatchOpts) error {
 
 // Exists returns true if resource is found, false if not
 func (c client) Exists(resource kubectl.Resource) (bool, error) {
-	err := c.runKubectlCommand("exists", []string{
+	_, err := c.runKubectlCommand("exists",
 		"--namespace", resource.Namespace,
 		"get",
 		resource.Kind,
 		resource.Name,
-	})
+	)
 	if err != nil {
 		if errors.Is(err, kubectl.ErrNotFound) {
 			return false, nil

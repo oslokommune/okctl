@@ -19,35 +19,38 @@ import (
 )
 
 // runKubectlCommand knows how to run a command with the kubectl binary
-func (c client) runKubectlCommand(logActivity string, args []string) error {
+func (c client) runKubectlCommand(logActivity string, args ...string) (io.Reader, error) {
 	log := logging.GetLogger("kubectl/binary", logActivity)
 
 	k, err := c.binaryProvider.Kubectl(kubectl.Version)
 	if err != nil {
-		return fmt.Errorf("acquiring kubectl binary path: %w", err)
+		return nil, fmt.Errorf("acquiring kubectl binary path: %w", err)
 	}
 
 	cmd := exec.Command(k.BinaryPath, args...) //nolint:gosec
 	log.Debug(fmt.Sprintf("passing arguments: %+v", args))
 
-	multiwriter := bytes.Buffer{}
+	stdout := bytes.Buffer{}
+	stderr := bytes.Buffer{}
 
-	cmd.Stdout = &multiwriter
-	cmd.Stderr = &multiwriter
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 
 	cmd.Env, err = c.generateEnv()
 	if err != nil {
-		return fmt.Errorf("generating environment: %w", err)
+		return nil, fmt.Errorf("generating environment: %w", err)
 	}
 
 	err = cmd.Run()
 	if err != nil {
-		err = fmt.Errorf("%s: %w", multiwriter.String(), err)
+		log.Debug(stdout.String())
 
-		return errorHandler(err, fmt.Errorf("running command: %w", err))
+		err = fmt.Errorf("%s: %w", stderr.String(), err)
+
+		return nil, errorHandler(err, fmt.Errorf("running command: %w", err))
 	}
 
-	return nil
+	return &stdout, nil
 }
 
 // envAsArray converts a map to a string array of KEY=VALUE pairs

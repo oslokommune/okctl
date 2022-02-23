@@ -53,6 +53,7 @@ type StateHandlers struct {
 	ExternalSecrets           client.ExternalSecretsState
 	Upgrade                   client.UpgradeState
 	Kubernetes                client.KubernetesState
+	Application               client.ApplicationState
 }
 
 // Services contains all client-side services

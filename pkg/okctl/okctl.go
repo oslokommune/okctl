@@ -10,6 +10,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/client/core/state/crd"
 	"github.com/oslokommune/okctl/pkg/clients/kubectl/binary"
 
 	"github.com/oslokommune/okctl/pkg/logging"
@@ -170,6 +171,7 @@ func (o *Okctl) StateHandlers(nodes *clientCore.StateNodes) *clientCore.StateHan
 		Blockstorage:              direct.NewBlockstorageState(o.Declaration.Metadata, o.toolChain.Helm),
 		ExternalSecrets:           direct.NewExternalSecretsState(o.Declaration.Metadata, o.toolChain.Helm),
 		Upgrade:                   storm.NewUpgradesState(nodes.Upgrade),
+		Application:               crd.NewApplicationState(kubectlClient),
 	}
 }
 
@@ -439,6 +441,11 @@ func (o *Okctl) initialise() error {
 		return err
 	}
 
+	err = o.initializeState()
+	if err != nil {
+		return fmt.Errorf("initializing state: %w", err)
+	}
+
 	return nil
 }
 
@@ -616,6 +623,18 @@ func (o *Okctl) initialiseProviders() error {
 	err = o.newCloudProvider()
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// initializeState knows how to ensure state is initialized
+func (o *Okctl) initializeState() error {
+	stateHandlers := o.StateHandlers(o.StateNodes())
+
+	err := stateHandlers.Application.Initialize()
+	if err != nil {
+		return fmt.Errorf("initializing application state: %w", err)
 	}
 
 	return nil

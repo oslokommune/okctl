@@ -93,3 +93,17 @@ type ApplicationService interface {
 	// HasArgoCDIntegration implements functionality for verifying if there is an existing ArgoCD integration for the app
 	HasArgoCDIntegration(context.Context, HasArgoCDIntegrationOpts) (bool, error)
 }
+
+// ApplicationState defines operations done on application state
+type ApplicationState interface {
+	// Put knows how to upsert application state
+	Put(v1alpha1.Application) error
+	// Get knows how to retrieve application state
+	Get(name string) (v1alpha1.Application, error)
+	// Delete knows how to remove application state
+	Delete(name string) error
+	// List knows how to retrieve all application state stored
+	List() ([]v1alpha1.Application, error)
+	// Initialize knows how to do required setup for state to work
+	Initialize() error
+}

@@ -5,69 +5,63 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/go-git/go-git/v5"
-	"github.com/oslokommune/okctl/pkg/config/load"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
+	"github.com/go-git/go-git/v5"
 	"github.com/oslokommune/okctl/pkg/commands"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
 )
 
-// LoadClusterDeclaration acquires a cluster manifest from either stdin
-// or a file and stores it in o.Declaration
-func LoadClusterDeclaration(o *okctl.Okctl, path *string) RunEer {
-	return func(cmd *cobra.Command, args []string) error {
-		declaration, err := commands.InferClusterFromStdinOrFile(o.In, *path)
-		if err != nil {
-			return fmt.Errorf("inferring cluster: %w", err)
-		}
-
-		err = declaration.Validate()
-		if err != nil {
-			return fmt.Errorf("validating cluster declaration: %w", err)
-		}
-
-		o.Declaration = declaration
-
-		return nil
-	}
-}
-
-// LoadClusterDeclarationPath loads a cluster declaration path from disk
-// Shares a lot in common with LoadClusterDeclaration and these should be merged together.
-// But: LoadClusterDeclaration also takes into consideration loading from stdin, so we keep
-// these two separate for the time being
-func LoadClusterDeclarationPath(o *okctl.Okctl, declarationPath *string) RunEer {
+// LoadClusterDeclaration loads a cluster declaration path from disk or stdin
+// and stores it in o.Declaration
+func LoadClusterDeclaration(o *okctl.Okctl, declarationPath *string) RunEer {
 	return func(cmd *cobra.Command, _ []string) error {
-		var err error
-
-		if len(*declarationPath) == 0 {
-			return fmt.Errorf("declaration must be provided")
-		}
-
-		tmp, err := filepath.Abs(*declarationPath)
-		if err != nil {
-			return fmt.Errorf("converting declaration path to absolute path: %w", err)
-		}
-
-		declarationPath = &tmp
-
-		err = loadRepoData(o, *declarationPath, cmd)
+		clusterDeclaration, err := loadClusterDeclaration(o, declarationPath)
 		if err != nil {
 			if errors.Is(err, git.ErrRepositoryNotExists) {
 				return fmt.Errorf("okctl needs to be run inside a Git repository (okctl outputs " +
-					"various configuration files that will be stored here)")
+					"various configuration files that will bwe stored here)")
 			}
 
 			return fmt.Errorf("loading repository data: %w", err)
 		}
 
+		o.Declaration = clusterDeclaration
+
 		return nil
 	}
 }
 
-func loadRepoData(o *okctl.Okctl, declarationPath string, _ *cobra.Command) error {
-	o.RepoDataLoader = load.RepoDataFromConfigFile(declarationPath)
+func loadClusterDeclaration(o *okctl.Okctl, path *string) (*v1alpha1.Cluster, error) {
+	emptyCluster := &v1alpha1.Cluster{}
 
-	return o.LoadRepoData()
+	if len(*path) == 0 {
+		return emptyCluster, fmt.Errorf("declaration must be provided")
+	}
+
+	var err error
+
+	var pathValue string
+	pathValue = *path
+
+	// Check if path is set to '-' (stdin)
+	if pathValue != "-" {
+		pathValue, err = filepath.Abs(*path)
+		if err != nil {
+			return emptyCluster, fmt.Errorf("converting declaration path to absolute path: %w", err)
+		}
+	}
+
+	clusterDeclaration, err := commands.InferClusterFromStdinOrFile(o.In, pathValue)
+	if err != nil {
+		return emptyCluster, fmt.Errorf("inferring cluster: %w", err)
+	}
+
+	err = clusterDeclaration.Validate()
+	if err != nil {
+		return emptyCluster, fmt.Errorf("validating cluster declaration: %w", err)
+	}
+
+	return clusterDeclaration, nil
 }

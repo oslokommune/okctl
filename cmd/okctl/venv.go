@@ -48,7 +48,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command { //nolint: funlen
 			hooks.LoadUserData(o),
 			hooks.InitializeMetrics(o),
 			hooks.EmitStartCommandExecutionEvent(metrics.ActionVenv),
-			hooks.LoadClusterDeclarationPath(o, &opts.ClusterDeclarationPath),
+			hooks.LoadClusterDeclaration(o, &opts.ClusterDeclarationPath),
 			hooks.InitializeOkctl(o),
 			hooks.DownloadState(o, false),
 			hooks.VerifyClusterExistsInState(o),

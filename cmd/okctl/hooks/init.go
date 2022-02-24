@@ -33,6 +33,8 @@ func InitializeEnvironment(o *okctl.Okctl) RunEer {
 
 		initializeIo(o, cmd)
 
+		initializeSignalHandling(o, cmd)
+
 		return nil
 	}
 }
@@ -59,7 +61,9 @@ func initializeAuthentication(o *okctl.Okctl) error {
 func initializeIo(o *okctl.Okctl, cmd *cobra.Command) {
 	o.Out = cmd.OutOrStdout()
 	o.Err = cmd.OutOrStderr()
+}
 
+func initializeSignalHandling(o *okctl.Okctl, cmd *cobra.Command) {
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM) //nolint
 

@@ -78,6 +78,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command { //nolint: funlen
 		),
 	}
 
+	addCommonCommandFlags(cmd)
 	flags := cmd.Flags()
 
 	flags.StringVarP(&opts.ClusterDeclarationPath,

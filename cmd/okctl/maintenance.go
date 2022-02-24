@@ -16,6 +16,7 @@ func buildMaintenanceCommand(o *okctl.Okctl) *cobra.Command {
 	cmd.AddCommand(buildMaintenanceStateReleaseLockCommand(o))
 	cmd.AddCommand(buildMaintenanceStateDownloadCommand(o))
 	cmd.AddCommand(buildMaintenanceStateUploadCommand(o))
+	addCommonCommandFlags(cmd)
 
 	return cmd
 }

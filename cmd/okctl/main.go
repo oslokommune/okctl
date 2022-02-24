@@ -61,7 +61,6 @@ func buildRootCommand() (*cobra.Command, *okctl.Okctl) {
 	}
 
 	addAvailableCommands(cmd, o)
-	addCommonCommandFlags(cmd)
 
 	return cmd, o
 }

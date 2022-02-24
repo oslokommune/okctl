@@ -142,6 +142,7 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 			hooks.EmitEndCommandExecutionEvent(metrics.ActionUpgrade),
 		),
 	}
+	addCommonCommandFlags(cmd)
 
 	cmd.PersistentFlags().BoolVarP(
 		&flags.confirm, "confirm", "y", false, "Skip confirmation prompts")

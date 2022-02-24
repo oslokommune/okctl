@@ -26,6 +26,7 @@ func buildShowCommand(o *okctl.Okctl) *cobra.Command {
 	}
 
 	cmd.AddCommand(buildShowCredentialsCommand(o))
+	addCommonCommandFlags(cmd)
 
 	return cmd
 }

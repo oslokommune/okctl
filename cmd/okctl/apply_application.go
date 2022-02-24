@@ -24,7 +24,8 @@ const requiredApplyApplicationArguments = 0
 
 // applyApplicationOpts contains all the possible options for "apply application"
 type applyApplicationOpts struct {
-	File string
+	File                   string
+	ClusterDeclarationPath string
 
 	Application v1alpha1.Application
 }
@@ -33,6 +34,7 @@ type applyApplicationOpts struct {
 func (o applyApplicationOpts) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.File, validation.Required),
+		validation.Field(&o.ClusterDeclarationPath, validation.Required),
 		validation.Field(&o.Application),
 	)
 }
@@ -48,6 +50,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 		PreRunE: hooks.RunECombinator(
 			hooks.InitializeMetrics(o),
 			hooks.EmitStartCommandExecutionEvent(metrics.ActionApplyApplication),
+			hooks.LoadClusterDeclaration(o, &opts.ClusterDeclarationPath),
 			hooks.InitializeOkctl(o),
 			hooks.AcquireStateLock(o),
 			hooks.DownloadState(o, true),
@@ -117,8 +120,16 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.EmitEndCommandExecutionEvent(metrics.ActionApplyApplication),
 		),
 	}
+	addAuthenticationFlags(cmd)
+	addClusterDeclarationPathFlag(cmd, &opts.ClusterDeclarationPath)
 
-	cmd.Flags().StringVarP(&opts.File, "file", "f", "", "Specify the file path. Use \"-\" for stdin")
+	cmd.Flags().StringVarP(
+		&opts.File,
+		"file",
+		"f",
+		"",
+		"Specify the file path. Use \"-\" for stdin",
+	)
 
 	return cmd
 }

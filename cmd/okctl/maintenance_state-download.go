@@ -12,7 +12,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type stateDownloadOpts struct {
+	ClusterDeclarationPath string
+}
+
+// nolint: funlen
 func buildMaintenanceStateDownloadCommand(o *okctl.Okctl) *cobra.Command {
+	opts := &stateDownloadOpts{}
+
 	var path string
 
 	cmd := &cobra.Command{
@@ -23,6 +30,7 @@ func buildMaintenanceStateDownloadCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.LoadUserData(o),
 			hooks.InitializeMetrics(o),
 			hooks.EmitStartCommandExecutionEvent(metrics.ActionMaintenanceStateDownload),
+			hooks.LoadClusterDeclaration(o, &opts.ClusterDeclarationPath),
 			hooks.InitializeOkctl(o),
 		),
 		RunE: func(_ *cobra.Command, _ []string) error {
@@ -55,8 +63,17 @@ func buildMaintenanceStateDownloadCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.EmitEndCommandExecutionEvent(metrics.ActionMaintenanceStateDownload),
 		),
 	}
+	addAuthenticationFlags(cmd)
+	addClusterDeclarationPathFlag(cmd, &opts.ClusterDeclarationPath)
 
-	cmd.Flags().StringVarP(&path, "path", "p", "state.db", "determines where the downloaded state should be stored")
+	flags := cmd.Flags()
+	flags.StringVarP(
+		&path,
+		"path",
+		"p",
+		"state.db",
+		"determines where the downloaded state should be stored",
+	)
 
 	return cmd
 }

@@ -8,7 +8,8 @@ import (
 
 // ScaffoldApplicationOpts contains attributes used in an application declaration
 type ScaffoldApplicationOpts struct {
-	PrimaryHostedZone string
+	PrimaryHostedZone      string
+	ClusterDeclarationPath string
 }
 
 // ScaffoldApplicationDeclaration scaffolds an application declaration based on ScaffoldApplicationOpts

@@ -42,9 +42,6 @@ func main() {
 	}
 }
 
-// This will be deleted when all sub-commands starts using hooks.LoadDeclarationPath(o, &opts.DeclarationPath),
-var declarationPath string //nolint:gochecknoglobals
-
 func buildRootCommand() (*cobra.Command, *okctl.Okctl) {
 	o := okctl.New()
 	if err := o.InitLogging(); err != nil {
@@ -78,7 +75,9 @@ func addAvailableCommands(cmd *cobra.Command, o *okctl.Okctl) {
 	cmd.AddCommand(buildMaintenanceCommand(o))
 }
 
-func addCommonCommandFlags(cmd *cobra.Command) {
+// Add the common authentication flags used throughout the application.
+// Each sub-command needs to apply this individual according to needs
+func addAuthenticationFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&auth.AwsCredentialsType,
 		"aws-credentials-type",
 		"a",
@@ -96,6 +95,17 @@ func addCommonCommandFlags(cmd *cobra.Command) {
 			"The form of authentication to use for Github. Possible values: [%s]",
 			strings.Join(auth.GetGithubCredentialsTypes(), ","),
 		),
+	)
+}
+
+// Add a '-c/--cluster-declaration' flag for those that require this
+// Each sub-command needs to apply this individual according to needs
+func addClusterDeclarationPathFlag(cmd *cobra.Command, clusterDeclarationPath *string) {
+	cmd.Flags().StringVarP(clusterDeclarationPath,
+		"cluster-declaration",
+		"c",
+		os.Getenv(constant.EnvClusterDeclaration),
+		usageApplyClusterFile,
 	)
 }
 

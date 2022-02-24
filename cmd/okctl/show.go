@@ -19,6 +19,10 @@ const (
 	showCredentialsArgs = 0
 )
 
+type showCredentialsOpts struct {
+	ClusterDeclarationPath string
+}
+
 func buildShowCommand(o *okctl.Okctl) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show",
@@ -26,7 +30,7 @@ func buildShowCommand(o *okctl.Okctl) *cobra.Command {
 	}
 
 	cmd.AddCommand(buildShowCredentialsCommand(o))
-	addCommonCommandFlags(cmd)
+	addAuthenticationFlags(cmd)
 
 	return cmd
 }
@@ -38,6 +42,8 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 		err              error
 	)
 
+	opts := &showCredentialsOpts{}
+
 	cmd := &cobra.Command{
 		Use:   "credentials",
 		Short: ShowShortDescription,
@@ -47,12 +53,13 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.LoadUserData(o),
 			hooks.InitializeMetrics(o),
 			hooks.EmitStartCommandExecutionEvent(metrics.ActionShowCredentials),
+			hooks.LoadClusterDeclaration(o, &opts.ClusterDeclarationPath),
 			hooks.InitializeOkctl(o),
 			hooks.DownloadState(o, false),
 			hooks.VerifyClusterExistsInState(o),
 			hooks.WriteKubeConfig(o),
 			func(_ *cobra.Command, args []string) error {
-				okctlEnvironment, err = commands.GetOkctlEnvironment(o, declarationPath)
+				okctlEnvironment, err = commands.GetOkctlEnvironment(o, opts.ClusterDeclarationPath)
 				if err != nil {
 					return err
 				}
@@ -120,6 +127,7 @@ func buildShowCredentialsCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.EmitEndCommandExecutionEvent(metrics.ActionShowCredentials),
 		),
 	}
+	addClusterDeclarationPathFlag(cmd, &opts.ClusterDeclarationPath)
 
 	return cmd
 }

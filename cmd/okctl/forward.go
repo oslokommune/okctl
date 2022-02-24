@@ -13,7 +13,6 @@ func buildForwardCommand(o *okctl.Okctl) *cobra.Command {
 	}
 
 	cmd.AddCommand(buildForwardPostgres(o))
-	addCommonCommandFlags(cmd)
 
 	return cmd
 }

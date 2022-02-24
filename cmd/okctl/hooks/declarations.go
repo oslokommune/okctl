@@ -17,7 +17,7 @@ import (
 // and stores it in o.Declaration
 func LoadClusterDeclaration(o *okctl.Okctl, declarationPath *string) RunEer {
 	return func(cmd *cobra.Command, _ []string) error {
-		clusterDeclaration, err := loadClusterDeclaration(o, declarationPath)
+		clusterDeclaration, err := LoadClusterDeclarationFromPath(o, declarationPath)
 		if err != nil {
 			if errors.Is(err, git.ErrRepositoryNotExists) {
 				return fmt.Errorf("okctl needs to be run inside a Git repository (okctl outputs " +
@@ -33,7 +33,8 @@ func LoadClusterDeclaration(o *okctl.Okctl, declarationPath *string) RunEer {
 	}
 }
 
-func loadClusterDeclaration(o *okctl.Okctl, path *string) (*v1alpha1.Cluster, error) {
+// LoadClusterDeclarationFromPath loads a cluster declaration path from disk or stdin
+func LoadClusterDeclarationFromPath(o *okctl.Okctl, path *string) (*v1alpha1.Cluster, error) {
 	emptyCluster := &v1alpha1.Cluster{}
 
 	if len(*path) == 0 {
@@ -45,7 +46,7 @@ func loadClusterDeclaration(o *okctl.Okctl, path *string) (*v1alpha1.Cluster, er
 	var pathValue string
 	pathValue = *path
 
-	// Check if path is set to '-' (stdin)
+	// "-":  user wants to read from stdin
 	if pathValue != "-" {
 		pathValue, err = filepath.Abs(*path)
 		if err != nil {

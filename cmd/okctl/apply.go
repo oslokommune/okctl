@@ -13,7 +13,6 @@ func buildApplyCommand(o *okctl.Okctl) *cobra.Command {
 
 	cmd.AddCommand(buildApplyApplicationCommand(o))
 	cmd.AddCommand(buildApplyClusterCommand(o))
-	addCommonCommandFlags(cmd)
 
 	return cmd
 }

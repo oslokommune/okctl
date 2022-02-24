@@ -10,7 +10,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type aquireLockOpts struct {
+	ClusterDeclarationPath string
+}
+
 func buildMaintenanceStateAcquireLockCommand(o *okctl.Okctl) *cobra.Command {
+	opts := &aquireLockOpts{}
+
 	cmd := &cobra.Command{
 		Use:   "state-acquire-lock",
 		Short: "acquires a state.db lock",
@@ -19,6 +25,7 @@ func buildMaintenanceStateAcquireLockCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.LoadUserData(o),
 			hooks.InitializeMetrics(o),
 			hooks.EmitStartCommandExecutionEvent(metrics.ActionMaintenanceStateAcquireLock),
+			hooks.LoadClusterDeclaration(o, &opts.ClusterDeclarationPath),
 			hooks.InitializeOkctl(o),
 		),
 		RunE: func(_ *cobra.Command, _ []string) error {
@@ -37,6 +44,8 @@ func buildMaintenanceStateAcquireLockCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.EmitEndCommandExecutionEvent(metrics.ActionMaintenanceStateAcquireLock),
 		),
 	}
+	addAuthenticationFlags(cmd)
+	addClusterDeclarationPathFlag(cmd, &opts.ClusterDeclarationPath)
 
 	return cmd
 }

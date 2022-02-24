@@ -10,7 +10,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type releaseLockOpts struct {
+	ClusterDeclarationPath string
+}
+
 func buildMaintenanceStateReleaseLockCommand(o *okctl.Okctl) *cobra.Command {
+	opts := &releaseLockOpts{}
+
 	cmd := &cobra.Command{
 		Use:   "state-release-lock",
 		Short: "releases a state.db lock",
@@ -19,6 +25,7 @@ func buildMaintenanceStateReleaseLockCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.LoadUserData(o),
 			hooks.InitializeMetrics(o),
 			hooks.EmitStartCommandExecutionEvent(metrics.ActionMaintenanceStateReleaseLock),
+			hooks.LoadClusterDeclaration(o, &opts.ClusterDeclarationPath),
 			hooks.InitializeOkctl(o),
 		),
 		RunE: func(_ *cobra.Command, _ []string) error {
@@ -37,6 +44,8 @@ func buildMaintenanceStateReleaseLockCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.EmitEndCommandExecutionEvent(metrics.ActionMaintenanceStateReleaseLock),
 		),
 	}
+	addAuthenticationFlags(cmd)
+	addClusterDeclarationPathFlag(cmd, &opts.ClusterDeclarationPath)
 
 	return cmd
 }

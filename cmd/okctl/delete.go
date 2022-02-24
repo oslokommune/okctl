@@ -31,15 +31,16 @@ func buildDeleteCommand(o *okctl.Okctl) *cobra.Command {
 	deleteClusterCommand := buildDeleteClusterCommand(o)
 	cmd.AddCommand(deleteClusterCommand)
 	cmd.AddCommand(buildDeletePostgresCommand(o))
-	addCommonCommandFlags(cmd)
+	addAuthenticationFlags(cmd)
 
 	return cmd
 }
 
 // DeleteClusterOpts contains the required inputs
 type DeleteClusterOpts struct {
-	AWSCredentialsType    string
-	GithubCredentialsType string
+	AWSCredentialsType     string
+	GithubCredentialsType  string
+	ClusterDeclarationPath string
 
 	DisableSpinner bool
 	Confirm        bool
@@ -58,6 +59,7 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.LoadUserData(o),
 			hooks.InitializeMetrics(o),
 			hooks.EmitStartCommandExecutionEvent(metrics.ActionDeleteCluster),
+			hooks.LoadClusterDeclaration(o, &opts.ClusterDeclarationPath),
 			hooks.InitializeOkctl(o),
 			hooks.AcquireStateLock(o),
 			hooks.DownloadState(o, true),
@@ -138,9 +140,10 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.EmitEndCommandExecutionEvent(metrics.ActionDeleteCluster),
 		),
 	}
+	addAuthenticationFlags(cmd)
+	addClusterDeclarationPathFlag(cmd, &opts.ClusterDeclarationPath)
 
 	flags := cmd.Flags()
-
 	flags.BoolVar(
 		&opts.DisableSpinner,
 		"no-spinner",

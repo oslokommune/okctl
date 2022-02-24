@@ -34,22 +34,24 @@ import (
 const defaultPostgreSQLPort = 5432
 
 type forwardPostgresOpts struct {
-	ID              api.ID
-	ApplicationName string
-	DatabaseName    string
-	Namespace       string
-	ConfigMapName   string
-	SecretName      string
-	SecurityGroup   string
-	Username        string
-	PasswordFile    string
-	ListenPort      int32
+	ID                     api.ID
+	ClusterDeclarationPath string
+	ApplicationName        string
+	DatabaseName           string
+	Namespace              string
+	ConfigMapName          string
+	SecretName             string
+	SecurityGroup          string
+	Username               string
+	PasswordFile           string
+	ListenPort             int32
 }
 
 // Validate the inputs
 func (o *forwardPostgresOpts) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.ID, validation.Required),
+		validation.Field(&o.ClusterDeclarationPath, validation.Required),
 		validation.Field(&o.ApplicationName, validation.Required),
 		validation.Field(&o.Namespace, validation.Required),
 		validation.Field(&o.Username, validation.Required),
@@ -74,7 +76,7 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 			hooks.LoadUserData(o),
 			hooks.InitializeMetrics(o),
 			hooks.EmitStartCommandExecutionEvent(metrics.ActionForwardPostgres),
-			hooks.LoadClusterDeclaration(o, &declarationPath),
+			hooks.LoadClusterDeclaration(o, &opts.ClusterDeclarationPath),
 			hooks.InitializeOkctl(o),
 			hooks.DownloadState(o, false),
 			hooks.VerifyClusterExistsInState(o),
@@ -201,6 +203,8 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 			hooks.EmitEndCommandExecutionEvent(metrics.ActionForwardPostgres),
 		),
 	}
+	addAuthenticationFlags(cmd)
+	addClusterDeclarationPathFlag(cmd, &opts.ClusterDeclarationPath)
 
 	flags := cmd.Flags()
 

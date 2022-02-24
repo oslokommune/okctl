@@ -166,6 +166,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.EmitEndCommandExecutionEvent(metrics.ActionApplyCluster),
 		),
 	}
+	addAuthenticationFlags(cmd)
 
 	flags := cmd.Flags()
 

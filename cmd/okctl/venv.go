@@ -8,8 +8,6 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/oslokommune/okctl/pkg/config/constant"
-
 	"github.com/oslokommune/okctl/cmd/okctl/hooks"
 	"github.com/oslokommune/okctl/pkg/metrics"
 
@@ -54,7 +52,7 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command { //nolint: funlen
 			hooks.VerifyClusterExistsInState(o),
 			hooks.WriteKubeConfig(o),
 			func(_ *cobra.Command, args []string) error {
-				e, err := venvPreRunE(o)
+				e, err := venvPreRunE(o, opts.ClusterDeclarationPath)
 				if err != nil {
 					return err
 				}
@@ -78,20 +76,13 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command { //nolint: funlen
 		),
 	}
 
-	addCommonCommandFlags(cmd)
-	flags := cmd.Flags()
-
-	flags.StringVarP(&opts.ClusterDeclarationPath,
-		"cluster-declaration",
-		"c",
-		osPkg.Getenv(constant.EnvClusterDeclaration),
-		usageApplyClusterFile,
-	)
+	addAuthenticationFlags(cmd)
+	addClusterDeclarationPathFlag(cmd, &opts.ClusterDeclarationPath)
 
 	return cmd
 }
 
-func venvPreRunE(o *okctl.Okctl) (commands.OkctlEnvironment, error) {
+func venvPreRunE(o *okctl.Okctl, declarationPath string) (commands.OkctlEnvironment, error) {
 	okctlEnvironment, err := commands.GetOkctlEnvironment(o, declarationPath)
 	if err != nil {
 		return commands.OkctlEnvironment{}, err

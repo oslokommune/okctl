@@ -3,6 +3,7 @@ package crd
 import (
 	"bytes"
 	_ "embed"
+	"errors"
 	"fmt"
 	"io"
 	"path"
@@ -72,6 +73,10 @@ func (a applicationState) Delete(name string) error {
 		Namespace: defaultAppManifestNamespace,
 	})
 	if err != nil {
+		if errors.Is(err, kubectl.ErrNotFound) {
+			return nil
+		}
+
 		return fmt.Errorf("deleting: %w", err)
 	}
 

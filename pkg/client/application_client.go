@@ -105,5 +105,5 @@ type ApplicationState interface {
 	// List knows how to retrieve all application state stored
 	List() ([]v1alpha1.Application, error)
 	// Initialize knows how to do required setup for state to work
-	Initialize() error
+	Initialize(clusterManifest v1alpha1.Cluster, absoluteIACRepositoryRootDirectory string) error
 }

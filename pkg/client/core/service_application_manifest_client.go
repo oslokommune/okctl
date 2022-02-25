@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"sort"
 	"strings"
 
 	merrors "github.com/mishudark/errors"
@@ -52,6 +53,7 @@ func (a *applicationManifestService) SaveManifest(_ context.Context, opts client
 	}
 
 	kustomizationManifest.AddResource(opts.Filename)
+	sort.Strings(kustomizationManifest.Resources)
 
 	rawKustomizationManifest, err := yaml.Marshal(kustomizationManifest)
 	if err != nil {

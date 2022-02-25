@@ -1,7 +1,7 @@
 resources:
-- volumes.yaml
-- service.yaml
-- ingress.yaml
-- service-monitor.yaml
-- namespace.yaml
 - deployment.yaml
+- ingress.yaml
+- namespace.yaml
+- service-monitor.yaml
+- service.yaml
+- volumes.yaml

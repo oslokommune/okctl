@@ -170,9 +170,10 @@ func (a Application) URL() (url.URL, error) {
 // NewApplication returns an initialized application definition
 func NewApplication(cluster Cluster) Application {
 	return Application{
-		TypeMeta: ApplicationTypeMeta(),
-		Image:    ApplicationImage{},
-		Replicas: defaultReplicas,
-		cluster:  cluster,
+		TypeMeta:    ApplicationTypeMeta(),
+		Replicas:    defaultReplicas,
+		Environment: make(map[string]string),
+		Volumes:     make([]map[string]string, 0),
+		cluster:     cluster,
 	}
 }

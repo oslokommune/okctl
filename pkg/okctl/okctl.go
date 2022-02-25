@@ -339,6 +339,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 
 	applicationService := clientCore.NewApplicationService(
 		o.FileSystem,
+		handlers.Application,
 		o.toolChain.Kubectl,
 		applicationManifestService,
 		absoluteRepositoryPath,

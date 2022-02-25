@@ -31,6 +31,7 @@ const finalizerCascadingDelete = "resources-finalizer.argocd.argoproj.io"
 
 type applicationService struct {
 	appManifestService    client.ApplicationManifestService
+	appState              client.ApplicationState
 	fs                    *afero.Afero
 	absoluteRepositoryDir string
 	kubectl               kubectl.Client
@@ -65,6 +66,11 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 		return fmt.Errorf("generating application overlay: %w", err)
 	}
 
+	err = s.appState.Put(opts.Application)
+	if err != nil {
+		return fmt.Errorf("saving application state: %w", err)
+	}
+
 	return nil
 }
 
@@ -78,6 +84,11 @@ func (s *applicationService) DeleteApplicationManifests(_ context.Context, opts 
 	err := s.fs.RemoveAll(absoluteApplicationDir)
 	if err != nil {
 		return errors.E(err, "removing application directory: %w", err)
+	}
+
+	err = s.appState.Delete(opts.Application.Metadata.Name)
+	if err != nil {
+		return fmt.Errorf("deleting application state: %w", err)
 	}
 
 	return nil
@@ -295,11 +306,13 @@ func generatePatchSaver(ctx context.Context, service client.ApplicationManifestS
 // NewApplicationService initializes a new Scaffold application service
 func NewApplicationService(
 	fs *afero.Afero,
+	appState client.ApplicationState,
 	kubectlClient kubectl.Client,
 	appManifestService client.ApplicationManifestService,
 	absoluteRepositoryDir string,
 ) client.ApplicationService {
 	return &applicationService{
+		appState:              appState,
 		kubectl:               kubectlClient,
 		appManifestService:    appManifestService,
 		fs:                    fs,

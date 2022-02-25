@@ -22,7 +22,7 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/client"
 	"github.com/oslokommune/okctl/pkg/client/core"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 // nolint:funlen,lll
@@ -51,28 +51,34 @@ func TestNewApplicationService(t *testing.T) {
 
 	appManifestService := core.NewApplicationManifestService(fs, absoluteApplicationsDir)
 
+	state := mockApplicationState{}
+
+	err := state.Initialize(cluster, absoluteRepoDir)
+	assert.NoError(t, err)
+
 	service := core.NewApplicationService(
 		fs,
+		&state,
 		&mockKubectlClient{},
 		appManifestService,
 		absoluteRepoDir,
 	)
 
 	application, err := commands.InferApplicationFromStdinOrFile(cluster, testInputBuffer, fs, "-")
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 
 	err = service.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
 		Cluster:        cluster,
 		Application:    application,
 		CertificateARN: defaultMockARN,
 	})
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 
 	err = service.CreateArgoCDApplicationManifest(client.CreateArgoCDApplicationManifestOpts{
 		Cluster:     cluster,
 		Application: application,
 	})
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 
 	g := goldie.New(t)
 
@@ -101,6 +107,9 @@ func TestNewApplicationService(t *testing.T) {
 		clusterApplicationsDir,
 		fmt.Sprintf("%s.yaml", application.Metadata.Name),
 	)))
+
+	assert.Equal(t, state.store[application.Metadata.Name], application)
+	assert.Equal(t, 1, len(state.store))
 }
 
 func TestDeleteApplication(t *testing.T) {
@@ -110,27 +119,32 @@ func TestDeleteApplication(t *testing.T) {
 
 	clusterManifest := generateMockClusterManifest()
 	applicationManifest, err := commands.InferApplicationFromStdinOrFile(clusterManifest, stdin, fs, "-")
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 
 	absoluteRepoDir := "/"
 	absoluteOutputDir := path.Join(absoluteRepoDir, clusterManifest.Github.OutputPath)
 	absoluteApplicationsDir := path.Join(absoluteOutputDir, constant.DefaultApplicationsOutputDir)
 
+	state := mockApplicationState{}
+
+	err = state.Initialize(clusterManifest, absoluteRepoDir)
+	assert.NoError(t, err)
+
 	manifestService := core.NewApplicationManifestService(fs, absoluteApplicationsDir)
-	appService := core.NewApplicationService(fs, mockKubectlClient{}, manifestService, absoluteRepoDir)
+	appService := core.NewApplicationService(fs, &state, mockKubectlClient{}, manifestService, absoluteRepoDir)
 
 	err = appService.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
 		Cluster:        clusterManifest,
 		Application:    applicationManifest,
 		CertificateARN: defaultMockARN,
 	})
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 
 	err = appService.DeleteApplicationManifests(ctx, client.DeleteApplicationManifestsOpts{
 		Cluster:     clusterManifest,
 		Application: applicationManifest,
 	})
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 
 	appDir := filepath.Join(absoluteApplicationsDir, applicationManifest.Metadata.Name)
 	appBaseDir := filepath.Join(appDir, constant.DefaultApplicationBaseDir)
@@ -157,18 +171,20 @@ func TestDeleteApplication(t *testing.T) {
 		clusterApplicationsDir,
 		fmt.Sprintf("%s.yaml", applicationManifest.Metadata.Name),
 	)))
+
+	assert.Equal(t, 0, len(state.store))
 }
 
 func fileExists(t *testing.T, fs *afero.Afero, path string) bool {
 	result, err := fs.Exists(path)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 
 	return result
 }
 
 func readFile(t *testing.T, fs *afero.Afero, path string) []byte {
 	result, err := fs.ReadFile(path)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 
 	return result
 }
@@ -197,6 +213,31 @@ func (m mockKubectlClient) DeleteByManifest(io.Reader) error        { panic("imp
 func (m mockKubectlClient) DeleteByResource(kubectl.Resource) error { panic("implement me") }
 func (m mockKubectlClient) Patch(kubectl.PatchOpts) error           { panic("implement me") }
 func (m mockKubectlClient) Exists(kubectl.Resource) (bool, error)   { panic("implement me") }
+
+type mockApplicationState struct {
+	store map[string]v1alpha1.Application
+}
+
+func (m *mockApplicationState) Get(string) (v1alpha1.Application, error) { panic("implement me") }
+func (m *mockApplicationState) List() ([]v1alpha1.Application, error)    { panic("implement me") }
+
+func (m *mockApplicationState) Initialize(v1alpha1.Cluster, string) error {
+	m.store = make(map[string]v1alpha1.Application)
+
+	return nil
+}
+
+func (m *mockApplicationState) Put(app v1alpha1.Application) error {
+	m.store[app.Metadata.Name] = app
+
+	return nil
+}
+
+func (m *mockApplicationState) Delete(name string) error {
+	delete(m.store, name)
+
+	return nil
+}
 
 const (
 	defaultMockARN  = "arn:which:isnt:an:arn"

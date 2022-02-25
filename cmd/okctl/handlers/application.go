@@ -187,9 +187,9 @@ type HandleApplicationOpts struct {
 	Err io.Writer
 	Ctx context.Context
 
-	State    *core.StateHandlers
-	Services *core.Services
-	File     string
+	State                  *core.StateHandlers
+	Services               *core.Services
+	File                   string
 	ClusterDeclarationPath string
 
 	ClusterManifest     v1alpha1.Cluster

@@ -38,12 +38,9 @@ func buildDeleteCommand(o *okctl.Okctl) *cobra.Command {
 
 // DeleteClusterOpts contains the required inputs
 type DeleteClusterOpts struct {
-	AWSCredentialsType     string
-	GithubCredentialsType  string
 	ClusterDeclarationPath string
-
-	DisableSpinner bool
-	Confirm        bool
+	DisableSpinner         bool
+	Confirm                bool
 }
 
 // nolint: gocyclo, funlen, gocognit

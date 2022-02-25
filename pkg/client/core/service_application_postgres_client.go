@@ -93,25 +93,12 @@ func (a *applicationPostgresService) RemovePostgresFromApplication(ctx context.C
 		return fmt.Errorf("getting security group: %w", err)
 	}
 
-	err = a.sgService.DeleteSecurityGroup(ctx, api.DeleteSecurityGroupOpts{
-		ClusterName: opts.Cluster.Metadata.Name,
-		Name:        opts.Application.Metadata.Name,
-	})
-	if err != nil {
-		return fmt.Errorf("deleting security group: %w", err)
-	}
-
 	stackName := cfn.NewStackNamer().RDSPostgres(opts.DatabaseName, opts.Cluster.Metadata.Name)
 
 	resourceName := components.NewRDSPostgresComposer(components.RDSPostgresComposerOpts{
 		ApplicationDBName: opts.Application.Postgres,
 		ClusterName:       opts.Cluster.Metadata.Name,
 	}).CloudFormationResourceName("RDSPostgresIncoming")
-
-	err = a.removeSecurityGroupPolicy(ctx, opts.Cluster, opts.Application, securityGroup)
-	if err != nil {
-		return fmt.Errorf("removing security group policy: %w", err)
-	}
 
 	err = a.sgService.RemoveRule(ctx, api.RemoveRuleOpts{
 		ClusterName:               opts.Cluster.Metadata.Name,
@@ -127,6 +114,19 @@ func (a *applicationPostgresService) RemovePostgresFromApplication(ctx context.C
 	})
 	if err != nil {
 		return fmt.Errorf("removing rule from inbound database security group: %w", err)
+	}
+
+	err = a.sgService.DeleteSecurityGroup(ctx, api.DeleteSecurityGroupOpts{
+		ClusterName: opts.Cluster.Metadata.Name,
+		Name:        opts.Application.Metadata.Name,
+	})
+	if err != nil {
+		return fmt.Errorf("deleting security group: %w", err)
+	}
+
+	err = a.removeSecurityGroupPolicy(ctx, opts.Cluster, opts.Application, securityGroup)
+	if err != nil {
+		return fmt.Errorf("removing security group policy: %w", err)
 	}
 
 	return nil

@@ -169,6 +169,14 @@ func (m mockGithubService) ListReleases(_, _ string) ([]*github.RepositoryReleas
 	return nil, nil
 }
 
+func (m mockGithubService) CreateRepositoryDeployKey(_ client.CreateGithubDeployKeyOpts) (*client.GithubDeployKey, error) {
+	return nil, nil
+}
+
+func (m mockGithubService) DeleteRepositoryDeployKey(_ client.DeleteGithubDeployKeyOpts) error {
+	return nil
+}
+
 type mockArgoCDState struct {
 	exists bool
 }

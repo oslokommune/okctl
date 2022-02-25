@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"path"
 	"path/filepath"
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/jsonpatch"
+	"github.com/oslokommune/okctl/pkg/clients/kubectl"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
@@ -24,7 +25,180 @@ import (
 	"gotest.tools/assert"
 )
 
-const defaultTemplate = `apiVersion: okctl.io/v1alpha1
+// nolint:funlen,lll
+func TestNewApplicationService(t *testing.T) {
+	testInputBuffer := bytes.NewBufferString(defaultTemplate)
+
+	fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+
+	cluster := v1alpha1.Cluster{
+		Metadata: v1alpha1.ClusterMeta{
+			Name:      "test",
+			Region:    "eu-west-1",
+			AccountID: "012345678912",
+		},
+		Github: v1alpha1.ClusterGithub{
+			Organisation: "test",
+			Repository:   "repo.git",
+			OutputPath:   "infrastructure",
+		},
+		ClusterRootDomain: "kjoremiljo.oslo.systems",
+	}
+
+	absoluteRepoDir := "/"
+	absoluteOutputDir := path.Join(absoluteRepoDir, cluster.Github.OutputPath)
+	absoluteApplicationsDir := path.Join(absoluteOutputDir, constant.DefaultApplicationsOutputDir)
+
+	appManifestService := core.NewApplicationManifestService(fs, absoluteApplicationsDir)
+
+	service := core.NewApplicationService(
+		fs,
+		&mockKubectlClient{},
+		appManifestService,
+		absoluteRepoDir,
+	)
+
+	application, err := commands.InferApplicationFromStdinOrFile(cluster, testInputBuffer, fs, "-")
+	assert.NilError(t, err)
+
+	err = service.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
+		Cluster:        cluster,
+		Application:    application,
+		CertificateARN: defaultMockARN,
+	})
+	assert.NilError(t, err)
+
+	err = service.CreateArgoCDApplicationManifest(client.CreateArgoCDApplicationManifestOpts{
+		Cluster:     cluster,
+		Application: application,
+	})
+	assert.NilError(t, err)
+
+	g := goldie.New(t)
+
+	appDir := filepath.Join(absoluteApplicationsDir, application.Metadata.Name)
+	appBaseDir := filepath.Join(appDir, constant.DefaultApplicationBaseDir)
+	appOverlayDir := filepath.Join(appDir, constant.DefaultApplicationOverlayDir, cluster.Metadata.Name)
+	clusterApplicationsDir := filepath.Join(
+		absoluteOutputDir,
+		cluster.Metadata.Name,
+		constant.DefaultArgoCDClusterConfigDir,
+		constant.DefaultArgoCDClusterConfigApplicationsDir,
+	)
+
+	g.Assert(t, "kustomization-base.yaml", readFile(t, fs, filepath.Join(appBaseDir, "kustomization.yaml")))
+	g.Assert(t, "namespace.yaml", readFile(t, fs, filepath.Join(appBaseDir, "namespace.yaml")))
+	g.Assert(t, "deployment.yaml", readFile(t, fs, filepath.Join(appBaseDir, "deployment.yaml")))
+	g.Assert(t, "volumes.yaml", readFile(t, fs, filepath.Join(appBaseDir, "volumes.yaml")))
+	g.Assert(t, "ingress.yaml", readFile(t, fs, filepath.Join(appBaseDir, "ingress.yaml")))
+	g.Assert(t, "service.yaml", readFile(t, fs, filepath.Join(appBaseDir, "service.yaml")))
+	g.Assert(t, "service-monitor.yaml", readFile(t, fs, filepath.Join(appBaseDir, "service-monitor.yaml")))
+
+	g.Assert(t, "kustomization-overlay.yaml", readFile(t, fs, filepath.Join(appOverlayDir, "kustomization.yaml")))
+	g.Assert(t, "deployment-patch.yaml", readFile(t, fs, filepath.Join(appOverlayDir, "deployment-patch.json")))
+	g.Assert(t, "ingress-patch.yaml", readFile(t, fs, filepath.Join(appOverlayDir, "ingress-patch.json")))
+	g.Assert(t, "argocd-application.yaml", readFile(t, fs, filepath.Join(
+		clusterApplicationsDir,
+		fmt.Sprintf("%s.yaml", application.Metadata.Name),
+	)))
+}
+
+func TestDeleteApplication(t *testing.T) {
+	ctx := context.Background()
+	fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+	stdin := bytes.NewBufferString(defaultTemplate)
+
+	clusterManifest := generateMockClusterManifest()
+	applicationManifest, err := commands.InferApplicationFromStdinOrFile(clusterManifest, stdin, fs, "-")
+	assert.NilError(t, err)
+
+	absoluteRepoDir := "/"
+	absoluteOutputDir := path.Join(absoluteRepoDir, clusterManifest.Github.OutputPath)
+	absoluteApplicationsDir := path.Join(absoluteOutputDir, constant.DefaultApplicationsOutputDir)
+
+	manifestService := core.NewApplicationManifestService(fs, absoluteApplicationsDir)
+	appService := core.NewApplicationService(fs, mockKubectlClient{}, manifestService, absoluteRepoDir)
+
+	err = appService.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
+		Cluster:        clusterManifest,
+		Application:    applicationManifest,
+		CertificateARN: defaultMockARN,
+	})
+	assert.NilError(t, err)
+
+	err = appService.DeleteApplicationManifests(ctx, client.DeleteApplicationManifestsOpts{
+		Cluster:     clusterManifest,
+		Application: applicationManifest,
+	})
+	assert.NilError(t, err)
+
+	appDir := filepath.Join(absoluteApplicationsDir, applicationManifest.Metadata.Name)
+	appBaseDir := filepath.Join(appDir, constant.DefaultApplicationBaseDir)
+	appOverlayDir := filepath.Join(appDir, constant.DefaultApplicationOverlayDir, clusterManifest.Metadata.Name)
+	clusterApplicationsDir := filepath.Join(
+		absoluteOutputDir,
+		clusterManifest.Metadata.Name,
+		constant.DefaultArgoCDClusterConfigDir,
+		constant.DefaultArgoCDClusterConfigApplicationsDir,
+	)
+
+	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "kustomization.yaml")))
+	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "namespace.yaml")))
+	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "deployment.yaml")))
+	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "volumes.yaml")))
+	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "ingress.yaml")))
+	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "service.yaml")))
+	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "service-monitor.yaml")))
+
+	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appOverlayDir, "kustomization.yaml")))
+	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appOverlayDir, "deployment-patch.json")))
+	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appOverlayDir, "ingress-patch.json")))
+	assert.Equal(t, false, fileExists(t, fs, filepath.Join(
+		clusterApplicationsDir,
+		fmt.Sprintf("%s.yaml", applicationManifest.Metadata.Name),
+	)))
+}
+
+func fileExists(t *testing.T, fs *afero.Afero, path string) bool {
+	result, err := fs.Exists(path)
+	assert.NilError(t, err)
+
+	return result
+}
+
+func readFile(t *testing.T, fs *afero.Afero, path string) []byte {
+	result, err := fs.ReadFile(path)
+	assert.NilError(t, err)
+
+	return result
+}
+
+func generateMockClusterManifest() v1alpha1.Cluster {
+	return v1alpha1.Cluster{
+		Metadata: v1alpha1.ClusterMeta{
+			Name:      "test",
+			Region:    "eu-west-1",
+			AccountID: "012345678912",
+		},
+		Github: v1alpha1.ClusterGithub{
+			Organisation: "test",
+			Repository:   "repo.git",
+			OutputPath:   "infrastructure",
+		},
+		ClusterRootDomain: "kjoremiljo.oslo.systems",
+	}
+}
+
+type mockKubectlClient struct{}
+
+func (m mockKubectlClient) Apply(_ io.Reader) error                 { panic("implement me") }
+func (m mockKubectlClient) Delete(_ io.Reader) error                { panic("implement me") }
+func (m mockKubectlClient) Patch(_ kubectl.PatchOpts) error         { panic("implement me") }
+func (m mockKubectlClient) Exists(_ kubectl.Resource) (bool, error) { panic("implement me") }
+
+const (
+	defaultMockARN  = "arn:which:isnt:an:arn"
+	defaultTemplate = `apiVersion: okctl.io/v1alpha1
 kind: Application
 
 metadata:
@@ -70,204 +244,4 @@ volumes:
 #    nginx.ingress.kubernetes.io/cors-allow-origin: http://localhost:8080
 #    cert-manager.io/cluster-issuer: letsencrypt-production
 `
-
-// nolint:funlen,lll
-func TestNewApplicationService(t *testing.T) {
-	testInputBuffer := bytes.NewBufferString(defaultTemplate)
-
-	fs := &afero.Afero{Fs: afero.NewMemMapFs()}
-
-	cluster := v1alpha1.Cluster{
-		Metadata: v1alpha1.ClusterMeta{
-			Name:      "test",
-			Region:    "eu-west-1",
-			AccountID: "012345678912",
-		},
-		Github: v1alpha1.ClusterGithub{
-			Organisation: "test",
-			Repository:   "repo.git",
-			OutputPath:   "infrastructure",
-		},
-		ClusterRootDomain: "kjoremiljo.oslo.systems",
-	}
-
-	absoluteRepoDir := "/"
-	absoluteOutputDir := path.Join(absoluteRepoDir, cluster.Github.OutputPath)
-	absoluteApplicationsDir := path.Join(absoluteOutputDir, constant.DefaultApplicationsOutputDir)
-
-	appManifestService := core.NewApplicationManifestService(fs, absoluteApplicationsDir)
-
-	service := core.NewApplicationService(
-		fs,
-		&mockCertService{},
-		appManifestService,
-		absoluteRepoDir,
-	)
-
-	application, err := commands.InferApplicationFromStdinOrFile(cluster, testInputBuffer, fs, "-")
-	assert.NilError(t, err)
-
-	err = service.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
-		Cluster:      cluster,
-		Application:  application,
-		HostedZoneID: "dummyID",
-	})
-	assert.NilError(t, err)
-
-	err = service.CreateArgoCDApplicationManifest(client.CreateArgoCDApplicationManifestOpts{
-		Cluster:     cluster,
-		Application: application,
-	})
-	assert.NilError(t, err)
-
-	g := goldie.New(t)
-
-	appDir := filepath.Join(absoluteApplicationsDir, application.Metadata.Name)
-	appBaseDir := filepath.Join(appDir, constant.DefaultApplicationBaseDir)
-	appOverlayDir := filepath.Join(appDir, constant.DefaultApplicationOverlayDir, cluster.Metadata.Name)
-	clusterApplicationsDir := filepath.Join(
-		absoluteOutputDir,
-		cluster.Metadata.Name,
-		constant.DefaultArgoCDClusterConfigDir,
-		constant.DefaultArgoCDClusterConfigApplicationsDir,
-	)
-
-	g.Assert(t, "kustomization-base.yaml", readFile(t, fs, filepath.Join(appBaseDir, "kustomization.yaml")))
-	g.Assert(t, "namespace.yaml", readFile(t, fs, filepath.Join(appBaseDir, "namespace.yaml")))
-	g.Assert(t, "deployment.yaml", readFile(t, fs, filepath.Join(appBaseDir, "deployment.yaml")))
-	g.Assert(t, "volumes.yaml", readFile(t, fs, filepath.Join(appBaseDir, "volumes.yaml")))
-	g.Assert(t, "ingress.yaml", readFile(t, fs, filepath.Join(appBaseDir, "ingress.yaml")))
-	g.Assert(t, "service.yaml", readFile(t, fs, filepath.Join(appBaseDir, "service.yaml")))
-	g.Assert(t, "service-monitor.yaml", readFile(t, fs, filepath.Join(appBaseDir, "service-monitor.yaml")))
-
-	g.Assert(t, "kustomization-overlay.yaml", readFile(t, fs, filepath.Join(appOverlayDir, "kustomization.yaml")))
-	g.Assert(t, "deployment-patch.yaml", readFile(t, fs, filepath.Join(appOverlayDir, "deployment-patch.json")))
-	g.Assert(t, "ingress-patch.yaml", readFile(t, fs, filepath.Join(appOverlayDir, "ingress-patch.json")))
-	g.Assert(t, "argocd-application.yaml", readFile(t, fs, filepath.Join(
-		clusterApplicationsDir,
-		fmt.Sprintf("%s.yaml", application.Metadata.Name),
-	)))
-}
-
-// nolint: funlen
-func TestCertificateCreation(t *testing.T) {
-	testCases := []struct {
-		name string
-
-		withApplication   func() v1alpha1.Application
-		expectCreateCount int
-	}{
-		{
-			name: "Should request certificate upon subDomain specification",
-
-			withApplication: func() v1alpha1.Application {
-				app := createValidApplication()
-
-				app.SubDomain = "dummyapp"
-
-				return app
-			},
-
-			expectCreateCount: 1,
-		},
-		{
-			name: "Should not request certificate when subDomain is not specified",
-
-			withApplication: func() v1alpha1.Application {
-				app := createValidApplication()
-
-				app.SubDomain = ""
-
-				return app
-			},
-
-			expectCreateCount: 0,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			certService := &mockCertService{CreateCounter: 0}
-
-			service := core.NewApplicationService(
-				&afero.Afero{Fs: afero.NewMemMapFs()},
-				certService,
-				mockAppManifestService{},
-				"",
-			)
-
-			err := service.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
-				Cluster: v1alpha1.Cluster{
-					Metadata: v1alpha1.ClusterMeta{
-						Name:      "test",
-						Region:    "eu-west-1",
-						AccountID: "012345678912",
-					},
-					ClusterRootDomain: "okctl.io",
-					Github: v1alpha1.ClusterGithub{
-						Organisation: "oslokommune",
-						Repository:   "dummy",
-						OutputPath:   "infrastructure",
-					},
-				},
-				HostedZoneID: "somedummyid",
-				Application:  tc.withApplication(),
-			})
-
-			assert.NilError(t, err)
-			assert.Equal(t, tc.expectCreateCount, certService.CreateCounter)
-		})
-	}
-}
-
-func createValidApplication() v1alpha1.Application {
-	app := v1alpha1.NewApplication(v1alpha1.NewCluster())
-
-	app.Metadata.Name = "dummy-app"
-	app.Metadata.Namespace = "dummyns"
-
-	return app
-}
-
-func readFile(t *testing.T, fs *afero.Afero, path string) []byte {
-	result, err := fs.ReadFile(path)
-	assert.NilError(t, err)
-
-	return result
-}
-
-type mockCertService struct {
-	CreateCounter int
-}
-
-func (m *mockCertService) DeleteCertificate(_ context.Context, _ client.DeleteCertificateOpts) error {
-	return nil
-}
-
-func (m *mockCertService) DeleteCognitoCertificate(_ context.Context, _ client.DeleteCognitoCertificateOpts) error {
-	return nil
-}
-
-func (m *mockCertService) CreateCertificate(_ context.Context, _ client.CreateCertificateOpts) (*client.Certificate, error) {
-	m.CreateCounter++
-
-	return &client.Certificate{
-		ARN: "arn:which:isnt:an:arn",
-	}, nil
-}
-
-type mockAppManifestService struct{}
-
-func (m mockAppManifestService) SaveManifest(_ context.Context, _ client.SaveManifestOpts) error {
-	return nil
-}
-
-func (m mockAppManifestService) SavePatch(_ context.Context, _ client.SavePatchOpts) error {
-	return nil
-}
-
-func (m mockAppManifestService) GetPatch(_ context.Context, _ client.GetPatchOpts) (jsonpatch.Patch, error) {
-	return jsonpatch.Patch{}, nil
-}
+)

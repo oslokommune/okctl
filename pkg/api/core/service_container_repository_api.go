@@ -41,6 +41,21 @@ func (c *containerRepositoryService) DeleteContainerRepository(_ context.Context
 	return nil
 }
 
+// EmptyContainerRepository removes all containers in a container repository
+func (c *containerRepositoryService) EmptyContainerRepository(ctx context.Context, opts api.EmptyContainerRepositoryOpts) error {
+	err := opts.Validate()
+	if err != nil {
+		return errors.E(err, "invalid inputs", errors.Invalid)
+	}
+
+	err = c.provider.EmptyContainerRepository(ctx, opts)
+	if err != nil {
+		return errors.E(err, "emptying container repository", errors.Internal)
+	}
+
+	return nil
+}
+
 // NewContainerRepositoryService returns an initialised container repository service
 func NewContainerRepositoryService(provider api.ContainerRepositoryCloudProvider) api.ContainerRepositoryService {
 	return &containerRepositoryService{

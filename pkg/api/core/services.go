@@ -1,6 +1,9 @@
 package core
 
-import "github.com/oslokommune/okctl/pkg/api"
+import (
+	"github.com/oslokommune/okctl/pkg/api"
+	"github.com/oslokommune/okctl/pkg/clients/kubectl"
+)
 
 // Services defines all available services
 type Services struct {
@@ -17,4 +20,5 @@ type Services struct {
 	ComponentService           api.ComponentService
 	ContainerRepositoryService api.ContainerRepositoryService
 	SecurityGroupService       api.SecurityGroupService
+	Kubectl                    kubectl.Client
 }

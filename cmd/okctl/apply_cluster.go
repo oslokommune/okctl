@@ -160,6 +160,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				reconciliation.NewUsersReconciler(services.IdentityManager),
 				reconciliation.NewPostgresReconciler(services.Component),
 				reconciliation.NewCleanupSGReconciler(o.CloudProvider),
+				reconciliation.NewApplicationReconciler(),
 			)
 
 			_, err = scheduler.Run(o.Ctx, state)

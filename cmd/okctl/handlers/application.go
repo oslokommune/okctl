@@ -48,7 +48,7 @@ func HandleApplication(opts *HandleApplicationOpts) RunEHandler { //nolint:funle
 			return fmt.Errorf("error creating spinner: %w", err)
 		}
 
-		scheduler := createScheduler(createSchedulerOpts{
+		scheduler := CreateScheduler(CreateSchedulerOpts{
 			Out:                 opts.Out,
 			Services:            opts.Services,
 			State:               opts.State,
@@ -68,7 +68,8 @@ func HandleApplication(opts *HandleApplicationOpts) RunEHandler { //nolint:funle
 	}
 }
 
-func createScheduler(opts createSchedulerOpts) common.Scheduler {
+// CreateScheduler knows how to create a complete application reconciliation scheduler
+func CreateScheduler(opts CreateSchedulerOpts) common.Scheduler {
 	schedulerOpts := common.SchedulerOpts{
 		Out:                             opts.Out,
 		Spinner:                         opts.Spinner,
@@ -168,7 +169,8 @@ func deleteApplicationReadyCheck(out io.Writer, application v1alpha1.Application
 	return ready, nil
 }
 
-type createSchedulerOpts struct {
+// CreateSchedulerOpts defines necessary data to create an application reconciliation scheduler
+type CreateSchedulerOpts struct {
 	Out io.Writer
 
 	Services *core.Services

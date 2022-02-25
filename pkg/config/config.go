@@ -12,8 +12,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/logging"
 
-	"github.com/rancher/k3d/v3/cmd/util"
-
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/client/store"
@@ -45,31 +43,17 @@ type Config struct {
 
 	Declaration *v1alpha1.Cluster
 
-	Destination   string
-	ServerURL     string
-	ServerBaseURL string
-
 	homeDir string
 	repoDir string
 }
 
 // New Config initialises a default okctl configuration
 func New() *Config {
-	port, err := util.GetFreePort()
-	if err != nil {
-		port = 8085
-	}
-
-	dest := fmt.Sprintf("127.0.0.1:%d", port)
-
 	return &Config{
 		Context:        context.New(),
 		UserDataLoader: NoopDataLoader,
 		UserState:      &state.User{},
 		RepoDataLoader: NoopDataLoader,
-		Destination:    dest,
-		ServerURL:      fmt.Sprintf("http://%s/v1/", dest),
-		ServerBaseURL:  fmt.Sprintf("http://%s/", dest),
 	}
 }
 

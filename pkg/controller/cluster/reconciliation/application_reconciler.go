@@ -3,6 +3,7 @@ package reconciliation
 import (
 	"context"
 	"fmt"
+	"io"
 
 	"github.com/oslokommune/okctl/cmd/okctl/handlers"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -70,7 +71,7 @@ type deleteApplicationOpts struct {
 }
 
 func deleteApplication(opts deleteApplicationOpts) error {
-	spin, err := spinner.New("deleting", opts.Meta.Out)
+	spin, err := spinner.New("", io.Discard)
 	if err != nil {
 		return fmt.Errorf("creating spinner: %w", err)
 	}

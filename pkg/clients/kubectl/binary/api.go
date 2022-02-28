@@ -37,7 +37,7 @@ func (c client) Apply(manifest io.Reader) error {
 // Get runs kubectl get to retrieve resources as yaml
 func (c *client) Get(resource kubectl.Resource) (io.Reader, error) {
 	output, err := c.runKubectlCommand("get",
-		"--namespace", resource.Namespace,
+		namespaceFlag, resource.Namespace,
 		"get", resource.Kind, resource.Name,
 		"--output", "yaml",
 	)
@@ -51,7 +51,7 @@ func (c *client) Get(resource kubectl.Resource) (io.Reader, error) {
 // DeleteByResource deletes resources based on values
 func (c *client) DeleteByResource(resource kubectl.Resource) error {
 	_, err := c.runKubectlCommand("delete",
-		"--namespace", resource.Namespace,
+		namespaceFlag, resource.Namespace,
 		"delete", resource.Kind, resource.Name,
 	)
 	if err != nil {
@@ -88,7 +88,7 @@ func (c client) Patch(opts kubectl.PatchOpts) error {
 	}
 
 	_, err = c.runKubectlCommand("patch",
-		"--namespace", opts.Namespace,
+		namespaceFlag, opts.Namespace,
 		"patch",
 		opts.Kind, opts.Name,
 		"--patch", string(rawPatch),
@@ -104,7 +104,7 @@ func (c client) Patch(opts kubectl.PatchOpts) error {
 // Exists returns true if resource is found, false if not
 func (c client) Exists(resource kubectl.Resource) (bool, error) {
 	_, err := c.runKubectlCommand("exists",
-		"--namespace", resource.Namespace,
+		namespaceFlag, resource.Namespace,
 		"get",
 		resource.Kind,
 		resource.Name,
@@ -129,3 +129,5 @@ func New(fs *afero.Afero, binaryProvider binaries.Provider, credentialsProvider 
 		cluster:             cluster,
 	}
 }
+
+const namespaceFlag = "--namespace"

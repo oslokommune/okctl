@@ -36,11 +36,17 @@ func (c client) Apply(manifest io.Reader) error {
 
 // Get runs kubectl get to retrieve resources as yaml
 func (c *client) Get(resource kubectl.Resource) (io.Reader, error) {
-	output, err := c.runKubectlCommand("get",
+	args := []string{
 		namespaceFlag, resource.Namespace,
-		"get", resource.Kind, resource.Name,
 		"--output", "yaml",
-	)
+		"get", resource.Kind,
+	}
+
+	if resource.Name != "" {
+		args = append(args, resource.Name)
+	}
+
+	output, err := c.runKubectlCommand("get", args...)
 	if err != nil {
 		return nil, fmt.Errorf("running command: %w", err)
 	}

@@ -110,6 +110,7 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 				reconciliation.NewUsersReconciler(services.IdentityManager),
 				reconciliation.NewPostgresReconciler(services.Component),
 				reconciliation.NewCleanupSGReconciler(o.CloudProvider),
+				reconciliation.NewApplicationReconciler(services),
 			)
 
 			ready, err := checkIfReady(o.Declaration.Metadata.Name, o, opts.Confirm)

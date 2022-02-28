@@ -63,6 +63,16 @@ func TestBlockstorageReconciler(t *testing.T) {
 			expectCreations:     0,
 			expectDeletions:     1,
 		},
+		{
+			name:                "Should do nothing if applications exist during purge",
+			withApplications:    1,
+			withPurge:           true,
+			withComponentFlag:   true,
+			withComponentExists: true,
+			withDependenciesMet: true,
+			expectCreations:     0,
+			expectDeletions:     0,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -77,7 +87,7 @@ func TestBlockstorageReconciler(t *testing.T) {
 			state := &clientCore.StateHandlers{
 				Cluster:      &mockClusterState{exists: tc.withDependenciesMet},
 				Blockstorage: &mockBlockstorageState{exists: tc.withComponentExists},
-				Application:  &mockApplicationState{existingApplications: 0},
+				Application:  &mockApplicationState{existingApplications: tc.withApplications},
 			}
 
 			reconciler := NewBlockstorageReconciler(&mockBlockstorageService{

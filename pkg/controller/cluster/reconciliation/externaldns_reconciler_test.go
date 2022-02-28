@@ -15,6 +15,7 @@ import (
 func TestExternalDNSReconciler(t *testing.T) {
 	testCases := []struct {
 		name                      string
+		withApplications          int
 		withPurge                 bool
 		withComponentFlag         bool
 		withComponentExists       bool
@@ -88,6 +89,17 @@ func TestExternalDNSReconciler(t *testing.T) {
 			expectCreations:           0,
 			expectDeletions:           0,
 		},
+		{
+			name:                      "Should wait on purge and applications exist",
+			withPurge:                 true,
+			withApplications:          1,
+			withComponentExists:       true,
+			withComponentFlag:         true,
+			withDeleteDependenciesMet: true,
+			withClusterExists:         true,
+			expectCreations:           0,
+			expectDeletions:           0,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -105,7 +117,7 @@ func TestExternalDNSReconciler(t *testing.T) {
 
 				Cluster:     &mockClusterState{exists: tc.withClusterExists},
 				ExternalDNS: &mockExternalDNSState{exists: tc.withComponentExists},
-				Application: &mockApplicationState{existingApplications: 0},
+				Application: &mockApplicationState{existingApplications: tc.withApplications},
 				Domain: &mockDomainState{
 					exists:      tc.withCreateDependenciesMet,
 					isDelegated: tc.withCreateDependenciesMet,

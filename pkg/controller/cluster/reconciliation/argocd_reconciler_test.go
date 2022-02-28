@@ -22,6 +22,7 @@ func TestArgocdReconciler_Reconcile(t *testing.T) {
 		withClusterExists              bool
 		withPrimaryHostedZoneExists    bool
 		withPrimaryHostedZoneDelegated bool
+		withApplications               int
 		expectCreations                int
 		expectDeletions                int
 		withPurge                      bool
@@ -97,6 +98,17 @@ func TestArgocdReconciler_Reconcile(t *testing.T) {
 			expectCreations:                0,
 			expectDeletions:                1,
 		},
+		{
+			name:                           "Should do nothing when applications exist",
+			withApplications:               1,
+			withPurge:                      true,
+			withAlreadyExists:              true,
+			withClusterExists:              true,
+			withPrimaryHostedZoneExists:    true,
+			withPrimaryHostedZoneDelegated: true,
+			expectCreations:                0,
+			expectDeletions:                0,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -116,7 +128,7 @@ func TestArgocdReconciler_Reconcile(t *testing.T) {
 					exists:      tc.withPrimaryHostedZoneExists,
 					isDelegated: tc.withPrimaryHostedZoneDelegated,
 				},
-				Application: &mockApplicationState{existingApplications: 0},
+				Application: &mockApplicationState{existingApplications: tc.withApplications},
 			}
 
 			reconciler := NewArgocdReconciler(

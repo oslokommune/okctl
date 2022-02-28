@@ -20,6 +20,7 @@ func TestAWSLoadBalancerControllerReconciler(t *testing.T) {
 		withComponentExists       bool
 		withCreateDependenciesMet bool
 		withDeleteDependenciesMet bool
+		withApplications          int
 		expectCreations           int
 		expectDeletions           int
 	}{
@@ -74,6 +75,17 @@ func TestAWSLoadBalancerControllerReconciler(t *testing.T) {
 			expectCreations:           0,
 			expectDeletions:           1,
 		},
+		{
+			name:                      "Should do nothing if applications exist",
+			withApplications:          1,
+			withPurge:                 true,
+			withComponentFlag:         true,
+			withComponentExists:       true,
+			withCreateDependenciesMet: true,
+			withDeleteDependenciesMet: true,
+			expectCreations:           0,
+			expectDeletions:           0,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -91,7 +103,7 @@ func TestAWSLoadBalancerControllerReconciler(t *testing.T) {
 				AWSLoadBalancerController: &mockAWSLoadBalancerState{exists: tc.withComponentExists},
 				ArgoCD:                    &mockArgoCDState{exists: !tc.withDeleteDependenciesMet},
 				Monitoring:                &mockMonitoringState{exists: !tc.withDeleteDependenciesMet},
-				Application:               &mockApplicationState{existingApplications: 0},
+				Application:               &mockApplicationState{existingApplications: tc.withApplications},
 			}
 
 			reconciler := NewAWSLoadBalancerControllerReconciler(&mockAWSLoadBalancerControllerService{

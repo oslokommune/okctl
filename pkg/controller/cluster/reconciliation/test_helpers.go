@@ -24,6 +24,7 @@ type generalizedTestCase struct {
 	withComponentFlag   bool
 	withComponentExists bool
 	withDependenciesMet bool
+	withApplications    int
 	expectCreations     int
 	expectDeletions     int
 }

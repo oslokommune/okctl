@@ -28,6 +28,7 @@ func TestClusterReconciler(t *testing.T) {
 		withCreationDependenciesMet bool
 		withDeletionDependenciesMet bool
 		withComponentExists         bool
+		withApplications            int
 
 		expectCreations int
 		expectDeletions int
@@ -66,6 +67,16 @@ func TestClusterReconciler(t *testing.T) {
 			expectCreations:             0,
 			expectDeletions:             0,
 		},
+		{
+			name: "Should wait when purge and applications exist",
+
+			withApplications:            1,
+			withPurge:                   true,
+			withComponentExists:         true,
+			withDeletionDependenciesMet: true,
+			expectCreations:             0,
+			expectDeletions:             0,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -93,7 +104,7 @@ func TestClusterReconciler(t *testing.T) {
 				Loki:                      &mockLokiState{exists: !tc.withDeletionDependenciesMet},
 				Promtail:                  &mockPromtailState{exists: !tc.withDeletionDependenciesMet},
 				Tempo:                     &mockTempoState{exists: !tc.withDeletionDependenciesMet},
-				Application:               &mockApplicationState{existingApplications: 0},
+				Application:               &mockApplicationState{existingApplications: tc.withApplications},
 			}
 
 			reconciler := NewClusterReconciler(

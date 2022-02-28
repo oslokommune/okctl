@@ -98,14 +98,14 @@ func (a applicationState) List() ([]v1alpha1.Application, error) {
 		return nil, fmt.Errorf("buffering: %w", err)
 	}
 
-	var manifests []v1alpha1.Application
+	var manifestList listApplicationsKind
 
-	err = yaml.Unmarshal(rawResources, &manifests)
+	err = yaml.Unmarshal(rawResources, &manifestList)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshalling: %w", err)
 	}
 
-	return manifests, nil
+	return manifestList.Items, nil
 }
 
 // Initialize knows how to apply the CustomResourceDefinition, so we can store application manifests in etcd
@@ -189,6 +189,10 @@ type applicationState struct {
 
 //go:embed application-crd-template.yaml
 var applicationCRDTemplate []byte
+
+type listApplicationsKind struct {
+	Items []v1alpha1.Application `json:"items"`
+}
 
 const (
 	defaultAppManifestNamespace                                   = "okctl"

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/logging"
+
 	"github.com/oslokommune/okctl/cmd/okctl/handlers"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/spinner"
@@ -17,6 +19,8 @@ import (
 
 // Reconcile knows how to do what is necessary to ensure the desired state is achieved
 func (c applicationReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
+	log := logging.GetLogger("reconciler/application", "Reconcile")
+
 	action, err := c.determineAction(meta, state)
 	if err != nil {
 		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
@@ -40,6 +44,8 @@ func (c applicationReconciler) Reconcile(ctx context.Context, meta reconciliatio
 		if err != nil {
 			return reconciliation.Result{}, fmt.Errorf("listing applications: %w", err)
 		}
+
+		log.Debug(fmt.Sprintf("Found %d applications to delete (%+v)", len(applications), applications))
 
 		for _, app := range applications {
 			err = deleteApplication(deleteApplicationOpts{

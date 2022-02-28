@@ -62,6 +62,8 @@ func (z *postgresReconciler) Reconcile(ctx context.Context, meta reconciliation.
 		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
 	}
 
+	requeue := false
+
 	for db, action := range actionMap {
 		switch action {
 		case reconciliation.ActionCreate:
@@ -80,7 +82,9 @@ func (z *postgresReconciler) Reconcile(ctx context.Context, meta reconciliation.
 			}
 		case reconciliation.ActionDelete:
 			if hasDependentApplication(db, applications) {
-				return reconciliation.Result{Requeue: true}, nil
+				requeue = true
+
+				continue
 			}
 
 			err = z.client.DeletePostgresDatabase(ctx, client.DeletePostgresDatabaseOpts{
@@ -97,7 +101,7 @@ func (z *postgresReconciler) Reconcile(ctx context.Context, meta reconciliation.
 		}
 	}
 
-	return reconciliation.Result{}, nil
+	return reconciliation.Result{Requeue: requeue}, nil
 }
 
 func (z *postgresReconciler) determineActions(meta reconciliation.Metadata, state *clientCore.StateHandlers) (map[database]reconciliation.Action, error) {

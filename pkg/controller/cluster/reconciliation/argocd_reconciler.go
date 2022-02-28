@@ -142,6 +142,17 @@ func (z *argocdReconciler) determineAction(meta reconciliation.Metadata, state *
 			return reconciliation.ActionNoop, nil
 		}
 
+		ok, err := reconciliation.AssertDependencyExistence(false,
+			generateHasApplicationsTest(state),
+		)
+		if err != nil {
+			return "", fmt.Errorf("checking dependencies: %w", err)
+		}
+
+		if !ok {
+			return reconciliation.ActionWait, nil
+		}
+
 		return reconciliation.ActionDelete, nil
 	}
 

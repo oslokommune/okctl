@@ -93,6 +93,7 @@ func TestClusterReconciler(t *testing.T) {
 				Loki:                      &mockLokiState{exists: !tc.withDeletionDependenciesMet},
 				Promtail:                  &mockPromtailState{exists: !tc.withDeletionDependenciesMet},
 				Tempo:                     &mockTempoState{exists: !tc.withDeletionDependenciesMet},
+				Application:               &mockApplicationState{existingApplications: 0},
 			}
 
 			reconciler := NewClusterReconciler(

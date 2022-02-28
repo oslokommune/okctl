@@ -77,6 +77,7 @@ func TestBlockstorageReconciler(t *testing.T) {
 			state := &clientCore.StateHandlers{
 				Cluster:      &mockClusterState{exists: tc.withDependenciesMet},
 				Blockstorage: &mockBlockstorageState{exists: tc.withComponentExists},
+				Application:  &mockApplicationState{existingApplications: 0},
 			}
 
 			reconciler := NewBlockstorageReconciler(&mockBlockstorageService{

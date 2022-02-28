@@ -113,6 +113,7 @@ func (z *externalDNSReconciler) determineAction(meta reconciliation.Metadata, st
 		dependenciesReady, err := reconciliation.AssertDependencyExistence(false,
 			state.ArgoCD.HasArgoCD,
 			state.Monitoring.HasKubePromStack,
+			generateHasApplicationsTest(state),
 		)
 		if err != nil {
 			return reconciliation.ActionNoop, fmt.Errorf("checking dependencies: %w", err)

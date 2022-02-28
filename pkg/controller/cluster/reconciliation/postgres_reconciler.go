@@ -52,6 +52,11 @@ func (z *postgresReconciler) Reconcile(ctx context.Context, meta reconciliation.
 	dbSubnetIDs := subnetsAsIDList(vpc.DatabaseSubnets)
 	dbSubnetCIDRs := subnetsAsCIDRList(vpc.DatabaseSubnets)
 
+	applications, err := state.Application.List()
+	if err != nil {
+		return reconciliation.Result{}, fmt.Errorf("listing applications: %w", err)
+	}
+
 	actionMap, err := z.determineActions(meta, state)
 	if err != nil {
 		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
@@ -74,6 +79,10 @@ func (z *postgresReconciler) Reconcile(ctx context.Context, meta reconciliation.
 				return reconciliation.Result{}, fmt.Errorf("creating postgres database: %w", err)
 			}
 		case reconciliation.ActionDelete:
+			if hasDependentApplication(db, applications) {
+				return reconciliation.Result{Requeue: true}, nil
+			}
+
 			err = z.client.DeletePostgresDatabase(ctx, client.DeletePostgresDatabaseOpts{
 				ID:              clusterID,
 				ApplicationName: db.Name,
@@ -131,6 +140,16 @@ func (z *postgresReconciler) determineActions(meta reconciliation.Metadata, stat
 	}
 
 	return actionMap, nil
+}
+
+func hasDependentApplication(db database, applications []v1alpha1.Application) bool {
+	for _, app := range applications {
+		if app.Postgres == db.Name {
+			return true
+		}
+	}
+
+	return false
 }
 
 // String returns the identifier type

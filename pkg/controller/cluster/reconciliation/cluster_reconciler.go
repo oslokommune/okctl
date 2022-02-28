@@ -170,6 +170,7 @@ func (z *clusterReconciler) hasDeleteDependenciesMet(state *clientCore.StateHand
 		state.Loki.HasLoki,
 		state.Promtail.HasPromtail,
 		state.Tempo.HasTempo,
+		generateHasApplicationsTest(state),
 	)
 	if err != nil {
 		return false, fmt.Errorf("asserting existence: %w", err)

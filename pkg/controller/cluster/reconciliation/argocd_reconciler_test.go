@@ -2,6 +2,7 @@ package reconciliation
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/oslokommune/okctl/pkg/github"
@@ -115,6 +116,7 @@ func TestArgocdReconciler_Reconcile(t *testing.T) {
 					exists:      tc.withPrimaryHostedZoneExists,
 					isDelegated: tc.withPrimaryHostedZoneDelegated,
 				},
+				Application: &mockApplicationState{existingApplications: 0},
 			}
 
 			reconciler := NewArgocdReconciler(
@@ -223,4 +225,27 @@ func (m mockArgoIdentityManagerState) GetIdentityPoolUser(_ string) (*client.Ide
 func (m mockArgoIdentityManagerState) RemoveIdentityPoolUser(_ string) error { panic("implement me") }
 func (m mockArgoIdentityManagerState) GetIdentityPoolUsers() ([]client.IdentityPoolUser, error) {
 	panic("implement me")
+}
+
+type mockApplicationState struct {
+	existingApplications int
+}
+
+func (m mockApplicationState) Put(v1alpha1.Application) error            { panic("implement me") }
+func (m mockApplicationState) Get(string) (v1alpha1.Application, error)  { panic("implement me") }
+func (m mockApplicationState) Delete(string) error                       { panic("implement me") }
+func (m mockApplicationState) Initialize(v1alpha1.Cluster, string) error { panic("implement me") }
+
+func (m mockApplicationState) List() ([]v1alpha1.Application, error) {
+	apps := make([]v1alpha1.Application, m.existingApplications)
+
+	for i := 0; i < m.existingApplications; i++ {
+		apps[i] = v1alpha1.Application{
+			Metadata: v1alpha1.ApplicationMeta{
+				Name: fmt.Sprintf("mockApp%d", i+1),
+			},
+		}
+	}
+
+	return apps, nil
 }

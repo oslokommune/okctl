@@ -105,6 +105,7 @@ func TestExternalDNSReconciler(t *testing.T) {
 
 				Cluster:     &mockClusterState{exists: tc.withClusterExists},
 				ExternalDNS: &mockExternalDNSState{exists: tc.withComponentExists},
+				Application: &mockApplicationState{existingApplications: 0},
 				Domain: &mockDomainState{
 					exists:      tc.withCreateDependenciesMet,
 					isDelegated: tc.withCreateDependenciesMet,

@@ -101,7 +101,14 @@ func deleteApplication(opts deleteApplicationOpts) error {
 	return nil
 }
 
-// determineAction knows how to determine if a resource should be created, deleted or updated
+/*
+determineAction knows how to determine if a resource should be created, deleted or updated.
+
+Notable dependencies:
+- Ingress reconciler: so deleting the ingress will take down the ALB
+- ExternalDNS reconciler: so deleting the ingress will take down the Route53 record
+- Postgres: to remove patched rules so postgres will delete correctly
+*/
 func (c applicationReconciler) determineAction(meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Action, error) {
 	userIndication := reconciliation.DetermineUserIndication(meta, true)
 
@@ -126,6 +133,17 @@ func (c applicationReconciler) determineAction(meta reconciliation.Metadata, sta
 	}
 
 	return "", reconciliation.ErrIndecisive
+}
+
+func generateHasApplicationsTest(state *clientCore.StateHandlers) func() (bool, error) {
+	return func() (bool, error) {
+		applications, err := state.Application.List()
+		if err != nil {
+			return false, fmt.Errorf("listing applications: %w", err)
+		}
+
+		return len(applications) > 0, nil
+	}
 }
 
 // String returns a descriptive identifier of the domain that this reconciler represents

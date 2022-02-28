@@ -90,6 +90,17 @@ func (z *blockstorageReconciler) determineAction(_ context.Context, meta reconci
 			return reconciliation.ActionNoop, nil
 		}
 
+		ok, err := reconciliation.AssertDependencyExistence(false,
+			generateHasApplicationsTest(state),
+		)
+		if err != nil {
+			return "", fmt.Errorf("checking dependencies: %w", err)
+		}
+
+		if !ok {
+			return reconciliation.ActionWait, nil
+		}
+
 		return reconciliation.ActionDelete, nil
 	}
 

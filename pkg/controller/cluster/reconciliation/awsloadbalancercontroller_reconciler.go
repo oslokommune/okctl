@@ -106,6 +106,7 @@ func (z *awsLoadBalancerControllerReconciler) determineAction(
 		dependenciesReady, err := reconciliation.AssertDependencyExistence(false,
 			state.ArgoCD.HasArgoCD,
 			state.Monitoring.HasKubePromStack,
+			generateHasApplicationsTest(state),
 		)
 		if err != nil {
 			return reconciliation.ActionNoop, fmt.Errorf("checking deletion dependencies: %w", err)

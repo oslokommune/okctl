@@ -91,6 +91,7 @@ func TestAWSLoadBalancerControllerReconciler(t *testing.T) {
 				AWSLoadBalancerController: &mockAWSLoadBalancerState{exists: tc.withComponentExists},
 				ArgoCD:                    &mockArgoCDState{exists: !tc.withDeleteDependenciesMet},
 				Monitoring:                &mockMonitoringState{exists: !tc.withDeleteDependenciesMet},
+				Application:               &mockApplicationState{existingApplications: 0},
 			}
 
 			reconciler := NewAWSLoadBalancerControllerReconciler(&mockAWSLoadBalancerControllerService{

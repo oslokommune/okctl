@@ -106,8 +106,9 @@ func TestPostgresReconciler(t *testing.T) {
 			}
 
 			state := &clientCore.StateHandlers{
-				Vpc:       &mockVPCState{exists: tc.withVPCExists},
-				Component: &mockComponentState{databases: tc.withExistingDBs},
+				Vpc:         &mockVPCState{exists: tc.withVPCExists},
+				Component:   &mockComponentState{databases: tc.withExistingDBs},
+				Application: &mockApplicationState{existingApplications: 0},
 			}
 
 			_, err := reconciler.Reconcile(context.Background(), meta, state)

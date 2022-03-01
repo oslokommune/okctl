@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/oslokommune/okctl/pkg/binaries"
+	"github.com/oslokommune/okctl/pkg/binaries/run/awsiamauthenticator"
+
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/client"
@@ -22,9 +25,10 @@ type kubeConfig struct {
 	kubeConfigFileName string
 	kubeConfigBaseDir  string
 
-	fs           *afero.Afero
-	provider     v1alpha1.CloudProvider
-	clusterState client.ClusterState
+	fs               *afero.Afero
+	provider         v1alpha1.CloudProvider
+	clusterState     client.ClusterState
+	binariesProvider binaries.Provider
 }
 
 func (k *kubeConfig) SaveKubeConfig(config *kubeconfig.Config) error {
@@ -52,7 +56,12 @@ func (k *kubeConfig) GetKubeConfig(clusterName string) (*api.KubeConfig, error) 
 		return nil, err
 	}
 
-	cfg, err := kubeconfig.New(cluster.Config, k.provider).Get()
+	awsIAMAuthenticatorProvider, err := k.binariesProvider.AwsIamAuthenticator(awsiamauthenticator.Version)
+	if err != nil {
+		return nil, fmt.Errorf("acquiring aws-iam-authenticator provider: %w", err)
+	}
+
+	cfg, err := kubeconfig.New(awsIAMAuthenticatorProvider.BinaryPath, cluster.Config, k.provider).Get()
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +98,9 @@ func (k *kubeConfig) DeleteKubeConfig() error {
 // NewKubeConfigStore returns an initialised kubeconfig store
 func NewKubeConfigStore(
 	provider v1alpha1.CloudProvider,
-	kubeConfigFileName, kubeConfigBaseDir string,
+	binariesProvider binaries.Provider,
+	kubeConfigFileName,
+	kubeConfigBaseDir string,
 	clusterState client.ClusterState,
 	fs *afero.Afero,
 ) api.KubeConfigStore {
@@ -98,6 +109,7 @@ func NewKubeConfigStore(
 		kubeConfigBaseDir:  kubeConfigBaseDir,
 		fs:                 fs,
 		provider:           provider,
+		binariesProvider:   binariesProvider,
 		clusterState:       clusterState,
 	}
 }

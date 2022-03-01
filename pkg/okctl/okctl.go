@@ -400,6 +400,7 @@ func (o *Okctl) KubeConfigStore() (api.KubeConfigStore, error) {
 
 	return filesystem.NewKubeConfigStore(
 		o.CloudProvider,
+		o.BinariesProvider,
 		constant.DefaultClusterKubeConfig,
 		path.Join(appDir, constant.DefaultCredentialsDirName, o.Declaration.Metadata.Name),
 		o.StateHandlers(o.StateNodes()).Cluster,

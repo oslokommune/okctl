@@ -94,7 +94,7 @@ func (c *clusterRun) CreateCluster(opts api.ClusterCreateOpts) (*api.Cluster, er
 		return nil, fmt.Errorf("creating the cluster: %w", err)
 	}
 
-	kubeConf, err := kubeconfig.New(cfg, c.cloud).Get()
+	kubeConf, err := kubeconfig.New(a.BinaryPath, cfg, c.cloud).Get()
 	if err != nil {
 		return nil, err
 	}

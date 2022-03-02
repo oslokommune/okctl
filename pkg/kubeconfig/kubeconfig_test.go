@@ -41,6 +41,8 @@ func testConfig(t *testing.T) *v1alpha5.ClusterConfig {
 	return conf
 }
 
+const mockawsIAMAuthenticatorPath = "/home/mockuser/.okctl/binaries/aws-iam-authenticator/0.5.3/aws-iam-authenticator"
+
 func TestCreate(t *testing.T) {
 	testCases := []struct {
 		name   string
@@ -58,7 +60,7 @@ func TestCreate(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := clientcmd.Write(kubeconfig.Create("someuser", tc.cfg))
+			got, err := clientcmd.Write(kubeconfig.Create(mockawsIAMAuthenticatorPath, "someuser", tc.cfg))
 			assert.NoError(t, err)
 
 			g := goldie.New(t)
@@ -88,7 +90,7 @@ func TestNew(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := kubeconfig.New(tc.cfg, tc.provider).Get()
+			got, err := kubeconfig.New(mockawsIAMAuthenticatorPath, tc.cfg, tc.provider).Get()
 			if tc.expectErr {
 				assert.Nil(t, got)
 				assert.Error(t, err)

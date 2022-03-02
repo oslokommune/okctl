@@ -21,7 +21,7 @@ users:
       - token
       - -i
       - okctl-pro
-      command: aws-iam-authenticator
+      command: /home/mockuser/.okctl/binaries/aws-iam-authenticator/0.5.3/aws-iam-authenticator
       env:
       - name: AWS_STS_REGIONAL_ENDPOINTS
         value: regional

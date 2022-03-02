@@ -42,15 +42,17 @@ type Getter interface {
 }
 
 type kubeConfig struct {
-	provider v1alpha1.CloudProvider
-	cfg      *v1alpha5.ClusterConfig
+	provider                v1alpha1.CloudProvider
+	cfg                     *v1alpha5.ClusterConfig
+	awsIAMAuthenticatorPath string
 }
 
 // New returns an initialised kubeconfig creator
-func New(clusterConfig *v1alpha5.ClusterConfig, provider v1alpha1.CloudProvider) Getter {
+func New(awsIAMAuthenticatorPath string, clusterConfig *v1alpha5.ClusterConfig, provider v1alpha1.CloudProvider) Getter {
 	return &kubeConfig{
-		provider: provider,
-		cfg:      clusterConfig,
+		provider:                provider,
+		cfg:                     clusterConfig,
+		awsIAMAuthenticatorPath: awsIAMAuthenticatorPath,
 	}
 }
 
@@ -87,7 +89,7 @@ func (a *kubeConfig) Get() (*Config, error) {
 		StackName:                aws.StringValue(cluster.Name),
 	}
 
-	kubeCfg := Create(GetUser(a.provider.PrincipalARN()), a.cfg)
+	kubeCfg := Create(a.awsIAMAuthenticatorPath, GetUser(a.provider.PrincipalARN()), a.cfg)
 
 	return &Config{
 		content: kubeCfg,
@@ -95,7 +97,7 @@ func (a *kubeConfig) Get() (*Config, error) {
 }
 
 // Create returns an initialised kubeconfig
-func Create(username string, cfg *v1alpha5.ClusterConfig) clientCmdApi.Config {
+func Create(awsIAMAuthenticatorPath string, username string, cfg *v1alpha5.ClusterConfig) clientCmdApi.Config {
 	contextName := fmt.Sprintf("%s@%s", username, cfg.Metadata.String())
 
 	return clientCmdApi.Config{
@@ -112,7 +114,7 @@ func Create(username string, cfg *v1alpha5.ClusterConfig) clientCmdApi.Config {
 			contextName: {
 				Exec: &clientCmdApi.ExecConfig{
 					APIVersion: "client.authentication.k8s.io/v1alpha1",
-					Command:    "aws-iam-authenticator",
+					Command:    awsIAMAuthenticatorPath,
 					Env: []clientCmdApi.ExecEnvVar{
 						{
 							Name:  "AWS_STS_REGIONAL_ENDPOINTS",

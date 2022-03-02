@@ -9,7 +9,7 @@ jobs:
     if: ${{ github.event.label.name == 'preview' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.4.0
+      - uses: actions/checkout@v3
 
       - name: Set up Go
         uses: actions/setup-go@v2

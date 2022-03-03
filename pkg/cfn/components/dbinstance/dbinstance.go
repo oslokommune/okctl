@@ -71,7 +71,7 @@ func (i *DBInstance) Resource() cloudformation.Resource {
 		EnableCloudwatchLogsExports: []string{"postgresql", "upgrade"},
 		EnablePerformanceInsights:   true,
 		Engine:                      "postgres",
-		EngineVersion:               "13.1",
+		EngineVersion:               "13.5",
 		MasterUserPassword: cloudformation.Sub(
 			fmt.Sprintf(`{{resolve:secretsmanager:${%s}::password}}`, i.Admin.Name()),
 		),

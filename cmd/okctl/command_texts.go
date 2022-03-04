@@ -19,9 +19,6 @@ including VPC, this is a highly destructive operation.`
 	deleteApplicationShortDescription = "Delete an application"
 	deleteApplicationLongDescription  = "Delete all resources related to an application"
 
-	DeletePostgresShortDescription = "Delete an AWS RDS Postgres database"
-	DeletePostgresLongDescription  = `Delete the AWS RDS Postgres database`
-
 	ForwardCommandsShortDescription = "Forward commands"
 	ForwardCommandsLongDescription  = `Forward traffic to different services running in AWS
 

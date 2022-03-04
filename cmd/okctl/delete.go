@@ -137,9 +137,14 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 		),
 	}
 	addAuthenticationFlags(cmd)
-	addClusterDeclarationPathFlag(cmd, &opts.ClusterDeclarationPath)
 
 	flags := cmd.Flags()
+	flags.StringVarP(&opts.ClusterDeclarationPath,
+		"file",
+		"f",
+		"",
+		usageApplyClusterFile,
+	)
 	flags.BoolVar(
 		&opts.DisableSpinner,
 		"no-spinner",

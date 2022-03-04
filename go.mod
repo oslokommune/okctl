@@ -21,7 +21,7 @@ require (
 	github.com/bugsnag/bugsnag-go v1.5.3 // indirect
 	github.com/bugsnag/panicwrap v1.2.0 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
-	github.com/containerd/containerd v1.5.9
+	github.com/containerd/containerd v1.6.1
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v20.10.3+incompatible // indirect
 	github.com/dustin/go-humanize v1.0.0
@@ -36,7 +36,6 @@ require (
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/google/go-cmp v0.5.6
 	github.com/google/go-github/v32 v32.1.0
-	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.3.0
 	github.com/gosimple/slug v1.12.0
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
@@ -49,6 +48,7 @@ require (
 	github.com/mishudark/errors v0.0.0-20210318113247-bd4e9ef2fc74
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/moby/sys/mount v0.2.0 // indirect
+	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/oslokommune/okctl-metrics-service v0.1.9
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
@@ -77,10 +77,10 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gotest.tools v2.2.0+incompatible
 	helm.sh/helm/v3 v3.7.2
-	k8s.io/api v0.22.4
-	k8s.io/apimachinery v0.22.4
+	k8s.io/api v0.22.5
+	k8s.io/apimachinery v0.22.5
 	k8s.io/cli-runtime v0.22.4
-	k8s.io/client-go v0.22.4
+	k8s.io/client-go v0.22.5
 	sigs.k8s.io/aws-iam-authenticator v0.5.3
 	sigs.k8s.io/yaml v1.3.0
 )

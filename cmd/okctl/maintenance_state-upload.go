@@ -12,7 +12,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type stateUploadOpts struct {
+	ClusterDeclarationPath string
+}
+
 func buildMaintenanceStateUploadCommand(o *okctl.Okctl) *cobra.Command {
+	opts := &stateUploadOpts{}
+
 	cmd := &cobra.Command{
 		Use:   "state-upload <path to state.db>",
 		Short: "uploads a state.db",
@@ -22,6 +28,7 @@ func buildMaintenanceStateUploadCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.LoadUserData(o),
 			hooks.InitializeMetrics(o),
 			hooks.EmitStartCommandExecutionEvent(metrics.ActionMaintenanceStateUpload),
+			hooks.LoadClusterDeclaration(o, &opts.ClusterDeclarationPath),
 			hooks.InitializeOkctl(o),
 		),
 		RunE: func(_ *cobra.Command, args []string) error {
@@ -60,6 +67,8 @@ func buildMaintenanceStateUploadCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.EmitEndCommandExecutionEvent(metrics.ActionMaintenanceStateUpload),
 		),
 	}
+	addAuthenticationFlags(cmd)
+	addClusterDeclarationPathFlag(cmd, &opts.ClusterDeclarationPath)
 
 	return cmd
 }

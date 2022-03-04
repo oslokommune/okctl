@@ -33,6 +33,7 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 		PreRunE: hooks.RunECombinator(
 			hooks.InitializeMetrics(o),
 			hooks.EmitStartCommandExecutionEvent(metrics.ActionApplyApplication),
+			hooks.LoadClusterDeclaration(o, &opts.ClusterDeclarationPath),
 			hooks.InitializeOkctl(o),
 			hooks.AcquireStateLock(o),
 			hooks.DownloadState(o, true),
@@ -68,8 +69,16 @@ func buildApplyApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.EmitEndCommandExecutionEvent(metrics.ActionApplyApplication),
 		),
 	}
+	addAuthenticationFlags(cmd)
+	addClusterDeclarationPathFlag(cmd, &opts.ClusterDeclarationPath)
 
-	cmd.Flags().StringVarP(&opts.File, "file", "f", "", "Specify the file path. Use \"-\" for stdin")
+	cmd.Flags().StringVarP(
+		&opts.File,
+		"file",
+		"f",
+		"",
+		"Specify the file path. Use \"-\" for stdin",
+	)
 
 	return cmd
 }

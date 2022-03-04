@@ -261,6 +261,36 @@ func VerifyClusterExistsInState(o *okctl.Okctl) RunEer {
 	}
 }
 
+// GracefullyTearDownState gracefully tears down the state by uploading current state,
+// releasing the state lock and clearing the local state
+func GracefullyTearDownState(o *okctl.Okctl) error {
+	err := UploadState(o)(nil, nil)
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrNotInitialized):
+			return nil
+		case errors.Is(err, ErrImmutable):
+			return nil
+		case errors.Is(err, ErrNotFound):
+			return nil
+		default:
+			return fmt.Errorf("uploading state: %w", err)
+		}
+	}
+
+	err = ReleaseStateLock(o)(nil, nil)
+	if err != nil {
+		return fmt.Errorf("releasing state lock: %w", err)
+	}
+
+	err = ClearLocalState(o)(nil, nil)
+	if err != nil {
+		return fmt.Errorf("clearing local state: %w", err)
+	}
+
+	return nil
+}
+
 func backupStateDatabase(fs *afero.Afero, rootDir string, clusterName string, dbPath string) error {
 	stateBackupPath := path.Join(
 		rootDir,

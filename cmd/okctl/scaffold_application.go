@@ -31,8 +31,8 @@ func buildScaffoldApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.InitializeMetrics(o),
 			hooks.EmitStartCommandExecutionEvent(metrics.ActionScaffoldApplication),
 			func(cmd *cobra.Command, args []string) error {
-				if declarationPath != "" {
-					clusterDeclaration, err := commands.InferClusterFromStdinOrFile(o.In, declarationPath)
+				if opts.ClusterDeclarationPath != "" {
+					clusterDeclaration, err := hooks.LoadClusterDeclarationFromPath(o, &opts.ClusterDeclarationPath)
 					if err != nil {
 						return fmt.Errorf("inferring cluster declaration: %w", err)
 					}
@@ -54,6 +54,8 @@ func buildScaffoldApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.EmitEndCommandExecutionEvent(metrics.ActionScaffoldApplication),
 		),
 	}
+	addAuthenticationFlags(cmd)
+	addClusterDeclarationPathFlag(cmd, &opts.ClusterDeclarationPath)
 
 	return cmd
 }

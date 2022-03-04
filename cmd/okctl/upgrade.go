@@ -21,13 +21,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type upgradeFlags struct {
-	confirm bool
+type upgradeOpts struct {
+	confirm                bool
+	ClusterDeclarationPath string
 }
 
 //nolint:funlen
 func buildUpgradeCommand(o *okctl.Okctl) *cobra.Command {
-	flags := upgradeFlags{}
+	opts := upgradeOpts{}
 
 	var upgrader upgrade.Upgrader
 
@@ -45,13 +46,14 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 			hooks.LoadUserData(o),
 			hooks.InitializeMetrics(o),
 			hooks.EmitStartCommandExecutionEvent(metrics.ActionUpgrade),
+			hooks.LoadClusterDeclaration(o, &opts.ClusterDeclarationPath),
 			hooks.InitializeOkctl(o),
 			hooks.AcquireStateLock(o),
 			hooks.DownloadState(o, true),
 			hooks.VerifyClusterExistsInState(o),
 			hooks.WriteKubeConfig(o),
 			func(cmd *cobra.Command, args []string) error {
-				okctlEnvironment, err := commands.GetOkctlEnvironment(o, declarationPath)
+				okctlEnvironment, err := commands.GetOkctlEnvironment(o, opts.ClusterDeclarationPath)
 				if err != nil {
 					return err
 				}
@@ -100,13 +102,13 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 					stateHandlers.Upgrade,
 				)
 
-				surveyor := survey.NewTerminalSurveyor(out, flags.confirm)
+				surveyor := survey.NewTerminalSurveyor(out, opts.confirm)
 
 				originalClusterVersioner = originalclusterversion.New(clusterID, stateHandlers.Upgrade, stateHandlers.Cluster)
 
 				upgrader, err = upgrade.New(upgrade.Opts{
 					Debug:                      o.Debug,
-					AutoConfirm:                flags.confirm,
+					AutoConfirm:                opts.confirm,
 					Logger:                     o.Logger,
 					Out:                        out,
 					RepositoryDirectory:        repoDir,
@@ -143,8 +145,16 @@ binaries used by okctl (kubectl, etc), and internal state.`,
 		),
 	}
 
+	addAuthenticationFlags(cmd)
+	addClusterDeclarationPathFlag(cmd, &opts.ClusterDeclarationPath)
+
 	cmd.PersistentFlags().BoolVarP(
-		&flags.confirm, "confirm", "y", false, "Skip confirmation prompts")
+		&opts.confirm,
+		"confirm",
+		"y",
+		false,
+		"Skip confirmation prompts",
+	)
 
 	return cmd
 }

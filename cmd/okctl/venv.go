@@ -29,8 +29,13 @@ const (
 	venvArgs = 0
 )
 
+type venvOpts struct {
+	ClusterDeclarationPath string
+}
+
 func buildVenvCommand(o *okctl.Okctl) *cobra.Command { //nolint: funlen
 	okctlEnvironment := commands.OkctlEnvironment{}
+	opts := venvOpts{}
 
 	cmd := &cobra.Command{
 		Use:   "venv",
@@ -41,12 +46,13 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command { //nolint: funlen
 			hooks.LoadUserData(o),
 			hooks.InitializeMetrics(o),
 			hooks.EmitStartCommandExecutionEvent(metrics.ActionVenv),
+			hooks.LoadClusterDeclaration(o, &opts.ClusterDeclarationPath),
 			hooks.InitializeOkctl(o),
 			hooks.DownloadState(o, false),
 			hooks.VerifyClusterExistsInState(o),
 			hooks.WriteKubeConfig(o),
 			func(_ *cobra.Command, args []string) error {
-				e, err := venvPreRunE(o)
+				e, err := venvPreRunE(o, opts.ClusterDeclarationPath)
 				if err != nil {
 					return err
 				}
@@ -70,10 +76,13 @@ func buildVenvCommand(o *okctl.Okctl) *cobra.Command { //nolint: funlen
 		),
 	}
 
+	addAuthenticationFlags(cmd)
+	addClusterDeclarationPathFlag(cmd, &opts.ClusterDeclarationPath)
+
 	return cmd
 }
 
-func venvPreRunE(o *okctl.Okctl) (commands.OkctlEnvironment, error) {
+func venvPreRunE(o *okctl.Okctl, declarationPath string) (commands.OkctlEnvironment, error) {
 	okctlEnvironment, err := commands.GetOkctlEnvironment(o, declarationPath)
 	if err != nil {
 		return commands.OkctlEnvironment{}, err

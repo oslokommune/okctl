@@ -36,6 +36,7 @@ func buildDeleteApplicationCommand(o *okctl.Okctl) *cobra.Command {
 		PreRunE: hooks.RunECombinator(
 			hooks.InitializeMetrics(o),
 			hooks.EmitStartCommandExecutionEvent(metrics.ActionDeleteApplication),
+			hooks.LoadClusterDeclaration(o, &opts.ClusterDeclarationPath),
 			hooks.InitializeOkctl(o),
 			hooks.AcquireStateLock(o),
 			hooks.DownloadState(o, true),
@@ -70,6 +71,8 @@ func buildDeleteApplicationCommand(o *okctl.Okctl) *cobra.Command {
 			hooks.EmitEndCommandExecutionEvent(metrics.ActionDeleteApplication),
 		),
 	}
+	addAuthenticationFlags(cmd)
+	addClusterDeclarationPathFlag(cmd, &opts.ClusterDeclarationPath)
 
 	cmd.Flags().StringVarP(
 		&opts.File,

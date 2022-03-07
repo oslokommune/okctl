@@ -23,7 +23,7 @@ runs:
   steps:
     - run: |
         ${{ inputs.okctl-path }} delete cluster \
-          --cluster-declaration ${{ inputs.cluster-manifest-path }} \
+          --file ${{ inputs.cluster-manifest-path }} \
           --aws-credentials-type access-key \
           --github-credentials-type token \
           --confirm \

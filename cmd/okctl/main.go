@@ -78,7 +78,7 @@ func addAvailableCommands(cmd *cobra.Command, o *okctl.Okctl) {
 // Add the common authentication flags used throughout the application.
 // Each sub-command needs to apply this individual according to needs
 func addAuthenticationFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().StringVarP(&auth.AwsCredentialsType,
+	cmd.PersistentFlags().StringVarP((*string)(&auth.AwsCredentialsType),
 		"aws-credentials-type",
 		"a",
 		getWithDefault(os.Getenv, constant.EnvAWSCredentialsType, context.AWSCredentialsTypeSAML),
@@ -87,7 +87,7 @@ func addAuthenticationFlags(cmd *cobra.Command) {
 			strings.Join(auth.GetAwsCredentialsTypes(), ","),
 		),
 	)
-	cmd.PersistentFlags().StringVarP(&auth.GithubCredentialsType,
+	cmd.PersistentFlags().StringVarP((*string)(&auth.GithubCredentialsType),
 		"github-credentials-type",
 		"g",
 		getWithDefault(os.Getenv, constant.EnvGithubCredentialsType, context.GithubCredentialsTypeDeviceAuthentication),

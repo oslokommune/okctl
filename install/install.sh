@@ -2,6 +2,8 @@
 
 set -e
 
+TMP_INSTALL_DIR=/tmp/okctl-install
+
 function get_user_agent() {
   if [[ -f ~/.okctl/conf.yml ]]; then
     USER_AGENT=$( (grep -E "userAgent:" ~/.okctl/conf.yml || echo okctl) | sed 's/userAgent://')
@@ -18,13 +20,18 @@ METRICS_URL="https://metrics.kjoremiljo.oslo.systems/v1/metrics/events"
 USER_AGENT=$(get_user_agent)
 
 function fetch_binary() {
+  mkdir -p $TMP_INSTALL_DIR
+  if [[ -f $TMP_INSTALL_DIR/okctl ]]; then
+    rm $TMP_INSTALL_DIR/okctl 
+  fi
+
   VERSION=$1
   if [[ $VERSION == "latest" ]]; then
     echo "Downloading latest version of okctl..."
-    curl --silent --location "https://github.com/oslokommune/okctl/releases/latest/download/okctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp okctl
+    curl --silent --location "https://github.com/oslokommune/okctl/releases/latest/download/okctl_$(uname -s)_amd64.tar.gz" | tar xz -C $TMP_INSTALL_DIR okctl
   else
     echo "Downloading version '$VERSION' of okctl..."
-    curl --silent --location "https://github.com/oslokommune/okctl/releases/download/v$VERSION/okctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp okctl
+    curl --silent --location "https://github.com/oslokommune/okctl/releases/download/v$VERSION/okctl_$(uname -s)_amd64.tar.gz" | tar xz -C $TMP_INSTALL_DIR okctl
   fi
 }
 
@@ -43,7 +50,7 @@ function install_local_bin() {
 
   fetch_binary $1
 
-  mv /tmp/okctl $HOME/.local/bin
+  mv $TMP_INSTALL_DIR/okctl $HOME/.local/bin
   echo "Successfully installed okctl. You can test it by running:"
   echo -e "${CMD}okctl version${CX}"
 }
@@ -56,7 +63,7 @@ function install_usr() {
   echo "-------------------------------------------------------------------------------------------------------------------------"
   echo "To complete installation, run:"
   printf $CMD
-  echo "sudo mv /tmp/okctl /usr/local/bin"
+  echo "sudo mv $TMP_INSTALL_DIR/okctl /usr/local/bin"
   printf $CX
   echo "-------------------------------------------------------------------------------------------------------------------------"
   echo

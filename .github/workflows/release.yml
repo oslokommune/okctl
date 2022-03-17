@@ -26,7 +26,7 @@ jobs:
 
       -
         name: Check if release notes exist
-        uses: andstor/file-existence-action@v1.0.1
+        uses: andstor/file-existence-action@v1.1.0
         with:
           files: docs/release_notes/${{ steps.tagName.outputs.tag }}
           allow_failure: false

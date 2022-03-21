@@ -110,6 +110,7 @@ func (c client) generateEnv() ([]string, error) {
 			constant.DefaultClusterKubeConfig,
 		),
 		"PATH": strings.Join(generatedPaths, ":"),
+		"HOME": homeDir,
 	})
 
 	env = append(env, awsEnvCredentials...)

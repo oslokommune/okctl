@@ -81,7 +81,8 @@ The error happened due to a combination of:
 ### Incident 1
 
 A bug in the ArgoCD app sync upgrade causing the upgrade to ignore what environment the files were related to, migrating
-them all.
+them all. One can speculate in why we didn't pick this up before. Maybe due to Team Kjøremiljø developers generally only
+having one dev environment available?
 
 ### Incident 2
 
@@ -164,6 +165,7 @@ Example:
 -->
 
 [KM620](https://trello.com/c/AyCdNq4y) - 0.0.88 upgrade fails: dev and prod files get mixed
+
 [KM621](https://trello.com/c/wjF1XyfK) - `okctl delete` application removes the whole namespace
 
 ## Supporting information and documentation

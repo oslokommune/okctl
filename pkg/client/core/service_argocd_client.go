@@ -9,6 +9,8 @@ import (
 	"path"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/clients/kubectl"
+
 	"github.com/oslokommune/okctl/pkg/binaries"
 	"github.com/oslokommune/okctl/pkg/clients/kubectl/binary"
 	"github.com/oslokommune/okctl/pkg/credentials"
@@ -53,6 +55,7 @@ const (
 	argoChartTimeout                     = 15 * time.Minute
 	argoRepositoryTypeGit                = "git"
 	defaultArgoCDApplicationManifestName = "applications"
+	defaultArgoCDNamespacesManifestName  = "namespaces"
 )
 
 // nolint: funlen
@@ -301,6 +304,13 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		},
 	}
 
+	kubectlClient := binary.New(s.fs, s.binaryProvider, s.credentialsProvider, opts.ClusterManifest)
+
+	err = s.SetupNamespacesSync(ctx, kubectlClient, opts.ClusterManifest)
+	if err != nil {
+		return nil, fmt.Errorf("setting up namespace sync: %w", err)
+	}
+
 	err = s.SetupApplicationsSync(ctx, opts.ClusterManifest)
 	if err != nil {
 		return nil, fmt.Errorf("setting up application sync: %w", err)
@@ -352,6 +362,52 @@ func (s *argoCDService) SetupApplicationsSync(_ context.Context, cluster v1alpha
 	}
 
 	kubectlClient := binary.New(s.fs, s.binaryProvider, s.credentialsProvider, cluster)
+
+	err = kubectlClient.Apply(&manifestCopy)
+	if err != nil {
+		return fmt.Errorf("applying ArgoCD application manifest: %w", err)
+	}
+
+	return nil
+}
+
+// SetupNamespacesSync makes ArgoCD track namespace manifests added to the
+// infrastructure/<cluster name>/argocd/namespaces/ directory
+func (s *argoCDService) SetupNamespacesSync(_ context.Context, kubectlClient kubectl.Client, cluster v1alpha1.Cluster) error {
+	relativeArgoCDConfigDir := path.Join(
+		cluster.Github.OutputPath,
+		cluster.Metadata.Name,
+		constant.DefaultArgoCDClusterConfigDir,
+	)
+
+	relativeArgoCDNamespacesSyncDirectory := path.Join(
+		relativeArgoCDConfigDir,
+		constant.DefaultArgoCDClusterConfigNamespacesDir,
+	)
+
+	absoluteArgoCDManifestPath := path.Join(s.absoluteRepoDir,
+		relativeArgoCDConfigDir,
+		fmt.Sprintf("%s.yaml", defaultArgoCDNamespacesManifestName),
+	)
+
+	originalManifest, err := scaffold.GenerateArgoCDApplicationManifest(scaffold.GenerateArgoCDApplicationManifestOpts{
+		Name:          "namespaces",
+		Namespace:     argocd.Namespace,
+		IACRepoURL:    cluster.Github.URL(),
+		SourceSyncDir: relativeArgoCDNamespacesSyncDirectory,
+		Prune:         false,
+	})
+	if err != nil {
+		return fmt.Errorf("generating ArgoCD application manifest: %w", err)
+	}
+
+	manifestCopy := bytes.Buffer{}
+	manifest := io.TeeReader(originalManifest, &manifestCopy)
+
+	err = s.fs.WriteReader(absoluteArgoCDManifestPath, manifest)
+	if err != nil {
+		return fmt.Errorf("writing manifest: %w", err)
+	}
 
 	err = kubectlClient.Apply(&manifestCopy)
 	if err != nil {

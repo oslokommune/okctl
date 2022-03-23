@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/clients/kubectl"
+
 	"github.com/oslokommune/okctl/pkg/github"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -137,6 +139,10 @@ func TestArgocdReconciler_Reconcile(t *testing.T) {
 type mockArgocdService struct {
 	creationBump func()
 	deletionBump func()
+}
+
+func (m mockArgocdService) SetupNamespacesSync(_ context.Context, _ kubectl.Client, _ v1alpha1.Cluster) error {
+	return nil
 }
 
 func (m mockArgocdService) SetupApplicationsSync(_ context.Context, _ v1alpha1.Cluster) error {

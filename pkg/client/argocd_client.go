@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 
+	"github.com/oslokommune/okctl/pkg/clients/kubectl"
+
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -50,6 +52,9 @@ type ArgoCDService interface {
 	// SetupApplicationsSync defines functionality for preparing a directory where ArgoCD application manifests will be
 	// automatically synced
 	SetupApplicationsSync(ctx context.Context, cluster v1alpha1.Cluster) error
+	// SetupNamespacesSync defines functionality for preparing a directory where namespace manifests will be
+	// automatically synced
+	SetupNamespacesSync(ctx context.Context, kubectlClient kubectl.Client, cluster v1alpha1.Cluster) error
 }
 
 // ArgoCDState implements the state layer

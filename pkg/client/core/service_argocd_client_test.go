@@ -17,10 +17,12 @@ import (
 
 func TestSetupNamespaceSync(t *testing.T) {
 	testCases := []struct {
-		name string
+		name                   string
+		expectedKubectlApplies int
 	}{
 		{
-			name: "Should produce an ArgoCD application manifest for namespaces in the correct location",
+			name:                   "Should produce an ArgoCD application manifest for namespaces in the correct location",
+			expectedKubectlApplies: 1,
 		},
 	}
 
@@ -43,7 +45,9 @@ func TestSetupNamespaceSync(t *testing.T) {
 				AbsoluteRepoDir: absoluteRepositoryDir,
 			})
 
-			err := service.SetupNamespacesSync(ctx, &mockKubectlClient{}, cluster)
+			kubectlClient := &mockKubectlClient{}
+
+			err := service.SetupNamespacesSync(ctx, kubectlClient, cluster)
 			assert.NoError(t, err)
 
 			argocdManifestPath := path.Join(
@@ -59,16 +63,20 @@ func TestSetupNamespaceSync(t *testing.T) {
 
 			g := goldie.New(t)
 			g.Assert(t, tc.name, result)
+
+			assert.Equal(t, tc.expectedKubectlApplies, kubectlClient.numberOfApplies)
 		})
 	}
 }
 
 func TestSetupApplicationSync(t *testing.T) {
 	testCases := []struct {
-		name string
+		name                   string
+		expectedKubectlApplies int
 	}{
 		{
-			name: "Should produce an ArgoCD application manifest for applications in the correct location",
+			name:                   "Should produce an ArgoCD application manifest for applications in the correct location",
+			expectedKubectlApplies: 1,
 		},
 	}
 
@@ -91,7 +99,9 @@ func TestSetupApplicationSync(t *testing.T) {
 				AbsoluteRepoDir: absoluteRepositoryDir,
 			})
 
-			err := service.SetupApplicationsSync(ctx, &mockKubectlClient{}, cluster)
+			kubectlClient := &mockKubectlClient{}
+
+			err := service.SetupApplicationsSync(ctx, kubectlClient, cluster)
 			assert.NoError(t, err)
 
 			argocdManifestPath := path.Join(
@@ -107,13 +117,22 @@ func TestSetupApplicationSync(t *testing.T) {
 
 			g := goldie.New(t)
 			g.Assert(t, tc.name, result)
+
+			assert.Equal(t, tc.expectedKubectlApplies, kubectlClient.numberOfApplies)
 		})
 	}
 }
 
-type mockKubectlClient struct{}
+type mockKubectlClient struct {
+	numberOfApplies int
+}
 
-func (m mockKubectlClient) Apply(_ io.Reader) error                 { return nil }
-func (m mockKubectlClient) Delete(_ io.Reader) error                { panic("implement me") }
-func (m mockKubectlClient) Patch(_ kubectl.PatchOpts) error         { panic("implement me") }
-func (m mockKubectlClient) Exists(_ kubectl.Resource) (bool, error) { panic("implement me") }
+func (m *mockKubectlClient) Apply(_ io.Reader) error {
+	m.numberOfApplies++
+
+	return nil
+}
+
+func (m *mockKubectlClient) Delete(_ io.Reader) error                { panic("implement me") }
+func (m *mockKubectlClient) Patch(_ kubectl.PatchOpts) error         { panic("implement me") }
+func (m *mockKubectlClient) Exists(_ kubectl.Resource) (bool, error) { panic("implement me") }

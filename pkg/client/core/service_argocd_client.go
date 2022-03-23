@@ -311,7 +311,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		return nil, fmt.Errorf("setting up namespace sync: %w", err)
 	}
 
-	err = s.SetupApplicationsSync(ctx, opts.ClusterManifest)
+	err = s.SetupApplicationsSync(ctx, kubectlClient, opts.ClusterManifest)
 	if err != nil {
 		return nil, fmt.Errorf("setting up application sync: %w", err)
 	}
@@ -325,7 +325,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 }
 
 // SetupApplicationsSync applies an ArgoCD Application manifest which ensures syncing of an application folder
-func (s *argoCDService) SetupApplicationsSync(_ context.Context, cluster v1alpha1.Cluster) error {
+func (s *argoCDService) SetupApplicationsSync(_ context.Context, kubectlClient kubectl.Client, cluster v1alpha1.Cluster) error {
 	relativeArgoCDConfigDir := path.Join(
 		cluster.Github.OutputPath,
 		cluster.Metadata.Name,
@@ -360,8 +360,6 @@ func (s *argoCDService) SetupApplicationsSync(_ context.Context, cluster v1alpha
 	if err != nil {
 		return fmt.Errorf("writing manifest: %w", err)
 	}
-
-	kubectlClient := binary.New(s.fs, s.binaryProvider, s.credentialsProvider, cluster)
 
 	err = kubectlClient.Apply(&manifestCopy)
 	if err != nil {

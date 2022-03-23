@@ -51,7 +51,7 @@ type ArgoCDService interface {
 	DeleteArgoCD(ctx context.Context, opts DeleteArgoCDOpts) error
 	// SetupApplicationsSync defines functionality for preparing a directory where ArgoCD application manifests will be
 	// automatically synced
-	SetupApplicationsSync(ctx context.Context, cluster v1alpha1.Cluster) error
+	SetupApplicationsSync(ctx context.Context, kubectlClient kubectl.Client, cluster v1alpha1.Cluster) error
 	// SetupNamespacesSync defines functionality for preparing a directory where namespace manifests will be
 	// automatically synced
 	SetupNamespacesSync(ctx context.Context, kubectlClient kubectl.Client, cluster v1alpha1.Cluster) error

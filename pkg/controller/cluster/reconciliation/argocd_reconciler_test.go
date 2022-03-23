@@ -145,7 +145,7 @@ func (m mockArgocdService) SetupNamespacesSync(_ context.Context, _ kubectl.Clie
 	return nil
 }
 
-func (m mockArgocdService) SetupApplicationsSync(_ context.Context, _ v1alpha1.Cluster) error {
+func (m mockArgocdService) SetupApplicationsSync(_ context.Context, _ kubectl.Client, _ v1alpha1.Cluster) error {
 	return nil
 }
 

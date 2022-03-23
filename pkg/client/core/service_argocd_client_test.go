@@ -20,7 +20,7 @@ func TestSetupNamespaceSync(t *testing.T) {
 		name string
 	}{
 		{
-			name: "Should produce a ArgoCD application manifest in the correct location",
+			name: "Should produce an ArgoCD application manifest for namespaces in the correct location",
 		},
 	}
 
@@ -52,6 +52,54 @@ func TestSetupNamespaceSync(t *testing.T) {
 				cluster.Metadata.Name,
 				constant.DefaultArgoCDClusterConfigDir,
 				fmt.Sprintf("%s.yaml", defaultArgoCDNamespacesManifestName),
+			)
+
+			result, err := fs.ReadFile(argocdManifestPath)
+			assert.NoError(t, err)
+
+			g := goldie.New(t)
+			g.Assert(t, tc.name, result)
+		})
+	}
+}
+
+func TestSetupApplicationSync(t *testing.T) {
+	testCases := []struct {
+		name string
+	}{
+		{
+			name: "Should produce an ArgoCD application manifest for applications in the correct location",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+			absoluteRepositoryDir := "/"
+
+			cluster := v1alpha1.NewCluster()
+			cluster.Metadata.Name = "mockCluster"
+			cluster.Github.Repository = "mock-iac"
+
+			service := NewArgoCDService(NewArgoCDServiceOpts{
+				Fs:              fs,
+				AbsoluteRepoDir: absoluteRepositoryDir,
+			})
+
+			err := service.SetupApplicationsSync(ctx, &mockKubectlClient{}, cluster)
+			assert.NoError(t, err)
+
+			argocdManifestPath := path.Join(
+				absoluteRepositoryDir,
+				cluster.Github.OutputPath,
+				cluster.Metadata.Name,
+				constant.DefaultArgoCDClusterConfigDir,
+				fmt.Sprintf("%s.yaml", defaultArgoCDApplicationManifestName),
 			)
 
 			result, err := fs.ReadFile(argocdManifestPath)

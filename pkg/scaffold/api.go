@@ -88,16 +88,6 @@ func GenerateApplicationBase(opts GenerateApplicationBaseOpts) error {
 		}
 	}
 
-	rawNamespace, err := ResourceAsBytes(resources.CreateNamespace(opts.Application))
-	if err != nil {
-		return err
-	}
-
-	err = opts.SaveManifest("namespace.yaml", rawNamespace)
-	if err != nil {
-		return fmt.Errorf("saving namespace manifest: %w", err)
-	}
-
 	rawDeployment, err := ResourceAsBytes(resources.CreateOkctlDeployment(opts.Application))
 	if err != nil {
 		return err

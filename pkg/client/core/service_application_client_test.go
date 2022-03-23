@@ -87,7 +87,6 @@ func TestNewApplicationService(t *testing.T) {
 	)
 
 	g.Assert(t, "kustomization-base.yaml", readFile(t, fs, filepath.Join(appBaseDir, "kustomization.yaml")))
-	g.Assert(t, "namespace.yaml", readFile(t, fs, filepath.Join(appBaseDir, "namespace.yaml")))
 	g.Assert(t, "deployment.yaml", readFile(t, fs, filepath.Join(appBaseDir, "deployment.yaml")))
 	g.Assert(t, "volumes.yaml", readFile(t, fs, filepath.Join(appBaseDir, "volumes.yaml")))
 	g.Assert(t, "ingress.yaml", readFile(t, fs, filepath.Join(appBaseDir, "ingress.yaml")))
@@ -143,7 +142,6 @@ func TestDeleteApplication(t *testing.T) {
 	)
 
 	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "kustomization.yaml")))
-	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "namespace.yaml")))
 	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "deployment.yaml")))
 	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "volumes.yaml")))
 	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "ingress.yaml")))

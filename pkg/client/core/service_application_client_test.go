@@ -49,7 +49,7 @@ func TestNewApplicationService(t *testing.T) {
 	absoluteOutputDir := path.Join(absoluteRepoDir, cluster.Github.OutputPath)
 	absoluteApplicationsDir := path.Join(absoluteOutputDir, constant.DefaultApplicationsOutputDir)
 
-	appManifestService := core.NewApplicationManifestService(fs, absoluteApplicationsDir)
+	appManifestService := core.NewApplicationManifestService(fs, absoluteOutputDir)
 
 	service := core.NewApplicationService(
 		fs,
@@ -115,7 +115,7 @@ func TestDeleteApplication(t *testing.T) {
 	absoluteOutputDir := path.Join(absoluteRepoDir, clusterManifest.Github.OutputPath)
 	absoluteApplicationsDir := path.Join(absoluteOutputDir, constant.DefaultApplicationsOutputDir)
 
-	manifestService := core.NewApplicationManifestService(fs, absoluteApplicationsDir)
+	manifestService := core.NewApplicationManifestService(fs, absoluteOutputDir)
 	appService := core.NewApplicationService(fs, mockKubectlClient{}, manifestService, absoluteRepoDir)
 
 	err = appService.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{

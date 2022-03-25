@@ -181,10 +181,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		return nil, err
 	}
 
-	applicationsOutputDir, err := o.GetRepoApplicationsOutputDir()
-	if err != nil {
-		return nil, err
-	}
+	outputDir := path.Join(absoluteRepositoryPath, o.Declaration.Github.OutputPath)
 
 	ghClient, err := githubClient.New(o.Ctx, o.CredentialsProvider.Github())
 	if err != nil {
@@ -243,7 +240,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 
 	applicationManifestService := clientCore.NewApplicationManifestService(
 		o.FileSystem,
-		applicationsOutputDir,
+		outputDir,
 	)
 
 	blockstorageService := clientCore.NewBlockstorageService(

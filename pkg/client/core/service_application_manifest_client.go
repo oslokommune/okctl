@@ -28,13 +28,13 @@ const (
 )
 
 type applicationManifestService struct {
-	absoluteApplicationsDir string
 	fs                      *afero.Afero
+	absoluteOutputDirectory string
 }
 
 // SaveManifest saves a manifest to the application base directory and adds the manifest to the kustomization file
 func (a *applicationManifestService) SaveManifest(_ context.Context, opts client.SaveManifestOpts) error {
-	workingDir := path.Join(a.absoluteApplicationsDir, opts.ApplicationName, constant.DefaultApplicationBaseDir)
+	workingDir := getAbsoluteApplicationBaseDirectory(a.absoluteOutputDirectory, opts.ApplicationName)
 
 	err := a.fs.MkdirAll(workingDir, defaultFolderMode)
 	if err != nil {
@@ -68,7 +68,7 @@ func (a *applicationManifestService) SaveManifest(_ context.Context, opts client
 
 // SavePatch saves a json patch to the application overlay directory and adds the patch to the kustomization file
 func (a *applicationManifestService) SavePatch(_ context.Context, opts client.SavePatchOpts) error {
-	workingDir := path.Join(a.absoluteApplicationsDir, opts.ApplicationName, constant.DefaultApplicationOverlayDir, opts.ClusterName)
+	workingDir := getAbsoluteApplicationOverlaysDirectory(a.absoluteOutputDirectory, opts.ClusterName, opts.ApplicationName)
 	patchFilename := fmt.Sprintf("%s-patch.json", strings.ToLower(opts.Kind))
 
 	err := a.fs.MkdirAll(workingDir, defaultFolderMode)
@@ -113,7 +113,7 @@ func (a *applicationManifestService) SavePatch(_ context.Context, opts client.Sa
 
 // GetPatch retrieves a json patch from the application overlay directory
 func (a *applicationManifestService) GetPatch(_ context.Context, opts client.GetPatchOpts) (jsonpatch.Patch, error) {
-	workingDir := path.Join(a.absoluteApplicationsDir, opts.ApplicationName, constant.DefaultApplicationOverlayDir, opts.ClusterName)
+	workingDir := getAbsoluteApplicationOverlaysDirectory(a.absoluteOutputDirectory, opts.ClusterName, opts.ApplicationName)
 	patchFilename := fmt.Sprintf("%s-patch.json", strings.ToLower(opts.Kind))
 
 	content, err := a.fs.ReadFile(path.Join(workingDir, patchFilename))
@@ -162,10 +162,42 @@ func acquireKustomizeFile(fs *afero.Afero, absoluteDirPath string) (resources.Ku
 	return manifest, nil
 }
 
+func getAbsoluteNamespacesDirectory(absoluteOutputDirectory string, clusterName string) string {
+	return path.Join(
+		absoluteOutputDirectory,
+		clusterName,
+		constant.DefaultArgoCDClusterConfigDir,
+		constant.DefaultArgoCDClusterConfigNamespacesDir,
+	)
+}
+
+func getAbsoluteApplicationBaseDirectory(absoluteOutputDirectory string, applicationName string) string {
+	return path.Join(
+		getAbsoluteApplicationDirectory(absoluteOutputDirectory, applicationName),
+		constant.DefaultApplicationBaseDir,
+	)
+}
+
+func getAbsoluteApplicationOverlaysDirectory(absoluteOutputDirectory string, clusterName string, applicationName string) string {
+	return path.Join(
+		getAbsoluteApplicationDirectory(absoluteOutputDirectory, applicationName),
+		constant.DefaultApplicationOverlayDir,
+		clusterName,
+	)
+}
+
+func getAbsoluteApplicationDirectory(absoluteOutputDirectory string, applicationName string) string {
+	return path.Join(
+		absoluteOutputDirectory,
+		constant.DefaultApplicationsOutputDir,
+		applicationName,
+	)
+}
+
 // NewApplicationManifestService initializes an Application Manifest Service
-func NewApplicationManifestService(fs *afero.Afero, absoluteApplicationsDir string) client.ApplicationManifestService {
+func NewApplicationManifestService(fs *afero.Afero, absoluteOutputDirectory string) client.ApplicationManifestService {
 	return &applicationManifestService{
-		absoluteApplicationsDir: absoluteApplicationsDir,
 		fs:                      fs,
+		absoluteOutputDirectory: absoluteOutputDirectory,
 	}
 }

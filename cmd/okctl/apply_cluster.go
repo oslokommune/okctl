@@ -6,6 +6,9 @@ import (
 	"io/ioutil"
 	"path"
 
+	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
+	"github.com/oslokommune/okctl/pkg/modules"
+
 	"github.com/oslokommune/okctl/pkg/metrics"
 
 	"github.com/oslokommune/okctl/cmd/okctl/hooks"
@@ -18,8 +21,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/version"
 
 	"github.com/oslokommune/okctl/pkg/api"
-
-	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
@@ -125,7 +126,17 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				ClusterDeclaration:              *o.Declaration,
 			}
 
+			/* Move this if prod START */
+			repoOutputDir, err := o.GetRepoOutputDir()
+			if err != nil {
+				return fmt.Errorf("acquiring modules base dir: %w", err)
+			}
+
+			modulesBaseDir := path.Join(repoOutputDir, "modules")
+			/* Move this if prod END */
+
 			scheduler := common.NewScheduler(schedulerOpts,
+				modules.NewReconciler(o.FileSystem, modulesBaseDir),
 				reconciliation.NewZoneReconciler(services.Domain),
 				reconciliation.NewVPCReconciler(services.Vpc, o.CloudProvider),
 				reconciliation.NewNameserverDelegationReconciler(services.NameserverHandler),

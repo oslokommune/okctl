@@ -45,6 +45,9 @@ type Cluster struct {
 	// +optional
 	VPC *ClusterVPC `json:"vpc,omitempty"`
 
+	// Modules defines modules related to the environment to scaffold
+	Modules ClusterModules `json:"modules,omitempty"`
+
 	// Integrations defines what cluster integrations we deploy to the
 	// cluster
 	// +optional
@@ -253,6 +256,9 @@ type ClusterIntegrations struct {
 	// +optional
 	ArgoCD bool `json:"argoCD,omitempty"`
 }
+
+// ClusterModules defines modules to install into the environment
+type ClusterModules []string
 
 // Validate ensures there is no conflicting options
 func (c ClusterIntegrations) Validate() error {

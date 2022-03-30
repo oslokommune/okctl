@@ -11,7 +11,10 @@ import (
 	"github.com/spf13/afero"
 )
 
+// This should be moved to ~/.okctl/conf.yaml if prod START
 const modulesRepositoryURL = "git@github.com:oslokommune/okctl-modules-poc.git"
+
+// This should be moved to ~/.okctl/conf.yaml if prod END
 
 // InstallModule downloads a module from the okctl modules repository and installs it into a directory
 func InstallModule(fs *afero.Afero, moduleName string, destDirectory string) error {

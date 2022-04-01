@@ -95,6 +95,8 @@ const (
 	// EnvGithubCredentialsType enables setting the --github-credentials-type flag through environment vars
 	EnvGithubCredentialsType = EnvPrefix + "_" + "GITHUB_CREDENTIALS_TYPE"
 
+	// DefaultClusterModulesDirectory is where okctl places and handles Terraform configuration
+	DefaultClusterModulesDirectory = "modules"
 	// DefaultArgoCDClusterConfigDir is where we do cluster specific ArgoCD configuration
 	DefaultArgoCDClusterConfigDir = "argocd"
 	// DefaultArgoCDClusterConfigApplicationsDir is where we put ArgoCD application manifests for applications

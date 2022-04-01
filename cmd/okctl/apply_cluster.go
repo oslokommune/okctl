@@ -7,6 +7,9 @@ import (
 	"path"
 
 	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
+
+	"github.com/oslokommune/okctl/pkg/terraform"
+
 	"github.com/oslokommune/okctl/pkg/modules"
 
 	"github.com/oslokommune/okctl/pkg/metrics"
@@ -132,7 +135,9 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("acquiring modules base dir: %w", err)
 			}
 
-			modulesBaseDir := path.Join(repoOutputDir, "modules")
+			modulesBaseDir := path.Join(repoOutputDir, constant.DefaultClusterModulesDirectory)
+			modulesPreApplyDir := path.Join(modulesBaseDir, "pre-apply")
+			modulesPostApplyDir := path.Join(modulesBaseDir, "post-apply")
 			/* Move this if prod END */
 
 			scheduler := common.NewScheduler(schedulerOpts,
@@ -158,9 +163,19 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				reconciliation.NewCleanupSGReconciler(o.CloudProvider),
 			)
 
+			err = terraform.SyncDirectory(o, modulesPreApplyDir)
+			if err != nil {
+				return fmt.Errorf("synchronizing modules pre apply dir: %w", err)
+			}
+
 			_, err = scheduler.Run(o.Ctx, state)
 			if err != nil {
 				return fmt.Errorf("synchronizing declaration with state: %w", err)
+			}
+
+			err = terraform.SyncDirectory(o, modulesPostApplyDir)
+			if err != nil {
+				return fmt.Errorf("synchronizing modules pre apply dir: %w", err)
 			}
 
 			err = handleClusterVersioning(o, originalClusterVersioner, clusterVersioner, opts)

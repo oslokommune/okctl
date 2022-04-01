@@ -51,20 +51,13 @@ func copyModuleToFs(sourceFs billy.Filesystem, destFs *afero.Afero, moduleName s
 		return fmt.Errorf("listing module files: %w", err)
 	}
 
-	moduleDir := path.Join(destBaseDirectory, moduleName)
-
-	err = destFs.MkdirAll(moduleDir, 0o700)
-	if err != nil {
-		return fmt.Errorf("preparing directory: %w", err)
-	}
-
 	for _, file := range files {
 		f, err := sourceFs.Open(path.Join(moduleName, file.Name()))
 		if err != nil {
 			return fmt.Errorf("opening module file: %w", err)
 		}
 
-		err = destFs.WriteReader(path.Join(moduleDir, file.Name()), f)
+		err = destFs.WriteReader(path.Join(destBaseDirectory, file.Name()), f)
 		if err != nil {
 			return fmt.Errorf("storing module file: %w", err)
 		}

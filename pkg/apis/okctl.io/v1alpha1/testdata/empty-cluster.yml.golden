@@ -7,3 +7,5 @@ metadata:
   accountID: ""
   name: ""
   region: ""
+terraform:
+  version: ""

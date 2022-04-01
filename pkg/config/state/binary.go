@@ -6,6 +6,7 @@ func KnownBinaries() (binaries []Binary) {
 	binaries = append(binaries, AWSIamAuthenticatorKnownBinaries()...)
 	binaries = append(binaries, KubectlKnownBinaries()...)
 	binaries = append(binaries, KubensKnownBinaries()...)
+	binaries = append(binaries, TerraformKnownBinaries()...)
 
 	return binaries
 }
@@ -118,6 +119,36 @@ func KubensKnownBinaries() []Binary {
 					Arch:   "amd64",
 					Type:   "sha256",
 					Digest: "8b3672961fb15f8b87d5793af8bd3c1cca52c016596fbf57c46ab4ef39265fcd",
+				},
+			},
+		},
+	}
+}
+
+// TerraformKnownBinaries returns the known binaries
+func TerraformKnownBinaries() []Binary {
+	return []Binary{
+		{
+			Name:       "terraform",
+			Version:    "1.1.7",
+			BufferSize: "100mb",
+			URLPattern: "https://releases.hashicorp.com/terraform/#{ver}/terraform_#{ver}_#{os}_#{arch}.zip",
+			Archive: Archive{
+				Type:   ".zip",
+				Target: "terraform",
+			},
+			Checksums: []Checksum{
+				{
+					Os:     "darwin",
+					Arch:   "amd64",
+					Type:   "sha256",
+					Digest: "5e7e939e084ae29af7fd86b00a618433d905477c52add2d4ea8770692acbceac",
+				},
+				{
+					Os:     "linux",
+					Arch:   "amd64",
+					Type:   "sha256",
+					Digest: "e4add092a54ff6febd3325d1e0c109c9e590dc6c38f8bb7f9632e4e6bcca99d4",
 				},
 			},
 		},

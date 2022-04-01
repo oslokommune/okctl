@@ -2,7 +2,6 @@ package modules
 
 import (
 	"fmt"
-	"path"
 	"testing"
 
 	"github.com/go-git/go-billy/v5/memfs"
@@ -54,7 +53,7 @@ func TestCopyToFs(t *testing.T) {
 			withModule:         "sqs",
 			withDestinationDir: "/",
 			expectFiles: []string{
-				"/sqs/module.tf",
+				"/sqs.tf",
 			},
 		},
 	}
@@ -74,14 +73,10 @@ func TestCopyToFs(t *testing.T) {
 			err = copyModuleToFs(moduleFs, fs, tc.withModule, "/")
 			assert.NoError(t, err)
 
-			exists, err := fs.DirExists(path.Join("/", tc.withModule))
-			assert.NoError(t, err)
-			assert.True(t, exists, "missing new module folder")
-
 			g := goldie.New(t)
 
 			for index, filepath := range tc.expectFiles {
-				exists, err = fs.Exists(filepath)
+				exists, err := fs.Exists(filepath)
 				assert.NoError(t, err)
 
 				assert.True(t, exists)

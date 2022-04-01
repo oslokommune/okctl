@@ -45,6 +45,9 @@ type Cluster struct {
 	// +optional
 	VPC *ClusterVPC `json:"vpc,omitempty"`
 
+	// Terraform defines configuration regarding Terraform
+	Terraform ClusterTerraform `json:"terraform"`
+
 	// Modules defines modules related to the environment to scaffold
 	Modules ClusterModules `json:"modules,omitempty"`
 
@@ -259,6 +262,11 @@ type ClusterIntegrations struct {
 
 // ClusterModules defines modules to install into the environment
 type ClusterModules []string
+
+// ClusterTerraform defines information about terraform version for a certain environment
+type ClusterTerraform struct {
+	Version string `json:"version"`
+}
 
 // Validate ensures there is no conflicting options
 func (c ClusterIntegrations) Validate() error {

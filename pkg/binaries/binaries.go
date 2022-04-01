@@ -4,6 +4,8 @@ package binaries
 import (
 	"io"
 
+	"github.com/oslokommune/okctl/pkg/binaries/run/terraform"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/oslokommune/okctl/pkg/binaries/fetch"
@@ -21,6 +23,7 @@ type Provider interface {
 	Eksctl(version string) (*eksctl.Eksctl, error)
 	Kubectl(version string) (*kubectl.Kubectl, error)
 	Kubens(version string) (*kubens.Kubens, error)
+	Terraform(version string) (*terraform.Terraform, error)
 	AwsIamAuthenticator(version string) (*awsiamauthenticator.AwsIamAuthenticator, error)
 }
 
@@ -34,6 +37,7 @@ type provider struct {
 	kubectl             map[string]*kubectl.Kubectl
 	kubens              map[string]*kubens.Kubens
 	awsIamAuthenticator map[string]*awsiamauthenticator.AwsIamAuthenticator
+	terraform           map[string]*terraform.Terraform
 }
 
 // AwsIamAuthenticator returns an aws-iam-authenticator cli wrapper for running commands
@@ -105,6 +109,22 @@ func (p *provider) Eksctl(version string) (*eksctl.Eksctl, error) {
 	return p.eksctl[version], nil
 }
 
+// Terraform returns a terraform cli wrapper for running commands
+func (p *provider) Terraform(version string) (*terraform.Terraform, error) {
+	_, ok := p.terraform[version]
+
+	if !ok {
+		binaryPath, err := p.fetcher.Fetch(terraform.Name, version)
+		if err != nil {
+			return nil, err
+		}
+
+		p.terraform[version] = terraform.New(binaryPath)
+	}
+
+	return p.terraform[version], nil
+}
+
 // New returns a provider that knows how to fetch binaries and make
 // them available for other commands
 func New(logger *logrus.Logger, progress io.Writer, auth aws.Authenticator, fetcher fetch.Provider) Provider {
@@ -117,5 +137,6 @@ func New(logger *logrus.Logger, progress io.Writer, auth aws.Authenticator, fetc
 		kubectl:             map[string]*kubectl.Kubectl{},
 		kubens:              map[string]*kubens.Kubens{},
 		awsIamAuthenticator: map[string]*awsiamauthenticator.AwsIamAuthenticator{},
+		terraform:           map[string]*terraform.Terraform{},
 	}
 }

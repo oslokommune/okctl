@@ -1,7 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	clientCore "github.com/oslokommune/okctl/pkg/client/core"
+	"github.com/oslokommune/okctl/pkg/client/dryrun"
 	"io"
 	"io/ioutil"
 	"path"
@@ -37,6 +41,7 @@ import (
 type applyClusterOpts struct {
 	DisableSpinner bool
 	File           string
+	DryRun         bool
 }
 
 // Validate ensures the applyClusterOpts contains the right information
@@ -100,7 +105,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 		),
 		RunE: func(cmd *cobra.Command, _ []string) (err error) {
 			var spinnerWriter io.Writer
-			if opts.DisableSpinner {
+			if opts.DisableSpinner || opts.DryRun {
 				spinnerWriter = ioutil.Discard
 			} else {
 				spinnerWriter = o.Err
@@ -113,9 +118,23 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 
 			state := o.StateHandlers(o.StateNodes())
 
-			services, err := o.ClientServices(state)
-			if err != nil {
-				return fmt.Errorf("error getting services: %w", err)
+			var services *clientCore.Services
+
+			dryRunBuffer := bytes.Buffer{}
+
+			if opts.DryRun {
+				services = dryrun.ClientServices(&dryRunBuffer)
+
+				fmt.Fprintf(o.Out, "Calculating difference, please wait..\n\n")
+				fmt.Fprintf(o.Out, "Legend:\n")
+				fmt.Fprintf(o.Out, "%s Resources to be created\n", aurora.Green("+"))
+				fmt.Fprintf(o.Out, "%s Resources to be deleted\n", aurora.Red("-"))
+				fmt.Fprintf(&dryRunBuffer, "\nDifference:\n")
+			} else {
+				services, err = o.ClientServices(state)
+				if err != nil {
+					return fmt.Errorf("error getting services: %w", err)
+				}
 			}
 
 			schedulerOpts := common.SchedulerOpts{
@@ -128,7 +147,7 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 			scheduler := common.NewScheduler(schedulerOpts,
 				reconciliation.NewZoneReconciler(services.Domain),
 				reconciliation.NewVPCReconciler(services.Vpc, o.CloudProvider),
-				reconciliation.NewNameserverDelegationReconciler(services.NameserverHandler),
+				//reconciliation.NewNameserverDelegationReconciler(services.NameserverHandler),
 				reconciliation.NewClusterReconciler(services.Cluster, o.CloudProvider),
 				reconciliation.NewAutoscalerReconciler(services.Autoscaler),
 				reconciliation.NewAWSLoadBalancerControllerReconciler(services.AWSLoadBalancerControllerService),
@@ -144,18 +163,24 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 				reconciliation.NewKubePrometheusStackReconciler(services.Monitoring),
 				reconciliation.NewUsersReconciler(services.IdentityManager),
 				reconciliation.NewPostgresReconciler(services.Component),
-				reconciliation.NewCleanupSGReconciler(o.CloudProvider),
+				//reconciliation.NewCleanupSGReconciler(o.CloudProvider),
 			)
 
 			_, err = scheduler.Run(o.Ctx, state)
 			if err != nil {
-				return fmt.Errorf("synchronizing declaration with state: %w", err)
+				if !(errors.Is(err, common.ErrMaximumReconciliationRequeues) && opts.DryRun) {
+					return fmt.Errorf("synchronizing declaration with state: %w", err)
+				}
 			}
 
-			err = handleClusterVersioning(o, originalClusterVersioner, clusterVersioner, opts)
-			if err != nil {
-				return fmt.Errorf("handle cluster versioning: %w", err)
+			if opts.DryRun {
+				_, _ = io.Copy(o.Out, &dryRunBuffer)
 			}
+
+			//err = handleClusterVersioning(o, originalClusterVersioner, clusterVersioner, opts)
+			//if err != nil {
+			//	return fmt.Errorf("handle cluster versioning: %w", err)
+			//}
 
 			return nil
 		},
@@ -180,6 +205,12 @@ func buildApplyClusterCommand(o *okctl.Okctl) *cobra.Command {
 		"no-spinner",
 		false,
 		"disables progress spinner",
+	)
+	flags.BoolVarP(&opts.DryRun,
+		"dry-run",
+		"d",
+		false,
+		"dont actually do anything, just show intention",
 	)
 
 	return cmd

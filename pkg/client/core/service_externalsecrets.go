@@ -29,8 +29,8 @@ func (s *externalSecretsService) DeleteExternalSecrets(ctx context.Context, id a
 	config, err := clusterconfig.NewExternalSecretsServiceAccount(
 		id.ClusterName,
 		id.Region,
-		"n/a",
 		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
+		[]string{"n/a"},
 	)
 	if err != nil {
 		return err
@@ -97,8 +97,8 @@ func (s *externalSecretsService) CreateExternalSecrets(ctx context.Context, opts
 	config, err := clusterconfig.NewExternalSecretsServiceAccount(
 		opts.ID.ClusterName,
 		opts.ID.Region,
-		policy.PolicyARN,
 		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
+		[]string{policy.PolicyARN},
 	)
 	if err != nil {
 		return nil, err

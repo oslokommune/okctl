@@ -156,7 +156,7 @@ func ServiceAccountClusterConfig() *v1alpha5.ClusterConfig {
 		Name:                   DefaultServiceAccountName,
 		Namespace:              DefaultNamespace,
 		PermissionsBoundaryArn: v1alpha1.PermissionsBoundaryARN(DefaultAWSAccountID),
-		PolicyArn:              DefaultPolicyARN,
+		PolicyArns:             []string{DefaultPolicyARN},
 		Region:                 DefaultRegion,
 	})
 

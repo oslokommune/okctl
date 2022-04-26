@@ -166,7 +166,7 @@ type ServiceAccountArgs struct {
 	Name                   string
 	Namespace              string
 	PermissionsBoundaryArn string
-	PolicyArn              string
+	PolicyArns             []string
 	Region                 string
 }
 
@@ -188,7 +188,7 @@ func (a *ServiceAccountArgs) validate() error {
 		validation.Field(&a.Name, validation.Required),
 		validation.Field(&a.Namespace, validation.Required),
 		validation.Field(&a.PermissionsBoundaryArn, validation.Required),
-		validation.Field(&a.PolicyArn, validation.Required),
+		validation.Field(&a.PolicyArns, validation.Required),
 		validation.Field(&a.Region, validation.Required),
 	)
 }
@@ -217,9 +217,7 @@ func (a *ServiceAccountArgs) build() *v1alpha5.ClusterConfig {
 						Namespace: a.Namespace,
 						Labels:    a.Labels,
 					},
-					AttachPolicyARNs: []string{
-						a.PolicyArn,
-					},
+					AttachPolicyARNs:    a.PolicyArns,
 					PermissionsBoundary: a.PermissionsBoundaryArn,
 				},
 			},
@@ -229,7 +227,7 @@ func (a *ServiceAccountArgs) build() *v1alpha5.ClusterConfig {
 
 // NewExternalSecretsServiceAccount returns an initialised configuration for
 // creating an external secrets service account
-func NewExternalSecretsServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha5.ClusterConfig, error) {
+func NewExternalSecretsServiceAccount(clusterName, region, permissionsBoundaryArn string, policyArns []string) (*v1alpha5.ClusterConfig, error) {
 	return NewServiceAccount(&ServiceAccountArgs{
 		ClusterName: clusterName,
 		Labels: map[string]string{
@@ -238,14 +236,14 @@ func NewExternalSecretsServiceAccount(clusterName, region, policyArn, permission
 		Name:                   "external-secrets",
 		Namespace:              "kube-system",
 		PermissionsBoundaryArn: permissionsBoundaryArn,
-		PolicyArn:              policyArn,
+		PolicyArns:             policyArns,
 		Region:                 region,
 	})
 }
 
 // NewAlbIngressControllerServiceAccount returns an initialised configuration
 // for creating an aws-alb-ingress-controller service account
-func NewAlbIngressControllerServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha5.ClusterConfig, error) {
+func NewAlbIngressControllerServiceAccount(clusterName, region, permissionsBoundaryArn string, policyArns []string) (*v1alpha5.ClusterConfig, error) {
 	return NewServiceAccount(&ServiceAccountArgs{
 		ClusterName: clusterName,
 		Labels: map[string]string{
@@ -254,14 +252,14 @@ func NewAlbIngressControllerServiceAccount(clusterName, region, policyArn, permi
 		Name:                   "alb-ingress-controller",
 		Namespace:              "kube-system",
 		PermissionsBoundaryArn: permissionsBoundaryArn,
-		PolicyArn:              policyArn,
+		PolicyArns:             policyArns,
 		Region:                 region,
 	})
 }
 
 // NewAWSLoadBalancerControllerServiceAccount returns an initialised configuration
 // for creating an aws-load-balancer-controller service account
-func NewAWSLoadBalancerControllerServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha5.ClusterConfig, error) {
+func NewAWSLoadBalancerControllerServiceAccount(clusterName, region, permissionsBoundaryArn string, policyArns []string) (*v1alpha5.ClusterConfig, error) {
 	return NewServiceAccount(&ServiceAccountArgs{
 		ClusterName: clusterName,
 		Labels: map[string]string{
@@ -270,14 +268,14 @@ func NewAWSLoadBalancerControllerServiceAccount(clusterName, region, policyArn, 
 		Name:                   "aws-load-balancer-controller",
 		Namespace:              "kube-system",
 		PermissionsBoundaryArn: permissionsBoundaryArn,
-		PolicyArn:              policyArn,
+		PolicyArns:             policyArns,
 		Region:                 region,
 	})
 }
 
 // NewExternalDNSServiceAccount returns an initialised configuration
 // for creating an external-dns service account
-func NewExternalDNSServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha5.ClusterConfig, error) {
+func NewExternalDNSServiceAccount(clusterName, region, permissionsBoundaryArn string, policyArns []string) (*v1alpha5.ClusterConfig, error) {
 	return NewServiceAccount(&ServiceAccountArgs{
 		ClusterName: clusterName,
 		Labels: map[string]string{
@@ -286,14 +284,14 @@ func NewExternalDNSServiceAccount(clusterName, region, policyArn, permissionsBou
 		Name:                   "external-dns",
 		Namespace:              "kube-system",
 		PermissionsBoundaryArn: permissionsBoundaryArn,
-		PolicyArn:              policyArn,
+		PolicyArns:             policyArns,
 		Region:                 region,
 	})
 }
 
 // NewAutoscalerServiceAccount returns an initialised configuration
 // for creating a cluster autoscaler service account
-func NewAutoscalerServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha5.ClusterConfig, error) {
+func NewAutoscalerServiceAccount(clusterName, region, permissionsBoundaryArn string, policyArns []string) (*v1alpha5.ClusterConfig, error) {
 	return NewServiceAccount(&ServiceAccountArgs{
 		ClusterName: clusterName,
 		Labels: map[string]string{
@@ -302,14 +300,14 @@ func NewAutoscalerServiceAccount(clusterName, region, policyArn, permissionsBoun
 		Name:                   "autoscaler",
 		Namespace:              "kube-system",
 		PermissionsBoundaryArn: permissionsBoundaryArn,
-		PolicyArn:              policyArn,
+		PolicyArns:             policyArns,
 		Region:                 region,
 	})
 }
 
 // NewBlockstorageServiceAccount returns an initialised configuration
 // for creating a cluster Blockstorage service account
-func NewBlockstorageServiceAccount(clusterName, region, policyArn, permissionsBoundaryArn string) (*v1alpha5.ClusterConfig, error) {
+func NewBlockstorageServiceAccount(clusterName, region, permissionsBoundaryArn string, policyArns []string) (*v1alpha5.ClusterConfig, error) {
 	return NewServiceAccount(&ServiceAccountArgs{
 		ClusterName: clusterName,
 		Labels: map[string]string{
@@ -318,14 +316,14 @@ func NewBlockstorageServiceAccount(clusterName, region, policyArn, permissionsBo
 		Name:                   "blockstorage",
 		Namespace:              "kube-system",
 		PermissionsBoundaryArn: permissionsBoundaryArn,
-		PolicyArn:              policyArn,
+		PolicyArns:             policyArns,
 		Region:                 region,
 	})
 }
 
 // NewCloudwatchDatasourceServiceAccount returns an initialised configuration
 // for creating a cluster CloudwatchDatasource service account
-func NewCloudwatchDatasourceServiceAccount(clusterName, region, policyArn, namespace, permissionsBoundaryArn string) (*v1alpha5.ClusterConfig, error) {
+func NewCloudwatchDatasourceServiceAccount(clusterName, region, namespace, permissionsBoundaryArn string, policyArns []string) (*v1alpha5.ClusterConfig, error) {
 	return NewServiceAccount(&ServiceAccountArgs{
 		ClusterName: clusterName,
 		Labels: map[string]string{
@@ -334,7 +332,7 @@ func NewCloudwatchDatasourceServiceAccount(clusterName, region, policyArn, names
 		Name:                   "cloudwatch-datasource",
 		Namespace:              namespace,
 		PermissionsBoundaryArn: permissionsBoundaryArn,
-		PolicyArn:              policyArn,
+		PolicyArns:             policyArns,
 		Region:                 region,
 	})
 }

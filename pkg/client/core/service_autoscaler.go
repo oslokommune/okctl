@@ -28,8 +28,8 @@ func (s *autoscalerService) DeleteAutoscaler(ctx context.Context, id api.ID) err
 	config, err := clusterconfig.NewAutoscalerServiceAccount(
 		id.ClusterName,
 		id.Region,
-		"n/a",
 		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
+		[]string{"n/a"},
 	)
 	if err != nil {
 		return err
@@ -94,8 +94,8 @@ func (s *autoscalerService) CreateAutoscaler(ctx context.Context, opts client.Cr
 	config, err := clusterconfig.NewAutoscalerServiceAccount(
 		opts.ID.ClusterName,
 		opts.ID.Region,
-		policy.PolicyARN,
 		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
+		[]string{policy.PolicyARN},
 	)
 	if err != nil {
 		return nil, err

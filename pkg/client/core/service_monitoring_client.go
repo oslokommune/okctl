@@ -352,9 +352,9 @@ func (s *monitoringService) DeleteKubePromStack(ctx context.Context, opts client
 	cc, err := clusterconfig.NewCloudwatchDatasourceServiceAccount(
 		opts.ID.ClusterName,
 		opts.ID.Region,
-		"N/A",
 		constant.DefaultMonitoringNamespace,
 		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
+		[]string{"N/A"},
 	)
 	if err != nil {
 		return err
@@ -448,9 +448,9 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 	cc, err := clusterconfig.NewCloudwatchDatasourceServiceAccount(
 		opts.ID.ClusterName,
 		opts.ID.Region,
-		policy.PolicyARN,
 		constant.DefaultMonitoringNamespace,
 		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
+		[]string{policy.PolicyARN},
 	)
 	if err != nil {
 		return nil, err

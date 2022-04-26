@@ -78,21 +78,44 @@ config:
         index:
           prefix: index_
           period: 24h
+      - from: "2022-04-26"
+        store: aws
+        object_store: s3
+        schema: v11
+        index:
+          prefix: {{.IndexPrefix}}-index_
+          period: 336h # 7 days
   server:
     http_listen_port: 3100
   storage_config:
+    aws:
+      s3: s3://eu-west-1
+      bucketnames: {{.LokiStorageBucketName}}
+      dynamodb:
+        dynamodb_url: dynamodb://eu-west-1
+
     boltdb_shipper:
       active_index_directory: /data/loki/boltdb-shipper-active
       cache_location: /data/loki/boltdb-shipper-cache
       cache_ttl: 24h         # Can be increased for faster performance over longer query periods, uses more disk space
       shared_store: filesystem
+
     filesystem:
       directory: /data/loki/chunks
   chunk_store_config:
     max_look_back_period: 0s
   table_manager:
-    retention_deletes_enabled: false
-    retention_period: 0s
+    retention_deletes_enabled: true
+    retention_period: 1344h # 1 month
+    index_tables_provisioning:
+      # Read/write throughput requirements for the current table
+      # (the table which would handle writes/reads for data timestamped at the current time)
+      # Throughput is how many operations per second
+      provisioned_write_throughput: 1
+      provisioned_read_throughput: 1
+      # Read/write throughput requirements for non-current tables
+      inactive_write_throughput: 1
+      inactive_read_throughput: 1
   compactor:
     working_directory: /data/loki/boltdb-shipper-compactor
     shared_store: filesystem
@@ -195,8 +218,8 @@ service:
   targetPort: http-metrics
 
 serviceAccount:
-  create: true
-  name:
+  create: false
+  name: loki
   annotations: {}
 
 terminationGracePeriodSeconds: 4800

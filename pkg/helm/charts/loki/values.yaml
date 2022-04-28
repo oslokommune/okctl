@@ -71,19 +71,12 @@ config:
     reject_old_samples_max_age: 168h
   schema_config:
     configs:
-      - from: "2020-10-24"
-        store: boltdb-shipper
-        object_store: filesystem
-        schema: v11
-        index:
-          prefix: index_
-          period: 24h
-      - from: "2022-04-26"
+      - from: {{.FromDate}}
         store: aws
         object_store: s3
         schema: v11
         index:
-          prefix: {{.IndexPrefix}}-index_
+          prefix: {{.IndexPrefix}}
           period: 336h # 7 days
   server:
     http_listen_port: 3100
@@ -93,12 +86,6 @@ config:
       bucketnames: {{.LokiStorageBucketName}}
       dynamodb:
         dynamodb_url: dynamodb://eu-west-1
-
-    boltdb_shipper:
-      active_index_directory: /data/loki/boltdb-shipper-active
-      cache_location: /data/loki/boltdb-shipper-cache
-      cache_ttl: 24h         # Can be increased for faster performance over longer query periods, uses more disk space
-      shared_store: filesystem
 
     filesystem:
       directory: /data/loki/chunks

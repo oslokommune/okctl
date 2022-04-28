@@ -16,7 +16,7 @@ func TestNewDefaultValues(t *testing.T) {
 	}{
 		{
 			name:   "Default values should generate valid yaml",
-			values: loki.NewDefaultValues(),
+			values: loki.NewDefaultValues("mock-bucket-name", "mock-prefix_"),
 			golden: "loki.yml",
 		},
 	}

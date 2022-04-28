@@ -41,7 +41,7 @@ func (o objectStorageProvider) CreateBucket(opts api.CreateBucketOpts) (bucketID
 	}
 
 	err = r.Outputs(stackName, map[string]cfn.ProcessOutputFn{
-		"S3Bucket": cfn.String(&bucketID),
+		"BucketARN": cfn.String(&bucketID),
 	})
 	if err != nil {
 		return "", errors.E(err, "acquiring bucket outputs")

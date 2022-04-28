@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/mishudark/errors"
@@ -40,15 +41,17 @@ import (
 )
 
 type monitoringService struct {
-	state    client.MonitoringState
-	helm     client.HelmService
-	cert     client.CertificateService
-	ident    client.IdentityManagerService
-	param    client.ParameterService
-	manifest client.ManifestService
-	service  client.ServiceAccountService
-	policy   client.ManagedPolicyService
-	provider v1alpha1.CloudProvider
+	state                client.MonitoringState
+	helm                 client.HelmService
+	cert                 client.CertificateService
+	ident                client.IdentityManagerService
+	param                client.ParameterService
+	manifest             client.ManifestService
+	service              client.ServiceAccountService
+	policy               client.ManagedPolicyService
+	provider             v1alpha1.CloudProvider
+	objectStorageService api.ObjectStorageService
+	keyValueStoreService api.KeyValueStoreService
 }
 
 const (
@@ -215,12 +218,97 @@ func (s *monitoringService) DeleteLoki(ctx context.Context, id api.ID) error {
 		return err
 	}
 
+	config, err := clusterconfig.NewLokiServiceAccount(
+		id.ClusterName,
+		id.Region,
+		constant.DefaultMonitoringNamespace,
+		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
+		[]string{"N/A"},
+	)
+	if err != nil {
+		return fmt.Errorf("generating service account config: %w", err)
+	}
+
+	err = s.service.DeleteServiceAccount(ctx, client.DeleteServiceAccountOpts{
+		ID:     id,
+		Name:   defaultLokiServiceAccountName,
+		Config: config,
+	})
+	if err != nil {
+		return fmt.Errorf("deleting service account: %w", err)
+	}
+
+	err = deleteDynamoDBIntegration(deleteDynamoDBOpts{
+		ctx:                  ctx,
+		policyService:        s.policy,
+		keyValueStoreService: s.keyValueStoreService,
+		clusterID:            id,
+	})
+	if err != nil {
+		return fmt.Errorf("deleting DynamoDB integration: %w", err)
+	}
+
+	err = deleteS3Integration(deleteS3IntegrationOpts{
+		ctx:                  ctx,
+		policyService:        s.policy,
+		objectStorageService: s.objectStorageService,
+		clusterID:            id,
+	})
+	if err != nil {
+		return fmt.Errorf("deleting S3 integration: %w", err)
+	}
+
 	return nil
 }
 
 // nolint: funlen
 func (s *monitoringService) CreateLoki(ctx context.Context, id api.ID) (*client.Helm, error) {
-	chart := loki.New(loki.NewDefaultValues(), constant.DefaultChartApplyTimeout)
+	bucketName := bucketNameGenerator(id.ClusterName)
+	tablePrefix := tablePrefixGenerator(id.ClusterName)
+
+	s3PolicyARN, err := createBucket(createBucketOpts{
+		ctx:                  ctx,
+		id:                   id,
+		objectStorageService: s.objectStorageService,
+		policyService:        s.policy,
+		bucketName:           bucketName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("creating bucket: %w", err)
+	}
+
+	dynamoDBPolicy, err := createDynamoDBPolicy(createDynamoDBPolicyOpts{
+		ctx:           ctx,
+		id:            id,
+		policyService: s.policy,
+		tablePrefix:   tablePrefix,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("creating DynamoDB policy: %w", err)
+	}
+
+	clusterConfig, err := clusterconfig.NewLokiServiceAccount(
+		id.ClusterName,
+		id.Region,
+		constant.DefaultMonitoringNamespace,
+		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
+		[]string{s3PolicyARN, dynamoDBPolicy},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("preparing service account: %w", err)
+	}
+
+	_, err = s.service.CreateServiceAccount(ctx, client.CreateServiceAccountOpts{
+		ID:        id,
+		Name:      defaultLokiServiceAccountName,
+		PolicyArn: dynamoDBPolicy,
+		Config:    clusterConfig,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("creating service account: %w", err)
+	}
+
+	chart := loki.New(loki.NewDefaultValues(bucketName, tablePrefix), constant.DefaultChartApplyTimeout)
 
 	values, err := chart.ValuesYAML()
 	if err != nil {
@@ -739,17 +827,176 @@ func NewMonitoringService(
 	param client.ParameterService,
 	service client.ServiceAccountService,
 	policy client.ManagedPolicyService,
+	objectStorageService api.ObjectStorageService,
 	provider v1alpha1.CloudProvider,
 ) client.MonitoringService {
 	return &monitoringService{
-		state:    state,
-		helm:     helm,
-		cert:     cert,
-		ident:    ident,
-		param:    param,
-		manifest: manifest,
-		service:  service,
-		policy:   policy,
-		provider: provider,
+		state:                state,
+		helm:                 helm,
+		cert:                 cert,
+		ident:                ident,
+		param:                param,
+		manifest:             manifest,
+		service:              service,
+		policy:               policy,
+		objectStorageService: objectStorageService,
+		provider:             provider,
 	}
+}
+
+const (
+	defaultLokiServiceAccountName   = "loki"
+	defaultLokiDynamoDBPolicyDomain = "loki"
+)
+
+type createBucketOpts struct {
+	ctx                  context.Context
+	id                   api.ID
+	objectStorageService api.ObjectStorageService
+	policyService        client.ManagedPolicyService
+	bucketName           string
+}
+
+func createBucket(opts createBucketOpts) (string, error) {
+	bucketARN, err := opts.objectStorageService.CreateBucket(api.CreateBucketOpts{
+		ClusterID:  opts.id,
+		BucketName: opts.bucketName,
+		Private:    true,
+	})
+	if err != nil {
+		return "", fmt.Errorf("creating bucket: %w", err)
+	}
+
+	s3PolicyCFNStack, err := cfn.New(components.NewLokiS3PolicyComposer(opts.id.ClusterName, bucketARN)).Build()
+	if err != nil {
+		return "", fmt.Errorf("building S3 policy template: %w", err)
+	}
+
+	s3Policy, err := opts.policyService.CreatePolicy(opts.ctx, client.CreatePolicyOpts{
+		ID:                     opts.id,
+		StackName:              cfn.NewStackNamer().LokiS3Policy(opts.id.ClusterName, "loki"),
+		PolicyOutputName:       "LokiS3ServiceAccountPolicy",
+		CloudFormationTemplate: s3PolicyCFNStack,
+	})
+	if err != nil {
+		return "", fmt.Errorf("creating S3 policy: %w", err)
+	}
+
+	return s3Policy.PolicyARN, nil
+}
+
+type createDynamoDBPolicyOpts struct {
+	ctx           context.Context
+	id            api.ID
+	policyService client.ManagedPolicyService
+	tablePrefix   string
+}
+
+func createDynamoDBPolicy(opts createDynamoDBPolicyOpts) (string, error) {
+	// Should cover all tables starting with a certain prefix
+	tablePrefix := opts.tablePrefix + "*"
+
+	dynamoDBCFNStack, err := cfn.New(components.NewLokiDynamoDBPolicyComposer(opts.id, tablePrefix)).Build()
+	if err != nil {
+		return "", fmt.Errorf("building DynamoDB policy template: %w", err)
+	}
+
+	dynamoDBPolicy, err := opts.policyService.CreatePolicy(opts.ctx, client.CreatePolicyOpts{
+		ID:                     opts.id,
+		StackName:              cfn.NewStackNamer().LokiDynamoDBPolicy(opts.id.ClusterName, defaultLokiDynamoDBPolicyDomain),
+		PolicyOutputName:       "LokiDynamoDBServiceAccountPolicy",
+		CloudFormationTemplate: dynamoDBCFNStack,
+	})
+	if err != nil {
+		return "", fmt.Errorf("creating DynamoDB policy: %w", err)
+	}
+
+	return dynamoDBPolicy.PolicyARN, nil
+}
+
+type deleteDynamoDBOpts struct {
+	ctx                  context.Context
+	policyService        client.ManagedPolicyService
+	keyValueStoreService api.KeyValueStoreService
+	clusterID            api.ID
+}
+
+func deleteDynamoDBIntegration(opts deleteDynamoDBOpts) error {
+	err := opts.policyService.DeletePolicy(opts.ctx, client.DeletePolicyOpts{
+		ID:        opts.clusterID,
+		StackName: cfn.NewStackNamer().LokiDynamoDBPolicy(opts.clusterID.ClusterName, defaultLokiDynamoDBPolicyDomain),
+	})
+	if err != nil {
+		return fmt.Errorf("deleting DynamoDB policy: %w", err)
+	}
+
+	tables, err := opts.keyValueStoreService.ListStores()
+	if err != nil {
+		return fmt.Errorf("listing tables: %w", err)
+	}
+
+	deletionQueue := make([]string, 0)
+	tablePrefix := tablePrefixGenerator(opts.clusterID.ClusterName)
+
+	for _, table := range tables {
+		if strings.HasPrefix(table, tablePrefix) {
+			deletionQueue = append(deletionQueue, table)
+		}
+	}
+
+	for _, table := range deletionQueue {
+		err = opts.keyValueStoreService.DeleteStore(api.DeleteStoreOpts{
+			ClusterID: opts.clusterID,
+			Name:      api.StoreName(table),
+		})
+		if err != nil {
+			return fmt.Errorf("deleting table: %w", err)
+		}
+	}
+
+	return nil
+}
+
+type deleteS3IntegrationOpts struct {
+	ctx                  context.Context
+	policyService        client.ManagedPolicyService
+	objectStorageService api.ObjectStorageService
+	clusterID            api.ID
+}
+
+func deleteS3Integration(opts deleteS3IntegrationOpts) error {
+	bucketName := bucketNameGenerator(opts.clusterID.ClusterName)
+
+	err := opts.policyService.DeletePolicy(opts.ctx, client.DeletePolicyOpts{
+		ID:        opts.clusterID,
+		StackName: cfn.NewStackNamer().LokiS3Policy(opts.clusterID.ClusterName, bucketName),
+	})
+	if err != nil {
+		return fmt.Errorf("deleting S3 policy: %w", err)
+	}
+
+	err = opts.objectStorageService.EmptyBucket(api.EmptyBucketOpts{
+		BucketName: bucketName,
+	})
+	if err != nil {
+		return fmt.Errorf("emptying bucket: %w", err)
+	}
+
+	err = opts.objectStorageService.DeleteBucket(api.DeleteBucketOpts{
+		ClusterID:  opts.clusterID,
+		BucketName: bucketName,
+	})
+	if err != nil {
+		return fmt.Errorf("deleting bucket: %w", err)
+	}
+
+	return nil
+}
+
+func tablePrefixGenerator(clusterName string) string {
+	return fmt.Sprintf("okctl-%s-loki-index_", clusterName)
+}
+
+func bucketNameGenerator(clusterName string) string {
+	return fmt.Sprintf("okctl-%s-loki", clusterName)
 }

@@ -310,6 +310,10 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		clusterService,
 	)
 
+	objectStorageService := core.NewObjectStorageService(
+		awsProvider.NewObjectStorageCloudProvider(o.CloudProvider),
+	)
+
 	monitoringService := clientCore.NewMonitoringService(
 		handlers.Monitoring,
 		helmService,
@@ -319,6 +323,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		paramService,
 		serviceAccountService,
 		managedPolicyService,
+		objectStorageService,
 		o.CloudProvider,
 	)
 
@@ -348,10 +353,6 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		o.toolChain.ContainerRepositoryService,
 		handlers.ContainerRepository,
 		o.CloudProvider,
-	)
-
-	objectStorageService := core.NewObjectStorageService(
-		awsProvider.NewObjectStorageCloudProvider(o.CloudProvider),
 	)
 
 	keyValueStoreService := core.NewKeyValueStoreService(

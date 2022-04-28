@@ -336,3 +336,19 @@ func NewCloudwatchDatasourceServiceAccount(clusterName, region, namespace, permi
 		Region:                 region,
 	})
 }
+
+// NewLokiServiceAccount returns an initialized configuration
+// for creating a service account used by Loki to manipulate S3 and DynamoDB
+func NewLokiServiceAccount(clusterName, region, namespace, permissionsBoundaryARN string, policyARNs []string) (*v1alpha5.ClusterConfig, error) {
+	return NewServiceAccount(&ServiceAccountArgs{
+		ClusterName: clusterName,
+		Labels: map[string]string{
+			"aws-usage": "cluster-ops",
+		},
+		Name:                   "loki",
+		Namespace:              namespace,
+		PermissionsBoundaryArn: permissionsBoundaryARN,
+		PolicyArns:             policyARNs,
+		Region:                 region,
+	})
+}

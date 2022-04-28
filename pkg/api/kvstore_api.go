@@ -143,6 +143,8 @@ type Storer interface {
 	CreateStore(CreateStoreOpts) error
 	// DeleteStore defines a function that deletes a key / value store
 	DeleteStore(DeleteStoreOpts) error
+	// ListStores defines a function that lists all available stores
+	ListStores() ([]string, error)
 }
 
 // Stringer defines operations done with string items

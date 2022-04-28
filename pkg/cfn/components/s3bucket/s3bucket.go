@@ -47,7 +47,12 @@ func (s *S3Bucket) Ref() string {
 
 // NamedOutputs returns the named outputs
 func (s *S3Bucket) NamedOutputs() map[string]cloudformation.Output {
-	return cfn.NewValue(s.Name(), s.Ref()).NamedOutputs()
+	valueMap := cfn.NewValueMap()
+
+	valueMap.Add(cfn.NewValue(s.Name(), s.Ref()))
+	valueMap.Add(cfn.NewValue("BucketARN", cloudformation.GetAtt(s.Name(), "Arn")))
+
+	return valueMap.NamedOutputs()
 }
 
 // New returns an initialised AWS S3 cloud formation template

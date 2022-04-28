@@ -55,6 +55,7 @@ type mockDynamoProvider struct {
 	hasLock bool
 }
 
+func (m *mockDynamoProvider) ListStores() ([]string, error)           { panic("implement me") }
 func (m *mockDynamoProvider) CreateStore(_ api.CreateStoreOpts) error { return nil }
 func (m *mockDynamoProvider) DeleteStore(_ api.DeleteStoreOpts) error { return nil }
 func (m *mockDynamoProvider) GetString(_ api.GetStringOpts) (string, error) {

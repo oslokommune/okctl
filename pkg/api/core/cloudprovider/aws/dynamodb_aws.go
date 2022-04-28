@@ -56,6 +56,22 @@ func (k kvStoreProvider) DeleteStore(opts api.DeleteStoreOpts) error {
 	return nil
 }
 
+// ListStores knows how to fetch and return all available stores
+func (k kvStoreProvider) ListStores() ([]string, error) {
+	result, err := k.provider.DynamoDB().ListTables(&dynamodbapi.ListTablesInput{})
+	if err != nil {
+		return nil, fmt.Errorf("listing tables: %w", err)
+	}
+
+	cleanedTableNames := make([]string, len(result.TableNames))
+
+	for index, name := range result.TableNames {
+		cleanedTableNames[index] = *name
+	}
+
+	return cleanedTableNames, nil
+}
+
 // InsertItem knows how to insert a string into a DynamoDB table
 func (k kvStoreProvider) InsertItem(opts api.InsertItemOpts) error {
 	attrs, err := keyValueStoreFieldAsAttributeValue(opts.Item.Fields)

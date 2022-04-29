@@ -1,10 +1,11 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
-	"github.com/mishudark/errors"
+	merrors "github.com/mishudark/errors"
 
 	"github.com/google/uuid"
 
@@ -58,7 +59,7 @@ func (r *remoteStateService) Download(clusterID api.ID) (io.Reader, error) {
 		Path:       defaultStateObjectName,
 	})
 	if err != nil {
-		return nil, errors.E(err, "getting object")
+		return nil, fmt.Errorf("getting object: %w", err)
 	}
 
 	return object, nil
@@ -123,7 +124,7 @@ func (r *remoteStateService) Purge(clusterID api.ID) error {
 	stateDBBucketName := generateStateDBBucketName(clusterID.ClusterName)
 
 	err := r.objectAPI.EmptyBucket(api.EmptyBucketOpts{BucketName: stateDBBucketName})
-	if err != nil && !errors.IsKind(err, errors.NotExist) {
+	if err != nil && !errors.Is(err, api.ErrObjectStorageBucketNotExist) {
 		return fmt.Errorf("emptying state bucket: %w", err)
 	}
 
@@ -160,7 +161,7 @@ func (r *remoteStateService) hasLock(clusterID api.ID) (bool, error) {
 		return true, nil
 	}
 
-	if errors.IsKind(err, errors.NotExist) {
+	if merrors.IsKind(err, merrors.NotExist) {
 		return false, nil
 	}
 

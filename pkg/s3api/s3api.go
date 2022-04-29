@@ -3,13 +3,11 @@
 package s3api
 
 import (
-	stderrors "errors"
+	"errors"
 	"fmt"
 	"io"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
-
-	"github.com/mishudark/errors"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -48,7 +46,7 @@ func (a *S3API) DeleteObject(bucket, key string) error {
 
 	var aerr awserr.Error
 
-	if stderrors.As(err, &aerr) {
+	if errors.As(err, &aerr) {
 		if aerr.Code() == s3.ErrCodeNoSuchBucket {
 			return ErrBucketDoesNotExist
 		}
@@ -74,12 +72,12 @@ func (a *S3API) GetObject(bucket, key string) (io.ReadCloser, error) {
 func (a *S3API) EmptyBucket(bucketName string) error {
 	err := a.deleteAllObjects(bucketName)
 	if err != nil {
-		return errors.E(err, "deleting all objects")
+		return fmt.Errorf("deleting all objects: %w", err)
 	}
 
 	err = a.deleteAllVersions(bucketName)
 	if err != nil {
-		return errors.E(err, "deleting all versions")
+		return fmt.Errorf("deleting all versions: %w", err)
 	}
 
 	return nil
@@ -100,7 +98,7 @@ func (a *S3API) deleteAllObjects(bucketName string) error {
 		if err != nil {
 			var aerr awserr.Error
 
-			if stderrors.As(err, &aerr) && aerr.Code() == s3.ErrCodeNoSuchBucket {
+			if errors.As(err, &aerr) && aerr.Code() == s3.ErrCodeNoSuchBucket {
 				return ErrBucketDoesNotExist
 			}
 
@@ -138,7 +136,7 @@ func (a *S3API) deleteAllVersions(bucketName string) error {
 			VersionIdMarker: nextMarker,
 		})
 		if err != nil {
-			return errors.E(err, "listing object versions")
+			return fmt.Errorf("listing object versions: %w", err)
 		}
 
 		if result.Versions == nil {
@@ -150,7 +148,7 @@ func (a *S3API) deleteAllVersions(bucketName string) error {
 			Delete: &s3.Delete{Objects: objectVersionsAsIdentifiers(result.Versions)},
 		})
 		if err != nil {
-			return errors.E(err, "deleting versions")
+			return fmt.Errorf("deleting versions: %w", err)
 		}
 
 		if !*result.IsTruncated {

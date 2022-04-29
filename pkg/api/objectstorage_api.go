@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"io"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -139,3 +140,6 @@ type ObjectStorageCloudProvider interface {
 	Bucketer
 	Objecter
 }
+
+// ErrObjectStorageBucketNotExist indicates that a specified bucket does not exist
+var ErrObjectStorageBucketNotExist = errors.New("bucket does not exist")

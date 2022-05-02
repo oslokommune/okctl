@@ -71,7 +71,7 @@ config:
     reject_old_samples_max_age: 168h
   schema_config:
     configs:
-      - from: {{.FromDate}}
+      - from: '{{.FromDate}}'
         store: aws
         object_store: s3
         schema: v11

@@ -105,6 +105,10 @@ func (a *S3API) deleteAllObjects(bucketName string) error {
 			return err
 		}
 
+		if result.Contents == nil {
+			break
+		}
+
 		_, err = a.provider.S3().DeleteObjects(&s3.DeleteObjectsInput{
 			Bucket: aws.String(bucketName),
 			Delete: &s3.Delete{Objects: objectsAsIdentifiers(result.Contents)},

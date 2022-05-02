@@ -46,7 +46,9 @@ Example:
 - Approximately 30.000 users downloaded and experienced an error using the app.
 - Users already logged in experienced some minor delay in the app
 -->
-- Citizens expecting a mail regarding kindergarden benefits experienced an ~eight~ hour delay?
+- During the annual creation of re-applications for citizens with reduced payment the processing had to be halte for
+  hours.
+- Approximately two hours of log data got lost
 
 ## Cause(s)
 <!--

@@ -245,6 +245,7 @@ func (s *monitoringService) DeleteLoki(ctx context.Context, id api.ID) error {
 		ctx:                  ctx,
 		policyService:        s.policy,
 		keyValueStoreService: s.keyValueStoreService,
+		provider:             s.provider,
 		clusterID:            id,
 	})
 	if err != nil {
@@ -266,7 +267,7 @@ func (s *monitoringService) DeleteLoki(ctx context.Context, id api.ID) error {
 
 // nolint: funlen
 func (s *monitoringService) CreateLoki(ctx context.Context, id api.ID) (*client.Helm, error) {
-	bucketName := bucketNameGenerator(id.ClusterName)
+	absoluteBucketName := bucketNameGenerator(id.ClusterName)
 	tablePrefix := tablePrefixGenerator(id.ClusterName)
 
 	s3PolicyARN, err := createBucket(createBucketOpts{
@@ -274,7 +275,7 @@ func (s *monitoringService) CreateLoki(ctx context.Context, id api.ID) (*client.
 		id:                   id,
 		objectStorageService: s.objectStorageService,
 		policyService:        s.policy,
-		bucketName:           bucketName,
+		bucketName:           absoluteBucketName,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("creating bucket: %w", err)
@@ -311,7 +312,7 @@ func (s *monitoringService) CreateLoki(ctx context.Context, id api.ID) (*client.
 		return nil, fmt.Errorf("creating service account: %w", err)
 	}
 
-	chart := loki.New(loki.NewDefaultValues(bucketName, tablePrefix), constant.DefaultChartApplyTimeout)
+	chart := loki.New(loki.NewDefaultValues(absoluteBucketName, tablePrefix), constant.DefaultChartApplyTimeout)
 
 	values, err := chart.ValuesYAML()
 	if err != nil {
@@ -820,36 +821,42 @@ func (s *monitoringService) CreateKubePromStack(ctx context.Context, opts client
 	return stack, nil
 }
 
+// NewMonitoringServiceOpts contains necessary data for handling monitoring
+type NewMonitoringServiceOpts struct {
+	State                 client.MonitoringState
+	Helm                  client.HelmService
+	CertificateService    client.CertificateService
+	IdentityService       client.IdentityManagerService
+	ManifestService       client.ManifestService
+	ParameterService      client.ParameterService
+	ServiceAccountService client.ServiceAccountService
+	PolicyService         client.ManagedPolicyService
+	ObjectStorageService  api.ObjectStorageService
+	KeyValueStoreService  api.KeyValueStoreService
+	Provider              v1alpha1.CloudProvider
+}
+
 // NewMonitoringService returns an initialised service
-func NewMonitoringService(
-	state client.MonitoringState,
-	helm client.HelmService,
-	cert client.CertificateService,
-	ident client.IdentityManagerService,
-	manifest client.ManifestService,
-	param client.ParameterService,
-	service client.ServiceAccountService,
-	policy client.ManagedPolicyService,
-	objectStorageService api.ObjectStorageService,
-	provider v1alpha1.CloudProvider,
-) client.MonitoringService {
+func NewMonitoringService(opts NewMonitoringServiceOpts) client.MonitoringService {
 	return &monitoringService{
-		state:                state,
-		helm:                 helm,
-		cert:                 cert,
-		ident:                ident,
-		param:                param,
-		manifest:             manifest,
-		service:              service,
-		policy:               policy,
-		objectStorageService: objectStorageService,
-		provider:             provider,
+		state:                opts.State,
+		helm:                 opts.Helm,
+		cert:                 opts.CertificateService,
+		ident:                opts.IdentityService,
+		param:                opts.ParameterService,
+		manifest:             opts.ManifestService,
+		service:              opts.ServiceAccountService,
+		policy:               opts.PolicyService,
+		objectStorageService: opts.ObjectStorageService,
+		keyValueStoreService: opts.KeyValueStoreService,
+		provider:             opts.Provider,
 	}
 }
 
 const (
 	defaultLokiServiceAccountName   = "loki"
 	defaultLokiDynamoDBPolicyDomain = "loki"
+	defaultLokiBucketName           = "loki"
 )
 
 type createBucketOpts struct {
@@ -878,7 +885,7 @@ func createBucket(opts createBucketOpts) (string, error) {
 
 	s3Policy, err := opts.policyService.CreatePolicy(opts.ctx, client.CreatePolicyOpts{
 		ID:                     opts.id,
-		StackName:              cfn.NewStackNamer().LokiS3Policy(opts.id.ClusterName, "loki"),
+		StackName:              cfn.NewStackNamer().LokiS3Policy(opts.id.ClusterName, defaultLokiBucketName),
 		PolicyOutputName:       "LokiS3ServiceAccountPolicy",
 		CloudFormationTemplate: s3PolicyCFNStack,
 	})
@@ -922,6 +929,7 @@ type deleteDynamoDBOpts struct {
 	ctx                  context.Context
 	policyService        client.ManagedPolicyService
 	keyValueStoreService api.KeyValueStoreService
+	provider             v1alpha1.CloudProvider
 	clusterID            api.ID
 }
 
@@ -948,10 +956,11 @@ func deleteDynamoDBIntegration(opts deleteDynamoDBOpts) error {
 		}
 	}
 
+	dynamoDBAPI := opts.provider.DynamoDB()
+
 	for _, table := range deletionQueue {
-		err = opts.keyValueStoreService.DeleteStore(api.DeleteStoreOpts{
-			ClusterID: opts.clusterID,
-			Name:      api.StoreName(table),
+		_, err = dynamoDBAPI.DeleteTable(&dynamodb.DeleteTableInput{
+			TableName: aws.String(table),
 		})
 		if err != nil {
 			return fmt.Errorf("deleting table: %w", err)
@@ -969,28 +978,28 @@ type deleteS3IntegrationOpts struct {
 }
 
 func deleteS3Integration(opts deleteS3IntegrationOpts) error {
-	bucketName := bucketNameGenerator(opts.clusterID.ClusterName)
+	absoluteBucketName := bucketNameGenerator(opts.clusterID.ClusterName)
 
 	err := opts.policyService.DeletePolicy(opts.ctx, client.DeletePolicyOpts{
 		ID:        opts.clusterID,
-		StackName: cfn.NewStackNamer().LokiS3Policy(opts.clusterID.ClusterName, bucketName),
+		StackName: cfn.NewStackNamer().LokiS3Policy(opts.clusterID.ClusterName, defaultLokiBucketName),
 	})
 	if err != nil {
 		return fmt.Errorf("deleting S3 policy: %w", err)
 	}
 
 	err = opts.objectStorageService.EmptyBucket(api.EmptyBucketOpts{
-		BucketName: bucketName,
+		BucketName: absoluteBucketName,
 	})
-	if err != nil {
+	if err != nil && !errors.Is(err, api.ErrObjectStorageBucketNotExist) {
 		return fmt.Errorf("emptying bucket: %w", err)
 	}
 
 	err = opts.objectStorageService.DeleteBucket(api.DeleteBucketOpts{
 		ClusterID:  opts.clusterID,
-		BucketName: bucketName,
+		BucketName: absoluteBucketName,
 	})
-	if err != nil {
+	if err != nil && !errors.Is(err, api.ErrObjectStorageBucketNotExist) {
 		return fmt.Errorf("deleting bucket: %w", err)
 	}
 

@@ -314,18 +314,23 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		awsProvider.NewObjectStorageCloudProvider(o.CloudProvider),
 	)
 
-	monitoringService := clientCore.NewMonitoringService(
-		handlers.Monitoring,
-		helmService,
-		certificateService,
-		identityManagerService,
-		manifestService,
-		paramService,
-		serviceAccountService,
-		managedPolicyService,
-		objectStorageService,
-		o.CloudProvider,
+	keyValueStoreService := core.NewKeyValueStoreService(
+		awsProvider.NewDynamoDBKeyValueStoreCloudProvider(o.CloudProvider),
 	)
+
+	monitoringService := clientCore.NewMonitoringService(clientCore.NewMonitoringServiceOpts{
+		State:                 handlers.Monitoring,
+		Helm:                  helmService,
+		CertificateService:    certificateService,
+		IdentityService:       identityManagerService,
+		ManifestService:       manifestService,
+		ParameterService:      paramService,
+		ServiceAccountService: serviceAccountService,
+		PolicyService:         managedPolicyService,
+		ObjectStorageService:  objectStorageService,
+		KeyValueStoreService:  keyValueStoreService,
+		Provider:              o.CloudProvider,
+	})
 
 	argocdService := clientCore.NewArgoCDService(clientCore.NewArgoCDServiceOpts{
 		Fs:                  o.FileSystem,
@@ -353,10 +358,6 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		o.toolChain.ContainerRepositoryService,
 		handlers.ContainerRepository,
 		o.CloudProvider,
-	)
-
-	keyValueStoreService := core.NewKeyValueStoreService(
-		awsProvider.NewDynamoDBKeyValueStoreCloudProvider(o.CloudProvider),
 	)
 
 	remoteStateService := clientCore.NewRemoteStateService(keyValueStoreService, objectStorageService)

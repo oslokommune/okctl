@@ -15,18 +15,19 @@ import (
 type clusterConfigRetrieverFn func(config *v1alpha5.ClusterConfig)
 
 func createMonitoringService(retriever clusterConfigRetrieverFn) client.MonitoringService {
-	return NewMonitoringService(
-		mockState{},
-		mockHelm{},
-		mockCertService{},
-		mockIdentityManagerService{},
-		mockManifestService{},
-		mockParameterService{},
-		mockServiceAccountService{retrieverFn: retriever},
-		mockManagedPolicyService{},
-		mockObjectStorageService{},
-		mock.NewGoodCloudProvider(),
-	)
+	return NewMonitoringService(NewMonitoringServiceOpts{
+		State:                 mockState{},
+		Helm:                  mockHelm{},
+		CertificateService:    mockCertService{},
+		IdentityService:       mockIdentityManagerService{},
+		ManifestService:       mockManifestService{},
+		ParameterService:      mockParameterService{},
+		ServiceAccountService: mockServiceAccountService{retrieverFn: retriever},
+		PolicyService:         mockManagedPolicyService{},
+		ObjectStorageService:  mockObjectStorageService{},
+		KeyValueStoreService:  nil,
+		Provider:              mock.NewGoodCloudProvider(),
+	})
 }
 
 func TestKM196(t *testing.T) {

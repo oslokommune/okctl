@@ -2,11 +2,14 @@ package core
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/mishudark/errors"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	merrors "github.com/mishudark/errors"
 
 	"github.com/oslokommune/okctl/pkg/iamapi"
 
@@ -150,7 +153,7 @@ func (s *monitoringService) CreateTempo(ctx context.Context, id api.ID) (*client
 			Replicas:  replicas,
 		})
 		if err != nil {
-			if errors.IsKind(err, errors.NotExist) {
+			if merrors.IsKind(err, merrors.NotExist) {
 				break
 			}
 
@@ -214,7 +217,7 @@ func (s *monitoringService) DeleteLoki(ctx context.Context, id api.ID) error {
 		ReleaseName: loki.ReleaseName,
 		Namespace:   loki.Namespace,
 	})
-	if err != nil {
+	if err != nil && !merrors.IsKind(err, merrors.NotExist) {
 		return err
 	}
 
@@ -359,7 +362,7 @@ func (s *monitoringService) CreateLoki(ctx context.Context, id api.ID) (*client.
 			Replicas:  replicas,
 		})
 		if err != nil {
-			if errors.IsKind(err, errors.NotExist) {
+			if merrors.IsKind(err, merrors.NotExist) {
 				break
 			}
 

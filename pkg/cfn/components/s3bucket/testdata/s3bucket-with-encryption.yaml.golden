@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  BucketARN:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-BucketARN
+    Value:
+      Fn::GetAtt:
+      - myResource
+      - Arn
+  myResource:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-myResource
+    Value:
+      Ref: myResource
+Resources:
+  myResource:
+    Properties:
+      AccessControl: BucketOwnerFullControl
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+        - BucketKeyEnabled: true
+          ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
+      BucketName: my-bucket
+    Type: AWS::S3::Bucket

@@ -75,6 +75,7 @@ type CreateS3BucketOpts struct {
 	ID        ID
 	Name      string
 	StackName string
+	Encrypt   bool
 }
 
 // Validate the inputs

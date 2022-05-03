@@ -862,6 +862,7 @@ func createBucket(opts createBucketOpts) (string, error) {
 		ClusterID:  opts.id,
 		BucketName: opts.bucketName,
 		Private:    true,
+		Encrypted:  true,
 	})
 	if err != nil {
 		return "", fmt.Errorf("creating bucket: %w", err)

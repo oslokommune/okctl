@@ -1719,6 +1719,7 @@ type S3BucketComposer struct {
 	BucketName           string
 	ResourceName         string
 	BlockAllPublicAccess bool
+	EncryptObjects       bool
 }
 
 // ResourceBucketNameOutput returns the name of the resource
@@ -1731,6 +1732,7 @@ func (s *S3BucketComposer) Compose() (*cfn.Composition, error) {
 	b := s3bucket.New(
 		s.ResourceBucketNameOutput(),
 		s.BucketName,
+		s.EncryptObjects,
 	)
 
 	b.BlockAllPublicAccess = s.BlockAllPublicAccess
@@ -1742,10 +1744,11 @@ func (s *S3BucketComposer) Compose() (*cfn.Composition, error) {
 }
 
 // NewS3BucketComposer returns an initialised AWS S3 bucket composer
-func NewS3BucketComposer(bucketName, resourceName string) *S3BucketComposer {
+func NewS3BucketComposer(bucketName, resourceName string, encryptObjects bool) *S3BucketComposer {
 	return &S3BucketComposer{
-		BucketName:   bucketName,
-		ResourceName: resourceName,
+		BucketName:     bucketName,
+		ResourceName:   resourceName,
+		EncryptObjects: encryptObjects,
 	}
 }
 

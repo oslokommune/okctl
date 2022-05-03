@@ -36,6 +36,8 @@ type CreateBucketOpts struct {
 	// Determines if the bucket should be protected from public access. N.B.: leaving this as false does not mean public
 	// access is allowed nor enabled
 	Private bool
+	// Encrypted defines if objects should be encrypted
+	Encrypted bool
 }
 
 // Validate ensures correct and required data

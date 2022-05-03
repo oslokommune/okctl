@@ -9,6 +9,8 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/config/constant"
+
 	"github.com/oslokommune/okctl/pkg/helm"
 )
 
@@ -16,7 +18,8 @@ const (
 	// ReleaseName is the name of the release
 	ReleaseName = "loki"
 	// Namespace is the default namespace
-	Namespace = "monitoring"
+	Namespace                  = constant.DefaultMonitoringNamespace
+	schemaConfigFromDateFormat = "2006-01-02" // YYYY-MM-DD
 )
 
 // New returns an initialised Helm chart for installing cluster-Loki
@@ -37,7 +40,7 @@ func New(values *Values, timeout time.Duration) *helm.Chart {
 // the default values
 func NewDefaultValues(s3BucketName string, dynamoDBTablePrefix string) *Values {
 	return &Values{
-		FromDate:              time.Now().Format("2006-01-02"),
+		FromDate:              time.Now().Format(schemaConfigFromDateFormat),
 		IndexPrefix:           dynamoDBTablePrefix,
 		LokiStorageBucketName: s3BucketName,
 	}

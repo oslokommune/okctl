@@ -2,6 +2,7 @@ package loki_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/oslokommune/okctl/pkg/helm/charts/loki"
 	"github.com/sebdah/goldie/v2"
@@ -15,8 +16,15 @@ func TestNewDefaultValues(t *testing.T) {
 		golden string
 	}{
 		{
-			name:   "Default values should generate valid yaml",
-			values: loki.NewDefaultValues("mock-bucket-name", "mock-prefix_"),
+			name: "Default values should generate valid yaml",
+			values: func() *loki.Values {
+				v := loki.NewDefaultValues("mock-bucket-name", "mock-prefix_")
+
+				t, _ := time.Parse("2006-01-02", "2006-01-02")
+				v.FromDate = t.Format("2006-01-02")
+
+				return v
+			}(),
 			golden: "loki.yml",
 		},
 	}

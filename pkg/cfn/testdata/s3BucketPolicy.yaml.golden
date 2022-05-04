@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  LokiS3ServiceAccountPolicy:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-LokiS3ServiceAccountPolicy
+    Value:
+      Ref: LokiS3ServiceAccountPolicy
+Resources:
+  LokiS3ServiceAccountPolicy:
+    Properties:
+      Description: Service account policy for storing logs in an S3 bucket
+      ManagedPolicyName: okctl-mock-cluster-LokiS3ServiceAccountPolicy
+      PolicyDocument:
+        Statement:
+        - Action:
+          - s3:PutObject
+          - s3:GetObject
+          - s3:ListBucket
+          - s3:DeleteObject
+          Effect: Allow
+          Resource:
+          - arn:but:is:not:an:arn
+          - arn:but:is:not:an:arn/*
+        Version: 2012-10-17
+    Type: AWS::IAM::ManagedPolicy

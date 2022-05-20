@@ -86,6 +86,7 @@ config:
       bucketnames: mock-bucket-name
       dynamodb:
         dynamodb_url: dynamodb://eu-west-1
+      sse_encryption: true
 
     filesystem:
       directory: /data/loki/chunks
@@ -95,14 +96,8 @@ config:
     retention_deletes_enabled: true
     retention_period: 1344h # 1 month
     index_tables_provisioning:
-      # Read/write throughput requirements for the current table
-      # (the table which would handle writes/reads for data timestamped at the current time)
-      # Throughput is how many operations per second
-      provisioned_write_throughput: 1
-      provisioned_read_throughput: 1
-      # Read/write throughput requirements for non-current tables
-      inactive_write_throughput: 1
-      inactive_read_throughput: 1
+      enable_ondemand_throughput_mode: true
+      enable_inactive_throughput_on_demand_mode: true
   compactor:
     working_directory: /data/loki/boltdb-shipper-compactor
     shared_store: filesystem

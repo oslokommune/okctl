@@ -9,8 +9,6 @@ import (
 	"path"
 	"time"
 
-	"github.com/oslokommune/okctl/pkg/clients/kubectl"
-
 	"github.com/oslokommune/okctl/pkg/binaries"
 	"github.com/oslokommune/okctl/pkg/clients/kubectl/binary"
 	"github.com/oslokommune/okctl/pkg/credentials"
@@ -325,7 +323,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 }
 
 // SetupApplicationsSync applies an ArgoCD Application manifest which ensures syncing of an application folder
-func (s *argoCDService) SetupApplicationsSync(_ context.Context, kubectlClient kubectl.Client, cluster v1alpha1.Cluster) error {
+func (s *argoCDService) SetupApplicationsSync(_ context.Context, kubectlClient client.Applier, cluster v1alpha1.Cluster) error {
 	relativeArgoCDConfigDir := path.Join(
 		cluster.Github.OutputPath,
 		cluster.Metadata.Name,
@@ -371,7 +369,7 @@ func (s *argoCDService) SetupApplicationsSync(_ context.Context, kubectlClient k
 
 // SetupNamespacesSync makes ArgoCD track namespace manifests added to the
 // infrastructure/<cluster name>/argocd/namespaces/ directory
-func (s *argoCDService) SetupNamespacesSync(_ context.Context, kubectlClient kubectl.Client, cluster v1alpha1.Cluster) error {
+func (s *argoCDService) SetupNamespacesSync(_ context.Context, kubectlClient client.Applier, cluster v1alpha1.Cluster) error {
 	relativeArgoCDConfigDir := path.Join(
 		cluster.Github.OutputPath,
 		cluster.Metadata.Name,

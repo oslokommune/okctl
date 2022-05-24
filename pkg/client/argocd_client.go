@@ -2,8 +2,7 @@ package client
 
 import (
 	"context"
-
-	"github.com/oslokommune/okctl/pkg/clients/kubectl"
+	"io"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
@@ -43,6 +42,10 @@ type DeleteArgoCDOpts struct {
 	ID api.ID
 }
 
+type Applier interface {
+	Apply(io.Reader) error
+}
+
 // ArgoCDService is a business logic implementation
 type ArgoCDService interface {
 	// CreateArgoCD defines functionality for installing ArgoCD into a cluster
@@ -51,10 +54,10 @@ type ArgoCDService interface {
 	DeleteArgoCD(ctx context.Context, opts DeleteArgoCDOpts) error
 	// SetupApplicationsSync defines functionality for preparing a directory where ArgoCD application manifests will be
 	// automatically synced
-	SetupApplicationsSync(ctx context.Context, kubectlClient kubectl.Client, cluster v1alpha1.Cluster) error
+	SetupApplicationsSync(ctx context.Context, kubectlClient Applier, cluster v1alpha1.Cluster) error
 	// SetupNamespacesSync defines functionality for preparing a directory where namespace manifests will be
 	// automatically synced
-	SetupNamespacesSync(ctx context.Context, kubectlClient kubectl.Client, cluster v1alpha1.Cluster) error
+	SetupNamespacesSync(ctx context.Context, kubectlClient Applier, cluster v1alpha1.Cluster) error
 }
 
 // ArgoCDState implements the state layer

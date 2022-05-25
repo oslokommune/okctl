@@ -9,6 +9,8 @@ import (
 	"os"
 	"path"
 
+	"github.com/oslokommune/okctl/pkg/scaffold/resources"
+
 	"github.com/go-git/go-git/v5/plumbing/format/index"
 
 	"github.com/go-git/go-billy/v5/memfs"
@@ -63,6 +65,22 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 	})
 	if err != nil {
 		return fmt.Errorf("generating application overlay: %w", err)
+	}
+
+	namespace := resources.CreateNamespace(opts.Application)
+
+	rawNamespace, err := scaffold.ResourceAsBytes(namespace)
+	if err != nil {
+		return fmt.Errorf("serializing namespace: %w", err)
+	}
+
+	err = s.appManifestService.SaveNamespace(ctx, client.SaveNamespaceOpts{
+		Filename:    fmt.Sprintf("%s.yaml", namespace.Name),
+		ClusterName: opts.Cluster.Metadata.Name,
+		Payload:     bytes.NewReader(rawNamespace),
+	})
+	if err != nil {
+		return fmt.Errorf("storing namespace: %w", err)
 	}
 
 	return nil

@@ -135,6 +135,18 @@ func (a *applicationManifestService) GetPatch(_ context.Context, opts client.Get
 	return jsonpatch.Patch{Operations: patch}, nil
 }
 
+// SaveNamespace knows how and where to store a namespace
+func (a *applicationManifestService) SaveNamespace(_ context.Context, opts client.SaveNamespaceOpts) error {
+	workingDir := getAbsoluteNamespacesDirectory(a.absoluteOutputDirectory, opts.ClusterName)
+
+	err := a.fs.WriteReader(path.Join(workingDir, opts.Filename), opts.Payload)
+	if err != nil {
+		return fmt.Errorf("writing: %w", err)
+	}
+
+	return nil
+}
+
 func acquireKustomizeFile(fs *afero.Afero, absoluteDirPath string) (resources.Kustomization, error) {
 	absoluteKustomizePath := path.Join(absoluteDirPath, kustomizationFilename)
 

@@ -4,8 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/clients/kubectl"
-
 	"github.com/oslokommune/okctl/pkg/github"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -141,11 +139,11 @@ type mockArgocdService struct {
 	deletionBump func()
 }
 
-func (m mockArgocdService) SetupNamespacesSync(_ context.Context, _ kubectl.Client, _ v1alpha1.Cluster) error {
+func (m mockArgocdService) SetupNamespacesSync(_ context.Context, _ client.Applier, _ v1alpha1.Cluster) error {
 	return nil
 }
 
-func (m mockArgocdService) SetupApplicationsSync(_ context.Context, _ kubectl.Client, _ v1alpha1.Cluster) error {
+func (m mockArgocdService) SetupApplicationsSync(_ context.Context, _ client.Applier, _ v1alpha1.Cluster) error {
 	return nil
 }
 

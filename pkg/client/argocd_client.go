@@ -42,7 +42,9 @@ type DeleteArgoCDOpts struct {
 	ID api.ID
 }
 
+// Applier defines necessary functionality for applying manifests to a Kubernetes cluster
 type Applier interface {
+	// Apply knows how to apply a manifest to a Kubernetes cluster
 	Apply(io.Reader) error
 }
 

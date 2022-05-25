@@ -160,7 +160,10 @@ func TestDeleteApplication(t *testing.T) {
 		clusterApplicationsDir,
 		fmt.Sprintf("%s.yaml", applicationManifest.Metadata.Name),
 	)))
-	assert.Equal(t, false, fileExists(t, fs, filepath.Join(
+
+	// Namespace should still exist. User might have resources not tracked by okctl here, and the namespaces will get
+	// cleaned up by `delete cluster` later anyhow.
+	assert.Equal(t, true, fileExists(t, fs, filepath.Join(
 		clusterNamespacesDir, fmt.Sprintf("%s.yaml", applicationManifest.Metadata.Namespace),
 	)))
 }

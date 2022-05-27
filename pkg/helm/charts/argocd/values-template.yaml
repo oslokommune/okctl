@@ -14,7 +14,7 @@ global:
     # -- If defined, a repository applied to all ArgoCD deployments
     repository: quay.io/argoproj/argocd
     # -- Overrides the global ArgoCD image tag whose default is the chart appVersion
-    tag: ""
+    tag: "v2.1.15"
     # -- If defined, a imagePullPolicy applied to all ArgoCD deployments
     imagePullPolicy: IfNotPresent
   # -- Annotations for the all deployed pods

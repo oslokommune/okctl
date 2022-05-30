@@ -3,6 +3,8 @@ package cfn_test
 import (
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/api"
+
 	"github.com/oslokommune/okctl/pkg/cfn"
 	"github.com/oslokommune/okctl/pkg/cfn/components"
 	"github.com/sebdah/goldie/v2"
@@ -117,12 +119,22 @@ func TestBuilderAndComposers(t *testing.T) {
 		{
 			name:     "S3Bucket composer",
 			golden:   "s3-bucket.yaml",
-			composer: components.NewS3BucketComposer("myBucket", "S3Bucket"),
+			composer: components.NewS3BucketComposer("myBucket", "S3Bucket", false),
 		},
 		{
 			name:     "DynamoDB composer",
 			golden:   "dynamodb.yaml",
 			composer: components.NewDynamoDBTableComposer("myTable", "myID"),
+		},
+		{
+			name:     "Loki S3BucketPolicy composer",
+			golden:   "s3BucketPolicy.yaml",
+			composer: components.NewLokiS3PolicyComposer("mock-cluster", "arn:but:is:not:an:arn"),
+		},
+		{
+			name:     "Loki DynamoDB policy composer",
+			golden:   "lokiDynamoDBPolicy.yaml",
+			composer: components.NewLokiDynamoDBPolicyComposer(api.ID{ClusterName: "mock-cluster"}, "test-prefix_"),
 		},
 	}
 

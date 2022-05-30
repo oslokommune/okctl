@@ -1157,6 +1157,133 @@ func (c *BlockstoragePolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolic
 	return managedpolicy.New("BlockstoragePolicy", policyName, policyDesc, d)
 }
 
+// LokiS3PolicyComposer contains data for creating a policy governing Loki's S3 usage
+type LokiS3PolicyComposer struct {
+	clusterName string
+	bucketARN   string
+}
+
+// NewLokiS3PolicyComposer initialises a new LokiS3PolicyComposer
+func NewLokiS3PolicyComposer(clusterName string, bucketARN string) *LokiS3PolicyComposer {
+	return &LokiS3PolicyComposer{
+		clusterName: clusterName,
+		bucketARN:   bucketARN,
+	}
+}
+
+// Compose builds the policy and returns the result
+func (l *LokiS3PolicyComposer) Compose() (*cfn.Composition, error) {
+	p := l.ManagedPolicy()
+
+	return &cfn.Composition{
+		Outputs:   []cfn.StackOutputer{p},
+		Resources: []cfn.ResourceNamer{p},
+	}, nil
+}
+
+// ManagedPolicy returns the policy
+func (l *LokiS3PolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
+	policyName := fmt.Sprintf("okctl-%s-LokiS3ServiceAccountPolicy", l.clusterName)
+	policyDesc := "Service account policy for storing logs in an S3 bucket"
+
+	d := &policydocument.PolicyDocument{
+		Version: policydocument.Version,
+		Statement: []policydocument.StatementEntry{
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"s3:PutObject",
+					"s3:GetObject",
+					"s3:ListBucket",
+					"s3:DeleteObject",
+				},
+				Resource: []string{
+					l.bucketARN,
+					fmt.Sprintf("%s/*", l.bucketARN),
+				},
+			},
+		},
+	}
+
+	return managedpolicy.New("LokiS3ServiceAccountPolicy", policyName, policyDesc, d)
+}
+
+// LokiDynamoDBPolicyComposer contains data for creating a policy governing Loki's DynamoDB usage
+type LokiDynamoDBPolicyComposer struct {
+	clusterID   api.ID
+	tablePrefix string
+}
+
+// NewLokiDynamoDBPolicyComposer initialises a new LokiDynamoDBPolicyComposer
+func NewLokiDynamoDBPolicyComposer(clusterID api.ID, tablePrefix string) *LokiDynamoDBPolicyComposer {
+	return &LokiDynamoDBPolicyComposer{
+		clusterID:   clusterID,
+		tablePrefix: tablePrefix,
+	}
+}
+
+// Compose builds the policy and returns the result
+func (l *LokiDynamoDBPolicyComposer) Compose() (*cfn.Composition, error) {
+	p := l.ManagedPolicy()
+
+	return &cfn.Composition{
+		Outputs:   []cfn.StackOutputer{p},
+		Resources: []cfn.ResourceNamer{p},
+	}, nil
+}
+
+// ManagedPolicy returns the policy
+func (l *LokiDynamoDBPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolicy {
+	policyName := fmt.Sprintf("okctl-%s-LokiDynamoDBServiceAccountPolicy", l.clusterID.ClusterName)
+	policyDesc := "Service account policy for storing indexes in an DynamoDB table"
+
+	d := &policydocument.PolicyDocument{
+		Version: policydocument.Version,
+		Statement: []policydocument.StatementEntry{
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"dynamodb:BatchGetItem",
+					"dynamodb:BatchWriteItem",
+					"dynamodb:UntagResource",
+					"dynamodb:PutItem",
+					"dynamodb:DeleteItem",
+					"dynamodb:ListTagsOfResource",
+					"dynamodb:Query",
+					"dynamodb:UpdateItem",
+					"dynamodb:CreateTable",
+					"dynamodb:TagResource",
+					"dynamodb:DescribeTable",
+					"dynamodb:GetItem",
+					"dynamodb:UpdateTable",
+				},
+				Resource: []string{
+					fmt.Sprintf("arn:aws:dynamodb:%s:%s:table/%s",
+						l.clusterID.Region,
+						l.clusterID.AWSAccountID,
+						l.tablePrefix,
+					),
+				},
+			},
+			{
+				Effect: policydocument.EffectTypeAllow,
+				Action: []string{
+					"dynamodb:ListTables",
+				},
+				Resource: []string{
+					fmt.Sprintf("arn:aws:dynamodb:%s:%s:table/%s",
+						l.clusterID.Region,
+						l.clusterID.AWSAccountID,
+						"*",
+					),
+				},
+			},
+		},
+	}
+
+	return managedpolicy.New("LokiDynamoDBServiceAccountPolicy", policyName, policyDesc, d)
+}
+
 // CloudwatchDatasourcePolicyComposer contains state for building
 // a managed iam policy that allows grafana to read cloudwatch metrics
 // and logs
@@ -1592,6 +1719,7 @@ type S3BucketComposer struct {
 	BucketName           string
 	ResourceName         string
 	BlockAllPublicAccess bool
+	EncryptObjects       bool
 }
 
 // ResourceBucketNameOutput returns the name of the resource
@@ -1604,6 +1732,7 @@ func (s *S3BucketComposer) Compose() (*cfn.Composition, error) {
 	b := s3bucket.New(
 		s.ResourceBucketNameOutput(),
 		s.BucketName,
+		s.EncryptObjects,
 	)
 
 	b.BlockAllPublicAccess = s.BlockAllPublicAccess
@@ -1615,10 +1744,11 @@ func (s *S3BucketComposer) Compose() (*cfn.Composition, error) {
 }
 
 // NewS3BucketComposer returns an initialised AWS S3 bucket composer
-func NewS3BucketComposer(bucketName, resourceName string) *S3BucketComposer {
+func NewS3BucketComposer(bucketName, resourceName string, encryptObjects bool) *S3BucketComposer {
 	return &S3BucketComposer{
-		BucketName:   bucketName,
-		ResourceName: resourceName,
+		BucketName:     bucketName,
+		ResourceName:   resourceName,
+		EncryptObjects: encryptObjects,
 	}
 }
 

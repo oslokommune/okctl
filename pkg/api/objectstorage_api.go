@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"io"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -35,6 +36,8 @@ type CreateBucketOpts struct {
 	// Determines if the bucket should be protected from public access. N.B.: leaving this as false does not mean public
 	// access is allowed nor enabled
 	Private bool
+	// Encrypted defines if objects should be encrypted
+	Encrypted bool
 }
 
 // Validate ensures correct and required data
@@ -139,3 +142,6 @@ type ObjectStorageCloudProvider interface {
 	Bucketer
 	Objecter
 }
+
+// ErrObjectStorageBucketNotExist indicates that a specified bucket does not exist
+var ErrObjectStorageBucketNotExist = errors.New("bucket does not exist")

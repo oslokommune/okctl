@@ -585,7 +585,7 @@ func (h *Helm) Delete(kubeConfigPath string, cfg *DeleteConfig) error {
 	}
 
 	rel, err := h.findRelease(cfg.ReleaseName, actionConfig)
-	if err != nil && merrors.IsKind(err, merrors.NotExist) {
+	if err != nil && !merrors.IsKind(err, merrors.NotExist) {
 		return err
 	}
 

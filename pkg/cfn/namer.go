@@ -26,9 +26,11 @@ const (
 	DefaultStackNameIdentityPoolUser                  = "identitypooluser"
 	DefaultStackNameRDSPostgres                       = "rdspostgres"
 	DefaultStackNameS3Bucket                          = "s3bucket"
+	DefaultStackNameS3Policy                          = "s3bucketpolicy"
 	DefaultStackNameContainerRepository               = "containerrepository"
 	DefaultStackNameSecurityGroup                     = "sg"
 	DefaultStackNameDynamoDBTable                     = "dynamodb"
+	DefaultStackNameDynamoDBPolicy                    = "dynamodbpolicy"
 )
 
 // StackNamer knows how to name cloud formation stacks
@@ -226,5 +228,25 @@ func (n *StackNamer) DynamoDBTable(clusterName string, tableName string) string 
 		DefaultStackNameDynamoDBTable,
 		clusterName,
 		tableName,
+	)
+}
+
+// LokiS3Policy returns the stack name of a S3 policy made for Loki storage
+func (n *StackNamer) LokiS3Policy(clusterName string, bucketName string) string {
+	return fmt.Sprintf("%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameS3Policy,
+		clusterName,
+		bucketName,
+	)
+}
+
+// LokiDynamoDBPolicy returns the stack name of a DynamoDB policy made for Loki indexes
+func (n *StackNamer) LokiDynamoDBPolicy(clusterName string, domain string) string {
+	return fmt.Sprintf("%s-%s-%s-%s",
+		DefaultStackNamePrefix,
+		DefaultStackNameDynamoDBPolicy,
+		clusterName,
+		domain,
 	)
 }

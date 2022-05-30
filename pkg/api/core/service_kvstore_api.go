@@ -28,6 +28,10 @@ func (k *kvStoreService) DeleteStore(opts api.DeleteStoreOpts) error {
 	return k.cloudProvider.DeleteStore(opts)
 }
 
+func (k *kvStoreService) ListStores() ([]string, error) {
+	return k.cloudProvider.ListStores()
+}
+
 func (k *kvStoreService) InsertItem(opts api.InsertItemOpts) error {
 	err := opts.Validate()
 	if err != nil {

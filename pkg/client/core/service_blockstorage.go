@@ -38,8 +38,8 @@ func (s *blockstorageService) DeleteBlockstorage(ctx context.Context, id api.ID)
 	config, err := clusterconfig.NewBlockstorageServiceAccount(
 		id.ClusterName,
 		id.Region,
-		"n/a",
 		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
+		[]string{"n/a"},
 	)
 	if err != nil {
 		return err
@@ -95,8 +95,8 @@ func (s *blockstorageService) CreateBlockstorage(ctx context.Context, opts clien
 	config, err := clusterconfig.NewBlockstorageServiceAccount(
 		opts.ID.ClusterName,
 		opts.ID.Region,
-		policy.PolicyARN,
 		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
+		[]string{policy.PolicyARN},
 	)
 	if err != nil {
 		return nil, err

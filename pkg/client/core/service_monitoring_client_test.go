@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"io"
 	"testing"
 
 	"github.com/oslokommune/okctl/pkg/api"
@@ -14,17 +15,19 @@ import (
 type clusterConfigRetrieverFn func(config *v1alpha5.ClusterConfig)
 
 func createMonitoringService(retriever clusterConfigRetrieverFn) client.MonitoringService {
-	return NewMonitoringService(
-		mockState{},
-		mockHelm{},
-		mockCertService{},
-		mockIdentityManagerService{},
-		mockManifestService{},
-		mockParameterService{},
-		mockServiceAccountService{retrieverFn: retriever},
-		mockManagedPolicyService{},
-		mock.NewGoodCloudProvider(),
-	)
+	return NewMonitoringService(NewMonitoringServiceOpts{
+		State:                 mockState{},
+		Helm:                  mockHelm{},
+		CertificateService:    mockCertService{},
+		IdentityService:       mockIdentityManagerService{},
+		ManifestService:       mockManifestService{},
+		ParameterService:      mockParameterService{},
+		ServiceAccountService: mockServiceAccountService{retrieverFn: retriever},
+		PolicyService:         mockManagedPolicyService{},
+		ObjectStorageService:  mockObjectStorageService{},
+		KeyValueStoreService:  nil,
+		Provider:              mock.NewGoodCloudProvider(),
+	})
 }
 
 func TestKM196(t *testing.T) {
@@ -193,4 +196,30 @@ func (m mockManagedPolicyService) CreatePolicy(_ context.Context, _ client.Creat
 
 func (m mockManagedPolicyService) DeletePolicy(_ context.Context, _ client.DeletePolicyOpts) error {
 	return nil
+}
+
+type mockObjectStorageService struct{}
+
+func (m mockObjectStorageService) CreateBucket(_ api.CreateBucketOpts) (bucketID string, err error) {
+	panic("implement me")
+}
+
+func (m mockObjectStorageService) DeleteBucket(_ api.DeleteBucketOpts) error {
+	panic("implement me")
+}
+
+func (m mockObjectStorageService) EmptyBucket(_ api.EmptyBucketOpts) error {
+	panic("implement me")
+}
+
+func (m mockObjectStorageService) PutObject(_ api.PutObjectOpts) error {
+	panic("implement me")
+}
+
+func (m mockObjectStorageService) GetObject(_ api.GetObjectOpts) (io.Reader, error) {
+	panic("implement me")
+}
+
+func (m mockObjectStorageService) DeleteObject(_ api.DeleteObjectOpts) error {
+	panic("implement me")
 }

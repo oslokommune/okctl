@@ -8,12 +8,15 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
+const seeAlgorithmAES256 = "AES256"
+
 // S3Bucket contains the state required for building
 // the cloud formation template
 type S3Bucket struct {
 	StoredName           string
 	BucketName           string
 	BlockAllPublicAccess bool
+	Encrypt              bool
 }
 
 // Resource returns the cloud formation template
@@ -32,6 +35,19 @@ func (s *S3Bucket) Resource() cloudformation.Resource {
 		}
 	}
 
+	if s.Encrypt {
+		bucket.BucketEncryption = &s3.Bucket_BucketEncryption{
+			ServerSideEncryptionConfiguration: []s3.Bucket_ServerSideEncryptionRule{
+				{
+					BucketKeyEnabled: true,
+					ServerSideEncryptionByDefault: &s3.Bucket_ServerSideEncryptionByDefault{
+						SSEAlgorithm: seeAlgorithmAES256,
+					},
+				},
+			},
+		}
+	}
+
 	return bucket
 }
 
@@ -47,14 +63,20 @@ func (s *S3Bucket) Ref() string {
 
 // NamedOutputs returns the named outputs
 func (s *S3Bucket) NamedOutputs() map[string]cloudformation.Output {
-	return cfn.NewValue(s.Name(), s.Ref()).NamedOutputs()
+	valueMap := cfn.NewValueMap()
+
+	valueMap.Add(cfn.NewValue(s.Name(), s.Ref()))
+	valueMap.Add(cfn.NewValue("BucketARN", cloudformation.GetAtt(s.Name(), "Arn")))
+
+	return valueMap.NamedOutputs()
 }
 
 // New returns an initialised AWS S3 cloud formation template
 // - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-bucket.html
-func New(resourceName, bucketName string) *S3Bucket {
+func New(resourceName, bucketName string, encrypt bool) *S3Bucket {
 	return &S3Bucket{
 		StoredName: resourceName,
 		BucketName: bucketName,
+		Encrypt:    encrypt,
 	}
 }

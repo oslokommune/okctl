@@ -18,7 +18,6 @@ import (
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/asdine/storm/v3/codec/json"
-	merrors "github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/config/constant"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
@@ -62,7 +61,7 @@ func DownloadState(o *okctl.Okctl, writable bool) RunEer {
 
 		state, err := services.RemoteState.Download(metadataAsClusterID(o.Declaration.Metadata))
 		if err != nil {
-			if !merrors.IsKind(err, merrors.NotExist) {
+			if !errors.Is(err, api.ErrObjectStorageBucketNotExist) {
 				return fmt.Errorf("acquiring remote state: %w", err)
 			}
 

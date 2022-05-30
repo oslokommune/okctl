@@ -71,19 +71,19 @@ config:
     reject_old_samples_max_age: 168h
   schema_config:
     configs:
-      - from: '2006-01-02'
+      - from: '{{.FromDate}}'
         store: aws
         object_store: s3
         schema: v11
         index:
-          prefix: mock-prefix_
+          prefix: {{.IndexPrefix}}
           period: 336h # 7 days
   server:
     http_listen_port: 3100
   storage_config:
     aws:
       s3: s3://eu-west-1
-      bucketnames: mock-bucket-name
+      bucketnames: {{.LokiStorageBucketName}}
       dynamodb:
         dynamodb_url: dynamodb://eu-west-1
       sse_encryption: true

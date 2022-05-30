@@ -2,12 +2,12 @@ package aws
 
 import (
 	"bytes"
-	oerr "errors"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/mishudark/errors"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/cfn"
@@ -21,7 +21,7 @@ type objectStorageProvider struct {
 
 // CreateBucket produces and deploys necessary CFN template(s) for S3 bucket creation
 func (o objectStorageProvider) CreateBucket(opts api.CreateBucketOpts) (bucketID string, err error) {
-	composer := components.NewS3BucketComposer(opts.BucketName, "S3Bucket")
+	composer := components.NewS3BucketComposer(opts.BucketName, "S3Bucket", opts.Encrypted)
 	composer.BlockAllPublicAccess = opts.Private
 
 	b := cfn.New(composer)
@@ -30,21 +30,21 @@ func (o objectStorageProvider) CreateBucket(opts api.CreateBucketOpts) (bucketID
 
 	template, err := b.Build()
 	if err != nil {
-		return "", errors.E(err, "building CloudFormation template")
+		return "", fmt.Errorf("building CloudFormation template: %w", err)
 	}
 
 	r := cfn.NewRunner(o.provider)
 
 	err = r.CreateIfNotExists(opts.ClusterID.ClusterName, stackName, template, nil, defaultTimeOut)
 	if err != nil {
-		return "", errors.E(err, "creating CloudFormation template")
+		return "", fmt.Errorf("creating CloudFormation template: %w", err)
 	}
 
 	err = r.Outputs(stackName, map[string]cfn.ProcessOutputFn{
-		"S3Bucket": cfn.String(&bucketID),
+		"BucketARN": cfn.String(&bucketID),
 	})
 	if err != nil {
-		return "", errors.E(err, "acquiring bucket outputs")
+		return "", fmt.Errorf("acquiring bucket outputs: %w", err)
 	}
 
 	return bucketID, nil
@@ -58,7 +58,7 @@ func (o objectStorageProvider) DeleteBucket(opts api.DeleteBucketOpts) error {
 
 	err := r.Delete(stackName)
 	if err != nil {
-		return errors.E(err, "deleting bucket CloudFormation template")
+		return fmt.Errorf("deleting bucket CloudFormation template: %w", err)
 	}
 
 	return nil
@@ -70,12 +70,12 @@ func (o objectStorageProvider) PutObject(opts api.PutObjectOpts) error {
 
 	raw, err := io.ReadAll(opts.Content)
 	if err != nil {
-		return errors.E(err, "buffering content")
+		return fmt.Errorf("buffering content: %w", err)
 	}
 
 	err = s3.PutObject(opts.BucketName, opts.Path, bytes.NewReader(raw))
 	if err != nil {
-		return errors.E(err, "putting object into bucket")
+		return fmt.Errorf("putting object into bucket: %w", err)
 	}
 
 	return nil
@@ -89,13 +89,13 @@ func (o objectStorageProvider) GetObject(opts api.GetObjectOpts) (io.Reader, err
 	if err != nil {
 		var aerr awserr.RequestFailure
 
-		if oerr.As(err, &aerr) {
+		if errors.As(err, &aerr) {
 			if aerr.StatusCode() == http.StatusNotFound {
-				return nil, errors.E(err, "bucket missing", errors.NotExist)
+				return nil, fmt.Errorf("bucket missing: %w", err)
 			}
 		}
 
-		return nil, errors.E(err, "retrieving object")
+		return nil, fmt.Errorf("retrieving object: %w", err)
 	}
 
 	return object, nil
@@ -107,7 +107,7 @@ func (o objectStorageProvider) DeleteObject(opts api.DeleteObjectOpts) error {
 
 	err := s3.DeleteObject(opts.BucketName, opts.Path)
 	if err != nil {
-		return errors.E(err, "deleting object")
+		return fmt.Errorf("deleting object: %w", err)
 	}
 
 	return nil
@@ -119,7 +119,11 @@ func (o objectStorageProvider) EmptyBucket(opts api.EmptyBucketOpts) error {
 
 	err := s3.EmptyBucket(opts.BucketName)
 	if err != nil {
-		return errors.E(err, "emptying bucket")
+		if errors.Is(err, s3api.ErrBucketDoesNotExist) {
+			return api.ErrObjectStorageBucketNotExist
+		}
+
+		return fmt.Errorf("emptying bucket: %w", err)
 	}
 
 	return nil

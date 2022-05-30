@@ -27,8 +27,8 @@ func (s *awsLoadBalancerControllerService) DeleteAWSLoadBalancerController(ctx c
 	config, err := clusterconfig.NewAWSLoadBalancerControllerServiceAccount(
 		id.ClusterName,
 		id.Region,
-		"n/a",
 		v1alpha1.PermissionsBoundaryARN(id.AWSAccountID),
+		[]string{"n/a"},
 	)
 	if err != nil {
 		return err
@@ -95,8 +95,8 @@ func (s *awsLoadBalancerControllerService) CreateAWSLoadBalancerController(ctx c
 	config, err := clusterconfig.NewAWSLoadBalancerControllerServiceAccount(
 		opts.ID.ClusterName,
 		opts.ID.Region,
-		policy.PolicyARN,
 		v1alpha1.PermissionsBoundaryARN(opts.ID.AWSAccountID),
+		[]string{policy.PolicyARN},
 	)
 	if err != nil {
 		return nil, err

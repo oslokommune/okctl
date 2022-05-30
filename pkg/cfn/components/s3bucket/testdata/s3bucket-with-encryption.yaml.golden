@@ -18,5 +18,10 @@ Resources:
   myResource:
     Properties:
       AccessControl: BucketOwnerFullControl
-      BucketName: my-Bucket
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+        - BucketKeyEnabled: true
+          ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
+      BucketName: my-bucket
     Type: AWS::S3::Bucket

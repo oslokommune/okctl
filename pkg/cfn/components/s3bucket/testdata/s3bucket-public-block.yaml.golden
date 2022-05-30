@@ -1,5 +1,13 @@
 AWSTemplateFormatVersion: 2010-09-09
 Outputs:
+  BucketARN:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-BucketARN
+    Value:
+      Fn::GetAtt:
+      - myResource
+      - Arn
   myResource:
     Export:
       Name:

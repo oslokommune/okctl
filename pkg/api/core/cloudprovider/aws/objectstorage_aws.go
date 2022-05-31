@@ -91,7 +91,7 @@ func (o objectStorageProvider) GetObject(opts api.GetObjectOpts) (io.Reader, err
 
 		if errors.As(err, &aerr) {
 			if aerr.StatusCode() == http.StatusNotFound {
-				return nil, fmt.Errorf("bucket missing: %w", err)
+				return nil, fmt.Errorf("bucket missing: %w", api.ErrObjectStorageBucketNotExist)
 			}
 		}
 

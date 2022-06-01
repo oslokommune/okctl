@@ -21,7 +21,7 @@ type objectStorageProvider struct {
 
 // CreateBucket produces and deploys necessary CFN template(s) for S3 bucket creation
 func (o objectStorageProvider) CreateBucket(opts api.CreateBucketOpts) (bucketID string, err error) {
-	composer := components.NewS3BucketComposer(opts.BucketName, "S3Bucket", opts.Encrypted)
+	composer := components.NewS3BucketComposer(opts.BucketName, "S3Bucket", opts.Encrypted, opts.EnableVersioning)
 	composer.BlockAllPublicAccess = opts.Private
 
 	b := cfn.New(composer)

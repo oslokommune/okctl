@@ -72,10 +72,11 @@ type S3Bucket struct {
 
 // CreateS3BucketOpts contains the required inputs
 type CreateS3BucketOpts struct {
-	ID        ID
-	Name      string
-	StackName string
-	Encrypt   bool
+	ID               ID
+	Name             string
+	StackName        string
+	Encrypt          bool
+	EnableVersioning bool
 }
 
 // Validate the inputs

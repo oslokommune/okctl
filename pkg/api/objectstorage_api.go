@@ -38,6 +38,8 @@ type CreateBucketOpts struct {
 	Private bool
 	// Encrypted defines if objects should be encrypted
 	Encrypted bool
+	// EnableVersioning defines if object versioning should be enabled
+	EnableVersioning bool
 }
 
 // Validate ensures correct and required data

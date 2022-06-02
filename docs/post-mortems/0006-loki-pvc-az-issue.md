@@ -7,6 +7,7 @@ Example:
 The backend of Oslo Nøkkelen were unavailable for 31 minutes due to an increase in traffic that happened after a
 proaktiv melding.
 -->
+
 Logs were not available due to Loki being scheduled in the wrong availability zone after a rescheduling operation. This
 happened to two individual teams on two different occasions.
 
@@ -53,6 +54,7 @@ Example:
 - Approximately 30.000 users downloaded and experienced an error using the app.
 - Users already logged in experienced some minor delay in the app
 -->
+
 Since Promtail is temporarily storing the logs until it can pass it along to Loki, no logs were harmed in this
 operation.
 
@@ -151,5 +153,6 @@ Add relevant additional information or documentation.
 
 Example: images of metrics that show when something went wrong, relevant pieces of logs, etc
 -->
+
 [Slack thread team 1](https://oslokommune.slack.com/archives/CV9EGL9UG/p1637577284025100)
 [Slack thread team 2](https://oslokommune.slack.com/archives/CV9EGL9UG/p1652085036603709)

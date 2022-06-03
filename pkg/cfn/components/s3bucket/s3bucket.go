@@ -8,7 +8,10 @@ import (
 	"github.com/oslokommune/okctl/pkg/cfn"
 )
 
-const seeAlgorithmAES256 = "AES256"
+const (
+	seeAlgorithmAES256      = "AES256"
+	bucketVersioningEnabled = "Enabled"
+)
 
 // S3Bucket contains the state required for building
 // the cloud formation template
@@ -17,6 +20,7 @@ type S3Bucket struct {
 	BucketName           string
 	BlockAllPublicAccess bool
 	Encrypt              bool
+	Versioning           bool
 }
 
 // Resource returns the cloud formation template
@@ -48,6 +52,10 @@ func (s *S3Bucket) Resource() cloudformation.Resource {
 		}
 	}
 
+	if s.Versioning {
+		bucket.VersioningConfiguration = &s3.Bucket_VersioningConfiguration{Status: bucketVersioningEnabled}
+	}
+
 	return bucket
 }
 
@@ -73,10 +81,11 @@ func (s *S3Bucket) NamedOutputs() map[string]cloudformation.Output {
 
 // New returns an initialised AWS S3 cloud formation template
 // - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-bucket.html
-func New(resourceName, bucketName string, encrypt bool) *S3Bucket {
+func New(resourceName, bucketName string, encrypt bool, versioning bool) *S3Bucket {
 	return &S3Bucket{
 		StoredName: resourceName,
 		BucketName: bucketName,
 		Encrypt:    encrypt,
+		Versioning: versioning,
 	}
 }

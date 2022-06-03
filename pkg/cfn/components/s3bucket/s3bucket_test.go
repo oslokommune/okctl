@@ -17,6 +17,7 @@ func TestNew(t *testing.T) {
 				"myResource",
 				"my-Bucket",
 				false,
+				false,
 			),
 		},
 		{
@@ -26,6 +27,7 @@ func TestNew(t *testing.T) {
 				b := s3bucket.New(
 					"myResource",
 					"my-Bucket",
+					false,
 					false,
 				)
 				b.BlockAllPublicAccess = true
@@ -37,7 +39,16 @@ func TestNew(t *testing.T) {
 			Name:   "S3Bucket with encryption",
 			Golden: "s3bucket-with-encryption.yaml",
 			Content: func() *s3bucket.S3Bucket {
-				b := s3bucket.New("myResource", "my-bucket", true)
+				b := s3bucket.New("myResource", "my-bucket", true, false)
+
+				return b
+			}(),
+		},
+		{
+			Name:   "S3Bucket with versioning",
+			Golden: "s3bucket-with-versioning.yaml",
+			Content: func() *s3bucket.S3Bucket {
+				b := s3bucket.New("myResource", "my-bucket", true, true)
 
 				return b
 			}(),

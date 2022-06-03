@@ -30,9 +30,10 @@ func (r *remoteStateService) Upload(clusterID api.ID, reader io.Reader) error {
 	bucketName := generateStateDBBucketName(clusterID.ClusterName)
 
 	_, err := r.objectAPI.CreateBucket(api.CreateBucketOpts{
-		ClusterID:  clusterID,
-		BucketName: bucketName,
-		Private:    true,
+		ClusterID:        clusterID,
+		BucketName:       bucketName,
+		Private:          true,
+		EnableVersioning: true,
 	})
 	if err != nil {
 		return fmt.Errorf("creating bucket: %w", err)

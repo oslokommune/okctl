@@ -117,9 +117,14 @@ func TestBuilderAndComposers(t *testing.T) {
 			),
 		},
 		{
-			name:     "S3Bucket composer",
-			golden:   "s3-bucket.yaml",
-			composer: components.NewS3BucketComposer("myBucket", "S3Bucket", false),
+			name:   "S3Bucket composer",
+			golden: "s3-bucket.yaml",
+			composer: components.NewS3BucketComposer(
+				"myBucket",
+				"S3Bucket",
+				false,
+				false,
+			),
 		},
 		{
 			name:     "DynamoDB composer",

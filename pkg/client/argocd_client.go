@@ -51,15 +51,15 @@ type Applier interface {
 // ArgoCDService is a business logic implementation
 type ArgoCDService interface {
 	// CreateArgoCD defines functionality for installing ArgoCD into a cluster
-	CreateArgoCD(ctx context.Context, opts CreateArgoCDOpts) (*ArgoCD, error)
+	CreateArgoCD(context.Context, CreateArgoCDOpts) (*ArgoCD, error)
 	// DeleteArgoCD defines functionality for uninstalling ArgoCD from a cluster
-	DeleteArgoCD(ctx context.Context, opts DeleteArgoCDOpts) error
+	DeleteArgoCD(context.Context, DeleteArgoCDOpts) error
 	// SetupApplicationsSync defines functionality for preparing a directory where ArgoCD application manifests will be
 	// automatically synced
-	SetupApplicationsSync(ctx context.Context, kubectlClient Applier, cluster v1alpha1.Cluster) error
+	SetupApplicationsSync(context.Context, Applier, v1alpha1.Cluster) error
 	// SetupNamespacesSync defines functionality for preparing a directory where namespace manifests will be
 	// automatically synced
-	SetupNamespacesSync(ctx context.Context, kubectlClient Applier, cluster v1alpha1.Cluster) error
+	SetupNamespacesSync(context.Context, Applier, v1alpha1.Cluster) error
 }
 
 // ArgoCDState implements the state layer

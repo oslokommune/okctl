@@ -69,7 +69,7 @@ EOF
 
 git add docs/release_notes/$NEXT_VERSION_RAW.md
 git diff --cached
-git commit -m "Add changelog file for $NEXT_VERSION_RAW"
+git commit -m "✅ Add changelog file for $NEXT_VERSION_RAW"
 
 git tag $RELEASE_VERSION
 if [[ $? != 0 ]]; then

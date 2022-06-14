@@ -65,7 +65,7 @@ func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 	opts := &forwardPostgresOpts{}
 
 	initEnvOpts := hooks.InitializeEnvironmentOpts{
-		InitSignalHandling: false,
+		DisableSignalHandling: true,
 	}
 
 	cmd := &cobra.Command{

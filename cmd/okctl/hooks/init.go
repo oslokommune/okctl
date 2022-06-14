@@ -12,14 +12,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// InitializeEnvironmentOpts contains opts for initializing an environment
 type InitializeEnvironmentOpts struct {
-	InitSignalHandling bool
+	DisableSignalHandling bool
 }
 
 // InitializeEnvironment - initialize everything required for ALL operations
 func InitializeEnvironment(o *okctl.Okctl) RunEer {
 	opts := InitializeEnvironmentOpts{
-		InitSignalHandling: true,
+		DisableSignalHandling: true,
 	}
 	return InitializeEnvironmentWithOpts(o, opts)
 }
@@ -45,7 +46,7 @@ func InitializeEnvironmentWithOpts(o *okctl.Okctl, opts InitializeEnvironmentOpt
 
 		initializeIo(o, cmd)
 
-		if opts.InitSignalHandling {
+		if !opts.DisableSignalHandling {
 			initializeSignalHandling(o, cmd)
 		}
 

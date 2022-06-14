@@ -22,6 +22,7 @@ func InitializeEnvironment(o *okctl.Okctl) RunEer {
 	opts := InitializeEnvironmentOpts{
 		DisableSignalHandling: true,
 	}
+
 	return InitializeEnvironmentWithOpts(o, opts)
 }
 

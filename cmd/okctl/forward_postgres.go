@@ -64,14 +64,18 @@ func (o *forwardPostgresOpts) Validate() error {
 func buildForwardPostgres(o *okctl.Okctl) *cobra.Command {
 	opts := &forwardPostgresOpts{}
 
+	initEnvOpts := hooks.InitializeEnvironmentOpts{
+		DisableSignalHandling: true,
+	}
+
 	cmd := &cobra.Command{
 		Use:   "postgres",
 		Short: ForwardPostgresShortDescription,
 		Long:  ForwardPostgresLongDescription,
 		Args:  cobra.ExactArgs(0), // nolint: gomnd
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-			return nil
-		},
+		// We override PersistentPreRunE in order to override the inherited signal handling, because we want to clean up pods if
+		// user press CTRL+C. Without this, pods are left behind running.
+		PersistentPreRunE: hooks.InitializeEnvironmentWithOpts(o, initEnvOpts),
 		PreRunE: hooks.RunECombinator(
 			hooks.LoadUserData(o),
 			hooks.InitializeMetrics(o),

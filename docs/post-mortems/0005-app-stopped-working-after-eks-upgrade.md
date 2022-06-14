@@ -80,7 +80,7 @@ Example:
 -->
 
 We updated to the correct application configuration:
-* removed `dnsPolicy: true` from all three application's Deployment.
+* removed `dnsPolicy: default` from all three application's Deployment.
 * Added `terminationGracePeriodSeconds: 30` to the backend Deployment.
 * Added the correct cluster security group to the backend's SecurityGroupPolicy.
 

@@ -12,8 +12,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type InitializeEnvironmentOpts struct {
+	InitSignalHandling bool
+}
+
 // InitializeEnvironment - initialize everything required for ALL operations
 func InitializeEnvironment(o *okctl.Okctl) RunEer {
+	opts := InitializeEnvironmentOpts{
+		InitSignalHandling: true,
+	}
+	return InitializeEnvironmentWithOpts(o, opts)
+}
+
+// InitializeEnvironmentWithOpts - initialize everything required for ALL operations
+func InitializeEnvironmentWithOpts(o *okctl.Okctl, opts InitializeEnvironmentOpts) RunEer {
 	return func(cmd *cobra.Command, _ []string) error {
 		if cmd.Name() == cobra.ShellCompRequestCmd {
 			return nil
@@ -33,7 +45,9 @@ func InitializeEnvironment(o *okctl.Okctl) RunEer {
 
 		initializeIo(o, cmd)
 
-		initializeSignalHandling(o, cmd)
+		if opts.InitSignalHandling {
+			initializeSignalHandling(o, cmd)
+		}
 
 		return nil
 	}

@@ -82,10 +82,10 @@ config:
     http_listen_port: 3100
   storage_config:
     aws:
-      s3: s3://eu-west-1
+      s3: s3://eu-mock-1
       bucketnames: mock-bucket-name
       dynamodb:
-        dynamodb_url: dynamodb://eu-west-1
+        dynamodb_url: dynamodb://eu-mock-1
       sse_encryption: true
 
     filesystem:

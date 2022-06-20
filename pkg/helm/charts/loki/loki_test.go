@@ -18,7 +18,7 @@ func TestNewDefaultValues(t *testing.T) {
 		{
 			name: "Default values should generate valid yaml",
 			values: func() *loki.Values {
-				v := loki.NewDefaultValues("mock-bucket-name", "mock-prefix_")
+				v := loki.NewDefaultValues("mock-bucket-name", "mock-prefix_", "eu-mock-1")
 
 				t, _ := time.Parse("2006-01-02", "2006-01-02")
 				v.FromDate = t.Format("2006-01-02")

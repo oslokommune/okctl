@@ -18,7 +18,7 @@ type lokiState struct {
 }
 
 func (l *lokiState) HasLoki() (bool, error) {
-	ch := loki.New(loki.NewDefaultValues("", ""), 0*time.Minute)
+	ch := loki.New(loki.NewDefaultValues("", "", ""), 0*time.Minute)
 
 	_, err := l.helm.GetHelmRelease(context.Background(), api.GetHelmReleaseOpts{
 		ClusterID: api.ID{

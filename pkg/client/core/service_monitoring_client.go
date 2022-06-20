@@ -312,7 +312,7 @@ func (s *monitoringService) CreateLoki(ctx context.Context, id api.ID) (*client.
 		return nil, fmt.Errorf("creating service account: %w", err)
 	}
 
-	chart := loki.New(loki.NewDefaultValues(absoluteBucketName, tablePrefix), constant.DefaultChartApplyTimeout)
+	chart := loki.New(loki.NewDefaultValues(absoluteBucketName, tablePrefix, id.Region), constant.DefaultChartApplyTimeout)
 
 	values, err := chart.ValuesYAML()
 	if err != nil {

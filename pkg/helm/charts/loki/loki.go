@@ -38,11 +38,12 @@ func New(values *Values, timeout time.Duration) *helm.Chart {
 
 // NewDefaultValues returns the mapped values.yml containing
 // the default values
-func NewDefaultValues(s3BucketName string, dynamoDBTablePrefix string) *Values {
+func NewDefaultValues(s3BucketName string, dynamoDBTablePrefix string, region string) *Values {
 	return &Values{
 		FromDate:              time.Now().Format(schemaConfigFromDateFormat),
 		IndexPrefix:           dynamoDBTablePrefix,
 		LokiStorageBucketName: s3BucketName,
+		Region:                region,
 	}
 }
 
@@ -56,6 +57,8 @@ type Values struct {
 	// FromDate is from when Loki should prepare indexes for. Loki will create one index (DynamoDB table) per period,
 	// meaning you probably want this to be today, i.e.: YYYY-MM-DD, unless you are migrating from an existing setup.
 	FromDate string
+	// Region is where the DynamoDB table and S3 bucket resides
+	Region string
 }
 
 // RawYAML implements the raw marshaller interface in the Helm package

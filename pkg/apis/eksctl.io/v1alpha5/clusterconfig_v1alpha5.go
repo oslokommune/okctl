@@ -155,14 +155,9 @@ type NodeGroup struct {
 	Labels            map[string]string `json:"labels"`
 	Tags              map[string]string `json:"tags"`
 	PrivateNetworking bool              `json:"privateNetworking"`
-	IAM               NodeGroupIAM      `json:"iam"`
+	AvailabilityZones []string          `json:"availabilityZones"`
 
 	ScalingConfig `json:",inline"`
-}
-
-// NodeGroupIAM comes from eksctl and maps up what we need
-type NodeGroupIAM struct {
-	InstanceRolePermissionsBoundary string `json:"instanceRolePermissionsBoundary"`
 }
 
 // ScalingConfig comes from eksctl and maps up what we need

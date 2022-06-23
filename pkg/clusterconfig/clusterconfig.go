@@ -55,6 +55,8 @@ func (a *Args) validate() error {
 func (a *Args) build() *v1alpha5.ClusterConfig {
 	v := version.GetVersionInfo()
 
+	nodeGroups := createNodeGroups(a)
+
 	cfg := &v1alpha5.ClusterConfig{
 		TypeMeta: TypeMeta(),
 		Metadata: v1alpha5.ClusterMeta{
@@ -104,28 +106,7 @@ func (a *Args) build() *v1alpha5.ClusterConfig {
 				},
 			},
 		},
-		NodeGroups: []v1alpha5.NodeGroup{
-			{
-				Name:         "ng-generic",
-				InstanceType: "m5.large",
-				ScalingConfig: v1alpha5.ScalingConfig{
-					DesiredCapacity: 1, //nolint: gomnd
-					MinSize:         1,
-					MaxSize:         10, //nolint: gomnd
-				},
-				Labels: map[string]string{
-					"pool": "ng-generic",
-				},
-				Tags: map[string]string{
-					"k8s.io/cluster-autoscaler/enabled":                        "true",
-					fmt.Sprintf("k8s.io/cluster-autoscaler/%s", a.ClusterName): "owned",
-				},
-				PrivateNetworking: true,
-				IAM: v1alpha5.NodeGroupIAM{
-					InstanceRolePermissionsBoundary: a.PermissionsBoundaryARN,
-				},
-			},
-		},
+		NodeGroups: nodeGroups,
 		CloudWatch: &v1alpha5.ClusterCloudWatch{
 			ClusterLogging: &v1alpha5.ClusterCloudWatchLogging{
 				EnableTypes: v1alpha5.AllCloudWatchLogging(),
@@ -148,6 +129,36 @@ func (a *Args) build() *v1alpha5.ClusterConfig {
 	}
 
 	return cfg
+}
+
+func createNodeGroups(a *Args) []v1alpha5.NodeGroup {
+	availabilityZoneIds := []string{"a", "b", "c"}
+	nodeGroups := make([]v1alpha5.NodeGroup, 0, len(availabilityZoneIds))
+
+	for _, azID := range availabilityZoneIds {
+		az := a.Region + azID
+
+		nodeGroups = append(nodeGroups, v1alpha5.NodeGroup{
+			Name:         fmt.Sprintf("ng-generic-1-20-1%s", azID),
+			InstanceType: "m5.large",
+			ScalingConfig: v1alpha5.ScalingConfig{
+				DesiredCapacity: 0,  //nolint: gomnd
+				MinSize:         0,  //nolint: gomnd
+				MaxSize:         10, //nolint: gomnd
+			},
+			Labels: map[string]string{
+				"pool": fmt.Sprintf("ng-generic-%s", az),
+			},
+			Tags: map[string]string{
+				"k8s.io/cluster-autoscaler/enabled":                        "true",
+				fmt.Sprintf("k8s.io/cluster-autoscaler/%s", a.ClusterName): "owned",
+			},
+			PrivateNetworking: true,
+			AvailabilityZones: []string{az},
+		})
+	}
+
+	return nodeGroups
 }
 
 // TypeMeta returns the defaults

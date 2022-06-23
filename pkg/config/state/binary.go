@@ -41,25 +41,27 @@ func EksctlKnownBinaries() []Binary {
 	return []Binary{
 		{
 			Name:       "eksctl",
-			Version:    "0.41.0",
+			Version:    "0.98.0",
 			BufferSize: "100mb",
-			URLPattern: "https://github.com/weaveworks/eksctl/releases/download/#{ver}/eksctl_#{os}_#{arch}.tar.gz",
+			URLPattern: "https://github.com/weaveworks/eksctl/releases/download/v#{ver}/eksctl_#{os}_#{arch}.tar.gz",
 			Archive: Archive{
 				Type:   ".tar.gz",
 				Target: "eksctl",
 			},
+			// Find digest by using
+			// curl --location URL | sha256sum
 			Checksums: []Checksum{
 				{
 					Os:     "darwin",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "f703322bd778a0d59b133ebfb93c09170fb732d87504b5cd4cb6dded7f538556",
+					Digest: "2d948e28a3b69a71fc545aee22a0bf0a791fb5ee605212b424b505cbe45a23db",
 				},
 				{
 					Os:     "linux",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "0769b8a784bf75ccd91c39d5b96a12a55a6d5995dbd8fc97d58d7a14929d9d6c",
+					Digest: "385de15f7bf361ec8bd723e90f64398ab1de20cd25e81977a45097ef8182e771",
 				},
 			},
 		},
@@ -71,21 +73,21 @@ func KubectlKnownBinaries() []Binary {
 	return []Binary{
 		{
 			Name:       "kubectl",
-			Version:    "1.18.9",
+			Version:    "1.20.15",
 			BufferSize: "100mb",
-			URLPattern: "https://amazon-eks.s3.us-west-2.amazonaws.com/#{ver}/2020-11-02/bin/#{os}/#{arch}/kubectl",
+			URLPattern: "https://dl.k8s.io/release/v#{ver}/bin/#{os}/#{arch}/kubectl",
 			Checksums: []Checksum{
 				{
 					Os:     "darwin",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "f3f3919bf94d7b7f2014e2e9b318f049f4de378aed62833d609d211cf416935b",
+					Digest: "6b6cf555a34271379b45013dfa9b580329314254aafc91b543bf2d83ebd1db74",
 				},
 				{
 					Os:     "linux",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "3dbe69e6deb35fbd6fec95b13d20ac1527544867ae56e3dae17e8c4d638b25b9",
+					Digest: "d283552d3ef3b0fd47c08953414e1e73897a1b3f88c8a520bb2e7de4e37e96f3",
 				},
 			},
 		},

@@ -5,7 +5,7 @@ const (
 	// Name sets the name of the binary/cli
 	Name = "kubectl"
 	// Version sets the currently used version of the binary/cli
-	Version = "1.18.9"
+	Version = "1.20.15"
 )
 
 // Kubectl stores state for running the cli

@@ -3,10 +3,12 @@ package core
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"errors"
 	"fmt"
 	"io"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/oslokommune/okctl/pkg/binaries"
@@ -386,6 +388,21 @@ func (s *argoCDService) SetupNamespacesSync(_ context.Context, kubectlClient cli
 		fmt.Sprintf("%s.yaml", defaultArgoCDNamespacesManifestName),
 	)
 
+	absoluteArgoCDNamespacesSyncDirectory := path.Join(s.absoluteRepoDir, relativeArgoCDNamespacesSyncDirectory)
+
+	err := s.fs.MkdirAll(absoluteArgoCDNamespacesSyncDirectory, defaultFolderMode)
+	if err != nil {
+		return fmt.Errorf("preparing namespaces dir: %w", err)
+	}
+
+	err = s.fs.WriteReader(
+		path.Join(absoluteArgoCDNamespacesSyncDirectory, "README.md"),
+		strings.NewReader(namespacesReadmeTemplate),
+	)
+	if err != nil {
+		return fmt.Errorf("writing namespaces readme: %w", err)
+	}
+
 	originalManifest, err := scaffold.GenerateArgoCDApplicationManifest(scaffold.GenerateArgoCDApplicationManifestOpts{
 		Name:          "namespaces",
 		Namespace:     argocd.Namespace,
@@ -442,3 +459,6 @@ func NewArgoCDService(opts NewArgoCDServiceOpts) client.ArgoCDService {
 		helm:                opts.Helm,
 	}
 }
+
+//go:embed templates/namespaces-readme.md
+var namespacesReadmeTemplate string //nolint:gochecknoglobals

@@ -71,8 +71,8 @@ The team didn't need to preserve old logs contained in Loki's persistent volume 
 * We have confirmed that no other Okctl cluster is running Loki 2.4.x or newer. Some clusters are running 2.3.0, but that should not be a problem.
 
 ## Action items
-* [Q231](https://trello.com/c/K4QykQh0/31-okctio-beskriv-i-common-issues-hvordan-fikse-logging-som-slutter-%C3%A5-funke-pga-loki-24x) - Describe in common issues in our documentation how to fix logs if they stop working due to this issue.
-* [Q232](https://trello.com/c/plYjrcfb/32-diskuter-hvordan-loki-i-et-cluster-kunne-f%C3%A5-versjon-241) - Discuss what causes Loki to use version 2.4.1, and why some teams are using unexpected versions of the Loki helm chart.
+* [22Q2-31](https://trello.com/c/K4QykQh0/31-okctio-beskriv-i-common-issues-hvordan-fikse-logging-som-slutter-%C3%A5-funke-pga-loki-24x) - Describe in common issues in our documentation how to fix logs if they stop working due to this issue.
+* [22Q2-32](https://trello.com/c/plYjrcfb/32-diskuter-hvordan-loki-i-et-cluster-kunne-f%C3%A5-versjon-241) - Discuss what causes Loki to use version 2.4.1, and why some teams are using unexpected versions of the Loki helm chart.
 
 ## Supporting information and documentation
 * Communcation with team - https://oslokommune.slack.com/archives/CV9EGL9UG/p1656678663318469

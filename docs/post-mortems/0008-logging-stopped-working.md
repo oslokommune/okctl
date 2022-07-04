@@ -67,8 +67,11 @@ The team didn't notice anything was wrong for many days because they don't usual
 The team didn't need to preserve old logs contained in Loki's persistent volume in Kubernetes. If this had been the case, we would have had to backup the volume and restore it after reinstalling Loki, which would have added to the recovery time and complexity of recovering.
 
 ## Mitigations
-* There is currently no system (monitoring and alerting) in place for noticing if logging in an Okctl EKS cluster is working. If Okctl was not going to be discontinued, Kjøremiljø should implement some alerting system to ensure logging is always up.
+* See action items 22Q2-31. It will result in documentation for how to reinstall Loki should this happen again.
 * We have confirmed that no other Okctl cluster is running Loki 2.4.x or newer. Some clusters are running 2.3.0, but that should not be a problem.
+
+* We will discuss this issue after vacation to see if we should do anything more.
+* On a higher level, focus on getting the new golden path ready. Then this issue will become irrelevant due to most likely using other logging systems.
 
 ## Action items
 * [22Q2-31](https://trello.com/c/K4QykQh0/31-okctio-beskriv-i-common-issues-hvordan-fikse-logging-som-slutter-%C3%A5-funke-pga-loki-24x) - Describe in common issues in our documentation how to fix logs if they stop working due to this issue.

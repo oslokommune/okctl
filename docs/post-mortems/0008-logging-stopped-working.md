@@ -69,7 +69,6 @@ The team didn't need to preserve old logs contained in Loki's persistent volume 
 ## Mitigations
 * See action items 22Q2-31. It will result in documentation for how to reinstall Loki should this happen again.
 * We have confirmed that no other Okctl cluster is running Loki 2.4.x or newer. Some clusters are running 2.3.0, but that should not be a problem.
-
 * We will discuss this issue after vacation to see if we should do anything more.
 * On a higher level, focus on getting the new golden path ready. Then this issue will become irrelevant due to most likely using other logging systems.
 

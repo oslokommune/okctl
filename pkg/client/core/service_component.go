@@ -181,20 +181,6 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		},
 	}
 
-	//azList := []string{"a", "b", "c"}
-	//for _, az := range azList {
-	//	nodeGroupName := fmt.Sprintf("ng-generic-1-20-1%s", az)
-	//
-	//	err = ec2api.New(c.provider).AuthorizePodToNodeGroupTraffic(
-	//		nodeGroupName,
-	//		pg.OutgoingSecurityGroupID,
-	//		opts.VpcID,
-	//	)
-	//	if err != nil {
-	//		return nil, fmt.Errorf("authorizing pod to node group traffic for node group '%s': %w", nodeGroupName, err)
-	//	}
-	//}
-
 	err = c.state.SavePostgresDatabase(postgres)
 	if err != nil {
 		return nil, err
@@ -209,15 +195,6 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 
 	db, err := c.state.GetPostgresDatabase(stackName)
 	if err != nil {
-		return err
-	}
-
-	err = ec2api.New(c.provider).RevokePodToNodeGroupTraffic(
-		"ng-generic",
-		db.OutgoingSecurityGroupID,
-		opts.VpcID,
-	)
-	if err != nil && !stderrors.Is(err, ec2api.ErrNotFound) {
 		return err
 	}
 

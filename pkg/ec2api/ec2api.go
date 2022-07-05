@@ -28,6 +28,11 @@ func New(provider v1alpha1.CloudProvider) *EC2API {
 	}
 }
 
+// CLI version
+// aws ec2 describe-security-groups \
+// --filter Name=tag:alpha.eksctl.io/nodegroup-name,Values=ng-generic-1-20-1a
+// --filter Name=vpc-id,Values=vpc-06a32841508c1721b \
+// | jq '.SecurityGroups[0].GroupId'
 func (a *EC2API) securityGroupForNodeGroup(name, vpcID string) (string, error) {
 	sgs, err := a.provider.EC2().DescribeSecurityGroups(&ec2.DescribeSecurityGroupsInput{
 		Filters: []*ec2.Filter{

@@ -26,7 +26,7 @@ However, we do know that logging stopped working the day after we did the follow
 
 * Running `okctl upgrade`, which for both the development and production cluster included the upgrades `0.0.95.persist-loki` and `0.0.96.remote-state-versioning`. 
 
-* Upgraded EKS control plane and nodes from 1.19 to 1.20, causing all pods in the `monitoring` namespace (including Loki) to be stopped on old nodes and re-run at new nodes.
+* Upgraded EKS control plane and nodes from 1.19 to 1.20, causing all pods in the `monitoring` namespace (including Loki) to be stopped on old nodes and re-run on new nodes.
 
 None of these should affect the version of Loki. Loki's version is specified in the Statefulset `loki` in the `monitoring` namespace, and we don't have code changing this.
 
@@ -37,9 +37,7 @@ Lastly, both `okctl upgrade` and EKS upgrade have been run for other clusters wi
 ## Solution
 The solution was to change Loki version to the same version as Okctl `0.0.98` (the Okctl cluster version) installs, which is `2.1.0` .
 
-We did this by uninstalling Loki and Promtail, and reinstalling again, using okctl:
-
-* We edited the cluster manifest to use `loki: false` and `promtail: false`. Promtail was probably not needed, but we did just because it is related, and doesn't hurt to reinstall as well.
+We did this by uninstalling Loki and Promtail, and reinstalling again, using okctl: We edited the cluster manifest to use `loki: false` and `promtail: false`. Promtail was probably not needed, but we did just because it is related, and doesn't hurt to reinstall as well.
 
 ```bash
 okctl apply cluster -f cluster-manifest.yaml
@@ -67,7 +65,7 @@ The team didn't notice anything was wrong for many days because they don't usual
 The team didn't need to preserve old logs contained in Loki's persistent volume in Kubernetes. If this had been the case, we would have had to backup the volume and restore it after reinstalling Loki, which would have added to the recovery time and complexity of recovering.
 
 ## Mitigations
-* See action items 22Q2-31. It will result in documentation for how to reinstall Loki should this happen again.
+* See action items 22Q2-31 below. It will result in documentation for how to reinstall Loki should this happen again.
 * We have confirmed that no other Okctl cluster is running Loki 2.4.x or newer. Some clusters are running 2.3.0, but that should not be a problem.
 * We will discuss this issue after vacation to see if we should do anything more.
 * On a higher level, focus on getting the new golden path ready. Then this issue will become irrelevant due to most likely using other logging systems.

@@ -12,8 +12,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/smapi"
 
-	"github.com/oslokommune/okctl/pkg/ec2api"
-
 	"github.com/oslokommune/okctl/pkg/static/rotater"
 
 	"github.com/oslokommune/okctl/pkg/iamapi"
@@ -183,14 +181,19 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		},
 	}
 
-	err = ec2api.New(c.provider).AuthorizePodToNodeGroupTraffic(
-		"ng-generic",
-		pg.OutgoingSecurityGroupID,
-		opts.VpcID,
-	)
-	if err != nil {
-		return nil, err
-	}
+	//azList := []string{"a", "b", "c"}
+	//for _, az := range azList {
+	//	nodeGroupName := fmt.Sprintf("ng-generic-1-20-1%s", az)
+	//
+	//	err = ec2api.New(c.provider).AuthorizePodToNodeGroupTraffic(
+	//		nodeGroupName,
+	//		pg.OutgoingSecurityGroupID,
+	//		opts.VpcID,
+	//	)
+	//	if err != nil {
+	//		return nil, fmt.Errorf("authorizing pod to node group traffic for node group '%s': %w", nodeGroupName, err)
+	//	}
+	//}
 
 	err = c.state.SavePostgresDatabase(postgres)
 	if err != nil {

@@ -42,7 +42,7 @@ func EksctlKnownBinaries() []Binary {
 		{
 			Name:       "eksctl",
 			Version:    "0.98.0",
-			BufferSize: "200mb",
+			BufferSize: "200mb", // Note the BufferSize must be higher than file size (this is a bug).
 			URLPattern: "https://github.com/weaveworks/eksctl/releases/download/v#{ver}/eksctl_#{os}_#{arch}.tar.gz",
 			Archive: Archive{
 				Type:   ".tar.gz",

@@ -36,6 +36,7 @@ type Addon struct {
 	Name                string   `json:"name,omitempty"`
 	AttachPolicyARNs    []string `json:"attachPolicyARNs,omitempty"`
 	PermissionsBoundary string   `json:"permissionsBoundary,omitempty"`
+	Version             string   `json:"version"`
 }
 
 // ClusterCloudWatch maps up parts of the eksctl config that we require

@@ -3,6 +3,7 @@ addons:
   - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
   name: vpc-cni
   permissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
+  version: 1.11.0-eksbuild.1
 apiVersion: eksctl.io/v1alpha5
 cloudWatch:
   clusterLogging:

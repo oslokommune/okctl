@@ -14,6 +14,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const vpcCniVersion = "1.11.0-eksbuild.1"
+
 // Args contains the input arguments for creating a valid
 // cluster configuration
 type Args struct {
@@ -81,6 +83,7 @@ func (a *Args) build() *v1alpha5.ClusterConfig {
 				AttachPolicyARNs: []string{
 					"arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
 				},
+				Version:             vpcCniVersion,
 				PermissionsBoundary: a.PermissionsBoundaryARN,
 			},
 		},

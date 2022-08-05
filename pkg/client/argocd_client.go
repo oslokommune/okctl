@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"io"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
@@ -41,15 +42,24 @@ type DeleteArgoCDOpts struct {
 	ID api.ID
 }
 
+// Applier defines necessary functionality for applying manifests to a Kubernetes cluster
+type Applier interface {
+	// Apply knows how to apply a manifest to a Kubernetes cluster
+	Apply(io.Reader) error
+}
+
 // ArgoCDService is a business logic implementation
 type ArgoCDService interface {
 	// CreateArgoCD defines functionality for installing ArgoCD into a cluster
-	CreateArgoCD(ctx context.Context, opts CreateArgoCDOpts) (*ArgoCD, error)
+	CreateArgoCD(context.Context, CreateArgoCDOpts) (*ArgoCD, error)
 	// DeleteArgoCD defines functionality for uninstalling ArgoCD from a cluster
-	DeleteArgoCD(ctx context.Context, opts DeleteArgoCDOpts) error
+	DeleteArgoCD(context.Context, DeleteArgoCDOpts) error
 	// SetupApplicationsSync defines functionality for preparing a directory where ArgoCD application manifests will be
 	// automatically synced
-	SetupApplicationsSync(ctx context.Context, cluster v1alpha1.Cluster) error
+	SetupApplicationsSync(context.Context, Applier, v1alpha1.Cluster) error
+	// SetupNamespacesSync defines functionality for preparing a directory where namespace manifests will be
+	// automatically synced
+	SetupNamespacesSync(context.Context, Applier, v1alpha1.Cluster) error
 }
 
 // ArgoCDState implements the state layer

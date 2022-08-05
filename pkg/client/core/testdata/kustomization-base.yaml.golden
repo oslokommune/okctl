@@ -3,5 +3,4 @@ resources:
 - service.yaml
 - ingress.yaml
 - service-monitor.yaml
-- namespace.yaml
 - deployment.yaml

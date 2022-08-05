@@ -139,7 +139,11 @@ type mockArgocdService struct {
 	deletionBump func()
 }
 
-func (m mockArgocdService) SetupApplicationsSync(_ context.Context, _ v1alpha1.Cluster) error {
+func (m mockArgocdService) SetupNamespacesSync(_ context.Context, _ client.Applier, _ v1alpha1.Cluster) error {
+	return nil
+}
+
+func (m mockArgocdService) SetupApplicationsSync(_ context.Context, _ client.Applier, _ v1alpha1.Cluster) error {
 	return nil
 }
 

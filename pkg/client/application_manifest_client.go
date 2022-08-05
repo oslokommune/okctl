@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"io"
 
 	"github.com/oslokommune/okctl/pkg/jsonpatch"
 )
@@ -31,6 +32,13 @@ type GetPatchOpts struct {
 	Kind string
 }
 
+// SaveNamespaceOpts contains required data for saving a namespace
+type SaveNamespaceOpts struct {
+	Filename    string
+	ClusterName string
+	Payload     io.Reader
+}
+
 // ApplicationManifestService defines functionality for the ApplicationManifestService
 type ApplicationManifestService interface {
 	// SaveManifest knows how to store a Kubernetes manifest and update Kustomize resources
@@ -39,4 +47,6 @@ type ApplicationManifestService interface {
 	SavePatch(ctx context.Context, opts SavePatchOpts) error
 	// GetPatch knows how to retrieve a Kustomize patch
 	GetPatch(ctx context.Context, opts GetPatchOpts) (jsonpatch.Patch, error)
+	// SaveNamespace knows how to store a namespace
+	SaveNamespace(ctx context.Context, opts SaveNamespaceOpts) error
 }

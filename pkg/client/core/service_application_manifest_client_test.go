@@ -3,7 +3,10 @@ package core
 import (
 	"context"
 	"encoding/json"
+	"path"
 	"testing"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -21,6 +24,9 @@ type expectedFile struct {
 
 //nolint:funlen
 func TestApplicationManifestService_SaveManifest(t *testing.T) {
+	absoluteRepositoryDir := "/"
+	absoluteApplicationsDir := path.Join(absoluteRepositoryDir, constant.DefaultApplicationsOutputDir)
+
 	testCases := []struct {
 		name string
 
@@ -43,7 +49,7 @@ func TestApplicationManifestService_SaveManifest(t *testing.T) {
 			},
 			expectFiles: []expectedFile{
 				{
-					Filename: "/test/base/kustomization.yaml",
+					Filename: path.Join(absoluteApplicationsDir, "test", constant.DefaultApplicationBaseDir, "kustomization.yaml"),
 					Content: func() []byte {
 						raw, _ := yaml.Marshal(resources.Kustomization{
 							Resources: []string{"service.yaml"},
@@ -53,7 +59,7 @@ func TestApplicationManifestService_SaveManifest(t *testing.T) {
 					}(),
 				},
 				{
-					Filename: "/test/base/service.yaml",
+					Filename: path.Join(absoluteApplicationsDir, "test", constant.DefaultApplicationBaseDir, "service.yaml"),
 					Content: func() []byte {
 						raw, _ := yaml.Marshal(resources.CreateOkctlService(
 							v1alpha1.Application{Metadata: v1alpha1.ApplicationMeta{Name: "test"}},
@@ -89,6 +95,9 @@ func TestApplicationManifestService_SaveManifest(t *testing.T) {
 
 //nolint:funlen
 func TestApplicationManifestService_SavePatch(t *testing.T) {
+	absoluteRepositoryDir := "/"
+	absoluteApplicationsDir := path.Join(absoluteRepositoryDir, constant.DefaultApplicationsOutputDir)
+
 	testCases := []struct {
 		name string
 
@@ -113,7 +122,13 @@ func TestApplicationManifestService_SavePatch(t *testing.T) {
 			},
 			expectFiles: []expectedFile{
 				{
-					Filename: "/testapp/overlays/testcluster/kustomization.yaml",
+					Filename: path.Join(
+						absoluteApplicationsDir,
+						"testapp",
+						constant.DefaultApplicationOverlayDir,
+						"testcluster",
+						"kustomization.yaml",
+					),
 					Content: func() []byte {
 						raw, _ := yaml.Marshal(resources.Kustomization{
 							Resources: []string{"../../base"},
@@ -131,7 +146,13 @@ func TestApplicationManifestService_SavePatch(t *testing.T) {
 					}(),
 				},
 				{
-					Filename: "/testapp/overlays/testcluster/service-patch.json",
+					Filename: path.Join(
+						absoluteApplicationsDir,
+						"testapp",
+						constant.DefaultApplicationOverlayDir,
+						"testcluster",
+						"service-patch.json",
+					),
 					Content: func() []byte {
 						raw, _ := json.Marshal(jsonpatch.Patch{
 							Operations: []jsonpatch.Operation{

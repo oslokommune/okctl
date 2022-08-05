@@ -49,7 +49,7 @@ func TestNewApplicationService(t *testing.T) {
 	absoluteOutputDir := path.Join(absoluteRepoDir, cluster.Github.OutputPath)
 	absoluteApplicationsDir := path.Join(absoluteOutputDir, constant.DefaultApplicationsOutputDir)
 
-	appManifestService := core.NewApplicationManifestService(fs, absoluteApplicationsDir)
+	appManifestService := core.NewApplicationManifestService(fs, absoluteOutputDir)
 
 	service := core.NewApplicationService(
 		fs,
@@ -79,15 +79,15 @@ func TestNewApplicationService(t *testing.T) {
 	appDir := filepath.Join(absoluteApplicationsDir, application.Metadata.Name)
 	appBaseDir := filepath.Join(appDir, constant.DefaultApplicationBaseDir)
 	appOverlayDir := filepath.Join(appDir, constant.DefaultApplicationOverlayDir, cluster.Metadata.Name)
-	clusterApplicationsDir := filepath.Join(
+	clusterArgoCDConfigDir := filepath.Join(
 		absoluteOutputDir,
 		cluster.Metadata.Name,
 		constant.DefaultArgoCDClusterConfigDir,
-		constant.DefaultArgoCDClusterConfigApplicationsDir,
 	)
+	clusterApplicationsDir := filepath.Join(clusterArgoCDConfigDir, constant.DefaultArgoCDClusterConfigApplicationsDir)
+	clusterNamespacesDir := filepath.Join(clusterArgoCDConfigDir, constant.DefaultArgoCDClusterConfigNamespacesDir)
 
 	g.Assert(t, "kustomization-base.yaml", readFile(t, fs, filepath.Join(appBaseDir, "kustomization.yaml")))
-	g.Assert(t, "namespace.yaml", readFile(t, fs, filepath.Join(appBaseDir, "namespace.yaml")))
 	g.Assert(t, "deployment.yaml", readFile(t, fs, filepath.Join(appBaseDir, "deployment.yaml")))
 	g.Assert(t, "volumes.yaml", readFile(t, fs, filepath.Join(appBaseDir, "volumes.yaml")))
 	g.Assert(t, "ingress.yaml", readFile(t, fs, filepath.Join(appBaseDir, "ingress.yaml")))
@@ -100,6 +100,9 @@ func TestNewApplicationService(t *testing.T) {
 	g.Assert(t, "argocd-application.yaml", readFile(t, fs, filepath.Join(
 		clusterApplicationsDir,
 		fmt.Sprintf("%s.yaml", application.Metadata.Name),
+	)))
+	g.Assert(t, "namespace.yaml", readFile(t, fs, filepath.Join(
+		clusterNamespacesDir, fmt.Sprintf("%s.yaml", application.Metadata.Namespace),
 	)))
 }
 
@@ -116,7 +119,7 @@ func TestDeleteApplication(t *testing.T) {
 	absoluteOutputDir := path.Join(absoluteRepoDir, clusterManifest.Github.OutputPath)
 	absoluteApplicationsDir := path.Join(absoluteOutputDir, constant.DefaultApplicationsOutputDir)
 
-	manifestService := core.NewApplicationManifestService(fs, absoluteApplicationsDir)
+	manifestService := core.NewApplicationManifestService(fs, absoluteOutputDir)
 	appService := core.NewApplicationService(fs, mockKubectlClient{}, manifestService, absoluteRepoDir)
 
 	err = appService.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
@@ -135,15 +138,15 @@ func TestDeleteApplication(t *testing.T) {
 	appDir := filepath.Join(absoluteApplicationsDir, applicationManifest.Metadata.Name)
 	appBaseDir := filepath.Join(appDir, constant.DefaultApplicationBaseDir)
 	appOverlayDir := filepath.Join(appDir, constant.DefaultApplicationOverlayDir, clusterManifest.Metadata.Name)
-	clusterApplicationsDir := filepath.Join(
+	clusterArgoCDConfigDir := filepath.Join(
 		absoluteOutputDir,
 		clusterManifest.Metadata.Name,
 		constant.DefaultArgoCDClusterConfigDir,
-		constant.DefaultArgoCDClusterConfigApplicationsDir,
 	)
+	clusterApplicationsDir := filepath.Join(clusterArgoCDConfigDir, constant.DefaultArgoCDClusterConfigApplicationsDir)
+	clusterNamespacesDir := filepath.Join(clusterArgoCDConfigDir, constant.DefaultArgoCDClusterConfigNamespacesDir)
 
 	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "kustomization.yaml")))
-	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "namespace.yaml")))
 	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "deployment.yaml")))
 	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "volumes.yaml")))
 	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "ingress.yaml")))
@@ -156,6 +159,12 @@ func TestDeleteApplication(t *testing.T) {
 	assert.Equal(t, false, fileExists(t, fs, filepath.Join(
 		clusterApplicationsDir,
 		fmt.Sprintf("%s.yaml", applicationManifest.Metadata.Name),
+	)))
+
+	// Namespace should still exist. User might have resources not tracked by okctl here, and the namespaces will get
+	// cleaned up by `delete cluster` later anyhow.
+	assert.Equal(t, true, fileExists(t, fs, filepath.Join(
+		clusterNamespacesDir, fmt.Sprintf("%s.yaml", applicationManifest.Metadata.Namespace),
 	)))
 }
 

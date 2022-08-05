@@ -3,10 +3,12 @@ package core
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"errors"
 	"fmt"
 	"io"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/oslokommune/okctl/pkg/binaries"
@@ -53,6 +55,7 @@ const (
 	argoChartTimeout                     = 15 * time.Minute
 	argoRepositoryTypeGit                = "git"
 	defaultArgoCDApplicationManifestName = "applications"
+	defaultArgoCDNamespacesManifestName  = "namespaces"
 )
 
 // nolint: funlen
@@ -301,7 +304,14 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 		},
 	}
 
-	err = s.SetupApplicationsSync(ctx, opts.ClusterManifest)
+	kubectlClient := binary.New(s.fs, s.binaryProvider, s.credentialsProvider, opts.ClusterManifest)
+
+	err = s.SetupNamespacesSync(ctx, kubectlClient, opts.ClusterManifest)
+	if err != nil {
+		return nil, fmt.Errorf("setting up namespace sync: %w", err)
+	}
+
+	err = s.SetupApplicationsSync(ctx, kubectlClient, opts.ClusterManifest)
 	if err != nil {
 		return nil, fmt.Errorf("setting up application sync: %w", err)
 	}
@@ -315,7 +325,7 @@ func (s *argoCDService) CreateArgoCD(ctx context.Context, opts client.CreateArgo
 }
 
 // SetupApplicationsSync applies an ArgoCD Application manifest which ensures syncing of an application folder
-func (s *argoCDService) SetupApplicationsSync(_ context.Context, cluster v1alpha1.Cluster) error {
+func (s *argoCDService) SetupApplicationsSync(_ context.Context, kubectlClient client.Applier, cluster v1alpha1.Cluster) error {
 	relativeArgoCDConfigDir := path.Join(
 		cluster.Github.OutputPath,
 		cluster.Metadata.Name,
@@ -351,7 +361,66 @@ func (s *argoCDService) SetupApplicationsSync(_ context.Context, cluster v1alpha
 		return fmt.Errorf("writing manifest: %w", err)
 	}
 
-	kubectlClient := binary.New(s.fs, s.binaryProvider, s.credentialsProvider, cluster)
+	err = kubectlClient.Apply(&manifestCopy)
+	if err != nil {
+		return fmt.Errorf("applying ArgoCD application manifest: %w", err)
+	}
+
+	return nil
+}
+
+// SetupNamespacesSync makes ArgoCD track namespace manifests added to the
+// infrastructure/<cluster name>/argocd/namespaces/ directory
+func (s *argoCDService) SetupNamespacesSync(_ context.Context, kubectlClient client.Applier, cluster v1alpha1.Cluster) error {
+	relativeArgoCDConfigDir := path.Join(
+		cluster.Github.OutputPath,
+		cluster.Metadata.Name,
+		constant.DefaultArgoCDClusterConfigDir,
+	)
+
+	relativeArgoCDNamespacesSyncDirectory := path.Join(
+		relativeArgoCDConfigDir,
+		constant.DefaultArgoCDClusterConfigNamespacesDir,
+	)
+
+	absoluteArgoCDManifestPath := path.Join(s.absoluteRepoDir,
+		relativeArgoCDConfigDir,
+		fmt.Sprintf("%s.yaml", defaultArgoCDNamespacesManifestName),
+	)
+
+	absoluteArgoCDNamespacesSyncDirectory := path.Join(s.absoluteRepoDir, relativeArgoCDNamespacesSyncDirectory)
+
+	err := s.fs.MkdirAll(absoluteArgoCDNamespacesSyncDirectory, defaultFolderMode)
+	if err != nil {
+		return fmt.Errorf("preparing namespaces dir: %w", err)
+	}
+
+	err = s.fs.WriteReader(
+		path.Join(absoluteArgoCDNamespacesSyncDirectory, "README.md"),
+		strings.NewReader(namespacesReadmeTemplate),
+	)
+	if err != nil {
+		return fmt.Errorf("writing namespaces readme: %w", err)
+	}
+
+	originalManifest, err := scaffold.GenerateArgoCDApplicationManifest(scaffold.GenerateArgoCDApplicationManifestOpts{
+		Name:          "namespaces",
+		Namespace:     argocd.Namespace,
+		IACRepoURL:    cluster.Github.URL(),
+		SourceSyncDir: relativeArgoCDNamespacesSyncDirectory,
+		Prune:         false,
+	})
+	if err != nil {
+		return fmt.Errorf("generating ArgoCD application manifest: %w", err)
+	}
+
+	manifestCopy := bytes.Buffer{}
+	manifest := io.TeeReader(originalManifest, &manifestCopy)
+
+	err = s.fs.WriteReader(absoluteArgoCDManifestPath, manifest)
+	if err != nil {
+		return fmt.Errorf("writing manifest: %w", err)
+	}
 
 	err = kubectlClient.Apply(&manifestCopy)
 	if err != nil {
@@ -390,3 +459,6 @@ func NewArgoCDService(opts NewArgoCDServiceOpts) client.ArgoCDService {
 		helm:                opts.Helm,
 	}
 }
+
+//go:embed templates/namespaces-readme.md
+var namespacesReadmeTemplate string //nolint:gochecknoglobals

@@ -99,6 +99,8 @@ const (
 	DefaultArgoCDClusterConfigDir = "argocd"
 	// DefaultArgoCDClusterConfigApplicationsDir is where we put ArgoCD application manifests for applications
 	DefaultArgoCDClusterConfigApplicationsDir = "applications"
+	// DefaultArgoCDClusterConfigNamespacesDir is where we put namespace manifests for applications
+	DefaultArgoCDClusterConfigNamespacesDir = "namespaces"
 	// DefaultApplicationsOutputDir is where the application declarations reside
 	DefaultApplicationsOutputDir = "applications"
 	// DefaultApplicationBaseDir is where the directory where application base files reside

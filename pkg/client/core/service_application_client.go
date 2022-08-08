@@ -11,11 +11,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/scaffold/resources"
 
-	"github.com/go-git/go-git/v5/plumbing/format/index"
-
-	"github.com/go-git/go-billy/v5/memfs"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/oslokommune/okctl/pkg/clients/kubectl"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -36,6 +31,7 @@ type applicationService struct {
 	fs                    *afero.Afero
 	absoluteRepositoryDir string
 	kubectl               kubectl.Client
+	gitDeleteRemoteFileFn client.GitDeleteRemoteFileFn
 }
 
 // ScaffoldApplication turns a file path into Kubernetes resources
@@ -145,7 +141,11 @@ func (s *applicationService) DeleteArgoCDApplicationManifest(opts client.DeleteA
 		}
 	}
 
-	err = s.deleteFileFromGitRepository(opts.Cluster, opts.Application, relativeArgoCDApplicationManifestPath)
+	err = s.gitDeleteRemoteFileFn(
+		opts.Cluster.Github.URL(),
+		relativeArgoCDApplicationManifestPath,
+		fmt.Sprintf("❌ Remove ArgoCD application manifest for %s", opts.Application.Metadata.Name),
+	)
 	if err != nil {
 		return fmt.Errorf("deleting application manifest in repository: %w", err)
 	}
@@ -194,44 +194,6 @@ func (s *applicationService) HasArgoCDIntegration(_ context.Context, opts client
 	}
 
 	return true, nil
-}
-
-// deleteFileFromGitRepository creates and pushes a commit to the main branch of a repository that removes a file at a
-// certain path
-func (s *applicationService) deleteFileFromGitRepository(cluster v1alpha1.Cluster, app v1alpha1.Application, path string) error {
-	repo, err := git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{
-		URL:   cluster.Github.URL(),
-		Depth: 1,
-	})
-	if err != nil {
-		return fmt.Errorf("cloning repository: %w", err)
-	}
-
-	tree, _ := repo.Worktree()
-
-	_, err = tree.Remove(path)
-	if err != nil {
-		if stderrors.Is(err, index.ErrEntryNotFound) {
-			return nil
-		}
-
-		return fmt.Errorf("removing file: %w", err)
-	}
-
-	_, err = tree.Commit(
-		fmt.Sprintf("❌ Remove ArgoCD application manifest for %s", app.Metadata.Name),
-		&git.CommitOptions{},
-	)
-	if err != nil {
-		return fmt.Errorf("committing changes: %w", err)
-	}
-
-	err = repo.Push(&git.PushOptions{})
-	if err != nil {
-		return fmt.Errorf("pushing to repository: %w", err)
-	}
-
-	return nil
 }
 
 // patchArgoCDApplicationManifest adds a cascading deletion finalizer to an ArgoCD application manifest with a patch
@@ -316,11 +278,13 @@ func NewApplicationService(
 	kubectlClient kubectl.Client,
 	appManifestService client.ApplicationManifestService,
 	absoluteRepositoryDir string,
+	gitDeleteRemoteFileFn client.GitDeleteRemoteFileFn,
 ) client.ApplicationService {
 	return &applicationService{
 		kubectl:               kubectlClient,
 		appManifestService:    appManifestService,
 		fs:                    fs,
 		absoluteRepositoryDir: absoluteRepositoryDir,
+		gitDeleteRemoteFileFn: gitDeleteRemoteFileFn,
 	}
 }

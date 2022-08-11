@@ -7,6 +7,7 @@ import (
 	"io"
 	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/oslokommune/okctl/pkg/clients/kubectl"
@@ -109,8 +110,6 @@ func TestNewApplicationService(t *testing.T) {
 
 //nolint:funlen
 func TestDeleteApplication(t *testing.T) {
-	t.Skip()
-
 	ctx := context.Background()
 	fs := &afero.Afero{Fs: afero.NewMemMapFs()}
 	stdin := bytes.NewBufferString(defaultTemplate)
@@ -263,4 +262,193 @@ volumes:
 #    nginx.ingress.kubernetes.io/cors-allow-origin: http://localhost:8080
 #    cert-manager.io/cluster-issuer: letsencrypt-production
 `
+	defaultArgoCDApplicationTemplate = `apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mock-app
+  namespace: argocd
+spec:
+  destination:
+    namespace: mock-namespace
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: infrastructure/applications/mock-app/overlays/mock-cluster
+    repoURL: git@github.com:mock-org/mock-iac-repo
+    targetRevision: HEAD
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: false
+
+---
+`
 )
+
+//nolint:unparam
+func addApplication(t *testing.T, fs *afero.Afero, name string) {
+	err := fs.MkdirAll(path.Join("/", "infrastructure", "applications", name, "overlays"), 0o700)
+	assert.NilError(t, err)
+}
+
+//nolint:unparam
+func addClusterToAppOverlays(t *testing.T, fs *afero.Afero, clusterName, appName string) {
+	absOverlaysDir := path.Join("/", "infrastructure", "applications", appName, "overlays", clusterName)
+
+	err := fs.MkdirAll(absOverlaysDir, 0o700)
+	assert.NilError(t, err)
+
+	err = fs.WriteReader(path.Join(absOverlaysDir, "kustomization.yaml"), strings.NewReader(""))
+	assert.NilError(t, err)
+}
+
+//nolint:unparam
+func addAppToClusterApplications(t *testing.T, fs *afero.Afero, clusterName string, appName string) {
+	absClusterApplicationsDir := path.Join("/", "infrastructure", clusterName, "argocd", "applications")
+
+	err := fs.MkdirAll(absClusterApplicationsDir, 0o700)
+	assert.NilError(t, err)
+
+	err = fs.WriteReader(path.Join(absClusterApplicationsDir, appName), strings.NewReader(defaultArgoCDApplicationTemplate))
+	assert.NilError(t, err)
+}
+
+const defaultMockAppName = "mock-app"
+
+//nolint:funlen
+func TestAmountAssociatedClusters(t *testing.T) {
+	testCases := []struct {
+		name                          string
+		withFs                        *afero.Afero
+		withAppToTest                 string
+		expectAssociatedClusterAmount int
+	}{
+		{
+			name: "Should return 0 when theres no cluster overlays and no argocd applications",
+			withFs: func() *afero.Afero {
+				fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+
+				addApplication(t, fs, defaultMockAppName)
+
+				return fs
+			}(),
+			withAppToTest:                 defaultMockAppName,
+			expectAssociatedClusterAmount: 0,
+		},
+		{
+			name: "Should return 0 when theres no cluster overlays and but a relevant argocd application",
+			withFs: func() *afero.Afero {
+				fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+
+				appName := defaultMockAppName
+
+				addApplication(t, fs, appName)
+				addAppToClusterApplications(t, fs, "mock-cluster", appName)
+
+				return fs
+			}(),
+			withAppToTest:                 defaultMockAppName,
+			expectAssociatedClusterAmount: 0,
+		},
+		{
+			name: "Should return 0 when theres a cluster overlay and but no relevant argocd applications",
+			withFs: func() *afero.Afero {
+				fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+
+				appName := defaultMockAppName
+
+				addApplication(t, fs, appName)
+				addAppToClusterApplications(t, fs, "mock-cluster", appName)
+
+				return fs
+			}(),
+			withAppToTest:                 defaultMockAppName,
+			expectAssociatedClusterAmount: 0,
+		},
+		{
+			name: "Should return 1 when theres a cluster overlay and a relevant argocd application",
+			withFs: func() *afero.Afero {
+				fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+
+				appName := defaultMockAppName
+				clusterName := "mock-cluster"
+
+				addApplication(t, fs, appName)
+				addClusterToAppOverlays(t, fs, clusterName, appName)
+				addAppToClusterApplications(t, fs, clusterName, appName)
+
+				return fs
+			}(),
+			withAppToTest:                 defaultMockAppName,
+			expectAssociatedClusterAmount: 1,
+		},
+		{
+			name: "Should return 1 when theres three cluster overlays but only one relevant argocd application",
+			withFs: func() *afero.Afero {
+				fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+
+				appName := defaultMockAppName
+				clusterName := "valid-cluster"
+
+				addApplication(t, fs, appName)
+				addClusterToAppOverlays(t, fs, clusterName, appName)
+				addAppToClusterApplications(t, fs, clusterName, appName)
+
+				addClusterToAppOverlays(t, fs, "not-relevant-cluster", appName)
+				addClusterToAppOverlays(t, fs, "random-cluster", appName)
+
+				return fs
+			}(),
+			withAppToTest:                 defaultMockAppName,
+			expectAssociatedClusterAmount: 1,
+		},
+		{
+			name: "Should return 3 when theres three cluster overlays and three relevant argocd applications",
+			withFs: func() *afero.Afero {
+				fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+
+				appName := defaultMockAppName
+
+				clusterName := "valid-cluster"
+				addApplication(t, fs, appName)
+				addClusterToAppOverlays(t, fs, clusterName, appName)
+				addAppToClusterApplications(t, fs, clusterName, appName)
+
+				clusterName = "valid-second-cluster"
+				addApplication(t, fs, appName)
+				addClusterToAppOverlays(t, fs, clusterName, appName)
+				addAppToClusterApplications(t, fs, clusterName, appName)
+
+				clusterName = "valid-third-cluster"
+				addApplication(t, fs, appName)
+				addClusterToAppOverlays(t, fs, clusterName, appName)
+				addAppToClusterApplications(t, fs, clusterName, appName)
+
+				return fs
+			}(),
+			withAppToTest:                 defaultMockAppName,
+			expectAssociatedClusterAmount: 3,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := core.AmountAssociatedClusters(
+				tc.withFs,
+				"/",
+				v1alpha1.Cluster{
+					Metadata: v1alpha1.ClusterMeta{Name: "mock-cluster"},
+					Github:   v1alpha1.ClusterGithub{OutputPath: "/infrastructure"},
+				},
+				v1alpha1.Application{Metadata: v1alpha1.ApplicationMeta{Name: tc.withAppToTest}},
+			)
+			assert.NilError(t, err)
+
+			assert.Equal(t, tc.expectAssociatedClusterAmount, result)
+		})
+	}
+}

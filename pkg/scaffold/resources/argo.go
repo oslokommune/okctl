@@ -5,7 +5,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func generateDefaultArgoApp() argo.Application {
+// GenerateDefaultArgoApp knows how to construct a default ArgoCD application
+func GenerateDefaultArgoApp() argo.Application {
 	return argo.Application{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Application",
@@ -37,7 +38,7 @@ func generateDefaultArgoApp() argo.Application {
 
 // CreateArgoApp creates an ArgoCD definition customized for okctl
 func CreateArgoApp(name string, namespace string, sourceRepositoryURL string, sourceRepositoryPath string) argo.Application {
-	argoApp := generateDefaultArgoApp()
+	argoApp := GenerateDefaultArgoApp()
 
 	argoApp.ObjectMeta.Name = name
 

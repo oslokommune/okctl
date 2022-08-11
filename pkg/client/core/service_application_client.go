@@ -88,7 +88,7 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 }
 
 func getApplicationOverlayClusters(fs *afero.Afero, absoluteApplicationDir string) ([]string, error) {
-	absoluteApplicationOverlaysDirectory := path.Join(absoluteApplicationDir, constant.DefaultApplicationOverlayDir)
+	absoluteApplicationOverlaysDirectory := path.Join(absoluteApplicationDir, paths.DefaultApplicationOverlayDir)
 
 	clusters := make([]string, 0)
 
@@ -185,7 +185,6 @@ func getClusterApplications(fs *afero.Afero, absoluteRepositoryRootDir string, c
 // AmountAssociatedClusters knows how to count the number of associated clusters a specific application has. A cluster is
 // classified as associated iff the cluster has an ArgoCD application referencing the app and the app has an overlay folder
 // referencing the cluster.
-// TODO: make private and sort out import cycle
 func AmountAssociatedClusters(fs *afero.Afero, absoluteRepositoryRootDir string, clusterContext v1alpha1.Cluster, app v1alpha1.Application) (int, error) {
 	absoluteApplicationDir := path.Join(absoluteRepositoryRootDir, paths.GetRelativeApplicationDir(clusterContext, app))
 
@@ -374,7 +373,7 @@ func (s *applicationService) patchArgoCDApplicationManifest(applicationName stri
 func getRelativeApplicationDirectory(cluster v1alpha1.Cluster, app v1alpha1.Application) string {
 	return path.Join(
 		cluster.Github.OutputPath,
-		constant.DefaultApplicationsOutputDir,
+		paths.DefaultApplicationsOutputDir,
 		app.Metadata.Name,
 	)
 }
@@ -382,7 +381,7 @@ func getRelativeApplicationDirectory(cluster v1alpha1.Cluster, app v1alpha1.Appl
 func getRelativeOverlayDirectory(cluster v1alpha1.Cluster, app v1alpha1.Application) string {
 	return path.Join(
 		getRelativeApplicationDirectory(cluster, app),
-		constant.DefaultApplicationOverlayDir, cluster.Metadata.Name,
+		paths.DefaultApplicationOverlayDir, cluster.Metadata.Name,
 	)
 }
 
@@ -390,8 +389,8 @@ func getRelativeArgoCDManifestPath(cluster v1alpha1.Cluster, app v1alpha1.Applic
 	return path.Join(
 		cluster.Github.OutputPath,
 		cluster.Metadata.Name,
-		constant.DefaultArgoCDClusterConfigDir,
-		constant.DefaultArgoCDClusterConfigApplicationsDir,
+		paths.DefaultArgoCDClusterConfigDir,
+		paths.DefaultArgoCDClusterConfigApplicationsDir,
 		fmt.Sprintf("%s.yaml", app.Metadata.Name),
 	)
 }

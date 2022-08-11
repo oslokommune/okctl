@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/paths"
+
 	"github.com/oslokommune/okctl/pkg/binaries"
 	"github.com/oslokommune/okctl/pkg/clients/kubectl/binary"
 	"github.com/oslokommune/okctl/pkg/credentials"
@@ -329,12 +331,12 @@ func (s *argoCDService) SetupApplicationsSync(_ context.Context, kubectlClient c
 	relativeArgoCDConfigDir := path.Join(
 		cluster.Github.OutputPath,
 		cluster.Metadata.Name,
-		constant.DefaultArgoCDClusterConfigDir,
+		paths.DefaultArgoCDClusterConfigDir,
 	)
 
 	relativeArgoCDApplicationsSyncDir := path.Join(
 		relativeArgoCDConfigDir,
-		constant.DefaultArgoCDClusterConfigApplicationsDir,
+		paths.DefaultArgoCDClusterConfigApplicationsDir,
 	)
 
 	absoluteArgoCDManifestPath := path.Join(s.absoluteRepoDir,
@@ -375,12 +377,12 @@ func (s *argoCDService) SetupNamespacesSync(_ context.Context, kubectlClient cli
 	relativeArgoCDConfigDir := path.Join(
 		cluster.Github.OutputPath,
 		cluster.Metadata.Name,
-		constant.DefaultArgoCDClusterConfigDir,
+		paths.DefaultArgoCDClusterConfigDir,
 	)
 
 	relativeArgoCDNamespacesSyncDirectory := path.Join(
 		relativeArgoCDConfigDir,
-		constant.DefaultArgoCDClusterConfigNamespacesDir,
+		paths.DefaultArgoCDClusterConfigNamespacesDir,
 	)
 
 	absoluteArgoCDManifestPath := path.Join(s.absoluteRepoDir,

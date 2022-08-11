@@ -2,12 +2,12 @@
 package config
 
 import (
-	"bytes"
 	"fmt"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
+
+	"github.com/oslokommune/okctl/pkg/paths"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/logging"
@@ -125,7 +125,7 @@ func (c *Config) GetRepoDir() (string, error) {
 		return c.repoDir, nil
 	}
 
-	repoDir, err := c.getRepositoryRootDirectory()
+	repoDir, err := paths.GetAbsoluteRepositoryRootDirectory()
 	if err != nil {
 		return "", err
 	}
@@ -143,19 +143,6 @@ func (c *Config) GetRepoDir() (string, error) {
 	c.repoDir = absoluteRepo
 
 	return c.repoDir, nil
-}
-
-// getRepositoryRootDirectory returns the absolute path of the repository root no matter what the current working
-// directory of the repository the user is in
-func (c *Config) getRepositoryRootDirectory() (string, error) {
-	result, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
-	if err != nil {
-		return "", fmt.Errorf("getting repository root directory: %w", err)
-	}
-
-	pathAsString := string(bytes.Trim(result, "\n"))
-
-	return pathAsString, nil
 }
 
 // GetRepoStateDir will return the directory where repo data should be read/written
@@ -252,5 +239,5 @@ func (c *Config) GetRepoApplicationsOutputDir() (string, error) {
 		return "", err
 	}
 
-	return path.Join(base, c.Declaration.Github.OutputPath, constant.DefaultApplicationsOutputDir), nil
+	return path.Join(base, c.Declaration.Github.OutputPath, paths.DefaultApplicationsOutputDir), nil
 }

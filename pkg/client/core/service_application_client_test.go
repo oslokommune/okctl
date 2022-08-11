@@ -10,13 +10,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/paths"
+
 	"github.com/oslokommune/okctl/pkg/clients/kubectl"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/commands"
-
-	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/sebdah/goldie/v2"
 	"github.com/spf13/afero"
@@ -48,7 +48,7 @@ func TestNewApplicationService(t *testing.T) {
 
 	absoluteRepoDir := "/"
 	absoluteOutputDir := path.Join(absoluteRepoDir, cluster.Github.OutputPath)
-	absoluteApplicationsDir := path.Join(absoluteOutputDir, constant.DefaultApplicationsOutputDir)
+	absoluteApplicationsDir := path.Join(absoluteOutputDir, paths.DefaultApplicationsOutputDir)
 
 	appManifestService := core.NewApplicationManifestService(fs, absoluteOutputDir)
 
@@ -79,15 +79,15 @@ func TestNewApplicationService(t *testing.T) {
 	g := goldie.New(t)
 
 	appDir := filepath.Join(absoluteApplicationsDir, application.Metadata.Name)
-	appBaseDir := filepath.Join(appDir, constant.DefaultApplicationBaseDir)
-	appOverlayDir := filepath.Join(appDir, constant.DefaultApplicationOverlayDir, cluster.Metadata.Name)
+	appBaseDir := filepath.Join(appDir, paths.DefaultApplicationBaseDir)
+	appOverlayDir := filepath.Join(appDir, paths.DefaultApplicationOverlayDir, cluster.Metadata.Name)
 	clusterArgoCDConfigDir := filepath.Join(
 		absoluteOutputDir,
 		cluster.Metadata.Name,
-		constant.DefaultArgoCDClusterConfigDir,
+		paths.DefaultArgoCDClusterConfigDir,
 	)
-	clusterApplicationsDir := filepath.Join(clusterArgoCDConfigDir, constant.DefaultArgoCDClusterConfigApplicationsDir)
-	clusterNamespacesDir := filepath.Join(clusterArgoCDConfigDir, constant.DefaultArgoCDClusterConfigNamespacesDir)
+	clusterApplicationsDir := filepath.Join(clusterArgoCDConfigDir, paths.DefaultArgoCDClusterConfigApplicationsDir)
+	clusterNamespacesDir := filepath.Join(clusterArgoCDConfigDir, paths.DefaultArgoCDClusterConfigNamespacesDir)
 
 	g.Assert(t, "kustomization-base.yaml", readFile(t, fs, filepath.Join(appBaseDir, "kustomization.yaml")))
 	g.Assert(t, "deployment.yaml", readFile(t, fs, filepath.Join(appBaseDir, "deployment.yaml")))
@@ -120,7 +120,7 @@ func TestDeleteApplication(t *testing.T) {
 
 	absoluteRepoDir := "/"
 	absoluteOutputDir := path.Join(absoluteRepoDir, clusterManifest.Github.OutputPath)
-	absoluteApplicationsDir := path.Join(absoluteOutputDir, constant.DefaultApplicationsOutputDir)
+	absoluteApplicationsDir := path.Join(absoluteOutputDir, paths.DefaultApplicationsOutputDir)
 
 	manifestService := core.NewApplicationManifestService(fs, absoluteOutputDir)
 	appService := core.NewApplicationService(
@@ -145,15 +145,15 @@ func TestDeleteApplication(t *testing.T) {
 	assert.NilError(t, err)
 
 	appDir := filepath.Join(absoluteApplicationsDir, applicationManifest.Metadata.Name)
-	appBaseDir := filepath.Join(appDir, constant.DefaultApplicationBaseDir)
-	appOverlayDir := filepath.Join(appDir, constant.DefaultApplicationOverlayDir, clusterManifest.Metadata.Name)
+	appBaseDir := filepath.Join(appDir, paths.DefaultApplicationBaseDir)
+	appOverlayDir := filepath.Join(appDir, paths.DefaultApplicationOverlayDir, clusterManifest.Metadata.Name)
 	clusterArgoCDConfigDir := filepath.Join(
 		absoluteOutputDir,
 		clusterManifest.Metadata.Name,
-		constant.DefaultArgoCDClusterConfigDir,
+		paths.DefaultArgoCDClusterConfigDir,
 	)
-	clusterApplicationsDir := filepath.Join(clusterArgoCDConfigDir, constant.DefaultArgoCDClusterConfigApplicationsDir)
-	clusterNamespacesDir := filepath.Join(clusterArgoCDConfigDir, constant.DefaultArgoCDClusterConfigNamespacesDir)
+	clusterApplicationsDir := filepath.Join(clusterArgoCDConfigDir, paths.DefaultArgoCDClusterConfigApplicationsDir)
+	clusterNamespacesDir := filepath.Join(clusterArgoCDConfigDir, paths.DefaultArgoCDClusterConfigNamespacesDir)
 
 	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "kustomization.yaml")))
 	assert.Equal(t, false, fileExists(t, fs, filepath.Join(appBaseDir, "deployment.yaml")))

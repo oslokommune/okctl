@@ -6,7 +6,7 @@ import (
 	"path"
 	"testing"
 
-	"github.com/oslokommune/okctl/pkg/config/constant"
+	"github.com/oslokommune/okctl/pkg/paths"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -25,7 +25,7 @@ type expectedFile struct {
 //nolint:funlen
 func TestApplicationManifestService_SaveManifest(t *testing.T) {
 	absoluteRepositoryDir := "/"
-	absoluteApplicationsDir := path.Join(absoluteRepositoryDir, constant.DefaultApplicationsOutputDir)
+	absoluteApplicationsDir := path.Join(absoluteRepositoryDir, paths.DefaultApplicationsOutputDir)
 
 	testCases := []struct {
 		name string
@@ -49,7 +49,7 @@ func TestApplicationManifestService_SaveManifest(t *testing.T) {
 			},
 			expectFiles: []expectedFile{
 				{
-					Filename: path.Join(absoluteApplicationsDir, "test", constant.DefaultApplicationBaseDir, "kustomization.yaml"),
+					Filename: path.Join(absoluteApplicationsDir, "test", paths.DefaultApplicationBaseDir, "kustomization.yaml"),
 					Content: func() []byte {
 						raw, _ := yaml.Marshal(resources.Kustomization{
 							Resources: []string{"service.yaml"},
@@ -59,7 +59,7 @@ func TestApplicationManifestService_SaveManifest(t *testing.T) {
 					}(),
 				},
 				{
-					Filename: path.Join(absoluteApplicationsDir, "test", constant.DefaultApplicationBaseDir, "service.yaml"),
+					Filename: path.Join(absoluteApplicationsDir, "test", paths.DefaultApplicationBaseDir, "service.yaml"),
 					Content: func() []byte {
 						raw, _ := yaml.Marshal(resources.CreateOkctlService(
 							v1alpha1.Application{Metadata: v1alpha1.ApplicationMeta{Name: "test"}},
@@ -96,7 +96,7 @@ func TestApplicationManifestService_SaveManifest(t *testing.T) {
 //nolint:funlen
 func TestApplicationManifestService_SavePatch(t *testing.T) {
 	absoluteRepositoryDir := "/"
-	absoluteApplicationsDir := path.Join(absoluteRepositoryDir, constant.DefaultApplicationsOutputDir)
+	absoluteApplicationsDir := path.Join(absoluteRepositoryDir, paths.DefaultApplicationsOutputDir)
 
 	testCases := []struct {
 		name string
@@ -125,7 +125,7 @@ func TestApplicationManifestService_SavePatch(t *testing.T) {
 					Filename: path.Join(
 						absoluteApplicationsDir,
 						"testapp",
-						constant.DefaultApplicationOverlayDir,
+						paths.DefaultApplicationOverlayDir,
 						"testcluster",
 						"kustomization.yaml",
 					),
@@ -149,7 +149,7 @@ func TestApplicationManifestService_SavePatch(t *testing.T) {
 					Filename: path.Join(
 						absoluteApplicationsDir,
 						"testapp",
-						constant.DefaultApplicationOverlayDir,
+						paths.DefaultApplicationOverlayDir,
 						"testcluster",
 						"service-patch.json",
 					),

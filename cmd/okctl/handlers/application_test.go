@@ -292,7 +292,7 @@ func createCluster(t *testing.T, fs *afero.Afero, name string) {
 }
 
 func createApp(t *testing.T, fs *afero.Afero, name string) {
-	absAppDir := path.Join("/", "infrastructure", name)
+	absAppDir := path.Join("/", "infrastructure", "applications", name)
 
 	err := fs.MkdirAll(path.Join(absAppDir, "base"), defaultFolderPermissions)
 	assert.NoError(t, err)
@@ -390,6 +390,13 @@ func TestDeleteApplicationFiles(t *testing.T) {
 			fs := &afero.Afero{Fs: afero.NewMemMapFs()}
 
 			initializeEnvironment(t, fs, tc.withApplications)
+
+			for _, item := range tc.expectNonExistentFiles {
+				exists, err := fs.Exists(item)
+				assert.NoError(t, err)
+
+				assert.Equal(t, true, exists)
+			}
 
 			mockS, _ := mockServices(t)
 

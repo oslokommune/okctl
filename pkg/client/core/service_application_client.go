@@ -11,10 +11,10 @@ import (
 	"path"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/argocd"
+
 	"github.com/oslokommune/okctl/pkg/paths"
 	"github.com/oslokommune/okctl/pkg/scaffold/resources"
-
-	"sigs.k8s.io/yaml"
 
 	"github.com/oslokommune/okctl/pkg/clients/kubectl"
 
@@ -116,44 +116,6 @@ func getApplicationOverlayClusters(fs *afero.Afero, absoluteApplicationDir strin
 	return clusters, nil
 }
 
-func isArgoCDApplication(fs *afero.Afero, targetPath string) (bool, error) {
-	info, err := fs.Stat(targetPath)
-	if err != nil {
-		return false, fmt.Errorf("stating: %w", err)
-	}
-
-	if info.IsDir() {
-		return false, nil
-	}
-
-	content, err := fs.ReadFile(targetPath)
-	if err != nil {
-		return false, fmt.Errorf("reading file: %w", err)
-	}
-
-	serializer := struct {
-		APIVersion string `json:"apiVersion"`
-		Kind       string `json:"kind"`
-	}{}
-
-	err = yaml.Unmarshal(content, &serializer)
-	if err != nil {
-		return false, fmt.Errorf("unmarshalling: %w", err)
-	}
-
-	model := resources.GenerateDefaultArgoApp()
-
-	if serializer.APIVersion != model.APIVersion {
-		return false, nil
-	}
-
-	if serializer.Kind != model.Kind {
-		return false, nil
-	}
-
-	return true, nil
-}
-
 func getClusterApplications(fs *afero.Afero, absoluteRepositoryRootDir string, cluster v1alpha1.Cluster) ([]string, error) {
 	absoluteApplicationsDir := path.Join(absoluteRepositoryRootDir, paths.GetRelativeArgoCDApplicationsDir(cluster))
 
@@ -169,7 +131,7 @@ func getClusterApplications(fs *afero.Afero, absoluteRepositoryRootDir string, c
 	}
 
 	for _, item := range items {
-		valid, err := isArgoCDApplication(fs, path.Join(absoluteApplicationsDir, item.Name()))
+		valid, err := argocd.IsArgoCDApplication(fs, path.Join(absoluteApplicationsDir, item.Name()))
 		if err != nil {
 			return nil, fmt.Errorf("checking if ArgoCD application: %w", err)
 		}

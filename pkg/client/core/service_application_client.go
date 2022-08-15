@@ -176,6 +176,7 @@ func GetAssociatedClustersCount(fs *afero.Afero, absoluteRepositoryRootDir strin
 
 // DeleteApplicationManifests removes manifests related to an application
 func (s *applicationService) DeleteApplicationManifests(_ context.Context, opts client.DeleteApplicationManifestsOpts) error {
+	// /home/user/../my-iac-repo/infrastructure/applications/my-application/overlays/
 	absoluteApplicationOverlaysDirectory := path.Join(
 		s.absoluteRepositoryDir,
 		getRelativeOverlayDirectory(opts.Cluster, opts.Application),
@@ -195,6 +196,7 @@ func (s *applicationService) DeleteApplicationManifests(_ context.Context, opts 
 		return nil
 	}
 
+	// /home/user/../my-iac-repo/infrastructure/applications/my-application/
 	absoluteApplicationRootDirectory := path.Join(
 		s.absoluteRepositoryDir,
 		getRelativeApplicationDirectory(opts.Cluster, opts.Application),

@@ -3,7 +3,14 @@ package handlers
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"io"
+	"path"
+	"strings"
 	"testing"
+
+	"github.com/oslokommune/okctl/pkg/clients/kubectl"
+	"github.com/spf13/afero"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/client"
@@ -271,3 +278,184 @@ func (m mockService) DeleteCertificate(_ context.Context, _ client.DeleteCertifi
 func (m mockService) DeleteCognitoCertificate(_ context.Context, _ client.DeleteCognitoCertificateOpts) error {
 	panic("implement me")
 }
+
+const defaultFolderPermissions = 0o700
+
+func createCluster(t *testing.T, fs *afero.Afero, name string) {
+	absArgoCDConfigurationDir := path.Join("/", "infrastructure", name, "argocd")
+
+	err := fs.MkdirAll(path.Join(absArgoCDConfigurationDir, "applications"), defaultFolderPermissions)
+	assert.NoError(t, err)
+
+	err = fs.MkdirAll(path.Join(absArgoCDConfigurationDir, "namespaces"), defaultFolderPermissions)
+	assert.NoError(t, err)
+}
+
+func createApp(t *testing.T, fs *afero.Afero, name string) {
+	absAppDir := path.Join("/", "infrastructure", "applications", name)
+
+	err := fs.MkdirAll(path.Join(absAppDir, "base"), defaultFolderPermissions)
+	assert.NoError(t, err)
+
+	err = fs.MkdirAll(path.Join(absAppDir, "overlays"), defaultFolderPermissions)
+	assert.NoError(t, err)
+}
+
+func addAppToCluster(t *testing.T, fs *afero.Afero, appName string, clusterName string) {
+	absAppDir := path.Join("/", "infrastructure", appName)
+	absOverlaysDir := path.Join(absAppDir, clusterName)
+	absArgoCDConfigurationDir := path.Join("/", "infrastructure", clusterName, "argocd")
+
+	err := fs.MkdirAll(path.Join(absOverlaysDir), defaultFolderPermissions)
+	assert.NoError(t, err)
+
+	err = fs.WriteReader(path.Join(absOverlaysDir, "kustomization.yaml"), strings.NewReader(""))
+	assert.NoError(t, err)
+
+	err = fs.WriteReader(
+		path.Join(absArgoCDConfigurationDir, "applications", fmt.Sprintf("%s.yaml", appName)),
+		strings.NewReader(""),
+	)
+	assert.NoError(t, err)
+}
+
+func initializeEnvironment(t *testing.T, fs *afero.Afero, applications []testApplication) {
+	for _, app := range applications {
+		createApp(t, fs, app.Name)
+
+		for _, cluster := range app.Clusters {
+			createCluster(t, fs, cluster)
+
+			addAppToCluster(t, fs, app.Name, cluster)
+		}
+	}
+}
+
+func mockCluster(name string) v1alpha1.Cluster {
+	cluster := v1alpha1.NewCluster()
+
+	cluster.Metadata.Name = name
+	cluster.Github.OutputPath = "infrastructure"
+
+	return cluster
+}
+
+func mockApp(name string) v1alpha1.Application {
+	return v1alpha1.Application{
+		TypeMeta: v1alpha1.ApplicationTypeMeta(),
+		Metadata: v1alpha1.ApplicationMeta{
+			Name:      name,
+			Namespace: "mock-namespace",
+		},
+	}
+}
+
+type testApplication struct {
+	Name     string
+	Clusters []string
+}
+
+//nolint:funlen
+func TestDeleteApplicationFiles(t *testing.T) {
+	testCases := []struct {
+		name                   string
+		withCurrentCluster     v1alpha1.Cluster
+		withCurrentApplication v1alpha1.Application
+		withApplications       []testApplication
+		expectExistentFiles    []string
+		expectNonExistentFiles []string
+	}{
+		{
+			name:                   "Should delete expected files with one app and one cluster",
+			withCurrentCluster:     mockCluster("cluster-one"),
+			withCurrentApplication: mockApp("app-one"),
+			withApplications: []testApplication{
+				{
+					Name:     "app-one",
+					Clusters: []string{"cluster-one"},
+				},
+			},
+			expectNonExistentFiles: []string{
+				"/infrastructure/applications/app-one",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+
+			initializeEnvironment(t, fs, tc.withApplications)
+
+			for _, item := range tc.expectNonExistentFiles {
+				exists, err := fs.Exists(item)
+				assert.NoError(t, err)
+
+				assert.Equal(t, true, exists)
+			}
+
+			mockS, _ := mockServices(t)
+
+			err := HandleApplication(&HandleApplicationOpts{
+				Out:   io.Discard,
+				Err:   io.Discard,
+				Ctx:   context.Background(),
+				State: mockStates(),
+				Services: &core.Services{
+					ApplicationService: core.NewApplicationService(
+						fs,
+						&mockKubectlClient{},
+						nil,
+						"/",
+						&mockGitRemoteFileDeleter{},
+					),
+					ApplicationPostgresService: mockS.ApplicationPostgresService,
+					Certificate:                mockS.Certificate,
+					Domain:                     mockS.Domain,
+					ContainerRepository:        mockS.ContainerRepository,
+				},
+				File:                "-",
+				ClusterManifest:     tc.withCurrentCluster,
+				ApplicationManifest: tc.withCurrentApplication,
+				Purge:               true,
+				Confirm:             true,
+				DelayFunction:       func() {},
+			})(nil, nil)
+			assert.NoError(t, err)
+
+			for _, item := range tc.expectExistentFiles {
+				exists, err := fs.Exists(item)
+				assert.NoError(t, err)
+
+				assert.Equal(t, true, exists)
+			}
+
+			for _, item := range tc.expectNonExistentFiles {
+				exists, err := fs.Exists(item)
+				assert.NoError(t, err)
+
+				assert.Equal(t, false, exists)
+			}
+		})
+	}
+}
+
+type mockGitRemoteFileDeleter struct{}
+
+func (m mockGitRemoteFileDeleter) Delete(_ string, _ string, _ string) error {
+	return nil
+}
+
+type mockKubectlClient struct{}
+
+func (m mockKubectlClient) Apply(_ io.Reader) error { panic("implement me") }
+
+func (m mockKubectlClient) Delete(_ io.Reader) error { return nil }
+
+func (m mockKubectlClient) Patch(_ kubectl.PatchOpts) error { return nil }
+
+func (m mockKubectlClient) Exists(_ kubectl.Resource) (bool, error) { panic("implement me") }

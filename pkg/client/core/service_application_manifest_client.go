@@ -9,12 +9,13 @@ import (
 	"path"
 	"strings"
 
+	"github.com/oslokommune/okctl/pkg/paths"
+
 	merrors "github.com/mishudark/errors"
 
 	"github.com/oslokommune/okctl/pkg/jsonpatch"
 
 	"github.com/oslokommune/okctl/pkg/client"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"github.com/oslokommune/okctl/pkg/scaffold/resources"
 	"github.com/spf13/afero"
 
@@ -178,22 +179,22 @@ func getAbsoluteNamespacesDirectory(absoluteOutputDirectory string, clusterName 
 	return path.Join(
 		absoluteOutputDirectory,
 		clusterName,
-		constant.DefaultArgoCDClusterConfigDir,
-		constant.DefaultArgoCDClusterConfigNamespacesDir,
+		paths.DefaultArgoCDClusterConfigDir,
+		paths.DefaultArgoCDClusterConfigNamespacesDir,
 	)
 }
 
 func getAbsoluteApplicationBaseDirectory(absoluteOutputDirectory string, applicationName string) string {
 	return path.Join(
 		getAbsoluteApplicationDirectory(absoluteOutputDirectory, applicationName),
-		constant.DefaultApplicationBaseDir,
+		paths.DefaultApplicationBaseDir,
 	)
 }
 
 func getAbsoluteApplicationOverlaysDirectory(absoluteOutputDirectory string, clusterName string, applicationName string) string {
 	return path.Join(
 		getAbsoluteApplicationDirectory(absoluteOutputDirectory, applicationName),
-		constant.DefaultApplicationOverlayDir,
+		paths.DefaultApplicationOverlayDir,
 		clusterName,
 	)
 }
@@ -201,7 +202,7 @@ func getAbsoluteApplicationOverlaysDirectory(absoluteOutputDirectory string, clu
 func getAbsoluteApplicationDirectory(absoluteOutputDirectory string, applicationName string) string {
 	return path.Join(
 		absoluteOutputDirectory,
-		constant.DefaultApplicationsOutputDir,
+		paths.DefaultApplicationsOutputDir,
 		applicationName,
 	)
 }

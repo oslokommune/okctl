@@ -6,16 +6,16 @@ import (
 	"encoding/json"
 	stderrors "errors"
 	"fmt"
+	fsPkg "io/fs"
 	"os"
 	"path"
+	"strings"
 
+	"github.com/oslokommune/okctl/pkg/argocd"
+
+	"github.com/oslokommune/okctl/pkg/paths"
 	"github.com/oslokommune/okctl/pkg/scaffold/resources"
 
-	"github.com/go-git/go-git/v5/plumbing/format/index"
-
-	"github.com/go-git/go-billy/v5/memfs"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/oslokommune/okctl/pkg/clients/kubectl"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
@@ -36,6 +36,7 @@ type applicationService struct {
 	fs                    *afero.Afero
 	absoluteRepositoryDir string
 	kubectl               kubectl.Client
+	gitRemoteFileDeleter  client.GitRemoteFileDeleter
 }
 
 // ScaffoldApplication turns a file path into Kubernetes resources
@@ -86,14 +87,122 @@ func (s *applicationService) ScaffoldApplication(ctx context.Context, opts *clie
 	return nil
 }
 
+func getApplicationOverlayClusters(fs *afero.Afero, absoluteApplicationDir string) ([]string, error) {
+	absoluteApplicationOverlaysDirectory := path.Join(absoluteApplicationDir, paths.DefaultApplicationOverlayDir)
+
+	clusters := make([]string, 0)
+
+	err := fs.Walk(absoluteApplicationOverlaysDirectory, func(currentPath string, info fsPkg.FileInfo, err error) error {
+		if err != nil {
+			if stderrors.Is(err, os.ErrNotExist) {
+				return nil
+			}
+
+			return err
+		}
+
+		if contains(recognizedKustomizationFileNames(), path.Base(currentPath)) {
+			dir, _ := path.Split(currentPath)
+
+			clusters = append(clusters, path.Base(dir))
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("walking overlays directory: %w", err)
+	}
+
+	return clusters, nil
+}
+
+func getClusterApplications(fs *afero.Afero, absoluteRepositoryRootDir string, cluster v1alpha1.Cluster) ([]string, error) {
+	absoluteApplicationsDir := path.Join(absoluteRepositoryRootDir, paths.GetRelativeArgoCDApplicationsDir(cluster))
+
+	applications := make([]string, 0)
+
+	items, err := fs.ReadDir(absoluteApplicationsDir)
+	if err != nil {
+		if stderrors.Is(err, os.ErrNotExist) {
+			return applications, nil
+		}
+
+		return nil, fmt.Errorf("listing applications directory: %w", err)
+	}
+
+	for _, item := range items {
+		valid, err := argocd.IsArgoCDApplication(fs, path.Join(absoluteApplicationsDir, item.Name()))
+		if err != nil {
+			return nil, fmt.Errorf("checking if ArgoCD application: %w", err)
+		}
+
+		if valid {
+			applications = append(applications, strings.Replace(item.Name(), path.Ext(item.Name()), "", 1))
+		}
+	}
+
+	return applications, nil
+}
+
+// GetAssociatedClustersCount knows how to count the number of associated clusters a specific application has. A cluster is
+// classified as associated if and only if the cluster has an ArgoCD application referencing the app and the app has an
+// overlay folder referencing the cluster.
+func GetAssociatedClustersCount(fs *afero.Afero, absoluteRepositoryRootDir string, clusterContext v1alpha1.Cluster, app v1alpha1.Application) (int, error) {
+	absoluteApplicationDir := path.Join(absoluteRepositoryRootDir, paths.GetRelativeApplicationDir(clusterContext, app))
+
+	clusters, err := getApplicationOverlayClusters(fs, absoluteApplicationDir)
+	if err != nil {
+		return 0, fmt.Errorf("retrieving clusters in overlay directory: %w", err)
+	}
+
+	associatedClusters := 0
+
+	for _, cluster := range clusters {
+		clusterApplications, err := getClusterApplications(fs, absoluteRepositoryRootDir, v1alpha1.Cluster{
+			Metadata: v1alpha1.ClusterMeta{Name: cluster},
+			Github:   v1alpha1.ClusterGithub{OutputPath: clusterContext.Github.OutputPath},
+		})
+		if err != nil {
+			return 0, fmt.Errorf("listing cluster applications: %w", err)
+		}
+
+		if contains(clusterApplications, app.Metadata.Name) {
+			associatedClusters++
+		}
+	}
+
+	return associatedClusters, nil
+}
+
 // DeleteApplicationManifests removes manifests related to an application
 func (s *applicationService) DeleteApplicationManifests(_ context.Context, opts client.DeleteApplicationManifestsOpts) error {
-	absoluteApplicationDir := path.Join(
+	// /home/user/../my-iac-repo/infrastructure/applications/my-application/overlays/
+	absoluteApplicationOverlaysDirectory := path.Join(
+		s.absoluteRepositoryDir,
+		getRelativeOverlayDirectory(opts.Cluster, opts.Application),
+	)
+
+	err := s.fs.RemoveAll(absoluteApplicationOverlaysDirectory)
+	if err != nil {
+		return fmt.Errorf("deleting overlay directory: %w", err)
+	}
+
+	associatedClusters, err := GetAssociatedClustersCount(s.fs, s.absoluteRepositoryDir, opts.Cluster, opts.Application)
+	if err != nil {
+		return fmt.Errorf("counting associated clusters: %w", err)
+	}
+
+	if associatedClusters != 0 {
+		return nil
+	}
+
+	// /home/user/../my-iac-repo/infrastructure/applications/my-application/
+	absoluteApplicationRootDirectory := path.Join(
 		s.absoluteRepositoryDir,
 		getRelativeApplicationDirectory(opts.Cluster, opts.Application),
 	)
 
-	err := s.fs.RemoveAll(absoluteApplicationDir)
+	err = s.fs.RemoveAll(absoluteApplicationRootDirectory)
 	if err != nil {
 		return errors.E(err, "removing application directory: %w", err)
 	}
@@ -145,7 +254,11 @@ func (s *applicationService) DeleteArgoCDApplicationManifest(opts client.DeleteA
 		}
 	}
 
-	err = s.deleteFileFromGitRepository(opts.Cluster, opts.Application, relativeArgoCDApplicationManifestPath)
+	err = s.gitRemoteFileDeleter.Delete(
+		opts.Cluster.Github.URL(),
+		relativeArgoCDApplicationManifestPath,
+		fmt.Sprintf("❌ Remove ArgoCD application manifest for %s", opts.Application.Metadata.Name),
+	)
 	if err != nil {
 		return fmt.Errorf("deleting application manifest in repository: %w", err)
 	}
@@ -196,44 +309,6 @@ func (s *applicationService) HasArgoCDIntegration(_ context.Context, opts client
 	return true, nil
 }
 
-// deleteFileFromGitRepository creates and pushes a commit to the main branch of a repository that removes a file at a
-// certain path
-func (s *applicationService) deleteFileFromGitRepository(cluster v1alpha1.Cluster, app v1alpha1.Application, path string) error {
-	repo, err := git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{
-		URL:   cluster.Github.URL(),
-		Depth: 1,
-	})
-	if err != nil {
-		return fmt.Errorf("cloning repository: %w", err)
-	}
-
-	tree, _ := repo.Worktree()
-
-	_, err = tree.Remove(path)
-	if err != nil {
-		if stderrors.Is(err, index.ErrEntryNotFound) {
-			return nil
-		}
-
-		return fmt.Errorf("removing file: %w", err)
-	}
-
-	_, err = tree.Commit(
-		fmt.Sprintf("❌ Remove ArgoCD application manifest for %s", app.Metadata.Name),
-		&git.CommitOptions{},
-	)
-	if err != nil {
-		return fmt.Errorf("committing changes: %w", err)
-	}
-
-	err = repo.Push(&git.PushOptions{})
-	if err != nil {
-		return fmt.Errorf("pushing to repository: %w", err)
-	}
-
-	return nil
-}
-
 // patchArgoCDApplicationManifest adds a cascading deletion finalizer to an ArgoCD application manifest with a patch
 // operation
 func (s *applicationService) patchArgoCDApplicationManifest(applicationName string) error {
@@ -267,7 +342,7 @@ func (s *applicationService) patchArgoCDApplicationManifest(applicationName stri
 func getRelativeApplicationDirectory(cluster v1alpha1.Cluster, app v1alpha1.Application) string {
 	return path.Join(
 		cluster.Github.OutputPath,
-		constant.DefaultApplicationsOutputDir,
+		paths.DefaultApplicationsOutputDir,
 		app.Metadata.Name,
 	)
 }
@@ -275,7 +350,7 @@ func getRelativeApplicationDirectory(cluster v1alpha1.Cluster, app v1alpha1.Appl
 func getRelativeOverlayDirectory(cluster v1alpha1.Cluster, app v1alpha1.Application) string {
 	return path.Join(
 		getRelativeApplicationDirectory(cluster, app),
-		constant.DefaultApplicationOverlayDir, cluster.Metadata.Name,
+		paths.DefaultApplicationOverlayDir, cluster.Metadata.Name,
 	)
 }
 
@@ -283,8 +358,8 @@ func getRelativeArgoCDManifestPath(cluster v1alpha1.Cluster, app v1alpha1.Applic
 	return path.Join(
 		cluster.Github.OutputPath,
 		cluster.Metadata.Name,
-		constant.DefaultArgoCDClusterConfigDir,
-		constant.DefaultArgoCDClusterConfigApplicationsDir,
+		paths.DefaultArgoCDClusterConfigDir,
+		paths.DefaultArgoCDClusterConfigApplicationsDir,
 		fmt.Sprintf("%s.yaml", app.Metadata.Name),
 	)
 }
@@ -316,11 +391,21 @@ func NewApplicationService(
 	kubectlClient kubectl.Client,
 	appManifestService client.ApplicationManifestService,
 	absoluteRepositoryDir string,
+	gitRemoteFileDeleter client.GitRemoteFileDeleter,
 ) client.ApplicationService {
 	return &applicationService{
 		kubectl:               kubectlClient,
 		appManifestService:    appManifestService,
 		fs:                    fs,
 		absoluteRepositoryDir: absoluteRepositoryDir,
+		gitRemoteFileDeleter:  gitRemoteFileDeleter,
+	}
+}
+
+func recognizedKustomizationFileNames() []string {
+	return []string{
+		"kustomization.yaml",
+		"kustomization.yml",
+		"Kustomization",
 	}
 }

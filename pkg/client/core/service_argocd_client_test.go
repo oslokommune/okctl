@@ -7,9 +7,10 @@ import (
 	"path"
 	"testing"
 
+	"github.com/oslokommune/okctl/pkg/paths"
+
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/clients/kubectl"
-	"github.com/oslokommune/okctl/pkg/config/constant"
 	"github.com/sebdah/goldie/v2"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -54,7 +55,7 @@ func TestSetupNamespaceSync(t *testing.T) {
 				absoluteRepositoryDir,
 				cluster.Github.OutputPath,
 				cluster.Metadata.Name,
-				constant.DefaultArgoCDClusterConfigDir,
+				paths.DefaultArgoCDClusterConfigDir,
 				fmt.Sprintf("%s.yaml", defaultArgoCDNamespacesManifestName),
 			)
 
@@ -108,7 +109,7 @@ func TestSetupApplicationSync(t *testing.T) {
 				absoluteRepositoryDir,
 				cluster.Github.OutputPath,
 				cluster.Metadata.Name,
-				constant.DefaultArgoCDClusterConfigDir,
+				paths.DefaultArgoCDClusterConfigDir,
 				fmt.Sprintf("%s.yaml", defaultArgoCDApplicationManifestName),
 			)
 

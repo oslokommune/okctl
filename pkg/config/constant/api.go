@@ -95,23 +95,6 @@ const (
 	// EnvGithubCredentialsType enables setting the --github-credentials-type flag through environment vars
 	EnvGithubCredentialsType = EnvPrefix + "_" + "GITHUB_CREDENTIALS_TYPE"
 
-	// DefaultArgoCDClusterConfigDir is where we do cluster specific ArgoCD configuration
-	DefaultArgoCDClusterConfigDir = "argocd"
-	// DefaultArgoCDClusterConfigApplicationsDir is where we put ArgoCD application manifests for applications
-	DefaultArgoCDClusterConfigApplicationsDir = "applications"
-	// DefaultArgoCDClusterConfigNamespacesDir is where we put namespace manifests for applications
-	DefaultArgoCDClusterConfigNamespacesDir = "namespaces"
-	// DefaultApplicationsOutputDir is where the application declarations reside
-	DefaultApplicationsOutputDir = "applications"
-	// DefaultApplicationBaseDir is where the directory where application base files reside
-	DefaultApplicationBaseDir = "base"
-	// DefaultApplicationOverlayDir is where the directory where application overlay files reside
-	DefaultApplicationOverlayDir = "overlays"
-	// DefaultDeploymentPatchFilename defines the filename of the deployment patch
-	DefaultDeploymentPatchFilename = "deployment-patch.json"
-	// DefaultIngressPatchFilename defines the filename of the ingress patch
-	DefaultIngressPatchFilename = "ingress-patch.json"
-
 	// DefaultKeyringServiceName is the name of the keyring or encrypted file used to store client secrets
 	DefaultKeyringServiceName = "okctlService"
 

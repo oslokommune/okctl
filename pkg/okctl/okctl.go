@@ -10,6 +10,8 @@ import (
 	"path"
 	"time"
 
+	"github.com/oslokommune/okctl/pkg/git"
+
 	"github.com/oslokommune/okctl/pkg/clients/kubectl/binary"
 
 	"github.com/oslokommune/okctl/pkg/logging"
@@ -347,6 +349,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		o.toolChain.Kubectl,
 		applicationManifestService,
 		absoluteRepositoryPath,
+		&git.RemoteFileDeleter{},
 	)
 
 	nameserverService := clientCore.NewNameserverHandlerService(ghClient)

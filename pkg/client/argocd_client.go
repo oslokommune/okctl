@@ -48,6 +48,12 @@ type Applier interface {
 	Apply(io.Reader) error
 }
 
+// GitRemoteFileDeleter knows how to remotely delete a file tracked by Git
+type GitRemoteFileDeleter interface {
+	// Delete deletes a remote file from a Git repository
+	Delete(repositoryURL string, targetPath string, commitMessage string) error
+}
+
 // ArgoCDService is a business logic implementation
 type ArgoCDService interface {
 	// CreateArgoCD defines functionality for installing ArgoCD into a cluster

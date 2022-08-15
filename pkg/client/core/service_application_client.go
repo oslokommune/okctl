@@ -176,26 +176,31 @@ func AmountAssociatedClusters(fs *afero.Afero, absoluteRepositoryRootDir string,
 
 // DeleteApplicationManifests removes manifests related to an application
 func (s *applicationService) DeleteApplicationManifests(_ context.Context, opts client.DeleteApplicationManifestsOpts) error {
-	absoluteApplicationOverlaysDirectory := path.Join(s.absoluteRepositoryDir, getRelativeOverlayDirectory(opts.Cluster, opts.Application))
-	absoluteApplicationRootDirectory := path.Join(
+	absoluteApplicationOverlaysDirectory := path.Join(
 		s.absoluteRepositoryDir,
-		getRelativeApplicationDirectory(opts.Cluster, opts.Application),
+		getRelativeOverlayDirectory(opts.Cluster, opts.Application),
 	)
+
+	err := s.fs.RemoveAll(absoluteApplicationOverlaysDirectory)
+	if err != nil {
+		return fmt.Errorf("deleting overlay directory: %w", err)
+	}
 
 	associatedClusters, err := AmountAssociatedClusters(s.fs, s.absoluteRepositoryDir, opts.Cluster, opts.Application)
 	if err != nil {
 		return fmt.Errorf("counting associated clusters: %w", err)
 	}
 
-	var targetDir string
-
-	if associatedClusters == 0 {
-		targetDir = absoluteApplicationRootDirectory
-	} else {
-		targetDir = absoluteApplicationOverlaysDirectory
+	if associatedClusters != 0 {
+		return nil
 	}
 
-	err = s.fs.RemoveAll(targetDir)
+	absoluteApplicationRootDirectory := path.Join(
+		s.absoluteRepositoryDir,
+		getRelativeApplicationDirectory(opts.Cluster, opts.Application),
+	)
+
+	err = s.fs.RemoveAll(absoluteApplicationRootDirectory)
 	if err != nil {
 		return errors.E(err, "removing application directory: %w", err)
 	}

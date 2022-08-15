@@ -12,8 +12,6 @@ import (
 
 	"github.com/oslokommune/okctl/pkg/smapi"
 
-	"github.com/oslokommune/okctl/pkg/ec2api"
-
 	"github.com/oslokommune/okctl/pkg/static/rotater"
 
 	"github.com/oslokommune/okctl/pkg/iamapi"
@@ -183,15 +181,6 @@ func (c *componentService) CreatePostgresDatabase(ctx context.Context, opts clie
 		},
 	}
 
-	err = ec2api.New(c.provider).AuthorizePodToNodeGroupTraffic(
-		"ng-generic",
-		pg.OutgoingSecurityGroupID,
-		opts.VpcID,
-	)
-	if err != nil {
-		return nil, err
-	}
-
 	err = c.state.SavePostgresDatabase(postgres)
 	if err != nil {
 		return nil, err
@@ -206,15 +195,6 @@ func (c *componentService) DeletePostgresDatabase(ctx context.Context, opts clie
 
 	db, err := c.state.GetPostgresDatabase(stackName)
 	if err != nil {
-		return err
-	}
-
-	err = ec2api.New(c.provider).RevokePodToNodeGroupTraffic(
-		"ng-generic",
-		db.OutgoingSecurityGroupID,
-		opts.VpcID,
-	)
-	if err != nil && !stderrors.Is(err, ec2api.ErrNotFound) {
 		return err
 	}
 

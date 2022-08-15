@@ -3,6 +3,7 @@ addons:
   - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
   name: vpc-cni
   permissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
+  version: 1.11.0-eksbuild.1
 apiVersion: eksctl.io/v1alpha5
 cloudWatch:
   clusterLogging:
@@ -33,15 +34,41 @@ metadata:
     alpha.okctl.io/okctl-version: 0.0.70
   version: "1.18"
 nodeGroups:
-- desiredCapacity: 1
-  iam:
-    instanceRolePermissionsBoundary: arn:aws:iam::123456789012:policy/oslokommune/oslokommune-boundary
+- availabilityZones:
+  - eu-west-1a
+  desiredCapacity: 0
   instanceType: m5.large
   labels:
-    pool: ng-generic
+    pool: ng-generic-eu-west-1a
   maxSize: 10
-  minSize: 1
-  name: ng-generic
+  minSize: 0
+  name: ng-generic-1-20-1a
+  privateNetworking: true
+  tags:
+    k8s.io/cluster-autoscaler/enabled: "true"
+    k8s.io/cluster-autoscaler/test: owned
+- availabilityZones:
+  - eu-west-1b
+  desiredCapacity: 0
+  instanceType: m5.large
+  labels:
+    pool: ng-generic-eu-west-1b
+  maxSize: 10
+  minSize: 0
+  name: ng-generic-1-20-1b
+  privateNetworking: true
+  tags:
+    k8s.io/cluster-autoscaler/enabled: "true"
+    k8s.io/cluster-autoscaler/test: owned
+- availabilityZones:
+  - eu-west-1c
+  desiredCapacity: 0
+  instanceType: m5.large
+  labels:
+    pool: ng-generic-eu-west-1c
+  maxSize: 10
+  minSize: 0
+  name: ng-generic-1-20-1c
   privateNetworking: true
   tags:
     k8s.io/cluster-autoscaler/enabled: "true"

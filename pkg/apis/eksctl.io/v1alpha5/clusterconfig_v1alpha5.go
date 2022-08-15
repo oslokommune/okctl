@@ -36,6 +36,7 @@ type Addon struct {
 	Name                string   `json:"name,omitempty"`
 	AttachPolicyARNs    []string `json:"attachPolicyARNs,omitempty"`
 	PermissionsBoundary string   `json:"permissionsBoundary,omitempty"`
+	Version             string   `json:"version"`
 }
 
 // ClusterCloudWatch maps up parts of the eksctl config that we require
@@ -155,14 +156,9 @@ type NodeGroup struct {
 	Labels            map[string]string `json:"labels"`
 	Tags              map[string]string `json:"tags"`
 	PrivateNetworking bool              `json:"privateNetworking"`
-	IAM               NodeGroupIAM      `json:"iam"`
+	AvailabilityZones []string          `json:"availabilityZones"`
 
 	ScalingConfig `json:",inline"`
-}
-
-// NodeGroupIAM comes from eksctl and maps up what we need
-type NodeGroupIAM struct {
-	InstanceRolePermissionsBoundary string `json:"instanceRolePermissionsBoundary"`
 }
 
 // ScalingConfig comes from eksctl and maps up what we need

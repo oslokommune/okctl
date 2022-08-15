@@ -411,7 +411,7 @@ func TestDeleteApplicationFiles(t *testing.T) {
 						&mockKubectlClient{},
 						nil,
 						"/",
-						func(_ string, _ string, _ string) error { return nil },
+						&mockGitRemoteFileDeleter{},
 					),
 					ApplicationPostgresService: mockS.ApplicationPostgresService,
 					Certificate:                mockS.Certificate,
@@ -442,6 +442,12 @@ func TestDeleteApplicationFiles(t *testing.T) {
 			}
 		})
 	}
+}
+
+type mockGitRemoteFileDeleter struct{}
+
+func (m mockGitRemoteFileDeleter) Delete(_ string, _ string, _ string) error {
+	return nil
 }
 
 type mockKubectlClient struct{}

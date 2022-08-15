@@ -57,7 +57,7 @@ func TestNewApplicationService(t *testing.T) {
 		&mockKubectlClient{},
 		appManifestService,
 		absoluteRepoDir,
-		func(_ string, _ string, _ string) error { return nil },
+		&mockGitRemoteFileDeleter{},
 	)
 
 	application, err := commands.InferApplicationFromStdinOrFile(cluster, testInputBuffer, fs, "-")
@@ -128,7 +128,7 @@ func TestDeleteApplication(t *testing.T) {
 		mockKubectlClient{},
 		manifestService,
 		absoluteRepoDir,
-		func(_ string, _ string, _ string) error { return nil },
+		&mockGitRemoteFileDeleter{},
 	)
 
 	err = appService.ScaffoldApplication(context.Background(), &client.ScaffoldApplicationOpts{
@@ -205,6 +205,12 @@ func generateMockClusterManifest() v1alpha1.Cluster {
 		},
 		ClusterRootDomain: "kjoremiljo.oslo.systems",
 	}
+}
+
+type mockGitRemoteFileDeleter struct{}
+
+func (m mockGitRemoteFileDeleter) Delete(_ string, _ string, _ string) error {
+	return nil
 }
 
 type mockKubectlClient struct{}

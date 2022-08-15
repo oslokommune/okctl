@@ -349,7 +349,7 @@ func (o *Okctl) ClientServices(handlers *clientCore.StateHandlers) (*clientCore.
 		o.toolChain.Kubectl,
 		applicationManifestService,
 		absoluteRepositoryPath,
-		git.DeleteRemoteFile,
+		&git.RemoteFileDeleter{},
 	)
 
 	nameserverService := clientCore.NewNameserverHandlerService(ghClient)

@@ -36,7 +36,7 @@ type applicationService struct {
 	fs                    *afero.Afero
 	absoluteRepositoryDir string
 	kubectl               kubectl.Client
-	gitDeleteRemoteFileFn client.GitDeleteRemoteFileFn
+	gitRemoteFileDeleter  client.GitRemoteFileDeleter
 }
 
 // ScaffoldApplication turns a file path into Kubernetes resources
@@ -254,7 +254,7 @@ func (s *applicationService) DeleteArgoCDApplicationManifest(opts client.DeleteA
 		}
 	}
 
-	err = s.gitDeleteRemoteFileFn(
+	err = s.gitRemoteFileDeleter.Delete(
 		opts.Cluster.Github.URL(),
 		relativeArgoCDApplicationManifestPath,
 		fmt.Sprintf("❌ Remove ArgoCD application manifest for %s", opts.Application.Metadata.Name),
@@ -391,14 +391,14 @@ func NewApplicationService(
 	kubectlClient kubectl.Client,
 	appManifestService client.ApplicationManifestService,
 	absoluteRepositoryDir string,
-	gitDeleteRemoteFileFn client.GitDeleteRemoteFileFn,
+	gitRemoteFileDeleter client.GitRemoteFileDeleter,
 ) client.ApplicationService {
 	return &applicationService{
 		kubectl:               kubectlClient,
 		appManifestService:    appManifestService,
 		fs:                    fs,
 		absoluteRepositoryDir: absoluteRepositoryDir,
-		gitDeleteRemoteFileFn: gitDeleteRemoteFileFn,
+		gitRemoteFileDeleter:  gitRemoteFileDeleter,
 	}
 }
 

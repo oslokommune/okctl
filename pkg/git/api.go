@@ -10,8 +10,11 @@ import (
 	"github.com/go-git/go-git/v5/storage/memory"
 )
 
-// DeleteRemoteFile knows how to delete a file in a remote Git repository
-func DeleteRemoteFile(repositoryURL string, path string, commitMessage string) error {
+// RemoteFileDeleter knows how to delete a file in a remote Git repository
+type RemoteFileDeleter struct{}
+
+// Delete deletes a file from a remote Git repository
+func (RemoteFileDeleter) Delete(repositoryURL string, path string, commitMessage string) error {
 	repo, err := git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{
 		URL:   repositoryURL,
 		Depth: 1,

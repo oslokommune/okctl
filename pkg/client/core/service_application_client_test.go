@@ -437,7 +437,7 @@ func TestAmountAssociatedClusters(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			result, err := core.AmountAssociatedClusters(
+			result, err := core.GetAssociatedClustersCount(
 				tc.withFs,
 				"/",
 				v1alpha1.Cluster{

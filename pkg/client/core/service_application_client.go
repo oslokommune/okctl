@@ -145,8 +145,8 @@ func getClusterApplications(fs *afero.Afero, absoluteRepositoryRootDir string, c
 }
 
 // AmountAssociatedClusters knows how to count the number of associated clusters a specific application has. A cluster is
-// classified as associated iff the cluster has an ArgoCD application referencing the app and the app has an overlay folder
-// referencing the cluster.
+// classified as associated if and only if the cluster has an ArgoCD application referencing the app and the app has an
+// overlay folder referencing the cluster.
 func AmountAssociatedClusters(fs *afero.Afero, absoluteRepositoryRootDir string, clusterContext v1alpha1.Cluster, app v1alpha1.Application) (int, error) {
 	absoluteApplicationDir := path.Join(absoluteRepositoryRootDir, paths.GetRelativeApplicationDir(clusterContext, app))
 

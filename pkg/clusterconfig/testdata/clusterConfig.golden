@@ -42,7 +42,7 @@ nodeGroups:
     pool: ng-generic-eu-west-1a
   maxSize: 10
   minSize: 0
-  name: ng-generic-1-20-1a
+  name: ng-generic-1-21-1a
   privateNetworking: true
   tags:
     k8s.io/cluster-autoscaler/enabled: "true"
@@ -55,7 +55,7 @@ nodeGroups:
     pool: ng-generic-eu-west-1b
   maxSize: 10
   minSize: 0
-  name: ng-generic-1-20-1b
+  name: ng-generic-1-21-1b
   privateNetworking: true
   tags:
     k8s.io/cluster-autoscaler/enabled: "true"
@@ -68,7 +68,7 @@ nodeGroups:
     pool: ng-generic-eu-west-1c
   maxSize: 10
   minSize: 0
-  name: ng-generic-1-20-1c
+  name: ng-generic-1-21-1c
   privateNetworking: true
   tags:
     k8s.io/cluster-autoscaler/enabled: "true"

@@ -454,3 +454,7 @@ func mockVersion() {
 		}, nil
 	}
 }
+
+func TestDotToDash(t *testing.T) {
+	assert.Equal(t, "1-21", clusterconfig.DotToDash("1.21"))
+}

@@ -94,7 +94,6 @@ func ValidateCredentialTypes() error {
 // GetAwsCredentialsTypes gets all the valid AWS credential types we support
 func GetAwsCredentialsTypes() []string {
 	awsCredentialsTypes := []string{
-		context.AWSCredentialsTypeSAML,
 		context.AWSCredentialsTypeAccessKey,
 		context.AWSCredentialsTypeAwsProfile,
 	}

@@ -13,12 +13,8 @@ import (
 // KeyType : the type of key we are storing or fetching from keyring
 type KeyType string
 
-const (
-	// KeyTypeUserPassword user password used to login with saml (AD-password)
-	KeyTypeUserPassword = "userPassword"
-	// KeyTypeGithubToken github token for session
-	KeyTypeGithubToken = "githubToken"
-)
+// KeyTypeGithubToken github token for session
+const KeyTypeGithubToken = "githubToken"
 
 // Keyringer exposes functions needed from keyring
 type Keyringer interface {

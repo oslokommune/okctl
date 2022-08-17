@@ -5,31 +5,18 @@ import (
 	"bytes"
 	"fmt"
 	"path"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/oslokommune/okctl/pkg/config/constant"
 
-	"github.com/oslokommune/okctl/pkg/credentials/aws/saml"
-
-	"github.com/AlecAivazis/survey/v2"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
-	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
-	"github.com/oslokommune/okctl/pkg/credentials/aws/scrape"
 	"github.com/spf13/afero"
 	"gopkg.in/ini.v1"
 )
 
-const (
-	awsAccountIDLength                       = 12
-	defaultSessionDuration                   = 14400
-	defaultAWSServiceUserCredentialsDuration = 24 * time.Hour
-)
+const defaultAWSServiceUserCredentialsDuration = 24 * time.Hour
 
 // Credentials contains all data required for using AWS
 type Credentials struct {
@@ -258,225 +245,6 @@ func NewAuthProfile(region string, getter KeyGetter) (Retriever, error) {
 		Credentials: credentials,
 		IsValid:     credentials.AwsProfile != "",
 	}, nil
-}
-
-// DefaultStsProvider returns a standard aws sts client
-func DefaultStsProvider(sess *session.Session) stsiface.STSAPI {
-	return sts.New(sess)
-}
-
-// PopulateFn is invoked when a login is required due
-// to missing or expired credentials
-type PopulateFn func(*AuthSAML) error
-
-// AuthSAML contains the state for performing a SAML authentication with AWS
-type AuthSAML struct {
-	Username     string
-	Password     string
-	MFAToken     string
-	Region       string
-	AwsAccountID string
-
-	IsValid bool
-
-	Scraper    scrape.Scraper
-	ProviderFn StsProviderFn
-	PopulateFn PopulateFn
-}
-
-// NewAuthSAML returns an instantiated authenticator towards aws with saml
-func NewAuthSAML(awsAccountID, region string, scraper scrape.Scraper, providerFn StsProviderFn, fn PopulateFn) *AuthSAML {
-	return &AuthSAML{
-		AwsAccountID: awsAccountID,
-		Region:       region,
-		Scraper:      scraper,
-		ProviderFn:   providerFn,
-		PopulateFn:   fn,
-		IsValid:      true,
-	}
-}
-
-// Invalidate sets the authentication method as invalid
-func (a *AuthSAML) Invalidate() {
-	a.IsValid = false
-}
-
-// Valid returns the status of the authentication method
-func (a *AuthSAML) Valid() bool {
-	return a.IsValid
-}
-
-// Validate the SAML authentication fields
-func (a *AuthSAML) Validate() error {
-	return validation.ValidateStruct(a,
-		validation.Field(&a.Username,
-			validation.Match(regexp.MustCompile(constant.ValidationOKUsername)).
-				Error("username must match: yyyXXXXXX (y = letter, x = digit)"),
-		),
-		validation.Field(&a.Password,
-			validation.Required,
-		),
-		validation.Field(&a.Region,
-			validation.Required,
-		),
-		validation.Field(&a.AwsAccountID,
-			validation.Required,
-			validation.Length(awsAccountIDLength, awsAccountIDLength),
-		),
-		validation.Field(&a.MFAToken,
-			validation.Match(regexp.MustCompile(constant.ValidationMFATokenLength)).
-				Error("token must consist of 6 digits"),
-		),
-	)
-}
-
-// Retrieve initiates a saml based sts authentication
-func (a *AuthSAML) Retrieve() (*Credentials, error) {
-	err := a.PopulateFn(a)
-	if err != nil {
-		return nil, fmt.Errorf("populating required fields: %w", err)
-	}
-
-	samlAssertion, err := a.Scraper.Scrape(a.Username, a.Password, a.MFAToken)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(samlAssertion) == 0 {
-		return nil, fmt.Errorf("empty SAML assertion")
-	}
-
-	err = saml.VerifyAssertion(v1alpha1.RoleARN(a.AwsAccountID), []byte(samlAssertion))
-	if err != nil {
-		return nil, fmt.Errorf("verifying saml: %w", err)
-	}
-
-	sess, err := session.NewSession(&aws.Config{
-		Region: &a.Region,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("creating AWS STS session: %w", err)
-	}
-
-	svc := a.ProviderFn(sess)
-
-	resp, err := svc.AssumeRoleWithSAML(&sts.AssumeRoleWithSAMLInput{
-		DurationSeconds: aws.Int64(defaultSessionDuration),
-		PrincipalArn:    aws.String(v1alpha1.PrincipalARN(a.AwsAccountID)),
-		RoleArn:         aws.String(v1alpha1.RoleARN(a.AwsAccountID)),
-		SAMLAssertion:   aws.String(samlAssertion),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("retrieving STS credentials using SAML: %w", err)
-	}
-
-	return &Credentials{
-		AwsProfile:      constant.DefaultAwsProfile,
-		AccessKeyID:     aws.StringValue(resp.Credentials.AccessKeyId),
-		SecretAccessKey: aws.StringValue(resp.Credentials.SecretAccessKey),
-		SessionToken:    aws.StringValue(resp.Credentials.SessionToken),
-		SecurityToken:   aws.StringValue(resp.Credentials.SessionToken),
-		PrincipalARN:    aws.StringValue(resp.AssumedRoleUser.Arn),
-		Expires:         resp.Credentials.Expiration.Local(),
-		Region:          a.Region,
-	}, nil
-}
-
-// Static returns a populate method that returns the statically declared credentials
-// good for testing
-func Static(userName, password, mfatoken string) PopulateFn {
-	return func(a *AuthSAML) error {
-		a.Username = userName
-		a.Password = password
-		a.MFAToken = mfatoken
-
-		return a.Validate()
-	}
-}
-
-// InteractiveCallbackFn is used to store username and password from an interactive session
-type InteractiveCallbackFn func(username, password string)
-
-// Interactive returns a populate method that queries the user interactively
-// nolint: funlen
-func Interactive(userName, storedPassword string, interactiveCallbackFn InteractiveCallbackFn) PopulateFn {
-	hasCredentials := len(storedPassword) > 0 && len(userName) > 0
-	useStoredCredentials := false
-
-	mfaQuestion := &survey.Question{
-		Name: "mfatoken",
-		Prompt: &survey.Password{
-			Message: "Multi-factor authentication token:",
-			Help:    "Oslo kommune multi-factor token, for authentication towards KeyCloak and AWS",
-		},
-	}
-
-	return func(a *AuthSAML) error {
-		var qs []*survey.Question
-
-		if hasCredentials {
-			prompt := &survey.Confirm{
-				Message: fmt.Sprintf("Use stored credentials for username and password? Username: %s, Password: *******", userName),
-				Default: true,
-			}
-
-			err := survey.AskOne(prompt, &useStoredCredentials)
-			if err != nil {
-				return err
-			}
-		}
-
-		if useStoredCredentials {
-			qs = []*survey.Question{
-				mfaQuestion,
-			}
-		} else {
-			qs = []*survey.Question{
-				{
-					Name: "username",
-					Prompt: &survey.Input{
-						Message: "Username:",
-						Default: userName,
-						Help:    "Oslo kommune username (yyyXXXXXX, y = letter, x = character), for authentication towards Keycloak and AWS",
-					},
-				},
-				{
-					Name: "password",
-					Prompt: &survey.Password{
-						Message: "Password:",
-						Help:    "Oslo kommune password, for authentication towards KeyCloak and AWS",
-					},
-				},
-				mfaQuestion,
-			}
-		}
-
-		answers := struct {
-			Username string
-			Password string
-			MFAToken string
-		}{}
-
-		err := survey.Ask(qs, &answers)
-		if err != nil {
-			return err
-		}
-
-		a.Username = answers.Username
-		a.Password = answers.Password
-		a.MFAToken = answers.MFAToken
-
-		if useStoredCredentials {
-			a.Username = userName
-			a.Password = storedPassword
-		}
-
-		if interactiveCallbackFn != nil {
-			interactiveCallbackFn(a.Username, a.Password)
-		}
-
-		return a.Validate()
-	}
 }
 
 // IniStorer defines the operations required for writing and reading

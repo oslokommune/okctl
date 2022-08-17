@@ -122,7 +122,7 @@ func NewSession(region string, auth awsauth.Authenticator) (*session.Session, *a
 	var opts session.Options
 
 	if creds.AccessKeyID != "" {
-		// Login with environment access key or SAML, setting static credentials
+		// Login with environment access key, setting static credentials
 		opts = session.Options{}
 		config = config.WithCredentials(awsCreds.NewStaticCredentials(
 			creds.AccessKeyID,

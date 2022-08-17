@@ -20,8 +20,6 @@ const (
 )
 
 const (
-	// AWSCredentialsTypeSAML represents using SAML for AWS authentication
-	AWSCredentialsTypeSAML = "saml"
 	// AWSCredentialsTypeAccessKey represents using access key environment variables for AWS authentication
 	AWSCredentialsTypeAccessKey = "access-key"
 	// AWSCredentialsTypeAwsProfile represents using AWS Profile environment variable for AWS authentication

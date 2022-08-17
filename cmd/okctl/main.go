@@ -81,7 +81,7 @@ func addAuthenticationFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP((*string)(&auth.AwsCredentialsType),
 		"aws-credentials-type",
 		"a",
-		getWithDefault(os.Getenv, constant.EnvAWSCredentialsType, context.AWSCredentialsTypeSAML),
+		getWithDefault(os.Getenv, constant.EnvAWSCredentialsType, context.AWSCredentialsTypeAwsProfile),
 		fmt.Sprintf(
 			"The form of authentication to use for AWS. Possible values: [%s]",
 			strings.Join(auth.GetAwsCredentialsTypes(), ","),

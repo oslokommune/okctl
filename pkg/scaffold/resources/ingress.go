@@ -23,8 +23,12 @@ func CreateOkctlIngress(app v1alpha1.Application) (networkingv1.Ingress, error) 
 	ingress.Annotations["alb.ingress.kubernetes.io/actions.ssl-redirect"] =
 		`{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}`
 
+	// https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.4/guide/tasks/ssl_redirect/
+	pathType := networkingv1.PathTypeImplementationSpecific
+
 	redirectPath := networkingv1.HTTPIngressPath{
-		Path: "/*",
+		Path:     "/*",
+		PathType: &pathType,
 		Backend: networkingv1.IngressBackend{
 			Service: &networkingv1.IngressServiceBackend{
 				Name: "ssl-redirect",
@@ -44,7 +48,7 @@ func generateDefaultIngress() networkingv1.Ingress {
 	return networkingv1.Ingress{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Ingress",
-			APIVersion: "networking.k8s.io/v1beta1",
+			APIVersion: apiVersion(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      map[string]string{},
@@ -54,6 +58,10 @@ func generateDefaultIngress() networkingv1.Ingress {
 			Rules: make([]networkingv1.IngressRule, 1),
 		},
 	}
+}
+
+func apiVersion() string {
+	return fmt.Sprintf("%s/%s", networkingv1.SchemeGroupVersion.Group, networkingv1.SchemeGroupVersion.Version)
 }
 
 func createGenericIngress(app v1alpha1.Application) (networkingv1.Ingress, error) {
@@ -67,13 +75,17 @@ func createGenericIngress(app v1alpha1.Application) (networkingv1.Ingress, error
 
 	ingress.ObjectMeta.Name = app.Metadata.Name
 
+	// https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.4/guide/tasks/ssl_redirect/
+	pathType := networkingv1.PathTypeImplementationSpecific
+
 	ingress.Spec.Rules = []networkingv1.IngressRule{
 		{
 			Host: hostURL.Host,
 			IngressRuleValue: networkingv1.IngressRuleValue{
 				HTTP: &networkingv1.HTTPIngressRuleValue{
 					Paths: []networkingv1.HTTPIngressPath{{
-						Path: "/",
+						Path:     "/",
+						PathType: &pathType,
 						Backend: networkingv1.IngressBackend{
 							Service: &networkingv1.IngressServiceBackend{
 								Name: app.Metadata.Name,

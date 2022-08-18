@@ -37,10 +37,9 @@ type OkctlEnvironment struct {
 
 // Validate the inputs
 func (o *OkctlEnvironment) Validate() error {
-	return validation.ValidateStruct(o,
+	validators := []*validation.FieldRules{
 		validation.Field(&o.AWSAccountID, validation.Required),
 		validation.Field(&o.Region, validation.Required),
-		validation.Field(&o.AwsProfile, validation.Required),
 		validation.Field(&o.ClusterName, validation.Required),
 		validation.Field(&o.UserDataDir, validation.Required),
 		validation.Field(&o.UserHomeDir, validation.Required),
@@ -50,7 +49,13 @@ func (o *OkctlEnvironment) Validate() error {
 		validation.Field(&o.ClusterDeclarationPath, validation.Required),
 		validation.Field(&o.AWSCredentialsType, validation.Required),
 		validation.Field(&o.GithubCredentialsType, validation.Required),
-	)
+	}
+
+	if o.AWSCredentialsType == context.AWSCredentialsTypeAwsProfile {
+		validators = append(validators, validation.Field(&o.AwsProfile, validation.Required))
+	}
+
+	return validation.ValidateStruct(o, validators...)
 }
 
 // GetOkctlEnvironment returns data needed to connect to an okctl cluster

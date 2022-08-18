@@ -53,8 +53,6 @@ import (
 )
 
 const (
-	// DefaultAwsProfile is a mocked AWS profile name
-	DefaultAwsProfile = "default"
 	// DefaultAccessKeyID is a mocked aws access key id
 	DefaultAccessKeyID = "ASIAV3ZUEFP6EXAMPLE"
 	// DefaultSecretAccessKey is a mocked aws secret access key
@@ -100,7 +98,6 @@ func DefaultCredentials() *awspkg.Credentials {
 	t, _ := time.Parse(time.RFC3339, DefaultExpiration)
 
 	return &awspkg.Credentials{
-		AwsProfile:      DefaultAwsProfile,
 		AccessKeyID:     DefaultAccessKeyID,
 		SecretAccessKey: DefaultSecretAccessKey,
 		SessionToken:    DefaultSessionToken,

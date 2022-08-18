@@ -65,12 +65,7 @@ func GetOkctlEnvironment(o *okctl.Okctl, clusterDeclarationPath string) (OkctlEn
 		return OkctlEnvironment{}, err
 	}
 
-	var awsProfile string
-	if o.AWSCredentialsType == context.AWSCredentialsTypeAwsProfile {
-		awsProfile = os.Getenv("AWS_PROFILE")
-	} else {
-		awsProfile = constant.DefaultAwsProfile
-	}
+	awsProfile := os.Getenv("AWS_PROFILE")
 
 	k, err := o.BinariesProvider.Kubectl(kubectl.Version)
 	if err != nil {
@@ -155,7 +150,6 @@ func GetOkctlEnvVars(opts OkctlEnvironment) (map[string]string, error) {
 		awsConfig = path.Join(opts.UserHomeDir, ".aws", "config")
 		awsCredentials = path.Join(opts.UserHomeDir, ".aws", "credentials")
 	} else {
-		awsProfile = constant.DefaultAwsProfile
 		awsConfig = path.Join(appDir, constant.DefaultCredentialsDirName, opts.ClusterName, constant.DefaultClusterAwsConfig)
 		awsCredentials = path.Join(appDir, constant.DefaultCredentialsDirName, opts.ClusterName, constant.DefaultClusterAwsCredentials)
 	}

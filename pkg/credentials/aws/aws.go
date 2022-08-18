@@ -210,7 +210,6 @@ func NewAuthEnvironment(region string, getter KeyGetter) (Retriever, error) {
 	}
 
 	credentials := &Credentials{
-		AwsProfile:      constant.DefaultAwsProfile,
 		AccessKeyID:     awsAccessKeyID,
 		SecretAccessKey: awsSecretAccessKey,
 		Region:          region,
@@ -424,7 +423,6 @@ func (s *IniPersister) Get() (*Credentials, error) {
 	}
 
 	return &Credentials{
-		AwsProfile:      constant.DefaultAwsProfile, // SAML login uses 'default' profile
 		AccessKeyID:     creds.AccessKeyID,
 		SecretAccessKey: creds.SecretAccessKey,
 		SessionToken:    creds.SessionToken,

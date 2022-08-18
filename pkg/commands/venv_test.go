@@ -59,7 +59,6 @@ func TestGetOkctlEnvVarsForAccessKey(t *testing.T) {
 	envVars, err := GetVenvEnvVars(okctlEnv)
 
 	assert.Nil(t, err, "should not return error")
-	assert.Equal(t, "default", envVars["AWS_PROFILE"])
 	assert.Equal(t, "/home/user/.okctl/credentials/testcluster/aws-config", envVars["AWS_CONFIG_FILE"])
 	assert.Equal(t, "/home/user/.okctl/credentials/testcluster/aws-credentials", envVars["AWS_SHARED_CREDENTIALS_FILE"])
 }

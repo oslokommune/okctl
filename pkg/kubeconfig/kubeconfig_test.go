@@ -21,7 +21,7 @@ import (
 func testConfig(t *testing.T) *v1alpha5.ClusterConfig {
 	conf, err := clusterconfig.New(&clusterconfig.Args{
 		ClusterName:            "okctl-pro",
-		PermissionsBoundaryARN: v1alpha1.PrincipalARN(mock.DefaultAWSAccountID),
+		PermissionsBoundaryARN: "mock-boundary-arn",
 		PrivateSubnets:         mock.DefaultVpcPrivateSubnets(),
 		PublicSubnets:          mock.DefaultVpcPublicSubnets(),
 		Region:                 "eu-west-1",

@@ -37,22 +37,18 @@ const (
 	DefaultChartFindTimeout   = 1 * time.Minute
 
 	DefaultAwsRegion                       = "eu-west-1"
-	DefaultAwsProfile                      = "default"
 	DefaultGithubHost                      = "git@github.com"
 	DefaultGithubOrganization              = "oslokommune"
 	DefaultFargateObservabilityNamespace   = "aws-observability"
 	DefaultArgoCDNamespace                 = "argocd"
 	DefaultMonitoringNamespace             = "monitoring"
-	DefaultSystemNamespace                 = "kube-system"
 	DefaultKubePrometheusStackGrafanaName  = "kube-prometheus-stack-grafana"
 	DefaultGrafanaCloudWatchDatasourceName = "cloudwatch-datasource"
 
-	DefaultClusterConfig         = "cluster.yml"
 	DefaultClusterKubeConfig     = "kubeconfig"
 	DefaultClusterKubePermission = 0o600
 	DefaultClusterAwsConfig      = "aws-config"
 	DefaultClusterAwsCredentials = "aws-credentials"
-	DefaultClusterBaseDir        = "cluster"
 
 	DefaultHelmBaseDir          = "helm"
 	DefaultHelmRegistryConfig   = "registry.json"
@@ -60,29 +56,24 @@ const (
 	DefaultHelmRepositoryCache  = "repository"
 	DefaultHelmPluginsDirectory = "plugins"
 
-	DefaultStormDBName                        = "state.db"
-	DefaultStormNodeDomains                   = "domains"
-	DefaultStormNodeCertificates              = "certificates"
-	DefaultStormNodeKubernetesManifest        = "manifests"
-	DefaultStormNodeBlockStorage              = "blockstorage"
-	DefaultStormNodeMonitoring                = "monitoring"
-	DefaultStormNodeComponent                 = "components"
-	DefaultStormNodeArgoCD                    = "argocd"
-	DefaultStormNodeHelm                      = "helm"
-	DefaultStormNodeExternalSecrets           = "externalsecrets"
-	DefaultStormNodeAWSLoadBalancerController = "awsloadbalancercontroller"
-	DefaultStormNodeExternalDNS               = "externaldns"
-	DefaultStormNodeAutoscaler                = "autoscaler"
-	DefaultStormNodeParameter                 = "parameter"
-	DefaultStormNodeApplications              = "applications"
-	DefaultStormNodeIdentityManager           = "identitymanager"
-	DefaultStormNodeVpc                       = "vpc"
-	DefaultStormNodeCluster                   = "cluster"
-	DefaultStormNodeGithub                    = "github"
-	DefaultStormNodeManagedPolicy             = "managedpolicy"
-	DefaultStormNodeServiceAccount            = "serviceaccount"
-	DefaultStormNodeContainerRepository       = "containers"
-	DefaultStormNodeUpgrade                   = "upgrade"
+	DefaultStormDBName                  = "state.db"
+	DefaultStormNodeDomains             = "domains"
+	DefaultStormNodeCertificates        = "certificates"
+	DefaultStormNodeKubernetesManifest  = "manifests"
+	DefaultStormNodeMonitoring          = "monitoring"
+	DefaultStormNodeComponent           = "components"
+	DefaultStormNodeArgoCD              = "argocd"
+	DefaultStormNodeHelm                = "helm"
+	DefaultStormNodeExternalDNS         = "externaldns"
+	DefaultStormNodeParameter           = "parameter"
+	DefaultStormNodeIdentityManager     = "identitymanager"
+	DefaultStormNodeVpc                 = "vpc"
+	DefaultStormNodeCluster             = "cluster"
+	DefaultStormNodeGithub              = "github"
+	DefaultStormNodeManagedPolicy       = "managedpolicy"
+	DefaultStormNodeServiceAccount      = "serviceaccount"
+	DefaultStormNodeContainerRepository = "containers"
+	DefaultStormNodeUpgrade             = "upgrade"
 
 	// EnvPrefix of environment variables that will be processed by okctl
 	EnvPrefix = "OKCTL"
@@ -108,8 +99,6 @@ const (
 	// DefaultRequiredFargateOnDemandPods is the minimum number of fargate pods that should be available
 	DefaultRequiredFargateOnDemandPods = 50
 
-	DefaultNameserverRecordTTL = 300
-
 	// DefaultMaxReconciliationRequeues defines the maximum allowed times a reconciliation can be requeued
 	DefaultMaxReconciliationRequeues = 3
 	// DefaultReconciliationLoopDelayDuration defines the default delay between each reconciliation
@@ -123,6 +112,5 @@ const (
 
 	DefaultAwsAuthDocumentationURL = "https://www.okctl.io/authenticating-to-aws/"
 
-	ValidationOKUsername     = "^[a-z]{3}[0-9]{4,7}$"
-	ValidationMFATokenLength = "^[0-9]{6}$" // #nosec G101
+	ValidationOKUsername = "^[a-z]{3}[0-9]{4,7}$"
 )

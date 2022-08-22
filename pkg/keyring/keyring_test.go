@@ -18,16 +18,16 @@ func TestStore(t *testing.T) {
 	}{
 		{
 			name:    "Should be able to store password",
-			keytype: keyring.KeyTypeUserPassword,
+			keytype: keyring.KeyTypeGithubToken,
 			secret:  "foobar",
 			expect:  true,
 		},
 		{
 			name:      "Empty password should fail",
-			keytype:   keyring.KeyTypeUserPassword,
+			keytype:   keyring.KeyTypeGithubToken,
 			secret:    "",
 			expectErr: true,
-			expect:    fmt.Errorf("key of type userPassword cannot store empty value"),
+			expect:    fmt.Errorf("key of type githubToken cannot store empty value"),
 		},
 	}
 
@@ -65,7 +65,7 @@ func TestFetch(t *testing.T) {
 
 				return r
 			}(),
-			keytype: keyring.KeyTypeUserPassword,
+			keytype: keyring.KeyTypeGithubToken,
 			secret:  "s3cret",
 			expect:  "s3cret",
 		},
@@ -77,7 +77,7 @@ func TestFetch(t *testing.T) {
 
 				return r
 			}(),
-			keytype:   keyring.KeyTypeUserPassword,
+			keytype:   keyring.KeyTypeGithubToken,
 			expectErr: true,
 			expect:    "The specified item could not be found in the keyring",
 		},
@@ -86,7 +86,7 @@ func TestFetch(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.ring.Store(keyring.KeyTypeUserPassword, tc.expect)
+			err := tc.ring.Store(keyring.KeyTypeGithubToken, tc.expect)
 			if err != nil {
 				fmt.Print("Ignore error")
 			}

@@ -4,54 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 	"github.com/google/go-cmp/cmp"
-	"github.com/mishudark/errors"
-	"github.com/oslokommune/okctl/pkg/api/mock"
 	"github.com/oslokommune/okctl/pkg/credentials/aws"
 	awsmock "github.com/oslokommune/okctl/pkg/mock"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestNewAuthSAML(t *testing.T) {
-	testCases := []struct {
-		name        string
-		retriever   aws.Retriever
-		provider    aws.StsProviderFn
-		expect      interface{}
-		expectError bool
-	}{
-		{
-			name: "SAML retriever should work",
-			retriever: aws.NewAuthSAML(
-				"000000000000",
-				mock.DefaultRegion,
-				awsmock.NewGoodScraper(),
-				func(session *session.Session) stsiface.STSAPI {
-					return awsmock.NewGoodSTSAPI()
-				},
-				aws.Static("byr999999", "the", "123456"),
-			),
-			expect: awsmock.DefaultCredentials(),
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			got, err := tc.retriever.Retrieve()
-			if tc.expectError {
-				assert.Error(t, err)
-				assert.Equal(t, tc.expect, err.Error())
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tc.expect, got)
-			}
-		})
-	}
-}
 
 func TestAuthRaw(t *testing.T) {
 	c := awsmock.DefaultCredentials()
@@ -228,128 +186,6 @@ func TestNewAuthMissingProfile(t *testing.T) {
 
 	assert.Nil(t, retriever)
 	assert.NotNil(t, err, "credentials are invalid if AWS_PROFILE is not set")
-}
-
-func TestAuthSAMLUsernameValidation(t *testing.T) {
-	testCases := []struct {
-		name        string
-		username    string
-		expectError bool
-		expect      interface{}
-	}{
-		{
-			name:     "Correct username, minimum length",
-			username: "ooo1234",
-		},
-		{
-			name:     "Correct username, maximum length",
-			username: "ooo1234567",
-		},
-		{
-			name:        "Too short username",
-			username:    "ooo123",
-			expectError: true,
-			expect:      "Username: username must match: yyyXXXXXX (y = letter, x = digit).",
-		},
-		{
-			name:        "Too long username",
-			username:    "ooo12345678",
-			expectError: true,
-			expect:      "Username: username must match: yyyXXXXXX (y = letter, x = digit).",
-		},
-	}
-
-	authSAML := aws.NewAuthSAML(
-		"000000000000",
-		mock.DefaultRegion,
-		awsmock.NewGoodScraper(),
-		func(session *session.Session) stsiface.STSAPI {
-			return awsmock.NewGoodSTSAPI()
-		},
-		aws.Static("username", "the", "123456"),
-	)
-
-	err := authSAML.PopulateFn(authSAML)
-	if err != nil {
-		assert.Error(t, errors.New("populating required fields"))
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			authSAML.Username = tc.username
-			err := authSAML.Validate()
-			if tc.expectError {
-				assert.Error(t, err)
-				assert.Equal(t, tc.expect, err.Error())
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
-func TestAuthSAMLMFATokenValidation(t *testing.T) {
-	testCases := []struct {
-		name        string
-		token       string
-		expectError bool
-		expect      interface{}
-	}{
-		{
-			name:  "Correct token length",
-			token: "123456",
-		},
-		{
-			name:        "Too short token",
-			token:       "12345",
-			expectError: true,
-			expect:      "MFAToken: token must consist of 6 digits.",
-		},
-		{
-			name:        "Too long token",
-			token:       "1234567",
-			expectError: true,
-			expect:      "MFAToken: token must consist of 6 digits.",
-		},
-		{
-			name:        "Correct length, but contains non-numeric character",
-			token:       "123a56",
-			expectError: true,
-			expect:      "MFAToken: token must consist of 6 digits.",
-		},
-	}
-
-	authSAML := aws.NewAuthSAML(
-		"000000000000",
-		mock.DefaultRegion,
-		awsmock.NewGoodScraper(),
-		func(session *session.Session) stsiface.STSAPI {
-			return awsmock.NewGoodSTSAPI()
-		},
-		aws.Static("ooo123456", "the", "123456"),
-	)
-
-	err := authSAML.PopulateFn(authSAML)
-	if err != nil {
-		assert.Error(t, errors.New("populating required fields"))
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			authSAML.MFAToken = tc.token
-			err := authSAML.Validate()
-			if tc.expectError {
-				assert.Error(t, err)
-				assert.Equal(t, tc.expect, err.Error())
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
 }
 
 func getter(m map[string]string) aws.KeyGetter {

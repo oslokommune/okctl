@@ -12,15 +12,6 @@ const (
 	RegionEuCentral1 = "eu-central-1"
 	// RegionEuNorth1 defines the AWS region
 	RegionEuNorth1 = "eu-north-1"
-	// OkPrincipalARNPattern defines what the Oslo kommune principal ARN for KeyCloak looks like
-	// https://docs.aws.amazon.com/IAM/latest/UserGuide/intro-structure.html#intro-structure-principal
-	OkPrincipalARNPattern = "arn:aws:iam::%s:saml-provider/keycloak"
-	// OkRoleARNPattern defines the standard role that we should select, i.e., the one with most privileges
-	// This might be made configurable in the future, but for now it only makes sense to do it this way
-	// as the other roles are pretty much useless in their current state
-	OkRoleARNPattern = "arn:aws:iam::%s:role/oslokommune/iamadmin-SAML"
-	// OkSamlURL is the starting point for authenticating via KeyCloak towards AWS
-	OkSamlURL = "https://login.oslo.kommune.no/auth/realms/AD/protocol/saml/clients/amazon-aws"
 
 	// OkctlVersionTag defines the version of okctl used to provision the given resources
 	OkctlVersionTag = "alpha.okctl.io/okctl-version"
@@ -38,17 +29,6 @@ func SupportedRegions() []string {
 		RegionEuWest1,
 		RegionEuCentral1,
 	}
-}
-
-// IsSupportedRegion determines if a given region is supported
-func IsSupportedRegion(region string) bool {
-	for _, r := range SupportedRegions() {
-		if region == r {
-			return true
-		}
-	}
-
-	return false
 }
 
 // SupportedAvailabilityZones returns the availability zones for a
@@ -76,16 +56,6 @@ func SupportedAvailabilityZones(region string) ([]string, error) {
 	default:
 		return nil, fmt.Errorf("region: %s is not supported", region)
 	}
-}
-
-// PrincipalARN returns the Ok principal ARN with account number set
-func PrincipalARN(awsAccountID string) string {
-	return fmt.Sprintf(OkPrincipalARNPattern, awsAccountID)
-}
-
-// RoleARN return the Ok role ARN with account number set
-func RoleARN(awsAccountID string) string {
-	return fmt.Sprintf(OkRoleARNPattern, awsAccountID)
 }
 
 // PermissionsBoundaryARN return the Ok permissions boundary ARN

@@ -1,8 +1,6 @@
 // Package mock provides mocks
 package mock
 
-import "C"
-
 import (
 	"encoding/base64"
 	"fmt"
@@ -50,15 +48,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation/cloudformationiface"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
-	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	awspkg "github.com/oslokommune/okctl/pkg/credentials/aws"
 )
 
 const (
-	// DefaultAwsProfile is a mocked AWS profile name
-	DefaultAwsProfile = "default"
 	// DefaultAccessKeyID is a mocked aws access key id
 	DefaultAccessKeyID = "ASIAV3ZUEFP6EXAMPLE"
 	// DefaultSecretAccessKey is a mocked aws secret access key
@@ -104,7 +98,6 @@ func DefaultCredentials() *awspkg.Credentials {
 	t, _ := time.Parse(time.RFC3339, DefaultExpiration)
 
 	return &awspkg.Credentials{
-		AwsProfile:      DefaultAwsProfile,
 		AccessKeyID:     DefaultAccessKeyID,
 		SecretAccessKey: DefaultSecretAccessKey,
 		SessionToken:    DefaultSessionToken,
@@ -115,32 +108,11 @@ func DefaultCredentials() *awspkg.Credentials {
 	}
 }
 
-// DefaultStsCredentials returns a mocked set of aws sts credentials
-func DefaultStsCredentials() *sts.Credentials {
-	t, _ := time.Parse(time.RFC3339, DefaultExpiration)
-
-	return &sts.Credentials{
-		AccessKeyId:     aws.String(DefaultAccessKeyID),
-		Expiration:      aws.Time(t.Local()),
-		SecretAccessKey: aws.String(DefaultSecretAccessKey),
-		SessionToken:    aws.String(DefaultSessionToken),
-	}
-}
-
 // DefaultValidCredentials returns a mocked set of valid credentials
 func DefaultValidCredentials() *awspkg.Credentials {
 	creds := DefaultCredentials()
 
 	creds.Expires = time.Now().Add(1 * time.Hour).Local()
-
-	return creds
-}
-
-// DefaultValidStsCredentials returns a mocked set of valid aws sts credentials
-func DefaultValidStsCredentials() *sts.Credentials {
-	creds := DefaultStsCredentials()
-
-	creds.Expiration = aws.Time(time.Now().Add(1 * time.Hour).Local())
 
 	return creds
 }
@@ -155,32 +127,6 @@ type SQAPI struct {
 // GetServiceQuota invokes the mocked response
 func (a *SQAPI) GetServiceQuota(input *servicequotas.GetServiceQuotaInput) (*servicequotas.GetServiceQuotaOutput, error) {
 	return a.GetServiceQuotaFn(input)
-}
-
-// STSAPI stores state for mocking out the STS API
-type STSAPI struct {
-	stsiface.STSAPI
-
-	AssumeRoleWithSAMLFn func(*sts.AssumeRoleWithSAMLInput) (*sts.AssumeRoleWithSAMLOutput, error)
-}
-
-// AssumeRoleWithSAML invokes the mocked function
-func (a *STSAPI) AssumeRoleWithSAML(in *sts.AssumeRoleWithSAMLInput) (*sts.AssumeRoleWithSAMLOutput, error) {
-	return a.AssumeRoleWithSAMLFn(in)
-}
-
-// NewGoodSTSAPI returns a mocked sts api that will succeed
-func NewGoodSTSAPI() stsiface.STSAPI {
-	return &STSAPI{
-		AssumeRoleWithSAMLFn: func(input *sts.AssumeRoleWithSAMLInput) (*sts.AssumeRoleWithSAMLOutput, error) {
-			return &sts.AssumeRoleWithSAMLOutput{
-				AssumedRoleUser: &sts.AssumedRoleUser{
-					Arn: aws.String(DefaultPrincipalARN),
-				},
-				Credentials: DefaultStsCredentials(),
-			}, nil
-		},
-	}
 }
 
 // EKSAPI mocks eksiface.EKSAPI
@@ -251,11 +197,8 @@ func (a *EC2API) DescribeSecurityGroups(input *ec2.DescribeSecurityGroupsInput) 
 }
 
 // DescribeSecurityGroupsWithContext invokes the mocked response
+//nolint:lll
 func (a *EC2API) DescribeSecurityGroupsWithContext(_ aws.Context, input *ec2.DescribeSecurityGroupsInput, _ ...request.Option) (*ec2.DescribeSecurityGroupsOutput, error) {
-	return a.DescribeSecurityGroupsFn(input)
-}
-
-func (a *EC2API) DescribeSecurityGroupsWithContext2(_ aws.Context, input *ec2.DescribeSecurityGroupsInput, _ ...request.Option) (*ec2.DescribeSecurityGroupsOutput, error) {
 	return a.DescribeSecurityGroupsFn(input)
 }
 
@@ -346,6 +289,7 @@ func (a *CIPAPI) DescribeUserPoolDomain(input *cognitoidentityprovider.DescribeU
 	return a.DescribeUserPoolDomainFn(input)
 }
 
+// CWAPI mocks the Cloudwatch API
 type CWAPI struct {
 	GetMetricsStatisticsFn func(input *cloudwatch.GetMetricStatisticsInput) (*cloudwatch.GetMetricStatisticsOutput, error)
 }
@@ -371,6 +315,7 @@ func (c *CWAPI) DeleteAnomalyDetector(_ *cloudwatch.DeleteAnomalyDetectorInput) 
 }
 
 // DeleteAnomalyDetectorWithContext returns a mocked response
+//nolint:lll
 func (c *CWAPI) DeleteAnomalyDetectorWithContext(_ aws.Context, _ *cloudwatch.DeleteAnomalyDetectorInput, _ ...request.Option) (*cloudwatch.DeleteAnomalyDetectorOutput, error) {
 	panic("implement me")
 }
@@ -431,6 +376,7 @@ func (c *CWAPI) DescribeAlarmHistory(_ *cloudwatch.DescribeAlarmHistoryInput) (*
 }
 
 // DescribeAlarmHistoryWithContext returns a mocked response
+//nolint:lll
 func (c *CWAPI) DescribeAlarmHistoryWithContext(_ aws.Context, _ *cloudwatch.DescribeAlarmHistoryInput, _ ...request.Option) (*cloudwatch.DescribeAlarmHistoryOutput, error) {
 	panic("implement me")
 }
@@ -446,6 +392,7 @@ func (c *CWAPI) DescribeAlarmHistoryPages(_ *cloudwatch.DescribeAlarmHistoryInpu
 }
 
 // DescribeAlarmHistoryPagesWithContext returns a mocked response
+//nolint:lll
 func (c *CWAPI) DescribeAlarmHistoryPagesWithContext(_ aws.Context, _ *cloudwatch.DescribeAlarmHistoryInput, _ func(*cloudwatch.DescribeAlarmHistoryOutput, bool) bool, _ ...request.Option) error {
 	panic("implement me")
 }
@@ -471,6 +418,7 @@ func (c *CWAPI) DescribeAlarmsPages(_ *cloudwatch.DescribeAlarmsInput, _ func(*c
 }
 
 // DescribeAlarmsPagesWithContext returns a mocked response
+//nolint:lll
 func (c *CWAPI) DescribeAlarmsPagesWithContext(_ aws.Context, _ *cloudwatch.DescribeAlarmsInput, _ func(*cloudwatch.DescribeAlarmsOutput, bool) bool, _ ...request.Option) error {
 	panic("implement me")
 }
@@ -481,6 +429,7 @@ func (c *CWAPI) DescribeAlarmsForMetric(_ *cloudwatch.DescribeAlarmsForMetricInp
 }
 
 // DescribeAlarmsForMetricWithContext returns a mocked response
+//nolint:lll
 func (c *CWAPI) DescribeAlarmsForMetricWithContext(_ aws.Context, _ *cloudwatch.DescribeAlarmsForMetricInput, _ ...request.Option) (*cloudwatch.DescribeAlarmsForMetricOutput, error) {
 	panic("implement me")
 }
@@ -496,6 +445,7 @@ func (c *CWAPI) DescribeAnomalyDetectors(_ *cloudwatch.DescribeAnomalyDetectorsI
 }
 
 // DescribeAnomalyDetectorsWithContext returns a mocked response
+//nolint:lll
 func (c *CWAPI) DescribeAnomalyDetectorsWithContext(_ aws.Context, _ *cloudwatch.DescribeAnomalyDetectorsInput, _ ...request.Option) (*cloudwatch.DescribeAnomalyDetectorsOutput, error) {
 	panic("implement me")
 }
@@ -511,6 +461,7 @@ func (c *CWAPI) DescribeInsightRules(_ *cloudwatch.DescribeInsightRulesInput) (*
 }
 
 // DescribeInsightRulesWithContext returns a mocked response
+//nolint:lll
 func (c *CWAPI) DescribeInsightRulesWithContext(_ aws.Context, _ *cloudwatch.DescribeInsightRulesInput, _ ...request.Option) (*cloudwatch.DescribeInsightRulesOutput, error) {
 	panic("implement me")
 }
@@ -526,6 +477,7 @@ func (c *CWAPI) DescribeInsightRulesPages(_ *cloudwatch.DescribeInsightRulesInpu
 }
 
 // DescribeInsightRulesPagesWithContext returns a mocked response
+//nolint:lll
 func (c *CWAPI) DescribeInsightRulesPagesWithContext(_ aws.Context, _ *cloudwatch.DescribeInsightRulesInput, _ func(*cloudwatch.DescribeInsightRulesOutput, bool) bool, _ ...request.Option) error {
 	panic("implement me")
 }
@@ -536,6 +488,7 @@ func (c *CWAPI) DisableAlarmActions(_ *cloudwatch.DisableAlarmActionsInput) (*cl
 }
 
 // DisableAlarmActionsWithContext returns a mocked response
+//nolint:lll
 func (c *CWAPI) DisableAlarmActionsWithContext(_ aws.Context, _ *cloudwatch.DisableAlarmActionsInput, _ ...request.Option) (*cloudwatch.DisableAlarmActionsOutput, error) {
 	panic("implement me")
 }
@@ -551,6 +504,7 @@ func (c *CWAPI) DisableInsightRules(_ *cloudwatch.DisableInsightRulesInput) (*cl
 }
 
 // DisableInsightRulesWithContext returns a mocked response
+//nolint:lll
 func (c *CWAPI) DisableInsightRulesWithContext(_ aws.Context, _ *cloudwatch.DisableInsightRulesInput, _ ...request.Option) (*cloudwatch.DisableInsightRulesOutput, error) {
 	panic("implement me")
 }
@@ -611,6 +565,7 @@ func (c *CWAPI) GetInsightRuleReport(_ *cloudwatch.GetInsightRuleReportInput) (*
 }
 
 // GetInsightRuleReportWithContext returns a mocked response
+//nolint:lll
 func (c *CWAPI) GetInsightRuleReportWithContext(_ aws.Context, _ *cloudwatch.GetInsightRuleReportInput, _ ...request.Option) (*cloudwatch.GetInsightRuleReportOutput, error) {
 	panic("implement me")
 }
@@ -641,6 +596,7 @@ func (c *CWAPI) GetMetricDataPages(_ *cloudwatch.GetMetricDataInput, _ func(*clo
 }
 
 // GetMetricDataPagesWithContext returns a mocked response
+//nolint:lll
 func (c *CWAPI) GetMetricDataPagesWithContext(_ aws.Context, _ *cloudwatch.GetMetricDataInput, _ func(*cloudwatch.GetMetricDataOutput, bool) bool, _ ...request.Option) error {
 	panic("implement me")
 }
@@ -651,6 +607,7 @@ func (c *CWAPI) GetMetricStatistics(input *cloudwatch.GetMetricStatisticsInput) 
 }
 
 // GetMetricStatisticsWithContext returns a mocked response
+//nolint:lll
 func (c *CWAPI) GetMetricStatisticsWithContext(_ aws.Context, _ *cloudwatch.GetMetricStatisticsInput, _ ...request.Option) (*cloudwatch.GetMetricStatisticsOutput, error) {
 	panic("implement me")
 }
@@ -681,6 +638,7 @@ func (c *CWAPI) GetMetricWidgetImage(_ *cloudwatch.GetMetricWidgetImageInput) (*
 }
 
 // GetMetricWidgetImageWithContext returns a mocked response
+//nolint:lll
 func (c *CWAPI) GetMetricWidgetImageWithContext(_ aws.Context, _ *cloudwatch.GetMetricWidgetImageInput, _ ...request.Option) (*cloudwatch.GetMetricWidgetImageOutput, error) {
 	panic("implement me")
 }
@@ -711,6 +669,7 @@ func (c *CWAPI) ListDashboardsPages(_ *cloudwatch.ListDashboardsInput, _ func(*c
 }
 
 // ListDashboardsPagesWithContext returns a mocked response
+//nolint:lll
 func (c *CWAPI) ListDashboardsPagesWithContext(_ aws.Context, _ *cloudwatch.ListDashboardsInput, _ func(*cloudwatch.ListDashboardsOutput, bool) bool, _ ...request.Option) error {
 	panic("implement me")
 }
@@ -736,6 +695,7 @@ func (c *CWAPI) ListMetricStreamsPages(_ *cloudwatch.ListMetricStreamsInput, _ f
 }
 
 // ListMetricStreamsPagesWithContext returns a mocked response
+//nolint:lll
 func (c *CWAPI) ListMetricStreamsPagesWithContext(_ aws.Context, _ *cloudwatch.ListMetricStreamsInput, _ func(*cloudwatch.ListMetricStreamsOutput, bool) bool, _ ...request.Option) error {
 	panic("implement me")
 }
@@ -771,6 +731,7 @@ func (c *CWAPI) ListTagsForResource(_ *cloudwatch.ListTagsForResourceInput) (*cl
 }
 
 // ListTagsForResourceWithContext returns a mocked response
+//nolint:lll
 func (c *CWAPI) ListTagsForResourceWithContext(_ aws.Context, _ *cloudwatch.ListTagsForResourceInput, _ ...request.Option) (*cloudwatch.ListTagsForResourceOutput, error) {
 	panic("implement me")
 }

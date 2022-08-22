@@ -37,10 +37,9 @@ type OkctlEnvironment struct {
 
 // Validate the inputs
 func (o *OkctlEnvironment) Validate() error {
-	return validation.ValidateStruct(o,
+	validators := []*validation.FieldRules{
 		validation.Field(&o.AWSAccountID, validation.Required),
 		validation.Field(&o.Region, validation.Required),
-		validation.Field(&o.AwsProfile, validation.Required),
 		validation.Field(&o.ClusterName, validation.Required),
 		validation.Field(&o.UserDataDir, validation.Required),
 		validation.Field(&o.UserHomeDir, validation.Required),
@@ -50,7 +49,13 @@ func (o *OkctlEnvironment) Validate() error {
 		validation.Field(&o.ClusterDeclarationPath, validation.Required),
 		validation.Field(&o.AWSCredentialsType, validation.Required),
 		validation.Field(&o.GithubCredentialsType, validation.Required),
-	)
+	}
+
+	if o.AWSCredentialsType == context.AWSCredentialsTypeAwsProfile {
+		validators = append(validators, validation.Field(&o.AwsProfile, validation.Required))
+	}
+
+	return validation.ValidateStruct(o, validators...)
 }
 
 // GetOkctlEnvironment returns data needed to connect to an okctl cluster
@@ -65,12 +70,7 @@ func GetOkctlEnvironment(o *okctl.Okctl, clusterDeclarationPath string) (OkctlEn
 		return OkctlEnvironment{}, err
 	}
 
-	var awsProfile string
-	if o.AWSCredentialsType == context.AWSCredentialsTypeAwsProfile {
-		awsProfile = os.Getenv("AWS_PROFILE")
-	} else {
-		awsProfile = constant.DefaultAwsProfile
-	}
+	awsProfile := os.Getenv("AWS_PROFILE")
 
 	k, err := o.BinariesProvider.Kubectl(kubectl.Version)
 	if err != nil {
@@ -155,7 +155,6 @@ func GetOkctlEnvVars(opts OkctlEnvironment) (map[string]string, error) {
 		awsConfig = path.Join(opts.UserHomeDir, ".aws", "config")
 		awsCredentials = path.Join(opts.UserHomeDir, ".aws", "credentials")
 	} else {
-		awsProfile = constant.DefaultAwsProfile
 		awsConfig = path.Join(appDir, constant.DefaultCredentialsDirName, opts.ClusterName, constant.DefaultClusterAwsConfig)
 		awsCredentials = path.Join(appDir, constant.DefaultCredentialsDirName, opts.ClusterName, constant.DefaultClusterAwsCredentials)
 	}

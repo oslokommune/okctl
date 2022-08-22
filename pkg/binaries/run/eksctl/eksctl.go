@@ -21,7 +21,7 @@ const (
 	// Name sets the name of the binary/cli
 	Name = "eksctl"
 	// Version sets the currently used version of the binary/cli
-	Version = "0.98.0"
+	Version = "0.104.0"
 
 	defaultClusterConfig = "cluster-config.yml"
 )

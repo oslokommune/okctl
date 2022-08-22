@@ -1,5 +1,10 @@
 package state
 
+import (
+	"github.com/oslokommune/okctl/pkg/binaries/run/eksctl"
+	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
+)
+
 // KnownBinaries returns a list of known binaries
 func KnownBinaries() (binaries []Binary) {
 	binaries = append(binaries, EksctlKnownBinaries()...)
@@ -41,27 +46,28 @@ func EksctlKnownBinaries() []Binary {
 	return []Binary{
 		{
 			Name:       "eksctl",
-			Version:    "0.98.0",
+			Version:    eksctl.Version,
 			BufferSize: "200mb", // Note the BufferSize must be higher than file size (this is a bug).
 			URLPattern: "https://github.com/weaveworks/eksctl/releases/download/v#{ver}/eksctl_#{os}_#{arch}.tar.gz",
 			Archive: Archive{
 				Type:   ".tar.gz",
 				Target: "eksctl",
 			},
-			// Find digest by using
-			// curl --location URL | sha256sum
+			// Example: How to find digest:
+			// URL="https://github.com/weaveworks/eksctl/releases/download/v0.104.0/eksctl_darwin_amd64.tar.gz"; curl --location $URL | sha256sum
+			// URL="https://github.com/weaveworks/eksctl/releases/download/v0.104.0/eksctl_linux_amd64.tar.gz"; curl --location $URL | sha256sum
 			Checksums: []Checksum{
 				{
 					Os:     "darwin",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "2d948e28a3b69a71fc545aee22a0bf0a791fb5ee605212b424b505cbe45a23db",
+					Digest: "a1ea933fc998ebc00502c993f6489c3a73535e846a79b64ac70dbe290189712c",
 				},
 				{
 					Os:     "linux",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "385de15f7bf361ec8bd723e90f64398ab1de20cd25e81977a45097ef8182e771",
+					Digest: "f00539c6a00f7acfc614023961f4eec2fbcdaa836390b703aba63585b360afc3",
 				},
 			},
 		},
@@ -69,25 +75,32 @@ func EksctlKnownBinaries() []Binary {
 }
 
 // KubectlKnownBinaries returns the known binaries
+//
+// For versions, see
+// - https://kubernetes.io/releases/
+// - https://kubernetes.io/releases/patch-releases/
 func KubectlKnownBinaries() []Binary {
 	return []Binary{
 		{
 			Name:       "kubectl",
-			Version:    "1.20.15",
+			Version:    kubectl.Version,
 			BufferSize: "100mb",
 			URLPattern: "https://dl.k8s.io/release/v#{ver}/bin/#{os}/#{arch}/kubectl",
+			// Example: How to find digest:
+			// URL="https://dl.k8s.io/release/v1.21.14/bin/darwin/amd64/kubectl.sha256"; curl --location $URL
+			// URL="https://dl.k8s.io/release/v1.21.14/bin/linux/amd64/kubectl.sha256"; curl --location $URL
 			Checksums: []Checksum{
 				{
 					Os:     "darwin",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "6b6cf555a34271379b45013dfa9b580329314254aafc91b543bf2d83ebd1db74",
+					Digest: "30c529fe2891eb93dda99597b5c84cb10d2318bb92ae89e1e6189b3ae5fb6296",
 				},
 				{
 					Os:     "linux",
 					Arch:   "amd64",
 					Type:   "sha256",
-					Digest: "d283552d3ef3b0fd47c08953414e1e73897a1b3f88c8a520bb2e7de4e37e96f3",
+					Digest: "0c1682493c2abd7bc5fe4ddcdb0b6e5d417aa7e067994ffeca964163a988c6ee",
 				},
 			},
 		},

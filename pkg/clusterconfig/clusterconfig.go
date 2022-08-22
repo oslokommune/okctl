@@ -3,6 +3,9 @@ package clusterconfig
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/oslokommune/okctl/pkg/config/constant"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/version"
@@ -137,12 +140,14 @@ func (a *Args) build() *v1alpha5.ClusterConfig {
 func createNodeGroups(a *Args) []v1alpha5.NodeGroup {
 	availabilityZoneIds := []string{"a", "b", "c"}
 	nodeGroups := make([]v1alpha5.NodeGroup, 0, len(availabilityZoneIds))
+	versionWithDash := DotToDash(constant.DefaultEKSKubernetesVersion)
 
 	for _, azID := range availabilityZoneIds {
 		az := a.Region + azID
 
 		nodeGroups = append(nodeGroups, v1alpha5.NodeGroup{
-			Name:         fmt.Sprintf("ng-generic-1-20-1%s", azID),
+			// Name example: ng-generic-1-20-1a
+			Name:         fmt.Sprintf("ng-generic-%s-1%s", versionWithDash, azID),
 			InstanceType: "m5.large",
 			ScalingConfig: v1alpha5.ScalingConfig{
 				DesiredCapacity: 0,  //nolint: gomnd
@@ -162,6 +167,11 @@ func createNodeGroups(a *Args) []v1alpha5.NodeGroup {
 	}
 
 	return nodeGroups
+}
+
+// DotToDash replaces dots with dashes
+func DotToDash(str string) string {
+	return strings.ReplaceAll(str, ".", "-")
 }
 
 // TypeMeta returns the defaults

@@ -68,7 +68,7 @@ func (a *S3API) GetObject(bucket, key string) (io.ReadCloser, error) {
 	return result.Body, nil
 }
 
-// EmptyBucket deletes all objects and versions from a bucket, making the bucket itself deletable
+// EmptyBucket deletes all objects, versions and delete markers from a bucket, making the bucket itself deletable
 func (a *S3API) EmptyBucket(bucketName string) error {
 	err := a.deleteAllObjects(bucketName)
 	if err != nil {
@@ -78,6 +78,11 @@ func (a *S3API) EmptyBucket(bucketName string) error {
 	err = a.deleteAllVersions(bucketName)
 	if err != nil {
 		return fmt.Errorf("deleting all versions: %w", err)
+	}
+
+	err = a.deleteAllDeleteMarkers(bucketName)
+	if err != nil {
+		return fmt.Errorf("deleting all delete markers: %w", err)
 	}
 
 	return nil
@@ -165,6 +170,44 @@ func (a *S3API) deleteAllVersions(bucketName string) error {
 	return nil
 }
 
+func (a *S3API) deleteAllDeleteMarkers(bucketName string) error {
+	var (
+		result     *s3.ListObjectVersionsOutput
+		nextMarker *string
+		err        error
+	)
+
+	for {
+		result, err = a.provider.S3().ListObjectVersions(&s3.ListObjectVersionsInput{
+			Bucket:          aws.String(bucketName),
+			VersionIdMarker: nextMarker,
+		})
+		if err != nil {
+			return fmt.Errorf("listing object versions: %w", err)
+		}
+
+		if result.DeleteMarkers == nil {
+			break
+		}
+
+		_, err = a.provider.S3().DeleteObjects(&s3.DeleteObjectsInput{
+			Bucket: aws.String(bucketName),
+			Delete: &s3.Delete{Objects: objectDeleteMarkersAsIdentifiers(result.DeleteMarkers)},
+		})
+		if err != nil {
+			return fmt.Errorf("deleting delete markers: %w", err)
+		}
+
+		if !*result.IsTruncated {
+			break
+		}
+
+		nextMarker = result.DeleteMarkers[len(result.DeleteMarkers)-1].VersionId
+	}
+
+	return nil
+}
+
 func objectsAsIdentifiers(objects []*s3.Object) []*s3.ObjectIdentifier {
 	identifiers := make([]*s3.ObjectIdentifier, len(objects))
 
@@ -182,6 +225,19 @@ func objectVersionsAsIdentifiers(versions []*s3.ObjectVersion) []*s3.ObjectIdent
 		identifiers[index] = &s3.ObjectIdentifier{
 			Key:       version.Key,
 			VersionId: version.VersionId,
+		}
+	}
+
+	return identifiers
+}
+
+func objectDeleteMarkersAsIdentifiers(markers []*s3.DeleteMarkerEntry) []*s3.ObjectIdentifier {
+	identifiers := make([]*s3.ObjectIdentifier, len(markers))
+
+	for index, marker := range markers {
+		identifiers[index] = &s3.ObjectIdentifier{
+			Key:       marker.Key,
+			VersionId: marker.VersionId,
 		}
 	}
 

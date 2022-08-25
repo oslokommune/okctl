@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
+
 	"github.com/oslokommune/okctl/cmd/okctl/hooks"
+	"github.com/oslokommune/okctl/pkg/cognito"
 	"github.com/oslokommune/okctl/pkg/metrics"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
@@ -29,7 +32,11 @@ func buildSetupMFA(o *okctl.Okctl) *cobra.Command {
 			hooks.DownloadState(o, true),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return nil
+			ctx := context.Background()
+
+			userEmail := args[0]
+
+			return cognito.RegisterMFADevice(ctx, o.CloudProvider.CognitoIdentityProvider(), userEmail, *o.Declaration)
 		},
 	}
 

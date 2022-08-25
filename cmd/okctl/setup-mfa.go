@@ -36,7 +36,13 @@ func buildSetupMFA(o *okctl.Okctl) *cobra.Command {
 
 			userEmail := args[0]
 
-			return cognito.RegisterMFADevice(ctx, o.CloudProvider.CognitoIdentityProvider(), userEmail, *o.Declaration)
+			return cognito.RegisterMFADevice(cognito.RegisterMFADeviceOpts{
+				Ctx:                    ctx,
+				CognitoProvider:        o.CloudProvider.CognitoIdentityProvider(),
+				ParameterStoreProvider: o.CloudProvider.SSM(),
+				UserEmail:              userEmail,
+				Cluster:                *o.Declaration,
+			})
 		},
 	}
 

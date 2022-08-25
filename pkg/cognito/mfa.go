@@ -6,30 +6,48 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"io"
+	"strings"
+
+	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go/service/ssm/ssmiface"
+	"github.com/logrusorgru/aurora"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
-	"strings"
 )
 
-func acquireCognitoClientIDForCluster(ctx context.Context, provider cognitoidentityprovideriface.CognitoIdentityProviderAPI, cluster v1alpha1.Cluster) (string, error) {
+const (
+	defaultOneTimePasswordType      = "TOTP"
+	defaultOneTimePasswordDigits    = 6
+	defaultOneTimePasswordAlgorithm = "SHA1"
+	defaultOneTimePasswordInterval  = 30
+)
+
+type userPoolClient struct {
+	Name string
+	ID   string
+}
+
+func getCognitoClientForCluster(ctx context.Context, provider cognitoidentityprovideriface.CognitoIdentityProviderAPI, cluster v1alpha1.Cluster) (userPoolClient, error) {
 	relevantUserPoolID, err := getRelevantUserPoolID(ctx, provider, cluster)
 	if err != nil {
-		return "", fmt.Errorf("getting relevant user pool ID: %w", err)
+		return userPoolClient{}, fmt.Errorf("getting relevant user pool ID: %w", err)
 	}
 
-	relevantUserPoolClientID, err := getRelevantUserPoolClient(ctx, provider, relevantUserPoolID)
+	relevantUserPoolClient, err := getRelevantUserPoolClient(ctx, provider, relevantUserPoolID)
 	if err != nil {
-		return "", fmt.Errorf("getting relevant user pool client: %w", err)
+		return userPoolClient{}, fmt.Errorf("getting relevant user pool client: %w", err)
 	}
 
-	return relevantUserPoolClientID, nil
+	return userPoolClient{Name: *relevantUserPoolClient.ClientName, ID: *relevantUserPoolClient.ClientId}, nil
 }
 
 func getRelevantUserPoolID(ctx context.Context, provider cognitoidentityprovideriface.CognitoIdentityProviderAPI, cluster v1alpha1.Cluster) (string, error) {
-	var nextToken *string = nil
+	var nextToken *string
 
 	for {
 		listUserPoolsResult, err := provider.ListUserPoolsWithContext(ctx, &cognitoidentityprovider.ListUserPoolsInput{
@@ -56,8 +74,11 @@ func getRelevantUserPoolID(ctx context.Context, provider cognitoidentityprovider
 	return "", fmt.Errorf("no user pool found for cluster %s", cluster.Metadata.Name)
 }
 
-func getRelevantUserPoolClient(ctx context.Context, provider cognitoidentityprovideriface.CognitoIdentityProviderAPI, userPoolClientID string) (string, error) {
-	var nextToken *string = nil
+func getRelevantUserPoolClient(ctx context.Context, provider cognitoidentityprovideriface.CognitoIdentityProviderAPI, userPoolClientID string) (
+	cognitoidentityprovider.UserPoolClientDescription,
+	error,
+) {
+	var nextToken *string
 
 	for {
 		listUserPoolsResult, err := provider.ListUserPoolClientsWithContext(ctx, &cognitoidentityprovider.ListUserPoolClientsInput{
@@ -66,11 +87,11 @@ func getRelevantUserPoolClient(ctx context.Context, provider cognitoidentityprov
 			UserPoolId: aws.String(userPoolClientID),
 		})
 		if err != nil {
-			return "", fmt.Errorf("listing user pools: %w", err)
+			return cognitoidentityprovider.UserPoolClientDescription{}, fmt.Errorf("listing user pools: %w", err)
 		}
 
-		for _, userPoolClient := range listUserPoolsResult.UserPoolClients {
-			return *userPoolClient.ClientId, nil
+		for _, client := range listUserPoolsResult.UserPoolClients {
+			return *client, nil
 		}
 
 		if listUserPoolsResult.NextToken == nil {
@@ -80,19 +101,25 @@ func getRelevantUserPoolClient(ctx context.Context, provider cognitoidentityprov
 		nextToken = listUserPoolsResult.NextToken
 	}
 
-	return "", fmt.Errorf("no clients found for user pool %s", userPoolClientID)
+	return cognitoidentityprovider.UserPoolClientDescription{}, fmt.Errorf("no clients found for user pool %s", userPoolClientID)
 }
 
-func computeSecretHash(clientId string, clientSecret string, username string) string {
+func computeSecretHash(clientID string, clientSecret string, username string) (string, error) {
 	mac := hmac.New(sha256.New, []byte(clientSecret))
-	mac.Write([]byte(username + clientId))
 
-	return base64.StdEncoding.EncodeToString(mac.Sum(nil))
+	_, err := mac.Write([]byte(username + clientID))
+	if err != nil {
+		return "", fmt.Errorf("writing payload: %w", err)
+	}
+
+	return base64.StdEncoding.EncodeToString(mac.Sum(nil)), nil
 }
 
 func prompt(question string, hidden bool) (string, error) {
-	var result string
-	var prompter survey.Prompt
+	var (
+		result   string
+		prompter survey.Prompt
+	)
 
 	cleanQuestion := fmt.Sprintf("%s:", question)
 
@@ -108,4 +135,27 @@ func prompt(question string, hidden bool) (string, error) {
 	}
 
 	return result, nil
+}
+
+func getCognitoClientSecretForClient(ctx context.Context, provider ssmiface.SSMAPI, clientName string) (string, error) {
+	parameterPath := fmt.Sprintf("/%s/client_secret", strings.ReplaceAll(clientName, "-", "/"))
+
+	getParameterResult, err := provider.GetParameterWithContext(ctx, &ssm.GetParameterInput{
+		Name:           aws.String(parameterPath),
+		WithDecryption: aws.Bool(true),
+	})
+	if err != nil {
+		return "", fmt.Errorf("retrieving parameter: %w", err)
+	}
+
+	return *getParameterResult.Parameter.Value, nil
+}
+
+func printDeviceSecret(out io.Writer, secret string) {
+	fmt.Fprintf(out, "Enter the following information in your MFA client:\n")
+	fmt.Fprintf(out, "Code\t\t: %s\n", aurora.Green(secret))
+	fmt.Fprintf(out, "Type\t\t: %s\n", aurora.Green(defaultOneTimePasswordType))
+	fmt.Fprintf(out, "Digits\t\t: %d\n", aurora.Green(defaultOneTimePasswordDigits))
+	fmt.Fprintf(out, "Algorithm\t: %s\n", aurora.Green(defaultOneTimePasswordAlgorithm))
+	fmt.Fprintf(out, "Interval\t: %d\n", aurora.Green(defaultOneTimePasswordInterval))
 }

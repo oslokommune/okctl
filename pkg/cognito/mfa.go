@@ -32,6 +32,47 @@ type userPoolClient struct {
 	ID   string
 }
 
+func acquireSession(opts RegisterMFADeviceOpts) (string, error) {
+	cognitoUserPoolclient, err := getCognitoClientForCluster(opts.Ctx, opts.CognitoProvider, opts.Cluster)
+	if err != nil {
+		return "", fmt.Errorf("acquiring Cognito client ID: %w", err)
+	}
+
+	clientSecret, err := getCognitoClientSecretForClient(opts.Ctx, opts.ParameterStoreProvider, cognitoUserPoolclient.Name)
+	if err != nil {
+		return "", fmt.Errorf("acquiring Cognito client secret: %w", err)
+	}
+
+	userPassword, err := prompt(fmt.Sprintf("Enter password for user %s", opts.UserEmail), true)
+	if err != nil {
+		return "", fmt.Errorf("prompting for password: %w", err)
+	}
+
+	secretHash, err := computeSecretHash(cognitoUserPoolclient.ID, clientSecret, opts.UserEmail)
+	if err != nil {
+		return "", fmt.Errorf("computing hash: %w", err)
+	}
+
+	initiateAuthResult, err := opts.CognitoProvider.InitiateAuthWithContext(opts.Ctx, &cognitoidentityprovider.InitiateAuthInput{
+		AuthFlow: aws.String(cognitoidentityprovider.AuthFlowTypeUserPasswordAuth),
+		AuthParameters: map[string]*string{
+			"USERNAME":    aws.String(opts.UserEmail),
+			"PASSWORD":    aws.String(userPassword),
+			"SECRET_HASH": aws.String(secretHash),
+		},
+		ClientId: aws.String(cognitoUserPoolclient.ID),
+	})
+	if err != nil {
+		return "", fmt.Errorf("initiating auth: %w", err)
+	}
+
+	if *initiateAuthResult.ChallengeName != cognitoidentityprovider.ChallengeNameTypeMfaSetup {
+		return "", fmt.Errorf("MFA already configured for this user. Use --force to setup a new device")
+	}
+
+	return *initiateAuthResult.Session, nil
+}
+
 func getCognitoClientForCluster(ctx context.Context, provider cognitoidentityprovideriface.CognitoIdentityProviderAPI, cluster v1alpha1.Cluster) (userPoolClient, error) {
 	relevantUserPoolID, err := getRelevantUserPoolID(ctx, provider, cluster)
 	if err != nil {
@@ -104,6 +145,20 @@ func getRelevantUserPoolClient(ctx context.Context, provider cognitoidentityprov
 	return cognitoidentityprovider.UserPoolClientDescription{}, fmt.Errorf("no clients found for user pool %s", userPoolClientID)
 }
 
+func getCognitoClientSecretForClient(ctx context.Context, provider ssmiface.SSMAPI, clientName string) (string, error) {
+	parameterPath := fmt.Sprintf("/%s/client_secret", strings.ReplaceAll(clientName, "-", "/"))
+
+	getParameterResult, err := provider.GetParameterWithContext(ctx, &ssm.GetParameterInput{
+		Name:           aws.String(parameterPath),
+		WithDecryption: aws.Bool(true),
+	})
+	if err != nil {
+		return "", fmt.Errorf("retrieving parameter: %w", err)
+	}
+
+	return *getParameterResult.Parameter.Value, nil
+}
+
 func computeSecretHash(clientID string, clientSecret string, username string) (string, error) {
 	mac := hmac.New(sha256.New, []byte(clientSecret))
 
@@ -135,20 +190,6 @@ func prompt(question string, hidden bool) (string, error) {
 	}
 
 	return result, nil
-}
-
-func getCognitoClientSecretForClient(ctx context.Context, provider ssmiface.SSMAPI, clientName string) (string, error) {
-	parameterPath := fmt.Sprintf("/%s/client_secret", strings.ReplaceAll(clientName, "-", "/"))
-
-	getParameterResult, err := provider.GetParameterWithContext(ctx, &ssm.GetParameterInput{
-		Name:           aws.String(parameterPath),
-		WithDecryption: aws.Bool(true),
-	})
-	if err != nil {
-		return "", fmt.Errorf("retrieving parameter: %w", err)
-	}
-
-	return *getParameterResult.Parameter.Value, nil
 }
 
 func printDeviceSecret(out io.Writer, secret string) {

@@ -25,45 +25,13 @@ type RegisterMFADeviceOpts struct {
 
 // RegisterMFADevice knows how to register an MFA device with a user
 func RegisterMFADevice(opts RegisterMFADeviceOpts) error {
-	cognitoUserPoolclient, err := getCognitoClientForCluster(opts.Ctx, opts.CognitoProvider, opts.Cluster)
+	session, err := acquireSession(opts)
 	if err != nil {
-		return fmt.Errorf("acquiring Cognito client ID: %w", err)
-	}
-
-	clientSecret, err := getCognitoClientSecretForClient(opts.Ctx, opts.ParameterStoreProvider, cognitoUserPoolclient.Name)
-	if err != nil {
-		return fmt.Errorf("acquiring Cognito client secret: %w", err)
-	}
-
-	userPassword, err := prompt(fmt.Sprintf("Enter password for user %s", opts.UserEmail), true)
-	if err != nil {
-		return fmt.Errorf("prompting for password: %w", err)
-	}
-
-	secretHash, err := computeSecretHash(cognitoUserPoolclient.ID, clientSecret, opts.UserEmail)
-	if err != nil {
-		return fmt.Errorf("computing hash: %w", err)
-	}
-
-	initiateAuthResult, err := opts.CognitoProvider.InitiateAuthWithContext(opts.Ctx, &cognitoidentityprovider.InitiateAuthInput{
-		AuthFlow: aws.String(cognitoidentityprovider.AuthFlowTypeUserPasswordAuth),
-		AuthParameters: map[string]*string{
-			"USERNAME":    aws.String(opts.UserEmail),
-			"PASSWORD":    aws.String(userPassword),
-			"SECRET_HASH": aws.String(secretHash),
-		},
-		ClientId: aws.String(cognitoUserPoolclient.ID),
-	})
-	if err != nil {
-		return fmt.Errorf("initiating auth: %w", err)
-	}
-
-	if *initiateAuthResult.ChallengeName != cognitoidentityprovider.ChallengeNameTypeMfaSetup {
-		return fmt.Errorf("MFA already configured for this user. Use --force to setup a new device")
+		return fmt.Errorf("acquiring session: %w", err)
 	}
 
 	associateSoftwareTokenResult, err := opts.CognitoProvider.AssociateSoftwareTokenWithContext(opts.Ctx, &cognitoidentityprovider.AssociateSoftwareTokenInput{
-		Session: initiateAuthResult.Session,
+		Session: aws.String(session),
 	})
 	if err != nil {
 		return fmt.Errorf("associating: %w", err)

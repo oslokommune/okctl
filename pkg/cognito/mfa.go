@@ -43,7 +43,7 @@ func acquireSession(opts RegisterMFADeviceOpts) (string, error) {
 		return "", fmt.Errorf("acquiring Cognito client secret: %w", err)
 	}
 
-	userPassword, err := prompt(fmt.Sprintf("Enter password for user %s", opts.UserEmail), true)
+	userPassword, err := prompt(fmt.Sprintf("Enter password for Cognito user %s", opts.UserEmail), true)
 	if err != nil {
 		return "", fmt.Errorf("prompting for password: %w", err)
 	}

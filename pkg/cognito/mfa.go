@@ -7,7 +7,15 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"log"
+	"os"
+	"os/exec"
+	"path"
+	"runtime"
 	"strings"
+
+	"github.com/google/uuid"
+	qrcode "github.com/skip2/go-qrcode"
 
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/ssm/ssmiface"
@@ -21,6 +29,10 @@ import (
 )
 
 const (
+	// MFAOutputFormatQRCode represents showing the MFA details as a QR code
+	MFAOutputFormatQRCode = "qrcode"
+	// MFAOutputFormatText represents showing the MFA details as text
+	MFAOutputFormatText             = "text"
 	defaultOneTimePasswordType      = "TOTP"
 	defaultOneTimePasswordDigits    = 6
 	defaultOneTimePasswordAlgorithm = "SHA1"
@@ -199,4 +211,45 @@ func printDeviceSecret(out io.Writer, secret string) {
 	fmt.Fprintf(out, "Digits\t\t: %d\n", aurora.Green(defaultOneTimePasswordDigits))
 	fmt.Fprintf(out, "Algorithm\t: %s\n", aurora.Green(defaultOneTimePasswordAlgorithm))
 	fmt.Fprintf(out, "Interval\t: %d\n", aurora.Green(defaultOneTimePasswordInterval))
+}
+
+func generateDeviceSecretQRCode(cluster v1alpha1.Cluster, userEmail string, secret string) (string, error) {
+	qrCodePath := path.Join(os.TempDir(), fmt.Sprintf("%s.png", uuid.Must(uuid.NewUUID()).String()))
+
+	qrCodeURI := fmt.Sprintf("otpauth://totp/%s:%s?secret=%s&issuer=%s&algorithm=%s&digits=%d&period=%d",
+		cluster.Metadata.Name,
+		userEmail,
+		secret,
+		cluster.Metadata.Name,
+		defaultOneTimePasswordAlgorithm,
+		defaultOneTimePasswordDigits,
+		defaultOneTimePasswordInterval,
+	)
+
+	err := qrcode.WriteFile(qrCodeURI, qrcode.Medium, 256, qrCodePath)
+	if err != nil {
+		return "", fmt.Errorf("writing QR code: %w", err)
+	}
+
+	return qrCodePath, nil
+}
+
+//nolint:gosec
+func openbrowser(url string) {
+	var err error
+
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }

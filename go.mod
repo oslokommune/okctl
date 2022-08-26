@@ -16,7 +16,6 @@ require (
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/aws/aws-sdk-go v1.42.32
 	github.com/awslabs/goformation/v4 v4.19.5
-	github.com/beevik/etree v1.1.0
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/bugsnag/bugsnag-go v1.5.3 // indirect
 	github.com/bugsnag/panicwrap v1.2.0 // indirect
@@ -26,7 +25,6 @@ require (
 	github.com/docker/docker v20.10.3+incompatible // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/evanphx/json-patch/v5 v5.6.0
-	github.com/foolin/pagser v0.1.5
 	github.com/garyburd/redigo v1.6.2 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.4.2
@@ -59,6 +57,7 @@ require (
 	github.com/sebdah/goldie/v2 v2.5.3
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.8.1
+	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/spf13/afero v1.8.0
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5

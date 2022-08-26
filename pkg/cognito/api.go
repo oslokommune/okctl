@@ -21,6 +21,8 @@ type RegisterMFADeviceOpts struct {
 	ParameterStoreProvider ssmiface.SSMAPI
 	Cluster                v1alpha1.Cluster
 	UserEmail              string
+	OutputFormat           string
+	Force                  bool
 }
 
 // RegisterMFADevice knows how to register an MFA device with a user
@@ -37,9 +39,23 @@ func RegisterMFADevice(opts RegisterMFADeviceOpts) error {
 		return fmt.Errorf("associating: %w", err)
 	}
 
-	printDeviceSecret(os.Stdout, *associateSoftwareTokenResult.SecretCode)
+	switch {
+	case opts.OutputFormat == MFAOutputFormatQRCode:
+		qrCodePath, err := generateDeviceSecretQRCode(opts.Cluster, opts.UserEmail, *associateSoftwareTokenResult.SecretCode)
+		if err != nil {
+			return fmt.Errorf("generating QR code: %w", err)
+		}
 
-	otpCode, err := prompt("Configure your MFA client with the information above and enter the one-time-password", false)
+		openbrowser(qrCodePath)
+
+		fmt.Printf("Scan the QR code in %s with your MFA device to configure your device.\n", qrCodePath)
+	case opts.OutputFormat == MFAOutputFormatText:
+		printDeviceSecret(os.Stdout, *associateSoftwareTokenResult.SecretCode)
+	default:
+		return fmt.Errorf("unknown output format: %s", opts.OutputFormat)
+	}
+
+	otpCode, err := prompt("Enter one-time-password", false)
 	if err != nil {
 		return fmt.Errorf("prompting for OTP: %w", err)
 	}

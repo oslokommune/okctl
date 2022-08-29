@@ -60,6 +60,9 @@ Resources:
         EmailSendingAccount: COGNITO_DEFAULT
       EmailVerificationMessage: Your verification code is {####}.
       EmailVerificationSubject: Your verification code for test
+      EnabledMfas:
+      - SOFTWARE_TOKEN_MFA
+      MfaConfiguration: "ON"
       Policies:
         PasswordPolicy:
           MinimumLength: 8

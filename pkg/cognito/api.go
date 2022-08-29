@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/logrusorgru/aurora"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
@@ -38,11 +40,17 @@ func RegisterMFADevice(opts RegisterMFADeviceOpts) error {
 		return fmt.Errorf("associating: %w", err)
 	}
 
+	teardown := func() error { return nil }
+
 	switch {
 	case opts.OutputFormat == MFAOutputFormatQRCode:
 		qrCodePath, err := generateDeviceSecretQRCode(opts.Cluster, opts.UserEmail, *associateSoftwareTokenResult.SecretCode)
 		if err != nil {
 			return fmt.Errorf("generating QR code: %w", err)
+		}
+
+		teardown = func() error {
+			return os.Remove(qrCodePath)
 		}
 
 		openbrowser(qrCodePath)
@@ -59,6 +67,11 @@ func RegisterMFADevice(opts RegisterMFADeviceOpts) error {
 		return fmt.Errorf("prompting for OTP: %w", err)
 	}
 
+	err = teardown()
+	if err != nil {
+		return fmt.Errorf("tearing down: %w", err)
+	}
+
 	verifySoftwareTokenResult, err := opts.CognitoProvider.VerifySoftwareTokenWithContext(opts.Ctx, &cognitoidentityprovider.VerifySoftwareTokenInput{
 		FriendlyDeviceName: aws.String("code generator"),
 		Session:            associateSoftwareTokenResult.Session,
@@ -72,7 +85,7 @@ func RegisterMFADevice(opts RegisterMFADeviceOpts) error {
 		return fmt.Errorf("verifying OTP: %w", err)
 	}
 
-	fmt.Printf("Software token setup complete\n")
+	fmt.Printf("Software token setup %s\n", aurora.Green("complete"))
 
 	return nil
 }

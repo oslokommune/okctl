@@ -79,7 +79,7 @@ func acquireSession(opts RegisterMFADeviceOpts) (string, error) {
 	}
 
 	if *initiateAuthResult.ChallengeName != cognitoidentityprovider.ChallengeNameTypeMfaSetup {
-		return "", fmt.Errorf("MFA already configured for this user. Use --force to setup a new device")
+		return "", fmt.Errorf("MFA already configured for this user")
 	}
 
 	return *initiateAuthResult.Session, nil

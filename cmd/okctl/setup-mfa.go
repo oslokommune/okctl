@@ -45,7 +45,6 @@ func buildSetupMFA(o *okctl.Okctl) *cobra.Command {
 				UserEmail:              userEmail,
 				Cluster:                *o.Declaration,
 				OutputFormat:           opts.OutputFormat,
-				Force:                  opts.Force,
 			})
 		},
 	}
@@ -54,7 +53,6 @@ func buildSetupMFA(o *okctl.Okctl) *cobra.Command {
 	addClusterDeclarationPathFlag(cmd, &opts.ClusterManifestPath)
 
 	cmd.Flags().StringVarP(&opts.OutputFormat, "output", "o", cognito.MFAOutputFormatQRCode, "Configures how to display the MFA secret (qrcode|text)")
-	cmd.Flags().BoolVarP(&opts.Force, "force", "f", false, "Setup MFA device even if a device is already registered")
 
 	return cmd
 }

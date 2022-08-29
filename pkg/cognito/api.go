@@ -22,7 +22,6 @@ type RegisterMFADeviceOpts struct {
 	Cluster                v1alpha1.Cluster
 	UserEmail              string
 	OutputFormat           string
-	Force                  bool
 }
 
 // RegisterMFADevice knows how to register an MFA device with a user

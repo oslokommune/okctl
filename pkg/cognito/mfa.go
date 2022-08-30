@@ -14,6 +14,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws/request"
+
 	"github.com/google/uuid"
 	qrcode "github.com/skip2/go-qrcode"
 
@@ -32,11 +34,13 @@ const (
 	// MFAOutputFormatQRCode represents showing the MFA details as a QR code
 	MFAOutputFormatQRCode = "qrcode"
 	// MFAOutputFormatText represents showing the MFA details as text
-	MFAOutputFormatText             = "text"
-	defaultOneTimePasswordType      = "TOTP"
-	defaultOneTimePasswordDigits    = 6
-	defaultOneTimePasswordAlgorithm = "SHA1"
-	defaultOneTimePasswordInterval  = 30
+	MFAOutputFormatText                  = "text"
+	defaultOneTimePasswordType           = "TOTP"
+	defaultOneTimePasswordDigits         = 6
+	defaultOneTimePasswordAlgorithm      = "SHA1"
+	defaultOneTimePasswordInterval       = 30
+	defaultRelevantUserPoolClientKeyword = "argocd"
+	defaultQRCodePixelSize               = 256
 )
 
 type userPoolClient struct {
@@ -127,7 +131,7 @@ func getRelevantUserPoolID(ctx context.Context, provider cognitoidentityprovider
 	return "", fmt.Errorf("no user pool found for cluster %s", cluster.Metadata.Name)
 }
 
-func getRelevantUserPoolClient(ctx context.Context, provider cognitoidentityprovideriface.CognitoIdentityProviderAPI, userPoolClientID string) (
+func getRelevantUserPoolClient(ctx context.Context, provider userpoolClientsLister, userPoolID string) (
 	cognitoidentityprovider.UserPoolClientDescription,
 	error,
 ) {
@@ -135,16 +139,21 @@ func getRelevantUserPoolClient(ctx context.Context, provider cognitoidentityprov
 
 	for {
 		listUserPoolsResult, err := provider.ListUserPoolClientsWithContext(ctx, &cognitoidentityprovider.ListUserPoolClientsInput{
-			MaxResults: aws.Int64(1),
+			MaxResults: aws.Int64(maximumMaximumUserPoolResults),
 			NextToken:  nextToken,
-			UserPoolId: aws.String(userPoolClientID),
+			UserPoolId: aws.String(userPoolID),
 		})
 		if err != nil {
 			return cognitoidentityprovider.UserPoolClientDescription{}, fmt.Errorf("listing user pools: %w", err)
 		}
 
 		for _, client := range listUserPoolsResult.UserPoolClients {
-			return *client, nil
+			// This should be any of the clients provisioned by okctl, but due to inconsistent naming of the Grafana client
+			// secret SSM parameter and the situation regarding golden path we'll settle on picking the ArgoCD client for
+			// now. This breaks MFA for environments without ArgoCD.
+			if strings.Contains(*client.ClientName, defaultRelevantUserPoolClientKeyword) {
+				return *client, nil
+			}
 		}
 
 		if listUserPoolsResult.NextToken == nil {
@@ -154,7 +163,7 @@ func getRelevantUserPoolClient(ctx context.Context, provider cognitoidentityprov
 		nextToken = listUserPoolsResult.NextToken
 	}
 
-	return cognitoidentityprovider.UserPoolClientDescription{}, fmt.Errorf("no clients found for user pool %s", userPoolClientID)
+	return cognitoidentityprovider.UserPoolClientDescription{}, fmt.Errorf("no clients found for user pool %s", userPoolID)
 }
 
 func getCognitoClientSecretForClient(ctx context.Context, provider ssmiface.SSMAPI, clientName string) (string, error) {
@@ -226,7 +235,7 @@ func generateDeviceSecretQRCode(cluster v1alpha1.Cluster, userEmail string, secr
 		defaultOneTimePasswordInterval,
 	)
 
-	err := qrcode.WriteFile(qrCodeURI, qrcode.Medium, 256, qrCodePath)
+	err := qrcode.WriteFile(qrCodeURI, qrcode.Medium, defaultQRCodePixelSize, qrCodePath)
 	if err != nil {
 		return "", fmt.Errorf("writing QR code: %w", err)
 	}
@@ -252,4 +261,12 @@ func openbrowser(url string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+type userpoolClientsLister interface {
+	ListUserPoolClientsWithContext(
+		context.Context,
+		*cognitoidentityprovider.ListUserPoolClientsInput,
+		...request.Option,
+	) (*cognitoidentityprovider.ListUserPoolClientsOutput, error)
 }

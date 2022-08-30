@@ -73,6 +73,7 @@ func addAvailableCommands(cmd *cobra.Command, o *okctl.Okctl) {
 	cmd.AddCommand(buildVersionCommand(o))
 	cmd.AddCommand(buildUpgradeCommand(o))
 	cmd.AddCommand(buildMaintenanceCommand(o))
+	cmd.AddCommand(buildSetupMFA(o))
 }
 
 // Add the common authentication flags used throughout the application.

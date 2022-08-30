@@ -107,6 +107,9 @@ func TestUsersReconciler(t *testing.T) {
 				Purge: tc.withPurge,
 				ClusterDeclaration: &v1alpha1.Cluster{
 					Users: tc.withDeclaredUsers,
+					Integrations: &v1alpha1.ClusterIntegrations{
+						Cognito: !tc.withDisabledIdentityPool,
+					},
 				},
 			}
 

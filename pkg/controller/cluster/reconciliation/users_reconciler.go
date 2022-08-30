@@ -22,14 +22,18 @@ type usersReconciler struct {
 func (z *usersReconciler) Reconcile(ctx context.Context, meta reconciliation.Metadata, state *clientCore.StateHandlers) (reconciliation.Result, error) {
 	userPoolID := ""
 
-	actionMap, err := z.determineActionsForUsers(meta, state)
-	if err != nil {
-		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
-	}
-
 	identityPoolExists, err := state.IdentityManager.HasIdentityPool()
 	if err != nil {
 		return reconciliation.Result{}, fmt.Errorf("checking identity pool existence: %w", err)
+	}
+
+	if !identityPoolExists && !meta.ClusterDeclaration.Integrations.Cognito {
+		meta.Purge = true
+	}
+
+	actionMap, err := z.determineActionsForUsers(meta, state)
+	if err != nil {
+		return reconciliation.Result{}, fmt.Errorf("determining course of action: %w", err)
 	}
 
 	hasCreate := hasCreateAction(actionMap)

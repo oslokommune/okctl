@@ -14,6 +14,7 @@ import (
 const (
 	refreshTokenValidityDays = 30
 	// https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpool.html // ExplicitAuthFlows
+	explicitAuthenticationFlowRefreshTokenAuth = "ALLOW_REFRESH_TOKEN_AUTH" // Obligatory for all clients
 	explicitAuthenticationFlowUserSRPAuth      = "ALLOW_USER_SRP_AUTH"      // Default when nothing is specified
 	explicitAuthenticationFlowCustomAuth       = "ALLOW_CUSTOM_AUTH"        // Default when nothing is specified
 	explicitAuthenticationFlowUserPasswordAuth = "ALLOW_USER_PASSWORD_AUTH" // Required for MFA
@@ -59,6 +60,7 @@ func (c *UserPoolClient) Resource() cloudformation.Resource {
 		ExplicitAuthFlows: []string{
 			explicitAuthenticationFlowUserSRPAuth,
 			explicitAuthenticationFlowCustomAuth,
+			explicitAuthenticationFlowRefreshTokenAuth,
 			explicitAuthenticationFlowUserPasswordAuth, // Required for MFA
 		},
 		GenerateSecret:             true,

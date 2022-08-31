@@ -12,6 +12,7 @@ import (
 const (
 	temporaryPasswordValidityDays = 7
 	minPasswordLength             = 8
+	mfaSoftwareToken              = "SOFTWARE_TOKEN_MFA"
 )
 
 // UserPool stores the state for a cloud formation
@@ -86,8 +87,10 @@ func (p *UserPool) Resource() cloudformation.Resource {
 		EmailConfiguration: &cognito.UserPool_EmailConfiguration{
 			EmailSendingAccount: "COGNITO_DEFAULT",
 		},
-		EmailVerificationSubject: fmt.Sprintf("Your verification code for %s", p.ClusterName),
 		EmailVerificationMessage: "Your verification code is {####}.",
+		EmailVerificationSubject: fmt.Sprintf("Your verification code for %s", p.ClusterName),
+		EnabledMfas:              []string{mfaSoftwareToken},
+		MfaConfiguration:         "ON",
 		Policies: &cognito.UserPool_Policies{
 			PasswordPolicy: &cognito.UserPool_PasswordPolicy{
 				MinimumLength:                 minPasswordLength,

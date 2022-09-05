@@ -1251,6 +1251,7 @@ func (l *LokiDynamoDBPolicyComposer) ManagedPolicy() *managedpolicy.ManagedPolic
 					"dynamodb:ListTagsOfResource",
 					"dynamodb:Query",
 					"dynamodb:UpdateItem",
+					"dynamodb:DeleteTable",
 					"dynamodb:CreateTable",
 					"dynamodb:TagResource",
 					"dynamodb:DescribeTable",

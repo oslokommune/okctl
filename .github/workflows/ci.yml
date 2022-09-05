@@ -82,29 +82,3 @@ jobs:
             ${{ runner.os }}-go-build-
 
       - run: make test
-
-  Coverage:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.16
-
-      - uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Generate coverage report
-        run: make test-coverage
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          fail_ci_if_error: true

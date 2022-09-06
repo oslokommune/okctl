@@ -22,6 +22,7 @@ Resources:
           - dynamodb:ListTagsOfResource
           - dynamodb:Query
           - dynamodb:UpdateItem
+          - dynamodb:DeleteTable
           - dynamodb:CreateTable
           - dynamodb:TagResource
           - dynamodb:DescribeTable

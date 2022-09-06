@@ -24,6 +24,11 @@ func CreateOkctlIngress(app v1alpha1.Application) (networkingv1beta1.Ingress, er
 	ingress.Annotations["alb.ingress.kubernetes.io/actions.ssl-redirect"] =
 		`{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}`
 
+	// Disable SSL 1.0 and 1.1
+	// https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.1/guide/ingress/annotations/#ssl-policy
+	// https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-security-policy-table.html
+	ingress.Annotations["alb.ingress.kubernetes.io/ssl-policy"] = "ELBSecurityPolicy-TLS-1-2-2017-01"
+
 	redirectPath := networkingv1beta1.HTTPIngressPath{
 		Path: "/*",
 		Backend: networkingv1beta1.IngressBackend{

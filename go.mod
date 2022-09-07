@@ -14,7 +14,7 @@ require (
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/asdine/storm/v3 v3.2.1
-	github.com/aws/aws-sdk-go v1.42.32
+	github.com/aws/aws-sdk-go v1.43.28
 	github.com/awslabs/goformation/v4 v4.19.5
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/bugsnag/bugsnag-go v1.5.3 // indirect
@@ -80,6 +80,6 @@ require (
 	k8s.io/apimachinery v0.22.5
 	k8s.io/cli-runtime v0.22.4
 	k8s.io/client-go v0.22.5
-	sigs.k8s.io/aws-iam-authenticator v0.5.3
+	sigs.k8s.io/aws-iam-authenticator v0.5.9
 	sigs.k8s.io/yaml v1.3.0
 )

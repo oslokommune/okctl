@@ -26,7 +26,6 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 )
 
@@ -94,7 +93,7 @@ func acquireSession(opts RegisterMFADeviceOpts) (string, error) {
 	return *initiateAuthResult.Session, nil
 }
 
-func getCognitoClientForCluster(ctx context.Context, provider cognitoidentityprovideriface.CognitoIdentityProviderAPI, cluster v1alpha1.Cluster) (userPoolClient, error) {
+func getCognitoClientForCluster(ctx context.Context, provider userpoolAPI, cluster v1alpha1.Cluster) (userPoolClient, error) {
 	relevantUserPoolID, err := getRelevantUserPoolID(ctx, provider, cluster)
 	if err != nil {
 		return userPoolClient{}, fmt.Errorf("getting relevant user pool ID: %w", err)
@@ -114,7 +113,7 @@ func getCognitoClientForCluster(ctx context.Context, provider cognitoidentitypro
 	return userPoolClient{Name: clientName, ID: *relevantUserPoolClient.ClientId}, nil
 }
 
-func getRelevantUserPoolID(ctx context.Context, provider cognitoidentityprovideriface.CognitoIdentityProviderAPI, cluster v1alpha1.Cluster) (string, error) {
+func getRelevantUserPoolID(ctx context.Context, provider userpoolLister, cluster v1alpha1.Cluster) (string, error) {
 	var nextToken *string
 
 	for {
@@ -280,4 +279,17 @@ type userpoolClientsLister interface {
 		*cognitoidentityprovider.ListUserPoolClientsInput,
 		...request.Option,
 	) (*cognitoidentityprovider.ListUserPoolClientsOutput, error)
+}
+
+type userpoolLister interface {
+	ListUserPoolsWithContext(
+		context.Context,
+		*cognitoidentityprovider.ListUserPoolsInput,
+		...request.Option,
+	) (*cognitoidentityprovider.ListUserPoolsOutput, error)
+}
+
+type userpoolAPI interface {
+	userpoolLister
+	userpoolClientsLister
 }

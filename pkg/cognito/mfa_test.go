@@ -2,11 +2,13 @@ package cognito
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -57,8 +59,46 @@ func TestGetRelevantUserPoolClient(t *testing.T) {
 	}
 }
 
+func TestGetCognitoClientForCluster(t *testing.T) {
+	testCases := []struct {
+		name             string
+		withClusterName  string
+		expectClientName string
+	}{
+		{
+			name:             "Should work",
+			withClusterName:  "mock-prod",
+			expectClientName: "argocd",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			cluster := v1alpha1.NewCluster()
+			cluster.Metadata.Name = tc.withClusterName
+
+			client, err := getCognitoClientForCluster(
+				context.Background(),
+				&mockCognitoIdentityProviderAPI{
+					clusterName: cluster.Metadata.Name,
+					clients:     []string{fmt.Sprintf("okctl-%s-argocd", tc.withClusterName)},
+				},
+				cluster,
+			)
+			assert.NoError(t, err)
+
+			assert.Equal(t, tc.expectClientName, client.Name)
+		})
+	}
+}
+
 type mockCognitoIdentityProviderAPI struct {
-	clients []string
+	clusterName string
+	clients     []string
 }
 
 func (m mockCognitoIdentityProviderAPI) ListUserPoolClientsWithContext(
@@ -78,5 +118,17 @@ func (m mockCognitoIdentityProviderAPI) ListUserPoolClientsWithContext(
 
 	return &cognitoidentityprovider.ListUserPoolClientsOutput{
 		UserPoolClients: clients,
+	}, nil
+}
+
+func (m mockCognitoIdentityProviderAPI) ListUserPoolsWithContext(
+	_ context.Context,
+	_ *cognitoidentityprovider.ListUserPoolsInput,
+	_ ...request.Option,
+) (*cognitoidentityprovider.ListUserPoolsOutput, error) {
+	return &cognitoidentityprovider.ListUserPoolsOutput{
+		UserPools: []*cognitoidentityprovider.UserPoolDescriptionType{
+			{Id: aws.String("mock-id"), Name: aws.String(m.clusterName)},
+		},
 	}, nil
 }

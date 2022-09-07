@@ -235,8 +235,14 @@ func (o ScaleDeploymentOpts) Validate() error {
 	)
 }
 
+// EarlyTCPDemuxDisabler defines functionality required to disable Early TCP demux in an EKS cluster
+type EarlyTCPDemuxDisabler interface {
+	DisableEarlyDEMUX(ctx context.Context, clusterID ID) error
+}
+
 // KubeService provides kube deployment service layer
 type KubeService interface {
+	EarlyTCPDemuxDisabler
 	CreateExternalDNSKubeDeployment(ctx context.Context, opts CreateExternalDNSKubeDeploymentOpts) (*ExternalDNSKube, error)
 	DeleteNamespace(ctx context.Context, opts DeleteNamespaceOpts) error
 	CreateStorageClass(ctx context.Context, opts CreateStorageClassOpts) (*StorageClassKube, error)
@@ -246,11 +252,11 @@ type KubeService interface {
 	DeleteConfigMap(ctx context.Context, opts DeleteConfigMapOpts) error
 	ScaleDeployment(ctx context.Context, opts ScaleDeploymentOpts) error
 	CreateNamespace(ctx context.Context, opts CreateNamespaceOpts) (*Namespace, error)
-	DisableEarlyDEMUX(ctx context.Context, clusterID ID) error
 }
 
 // KubeRun provides kube deployment run layer
 type KubeRun interface {
+	EarlyTCPDemuxDisabler
 	CreateExternalDNSKubeDeployment(opts CreateExternalDNSKubeDeploymentOpts) (*ExternalDNSKube, error)
 	DeleteNamespace(opts DeleteNamespaceOpts) error
 	CreateStorageClass(opts CreateStorageClassOpts) (*StorageClassKube, error)
@@ -260,5 +266,4 @@ type KubeRun interface {
 	DeleteConfigMap(opts DeleteConfigMapOpts) error
 	ScaleDeployment(opts ScaleDeploymentOpts) error
 	CreateNamespace(opts CreateNamespaceOpts) (*Namespace, error)
-	DisableEarlyDEMUX(ctx context.Context, clusterID ID) error
 }

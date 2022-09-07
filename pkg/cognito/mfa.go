@@ -54,7 +54,12 @@ func acquireSession(opts RegisterMFADeviceOpts) (string, error) {
 		return "", fmt.Errorf("acquiring Cognito client ID: %w", err)
 	}
 
-	clientSecret, err := getCognitoClientSecretForClient(opts.Ctx, opts.ParameterStoreProvider, cognitoUserPoolclient.Name)
+	clientSecret, err := getCognitoClientSecretForClient(
+		opts.Ctx,
+		opts.ParameterStoreProvider,
+		opts.Cluster.Metadata.Name,
+		cognitoUserPoolclient.Name,
+	)
 	if err != nil {
 		return "", fmt.Errorf("acquiring Cognito client secret: %w", err)
 	}
@@ -100,7 +105,13 @@ func getCognitoClientForCluster(ctx context.Context, provider cognitoidentitypro
 		return userPoolClient{}, fmt.Errorf("getting relevant user pool client: %w", err)
 	}
 
-	return userPoolClient{Name: *relevantUserPoolClient.ClientName, ID: *relevantUserPoolClient.ClientId}, nil
+	clientName := strings.ReplaceAll(
+		*relevantUserPoolClient.ClientName,
+		fmt.Sprintf("okctl-%s-", cluster.Metadata.Name),
+		"",
+	)
+
+	return userPoolClient{Name: clientName, ID: *relevantUserPoolClient.ClientId}, nil
 }
 
 func getRelevantUserPoolID(ctx context.Context, provider cognitoidentityprovideriface.CognitoIdentityProviderAPI, cluster v1alpha1.Cluster) (string, error) {
@@ -166,15 +177,15 @@ func getRelevantUserPoolClient(ctx context.Context, provider userpoolClientsList
 	return cognitoidentityprovider.UserPoolClientDescription{}, fmt.Errorf("no clients found for user pool %s", userPoolID)
 }
 
-func getCognitoClientSecretForClient(ctx context.Context, provider ssmiface.SSMAPI, clientName string) (string, error) {
-	parameterPath := fmt.Sprintf("/%s/client_secret", strings.ReplaceAll(clientName, "-", "/"))
+func getCognitoClientSecretForClient(ctx context.Context, provider ssmiface.SSMAPI, clusterName string, clientName string) (string, error) {
+	parameterPath := path.Join("/", "okctl", clusterName, clientName, "client_secret")
 
 	getParameterResult, err := provider.GetParameterWithContext(ctx, &ssm.GetParameterInput{
 		Name:           aws.String(parameterPath),
 		WithDecryption: aws.Bool(true),
 	})
 	if err != nil {
-		return "", fmt.Errorf("retrieving parameter: %w", err)
+		return "", fmt.Errorf("retrieving parameter \"%s\": %w", parameterPath, err)
 	}
 
 	return *getParameterResult.Parameter.Value, nil

@@ -158,6 +158,9 @@ type NodeGroup struct {
 	PrivateNetworking bool              `json:"privateNetworking"`
 	AvailabilityZones []string          `json:"availabilityZones"`
 
+	VolumeSize      int  `json:"volumeSize"`
+	VolumeEncrypted bool `json:"volumeEncrypted"`
+
 	ScalingConfig `json:",inline"`
 }
 

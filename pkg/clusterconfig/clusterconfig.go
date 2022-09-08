@@ -17,7 +17,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const vpcCniVersion = "1.11.0-eksbuild.1"
+const (
+	vpcCniVersion         = "1.11.0-eksbuild.1"
+	defaultNodeVolumeSize = 80
+)
 
 // Args contains the input arguments for creating a valid
 // cluster configuration
@@ -163,6 +166,8 @@ func createNodeGroups(a *Args) []v1alpha5.NodeGroup {
 			},
 			PrivateNetworking: true,
 			AvailabilityZones: []string{az},
+			VolumeSize:        defaultNodeVolumeSize,
+			VolumeEncrypted:   true,
 		})
 	}
 

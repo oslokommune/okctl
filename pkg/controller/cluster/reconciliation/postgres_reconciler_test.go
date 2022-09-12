@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/client"
 	clientCore "github.com/oslokommune/okctl/pkg/client/core"
@@ -94,10 +95,10 @@ func TestPostgresReconciler(t *testing.T) {
 			creations := 0
 			deletions := 0
 
-			reconciler := NewPostgresReconciler(&mockPostgresService{
-				creationBump: func() { creations++ },
-				deletionBump: func() { deletions++ },
-			})
+			reconciler := NewPostgresReconciler(
+				mockEarlyTCPDemuxDisabler{},
+				&mockPostgresService{creationBump: func() { creations++ }, deletionBump: func() { deletions++ }},
+			)
 
 			meta := reconciliation.Metadata{
 				ClusterDeclaration: &v1alpha1.Cluster{
@@ -117,6 +118,12 @@ func TestPostgresReconciler(t *testing.T) {
 			assert.Equal(t, tc.expectDeletions, deletions)
 		})
 	}
+}
+
+type mockEarlyTCPDemuxDisabler struct{}
+
+func (mockEarlyTCPDemuxDisabler) DisableEarlyDEMUX(_ context.Context, _ api.ID) error {
+	return nil
 }
 
 type mockPostgresService struct {

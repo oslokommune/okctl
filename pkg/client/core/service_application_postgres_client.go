@@ -75,11 +75,6 @@ func (a *applicationPostgresService) AddPostgresToApplication(ctx context.Contex
 		return fmt.Errorf("creating security group policy: %w", err)
 	}
 
-	err = a.disableEarlyTCPDemux(ctx, clusterID)
-	if err != nil {
-		return fmt.Errorf("disabling early demux: %w", err)
-	}
-
 	return nil
 }
 
@@ -274,11 +269,6 @@ func (a *applicationPostgresService) newSecurityGroupPatchOperations(
 			Value: appSecurityGroup.ID,
 		},
 	}
-}
-
-// ref: https://aws.amazon.com/blogs/containers/introducing-security-groups-for-pods/
-func (a *applicationPostgresService) disableEarlyTCPDemux(ctx context.Context, clusterID api.ID) error {
-	return a.kubeService.DisableEarlyDEMUX(ctx, clusterID)
 }
 
 func (a *applicationPostgresService) removeSecurityGroupPolicy(

@@ -3,8 +3,6 @@ package client
 import (
 	"context"
 
-	"github.com/oslokommune/okctl/pkg/api"
-
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 )
 
@@ -37,9 +35,4 @@ type ApplicationPostgresService interface {
 	AddPostgresToApplication(ctx context.Context, opts AddPostgresToApplicationOpts) error
 	RemovePostgresFromApplication(ctx context.Context, opts RemovePostgresFromApplicationOpts) error
 	HasPostgresIntegration(ctx context.Context, opts HasPostgresIntegrationOpts) (bool, error)
-}
-
-// ApplicationPostgresAPI defines the
-type ApplicationPostgresAPI interface {
-	DisableEarlyTCPDemux(context.Context, api.ID) error
 }

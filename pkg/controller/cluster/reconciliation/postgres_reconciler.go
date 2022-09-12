@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 
 	"github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
@@ -18,7 +19,8 @@ import (
 const postgresReconcilerIdentifier = "Postgres"
 
 type postgresReconciler struct {
-	client client.ComponentService
+	client      client.ComponentService
+	kubeService api.EarlyTCPDemuxDisabler
 }
 
 type database struct {
@@ -51,6 +53,11 @@ func (z *postgresReconciler) Reconcile(ctx context.Context, meta reconciliation.
 	clusterID := reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata)
 	dbSubnetIDs := subnetsAsIDList(vpc.DatabaseSubnets)
 	dbSubnetCIDRs := subnetsAsCIDRList(vpc.DatabaseSubnets)
+
+	err = z.kubeService.DisableEarlyDEMUX(ctx, reconciliation.ClusterMetaAsID(meta.ClusterDeclaration.Metadata))
+	if err != nil {
+		return reconciliation.Result{}, fmt.Errorf("disabling early TCP demux: %w", err)
+	}
 
 	actionMap, err := z.determineActions(meta, state)
 	if err != nil {
@@ -139,9 +146,10 @@ func (z *postgresReconciler) String() string {
 }
 
 // NewPostgresReconciler creates a new reconciler for the Postgres resource
-func NewPostgresReconciler(client client.ComponentService) reconciliation.Reconciler {
+func NewPostgresReconciler(kubeService api.EarlyTCPDemuxDisabler, client client.ComponentService) reconciliation.Reconciler {
 	return &postgresReconciler{
-		client: client,
+		kubeService: kubeService,
+		client:      client,
 	}
 }
 

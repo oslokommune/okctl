@@ -7,6 +7,8 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/oslokommune/okctl/cmd/okctl/hooks"
+	"github.com/oslokommune/okctl/pkg/api/core"
+	"github.com/oslokommune/okctl/pkg/api/core/run"
 	"github.com/oslokommune/okctl/pkg/controller/cluster/reconciliation"
 	common "github.com/oslokommune/okctl/pkg/controller/common/reconciliation"
 	"github.com/oslokommune/okctl/pkg/metrics"
@@ -60,6 +62,8 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 				return fmt.Errorf("error getting services: %w", err)
 			}
 
+			kubeService := core.NewKubeService(run.NewKubeRun(o.CloudProvider, o.CredentialsProvider.Aws()))
+
 			schedulerOpts := common.SchedulerOpts{
 				Out:                             o.Out,
 				Spinner:                         spin,
@@ -86,7 +90,7 @@ func buildDeleteClusterCommand(o *okctl.Okctl) *cobra.Command {
 				reconciliation.NewTempoReconciler(services.Monitoring),
 				reconciliation.NewKubePrometheusStackReconciler(services.Monitoring),
 				reconciliation.NewUsersReconciler(services.IdentityManager),
-				reconciliation.NewPostgresReconciler(services.Component),
+				reconciliation.NewPostgresReconciler(kubeService, services.Component),
 				reconciliation.NewCleanupSGReconciler(o.CloudProvider),
 			)
 

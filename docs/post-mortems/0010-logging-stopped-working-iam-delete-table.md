@@ -89,6 +89,7 @@ The team forwards important logs to Slack.
 
 ## Action items
 
+* https://github.com/oslokommune/okctl/issues/1038 - Research and fix the issue
 * https://github.com/oslokommune/kjoremiljo-admin-tasks/issues/56 - Ensure teams are notified about important upgrades
 
 ## Supporting information and documentation

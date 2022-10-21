@@ -149,7 +149,7 @@ func (z *clusterReconciler) hasCreateDependenciesMet(meta reconciliation.Metadat
 	}
 
 	err = servicequota.CheckQuotas(
-		servicequota.NewFargateCheck(constant.DefaultRequiredFargateOnDemandPods, z.cloudProvider),
+		servicequota.NewFargateCheck(constant.DefaultRequiredFargateVCPUOnDemandResourceCount, z.cloudProvider),
 	)
 	if err != nil {
 		return false, fmt.Errorf("checking service quotas: %w", err)

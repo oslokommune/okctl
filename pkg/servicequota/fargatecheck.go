@@ -29,15 +29,16 @@ func NewFargateCheck(required int, provider v1alpha1.CloudProvider) *FargateChec
 	}
 }
 
-// CheckAvailability determines if you have sufficient fargate pods
+// CheckAvailability determines if you have sufficient fargate vCPU resource count
+// See: https://docs.aws.amazon.com/general/latest/gr/ecs-service.html#service-quotas-fargate
 // nolint: funlen
 func (e *FargateCheck) CheckAvailability() (*Result, error) {
 	q, err := e.provider.ServiceQuotas().GetServiceQuota(&servicequotas.GetServiceQuotaInput{
-		QuotaCode:   aws.String("L-790AF391"),
+		QuotaCode:   aws.String("L-3032A538"),
 		ServiceCode: aws.String("fargate"),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("getting fargate on-demand pods quotas: %w", err)
+		return nil, fmt.Errorf("getting fargate on-demand vCPU resource count: %w", err)
 	}
 
 	now := time.Now()
@@ -69,11 +70,11 @@ func (e *FargateCheck) CheckAvailability() (*Result, error) {
 			},
 			{
 				Name:  aws.String("Resource"),
-				Value: aws.String("OnDemand"),
+				Value: aws.String("vCPU"),
 			},
 			{
 				Name:  aws.String("Class"),
-				Value: aws.String("None"),
+				Value: aws.String("Standard/OnDemand"),
 			},
 		},
 		EndTime:    aws.Time(end),
@@ -86,7 +87,7 @@ func (e *FargateCheck) CheckAvailability() (*Result, error) {
 		},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("getting fargate on-demand pods utilisation: %w", err)
+		return nil, fmt.Errorf("getting Fargate vCPU on-demand resource utilisation: %w", err)
 	}
 
 	quota := int(*q.Quota.Value)
@@ -101,6 +102,6 @@ func (e *FargateCheck) CheckAvailability() (*Result, error) {
 		Required:    e.required,
 		Available:   available,
 		HasCapacity: e.required <= available,
-		Description: "Fargate On-Demand Pods",
+		Description: "Fargate On-Demand vCPU resource count",
 	}, nil
 }

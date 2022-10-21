@@ -96,8 +96,8 @@ const (
 	// DefaultRequiredIgws number of internet gateways required for cluster creation
 	DefaultRequiredIgws = 1
 
-	// DefaultRequiredFargateOnDemandPods is the minimum number of fargate pods that should be available
-	DefaultRequiredFargateOnDemandPods = 50
+	// DefaultRequiredFargateVCPUOnDemandResourceCount is the minimum amount of Fargate vCPU units that should be available
+	DefaultRequiredFargateVCPUOnDemandResourceCount = 6
 
 	// DefaultMaxReconciliationRequeues defines the maximum allowed times a reconciliation can be requeued
 	DefaultMaxReconciliationRequeues = 3

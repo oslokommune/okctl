@@ -30,6 +30,7 @@ func NewFargateCheck(required int, provider v1alpha1.CloudProvider) *FargateChec
 }
 
 // CheckAvailability determines if you have sufficient fargate vCPU resource count
+// See: https://docs.aws.amazon.com/general/latest/gr/ecs-service.html#service-quotas-fargate
 // nolint: funlen
 func (e *FargateCheck) CheckAvailability() (*Result, error) {
 	q, err := e.provider.ServiceQuotas().GetServiceQuota(&servicequotas.GetServiceQuotaInput{

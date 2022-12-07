@@ -20,7 +20,7 @@ require (
 	github.com/bugsnag/bugsnag-go v1.5.3 // indirect
 	github.com/bugsnag/panicwrap v1.2.0 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
-	github.com/containerd/containerd v1.6.1
+	github.com/containerd/containerd v1.6.12
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v20.10.3+incompatible // indirect
 	github.com/dustin/go-humanize v1.0.0
@@ -46,7 +46,6 @@ require (
 	github.com/mishudark/errors v0.0.0-20210318113247-bd4e9ef2fc74
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/moby/sys/mount v0.2.0 // indirect
-	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/oslokommune/okctl-metrics-service v0.1.9
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
@@ -68,12 +67,12 @@ require (
 	github.com/yvasiyarov/go-metrics v0.0.0-20150112132944-c25f46c4b940 // indirect
 	github.com/yvasiyarov/gorelic v0.0.7 // indirect
 	github.com/yvasiyarov/newrelic_platform_go v0.0.0-20160601141957-9c099fbc30e9 // indirect
-	golang.org/x/crypto v0.0.0-20211108221036-ceb1ce70b4fa
+	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	gopkg.in/h2non/gock.v1 v1.1.2
 	gopkg.in/ini.v1 v1.66.2
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	gopkg.in/yaml.v3 v3.0.1
 	gotest.tools v2.2.0+incompatible
 	helm.sh/helm/v3 v3.7.2
 	k8s.io/api v0.22.5
